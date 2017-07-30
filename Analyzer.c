@@ -75,15 +75,15 @@ Params_t *Analyzer_GetParams(Work_t *work) {
     memset(work->CurrentSamples, 0, work->Samples * sizeof(float));
     memset(FFT_Current->Result, 0, FFT_Current->Len * sizeof(Complex_t));
   }
-  if(((work->SequenceID) % 15 == 0) && (work->Cycles_Len == 20)) {
+  //if(((work->SequenceID) % 15 == 0) && (work->Cycles_Len == 20)) {
     float FFT_V[600];
     float FFT_I[600];
     for(int i = 0; i < 600; i++) {
       FFT_V[i] = sqrt(pow(FFT_Voltage->Result[i].Real, 2.0) + pow(FFT_Voltage->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
       FFT_I[i] = sqrt(pow(FFT_Current->Result[i].Real, 2.0) + pow(FFT_Current->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
     }
-    RequestServer_SetValues(work->Timestamp, work->VoltageSamples, work->CurrentSamples, FFT_V, FFT_I, work->Cycles[5].End, 600);
-  }
+    RequestServer_SetValues(work->Timestamp, work->VoltageSamples, work->CurrentSamples, FFT_V, FFT_I, work->Samples, 600);
+ // }
 //  if(Params->Flag == false) {
     float THD_V = 0.0;
     float THD_I = 0.0;

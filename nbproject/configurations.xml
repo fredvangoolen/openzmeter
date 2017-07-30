@@ -46,7 +46,6 @@
       </toolsSet>
       <compileType>
         <cTool>
-          <developmentMode>0</developmentMode>
           <standard>3</standard>
           <commandlineTool>gcc</commandlineTool>
           <incDir>
@@ -64,12 +63,18 @@
         </ccTool>
         <linkerTool>
           <commandlineTool>gcc</commandlineTool>
-          <commandLine>-lm -lfftw3f -lpthread -lrt -lpq -lcurl -lxml2</commandLine>
+          <commandLine>-lm -lfftw3f -lpthread -lrt -lpq -lcurl -lxml2 -lusb-1.0</commandLine>
         </linkerTool>
       </compileType>
       <packaging>
         <packType>Debian</packType>
         <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
                             from="${OUTPUT_PATH}"

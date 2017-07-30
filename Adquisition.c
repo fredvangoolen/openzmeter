@@ -21,8 +21,8 @@
 
 // Tipos privados ======================================================================================================
 typedef struct {
-  int16_t  Voltage;                     //Valor de tension
-  uint16_t Current;                     // Valor de corriente
+  int16_t Voltage;                     //Valor de tension
+  int16_t Current;                     // Valor de corriente
 } Sample_t;
 typedef struct {
   float A0;
@@ -52,6 +52,10 @@ typedef struct {
 Adquisition_t Adquisition;
 
 // Funciones ===========================================================================================================
+void Adquisition_Callback() {
+
+}
+
 void *Adquisition_Thread(void *args) {
 //  struct sched_param Prio;
 //  Prio.sched_priority = sched_get_priority_max(SCHED_OTHER);
@@ -69,7 +73,7 @@ void *Adquisition_Thread(void *args) {
 
 
 //  
-  uint16_t *Buffer16 = (uint16_t*)Buffer8; 
+  uint16_t *Buffer16 = (uint16_t*)Buffer8;
 //  if(tcflush(Adquisition.FD.fd, TCIOFLUSH) != 0) {
 //    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
 //    close(Adquisition.FD.fd);
@@ -86,7 +90,7 @@ void *Adquisition_Thread(void *args) {
   int Remain = 0;
   while(!Adquisition.Terminate) {
     int Count;  
-    int Error = libusb_bulk_transfer(Adquisition.DeviceHandle, ADQUISITION_ENDPOINT_IN, Buffer8, sizeof(Buffer8), &Count, 100);
+    int Error = libusb_bulk_transfer(Adquisition.DeviceHandle, ADQUISITION_ENDPOINT_IN, Buffer8, sizeof(Buffer8), &Count, 250);
     if(Error) {
       LogMsg("ERROR", "%s:%d -> libusb_bulk_transfer (%d)\n", __func__, __LINE__, Error);
     }

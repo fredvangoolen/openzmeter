@@ -36,7 +36,7 @@ void LogMsg(const char *level, const char *msg, ...) {
   time(&Now);
   TimeStamp = localtime(&Now);
   strftime(DateStr, 80, "[%d/%m/%Y - %X] ", TimeStamp);
-  printf(DateStr);
+  printf("%s", DateStr);
   printf("\033[0m");
   vprintf(msg, args);
   fflush(stdout);

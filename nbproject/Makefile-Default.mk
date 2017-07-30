@@ -68,52 +68,52 @@ LDLIBSOPTIONS=
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	gcc -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service ${OBJECTFILES} ${LDLIBSOPTIONS} -lm -lfftw3f -lpthread -lrt -lpq -lcurl -lxml2
+	gcc -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service ${OBJECTFILES} ${LDLIBSOPTIONS} -lm -lfftw3f -lpthread -lrt -lpq -lcurl -lxml2 -lusb-1.0
 
 ${OBJECTDIR}/Adquisition.o: Adquisition.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Adquisition.o Adquisition.c
+	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Adquisition.o Adquisition.c
 
 ${OBJECTDIR}/Analyzer.o: Analyzer.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Analyzer.o Analyzer.c
+	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Analyzer.o Analyzer.c
 
 ${OBJECTDIR}/Config.o: Config.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Config.o Config.c
+	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Config.o Config.c
 
 ${OBJECTDIR}/DB.o: DB.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DB.o DB.c
+	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DB.o DB.c
 
 ${OBJECTDIR}/Events.o: Events.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Events.o Events.c
+	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Events.o Events.c
 
 ${OBJECTDIR}/FFT.o: FFT.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FFT.o FFT.c
+	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FFT.o FFT.c
 
 ${OBJECTDIR}/Prices.o: Prices.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Prices.o Prices.c
+	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Prices.o Prices.c
 
 ${OBJECTDIR}/RequestServer.o: RequestServer.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/RequestServer.o RequestServer.c
+	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/RequestServer.o RequestServer.c
 
 ${OBJECTDIR}/main.o: main.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.c
+	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.c
 
 # Subprojects
 .build-subprojects:
