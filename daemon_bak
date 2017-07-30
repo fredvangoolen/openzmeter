@@ -1,0 +1,409 @@
+#include <unistd.h>
+#include <stdio.h>
+#include "pruio.h"
+#include "types.h"
+#include "constants.h"
+#include "globalVars.h"
+#include "calculation_module.h"
+#include "processing.h"
+#include "debug.h"
+#include "thpool.h"
+#include <influxdb/influxdb.h>
+#include <string.h>
+#include <pthread.h>
+
+
+pruIo *io;
+
+/* Handles SIGINT */
+void exithandler(int x) {
+    printf("sigint caught\n");
+    fflush(stdout);
+    pruio_destroy(io);
+
+    exit(-1);
+}
+
+/* Handles SIGSEGV */
+void segfaulthandler(int x) {
+    printf("segfault caught\n");
+
+    fflush(stdout);
+    pruio_destroy(io);
+
+    exit(-1);
+}
+
+int sign(float x) {
+    return (x > 0) - (x < 0);
+}
+
+/*
+ * Obtención de 10 ciclos de tensión y conversión de short a float (d) para adaptarlo a librería FFTW.
+ **/
+int getFloatVoltagePLL(unsigned short *in, float **out, int *cycle_indexes, int* readCycles, int numCycles, int maxSamples, int firstRead) {
+    int i;
+    int cycleIndex = 0;
+    int outLength = 0;
+    if (!firstRead) {
+        cycle_indexes[cycleIndex] = 0;
+        cycleIndex++;
+    }
+    float tempOut[maxSamples];
+    for (i = 0; i < maxSamples && cycleIndex < numCycles + 1; i++) {
+        tempOut[i] = (((float) in[i] / (float) MAX2E12)*2 - 1);
+        if (i > 0) {
+            //printf("%04d | %f => %f \n", i, tempOut[i - 1], tempOut[i]);
+            //fflush(stdout);
+            if (sign(tempOut[i]) > sign(tempOut[i - 1])) {//Passing by zero
+                //printf("PASO POR CERO! \n");
+                //fflush(stdout);
+                //if (numPassingByZero % 2 == 0) {//Cycle completion
+                //printf("CICLO %d! \n", cycleIndex + 1);
+                //fflush(stdout);
+                cycle_indexes[cycleIndex] = i;
+                cycleIndex++;
+                //}
+            }
+        }
+    }
+    *readCycles = cycleIndex - firstRead ? 0 : 1;
+    if (cycleIndex == 0 || (cycleIndex == 1 && !firstRead)) {//No cycles => Possible voltage drop
+        outLength = maxSamples;
+        cycle_indexes[0] = 0;
+    } else {
+        //if (numCycles == cycleIndex) {
+        outLength = cycle_indexes[numCycles - 1] - cycle_indexes[0];
+        debug_print_2("\nMuestra ejemplo antes reserva: %f\n", tempOut[cycle_indexes[0]]);
+        //fflush(stdout);
+
+        //} else {
+        //Necesito más muestras...
+        //    return maxSamples;
+        //}
+    }
+    *out = NULL;
+    *out = calloc(outLength, sizeof (float));
+    memcpy(*out, tempOut + cycle_indexes[0], outLength);
+    debug_print_2("\nReservando salida: %d para puntero %p\n", outLength, out);
+    debug_print_2("\nPost reserva: %f\n", *out[0]);
+    //fflush(stdout);
+    return outLength;
+}
+
+void unshort2float(unsigned short *x, float *d, int n) {
+    int i;
+    for (i = 0; i < n; i++) {
+        d[i] = (((float) x[i] / (float) MAX2E12)*2 - 1);
+    }
+}
+
+void writeValue(s_influxdb_client* client, char* serie, float value, int64_t microsec) {
+    int status;
+    s_influxdb_series *series = influxdb_series_create(serie, NULL);
+    influxdb_series_add_colums(series, "time");
+    influxdb_series_add_colums(series, "value");
+    int i = 0;
+    char **tab1 = malloc(sizeof (char *) * 2);
+
+    //TIME
+    int64_t *timeUsec = malloc(sizeof (int64_t));
+    *timeUsec = microsec;
+
+    //VALUE
+    double *valuePointer = malloc(sizeof (double));
+    *valuePointer = value;
+
+    tab1[0] = (char *) timeUsec;
+    tab1[1] = (char *) valuePointer;
+    influxdb_series_add_points(series, tab1);
+
+    status = influxdb_write_serie_with_time_precision(client, series, INFLUXDB_TP_MICROSEC);
+
+    influxdb_series_free(series, NULL);
+}
+
+void writeSamples(s_influxdb_client* client, uint16 *samples, uint32 packageSize, int64_t microsec, uint32 timestep) {
+    //printf("Escribiendo muestras en influxdb para microsec %" PRId64 "...\n", microsec);
+    int status;
+    s_influxdb_series *series = influxdb_series_create("voltage", NULL);
+    influxdb_series_add_colums(series, "time");
+    influxdb_series_add_colums(series, "value");
+    int i = 0;
+    for (i = 0; i < packageSize; i++) {
+        char **tab1 = malloc(sizeof (char *) * 2);
+
+        //TIME
+        int64_t *timeUsec = malloc(sizeof (int64_t));
+        *timeUsec = microsec;
+
+        //VALUE
+        double *value = malloc(sizeof (double));
+        *value = samples[i]*1.8 / 4095;
+
+        tab1[0] = (char *) timeUsec;
+        tab1[1] = (char *) value;
+        influxdb_series_add_points(series, tab1);
+        microsec += timestep;
+    }
+
+    status = influxdb_write_serie_with_time_precision(client, series, INFLUXDB_TP_MICROSEC);
+
+    influxdb_series_free(series, NULL);
+}
+
+int64_t startDaemon(s_influxdb_client* db) {
+    /*signal(SIGINT, exithandler);
+    signal(SIGKILL, exithandler);
+    signal(SIGTERM, exithandler);
+    signal(SIGSEGV, segfaulthandler);*/
+
+    int currentScale = 100;
+    int voltageScale = 400;
+    int i = 0;
+    int sampleRate = SAMPLE_RATE;
+    int32 sampleRateNanosec = 1e9 / sampleRate;
+    int numSignals = 2;
+    int workingSamplesPerSignal = SAMPLES_PER_INTERVAL; //Working size in samples: 10 signal cycles
+    uint32 packageSize = workingSamplesPerSignal * numSignals; //Working size in samples of all signals
+
+    uint8 bufStep = 0;
+    uint16 bufDivisions = 1e6/*4194304*/ / packageSize; //How many packages can have in the maximum allocated (Max: 4194304 samples of 16 bits in 8 Mb) => Set via modprobe: modprobe uio_pruss extram_pool_sz=0x800000
+    uint32 bSize = bufDivisions * packageSize; //number of samples to store in the ring buffer according to possible divisions (Max: 4194304 samples of 16 bits in 8 Mb)
+    uint32 timeStepPerSample = sampleRateNanosec / 1000; //Conversion to usec
+    //uint32 timeStepPerPackage = packageSize / numSignals * timeStepPerSample;
+    uint64_t processedSamples = 0;
+
+    /**
+     * Thread pool creation
+     */
+    threadpool thpool = thpool_init(NUM_THREADS);
+
+    /**
+     * Samples structures allocation in memory
+     */
+    uint16 **adcSamples, **workingSamples, **remainingSamples, **adcRemainingSamples;
+    adcSamples = calloc(sizeof (uint16*), numSignals);
+    workingSamples = calloc(sizeof (uint16*), numSignals);
+    remainingSamples = calloc(sizeof (uint16*), numSignals);
+    adcRemainingSamples = calloc(sizeof (uint16*), numSignals);
+    for (i = 0; i < numSignals; i++) {
+        adcSamples[i] = calloc(workingSamplesPerSignal, sizeof (uint16));
+        workingSamples[i] = calloc(workingSamplesPerSignal, sizeof (uint16));
+        adcRemainingSamples[i] = calloc(workingSamplesPerSignal, sizeof (uint16));
+        remainingSamples[i] = calloc(workingSamplesPerSignal * 2, sizeof (uint16));
+    }
+    long numRemainingSamples = 0;
+    long numAdcRemainingSamples = 0;
+
+    struct processing_work_list workList; //Init work list
+    workList.head = NULL;
+    pthread_mutex_init(&workList.lock, NULL); //Intialize work list lock.
+
+    /**
+     * Driver creation.
+     */
+    pruIo *io = pruio_new(PRUIO_ACT_PRU1 | PRUIO_ACT_ADC, 0, 0, 0); //! create new driver structure
+    if (pruio_adc_setStep(io, 9, 1, 0, 0, 0)) { // step 9 for AIN-1
+        printf("step failed (%s)\n", io->Errr);
+    }
+    if (numSignals == 2) {
+        if (pruio_adc_setStep(io, 10, 3, 0, 0, 0)) { // step 10 for AIN-3
+            printf("step failed (%s)\n", io->Errr);
+        }
+    }
+    if (pruio_config(io, bSize, 1 << 9 | 1 << 10, sampleRateNanosec, 0)) { // '1 << 1' -> step 1, '125000' ns -> 8000 Hz
+        printf("config failed (%s)\n", io->Errr);
+    } else {
+        if (pruio_rb_start(io)) {
+            printf("rbuffer failed (%s)\n", io->Errr);
+        }
+        //usleep(100);
+        int64_t timeUsecTenSeconds = 1000000 * 60 * 10;
+        struct timeval time;
+        gettimeofday(&time, NULL);
+        int64_t timeUsec = ((unsigned long long) time.tv_sec * 1000000) + time.tv_usec;
+        int64_t timeUsecTenSecondsStart = timeUsec;
+        int totalCycles = 0;
+        int j = 0;
+        //printf("\nDRAM INIT: %d\n", io->DRam[0]);
+        int firstRead = 1;
+        while (j < 1) {
+            debug_print_2("\n\n --------- ITERACION  %d ---\n", j);
+
+            // PSEUDO CODE:
+            // ============
+            //1. count(remainingSamples) < packageSize?
+            //  1.1. YES
+            //    1.1.1. Read packageSize samples from ADC (adcSamples)
+            //    1.1.2.  Combine remainingSamples with new adcSamples to achieve packageSize. => We get workingSamples and adcRemainingSamples
+            //  1.2. NO
+            //      1.2.1. workingSamples = remainingSamples
+            //2. Get 10 cycles of the signal from workingSamples => signalSamples and remainingSamples
+            //3. Append adcRemainingSamples to remainingSamples.
+            //4. Insert work in thread pool.
+
+            debug_print_2("\n * PASO 1\n");
+            /**
+             * STEP 1: Getting samples to work
+             */
+            if (numRemainingSamples < workingSamplesPerSignal) {
+                /**
+                 * STEP 1.1.1: Read packageSize samples from ADC (adcSamples)
+                 */
+                long r = 1;
+                while (io->DRam[0] < (bufStep + 1) * packageSize - 1) {// && io->DRam[0] > bufStep * packageSize) {
+                    usleep(10);
+                    /*if (r % 100000 == 0) {
+                        printf("Esperando DRAM: %d hasta %d \n", io->DRam[0], (bufStep + 1) * packageSize);
+                        fflush(stdout);
+                    }
+                    r++;*/
+                }
+                for (i = 0; i < packageSize; i += 2) {
+                    int muestra1 = io->Adc->Value[bufStep * packageSize + i];
+                    int muestra2 = io->Adc->Value[bufStep * packageSize + i + 1];
+                    float muestra1f = (((float) muestra1 / (float) MAX2E12)*2 - 1);
+                    float muestra2f = (((float) muestra2 / (float) MAX2E12)*2 - 1);
+                    printf("%d %d | %f %f\n", muestra1, muestra2, muestra1f, muestra2f);
+                }
+                bufStep++; //Next buffer step index
+                if (bufStep == bufDivisions) {//Reset buffer read index
+                    bufStep = 0;
+                    //TODO: Resync timestamp?
+                }
+                //printf("DRAM: %d\n", io->DRam[0]);
+                //readed += packageSize;
+                if (numSignals == 1) {
+                    memcpy(adcSamples[0], &io->Adc->Value[bufStep * packageSize], sizeof (uint16) * packageSize);
+                } else {
+                    for (i = 0; i < packageSize; i++) {
+                        adcSamples[i % numSignals][i / numSignals] = io->Adc->Value[bufStep * packageSize + i]; //Reordering buffer
+                    }
+                }
+                /**
+                 * STEP 1.1.2: Combine remainingSamples with new adcSamples to achieve packageSize. => We get workingSamples and adcRemainingSamples
+                 */
+                //Append remaining samples of previous read.
+                if (numRemainingSamples > 0) {
+                    debug_print_2("\nAñado restantes combinadas a workingSamples. Escribiendo a posición 0 la cantidad de %d muestras (Indice final de escritura: %d | indice máximo muestras: %d)\n", numRemainingSamples, numRemainingSamples - 1, workingSamplesPerSignal - 1);
+                    for (i = 0; i < numSignals; i++) {
+                        memcpy(workingSamples[i], remainingSamples[i], sizeof (uint16) * numRemainingSamples); //Copy remaining samples
+                    }
+                }
+                //Complete buffer with ADC new samples
+                int samplesToComplete = workingSamplesPerSignal - numRemainingSamples;
+                if (samplesToComplete > 0) {
+                    debug_print_2("\nCompleto workingSamples con las nuevas muestras del ADC. Escribiendo a posición %d la cantidad de %d muestras (Indice final de escritura: %d | indice máximo muestras: %d)\n", numRemainingSamples, samplesToComplete, numRemainingSamples + samplesToComplete - 1, workingSamplesPerSignal - 1);
+                    for (i = 0; i < numSignals; i++) {
+                        memcpy(workingSamples[i] + numRemainingSamples, adcSamples[i], sizeof (uint16) * samplesToComplete);
+                    }
+                }
+                numRemainingSamples = 0;
+                //Save ADC remaining Samples
+                numAdcRemainingSamples = workingSamplesPerSignal - samplesToComplete;
+                if (numAdcRemainingSamples > 0) {
+                    debug_print_2("\nGuardo las muestras nuevas del ADC restantes a adcRemainingSamples. Escribiendo a posición %d la cantidad de %d muestras (Indice final de escritura: %d | indice máximo muestras: %d)\n", 0, numAdcRemainingSamples, numAdcRemainingSamples - 1, workingSamplesPerSignal - 1);
+                    for (i = 0; i < numSignals; i++) {
+                        memcpy(adcRemainingSamples[i], adcSamples[i] + samplesToComplete, sizeof (uint16) * numAdcRemainingSamples);
+                    }
+                }
+            } else {
+                /**
+                 * STEP 1.2.1: Set workingSamples=remainingSamples
+                 */
+                debug_print_2("\nCopio las muestras restantes combinadas a workingSamples. Escribiendo a posición %d la cantidad de %d muestras (Indice final de escritura: %d | indice máximo muestras: %d)\n", 0, workingSamplesPerSignal, workingSamplesPerSignal - 1, workingSamplesPerSignal - 1);
+                for (i = 0; i < numSignals; i++) {
+                    memcpy(workingSamples[i], remainingSamples[i], sizeof (uint16) * workingSamplesPerSignal); //Copy remaining samples
+                }
+                numRemainingSamples -= workingSamplesPerSignal;
+            }
+
+
+            /**
+             * STEP 2. Get 10 cycles of the signal from workingSamples => signalSamples and remainingSamples
+             */
+            debug_print_2("\n * PASO 2\n");
+            int numCycles = 10;
+            int readCycles = 0;
+            float* voltage_in;
+            float* current_in;
+            int cycle_indexes[numCycles + 1];
+            //float current_in[SAMPLES_PER_INTERVAL];
+            int signalLength = 0;
+            if (signalLength = getFloatVoltagePLL(workingSamples[0], &voltage_in, cycle_indexes, &readCycles, numCycles, workingSamplesPerSignal, firstRead)) {//We success getting the cycles
+                //Get signal samples => voltage_in
+                //Save remaining samples
+                debug_print_2("\nMuestra ejemplo return: %f\n", voltage_in[0]);
+                int remainingIndex = workingSamplesPerSignal;
+                if (readCycles > 1) {
+                    remainingIndex = cycle_indexes[readCycles];
+                }
+                int samplesToComplete = workingSamplesPerSignal - numRemainingSamples - remainingIndex;
+                debug_print_2("\nGuardo las restantes de los 10 ciclos a las restantes combinadas. Escribiendo a posición numRemainingSamples [%d] la cantidad de %d muestras (Indice final de escritura: %d| indice máximo muestras: %d)\n", numRemainingSamples, samplesToComplete, samplesToComplete + numRemainingSamples - 1, workingSamplesPerSignal - 1);
+                for (i = 0; i < numSignals; i++) {
+                    memcpy(remainingSamples[i] + numRemainingSamples, workingSamples[i] + remainingIndex, sizeof (uint16) * samplesToComplete); //Copy remaining samples
+                }
+                /**
+                 * STEP 3: Append adcRemainingSamples to remainingSamples.
+                 */
+                //Combine with adc remaining samples
+                debug_print_2("\nCombino las restantes del ADC con las restantes de 10 ciclos. Escribiendo a posición samplesToComplete [%d] la cantidad de %d muestras (Indice final de escritura: %d| indice máximo muestras: %d)\n", samplesToComplete, numAdcRemainingSamples, samplesToComplete + numAdcRemainingSamples - 1, workingSamplesPerSignal - 1);
+                for (i = 0; i < numSignals; i++) {
+                    memcpy(remainingSamples[i] + samplesToComplete, adcRemainingSamples[i], sizeof (uint16) * numAdcRemainingSamples); //Copy remaining adc samples
+                }
+                numRemainingSamples += samplesToComplete + numAdcRemainingSamples;
+                numAdcRemainingSamples = 0;
+            } else {
+                //We need to get more samples... but it seems that something is wrong so we use the entire package...
+            }
+            firstRead = 0;
+
+            debug_print("\nIteracion: %d: | Longitud señal: %d | Ciclos leidos: %d\n", j, signalLength, readCycles);
+
+            /**
+             * STEP 4: Insert work in thread pool.
+             */
+            struct processing_work* work = calloc(1, sizeof (struct processing_work));
+            work->voltageSamples = voltage_in;
+            work->currentSamples = current_in;
+            work->numCycles = readCycles;
+            work->index10SecLimit = -1;
+            work->numVoltageSamples = signalLength;
+            work->numVoltageLastCycleSamples = -1;
+            work->voltageLastCycleSamples = NULL;
+            work->prev = NULL;
+            pthread_mutex_lock(&workList.lock);
+            if (workList.head == NULL) {
+                work->next = NULL;
+            } else {
+                work->next = workList.head;
+            }
+            workList.head = work;
+            pthread_mutex_unlock(&workList.lock);
+
+            thpool_add_work(thpool, (void*) processing, work);
+
+            /**
+             * STEP 5: Refresh timestamp.
+             */
+            timeUsec = timeUsec + signalLength*timeStepPerSample;
+            //("Ciclo %d | Time: %" PRId64 " | Muestras leidas: %d \n", j + 1, timeUsec, readed);
+            j++;
+        }
+    }
+    pruio_destroy(io);
+    thpool_wait(thpool);
+    thpool_destroy(thpool);
+    for (i = 0; i < numSignals; i++) {
+        free(adcSamples[i]);
+        free(workingSamples[i]);
+        free(adcRemainingSamples[i]);
+        free(remainingSamples[i]);
+    }
+    free(workingSamples);
+    free(adcRemainingSamples);
+    free(remainingSamples);
+    free(adcSamples);
+    return processedSamples;
+}
