@@ -133,7 +133,7 @@ Params_t *Analyzer_GetParams(Work_t *work) {
       FFT_V[i] = sqrt(pow(FFT_Voltage->Result[i].Real, 2.0) + pow(FFT_Voltage->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
       FFT_I[i] = sqrt(pow(FFT_Current->Result[i].Real, 2.0) + pow(FFT_Current->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
     }
-    RequestServer_SetValues(work->Timestamp, work->VoltageSamples, work->CurrentSamples, FFT_V, FFT_I, work->Samples, 600);
+    RequestServer_SetValues(Params, work->VoltageSamples, work->CurrentSamples, FFT_V, FFT_I, work->Samples, 600);
   }
 Exit:
   free(FFT_Voltage);

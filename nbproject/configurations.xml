@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <logicalFolder name="HeaderFiles"
-                   displayName="Header Files"
-                   projectFiles="true">
-      <itemPath>ini.h</itemPath>
-      <itemPath>types.h</itemPath>
-    </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
                    projectFiles="true">
@@ -24,6 +18,16 @@
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
+    <itemPath>Adquisition.c</itemPath>
+    <itemPath>Analyzer.c</itemPath>
+    <itemPath>Config.c</itemPath>
+    <itemPath>DB.c</itemPath>
+    <itemPath>Events.c</itemPath>
+    <itemPath>FFT.c</itemPath>
+    <itemPath>Main.h</itemPath>
+    <itemPath>Prices.c</itemPath>
+    <itemPath>RequestServer.c</itemPath>
+    <itemPath>main.c</itemPath>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -105,6 +109,12 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="service" mandatory="true"/>
@@ -134,11 +144,7 @@
       </item>
       <item path="RequestServer.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="ini.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="main.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="types.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>

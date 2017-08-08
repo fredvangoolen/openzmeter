@@ -22,6 +22,9 @@
             <file>file:/home/edu/Proyectos/zMeter/Service/RequestServer.c</file>
         </group>
         <group>
+            <file>file:/home/edu/Proyectos/zMeter/Service/main.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/Main.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/Events.c</file>
             <file>file:/home/edu/Proyectos/zMeter/Service/Adquisition.c</file>
         </group>
     </open-files>
