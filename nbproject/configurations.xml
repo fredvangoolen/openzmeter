@@ -18,16 +18,12 @@
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
-    <itemPath>Adquisition.c</itemPath>
-    <itemPath>Analyzer.c</itemPath>
-    <itemPath>Config.c</itemPath>
-    <itemPath>DB.c</itemPath>
-    <itemPath>Events.c</itemPath>
-    <itemPath>FFT.c</itemPath>
-    <itemPath>Main.h</itemPath>
-    <itemPath>Prices.c</itemPath>
-    <itemPath>RequestServer.c</itemPath>
-    <itemPath>main.c</itemPath>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -61,6 +57,12 @@
       <packaging>
         <packType>Debian</packType>
         <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
                             from="${OUTPUT_PATH}"

@@ -150,7 +150,7 @@ void    Adquisition_SamplesCopy(float *dest, int32_t offset, uint32_t len);
 // Funciones exportadas del modulo de SERVIDOR==========================================================================
 bool RequestServer_Start(char *path);
 void RequestServer_Stop();
-void RequestServer_SetValues(uint64_t timestamp, float *voltage, float *current, float *fftv, float *ffti, uint32_t lensamples, uint32_t lenfft);
+void RequestServer_SetValues(Params_t *params, float *voltage, float *current, float *fftv, float *ffti, uint32_t lensamples, uint32_t lenfft);
 // Funciones exportadas del modulo de BASE DE DATOS ====================================================================
 bool DB_Start(char *connString, uint16_t bufferLen);
 void DB_Save(enum DB_Type type, void *data, bool free);

@@ -24,11 +24,11 @@ typedef struct {
   bool            Terminate;
   pthread_t       Thread;
   pthread_mutex_t Mutex; 
-  float          *Samples_Voltage;
-  float          *Samples_Current;
-  float          *FFT_Voltage;
-  float          *FFT_Current;
-  uint64_t        Timestamp;
+  float           Samples_Voltage[MAX_FRAME];
+  float           Samples_Current[MAX_FRAME];
+  float           FFT_Voltage[MAX_FRAME / 2 + 1];
+  float           FFT_Current[MAX_FRAME / 2 + 1];
+  Params_t        Params;
   uint32_t        SamplesLen;
   uint32_t        FFTLen;
 } RequestServer_t;
@@ -55,16 +55,20 @@ void RequestServer_Handle(int socket) {
   }
   int Len;
   if(strcmp(Command, "OSCILLOSCOPE") == 0) {
-    Len = sprintf(Buffer, "{\"time\":%jd,\"points\":[%f,%f", RequestServer.Timestamp, RequestServer.Samples_Voltage[0], RequestServer.Samples_Current[0]);
+    Len = sprintf(Buffer, "{\n  \"time\" : %jd,\n", RequestServer.Params.Timestamp);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"points\" : [\n");
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "    %f, %f",  RequestServer.Samples_Voltage[0], RequestServer.Samples_Current[0]);
     send(socket, Buffer, Len, MSG_NOSIGNAL);
     for(int i = 1; i < RequestServer.SamplesLen; i++) {
-      Len = sprintf(Buffer, ",%f,%f", RequestServer.Samples_Voltage[i], RequestServer.Samples_Current[i]);
+      Len = sprintf(Buffer, ",\n    %f, %f", RequestServer.Samples_Voltage[i], RequestServer.Samples_Current[i]);
       send(socket, Buffer, Len, MSG_NOSIGNAL);
     }
     pthread_mutex_unlock(&RequestServer.Mutex);
-    send(socket, "]}", 2, MSG_NOSIGNAL);
+    send(socket, "\n  ]\n}\n", 7, MSG_NOSIGNAL);
   } else if(strcmp(Command, "FFT_V") == 0) {
-    Len = sprintf(Buffer, "{\"time\":%jd,\"points\":[%f", RequestServer.Timestamp, RequestServer.FFT_Voltage[0]);
+    Len = sprintf(Buffer, "{\"time\":%jd,\"points\":[%f", RequestServer.Params.Timestamp, RequestServer.FFT_Voltage[0]);
     send(socket, Buffer, Len, MSG_NOSIGNAL);
     for(int i = 1; i < RequestServer.FFTLen; i++) {
       Len = sprintf(Buffer, ",%f", RequestServer.FFT_Voltage[i]);
@@ -73,7 +77,7 @@ void RequestServer_Handle(int socket) {
     pthread_mutex_unlock(&RequestServer.Mutex);
     send(socket, "]}", 2, MSG_NOSIGNAL);
   } else if(strcmp(Command, "FFT_I") == 0) {
-    Len = sprintf(Buffer, "{\"time\":%jd,\"points\":[%f", RequestServer.Timestamp, RequestServer.FFT_Current[0]);
+    Len = sprintf(Buffer, "{\"time\":%jd,\"points\":[%f", RequestServer.Params.Timestamp, RequestServer.FFT_Current[0]);
     send(socket, Buffer, Len, MSG_NOSIGNAL);
     for(int i = 1; i < RequestServer.FFTLen; i++) {
       Len = sprintf(Buffer, ",%f", RequestServer.FFT_Current[i]);
@@ -81,6 +85,56 @@ void RequestServer_Handle(int socket) {
     }
     pthread_mutex_unlock(&RequestServer.Mutex);
     send(socket, "]}", 2, MSG_NOSIGNAL);
+  } else if(strcmp(Command, "VALUES") == 0) {
+    Len = sprintf(Buffer, "{\n  \"timestamp\" : %jd,\n", RequestServer.Params.Timestamp);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"rms_v\" : %f,\n", RequestServer.Params.RMS_V);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"rms_i\" : %f,\n", RequestServer.Params.RMS_I);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"active_power\" : %f,\n", RequestServer.Params.Active_Power);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"apparent_power\" : %f,\n", RequestServer.Params.Apparent_Power);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"reactive_power\" : %f,\n", RequestServer.Params.Reactive_Power);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"power_factor\" : %f,\n", RequestServer.Params.Power_Factor);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"fundamental_active_power\" : %f,\n", RequestServer.Params.Fundamental_Active_Power);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"fundamental_apparent_power\" : %f,\n", RequestServer.Params.Fundamental_Apparent_Power);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"fundamental_reactive_power\" : %f,\n", RequestServer.Params.Fundamental_Reactive_Power);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"fundamental_power_factor\" : %f,\n", RequestServer.Params.Fundamental_Power_Factor);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"energy\" : %f,\n", RequestServer.Params.Energy);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"reactive_energy\" : %f,\n", RequestServer.Params.Reactive_Energy);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"thd_v\" : %f,\n", RequestServer.Params.THD_V);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"thd_i\" : %f,\n", RequestServer.Params.THD_I);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"frequency\" : %f,\n", RequestServer.Params.Frequency);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    Len = sprintf(Buffer, "  \"harmonics_v\" : [\n    %f", RequestServer.Params.VoltageHarmonics[0]);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    for(int i = 1; i < 50; i++) {
+      Len = sprintf(Buffer, ",\n    %f", RequestServer.Params.VoltageHarmonics[i]);
+      send(socket, Buffer, Len, MSG_NOSIGNAL);
+    }
+    Len = sprintf(Buffer, "\n  ],\n  \"harmonics_i\" : [\n    %f", RequestServer.Params.CurrentHarmonics[0]);
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    for(int i = 1; i < 50; i++) {
+      Len = sprintf(Buffer, ",\n    %f", RequestServer.Params.CurrentHarmonics[i]);
+      send(socket, Buffer, Len, MSG_NOSIGNAL);
+    }
+    Len = sprintf(Buffer, "\n  ]\n}\n");
+    send(socket, Buffer, Len, MSG_NOSIGNAL);
+    pthread_mutex_unlock(&RequestServer.Mutex);
+  } else {
+    pthread_mutex_unlock(&RequestServer.Mutex);
   }
 }
 void *RequestServer_Thread(void *arg) {
@@ -141,40 +195,36 @@ bool RequestServer_Start(char *path) {
   }
   RequestServer.SamplesLen = 0;
   RequestServer.FFTLen = 0;
-  RequestServer.Samples_Voltage = NULL;
-  RequestServer.Samples_Current = NULL;
-  RequestServer.FFT_Voltage = NULL;
-  RequestServer.FFT_Current = NULL;
   return true;
 }
 void RequestServer_Stop() {
   RequestServer.Terminate = true;
-  LogMsg("INFO", "Waiting for request server thread ends...");
+  LogMsg("INFO", "Waiting for request server thread ends...\n");
   pthread_join(RequestServer.Thread, NULL);
   close(RequestServer.FD.fd);
 }
-void RequestServer_SetValues(uint64_t timestamp, float *voltage, float *current, float *fftv, float *ffti, uint32_t lensamples, uint32_t lenfft) {
+void RequestServer_SetValues(Params_t *params, float *voltage, float *current, float *fftv, float *ffti, uint32_t lensamples, uint32_t lenfft) {
   pthread_mutex_lock(&RequestServer.Mutex);
-  if(lensamples > RequestServer.SamplesLen) {
-    RequestServer.Samples_Voltage = realloc(RequestServer.Samples_Voltage, lensamples * sizeof(float));
-    RequestServer.Samples_Current = realloc(RequestServer.Samples_Current, lensamples * sizeof(float));
-  }
-  if(lenfft > RequestServer.FFTLen) {
-    RequestServer.FFT_Voltage = realloc(RequestServer.FFT_Voltage, lenfft * sizeof(float));
-    RequestServer.FFT_Current = realloc(RequestServer.FFT_Current, lenfft * sizeof(float));
-  }
+//  if(lensamples > RequestServer.SamplesLen) {
+//    RequestServer.Samples_Voltage = realloc(RequestServer.Samples_Voltage, lensamples * sizeof(float));
+//    RequestServer.Samples_Current = realloc(RequestServer.Samples_Current, lensamples * sizeof(float));
+//  }
+//  if(lenfft > RequestServer.FFTLen) {
+//    RequestServer.FFT_Voltage = realloc(RequestServer.FFT_Voltage, lenfft * sizeof(float));
+//    RequestServer.FFT_Current = realloc(RequestServer.FFT_Current, lenfft * sizeof(float));
+//  }
   RequestServer.SamplesLen = lensamples;
   RequestServer.FFTLen = lenfft;
-  RequestServer.Timestamp = timestamp;
-  memcpy(RequestServer.Samples_Voltage, voltage, lensamples * sizeof(float));
-  memcpy(RequestServer.Samples_Current, current, lensamples * sizeof(float));
-//  for(int i = 0; i < lenfft; i++) {
+  memcpy(&RequestServer.Samples_Voltage, voltage, lensamples * sizeof(float));
+  memcpy(&RequestServer.Samples_Current, current, lensamples * sizeof(float));
+  memcpy(&RequestServer.Params, params, sizeof(Params_t));
+  //  for(int i = 0; i < lenfft; i++) {
 //    RequestServer.FFT_Voltage[i] = (fftv[i] < 0.001) ? 0.001 : fftv[i];
 //    RequestServer.FFT_Current[i] = (ffti[i] < 0.001) ? 0.001 : ffti[i];
 //  }
 //  for(int i = 0; i < lensamples; i++) {
-  memcpy(RequestServer.FFT_Voltage, fftv, lenfft * sizeof(float));
-  memcpy(RequestServer.FFT_Current, ffti, lenfft * sizeof(float));
+  memcpy(&RequestServer.FFT_Voltage, fftv, lenfft * sizeof(float));
+  memcpy(&RequestServer.FFT_Current, ffti, lenfft * sizeof(float));
   pthread_mutex_unlock(&RequestServer.Mutex);
 }
 //======================================================================================================================
