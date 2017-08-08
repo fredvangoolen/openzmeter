@@ -6,17 +6,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
+#include <errno.h>
+#include <stdarg.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include "globalVars.h"
 #include "Main.h"
 
 bool CloseRequest = false;
 void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) CloseRequest = true;
 }
-#include <stdarg.h>
-/* Muestra por pantalla (o guarda a archivo) los mensajes de informacion que se generen */
 void LogMsg(const char *level, const char *msg, ...) {
   va_list args;
   va_start(args, msg);
@@ -43,27 +47,24 @@ void LogMsg(const char *level, const char *msg, ...) {
   funlockfile(stdout);
   va_end(args);
 }
-int createPidFile(long pid) {
-    FILE* pid_file;
-    char pid_string[10];
-    sprintf(pid_string, "%ld", pid);
-    remove("zenergy.pid");
-    pid_file = fopen("zenergy.pid", "wt");
-    if (!pid_file) {
-        return -1;
-    }
-    fwrite(pid_string, sizeof (char), strlen(pid_string) + 1, pid_file);
-    fclose(pid_file);
-    return 1;
+bool CreatePidFile(long pid) {
+  char PID_Number[64];
+  int Len = sprintf(PID_Number, "%d", getpid());
+  remove("/var/run/openZmeter.pid");
+  int File = open("/var/run/openZmeter.pid", O_CREAT | O_WRONLY);
+  if(File < 0) {
+    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    return false;
+  }
+  write(File, PID_Number, Len);
+  close(File);
+  return true;
 }
-
-int removePidFile() {
-    return remove("zenergy.pid");
+int RemovePidFile() {
+ return remove("/var/run/openZmeter.pid");
 }
-
-
 int main(int argc, char** argv) {
-  char *ConfigFile = "openzmeter.ini";
+  char *ConfigFile = "openZmeter.ini";
   printf("=================================================================================\n");
   printf("               ** openZmeter - Analizador de calidad electrica **                \n");
   printf("=================================================================================\n");
@@ -85,7 +86,7 @@ int main(int argc, char** argv) {
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
   setpriority(PRIO_PROCESS, 0, -20);
-//  Config_Init(ConfigFile);
+  Config_Init(ConfigFile);
 
 
   char connectionString[100];

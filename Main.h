@@ -4,22 +4,22 @@
 #include <pthread.h>
 #include <fftw3.h>
 
-#define MAX_FRAME                    11800         //Longitud maxima de muestras de un frame (236ms)
+#define MAX_FRAME                     3688         //Longitud maxima de muestras de un frame (236ms)
 //Definiciones relaccionadas con la adquisicion de datos desde el puerto USB ===========================================
 #define ADQUISITION_USB_VID         0x0483         //Product ID
 #define ADQUISITION_PID             0x7270         //Device ID
 #define ADQUISITION_ENDPOINT_IN       0x81         //Endpoint de lectura de datos
-#define ADQUISITION_VOLT_OFFSET     608.00         //Real_Value = (Read_Value - Offset) * Gain
+#define ADQUISITION_VOLT_OFFSET     348.00         //Real_Value = (Read_Value - Offset) * Gain
 #define ADQUISITION_VOLT_GAIN      0.01160        
 #define ADQUISITION_CURR_OFFSET   32768.00         //Real_Value = (Read_Value - Offset) * Gain
 #define ADQUISITION_CURR_GAIN  -0.00078125
-#define ADQUISITION_SAMPLEFREQ    50000.00         //Frequencia de muestreo
+#define ADQUISITION_SAMPLEFREQ    15625.00         //Frequencia de muestreo
 #define ADQUISITION_DEVICE  "/dev/ttyACM0"         //Puerto desde el que se hace la lectura
 #define ADQUISITION_BUFFERSIZE     1048576         //Tamaño del buffer circular para captura (en grupos de muestras)
 #define ADQUISITION_SAFESAMPLES  MAX_FRAME         //Numero de muestras "seguras" antes y despues del punto de lectura 
 //Definiciones relaccionadas con almacenamiento de datos a la BD =======================================================
 #define DB_QUEUESIZE                  1024         //Longitud de la cola de transacciones
-#define DB_CONNECTIONSTRING "user=openzmeter password=swordfish dbname=openzmeter"
+#define DB_CONNECTIONSTRING "user=zmeter password=swordfish dbname=zmeter"
 //Definiciones del servidor de peticiones ==============================================================================
 #define REQUESTSERVER_PATH  "/var/run/openZmeter.sock"
 #define REQUESTSERVER_BUFSIZE          128
@@ -163,5 +163,7 @@ FFT_t *FFT_Start(float *data, uint32_t len);
 void   FFT_Wait(FFT_t *fft);
 // Funciones exportadas del modulo de analisis =========================================================================
 Params_t *Analyzer_GetParams(Work_t *work);
+// Funciones exportadas del modulo de configuracion ====================================================================
+bool Config_Init(char *filename);
 // Funciones exportadas del modulo de precios ==========================================================================
 bool Prices_Start(uint32_t startTimestamp);

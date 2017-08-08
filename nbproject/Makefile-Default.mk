@@ -47,7 +47,7 @@ OBJECTFILES= \
 
 
 # C Compiler Flags
-CFLAGS=-flto -Os
+CFLAGS=
 
 # CC Compiler Flags
 CCFLAGS=

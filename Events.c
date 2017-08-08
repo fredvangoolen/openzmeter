@@ -8,7 +8,7 @@
 #include <string.h>
 #include <sys/param.h>
 #include "Main.h"
-#include "globalVars.h"
+//#include "globalVars.h"
 // Tipos de datos ======================================================================================================
 typedef struct {
   float     PrevRMS[100];

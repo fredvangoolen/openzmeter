@@ -1,8 +1,8 @@
 //#include <unistd.h>
 #include <stdlib.h>
 #include "types.h"
-#include "constants.h"
-#include "globalVars.h"
+//#include "constants.h"
+//#include "globalVars.h"
 //#include "calculation_module.h"
 //#include "utils.h"
 //#include "debug.h"
@@ -21,13 +21,13 @@ float CalcPhi(Complex_t voltage, Complex_t current) {
   else if(voltage.Real < 0)
     Tmp = atan(voltage.Imag / voltage.Real);
   else
-    Tmp = atan(voltage.Imag / voltage.Real) + PI;
+    Tmp = atan(voltage.Imag / voltage.Real) + M_PI;
   if((current.Real == 0) && (current.Imag == 0)) 
     return Tmp;
   else if(current.Real < 0)
     return Tmp - atan(current.Imag / current.Real);
   else
-    return Tmp - atan(current.Imag / current.Real) + PI;
+    return Tmp - atan(current.Imag / current.Real) + M_PI;
 }
 
 uint32_t LastCycles[PROCESSING_FREQCYCLES];
@@ -59,23 +59,74 @@ Params_t *Analyzer_GetParams(Work_t *work) {
     I += pow(work->CurrentSamples[i], 2.0);
     P += work->VoltageSamples[i] * work->CurrentSamples[i];
   }
-  Params->Flag = Events_Detect(work);
-  FFT_Wait(FFT_Voltage);
-  FFT_Wait(FFT_Current);
   Params->RMS_V = sqrt(V / work->Samples);
-  if(sqrt(I / work->Samples) > PROCESSING_CURRENTOFFSET) {
-    Params->RMS_I = sqrt(I / work->Samples);
-    Params->Active_Power = P / work->Samples;
-    Params->Apparent_Power = Params->RMS_V * Params->RMS_I;
-    Params->Reactive_Power = sqrt(pow(Params->Apparent_Power, 2) - pow(Params->Active_Power, 2));
+  Params->RMS_I = sqrt(I / work->Samples);
+  Params->Flag = Events_Detect(work);
+  Params->Frequency = Analyzer_Frequency(work);
+  FFT_Wait(FFT_Voltage);
+  //float THD_V = 0.0;
+  for(int i = 0; i < 50; i++) {
+    Params->VoltageHarmonics[i] = sqrt(pow(FFT_Voltage->Result[10 + i * 10].Real, 2.0) + pow(FFT_Voltage->Result[10 + i * 10].Imag, 2.0)) / M_SQRT2 * 2.0;
+    if(i > 0) Params->THD_V += pow(Params->VoltageHarmonics[i], 2.0);
+  }
+  Params->THD_V = sqrt(Params->THD_V) / Params->VoltageHarmonics[0];
+  
+  FFT_Wait(FFT_Current);
+  if(Params->RMS_I > PROCESSING_CURRENTOFFSET) {
+    for(int i = 0; i < FFT_Voltage->Len; i++) {
+      float CurrentHarmonic = sqrt(pow(FFT_Current->Result[i].Real, 2.0) + pow(FFT_Current->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
+      float VoltageHarmonic = sqrt(pow(FFT_Voltage->Result[i].Real, 2.0) + pow(FFT_Voltage->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;  
+      float PHI = CalcPhi(FFT_Voltage->Result[i], FFT_Current->Result[i]);
+      Params->Active_Power   += VoltageHarmonic * CurrentHarmonic * cos(PHI);
+      Params->Apparent_Power += VoltageHarmonic * CurrentHarmonic;
+      Params->Reactive_Power += VoltageHarmonic * CurrentHarmonic * sin(PHI);
+      if(((i % 10) != 0) || (i >= 500) || (i < 10)) continue;
+      int Harmonic = (i / 10) - 1;
+      Params->CurrentHarmonics[Harmonic] = CurrentHarmonic;
+      if(Harmonic == 0) {
+        Params->Fundamental_Active_Power   = VoltageHarmonic * CurrentHarmonic * cos(PHI);
+        Params->Fundamental_Reactive_Power = VoltageHarmonic * CurrentHarmonic * sin(PHI);
+        Params->Fundamental_Apparent_Power = VoltageHarmonic * CurrentHarmonic;
+        Params->Fundamental_Power_Factor   = Params->Fundamental_Active_Power / Params->Fundamental_Apparent_Power;
+      }
+      if(Harmonic > 0) Params->THD_I += pow(CurrentHarmonic, 2.0);
+    }
+    Params->THD_I = sqrt(Params->THD_I) / Params->CurrentHarmonics[0];
+
+    //    for(int i = 0; i < 50; i++) {
+//      Params->CurrentHarmonics[i] = sqrt(pow(FFT_Current->Result[10 + i * 10].Real, 2.0) + pow(FFT_Current->Result[10 + i * 10].Imag, 2.0)) / M_SQRT2 * 2.0;
+//      float PHI = CalcPhi(FFT_Voltage->Result[10 + i * 10], FFT_Current->Result[10 + i * 10]);
+//      if(i > 0) {
+//      } else {
+//        Params->Fundamental_Active_Power   = Params->VoltageHarmonics[i] * Params->CurrentHarmonics[i] * cos(PHI);
+//        Params->Fundamental_Reactive_Power = Params->VoltageHarmonics[i] * Params->CurrentHarmonics[i] * sin(PHI);
+//        Params->Fundamental_Apparent_Power = Params->VoltageHarmonics[i] * Params->CurrentHarmonics[i];
+//        Params->Fundamental_Power_Factor   = Params->Fundamental_Active_Power / Params->Fundamental_Apparent_Power;
+//      }
+//              Active_Power += Params->VoltageHarmonics[i] * Params->CurrentHarmonics[i] * cos(PHI);
+//        Apparent_Power += Params->VoltageHarmonics[i] * Params->CurrentHarmonics[i];
+//        Reactive_Power += Params->VoltageHarmonics[i] * Params->CurrentHarmonics[i] * sin(PHI);
+//    }
+
+//    Params->Active_Power = P / work->Samples;
+//    Params->Apparent_Power = Params->RMS_V * Params->RMS_I;
+//    Params->Reactive_Power = sqrt(pow(Params->Apparent_Power, 2) - pow(Params->Active_Power, 2));
+
+//    printf("ActivePower: %f (%f)\n", Params->Active_Power, 0);
+//    printf("ReactivePower: %f (%f)\n", Params->Reactive_Power, 0);
+//    printf("ApparentPower: %f (%f)\n", Params->Apparent_Power, 0);
+    
     Params->Energy = (Params->Active_Power * work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
     Params->Power_Factor = Params->Active_Power / Params->Apparent_Power;
     Params->Reactive_Energy = sqrt(pow(Params->Apparent_Power, 2) - pow(Params->Active_Power, 2) - pow(Params->Reactive_Power, 2));
   } else {
+    Params->RMS_I = 0.0;
     memset(work->CurrentSamples, 0, work->Samples * sizeof(float));
     memset(FFT_Current->Result, 0, FFT_Current->Len * sizeof(Complex_t));
   }
-  //if(((work->SequenceID) % 15 == 0) && (work->Cycles_Len == 20)) {
+    
+
+      if(((work->SequenceID) % 15 == 0) && (work->Cycles_Len == 20)) {
     float FFT_V[600];
     float FFT_I[600];
     for(int i = 0; i < 600; i++) {
@@ -83,50 +134,7 @@ Params_t *Analyzer_GetParams(Work_t *work) {
       FFT_I[i] = sqrt(pow(FFT_Current->Result[i].Real, 2.0) + pow(FFT_Current->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
     }
     RequestServer_SetValues(work->Timestamp, work->VoltageSamples, work->CurrentSamples, FFT_V, FFT_I, work->Samples, 600);
- // }
-//  if(Params->Flag == false) {
-    float THD_V = 0.0;
-    float THD_I = 0.0;
-    Params->Frequency = Analyzer_Frequency(work);
-    for(int i = 0; i < 50; i++) {
-      Params->VoltageHarmonics[i] = sqrt(pow(FFT_Voltage->Result[10 + i * 10].Real, 2.0) + pow(FFT_Voltage->Result[10 + i * 10].Imag, 2.0)) / M_SQRT2 * 2.0;
-      Params->CurrentHarmonics[i] = sqrt(pow(FFT_Current->Result[10 + i * 10].Real, 2.0) + pow(FFT_Current->Result[10 + i * 10].Imag, 2.0)) / M_SQRT2 * 2.0;
-      float PHI = CalcPhi(FFT_Voltage->Result[10 + i * 10], FFT_Current->Result[10 + i * 10]);
-      if(i > 0) {
-        THD_V += Params->VoltageHarmonics[i];
-        THD_I += Params->CurrentHarmonics[i];
-      } else {
-        Params->Fundamental_Active_Power   = Params->VoltageHarmonics[i] * Params->CurrentHarmonics[i] * cos(PHI);
-        Params->Fundamental_Reactive_Power = Params->VoltageHarmonics[i] * Params->CurrentHarmonics[i] * sin(PHI);
-        Params->Fundamental_Apparent_Power = Params->VoltageHarmonics[i] * Params->CurrentHarmonics[i];
-        Params->Fundamental_Power_Factor   = Params->Fundamental_Active_Power / Params->Fundamental_Apparent_Power;
-        
-        
-      }
-    }
-//    float sum = 0;
-//    for(int i = 0; i < FFT_Current->Len; i++) sum += sqrt(pow(FFT_Current->Result[i].Imag, 2.0) + pow(FFT_Current->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0; 
-//    printf("%f\n", sum);
-    //    printf("Reactive power Calc: %f, la mia %f\n", Params->Reactive_Power, sqrt(pow(Params->Apparent_Power, 2) - pow(Params->Active_Power, 2)));
-    Params->THD_V = THD_V / Params->VoltageHarmonics[0];
-    Params->THD_I = THD_I / Params->CurrentHarmonics[0];
-//  } else {
-//    for(int i = 0; i < 50; i++) {
-//      Params->CurrentHarmonics[i] = NAN;
-//      Params->VoltageHarmonics[i] = NAN;
-//    }
-//    Params->Reactive_Power = NAN;
-//    Params->Power_Factor = NAN;
-//    Params->Reactive_Energy = NAN;
-//    Params->Frequency = NAN;
-//    Params->Fundamental_Active_Power = NAN;
-//    Params->Fundamental_Active_Power = NAN;
-//    Params->Fundamental_Apparent_Power = NAN;
-//    Params->Fundamental_Reactive_Power = NAN;
-//    Params->Fundamental_Power_Factor = NAN;
-//    Params->THD_V = NAN;
-//    Params->THD_I = NAN;    
-//  }
+  }
 Exit:
   free(FFT_Voltage);
   free(FFT_Current);

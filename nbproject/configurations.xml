@@ -4,10 +4,6 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>Main.h</itemPath>
-      <itemPath>constants.h</itemPath>
-      <itemPath>debug.h</itemPath>
-      <itemPath>globalVars.h</itemPath>
       <itemPath>ini.h</itemPath>
       <itemPath>types.h</itemPath>
     </logicalFolder>
@@ -16,25 +12,22 @@
                    projectFiles="true">
       <itemPath>../openZmeter-web/openzmeter.ini</itemPath>
     </logicalFolder>
-    <logicalFolder name="SourceFiles"
-                   displayName="Source Files"
-                   projectFiles="true">
-      <itemPath>Adquisition.c</itemPath>
-      <itemPath>Analyzer.c</itemPath>
-      <itemPath>Config.c</itemPath>
-      <itemPath>DB.c</itemPath>
-      <itemPath>Events.c</itemPath>
-      <itemPath>FFT.c</itemPath>
-      <itemPath>Prices.c</itemPath>
-      <itemPath>RequestServer.c</itemPath>
-      <itemPath>main.c</itemPath>
-    </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
                    projectFiles="false"
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
+    <itemPath>Adquisition.c</itemPath>
+    <itemPath>Analyzer.c</itemPath>
+    <itemPath>Config.c</itemPath>
+    <itemPath>DB.c</itemPath>
+    <itemPath>Events.c</itemPath>
+    <itemPath>FFT.c</itemPath>
+    <itemPath>Main.h</itemPath>
+    <itemPath>Prices.c</itemPath>
+    <itemPath>RequestServer.c</itemPath>
+    <itemPath>main.c</itemPath>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -52,7 +45,6 @@
             <pElem>/usr/local/pgsql/include/</pElem>
             <pElem>/usr/include/libxml2</pElem>
           </incDir>
-          <commandLine>-flto -Os</commandLine>
           <preprocessorList>
             <Elem>_DEFAULT_SOURCE</Elem>
             <Elem>_GNU_SOURCE</Elem>
@@ -69,6 +61,18 @@
       <packaging>
         <packType>Debian</packType>
         <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
                             from="${OUTPUT_PATH}"
@@ -127,12 +131,6 @@
       <item path="Prices.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="RequestServer.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="constants.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="debug.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="globalVars.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="ini.h" ex="false" tool="3" flavor2="0">
       </item>

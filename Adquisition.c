@@ -22,7 +22,7 @@
 // Tipos privados ======================================================================================================
 typedef struct {
   int16_t Voltage;                     //Valor de tension
-  int16_t Current;                     // Valor de corriente
+  uint16_t Current;                     // Valor de corriente
 } Sample_t;
 typedef struct {
   float A0;
@@ -34,99 +34,63 @@ typedef struct {
   float Z2;
 } AdquisitionFilter_t;
 typedef struct {
-  Sample_t             *Buffer;           //Donde almaceno muestras leidas (RingBuffer)
-  uint32_t              ReadPos;          //Posicion de lectura del buffer
-  uint32_t             WritePos;         //Posicion de escritura del buffer
-  uint32_t             Size;             //Tamaño total del buffer
-  uint32_t             Used;             //Muestras en uso del buffer
+  Sample_t                    *Buffer;           //Donde almaceno muestras leidas (RingBuffer)
+  uint32_t                     ReadPos;          //Posicion de lectura del buffer
+  uint32_t                     WritePos;         //Posicion de escritura del buffer
+  uint32_t                     Size;             //Tamaño total del buffer
+  uint32_t                     Used;             //Muestras en uso del buffer
   pthread_mutex_t              Mutex;            //Mutex para bloquear acceso al buffer
   pthread_t                    Thread;           //Descriptor del hilo de captura
-//  struct pollfd       FD;               //Descriptor del puerto de captura
   bool                         Terminate;        //Señal para detener el hilo de captura
   AdquisitionFilter_t          Filters[5];       //Filtros paso banda para deteccion de paso por cero
   uint64_t                     SequenceID;           //Numero de secuencia de bloques generados
   struct libusb_device_handle *DeviceHandle; //Dispositivo de captura
 } Adquisition_t;
-
 // Variables privadas ==================================================================================================
 Adquisition_t Adquisition;
 
 // Funciones ===========================================================================================================
-void Adquisition_Callback() {
-
-}
-
-void *Adquisition_Thread(void *args) {
-//  struct sched_param Prio;
-//  Prio.sched_priority = sched_get_priority_max(SCHED_OTHER);
-//  if(pthread_setschedparam(0, SCHED_OTHER, &Prio) == -1) {
-//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    return NULL;
-//  }
-  pthread_setname_np(Adquisition.Thread, "Adquisition");
-  uint8_t   Buffer8[8192];
-  //  struct libusb_transfer *IN_Transfer = libusb_alloc_transfer(0);
-
-  
-//  libusb_fill_bulk_transfer(Adquisition.IN_Transfer, Adquisition.DeviceHandle, USB_ENDPOINT_IN, Buffer8,  sizeof(Buffer8),
-//            cb_in, NULL, 0); // no user data
-
-
-//  
-  uint16_t *Buffer16 = (uint16_t*)Buffer8;
-//  if(tcflush(Adquisition.FD.fd, TCIOFLUSH) != 0) {
-//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    close(Adquisition.FD.fd);
-//    free(Adquisition.Buffer);
-//    return NULL;
-//  }
-//  int iFlags = TIOCM_DTR;
-//  if(ioctl(Adquisition.FD.fd, TIOCMBIS, &iFlags) != 0) {
-//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    close(Adquisition.FD.fd);
-//    free(Adquisition.Buffer);
-//    return NULL;
-//  }
-  int Remain = 0;
-  while(!Adquisition.Terminate) {
-    int Count;  
-    int Error = libusb_bulk_transfer(Adquisition.DeviceHandle, ADQUISITION_ENDPOINT_IN, Buffer8, sizeof(Buffer8), &Count, 250);
-    if(Error) {
-      LogMsg("ERROR", "%s:%d -> libusb_bulk_transfer (%d)\n", __func__, __LINE__, Error);
-    }
-
-    
-    //    Adquisition.FD.revents = 0;
-//    int Result = poll(&Adquisition.FD, 1, 250);
-//    if((Result == -1) && (errno != EAGAIN)) LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    if(Result <= 0) continue;
-//    int Count = read(Adquisition.FD.fd, &Buffer8[Remain], sizeof(Buffer8) - Remain);
-//    if(Count == -1) {
-//      if(errno != EAGAIN) LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//      continue;
-//    }
-    Count += Remain;
-    Remain = Count % 4;
-    Count = Count / 4;
-    do {
-      pthread_mutex_lock(&Adquisition.Mutex);
-      if(Adquisition.Used < (Adquisition.Size - Count - ADQUISITION_SAFESAMPLES)) {
-        pthread_mutex_unlock(&Adquisition.Mutex);
-        break;
-      } else {
-        pthread_mutex_unlock(&Adquisition.Mutex);
-        LogMsg("ERROR", "Capture buffer overflow!\n");
-        usleep(10000);
-      }
-    } while(1);
-    for(int i = 0; i < Count; i++) {
-      Adquisition.Buffer[Adquisition.WritePos].Voltage = Buffer16[i * 2 + 0];
-      Adquisition.Buffer[Adquisition.WritePos].Current = Buffer16[i * 2 + 1];
-      Adquisition.WritePos = (Adquisition.WritePos + 1) % Adquisition.Size;
-    }
+void Adquisition_Callback(struct libusb_transfer *transfer) {
+  int16_t *Buffer = (int16_t*)transfer->buffer;
+  int      Len = transfer->actual_length / 4;
+  do {
     pthread_mutex_lock(&Adquisition.Mutex);
-    Adquisition.Used += Count;
-    pthread_mutex_unlock(&Adquisition.Mutex);
+    if(Adquisition.Used < (Adquisition.Size - Len - ADQUISITION_SAFESAMPLES)) {
+      pthread_mutex_unlock(&Adquisition.Mutex);
+      break;
+    } else {
+      pthread_mutex_unlock(&Adquisition.Mutex);
+      LogMsg("ERROR", "Capture buffer overflow!\n");
+      usleep(10000);
+    }
+  } while(1);
+  for(int i = 0; i < Len; i++) {
+    Adquisition.Buffer[Adquisition.WritePos].Voltage = Buffer[i * 2 + 0];
+    Adquisition.Buffer[Adquisition.WritePos].Current = Buffer[i * 2 + 1];
+    Adquisition.WritePos = (Adquisition.WritePos + 1) % Adquisition.Size;
+  }
+  pthread_mutex_lock(&Adquisition.Mutex);
+  Adquisition.Used += Len;
+  pthread_mutex_unlock(&Adquisition.Mutex);
+  if(Adquisition.Terminate == false) libusb_submit_transfer(transfer);
+}
+void *Adquisition_Thread(void *args) {
+  struct sched_param Prio;
+  Prio.sched_priority = sched_get_priority_max(SCHED_OTHER);
+  if(pthread_setschedparam(0, SCHED_OTHER, &Prio) == -1) {
+    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    return NULL;
+  }
+  pthread_setname_np(Adquisition.Thread, "Adquisition");
+  uint8_t Buffer_A[8192], Buffer_B[8192];
+  struct libusb_transfer *Transfer_A = libusb_alloc_transfer(0);
+  struct libusb_transfer *Transfer_B = libusb_alloc_transfer(0);
+  libusb_fill_bulk_transfer(Transfer_A, Adquisition.DeviceHandle, ADQUISITION_ENDPOINT_IN, Buffer_A,  sizeof(Buffer_A), Adquisition_Callback, NULL, 500);
+  libusb_fill_bulk_transfer(Transfer_B, Adquisition.DeviceHandle, ADQUISITION_ENDPOINT_IN, Buffer_B,  sizeof(Buffer_B), Adquisition_Callback, NULL, 500);
+  libusb_submit_transfer(Transfer_A);
+  libusb_submit_transfer(Transfer_B);
+  while(!Adquisition.Terminate) {
+    libusb_handle_events_completed(NULL, NULL);
   }
   return NULL;
 }
@@ -152,38 +116,13 @@ bool Adquisition_Start(char *device, uint32_t bufferLen, float baseFreq) {
     libusb_exit(NULL);
  		return false;
 	}
-
-
-
-//  Adquisition.FD.events = POLLIN;
   if(pthread_mutex_init(&Adquisition.Mutex, NULL) != 0) {                                  
     LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return false;                                                                  
   } 
-//  Adquisition.FD.fd = open(device, O_RDWR | O_NONBLOCK | O_CLOEXEC);
-//  if(Adquisition.FD.fd == -1) {
-//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    return false;
-//  }
-//  int iFlags = TIOCM_DTR;
-//  if(ioctl(Adquisition.FD.fd, TIOCMBIC, &iFlags) != 0) {
-//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    close(Adquisition.FD.fd);
-//    return false;
-//  }
-//  struct termios IOConf;
-//  cfmakeraw(&IOConf);
-//  IOConf.c_cc[VMIN] = 64; 
-//  IOConf.c_cc[VTIME] = 0;
-//  if(tcsetattr(Adquisition.FD.fd, TCSANOW, &IOConf) != 0) {
-//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    close(Adquisition.FD.fd);
-//    return false;
-//  }
   Adquisition.Buffer = malloc(bufferLen * sizeof(Sample_t));
   if(Adquisition.Buffer == NULL) {
     LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    close(Adquisition.FD.fd);
     return false; 
   }
   Adquisition.ReadPos = 0;
@@ -206,7 +145,6 @@ bool Adquisition_Start(char *device, uint32_t bufferLen, float baseFreq) {
   if(pthread_create(&Adquisition.Thread, NULL, Adquisition_Thread, NULL) != 0) {
     LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     free(Adquisition.Buffer);
-//    close(Adquisition.FD.fd);
     return false;
   }
   return true;
