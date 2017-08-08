@@ -41,9 +41,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/DB.o \
 	${OBJECTDIR}/Events.o \
 	${OBJECTDIR}/FFT.o \
+	${OBJECTDIR}/Main.o \
 	${OBJECTDIR}/Prices.o \
-	${OBJECTDIR}/RequestServer.o \
-	${OBJECTDIR}/main.o
+	${OBJECTDIR}/RequestServer.o
 
 
 # C Compiler Flags
@@ -100,6 +100,11 @@ ${OBJECTDIR}/FFT.o: FFT.c
 	${RM} "$@.d"
 	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FFT.o FFT.c
 
+${OBJECTDIR}/Main.o: Main.c
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.c
+
 ${OBJECTDIR}/Prices.o: Prices.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -109,11 +114,6 @@ ${OBJECTDIR}/RequestServer.o: RequestServer.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/RequestServer.o RequestServer.c
-
-${OBJECTDIR}/main.o: main.c
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.c
 
 # Subprojects
 .build-subprojects:
