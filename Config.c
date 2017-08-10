@@ -126,7 +126,10 @@ bool Config_Handler(char *section, char *param, char *value) {
   return true;
 }
 bool Config_Init(char *filename) {
-  //Inicio valores por defecto
+  Config.Global.Listen = "/var/run/openZmeter.sock";
+  Config.Global.Log    = "/var/log/openZmeter.log";
+  Config.Global.Pid    = "/var/run/openZmeter.pid";
+
   if(filename == NULL) return true;
   LogMsg("INFO", "Loading config file...\n");
   FILE *File = fopen(filename, "r");

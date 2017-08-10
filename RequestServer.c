@@ -108,7 +108,7 @@ void RequestServer_Handle(int socket) {
     send(socket, Buffer, Len, MSG_NOSIGNAL);
     Len = sprintf(Buffer, "  \"fundamental_power_factor\" : %f,\n", RequestServer.Params.Fundamental_Power_Factor);
     send(socket, Buffer, Len, MSG_NOSIGNAL);
-    Len = sprintf(Buffer, "  \"energy\" : %f,\n", RequestServer.Params.Energy);
+    Len = sprintf(Buffer, "  \"energy\" : %f,\n", RequestServer.Params.Active_Energy);
     send(socket, Buffer, Len, MSG_NOSIGNAL);
     Len = sprintf(Buffer, "  \"reactive_energy\" : %f,\n", RequestServer.Params.Reactive_Energy);
     send(socket, Buffer, Len, MSG_NOSIGNAL);

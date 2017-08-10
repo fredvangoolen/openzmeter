@@ -120,7 +120,7 @@ Params_t *Analyzer_GetParams(Work_t *work) {
 //    printf("ReactivePower: %f (%f)\n", Params->Reactive_Power, 0);
 //    printf("ApparentPower: %f (%f)\n", Params->Apparent_Power, 0);
     
-    Params->Energy = (Params->Active_Power * work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
+    Params->Active_Energy = (Params->Active_Power * work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
     Params->Power_Factor = Params->Active_Power / Params->Apparent_Power;
     Params->Reactive_Energy = (Params->Reactive_Power * work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
   } else {

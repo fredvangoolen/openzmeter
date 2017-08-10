@@ -64,7 +64,7 @@ int RemovePidFile() {
  return remove("/var/run/openZmeter.pid");
 }
 int main(int argc, char** argv) {
-  char *ConfigFile = CONFIG_PATH;
+  char *ConfigFile = "/etc/openZmeter.conf";
   bool  Daemonize  = false;
   printf("=================================================================================\n");
   printf("           ** openZmeter - Electric quality analysis and metering **             \n");
@@ -93,20 +93,10 @@ int main(int argc, char** argv) {
 
   char ConnectionString[512];
   sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", Config.DB.Host, Config.DB.Port, Config.DB.User, Config.DB.Password, Config.DB.Database);
-  if(!DB_Start(ConnectionString, Config.DB.QueueLen)) goto Stop;
-
-  
-  //  if(err > 0) {
-//    DB = influxdb_client_new(connectionString, CONFIG.database.user, CONFIG.database.pass, CONFIG.database.database, 0);
-//  } else {
-    //ERROR with format of database connection parameters.
-//  }
-//  CONFIG.electrical.sample_rate *= 1000; //Convert kHz to Hz
-
+  uint32_t LastPrice = DB_Start(ConnectionString, Config.DB.QueueLen);
+  if(LastPrice == 0) goto Stop;
   Events_Init();
-  RequestServer_Start(LISTEN_PATH);
-  //uint32_t LasPriceUpdate = DB_Start(DB_CONNECTIONSTRING, DB_QUEUESIZE);
-
+  if(RequestServer_Start(Config.Global.Listen) == false) goto Stop;
 //  Prices_Start(LasPriceUpdate);
   Adquisition_Start(ADQUISITION_DEVICE, ADQUISITION_BUFFERSIZE, 50.0);
 
@@ -123,7 +113,7 @@ int main(int argc, char** argv) {
     
     Params_t *Params = Analyzer_GetParams(Work);
     if((Params->SequenceID) % 5 == 0) Adquisition_SetLEDs(Params->RMS_V, Params->RMS_I);
-    if(Params) DB_Save(PARAMS, Params, true);
+    if(Params) DB_Save(PARAMS_10C, Params, true);
 
     clock_gettime(CLOCK_MONOTONIC, &Time);
     End = Time.tv_sec * 1000000 + Time.tv_nsec / 1000;

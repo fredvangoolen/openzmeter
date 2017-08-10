@@ -4,11 +4,6 @@
 #include <pthread.h>
 #include <fftw3.h>
 
-// Config default file PATH ============================================================================================
-#define LISTEN_PATH  "/var/run/openZmeter.sock"
-#define CONFIG_PATH  "/etc/openZmeter.conf"
-#define LOG_PATH     "/var/log/openZmeter.log"
-
 #define MAX_FRAME                     3688         //Longitud maxima de muestras de un frame (236ms)
 //Definiciones relaccionadas con la adquisicion de datos desde el puerto USB ===========================================
 #define ADQUISITION_USB_VID         0x0483         //Product ID
@@ -48,10 +43,15 @@
 #define MAX_CURRENT                  12.00        //Corriente maxima
 // Enumeraciones =======================================================================================================
 enum Event_Type { SWELL, DIP, INTERRUPTION, RVC };
-enum DB_Type    { PARAMS, EVENT, PRICES };
+enum DB_Type    { PARAMS_10C, PARAMS_3S, PARAMS_1M, EVENT, PRICES };
 // Estructuras de datos comunes entre los modulos ======================================================================
 typedef struct {
   bool Debug;
+  struct {
+    char *Listen;
+    char *Log;
+    char *Pid;
+  } Global;
   struct {
     const char *Database;
     const char *Host;
@@ -125,7 +125,7 @@ typedef struct {
   float      Fundamental_Apparent_Power;//Potencia aparente fundamental (S_1)
   float      Fundamental_Reactive_Power;//Potencia reactiva fundamental (Q_1)
   float      Fundamental_Power_Factor;  //Fundamental power factor
-  float      Energy;                    //Energia consumida
+  float      Active_Energy;                    //Energia consumida
   float      Reactive_Energy;           //Energia reactiva
   float      THD_V;                     //Distorsion harmonica de la tension
   float      THD_I;                     //Distorsion harmonica de la corriente
@@ -158,8 +158,8 @@ bool RequestServer_Start(char *path);
 void RequestServer_Stop();
 void RequestServer_SetValues(Params_t *params, float *voltage, float *current, float *fftv, float *ffti, uint32_t lensamples, uint32_t lenfft);
 // Funciones exportadas del modulo de BASE DE DATOS ====================================================================
-bool DB_Start(char *connString, uint16_t bufferLen);
-void DB_Save(enum DB_Type type, void *data, bool free);
+uint32_t DB_Start(char *connString, uint16_t bufferLen);
+void     DB_Save(enum DB_Type type, void *data, bool free);
 // Funciones exportadas del modulo de eventos ==========================================================================
 void  Events_Init();
 char *EventType_ToString(enum Event_Type type);
