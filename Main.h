@@ -4,6 +4,11 @@
 #include <pthread.h>
 #include <fftw3.h>
 
+// Config default file PATH ============================================================================================
+#define LISTEN_PATH  "/var/run/openZmeter.sock"
+#define CONFIG_PATH  "/etc/openZmeter.conf"
+#define LOG_PATH     "/var/log/openZmeter.log"
+
 #define MAX_FRAME                     3688         //Longitud maxima de muestras de un frame (236ms)
 //Definiciones relaccionadas con la adquisicion de datos desde el puerto USB ===========================================
 #define ADQUISITION_USB_VID         0x0483         //Product ID
@@ -18,10 +23,10 @@
 #define ADQUISITION_BUFFERSIZE     1048576         //Tamaño del buffer circular para captura (en grupos de muestras)
 #define ADQUISITION_SAFESAMPLES  MAX_FRAME         //Numero de muestras "seguras" antes y despues del punto de lectura 
 //Definiciones relaccionadas con almacenamiento de datos a la BD =======================================================
-#define DB_QUEUESIZE                  1024         //Longitud de la cola de transacciones
-#define DB_CONNECTIONSTRING "user=zmeter password=swordfish dbname=zmeter"
+//#define DB_QUEUESIZE                  1024         //Longitud de la cola de transacciones
+//#define DB_CONNECTIONSTRING "user=zmeter password=swordfish dbname=zmeter"
 //Definiciones del servidor de peticiones ==============================================================================
-#define REQUESTSERVER_PATH  "/var/run/openZmeter.sock"
+
 #define REQUESTSERVER_BUFSIZE          128
 #define REQUESTSERVER_PERM            0666
 #define REQUESTSERVER_CLIENTS           50
@@ -53,6 +58,7 @@ typedef struct {
     int         Port;
     const char *User;
     const char *Password;
+    int         QueueLen;
   } DB;
   struct {
     int   sample_rate;

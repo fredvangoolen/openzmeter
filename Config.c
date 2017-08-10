@@ -7,11 +7,7 @@
 Config_t Config;
 
 
-#include "ini.h"
-
-#if !INI_USE_STACK
 #include <stdlib.h>
-#endif
 
 #define MAX_SECTION 50
 #define MAX_NAME 50
@@ -63,7 +59,10 @@ bool Config_Handler(char *section, char *param, char *value) {
       Config.DB.User = strdup(value);
     } else if(strcmp(param, "pass") == 0) {
       Config.DB.Password = strdup(value);
+    } else if(strcmp(param, "queue") == 0) {
+      Config.DB.QueueLen = atoi(value);
     } else {
+      LogMsg("ERROR", "Unknown param '%s' in section '%s'\n", param, section);
       return false;
     }
   } else if(strcmp(section, "electrical") == 0) {
@@ -147,6 +146,7 @@ bool Config_Init(char *filename) {
     } else if(Start[0] == '[') {
       char *End = strchr(&Start[1], ']');
       if((End == NULL) || (&Start[1] == End)) {
+        LogMsg("ERROR", "Reading config file (unmached ']' at line %d\n", LineNumber);
         Error = true;
         break;
       }
@@ -155,6 +155,7 @@ bool Config_Init(char *filename) {
     } else {
       char *End = strchr(&Start[1], '=');
       if(End == NULL) {
+        LogMsg("ERROR", "Expected '=' at line %d\n", LineNumber);
         Error = true;
         break;
       }

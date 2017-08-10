@@ -22,6 +22,7 @@ float CalcPhi(Complex_t voltage, Complex_t current) {
     Tmp = atan(voltage.Imag / voltage.Real);
   else
     Tmp = atan(voltage.Imag / voltage.Real) + M_PI;
+  
   if((current.Real == 0) && (current.Imag == 0)) 
     return Tmp;
   else if(current.Real < 0)
@@ -88,6 +89,9 @@ Params_t *Analyzer_GetParams(Work_t *work) {
         Params->Fundamental_Reactive_Power = VoltageHarmonic * CurrentHarmonic * sin(PHI);
         Params->Fundamental_Apparent_Power = VoltageHarmonic * CurrentHarmonic;
         Params->Fundamental_Power_Factor   = Params->Fundamental_Active_Power / Params->Fundamental_Apparent_Power;
+        if(PHI > M_PI) PHI = -PHI + M_PI;        
+        printf("PHI = %f\n", PHI * 180 / M_PI);
+
       }
       if(Harmonic > 0) Params->THD_I += pow(CurrentHarmonic, 2.0);
     }
@@ -118,7 +122,7 @@ Params_t *Analyzer_GetParams(Work_t *work) {
     
     Params->Energy = (Params->Active_Power * work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
     Params->Power_Factor = Params->Active_Power / Params->Apparent_Power;
-    Params->Reactive_Energy = sqrt(pow(Params->Apparent_Power, 2) - pow(Params->Active_Power, 2) - pow(Params->Reactive_Power, 2));
+    Params->Reactive_Energy = (Params->Reactive_Power * work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
   } else {
     Params->RMS_I = 0.0;
     memset(work->CurrentSamples, 0, work->Samples * sizeof(float));

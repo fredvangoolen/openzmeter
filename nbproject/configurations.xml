@@ -39,6 +39,7 @@
             <pElem>/usr/local/pgsql/include/</pElem>
             <pElem>/usr/include/libxml2</pElem>
           </incDir>
+          <commandLine>-Os</commandLine>
           <preprocessorList>
             <Elem>_DEFAULT_SOURCE</Elem>
             <Elem>_GNU_SOURCE</Elem>
@@ -55,6 +56,12 @@
       <packaging>
         <packType>Debian</packType>
         <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
                             from="${OUTPUT_PATH}"

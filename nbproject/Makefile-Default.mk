@@ -47,7 +47,7 @@ OBJECTFILES= \
 
 
 # C Compiler Flags
-CFLAGS=
+CFLAGS=-Os
 
 # CC Compiler Flags
 CCFLAGS=

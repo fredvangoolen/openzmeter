@@ -64,34 +64,39 @@ int RemovePidFile() {
  return remove("/var/run/openZmeter.pid");
 }
 int main(int argc, char** argv) {
-  char *ConfigFile = "openZmeter.ini";
+  char *ConfigFile = CONFIG_PATH;
+  bool  Daemonize  = false;
   printf("=================================================================================\n");
-  printf("               ** openZmeter - Analizador de calidad electrica **                \n");
+  printf("           ** openZmeter - Electric quality analysis and metering **             \n");
   printf("=================================================================================\n");
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
       ConfigFile = &argv[i][9];
     } else if(strcmp(argv[i], "--debug") == 0) {
       Config.Debug = true;
+    } else if(strcmp(argv[i], "--daemon") == 0) {
+      Daemonize  = true;
     } else if(strcmp(argv[i], "--help") == 0) {
-      printf("--help           - Muestra esta informacion de uso");
-      printf("--config=<file>  - Carga las opciones desde el archivo de configuracion indicado\n");
-      printf("                   Vea el archivo de ejemplo para mas detalles sobre las opciones\n");
-      printf("--debug          - Activa los mensages de depuracion\n");
+      printf("--help           - Shows this screen");
+      printf("--config=<file>  - Set config file\n");
+      printf("--debug          - Enable debug messages\n");
+      printf("--daemon         - Detach from console and run as service ");
       return 0;
     } else {
-      printf("Opcion %s no reconocida. Use --help para ver las opciones validas.", argv[i]);
+      printf("Option %s not recogniced. Use --help to show valid options.", argv[i]);
     }
   }
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
   setpriority(PRIO_PROCESS, 0, -20);
-  Config_Init(ConfigFile);
+  if(Config_Init(ConfigFile) == false) goto Stop;
 
+  char ConnectionString[512];
+  sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", Config.DB.Host, Config.DB.Port, Config.DB.User, Config.DB.Password, Config.DB.Database);
+  if(!DB_Start(ConnectionString, Config.DB.QueueLen)) goto Stop;
 
-  char connectionString[100];
-//  int err = snprintf(connectionString, 100, "%s:%d", CONFIG.database.host, CONFIG.database.port);
-//  if(err > 0) {
+  
+  //  if(err > 0) {
 //    DB = influxdb_client_new(connectionString, CONFIG.database.user, CONFIG.database.pass, CONFIG.database.database, 0);
 //  } else {
     //ERROR with format of database connection parameters.
@@ -99,9 +104,8 @@ int main(int argc, char** argv) {
 //  CONFIG.electrical.sample_rate *= 1000; //Convert kHz to Hz
 
   Events_Init();
-  RequestServer_Start(REQUESTSERVER_PATH);
+  RequestServer_Start(LISTEN_PATH);
   //uint32_t LasPriceUpdate = DB_Start(DB_CONNECTIONSTRING, DB_QUEUESIZE);
-  if(!DB_Start(DB_CONNECTIONSTRING, DB_QUEUESIZE)) goto Stop;
 
 //  Prices_Start(LasPriceUpdate);
   Adquisition_Start(ADQUISITION_DEVICE, ADQUISITION_BUFFERSIZE, 50.0);
