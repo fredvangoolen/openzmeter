@@ -18,12 +18,10 @@ typedef struct {
   char  *Buffer;
   size_t Size;
 } MemBuffer_t;
-typedef struct {
-  bool            Terminate;
-  pthread_t       Thread;
-  uint32_t        Timestamp;
-} Price_t;
-Price_t Prices;
+// Variables privadas ==================================================================================================
+static bool      Terminate;
+static pthread_t Thread;
+static uint32_t  Timestamp;
 //======================================================================================================================
 size_t Prices_ReadCallback(void *contents, size_t size, size_t nmemb, void *userp) {
   size_t realsize = size * nmemb;
@@ -39,21 +37,22 @@ size_t Prices_ReadCallback(void *contents, size_t size, size_t nmemb, void *user
   return realsize;
 }
 void *Prices_Thread(void *arg) {
-  pthread_setname_np(Prices.Thread, "Price Server");
-  while(!Prices.Terminate) {
+  pthread_setname_np(Thread, "Price Server");
+  while(!Terminate) {
     uint32_t CurrentTimestamp = (uint32_t)time(NULL);
     usleep(1000000);
-    if((Prices.Timestamp / 3600) > (CurrentTimestamp / 3600)) continue;
+    Timestamp = (Timestamp / 86400) * 86400;
+    if(Timestamp > CurrentTimestamp) continue;
     CURL *Curl = curl_easy_init();
     struct tm Time;
-    gmtime_r((time_t*)&Prices.Timestamp, &Time);
+    gmtime_r((time_t*)&Timestamp, &Time);
     MemBuffer_t Buffer;
     Buffer.Buffer = NULL;
     Buffer.Size = 0;
     char URL[1024];
     int Len = sprintf(URL, "https://api.esios.ree.es/archives/80/download?date_type=datos&locale=es");
-    Len    += strftime(&URL[Len], 100, "&start_date=%Y-%m-%dT%H:00:00+00:00", &Time);
-    Len    += strftime(&URL[Len], 100, "&end_date=%Y-%m-%dT%H:59:59+00:00", &Time);
+    Len    += strftime(&URL[Len], 100, "&start_date=%Y-%m-%dT00:00:00+00:00", &Time);
+    Len    += strftime(&URL[Len], 100, "&end_date=%Y-%m-%dT23:59:59+00:00", &Time);
     curl_easy_setopt(Curl, CURLOPT_URL, URL);
     curl_easy_setopt(Curl, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(Curl, CURLOPT_SSL_VERIFYHOST, 0L);
@@ -76,15 +75,14 @@ void *Prices_Thread(void *arg) {
         xmlXPathFreeContext(Context);
 	      if(Result != NULL) {
           xmlNodeSet *NodeSet = Result->nodesetval;
-  //        Prices_t *Prices = malloc(sizeof(Prices_t));
+          float *Prices = malloc(sizeof(float) * 24);
           if(NodeSet->nodeNr == 24) {
-//            for(int i = 0; i < NodeSet->nodeNr; i++) Prices->HourPrice[i] = atof(xmlGetProp(NodeSet->nodeTab[i], "v"));
+            for(int i = 0; i < NodeSet->nodeNr; i++) Prices[i] = atof(xmlGetProp(NodeSet->nodeTab[i], "v"));
             char StrDate[64];
             strftime(StrDate, sizeof(StrDate), "%d/%m/%Y", &Time);
             LogMsg("INFO", "Actualizando precios del dia %s\n", StrDate);
-//            Price->Timestamp = Prices.Timestamp;
-//            DB_Save(PRICES, Prices, true);
-//            Price.Timestamp += 3600 * 24;
+            DB_Save(PRICES, 0, Timestamp, Prices, true);
+            Timestamp += 86400;
           }
           xmlXPathFreeObject(Result);
         }
@@ -98,19 +96,17 @@ void *Prices_Thread(void *arg) {
   }
 }
 void Prices_Stop() {
-  Prices.Terminate = true;
+  Terminate = true;
   LogMsg("INFO", "Waiting for price server thread ends...");
-  pthread_join(Prices.Thread, NULL);
+  pthread_join(Thread, NULL);
   curl_global_cleanup();
 }
 bool Prices_Start(uint32_t startTimestamp) {
-  return true;
   LogMsg("INFO", "Starting price server thread...\n");
-  Prices.Terminate = false;
-  Prices.Timestamp = startTimestamp;
+  Terminate = false;
+  Timestamp = startTimestamp + 3600;
   curl_global_init(CURL_GLOBAL_DEFAULT);
-  //PriceServer_Thread(NULL);
-  if(pthread_create(&Prices.Thread, NULL, Prices_Thread, NULL) != 0) {
+  if(pthread_create(&Thread, NULL, Prices_Thread, NULL) != 0) {
     LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     curl_global_cleanup();
     return false;

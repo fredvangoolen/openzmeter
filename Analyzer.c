@@ -83,7 +83,7 @@ void *Analyzer_Thread(void *args) {
         Params->Active_Power   += VoltageHarmonic * CurrentHarmonic * cos(PHI);
         Params->Apparent_Power += VoltageHarmonic * CurrentHarmonic;
         Params->Reactive_Power += VoltageHarmonic * CurrentHarmonic * sin(PHI);
-        if(((i % 10) != 0) || (i >= 500) || (i < 10)) continue;
+        if(((i % 10) != 0) || (i > 500) || (i < 10)) continue;
         int Harmonic = (i / 10) - 1;
         Params->CurrentHarmonics[Harmonic] = CurrentHarmonic;
         if(Harmonic == 0) {

@@ -233,6 +233,13 @@ RETURNS bigint AS $$
   DELETE FROM agreg_10m WHERE sampletime < (in_sampletime - 43200000000);
   DELETE FROM agreg_1h WHERE sampletime < (in_sampletime - 432000000000);
 
+  -- Inserto en la tabla 1m                                                                                                                                                                                                                
+  INSERT INTO agreg_1m(node, sampletime,                                rms_v,                      rms_i,                      active_power,      reactive_power,      apparent_power,      power_factor,      active_energy,      reactive_energy,      fundamental_active_power,      fundamental_reactive_power,      fundamental_apparent_power,      fundamental_power_factor,      thd_v,                      thd_i,                      freq,      phi,      flaged,          harmonics_v,                                                harmonics_i) 
+                SELECT node, sampletime + 59999,                       SQRT(AVG(POW(rms_v, 2.0))), SQRT(AVG(POW(rms_i, 2.0))), AVG(active_power), AVG(reactive_power), AVG(apparent_power), AVG(power_factor), SUM(active_energy), SUM(reactive_energy), AVG(fundamental_active_power), AVG(fundamental_reactive_power), AVG(fundamental_apparent_power), AVG(fundamental_power_factor), SQRT(AVG(POW(thd_v, 2.0))), SQRT(AVG(POW(thd_i, 2.0))), AVG(freq), AVG(phi), BOOL_OR(flaged), VECTOR_RMS(VECTOR_SUM(VECTOR_POW2(harmonics_v)), COUNT(*)), VECTOR_RMS(VECTOR_SUM(VECTOR_POW2(harmonics_i)), COUNT(*)) 
+  FROM ( SELECT node, TRUNC(sampletime / 60000) * 60000 AS sampletime, rms_v,                      rms_i,                      active_power,      reactive_power,      apparent_power,      power_factor,      active_energy,      reactive_energy,      fundamental_active_power,      fundamental_reactive_power,      fundamental_apparent_power,      fundamental_power_factor,      thd_v,                      thd_i,                      freq,      phi,      flaged,          harmonics_v,                                                harmonics_i
+         FROM agreg_10c WHERE sampletime > COALESCE((SELECT MAX(sampletime) FROM agreg_1m), 0) AND sampletime < (TRUNC(in_sampletime / 60000) * 60000)) AS Table1                                                                                
+  GROUP BY sampletime, node; 
+  
   -- Inserto en la tabla 10m                                                                                                                                                                                                                
   INSERT INTO agreg_10m(node, sampletime,                                rms_v,                      rms_i,                      active_power,      reactive_power,      apparent_power,      power_factor,      active_energy,      reactive_energy,      fundamental_active_power,      fundamental_reactive_power,      fundamental_apparent_power,      fundamental_power_factor,      thd_v,                      thd_i,                      freq,      phi,      flaged,          harmonics_v,                                                harmonics_i) 
                  SELECT node, sampletime + 599999,                       SQRT(AVG(POW(rms_v, 2.0))), SQRT(AVG(POW(rms_i, 2.0))), AVG(active_power), AVG(reactive_power), AVG(apparent_power), AVG(power_factor), SUM(active_energy), SUM(reactive_energy), AVG(fundamental_active_power), AVG(fundamental_reactive_power), AVG(fundamental_apparent_power), AVG(fundamental_power_factor), SQRT(AVG(POW(thd_v, 2.0))), SQRT(AVG(POW(thd_i, 2.0))), AVG(freq), AVG(phi), BOOL_OR(flaged), VECTOR_RMS(VECTOR_SUM(VECTOR_POW2(harmonics_v)), COUNT(*)), VECTOR_RMS(VECTOR_SUM(VECTOR_POW2(harmonics_i)), COUNT(*)) 
@@ -248,4 +255,12 @@ RETURNS bigint AS $$
   GROUP BY sampletime, node;                                                                                                                                                                                                                     
   -- Obtiene la ultima tarifa de precios descargada
   SELECT MAX(starttime) FROM prices;
+$$ LANGUAGE sql VOLATILE;
+
+CREATE OR REPLACE FUNCTION INSERT_PRICES(in_starttime bigint, in_price real[])
+RETURNS void AS $$
+  INSERT INTO prices(starttime, price) 
+  SELECT in_starttime + (3600 * (ROW_NUMBER()OVER () - 1)), Table1.*  FROM (SELECT UNNEST(in_price)) AS Table1
+  ON CONFLICT (starttime) DO NOTHING;
+  
 $$ LANGUAGE sql VOLATILE;

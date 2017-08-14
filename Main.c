@@ -134,7 +134,7 @@ int main(int argc, char** argv) {
 
 
   Events_Init();
-//  Prices_Start(LasPriceUpdate);
+  Prices_Start(LastPrice);
   
   while(!Terminate) {
     usleep(1000000);
@@ -157,8 +157,7 @@ int main(int argc, char** argv) {
 //    LogMsg("DEBUG", "Processing block took %.1f mSec\n", (End - Start) / 1000.0);
   }
 Stop:
-//  PriceServer_Stop();
-//  DB_Stop();
+  Prices_Stop();
   Analyzer_Stop();
   RequestServer_Stop();
   RemovePidFile(Config.Global.Pid);

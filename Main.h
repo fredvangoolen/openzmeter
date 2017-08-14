@@ -75,10 +75,6 @@ typedef struct {
     const char* country;
     void * country_config;
 } budget_configuration;
- struct {
-  float    HourPrice[24];
-  uint32_t Timestamp;
-} Prices_t;
 struct {
     float cpc;
     int contracted_power;
@@ -113,9 +109,6 @@ typedef struct {
   float           Samples[EVENT_PREINIT + EVENT_POSTINIT + EVENT_PREEND + EVENT_POSTEND];
 } Event_t;
 typedef struct {
-//  uint32_t   Node;                      //Numero de nodo que genera la muestra
-//  uint64_t   SequenceID;                //Numero de secuencia del bloque
-//  uint64_t   Timestamp;                 //Timestamp de la muestra inicial
   float      RMS_V;                     //Valor RMS de la tension durante el bloque
   float      RMS_I;                     //Valor RMS de la intensidad durante el bloque
   float      Active_Power;              //Potencia activa (P)
@@ -162,6 +155,7 @@ void RequestServer_SetValues(uint64_t timestamp, Params_t *params, float *voltag
 // Funciones exportadas del modulo de BASE DE DATOS ====================================================================
 bool DB_Start(char *connString, uint16_t bufferLen, uint32_t *lastprice);
 void DB_Save(enum DB_Type type, uint32_t node, uint64_t timestamp, void *data, bool free);
+void DB_Stop();
 // Funciones exportadas del modulo de eventos ==========================================================================
 void  Events_Init();
 char *EventType_ToString(enum Event_Type type);
@@ -176,3 +170,4 @@ void Analyzer_Stop();
 bool Config_Init(char *filename);
 // Funciones exportadas del modulo de precios ==========================================================================
 bool Prices_Start(uint32_t startTimestamp);
+void Prices_Stop();
