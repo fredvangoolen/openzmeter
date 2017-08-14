@@ -32,12 +32,15 @@
 // Tipos privados ======================================================================================================
 typedef struct {
   enum DB_Type Type;
-  bool SaveAndFree;
+  bool         SaveAndFree;
+  uint32_t     Node;
+  uint64_t     Timestamp;
   union {
     Params_t *Params;
     Event_t  *Event;
 //    Price_t  *Prices;
     void     *Data;
+//    uint64_t  Timestamp;
   } Data;
 } DBSave_t;
 typedef struct {
@@ -50,7 +53,6 @@ typedef struct {
   pthread_t        Thread;               //Descriptor del hilo de captura
   bool             Terminate;            //Señal para detener el hilo de captura
   PGconn          *Database;             //Conexion a la base de datos
-  uint64_t         Timestamp;            //Marca de tiempo del anterior segmento
 } DB_t;
 
 // Variables privadas ==================================================================================================
@@ -81,7 +83,7 @@ void *DB_Thread(void *args) {
     } while(1);
     if(DB.Buffer[DB.ReadPos].Type == PARAMS_10C) {
       Params_t *Params = DB.Buffer[DB.ReadPos].Data.Params;
-      Len  = sprintf(&Buff[Len], "SELECT CREATE_10C(%llu, ", Params->Timestamp);
+      Len  = sprintf(&Buff[Len], "SELECT CREATE_10C(%u, %llu, ", DB.Buffer[DB.ReadPos].Node, DB.Buffer[DB.ReadPos].Timestamp);
       Len += isnan(Params->RMS_V) ? sprintf(&Buff[Len], "NULL, ") : sprintf(&Buff[Len], "%e, ", Params->RMS_V);
       Len += isnan(Params->RMS_I) ? sprintf(&Buff[Len], "NULL, ") : sprintf(&Buff[Len], "%e, ", Params->RMS_I);
       Len += isnan(Params->Active_Power) ? sprintf(&Buff[Len], "NULL, ") : sprintf(&Buff[Len], "%e, ", Params->Active_Power);
@@ -97,6 +99,7 @@ void *DB_Thread(void *args) {
       Len += isnan(Params->THD_V) ? sprintf(&Buff[Len], "NULL, ") : sprintf(&Buff[Len], "%e, ", Params->THD_V);
       Len += isnan(Params->THD_I) ? sprintf(&Buff[Len], "NULL, ") : sprintf(&Buff[Len], "%e, ", Params->THD_I);
       Len += isnan(Params->Frequency) ? sprintf(&Buff[Len], "NULL, ") : sprintf(&Buff[Len], "%e, ", Params->Frequency);
+      Len += isnan(Params->Phi) ? sprintf(&Buff[Len], "NULL, ") : sprintf(&Buff[Len], "%e, ", Params->Phi);
       Len += sprintf(&Buff[Len], "%s, ", Params->Flag ? "true" : "false");
       Len += DB_AppendArrayVal(&Buff[Len], 50, Params->VoltageHarmonics);
       Len += sprintf(&Buff[Len], ", ");
@@ -105,36 +108,47 @@ void *DB_Thread(void *args) {
       PGresult *Result = PQexec(DB.Database, Buff);
       if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query %s\n (%s)\n", Buff, PQresultErrorMessage(Result));
       PQclear(Result);
-      if((Params->SequenceID % 15) == 0) {
-        LogMsg("DEBUG", "Generando agregacion en tabla 3S\n");
-        sprintf(Buff, "SELECT CREATE_3S(%llu)", DB.Timestamp);
-        Result = PQexec(DB.Database, Buff);
-        if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
-        PQclear(Result);
-      }
-      if(((Params->Timestamp / 60000) * 60000) != ((DB.Timestamp / 60000) * 60000)) {
-        LogMsg("DEBUG", "Generando agregacion en tabla 1M\n");
-        sprintf(Buff, "SELECT CREATE_1M(%llu)", DB.Timestamp);
-        Result = PQexec(DB.Database, Buff);
-        if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
-        PQclear(Result);
-        if(((Params->Timestamp / 600000) * 600000) != ((DB.Timestamp / 600000) * 600000)) {
-          LogMsg("DEBUG", "Generando agregacion en tabla 10M\n");
-          sprintf(Buff, "SELECT CREATE_10M(%llu)", DB.Timestamp);
-          Result = PQexec(DB.Database, Buff);
-          if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
-          PQclear(Result);
-          if(((Params->Timestamp / 7200000) * 7200000) != ((DB.Timestamp / 7200000) * 7200000)) {
-            LogMsg("DEBUG", "Generando agregacion en tabla 2H\n");
-            sprintf(Buff, "SELECT CREATE_2H(%llu)", DB.Timestamp);
-            Result = PQexec(DB.Database, Buff);
-            if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
-            PQclear(Result);
-          }
-        }
-      }
-      DB.Timestamp = Params->Timestamp;
-      if(DB.Buffer[DB.ReadPos].SaveAndFree) free(Params);
+    } else if(DB.Buffer[DB.ReadPos].Type == PARAMS_3S) {
+      LogMsg("DEBUG", "Generando agregacion en tabla 3S\n");
+      sprintf(Buff, "SELECT AGREGATE_3S(%llu, %u)", DB.Buffer[DB.ReadPos].Timestamp, DB.Buffer[DB.ReadPos].Node);
+      PGresult *Result = PQexec(DB.Database, Buff);
+      if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
+      PQclear(Result);
+    } else if(DB.Buffer[DB.ReadPos].Type == PARAMS_1M) {
+      LogMsg("DEBUG", "Generando agregacion en tabla 1M\n");
+      sprintf(Buff, "SELECT AGREGATE_1M(%llu, %u)", DB.Buffer[DB.ReadPos].Timestamp, DB.Buffer[DB.ReadPos].Node);
+      PGresult *Result = PQexec(DB.Database, Buff);
+      if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
+      PQclear(Result);
+    } else if(DB.Buffer[DB.ReadPos].Type == PARAMS_10M) {
+      LogMsg("DEBUG", "Generando agregacion en tabla 10M\n");
+      sprintf(Buff, "SELECT AGREGATE_10M(%llu, %u)", DB.Buffer[DB.ReadPos].Timestamp, DB.Buffer[DB.ReadPos].Node);
+      PGresult *Result = PQexec(DB.Database, Buff);
+      if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
+      PQclear(Result);
+    } else if(DB.Buffer[DB.ReadPos].Type == PARAMS_1H) {
+      LogMsg("DEBUG", "Generando agregacion en tabla 1H\n");
+      sprintf(Buff, "SELECT AGREGATE_1H(%llu, %u)", DB.Buffer[DB.ReadPos].Timestamp, DB.Buffer[DB.ReadPos].Node);
+      PGresult *Result = PQexec(DB.Database, Buff);
+      if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
+      PQclear(Result);
+//      if(((Params->Timestamp / 600000) * 600000) != ((DB.Timestamp / 600000) * 600000)) {
+//          LogMsg("DEBUG", "Generando agregacion en tabla 10M\n");
+//          sprintf(Buff, "SELECT CREATE_10M(%llu)", DB.Timestamp);
+//          Result = PQexec(DB.Database, Buff);
+//          if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
+//          PQclear(Result);
+//          if(((Params->Timestamp / 7200000) * 7200000) != ((DB.Timestamp / 7200000) * 7200000)) {
+//            LogMsg("DEBUG", "Generando agregacion en tabla 2H\n");
+//            sprintf(Buff, "SELECT CREATE_2H(%llu)", DB.Timestamp);
+//            Result = PQexec(DB.Database, Buff);
+//            if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
+//            PQclear(Result);
+//          }
+//        }
+//      }
+//      DB.Timestamp = Params->Timestamp;
+//      if(DB.Buffer[DB.ReadPos].SaveAndFree) free(Params);
     } else if(DB.Buffer[DB.ReadPos].Type == EVENT) {
       Event_t *Event = DB.Buffer[DB.ReadPos].Data.Event;
       uint32_t NumSamples = MIN(EVENT_PREINIT + EVENT_POSTINIT + EVENT_PREEND + EVENT_POSTEND, EVENT_PREINIT + Event->Duration + EVENT_POSTEND);
@@ -142,13 +156,12 @@ void *DB_Thread(void *args) {
       Len += sprintf(&Buff[Len], "'%s', ", EventType_ToString(Event->Type));
       Len += sprintf(&Buff[Len], "%e, ", Event->Voltage);
       Len += sprintf(&Buff[Len], "%e, ", Event->Change);
-      printf("Guardando %d muestras\n", NumSamples);
+      printf("Guardando %u muestras\n", NumSamples);
       Len += DB_AppendArrayVal(&Buff[Len], (DB.Buffer[DB.ReadPos].SaveAndFree) ? NumSamples : 0, Event->Samples);
       Len += sprintf(&Buff[Len], ");");
       PGresult *Result = PQexec(DB.Database, Buff);
       if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
       PQclear(Result);
-      if(DB.Buffer[DB.ReadPos].SaveAndFree) free(Event);
     } else if(DB.Buffer[DB.ReadPos].Type == PRICES) {
 //      Prices_t *Prices = DB.Buffer[DB.ReadPos].Data.Prices;
 //      Len = sprintf(Buff, "SELECT update_prices(%u, ", Prices->Timestamp);
@@ -159,6 +172,7 @@ void *DB_Thread(void *args) {
 //      PQclear(Result);
 //      if(DB.Buffer[DB.ReadPos].SaveAndFree) free(Prices);
     }
+    if(DB.Buffer[DB.ReadPos].SaveAndFree) free(DB.Buffer[DB.ReadPos].Data.Data);
     pthread_mutex_lock(&DB.Mutex);
     DB.ReadPos = (DB.ReadPos + 1) % DB.Size;
     DB.Used--;
@@ -172,23 +186,22 @@ void DB_Stop() {
   pthread_join(DB.Thread, NULL);
   PQfinish(DB.Database);
 }
-uint32_t DB_Start(char *connString, uint16_t bufferLen) {
+bool DB_Start(char *connString, uint16_t bufferLen, uint32_t *lastprice) {
   struct timeval Time;
   if(gettimeofday(&Time, NULL) != 0) {
     LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return 0;
+    return false;
   }
-  DB.Timestamp = ((uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000);
   LogMsg("INFO", "Starting data save thread...\n");
   if(pthread_mutex_init(&DB.Mutex, NULL) != 0) {                                  
     LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return 0;                                                                  
+    return false;                                                                  
   }
   DB.Buffer = (DBSave_t*)malloc(sizeof(DBSave_t) * bufferLen);
   if(DB.Buffer == NULL) {
     LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pthread_mutex_destroy(&DB.Mutex);
-    return 0;
+    return false;
   }
   DB.ReadPos = 0;
   DB.WritePos = 0;
@@ -201,7 +214,7 @@ uint32_t DB_Start(char *connString, uint16_t bufferLen) {
     free(DB.Buffer);
     PQfinish(DB.Database);
     DB.Database = NULL;
-    return 0;
+    return false;
   }
   if(pthread_create(&DB.Thread, NULL, DB_Thread, NULL) != 0) {
     LogMsg("ERROR", "No se pudo abrir la base de datos (%s)\n", PQerrorMessage(DB.Database));
@@ -209,26 +222,28 @@ uint32_t DB_Start(char *connString, uint16_t bufferLen) {
     free(DB.Buffer);
     PQfinish(DB.Database);
     DB.Database = NULL;
-    return 0;
+    return false;
   }
   PGresult *Result = PQexec(DB.Database, "SET synchronous_commit TO OFF");
   if(PQresultStatus(Result) != PGRES_COMMAND_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
   PQclear(Result);
   char Tmp[128];
   LogMsg("INFO", "Resuming from last execution...\n");
-  sprintf(Tmp, "SELECT STARTUP(%llu)", DB.Timestamp);
+  sprintf(Tmp, "SELECT STARTUP(%llu)", ((uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000));
   Result = PQexec(DB.Database, Tmp);
   if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
-  uint32_t LastPrice = (PQgetisnull(Result, 0, 0)) ? (uint32_t)time(NULL) : atol(PQgetvalue(Result, 0, 0));
+  *lastprice = (PQgetisnull(Result, 0, 0)) ? (uint32_t)time(NULL) : atol(PQgetvalue(Result, 0, 0));
   PQclear(Result);
-  return LastPrice;
+  return true;
 }
-void DB_Save(enum DB_Type type, void *data, bool free) {
+void DB_Save(enum DB_Type type, uint32_t node, uint64_t timestamp, void *data, bool free) {
   do {
     pthread_mutex_lock(&DB.Mutex);
     if(DB.Used < DB.Size) {
-      DB.Buffer[DB.WritePos].Type = type;
-      DB.Buffer[DB.WritePos].Data.Data = data;
+      DB.Buffer[DB.WritePos].Type        = type;
+      DB.Buffer[DB.WritePos].Node        = node;
+      DB.Buffer[DB.WritePos].Timestamp   = timestamp;
+      DB.Buffer[DB.WritePos].Data.Data   = data;
       DB.Buffer[DB.WritePos].SaveAndFree = free;
       DB.WritePos = (DB.WritePos + 1) % DB.Size;
       DB.Used++;

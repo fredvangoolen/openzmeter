@@ -93,7 +93,7 @@ bool Events_Detect(Work_t *work) {
       if(fabs(100.0 - Change) > fabs(100.0 - Events.RunningEvent->Change)) {
         Events.RunningEvent->Change  = Change;
         Events.RunningEvent->Voltage = CycleRMS;
-        DB_Save(EVENT, Events.RunningEvent, false);
+//        DB_Save(EVENT, Events.RunningEvent, false);
       }
     }
     if((Events.RunningEvent != NULL) && (Events.RunningEvent->Type != RVC) && (fabs(100.0 - PercentChange(CycleRMS, EVENT_VOLTAGE)) < EVENT_HYSTERESIS)) {
@@ -103,7 +103,7 @@ bool Events_Detect(Work_t *work) {
         //Increment = Samples - POSTINIT - POSTEND;
         Adquisition_SamplesCopy(&Events.RunningEvent->Samples[EVENT_PREINIT + Events.RunningEvent->Duration / 2], work->Samples - work->Cycles[i].End + Events.RunningEvent->Duration / 2, Events.RunningEvent->Duration / 2 + EVENT_POSTEND);
       }
-      DB_Save(EVENT, Events.RunningEvent, true);
+//      DB_Save(EVENT, Events.RunningEvent, true);
       Events.RunningEvent = NULL;
     }
     if(fabs(100.0 - PercentChange(CycleRMS, RMS_Avg)) > ((Events.RunningEvent == NULL) ? EVENT_RVC : EVENT_HYSTERESIS)) {
@@ -122,7 +122,7 @@ bool Events_Detect(Work_t *work) {
             //Increment = Samples - POSTINIT - POSTEND;
             Adquisition_SamplesCopy(&Events.RunningEvent->Samples[EVENT_PREINIT + Events.RunningEvent->Duration / 2], work->Samples - work->Cycles[i].End + Events.RunningEvent->Duration / 2, Events.RunningEvent->Duration / 2 + EVENT_POSTEND);
           }
-          DB_Save(EVENT, Events.RunningEvent, true);
+//          DB_Save(EVENT, Events.RunningEvent, true);
           Events.RunningEvent = NULL;
         }
       }

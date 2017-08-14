@@ -43,7 +43,7 @@
 #define MAX_CURRENT                  12.00        //Corriente maxima
 // Enumeraciones =======================================================================================================
 enum Event_Type { SWELL, DIP, INTERRUPTION, RVC };
-enum DB_Type    { PARAMS_10C, PARAMS_3S, PARAMS_1M, EVENT, PRICES };
+enum DB_Type    { PARAMS_10C, PARAMS_3S, PARAMS_1M, PARAMS_10M, PARAMS_1H, EVENT, PRICES };
 // Estructuras de datos comunes entre los modulos ======================================================================
 typedef struct {
   bool Debug;
@@ -113,8 +113,9 @@ typedef struct {
   float           Samples[EVENT_PREINIT + EVENT_POSTINIT + EVENT_PREEND + EVENT_POSTEND];
 } Event_t;
 typedef struct {
-  uint64_t   SequenceID;                //Numero de secuencia del bloque
-  uint64_t   Timestamp;                 //Timestamp de la muestra inicial
+//  uint32_t   Node;                      //Numero de nodo que genera la muestra
+//  uint64_t   SequenceID;                //Numero de secuencia del bloque
+//  uint64_t   Timestamp;                 //Timestamp de la muestra inicial
   float      RMS_V;                     //Valor RMS de la tension durante el bloque
   float      RMS_I;                     //Valor RMS de la intensidad durante el bloque
   float      Active_Power;              //Potencia activa (P)
@@ -125,13 +126,14 @@ typedef struct {
   float      Fundamental_Apparent_Power;//Potencia aparente fundamental (S_1)
   float      Fundamental_Reactive_Power;//Potencia reactiva fundamental (Q_1)
   float      Fundamental_Power_Factor;  //Fundamental power factor
-  float      Active_Energy;                    //Energia consumida
+  float      Active_Energy;             //Energia consumida
   float      Reactive_Energy;           //Energia reactiva
   float      THD_V;                     //Distorsion harmonica de la tension
   float      THD_I;                     //Distorsion harmonica de la corriente
   float      VoltageHarmonics[50];      //Armonicos del canal de tension
   float      CurrentHarmonics[50];      //Armonicos del canal de corriente
   float      Frequency;                 //Frecuencia
+  float      Phi;                       //Angulo de Phi
   bool       Flag;                      //Periodo marcado
 } Params_t;
 typedef struct Work_t {
@@ -156,10 +158,10 @@ void    Adquisition_SamplesCopy(float *dest, int32_t offset, uint32_t len);
 // Funciones exportadas del modulo de SERVIDOR==========================================================================
 bool RequestServer_Start(char *path);
 void RequestServer_Stop();
-void RequestServer_SetValues(Params_t *params, float *voltage, float *current, float *fftv, float *ffti, uint32_t lensamples, uint32_t lenfft);
+void RequestServer_SetValues(uint64_t timestamp, Params_t *params, float *voltage, float *current, float *fftv, float *ffti, uint32_t lensamples, uint32_t lenfft);
 // Funciones exportadas del modulo de BASE DE DATOS ====================================================================
-uint32_t DB_Start(char *connString, uint16_t bufferLen);
-void     DB_Save(enum DB_Type type, void *data, bool free);
+bool DB_Start(char *connString, uint16_t bufferLen, uint32_t *lastprice);
+void DB_Save(enum DB_Type type, uint32_t node, uint64_t timestamp, void *data, bool free);
 // Funciones exportadas del modulo de eventos ==========================================================================
 void  Events_Init();
 char *EventType_ToString(enum Event_Type type);
@@ -168,7 +170,8 @@ bool  Events_Detect(Work_t *data);
 FFT_t *FFT_Start(float *data, uint32_t len);
 void   FFT_Wait(FFT_t *fft);
 // Funciones exportadas del modulo de analisis =========================================================================
-Params_t *Analyzer_GetParams(Work_t *work);
+bool Analyzer_Start();
+void Analyzer_Stop();
 // Funciones exportadas del modulo de configuracion ====================================================================
 bool Config_Init(char *filename);
 // Funciones exportadas del modulo de precios ==========================================================================

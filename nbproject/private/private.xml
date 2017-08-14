@@ -23,9 +23,15 @@
         </group>
         <group>
             <file>file:/home/edu/Proyectos/zMeter/Service/Main.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/Service/Config.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/Analyzer.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/FFT.c</file>
             <file>file:/home/edu/Proyectos/zMeter/Service/DB.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/Config.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/Prices.c</file>
             <file>file:/home/edu/Proyectos/zMeter/Service/Main.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/Events.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/Adquisition.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/RequestServer.c</file>
         </group>
     </open-files>
 </project-private>
