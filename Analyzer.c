@@ -64,8 +64,10 @@ void *Analyzer_Thread(void *args) {
       I += pow(Work->CurrentSamples[i], 2.0);
       P += Work->VoltageSamples[i] * Work->CurrentSamples[i];
     }
+    Params->Active_Power = P / Work->Samples;
     Params->RMS_V = sqrt(V / Work->Samples);
     Params->RMS_I = sqrt(I / Work->Samples);
+    Params->Apparent_Power = Params->RMS_V * Params->RMS_I;
     Params->Flag = Events_Detect(Work);
     Params->Frequency = Analyzer_Frequency(Work);
     FFT_Wait(FFT_Voltage);
@@ -80,9 +82,8 @@ void *Analyzer_Thread(void *args) {
         float CurrentHarmonic = sqrt(pow(FFT_Current->Result[i].Real, 2.0) + pow(FFT_Current->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
         float VoltageHarmonic = sqrt(pow(FFT_Voltage->Result[i].Real, 2.0) + pow(FFT_Voltage->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;  
         float PHI = CalcPhi(FFT_Voltage->Result[i], FFT_Current->Result[i]);
-        Params->Active_Power   += VoltageHarmonic * CurrentHarmonic * cos(PHI);
-        Params->Apparent_Power += VoltageHarmonic * CurrentHarmonic;
-        Params->Reactive_Power += VoltageHarmonic * CurrentHarmonic * sin(PHI);
+        
+//        Params->Reactive_Power += VoltageHarmonic * CurrentHarmonic * sin(PHI);
         if(((i % 10) != 0) || (i > 500) || (i < 10)) continue;
         int Harmonic = (i / 10) - 1;
         Params->CurrentHarmonics[Harmonic] = CurrentHarmonic;
@@ -91,14 +92,15 @@ void *Analyzer_Thread(void *args) {
           Params->Fundamental_Reactive_Power = VoltageHarmonic * CurrentHarmonic * sin(PHI);
           Params->Fundamental_Apparent_Power = VoltageHarmonic * CurrentHarmonic;
           Params->Fundamental_Power_Factor   = Params->Fundamental_Active_Power / Params->Fundamental_Apparent_Power;
-          if(PHI > M_PI) PHI = -PHI + M_PI;        
+          if(PHI > M_PI) PHI = -PHI + M_PI;  
+          Params->Phi = PHI * 180.0 / M_PI;
         }
         if(Harmonic > 0) Params->THD_I += pow(CurrentHarmonic, 2.0);
       }
       Params->THD_I = sqrt(Params->THD_I) / Params->CurrentHarmonics[0];
       Params->Active_Energy = (Params->Active_Power * Work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
       Params->Power_Factor = Params->Active_Power / Params->Apparent_Power;
-      Params->Reactive_Energy = (Params->Reactive_Power * Work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
+      Params->Fundamental_Reactive_Energy = (Params->Fundamental_Reactive_Power * Work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
     } else {
       Params->RMS_I = 0.0;
       memset(Work->CurrentSamples, 0, Work->Samples * sizeof(float));

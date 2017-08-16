@@ -109,25 +109,24 @@ typedef struct {
   float           Samples[EVENT_PREINIT + EVENT_POSTINIT + EVENT_PREEND + EVENT_POSTEND];
 } Event_t;
 typedef struct {
-  float      RMS_V;                     //Valor RMS de la tension durante el bloque
-  float      RMS_I;                     //Valor RMS de la intensidad durante el bloque
-  float      Active_Power;              //Potencia activa (P)
-  float      Apparent_Power;            //Potencia aparente (S)
-  float      Reactive_Power;            //Reactive power (Q)
-  float      Power_Factor;              //Factor de potencia (cos(PHI))
-  float      Fundamental_Active_Power;  //Potencia activa del primer armonico (P_1)
-  float      Fundamental_Apparent_Power;//Potencia aparente fundamental (S_1)
-  float      Fundamental_Reactive_Power;//Potencia reactiva fundamental (Q_1)
-  float      Fundamental_Power_Factor;  //Fundamental power factor
-  float      Active_Energy;             //Energia consumida
-  float      Reactive_Energy;           //Energia reactiva
-  float      THD_V;                     //Distorsion harmonica de la tension
-  float      THD_I;                     //Distorsion harmonica de la corriente
-  float      VoltageHarmonics[50];      //Armonicos del canal de tension
-  float      CurrentHarmonics[50];      //Armonicos del canal de corriente
-  float      Frequency;                 //Frecuencia
-  float      Phi;                       //Angulo de Phi
-  bool       Flag;                      //Periodo marcado
+  float      RMS_V;                       //Valor RMS de la tension durante el bloque
+  float      RMS_I;                       //Valor RMS de la intensidad durante el bloque
+  float      Active_Power;                //Potencia activa (P)
+  float      Apparent_Power;              //Potencia aparente (S)
+  float      Power_Factor;                //Factor de potencia (cos(PHI))
+  float      Fundamental_Active_Power;    //Potencia activa del primer armonico (P_1)
+  float      Fundamental_Apparent_Power;  //Potencia aparente fundamental (S_1)
+  float      Fundamental_Reactive_Power;  //Potencia reactiva fundamental (Q_1)
+  float      Fundamental_Power_Factor;    //Fundamental power factor
+  float      Fundamental_Reactive_Energy; //Energia reactiva
+  float      Active_Energy;               //Energia consumida
+  float      THD_V;                       //Distorsion harmonica de la tension
+  float      THD_I;                       //Distorsion harmonica de la corriente
+  float      VoltageHarmonics[50];        //Armonicos del canal de tension
+  float      CurrentHarmonics[50];        //Armonicos del canal de corriente
+  float      Frequency;                   //Frecuencia
+  float      Phi;                         //Angulo de Phi
+  bool       Flag;                        //Periodo marcado
 } Params_t;
 typedef struct Work_t {
   uint64_t  SequenceID;                 //Numero de secuencia del bloque
