@@ -82,7 +82,9 @@ void *Analyzer_Thread(void *args) {
         float CurrentHarmonic = sqrt(pow(FFT_Current->Result[i].Real, 2.0) + pow(FFT_Current->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
         float VoltageHarmonic = sqrt(pow(FFT_Voltage->Result[i].Real, 2.0) + pow(FFT_Voltage->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;  
         float PHI = CalcPhi(FFT_Voltage->Result[i], FFT_Current->Result[i]);
-        
+//        Params->Active_Power   += VoltageHarmonic * CurrentHarmonic * cos(PHI);
+//        Params->Apparent_Power += VoltageHarmonic * CurrentHarmonic;
+//        Params->Reactive_Power += VoltageHarmonic * CurrentHarmonic * sin(PHI);        
 //        Params->Reactive_Power += VoltageHarmonic * CurrentHarmonic * sin(PHI);
         if(((i % 10) != 0) || (i > 500) || (i < 10)) continue;
         int Harmonic = (i / 10) - 1;

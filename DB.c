@@ -141,7 +141,7 @@ void *DB_Thread(void *args) {
       PQclear(Result);
     } else if(Buffer[ReadPos].Type == PRICES) {
       float *Prices = Buffer[ReadPos].Data.Prices;
-      Len = sprintf(Buff, "SELECT INSERT_PRICES(%u, ", Buffer[ReadPos].Timestamp);
+      Len = sprintf(Buff, "SELECT INSERT_PRICES(%llu, ", Buffer[ReadPos].Timestamp);
       Len += DB_AppendArrayVal(&Buff[Len], 24, Prices);
       Len += sprintf(&Buff[Len], ");");
       PGresult *Result = PQexec(Database, Buff);

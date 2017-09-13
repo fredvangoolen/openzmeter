@@ -59,6 +59,7 @@ typedef struct {
     const char *User;
     const char *Password;
     int         QueueLen;
+    int         MaxRows;
   } DB;
   struct {
     int   sample_rate;

@@ -70,7 +70,7 @@ bool CreatePidFile(char *file) {
   char PID_Number[64];
   int Len = sprintf(PID_Number, "%d", getpid());
   remove(file);
-  int File = open(file, O_CREAT | O_WRONLY);
+  int File = open(file, O_CREAT, O_WRONLY);
   if(File < 0) {
     LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return false;
