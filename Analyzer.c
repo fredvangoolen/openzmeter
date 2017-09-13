@@ -78,15 +78,17 @@ void *Analyzer_Thread(void *args) {
     Params->THD_V = sqrt(Params->THD_V) / Params->VoltageHarmonics[0];
     FFT_Wait(FFT_Current);
     if(Params->RMS_I > PROCESSING_CURRENTOFFSET) {
-      for(int i = 0; i < FFT_Voltage->Len; i++) {
+//      float Active_Power = 0.0;
+  //  float Reactive_Power = 0.0;
+//      float Apparent_Power = 0.0;
+      for(int i = 10; i <= 500 ; i = i + 10) {
         float CurrentHarmonic = sqrt(pow(FFT_Current->Result[i].Real, 2.0) + pow(FFT_Current->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
         float VoltageHarmonic = sqrt(pow(FFT_Voltage->Result[i].Real, 2.0) + pow(FFT_Voltage->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;  
         float PHI = CalcPhi(FFT_Voltage->Result[i], FFT_Current->Result[i]);
-//        Params->Active_Power   += VoltageHarmonic * CurrentHarmonic * cos(PHI);
-//        Params->Apparent_Power += VoltageHarmonic * CurrentHarmonic;
-//        Params->Reactive_Power += VoltageHarmonic * CurrentHarmonic * sin(PHI);        
-//        Params->Reactive_Power += VoltageHarmonic * CurrentHarmonic * sin(PHI);
-        if(((i % 10) != 0) || (i > 500) || (i < 10)) continue;
+//        Active_Power   += VoltageHarmonic * CurrentHarmonic * cos(PHI);
+//        Apparent_Power += VoltageHarmonic * CurrentHarmonic;
+//        Reactive_Power += VoltageHarmonic * CurrentHarmonic * sin(PHI);        
+//        if(((i % 10) != 0) || (i > 500) || (i < 10)) continue;
         int Harmonic = (i / 10) - 1;
         Params->CurrentHarmonics[Harmonic] = CurrentHarmonic;
         if(Harmonic == 0) {
@@ -94,11 +96,16 @@ void *Analyzer_Thread(void *args) {
           Params->Fundamental_Reactive_Power = VoltageHarmonic * CurrentHarmonic * sin(PHI);
           Params->Fundamental_Apparent_Power = VoltageHarmonic * CurrentHarmonic;
           Params->Fundamental_Power_Factor   = Params->Fundamental_Active_Power / Params->Fundamental_Apparent_Power;
-          if(PHI > M_PI) PHI = PHI -  2.0 *M_PI;
+          PHI = fmod(PHI, 2.0 * M_PI);
+          if(PHI > M_PI) PHI = PHI -  2.0 * M_PI;
           Params->Phi = PHI * 180.0 / M_PI;
+//          printf("PHI: %f (%fº\n", PHI, PHI * 180.0 / M_PI);
+
         }
         if(Harmonic > 0) Params->THD_I += pow(CurrentHarmonic, 2.0);
       }
+//      printf("FFT  -> Active: %f  Reactive: %f  Apparent: %f\n", Active_Power, Reactive_Power, Apparent_Power);
+//      printf("Other-> Active: %f  Reactive: %f  Apparent: %f\n", Params->Active_Power, Params->Fundamental_Reactive_Power, Params->Apparent_Power);
       Params->THD_I = sqrt(Params->THD_I) / Params->CurrentHarmonics[0];
       Params->Active_Energy = (Params->Active_Power * Work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
       Params->Power_Factor = Params->Active_Power / Params->Apparent_Power;
