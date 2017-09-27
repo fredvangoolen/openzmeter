@@ -195,7 +195,7 @@ Work_t *Adquisition_GetWork() {
   Work->Timestamp = ((uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000) - ((Used * 1000) / ADQUISITION_SAMPLEFREQ);
   float LastSample = +100; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
   for(Work->Samples = 0; Work->Samples < MAX_FRAME; Work->Samples++) {
-    printf("Voltage: %d - Current: %d\n", Buffer[ReadPos].Voltage, Buffer[ReadPos].Current);
+//    printf("Voltage: %d - Current: %d\n", Buffer[ReadPos].Voltage, Buffer[ReadPos].Current);
     Work->VoltageSamples[Work->Samples] = (Buffer[ReadPos].Voltage - Config.Electrical.VoltageOffset) * Config.Electrical.VoltageGain;
     Work->CurrentSamples[Work->Samples] = (Buffer[ReadPos].Current - Config.Electrical.CurrentOffset) * Config.Electrical.CurrentGain;;
     float Out = Work->VoltageSamples[Work->Samples];

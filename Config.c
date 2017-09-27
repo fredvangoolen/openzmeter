@@ -129,10 +129,10 @@ bool Config_Init(char *filename) {
   Config.Global.Listen = "/var/run/openZmeter.sock";
   Config.Global.Log    = "/var/log/openZmeter.log";
   Config.Global.Pid    = "/var/run/openZmeter.pid";
-  Config.Electrical.VoltageGain   = 0.0120;
-  Config.Electrical.VoltageOffset = 0.0000;
-  Config.Electrical.CurrentGain   = 0.0016;
-  Config.Electrical.CurrentOffset = 0.0000;
+  Config.Electrical.VoltageGain   =     0.01200000;
+  Config.Electrical.VoltageOffset =   292.00000000;
+  Config.Electrical.CurrentGain   =    -0.00078125;
+  Config.Electrical.CurrentOffset = 0.00000000;
   if(filename == NULL) return true;
   LogMsg("INFO", "Loading config file...\n");
   FILE *File = fopen(filename, "r");

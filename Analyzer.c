@@ -71,6 +71,7 @@ void *Analyzer_Thread(void *args) {
     Params->Flag = Events_Detect(Work);
     Params->Frequency = Analyzer_Frequency(Work);
     FFT_Wait(FFT_Voltage);
+    printf("Offset %f\n", FFT_Voltage->Result[0].Real);
     for(int i = 0; i < 50; i++) {
       Params->VoltageHarmonics[i] = sqrt(pow(FFT_Voltage->Result[10 + i * 10].Real, 2.0) + pow(FFT_Voltage->Result[10 + i * 10].Imag, 2.0)) / M_SQRT2 * 2.0;
       if(i > 0) Params->THD_V += pow(Params->VoltageHarmonics[i], 2.0);
