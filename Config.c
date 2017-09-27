@@ -71,8 +71,8 @@ bool Config_Handler(char *section, char *param, char *value) {
       //Comprobar frecuencia
     } else if(strcmp(param, "nominal_voltage")) {
       //pconfig->electrical.nominal_voltage = atof(value);
-    } else if(strcmp(param, "voltage_scale")) {
-//      pconfig->electrical.voltage_scale = atof(value);
+    } else if(strcmp(param, "voltage_gain")) {
+      Config.Electrical.VoltageGain = atof(value);
     } else if(strcmp(param, "voltage_offset")) {
 //      pconfig->electrical.voltage_offset = atoi(value);
     } else if(strcmp(param, "current_scale")) {
@@ -129,7 +129,10 @@ bool Config_Init(char *filename) {
   Config.Global.Listen = "/var/run/openZmeter.sock";
   Config.Global.Log    = "/var/log/openZmeter.log";
   Config.Global.Pid    = "/var/run/openZmeter.pid";
-
+  Config.Electrical.VoltageGain   = 0.0120;
+  Config.Electrical.VoltageOffset = 0.0000;
+  Config.Electrical.CurrentGain   = 0.0016;
+  Config.Electrical.CurrentOffset = 0.0000;
   if(filename == NULL) return true;
   LogMsg("INFO", "Loading config file...\n");
   FILE *File = fopen(filename, "r");

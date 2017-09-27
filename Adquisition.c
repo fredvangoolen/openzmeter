@@ -21,8 +21,8 @@
 
 // Tipos privados ======================================================================================================
 typedef struct {
-  int16_t  Voltage;                     //Valor de tension
-  uint16_t Current;                     // Valor de corriente
+  int16_t Voltage;                     //Valor de tension
+  int16_t Current;                     // Valor de corriente
 } Sample_t;
 typedef struct {
   float A0;
@@ -195,8 +195,9 @@ Work_t *Adquisition_GetWork() {
   Work->Timestamp = ((uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000) - ((Used * 1000) / ADQUISITION_SAMPLEFREQ);
   float LastSample = +100; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
   for(Work->Samples = 0; Work->Samples < MAX_FRAME; Work->Samples++) {
-    Work->VoltageSamples[Work->Samples] = (Buffer[ReadPos].Voltage - ADQUISITION_VOLT_OFFSET) * ADQUISITION_VOLT_GAIN;
-    Work->CurrentSamples[Work->Samples] = (Buffer[ReadPos].Current - ADQUISITION_CURR_OFFSET) * ADQUISITION_CURR_GAIN;;
+    printf("Voltage: %d - Current: %d\n", Buffer[ReadPos].Voltage, Buffer[ReadPos].Current);
+    Work->VoltageSamples[Work->Samples] = (Buffer[ReadPos].Voltage - Config.Electrical.VoltageOffset) * Config.Electrical.VoltageGain;
+    Work->CurrentSamples[Work->Samples] = (Buffer[ReadPos].Current - Config.Electrical.CurrentOffset) * Config.Electrical.CurrentGain;;
     float Out = Work->VoltageSamples[Work->Samples];
     for(int i = 0; i < 5; i++) Out = Adquisition_Filter(Out, &Filters[i]);
     if(((LastSample >= 0.0) && (Out < 0.0)) || ((LastSample <= 0.0) && (Out > 0.0))) {
@@ -220,7 +221,7 @@ Work_t *Adquisition_GetWork() {
 }
 void Adquisition_SamplesCopy(float *dest, int32_t offset, uint32_t len) {
   for(int i = 0; i < len; i++) 
-    dest[i] = (Buffer[(ReadPos - offset + i) % Size].Voltage - ADQUISITION_VOLT_OFFSET) * ADQUISITION_VOLT_GAIN;
+    dest[i] = (Buffer[(ReadPos - offset + i) % Size].Voltage - Config.Electrical.VoltageOffset) * Config.Electrical.VoltageGain;
 }
 void Adquisition_SetLEDs(float voltage, float current) {
   uint8_t Val = 0;

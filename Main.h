@@ -9,12 +9,12 @@
 #define ADQUISITION_USB_VID         0x0483         //Product ID
 #define ADQUISITION_PID             0x7270         //Device ID
 #define ADQUISITION_ENDPOINT_IN       0x81         //Endpoint de lectura de datos
-#define ADQUISITION_VOLT_OFFSET     348.00         //Real_Value = (Read_Value - Offset) * Gain
-#define ADQUISITION_VOLT_GAIN      0.01160        
-#define ADQUISITION_CURR_OFFSET   32768.00         //Real_Value = (Read_Value - Offset) * Gain
-#define ADQUISITION_CURR_GAIN  -0.00078125
+//#define ADQUISITION_VOLT_OFFSET     348.00         //Real_Value = (Read_Value - Offset) * Gain
+//#define ADQUISITION_VOLT_GAIN      0.01160        
+//#define ADQUISITION_CURR_OFFSET   32768.00         //Real_Value = (Read_Value - Offset) * Gain
+//#define ADQUISITION_CURR_GAIN  -0.00078125
 #define ADQUISITION_SAMPLEFREQ    15625.00         //Frequencia de muestreo
-#define ADQUISITION_DEVICE  "/dev/ttyACM0"         //Puerto desde el que se hace la lectura
+//#define ADQUISITION_DEVICE  "/dev/ttyACM0"         //Puerto desde el que se hace la lectura
 #define ADQUISITION_BUFFERSIZE     1048576         //Tamaño del buffer circular para captura (en grupos de muestras)
 #define ADQUISITION_SAFESAMPLES  MAX_FRAME         //Numero de muestras "seguras" antes y despues del punto de lectura 
 //Definiciones relaccionadas con almacenamiento de datos a la BD =======================================================
@@ -65,11 +65,10 @@ typedef struct {
     int   sample_rate;
     int   nominal_frequency;
     float nominal_voltage;
-    float voltage_scale;
-    int   voltage_offset;
-    float current_scale;
-    int   current_offset;
-    int   num_stored_harmonics;
+    float VoltageGain;
+    int   VoltageOffset;
+    float CurrentGain;
+    int   CurrentOffset;
   } Electrical;
   struct {
     float  fixed_price;

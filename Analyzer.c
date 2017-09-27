@@ -136,7 +136,7 @@ void *Analyzer_Thread(void *args) {
   }
 }
 bool Analyzer_Start() {
-  if(Adquisition_Start(ADQUISITION_DEVICE, ADQUISITION_BUFFERSIZE, 50.0) == false) return false;
+  if(Adquisition_Start(NULL, ADQUISITION_BUFFERSIZE, 50.0) == false) return false;
   LogMsg("INFO", "Starting analyzer thread...\n");
   Terminate = false;
   Thread = 0;
