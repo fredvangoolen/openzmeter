@@ -66,21 +66,19 @@ bool Config_Handler(char *section, char *param, char *value) {
       return false;
     }
   } else if(strcmp(section, "electrical") == 0) {
-    if(strcmp(param, "nominal_frequency")) {
+    if(strcmp(param, "nominal_frequency") == 0) {
       Config.Electrical.nominal_frequency = atoi(value);
-      //Comprobar frecuencia
-    } else if(strcmp(param, "nominal_voltage")) {
+      if((Config.Electrical.nominal_frequency != 50) && (Config.Electrical.nominal_frequency != 60)) Config.Electrical.nominal_frequency = 50;
+    } else if(strcmp(param, "nominal_voltage") == 0) {
       //pconfig->electrical.nominal_voltage = atof(value);
-    } else if(strcmp(param, "voltage_gain")) {
+    } else if(strcmp(param, "voltage_gain") == 0) {
       Config.Electrical.VoltageGain = atof(value);
-    } else if(strcmp(param, "voltage_offset")) {
-//      pconfig->electrical.voltage_offset = atoi(value);
-    } else if(strcmp(param, "current_scale")) {
-//      pconfig->electrical.current_scale = atof(value);
-    } else if(strcmp(param, "current_offset")) {
-//      pconfig->electrical.current_offset = atoi(value);
-    } else if(strcmp(param, "num_stored_harmonics")) {
-//      pconfig->electrical.num_stored_harmonics = atoi(value);
+    } else if(strcmp(param, "voltage_offset") == 0) {
+      Config.Electrical.VoltageOffset = atoi(value);
+    } else if(strcmp(param, "current_gain") == 0) {
+      Config.Electrical.CurrentGain = atof(value);
+    } else if(strcmp(param, "current_offset") == 0) {
+      Config.Electrical.CurrentOffset = atoi(value);
     }
   } else if(strcmp(section, "budget")) {
     
@@ -132,7 +130,7 @@ bool Config_Init(char *filename) {
   Config.Electrical.VoltageGain   =     0.01200000;
   Config.Electrical.VoltageOffset =   292.00000000;
   Config.Electrical.CurrentGain   =    -0.00078125;
-  Config.Electrical.CurrentOffset = 0.00000000;
+  Config.Electrical.CurrentOffset =     0.00000000;
   if(filename == NULL) return true;
   LogMsg("INFO", "Loading config file...\n");
   FILE *File = fopen(filename, "r");
