@@ -6,9 +6,6 @@
 
 #define MAX_FRAME                     3688         //Longitud maxima de muestras de un frame (236ms)
 //Definiciones relaccionadas con la adquisicion de datos desde el puerto USB ===========================================
-#define ADQUISITION_USB_VID         0x0483         //Product ID
-#define ADQUISITION_PID             0x7270         //Device ID
-#define ADQUISITION_ENDPOINT_IN       0x81         //Endpoint de lectura de datos
 //#define ADQUISITION_VOLT_OFFSET     348.00         //Real_Value = (Read_Value - Offset) * Gain
 //#define ADQUISITION_VOLT_GAIN      0.01160        
 //#define ADQUISITION_CURR_OFFSET   32768.00         //Real_Value = (Read_Value - Offset) * Gain
@@ -152,7 +149,7 @@ bool RequestServer_Start(char *path);
 void RequestServer_Stop();
 void RequestServer_SetValues(uint64_t timestamp, Params_t *params, float *voltage, float *current, float *fftv, float *ffti, uint32_t lensamples, uint32_t lenfft);
 // Funciones exportadas del modulo de BASE DE DATOS ====================================================================
-bool DB_Start(char *connString, uint16_t bufferLen, uint32_t *lastprice);
+bool DB_Start(uint32_t *lastprice);
 void DB_Save(enum DB_Type type, uint32_t node, uint64_t timestamp, void *data, bool free);
 void DB_Stop();
 // Funciones exportadas del modulo de eventos ==========================================================================

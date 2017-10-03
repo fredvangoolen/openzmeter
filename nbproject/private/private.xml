@@ -21,6 +21,17 @@
             <file>file:/home/edu/Proyectos/zMeter/Service/Adquisition.c</file>
             <file>file:/home/edu/Proyectos/zMeter/Service/RequestServer.c</file>
         </group>
-        <group/>
+        <group>
+            <file>file:/home/edu/Proyectos/zMeter/Service/Main.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/Resources.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/CaptureInterface.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/FFT.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/Tools.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/BasicCapture.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/Main.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/Events.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/BasicCapture.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/Service/Tools.h</file>
+        </group>
     </open-files>
 </project-private>
