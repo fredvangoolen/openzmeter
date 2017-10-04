@@ -13,8 +13,8 @@ CND_BUILDDIR=build
 CND_DLIB_EXT=so
 NBTMPDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tmp-packaging
 TMPDIRNAME=tmp-packaging
-OUTPUT_PATH=${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service
-OUTPUT_BASENAME=service
+OUTPUT_PATH=${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/servicev2
+OUTPUT_BASENAME=servicev2
 PACKAGE_TOP_DIR=/usr/
 
 # Functions
@@ -131,6 +131,10 @@ cd "${TOP}"
 makeDirectory "${NBTMPDIR}//usr/bin"
 copyFileToTmpDir "${OUTPUT_PATH}" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}" 0755
 
+cd "${TOP}"
+makeDirectory "${NBTMPDIR}//usr/bin"
+copyFileToTmpDir "${OUTPUT_PATH}" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}" 0755
+
 
 # Create control file
 cd "${TOP}"
@@ -152,9 +156,9 @@ dpkg-deb  --build ${TMPDIRNAME}
 checkReturnCode
 cd "${TOP}"
 mkdir -p  ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package
-mv ${NBTMPDIR}.deb ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/service.deb
+mv ${NBTMPDIR}.deb ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/servicev2.deb
 checkReturnCode
-echo Debian: ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/service.deb
+echo Debian: ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/servicev2.deb
 
 # Cleanup
 cd "${TOP}"

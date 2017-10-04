@@ -9,11 +9,11 @@ CND_DISTDIR=dist
 # Default configuration
 CND_PLATFORM_Default=GNU-Linux
 CND_ARTIFACT_DIR_Default=dist/Default/GNU-Linux
-CND_ARTIFACT_NAME_Default=service
-CND_ARTIFACT_PATH_Default=dist/Default/GNU-Linux/service
+CND_ARTIFACT_NAME_Default=servicev2
+CND_ARTIFACT_PATH_Default=dist/Default/GNU-Linux/servicev2
 CND_PACKAGE_DIR_Default=dist/Default/GNU-Linux/package
-CND_PACKAGE_NAME_Default=service.deb
-CND_PACKAGE_PATH_Default=dist/Default/GNU-Linux/package/service.deb
+CND_PACKAGE_NAME_Default=servicev2.deb
+CND_PACKAGE_PATH_Default=dist/Default/GNU-Linux/package/servicev2.deb
 #
 # include compiler specific variables
 #

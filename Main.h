@@ -139,11 +139,11 @@ extern Config_t Config;
 //Funciones de utilidad para diversos modulos ==========================================================================
 void LogMsg(const char *level, const char *msg, ...);
 // Funciones exportadas del modulo de CAPTURA ==========================================================================
-bool    Adquisition_Start(char *device, uint32_t bufferLen, float baseFreq);
-void    Adquisition_Stop();
-Work_t *Adquisition_GetWork();
-void    Adquisition_SetLEDs(float voltage, float current);
-void    Adquisition_SamplesCopy(float *dest, int32_t offset, uint32_t len);
+//bool    Adquisition_Start(char *device, uint32_t bufferLen, float baseFreq);
+//void    Adquisition_Stop();
+//Work_t *Adquisition_GetWork();
+//void    Adquisition_SetLEDs(float voltage, float current);
+//void    Adquisition_SamplesCopy(float *dest, int32_t offset, uint32_t len);
 // Funciones exportadas del modulo de SERVIDOR==========================================================================
 bool RequestServer_Start(char *path);
 void RequestServer_Stop();

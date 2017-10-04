@@ -10,11 +10,14 @@ class Tools {
   private :
     static bool  Daemonized;
     static FILE *LogFile;
+    static char *PidFileName;
   public :
     static bool Debug;
     static void LogMsg(const char *level, const char *msg, ...);
     static bool SetLogFile(const char *filename);
     static void Daemonize();
+    static bool CreatePidFile();
+    static bool RemovePidFile();
     typedef struct {
       int   sample_rate;
       int   nominal_frequency;

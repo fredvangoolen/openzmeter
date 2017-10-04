@@ -24,22 +24,6 @@ bool  DB_Started = false;
 void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
 }
-bool CreatePidFile(char *file) {
-  char PID_Number[64];
-  int Len = sprintf(PID_Number, "%d", getpid());
-  remove(file);
-  int File = open(file, O_CREAT, O_WRONLY);
-  if(File < 0) {
-    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return false;
-  }
-  write(File, PID_Number, Len);
-  close(File);
-  return true;
-}
-int RemovePidFile(char *file) {
- return remove(file);
-}
 int main(int argc, char** argv) {
   char *ConfigFile = "/etc/openZmeter.conf";
   for(int i = 1; i != argc; i++) {
@@ -103,7 +87,7 @@ Stop:
   Prices_Stop();
   Analyzer_Stop();
   RequestServer_Stop();
-  RemovePidFile(Config.Global.Pid);
+//  Tools::RemovePidFile();
   return EXIT_SUCCESS;
 }
 

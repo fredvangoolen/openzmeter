@@ -37,7 +37,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/Analyzer.o \
 	${OBJECTDIR}/BasicCapture.o \
-	${OBJECTDIR}/DB.o \
+	${OBJECTDIR}/CaptureInterface.o \
 	${OBJECTDIR}/Events.o \
 	${OBJECTDIR}/FFT.o \
 	${OBJECTDIR}/Main.o \
@@ -65,26 +65,26 @@ LDLIBSOPTIONS=
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/servicev2
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service: ${OBJECTFILES}
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/servicev2: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	gcc -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service ${OBJECTFILES} ${LDLIBSOPTIONS} -lm -lfftw3f -lpthread -lrt -lpq -lcurl -lxml2 -lusb-1.0 -lmicrohttpd
+	gcc -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/servicev2 ${OBJECTFILES} ${LDLIBSOPTIONS} -lm -lfftw3f -lpthread -lrt -lpq -lcurl -lxml2 -lusb-1.0 -lmicrohttpd -lstdc++
 
-${OBJECTDIR}/Analyzer.o: Analyzer.c
+${OBJECTDIR}/Analyzer.o: Analyzer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Analyzer.o Analyzer.c
+	$(COMPILE.cc) -g -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Analyzer.o Analyzer.cpp
 
 ${OBJECTDIR}/BasicCapture.o: BasicCapture.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/BasicCapture.o BasicCapture.cpp
+	$(COMPILE.cc) -g -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/BasicCapture.o BasicCapture.cpp
 
-${OBJECTDIR}/DB.o: DB.c
+${OBJECTDIR}/CaptureInterface.o: CaptureInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D_DEFAULT_SOURCE -D_GNU_SOURCE -I/usr/local/pgsql/include/ -I/usr/include/libxml2 -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DB.o DB.c
+	$(COMPILE.cc) -g -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureInterface.o CaptureInterface.cpp
 
 ${OBJECTDIR}/Events.o: Events.c
 	${MKDIR} -p ${OBJECTDIR}
@@ -119,7 +119,7 @@ ${OBJECTDIR}/Resources.o: Resources.c
 ${OBJECTDIR}/Tools.o: Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Tools.o Tools.cpp
+	$(COMPILE.cc) -g -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Tools.o Tools.cpp
 
 # Subprojects
 .build-subprojects:

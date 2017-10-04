@@ -17,8 +17,8 @@
 class BasicCapture {
   private :
     typedef struct {
-      int16_t Voltage;                                    //Valor de tension
-      int16_t Current;                                    //Valor de corriente
+      float Voltage;                                    //Valor de tension
+      float Current;                                    //Valor de corriente
     } Sample_t;
     typedef struct {
       float A0;
@@ -29,26 +29,37 @@ class BasicCapture {
       float Z1;
       float Z2;
     } AdquisitionFilter_t;
+    float                        VoltageGain;             //Ganancia de tension
+    float                        CurrentGain;             //Ganancia de corriente
+    float                        VoltageOffset;           //Offset de tension
+    float                        CurrentOffset;           //Offset de corriente
     Sample_t                    *Buffer;                  //Donde almaceno muestras leidas (RingBuffer)
     uint32_t                     ReadPos;                 //Posicion de lectura del buffer
     uint32_t                     WritePos;                //Posicion de escritura del buffer
     uint32_t                     Size;                    //Tamaño total del buffer
     uint32_t                     Used;                    //Muestras en uso del buffer
-    pthread_mutex_t              Mutex;                   //Mutex para bloquear acceso al buffer
+    pthread_mutex_t              CaptureMutex;            //Mutex para bloquear acceso al buffer
     pthread_cond_t               WriteWait;               //Variable de condicion para esperar si buffer esta lleno
     pthread_cond_t               ReadWait;                //Variable de condicion para esperar si buffer esta vacio
-    pthread_t                    Thread;                  //Descriptor del hilo de captura
+    pthread_t                    CaptureThread;           //Descriptor del hilo de captura
     bool                         Terminate;               //Señal para detener el hilo de captura
     AdquisitionFilter_t          Filters[5];              //Filtros paso banda para deteccion de paso por cero
     uint64_t                     SequenceID;              //Numero de secuencia de bloques generados
     struct libusb_device_handle *DeviceHandle;            //Dispositivo de captura
+    
+    uint32_t        LastCycles[PROCESSING_FREQCYCLES];
+    uint32_t        LastCyclesCount  = 0;
+    uint32_t        LastCyclesPos    = 0;
+    uint32_t        LastCyclesLenght = 0;
+    pthread_mutex_t Mutex;                 //Mutex para bloquear acceso a muestras y resultados
+    pthread_t       AnalyzeThread;                //Descriptor del hilo de analisis
+
   private : 
     static void   ReadCallback(struct libusb_transfer *transfer);
     static void  *CaptureThread(void *args);
     static void  *ProcessThread(void *args);
     static void  *AnalizerThread(void *args);
     static float  ApplyFilter(float in, AdquisitionFilter_t *filter);
-    static void   CreateInstances();
   private :
     Work_t *GetWork();
     void    SamplesCopy(float *dest, int32_t offset, uint32_t len);

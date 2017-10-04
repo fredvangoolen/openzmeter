@@ -8,12 +8,14 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 //----------------------------------------------------------------------------------------------------------------------
 bool  Tools::Daemonized = false;
 bool  Tools::Debug = false;
 FILE *Tools::LogFile = NULL;
+char *Tools::PidFileName  = (char*)"/var/run/openZmeter.pid";
 //----------------------------------------------------------------------------------------------------------------------
 void Tools::LogMsg(const char *level, const char *msg, ...) {
   if((Debug == false) && (strcmp(level, "DEBUG") == 0)) return;
@@ -58,6 +60,22 @@ bool Tools::SetLogFile(const char *filename) {
     return false;
   }
   return true;
+}
+bool Tools::CreatePidFile() {
+  char PID_Number[64];
+  int Len = sprintf(PID_Number, "%d", getpid());
+  remove(PidFileName);
+  int File = open(PidFileName, O_CREAT, O_WRONLY);
+  if(File < 0) {
+    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    return false;
+  }
+  write(File, PID_Number, Len);
+  close(File);
+  return true;
+}
+bool Tools::RemovePidFile() {
+ return remove(PidFileName);
 }
 void Tools::Daemonize() {
   pid_t ProcID = fork();
@@ -206,9 +224,9 @@ bool Config_Handler(char *section, char *param, char *value) {
   return true;
 }
 bool Config_Init(char *filename) {
-  Config.Global.Listen = "/var/run/openZmeter.sock";
-  Config.Global.Log    = "/var/log/openZmeter.log";
-  Config.Global.Pid    = "/var/run/openZmeter.pid";
+//  Config.Global.Listen = "/var/run/openZmeter.sock";
+//  Config.Global.Log    = "/var/log/openZmeter.log";
+  
   Config.Electrical.VoltageGain   =     0.01200000;
   Config.Electrical.VoltageOffset =   292.00000000;
   Config.Electrical.CurrentGain   =    -0.00078125;

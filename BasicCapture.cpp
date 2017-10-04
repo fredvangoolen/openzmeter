@@ -29,8 +29,10 @@ void BasicCapture::ReadCallback(struct libusb_transfer *transfer) {
     pthread_cond_wait(&This->WriteWait, &This->Mutex);
   }
   for(int i = 0; i < Len; i++) {
-    This->Buffer[This->WritePos].Voltage = Buff16[i * 2 + 0];
-    This->Buffer[This->WritePos].Current = Buff16[i * 2 + 1];
+    uint16_t Voltage = Buff16[i * 2 + 0];
+    uint16_t Current = Buff16[i * 2 + 1];
+    This->Buffer[This->WritePos].Voltage = (Voltage - This->VoltageOffset) * This->VoltageGain;
+    This->Buffer[This->WritePos].Current = (Current - This->CurrentOffset) * This->CurrentGain;
     This->WritePos = (This->WritePos + 1) % This->Size;
   }
   This->Used += Len;
@@ -56,6 +58,100 @@ void *BasicCapture::CaptureThread(void *args) {
   libusb_submit_transfer(Transfer_B);
   while(!This->Terminate) libusb_handle_events_completed(NULL, NULL);
   return NULL;
+}
+void *BasicCapture::AnalizerThread(void* args) {
+  uint64_t PrevTimestamp, Agreg3S_Start;
+  pthread_setname_np(Thread, "Analysys");
+  while(!Terminate) {
+    Work = Adquisition_GetWork();
+    if((Work == NULL) || (Work->SequenceID == 0)) {
+      PrevTimestamp = Work->Timestamp;
+      Agreg3S_Start = Work->Timestamp;
+      continue;
+    }
+    Params = calloc(sizeof(Params_t), 1);
+    FFT_t *FFT_Voltage = FFT_Start(Work->VoltageSamples, Work->Samples);         // STEP 1: Start calculating FFT (in parallel)
+    FFT_t *FFT_Current = FFT_Start(Work->CurrentSamples, Work->Samples);
+    //Calcula valores basicos (RMS, potencia activa y energia) que son validos aun habiendo eventos
+    float V = 0.0;
+    float I = 0.0;
+    float P = 0.0;
+    for(int i = 0; i < Work->Samples; i++) {
+      V += pow(Work->VoltageSamples[i], 2.0);
+      I += pow(Work->CurrentSamples[i], 2.0);
+      P += Work->VoltageSamples[i] * Work->CurrentSamples[i];
+    }
+    Params->Active_Power = P / Work->Samples;
+    Params->RMS_V = sqrt(V / Work->Samples);
+    Params->RMS_I = sqrt(I / Work->Samples);
+    Params->Apparent_Power = Params->RMS_V * Params->RMS_I;
+    Params->Flag = Events_Detect(Work);
+    Params->Frequency = Analyzer_Frequency(Work);
+    FFT_Wait(FFT_Voltage);
+//    printf("Offset %f\n", FFT_Voltage->Result[0].Real);
+    for(int i = 0; i < 50; i++) {
+      Params->VoltageHarmonics[i] = sqrt(pow(FFT_Voltage->Result[10 + i * 10].Real, 2.0) + pow(FFT_Voltage->Result[10 + i * 10].Imag, 2.0)) / M_SQRT2 * 2.0;
+      if(i > 0) Params->THD_V += pow(Params->VoltageHarmonics[i], 2.0);
+    }
+    Params->THD_V = sqrt(Params->THD_V) / Params->VoltageHarmonics[0];
+    FFT_Wait(FFT_Current);
+    if(Params->RMS_I > PROCESSING_CURRENTOFFSET) {
+//      float Active_Power = 0.0;
+  //  float Reactive_Power = 0.0;
+//      float Apparent_Power = 0.0;
+      for(int i = 10; i <= 500 ; i = i + 10) {
+        float CurrentHarmonic = sqrt(pow(FFT_Current->Result[i].Real, 2.0) + pow(FFT_Current->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
+        float VoltageHarmonic = sqrt(pow(FFT_Voltage->Result[i].Real, 2.0) + pow(FFT_Voltage->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;  
+        float PHI = CalcPhi(FFT_Voltage->Result[i], FFT_Current->Result[i]);
+//        Active_Power   += VoltageHarmonic * CurrentHarmonic * cos(PHI);
+//        Apparent_Power += VoltageHarmonic * CurrentHarmonic;
+//        Reactive_Power += VoltageHarmonic * CurrentHarmonic * sin(PHI);        
+//        if(((i % 10) != 0) || (i > 500) || (i < 10)) continue;
+        int Harmonic = (i / 10) - 1;
+        Params->CurrentHarmonics[Harmonic] = CurrentHarmonic;
+        if(Harmonic == 0) {
+          Params->Fundamental_Active_Power   = VoltageHarmonic * CurrentHarmonic * cos(PHI);
+          Params->Fundamental_Reactive_Power = VoltageHarmonic * CurrentHarmonic * sin(PHI);
+          Params->Fundamental_Apparent_Power = VoltageHarmonic * CurrentHarmonic;
+          Params->Fundamental_Power_Factor   = Params->Fundamental_Active_Power / Params->Fundamental_Apparent_Power;
+          PHI = fmod(PHI, 2.0 * M_PI);
+          if(PHI > M_PI) PHI = PHI -  2.0 * M_PI;
+          Params->Phi = PHI * 180.0 / M_PI;
+//          printf("PHI: %f (%fº\n", PHI, PHI * 180.0 / M_PI);
+
+        }
+        if(Harmonic > 0) Params->THD_I += pow(CurrentHarmonic, 2.0);
+      }
+//      printf("FFT  -> Active: %f  Reactive: %f  Apparent: %f\n", Active_Power, Reactive_Power, Apparent_Power);
+//      printf("Other-> Active: %f  Reactive: %f  Apparent: %f\n", Params->Active_Power, Params->Fundamental_Reactive_Power, Params->Apparent_Power);
+      Params->THD_I = sqrt(Params->THD_I) / Params->CurrentHarmonics[0];
+      Params->Active_Energy = (Params->Active_Power * Work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
+      Params->Power_Factor = Params->Active_Power / Params->Apparent_Power;
+      Params->Fundamental_Reactive_Energy = (Params->Fundamental_Reactive_Power * Work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
+    } else {
+      Params->RMS_I = 0.0;
+      memset(Work->CurrentSamples, 0, Work->Samples * sizeof(float));
+      memset(FFT_Current->Result, 0, FFT_Current->Len * sizeof(Complex_t));
+    }
+    if(((Work->SequenceID) % 15 == 0) && (Work->Cycles_Len == 20)) {
+      float FFT_V[600];
+      float FFT_I[600];
+      for(int i = 0; i < 600; i++) {
+        FFT_V[i] = sqrt(pow(FFT_Voltage->Result[i].Real, 2.0) + pow(FFT_Voltage->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
+        FFT_I[i] = sqrt(pow(FFT_Current->Result[i].Real, 2.0) + pow(FFT_Current->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
+      }
+      RequestServer_SetValues(Work->Timestamp, Params, Work->VoltageSamples, Work->CurrentSamples, FFT_V, FFT_I, Work->Samples, 600);
+    }
+    free(FFT_Voltage);
+    free(FFT_Current);
+    DB_Save(PARAMS_10C, 0, Work->Timestamp, Params, true);
+    if((Work->SequenceID % 15) == 0) DB_Save(PARAMS_3S, 0, PrevTimestamp, NULL, true);
+    if(((Work->Timestamp / 60000) * 60000) != ((PrevTimestamp / 60000) * 60000)) DB_Save(PARAMS_1M, 0, PrevTimestamp, NULL, true);
+    if(((Work->Timestamp / 600000) * 600000) != ((PrevTimestamp / 600000) * 600000)) DB_Save(PARAMS_10M, 0, PrevTimestamp, NULL, true);
+    if(((Work->Timestamp / 3600000) * 3600000) != ((PrevTimestamp / 3600000) * 3600000)) DB_Save(PARAMS_1H, 0, PrevTimestamp, NULL, true);
+    PrevTimestamp = Work->Timestamp;
+    free(Work);
+  }
 }
 BasicCapture::BasicCapture(char* device, uint32_t bufferLen, float baseFreq) {
   Tools::LogMsg("INFO", "Starting adquisition thread...\n");
@@ -164,8 +260,8 @@ Work_t *BasicCapture::GetWork() {
   Work->Timestamp = ((uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000) - ((Used * 1000) / ADQUISITION_SAMPLEFREQ);
   float LastSample = +100; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
   for(Work->Samples = 0; Work->Samples < MAX_FRAME; Work->Samples++) {
-    Work->VoltageSamples[Work->Samples] = (Buffer[ReadPos].Voltage - Tools::Electrical.VoltageOffset) * Tools::Electrical.VoltageGain;
-    Work->CurrentSamples[Work->Samples] = (Buffer[ReadPos].Current - Tools::Electrical.CurrentOffset) * Tools::Electrical.CurrentGain;;
+    Work->VoltageSamples[Work->Samples] = Buffer[ReadPos].Voltage;
+    Work->CurrentSamples[Work->Samples] = Buffer[ReadPos].Current;
     float Out = Work->VoltageSamples[Work->Samples];
     for(int i = 0; i < 5; i++) Out = ApplyFilter(Out, &Filters[i]);
     if(((LastSample >= 0.0) && (Out < 0.0)) || ((LastSample <= 0.0) && (Out > 0.0))) {
@@ -189,7 +285,7 @@ Work_t *BasicCapture::GetWork() {
 }
 void BasicCapture::SamplesCopy(float *dest, int32_t offset, uint32_t len) {
   for(int i = 0; i < len; i++) 
-    dest[i] = (Buffer[(ReadPos - offset + i) % Size].Voltage - Tools::Electrical.VoltageOffset) * Tools::Electrical.VoltageGain;
+    dest[i] = Buffer[(ReadPos - offset + i) % Size].Voltage;
 }
 //void Adquisition_SetLEDs(float voltage, float current) {
 //  uint8_t Val = 0;
