@@ -17,11 +17,7 @@ bool  Tools::Debug = false;
 FILE *Tools::LogFile = NULL;
 char *Tools::PidFileName  = (char*)"/var/run/openZmeter.pid";
 
-Tools::DB_t Tools::DB {
-
-
-
-};
+Tools::DB_t Tools::DB = {};
 //----------------------------------------------------------------------------------------------------------------------
 void Tools::LogMsg(const char *level, const char *msg, ...) {
   if((Debug == false) && (strcmp(level, "DEBUG") == 0)) return;

@@ -15,13 +15,13 @@ CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux/package
 CND_PACKAGE_NAME_Debug=service.tar
 CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux/package/service.tar
 # Release configuration
-CND_PLATFORM_Release=GNU-Linux
-CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux
+CND_PLATFORM_Release=arm-none-eabi-Linux
+CND_ARTIFACT_DIR_Release=dist/Release/arm-none-eabi-Linux
 CND_ARTIFACT_NAME_Release=service
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/service
-CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux/package
+CND_ARTIFACT_PATH_Release=dist/Release/arm-none-eabi-Linux/service
+CND_PACKAGE_DIR_Release=dist/Release/arm-none-eabi-Linux/package
 CND_PACKAGE_NAME_Release=service.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/service.tar
+CND_PACKAGE_PATH_Release=dist/Release/arm-none-eabi-Linux/package/service.tar
 #
 # include compiler specific variables
 #

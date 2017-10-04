@@ -1,6 +1,522 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="WEB" displayName="WEB" projectFiles="true">
+      <logicalFolder name="application" displayName="application" projectFiles="true">
+        <logicalFolder name="controllers" displayName="controllers" projectFiles="true">
+          <itemPath>WEB/application/controllers/Account.php</itemPath>
+          <itemPath>WEB/application/controllers/Analysis.php</itemPath>
+          <itemPath>WEB/application/controllers/Dashboard.php</itemPath>
+          <itemPath>WEB/application/controllers/Events.php</itemPath>
+          <itemPath>WEB/application/controllers/Login.php</itemPath>
+          <itemPath>WEB/application/controllers/Settings.php</itemPath>
+          <itemPath>WEB/application/controllers/Stats.php</itemPath>
+          <itemPath>WEB/application/controllers/index.html</itemPath>
+        </logicalFolder>
+        <logicalFolder name="models" displayName="models" projectFiles="true">
+          <itemPath>WEB/application/models/Data_model.php</itemPath>
+          <itemPath>WEB/application/models/Event_model.php</itemPath>
+          <itemPath>WEB/application/models/Sysinfo_model.php</itemPath>
+          <itemPath>WEB/application/models/index.html</itemPath>
+        </logicalFolder>
+        <logicalFolder name="views" displayName="views" projectFiles="true">
+          <logicalFolder name="analysis" displayName="analysis" projectFiles="true">
+            <itemPath>WEB/application/views/analysis/current_view.php</itemPath>
+            <itemPath>WEB/application/views/analysis/energy_power_view.php</itemPath>
+            <itemPath>WEB/application/views/analysis/frequency_view.php</itemPath>
+            <itemPath>WEB/application/views/analysis/harmonics_view.php</itemPath>
+            <itemPath>WEB/application/views/analysis/voltage_view.php</itemPath>
+          </logicalFolder>
+          <logicalFolder name="errors" displayName="errors" projectFiles="true">
+            <logicalFolder name="cli" displayName="cli" projectFiles="true">
+              <itemPath>WEB/application/views/errors/cli/error_404.php</itemPath>
+              <itemPath>WEB/application/views/errors/cli/error_db.php</itemPath>
+              <itemPath>WEB/application/views/errors/cli/error_exception.php</itemPath>
+              <itemPath>WEB/application/views/errors/cli/error_general.php</itemPath>
+              <itemPath>WEB/application/views/errors/cli/error_php.php</itemPath>
+              <itemPath>WEB/application/views/errors/cli/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="html" displayName="html" projectFiles="true">
+              <itemPath>WEB/application/views/errors/html/error_404.php</itemPath>
+              <itemPath>WEB/application/views/errors/html/error_db.php</itemPath>
+              <itemPath>WEB/application/views/errors/html/error_exception.php</itemPath>
+              <itemPath>WEB/application/views/errors/html/error_general.php</itemPath>
+              <itemPath>WEB/application/views/errors/html/error_php.php</itemPath>
+              <itemPath>WEB/application/views/errors/html/index.html</itemPath>
+            </logicalFolder>
+            <itemPath>WEB/application/views/errors/index.html</itemPath>
+          </logicalFolder>
+          <logicalFolder name="events" displayName="events" projectFiles="true">
+            <itemPath>WEB/application/views/events/disturbances_view.php</itemPath>
+            <itemPath>WEB/application/views/events/itic_view.php</itemPath>
+          </logicalFolder>
+          <logicalFolder name="template" displayName="template" projectFiles="true">
+            <itemPath>WEB/application/views/template/commonHead.php</itemPath>
+            <itemPath>WEB/application/views/template/commonScripts.php</itemPath>
+            <itemPath>WEB/application/views/template/header.php</itemPath>
+          </logicalFolder>
+          <itemPath>WEB/application/views/account_view.php</itemPath>
+          <itemPath>WEB/application/views/dashboard_view.php</itemPath>
+          <itemPath>WEB/application/views/index.html</itemPath>
+          <itemPath>WEB/application/views/login_view.php</itemPath>
+          <itemPath>WEB/application/views/settings_view.php</itemPath>
+          <itemPath>WEB/application/views/stats_view.php</itemPath>
+        </logicalFolder>
+        <itemPath>WEB/application/.htaccess</itemPath>
+      </logicalFolder>
+      <logicalFolder name="css" displayName="css" projectFiles="true">
+        <itemPath>WEB/css/common.css</itemPath>
+        <itemPath>WEB/css/login.css</itemPath>
+      </logicalFolder>
+      <logicalFolder name="img" displayName="img" projectFiles="true">
+        <itemPath>WEB/img/load.gif</itemPath>
+        <itemPath>WEB/img/loading.gif</itemPath>
+        <itemPath>WEB/img/logo.png</itemPath>
+      </logicalFolder>
+      <logicalFolder name="js" displayName="js" projectFiles="true">
+        <logicalFolder name="analysis" displayName="analysis" projectFiles="true">
+          <itemPath>WEB/js/analysis/analysis.js</itemPath>
+          <itemPath>WEB/js/analysis/current.js</itemPath>
+          <itemPath>WEB/js/analysis/energy_power.js</itemPath>
+          <itemPath>WEB/js/analysis/frequency.js</itemPath>
+          <itemPath>WEB/js/analysis/harmonics.js</itemPath>
+          <itemPath>WEB/js/analysis/voltage.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="events" displayName="events" projectFiles="true">
+          <itemPath>WEB/js/events/disturbances.js</itemPath>
+          <itemPath>WEB/js/events/events.js</itemPath>
+          <itemPath>WEB/js/events/itic.js</itemPath>
+        </logicalFolder>
+        <itemPath>WEB/js/account.js</itemPath>
+        <itemPath>WEB/js/common.js</itemPath>
+        <itemPath>WEB/js/dashboard.js</itemPath>
+        <itemPath>WEB/js/live.js</itemPath>
+        <itemPath>WEB/js/login.js</itemPath>
+        <itemPath>WEB/js/settings.js</itemPath>
+        <itemPath>WEB/js/stats.js</itemPath>
+        <itemPath>WEB/js/utils.js</itemPath>
+        <itemPath>WEB/js/zTicker.js</itemPath>
+      </logicalFolder>
+      <logicalFolder name="lib" displayName="lib" projectFiles="true">
+        <logicalFolder name="bootstrap" displayName="bootstrap" projectFiles="true">
+          <logicalFolder name="css" displayName="css" projectFiles="true">
+            <itemPath>WEB/lib/bootstrap/css/bootstrap-theme.css</itemPath>
+            <itemPath>WEB/lib/bootstrap/css/bootstrap-theme.css.map</itemPath>
+            <itemPath>WEB/lib/bootstrap/css/bootstrap-theme.min.css</itemPath>
+            <itemPath>WEB/lib/bootstrap/css/bootstrap.css</itemPath>
+            <itemPath>WEB/lib/bootstrap/css/bootstrap.css.map</itemPath>
+            <itemPath>WEB/lib/bootstrap/css/bootstrap.min.css</itemPath>
+          </logicalFolder>
+          <logicalFolder name="fonts" displayName="fonts" projectFiles="true">
+            <itemPath>WEB/lib/bootstrap/fonts/glyphicons-halflings-regular.eot</itemPath>
+            <itemPath>WEB/lib/bootstrap/fonts/glyphicons-halflings-regular.svg</itemPath>
+            <itemPath>WEB/lib/bootstrap/fonts/glyphicons-halflings-regular.ttf</itemPath>
+            <itemPath>WEB/lib/bootstrap/fonts/glyphicons-halflings-regular.woff</itemPath>
+          </logicalFolder>
+          <logicalFolder name="js" displayName="js" projectFiles="true">
+            <itemPath>WEB/lib/bootstrap/js/bootstrap.js</itemPath>
+            <itemPath>WEB/lib/bootstrap/js/bootstrap.min.js</itemPath>
+          </logicalFolder>
+        </logicalFolder>
+        <logicalFolder name="bootstrap-datetimepicker"
+                       displayName="bootstrap-datetimepicker"
+                       projectFiles="true">
+          <itemPath>WEB/lib/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css</itemPath>
+          <itemPath>WEB/lib/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js</itemPath>
+          <itemPath>WEB/lib/bootstrap-datetimepicker/moment.min.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="bootstrap-validator"
+                       displayName="bootstrap-validator"
+                       projectFiles="true">
+          <logicalFolder name="language" displayName="language" projectFiles="true">
+            <itemPath>WEB/lib/bootstrap-validator/language/ar_MA.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/be_FR.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/be_NL.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/bg_BG.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/cs_CZ.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/da_DK.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/de_DE.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/en_US.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/es_CL.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/es_ES.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/fa_IR.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/fr_FR.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/gr_EL.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/hu_HU.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/id_ID.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/it_IT.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/ja_JP.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/nl_NL.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/no_NO.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/pl_PL.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/pt_BR.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/ro_RO.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/ru_RU.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/sr_RS.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/sv_SE.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/th_TH.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/tr_TR.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/ua_UA.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/vi_VN.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/zh_CN.js</itemPath>
+            <itemPath>WEB/lib/bootstrap-validator/language/zh_TW.js</itemPath>
+          </logicalFolder>
+          <itemPath>WEB/lib/bootstrap-validator/bootstrapValidator.min.css</itemPath>
+          <itemPath>WEB/lib/bootstrap-validator/bootstrapValidator.min.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="c3js" displayName="c3js" projectFiles="true">
+          <itemPath>WEB/lib/c3js/c3.css</itemPath>
+          <itemPath>WEB/lib/c3js/c3.min.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="cubism" displayName="cubism" projectFiles="true">
+          <itemPath>WEB/lib/cubism/cubism.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="d3" displayName="d3" projectFiles="true">
+          <itemPath>WEB/lib/d3/colorbrewer.css</itemPath>
+          <itemPath>WEB/lib/d3/colorbrewer.js</itemPath>
+          <itemPath>WEB/lib/d3/d3.v3.min.js</itemPath>
+          <itemPath>WEB/lib/d3/d3.v3.min_bak.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="d3-tip" displayName="d3-tip" projectFiles="true">
+          <itemPath>WEB/lib/d3-tip/d3-tip.min.css</itemPath>
+          <itemPath>WEB/lib/d3-tip/d3-tip.min.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="datatables" displayName="datatables" projectFiles="true">
+          <logicalFolder name="css" displayName="css" projectFiles="true">
+            <itemPath>WEB/lib/datatables/css/dataTables.bootstrap.css</itemPath>
+            <itemPath>WEB/lib/datatables/css/dataTables.responsive.css</itemPath>
+            <itemPath>WEB/lib/datatables/css/jquery.dataTables.min.css</itemPath>
+          </logicalFolder>
+          <logicalFolder name="images" displayName="images" projectFiles="true">
+            <itemPath>WEB/lib/datatables/images/favicon.ico</itemPath>
+            <itemPath>WEB/lib/datatables/images/sort_asc.png</itemPath>
+            <itemPath>WEB/lib/datatables/images/sort_asc_disabled.png</itemPath>
+            <itemPath>WEB/lib/datatables/images/sort_both.png</itemPath>
+            <itemPath>WEB/lib/datatables/images/sort_desc.png</itemPath>
+            <itemPath>WEB/lib/datatables/images/sort_desc_disabled.png</itemPath>
+          </logicalFolder>
+          <logicalFolder name="js" displayName="js" projectFiles="true">
+            <itemPath>WEB/lib/datatables/js/dataTables.bootstrap.js</itemPath>
+            <itemPath>WEB/lib/datatables/js/dataTables.responsive.min.js</itemPath>
+            <itemPath>WEB/lib/datatables/js/jquery.dataTables.min.js</itemPath>
+          </logicalFolder>
+        </logicalFolder>
+        <logicalFolder name="dc.js" displayName="dc.js" projectFiles="true">
+          <itemPath>WEB/lib/dc.js/crossfilter.js</itemPath>
+          <itemPath>WEB/lib/dc.js/dc.css</itemPath>
+          <itemPath>WEB/lib/dc.js/dc.min.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="dygraph" displayName="dygraph" projectFiles="true">
+          <itemPath>WEB/lib/dygraph/chart-plotter.js</itemPath>
+          <itemPath>WEB/lib/dygraph/crosshair.js</itemPath>
+          <itemPath>WEB/lib/dygraph/dygraph-combined_back.js</itemPath>
+          <itemPath>WEB/lib/dygraph/dygraph-interaction.js</itemPath>
+          <itemPath>WEB/lib/dygraph/dygraph.js</itemPath>
+          <itemPath>WEB/lib/dygraph/synchronize.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="flot" displayName="flot" projectFiles="true">
+          <logicalFolder name="examples" displayName="examples" projectFiles="true">
+            <logicalFolder name="ajax" displayName="ajax" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/ajax/data-eu-gdp-growth-1.json</itemPath>
+              <itemPath>WEB/lib/flot/examples/ajax/data-eu-gdp-growth-2.json</itemPath>
+              <itemPath>WEB/lib/flot/examples/ajax/data-eu-gdp-growth-3.json</itemPath>
+              <itemPath>WEB/lib/flot/examples/ajax/data-eu-gdp-growth-4.json</itemPath>
+              <itemPath>WEB/lib/flot/examples/ajax/data-eu-gdp-growth-5.json</itemPath>
+              <itemPath>WEB/lib/flot/examples/ajax/data-eu-gdp-growth.json</itemPath>
+              <itemPath>WEB/lib/flot/examples/ajax/data-japan-gdp-growth.json</itemPath>
+              <itemPath>WEB/lib/flot/examples/ajax/data-usa-gdp-growth.json</itemPath>
+              <itemPath>WEB/lib/flot/examples/ajax/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="annotating" displayName="annotating" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/annotating/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="axes-interacting"
+                           displayName="axes-interacting"
+                           projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/axes-interacting/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="axes-multiple"
+                           displayName="axes-multiple"
+                           projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/axes-multiple/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="axes-time" displayName="axes-time" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/axes-time/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="axes-time-zones"
+                           displayName="axes-time-zones"
+                           projectFiles="true">
+              <logicalFolder name="tz" displayName="tz" projectFiles="true">
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/africa</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/antarctica</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/asia</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/australasia</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/backward</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/etcetera</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/europe</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/factory</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/iso3166.tab</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/leapseconds</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/northamerica</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/pacificnew</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/solar87</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/solar88</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/solar89</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/southamerica</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/systemv</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/yearistype.sh</itemPath>
+                <itemPath>WEB/lib/flot/examples/axes-time-zones/tz/zone.tab</itemPath>
+              </logicalFolder>
+              <itemPath>WEB/lib/flot/examples/axes-time-zones/date.js</itemPath>
+              <itemPath>WEB/lib/flot/examples/axes-time-zones/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="basic-options"
+                           displayName="basic-options"
+                           projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/basic-options/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="basic-usage" displayName="basic-usage" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/basic-usage/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="canvas" displayName="canvas" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/canvas/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="categories" displayName="categories" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/categories/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="image" displayName="image" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/image/hs-2004-27-a-large-web.jpg</itemPath>
+              <itemPath>WEB/lib/flot/examples/image/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="interacting" displayName="interacting" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/interacting/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="navigate" displayName="navigate" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/navigate/arrow-down.gif</itemPath>
+              <itemPath>WEB/lib/flot/examples/navigate/arrow-left.gif</itemPath>
+              <itemPath>WEB/lib/flot/examples/navigate/arrow-right.gif</itemPath>
+              <itemPath>WEB/lib/flot/examples/navigate/arrow-up.gif</itemPath>
+              <itemPath>WEB/lib/flot/examples/navigate/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="percentiles" displayName="percentiles" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/percentiles/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="realtime" displayName="realtime" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/realtime/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="resize" displayName="resize" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/resize/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="selection" displayName="selection" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/selection/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="series-errorbars"
+                           displayName="series-errorbars"
+                           projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/series-errorbars/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="series-pie" displayName="series-pie" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/series-pie/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="series-toggle"
+                           displayName="series-toggle"
+                           projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/series-toggle/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="series-types"
+                           displayName="series-types"
+                           projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/series-types/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="shared" displayName="shared" projectFiles="true">
+              <logicalFolder name="jquery-ui" displayName="jquery-ui" projectFiles="true">
+                <itemPath>WEB/lib/flot/examples/shared/jquery-ui/jquery-ui.min.css</itemPath>
+                <itemPath>WEB/lib/flot/examples/shared/jquery-ui/jquery-ui.min.js</itemPath>
+              </logicalFolder>
+            </logicalFolder>
+            <logicalFolder name="stacking" displayName="stacking" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/stacking/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="symbols" displayName="symbols" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/symbols/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="threshold" displayName="threshold" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/threshold/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="tracking" displayName="tracking" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/tracking/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="visitors" displayName="visitors" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/visitors/index.html</itemPath>
+            </logicalFolder>
+            <logicalFolder name="zooming" displayName="zooming" projectFiles="true">
+              <itemPath>WEB/lib/flot/examples/zooming/index.html</itemPath>
+            </logicalFolder>
+            <itemPath>WEB/lib/flot/examples/background.png</itemPath>
+            <itemPath>WEB/lib/flot/examples/examples.css</itemPath>
+            <itemPath>WEB/lib/flot/examples/index.html</itemPath>
+          </logicalFolder>
+          <itemPath>WEB/lib/flot/API.md</itemPath>
+          <itemPath>WEB/lib/flot/CONTRIBUTING.md</itemPath>
+          <itemPath>WEB/lib/flot/FAQ.md</itemPath>
+          <itemPath>WEB/lib/flot/LICENSE.txt</itemPath>
+          <itemPath>WEB/lib/flot/Makefile</itemPath>
+          <itemPath>WEB/lib/flot/NEWS.md</itemPath>
+          <itemPath>WEB/lib/flot/PLUGINS.md</itemPath>
+          <itemPath>WEB/lib/flot/README.md</itemPath>
+          <itemPath>WEB/lib/flot/excanvas.js</itemPath>
+          <itemPath>WEB/lib/flot/excanvas.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.colorhelpers.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.colorhelpers.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.canvas.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.canvas.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.categories.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.categories.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.crosshair.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.crosshair.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.errorbars.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.errorbars.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.fillbetween.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.fillbetween.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.image.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.image.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.navigate.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.navigate.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.pie.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.pie.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.resize.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.resize.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.selection.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.selection.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.stack.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.stack.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.symbol.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.symbol.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.threshold.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.threshold.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.time.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.flot.time.min.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.js</itemPath>
+          <itemPath>WEB/lib/flot/jquery.min.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="font-awesome"
+                       displayName="font-awesome"
+                       projectFiles="true">
+          <logicalFolder name="fonts" displayName="fonts" projectFiles="true">
+            <itemPath>WEB/lib/font-awesome/fonts/FontAwesome.otf</itemPath>
+            <itemPath>WEB/lib/font-awesome/fonts/fontawesome-webfont.eot</itemPath>
+            <itemPath>WEB/lib/font-awesome/fonts/fontawesome-webfont.svg</itemPath>
+            <itemPath>WEB/lib/font-awesome/fonts/fontawesome-webfont.ttf</itemPath>
+            <itemPath>WEB/lib/font-awesome/fonts/fontawesome-webfont.woff</itemPath>
+          </logicalFolder>
+          <itemPath>WEB/lib/font-awesome/font-awesome.min.css</itemPath>
+        </logicalFolder>
+        <logicalFolder name="jQRangeSlider"
+                       displayName="jQRangeSlider"
+                       projectFiles="true">
+          <itemPath>WEB/lib/jQRangeSlider/jQDateRangeSlider-withRuler-min.js</itemPath>
+          <itemPath>WEB/lib/jQRangeSlider/jQDateRangeSlider.css</itemPath>
+          <itemPath>WEB/lib/jQRangeSlider/jquery.mousewheel.min.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="jquery-ui" displayName="jquery-ui" projectFiles="true">
+          <logicalFolder name="css" displayName="css" projectFiles="true">
+            <logicalFolder name="smoothness" displayName="smoothness" projectFiles="true">
+              <logicalFolder name="images" displayName="images" projectFiles="true">
+                <itemPath>WEB/lib/jquery-ui/css/smoothness/images/ui-bg_flat_0_aaaaaa_40x100.png</itemPath>
+                <itemPath>WEB/lib/jquery-ui/css/smoothness/images/ui-bg_flat_75_ffffff_40x100.png</itemPath>
+                <itemPath>WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_55_fbf9ee_1x400.png</itemPath>
+                <itemPath>WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_65_ffffff_1x400.png</itemPath>
+                <itemPath>WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_dadada_1x400.png</itemPath>
+                <itemPath>WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_e6e6e6_1x400.png</itemPath>
+                <itemPath>WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_95_fef1ec_1x400.png</itemPath>
+                <itemPath>WEB/lib/jquery-ui/css/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png</itemPath>
+                <itemPath>WEB/lib/jquery-ui/css/smoothness/images/ui-icons_222222_256x240.png</itemPath>
+                <itemPath>WEB/lib/jquery-ui/css/smoothness/images/ui-icons_2e83ff_256x240.png</itemPath>
+                <itemPath>WEB/lib/jquery-ui/css/smoothness/images/ui-icons_454545_256x240.png</itemPath>
+                <itemPath>WEB/lib/jquery-ui/css/smoothness/images/ui-icons_888888_256x240.png</itemPath>
+                <itemPath>WEB/lib/jquery-ui/css/smoothness/images/ui-icons_cd0a0a_256x240.png</itemPath>
+              </logicalFolder>
+              <itemPath>WEB/lib/jquery-ui/css/smoothness/jquery-ui-1.8.10.custom.css</itemPath>
+            </logicalFolder>
+          </logicalFolder>
+          <logicalFolder name="js" displayName="js" projectFiles="true">
+            <itemPath>WEB/lib/jquery-ui/js/jquery-ui.min.js</itemPath>
+          </logicalFolder>
+        </logicalFolder>
+        <logicalFolder name="jquery.lineProgressbar"
+                       displayName="jquery.lineProgressbar"
+                       projectFiles="true">
+          <itemPath>WEB/lib/jquery.lineProgressbar/jquery.lineProgressbar.css</itemPath>
+          <itemPath>WEB/lib/jquery.lineProgressbar/jquery.lineProgressbar.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="livestamp" displayName="livestamp" projectFiles="true">
+          <itemPath>WEB/lib/livestamp/livestamp.min.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="metisMenu" displayName="metisMenu" projectFiles="true">
+          <itemPath>WEB/lib/metisMenu/.bower.json</itemPath>
+          <itemPath>WEB/lib/metisMenu/metisMenu.css</itemPath>
+          <itemPath>WEB/lib/metisMenu/metisMenu.js</itemPath>
+          <itemPath>WEB/lib/metisMenu/metisMenu.min.css</itemPath>
+          <itemPath>WEB/lib/metisMenu/metisMenu.min.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="momentjs" displayName="momentjs" projectFiles="true">
+          <itemPath>WEB/lib/momentjs/moment.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="nvd3" displayName="nvd3" projectFiles="true">
+          <itemPath>WEB/lib/nvd3/nv.d3.css</itemPath>
+          <itemPath>WEB/lib/nvd3/nv.d3.min.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="qtip2" displayName="qtip2" projectFiles="true">
+          <itemPath>WEB/lib/qtip2/imagesloaded.pkg.min.js</itemPath>
+          <itemPath>WEB/lib/qtip2/imagesloaded.pkg.min.js.map</itemPath>
+          <itemPath>WEB/lib/qtip2/jquery.qtip.css</itemPath>
+          <itemPath>WEB/lib/qtip2/jquery.qtip.js</itemPath>
+          <itemPath>WEB/lib/qtip2/jquery.qtip.min.css</itemPath>
+          <itemPath>WEB/lib/qtip2/jquery.qtip.min.js</itemPath>
+          <itemPath>WEB/lib/qtip2/jquery.qtip.min.js.map</itemPath>
+        </logicalFolder>
+        <logicalFolder name="scrollto" displayName="scrollto" projectFiles="true">
+          <itemPath>WEB/lib/scrollto/jquery.scrollTo.min.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="spin.js" displayName="spin.js" projectFiles="true">
+          <itemPath>WEB/lib/spin.js/spin.min.js</itemPath>
+        </logicalFolder>
+        <logicalFolder name="visjs" displayName="visjs" projectFiles="true">
+          <logicalFolder name="img" displayName="img" projectFiles="true">
+            <logicalFolder name="network" displayName="network" projectFiles="true">
+              <itemPath>WEB/lib/visjs/img/network/acceptDeleteIcon.png</itemPath>
+              <itemPath>WEB/lib/visjs/img/network/addNodeIcon.png</itemPath>
+              <itemPath>WEB/lib/visjs/img/network/backIcon.png</itemPath>
+              <itemPath>WEB/lib/visjs/img/network/connectIcon.png</itemPath>
+              <itemPath>WEB/lib/visjs/img/network/cross.png</itemPath>
+              <itemPath>WEB/lib/visjs/img/network/cross2.png</itemPath>
+              <itemPath>WEB/lib/visjs/img/network/deleteIcon.png</itemPath>
+              <itemPath>WEB/lib/visjs/img/network/downArrow.png</itemPath>
+              <itemPath>WEB/lib/visjs/img/network/editIcon.png</itemPath>
+              <itemPath>WEB/lib/visjs/img/network/leftArrow.png</itemPath>
+              <itemPath>WEB/lib/visjs/img/network/minus.png</itemPath>
+              <itemPath>WEB/lib/visjs/img/network/plus.png</itemPath>
+              <itemPath>WEB/lib/visjs/img/network/rightArrow.png</itemPath>
+              <itemPath>WEB/lib/visjs/img/network/upArrow.png</itemPath>
+              <itemPath>WEB/lib/visjs/img/network/zoomExtends.png</itemPath>
+            </logicalFolder>
+            <logicalFolder name="timeline" displayName="timeline" projectFiles="true">
+              <itemPath>WEB/lib/visjs/img/timeline/delete.png</itemPath>
+            </logicalFolder>
+          </logicalFolder>
+          <itemPath>WEB/lib/visjs/vis.css</itemPath>
+          <itemPath>WEB/lib/visjs/vis.js</itemPath>
+          <itemPath>WEB/lib/visjs/vis.map</itemPath>
+          <itemPath>WEB/lib/visjs/vis.min.css</itemPath>
+          <itemPath>WEB/lib/visjs/vis.min.js</itemPath>
+        </logicalFolder>
+        <itemPath>WEB/lib/jquery.min.js</itemPath>
+      </logicalFolder>
+      <itemPath>WEB/favicon.ico</itemPath>
+      <itemPath>WEB/index.php</itemPath>
+    </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
                    projectFiles="false"
@@ -18,15 +534,18 @@
     <itemPath>Makefile</itemPath>
     <itemPath>Processing.c</itemPath>
     <itemPath>RequestServer.c</itemPath>
-    <itemPath>Resources.c</itemPath>
+    <itemPath>Resources.cpp</itemPath>
     <itemPath>Tools.cpp</itemPath>
     <itemPath>Tools.h</itemPath>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>WEB</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="Debug" type="1">
       <toolsSet>
-        <compilerSet>default</compilerSet>
+        <compilerSet>GNU|GNU</compilerSet>
         <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
@@ -35,6 +554,7 @@
           <standard>4</standard>
           <incDir>
             <pElem>/usr/include/libxml2</pElem>
+            <pElem>/usr/include</pElem>
           </incDir>
         </ccTool>
         <linkerTool>
@@ -63,11 +583,1347 @@
       </item>
       <item path="RequestServer.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="Resources.c" ex="false" tool="0" flavor2="0">
+      <item path="Resources.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Tools.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Tools.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/application/.htaccess" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/Account.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/Analysis.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/Dashboard.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/Events.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/Login.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/Settings.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/Stats.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/models/Data_model.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/models/Event_model.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/models/Sysinfo_model.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/models/index.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/application/views/account_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/analysis/current_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/analysis/energy_power_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/analysis/frequency_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/analysis/harmonics_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/analysis/voltage_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/dashboard_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/cli/error_404.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/cli/error_db.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/cli/error_exception.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/cli/error_general.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/cli/error_php.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/cli/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/html/error_404.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/html/error_db.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/html/error_exception.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/html/error_general.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/html/error_php.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/html/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/events/disturbances_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/events/itic_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/index.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/application/views/login_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/settings_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/stats_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/template/commonHead.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/template/commonScripts.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/template/header.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/css/common.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/css/login.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/favicon.ico" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/img/load.gif" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/img/loading.gif" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/img/logo.png" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/index.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/account.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/analysis/analysis.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/analysis/current.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/analysis/energy_power.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/analysis/frequency.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/analysis/harmonics.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/analysis/voltage.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/common.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/dashboard.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/events/disturbances.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/events/events.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/events/itic.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/live.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/login.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/settings.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/stats.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/utils.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/zTicker.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-datetimepicker/moment.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/bootstrapValidator.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/bootstrapValidator.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/ar_MA.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/be_FR.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/be_NL.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/bg_BG.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/cs_CZ.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/da_DK.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/de_DE.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/en_US.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/es_CL.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/es_ES.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/fa_IR.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/fr_FR.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/gr_EL.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/hu_HU.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/id_ID.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/it_IT.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/ja_JP.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/nl_NL.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/no_NO.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/pl_PL.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/pt_BR.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/ro_RO.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/ru_RU.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/sr_RS.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/sv_SE.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/th_TH.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/tr_TR.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/ua_UA.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/vi_VN.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/zh_CN.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/zh_TW.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/css/bootstrap-theme.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/css/bootstrap-theme.css.map"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/css/bootstrap-theme.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/css/bootstrap.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/css/bootstrap.css.map"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/css/bootstrap.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/fonts/glyphicons-halflings-regular.eot"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/fonts/glyphicons-halflings-regular.svg"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/fonts/glyphicons-halflings-regular.ttf"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/fonts/glyphicons-halflings-regular.woff"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/js/bootstrap.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/js/bootstrap.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/c3js/c3.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/c3js/c3.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/cubism/cubism.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/d3-tip/d3-tip.min.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/d3-tip/d3-tip.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/d3/colorbrewer.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/d3/colorbrewer.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/d3/d3.v3.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/d3/d3.v3.min_bak.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/css/dataTables.bootstrap.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/css/dataTables.responsive.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/css/jquery.dataTables.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/images/favicon.ico"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/images/sort_asc.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/images/sort_asc_disabled.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/images/sort_both.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/images/sort_desc.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/images/sort_desc_disabled.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/js/dataTables.bootstrap.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/js/dataTables.responsive.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/js/jquery.dataTables.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/dc.js/crossfilter.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/dc.js/dc.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/dc.js/dc.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/dygraph/chart-plotter.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/dygraph/crosshair.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/dygraph/dygraph-combined_back.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/dygraph/dygraph-interaction.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/dygraph/dygraph.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/dygraph/synchronize.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/API.md" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/CONTRIBUTING.md" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/FAQ.md" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/LICENSE.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/Makefile" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/NEWS.md" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/PLUGINS.md" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/README.md" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-eu-gdp-growth-1.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-eu-gdp-growth-2.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-eu-gdp-growth-3.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-eu-gdp-growth-4.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-eu-gdp-growth-5.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-eu-gdp-growth.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-japan-gdp-growth.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-usa-gdp-growth.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/annotating/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-interacting/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-multiple/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/date.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/africa"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/antarctica"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/asia"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/australasia"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/backward"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/etcetera"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/europe"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/factory"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/iso3166.tab"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/leapseconds"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/northamerica"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/pacificnew"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/solar87"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/solar88"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/solar89"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/southamerica"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/systemv"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/yearistype.sh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/zone.tab"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/background.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/basic-options/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/basic-usage/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/canvas/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/categories/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/examples.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/image/hs-2004-27-a-large-web.jpg"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/image/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/index.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/interacting/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/navigate/arrow-down.gif"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/navigate/arrow-left.gif"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/navigate/arrow-right.gif"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/navigate/arrow-up.gif"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/navigate/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/percentiles/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/realtime/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/resize/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/selection/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/series-errorbars/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/series-pie/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/series-toggle/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/series-types/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/shared/jquery-ui/jquery-ui.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/shared/jquery-ui/jquery-ui.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/stacking/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/symbols/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/threshold/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/tracking/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/visitors/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/zooming/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/excanvas.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/excanvas.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.colorhelpers.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.colorhelpers.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.canvas.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.canvas.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.categories.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.categories.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.crosshair.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.crosshair.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.errorbars.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.errorbars.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.fillbetween.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.fillbetween.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.image.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.image.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.navigate.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.navigate.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.pie.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.pie.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.resize.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.resize.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.selection.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.selection.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.stack.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.stack.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.symbol.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.symbol.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.threshold.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.threshold.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.time.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.time.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/font-awesome/font-awesome.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/font-awesome/fonts/FontAwesome.otf"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/font-awesome/fonts/fontawesome-webfont.eot"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/font-awesome/fonts/fontawesome-webfont.svg"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/font-awesome/fonts/fontawesome-webfont.ttf"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/font-awesome/fonts/fontawesome-webfont.woff"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jQRangeSlider/jQDateRangeSlider-withRuler-min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jQRangeSlider/jQDateRangeSlider.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jQRangeSlider/jquery.mousewheel.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_flat_0_aaaaaa_40x100.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_flat_75_ffffff_40x100.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_55_fbf9ee_1x400.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_65_ffffff_1x400.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_dadada_1x400.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_e6e6e6_1x400.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_95_fef1ec_1x400.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-icons_222222_256x240.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-icons_2e83ff_256x240.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-icons_454545_256x240.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-icons_888888_256x240.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-icons_cd0a0a_256x240.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/jquery-ui-1.8.10.custom.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/js/jquery-ui.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery.lineProgressbar/jquery.lineProgressbar.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery.lineProgressbar/jquery.lineProgressbar.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/livestamp/livestamp.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/metisMenu/.bower.json" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/metisMenu/metisMenu.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/metisMenu/metisMenu.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/metisMenu/metisMenu.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/metisMenu/metisMenu.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/momentjs/moment.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/nvd3/nv.d3.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/nvd3/nv.d3.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/qtip2/imagesloaded.pkg.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/qtip2/imagesloaded.pkg.min.js.map"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/qtip2/jquery.qtip.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/qtip2/jquery.qtip.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/qtip2/jquery.qtip.min.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/qtip2/jquery.qtip.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/qtip2/jquery.qtip.min.js.map"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/scrollto/jquery.scrollTo.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/spin.js/spin.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/acceptDeleteIcon.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/addNodeIcon.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/backIcon.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/connectIcon.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/cross.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/cross2.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/deleteIcon.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/downArrow.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/editIcon.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/leftArrow.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/minus.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/plus.png" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/rightArrow.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/upArrow.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/zoomExtends.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/timeline/delete.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/vis.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/vis.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/vis.map" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/vis.min.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/vis.min.js" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
     <conf name="Release" type="1">
@@ -112,11 +1968,1347 @@
       </item>
       <item path="RequestServer.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="Resources.c" ex="false" tool="0" flavor2="0">
+      <item path="Resources.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Tools.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Tools.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/application/.htaccess" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/Account.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/Analysis.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/Dashboard.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/Events.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/Login.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/Settings.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/Stats.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/controllers/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/models/Data_model.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/models/Event_model.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/models/Sysinfo_model.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/models/index.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/application/views/account_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/analysis/current_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/analysis/energy_power_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/analysis/frequency_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/analysis/harmonics_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/analysis/voltage_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/dashboard_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/cli/error_404.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/cli/error_db.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/cli/error_exception.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/cli/error_general.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/cli/error_php.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/cli/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/html/error_404.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/html/error_db.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/html/error_exception.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/html/error_general.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/html/error_php.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/html/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/errors/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/events/disturbances_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/events/itic_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/index.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/application/views/login_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/settings_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/stats_view.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/template/commonHead.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/template/commonScripts.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/application/views/template/header.php"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/css/common.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/css/login.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/favicon.ico" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/img/load.gif" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/img/loading.gif" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/img/logo.png" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/index.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/account.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/analysis/analysis.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/analysis/current.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/analysis/energy_power.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/analysis/frequency.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/analysis/harmonics.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/analysis/voltage.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/common.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/dashboard.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/events/disturbances.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/events/events.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/events/itic.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/live.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/login.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/settings.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/stats.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/utils.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/js/zTicker.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-datetimepicker/moment.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/bootstrapValidator.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/bootstrapValidator.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/ar_MA.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/be_FR.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/be_NL.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/bg_BG.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/cs_CZ.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/da_DK.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/de_DE.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/en_US.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/es_CL.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/es_ES.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/fa_IR.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/fr_FR.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/gr_EL.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/hu_HU.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/id_ID.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/it_IT.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/ja_JP.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/nl_NL.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/no_NO.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/pl_PL.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/pt_BR.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/ro_RO.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/ru_RU.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/sr_RS.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/sv_SE.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/th_TH.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/tr_TR.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/ua_UA.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/vi_VN.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/zh_CN.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap-validator/language/zh_TW.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/css/bootstrap-theme.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/css/bootstrap-theme.css.map"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/css/bootstrap-theme.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/css/bootstrap.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/css/bootstrap.css.map"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/css/bootstrap.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/fonts/glyphicons-halflings-regular.eot"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/fonts/glyphicons-halflings-regular.svg"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/fonts/glyphicons-halflings-regular.ttf"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/fonts/glyphicons-halflings-regular.woff"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/js/bootstrap.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/bootstrap/js/bootstrap.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/c3js/c3.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/c3js/c3.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/cubism/cubism.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/d3-tip/d3-tip.min.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/d3-tip/d3-tip.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/d3/colorbrewer.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/d3/colorbrewer.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/d3/d3.v3.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/d3/d3.v3.min_bak.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/css/dataTables.bootstrap.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/css/dataTables.responsive.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/css/jquery.dataTables.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/images/favicon.ico"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/images/sort_asc.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/images/sort_asc_disabled.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/images/sort_both.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/images/sort_desc.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/images/sort_desc_disabled.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/js/dataTables.bootstrap.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/js/dataTables.responsive.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/datatables/js/jquery.dataTables.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/dc.js/crossfilter.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/dc.js/dc.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/dc.js/dc.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/dygraph/chart-plotter.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/dygraph/crosshair.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/dygraph/dygraph-combined_back.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/dygraph/dygraph-interaction.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/dygraph/dygraph.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/dygraph/synchronize.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/API.md" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/CONTRIBUTING.md" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/FAQ.md" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/LICENSE.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/Makefile" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/NEWS.md" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/PLUGINS.md" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/README.md" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-eu-gdp-growth-1.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-eu-gdp-growth-2.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-eu-gdp-growth-3.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-eu-gdp-growth-4.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-eu-gdp-growth-5.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-eu-gdp-growth.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-japan-gdp-growth.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/data-usa-gdp-growth.json"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/ajax/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/annotating/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-interacting/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-multiple/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/date.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/africa"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/antarctica"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/asia"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/australasia"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/backward"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/etcetera"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/europe"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/factory"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/iso3166.tab"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/leapseconds"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/northamerica"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/pacificnew"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/solar87"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/solar88"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/solar89"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/southamerica"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/systemv"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/yearistype.sh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time-zones/tz/zone.tab"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/axes-time/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/background.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/basic-options/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/basic-usage/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/canvas/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/categories/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/examples.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/image/hs-2004-27-a-large-web.jpg"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/image/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/index.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/interacting/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/navigate/arrow-down.gif"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/navigate/arrow-left.gif"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/navigate/arrow-right.gif"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/navigate/arrow-up.gif"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/navigate/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/percentiles/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/realtime/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/resize/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/selection/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/series-errorbars/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/series-pie/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/series-toggle/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/series-types/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/shared/jquery-ui/jquery-ui.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/shared/jquery-ui/jquery-ui.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/stacking/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/symbols/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/threshold/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/tracking/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/visitors/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/examples/zooming/index.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/excanvas.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/excanvas.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.colorhelpers.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.colorhelpers.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.canvas.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.canvas.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.categories.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.categories.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.crosshair.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.crosshair.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.errorbars.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.errorbars.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.fillbetween.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.fillbetween.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.image.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.image.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.navigate.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.navigate.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.pie.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.pie.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.resize.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.resize.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.selection.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.selection.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.stack.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.stack.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.symbol.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.symbol.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.threshold.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.threshold.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.time.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.flot.time.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/flot/jquery.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/font-awesome/font-awesome.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/font-awesome/fonts/FontAwesome.otf"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/font-awesome/fonts/fontawesome-webfont.eot"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/font-awesome/fonts/fontawesome-webfont.svg"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/font-awesome/fonts/fontawesome-webfont.ttf"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/font-awesome/fonts/fontawesome-webfont.woff"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jQRangeSlider/jQDateRangeSlider-withRuler-min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jQRangeSlider/jQDateRangeSlider.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jQRangeSlider/jquery.mousewheel.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_flat_0_aaaaaa_40x100.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_flat_75_ffffff_40x100.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_55_fbf9ee_1x400.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_65_ffffff_1x400.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_dadada_1x400.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_e6e6e6_1x400.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_glass_95_fef1ec_1x400.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-icons_222222_256x240.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-icons_2e83ff_256x240.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-icons_454545_256x240.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-icons_888888_256x240.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/images/ui-icons_cd0a0a_256x240.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/css/smoothness/jquery-ui-1.8.10.custom.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery-ui/js/jquery-ui.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery.lineProgressbar/jquery.lineProgressbar.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery.lineProgressbar/jquery.lineProgressbar.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/jquery.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/livestamp/livestamp.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/metisMenu/.bower.json" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/metisMenu/metisMenu.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/metisMenu/metisMenu.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/metisMenu/metisMenu.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/metisMenu/metisMenu.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/momentjs/moment.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/nvd3/nv.d3.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/nvd3/nv.d3.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/qtip2/imagesloaded.pkg.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/qtip2/imagesloaded.pkg.min.js.map"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/qtip2/jquery.qtip.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/qtip2/jquery.qtip.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/qtip2/jquery.qtip.min.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/qtip2/jquery.qtip.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/qtip2/jquery.qtip.min.js.map"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/scrollto/jquery.scrollTo.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/spin.js/spin.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/acceptDeleteIcon.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/addNodeIcon.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/backIcon.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/connectIcon.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/cross.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/cross2.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/deleteIcon.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/downArrow.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/editIcon.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/leftArrow.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/minus.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/plus.png" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/rightArrow.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/upArrow.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/network/zoomExtends.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/img/timeline/delete.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/vis.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/vis.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/vis.map" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/vis.min.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/lib/visjs/vis.min.js" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>

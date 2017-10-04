@@ -73,17 +73,17 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service: ${OBJECTFILES}
 ${OBJECTDIR}/Analyzer.o: Analyzer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Analyzer.o Analyzer.cpp
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Analyzer.o Analyzer.cpp
 
 ${OBJECTDIR}/CaptureInterface.o: CaptureInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureInterface.o CaptureInterface.cpp
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureInterface.o CaptureInterface.cpp
 
 ${OBJECTDIR}/DB.o: DB.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DB.o DB.cpp
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DB.o DB.cpp
 
 ${OBJECTDIR}/Events.o: Events.c
 	${MKDIR} -p ${OBJECTDIR}
@@ -105,15 +105,15 @@ ${OBJECTDIR}/RequestServer.o: RequestServer.c
 	${RM} "$@.d"
 	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/RequestServer.o RequestServer.c
 
-${OBJECTDIR}/Resources.o: Resources.c
+${OBJECTDIR}/Resources.o: Resources.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Resources.o Resources.c
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Resources.o Resources.cpp
 
 ${OBJECTDIR}/Tools.o: Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Tools.o Tools.cpp
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Tools.o Tools.cpp
 
 # Subprojects
 .build-subprojects:

@@ -19,5 +19,12 @@
             <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/DB.h</file>
             <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/DB.cpp</file>
         </group>
+        <group>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/Analyzer.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/Tools.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/Main.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/DB.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/DB.cpp</file>
+        </group>
     </open-files>
 </project-private>

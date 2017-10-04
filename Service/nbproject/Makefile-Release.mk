@@ -14,14 +14,14 @@ GREP=grep
 NM=nm
 CCADMIN=CCadmin
 RANLIB=ranlib
-CC=gcc
-CCC=g++
-CXX=g++
+CC=arm-none-eabi-gcc
+CCC=arm-none-eabi-g++
+CXX=arm-none-eabi-g++
 FC=gfortran
-AS=as
+AS=arm-none-eabi-as
 
 # Macros
-CND_PLATFORM=GNU-Linux
+CND_PLATFORM=arm-none-eabi-Linux
 CND_DLIB_EXT=so
 CND_CONF=Release
 CND_DISTDIR=dist
@@ -105,10 +105,10 @@ ${OBJECTDIR}/RequestServer.o: RequestServer.c
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/RequestServer.o RequestServer.c
 
-${OBJECTDIR}/Resources.o: Resources.c
+${OBJECTDIR}/Resources.o: Resources.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Resources.o Resources.c
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Resources.o Resources.cpp
 
 ${OBJECTDIR}/Tools.o: Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}

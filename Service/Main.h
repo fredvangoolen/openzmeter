@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <inttypes.h>
 #include <pthread.h>
-#include <fftw3.h>
+//#include <fftw3.h>
 
 #define MAX_FRAME                     3688         //Longitud maxima de muestras de un frame (236ms)
 //Definiciones relaccionadas con la adquisicion de datos desde el puerto USB ===========================================
@@ -77,13 +77,13 @@ typedef struct {
   float Real;                           //Parte real
   float Imag;                           //Parte imaginaria
 } Complex_t;
-typedef struct {
-  float     *Input;                     //Muestras de entrada
-  uint32_t   Len;                       //Longitud de la transformada
-  fftwf_plan Plan;                      //Plan para realizar la transformada
-  pthread_t  Thread;                    //Hilo de ejecucion
-  Complex_t  Result[1];                 //Datos de salida
-} FFT_t;
+//typedef struct {
+//  float     *Input;                     //Muestras de entrada
+//  uint32_t   Len;                       //Longitud de la transformada
+//  fftwf_plan Plan;                      //Plan para realizar la transformada
+//  pthread_t  Thread;                    //Hilo de ejecucion
+//  Complex_t  Result[1];                 //Datos de salida
+//} FFT_t;
 typedef struct {
   uint32_t Start;                       //Muestra dentro del bloque que inicia el ciclo
   uint32_t End;                         //Muestra dentro del bloque que finaliza el ciclo
