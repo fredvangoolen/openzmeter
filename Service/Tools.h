@@ -12,12 +12,6 @@ class Tools {
     static FILE *LogFile;
     static char *PidFileName;
   public :
-    static bool Debug;
-    static void LogMsg(const char *level, const char *msg, ...);
-    static bool SetLogFile(const char *filename);
-    static void Daemonize();
-    static bool CreatePidFile();
-    static bool RemovePidFile();
     typedef struct {
       int   sample_rate;
       int   nominal_frequency;
@@ -27,6 +21,21 @@ class Tools {
       float CurrentGain;
       int   CurrentOffset;
     } Electrical_t;
+    typedef struct {
+      char *Database;
+      char *Host;
+      int   Port;
+      char *User;
+      char *Password;
+    } DB_t;
     static Electrical_t Electrical;
+    static DB_t         DB;
+  public :
+    static bool Debug;
+    static void LogMsg(const char *level, const char *msg, ...);
+    static bool SetLogFile(const char *filename);
+    static void Daemonize();
+    static bool CreatePidFile();
+    static bool RemovePidFile();
 };
 //----------------------------------------------------------------------------------------------------------------------

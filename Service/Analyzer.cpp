@@ -29,7 +29,7 @@ float Analyzer_Frequency(Work_t* work) {
 }
 bool Analyzer_Start() {
 //  if(Adquisition_Start(NULL, ADQUISITION_BUFFERSIZE, 50.0) == false) return false;
-  LogMsg("INFO", "Starting analyzer thread...\n");
+//  LogMsg("INFO", "Starting analyzer thread...\n");
   Terminate = false;
   Thread = 0;
   LastCyclesCount  = 0;
@@ -47,7 +47,7 @@ void Analyzer_Stop() {
     //  pthread_cond_signal(&WriteWait);
   //  pthread_cond_signal(&ReadWait);
     Terminate = true;
-    LogMsg("INFO", "Waiting for analysis thread ends...\n");
+//    LogMsg("INFO", "Waiting for analysis thread ends...\n");
     pthread_join(Thread, NULL);
 //    Adquisition_Stop();
   //  free(Buffer);

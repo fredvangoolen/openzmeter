@@ -50,15 +50,6 @@ typedef struct {
     char *Pid;
   } Global;
   struct {
-    const char *Database;
-    const char *Host;
-    int         Port;
-    const char *User;
-    const char *Password;
-    int         QueueLen;
-    int         MaxRows;
-  } DB;
-  struct {
     int   sample_rate;
     int   nominal_frequency;
     float nominal_voltage;

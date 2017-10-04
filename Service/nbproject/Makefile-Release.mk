@@ -34,7 +34,16 @@ include Makefile
 OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
-OBJECTFILES=
+OBJECTFILES= \
+	${OBJECTDIR}/Analyzer.o \
+	${OBJECTDIR}/CaptureInterface.o \
+	${OBJECTDIR}/DB.o \
+	${OBJECTDIR}/Events.o \
+	${OBJECTDIR}/Main.o \
+	${OBJECTDIR}/Processing.o \
+	${OBJECTDIR}/RequestServer.o \
+	${OBJECTDIR}/Resources.o \
+	${OBJECTDIR}/Tools.o
 
 
 # C Compiler Flags
@@ -59,7 +68,52 @@ LDLIBSOPTIONS=
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service ${OBJECTFILES} ${LDLIBSOPTIONS}
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service ${OBJECTFILES} ${LDLIBSOPTIONS}
+
+${OBJECTDIR}/Analyzer.o: Analyzer.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Analyzer.o Analyzer.cpp
+
+${OBJECTDIR}/CaptureInterface.o: CaptureInterface.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureInterface.o CaptureInterface.cpp
+
+${OBJECTDIR}/DB.o: DB.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DB.o DB.cpp
+
+${OBJECTDIR}/Events.o: Events.c
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Events.o Events.c
+
+${OBJECTDIR}/Main.o: Main.c
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.c
+
+${OBJECTDIR}/Processing.o: Processing.c
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Processing.o Processing.c
+
+${OBJECTDIR}/RequestServer.o: RequestServer.c
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/RequestServer.o RequestServer.c
+
+${OBJECTDIR}/Resources.o: Resources.c
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Resources.o Resources.c
+
+${OBJECTDIR}/Tools.o: Tools.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Tools.o Tools.cpp
 
 # Subprojects
 .build-subprojects:

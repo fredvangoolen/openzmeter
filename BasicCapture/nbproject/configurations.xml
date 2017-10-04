@@ -7,38 +7,31 @@
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
+    <itemPath>BasicCapture.cpp</itemPath>
+    <itemPath>BasicCapture.h</itemPath>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
-    <conf name="Debug" type="2">
+    <conf name="Default" type="2">
       <toolsSet>
         <compilerSet>default</compilerSet>
         <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
-      </compileType>
-    </conf>
-    <conf name="Release" type="2">
-      <toolsSet>
-        <compilerSet>default</compilerSet>
-        <dependencyChecking>true</dependencyChecking>
-        <rebuildPropChanged>false</rebuildPropChanged>
-      </toolsSet>
-      <compileType>
-        <cTool>
-          <developmentMode>5</developmentMode>
-        </cTool>
         <ccTool>
-          <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>../Service</pElem>
+          </incDir>
         </ccTool>
-        <fortranCompilerTool>
-          <developmentMode>5</developmentMode>
-        </fortranCompilerTool>
-        <asmTool>
-          <developmentMode>5</developmentMode>
-        </asmTool>
+        <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/mod_BasicCapture.${CND_DLIB_EXT}</output>
+        </linkerTool>
       </compileType>
+      <item path="BasicCapture.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="BasicCapture.h" ex="false" tool="3" flavor2="0">
+      </item>
     </conf>
   </confs>
 </configurationDescriptor>
