@@ -36,13 +36,14 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/Analyzer.o \
+	${OBJECTDIR}/BasicCapture/BasicCapture.o \
 	${OBJECTDIR}/CaptureInterface.o \
 	${OBJECTDIR}/DB.o \
 	${OBJECTDIR}/Events.o \
+	${OBJECTDIR}/HTTPServer.o \
 	${OBJECTDIR}/Main.o \
 	${OBJECTDIR}/Processing.o \
 	${OBJECTDIR}/RequestServer.o \
-	${OBJECTDIR}/Resources.o \
 	${OBJECTDIR}/Tools.o
 
 
@@ -64,36 +65,46 @@ LDLIBSOPTIONS=
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/servicev2
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service: ${OBJECTFILES}
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/servicev2: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service ${OBJECTFILES} ${LDLIBSOPTIONS} -lm -lfftw3f -lpthread -lrt -lpq -lcurl -lxml2 -lmicrohttpd
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/servicev2 ${OBJECTFILES} ${LDLIBSOPTIONS} -lm -lfftw3f -lpthread -lrt -lpq -lcurl -lxml2 -lmicrohttpd -lusb-1.0
 
 ${OBJECTDIR}/Analyzer.o: Analyzer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Analyzer.o Analyzer.cpp
+	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Analyzer.o Analyzer.cpp
+
+${OBJECTDIR}/BasicCapture/BasicCapture.o: BasicCapture/BasicCapture.cpp
+	${MKDIR} -p ${OBJECTDIR}/BasicCapture
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/BasicCapture/BasicCapture.o BasicCapture/BasicCapture.cpp
 
 ${OBJECTDIR}/CaptureInterface.o: CaptureInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureInterface.o CaptureInterface.cpp
+	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureInterface.o CaptureInterface.cpp
 
 ${OBJECTDIR}/DB.o: DB.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DB.o DB.cpp
+	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DB.o DB.cpp
 
 ${OBJECTDIR}/Events.o: Events.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Events.o Events.c
 
-${OBJECTDIR}/Main.o: Main.c
+${OBJECTDIR}/HTTPServer.o: HTTPServer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.c
+	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/HTTPServer.o HTTPServer.cpp
+
+${OBJECTDIR}/Main.o: Main.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.cpp
 
 ${OBJECTDIR}/Processing.o: Processing.c
 	${MKDIR} -p ${OBJECTDIR}
@@ -105,15 +116,10 @@ ${OBJECTDIR}/RequestServer.o: RequestServer.c
 	${RM} "$@.d"
 	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/RequestServer.o RequestServer.c
 
-${OBJECTDIR}/Resources.o: Resources.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Resources.o Resources.cpp
-
 ${OBJECTDIR}/Tools.o: Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Tools.o Tools.cpp
+	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Tools.o Tools.cpp
 
 # Subprojects
 .build-subprojects:

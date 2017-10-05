@@ -1,10 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <? $this->load->view('template/commonHead', array('title' => 'Dashboard')) ?>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="favicon.ico" />
+    <base href="<?= base_url(); ?>">
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css">
+    <link href="lib/metisMenu/metisMenu.min.css" rel="stylesheet">
+    <link href="lib/font-awesome/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+    <link href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" rel="stylesheet" type="text/css"/>
+    <link href="css/common.css" rel="stylesheet">
+    <title>openZmeter | Dashboard</title>
   </head>
   <body>
-    <? $this->load->view('template/header') ?>
+    <nav class="navbar navbar-default navbar-fixed-top" style="margin-bottom: 0" id="Header"></nav>
+    <span class="clearfix"> </span>
     <div class="modal fade" id="aggreg_modal" tabindex="-1" role="dialog" data-backdrop='static'>
       <div class="modal-dialog">
         <div class="modal-content">
@@ -284,11 +297,24 @@
       <!-- /#page-wrapper -->
     </div>
     <!-- /#wrapper -->
-    <? $this->load->view('template/commonScripts') ?>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="lib/metisMenu/metisMenu.min.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/common.js"></script>
+    <script src="lib/dygraph/dygraph.js"></script>
+    <script src="lib/dygraph/crosshair.js"></script>
+    <script src="lib/dygraph/dygraph-interaction.js"></script>
+    <script src="lib/jquery.lineProgressbar/jquery.lineProgressbar.js"></script>
+    
+    
     <script src="lib/spin.js/spin.min.js"></script>
     <script src="lib/dygraph/chart-plotter.js"></script>
     <script src="lib/dygraph/crosshair.js"></script>
     <script src="lib/dygraph/synchronize.js"></script>
     <script src="js/dashboard.js"></script>
+    <script>
+    $("#Header").load('CommonHeader.html');
+    </script>
   </body>
 </html>

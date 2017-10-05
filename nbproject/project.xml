@@ -11,6 +11,8 @@
             <make-dep-projects/>
             <sourceRootList>
                 <sourceRootElem>WEB</sourceRootElem>
+                <sourceRootElem>Resources</sourceRootElem>
+                <sourceRootElem>BasicCapture</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

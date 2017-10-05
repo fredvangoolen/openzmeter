@@ -5,13 +5,19 @@
 #pragma once
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdint.h>
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   private :
     static bool  Daemonized;
     static FILE *LogFile;
-    static char *PidFileName;
   public :
+    typedef struct {
+      uint16_t HTTPPort;
+      char    *Listen;
+      char    *Log;
+      char    *Pid;
+    } Global_t;
     typedef struct {
       int   sample_rate;
       int   nominal_frequency;
@@ -28,13 +34,15 @@ class Tools {
       char *User;
       char *Password;
     } DB_t;
-    static Electrical_t Electrical;
-    static DB_t         DB;
+    static Global_t      Global;
+    static Electrical_t  Electrical;
+    static DB_t          DB;
   public :
     static bool Debug;
+    static bool ReadConfig(char *file);
     static void LogMsg(const char *level, const char *msg, ...);
-    static bool SetLogFile(const char *filename);
     static void Daemonize();
+    static bool CreateLogFile();
     static bool CreatePidFile();
     static bool RemovePidFile();
 };

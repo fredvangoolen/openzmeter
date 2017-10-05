@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="BasicCapture"
+                   displayName="BasicCapture"
+                   projectFiles="true">
+      <itemPath>BasicCapture/BasicCapture.cpp</itemPath>
+      <itemPath>BasicCapture/BasicCapture.h</itemPath>
+    </logicalFolder>
     <logicalFolder name="WEB" displayName="WEB" projectFiles="true">
       <logicalFolder name="application" displayName="application" projectFiles="true">
         <logicalFolder name="controllers" displayName="controllers" projectFiles="true">
@@ -62,7 +68,6 @@
           <itemPath>WEB/application/views/settings_view.php</itemPath>
           <itemPath>WEB/application/views/stats_view.php</itemPath>
         </logicalFolder>
-        <itemPath>WEB/application/.htaccess</itemPath>
       </logicalFolder>
       <logicalFolder name="css" displayName="css" projectFiles="true">
         <itemPath>WEB/css/common.css</itemPath>
@@ -521,7 +526,9 @@
                    displayName="Important Files"
                    projectFiles="false"
                    kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Database.sql</itemPath>
       <itemPath>Makefile</itemPath>
+      <itemPath>openZmeter.ini</itemPath>
     </logicalFolder>
     <itemPath>Analyzer.cpp</itemPath>
     <itemPath>CaptureInterface.cpp</itemPath>
@@ -529,17 +536,20 @@
     <itemPath>DB.cpp</itemPath>
     <itemPath>DB.h</itemPath>
     <itemPath>Events.c</itemPath>
-    <itemPath>Main.c</itemPath>
+    <itemPath>HTTPServer.cpp</itemPath>
+    <itemPath>HTTPServer.h</itemPath>
+    <itemPath>Main.cpp</itemPath>
     <itemPath>Main.h</itemPath>
     <itemPath>Makefile</itemPath>
     <itemPath>Processing.c</itemPath>
     <itemPath>RequestServer.c</itemPath>
-    <itemPath>Resources.cpp</itemPath>
     <itemPath>Tools.cpp</itemPath>
     <itemPath>Tools.h</itemPath>
   </logicalFolder>
   <sourceRootList>
     <Elem>WEB</Elem>
+    <Elem>Resources</Elem>
+    <Elem>BasicCapture</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -556,12 +566,19 @@
             <pElem>/usr/include/libxml2</pElem>
             <pElem>/usr/include</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>_GNU_SOURCE</Elem>
+          </preprocessorList>
         </ccTool>
         <linkerTool>
-          <commandLine>-lm -lfftw3f -lpthread -lrt -lpq -lcurl -lxml2 -lmicrohttpd</commandLine>
+          <commandLine>-lm -lfftw3f -lpthread -lrt -lpq -lcurl -lxml2 -lmicrohttpd -lusb-1.0</commandLine>
         </linkerTool>
       </compileType>
       <item path="Analyzer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="BasicCapture/BasicCapture.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="BasicCapture/BasicCapture.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="CaptureInterface.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -573,7 +590,11 @@
       </item>
       <item path="Events.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="Main.c" ex="false" tool="0" flavor2="0">
+      <item path="HTTPServer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="HTTPServer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Main.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Main.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -583,13 +604,9 @@
       </item>
       <item path="RequestServer.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="Resources.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="Tools.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Tools.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/application/.htaccess" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/application/controllers/Account.php"
             ex="false"
@@ -1948,6 +1965,10 @@
       </compileType>
       <item path="Analyzer.cpp" ex="false" tool="1" flavor2="0">
       </item>
+      <item path="BasicCapture/BasicCapture.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="BasicCapture/BasicCapture.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="CaptureInterface.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="CaptureInterface.h" ex="false" tool="3" flavor2="0">
@@ -1958,7 +1979,11 @@
       </item>
       <item path="Events.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="Main.c" ex="false" tool="0" flavor2="0">
+      <item path="HTTPServer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="HTTPServer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Main.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Main.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -1968,13 +1993,9 @@
       </item>
       <item path="RequestServer.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="Resources.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="Tools.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Tools.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/application/.htaccess" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/application/controllers/Account.php"
             ex="false"

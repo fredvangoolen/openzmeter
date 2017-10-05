@@ -15,10 +15,15 @@
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <libusb-1.0/libusb.h>
-#include <fftw3.h>
 #include "BasicCapture.h"
-#include "Tools.h"
+#include "../Tools.h"
 // Funciones ===========================================================================================================
+uint8_t BasicCapture::CurrentChannels() {
+  return 1;
+}
+uint8_t BasicCapture::VoltageChannels() {
+  return 1;
+}
 void   BasicCapture::ReadCallback(struct libusb_transfer *transfer) {
   int16_t *Buff16 = (int16_t*)transfer->buffer;
   int      Len = transfer->actual_length / 4;
@@ -104,24 +109,6 @@ void   BasicCapture::FFT_Wait(FFT_t *fft) {
   fftwf_destroy_plan(fft->Plan);
   return;
 }
-void BasicCapture::CalculateCycleRMS(Work_t *work) {
-  for(int i = 0; i < work->Cycles_Len; i++) {
-    float Sum = 0;
-    for(int j = work->Cycles[i].Start; j < work->Cycles[i].End; j++) Sum += pow(work->VoltageSamples[j], 2);
-    work->Cycles[i].Voltage_RMS = sqrt(Sum / (work->Cycles[i].End - work->Cycles[i].Start));
-  }
-}
-void BasicCapture::CalculateIntervalRMSs(Work_t *work, Params_t *params) {
-  float V = 0.0;
-  float I = 0.0;
-  for(int i = 0; i < work->Samples; i++) {
-    V += pow(work->VoltageSamples[i], 2.0);
-    I += pow(work->CurrentSamples[i], 2.0);
-  }
-  params->RMS_V = sqrt(V / work->Samples);
-  params->RMS_I = sqrt(I / work->Samples);
-}
-
 float BasicCapture::CalculateFrequency(Work_t* work) {
   static uint64_t NumSamples = 0;    //Numero de muestras leidas desde el ultimo calculo
   static uint32_t NumCycles  = 0;    //Numero de ciclos desde ultimo calculo
@@ -135,29 +122,6 @@ float BasicCapture::CalculateFrequency(Work_t* work) {
   }
   return Frequency;
 }
-// Calculate active power
-void CalculateActivePower(Work_t *work, Params_t *params) {
-  float P = 0;
-  for(int i = 0; i < work->Samples; i++) P += pow(work->VoltageSamples[i], 2.0) * pow(work->CurrentSamples[i], 2.0);
-  params->Active_Power = sqrt(P / work->Samples);
-}
-// Calculate energy
-void CalculateEnergy(Work_t* work, Params_t *params) {
-  params->Energy = (params->Active_Power * work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
-}
-// Calculate voltage and current harmonics (return DC offset)
-float CalculateHarmonicsRMS(Work_t *work, FFT_t *FFT_Voltage, FFT_t *FFT_Current, Params_t *params) {
-  static const int FirstHarmonicBin = 10;
-  static const int HarmonicHop      = 10;
-  for(int i = 0; i < 50; i++) {
-    params->VoltageArmonics[i] = sqrt(pow(FFT_Voltage->Result[i * HarmonicHop + FirstHarmonicBin].Real, 2.0) + pow(FFT_Voltage->Result[i * HarmonicHop + FirstHarmonicBin].Imag, 2.0));
-    params->CurrentArmonics[i] = sqrt(pow(FFT_Current->Result[i * HarmonicHop + FirstHarmonicBin].Imag, 2.0) + pow(FFT_Current->Result[i * HarmonicHop + FirstHarmonicBin].Imag, 2.0));
-  }
-  return sqrt(pow(FFT_Voltage->Result[0].Real, 2.0) + pow(FFT_Voltage->Result[0].Imag, 2.0));
-}
-
-
-
 BasicCapture::FFT_t *BasicCapture::FFT_Start(float *data, uint32_t len) {
   FFT_t *FFT = (FFT_t *)malloc(sizeof(FFT_t) + sizeof(Complex_t) * ceil(len / 2));
   FFT->Plan = fftwf_plan_dft_r2c_1d(len, data, (fftwf_complex*)FFT->Result, FFTW_ESTIMATE);
@@ -294,8 +258,8 @@ CaptureInterface::Params_t *BasicCapture::Analyze(Work_t *work) {
   free(work);
   return Params;
 }
-BasicCapture::BasicCapture(char* device, uint32_t bufferLen, float baseFreq) {
-  Tools::LogMsg("INFO", "Starting adquisition thread...\n");
+BasicCapture::BasicCapture(char* device, uint32_t bufferLen, float baseFreq) : CaptureInterface() {
+  Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
   Buffer = NULL;
   ReadPos = 0;
   WritePos = 0;

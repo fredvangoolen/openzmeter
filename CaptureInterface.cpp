@@ -2,7 +2,7 @@
  * File:     CaptureInterface.cpp
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
-
+#include "CaptureInterface.h"
 //
 //
 //
@@ -57,3 +57,6 @@
 //  PQclear(Result);
 //  return true;
 //}
+CaptureInterface::CaptureInterface() {}
+CaptureInterface::~CaptureInterface() {
+}

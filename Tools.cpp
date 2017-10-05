@@ -15,9 +15,9 @@
 bool  Tools::Daemonized = false;
 bool  Tools::Debug = false;
 FILE *Tools::LogFile = NULL;
-char *Tools::PidFileName  = (char*)"/var/run/openZmeter.pid";
-
-Tools::DB_t Tools::DB = {};
+Tools::Global_t     Tools::Global;
+Tools::DB_t         Tools::DB;
+Tools::Electrical_t Tools::Electrical;
 //----------------------------------------------------------------------------------------------------------------------
 void Tools::LogMsg(const char *level, const char *msg, ...) {
   if((Debug == false) && (strcmp(level, "DEBUG") == 0)) return;
@@ -53,10 +53,9 @@ void Tools::LogMsg(const char *level, const char *msg, ...) {
   }
   va_end(args);
 }
-bool Tools::SetLogFile(const char *filename) {
-  if(LogFile == NULL) fclose(Tools::LogFile);
-  LogFile = fopen(filename, "at");
-  if(!LogFile) LogFile = fopen(filename, "wt");
+bool Tools::CreateLogFile() {
+  LogFile = fopen(Global.Log, "at");
+  if(!LogFile) LogFile = fopen(Global.Log, "wt");
   if(!LogFile) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return false;
@@ -66,8 +65,8 @@ bool Tools::SetLogFile(const char *filename) {
 bool Tools::CreatePidFile() {
   char PID_Number[64];
   int Len = sprintf(PID_Number, "%d", getpid());
-  remove(PidFileName);
-  int File = open(PidFileName, O_CREAT, O_WRONLY);
+  remove(Global.Pid);
+  int File = open(Global.Pid, O_CREAT, O_WRONLY);
   if(File < 0) {
     LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return false;
@@ -77,7 +76,7 @@ bool Tools::CreatePidFile() {
   return true;
 }
 bool Tools::RemovePidFile() {
- return remove(PidFileName);
+ return remove(Global.Pid);
 }
 void Tools::Daemonize() {
   pid_t ProcID = fork();
@@ -97,6 +96,68 @@ void Tools::Daemonize() {
   close(STDOUT_FILENO);
   close(STDERR_FILENO);
 }
+bool Tools::ReadConfig(char *file) {
+  Global.Pid      = (char*)"/var/run/openZmeter.pid";
+  Global.Listen   = (char*)"/var/run/openZmeter.sock";
+  Global.Log      = (char*)"/var/log/openZmeter.log";
+  Global.HTTPPort = 8080;
+  Electrical.VoltageGain   =     0.01200000;
+  Electrical.VoltageOffset =   292.00000000;
+  Electrical.CurrentGain   =    -0.00078125;
+  Electrical.CurrentOffset =     0.00000000;
+  DB.Database              = (char*)"openzmeter";
+  DB.Host                  = (char*)"127.0.0.1";
+  DB.Port                  = 5432;
+  DB.User                  = (char*)"openzmeter";
+  
+  if(file == NULL) return true;
+  LogMsg("INFO", "Loading config file...\n");
+//  FILE *File = fopen(filename, "r");
+//  if(!File) {
+////    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//    return false;
+//  }
+//  char Line[256];
+//  char Section[256] = "";
+//  int  LineNumber   = 0;
+//  bool Error        = false;
+//  while(fgets(Line, sizeof(Line), File) != NULL) {
+//    LineNumber++;
+//    char *Start = lskip(rstrip(Line));
+//    if((Start[0] == ';') || (Start[0] == '#') || (strlen(Start) == 0)) {
+//      continue;
+//    } else if(Start[0] == '[') {
+//      char *End = strchr(&Start[1], ']');
+//      if((End == NULL) || (&Start[1] == End)) {
+////        LogMsg("ERROR", "Reading config file (unmached ']' at line %d\n", LineNumber);
+//        Error = true;
+//        break;
+//      }
+//      End[0] = 0;
+//      strcpy(Section, &Start[1]);
+//    } else {
+//      char *End = strchr(&Start[1], '=');
+//      if(End == NULL) {
+////        LogMsg("ERROR", "Expected '=' at line %d\n", LineNumber);
+//        Error = true;
+//        break;
+//      }
+//      End[0] = 0;
+//      char *Param = rstrip(Start);
+//      char *Value = lskip(&End[1]);
+//      if(Config_Handler(Section, Param, Value) == false) {
+//        Error = true;
+//        break;
+//      }
+//    }
+//  }
+//  fclose(File);
+//  return !Error;
+  return true;
+}
+
+
+
 
 
 
@@ -224,56 +285,4 @@ static char* strncpy0(char* dest, const char* src, size_t size)
 ////    }
 //  }
 //  return true;
-//}
-//bool Config_Init(char *filename) {
-////  Config.Global.Listen = "/var/run/openZmeter.sock";
-////  Config.Global.Log    = "/var/log/openZmeter.log";
-//  
-//  Config.Electrical.VoltageGain   =     0.01200000;
-//  Config.Electrical.VoltageOffset =   292.00000000;
-//  Config.Electrical.CurrentGain   =    -0.00078125;
-//  Config.Electrical.CurrentOffset =     0.00000000;
-//  if(filename == NULL) return true;
-////  LogMsg("INFO", "Loading config file...\n");
-//  FILE *File = fopen(filename, "r");
-//  if(!File) {
-////    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    return false;
-//  }
-//  char Line[256];
-//  char Section[256] = "";
-//  int  LineNumber   = 0;
-//  bool Error        = false;
-//  while(fgets(Line, sizeof(Line), File) != NULL) {
-//    LineNumber++;
-//    char *Start = lskip(rstrip(Line));
-//    if((Start[0] == ';') || (Start[0] == '#') || (strlen(Start) == 0)) {
-//      continue;
-//    } else if(Start[0] == '[') {
-//      char *End = strchr(&Start[1], ']');
-//      if((End == NULL) || (&Start[1] == End)) {
-////        LogMsg("ERROR", "Reading config file (unmached ']' at line %d\n", LineNumber);
-//        Error = true;
-//        break;
-//      }
-//      End[0] = 0;
-//      strcpy(Section, &Start[1]);
-//    } else {
-//      char *End = strchr(&Start[1], '=');
-//      if(End == NULL) {
-////        LogMsg("ERROR", "Expected '=' at line %d\n", LineNumber);
-//        Error = true;
-//        break;
-//      }
-//      End[0] = 0;
-//      char *Param = rstrip(Start);
-//      char *Value = lskip(&End[1]);
-//      if(Config_Handler(Section, Param, Value) == false) {
-//        Error = true;
-//        break;
-//      }
-//    }
-//  }
-//  fclose(File);
-//  return !Error;
 //}

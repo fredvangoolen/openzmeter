@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-//#include <microhttpd.h>
+
 #include "Main.h"
 /* Escucha las peticiones que lleguen por el socket, devolviendo los datos disponibles
  * La escucha se realiza en un unico hilo y se atiende de forma secuencial, por que es de esperar que no haga 
@@ -37,39 +37,6 @@ typedef struct {
 
 // Variables privadas ==================================================================================================
 RequestServer_t RequestServer;
-
-//#define PORT 8888
-//int answer_to_connection (void *cls, struct MHD_Connection *connection,
-//const char *url,
-//const char *method, const char *version,
-//const char *upload_data,
-//size_t *upload_data_size, void **con_cls)
-//{
-//const char *page = "<html><body>Hello, browser!</body></html>";
-//struct MHD_Response *response;
-//int ret;
-//response = MHD_create_response_from_buffer (strlen (page),
-//(void*) page, MHD_RESPMEM_PERSISTENT);
-//
-//ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-//MHD_destroy_response (response);
-//return ret;
-//}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Funciones ===========================================================================================================
 void RequestServer_Handle(int socket) {
   char Buffer[REQUESTSERVER_BUFSIZE];
@@ -199,10 +166,7 @@ void *RequestServer_Thread(void *arg) {
   return NULL;
 }
 bool RequestServer_Start(char *path) {
-//    struct MHD_Daemon *daemon;
-//daemon = MHD_start_daemon (MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, PORT, NULL, NULL,
-//&answer_to_connection, NULL, MHD_OPTION_END);
-//return true;
+
   
   
   

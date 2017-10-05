@@ -3,7 +3,8 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
-#include "CaptureInterface.h"
+#include <fftw3.h>
+#include "../CaptureInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define ADQUISITION_USB_VID         0x0483                //Product ID
 #define ADQUISITION_PID             0x7270                //Device ID
@@ -74,16 +75,19 @@ class BasicCapture : public CaptureInterface {
     static void  *Analize_Thread(void *args);
     static void  *FFT_Thread(void *args);
     static void   ReadCallback(struct libusb_transfer *transfer);
-    static float  ApplyFilter(float in, AdquisitionFilter_t *filter);
-    static float  CalcPhi(Complex_t voltage, Complex_t current);
-    static void   FFT_Wait(FFT_t *fft);
-    static FFT_t *FFT_Start(float *data, uint32_t len);
+    float  ApplyFilter(float in, AdquisitionFilter_t *filter);
+    float  CalculateFrequency(Work_t* work);
+    float  CalcPhi(Complex_t voltage, Complex_t current);
+    void   FFT_Wait(FFT_t *fft);
+    FFT_t *FFT_Start(float *data, uint32_t len);
   private :
     Work_t   *GetWork();
     Params_t *Analyze(Work_t *work);
     void   SamplesCopy(float *dest, int32_t offset, uint32_t len);
   public :
     BasicCapture(char *device, uint32_t bufferLen, float baseFreq);
+    uint8_t CurrentChannels();
+    uint8_t VoltageChannels();
     bool IsRunning();
     ~BasicCapture();
 };

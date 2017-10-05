@@ -1,5 +1,5 @@
 /* ================================== zMeter ==================================
- * File:     main.c
+ * File:     main.cpp
  * Author:   Pedro Sanchez (3 de marzo de 2015)
  * Modified: Eduardo Viciana (20 de marzo de 2017)
  * ---------------------------------------------------------------------------- */
@@ -16,6 +16,10 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include "Main.h"
+#include "Tools.h"
+#include "HTTPServer.h"
+#include "CaptureInterface.h"
+#include "BasicCapture/BasicCapture.h"
 
 bool  Terminate  = false;
 bool  Daemonize  = false;
@@ -25,7 +29,7 @@ void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
 }
 int main(int argc, char** argv) {
-  char *ConfigFile = "/etc/openZmeter.conf";
+  char *ConfigFile = (char*)"/etc/openZmeter.ini";
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
       ConfigFile = &argv[i][9];
@@ -43,16 +47,17 @@ int main(int argc, char** argv) {
       printf("Option %s not recogniced. Use --help to show valid options.", argv[i]);
     }
   }
-//  if(Daemonize == true) Tools::Daemonize();
-
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
   setpriority(PRIO_PROCESS, 0, -20);
-//  if(Config_Init(ConfigFile) == false) goto Stop;
-//  CreatePidFile(Config.Global.Pid);
-//  CreateLogFile(Config.Global.Log);
+  if(Daemonize == true) Tools::Daemonize();
+  if(Tools::ReadConfig(ConfigFile) == false);// goto Stop;
+  Tools::CreatePidFile();
+  Tools::CreateLogFile();
+  HTTPServer::Start();
+  BasicCapture *Capture1 = new BasicCapture("", 8192*1024, 15625);
 
-  uint32_t LastPrice;
+  //  uint32_t LastPrice;
 //  if(DB_Start(&LastPrice) == true) {
 //    if(Analyzer_Start() == false) goto Stop;
 //    DB_Started = true;
@@ -83,7 +88,7 @@ int main(int argc, char** argv) {
 //    End = Time.tv_sec * 1000000 + Time.tv_nsec / 1000;
 //    LogMsg("DEBUG", "Processing block took %.1f mSec\n", (End - Start) / 1000.0);
   }
-Stop:
+//Stop:
 //  Prices_Stop();
 //  Analyzer_Stop();
 //  RequestServer_Stop();

@@ -3,6 +3,7 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
+#include <inttypes.h>
 class CaptureInterface {
   public :
     typedef struct {
@@ -46,7 +47,8 @@ class CaptureInterface {
     virtual uint8_t CurrentChannels() = 0;
     virtual uint8_t VoltageChannels() = 0;
   public :
-    bool ExecDBSentence(const char *sql);
-    
+//    bool ExecDBSentence(const char *sql);
+    CaptureInterface();
+    virtual ~CaptureInterface();
     //static void   CreateInstances();
 };

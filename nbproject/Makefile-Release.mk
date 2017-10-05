@@ -14,14 +14,14 @@ GREP=grep
 NM=nm
 CCADMIN=CCadmin
 RANLIB=ranlib
-CC=arm-none-eabi-gcc
-CCC=arm-none-eabi-g++
-CXX=arm-none-eabi-g++
+CC=gcc
+CCC=g++
+CXX=g++
 FC=gfortran
-AS=arm-none-eabi-as
+AS=as
 
 # Macros
-CND_PLATFORM=arm-none-eabi-Linux
+CND_PLATFORM=GNU-Linux
 CND_DLIB_EXT=so
 CND_CONF=Release
 CND_DISTDIR=dist
@@ -36,13 +36,14 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/Analyzer.o \
+	${OBJECTDIR}/BasicCapture/BasicCapture.o \
 	${OBJECTDIR}/CaptureInterface.o \
 	${OBJECTDIR}/DB.o \
 	${OBJECTDIR}/Events.o \
+	${OBJECTDIR}/HTTPServer.o \
 	${OBJECTDIR}/Main.o \
 	${OBJECTDIR}/Processing.o \
 	${OBJECTDIR}/RequestServer.o \
-	${OBJECTDIR}/Resources.o \
 	${OBJECTDIR}/Tools.o
 
 
@@ -64,16 +65,21 @@ LDLIBSOPTIONS=
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/servicev2
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service: ${OBJECTFILES}
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/servicev2: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service ${OBJECTFILES} ${LDLIBSOPTIONS}
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/servicev2 ${OBJECTFILES} ${LDLIBSOPTIONS}
 
 ${OBJECTDIR}/Analyzer.o: Analyzer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Analyzer.o Analyzer.cpp
+
+${OBJECTDIR}/BasicCapture/BasicCapture.o: BasicCapture/BasicCapture.cpp
+	${MKDIR} -p ${OBJECTDIR}/BasicCapture
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/BasicCapture/BasicCapture.o BasicCapture/BasicCapture.cpp
 
 ${OBJECTDIR}/CaptureInterface.o: CaptureInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}
@@ -90,10 +96,15 @@ ${OBJECTDIR}/Events.o: Events.c
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Events.o Events.c
 
-${OBJECTDIR}/Main.o: Main.c
+${OBJECTDIR}/HTTPServer.o: HTTPServer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.c
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/HTTPServer.o HTTPServer.cpp
+
+${OBJECTDIR}/Main.o: Main.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.cpp
 
 ${OBJECTDIR}/Processing.o: Processing.c
 	${MKDIR} -p ${OBJECTDIR}
@@ -104,11 +115,6 @@ ${OBJECTDIR}/RequestServer.o: RequestServer.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/RequestServer.o RequestServer.c
-
-${OBJECTDIR}/Resources.o: Resources.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Resources.o Resources.cpp
 
 ${OBJECTDIR}/Tools.o: Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}

@@ -6,25 +6,19 @@
     </data>
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/Processing.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/Tools.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/Analyzer.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/Main.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/Tools.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/CaptureInterface.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/Main.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/Prices.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/RequestServer.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/DB.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/DB.cpp</file>
-        </group>
         <group>
             <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/Analyzer.cpp</file>
             <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/Tools.cpp</file>
             <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/Main.h</file>
             <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/DB.h</file>
             <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/DB.cpp</file>
+        </group>
+        <group name="ServiceV2">
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/BasicCapture/BasicCapture.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Tools.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/WEB/index.php</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Tools.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Main.c</file>
         </group>
     </open-files>
 </project-private>
