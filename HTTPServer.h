@@ -14,13 +14,12 @@ class HTTPServer {
       char            ID[33];
       uint32_t        ResourceCounter;
       time_t          Start;
-//      char            value_1[64];
-//      char value_2[64];
+      char           *User;
     } Session_t;
     static MHD_Daemon *Daemon;
-    static int        HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **con_cls);
-    static int        HandleFile(struct MHD_Connection *connection, const char *url);
+    static int        HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
     static void       ExpireSessions();
+    static int        HandleLogin(struct MHD_Connection *connection, Session_t *session);
     static Session_t *GetSession(MHD_Connection *connection);
     static Session_t *Sessions; 
   public :

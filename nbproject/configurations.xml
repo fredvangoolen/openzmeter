@@ -8,67 +8,6 @@
       <itemPath>BasicCapture/BasicCapture.h</itemPath>
     </logicalFolder>
     <logicalFolder name="WEB" displayName="WEB" projectFiles="true">
-      <logicalFolder name="application" displayName="application" projectFiles="true">
-        <logicalFolder name="controllers" displayName="controllers" projectFiles="true">
-          <itemPath>WEB/application/controllers/Account.php</itemPath>
-          <itemPath>WEB/application/controllers/Analysis.php</itemPath>
-          <itemPath>WEB/application/controllers/Dashboard.php</itemPath>
-          <itemPath>WEB/application/controllers/Events.php</itemPath>
-          <itemPath>WEB/application/controllers/Login.php</itemPath>
-          <itemPath>WEB/application/controllers/Settings.php</itemPath>
-          <itemPath>WEB/application/controllers/Stats.php</itemPath>
-          <itemPath>WEB/application/controllers/index.html</itemPath>
-        </logicalFolder>
-        <logicalFolder name="models" displayName="models" projectFiles="true">
-          <itemPath>WEB/application/models/Data_model.php</itemPath>
-          <itemPath>WEB/application/models/Event_model.php</itemPath>
-          <itemPath>WEB/application/models/Sysinfo_model.php</itemPath>
-          <itemPath>WEB/application/models/index.html</itemPath>
-        </logicalFolder>
-        <logicalFolder name="views" displayName="views" projectFiles="true">
-          <logicalFolder name="analysis" displayName="analysis" projectFiles="true">
-            <itemPath>WEB/application/views/analysis/current_view.php</itemPath>
-            <itemPath>WEB/application/views/analysis/energy_power_view.php</itemPath>
-            <itemPath>WEB/application/views/analysis/frequency_view.php</itemPath>
-            <itemPath>WEB/application/views/analysis/harmonics_view.php</itemPath>
-            <itemPath>WEB/application/views/analysis/voltage_view.php</itemPath>
-          </logicalFolder>
-          <logicalFolder name="errors" displayName="errors" projectFiles="true">
-            <logicalFolder name="cli" displayName="cli" projectFiles="true">
-              <itemPath>WEB/application/views/errors/cli/error_404.php</itemPath>
-              <itemPath>WEB/application/views/errors/cli/error_db.php</itemPath>
-              <itemPath>WEB/application/views/errors/cli/error_exception.php</itemPath>
-              <itemPath>WEB/application/views/errors/cli/error_general.php</itemPath>
-              <itemPath>WEB/application/views/errors/cli/error_php.php</itemPath>
-              <itemPath>WEB/application/views/errors/cli/index.html</itemPath>
-            </logicalFolder>
-            <logicalFolder name="html" displayName="html" projectFiles="true">
-              <itemPath>WEB/application/views/errors/html/error_404.php</itemPath>
-              <itemPath>WEB/application/views/errors/html/error_db.php</itemPath>
-              <itemPath>WEB/application/views/errors/html/error_exception.php</itemPath>
-              <itemPath>WEB/application/views/errors/html/error_general.php</itemPath>
-              <itemPath>WEB/application/views/errors/html/error_php.php</itemPath>
-              <itemPath>WEB/application/views/errors/html/index.html</itemPath>
-            </logicalFolder>
-            <itemPath>WEB/application/views/errors/index.html</itemPath>
-          </logicalFolder>
-          <logicalFolder name="events" displayName="events" projectFiles="true">
-            <itemPath>WEB/application/views/events/disturbances_view.php</itemPath>
-            <itemPath>WEB/application/views/events/itic_view.php</itemPath>
-          </logicalFolder>
-          <logicalFolder name="template" displayName="template" projectFiles="true">
-            <itemPath>WEB/application/views/template/commonHead.php</itemPath>
-            <itemPath>WEB/application/views/template/commonScripts.php</itemPath>
-            <itemPath>WEB/application/views/template/header.php</itemPath>
-          </logicalFolder>
-          <itemPath>WEB/application/views/account_view.php</itemPath>
-          <itemPath>WEB/application/views/dashboard_view.php</itemPath>
-          <itemPath>WEB/application/views/index.html</itemPath>
-          <itemPath>WEB/application/views/login_view.php</itemPath>
-          <itemPath>WEB/application/views/settings_view.php</itemPath>
-          <itemPath>WEB/application/views/stats_view.php</itemPath>
-        </logicalFolder>
-      </logicalFolder>
       <logicalFolder name="css" displayName="css" projectFiles="true">
         <itemPath>WEB/css/common.css</itemPath>
         <itemPath>WEB/css/login.css</itemPath>
@@ -519,6 +458,60 @@
         </logicalFolder>
         <itemPath>WEB/lib/jquery.min.js</itemPath>
       </logicalFolder>
+      <logicalFolder name="Resources" displayName="Resources" projectFiles="true">
+      </logicalFolder>
+      <logicalFolder name="Views" displayName="Views" projectFiles="true">
+        <logicalFolder name="analysis" displayName="analysis" projectFiles="true">
+          <itemPath>WEB/Views/analysis/Analysis_Current.html</itemPath>
+          <itemPath>WEB/Views/analysis/energy_power_view.php</itemPath>
+          <itemPath>WEB/Views/analysis/frequency_view.php</itemPath>
+          <itemPath>WEB/Views/analysis/harmonics_view.php</itemPath>
+          <itemPath>WEB/Views/analysis/voltage_view.php</itemPath>
+        </logicalFolder>
+        <logicalFolder name="errors" displayName="errors" projectFiles="true">
+          <logicalFolder name="cli" displayName="cli" projectFiles="true">
+            <itemPath>WEB/Views/errors/cli/error_404.php</itemPath>
+            <itemPath>WEB/Views/errors/cli/error_db.php</itemPath>
+            <itemPath>WEB/Views/errors/cli/error_exception.php</itemPath>
+            <itemPath>WEB/Views/errors/cli/error_general.php</itemPath>
+            <itemPath>WEB/Views/errors/cli/error_php.php</itemPath>
+            <itemPath>WEB/Views/errors/cli/index.html</itemPath>
+          </logicalFolder>
+          <logicalFolder name="html" displayName="html" projectFiles="true">
+            <itemPath>WEB/Views/errors/html/error_404.php</itemPath>
+            <itemPath>WEB/Views/errors/html/error_db.php</itemPath>
+            <itemPath>WEB/Views/errors/html/error_exception.php</itemPath>
+            <itemPath>WEB/Views/errors/html/error_general.php</itemPath>
+            <itemPath>WEB/Views/errors/html/error_php.php</itemPath>
+            <itemPath>WEB/Views/errors/html/index.html</itemPath>
+          </logicalFolder>
+          <itemPath>WEB/Views/errors/index.html</itemPath>
+        </logicalFolder>
+        <logicalFolder name="events" displayName="events" projectFiles="true">
+          <itemPath>WEB/Views/events/disturbances_view.php</itemPath>
+          <itemPath>WEB/Views/events/itic_view.php</itemPath>
+        </logicalFolder>
+        <logicalFolder name="template" displayName="template" projectFiles="true">
+          <itemPath>WEB/Views/template/commonHeader.html</itemPath>
+          <itemPath>WEB/Views/template/commonScripts.php</itemPath>
+        </logicalFolder>
+        <itemPath>WEB/Views/Login.html</itemPath>
+        <itemPath>WEB/Views/account_view.php</itemPath>
+        <itemPath>WEB/Views/settings_view.php</itemPath>
+        <itemPath>WEB/Views/stats_view.php</itemPath>
+      </logicalFolder>
+      <itemPath>WEB/Account.php</itemPath>
+      <itemPath>WEB/Analysis.php</itemPath>
+      <itemPath>WEB/CommonHeader.html</itemPath>
+      <itemPath>WEB/Dashboard.php</itemPath>
+      <itemPath>WEB/Data_model.php</itemPath>
+      <itemPath>WEB/Event_model.php</itemPath>
+      <itemPath>WEB/Events.php</itemPath>
+      <itemPath>WEB/Login.php</itemPath>
+      <itemPath>WEB/Settings.php</itemPath>
+      <itemPath>WEB/Stats.php</itemPath>
+      <itemPath>WEB/Sysinfo_model.php</itemPath>
+      <itemPath>WEB/dashboard_view.php</itemPath>
       <itemPath>WEB/favicon.ico</itemPath>
       <itemPath>WEB/index.php</itemPath>
     </logicalFolder>
@@ -608,201 +601,118 @@
       </item>
       <item path="Tools.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/application/controllers/Account.php"
+      <item path="WEB/Account.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Analysis.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/CommonHeader.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Dashboard.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Data_model.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Event_model.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Events.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Login.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Settings.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Stats.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Sysinfo_model.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/Login.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/account_view.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/analysis/Analysis_Current.html"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/controllers/Analysis.php"
+      <item path="WEB/Views/analysis/energy_power_view.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/controllers/Dashboard.php"
+      <item path="WEB/Views/analysis/frequency_view.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/controllers/Events.php"
+      <item path="WEB/Views/analysis/harmonics_view.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/controllers/Login.php"
+      <item path="WEB/Views/analysis/voltage_view.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/controllers/Settings.php"
+      <item path="WEB/Views/errors/cli/error_404.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/errors/cli/error_db.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/errors/cli/error_exception.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/controllers/Stats.php"
+      <item path="WEB/Views/errors/cli/error_general.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/controllers/index.html"
+      <item path="WEB/Views/errors/cli/error_php.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/errors/cli/index.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/errors/html/error_404.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/models/Data_model.php"
+      <item path="WEB/Views/errors/html/error_db.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/errors/html/error_exception.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/models/Event_model.php"
+      <item path="WEB/Views/errors/html/error_general.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/models/Sysinfo_model.php"
+      <item path="WEB/Views/errors/html/error_php.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/models/index.html" ex="false" tool="3" flavor2="0">
+      <item path="WEB/Views/errors/html/index.html" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/application/views/account_view.php"
+      <item path="WEB/Views/errors/index.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/events/disturbances_view.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/views/analysis/current_view.php"
+      <item path="WEB/Views/events/itic_view.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/settings_view.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/stats_view.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/template/commonHeader.html"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/views/analysis/energy_power_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/analysis/frequency_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/analysis/harmonics_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/analysis/voltage_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/dashboard_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/cli/error_404.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/cli/error_db.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/cli/error_exception.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/cli/error_general.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/cli/error_php.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/cli/index.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/html/error_404.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/html/error_db.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/html/error_exception.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/html/error_general.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/html/error_php.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/html/index.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/index.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/events/disturbances_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/events/itic_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/index.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/application/views/login_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/settings_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/stats_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/template/commonHead.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/template/commonScripts.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/template/header.php"
+      <item path="WEB/Views/template/commonScripts.php"
             ex="false"
             tool="3"
             flavor2="0">
@@ -810,6 +720,8 @@
       <item path="WEB/css/common.css" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/css/login.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/dashboard_view.php" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/favicon.ico" ex="false" tool="3" flavor2="0">
       </item>
@@ -1997,201 +1909,118 @@
       </item>
       <item path="Tools.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/application/controllers/Account.php"
+      <item path="WEB/Account.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Analysis.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/CommonHeader.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Dashboard.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Data_model.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Event_model.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Events.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Login.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Settings.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Stats.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Sysinfo_model.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/Login.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/account_view.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/analysis/Analysis_Current.html"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/controllers/Analysis.php"
+      <item path="WEB/Views/analysis/energy_power_view.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/controllers/Dashboard.php"
+      <item path="WEB/Views/analysis/frequency_view.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/controllers/Events.php"
+      <item path="WEB/Views/analysis/harmonics_view.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/controllers/Login.php"
+      <item path="WEB/Views/analysis/voltage_view.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/controllers/Settings.php"
+      <item path="WEB/Views/errors/cli/error_404.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/errors/cli/error_db.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/errors/cli/error_exception.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/controllers/Stats.php"
+      <item path="WEB/Views/errors/cli/error_general.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/controllers/index.html"
+      <item path="WEB/Views/errors/cli/error_php.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/errors/cli/index.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/errors/html/error_404.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/models/Data_model.php"
+      <item path="WEB/Views/errors/html/error_db.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/errors/html/error_exception.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/models/Event_model.php"
+      <item path="WEB/Views/errors/html/error_general.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/models/Sysinfo_model.php"
+      <item path="WEB/Views/errors/html/error_php.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/models/index.html" ex="false" tool="3" flavor2="0">
+      <item path="WEB/Views/errors/html/index.html" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/application/views/account_view.php"
+      <item path="WEB/Views/errors/index.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/events/disturbances_view.php"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/views/analysis/current_view.php"
+      <item path="WEB/Views/events/itic_view.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/settings_view.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/stats_view.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Views/template/commonHeader.html"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/application/views/analysis/energy_power_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/analysis/frequency_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/analysis/harmonics_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/analysis/voltage_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/dashboard_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/cli/error_404.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/cli/error_db.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/cli/error_exception.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/cli/error_general.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/cli/error_php.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/cli/index.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/html/error_404.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/html/error_db.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/html/error_exception.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/html/error_general.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/html/error_php.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/html/index.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/errors/index.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/events/disturbances_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/events/itic_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/index.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/application/views/login_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/settings_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/stats_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/template/commonHead.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/template/commonScripts.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/application/views/template/header.php"
+      <item path="WEB/Views/template/commonScripts.php"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2199,6 +2028,8 @@
       <item path="WEB/css/common.css" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/css/login.css" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/dashboard_view.php" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/favicon.ico" ex="false" tool="3" flavor2="0">
       </item>
