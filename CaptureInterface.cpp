@@ -143,8 +143,14 @@ void CaptureInterface::ResetWork() {
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) pWork.Phi[i] = 0;
   pWork.Flag = false;
 }
+bool CaptureInterface::SaveWorkParams() {
+
+}
 CaptureInterface::~CaptureInterface() {
 }
 uint32_t CaptureInterface::GetMaxSamples() {
   return pMaxSamples;
+}
+uint32_t CaptureInterface::SampleRate() {
+  return pSampleRate;
 }

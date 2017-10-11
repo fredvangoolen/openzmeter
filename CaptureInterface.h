@@ -4,7 +4,8 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <inttypes.h>
-class CaptureInterface {
+#include "Database.h"
+class CaptureInterface : private Database {
   public :
     enum Freq_t {FREQ_50, FREQ_60};
     typedef struct {

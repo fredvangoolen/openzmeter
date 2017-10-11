@@ -526,8 +526,8 @@
     <itemPath>Analyzer.cpp</itemPath>
     <itemPath>CaptureInterface.cpp</itemPath>
     <itemPath>CaptureInterface.h</itemPath>
-    <itemPath>DB.cpp</itemPath>
-    <itemPath>DB.h</itemPath>
+    <itemPath>Database.cpp</itemPath>
+    <itemPath>Database.h</itemPath>
     <itemPath>Events.c</itemPath>
     <itemPath>HTTPServer.cpp</itemPath>
     <itemPath>HTTPServer.h</itemPath>
@@ -577,9 +577,9 @@
       </item>
       <item path="CaptureInterface.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="DB.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Database.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="DB.h" ex="false" tool="3" flavor2="0">
+      <item path="Database.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Events.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -1885,9 +1885,9 @@
       </item>
       <item path="CaptureInterface.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="DB.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Database.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="DB.h" ex="false" tool="3" flavor2="0">
+      <item path="Database.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Events.c" ex="false" tool="0" flavor2="0">
       </item>

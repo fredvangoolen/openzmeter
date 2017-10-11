@@ -33,8 +33,8 @@ int HTTPServer::HandleClient (void *cls, struct MHD_Connection *connection, cons
     if(File >= 0) {
       char *MimeType = NULL;
       int FileNameLen = strlen(url);
-      if((strlen(url) >= 3) && (strcmp(url + FileNameLen - 3, ".js")) == 0) MimeType = "text/javascript";
-      if((strlen(url) >= 4) && (strcmp(url + FileNameLen - 4, ".css")) == 0) MimeType = "text/css";
+      if((strlen(url) >= 3) && (strcmp(&url[FileNameLen - 3], ".js")) == 0) MimeType = "text/javascript";
+      if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".css")) == 0) MimeType = "text/css";
       struct MHD_Response *response = MHD_create_response_from_fd(FileStat.st_size, File);
       MHD_add_response_header (response, "Content-Type", MimeType);
       MHD_add_response_header (response, "Cache-Control", "public, max-age=2592000");

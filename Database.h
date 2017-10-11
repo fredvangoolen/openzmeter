@@ -1,18 +1,21 @@
 /* ================================== zMeter ===========================================================================
- * File:     DB.h
+ * File:     Database.h
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <postgresql/libpq-fe.h>
-class DB {
+class Database {
   private :
     static bool Initialized;
   private :
-    PGconn *Database;
-  private :
-    bool Initialize();
+    PGconn *DBConn;
+  protected :
+    void PrepareSentence(char *sentence);
+    void InsertSingleParam();
+    void InsertArrayParam();
+    bool ExecSentence();
+    bool ExecSentence(const char *sql);
   public :
-    static DB *getInstance();
-    ~DB();
-    bool ExecDBSentence(const char *sql);
+    Database();
+    ~Database();
 };

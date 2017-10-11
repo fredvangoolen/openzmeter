@@ -2,43 +2,27 @@
  * File:     DB.cpp
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
-#include "DB.h"
+#include "Database.h"
 #include "Tools.h"
-//#include <postgresql/libpq-fe.h>
-//#include <errno.h>
-//#include <string.h>
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <unistd.h>
-//#include <stdbool.h>
-//#include <math.h>
-//#include <sys/time.h>
-//#include <sys/param.h>
-//#include "Main.h"
-//#include "Tools.h"
-bool DB::Initialized = false;
-DB *DB::getInstance() {
-  DB *Instance = new DB();  
+bool Database::Initialized = false;
+Database::Database() {
   char ConnectionString[512];
   sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", Tools::DB.Host, Tools::DB.Port, Tools::DB.User, Tools::DB.Password, Tools::DB.Database);
-  Instance->Database = PQconnectdb(ConnectionString);
-  if(PQstatus(Instance->Database) == CONNECTION_BAD) {
-    Tools::LogMsg("ERROR", "No se pudo abrir la base de datos (%s)\n", PQerrorMessage(Instance->Database));
-    PQfinish(Instance->Database);
-    delete Instance;
-    return NULL;
+  DBConn = PQconnectdb(ConnectionString);
+  if(PQstatus(DBConn) == CONNECTION_BAD) {
+    Tools::LogMsg("ERROR", "No se pudo abrir la base de datos (%s)\n", PQerrorMessage(DBConn));
+    PQfinish(DBConn);
   }
   if(Initialized == false) {
-    if(Instance->ExecDBSentence("SET synchronous_commit TO OFF")) Initialized = true;
+    if(ExecDBSentence("SET synchronous_commit TO OFF")) Initialized = true;
   }
-  return Instance;
 }
-DB::~DB() {
+Database::~Database() {
   Tools::LogMsg("DEBUG", "Terminate DB connection...");
-  PQfinish(Database);
+  PQfinish(DBConn);
 }
-bool DB::ExecDBSentence(const char* sql) {
-  PGresult *Result = PQexec(Database, sql);
+bool Database::ExecDBSentence(const char* sql) {
+  PGresult *Result = PQexec(DBConn, sql);
   if(PQresultStatus(Result) != PGRES_COMMAND_OK) Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
   PQclear(Result);
 }
