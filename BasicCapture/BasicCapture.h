@@ -12,8 +12,8 @@
 #define ADQUISITION_SAMPLEFREQ    15625.00         //Frequencia de muestreo
 
 
-#define MAX_FRAME                     3688         //Longitud maxima de muestras de un frame (236ms)
-#define ADQUISITION_SAFESAMPLES  MAX_FRAME         //Numero de muestras "seguras" antes y despues del punto de lectura 
+//#define MAX_FRAME                     3688         //Longitud maxima de muestras de un frame (236ms)
+//#define ADQUISITION_SAFESAMPLES  MAX_FRAME         //Numero de muestras "seguras" antes y despues del punto de lectura 
 #define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
 #define PROCESSING_CURRENTOFFSET      0.10        //Corriente minima para realizar calculos
 //----------------------------------------------------------------------------------------------------------------------
@@ -57,17 +57,15 @@ class BasicCapture : public CaptureInterface {
     uint64_t                     SequenceID;              //Numero de secuencia de bloques generados
     struct libusb_device_handle *DeviceHandle;            //Dispositivo de captura
     
-    uint32_t        LastCycles[PROCESSING_FREQCYCLES];
-    uint32_t        LastCyclesCount;
-    uint32_t        LastCyclesPos;
-    uint32_t        LastCyclesLenght;
-    pthread_mutex_t AnalyzeMutex;                 //Mutex para bloquear acceso a muestras y resultados
-    pthread_t       AnalyzeThread;                //Descriptor del hilo de analisis
-    uint64_t        PrevTimestamp;
-    uint64_t        Agreg3S_Start;
+    uint32_t                     LastCycles[PROCESSING_FREQCYCLES];
+    uint32_t                     LastCyclesCount;
+    uint32_t                     LastCyclesPos;
+    uint32_t                     LastCyclesLenght;
+    pthread_mutex_t              AnalyzeMutex;                 //Mutex para bloquear acceso a muestras y resultados
+    pthread_t                    AnalyzeThread;                //Descriptor del hilo de analisis
+    uint64_t                     PrevTimestamp;
+    uint64_t                     Agreg3S_Start;
 
-//    Work_t         *Work;                  //Current working samples
-//    Params_t       *Params;                //Current working params
 
     
   private : 
@@ -75,19 +73,18 @@ class BasicCapture : public CaptureInterface {
     static void  *Analize_Thread(void *args);
     static void  *FFT_Thread(void *args);
     static void   ReadCallback(struct libusb_transfer *transfer);
-    float  ApplyFilter(float in, AdquisitionFilter_t *filter);
+    static float  ApplyFilter(float in, AdquisitionFilter_t *filter);
+    static void   FFT_Wait(FFT_t *fft);
+    static FFT_t *FFT_Start(float *data, uint32_t len);
+
     float  CalculateFrequency(Work_t* work);
     float  CalcPhi(Complex_t voltage, Complex_t current);
-    void   FFT_Wait(FFT_t *fft);
-    FFT_t *FFT_Start(float *data, uint32_t len);
   private :
-    Work_t   *GetWork();
-    Params_t *Analyze(Work_t *work);
+//    Work_t   *GetWork();
+//    Params_t *Analyze(Work_t *work);
     void   SamplesCopy(float *dest, int32_t offset, uint32_t len);
   public :
     BasicCapture(char *device, uint32_t bufferLen, float baseFreq);
-    uint8_t CurrentChannels();
-    uint8_t VoltageChannels();
     bool IsRunning();
     ~BasicCapture();
 };

@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
       ConfigFile = &argv[i][9];
     } else if(strcmp(argv[i], "--debug") == 0) {
-      Config.Debug = true;
+      Tools::Debug = true;
     } else if(strcmp(argv[i], "--daemon") == 0) {
       Daemonize  = true;
     } else if(strcmp(argv[i], "--help") == 0) {
@@ -54,8 +54,8 @@ int main(int argc, char** argv) {
   if(Tools::ReadConfig(ConfigFile) == false);// goto Stop;
   Tools::CreatePidFile();
   Tools::CreateLogFile();
-  HTTPServer::Start();
-  BasicCapture *Capture1 = new BasicCapture("", 8192*1024, 15625);
+//  HTTPServer::Start();
+  BasicCapture *Capture1 = new BasicCapture("", 128*1024, 15625);
 
   //  uint32_t LastPrice;
 //  if(DB_Start(&LastPrice) == true) {
