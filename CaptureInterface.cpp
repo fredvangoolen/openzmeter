@@ -8,9 +8,12 @@
 #include "CaptureInterface.h"
 
 bool CaptureInterface::SaveWorkParams() {
-
-
-
+  PrepareSentence("INSERT INTO agreg_10c() VALUES(?,?,?,?)");
+  BindSingleFloat(3.0);
+BindSingleFloat(5.0);
+BindSingleFloat(6.0);
+BindSingleFloat(8.0);
+ExecSentence();
 }
 //bool DB_Start(uint32_t *lastprice) {
 //  struct timeval Time;
@@ -145,9 +148,6 @@ void CaptureInterface::ResetWork() {
   pWork.Frequency = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) pWork.Phi[i] = 0;
   pWork.Flag = false;
-}
-bool CaptureInterface::SaveWorkParams() {
-
 }
 CaptureInterface::~CaptureInterface() {
 }

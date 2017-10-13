@@ -8,11 +8,15 @@ class Database {
   private :
     static bool Initialized;
   private :
-    PGconn *DBConn;
+    PGconn      *DBConn;
+    char       **Params;
+    int          ParamsLen;
+    int          ParamsAlloc;
+    const char  *Sentence;
   protected :
-    void PrepareSentence(char *sentence);
-    void InsertSingleParam();
-    void InsertArrayParam();
+    void PrepareSentence(const char *sentence);
+    void BindSingleFloat(float param);
+    void BindArrayFloat(float *params, int len);
     bool ExecSentence();
     bool ExecSentence(const char *sql);
   public :

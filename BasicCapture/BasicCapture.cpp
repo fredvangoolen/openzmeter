@@ -115,7 +115,7 @@ void  *BasicCapture::Analize_Thread(void* args) {
 //  }
 //  Params_t *Params = (Params_t*)calloc(sizeof(Params_t), 1);
     FFT_t *FFT_Voltage = FFT_Start(This->pWork.VoltageSamples[0], This->pWork.Samples);         // STEP 1: Start calculating FFT (in parallel)
-//    FFT_t *FFT_Current = FFT_Start(work->CurrentSamples, work->Samples);
+    FFT_t *FFT_Current = FFT_Start(This->pWork.CurrentSamples[0], This->pWork.Samples);
     //Calcula valores basicos (RMS, potencia activa y energia) que son validos aun habiendo eventos
     float V = 0.0;
     float I = 0.0;
@@ -127,15 +127,15 @@ void  *BasicCapture::Analize_Thread(void* args) {
     }
     This->pWork.Active_Power[0] = P / This->pWork.Samples;
     This->pWork.RMS_V[0] = sqrt(V / This->pWork.Samples);
-//  Params->RMS_I = sqrt(I / work->Samples);
-//  Params->Apparent_Power = Params->RMS_V * Params->RMS_I;
+    This->pWork.RMS_I[0] = sqrt(I / This->pWork.Samples);
+    This->pWork.Apparent_Power[0] = This->pWork.RMS_V[0] * This->pWork.RMS_I[0];
 //  Params->Flag = false; //Events_Detect(This->Work);
 ////  This->Params->Frequency = Analyzer_Frequency(Work);
     FFT_Wait(FFT_Voltage);
-//  for(int i = 0; i < 50; i++) {
+    for(int i = 0; i < 50; i++) {
 //    Params->VoltageHarmonics[i] = sqrt(pow(FFT_Voltage->Result[10 + i * 10].Real, 2.0) + pow(FFT_Voltage->Result[10 + i * 10].Imag, 2.0)) / M_SQRT2 * 2.0;
 //    if(i > 0) Params->THD_V += pow(Params->VoltageHarmonics[i], 2.0);
-//  }
+    }
 //  Params->THD_V = sqrt(Params->THD_V) / Params->VoltageHarmonics[0];
 //  FFT_Wait(FFT_Current);
 //  if(Params->RMS_I > PROCESSING_CURRENTOFFSET) {
@@ -175,7 +175,7 @@ void  *BasicCapture::Analize_Thread(void* args) {
 ////    RequestServer_SetValues(work->Timestamp, Params, work->VoltageSamples, work->CurrentSamples, FFT_V, FFT_I, work->Samples, 600);
 //  }
   free(FFT_Voltage);
-//  free(FFT_Current);
+  free(FFT_Current);
 ////  DB_Save(PARAMS_10C, 0, work->Timestamp, Params, true);
 ////  if((Work->SequenceID % 15) == 0) DB_Save(PARAMS_3S, 0, PrevTimestamp, NULL, true);
 ////  if(((Work->Timestamp / 60000) * 60000) != ((PrevTimestamp / 60000) * 60000)) DB_Save(PARAMS_1M, 0, PrevTimestamp, NULL, true);
@@ -261,6 +261,8 @@ BasicCapture::FFT_t *BasicCapture::FFT_Start(float *data, uint32_t len) {
   }
   return FFT;
 }
+
+
 //CaptureInterface::Params_t *BasicCapture::Analyze(Work_t *work) {
 //  if((work == NULL) || (work->SequenceID == 0)) {
 //    PrevTimestamp = work->Timestamp;

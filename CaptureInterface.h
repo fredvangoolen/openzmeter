@@ -60,7 +60,6 @@ class CaptureInterface : private Database {
     enum Freq_t NominalFreq();
   public :
     //bool ExecDBSentence(const char *sql);
-    bool SaveWorkParams();
     CaptureInterface(uint32_t samplerate, bool triphase, enum Freq_t freq);
     virtual ~CaptureInterface();
     //static void   CreateInstances();

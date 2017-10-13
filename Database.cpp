@@ -2,10 +2,15 @@
  * File:     DB.cpp
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
+#include <stdlib.h>
+#include <string.h>
+#include <float.h>
 #include "Database.h"
 #include "Tools.h"
 bool Database::Initialized = false;
 Database::Database() {
+  Params    = NULL;
+  ParamsLen = 0;
   char ConnectionString[512];
   sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", Tools::DB.Host, Tools::DB.Port, Tools::DB.User, Tools::DB.Password, Tools::DB.Database);
   DBConn = PQconnectdb(ConnectionString);
@@ -14,18 +19,57 @@ Database::Database() {
     PQfinish(DBConn);
   }
   if(Initialized == false) {
-    if(ExecDBSentence("SET synchronous_commit TO OFF")) Initialized = true;
+    if(ExecSentence("SET synchronous_commit TO OFF")) Initialized = true;
   }
 }
 Database::~Database() {
   Tools::LogMsg("DEBUG", "Terminate DB connection...");
   PQfinish(DBConn);
 }
-bool Database::ExecDBSentence(const char* sql) {
+bool Database::ExecSentence(const char* sql) {
   PGresult *Result = PQexec(DBConn, sql);
   if(PQresultStatus(Result) != PGRES_COMMAND_OK) Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
   PQclear(Result);
 }
+void Database::PrepareSentence(const char *sentence) {
+  if(ParamsLen != 0) {
+    for(int i = 0; i < ParamsLen; i++) free(Params[i]);
+    free(Params);
+  }
+  ParamsLen = 0;
+  int ParamsAlloc = 0;
+  char *Ptr = (char*)sentence;
+  for(int i = 0; i < strlen(sentence); i++) {
+    if(sentence[i] == '?') ParamsAlloc++;
+  }
+  if(ParamsAlloc != 0) Params = (char**)malloc(sizeof(char*) * ParamsAlloc);
+}
+void Database::BindSingleFloat(float param) {
+  if(ParamsLen < ParamsAlloc) {
+    Params[ParamsLen] = (char*)malloc(sizeof(char) * 32);
+    sprintf(Params[ParamsLen], "%e", param);
+    ParamsLen++;
+  }
+}
+bool Database::ExecSentence() {
+  int maxLenght = strlen(Sentence);
+  for(int i = 0; i < ParamsLen; i++) maxLenght = maxLenght + strlen(Params[i]);
+  char *Buffer = (char*)malloc(sizeof(char) * maxLenght);
+
+
+//  for(int i = 0; i < strlen(sentence); i++) {
+//    if(sentence[i] != '?') continue;
+//    Params[ParamsLen] = Ptr;
+    
+
+
+//    sentence[i] = 0;
+//    Ptr = sentence[i + 1];
+//    ParamsLen++;
+//  }
+}
+
+
 //
 //// Tipos privados ======================================================================================================
 //typedef struct {
