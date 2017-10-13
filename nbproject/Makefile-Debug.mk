@@ -38,7 +38,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/Analyzer.o \
 	${OBJECTDIR}/BasicCapture/BasicCapture.o \
 	${OBJECTDIR}/CaptureInterface.o \
-	${OBJECTDIR}/DB.o \
+	${OBJECTDIR}/Database.o \
 	${OBJECTDIR}/Events.o \
 	${OBJECTDIR}/HTTPServer.o \
 	${OBJECTDIR}/Main.o \
@@ -86,10 +86,10 @@ ${OBJECTDIR}/CaptureInterface.o: CaptureInterface.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureInterface.o CaptureInterface.cpp
 
-${OBJECTDIR}/DB.o: DB.cpp
+${OBJECTDIR}/Database.o: Database.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DB.o DB.cpp
+	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Database.o Database.cpp
 
 ${OBJECTDIR}/Events.o: Events.c
 	${MKDIR} -p ${OBJECTDIR}

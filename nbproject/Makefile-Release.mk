@@ -14,14 +14,14 @@ GREP=grep
 NM=nm
 CCADMIN=CCadmin
 RANLIB=ranlib
-CC=gcc
-CCC=g++
-CXX=g++
+CC=arm-none-eabi-gcc
+CCC=arm-none-eabi-g++
+CXX=arm-none-eabi-g++
 FC=gfortran
-AS=as
+AS=arm-none-eabi-as
 
 # Macros
-CND_PLATFORM=GNU-Linux
+CND_PLATFORM=arm-none-eabi-Linux
 CND_DLIB_EXT=so
 CND_CONF=Release
 CND_DISTDIR=dist
@@ -38,7 +38,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/Analyzer.o \
 	${OBJECTDIR}/BasicCapture/BasicCapture.o \
 	${OBJECTDIR}/CaptureInterface.o \
-	${OBJECTDIR}/DB.o \
+	${OBJECTDIR}/Database.o \
 	${OBJECTDIR}/Events.o \
 	${OBJECTDIR}/HTTPServer.o \
 	${OBJECTDIR}/Main.o \
@@ -86,10 +86,10 @@ ${OBJECTDIR}/CaptureInterface.o: CaptureInterface.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureInterface.o CaptureInterface.cpp
 
-${OBJECTDIR}/DB.o: DB.cpp
+${OBJECTDIR}/Database.o: Database.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DB.o DB.cpp
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Database.o Database.cpp
 
 ${OBJECTDIR}/Events.o: Events.c
 	${MKDIR} -p ${OBJECTDIR}
