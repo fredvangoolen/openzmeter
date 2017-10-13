@@ -6,9 +6,12 @@
 #include <math.h>
 #include <string.h>
 #include "CaptureInterface.h"
-//
-//
-//
+
+bool CaptureInterface::SaveWorkParams() {
+
+
+
+}
 //bool DB_Start(uint32_t *lastprice) {
 //  struct timeval Time;
 //  if(gettimeofday(&Time, NULL) != 0) {

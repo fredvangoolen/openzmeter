@@ -52,6 +52,7 @@ class CaptureInterface {
   protected :
     void     ResetWork();
     uint32_t GetMaxSamples();
+    bool     SaveWorkParams();
   public :
     bool        Triphase();
     uint32_t    SampleRate();
