@@ -3,6 +3,7 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
+#include <inttypes.h>
 #include <postgresql/libpq-fe.h>
 class Database {
   private :
@@ -15,8 +16,11 @@ class Database {
     const char  *Sentence;
   protected :
     void PrepareSentence(const char *sentence);
+    void BindSingleUInt32(uint32_t param);
+    void BindSingleUInt64(uint64_t param);
     void BindSingleFloat(float param);
     void BindArrayFloat(float *params, int len);
+    void BindSingleBool(bool param);
     bool ExecSentence();
     bool ExecSentence(const char *sql);
   public :

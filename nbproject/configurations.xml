@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <logicalFolder name="BasicCapture"
-                   displayName="BasicCapture"
+    <logicalFolder name="CaptureMono" displayName="CaptureMono" projectFiles="true">
+      <itemPath>CaptureMono/CaptureMono.cpp</itemPath>
+      <itemPath>CaptureMono/CaptureMono.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="CaptureVirtual"
+                   displayName="CaptureVirtual"
                    projectFiles="true">
-      <itemPath>BasicCapture/BasicCapture.cpp</itemPath>
-      <itemPath>BasicCapture/BasicCapture.h</itemPath>
+      <itemPath>CaptureVirtual/CaptureVirtual.cpp</itemPath>
+      <itemPath>CaptureVirtual/CaptureVirtual.h</itemPath>
     </logicalFolder>
     <logicalFolder name="WEB" displayName="WEB" projectFiles="true">
       <logicalFolder name="css" displayName="css" projectFiles="true">
@@ -543,6 +547,9 @@
     <Elem>WEB</Elem>
     <Elem>Resources</Elem>
     <Elem>BasicCapture</Elem>
+    <Elem>VirtualCapture</Elem>
+    <Elem>CaptureMono</Elem>
+    <Elem>CaptureVirtual</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -569,13 +576,17 @@
       </compileType>
       <item path="Analyzer.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="BasicCapture/BasicCapture.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="BasicCapture/BasicCapture.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="CaptureInterface.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="CaptureInterface.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="CaptureMono/CaptureMono.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="CaptureMono/CaptureMono.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="CaptureVirtual/CaptureVirtual.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="CaptureVirtual/CaptureVirtual.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Database.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -1877,13 +1888,17 @@
       </compileType>
       <item path="Analyzer.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="BasicCapture/BasicCapture.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="BasicCapture/BasicCapture.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="CaptureInterface.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="CaptureInterface.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="CaptureMono/CaptureMono.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="CaptureMono/CaptureMono.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="CaptureVirtual/CaptureVirtual.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="CaptureVirtual/CaptureVirtual.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Database.cpp" ex="false" tool="1" flavor2="0">
       </item>

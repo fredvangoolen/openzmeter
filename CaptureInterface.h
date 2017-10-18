@@ -3,7 +3,9 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
+#include <pthread.h>
 #include <inttypes.h>
+#include <fftw3.h>
 #include "Database.h"
 class CaptureInterface : private Database {
   public :
@@ -43,6 +45,22 @@ class CaptureInterface : private Database {
       float Real;                           //Parte real
       float Imag;                           //Parte imaginaria
     } Complex_t;
+    typedef struct {
+      float     *Input;                     //Muestras de entrada
+      uint32_t   Len;                       //Longitud de la transformada
+      fftwf_plan Plan;                      //Plan para realizar la transformada
+      pthread_t  Thread;                    //Hilo de ejecucion
+      Complex_t  Result[1];                 //Datos de salida
+    } FFT_t;
+    typedef struct {
+      float A0;
+      float A1;
+      float A2;
+      float B1;
+      float B2;
+      float Z1;
+      float Z2;
+    } Filter_t;
   private :
     bool        pTriphase;
     uint32_t    pSampleRate;
@@ -51,16 +69,22 @@ class CaptureInterface : private Database {
   protected :
     Work_t  pWork;
   protected :
+    uint8_t  NominalFrequency();
     void     ResetWork();
     uint32_t GetMaxSamples();
     bool     SaveWorkParams();
+    bool     Analyze();
+  protected :
+    static void  *FFT_Thread(void *args);
+    static float  ApplyFilter(float in, Filter_t *filter);
+    static void   FFT_Wait(FFT_t *fft);
+    static FFT_t *FFT_Start(float *data, uint32_t len);
+    static float  CalcPhi(Complex_t voltage, Complex_t current);
   public :
     bool        Triphase();
     uint32_t    SampleRate();
-    enum Freq_t NominalFreq();
+    uint8_t     NominalFreq();
   public :
-    //bool ExecDBSentence(const char *sql);
     CaptureInterface(uint32_t samplerate, bool triphase, enum Freq_t freq);
     virtual ~CaptureInterface();
-    //static void   CreateInstances();
 };

@@ -37,6 +37,10 @@ class Tools {
     static Global_t      Global;
     static Electrical_t  Electrical;
     static DB_t          DB;
+  private :
+    static char    *rstrip(char* s);
+    static char    *lskip(const char* s);
+    static bool     Config_Handler(char *section, char *param, char *value);
   public :
     static bool Debug;
     static bool ReadConfig(char *file);
@@ -45,5 +49,6 @@ class Tools {
     static bool CreateLogFile();
     static bool CreatePidFile();
     static bool RemovePidFile();
+    static uint64_t GetTime();
 };
 //----------------------------------------------------------------------------------------------------------------------

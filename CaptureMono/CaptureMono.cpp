@@ -1,5 +1,5 @@
 /* ================================== zMeter ===========================================================================
- * File:     BasicCapture.cpp
+ * File:     CaptureMono.cpp
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #include <termios.h>
@@ -15,13 +15,13 @@
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <libusb-1.0/libusb.h>
-#include "BasicCapture.h"
+#include "CaptureMono.h"
 #include "../Tools.h"
 // Funciones ===========================================================================================================
-void   BasicCapture::ReadCallback(struct libusb_transfer *transfer) {
+void   CaptureMono::ReadCallback(struct libusb_transfer *transfer) {
   int16_t *Buff16 = (int16_t*)transfer->buffer;
   int      Len = transfer->actual_length / 4;
-  BasicCapture *This = (BasicCapture*)transfer->user_data;
+  CaptureMono *This = (CaptureMono*)transfer->user_data;
   pthread_mutex_lock(&This->CaptureMutex);
   while(This->Used > (This->Size - Len)) {
     if(This->Terminate) return;
@@ -40,15 +40,15 @@ void   BasicCapture::ReadCallback(struct libusb_transfer *transfer) {
   pthread_mutex_unlock(&This->CaptureMutex);
   if(This->Terminate == false) libusb_submit_transfer(transfer);
 }
-void  *BasicCapture::Capture_Thread(void *args) {
+void  *CaptureMono::Capture_Thread(void *args) {
   struct sched_param Prio;
   Prio.sched_priority = sched_get_priority_max(SCHED_OTHER);
   if(pthread_setschedparam(0, SCHED_OTHER, &Prio) == -1) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL;
   }
-  BasicCapture *This = (BasicCapture*)args;  
-  pthread_setname_np(This->CaptureThread, "BasicCap_Init");
+  CaptureMono *This = (CaptureMono*)args;  
+  pthread_setname_np(This->CaptureThread, "CapMono_Init");
   uint8_t Buffer_A[8192], Buffer_B[8192];
   struct libusb_transfer *Transfer_A = libusb_alloc_transfer(0);
   struct libusb_transfer *Transfer_B = libusb_alloc_transfer(0);
@@ -60,7 +60,7 @@ void  *BasicCapture::Capture_Thread(void *args) {
   while(!This->Terminate) {
     if((Update % 10) == 0) {
       char ThreadName[16];
-      sprintf(ThreadName, "BasicCap_%03d", This->Used * 100 / This->Size);
+      sprintf(ThreadName, "CapMono_%03d", This->Used * 100 / This->Size);
       pthread_setname_np(This->CaptureThread, ThreadName);
     }
     Update++;
@@ -68,9 +68,9 @@ void  *BasicCapture::Capture_Thread(void *args) {
   }
   return NULL;
 }
-void  *BasicCapture::Analize_Thread(void* args) {
-  BasicCapture *This = (BasicCapture*)args;
-  pthread_setname_np(This->AnalyzeThread, "BasicAnalysys");
+void  *CaptureMono::Analize_Thread(void* args) {
+  CaptureMono *This = (CaptureMono*)args;
+  pthread_setname_np(This->AnalyzeThread, "AnalysisMono");
   while(!This->Terminate) {
     This->ResetWork();
     struct timeval Time;
@@ -137,7 +137,7 @@ void  *BasicCapture::Analize_Thread(void* args) {
 //    if(i > 0) Params->THD_V += pow(Params->VoltageHarmonics[i], 2.0);
     }
 //  Params->THD_V = sqrt(Params->THD_V) / Params->VoltageHarmonics[0];
-//  FFT_Wait(FFT_Current);
+  FFT_Wait(FFT_Current);
 //  if(Params->RMS_I > PROCESSING_CURRENTOFFSET) {
 //    for(int i = 10; i <= 500 ; i = i + 10) {
 //      float CurrentHarmonic = sqrt(pow(FFT_Current->Result[i].Real, 2.0) + pow(FFT_Current->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
@@ -200,42 +200,7 @@ void  *BasicCapture::Analize_Thread(void* args) {
     Tools::LogMsg("DEBUG", "Process of block %llu takes %.1fmS ( mS with store)\n", This->pWork.SequenceID, (End - Begin) / 1000.0);
   }
 }
-void  *BasicCapture::FFT_Thread(void *args) {
-  FFT_t *FFT = (FFT_t *)args;
-  fftwf_execute_dft_r2c(FFT->Plan, FFT->Input, (fftwf_complex*)FFT->Result);
-  for(int i = 0; i < ceil(FFT->Len / 2 + 1); i++) {
-    FFT->Result[i].Real = FFT->Result[i].Real / FFT->Len;
-    FFT->Result[i].Imag = FFT->Result[i].Imag / FFT->Len;
-  }
-  FFT->Len = ceil(FFT->Len / 2 + 1);
-  return NULL;  
-}
-float  BasicCapture::CalcPhi(Complex_t voltage, Complex_t current) {
-  float Tmp;
-  if((voltage.Real == 0) && (voltage.Imag == 0)) 
-    Tmp = 0;
-  else if(voltage.Real < 0)
-    Tmp = atan(voltage.Imag / voltage.Real);
-  else
-    Tmp = atan(voltage.Imag / voltage.Real) + M_PI;
-  
-  if((current.Real == 0) && (current.Imag == 0)) 
-    return Tmp;
-  else if(current.Real < 0)
-    return Tmp - atan(current.Imag / current.Real);
-  else
-    return Tmp - atan(current.Imag / current.Real) + M_PI;
-}
-void   BasicCapture::FFT_Wait(FFT_t *fft) {
-  if(pthread_join(fft->Thread, NULL) != 0) {  
-    Tools::LogMsg("ERROR", "%s:%d -> (Unknown)\n", __func__, __LINE__);
-    fftwf_destroy_plan(fft->Plan);
-    return;
-  }
-  fftwf_destroy_plan(fft->Plan);
-  return;
-}
-float BasicCapture::CalculateFrequency(Work_t* work) {
+float CaptureMono::CalculateFrequency(Work_t* work) {
   static uint64_t NumSamples = 0;    //Numero de muestras leidas desde el ultimo calculo
   static uint32_t NumCycles  = 0;    //Numero de ciclos desde ultimo calculo
   float  Frequency = NAN;
@@ -248,20 +213,6 @@ float BasicCapture::CalculateFrequency(Work_t* work) {
   }
   return Frequency;
 }
-BasicCapture::FFT_t *BasicCapture::FFT_Start(float *data, uint32_t len) {
-  FFT_t *FFT = (FFT_t *)malloc(sizeof(FFT_t) + sizeof(Complex_t) * ceil(len / 2));
-  FFT->Plan = fftwf_plan_dft_r2c_1d(len, data, (fftwf_complex*)FFT->Result, FFTW_ESTIMATE);
-  FFT->Len = len;
-  FFT->Input = data;
-  if(pthread_create(&FFT->Thread, NULL, FFT_Thread, (void*)FFT) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    fftwf_destroy_plan(FFT->Plan);
-    free(FFT);
-    return NULL;
-  }
-  return FFT;
-}
-
 
 //CaptureInterface::Params_t *BasicCapture::Analyze(Work_t *work) {
 //  if((work == NULL) || (work->SequenceID == 0)) {
@@ -341,7 +292,7 @@ BasicCapture::FFT_t *BasicCapture::FFT_Start(float *data, uint32_t len) {
 //  free(work);
 //  return Params;
 //}
-BasicCapture::BasicCapture(char* device, uint32_t bufferLen, float baseFreq) : CaptureInterface(15625, false, CaptureInterface::FREQ_50) {
+CaptureMono::CaptureMono(char* device, uint32_t bufferLen, float baseFreq) : CaptureInterface(15625, false, CaptureInterface::FREQ_50) {
   Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
   Buffer           = NULL;
   ReadPos          = 0;
@@ -415,12 +366,13 @@ BasicCapture::BasicCapture(char* device, uint32_t bufferLen, float baseFreq) : C
   }
   if(pthread_create(&AnalyzeThread, NULL, Analize_Thread, this) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    Adquisition_Stop();
-//    return false;
+    Terminate = true;
+    pthread_join(CaptureThread, NULL);
+    free(Buffer);
+    return;
   }
-
 }
-BasicCapture::~BasicCapture() {
+CaptureMono::~CaptureMono() {
   if(Buffer) {
     pthread_cond_signal(&WriteWait);
     pthread_cond_signal(&ReadWait);
@@ -431,13 +383,7 @@ BasicCapture::~BasicCapture() {
     free(Buffer);
   }
 }
-float BasicCapture::ApplyFilter(float in, AdquisitionFilter_t* filter) {
-  float out = in * filter->A0 + filter->Z1;
-  filter->Z1 = in * filter->A1 + filter->Z2 - filter->B1 * out;
-  filter->Z2 = in * filter->A2 - filter->B2 * out;
-  return out;
-}
-void BasicCapture::SamplesCopy(float *dest, int32_t offset, uint32_t len) {
+void CaptureMono::SamplesCopy(float *dest, int32_t offset, uint32_t len) {
   for(int i = 0; i < len; i++) 
     dest[i] = Buffer[(ReadPos - offset + i) % Size].Voltage;
 }

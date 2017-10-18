@@ -36,8 +36,9 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/Analyzer.o \
-	${OBJECTDIR}/BasicCapture/BasicCapture.o \
 	${OBJECTDIR}/CaptureInterface.o \
+	${OBJECTDIR}/CaptureMono/CaptureMono.o \
+	${OBJECTDIR}/CaptureVirtual/CaptureVirtual.o \
 	${OBJECTDIR}/Database.o \
 	${OBJECTDIR}/Events.o \
 	${OBJECTDIR}/HTTPServer.o \
@@ -76,15 +77,20 @@ ${OBJECTDIR}/Analyzer.o: Analyzer.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Analyzer.o Analyzer.cpp
 
-${OBJECTDIR}/BasicCapture/BasicCapture.o: BasicCapture/BasicCapture.cpp
-	${MKDIR} -p ${OBJECTDIR}/BasicCapture
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/BasicCapture/BasicCapture.o BasicCapture/BasicCapture.cpp
-
 ${OBJECTDIR}/CaptureInterface.o: CaptureInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureInterface.o CaptureInterface.cpp
+
+${OBJECTDIR}/CaptureMono/CaptureMono.o: CaptureMono/CaptureMono.cpp
+	${MKDIR} -p ${OBJECTDIR}/CaptureMono
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureMono/CaptureMono.o CaptureMono/CaptureMono.cpp
+
+${OBJECTDIR}/CaptureVirtual/CaptureVirtual.o: CaptureVirtual/CaptureVirtual.cpp
+	${MKDIR} -p ${OBJECTDIR}/CaptureVirtual
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_GNU_SOURCE -I/usr/include/libxml2 -I/usr/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureVirtual/CaptureVirtual.o CaptureVirtual/CaptureVirtual.cpp
 
 ${OBJECTDIR}/Database.o: Database.cpp
 	${MKDIR} -p ${OBJECTDIR}

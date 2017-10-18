@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
+#include <math.h>
 #include "Database.h"
 #include "Tools.h"
 bool Database::Initialized = false;
@@ -17,6 +18,7 @@ Database::Database() {
   if(PQstatus(DBConn) == CONNECTION_BAD) {
     Tools::LogMsg("ERROR", "No se pudo abrir la base de datos (%s)\n", PQerrorMessage(DBConn));
     PQfinish(DBConn);
+    return;
   }
   if(Initialized == false) {
     if(ExecSentence("SET synchronous_commit TO OFF")) Initialized = true;
@@ -32,41 +34,88 @@ bool Database::ExecSentence(const char* sql) {
   PQclear(Result);
 }
 void Database::PrepareSentence(const char *sentence) {
-  if(ParamsLen != 0) {
+  Sentence = sentence;
+  if(ParamsAlloc != 0) {
     for(int i = 0; i < ParamsLen; i++) free(Params[i]);
     free(Params);
   }
   ParamsLen = 0;
-  int ParamsAlloc = 0;
+  ParamsAlloc = 0;
   char *Ptr = (char*)sentence;
   for(int i = 0; i < strlen(sentence); i++) {
     if(sentence[i] == '?') ParamsAlloc++;
   }
   if(ParamsAlloc != 0) Params = (char**)malloc(sizeof(char*) * ParamsAlloc);
 }
+void Database::BindSingleUInt32(uint32_t param) {
+  if(ParamsLen < ParamsAlloc) {
+    Params[ParamsLen] = (char*)malloc(sizeof(char) * 11);
+    sprintf(Params[ParamsLen], "%u", param);
+    ParamsLen++;
+  }
+}
+void Database::BindSingleUInt64(uint64_t param) {
+  if(ParamsLen < ParamsAlloc) {
+    Params[ParamsLen] = (char*)malloc(sizeof(char) * 20);
+    sprintf(Params[ParamsLen], "%llu", param);
+    ParamsLen++;
+  }
+}
 void Database::BindSingleFloat(float param) {
   if(ParamsLen < ParamsAlloc) {
-    Params[ParamsLen] = (char*)malloc(sizeof(char) * 32);
+    Params[ParamsLen] = (char*)malloc(sizeof(char) * 16);
     sprintf(Params[ParamsLen], "%e", param);
     ParamsLen++;
   }
 }
+void Database::BindArrayFloat(float *params, int len) {
+  if(ParamsLen < ParamsAlloc) {
+    Params[ParamsLen] = (char*)malloc(4 + sizeof(char) * 18 * len);
+    int Pos = sprintf(Params[ParamsLen], "'{");
+    for(int i = 0; i < len; i++) Pos += sprintf(&Params[ParamsLen][Pos], isnan(params[i]) ? "NULL, " : "%e, ", params[i]);
+    if(len > 0) Pos -= 2;
+    sprintf(&Params[ParamsLen][Pos], "}'");
+    ParamsLen++;
+  }
+}
+void Database::BindSingleBool(bool param) {
+  if(ParamsLen < ParamsAlloc) {
+    Params[ParamsLen] = param ? strdup("true") : strdup("false");
+    ParamsLen++;
+  }
+}
 bool Database::ExecSentence() {
-  int maxLenght = strlen(Sentence);
-  for(int i = 0; i < ParamsLen; i++) maxLenght = maxLenght + strlen(Params[i]);
-  char *Buffer = (char*)malloc(sizeof(char) * maxLenght);
-
-
-//  for(int i = 0; i < strlen(sentence); i++) {
-//    if(sentence[i] != '?') continue;
-//    Params[ParamsLen] = Ptr;
-    
-
-
-//    sentence[i] = 0;
-//    Ptr = sentence[i + 1];
-//    ParamsLen++;
-//  }
+  if(ParamsAlloc == ParamsLen) {
+    int maxLenght = strlen(Sentence);
+    for(int i = 0; i < ParamsLen; i++) maxLenght = maxLenght + strlen(Params[i]);
+    char *Buffer = (char*)malloc(sizeof(char) * maxLenght);
+    char *Read   = (char*)Sentence;
+    char *Write  = Buffer;
+    int   Param  = 0;
+    while(true) {
+      if(*Read == '?') {
+        int Len = strlen(Params[Param]);
+        memcpy(Write, Params[Param], Len);
+        Write = Write + Len;
+        Param++;
+      } else {
+        *Write++ = *Read;
+        if(*Read == 0) break;
+      }
+      Read++;
+    }
+    ExecSentence(Buffer);
+//    printf(Buffer);
+//    fflush(stdout);
+    free(Buffer);
+  } else {
+      Tools::LogMsg("ERROR", "There are more placeholders than params!!");
+  }
+  if(ParamsAlloc != 0) {
+    for(int i = 0; i < ParamsLen; i++) free(Params[i]);
+    free(Params);
+    ParamsAlloc = 0;
+  }
 }
 
 

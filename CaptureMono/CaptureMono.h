@@ -1,5 +1,5 @@
 /* ================================== zMeter ===========================================================================
- * File:     BasicCapture.h
+ * File:     CaptureMono.h
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
@@ -17,28 +17,12 @@
 #define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
 #define PROCESSING_CURRENTOFFSET      0.10        //Corriente minima para realizar calculos
 //----------------------------------------------------------------------------------------------------------------------
-class BasicCapture : public CaptureInterface {
+class CaptureMono : public CaptureInterface {
   private :
     typedef struct {
       float Voltage;                                    //Valor de tension
       float Current;                                    //Valor de corriente
     } Sample_t;
-    typedef struct {
-      float A0;
-      float A1;
-      float A2;
-      float B1;
-      float B2;
-      float Z1;
-      float Z2;
-    } AdquisitionFilter_t;
-    typedef struct {
-      float     *Input;                     //Muestras de entrada
-      uint32_t   Len;                       //Longitud de la transformada
-      fftwf_plan Plan;                      //Plan para realizar la transformada
-      pthread_t  Thread;                    //Hilo de ejecucion
-      Complex_t  Result[1];                 //Datos de salida
-    } FFT_t;
     float                        VoltageGain;             //Ganancia de tension
     float                        CurrentGain;             //Ganancia de corriente
     float                        VoltageOffset;           //Offset de tension
@@ -53,7 +37,7 @@ class BasicCapture : public CaptureInterface {
     pthread_cond_t               ReadWait;                //Variable de condicion para esperar si buffer esta vacio
     pthread_t                    CaptureThread;           //Descriptor del hilo de captura
     bool                         Terminate;               //Señal para detener el hilo de captura
-    AdquisitionFilter_t          Filters[5];              //Filtros paso banda para deteccion de paso por cero
+    Filter_t          Filters[5];              //Filtros paso banda para deteccion de paso por cero
     uint64_t                     SequenceID;              //Numero de secuencia de bloques generados
     struct libusb_device_handle *DeviceHandle;            //Dispositivo de captura
     
@@ -71,21 +55,18 @@ class BasicCapture : public CaptureInterface {
   private : 
     static void  *Capture_Thread(void *args);
     static void  *Analize_Thread(void *args);
-    static void  *FFT_Thread(void *args);
     static void   ReadCallback(struct libusb_transfer *transfer);
-    static float  ApplyFilter(float in, AdquisitionFilter_t *filter);
-    static void   FFT_Wait(FFT_t *fft);
-    static FFT_t *FFT_Start(float *data, uint32_t len);
 
+   
     float  CalculateFrequency(Work_t* work);
-    float  CalcPhi(Complex_t voltage, Complex_t current);
+    
   private :
 //    Work_t   *GetWork();
 //    Params_t *Analyze(Work_t *work);
     void   SamplesCopy(float *dest, int32_t offset, uint32_t len);
   public :
-    BasicCapture(char *device, uint32_t bufferLen, float baseFreq);
+    CaptureMono(char *device, uint32_t bufferLen, float baseFreq);
     bool IsRunning();
-    ~BasicCapture();
+    ~CaptureMono();
 };
 //----------------------------------------------------------------------------------------------------------------------

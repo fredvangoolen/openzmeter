@@ -13,6 +13,18 @@
             <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/DB.h</file>
             <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Service/DB.cpp</file>
         </group>
-        <group name="ServiceV2"/>
+        <group name="ServiceV2">
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/BasicCapture/BasicCapture.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/HTTPServer.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/CaptureInterface.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Tools.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Analyzer.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Database.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Main.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/CaptureInterface.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/BasicCapture/BasicCapture.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Tools.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Database.h</file>
+        </group>
     </open-files>
 </project-private>
