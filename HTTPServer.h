@@ -12,7 +12,7 @@ class HTTPServer {
     typedef struct Session {
       struct Session *Next;
       char            ID[33];
-      uint32_t        ResourceCounter;
+//      uint32_t        ResourceCounter;
       time_t          Start;
       char           *User;
     } Session_t;

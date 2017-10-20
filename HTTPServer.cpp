@@ -33,8 +33,8 @@ int HTTPServer::HandleClient (void *cls, struct MHD_Connection *connection, cons
     if(File >= 0) {
       char *MimeType = NULL;
       int FileNameLen = strlen(url);
-      if((strlen(url) >= 3) && (strcmp(&url[FileNameLen - 3], ".js")) == 0) MimeType = "text/javascript";
-      if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".css")) == 0) MimeType = "text/css";
+      if((strlen(url) >= 3) && (strcmp(&url[FileNameLen - 3], ".js")) == 0) MimeType = (char*)"text/javascript";
+      if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".css")) == 0) MimeType = (char*)"text/css";
       struct MHD_Response *response = MHD_create_response_from_fd(FileStat.st_size, File);
       MHD_add_response_header (response, "Content-Type", MimeType);
       MHD_add_response_header (response, "Cache-Control", "public, max-age=2592000");
@@ -44,12 +44,24 @@ int HTTPServer::HandleClient (void *cls, struct MHD_Connection *connection, cons
     }
   }
   Session_t *Session = (Session_t*)*ptr;
-  if(Session == NULL) Session = GetSession(connection);
+  if(Session == NULL) {
+    Session = GetSession(connection);
+    *ptr = Session;
+    return MHD_YES;
+  }   
   if(Session != NULL) {
     *ptr = Session;
     Session->Start = time(NULL);
   }
   if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
+    if(strcmp(url, "/login/in") == 0) {
+        Session->User = "root";
+        struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
+      MHD_add_response_header(response, "Location", "/Dashboard");
+      Return = MHD_queue_response(connection, MHD_HTTP_SEE_OTHER, response);
+      MHD_destroy_response (response);
+      return Return;
+    }  
     if(Session->User == NULL) {
       struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
       Return = MHD_queue_response(connection, MHD_HTTP_UNAUTHORIZED, response);
@@ -62,7 +74,8 @@ int HTTPServer::HandleClient (void *cls, struct MHD_Connection *connection, cons
     if(Session->User == NULL) {
       struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
       MHD_add_response_header(response, "Location", "/Login");
-      MHD_queue_response(connection, MHD_HTTP_SEE_OTHER, response);
+      Return = MHD_queue_response(connection, MHD_HTTP_SEE_OTHER, response);
+      MHD_destroy_response (response);
       return Return;
     }
     if((strcmp(url, "/") == 0) || (strcmp(url, "/Dashboard") == 0)) {
@@ -85,10 +98,7 @@ HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection *connection) {
 	    if(strcmp(Cookie, Session->ID) == 0) break;
       Session = Session->Next;
     }
-    if(Session != NULL) {
-      Session->ResourceCounter++;
-      return Session;
-  	}
+    if(Session != NULL) return Session;
   }
   Session = (Session_t*)calloc(1, sizeof(Session_t));
   if(Session == NULL) {						
@@ -97,7 +107,6 @@ HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection *connection) {
   }
   sprintf(Session->ID, "%08X%08X%08X%08X", (uint32_t)random(), (uint32_t)random(), (uint32_t)random(), (uint32_t)random());
   Session->User = NULL;
-  Session->ResourceCounter = 1;  
   Session->Start = time(NULL);
   Session->Next = Sessions;
   Sessions = Session;

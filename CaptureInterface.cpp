@@ -6,6 +6,7 @@
 #include <math.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 #include "CaptureInterface.h"
 #include "Tools.h"
 bool CaptureInterface::SaveWorkParams() {
@@ -30,55 +31,71 @@ bool CaptureInterface::SaveWorkParams() {
   BindArrayFloat(pWork.VoltageHarmonics[0], (pTriphase == true) ? 150 : 50);     //harmonics_v
   BindArrayFloat(pWork.CurrentHarmonics[0], (pTriphase == true) ? 200 : 50);     //harmonics_i
   ExecSentence();
+  ResetWork();
 }
-bool CaptureInterface::Analyze() {
-  if(pTriphase == false) {
-    FFT_t *FFT_Voltage = FFT_Start(pWork.VoltageSamples[0], pWork.Samples);         // STEP 1: Start calculating FFT (in parallel)
-    FFT_t *FFT_Current = FFT_Start(pWork.CurrentSamples[0], pWork.Samples);
-    //Calcula valores basicos (RMS, potencia activa y energia) que son validos aun habiendo eventos
-    float V = 0.0;
-    float I = 0.0;
-    float P = 0.0;
-    for(int i = 0; i < pWork.Samples; i++) {
-      V += pow(pWork.VoltageSamples[0][i], 2.0);
-      I += pow(pWork.CurrentSamples[0][i], 2.0);
-      P += pWork.VoltageSamples[0][i] * pWork.CurrentSamples[0][i];
-    }
-    pWork.Active_Power[0] = P / pWork.Samples;
-    pWork.RMS_V[0] = sqrt(V / pWork.Samples);
-    pWork.RMS_I[0] = sqrt(I / pWork.Samples);
-    pWork.Apparent_Power[0] = pWork.RMS_V[0] * pWork.RMS_I[0];
+void CaptureInterface::Analyze(float minimunCurrent) {
+  FFT_t *FFT_Voltage[3];
+  FFT_t *FFT_Current[4];
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) FFT_Voltage[i] = FFT_Start(pWork.VoltageSamples[i], pWork.Samples);
+  for(int i = 0; i < (pTriphase ? 4 : 1); i++) FFT_Current[i] = FFT_Start(pWork.CurrentSamples[i], pWork.Samples);
+  //Calcula valores basicos (RMS, potencia activa y energia) que son validos aun habiendo eventos
+  float V[3] = {0.0, 0.0, 0.0};
+  float I[4] = {0.0, 0.0, 0.0, 0.0};
+  float P[3] = {0.0, 0.0, 0.0};
+  for(int i = 0; i < pWork.Samples; i++) {
+    for(int j = 0; j < (pTriphase ? 3 : 1); j++) V[j] += pow(pWork.VoltageSamples[j][i], 2.0);
+    for(int j = 0; j < (pTriphase ? 4 : 1); j++) I[j] += pow(pWork.CurrentSamples[j][i], 2.0);
+    for(int j = 0; j < (pTriphase ? 3 : 1); j++) P[j] += pWork.VoltageSamples[j][i] * pWork.CurrentSamples[j][i];
+  }
+  for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Active_Power[j] = P[j] / pWork.Samples;
+  for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.RMS_V[j] = sqrt(V[j] / pWork.Samples);
+  for(int j = 0; j < (pTriphase ? 4 : 1); j++) pWork.RMS_I[j] = sqrt(I[j] / pWork.Samples);
+  for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Apparent_Power[j] = pWork.RMS_V[j] * pWork.RMS_I[j];
 //  Params->Flag = false; //Events_Detect(This->Work);
-////  This->Params->Frequency = Analyzer_Frequency(Work);
-    FFT_Wait(FFT_Voltage);
+  for(int i = 0; i < pWork.Cycles_Len; i++) {
+    if(pLastCyclesCount == PROCESSING_FREQCYCLES) pLastCyclesLenght = pLastCyclesLenght - pLastCycles[pLastCyclesPos];
+    pLastCycles[pLastCyclesPos] = pWork.Cycles[i].End - pWork.Cycles[i].Start;
+    pLastCyclesLenght = pLastCyclesLenght + pLastCycles[pLastCyclesPos];
+    pLastCyclesPos = (pLastCyclesPos + 1) % PROCESSING_FREQCYCLES;
+    if(pLastCyclesCount < PROCESSING_FREQCYCLES) pLastCyclesCount++;
+  }
+  pWork.Frequency = pLastCyclesCount / (pLastCyclesLenght / (float)pSampleRate) / 2.0;
+  for(int j = 0; j < (pTriphase ? 3 : 1); j++) {
+    FFT_Wait(FFT_Voltage[j]);
     for(int i = 0; i < 50; i++) {
-//    Params->VoltageHarmonics[i] = sqrt(pow(FFT_Voltage->Result[10 + i * 10].Real, 2.0) + pow(FFT_Voltage->Result[10 + i * 10].Imag, 2.0)) / M_SQRT2 * 2.0;
-//    if(i > 0) Params->THD_V += pow(Params->VoltageHarmonics[i], 2.0);
+      pWork.VoltageHarmonics[j][i] = sqrt(pow(FFT_Voltage[j]->Result[10 + i * 10].Real, 2.0) + pow(FFT_Voltage[j]->Result[10 + i * 10].Imag, 2.0)) / M_SQRT2 * 2.0;
+      if(i > 0) pWork.THD_V[j] += pow(pWork.VoltageHarmonics[j][i], 2.0);
     }
-//  Params->THD_V = sqrt(Params->THD_V) / Params->VoltageHarmonics[0];
-  FFT_Wait(FFT_Current);
-//  if(Params->RMS_I > PROCESSING_CURRENTOFFSET) {
-//    for(int i = 10; i <= 500 ; i = i + 10) {
-//      float CurrentHarmonic = sqrt(pow(FFT_Current->Result[i].Real, 2.0) + pow(FFT_Current->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
-//      float VoltageHarmonic = sqrt(pow(FFT_Voltage->Result[i].Real, 2.0) + pow(FFT_Voltage->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;  
-//      float PHI = CalcPhi(FFT_Voltage->Result[i], FFT_Current->Result[i]);
-//      int Harmonic = (i / 10) - 1;
-//      Params->CurrentHarmonics[Harmonic] = CurrentHarmonic;
-//      if(Harmonic == 0) {
-//        Params->Fundamental_Active_Power   = VoltageHarmonic * CurrentHarmonic * cos(PHI);
-//        Params->Fundamental_Reactive_Power = VoltageHarmonic * CurrentHarmonic * sin(PHI);
-//        Params->Fundamental_Apparent_Power = VoltageHarmonic * CurrentHarmonic;
-//        Params->Fundamental_Power_Factor   = Params->Fundamental_Active_Power / Params->Fundamental_Apparent_Power;
-//        PHI = fmod(PHI, 2.0 * M_PI);
-//        if(PHI > M_PI) PHI = PHI -  2.0 * M_PI;
-//        Params->Phi = PHI * 180.0 / M_PI;
-//      }
-//      if(Harmonic > 0) Params->THD_I += pow(CurrentHarmonic, 2.0);
-//    }
-//    Params->THD_I = sqrt(Params->THD_I) / Params->CurrentHarmonics[0];
-//    Params->Active_Energy = (Params->Active_Power * work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
-//    Params->Power_Factor = Params->Active_Power / Params->Apparent_Power;
-//    Params->Fundamental_Reactive_Energy = (Params->Fundamental_Reactive_Power * work->Samples) / (ADQUISITION_SAMPLEFREQ * 3600.0);
+    pWork.THD_V[j] = sqrt(pWork.THD_V[j]) / pWork.VoltageHarmonics[j][0];
+  }
+  for(int j = 0; j < (pTriphase ? 4 : 1); j++) {
+    FFT_Wait(FFT_Current[j]);
+    if(pWork.RMS_I[j] < minimunCurrent) continue;
+    for(int i = 10; i <= 500 ; i = i + 10) {
+      int   Harmonic = (i / 10) - 1;
+      float CurrentHarmonic = sqrt(pow(FFT_Current[j]->Result[i].Real, 2.0) + pow(FFT_Current[j]->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
+      if(Harmonic > 0) pWork.THD_I[j] += pow(CurrentHarmonic, 2.0);
+      if(j < 3) {
+        float VoltageHarmonic = pWork.VoltageHarmonics[j][Harmonic];// sqrt(pow(FFT_Voltage[j]->Result[i].Real, 2.0) + pow(FFT_Voltage[j]->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;  
+        float PHI = CalcPhi(FFT_Voltage[j]->Result[i], FFT_Current[j]->Result[i]);
+        pWork.CurrentHarmonics[j][Harmonic] = CurrentHarmonic;
+        if(Harmonic == 0) {
+          pWork.Fundamental_Active_Power[j]   = VoltageHarmonic * CurrentHarmonic * cos(PHI);
+          pWork.Fundamental_Reactive_Power[j] = VoltageHarmonic * CurrentHarmonic * sin(PHI);
+          pWork.Fundamental_Apparent_Power[j] = VoltageHarmonic * CurrentHarmonic;
+          pWork.Fundamental_Power_Factor[j]   = pWork.Fundamental_Active_Power[j] / pWork.Fundamental_Apparent_Power[j];
+          PHI = fmod(PHI, 2.0 * M_PI);
+          if(PHI > M_PI) PHI = PHI -  2.0 * M_PI;
+          pWork.Phi[j] = PHI * 180.0 / M_PI;
+        }
+      }
+    }
+    pWork.THD_I[j] = sqrt(pWork.THD_I[j]) / pWork.CurrentHarmonics[j][0];
+    if(j < 3) {
+      pWork.Active_Energy[j] = (pWork.Active_Power[j] * pWork.Samples) / (pSampleRate * 3600.0);
+      pWork.Power_Factor[j] = pWork.Active_Power[j] / pWork.Apparent_Power[j];
+      pWork.Fundamental_Reactive_Energy[j] = (pWork.Fundamental_Reactive_Power[j] * pWork.Samples) / (pSampleRate * 3600.0);
+    }
 //  } else {
 //    Params->RMS_I = 0.0;
 //    memset(work->CurrentSamples, 0, work->Samples * sizeof(float));
@@ -92,9 +109,9 @@ bool CaptureInterface::Analyze() {
 //      FFT_I[i] = sqrt(pow(FFT_Current->Result[i].Real, 2.0) + pow(FFT_Current->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
 //    }
 ////    RequestServer_SetValues(work->Timestamp, Params, work->VoltageSamples, work->CurrentSamples, FFT_V, FFT_I, work->Samples, 600);
-//  }
-  free(FFT_Voltage);
-  free(FFT_Current);
+  }
+  for(int j = 0; j < (pTriphase ? 3 : 1); j++) free(FFT_Voltage[j]);
+  for(int j = 0; j < (pTriphase ? 4 : 1); j++) free(FFT_Current[j]);
 ////  DB_Save(PARAMS_10C, 0, work->Timestamp, Params, true);
 ////  if((Work->SequenceID % 15) == 0) DB_Save(PARAMS_3S, 0, PrevTimestamp, NULL, true);
 ////  if(((Work->Timestamp / 60000) * 60000) != ((PrevTimestamp / 60000) * 60000)) DB_Save(PARAMS_1M, 0, PrevTimestamp, NULL, true);
@@ -109,9 +126,7 @@ bool CaptureInterface::Analyze() {
     
     
 
-  }
-
-
+  
 }
 //bool DB_Start(uint32_t *lastprice) {
 //  struct timeval Time;
@@ -219,9 +234,13 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq
     pWork.Phi = (float*)malloc(sizeof(float*) * 1);
   }
   ResetWork();
+  pLastCyclesCount  = 0;
+  pLastCyclesPos    = 0;
+  pLastCyclesLenght = 0;
+  pWork.SequenceID  = 0;
 }
 void CaptureInterface::ResetWork() {
-  pWork.SequenceID = 0;
+  pWork.SequenceID++;
   pWork.Timestamp = 0;
   pWork.Samples = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(pWork.VoltageSamples[i], 0, sizeof(float) * pMaxSamples);

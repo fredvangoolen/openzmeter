@@ -7,6 +7,9 @@
 #include <inttypes.h>
 #include <fftw3.h>
 #include "Database.h"
+//---------------------------------------------------------------------------------------------------------------------
+#define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
+//---------------------------------------------------------------------------------------------------------------------
 class CaptureInterface : private Database {
   public :
     enum Freq_t {FREQ_50, FREQ_60};
@@ -62,10 +65,14 @@ class CaptureInterface : private Database {
       float Z2;
     } Filter_t;
   private :
-    bool        pTriphase;
+    uint32_t    pLastCycles[PROCESSING_FREQCYCLES];
+    uint32_t    pLastCyclesCount;
+    uint32_t    pLastCyclesPos;
+    uint32_t    pLastCyclesLenght;
     uint32_t    pSampleRate;
     uint32_t    pMaxSamples;
     enum Freq_t pNominalFreq;
+    bool        pTriphase;
   protected :
     Work_t  pWork;
   protected :
@@ -73,7 +80,7 @@ class CaptureInterface : private Database {
     void     ResetWork();
     uint32_t GetMaxSamples();
     bool     SaveWorkParams();
-    bool     Analyze();
+    void     Analyze(float minimunCurrent);
   protected :
     static void  *FFT_Thread(void *args);
     static float  ApplyFilter(float in, Filter_t *filter);

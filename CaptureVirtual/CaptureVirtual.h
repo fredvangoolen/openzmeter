@@ -5,9 +5,6 @@
 #pragma once
 #include "../CaptureInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
-#define PROCESSING_CURRENTOFFSET      0.10        //Corriente minima para realizar calculos
-//----------------------------------------------------------------------------------------------------------------------
 class CaptureVirtual : public CaptureInterface {
   private :
     typedef struct {
@@ -22,19 +19,18 @@ class CaptureVirtual : public CaptureInterface {
     float                        NominalVoltage;          //Tension nominal
     float                        NominalCurrent;          //Corriente nominal
     bool                         Terminate;               //Señal para detener el hilo de captura
-    uint64_t                     SequenceID;              //Numero de secuencia de bloques generados
 
-    uint32_t                     LastCycles[PROCESSING_FREQCYCLES];
-    uint32_t                     LastCyclesCount;
-    uint32_t                     LastCyclesPos;
-    uint32_t                     LastCyclesLenght;
-    pthread_mutex_t              AnalyzeMutex;                 //Mutex para bloquear acceso a muestras y resultados
+
+//    uint32_t                     LastCycles[PROCESSING_FREQCYCLES];
+//    uint32_t                     LastCyclesCount;
+//    uint32_t                     LastCyclesPos;
+//    uint32_t                     LastCyclesLenght;
+//    pthread_mutex_t              AnalyzeMutex;                 //Mutex para bloquear acceso a muestras y resultados
     pthread_t                    AnalyzeThread;                //Descriptor del hilo de analisis
-    uint64_t                     PrevTimestamp;
-    uint64_t                     Agreg3S_Start;
+//    uint64_t                     PrevTimestamp;
+//    uint64_t                     Agreg3S_Start;
   private : 
     static void  *Analize_Thread(void *args);
-    float  CalculateFrequency(Work_t* work);
   private :
     void   SamplesCopy(float *dest, int32_t offset, uint32_t len);
   public :

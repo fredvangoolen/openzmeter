@@ -4,6 +4,7 @@
  * Modified: Eduardo Viciana (20 de marzo de 2017)
  * ------------------------------------------------------------------------------------------------------------------ */
 #include <stdlib.h>
+#include <pthread.h>
 #include <poll.h>
 #include <errno.h>
 #include <string.h>

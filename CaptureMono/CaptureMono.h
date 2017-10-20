@@ -38,13 +38,13 @@ class CaptureMono : public CaptureInterface {
     pthread_t                    CaptureThread;           //Descriptor del hilo de captura
     bool                         Terminate;               //Señal para detener el hilo de captura
     Filter_t          Filters[5];              //Filtros paso banda para deteccion de paso por cero
-    uint64_t                     SequenceID;              //Numero de secuencia de bloques generados
+//    uint64_t                     SequenceID;              //Numero de secuencia de bloques generados
     struct libusb_device_handle *DeviceHandle;            //Dispositivo de captura
     
-    uint32_t                     LastCycles[PROCESSING_FREQCYCLES];
-    uint32_t                     LastCyclesCount;
-    uint32_t                     LastCyclesPos;
-    uint32_t                     LastCyclesLenght;
+//    uint32_t                     LastCycles[PROCESSING_FREQCYCLES];
+//    uint32_t                     LastCyclesCount;
+//    uint32_t                     LastCyclesPos;
+//    uint32_t                     LastCyclesLenght;
     pthread_mutex_t              AnalyzeMutex;                 //Mutex para bloquear acceso a muestras y resultados
     pthread_t                    AnalyzeThread;                //Descriptor del hilo de analisis
     uint64_t                     PrevTimestamp;
