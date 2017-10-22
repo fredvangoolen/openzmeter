@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
+#include <errno.h>
 #include "HTTPServer.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -19,42 +20,49 @@ bool HTTPServer::Start() {
   Daemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, Tools::Global.HTTPPort, NULL, NULL, &HandleClient, NULL, MHD_OPTION_END);
   return true;
 }
+void HTTPServer::SetMimeType(struct MHD_Response *response, const char *url) {
+  char *MimeType = NULL;
+  int FileNameLen = strlen(url);
+  if((strlen(url) >= 3) && (strcmp(&url[FileNameLen - 3], ".js")) == 0) 
+    MimeType = (char*)"text/javascript";
+  else if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".css")) == 0) 
+    MimeType = (char*)"text/css";
+  else if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".ico")) == 0) 
+    MimeType = (char*)"image/x-icon";
+  else if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".png")) == 0) 
+    MimeType = (char*)"image/png";
+  else
+    Tools::LogMsg("ERROR", "No mimetype defined for request '%s'\n", url);
+  MHD_add_response_header (response, "Content-Type", MimeType);
+}
+int HTTPServer::HandleStaticFiles(struct MHD_Connection *connection, const char *url, const char *method) {
+  if(strcmp(method, MHD_HTTP_METHOD_GET) != 0) return MHD_NO;
+  int File = -1;
+  struct stat FileStat;
+  char *FilePath = (char*)malloc(strlen(SERVER_ROOT) + strlen(url));
+  if(FilePath == NULL) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    return MHD_NO;
+  }
+  sprintf(FilePath, "%s%s", SERVER_ROOT, url);
+  if((stat(FilePath, &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) File = open(FilePath, O_RDONLY);
+  free(FilePath);
+  if(File == -1) return MHD_NO;
+  struct MHD_Response *response = MHD_create_response_from_fd(FileStat.st_size, File);
+  SetMimeType(response, url);
+  MHD_add_response_header (response, "Cache-Control", "public, max-age=2592000");
+  int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
+  MHD_destroy_response(response);
+  return Return;
+}
 int HTTPServer::HandleClient (void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
   int Return;
-  if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
-    int File = -1;
-    struct stat FileStat;
-    char *FilePath = (char*)malloc(strlen(SERVER_ROOT) + strlen(url));
-    sprintf(FilePath, "%s%s", SERVER_ROOT, url);
-    if((stat(FilePath, &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) {
-      File = open(FilePath, O_RDONLY);
-    }
-    free(FilePath);
-    if(File >= 0) {
-      char *MimeType = NULL;
-      int FileNameLen = strlen(url);
-      if((strlen(url) >= 3) && (strcmp(&url[FileNameLen - 3], ".js")) == 0) MimeType = (char*)"text/javascript";
-      if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".css")) == 0) MimeType = (char*)"text/css";
-      struct MHD_Response *response = MHD_create_response_from_fd(FileStat.st_size, File);
-      MHD_add_response_header (response, "Content-Type", MimeType);
-      MHD_add_response_header (response, "Cache-Control", "public, max-age=2592000");
-      Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
-      MHD_destroy_response (response);
-      return Return;
-    }
-  }
+  if(HandleStaticFiles(connection, url, method) == MHD_YES) return MHD_YES;
+  if(*ptr == NULL) *ptr = GetSession(connection);
   Session_t *Session = (Session_t*)*ptr;
-  if(Session == NULL) {
-    Session = GetSession(connection);
-    *ptr = Session;
-    return MHD_YES;
-  }   
-  if(Session != NULL) {
-    *ptr = Session;
-    Session->Start = time(NULL);
-  }
+
   if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
-    if(strcmp(url, "/login/in") == 0) {
+    if(strcmp(url, "/Login_In") == 0) {
         Session->User = "root";
         struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
       MHD_add_response_header(response, "Location", "/Dashboard");
@@ -98,11 +106,14 @@ HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection *connection) {
 	    if(strcmp(Cookie, Session->ID) == 0) break;
       Session = Session->Next;
     }
-    if(Session != NULL) return Session;
+    if(Session != NULL) {
+      Session->Start = time(NULL);
+      return Session;
+    }
   }
   Session = (Session_t*)calloc(1, sizeof(Session_t));
-  if(Session == NULL) {						
-//    fprintf (stderr, "calloc error: %s\n", strerror (errno));
+  if(Session == NULL) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL; 
   }
   sprintf(Session->ID, "%08X%08X%08X%08X", (uint32_t)random(), (uint32_t)random(), (uint32_t)random(), (uint32_t)random());

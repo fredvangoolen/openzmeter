@@ -1,7 +1,7 @@
 
 function ajaxLogin(formData) {
     var request = $.ajax({
-        url: "login/in",
+        url: "Login_In",
         data: formData,
         timeout: 20000,
         type: "POST",

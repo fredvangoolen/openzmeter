@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -8,7 +7,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <link rel="shortcut icon" href="favicon.ico" />
-    <base href="<?= base_url(); ?>">
+    <base href="/">
     <title>openZmeter | Login</title>
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css">
     <link href="lib/metisMenu/metisMenu.min.css" rel="stylesheet">
@@ -23,7 +22,7 @@
       <div class="card card-container">
         <img id="profile-img" class="profile-img-card" src="img/logo.png" />
         <p id="profile-name" class="profile-name-card"></p>
-        <form class="form-signin" method="post" action="<?= site_url('login/in') ?>">
+        <form class="form-signin" method="post">
           <span id="reauth-email" class="reauth-email"></span>
           <input name="username" type="text" id="user" class="form-control" placeholder="Username" required autofocus>
           <input name="password" type="password" id="password" class="form-control" placeholder="Password" required>
