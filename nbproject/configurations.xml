@@ -502,6 +502,7 @@
         </logicalFolder>
         <itemPath>WEB/Views/Login.html</itemPath>
         <itemPath>WEB/Views/account_view.php</itemPath>
+        <itemPath>WEB/dashboard_view.php</itemPath>
         <itemPath>WEB/Views/settings_view.php</itemPath>
         <itemPath>WEB/Views/stats_view.php</itemPath>
       </logicalFolder>
@@ -516,7 +517,6 @@
       <itemPath>WEB/Settings.php</itemPath>
       <itemPath>WEB/Stats.php</itemPath>
       <itemPath>WEB/Sysinfo_model.php</itemPath>
-      <itemPath>WEB/dashboard_view.php</itemPath>
       <itemPath>WEB/index.php</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -527,7 +527,6 @@
       <itemPath>Makefile</itemPath>
       <itemPath>openZmeter.ini</itemPath>
     </logicalFolder>
-    <itemPath>Analyzer.cpp</itemPath>
     <itemPath>CaptureInterface.cpp</itemPath>
     <itemPath>CaptureInterface.h</itemPath>
     <itemPath>Database.cpp</itemPath>
@@ -574,8 +573,6 @@
           <commandLine>-lm -lfftw3f -lpthread -lrt -lpq -lcurl -lxml2 -lmicrohttpd -lusb-1.0</commandLine>
         </linkerTool>
       </compileType>
-      <item path="Analyzer.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="CaptureInterface.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="CaptureInterface.h" ex="false" tool="3" flavor2="0">
@@ -2024,8 +2021,6 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
-      <item path="Analyzer.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="CaptureInterface.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="CaptureInterface.h" ex="false" tool="3" flavor2="0">

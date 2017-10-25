@@ -30,7 +30,7 @@ void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
 }
 int main(int argc, char** argv) {
-  char *ConfigFile = (char*)"/etc/openZmeter.ini";
+  char *ConfigFile = (char*)"/etc/openZmeter.conf";
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
       ConfigFile = &argv[i][9];
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
   Tools::CreatePidFile();
   Tools::CreateLogFile();
   HTTPServer::Start();
-  //CaptureMono *Capture1 = new CaptureMono("", 128*1024, 15625);
+  CaptureMono *Capture1 = new CaptureMono("", 128*1024, 50);
   //CaptureVirtual *Capture1 = new CaptureVirtual(15625, true, 230, 1.0, CaptureInterface::FREQ_50);
   //  uint32_t LastPrice;
 //  if(DB_Start(&LastPrice) == true) {

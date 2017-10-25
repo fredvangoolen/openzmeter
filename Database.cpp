@@ -29,6 +29,7 @@ Database::~Database() {
   PQfinish(DBConn);
 }
 bool Database::ExecSentence(const char* sql) {
+  if(!Initialized) return false;
   PGresult *Result = PQexec(DBConn, sql);
   if(PQresultStatus(Result) != PGRES_COMMAND_OK) Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
   PQclear(Result);
@@ -63,8 +64,12 @@ void Database::BindSingleUInt64(uint64_t param) {
 }
 void Database::BindSingleFloat(float param) {
   if(ParamsLen < ParamsAlloc) {
-    Params[ParamsLen] = (char*)malloc(sizeof(char) * 16);
-    sprintf(Params[ParamsLen], "%e", param);
+    if(isnan(param)) {
+      Params[ParamsLen] = strdup("NULL");
+    } else {
+      Params[ParamsLen] = (char*)malloc(sizeof(char) * 16);
+      sprintf(Params[ParamsLen], "%e", param);
+    }
     ParamsLen++;
   }
 }
@@ -85,6 +90,7 @@ void Database::BindSingleBool(bool param) {
   }
 }
 bool Database::ExecSentence() {
+  bool Result = false;
   if(ParamsAlloc == ParamsLen) {
     int maxLenght = strlen(Sentence);
     for(int i = 0; i < ParamsLen; i++) maxLenght = maxLenght + strlen(Params[i]);
@@ -104,18 +110,19 @@ bool Database::ExecSentence() {
       }
       Read++;
     }
-    ExecSentence(Buffer);
+    Result = ExecSentence(Buffer);
 //    printf(Buffer);
 //    fflush(stdout);
     free(Buffer);
   } else {
-      Tools::LogMsg("ERROR", "There are more placeholders than params!!");
+    Tools::LogMsg("ERROR", "There are more placeholders than params!!");
   }
   if(ParamsAlloc != 0) {
     for(int i = 0; i < ParamsLen; i++) free(Params[i]);
     free(Params);
     ParamsAlloc = 0;
   }
+  return Result;
 }
 
 
