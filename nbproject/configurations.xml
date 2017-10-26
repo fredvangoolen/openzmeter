@@ -463,6 +463,7 @@
           </logicalFolder>
           <itemPath>WEB/Resources/lib/jquery.min.js</itemPath>
         </logicalFolder>
+        <itemPath>WEB/Resources/CommonHeader.html</itemPath>
         <itemPath>WEB/Resources/favicon.ico</itemPath>
       </logicalFolder>
       <logicalFolder name="Views" displayName="Views" projectFiles="true">
@@ -508,7 +509,6 @@
       </logicalFolder>
       <itemPath>WEB/Account.php</itemPath>
       <itemPath>WEB/Analysis.php</itemPath>
-      <itemPath>WEB/CommonHeader.html</itemPath>
       <itemPath>WEB/Dashboard.php</itemPath>
       <itemPath>WEB/Data_model.php</itemPath>
       <itemPath>WEB/Event_model.php</itemPath>
@@ -570,7 +570,7 @@
           </preprocessorList>
         </ccTool>
         <linkerTool>
-          <commandLine>-lm -lfftw3f -lpthread -lrt -lpq -lcurl -lxml2 -lmicrohttpd -lusb-1.0</commandLine>
+          <commandLine>-lm -lfftw3f -lpthread -lrt -lpq -lcurl -lxml2 -lmicrohttpd -lusb-1.0 -ljson-c</commandLine>
         </linkerTool>
       </compileType>
       <item path="CaptureInterface.cpp" ex="false" tool="1" flavor2="0">
@@ -613,8 +613,6 @@
       </item>
       <item path="WEB/Analysis.php" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/CommonHeader.html" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="WEB/Dashboard.php" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Data_model.php" ex="false" tool="3" flavor2="0">
@@ -624,6 +622,8 @@
       <item path="WEB/Events.php" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Login.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/CommonHeader.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/css/common.css" ex="false" tool="3" flavor2="0">
       </item>
@@ -2061,8 +2061,6 @@
       </item>
       <item path="WEB/Analysis.php" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/CommonHeader.html" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="WEB/Dashboard.php" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Data_model.php" ex="false" tool="3" flavor2="0">
@@ -2072,6 +2070,8 @@
       <item path="WEB/Events.php" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Login.php" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/CommonHeader.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/css/common.css" ex="false" tool="3" flavor2="0">
       </item>

@@ -12,6 +12,7 @@
 #include <errno.h>
 #include "HTTPServer.h"
 #include "Tools.h"
+#include <json-c/json.h>
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon            *HTTPServer::Daemon = NULL;
 HTTPServer::Session_t *HTTPServer::Sessions = NULL;
@@ -44,18 +45,10 @@ int  HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url
   MHD_destroy_response (response);
   return Return;
 }
-int HTTPServer::HandleStaticFiles(struct MHD_Connection *connection, const char *url, const char *method) {
-  if(strcmp(method, MHD_HTTP_METHOD_GET) != 0) return MHD_NO;
+int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *url) {
   int File = -1;
   struct stat FileStat;
-  char *FilePath = (char*)malloc(strlen(SERVER_ROOT) + strlen(url) + 1);
-  if(FilePath == NULL) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return MHD_NO;
-  }
-  sprintf(FilePath, "%s%s", SERVER_ROOT, url);
-  if((stat(FilePath, &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) File = open(FilePath, O_RDONLY);
-  free(FilePath);
+  if((stat(url, &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) File = open(url, O_RDONLY);
   if(File == -1) return MHD_NO;
   struct MHD_Response *response = MHD_create_response_from_fd(FileStat.st_size, File);
   SetMimeType(response, url);
@@ -64,14 +57,21 @@ int HTTPServer::HandleStaticFiles(struct MHD_Connection *connection, const char 
   MHD_destroy_response(response);
   return Return;
 }
-int HTTPServer::HandleClient (void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
+int  HTTPServer::HandleStaticFiles(struct MHD_Connection *connection, const char *url, const char *method) {
+  if(strcmp(method, MHD_HTTP_METHOD_GET) != 0) return MHD_NO;
+  char *FilePath = (char*)malloc(strlen(SERVER_ROOT) + strlen(url) + 1);
+  sprintf(FilePath, "%s%s", SERVER_ROOT, url);
+  int Return = SendFile(connection, FilePath);
+  free(FilePath);
+  return Return;
+}
+int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
   if(HandleStaticFiles(connection, url, method) == MHD_YES) return MHD_YES;
   if(HandleLogin(connection, url, upload_data, upload_data_size, method, ptr) == MHD_YES) return MHD_YES;
   Session_t *Session = (Session_t*)*ptr;
   if(Session == NULL) return MHD_NO;
   if(HandleDashboard(connection, url, upload_data, upload_data_size, method, ptr) == MHD_YES) return MHD_YES;
-  
-  
+  if(HandlePostRequest(connection, url, upload_data, upload_data_size, method, ptr) == MHD_YES) return MHD_YES;
 
   if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
 //    if(strcmp(url, "/Login") == 0) return HandleLogin(connection, Session);
@@ -162,24 +162,48 @@ int HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url, 
   }
   return MHD_NO;
 }
-int HTTPServer::HandleDashboard(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, const char *method, void **ptr) {
+int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, const char *method, void **ptr) {
+  if(strcmp(method, MHD_HTTP_METHOD_POST) != 0) return MHD_NO;
+  if(strcmp(url, "/GetRows") == 0) {
+    if(upload_data == NULL) return MHD_YES;  
+    char    *Table = NULL;
+    char    *Variables = NULL;
+    uint64_t Period = 0;
+    uint64_t From = 0;
+    uint64_t To = 0;
+    json_object *JSON = json_tokener_parse(upload_data);
 
-if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
-    if(strcmp(url, "/Dashboard") == 0) {
-      int File = -1;
-      struct stat FileStat;
-      const char *FilePath = "WEB/Views/Dashboard.html";
-      if((stat(FilePath, &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) {
-        File = open(FilePath, O_RDONLY);
-      }
-      if(File >= 0) {
-        struct MHD_Response *response = MHD_create_response_from_fd(FileStat.st_size, File);
-        SetMimeType(response, FilePath);
-        int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
-        MHD_destroy_response (response);
-        return Return;
-      }
-      return MHD_NO;
-    }    
+//    struct json_object *JSON_Val; 
+//    char               *JSON_Key; 
+    json_object_object_foreach(JSON, JSON_Key, JSON_Val) {
+      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "variables") == 0)) Variables = strdup(json_object_get_string(JSON_Val));
+      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "table") == 0))     Table = strdup(json_object_get_string(JSON_Val));
+      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "period") == 0))       Period = json_object_get_int64(JSON_Val);
+      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "from") == 0))         From = json_object_get_int64(JSON_Val);
+      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "to") == 0))           To = json_object_get_int64(JSON_Val);
+    }
+    free(JSON);
+    if((Variables != NULL) && (Table != NULL)) {
+      
+      free(Variables);
+      free(Table);
+    }
+    //json_parse(jobj);
+    
+    
+      struct MHD_Response *response = MHD_create_response_from_buffer(2, (void*)"{}", MHD_RESPMEM_PERSISTENT);
+      MHD_add_response_header(response, "Content-Type", "application/json");
+      int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
+      MHD_destroy_response (response);
+      return Return;
+    
+    //Extraigo los campos que necesito, si no estan debuelvo error, si estan todos ejecuto consulta y devuelvo como json
+  
+  }
 }
+int HTTPServer::HandleDashboard(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, const char *method, void **ptr) {
+  if((strcmp(method, MHD_HTTP_METHOD_GET) != 0) || ((strcmp(url, "/Dashboard") != 0) && (strcmp(url, "/") != 0))) return MHD_NO;
+  int Return = SendFile(connection,  "WEB/Views/Dashboard.html");
+  return Return;
 }

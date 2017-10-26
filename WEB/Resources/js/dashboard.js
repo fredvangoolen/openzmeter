@@ -391,11 +391,17 @@ function GetValues5S() {
     $('#FrequencyPanel').append('<div id="SpinnerDivFrequency" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
     FrequencySpinner.spin(document.getElementById('SpinnerDivFrequency'));
   }
-  $.ajax({ url: "dashboard/ajaxUpdateValues5S",
+  $.ajax({ url: "/GetRows",
            timeout: 20000,
            type: "POST",
            dataType: "json",
-           data: { lasttimestamp: LastTimestamp, energyperiod: EnergyTimeScale },
+           data: JSON.stringify({ 
+             variables: "timestamp, rms_v, rms_i, active_energy, frequency",
+             period   : 7200000,
+             from     : LastTimestamp,
+             to       : 0,
+             table    : "agreg_10c"
+           }),
            success: AjaxSuccess5S,
            complete: function (x) {
                        setTimeout(GetValues5S, 5000);
