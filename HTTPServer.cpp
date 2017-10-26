@@ -12,6 +12,7 @@
 #include <errno.h>
 #include "HTTPServer.h"
 #include "Tools.h"
+#include "Database.h"
 #include <json-c/json.h>
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon            *HTTPServer::Daemon = NULL;
@@ -74,7 +75,6 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
   if(HandlePostRequest(connection, url, upload_data, upload_data_size, method, ptr) == MHD_YES) return MHD_YES;
 
   if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
-//    if(strcmp(url, "/Login") == 0) return HandleLogin(connection, Session);
     if(Session->User == NULL) {
       struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
       MHD_add_response_header(response, "Location", "/Login");
@@ -172,9 +172,6 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     uint64_t From = 0;
     uint64_t To = 0;
     json_object *JSON = json_tokener_parse(upload_data);
-
-//    struct json_object *JSON_Val; 
-//    char               *JSON_Key; 
     json_object_object_foreach(JSON, JSON_Key, JSON_Val) {
       enum json_type JSON_Type = json_object_get_type(JSON_Val);
       if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "variables") == 0)) Variables = strdup(json_object_get_string(JSON_Val));
@@ -185,7 +182,18 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     }
     free(JSON);
     if((Variables != NULL) && (Table != NULL)) {
-      
+      Database DB;
+      int Len;
+      char *Text = DB.ExecSentenceJSON("SELECT row_to_json(TmpB) FROM ("
+" SELECT array_agg(sampletime) AS sampletime, array_agg(rms_i) AS rms_i"
+" FROM (SELECT sampletime, rms_i FROM agreg_10c WHERE sampletime > 1508917614689 ORDER BY sampletime ASC LIMIT 200) as TmpA) AS TmpB;", &Len);
+      if(Text != NULL) {
+        struct MHD_Response *response = MHD_create_response_from_buffer(Len, Text, MHD_RESPMEM_MUST_FREE);
+        MHD_add_response_header(response, "Content-Type", "application/json");
+        int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
+        MHD_destroy_response (response);
+        return Return;
+      }      
       free(Variables);
       free(Table);
     }

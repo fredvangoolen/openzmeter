@@ -8,7 +8,7 @@
 #include <math.h>
 #include "Database.h"
 #include "Tools.h"
-bool Database::Initialized = false;
+//bool Database::Initialized = false;
 Database::Database() {
   Params    = NULL;
   ParamsLen = 0;
@@ -20,19 +20,33 @@ Database::Database() {
     PQfinish(DBConn);
     return;
   }
-  if(Initialized == false) {
-    if(ExecSentence("SET synchronous_commit TO OFF")) Initialized = true;
-  }
+  ExecSentence("SET synchronous_commit TO OFF");
 }
 Database::~Database() {
   Tools::LogMsg("DEBUG", "Terminate DB connection...");
   PQfinish(DBConn);
 }
 bool Database::ExecSentence(const char* sql) {
-  if(!Initialized) return false;
   PGresult *Result = PQexec(DBConn, sql);
-  if(PQresultStatus(Result) != PGRES_COMMAND_OK) Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
-  PQclear(Result);
+  if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
+    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
+    PQclear(Result);
+    return false;
+  } else {
+    PQclear(Result);
+    return true;  
+  }
+}
+char* Database::ExecSentenceJSON(const char* sql, int *len) {
+  PGresult *Result = PQexec(DBConn, sql);
+  if(PQresultStatus(Result) != PGRES_TUPLES_OK) {
+    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
+    PQclear(Result);
+    return NULL;
+  } else {
+    *len = PQgetlength(Result, 0, 0);
+    return strdup(PQgetvalue(Result, 0, 0));
+  }
 }
 void Database::PrepareSentence(const char *sentence) {
   Sentence = sentence;
