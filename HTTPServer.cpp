@@ -187,6 +187,8 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       char *Text = DB.ExecSentenceJSON("SELECT row_to_json(TmpB) FROM ("
 " SELECT array_agg(sampletime) AS sampletime, array_agg(rms_i) AS rms_i"
 " FROM (SELECT sampletime, rms_i FROM agreg_10c WHERE sampletime > 1508917614689 ORDER BY sampletime ASC LIMIT 200) as TmpA) AS TmpB;", &Len);
+      free(Variables);
+      free(Table);
       if(Text != NULL) {
         struct MHD_Response *response = MHD_create_response_from_buffer(Len, Text, MHD_RESPMEM_MUST_FREE);
         MHD_add_response_header(response, "Content-Type", "application/json");
@@ -194,20 +196,12 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
         MHD_destroy_response (response);
         return Return;
       }      
-      free(Variables);
-      free(Table);
     }
-    //json_parse(jobj);
-    
-    
-      struct MHD_Response *response = MHD_create_response_from_buffer(2, (void*)"{}", MHD_RESPMEM_PERSISTENT);
-      MHD_add_response_header(response, "Content-Type", "application/json");
-      int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
-      MHD_destroy_response (response);
-      return Return;
-    
-    //Extraigo los campos que necesito, si no estan debuelvo error, si estan todos ejecuto consulta y devuelvo como json
-  
+    struct MHD_Response *response = MHD_create_response_from_buffer(2, (void*)"{}", MHD_RESPMEM_PERSISTENT);
+    MHD_add_response_header(response, "Content-Type", "application/json");
+    int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
+    MHD_destroy_response (response);
+    return Return;
   }
 }
 int HTTPServer::HandleDashboard(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, const char *method, void **ptr) {

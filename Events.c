@@ -61,7 +61,7 @@ bool Events_Detect(Work_t *work) {
     if((Events.StableCycles == 100) && (Events.RunningEvent == NULL) && (fabs(100.0 - PercentChange(CycleRMS, RMS_Avg)) > EVENT_RVC)) {
       Events.RunningEvent = (Event_t*)malloc(sizeof(Event_t));
       Events.RunningEvent->Type    = RVC;
-      Events.RunningEvent->Voltage = EVENT_VOLTAGE;
+      Events.RunningEvent->Voltage = Config.Electrical.NominalVoltage; //EVENT_VOLTAGE;
     }    
     if(abs(100.0 - PercentChange(CycleRMS, EVENT_VOLTAGE)) > EVENT_DIP_SWELL) {
       if(Events.RunningEvent == NULL) {

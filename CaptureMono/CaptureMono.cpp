@@ -78,7 +78,7 @@ void  *CaptureMono::Analize_Thread(void* args) {
       pthread_cond_wait(&This->ReadWait, &This->AnalyzeMutex);
     }
     uint64_t Start = Tools::GetTime();
-    This->pWork.Timestamp = Start - ((This->Used * 1000) / ADQUISITION_SAMPLEFREQ);
+    This->pWork.Params.Timestamp = Start - ((This->Used * 1000) / ADQUISITION_SAMPLEFREQ);
     float LastSample = +100; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
     for(This->pWork.Samples = 0; This->pWork.Samples < This->GetMaxSamples(); This->pWork.Samples++) {
       
@@ -106,19 +106,19 @@ void  *CaptureMono::Analize_Thread(void* args) {
     Tools::LogMsg("DEBUG", "Process of block %llu takes %.1fmS (%.1fmS mS with store)\n", This->pWork.SequenceID, (AnalyzeEnd - Start) / 1000.0, (SaveEnd - Start) / 1000.0);
   }
 }
-float CaptureMono::CalculateFrequency(Work_t* work) {
-  static uint64_t NumSamples = 0;    //Numero de muestras leidas desde el ultimo calculo
-  static uint32_t NumCycles  = 0;    //Numero de ciclos desde ultimo calculo
-  float  Frequency = NAN;
-  NumSamples += work->Samples;
-  NumCycles += work->Cycles_Len;
-  if((((work->Timestamp / 1000000) % 10) == 0) && (NumSamples > (ADQUISITION_SAMPLEFREQ * 9))) {
-    Frequency = NumCycles / (NumSamples / ADQUISITION_SAMPLEFREQ) / 2.0;
-    NumSamples = 0;
-    NumCycles = 0;  
-  }
-  return Frequency;
-}
+//float CaptureMono::CalculateFrequency(Work_t* work) {
+//  static uint64_t NumSamples = 0;    //Numero de muestras leidas desde el ultimo calculo
+//  static uint32_t NumCycles  = 0;    //Numero de ciclos desde ultimo calculo
+//  float  Frequency = NAN;
+//  NumSamples += work->Samples;
+//  NumCycles += work->Cycles_Len;
+//  if((((work->Timestamp / 1000000) % 10) == 0) && (NumSamples > (ADQUISITION_SAMPLEFREQ * 9))) {
+//    Frequency = NumCycles / (NumSamples / ADQUISITION_SAMPLEFREQ) / 2.0;
+//    NumSamples = 0;
+//    NumCycles = 0;  
+//  }
+//  return Frequency;
+//}
 CaptureMono::CaptureMono(char* device, uint32_t bufferLen, float baseFreq) : CaptureInterface(15625, false, CaptureInterface::FREQ_50) {
   Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
   Buffer           = NULL;

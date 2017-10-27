@@ -56,8 +56,8 @@ int main(int argc, char** argv) {
   Tools::CreatePidFile();
   Tools::CreateLogFile();
   HTTPServer::Start();
-  CaptureMono *Capture1 = new CaptureMono("", 128*1024, 50);
-  //CaptureVirtual *Capture1 = new CaptureVirtual(15625, true, 230, 1.0, CaptureInterface::FREQ_50);
+//  CaptureMono *Capture1 = new CaptureMono("", 128*1024, 50);
+  CaptureVirtual *Capture1 = new CaptureVirtual(15625, true, 230, 1.0, CaptureInterface::FREQ_50);
   //  uint32_t LastPrice;
 //  if(DB_Start(&LastPrice) == true) {
 //    if(Analyzer_Start() == false) goto Stop;

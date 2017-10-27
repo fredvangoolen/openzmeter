@@ -22,7 +22,7 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
   pthread_setname_np(This->AnalyzeThread, "AnalysisVirt");
   while(!This->Terminate) {
     uint64_t Start = Tools::GetTime();
-    This->pWork.Timestamp = Start;
+    This->pWork.Params.Timestamp = Start;
     This->pWork.Cycles[0].Start = 0;
     for(int i = 0; ; i++) {
       This->pWork.VoltageSamples[0][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency());

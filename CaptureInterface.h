@@ -17,14 +17,8 @@ class CaptureInterface : private Database {
       uint32_t Start;                       //Muestra dentro del bloque que inicia el ciclo
       uint32_t End;                         //Muestra dentro del bloque que finaliza el ciclo
     } Cycle_t;
-    typedef struct Work_t {
-      uint64_t  SequenceID;                 //Numero de secuencia del bloque
+    typedef struct {
       uint64_t  Timestamp;                  //Timestamp de la muestra inicial
-      uint32_t  Samples;                    //Cantidad de muestras que componen el bloque
-      float   **VoltageSamples;             //Muestras de tension   (El array almacena hasta 236mS)
-      float   **CurrentSamples;             //Muestras de corriente (El array almacena hasta 236mS) 
-      Cycle_t   Cycles[20];                 //Informacion de los ciclos del bloque
-      uint8_t   Cycles_Len;                 //Numero de ciclos en el bloque
       float    *RMS_V;                      //Valor RMS de la tension durante el bloque
       float    *RMS_I;                      //Valor RMS de la intensidad durante el bloque
       float    *Active_Power;               //Potencia activa (P)
@@ -43,7 +37,22 @@ class CaptureInterface : private Database {
       float    Frequency;                   //Frecuencia
       float   *Phi;                         //Angulo de Phi
       bool     Flag;                        //Periodo marcado
+    } Params_t;
+    typedef struct {
+      uint64_t  SequenceID;                 //Numero de secuencia del bloque
+      uint32_t  Samples;                    //Cantidad de muestras que componen el bloque
+      float   **VoltageSamples;             //Muestras de tension   (El array almacena hasta 236mS)
+      float   **CurrentSamples;             //Muestras de corriente (El array almacena hasta 236mS) 
+      Cycle_t   Cycles[20];                 //Informacion de los ciclos del bloque
+      uint8_t   Cycles_Len;                 //Numero de ciclos en el bloque
+      Params_t  Params;
     } Work_t;
+    typedef struct {
+      Params_t Params;                      //Media/RMS de los valores agregados
+      Params_t Max;                         //Maximo valor alcanzado en la agregacion
+      Params_t Min;                         //Minimo valor alcanzado en la agregacion
+      uint32_t Samples;                     //Numero de muestras incluidas en la agregacion
+    } Aggreg_t;
     typedef struct {
       float Real;                           //Parte real
       float Imag;                           //Parte imaginaria
@@ -74,8 +83,14 @@ class CaptureInterface : private Database {
     enum Freq_t pNominalFreq;
     bool        pTriphase;
   protected :
-    Work_t  pWork;
+    Work_t      pWork;
+    Aggreg_t    pAgreg3S;
+    Aggreg_t    pAgreg1M;
+    Aggreg_t    pAgreg10M;
+    Aggreg_t    pAgreg1H;
   protected :
+    bool     AllocParams(Params_t *params);
+    void     ResetParams(Params_t *params);
     uint8_t  NominalFrequency();
     void     ResetWork();
     uint32_t GetMaxSamples();
