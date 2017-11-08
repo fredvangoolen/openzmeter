@@ -538,7 +538,6 @@
     <itemPath>Main.h</itemPath>
     <itemPath>Makefile</itemPath>
     <itemPath>Processing.c</itemPath>
-    <itemPath>RequestServer.c</itemPath>
     <itemPath>Tools.cpp</itemPath>
     <itemPath>Tools.h</itemPath>
   </logicalFolder>
@@ -602,8 +601,6 @@
       <item path="Makefile" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Processing.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="RequestServer.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="Tools.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -2050,8 +2047,6 @@
       <item path="Makefile" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Processing.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="RequestServer.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="Tools.cpp" ex="false" tool="1" flavor2="0">
       </item>

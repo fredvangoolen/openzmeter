@@ -20,6 +20,7 @@ FILE *Tools::LogFile = NULL;
 Tools::Global_t     Tools::Global;
 Tools::DB_t         Tools::DB;
 Tools::Electrical_t Tools::Electrical;
+Tools::Devices_t    Tools::Devices;
 //----------------------------------------------------------------------------------------------------------------------
 void Tools::LogMsg(const char *level, const char *msg, ...) {
   if((Debug == false) && (strcmp(level, "DEBUG") == 0)) return;
@@ -100,18 +101,17 @@ void Tools::Daemonize() {
 }
 bool Tools::ReadConfig(char *file) {
   Global.Pid      = (char*)"/var/run/openZmeter.pid";
-  Global.Listen   = (char*)"/var/run/openZmeter.sock";
   Global.Log      = (char*)"/var/log/openZmeter.log";
   Global.HTTPPort = 8080;
-  Electrical.VoltageGain   =     0.01200000;
-  Electrical.VoltageOffset =   292.00000000;
-  Electrical.CurrentGain   =    -0.00078125;
-  Electrical.CurrentOffset =     0.00000000;
-  DB.Database              = (char*)"openzmeter";
-  DB.Host                  = (char*)"127.0.0.1";
-  DB.Port                  = 5432;
-  DB.User                  = (char*)"openzmeter";
-  DB.Password              = (char*)"";
+  DB.Database     = (char*)"openzmeter";
+  DB.Host         = (char*)"127.0.0.1";
+  DB.Port         = 5432;
+  DB.User         = (char*)"openzmeter";
+  DB.Password     = (char*)"";
+  Devices.Items   = NULL;
+  Devices.Len     = 0;
+  Electrical.NominalFrequency = 50;
+  Electrical.NominalVoltage   = 230.0;
   
   if(file == NULL) return true;
   LogMsg("INFO", "Loading config file...\n");
@@ -138,6 +138,7 @@ bool Tools::ReadConfig(char *file) {
       }
       End[0] = 0;
       strcpy(Section, &Start[1]);
+      Config_Handler(Section);
     } else {
       char *End = strchr(&Start[1], '=');
       if(End == NULL) {
@@ -166,6 +167,23 @@ char *Tools::lskip(const char* s) {
   while (*s && isspace((unsigned char)(*s))) s++;
   return (char*)s;
 }
+bool Tools::Config_Handler(char* section) {
+  if(strcmp(section, "device") == 0) {
+    Tools::Devices.Len++;
+    Devices.Items = (Device_t*)realloc(Devices.Items, Devices.Len * sizeof(Device_t));
+    Devices.Items[Devices.Len - 1].VoltageGain   =       0.01200000;
+    Devices.Items[Devices.Len - 1].VoltageOffset =     292.00000000;
+    Devices.Items[Devices.Len - 1].CurrentGain   =      -0.00078125;
+    Devices.Items[Devices.Len - 1].CurrentOffset =       0.00000000;
+    Devices.Items[Devices.Len - 1].ID            =                0;
+    Devices.Items[Devices.Len - 1].Name          = (char*)"Default";
+    Devices.Items[Devices.Len - 1].PID           =           0x0000;
+    Devices.Items[Devices.Len - 1].VID           =           0x0000;
+    Devices.Items[Devices.Len - 1].Serial        =             NULL;
+    Devices.Items[Devices.Len - 1].Type          =             NULL;
+  }
+  return true;
+}
 bool Tools::Config_Handler(char *section, char *param, char *value) {
   if(strcmp(section, "database") == 0) {
     if(strcmp(param, "port") == 0) {
@@ -183,20 +201,39 @@ bool Tools::Config_Handler(char *section, char *param, char *value) {
       return false;
     }
   } else if(strcmp(section, "electrical") == 0) {
-//    if(strcmp(param, "nominal_frequency") == 0) {
-//      Config.Electrical.nominal_frequency = atoi(value);
-//      if((Config.Electrical.nominal_frequency != 50) && (Config.Electrical.nominal_frequency != 60)) Config.Electrical.nominal_frequency = 50;
-//    } else if(strcmp(param, "nominal_voltage") == 0) {
-      //pconfig->electrical.nominal_voltage = atof(value);
-//    } else if(strcmp(param, "voltage_gain") == 0) {
-//      Config.Electrical.VoltageGain = atof(value);
-//    } else if(strcmp(param, "voltage_offset") == 0) {
-//      Config.Electrical.VoltageOffset = atoi(value);
-//    } else if(strcmp(param, "current_gain") == 0) {
-//      Config.Electrical.CurrentGain = atof(value);
-//    } else if(strcmp(param, "current_offset") == 0) {
-//      Config.Electrical.CurrentOffset = atoi(value);
-//    }
+    if(strcmp(param, "nominal_frequency") == 0) {
+      Electrical.NominalFrequency = atoi(value);
+      if((Electrical.NominalFrequency != 50) && (Electrical.NominalFrequency != 60)) Electrical.NominalFrequency = 50;
+    } else if(strcmp(param, "nominal_voltage") == 0) {
+      Electrical.NominalVoltage = atof(value);
+    } else {
+      LogMsg("ERROR", "Unknown param '%s' in section '%s'\n", param, section);
+      return false;
+    }
+  } else if(strcmp(section, "device") == 0) {  
+    if(strcmp(param, "voltage_gain") == 0) {
+      Devices.Items[Devices.Len - 1].VoltageGain = atof(value);
+    } else if(strcmp(param, "voltage_offset") == 0) {
+      Devices.Items[Devices.Len - 1].VoltageOffset = atoi(value);
+    } else if(strcmp(param, "current_gain") == 0) {
+      Devices.Items[Devices.Len - 1].CurrentGain = atof(value);
+    } else if(strcmp(param, "current_offset") == 0) {
+      Devices.Items[Devices.Len - 1].CurrentOffset = atoi(value);
+    } else if(strcmp(param, "id") == 0) {
+      Devices.Items[Devices.Len - 1].ID = atoi(value);
+    } else if(strcmp(param, "name") == 0) {
+      Devices.Items[Devices.Len - 1].Name = strdup(value);
+    } else if(strcmp(param, "pid") == 0) {
+      Devices.Items[Devices.Len - 1].PID = atoi(value);
+    } else if(strcmp(param, "vid") == 0) {
+      Devices.Items[Devices.Len - 1].VID =atoi(value);
+    } else if(strcmp(param, "serial") == 0) {
+      Devices.Items[Devices.Len - 1].Serial = strdup(value);
+    } else if(strcmp(param, "type") == 0) {
+      Devices.Items[Devices.Len - 1].Type = strdup(value);      
+    } else {
+      LogMsg("INFO", "Unknown config param '%s/%s\n", section, param);
+    }
   } else if(strcmp(section, "budget")) {
     
     if(strcmp(param, "fixed_price") == 0) {

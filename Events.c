@@ -47,6 +47,7 @@ void Events_Init() {
   Events.StableLen    = 0;
 }
 bool Events_Detect(Work_t *work) {
+/*
   for(int i = 0; i < work->Cycles_Len; i++) {
     float CycleRMS = 0;
     uint32_t CycleLen = work->Cycles[i].End - work->Cycles[i].Start;
@@ -61,7 +62,7 @@ bool Events_Detect(Work_t *work) {
     if((Events.StableCycles == 100) && (Events.RunningEvent == NULL) && (fabs(100.0 - PercentChange(CycleRMS, RMS_Avg)) > EVENT_RVC)) {
       Events.RunningEvent = (Event_t*)malloc(sizeof(Event_t));
       Events.RunningEvent->Type    = RVC;
-      Events.RunningEvent->Voltage = Config.Electrical.NominalVoltage; //EVENT_VOLTAGE;
+//      Events.RunningEvent->Voltage = Config.Electrical.NominalVoltage; //EVENT_VOLTAGE;
     }    
     if(abs(100.0 - PercentChange(CycleRMS, EVENT_VOLTAGE)) > EVENT_DIP_SWELL) {
       if(Events.RunningEvent == NULL) {
@@ -128,5 +129,6 @@ bool Events_Detect(Work_t *work) {
       }
     }
   }
+*/
   return (Events.RunningEvent != NULL);
 }

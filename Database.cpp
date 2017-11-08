@@ -103,6 +103,12 @@ void Database::BindSingleBool(bool param) {
     ParamsLen++;
   }
 }
+void Database::BindSingleString(const char *string) {
+  if(ParamsLen < ParamsAlloc) {
+    Params[ParamsLen] = strdup(string);
+    ParamsLen++;
+  }  
+}
 bool Database::ExecSentence() {
   bool Result = false;
   if(ParamsAlloc == ParamsLen) {
@@ -129,7 +135,7 @@ bool Database::ExecSentence() {
 //    fflush(stdout);
     free(Buffer);
   } else {
-    Tools::LogMsg("ERROR", "There are more placeholders than params!!");
+    Tools::LogMsg("ERROR", "There are more placeholders than params!!\n");
   }
   if(ParamsAlloc != 0) {
     for(int i = 0; i < ParamsLen; i++) free(Params[i]);

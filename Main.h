@@ -4,7 +4,7 @@
 #include <pthread.h>
 //#include <fftw3.h>
 
-#define MAX_FRAME                     3688         //Longitud maxima de muestras de un frame (236ms)
+//#define MAX_FRAME                     3688         //Longitud maxima de muestras de un frame (236ms)
 //Definiciones relaccionadas con la adquisicion de datos desde el puerto USB ===========================================
 //#define ADQUISITION_VOLT_OFFSET     348.00         //Real_Value = (Read_Value - Offset) * Gain
 //#define ADQUISITION_VOLT_GAIN      0.01160        
@@ -116,15 +116,15 @@ typedef struct {
   float      Phi;                         //Angulo de Phi
   bool       Flag;                        //Periodo marcado
 } Params_t;
-typedef struct Work_t {
-  uint64_t  SequenceID;                 //Numero de secuencia del bloque
-  uint64_t  Timestamp;                  //Timestamp de la muestra inicial
-  uint32_t  Samples;                    //Cantidad de muestras que componen el bloque
-  float     VoltageSamples[MAX_FRAME];  //Muestras de tension   (El array almacena hasta 236mS)
-  float     CurrentSamples[MAX_FRAME];  //Muestras de corriente (El array almacena hasta 236mS) 
-  Cycle_t   Cycles[20];                 //Informacion de los ciclos del bloque
-  uint8_t   Cycles_Len;                 //Numero de ciclos en el bloque
-} Work_t;
+//typedef struct Work_t {
+//  uint64_t  SequenceID;                 //Numero de secuencia del bloque
+//  uint64_t  Timestamp;                  //Timestamp de la muestra inicial
+//  uint32_t  Samples;                    //Cantidad de muestras que componen el bloque
+//  float     VoltageSamples[MAX_FRAME];  //Muestras de tension   (El array almacena hasta 236mS)
+//  float     CurrentSamples[MAX_FRAME];  //Muestras de corriente (El array almacena hasta 236mS) 
+//  Cycle_t   Cycles[20];                 //Informacion de los ciclos del bloque
+//  uint8_t   Cycles_Len;                 //Numero de ciclos en el bloque
+//} Work_t;
 //Variables globales ===================================================================================================
 extern Config_t Config;
 //Funciones de utilidad para diversos modulos ==========================================================================
@@ -146,7 +146,7 @@ void DB_Stop();
 // Funciones exportadas del modulo de eventos ==========================================================================
 void  Events_Init();
 char *EventType_ToString(enum Event_Type type);
-bool  Events_Detect(Work_t *data);
+//bool  Events_Detect(Work_t *data);
 // Funciones exportadas del modulo de analisis =========================================================================
 bool Analyzer_Start();
 void Analyzer_Stop();

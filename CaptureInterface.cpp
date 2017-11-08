@@ -10,28 +10,115 @@
 #include "CaptureInterface.h"
 #include "Tools.h"
 bool CaptureInterface::SaveWorkParams() {
-  PrepareSentence("INSERT INTO agreg_10c(node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, thd_v, thd_i, freq, phi, flaged, harmonics_v, harmonics_i) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-  BindSingleUInt32(0);                                                                  //node
-  BindSingleUInt64(pWork.Params.Timestamp);                                             //sampletime
-  BindArrayFloat(pWork.Params.RMS_V, (pTriphase == true) ? 3 : 1);                      //rms_v 
-  BindArrayFloat(pWork.Params.RMS_I, (pTriphase == true) ? 4 : 1);                      //rms_i
-  BindArrayFloat(pWork.Params.Active_Power, (pTriphase == true) ? 3 : 1);               //active_power
-  BindArrayFloat(pWork.Params.Apparent_Power, (pTriphase == true) ? 3 : 1);             //apparent_power
-  BindArrayFloat(pWork.Params.Power_Factor, (pTriphase == true) ? 3 : 1);               //power_factor
-  BindArrayFloat(pWork.Params.Active_Energy, (pTriphase == true) ? 3 : 1);              //active_energy
-  BindArrayFloat(pWork.Params.Fundamental_Active_Power, (pTriphase == true) ? 3 : 1);   //fundamental_active_power
-  BindArrayFloat(pWork.Params.Fundamental_Reactive_Power, (pTriphase == true) ? 3 : 1); //fundamental_reactive_power
-  BindArrayFloat(pWork.Params.Fundamental_Apparent_Power, (pTriphase == true) ? 3 : 1); //fundamental_apparent_power
-  BindArrayFloat(pWork.Params.Fundamental_Power_Factor, (pTriphase == true) ? 3 : 1);   //fundamental_power_factor
-  BindArrayFloat(pWork.Params.THD_V, (pTriphase == true) ? 3 : 1);                      //thd_v
-  BindArrayFloat(pWork.Params.THD_I, (pTriphase == true) ? 4 : 1);                      //thd_i
-  BindSingleFloat(pWork.Params.Frequency);                                              //frequency
-  BindArrayFloat(pWork.Params.Phi, (pTriphase == true) ? 3 : 1);                        //phi
-  BindSingleBool(pWork.Params.Flag);                                                    //flaged
-  BindArrayFloat(pWork.Params.VoltageHarmonics[0], (pTriphase == true) ? 150 : 50);     //harmonics_v
-  BindArrayFloat(pWork.Params.CurrentHarmonics[0], (pTriphase == true) ? 200 : 50);     //harmonics_i
-  ExecSentence();
+  Tools::LogMsg("DEBUG", "Storing 10C aggregation\n");
+  SaveParams(&pWork.Params, "aggreg_10c");
+  if(((pWork.SequenceID % 15) == 0) && (pPrevTimestamp != 0)) {
+    Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
+    NormalizeAggregation(&pAggreg3S);
+    SaveParams(&pAggreg3S.Params, "aggreg_3s");
+    ResetParams(&pAggreg3S.Params);
+    pAggreg3S.Samples = 0;
+  }
+  AccumulateAggregation(&pAggreg3S, &pWork.Params);
+  if(((pWork.Params.Timestamp / 60000) > (pPrevTimestamp / 60000)) && (pPrevTimestamp != 0)) {
+    Tools::LogMsg("DEBUG", "Storing 1M aggregation\n");
+    NormalizeAggregation(&pAggreg1M);
+    AccumulateAggregation(&pAggreg10M, &pAggreg1M.Params);
+    SaveParams(&pAggreg1M.Params, "aggreg_1m");
+    ResetParams(&pAggreg1M.Params);
+    pAggreg1M.Samples = 0;
+  }
+  AccumulateAggregation(&pAggreg1M, &pWork.Params);
+  if(((pWork.Params.Timestamp / 600000) > (pPrevTimestamp / 600000)) && (pPrevTimestamp != 0)) {
+    Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
+    NormalizeAggregation(&pAggreg10M);
+    AccumulateAggregation(&pAggreg1H, &pAggreg10M.Params);
+    SaveParams(&pAggreg10M.Params, "aggreg_10m");
+    ResetParams(&pAggreg10M.Params);
+    pAggreg10M.Samples = 0;
+  }
+  if(((pWork.Params.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
+    Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
+    NormalizeAggregation(&pAggreg1H);
+    SaveParams(&pAggreg1H.Params, "aggreg_1h");
+    ResetParams(&pAggreg1H.Params);
+    pAggreg1H.Samples = 0;
+  }  
+  pPrevTimestamp = pWork.Params.Timestamp;
   ResetWork();
+}
+void CaptureInterface::AccumulateAggregation(Aggreg_t *dst, Params_t *src) {
+  dst->Params.Timestamp = src->Timestamp;
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.RMS_V[i] += pow(src->RMS_V[i], 2.0);
+  for(int i = 0; i < (pTriphase ? 4 : 1); i++) dst->Params.RMS_I[i] += pow(src->RMS_I[i], 2.0);
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Active_Power[i] += src->Active_Power[i];
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Apparent_Power[i] += src->Apparent_Power[i];
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Power_Factor[i] += src->Power_Factor[i];
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Fundamental_Active_Power[i] += src->Fundamental_Active_Power[i];
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Fundamental_Apparent_Power[i] += src->Fundamental_Apparent_Power[i];
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Fundamental_Reactive_Power[i] += src->Fundamental_Reactive_Power[i];
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Fundamental_Power_Factor[i] += src->Fundamental_Power_Factor[i];
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Fundamental_Reactive_Energy[i] += src->Fundamental_Reactive_Energy[i];
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Active_Energy[i] += src->Active_Energy[i];
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.THD_V[i] += pow(src->THD_V[i], 2.0);
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.THD_I[i] += pow(src->THD_I[i], 2.0);
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
+    for(int j = 0; j < 50; j++) {
+      dst->Params.VoltageHarmonics[i][j] += pow(src->VoltageHarmonics[i][j], 2.0);
+      dst->Params.CurrentHarmonics[i][j] += pow(src->CurrentHarmonics[i][j], 2.0);
+    }
+  }
+  dst->Params.Frequency += src->Frequency;
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Phi[i] += src->Phi[i];
+  dst->Params.Flag |= src->Flag;
+  dst->Samples++;
+}
+void CaptureInterface::NormalizeAggregation(Aggreg_t *src) {
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.RMS_V[i] = sqrt(src->Params.RMS_V[i] / src->Samples);
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.RMS_I[i] = sqrt(src->Params.RMS_I[i] / src->Samples);
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Active_Power[i] = src->Params.Active_Power[i] / src->Samples;
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Apparent_Power[i] = src->Params.Apparent_Power[i] / src->Samples;
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Power_Factor[i] = src->Params.Power_Factor[i] / src->Samples;
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Fundamental_Active_Power[i] = src->Params.Fundamental_Active_Power[i] / src->Samples;
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Fundamental_Apparent_Power[i] = src->Params.Fundamental_Apparent_Power[i] / src->Samples;
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Fundamental_Reactive_Power[i] = src->Params.Fundamental_Reactive_Power[i] / src->Samples;
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Fundamental_Power_Factor[i] = src->Params.Fundamental_Power_Factor[i] / src->Samples;
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.THD_V[i] = sqrt(src->Params.THD_V[i] / src->Samples);
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.THD_I[i] = sqrt(src->Params.THD_I[i] / src->Samples);
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
+    for(int j = 0; j < 50; j++) {
+      src->Params.VoltageHarmonics[i][j] = sqrt(src->Params.VoltageHarmonics[i][j] / src->Samples);
+      src->Params.CurrentHarmonics[i][j] = sqrt(src->Params.CurrentHarmonics[i][j] / src->Samples);
+    }
+  }
+  src->Params.Frequency = src->Params.Frequency / src->Samples;
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Phi[i] = src->Params.Phi[i] / src->Samples;
+  src->Samples = 1;
+}
+bool CaptureInterface::SaveParams(Params_t *params, const char *aggreg) {
+  Params_t *Aggreg = &pWork.Params;
+  PrepareSentence("INSERT INTO ?(node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+  BindSingleString(aggreg);
+  BindSingleUInt32(0);                                                                  //node
+  BindSingleUInt64(params->Timestamp);                                             //sampletime
+  BindArrayFloat(params->RMS_V, (pTriphase == true) ? 3 : 1);                      //rms_v 
+  BindArrayFloat(params->RMS_I, (pTriphase == true) ? 4 : 1);                      //rms_i
+  BindArrayFloat(params->Active_Power, (pTriphase == true) ? 3 : 1);               //active_power
+  BindArrayFloat(params->Apparent_Power, (pTriphase == true) ? 3 : 1);             //apparent_power
+  BindArrayFloat(params->Power_Factor, (pTriphase == true) ? 3 : 1);               //power_factor
+  BindArrayFloat(params->Active_Energy, (pTriphase == true) ? 3 : 1);              //active_energy
+  BindArrayFloat(params->Fundamental_Active_Power, (pTriphase == true) ? 3 : 1);   //fundamental_active_power
+  BindArrayFloat(params->Fundamental_Reactive_Power, (pTriphase == true) ? 3 : 1); //fundamental_reactive_power
+  BindArrayFloat(params->Fundamental_Apparent_Power, (pTriphase == true) ? 3 : 1); //fundamental_apparent_power
+  BindArrayFloat(params->Fundamental_Power_Factor, (pTriphase == true) ? 3 : 1);   //fundamental_power_factor
+  BindArrayFloat(params->THD_V, (pTriphase == true) ? 3 : 1);                      //thd_v
+  BindArrayFloat(params->THD_I, (pTriphase == true) ? 4 : 1);                      //thd_i
+  BindSingleFloat(params->Frequency);                                              //frequency
+  BindArrayFloat(params->Phi, (pTriphase == true) ? 3 : 1);                        //phi
+  BindSingleBool(params->Flag);                                                    //flaged
+  BindArrayFloat(params->VoltageHarmonics[0], (pTriphase == true) ? 150 : 50);     //harmonics_v
+  BindArrayFloat(params->CurrentHarmonics[0], (pTriphase == true) ? 200 : 50);     //harmonics_i
+  ExecSentence();
 }
 void CaptureInterface::Analyze(float minimunCurrent) {
   FFT_t *FFT_Voltage[3];
@@ -128,57 +215,6 @@ void CaptureInterface::Analyze(float minimunCurrent) {
 
   
 }
-//bool DB_Start(uint32_t *lastprice) {
-//  struct timeval Time;
-//  if(gettimeofday(&Time, NULL) != 0) {
-//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    return false;
-//  }
-//  LogMsg("INFO", "Starting data save thread...\n")INSERT INTO agreg_10c() VALUES(?,?,?,?);
-//  if(pthread_mutex_init(&Mutex, NULL) != 0) {                                  
-//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strINSERT INTO agreg_10c() VALUES(?,?,?,?)error(errno));
-//    return false;                                                                  
-//  }
-//  Buffer = (DBSave_t*)malloc(sizeof(DBSave_t) * Config.DB.QueueLen);
-//  if(Buffer == NULL) {
-//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    pthread_mutex_destroy(&Mutex);
-//    return false;
-//  }
-//  ReadPos = 0;
-//  WritePos = 0;
-//  Used = 0;
-//  char ConnectionString[512];
-//  sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", Config.DB.Host, Config.DB.Port, Config.DB.User, Config.DB.Password, Config.DB.Database);
-//  Database = PQconnectdb(ConnectionString);
-//  if(PQstatus(Database) == CONNECTION_BAD) {
-//    LogMsg("ERROR", "No se pudo abrir la base de datos (%s)\n", PQerrorMessage(Database));
-//    pthread_mutex_destroy(&Mutex);
-//    free(Buffer);
-//    PQfinish(Database);
-//    Database = NULL;
-//    return false;
-//  }
-//  if(pthread_create(&Thread, NULL, DB_Thread, NULL) != 0) {
-//    LogMsg("ERROR", "No se pudo abrir la base de datos (%s)\n", PQerrorMessage(Database));
-//    pthread_mutex_destroy(&Mutex);
-//    free(Buffer);
-//    PQfinish(Database);
-//    Database = NULL;
-//    return false;
-//  }
-//  PGresult *Result = PQexec(Database, "SET synchronous_commit TO OFF");
-//  if(PQresultStatus(Result) != PGRES_COMMAND_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
-//  PQclear(Result);
-//  char Tmp[128];
-//  LogMsg("INFO", "Resuming from last execution...\n");
-//  sprintf(Tmp, "SELECT STARTUP(%llu)", ((uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000));
-//  Result = PQexec(Database, Tmp);
-//  if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
-//  *lastprice = (PQgetisnull(Result, 0, 0)) ? (uint32_t)time(NULL) : atol(PQgetvalue(Result, 0, 0));
-//  PQclear(Result);
-//  return true;
-//}
 bool CaptureInterface::AllocParams(Params_t *params) {
   if(pTriphase == true) {
     params->RMS_V = (float*)malloc(sizeof(float*) * 3);
@@ -224,10 +260,11 @@ bool CaptureInterface::AllocParams(Params_t *params) {
   return true;
 }
 CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq_t freq) {
-  pSampleRate  = samplerate;
-  pTriphase    = triphase;
-  pNominalFreq = freq;
-  pMaxSamples  = ceil(samplerate * 10.0 / (freq == FREQ_50 ? 42.5 : 51.0));
+  pPrevTimestamp = 0;
+  pSampleRate    = samplerate;
+  pTriphase      = triphase;
+  pNominalFreq   = freq;
+  pMaxSamples    = ceil(samplerate * 10.0 / (freq == FREQ_50 ? 42.5 : 51.0));
   if(triphase == true) {
     pWork.VoltageSamples = (float**)malloc(sizeof(float*) * 3);
     for(int i = 0; i < 3; i++) pWork.VoltageSamples[i] = (float*)malloc(sizeof(float*) * pMaxSamples);
@@ -239,23 +276,20 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq
     pWork.CurrentSamples = (float**)malloc(sizeof(float*) * 1);
     pWork.CurrentSamples[0] = (float*)malloc(sizeof(float*) * pMaxSamples); 
   }
-  AllocParams(&pAgreg3S.Params);
-  AllocParams(&pAgreg3S.Min);
-  AllocParams(&pAgreg3S.Max);
-  pAgreg3S.Samples = 0;
-  AllocParams(&pAgreg1M.Params);
-  AllocParams(&pAgreg1M.Min);
-  AllocParams(&pAgreg1M.Max);
-  pAgreg1M.Samples = 0;
-  AllocParams(&pAgreg10M.Params);
-  AllocParams(&pAgreg10M.Min);
-  AllocParams(&pAgreg10M.Max);
-  pAgreg10M.Samples = 0;
-  AllocParams(&pAgreg1H.Params);
-  AllocParams(&pAgreg1H.Min);
-  AllocParams(&pAgreg1H.Max);
-  pAgreg1H.Samples = 0;
+  AllocParams(&pWork.Params);
   ResetWork();
+  AllocParams(&pAggreg3S.Params);
+  ResetParams(&pAggreg3S.Params);
+  pAggreg3S.Samples = 0;
+  AllocParams(&pAggreg1M.Params);
+  ResetParams(&pAggreg1M.Params);
+  pAggreg1M.Samples = 0;
+  AllocParams(&pAggreg10M.Params);
+  ResetParams(&pAggreg10M.Params);
+  pAggreg10M.Samples = 0;
+  AllocParams(&pAggreg1H.Params);
+  ResetParams(&pAggreg1H.Params);
+  pAggreg1H.Samples = 0;
   pLastCyclesCount  = 0;
   pLastCyclesPos    = 0;
   pLastCyclesLenght = 0;
@@ -264,7 +298,7 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq
 void CaptureInterface::ResetParams(Params_t *params) {
   params->Timestamp = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->RMS_V[i] = 0;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->RMS_I[i] = 0;
+  for(int i = 0; i < (pTriphase ? 4 : 1); i++) params->RMS_I[i] = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Active_Power[i] = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Apparent_Power[i] = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Power_Factor[i] = 0;

@@ -6,19 +6,6 @@
     </data>
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/BasicCapture/BasicCapture.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/HTTPServer.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/CaptureInterface.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Tools.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Analyzer.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Database.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Main.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/CaptureInterface.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/BasicCapture/BasicCapture.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Tools.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Database.h</file>
-        </group>
         <group>
             <file>file:/home/edu/Proyectos/zMeter/ServiceV2/CaptureInterface.h</file>
             <file>file:/home/edu/Proyectos/zMeter/ServiceV2/HTTPServer.h</file>
@@ -37,5 +24,6 @@
             <file>file:/home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/js/settings.js</file>
             <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Database.h</file>
         </group>
+        <group name="ServiceV2"/>
     </open-files>
 </project-private>

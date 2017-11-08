@@ -49,13 +49,16 @@ void  *CaptureMono::Capture_Thread(void *args) {
   }
   CaptureMono *This = (CaptureMono*)args;  
   pthread_setname_np(This->CaptureThread, "CapMono_Init");
-  uint8_t Buffer_A[8192], Buffer_B[8192];
+  uint8_t Buffer_A[8192], Buffer_B[8192], Buffer_C[8192];
   struct libusb_transfer *Transfer_A = libusb_alloc_transfer(0);
   struct libusb_transfer *Transfer_B = libusb_alloc_transfer(0);
+  struct libusb_transfer *Transfer_C = libusb_alloc_transfer(0);
   libusb_fill_bulk_transfer(Transfer_A, This->DeviceHandle, ADQUISITION_ENDPOINT_IN, Buffer_A,  sizeof(Buffer_A), ReadCallback, This, 500);
   libusb_fill_bulk_transfer(Transfer_B, This->DeviceHandle, ADQUISITION_ENDPOINT_IN, Buffer_B,  sizeof(Buffer_B), ReadCallback, This, 500);
+  libusb_fill_bulk_transfer(Transfer_C, This->DeviceHandle, ADQUISITION_ENDPOINT_IN, Buffer_C,  sizeof(Buffer_C), ReadCallback, This, 500);
   libusb_submit_transfer(Transfer_A);
   libusb_submit_transfer(Transfer_B);
+  libusb_submit_transfer(Transfer_C);
   uint32_t Update = 0;
   while(!This->Terminate) {
     if((Update % 10) == 0) {
@@ -73,20 +76,18 @@ void  *CaptureMono::Analize_Thread(void* args) {
   pthread_setname_np(This->AnalyzeThread, "AnalysisMono");
   while(!This->Terminate) {
     pthread_mutex_lock(&This->AnalyzeMutex);
-    while(This->Used < (This->GetMaxSamples() * 2)) {
+    while(This->Used < (This->GetMaxSamples())) {
       if(This->Terminate) return NULL;
       pthread_cond_wait(&This->ReadWait, &This->AnalyzeMutex);
     }
     uint64_t Start = Tools::GetTime();
-    This->pWork.Params.Timestamp = Start - ((This->Used * 1000) / ADQUISITION_SAMPLEFREQ);
-    float LastSample = +100; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
+    This->pWork.Params.Timestamp = (Start / 1000) - ((This->Used * 1000) / ADQUISITION_SAMPLEFREQ);
+    float LastSample = +20; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
     for(This->pWork.Samples = 0; This->pWork.Samples < This->GetMaxSamples(); This->pWork.Samples++) {
-      
       This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
       This->pWork.CurrentSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Current;
       float Out = This->pWork.VoltageSamples[0][This->pWork.Samples];
       for(int i = 0; i < 5; i++) Out = ApplyFilter(Out, &This->Filters[i]);
-//printf("%f\n", Out);
       if(((LastSample >= 0.0) && (Out < 0.0)) || ((LastSample <= 0.0) && (Out > 0.0))) {
         This->pWork.Cycles[This->pWork.Cycles_Len].End = This->pWork.Samples;
         This->pWork.Cycles_Len++;
@@ -106,20 +107,7 @@ void  *CaptureMono::Analize_Thread(void* args) {
     Tools::LogMsg("DEBUG", "Process of block %llu takes %.1fmS (%.1fmS mS with store)\n", This->pWork.SequenceID, (AnalyzeEnd - Start) / 1000.0, (SaveEnd - Start) / 1000.0);
   }
 }
-//float CaptureMono::CalculateFrequency(Work_t* work) {
-//  static uint64_t NumSamples = 0;    //Numero de muestras leidas desde el ultimo calculo
-//  static uint32_t NumCycles  = 0;    //Numero de ciclos desde ultimo calculo
-//  float  Frequency = NAN;
-//  NumSamples += work->Samples;
-//  NumCycles += work->Cycles_Len;
-//  if((((work->Timestamp / 1000000) % 10) == 0) && (NumSamples > (ADQUISITION_SAMPLEFREQ * 9))) {
-//    Frequency = NumCycles / (NumSamples / ADQUISITION_SAMPLEFREQ) / 2.0;
-//    NumSamples = 0;
-//    NumCycles = 0;  
-//  }
-//  return Frequency;
-//}
-CaptureMono::CaptureMono(char* device, uint32_t bufferLen, float baseFreq) : CaptureInterface(15625, false, CaptureInterface::FREQ_50) {
+CaptureMono::CaptureMono(uint16_t pid, uint16_t vid, char *serial, uint32_t id, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint32_t bufferLen, enum Freq_t freq) : CaptureInterface(15625, false, freq) {
   Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
   Buffer           = NULL;
   ReadPos          = 0;
@@ -137,7 +125,7 @@ CaptureMono::CaptureMono(char* device, uint32_t bufferLen, float baseFreq) : Cap
   
   for(int i = 0; i < 5; i++) {
     float Q = 1.0;
-    float K = tan(M_PI * (baseFreq / ADQUISITION_SAMPLEFREQ));
+    float K = tan(M_PI * ((float)NominalFrequency() / ADQUISITION_SAMPLEFREQ));
     float Norm = 1 / (1 + K / Q + K * K);
     Filters[i].A0 = K / Q * Norm;
     Filters[i].A1 = 0;
@@ -213,10 +201,10 @@ CaptureMono::~CaptureMono() {
     free(Buffer);
   }
 }
-void CaptureMono::SamplesCopy(float *dest, int32_t offset, uint32_t len) {
-  for(int i = 0; i < len; i++) 
-    dest[i] = Buffer[(ReadPos - offset + i) % Size].Voltage;
-}
+//void CaptureMono::SamplesCopy(float *dest, int32_t offset, uint32_t len) {
+//  for(int i = 0; i < len; i++) 
+//    dest[i] = Buffer[(ReadPos - offset + i) % Size].Voltage;
+//}
 //void Adquisition_SetLEDs(float voltage, float current) {
 //  uint8_t Val = 0;
 //  int Voltage = round(((voltage / EVENT_VOLTAGE) - 1.0) * 50.0 + 4.0);

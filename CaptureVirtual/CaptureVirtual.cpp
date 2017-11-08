@@ -21,7 +21,7 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
   CaptureVirtual *This = (CaptureVirtual*)args;
   pthread_setname_np(This->AnalyzeThread, "AnalysisVirt");
   while(!This->Terminate) {
-    uint64_t Start = Tools::GetTime();
+    uint64_t Start = Tools::GetTime() / 1000;
     This->pWork.Params.Timestamp = Start;
     This->pWork.Cycles[0].Start = 0;
     for(int i = 0; ; i++) {

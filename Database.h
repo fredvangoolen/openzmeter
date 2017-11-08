@@ -19,6 +19,7 @@ class Database {
     void  BindSingleFloat(float param);
     void  BindArrayFloat(float *params, int len);
     void  BindSingleBool(bool param);
+    void  BindSingleString(const char *string);
     bool  ExecSentence();
     bool  ExecSentence(const char *sql);
     char *ExecSentenceJSON(const char* sql, int *len);

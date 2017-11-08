@@ -34,9 +34,9 @@ class CaptureInterface : private Database {
       float    *THD_I;                      //Distorsion harmonica de la corriente
       float   **VoltageHarmonics;           //Armonicos del canal de tension
       float   **CurrentHarmonics;           //Armonicos del canal de corriente
-      float    Frequency;                   //Frecuencia
-      float   *Phi;                         //Angulo de Phi
-      bool     Flag;                        //Periodo marcado
+      float     Frequency;                  //Frecuencia
+      float    *Phi;                        //Angulo de Phi
+      bool      Flag;                       //Periodo marcado
     } Params_t;
     typedef struct {
       uint64_t  SequenceID;                 //Numero de secuencia del bloque
@@ -49,8 +49,6 @@ class CaptureInterface : private Database {
     } Work_t;
     typedef struct {
       Params_t Params;                      //Media/RMS de los valores agregados
-      Params_t Max;                         //Maximo valor alcanzado en la agregacion
-      Params_t Min;                         //Minimo valor alcanzado en la agregacion
       uint32_t Samples;                     //Numero de muestras incluidas en la agregacion
     } Aggreg_t;
     typedef struct {
@@ -82,12 +80,15 @@ class CaptureInterface : private Database {
     uint32_t    pMaxSamples;
     enum Freq_t pNominalFreq;
     bool        pTriphase;
+    Aggreg_t    pAggreg3S;
+    Aggreg_t    pAggreg1M;
+    Aggreg_t    pAggreg10M;
+    Aggreg_t    pAggreg1H;
+  private :    
+    bool     SaveParams(Params_t *param, const char *aggreg);
   protected :
+    uint64_t    pPrevTimestamp;
     Work_t      pWork;
-    Aggreg_t    pAgreg3S;
-    Aggreg_t    pAgreg1M;
-    Aggreg_t    pAgreg10M;
-    Aggreg_t    pAgreg1H;
   protected :
     bool     AllocParams(Params_t *params);
     void     ResetParams(Params_t *params);
@@ -96,6 +97,8 @@ class CaptureInterface : private Database {
     uint32_t GetMaxSamples();
     bool     SaveWorkParams();
     void     Analyze(float minimunCurrent);
+    void     AccumulateAggregation(Aggreg_t *dst, Params_t *src);
+    void     NormalizeAggregation(Aggreg_t *src);
   protected :
     static void  *FFT_Thread(void *args);
     static float  ApplyFilter(float in, Filter_t *filter);

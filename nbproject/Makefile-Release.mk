@@ -43,7 +43,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/HTTPServer.o \
 	${OBJECTDIR}/Main.o \
 	${OBJECTDIR}/Processing.o \
-	${OBJECTDIR}/RequestServer.o \
 	${OBJECTDIR}/Tools.o
 
 
@@ -110,11 +109,6 @@ ${OBJECTDIR}/Processing.o: Processing.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Processing.o Processing.c
-
-${OBJECTDIR}/RequestServer.o: RequestServer.c
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/RequestServer.o RequestServer.c
 
 ${OBJECTDIR}/Tools.o: Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}
