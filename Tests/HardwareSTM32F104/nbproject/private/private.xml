@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <data xmlns="http://www.netbeans.org/ns/make-project-private/1">
+        <activeConfTypeElem>1</activeConfTypeElem>
+        <activeConfIndexElem>0</activeConfIndexElem>
+    </data>
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="1">
+        <file>
+            <url>usb_istr.c</url>
+            <bookmark id="1">
+                <name/>
+                <line>108</line>
+                <key/>
+            </bookmark>
+        </file>
+    </editor-bookmarks>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group/>
+        <group name="ServiceV2">
+            <file>file:/home/edu/Proyectos/zMeter/HardwareSTM32F104/usb_pwr.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/HardwareSTM32F104/inc/usb_pwr.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/HardwareSTM32F104/inc/USB_CDC.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/HardwareSTM32F104/USB_CDC.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/HardwareSTM32F104/inc/usb_istr.h</file>
+        </group>
+    </open-files>
+</project-private>
