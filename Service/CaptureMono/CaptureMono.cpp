@@ -14,7 +14,6 @@
 #include <math.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
-#include <libusb-1.0/libusb.h>
 #include "CaptureMono.h"
 #include "../Tools.h"
 // Funciones ===========================================================================================================
@@ -40,6 +39,22 @@ void   CaptureMono::ReadCallback(struct libusb_transfer *transfer) {
   pthread_mutex_unlock(&This->CaptureMutex);
   if(This->Terminate == false) libusb_submit_transfer(transfer);
 }
+int CaptureMono::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
+  CaptureMono *This = (CaptureMono*)user_data;
+  if((event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) && (This->DeviceHandle == NULL)) {
+    This->NewDevice = dev;
+  } else if(event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+    if(This->DeviceHandle != NULL) {
+      libusb_device *CurrentDev = libusb_get_device(This->DeviceHandle);	
+      if(dev == CurrentDev) {
+        Tools::LogMsg("INFO", "Device CaptureMono with serial '%s' disconnected\n", This->Serial);
+        libusb_close(This->DeviceHandle);
+        This->DeviceHandle = NULL;
+      }
+    }
+  }
+  return 0;
+}
 void  *CaptureMono::Capture_Thread(void *args) {
   struct sched_param Prio;
   Prio.sched_priority = sched_get_priority_max(SCHED_OTHER);
@@ -47,18 +62,10 @@ void  *CaptureMono::Capture_Thread(void *args) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL;
   }
-  CaptureMono *This = (CaptureMono*)args;  
+  CaptureMono *This = (CaptureMono*)args;
   pthread_setname_np(This->CaptureThread, "CapMono_Init");
-  uint8_t Buffer_A[8192], Buffer_B[8192], Buffer_C[8192];
-  struct libusb_transfer *Transfer_A = libusb_alloc_transfer(0);
-  struct libusb_transfer *Transfer_B = libusb_alloc_transfer(0);
-  struct libusb_transfer *Transfer_C = libusb_alloc_transfer(0);
-  libusb_fill_bulk_transfer(Transfer_A, This->DeviceHandle, ADQUISITION_ENDPOINT_IN, Buffer_A,  sizeof(Buffer_A), ReadCallback, This, 500);
-  libusb_fill_bulk_transfer(Transfer_B, This->DeviceHandle, ADQUISITION_ENDPOINT_IN, Buffer_B,  sizeof(Buffer_B), ReadCallback, This, 500);
-  libusb_fill_bulk_transfer(Transfer_C, This->DeviceHandle, ADQUISITION_ENDPOINT_IN, Buffer_C,  sizeof(Buffer_C), ReadCallback, This, 500);
-  libusb_submit_transfer(Transfer_A);
-  libusb_submit_transfer(Transfer_B);
-  libusb_submit_transfer(Transfer_C);
+  uint8_t Buffer[8192];
+  struct libusb_transfer *TransferIN = libusb_alloc_transfer(0);
   uint32_t Update = 0;
   while(!This->Terminate) {
     if((Update % 10) == 0) {
@@ -67,7 +74,80 @@ void  *CaptureMono::Capture_Thread(void *args) {
       pthread_setname_np(This->CaptureThread, ThreadName);
     }
     Update++;
-    libusb_handle_events_completed(NULL, NULL);
+    struct timeval tv = { 1, 0 };
+    int Result = libusb_handle_events_timeout_completed(NULL, &tv, NULL);
+    if(Result < LIBUSB_SUCCESS) Tools::LogMsg("ERROR", "libusb_handle_events_timeout_completed returns code %d\n", Result);
+    if(This->NewDevice != NULL) {
+      struct libusb_device_descriptor Descriptor;
+      Result = libusb_get_device_descriptor(This->NewDevice, &Descriptor);
+      if(Result < LIBUSB_SUCCESS) {
+        Tools::LogMsg("ERROR", "libusb_get_device_descriptor return code %d\n", Result);
+        This->NewDevice = NULL;
+        continue;
+      }
+      Result = libusb_open(This->NewDevice, &This->DeviceHandle);
+      if(Result != LIBUSB_SUCCESS) {
+        Tools::LogMsg("ERROR", "libusb_open return %d\n", Result);
+        This->DeviceHandle = NULL;
+        This->NewDevice = NULL;
+        continue;
+      }
+      char Serial[256];
+      Result = libusb_get_string_descriptor_ascii(This->DeviceHandle, Descriptor.iSerialNumber, (unsigned char*)Serial, sizeof(Serial));
+      if(Result < 0) {
+        Tools::LogMsg("ERROR", "libusb_get_string_descriptor_ascii returns %d\n", Result);
+        libusb_close(This->DeviceHandle);
+        This->DeviceHandle = NULL; 
+        This->NewDevice = NULL;
+        continue;
+      }
+      if(strcmp(This->Serial, Serial) != 0) {
+        libusb_close(This->DeviceHandle);
+        This->DeviceHandle = NULL; 
+        This->NewDevice = NULL;
+        continue;
+      }        
+      Result = libusb_kernel_driver_active(This->DeviceHandle, 0);
+      if(Result < LIBUSB_SUCCESS) {
+        Tools::LogMsg("ERROR", "libusb_kernel_driver_active returns %d\n", Result);
+        libusb_close(This->DeviceHandle);
+        This->DeviceHandle = NULL; 
+        This->NewDevice = NULL;
+        continue;
+      } else if(Result == 1) { 
+        Result = libusb_detach_kernel_driver(This->DeviceHandle, 0);
+        if(Result < LIBUSB_SUCCESS) {
+          Tools::LogMsg("ERROR", "libusb_detach_kernel_driver returns %d\n", Result);
+          libusb_close(This->DeviceHandle);
+          This->DeviceHandle = NULL; 
+          This->NewDevice = NULL;
+          continue;
+        } else {
+          Tools::LogMsg("INFO", "Kernel driver dettached for CaptureMono device with serial %s\n", This->Serial);
+        }
+      }
+      Result = libusb_claim_interface(This->DeviceHandle, 0);
+      if(Result != LIBUSB_SUCCESS) {
+        Tools::LogMsg("ERROR", "libusb_claim_interface returns %d\n", Result);
+        libusb_close(This->DeviceHandle);
+        This->DeviceHandle = NULL; 
+        This->NewDevice = NULL;
+        continue;
+      } else {
+        Tools::LogMsg("INFO", "Claimed interface 0 on CaptureMono device with serial %s\n", This->Serial);
+      }
+      libusb_fill_bulk_transfer(TransferIN, This->DeviceHandle, ADQUISITION_ENDPOINT_IN, Buffer, sizeof(Buffer), ReadCallback, This, 500);
+      Result = libusb_submit_transfer(TransferIN);
+      if(Result != LIBUSB_SUCCESS) {
+        Tools::LogMsg("ERROR", "libusb_submit_transfer returns %d\n", Result);
+        libusb_close(This->DeviceHandle);
+        This->DeviceHandle = NULL; 
+        This->NewDevice = NULL;
+        continue;
+      }
+      Tools::LogMsg("INFO", "Capture started on CaptureMono device with serial %s\n", This->Serial);
+      This->NewDevice = NULL;
+    }
   }
   return NULL;
 }
@@ -107,7 +187,7 @@ void  *CaptureMono::Analize_Thread(void* args) {
     Tools::LogMsg("DEBUG", "Process of block %llu takes %.1fmS (%.1fmS mS with store)\n", This->pWork.SequenceID, (AnalyzeEnd - Start) / 1000.0, (SaveEnd - Start) / 1000.0);
   }
 }
-CaptureMono::CaptureMono(uint16_t pid, uint16_t vid, char *serial, uint32_t id, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint32_t bufferLen, enum Freq_t freq) : CaptureInterface(15625, false, freq) {
+CaptureMono::CaptureMono(const char *serial, uint32_t id, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint32_t bufferLen, enum Freq_t freq) : CaptureInterface(15625, false, freq) {
   Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
   Buffer           = NULL;
   ReadPos          = 0;
@@ -115,14 +195,13 @@ CaptureMono::CaptureMono(uint16_t pid, uint16_t vid, char *serial, uint32_t id, 
   Size             = bufferLen;
   Used             = 0;
   DeviceHandle     = NULL;
+  NewDevice        = NULL;
   Terminate        = false;
-  
-  VoltageGain = 0.0116585365854;             //Ganancia de tension
-  CurrentGain = -0.00078125;             //Ganancia de corriente
-  VoltageOffset = 292.0;           //Offset de tension
-  CurrentOffset = 0.0;           //Offset de corriente
-  
-  
+  Serial           = serial;
+  VoltageGain      = voltageGain;
+  CurrentGain      = currentGain;
+  VoltageOffset    = voltageOffset;
+  CurrentOffset    = currentOffset;
   for(int i = 0; i < 5; i++) {
     float Q = 1.0;
     float K = tan(M_PI * ((float)NominalFrequency() / ADQUISITION_SAMPLEFREQ));
@@ -139,11 +218,11 @@ CaptureMono::CaptureMono(uint16_t pid, uint16_t vid, char *serial, uint32_t id, 
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;
   } 
-  if(pthread_cond_init(&ReadWait, NULL) != 0) {                                  
+  if(pthread_cond_init(&ReadWait, NULL) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;                                                                  
   } 
-  if(pthread_mutex_init(&CaptureMutex, NULL) != 0) {                                  
+  if(pthread_mutex_init(&CaptureMutex, NULL) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;                                                                  
   } 
@@ -156,20 +235,6 @@ CaptureMono::CaptureMono(uint16_t pid, uint16_t vid, char *serial, uint32_t id, 
     Tools::LogMsg("ERROR", "Fallo la apertura de libUSB...\n");
     return;
   }
-  DeviceHandle = libusb_open_device_with_vid_pid(NULL, ADQUISITION_USB_VID, ADQUISITION_PID);
-  if(!DeviceHandle) {
-    Tools::LogMsg("ERROR", "Dispositivo de captura no conectado...\n");
-    libusb_exit(NULL);
-    return;
-  }
-  libusb_detach_kernel_driver(DeviceHandle, 0);
-  Error = libusb_claim_interface(DeviceHandle, 0);
-  if(Error < 0) {
-    Tools::LogMsg("ERROR", "Dispositivo de captura ocupado...\n");
-    libusb_close(DeviceHandle);
-    libusb_exit(NULL);
-    return;
-  }
   Buffer = (Sample_t*)malloc(bufferLen * sizeof(Sample_t));
   if(Buffer == NULL) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -179,6 +244,14 @@ CaptureMono::CaptureMono(uint16_t pid, uint16_t vid, char *serial, uint32_t id, 
   if(pthread_create(&CaptureThread, NULL, Capture_Thread, this) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(NULL);
+    free(Buffer);
+    return;
+  }
+  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , CAPTUREMONO_VID, CAPTUREMONO_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
+  if(Error < 0) {
+    Tools::LogMsg("ERROR", "Fallo al registrar callback de escucha libUSB...\n");
+    Terminate = true;
+    pthread_join(CaptureThread, NULL);
     free(Buffer);
     return;
   }

@@ -3,10 +3,10 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
-#include <fftw3.h>
+#include <libusb-1.0/libusb.h>
 #include "../CaptureInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define CAPTUREMONO_VID         0x0483                //Product ID
+#define CAPTUREMONO_VID             0x0483                //Product ID
 #define CAPTUREMONO_PID             0x7270                //Device ID
 #define ADQUISITION_ENDPOINT_IN       0x81                //Endpoint de lectura de datos
 #define ADQUISITION_SAMPLEFREQ    15625.00         //Frequencia de muestreo
@@ -27,6 +27,7 @@ class CaptureMono : public CaptureInterface {
     float                        CurrentGain;             //Ganancia de corriente
     float                        VoltageOffset;           //Offset de tension
     float                        CurrentOffset;           //Offset de corriente
+    const char                  *Serial;                  //Numero de serie del dispositivo de captura
     Sample_t                    *Buffer;                  //Donde almaceno muestras leidas (RingBuffer)
     uint32_t                     ReadPos;                 //Posicion de lectura del buffer
     uint32_t                     WritePos;                //Posicion de escritura del buffer
@@ -41,10 +42,12 @@ class CaptureMono : public CaptureInterface {
     bool                         Terminate;               //Señal para detener el hilo de captura
     Filter_t                     Filters[5];              //Filtros paso banda para deteccion de paso por cero
     struct libusb_device_handle *DeviceHandle;            //Dispositivo de captura
+    struct libusb_device        *NewDevice;               //Dispositivo que se conecta
   private : 
     static void  *Capture_Thread(void *args);
     static void  *Analize_Thread(void *args);
     static void   ReadCallback(struct libusb_transfer *transfer);
+    static int    PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
     float CalculateFrequency(Work_t* work);
     
@@ -53,7 +56,7 @@ class CaptureMono : public CaptureInterface {
 //    Params_t *Analyze(Work_t *work);
 //    void   SamplesCopy(float *dest, int32_t offset, uint32_t len);
   public :
-    CaptureMono(uint16_t pid, uint16_t vid, char *serial, uint32_t id, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint32_t bufferLen, enum Freq_t freq);
+    CaptureMono(const char *serial, uint32_t id, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint32_t bufferLen, enum Freq_t freq);
     bool IsRunning();
     ~CaptureMono();
 };

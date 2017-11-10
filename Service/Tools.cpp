@@ -177,8 +177,6 @@ bool Tools::Config_Handler(char* section) {
     Devices.Items[Devices.Len - 1].CurrentOffset =       0.00000000;
     Devices.Items[Devices.Len - 1].ID            =                0;
     Devices.Items[Devices.Len - 1].Name          = (char*)"Default";
-    Devices.Items[Devices.Len - 1].PID           =           0x0000;
-    Devices.Items[Devices.Len - 1].VID           =           0x0000;
     Devices.Items[Devices.Len - 1].Serial        =             NULL;
     Devices.Items[Devices.Len - 1].Type          =             NULL;
   }
@@ -223,10 +221,6 @@ bool Tools::Config_Handler(char *section, char *param, char *value) {
       Devices.Items[Devices.Len - 1].ID = atoi(value);
     } else if(strcmp(param, "name") == 0) {
       Devices.Items[Devices.Len - 1].Name = strdup(value);
-    } else if(strcmp(param, "pid") == 0) {
-      Devices.Items[Devices.Len - 1].PID = atoi(value);
-    } else if(strcmp(param, "vid") == 0) {
-      Devices.Items[Devices.Len - 1].VID =atoi(value);
     } else if(strcmp(param, "serial") == 0) {
       Devices.Items[Devices.Len - 1].Serial = strdup(value);
     } else if(strcmp(param, "type") == 0) {

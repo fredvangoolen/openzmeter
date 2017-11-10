@@ -20,8 +20,6 @@ class Tools {
     } Global_t;
     typedef struct {
       char    *Type;
-      uint16_t PID;
-      uint16_t VID;
       char    *Serial;
       uint32_t ID;
       char    *Name;

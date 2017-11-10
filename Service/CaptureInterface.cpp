@@ -11,11 +11,11 @@
 #include "Tools.h"
 bool CaptureInterface::SaveWorkParams() {
   Tools::LogMsg("DEBUG", "Storing 10C aggregation\n");
-  SaveParams(&pWork.Params, "aggreg_10c");
+  SaveParams(&pWork.Params, "INSERT_10C");
   if(((pWork.SequenceID % 15) == 0) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
     NormalizeAggregation(&pAggreg3S);
-    SaveParams(&pAggreg3S.Params, "aggreg_3s");
+    SaveParams(&pAggreg3S.Params, "INSERT_3S");
     ResetParams(&pAggreg3S.Params);
     pAggreg3S.Samples = 0;
   }
@@ -24,7 +24,7 @@ bool CaptureInterface::SaveWorkParams() {
     Tools::LogMsg("DEBUG", "Storing 1M aggregation\n");
     NormalizeAggregation(&pAggreg1M);
     AccumulateAggregation(&pAggreg10M, &pAggreg1M.Params);
-    SaveParams(&pAggreg1M.Params, "aggreg_1m");
+    SaveParams(&pAggreg1M.Params, "INSERT_1M");
     ResetParams(&pAggreg1M.Params);
     pAggreg1M.Samples = 0;
   }
@@ -33,14 +33,14 @@ bool CaptureInterface::SaveWorkParams() {
     Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
     NormalizeAggregation(&pAggreg10M);
     AccumulateAggregation(&pAggreg1H, &pAggreg10M.Params);
-    SaveParams(&pAggreg10M.Params, "aggreg_10m");
+    SaveParams(&pAggreg10M.Params, "INSERT_10M");
     ResetParams(&pAggreg10M.Params);
     pAggreg10M.Samples = 0;
   }
   if(((pWork.Params.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
     NormalizeAggregation(&pAggreg1H);
-    SaveParams(&pAggreg1H.Params, "aggreg_1h");
+    SaveParams(&pAggreg1H.Params, "INSERT_1H");
     ResetParams(&pAggreg1H.Params);
     pAggreg1H.Samples = 0;
   }  
@@ -97,7 +97,8 @@ void CaptureInterface::NormalizeAggregation(Aggreg_t *src) {
 }
 bool CaptureInterface::SaveParams(Params_t *params, const char *aggreg) {
   Params_t *Aggreg = &pWork.Params;
-  PrepareSentence("INSERT INTO ?(node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+  PrepareSentence("EXECUTE ?(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+  
   BindSingleString(aggreg);
   BindSingleUInt32(0);                                                                  //node
   BindSingleUInt64(params->Timestamp);                                             //sampletime
@@ -207,13 +208,6 @@ void CaptureInterface::Analyze(float minimunCurrent) {
 //  PrevTimestamp = work->Timestamp;
 //  free(work);
 //  return Params;
-
-    
-    
-    
-    
-
-  
 }
 bool CaptureInterface::AllocParams(Params_t *params) {
   if(pTriphase == true) {
@@ -259,7 +253,7 @@ bool CaptureInterface::AllocParams(Params_t *params) {
   }
   return true;
 }
-CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq_t freq) {
+CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq_t freq) : Database() {
   pPrevTimestamp = 0;
   pSampleRate    = samplerate;
   pTriphase      = triphase;
@@ -294,6 +288,11 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq
   pLastCyclesPos    = 0;
   pLastCyclesLenght = 0;
   pWork.SequenceID  = 0;
+  ExecSentence("PREPARE INSERT_10C AS INSERT INTO aggreg_10c(node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)");
+  ExecSentence("PREPARE INSERT_3S  AS INSERT INTO aggreg_3s (node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)");    
+  ExecSentence("PREPARE INSERT_1M  AS INSERT INTO aggreg_1m (node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)");  
+  ExecSentence("PREPARE INSERT_10M AS INSERT INTO aggreg_10m(node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)");  
+  ExecSentence("PREPARE INSERT_1H  AS INSERT INTO aggreg_1h (node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)");
 }
 void CaptureInterface::ResetParams(Params_t *params) {
   params->Timestamp = 0;

@@ -46,7 +46,7 @@ void Events_Init() {
   Events.StableCycles = 0;
   Events.StableLen    = 0;
 }
-bool Events_Detect(Work_t *work) {
+//bool Events_Detect(Work_t *work) {
 /*
   for(int i = 0; i < work->Cycles_Len; i++) {
     float CycleRMS = 0;
@@ -130,5 +130,5 @@ bool Events_Detect(Work_t *work) {
     }
   }
 */
-  return (Events.RunningEvent != NULL);
-}
+ // return (Events.RunningEvent != NULL);
+//}
