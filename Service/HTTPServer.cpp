@@ -40,6 +40,7 @@ void HTTPServer::SetMimeType(struct MHD_Response *response, const char *url) {
   MHD_add_response_header(response, "Content-Type", MimeType);
 }
 int  HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url) {
+  Tools::LogMsg("DEBUG", "Redirecting client to '%s'\n", url);
   struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
   MHD_add_response_header(response, "Location", url);
   int Return = MHD_queue_response(connection, MHD_HTTP_SEE_OTHER, response);
@@ -66,14 +67,14 @@ int  HTTPServer::HandleStaticFiles(struct MHD_Connection *connection, const char
   free(FilePath);
   return Return;
 }
-int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
+int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
+  Tools::LogMsg("DEBUG", "Client request '%s'\n", url);
   if(HandleStaticFiles(connection, url, method) == MHD_YES) return MHD_YES;
   if(HandleLogin(connection, url, upload_data, upload_data_size, method, ptr) == MHD_YES) return MHD_YES;
   Session_t *Session = (Session_t*)*ptr;
   if(Session == NULL) return MHD_NO;
   if(HandleDashboard(connection, url, upload_data, upload_data_size, method, ptr) == MHD_YES) return MHD_YES;
   if(HandlePostRequest(connection, url, upload_data, upload_data_size, method, ptr) == MHD_YES) return MHD_YES;
-
   if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
     if(Session->User == NULL) {
       struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
@@ -93,7 +94,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
   MHD_destroy_response (response);
   return Return;
 }
-int HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, const char *method, void **ptr) {
+int  HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, const char *method, void **ptr) {
   Session_t *Session = (Session_t*)*ptr;
   if(*ptr == NULL) {
     const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "OZM_SESSION");
@@ -164,8 +165,39 @@ int HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url, 
 }
 int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, const char *method, void **ptr) {
   if(strcmp(method, MHD_HTTP_METHOD_POST) != 0) return MHD_NO;
+  if(upload_data == NULL) return MHD_YES;  
   if(strcmp(url, "/GetRows") == 0) {
-    if(upload_data == NULL) return MHD_YES;  
+    char    *Table = NULL, *Variables = NULL;
+    uint64_t Period = 0, From = 0, To = 0;
+    json_object *JSON = json_tokener_parse(upload_data);
+    json_object_object_foreach(JSON, JSON_Key, JSON_Val) {
+      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "variables") == 0)) Variables = strdup(json_object_get_string(JSON_Val));
+      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "table") == 0))     Table = strdup(json_object_get_string(JSON_Val));
+      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "period") == 0))       Period = json_object_get_int64(JSON_Val);
+      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "from") == 0))         From = json_object_get_int64(JSON_Val);
+      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "to") == 0))           To = json_object_get_int64(JSON_Val);
+    }
+    free(JSON);
+    if((Variables != NULL) && (Table != NULL)) {
+      Database DB;
+      int Len;
+      char *Text = DB.ExecSentenceJSON("SELECT row_to_json(TmpB) FROM ("
+                                       " SELECT array_agg(sampletime) AS sampletime, array_agg(rms_i) AS rms_i"
+                                       " FROM (SELECT sampletime, rms_i FROM agreg_10c WHERE sampletime > 1508917614689 ORDER BY sampletime ASC LIMIT 200) as TmpA) AS TmpB;", &Len);
+      free(Variables);
+      free(Table);
+      if(Text != NULL) {
+        struct MHD_Response *response = MHD_create_response_from_buffer(Len, Text, MHD_RESPMEM_MUST_FREE);
+        MHD_add_response_header(response, "Content-Type", "application/json");
+        int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
+        MHD_destroy_response (response);
+        return Return;
+      }      
+    }
+  } else   if(strcmp(url, "/GetDevices") == 0) {
+    
+  } else   if(strcmp(url, "/GetLastValues") == 0) {
     char    *Table = NULL;
     char    *Variables = NULL;
     uint64_t Period = 0;
@@ -185,8 +217,8 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       Database DB;
       int Len;
       char *Text = DB.ExecSentenceJSON("SELECT row_to_json(TmpB) FROM ("
-" SELECT array_agg(sampletime) AS sampletime, array_agg(rms_i) AS rms_i"
-" FROM (SELECT sampletime, rms_i FROM agreg_10c WHERE sampletime > 1508917614689 ORDER BY sampletime ASC LIMIT 200) as TmpA) AS TmpB;", &Len);
+                                       " SELECT array_agg(sampletime) AS sampletime, array_agg(rms_i) AS rms_i"
+                                       " FROM (SELECT sampletime, rms_i FROM agreg_10c WHERE sampletime > 1508917614689 ORDER BY sampletime ASC LIMIT 200) as TmpA) AS TmpB;", &Len);
       free(Variables);
       free(Table);
       if(Text != NULL) {
@@ -203,6 +235,11 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     MHD_destroy_response (response);
     return Return;
   }
+  struct MHD_Response *response = MHD_create_response_from_buffer(2, (void*)"{}", MHD_RESPMEM_PERSISTENT);
+  MHD_add_response_header(response, "Content-Type", "application/json");
+  int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
+  MHD_destroy_response (response);
+  return Return;
 }
 int HTTPServer::HandleDashboard(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, const char *method, void **ptr) {
   if((strcmp(method, MHD_HTTP_METHOD_GET) != 0) || ((strcmp(url, "/Dashboard") != 0) && (strcmp(url, "/") != 0))) return MHD_NO;

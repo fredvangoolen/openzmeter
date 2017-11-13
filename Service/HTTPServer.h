@@ -12,11 +12,11 @@ class HTTPServer {
     typedef struct Session {
       struct Session *Next;
       char            ID[33];
-//      uint32_t        ResourceCounter;
       time_t          Start;
       char           *User;
     } Session_t;
     static MHD_Daemon *Daemon;
+  private :
     static int        HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
     static void       ExpireSessions();
     static void       SetMimeType(struct MHD_Response *response, const char *url);

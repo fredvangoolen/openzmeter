@@ -42,7 +42,7 @@ RequestServer_t RequestServer;
 void RequestServer_Handle(int socket) {
   char Buffer[REQUESTSERVER_BUFSIZE];
   if(recv(socket, Buffer, REQUESTSERVER_BUFSIZE, 0) == -1) {
-//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;
   }
   char *Command  = strtok(Buffer, "|");
