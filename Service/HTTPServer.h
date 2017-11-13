@@ -18,21 +18,19 @@ class HTTPServer {
     typedef struct {
       Session_t                *Session;
       struct MHD_PostProcessor *PostProcessor;
-      const char               *PostURL;
       char                     *PostData;
-      int                       PostResponse;
+      int                       PostResponseLen;      
     } Request_t;
     static MHD_Daemon *Daemon;
   private :
     static int        HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
     static void       HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe);
-//    static int        HandlePost(void *cls, enum MHD_ValueKind kind, const char *key, const char *filename, const char *content_type, const char *transfer_encoding, const char *data, uint64_t off, size_t size);
     static void       ExpireSessions();
     static void       SetMimeType(struct MHD_Response *response, const char *url);
     static int        SendFile(struct MHD_Connection *connection, const char *url);
     static int        HandleStaticFiles(struct MHD_Connection *connection, const char *url, const char *method);
     static int        HandleLogin(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, const char *method, void **ptr);
-    static int        HandlePostRequest(void *cls, enum MHD_ValueKind kind, const char *key, const char *filename, const char *content_type, const char *transfer_encoding, const char *data, uint64_t off, size_t size);
+    static int        HandlePostRequest(const char *url, const char *upload_data, size_t *upload_data_size, void **ptr);
     static int        HandleDashboard(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, const char *method, void **ptr);
     static int        SendRedirect(struct MHD_Connection *connection, const char *url);
     static int        SendError(struct MHD_Connection *connection, int error, const char *text);

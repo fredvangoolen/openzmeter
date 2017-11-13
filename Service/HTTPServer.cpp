@@ -80,7 +80,7 @@ int  HTTPServer::HandleStaticFiles(struct MHD_Connection *connection, const char
 }
 void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe) {
   Request_t *Request = (Request_t*)*con_cls;
-  if(Request != NULL) {
+  if(Request->PostProcessor != NULL) {
     MHD_destroy_post_processor(Request->PostProcessor);
     free(Request);
   }
@@ -93,18 +93,21 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
     *ptr = (Request_t*)calloc(1, sizeof(Request_t));
     Request = (Request_t*)*ptr;
     Request->Session = NULL;//GetSession(connection);
-    if(strcmp (method, MHD_HTTP_METHOD_POST) == 0) {
-      Request->PostProcessor = MHD_create_post_processor(connection, 1024, &HandlePostRequest, Request);
-      return (Request->PostProcessor == NULL) ? MHD_NO : MHD_YES;
-    }
+    if(strcmp (method, MHD_HTTP_METHOD_POST) == 0) return MHD_YES;
   }
   if(strcmp (method, MHD_HTTP_METHOD_POST) == 0) {
-    MHD_post_process(Request->PostProcessor, upload_data, *upload_data_size);
-    if (*upload_data_size != 0) {
+    //int bliu = MHD_post_process(Request->PostProcessor, upload_data, *upload_data_size);
+    //printf("%d\n", bliu);
+    if(*upload_data_size != 0) {
+      HandlePostRequest(url, upload_data, upload_data_size, ptr);
 	    *upload_data_size = 0;
   	  return MHD_YES;
 	  } else {
-      return SendError(connection, MHD_HTTP_LENGTH_REQUIRED, "bliu");
+      struct MHD_Response *response = MHD_create_response_from_buffer(Request->PostResponseLen, Request->PostData, MHD_RESPMEM_MUST_FREE);
+      MHD_add_response_header(response, "Content-Type", "application/json");
+      int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
+      MHD_destroy_response (response);
+      return Return;
     }
   }
   
@@ -187,10 +190,14 @@ int  HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url,
   }
   return MHD_NO;
 }
-int HTTPServer::HandlePostRequest(void *cls, enum MHD_ValueKind kind, const char *key, const char *filename, const char *content_type, const char *transfer_encoding, const char *data, uint64_t off, size_t size) {
+int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
   bool Error = false;
 //  if(strcmp(method, MHD_HTTP_METHOD_POST) != 0) return MHD_NO;
-  Request_t *Request = (Request_t*)cls;
+  Request_t *Request = (Request_t*)*ptr;
+  if(Request->PostData == NULL) {
+    Request->PostData = strdup("bliu");
+    Request->PostResponseLen = 4;
+  }
   return MHD_YES;
 //  if((upload_data != NULL) && (Request->PostData == NULL)) Request->PostData = strdup(upload_data);
 //  if((*upload_data_size != 0) || (upload_data != NULL) || (Request->PostData == NULL)) return MHD_YES;
