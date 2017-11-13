@@ -25,7 +25,12 @@
             <file>file:/home/edu/Proyectos/zMeter/ServiceV2/Database.h</file>
         </group>
         <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/CaptureMono/CaptureMono.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/CaptureInterface.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/CaptureMono/CaptureMono.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/HTTPServer.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/HTTPServer.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Main.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/CaptureMono/CaptureMono.cpp</file>
         </group>
     </open-files>
 </project-private>

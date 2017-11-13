@@ -558,10 +558,10 @@
       </toolsSet>
       <compileType>
         <cTool>
-          <developmentMode>6</developmentMode>
+          <developmentMode>2</developmentMode>
         </cTool>
         <ccTool>
-          <developmentMode>5</developmentMode>
+          <developmentMode>2</developmentMode>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>

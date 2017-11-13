@@ -24,6 +24,7 @@ bool CaptureInterface::SaveWorkParams() {
     Tools::LogMsg("DEBUG", "Storing 1M aggregation\n");
     NormalizeAggregation(&pAggreg1M);
     AccumulateAggregation(&pAggreg10M, &pAggreg1M.Params);
+    pAggreg1M.Params.Timestamp = pAggreg1M.Params.Timestamp / 60000 + 59999;
     SaveParams(&pAggreg1M.Params, "INSERT_1M");
     ResetParams(&pAggreg1M.Params);
     pAggreg1M.Samples = 0;
@@ -33,6 +34,7 @@ bool CaptureInterface::SaveWorkParams() {
     Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
     NormalizeAggregation(&pAggreg10M);
     AccumulateAggregation(&pAggreg1H, &pAggreg10M.Params);
+    pAggreg10M.Params.Timestamp = pAggreg10M.Params.Timestamp / 600000 + 599996;
     SaveParams(&pAggreg10M.Params, "INSERT_10M");
     ResetParams(&pAggreg10M.Params);
     pAggreg10M.Samples = 0;
@@ -40,11 +42,48 @@ bool CaptureInterface::SaveWorkParams() {
   if(((pWork.Params.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
     NormalizeAggregation(&pAggreg1H);
+    pAggreg1H.Params.Timestamp = pAggreg1H.Params.Timestamp / 3600000 + 3599999;
     SaveParams(&pAggreg1H.Params, "INSERT_1H");
     ResetParams(&pAggreg1H.Params);
     pAggreg1H.Samples = 0;
   }  
   pPrevTimestamp = pWork.Params.Timestamp;
+  pthread_mutex_lock(&pGetWorkThreadMutex);
+  while(pGetWorksThreads != NULL) {
+    pGetWorksThreads->Work->Params.Timestamp = pWork.Params.Timestamp;
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) pGetWorksThreads->Work->Params.RMS_V[i] = pWork.Params.RMS_V[i];
+    for(int i = 0; i < (pTriphase ? 4 : 1); i++) pGetWorksThreads->Work->Params.RMS_I[i] = pWork.Params.RMS_I[i];
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) pGetWorksThreads->Work->Params.Active_Power[i] = pWork.Params.Active_Power[i];
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) pGetWorksThreads->Work->Params.Apparent_Power[i] = pWork.Params.Apparent_Power[i];
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) pGetWorksThreads->Work->Params.Power_Factor[i] = pWork.Params.Power_Factor[i];
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) pGetWorksThreads->Work->Params.Fundamental_Active_Power[i] = pWork.Params.Fundamental_Active_Power[i];
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) pGetWorksThreads->Work->Params.Fundamental_Apparent_Power[i] = pWork.Params.Fundamental_Apparent_Power[i];
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) pGetWorksThreads->Work->Params.Fundamental_Reactive_Power[i] = pWork.Params.Fundamental_Reactive_Power[i];
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) pGetWorksThreads->Work->Params.Fundamental_Power_Factor[i] = pWork.Params.Fundamental_Power_Factor[i];
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) pGetWorksThreads->Work->Params.Fundamental_Reactive_Energy[i] = pWork.Params.Fundamental_Reactive_Energy[i];
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) pGetWorksThreads->Work->Params.Active_Energy[i] = pWork.Params.Active_Energy[i];
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) pGetWorksThreads->Work->Params.THD_V[i] = pWork.Params.THD_V[i];
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) pGetWorksThreads->Work->Params.THD_I[i] = pWork.Params.THD_I[i];
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
+      for(int j = 0; j < 50; j++) {
+        pGetWorksThreads->Work->Params.VoltageHarmonics[i][j] += pWork.Params.VoltageHarmonics[i][j];
+        pGetWorksThreads->Work->Params.CurrentHarmonics[i][j] += pWork.Params.CurrentHarmonics[i][j];
+      }
+    }
+    pGetWorksThreads->Work->Params.Frequency += pWork.Params.Frequency;
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) pGetWorksThreads->Work->Params.Phi[i] += pWork.Params.Phi[i];
+    pGetWorksThreads->Work->Params.Flag |= pWork.Params.Flag;
+    pGetWorksThreads->Work->SequenceID = pWork.SequenceID;
+    pGetWorksThreads->Work->Samples = pWork.Samples;
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) memcpy(pGetWorksThreads->Work->VoltageSamples[i], pWork.VoltageSamples[i], sizeof(float) * pMaxSamples);
+    for(int i = 0; i < (pTriphase ? 4 : 1); i++) memcpy(pGetWorksThreads->Work->CurrentSamples[i], pWork.CurrentSamples[i], sizeof(float) * pMaxSamples);
+    for(int i = 0; i < 20; i++) pGetWorksThreads->Work->Cycles[i] = pWork.Cycles[i];
+    pGetWorksThreads->Work->Cycles_Len = pWork.Cycles_Len;  
+    pGetWorksThreads->Ready = true;
+    pGetWorksThreads = pGetWorksThreads->Next;
+    pthread_cond_signal(&pGetWorksThreads->Wait);
+  }
+  pthread_mutex_unlock(&pGetWorkThreadMutex);  
   ResetWork();
 }
 void CaptureInterface::AccumulateAggregation(Aggreg_t *dst, Params_t *src) {
@@ -98,7 +137,6 @@ void CaptureInterface::NormalizeAggregation(Aggreg_t *src) {
 bool CaptureInterface::SaveParams(Params_t *params, const char *aggreg) {
   Params_t *Aggreg = &pWork.Params;
   PrepareSentence("EXECUTE ?(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-  
   BindSingleString(aggreg);
   BindSingleUInt32(0);                                                                  //node
   BindSingleUInt64(params->Timestamp);                                             //sampletime
@@ -254,11 +292,14 @@ bool CaptureInterface::AllocParams(Params_t *params) {
   return true;
 }
 CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq_t freq) : Database() {
-  pPrevTimestamp = 0;
-  pSampleRate    = samplerate;
-  pTriphase      = triphase;
-  pNominalFreq   = freq;
-  pMaxSamples    = ceil(samplerate * 10.0 / (freq == FREQ_50 ? 42.5 : 51.0));
+  pPrevTimestamp      = 0;
+  pSampleRate         = samplerate;
+  pTriphase           = triphase;
+  pNominalFreq        = freq;
+  pMaxSamples         = ceil(samplerate * 10.0 / (freq == FREQ_50 ? 42.5 : 51.0));
+  pGetWorksThreads    = NULL;
+  pGetWorkThreadMutex = PTHREAD_MUTEX_INITIALIZER;
+  pTerminate          = false;
   if(triphase == true) {
     pWork.VoltageSamples = (float**)malloc(sizeof(float*) * 3);
     for(int i = 0; i < 3; i++) pWork.VoltageSamples[i] = (float*)malloc(sizeof(float*) * pMaxSamples);
@@ -391,4 +432,32 @@ CaptureInterface::FFT_t *CaptureInterface::FFT_Start(float *data, uint32_t len) 
     return NULL;
   }
   return FFT;
+}
+CaptureInterface::Work_t *CaptureInterface::GetWorkCopy() {
+  Wait_t Tmp;
+  Tmp.Wait = PTHREAD_COND_INITIALIZER;
+  Tmp.Work = (Work_t*)malloc(sizeof(Work_t));
+  Tmp.Ready = false;
+  if(pTriphase == true) {
+    Tmp.Work->VoltageSamples = (float**)malloc(sizeof(float*) * 3);
+    for(int i = 0; i < 3; i++) Tmp.Work->VoltageSamples[i] = (float*)malloc(sizeof(float*) * pMaxSamples);
+    Tmp.Work->CurrentSamples = (float**)malloc(sizeof(float*) * 4);
+    for(int i = 0; i < 4; i++) Tmp.Work->CurrentSamples[i] = (float*)malloc(sizeof(float*) * pMaxSamples);
+  } else {
+    Tmp.Work->VoltageSamples = (float**)malloc(sizeof(float*) * 1);
+    Tmp.Work->VoltageSamples[0] = (float*)malloc(sizeof(float*) * pMaxSamples);  
+    Tmp.Work->CurrentSamples = (float**)malloc(sizeof(float*) * 1);
+    Tmp.Work->CurrentSamples[0] = (float*)malloc(sizeof(float*) * pMaxSamples); 
+  }
+  AllocParams(&Tmp.Work->Params);
+  pthread_mutex_lock(&pGetWorkThreadMutex);
+  Tmp.Next = pGetWorksThreads;
+  pGetWorksThreads = &Tmp;
+  pthread_mutex_unlock(&pGetWorkThreadMutex);
+  pthread_mutex_t Mutex = PTHREAD_MUTEX_INITIALIZER;
+  while(Tmp.Ready == false) {
+    if(pTerminate) return Tmp.Work;
+    pthread_cond_wait(&Tmp.Wait, &Mutex);
+  }
+  return Tmp.Work;
 }

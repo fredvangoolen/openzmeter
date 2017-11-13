@@ -39,7 +39,6 @@ class CaptureMono : public CaptureInterface {
     pthread_cond_t               ReadWait;                //Variable de condicion para esperar si buffer esta vacio
     pthread_t                    CaptureThread;           //Descriptor del hilo de captura
     pthread_t                    AnalyzeThread;           //Descriptor del hilo de analisis
-    bool                         Terminate;               //Señal para detener el hilo de captura
     Filter_t                     Filters[5];              //Filtros paso banda para deteccion de paso por cero
     struct libusb_device_handle *DeviceHandle;            //Dispositivo de captura
     struct libusb_device        *NewDevice;               //Dispositivo que se conecta

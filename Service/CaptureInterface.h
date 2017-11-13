@@ -72,23 +72,35 @@ class CaptureInterface : private Database {
       float Z2;
     } Filter_t;
   private :
-    uint32_t    pLastCycles[PROCESSING_FREQCYCLES];
-    uint32_t    pLastCyclesCount;
-    uint32_t    pLastCyclesPos;
-    uint32_t    pLastCyclesLenght;
-    uint32_t    pSampleRate;
-    uint32_t    pMaxSamples;
-    enum Freq_t pNominalFreq;
-    bool        pTriphase;
-    Aggreg_t    pAggreg3S;
-    Aggreg_t    pAggreg1M;
-    Aggreg_t    pAggreg10M;
-    Aggreg_t    pAggreg1H;
+    typedef struct Wait_t{
+      Wait_t          *Next;
+      pthread_cond_t   Wait;
+      bool             Ready;
+      Work_t          *Work;
+    } Wait_t;
+  private :
+    Wait_t         *pGetWorksThreads;
+    pthread_mutex_t pGetWorkThreadMutex;
+    uint32_t        pLastCycles[PROCESSING_FREQCYCLES];
+    uint32_t        pLastCyclesCount;
+    uint32_t        pLastCyclesPos;
+    uint32_t        pLastCyclesLenght;
+    uint32_t        pSampleRate;
+    uint32_t        pMaxSamples;
+    enum Freq_t     pNominalFreq;
+    bool            pTriphase;
+    Aggreg_t        pAggreg3S;
+    Aggreg_t        pAggreg1M;
+    Aggreg_t        pAggreg10M;
+    Aggreg_t        pAggreg1H;
   private :    
     bool     SaveParams(Params_t *param, const char *aggreg);
   protected :
+    
     uint64_t    pPrevTimestamp;
     Work_t      pWork;
+  protected : 
+      bool      pTerminate;
   protected :
     bool     AllocParams(Params_t *params);
     void     ResetParams(Params_t *params);
@@ -109,6 +121,7 @@ class CaptureInterface : private Database {
     bool        Triphase();
     uint32_t    SampleRate();
     uint8_t     NominalFreq();
+    Work_t     *GetWorkCopy();
   public :
     CaptureInterface(uint32_t samplerate, bool triphase, enum Freq_t freq);
     virtual ~CaptureInterface();
