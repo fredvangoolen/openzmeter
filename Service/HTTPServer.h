@@ -5,6 +5,7 @@
 #pragma once 
 #include <microhttpd.h>
 #include <stdlib.h>
+#include "Database.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define SERVER_ROOT "WEB/Resources"
 class HTTPServer {
@@ -19,7 +20,9 @@ class HTTPServer {
       Session_t                *Session;
       struct MHD_PostProcessor *PostProcessor;
       char                     *PostData;
-      int                       PostResponseLen;      
+      int                       PostResponseLen;
+      int                       ResultCode;
+      Database                 *DB;
     } Request_t;
     static MHD_Daemon *Daemon;
   private :

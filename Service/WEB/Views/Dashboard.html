@@ -7,7 +7,6 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <link rel="shortcut icon" href="favicon.ico" />
-    <base href="<?= base_url(); ?>">
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css">
     <link href="lib/metisMenu/metisMenu.min.css" rel="stylesheet">
     <link href="lib/font-awesome/font-awesome.min.css" rel="stylesheet" type="text/css"/>
@@ -59,46 +58,69 @@
               <div class="panel-heading">
                 <span class="huge-small">Energy consumption</span>
                 <div class="pull-right">
-                  <span class="small">Time scale:</span><br>
-                  <div class="btn-group" data-toggle="buttons" id="energybtnA">
-                    <label class="btn btn-default btn-sm" id="energy_year" data-toggle="tooltip" title="Zoom the graph to one year, keeping current aggregation level while possible">
-                      <input type="radio" name="energy_chart_range" value="year"/>Year
-                    </label>
-                    <label class="btn btn-default btn-sm" id="energy_month" data-toggle="tooltip" title="Zoom the graph to one month, keeping current aggregation level while possible">
-                      <input type="radio" name="energy_chart_range" value="month"/>Month
-                    </label>
-                    <label class="btn btn-default btn-sm" id="energy_week" data-toggle="tooltip" title="Zoom the graph to one week, keeping current aggregation level while possible">
-                      <input type="radio" name="energy_chart_range" value="week"/>Week
-                    </label>
-                    <label class="btn btn-default btn-sm" id="energy_day" data-toggle="tooltip" title="Zoom the graph to one day, keeping current aggregation level while possible">
-                      <input type="radio" name="energy_chart_range" value="day"/>Day
-                    </label>
-                  </div>
-                  <div class="btn-group" data-toggle="buttons" id="energybtnC">
-                    <label class="btn btn-default btn-sm active" id="energynow" data-toggle="tooltip" title="Move to most recent samples and update in real time.">
-                      <input type="checkbox" checked="checked"/><i class="fa fa-chevron-right"></i>
-                    </label>
-                  </div>
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-sm disabled" id="maximizeEnergy">
+                  <span class="small"></span><br>
+                  <div class="btn-group" id="energybtnC">
+                    <button type="button" class="btn btn-default btn-xs active" id="energynow" data-toggle="tooltip" title="Move to most recent samples and update in real time.">
+                      <i class="fa fa-play"></i>
+                    </button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnExportEnergy" data-toggle="tooltip" title="Export data to CSV file">
+                      <i class="fa fa-table fa-fw"></i>
+                    </button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="maximizeEnergy" data-toggle="tooltip" title="Maximize graph">
                       <i class="fa fa-expand"></i>
                     </button>
                   </div>
                 </div>
                 <div class="pull-right">&nbsp;</div>
                 <div class="pull-right">
+                  <span class="small">Phase:</span><br>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnExportVoltage" data-toggle="tooltip" title="Show sum of all phases">
+                      ALL
+                    </button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase R">
+                      R
+                    </button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase S">
+                      S
+                    </button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase T">
+                      T
+                    </button>
+                  </div>
+                </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="pull-right">
+                  <span class="small">Time scale:</span><br>
+                  <div class="btn-group" data-toggle="buttons" id="energybtnA">
+                    <label class="btn btn-default btn-xs" id="energy_year" data-toggle="tooltip" title="Zoom the graph to one year, keeping current aggregation level while possible">
+                      <input type="radio" name="energy_chart_range" value="year"/>Year
+                    </label>
+                    <label class="btn btn-default btn-xs" id="energy_month" data-toggle="tooltip" title="Zoom the graph to one month, keeping current aggregation level while possible">
+                      <input type="radio" name="energy_chart_range" value="month"/>Month
+                    </label>
+                    <label class="btn btn-default btn-xs" id="energy_week" data-toggle="tooltip" title="Zoom the graph to one week, keeping current aggregation level while possible">
+                      <input type="radio" name="energy_chart_range" value="week"/>Week
+                    </label>
+                    <label class="btn btn-default btn-xs" id="energy_day" data-toggle="tooltip" title="Zoom the graph to one day, keeping current aggregation level while possible">
+                      <input type="radio" name="energy_chart_range" value="day"/>Day
+                    </label>
+                  </div>
+                </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="pull-right">
                   <span class="small">Aggregation scale:</span><br>
                   <div class="btn-group" data-toggle="buttons" id="energybtnB">
-                    <label class="btn btn-default btn-sm" id="energy_3s" data-toggle="tooltip" title="Fetch graph from 3 seconds aggregation">
+                    <label class="btn btn-default btn-xs" id="energy_3s" data-toggle="tooltip" title="Fetch graph from 3 seconds aggregation">
                       <input type="radio" name="energy_chart_range" value="3s"/>3 Seg
                     </label>
-                    <label class="btn btn-default btn-sm" id="energy_1m" data-toggle="tooltip" title="Fetch graph from 1 minute aggregation">
+                    <label class="btn btn-default btn-xs" id="energy_1m" data-toggle="tooltip" title="Fetch graph from 1 minute aggregation">
                       <input type="radio" name="energy_chart_range" value="1m"/>1 Min
                     </label>
-                    <label class="btn btn-default btn-sm" id="energy_10m" data-toggle="tooltip" title="Fetch graph from 10 minutes aggregation">
+                    <label class="btn btn-default btn-xs" id="energy_10m" data-toggle="tooltip" title="Fetch graph from 10 minutes aggregation">
                       <input type="radio" name="energy_chart_range" value="10m"/>10 Min
                     </label>
-                    <label class="btn btn-default btn-sm" id="energy_1h" data-toggle="tooltip" title="Fetch graph from 1 hour aggregation">
+                    <label class="btn btn-default btn-xs" id="energy_1h" data-toggle="tooltip" title="Fetch graph from 1 hour aggregation">
                       <input type="radio" name="energy_chart_range" value="1h"/>1 Hour
                     </label>
                   </div>
@@ -169,9 +191,29 @@
                 <a href="<?= site_url('analysis/voltage') ?>">
                   <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
                 </a>
-                  <button type="button" class="btn btn-default btn-xs pull-right" id="maximizeVoltage">
+                <div class="btn-group pull-right">
+                  <button type="button" class="btn btn-default btn-xs" id="btnExportVoltage" data-toggle="tooltip" title="Export data to CSV file">
+                    <i class="fa fa-table fa-fw"></i>
+                  </button>
+                  <button type="button" class="btn btn-default btn-xs" id="maximizeVoltage" data-toggle="tooltip" title="Maximize graph">
                     <i class="fa fa-expand"></i>
                   </button>
+                </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="btn-group pull-right">
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnExportVoltage" data-toggle="tooltip" title="Show phases average">
+                    AVG
+                  </button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase A">
+                    R
+                  </button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase B">
+                    S
+                  </button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase C">
+                    T
+                  </button>
+                </div>
                 <div class="clearfix"></div>
               </div>
             </div>
@@ -203,9 +245,32 @@
                 <a href="<?= site_url('analysis/current') ?>">
                   <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
                 </a>
-                <button type="button" class="btn btn-default btn-xs pull-right" id="maximizeCurrent">
-                  <i class="fa fa-expand"></i>
-                </button>
+                <div class="btn-group pull-right">
+                  <button type="button" class="btn btn-default btn-xs" id="btnExportCurrent" data-toggle="tooltip" title="Export data to CSV file">
+                    <i class="fa fa-table fa-fw"></i>
+                  </button>
+                  <button type="button" class="btn btn-default btn-xs pull-right" id="maximizeCurrent">
+                    <i class="fa fa-expand"></i>
+                  </button>
+                </div>                
+                <div class="pull-right">&nbsp;</div>
+                <div class="btn-group pull-right">
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnExportVoltage" data-toggle="tooltip" title="Show phases average">
+                    AVG
+                  </button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase A">
+                    N
+                  </button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase A">
+                    R
+                  </button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase B">
+                    S
+                  </button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase C">
+                    T
+                  </button>
+                </div>
                 <div class="clearfix"></div>
               </div>
             </div>
@@ -306,15 +371,10 @@
     <script src="lib/dygraph/crosshair.js"></script>
     <script src="lib/dygraph/dygraph-interaction.js"></script>
     <script src="lib/jquery.lineProgressbar/jquery.lineProgressbar.js"></script>
-    
-    
     <script src="lib/spin.js/spin.min.js"></script>
     <script src="lib/dygraph/chart-plotter.js"></script>
     <script src="lib/dygraph/crosshair.js"></script>
     <script src="lib/dygraph/synchronize.js"></script>
     <script src="js/dashboard.js"></script>
-    <script>
-    $("#Header").load('CommonHeader.html');
-    </script>
   </body>
 </html>

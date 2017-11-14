@@ -877,7 +877,7 @@ $('#GraphDialogClose').click(function() {
   window.dispatchEvent(new Event('resize'));
 });
 $(document).ajaxError(function (event, jqxhr, settings, exception) {
-  if(jqxhr.status === 200) window.location.href = 'login';
+//  if(jqxhr.status === 200) window.location.href = 'login';
 });
 $(document).ready(EnergyGetData(86400, 0, true));
 $(document).ready(GetValues5S());
