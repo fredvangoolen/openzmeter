@@ -36,11 +36,11 @@
             <itemPath>WEB/Resources/js/events/events.js</itemPath>
             <itemPath>WEB/Resources/js/events/itic.js</itemPath>
           </logicalFolder>
+          <itemPath>WEB/Resources/js/Login.js</itemPath>
           <itemPath>WEB/Resources/js/account.js</itemPath>
           <itemPath>WEB/Resources/js/common.js</itemPath>
           <itemPath>WEB/Resources/js/dashboard.js</itemPath>
           <itemPath>WEB/Resources/js/live.js</itemPath>
-          <itemPath>WEB/Resources/js/login.js</itemPath>
           <itemPath>WEB/Resources/js/settings.js</itemPath>
           <itemPath>WEB/Resources/js/stats.js</itemPath>
           <itemPath>WEB/Resources/js/utils.js</itemPath>
@@ -474,25 +474,6 @@
           <itemPath>WEB/Views/analysis/harmonics_view.php</itemPath>
           <itemPath>WEB/Views/analysis/voltage_view.php</itemPath>
         </logicalFolder>
-        <logicalFolder name="errors" displayName="errors" projectFiles="true">
-          <logicalFolder name="cli" displayName="cli" projectFiles="true">
-            <itemPath>WEB/Views/errors/cli/error_404.php</itemPath>
-            <itemPath>WEB/Views/errors/cli/error_db.php</itemPath>
-            <itemPath>WEB/Views/errors/cli/error_exception.php</itemPath>
-            <itemPath>WEB/Views/errors/cli/error_general.php</itemPath>
-            <itemPath>WEB/Views/errors/cli/error_php.php</itemPath>
-            <itemPath>WEB/Views/errors/cli/index.html</itemPath>
-          </logicalFolder>
-          <logicalFolder name="html" displayName="html" projectFiles="true">
-            <itemPath>WEB/Views/errors/html/error_404.php</itemPath>
-            <itemPath>WEB/Views/errors/html/error_db.php</itemPath>
-            <itemPath>WEB/Views/errors/html/error_exception.php</itemPath>
-            <itemPath>WEB/Views/errors/html/error_general.php</itemPath>
-            <itemPath>WEB/Views/errors/html/error_php.php</itemPath>
-            <itemPath>WEB/Views/errors/html/index.html</itemPath>
-          </logicalFolder>
-          <itemPath>WEB/Views/errors/index.html</itemPath>
-        </logicalFolder>
         <logicalFolder name="events" displayName="events" projectFiles="true">
           <itemPath>WEB/Views/events/disturbances_view.php</itemPath>
           <itemPath>WEB/Views/events/itic_view.php</itemPath>
@@ -501,9 +482,9 @@
           <itemPath>WEB/Views/template/commonHeader.html</itemPath>
           <itemPath>WEB/Views/template/commonScripts.php</itemPath>
         </logicalFolder>
+        <itemPath>WEB/Views/Dashboard.html</itemPath>
         <itemPath>WEB/Views/Login.html</itemPath>
         <itemPath>WEB/Views/account_view.php</itemPath>
-        <itemPath>WEB/dashboard_view.php</itemPath>
         <itemPath>WEB/Views/settings_view.php</itemPath>
         <itemPath>WEB/Views/stats_view.php</itemPath>
       </logicalFolder>
@@ -557,12 +538,6 @@
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
-        <cTool>
-          <developmentMode>2</developmentMode>
-        </cTool>
-        <ccTool>
-          <developmentMode>2</developmentMode>
-        </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
         </fortranCompilerTool>
@@ -633,6 +608,8 @@
       </item>
       <item path="WEB/Resources/img/logo.png" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="WEB/Resources/js/Login.js" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="WEB/Resources/js/account.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/js/analysis/analysis.js"
@@ -679,8 +656,6 @@
       <item path="WEB/Resources/js/events/itic.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/js/live.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/login.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/js/settings.js" ex="false" tool="3" flavor2="0">
       </item>
@@ -1898,6 +1873,8 @@
       </item>
       <item path="WEB/Sysinfo_model.php" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="WEB/Views/Dashboard.html" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="WEB/Views/Login.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Views/account_view.php" ex="false" tool="3" flavor2="0">
@@ -1927,50 +1904,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Views/errors/cli/error_404.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Views/errors/cli/error_db.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Views/errors/cli/error_exception.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Views/errors/cli/error_general.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Views/errors/cli/error_php.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Views/errors/cli/index.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Views/errors/html/error_404.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Views/errors/html/error_db.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Views/errors/html/error_exception.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Views/errors/html/error_general.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Views/errors/html/error_php.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Views/errors/html/index.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Views/errors/index.html" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="WEB/Views/events/disturbances_view.php"
             ex="false"
             tool="3"
@@ -1991,8 +1924,6 @@
             ex="false"
             tool="3"
             flavor2="0">
-      </item>
-      <item path="WEB/dashboard_view.php" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/index.php" ex="false" tool="3" flavor2="0">
       </item>
