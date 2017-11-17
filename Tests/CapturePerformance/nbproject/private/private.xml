@@ -13,8 +13,6 @@
             <file>file:/home/edu/Proyectos/zMeter/Test/Main.cpp</file>
             <file>file:/home/edu/Proyectos/zMeter/Test/Main.c</file>
         </group>
-        <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/Test/Main.cpp</file>
-        </group>
+        <group name="ServiceV2"/>
     </open-files>
 </project-private>

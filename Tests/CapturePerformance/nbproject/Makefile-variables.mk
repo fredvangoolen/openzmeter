@@ -9,19 +9,19 @@ CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU-Linux
 CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux
-CND_ARTIFACT_NAME_Debug=test
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux/test
+CND_ARTIFACT_NAME_Debug=captureperformance
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux/captureperformance
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux/package
-CND_PACKAGE_NAME_Debug=test.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux/package/test.tar
+CND_PACKAGE_NAME_Debug=captureperformance.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux/package/captureperformance.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux
 CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux
-CND_ARTIFACT_NAME_Release=test
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/test
+CND_ARTIFACT_NAME_Release=captureperformance
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/captureperformance
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux/package
-CND_PACKAGE_NAME_Release=test.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/test.tar
+CND_PACKAGE_NAME_Release=captureperformance.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/captureperformance.tar
 #
 # include compiler specific variables
 #

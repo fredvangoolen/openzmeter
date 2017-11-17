@@ -104,9 +104,6 @@ bool ConnectToDevice() {
 //    sigaction(SIGINT, &sigact, NULL);
 //    sigaction(SIGTERM, &sigact, NULL);
 //    sigaction(SIGQUIT, &sigact, NULL);
-
-    
-  
   return true;
 }
 int main(void) {
