@@ -4,22 +4,4 @@
         <activeConfTypeElem>1</activeConfTypeElem>
         <activeConfIndexElem>0</activeConfIndexElem>
     </data>
-    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
-    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/ServiceV2/CaptureMono/CaptureMono.cpp</file>
-        </group>
-<<<<<<< HEAD
-        <group name="ServiceV2"/>
-=======
-        <group>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Tools.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/RequestServer.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/HTTPServer.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Tools.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Main.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/HTTPServer.h</file>
-        </group>
->>>>>>> e116def303ab3c8c3ff61d08fa8d22322f10828f
-    </open-files>
 </project-private>

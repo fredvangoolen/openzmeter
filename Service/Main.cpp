@@ -53,8 +53,8 @@ int main(int argc, char** argv) {
   setpriority(PRIO_PROCESS, 0, -20);
   if(Daemonize == true) Tools::Daemonize();
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
-  Tools::CreatePidFile();
-  Tools::CreateLogFile();
+  if(Tools::CreatePidFile() == false) return EXIT_FAILURE;
+  if(Tools::CreateLogFile() == false) return EXIT_FAILURE;
   HTTPServer::Start();
   CaptureInterface **Interfaces = (CaptureInterface**)calloc(sizeof(CaptureInterface*), Tools::Devices.Len);
   for(int i = 0; i < Tools::Devices.Len; i++) {

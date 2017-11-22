@@ -21,11 +21,11 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
   CaptureVirtual *This = (CaptureVirtual*)args;
   pthread_setname_np(This->AnalyzeThread, "AnalysisVirt");
   while(!This->Terminate) {
-    uint64_t Start = Tools::GetTime() / 1000;
+    uint64_t Start = Tools::GetTime();
     This->pWork.Params.Timestamp = Start;
     This->pWork.Cycles[0].Start = 0;
     for(int i = 0; ; i++) {
-      This->pWork.VoltageSamples[0][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency());
+      This->pWork.VoltageSamples[0][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency()) + rand() % 40;
       This->pWork.CurrentSamples[0][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency());
       if(This->Triphase()) {
         This->pWork.VoltageSamples[1][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 1.0 * This->SampleRate() / This->NominalFrequency() / 3.0);
@@ -46,8 +46,8 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
     uint64_t AnalyzeEnd = Tools::GetTime();
     This->SaveWorkParams();
     uint64_t SaveEnd = Tools::GetTime();
-    usleep(200000 - (SaveEnd - Start));
-    Tools::LogMsg("DEBUG", "Process of block %llu takes %.1fmS (%.1fmS mS with store)\n", This->pWork.SequenceID, (AnalyzeEnd - Start) / 1000.0, (SaveEnd - Start) / 1000.0);
+    if((SaveEnd - Start) <= 200) usleep((200 - (SaveEnd - Start)) * 1000);
+    Tools::LogMsg("DEBUG", "Process of block %llu takes %umS (%umS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
   }
 }
 CaptureVirtual::CaptureVirtual(uint32_t samplerate, bool triphase, float nominalvoltage, float nominalcurrent, CaptureInterface::Freq_t baseFreq) : CaptureInterface(samplerate, triphase, baseFreq) {

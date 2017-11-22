@@ -47,7 +47,9 @@ void Tools::LogMsg(const char *level, const char *msg, ...) {
     fflush(stdout);
     funlockfile(stdout);
   }
+
   if(LogFile) {
+    va_start(args, msg);
     flockfile(LogFile);
     fprintf(LogFile, "%s", DateStr);
     vfprintf(LogFile, msg, args);
@@ -183,7 +185,13 @@ bool Tools::Config_Handler(char* section) {
   return true;
 }
 bool Tools::Config_Handler(char *section, char *param, char *value) {
-  if(strcmp(section, "database") == 0) {
+  if(strcmp(section, "global") == 0) {
+    if(strcmp(param, "log") == 0) {
+      Global.Log = strdup(value);
+    } else if(strcmp(param, "pid") == 0) {
+      Global.Pid = strdup(value);
+    }
+  } else if(strcmp(section, "database") == 0) {
     if(strcmp(param, "port") == 0) {
       DB.Port = atoi(value);
     } else if(strcmp(param, "database") == 0) {
@@ -277,5 +285,5 @@ uint64_t Tools::GetTime() {
     LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return 0;
   }
-  return (uint64_t)Time.tv_sec * 1000000 + Time.tv_usec;
+  return (uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000;
 }

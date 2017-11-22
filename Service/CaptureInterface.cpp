@@ -24,7 +24,7 @@ bool CaptureInterface::SaveWorkParams() {
     Tools::LogMsg("DEBUG", "Storing 1M aggregation\n");
     NormalizeAggregation(&pAggreg1M);
     AccumulateAggregation(&pAggreg10M, &pAggreg1M.Params);
-    pAggreg1M.Params.Timestamp = pAggreg1M.Params.Timestamp / 60000 + 59999;
+    pAggreg1M.Params.Timestamp = pAggreg1M.Params.Timestamp / 60000 * 60000 + 59999;
     SaveParams(&pAggreg1M.Params, "INSERT_1M");
     ResetParams(&pAggreg1M.Params);
     pAggreg1M.Samples = 0;
@@ -34,7 +34,7 @@ bool CaptureInterface::SaveWorkParams() {
     Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
     NormalizeAggregation(&pAggreg10M);
     AccumulateAggregation(&pAggreg1H, &pAggreg10M.Params);
-    pAggreg10M.Params.Timestamp = pAggreg10M.Params.Timestamp / 600000 + 599996;
+    pAggreg10M.Params.Timestamp = pAggreg10M.Params.Timestamp / 600000 * 600000 + 599996;
     SaveParams(&pAggreg10M.Params, "INSERT_10M");
     ResetParams(&pAggreg10M.Params);
     pAggreg10M.Samples = 0;
@@ -42,7 +42,7 @@ bool CaptureInterface::SaveWorkParams() {
   if(((pWork.Params.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
     NormalizeAggregation(&pAggreg1H);
-    pAggreg1H.Params.Timestamp = pAggreg1H.Params.Timestamp / 3600000 + 3599999;
+    pAggreg1H.Params.Timestamp = pAggreg1H.Params.Timestamp / 3600000 * 3600000 + 3599999;
     SaveParams(&pAggreg1H.Params, "INSERT_1H");
     ResetParams(&pAggreg1H.Params);
     pAggreg1H.Samples = 0;

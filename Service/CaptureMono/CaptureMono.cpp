@@ -166,7 +166,7 @@ void  *CaptureMono::Analize_Thread(void* args) {
       pthread_cond_wait(&This->ReadWait, &This->AnalyzeMutex);
     }
     uint64_t Start = Tools::GetTime();
-    This->pWork.Params.Timestamp = (Start / 1000) - ((This->Used * 1000) / ADQUISITION_SAMPLEFREQ);
+    This->pWork.Params.Timestamp = Start - ((This->Used * 1000) / ADQUISITION_SAMPLEFREQ);
     float LastSample = +20; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
     for(This->pWork.Samples = 0; This->pWork.Samples < This->GetMaxSamples(); This->pWork.Samples++) {
       This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
@@ -189,7 +189,7 @@ void  *CaptureMono::Analize_Thread(void* args) {
     uint64_t AnalyzeEnd = Tools::GetTime();
     This->SaveWorkParams();
     uint64_t SaveEnd = Tools::GetTime();
-    Tools::LogMsg("DEBUG", "Process of block %llu takes %.1fmS (%.1fmS mS with store)\n", This->pWork.SequenceID, (AnalyzeEnd - Start) / 1000.0, (SaveEnd - Start) / 1000.0);
+    Tools::LogMsg("DEBUG", "Process of block %llu takes %umS (%umS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
   }
 }
 CaptureMono::CaptureMono(const char *serial, uint32_t id, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint32_t bufferLen, enum Freq_t freq) : CaptureInterface(15625, false, freq) {

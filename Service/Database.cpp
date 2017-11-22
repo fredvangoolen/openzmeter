@@ -23,7 +23,6 @@ Database::Database() {
   ExecSentence("SET synchronous_commit TO OFF");
 }
 Database::~Database() {
-  Tools::LogMsg("DEBUG", "Terminate DB connection...");
   PQfinish(DBConn);
 }
 bool Database::ExecSentence(const char* sql) {

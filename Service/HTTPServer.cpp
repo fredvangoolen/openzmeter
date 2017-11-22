@@ -62,12 +62,18 @@ void HTTPServer::SetMimeType(struct MHD_Response *response, const char *url) {
     MimeType = (char*)"image/png";
   else if((strlen(url) >= 5) && (strcmp(&url[FileNameLen - 5], ".html")) == 0) 
     MimeType = (char*)"text/html";
-  else
-    Tools::LogMsg("ERROR", "No mimetype defined for request '%s'\n", url);
+  else {
+    MimeType = (char*)"application/octet-stream";
+    Tools::LogMsg("DEBUG", "No mimetype defined for request '%s', '%s' used\n", url, MimeType);
+  }
   MHD_add_response_header(response, "Content-Type", MimeType);
 }
 int  HTTPServer::SendError(struct MHD_Connection *connection, int error, const char *text) {
-  Tools::LogMsg("DEBUG", "Error (%d - %s) on request\n", error, text);
+  int Len = strlen(text);
+  if(Len == 0)
+    Tools::LogMsg("DEBUG", "Error %d on request\n", error);
+  else
+    Tools::LogMsg("DEBUG", "Error %d (%s) on request\n", error, text);
   struct MHD_Response *response = MHD_create_response_from_buffer(strlen(text), (void*)text, MHD_RESPMEM_PERSISTENT);
   int Return = MHD_queue_response(connection, error, response);
   MHD_destroy_response(response);
@@ -81,14 +87,15 @@ int  HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url
   MHD_destroy_response (response);
   return Return;
 }
-int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *url) {
+int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, char *aditionalheadertype, char *aditionalheadervalue) {
   int File = -1;
   struct stat FileStat;
-  if((stat(url, &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) File = open(url, O_RDONLY);
+  if((stat(path, &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) File = open(path, O_RDONLY);
   if(File == -1) return MHD_NO;
   struct MHD_Response *response = MHD_create_response_from_fd(FileStat.st_size, File);
-  SetMimeType(response, url);
-  MHD_add_response_header (response, "Cache-Control", "public, max-age=2592000");
+  SetMimeType(response, path);
+  if((aditionalheadertype != NULL) && (aditionalheadervalue != NULL )) MHD_add_response_header(response, aditionalheadertype, aditionalheadervalue);
+  MHD_add_response_header(response, "Cache-Control", "public, max-age=2592000");
   int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
   MHD_destroy_response(response);
   return Return;
@@ -103,10 +110,9 @@ int  HTTPServer::HandleStaticFiles(struct MHD_Connection *connection, const char
 }
 void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe) {
   Request_t *Request = (Request_t*)*con_cls;
-  if((Request != NULL) && (Request->PostProcessor != NULL)) {
-    MHD_destroy_post_processor(Request->PostProcessor);
+  if(Request == NULL) return;
+  if(Request->DB) delete Request->DB;
     free(Request);
-  }
 }
 int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
   Request_t *Request = (Request_t*)*ptr;
@@ -152,6 +158,10 @@ int  HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url,
   Request_t *Request = (Request_t*)*ptr;
   if(strcmp(url, "/Login") == 0) {
     if(Request->Session->User != NULL) return SendRedirect(connection, "/Dashboard");
+    char Cookie[256];
+    sprintf(Cookie, "OZM_SESSION=%s; httponly; Path=/", Request->Session->ID);
+    return SendFile(connection, "WEB/Views/Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
+
     int File = -1;
     struct stat FileStat;
     const char *FilePath = "WEB/Views/Login.html";
@@ -162,10 +172,10 @@ int  HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url,
       struct MHD_Response *response = MHD_create_response_from_fd(FileStat.st_size, File);
       SetMimeType(response, FilePath);
       char Cookie[256];
-      sprintf(Cookie, "%s=%s; httponly; Path=/", "OZM_SESSION", Request->Session->ID);
+      sprintf(Cookie, "OZM_SESSION=%s; httponly; Path=/", Request->Session->ID);
       MHD_add_response_header(response, MHD_HTTP_HEADER_SET_COOKIE, Cookie);
       int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
-      MHD_destroy_response (response);
+      MHD_destroy_response(response);
       return Return;
     }
     return MHD_NO;
@@ -195,8 +205,9 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
     Request->PostResponseLen = strlen(Request->PostData);
     return MHD_YES;
   }
-  if(strcmp(url, "/GetRows") == 0) {
+  if(strcmp(url, "/dashboard/getSeriesData") == 0) {
     uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
+    bool     IncludeFlag = false;
     uint32_t Node = 0;
     char    *Aggreg = NULL, *Series = NULL;
     json_object_object_foreach(JSONReader, JSON_Key, JSON_Val) {
@@ -215,49 +226,58 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
         LastSample = json_object_get_int64(JSON_Val);
       else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
         Node = json_object_get_int(JSON_Val);
+      else if((JSON_Type == json_type_boolean) && (strcmp(JSON_Key, "IncludeFlag") == 0))
+        IncludeFlag = json_object_get_boolean(JSON_Val);
       else 
         Error = true;
     }
-    if(To == 0) To = Tools::GetTime() / 1000;
+    if((Aggreg == NULL) || (Series == NULL) || (Error == true)) {    
+      Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      Request->PostData = "Invalid JSON params";
+      Request->PostResponseLen = strlen(Request->PostData);
+      return MHD_YES;
+    }
+    if(To == 0) To = Tools::GetTime();
     From = To - Period;
     char QueryText[8192];
     int  QueryLen = 0;
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryLen) + QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryLen) + QueryLen, "%llu AS From, ", From);
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryLen) + QueryLen, "%llu AS To, ", To); 
-    int MaxPoints = 10000, PeriodSeconds = 3;
-    if((strcmp(Aggreg, "3S") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
-      Aggreg = "1M";
-      PeriodSeconds = 60;
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"From\", ", From);
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"To\", ", To); 
+    int MaxPoints = 10000, PeriodSeconds = 3000;
+    if((strcmp(Aggreg, "3s") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
+      Aggreg = "1m";
+      PeriodSeconds = 60000;
     } 
-    if((strcmp(Aggreg, "1M") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
-      Aggreg = "10M";
-      PeriodSeconds = 600;
+    if((strcmp(Aggreg, "1m") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
+      Aggreg = "10m";
+      PeriodSeconds = 600000;
     } 
-    if((strcmp(Aggreg, "10M") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
-      Aggreg = "1H";
-      PeriodSeconds = 3600;
+    if((strcmp(Aggreg, "10m") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
+      Aggreg = "1h";
+      PeriodSeconds = 3600000;
     } 
     From -= PeriodSeconds;
     To   += PeriodSeconds;
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryLen) + QueryLen, "%llu AS MaxSamples, ", (To - From) / PeriodSeconds);
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"MaxSamples\", ", (To - From) / PeriodSeconds);
     if(strcmp(Aggreg, "3s") == 0) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryLen) + QueryLen, "'3 seconds' AS Aggregation_Source, ");
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'3 seconds' AS \"Aggregation_Source\", ");
     } else if(strcmp(Aggreg, "1m") == 0) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryLen) + QueryLen, "'1 minute' AS Aggregation_Source, ");
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'1 minute' AS \"Aggregation_Source\", ");
     } else if(strcmp(Aggreg, "10m") == 0) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryLen) + QueryLen, "'10 minutes' AS Aggregation_Source, ");
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'10 minutes' AS \"Aggregation_Source\", ");
     } else if(strcmp(Aggreg, "1h") == 0) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryLen) + QueryLen, "'1 hour' AS Aggregation_Source, ");
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'1 hour' AS \"Aggregation_Source\", ");
     }
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryLen) + QueryLen, "%s AS Update, ", (LastSample != 0) ? "true" : "false");
-    
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%s AS \"Update\", ", (LastSample != 0) ? "true" : "false");
+
     char *Serie = strtok(Series, ", ");
     while(Serie != NULL) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryLen) + QueryLen, "array_agg(%s) AS %s, ", Serie, Serie);
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(%s) AS %s, ", Serie, Serie);
       Serie = strtok(NULL, ", ");
     }
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryLen) + QueryLen, "array_agg(sampletime) AS sampletime FROM aggreg_%s WHERE sampletime > %llu AND sampletime >= %llu AND sampletime <= %llu AND node = %u ORDER BY sampletime ASC) AS Result", Aggreg, LastSample, From, To, Node);
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(sampletime) AS \"Sampletime\" FROM aggreg_%s WHERE sampletime > %llu AND sampletime >= %llu AND sampletime <= %llu AND node = %u ORDER BY \"Sampletime\" ASC) AS Result", Aggreg, LastSample, From, To, Node);
+//    printf(QueryText);
     Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
