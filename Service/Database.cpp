@@ -11,6 +11,7 @@
 //bool Database::Initialized = false;
 Database::Database() {
   Params    = NULL;
+  Result    = NULL;
   ParamsLen = 0;
   char ConnectionString[512];
   sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", Tools::DB.Host, Tools::DB.Port, Tools::DB.User, Tools::DB.Password, Tools::DB.Database);
@@ -23,28 +24,34 @@ Database::Database() {
   ExecSentence("SET synchronous_commit TO OFF");
 }
 Database::~Database() {
+  if(Result != NULL) PQclear(Result);
   PQfinish(DBConn);
 }
 bool Database::ExecSentence(const char* sql) {
-  PGresult *Result = PQexec(DBConn, sql);
+  if(Result != NULL) PQclear(Result);
+  Result = PQexec(DBConn, sql);
   if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
     Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
     PQclear(Result);
+    Result = NULL;
     return false;
   } else {
     PQclear(Result);
+    Result = NULL;
     return true;  
   }
 }
 char* Database::ExecSentenceJSON(const char* sql, int *len) {
-  PGresult *Result = PQexec(DBConn, sql);
+  if(Result != NULL) PQclear(Result);
+  Result = PQexec(DBConn, sql);
   if(PQresultStatus(Result) != PGRES_TUPLES_OK) {
     Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
     PQclear(Result);
+    Result = NULL;
     return NULL;
   } else {
     *len = PQgetlength(Result, 0, 0);
-    return strdup(PQgetvalue(Result, 0, 0));
+    return PQgetvalue(Result, 0, 0);
   }
 }
 void Database::PrepareSentence(const char *sentence) {
@@ -109,7 +116,7 @@ void Database::BindSingleString(const char *string) {
   }  
 }
 bool Database::ExecSentence() {
-  bool Result = false;
+  bool Return = false;
   if(ParamsAlloc == ParamsLen) {
     int maxLenght = strlen(Sentence);
     for(int i = 0; i < ParamsLen; i++) maxLenght = maxLenght + strlen(Params[i]);
@@ -129,7 +136,7 @@ bool Database::ExecSentence() {
       }
       Read++;
     }
-    Result = ExecSentence(Buffer);
+    Return = ExecSentence(Buffer);
 //    printf(Buffer);
 //    fflush(stdout);
     free(Buffer);
@@ -141,7 +148,7 @@ bool Database::ExecSentence() {
     free(Params);
     ParamsAlloc = 0;
   }
-  return Result;
+  return Return;
 }
 
 

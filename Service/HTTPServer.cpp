@@ -12,7 +12,6 @@
 #include <errno.h>
 #include "HTTPServer.h"
 #include "Tools.h"
-#include <json-c/json.h>
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon            *HTTPServer::Daemon = NULL;
 HTTPServer::Session_t *HTTPServer::Sessions = NULL;
@@ -45,6 +44,7 @@ HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection* connection) {
       return NULL; 
     }
     sprintf(Session->ID, "%08X%08X%08X%08X", (uint32_t)random(), (uint32_t)random(), (uint32_t)random(), (uint32_t)random());
+    Tools::LogMsg("DEBUG", "New HTTP client with ID %s\n", Session->ID);
     Session->User = NULL;
     Session->Next = Sessions;
     Sessions = Session;
@@ -115,7 +115,8 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
   Request_t *Request = (Request_t*)*con_cls;
   if(Request == NULL) return;
   if(Request->DB) delete Request->DB;
-    free(Request);
+  if(Request->JSONReader) json_object_put(Request->JSONReader);
+  free(Request);
 }
 int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
   Request_t *Request = (Request_t*)*ptr;
@@ -137,7 +138,7 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
       struct MHD_Response *response = MHD_create_response_from_buffer(Request->PostResponseLen, Request->PostData, MHD_RESPMEM_PERSISTENT);
       MHD_add_response_header(response, "Content-Type", "application/json");
       int Return = MHD_queue_response(connection, Request->ResultCode, response);
-      MHD_destroy_response (response);
+      MHD_destroy_response(response);
       return Return;
     }
   } else if(strcmp (method, MHD_HTTP_METHOD_GET) == 0) {
@@ -188,9 +189,9 @@ int  HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url,
 }
 int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
   Request_t *Request = (Request_t*)*ptr;
-  json_object *JSONReader = json_tokener_parse(upload_data);
+  Request->JSONReader = json_tokener_parse(upload_data);
   bool Error = false;
-  if(JSONReader == NULL) {
+  if(Request->JSONReader == NULL) {
     Request->ResultCode = MHD_HTTP_BAD_REQUEST;
     Request->PostData = "Expected JSON params";
     Request->PostResponseLen = strlen(Request->PostData);
@@ -218,12 +219,12 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
     bool     IncludeFlag = false;
     uint32_t Node = 0;
     char    *Aggreg = NULL, *Series = NULL;
-    json_object_object_foreach(JSONReader, JSON_Key, JSON_Val) {
+    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
       enum json_type JSON_Type = json_object_get_type(JSON_Val);
       if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
-        Series = strdup(json_object_get_string(JSON_Val));
+        Series = (char*)json_object_get_string(JSON_Val);
       else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Aggreg") == 0))
-        Aggreg = strdup(json_object_get_string(JSON_Val));
+        Aggreg = (char*)json_object_get_string(JSON_Val);
       else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Period") == 0))      
         Period = json_object_get_int64(JSON_Val);
       else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "From") == 0))  
@@ -301,7 +302,7 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
 
 
   if(Request->PostData == NULL) {
-    Request->PostData = strdup("bliu");
+    Request->PostData = "bliu";
     Request->PostResponseLen = 4;
   }
   return MHD_YES;

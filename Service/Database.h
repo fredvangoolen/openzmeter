@@ -12,6 +12,7 @@ class Database {
     int          ParamsLen;
     int          ParamsAlloc;
     const char  *Sentence;
+    PGresult    *Result;
   public :
     void  PrepareSentence(const char *sentence);
     void  BindSingleUInt32(uint32_t param);

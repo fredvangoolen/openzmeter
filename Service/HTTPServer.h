@@ -4,6 +4,7 @@
  * ---------------------------------------------------------------------------- */
 #pragma once 
 #include <microhttpd.h>
+#include <json-c/json.h>
 #include <stdlib.h>
 #include "Database.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -22,6 +23,7 @@ class HTTPServer {
       int                       PostResponseLen;
       int                       ResultCode;
       Database                 *DB;
+      json_object              *JSONReader;
     } Request_t;
     static MHD_Daemon *Daemon;
   private :
