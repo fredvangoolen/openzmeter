@@ -461,6 +461,7 @@
             <itemPath>WEB/Resources/lib/visjs/vis.min.css</itemPath>
             <itemPath>WEB/Resources/lib/visjs/vis.min.js</itemPath>
           </logicalFolder>
+          <itemPath>WEB/Resources/lib/cookie.min.js</itemPath>
           <itemPath>WEB/Resources/lib/jquery.min.js</itemPath>
         </logicalFolder>
         <itemPath>WEB/Resources/CommonHeader.html</itemPath>
@@ -907,6 +908,8 @@
       <item path="WEB/Resources/lib/c3js/c3.css" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/c3js/c3.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/lib/cookie.min.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/cubism/cubism.js" ex="false" tool="3" flavor2="0">
       </item>

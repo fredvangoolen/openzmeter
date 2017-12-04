@@ -80,6 +80,8 @@ function MenuSelect() {
     timeout: 20000,
     type: "POST",
     dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({ }),
     success: GetNodesCompletes
   });
   $('#side-menu').metisMenu();
