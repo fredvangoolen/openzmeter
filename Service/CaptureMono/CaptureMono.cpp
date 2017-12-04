@@ -189,7 +189,7 @@ void  *CaptureMono::Analize_Thread(void* args) {
     uint64_t AnalyzeEnd = Tools::GetTime();
     This->SaveWorkParams();
     uint64_t SaveEnd = Tools::GetTime();
-    Tools::LogMsg("DEBUG", "Process of block %llu takes %umS (%umS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
+    Tools::LogMsg("DEBUG", "Process of block %llu takes %umS (%llumS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
   }
 }
 CaptureMono::CaptureMono(const char *serial, uint32_t id, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint32_t bufferLen, enum Freq_t freq) : CaptureInterface(15625, false, freq) {

@@ -607,7 +607,7 @@ function AjaxEnergyUpdate(result) {
     }
   }
   if(EnergyChart == null) {
-    EnergyChart = new Dygraph(document.getElementById("energy_chart"),
+    EnergyChart = new Dygraph(document.getElementById("EnergyChart"),
       toShow,
       { strokeWidth: 1,
         labelsDiv: "EnergyLegend",
@@ -900,7 +900,7 @@ $('#btnExportVoltage').click(function() {
   $(this).removeClass('active');
   $(this).blur();
 });
-//$('#Header').load('dashboard/header')
+$('#Header').load('CommonHeader.html')
 
 
 

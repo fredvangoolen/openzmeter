@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css">
-    <link href="lib/metisMenu/metisMenu.min.css" rel="stylesheet">
-    <link href="lib/font-awesome/font-awesome.min.css" rel="stylesheet" type="text/css"/>
-    <link href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" rel="stylesheet" type="text/css"/>
-    <link href="css/common.css" rel="stylesheet">
-    <title>openZmeter | Dashboard</title>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="zRed"/>
+    <link rel="shortcut icon" href="favicon.ico"/>
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="lib/metisMenu/metisMenu.min.css"/>
+    <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
+    <link rel="stylesheet" href="lib/dygraph/dygraph.css"/>
+    <link rel="stylesheet" href="css/common.css"/>
+    <title>openZmeter - Dashboard</title>
   </head>
   <body>
-    <nav class="navbar navbar-default navbar-fixed-top" style="margin-bottom: 0" id="Header"></nav>
-    <span class="clearfix"> </span>
+    <nav class="navbar navbar-default navbar-fixed-top" id="Header"></nav>
     <div class="modal fade" id="aggreg_modal" tabindex="-1" role="dialog" data-backdrop='static'>
       <div class="modal-dialog">
         <div class="modal-content">
@@ -37,7 +37,7 @@
         <div class="modal-content" style="height: 100%" id="GraphDialogContents">
           <div class="modal-header">
             <div class="pull-left">
-            <h3 class="modal-title" id="GraphDialogTitle"></h3>
+            <h3 class="modal-title" id="GraphDialogTitle">Dialog</h3>
             </div>
             <div class="pull-right">
               <button type="button" class="btn btn-default btn-sm" id="GraphDialogClose">
@@ -59,73 +59,43 @@
                 <span class="huge-small">Energy consumption</span>
                 <div class="pull-right">
                   <span class="small"></span><br>
-                  <div class="btn-group" id="energybtnC">
-                    <button type="button" class="btn btn-default btn-xs active" id="energynow" data-toggle="tooltip" title="Move to most recent samples and update in real time.">
-                      <i class="fa fa-play"></i>
-                    </button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnExportEnergy" data-toggle="tooltip" title="Export data to CSV file">
-                      <i class="fa fa-table fa-fw"></i>
-                    </button>
-                    <button type="button" class="btn btn-default btn-xs disabled" id="maximizeEnergy" data-toggle="tooltip" title="Maximize graph">
-                      <i class="fa fa-expand"></i>
-                    </button>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs active"   id="btnEnergyNow"      data-toggle="tooltip" title="Move to most recent samples and update in real time"><i class="fa fa-play"></i></button>
+                    <button type="button" class="btn btn-default btn-xs"          id="btnExportEnergy"   data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnMaximizeEnergy" data-toggle="tooltip" title="Maximize graph"><i class="fa fa-expand"></i></button>
                   </div>
                 </div>
                 <div class="pull-right">&nbsp;</div>
                 <div class="pull-right">
                   <span class="small">Phase:</span><br>
                   <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs disabled" id="btnExportVoltage" data-toggle="tooltip" title="Show sum of all phases">
-                      ALL
-                    </button>
-                    <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase R">
-                      R
-                    </button>
-                    <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase S">
-                      S
-                    </button>
-                    <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase T">
-                      T
-                    </button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowEnergyAllPhases" data-toggle="tooltip" title="Show sum of all phases">SUM</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowEnergyRPhase" data-toggle="tooltip" title="Show phase R">R</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowEnergySPhase" data-toggle="tooltip" title="Show phase S">S</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowEnergyTPhase" data-toggle="tooltip" title="Show phase T">T</button>
                   </div>
                 </div>
                 <div class="pull-right">&nbsp;</div>
                 <div class="pull-right">
                   <span class="small">Time scale:</span><br>
-                  <div class="btn-group" data-toggle="buttons" id="energybtnA">
-                    <label class="btn btn-default btn-xs" id="energy_year" data-toggle="tooltip" title="Zoom the graph to one year, keeping current aggregation level while possible">
-                      <input type="radio" name="energy_chart_range" value="year"/>Year
-                    </label>
-                    <label class="btn btn-default btn-xs" id="energy_month" data-toggle="tooltip" title="Zoom the graph to one month, keeping current aggregation level while possible">
-                      <input type="radio" name="energy_chart_range" value="month"/>Month
-                    </label>
-                    <label class="btn btn-default btn-xs" id="energy_week" data-toggle="tooltip" title="Zoom the graph to one week, keeping current aggregation level while possible">
-                      <input type="radio" name="energy_chart_range" value="week"/>Week
-                    </label>
-                    <label class="btn btn-default btn-xs" id="energy_day" data-toggle="tooltip" title="Zoom the graph to one day, keeping current aggregation level while possible">
-                      <input type="radio" name="energy_chart_range" value="day"/>Day
-                    </label>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEnergyYear"  data-toggle="tooltip" title="Zoom the graph to one year, keeping current aggregation level while possible">Year</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEnergyMonth" data-toggle="tooltip" title="Zoom the graph to one month, keeping current aggregation level while possible">Month</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEnergyWeek"  data-toggle="tooltip" title="Zoom the graph to one week, keeping current aggregation level while possible">Week</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEnergyDay"   data-toggle="tooltip" title="Zoom the graph to one day, keeping current aggregation level while possible">Day</button>
                   </div>
                 </div>
                 <div class="pull-right">&nbsp;</div>
                 <div class="pull-right">
                   <span class="small">Aggregation scale:</span><br>
-                  <div class="btn-group" data-toggle="buttons" id="energybtnB">
-                    <label class="btn btn-default btn-xs" id="energy_3s" data-toggle="tooltip" title="Fetch graph from 3 seconds aggregation">
-                      <input type="radio" name="energy_chart_range" value="3s"/>3 Seg
-                    </label>
-                    <label class="btn btn-default btn-xs" id="energy_1m" data-toggle="tooltip" title="Fetch graph from 1 minute aggregation">
-                      <input type="radio" name="energy_chart_range" value="1m"/>1 Min
-                    </label>
-                    <label class="btn btn-default btn-xs" id="energy_10m" data-toggle="tooltip" title="Fetch graph from 10 minutes aggregation">
-                      <input type="radio" name="energy_chart_range" value="10m"/>10 Min
-                    </label>
-                    <label class="btn btn-default btn-xs" id="energy_1h" data-toggle="tooltip" title="Fetch graph from 1 hour aggregation">
-                      <input type="radio" name="energy_chart_range" value="1h"/>1 Hour
-                    </label>
+                  <div class="btn-group">
+                    <button class="btn btn-default btn-xs" id="btnEnergy3S"  data-toggle="tooltip" title="Fetch graph from 3 seconds aggregation">3 Seconds</button>
+                    <button class="btn btn-default btn-xs" id="btnEnergy1M"  data-toggle="tooltip" title="Fetch graph from 1 minute aggregation">1 Minute</button>
+                    <button class="btn btn-default btn-xs" id="btnEnergy10M" data-toggle="tooltip" title="Fetch graph from 10 minutes aggregation">10 Minutes</button>
+                    <button class="btn btn-default btn-xs" id="btnEnergy1H"  data-toggle="tooltip" title="Fetch graph from 1 hour aggregation">1 Hour</button>
                   </div>
                 </div>
-                <span class="clearfix"> </span>
+                <span class="clearfix"></span>
               </div>
               <div class="row">
                 <div class="col-md-6 col-lg-3">
@@ -133,17 +103,17 @@
                     <div class="col-xs-6 col-md-12">
                       <div class="panel panel-lightblue-info" id="EnergyBox">
                         <h4 id="EnergyPeriod">Today</h4>
-                        <span id="energy_integer" class="huge">?</span>
-                        <span id="energy_decimal" class="huge-small"></span>&nbsp;<em class="huge-small-unit" id="EnergyUnits">kWh</em>
-                        <p><span id="PrevEnergyPeriod">Yesterday</span>&nbsp;<span id="PrevEnergy">?</span>&nbsp;<em class="small" id="PrevEnergyUnits">kWh</em></p>
+                        <span id="labelEnergyInteger" class="huge">?</span>
+                        <span id="labelEnergyDecimal" class="huge-small"></span>&nbsp;<em class="huge-small-unit" id="labelEnergyUnits">kWh</em>
+                        <p><span id="labelPrevEnergyPeriod">Yesterday</span>&nbsp;<span id="labelPrevEnergy">?</span>&nbsp;<em class="small" id="labelPrevEnergyUnits">kWh</em></p>
                       </div>
                     </div>
                     <div class="col-xs-6 col-md-12">
                       <div class="panel panel-lightblue-info" id="BudgetBox">
-                        <h4><span id="BudgetPeriod">Today</span> budget</h4>
-                        <span id="budget_integer" class="huge">?</span>
-                        <span id="budget_decimal" class="huge-small"></span>&nbsp;<em class="huge-small-unit">€</em>
-                        <p>Up to <span id="budget_lastcalc">?</span></p>
+                        <h4><span id="labelBudgetPeriod">Today</span> budget</h4>
+                        <span id="labelBudgetInteger" class="huge">?</span>
+                        <span id="labelBudgetDecimal" class="huge-small"></span>&nbsp;<em class="huge-small-unit" id="labelBudgetUnits">€</em>
+                        <p>Up to <span id="labelBudget_LastCalc">?</span></p>
                       </div>
                     </div>
                   </div>
@@ -154,41 +124,37 @@
                       <div style="display:inline-block" id="EnergyAggregation">Loading data...</div>
                       <div id="EnergyLegend" style="float: right"></div>
                     </div>
-                    <div id="energy_chart" class="chart big_chart"></div>
+                    <div id="EnergyChart" class="chart big_chart"></div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <!-- /.col-lg-12 -->
         </div>
-        <!-- /.row -->
         <div class="row">
           <div class="col-md-6">
             <div class="panel panel-red" id="VoltagePanel">
               <div class="panel-heading big-heading">
                 <div class="row">
                   <div class="col-xs-6 col-md-2 col-lg-4">
-                    <span class="huge">V</span><span class="huge-small hidden-md">oltage</span>
+                    <span class="huge">Voltage</span>
                   </div>
                   <div class="col-xs-6  col-md-10 col-lg-8 text-right">
-                    <span id="voltage_now_integer" class="huge">?</span>
-                    <span id="voltage_now_decimal" class="huge-small"></span>
-                    <em class="huge-small-unit">V</em>
+                    <span id="labelVoltageInteger" class="huge">?</span><span id="labelVoltageDecimal" class="huge-small"></span><em class="huge-small-unit">V</em>
                   </div>
                 </div>
               </div>
               <div class="panel-body no-padding" id="VoltageCol">
                 <div id="VoltageMaximizeDiv">
                   <div style="padding:5px">
-                    <div style="display:inline-block" id="VoltageAggregation">Loading data...</div>
+                    <div style="display:inline-block" id="labelVoltageAggregation">Loading data...</div>
                     <div id="VoltageLegend" style="float: right"></div>
                   </div>
-                  <div id="voltage_chart" class="chart"></div>
+                  <div id="VoltageChart" class="chart"></div>
                 </div>
               </div>
               <div class="panel-footer">
-                <a href="<?= site_url('analysis/voltage') ?>">
+                <a href="analysis/voltage">
                   <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
                 </a>
                 <div class="btn-group pull-right">
@@ -201,18 +167,10 @@
                 </div>
                 <div class="pull-right">&nbsp;</div>
                 <div class="btn-group pull-right">
-                  <button type="button" class="btn btn-default btn-xs disabled" id="btnExportVoltage" data-toggle="tooltip" title="Show phases average">
-                    AVG
-                  </button>
-                  <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase A">
-                    R
-                  </button>
-                  <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase B">
-                    S
-                  </button>
-                  <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase C">
-                    T
-                  </button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageAvgPhases" data-toggle="tooltip" title="Show phases average">AVG</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageRPhase"    data-toggle="tooltip" title="Show phase R">R</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageSPhase"    data-toggle="tooltip" title="Show phase S">S</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageTPhase"    data-toggle="tooltip" title="Show phase T">T</button>
                 </div>
                 <div class="clearfix"></div>
               </div>
@@ -242,34 +200,20 @@
                 </div>
               </div>
               <div class="panel-footer">
-                <a href="<?= site_url('analysis/current') ?>">
+                <a href="analysis/current">
                   <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
                 </a>
                 <div class="btn-group pull-right">
-                  <button type="button" class="btn btn-default btn-xs" id="btnExportCurrent" data-toggle="tooltip" title="Export data to CSV file">
-                    <i class="fa fa-table fa-fw"></i>
-                  </button>
-                  <button type="button" class="btn btn-default btn-xs pull-right" id="maximizeCurrent">
-                    <i class="fa fa-expand"></i>
-                  </button>
+                  <button type="button" class="btn btn-default btn-xs" id="btnExportCurrent" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
+                  <button type="button" class="btn btn-default btn-xs pull-right" id="btnMaximizeCurrent"><i class="fa fa-expand"></i></button>
                 </div>                
                 <div class="pull-right">&nbsp;</div>
                 <div class="btn-group pull-right">
-                  <button type="button" class="btn btn-default btn-xs disabled" id="btnExportVoltage" data-toggle="tooltip" title="Show phases average">
-                    AVG
-                  </button>
-                  <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase A">
-                    N
-                  </button>
-                  <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase A">
-                    R
-                  </button>
-                  <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase B">
-                    S
-                  </button>
-                  <button type="button" class="btn btn-default btn-xs disabled" id="maximizeVoltage" data-toggle="tooltip" title="Show phase C">
-                    T
-                  </button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowCurrentAvgPhases" data-toggle="tooltip" title="Show phases average">AVG</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowCurrentNPhase" data-toggle="tooltip" title="Show phase A">N</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowCurrentRPhase" data-toggle="tooltip" title="Show phase A">R</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowCurrentSPhase" data-toggle="tooltip" title="Show phase B">S</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowCurrentTPhase" data-toggle="tooltip" title="Show phase C">T</button>
                 </div>
                 <div class="clearfix"></div>
               </div>
@@ -301,12 +245,21 @@
                 </div>
               </div>
               <div class="panel-footer">
-                <a href="<?= site_url('analysis/energy') ?>">
+                <a href="analysis/energy">
                   <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
                 </a>
-                <button type="button" class="btn btn-default btn-xs pull-right" id="maximizePower">
-                  <i class="fa fa-expand"></i>
-                </button>
+                <div class="btn-group pull-right">
+                  <button type="button" class="btn btn-default btn-xs" id="btnExportPower" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
+                  <button type="button" class="btn btn-default btn-xs pull-right" id="btnMaximizePower"><i class="fa fa-expand"></i></button>
+                </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="btn-group pull-right">
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowPowerSumPhases" data-toggle="tooltip" title="Show phases sum">SUM</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowPowerNPhase" data-toggle="tooltip" title="Show phase A">N</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowPowerRPhase" data-toggle="tooltip" title="Show phase A">R</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowPowerSPhase" data-toggle="tooltip" title="Show phase B">S</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowPowerTPhase" data-toggle="tooltip" title="Show phase C">T</button>
+                </div>
                 <div class="clearfix"></div>
               </div>
             </div>
@@ -335,18 +288,18 @@
                 </div>
               </div>
               <div class="panel-footer">
-                <a href="<?= site_url('analysis/frequency') ?>">
+                <a href="analysis/frequency">
                   <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
                 </a>
-                <button type="button" class="btn btn-default btn-xs pull-right" id="maximizeFrequency">
-                  <i class="fa fa-expand"></i>
-                </button>
+                <div class="btn-group pull-right">
+                  <button type="button" class="btn btn-default btn-xs" id="btnExportFrequency" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
+                  <button type="button" class="btn btn-default btn-xs pull-right" id="maximizeFrequency"><i class="fa fa-expand"></i></button>
+                </div>
                 <div class="clearfix"></div>
               </div>
             </div>
           </div>
         </div>
-        <!-- /.row -->
         <div class="row">
           <div class="col-lg-12">
             <div class="panel panel-default" id="MainParamPanel">
@@ -357,24 +310,24 @@
             </div>
           </div>
         </div>
-        <!-- /.row -->
       </div>
-      <!-- /#page-wrapper -->
     </div>
-    <!-- /#wrapper -->
+    <script src="lib/cookie.min.js"></script>
     <script src="lib/jquery.min.js"></script>
     <script src="lib/bootstrap/js/bootstrap.min.js"></script>
     <script src="lib/metisMenu/metisMenu.min.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/common.js"></script>
+    <script src="lib/spin.js/spin.min.js"></script>
     <script src="lib/dygraph/dygraph.js"></script>
     <script src="lib/dygraph/crosshair.js"></script>
     <script src="lib/dygraph/dygraph-interaction.js"></script>
-    <script src="lib/jquery.lineProgressbar/jquery.lineProgressbar.js"></script>
-    <script src="lib/spin.js/spin.min.js"></script>
     <script src="lib/dygraph/chart-plotter.js"></script>
-    <script src="lib/dygraph/crosshair.js"></script>
     <script src="lib/dygraph/synchronize.js"></script>
+    <script src="lib/jquery.lineProgressbar/jquery.lineProgressbar.js"></script>
+    <script src="js/common.js"></script>
     <script src="js/dashboard.js"></script>
+
+    <script>
+      StartPageLoad();
+    </script>
   </body>
 </html>

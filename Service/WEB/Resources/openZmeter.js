@@ -28,6 +28,11 @@ function Round2(value) {
     }
   }
 }
+function MenuSelection() {
+  if(document.title === 'Dashboard') 
+  
+}
+
 function UpdateHeader(result) {
   if(result.sysinfo) {
     $('#ProgressCPU').LineProgressbar( { percentage: result.sysinfo.cpu, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });

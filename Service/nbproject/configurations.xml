@@ -38,7 +38,6 @@
           </logicalFolder>
           <itemPath>WEB/Resources/js/Login.js</itemPath>
           <itemPath>WEB/Resources/js/account.js</itemPath>
-          <itemPath>WEB/Resources/js/common.js</itemPath>
           <itemPath>WEB/Resources/js/dashboard.js</itemPath>
           <itemPath>WEB/Resources/js/live.js</itemPath>
           <itemPath>WEB/Resources/js/settings.js</itemPath>
@@ -161,6 +160,7 @@
             <itemPath>WEB/Resources/lib/dygraph/dygraph-combined_back.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/dygraph-interaction.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/dygraph.js</itemPath>
+            <itemPath>WEB/Resources/lib/dygraph/dygraph.min.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/synchronize.js</itemPath>
           </logicalFolder>
           <logicalFolder name="flot" displayName="flot" projectFiles="true">
@@ -465,6 +465,7 @@
         </logicalFolder>
         <itemPath>WEB/Resources/CommonHeader.html</itemPath>
         <itemPath>WEB/Resources/favicon.ico</itemPath>
+        <itemPath>WEB/Resources/openZmeter.js</itemPath>
       </logicalFolder>
       <logicalFolder name="Views" displayName="Views" projectFiles="true">
         <logicalFolder name="analysis" displayName="analysis" projectFiles="true">
@@ -641,8 +642,6 @@
             ex="false"
             tool="3"
             flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/common.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/js/dashboard.js" ex="false" tool="3" flavor2="0">
       </item>
@@ -1028,6 +1027,11 @@
             flavor2="0">
       </item>
       <item path="WEB/Resources/lib/dygraph/dygraph.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/lib/dygraph/dygraph.min.js"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1866,6 +1870,8 @@
             flavor2="0">
       </item>
       <item path="WEB/Resources/lib/visjs/vis.min.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/openZmeter.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Settings.php" ex="false" tool="3" flavor2="0">
       </item>
