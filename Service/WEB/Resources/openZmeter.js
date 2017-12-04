@@ -1,3 +1,25 @@
+/* Opciones por defecto del spinner */
+var SpinnerOpts         = { lines: 10, // The number of lines to draw
+                            length: 10, // The length of each line
+                            width: 5, // The line thickness
+                            radius: 10, // The radius of the inner circle
+                          };
+/* Añade los flag de eventos a una grafica */
+function AddEvents(result, serieName, graph) {
+  var Events = graph.annotations();
+  for(i = 0; i < result['sampletime'].length; i++) {
+    if(result['flag'][i] === false) continue;
+    var EventID = {
+      series: serieName,
+      xval: result['Sampletime'][i] * 1000 + 1000,
+      shortText: 'EVT',
+      text: "Este periodo esta marcado por que contiene un evento"
+    };
+    Events.push(EventID);
+  }
+  graph.setAnnotations(Events);
+}
+
 /* Convierte un numero a cadena con dos decimales y muestra el valor en los huecos que se pasen */
 function Round2Labels(value, integer, fraction) {
   if(isNaN(value)) {
@@ -6,7 +28,7 @@ function Round2Labels(value, integer, fraction) {
   } else {
     var parts = (value + "").split(".");
     integer.text(parts[0]);
-    if(parts.length == 1) {
+    if(parts.length === 1) {
       fraction.text('.00');
     } else {
       parts[1] = parts[1] + "0";
@@ -14,13 +36,14 @@ function Round2Labels(value, integer, fraction) {
     }
   }
 }
+
 /* Retorna un numero como cadena con dos decimales */
 function Round2(value) {
   if(isNaN(value)) {
     return '?';
   } else {
     var parts = (value + "").split(".");
-    if(parts.length == 1) {
+    if(parts.length === 1) {
       return parts[0] + '.00';
     } else {
       parts[1] = parts[1] + "0";
@@ -28,9 +51,61 @@ function Round2(value) {
     }
   }
 }
-function MenuSelection() {
-  if(document.title === 'Dashboard') 
+
+/* Actualiza el texto de la cabecera y lanza una nueva llamada de forma periodica */
+function UpdateIndicators() {
   
+}
+
+/* Actualiza el desplegable de nodos disponibles y selecciona el que este activo para la sesion */
+var Nodes = [];
+var Node = parseInt(Cookies.get("SelNode"));
+function GetNodesCompletes(result) {
+  Nodes = result;
+  if(!Node) {
+    Cookies.set("SelNode", 0);
+    Node = 0;
+  }
+  for(i = 0; i < result['IDs'].length; i++) {
+    $('#SourceList').append(' <li><a href="">' + result['Names'][i] + ' (' + result['Type'][i] + ')</a></li>');
+    if(i === Node) $('#SourceSel').text(result['Names'][i] + ' (' + result['Type'][i] + ')');
+  }
+  UpdateIndicators();
+  UpdatePage();
+}
+
+/* Selecciona el apartado en el menu segun la pagina cargada */
+function MenuSelect() {
+  $.ajax({ url: "getNodes",
+    timeout: 20000,
+    type: "POST",
+    dataType: "json",
+    success: GetNodesCompletes
+  });
+  $('#side-menu').metisMenu();
+  var url = window.location;
+  var element = $('ul.nav a').filter(function () {
+    return this.href === url || url.href.indexOf(this.href) === 0;
+  }).addClass('active').parent().parent().addClass('in').parent();
+  if(element.is('div')) {
+    element.addClass('active');
+  } else {
+    $('#side-menu li > a').first().addClass('active');
+  }
+}
+
+/* Genera la secuencia de pasos una vez cargado todo el javascript para mostrar la pagina */
+function StartPageLoad() {
+  $('#Header').load("CommonHeader.html", null, MenuSelect);
+  $(window).bind("load resize", function () {
+    width = (this.window.innerWidth > 0) ? this.window.innerWidth : this.screen.width;
+    if(width < 768) {
+      $('div.navbar-collapse').addClass('collapse');
+    } else {
+      $('div.navbar-collapse').removeClass('collapse');
+    }
+    $("#page-wrapper").css("margin-top", ($("#Header").height() + 15) + "px");
+  });  
 }
 
 function UpdateHeader(result) {

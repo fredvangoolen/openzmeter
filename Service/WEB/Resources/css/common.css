@@ -63,8 +63,7 @@ ul.nav.navbar-top-links.navbar-right > li > a{
 @media(min-width:768px) {
     #page-wrapper {
         position: inherit;
-        margin: 50px 0 0 160px;
-        padding: 30px 30px;
+        margin: 65px 0 0 160px;
     }
 }
 
@@ -423,16 +422,15 @@ label.btn:active, label.btn.active {
 }
 
 .huge {
-    font-size: 8vw;
-    line-height: 5vw;
+    font-size: 40px;
 }
 
 .huge-small{
-    font-size: 5vw;
+    font-size: 36px;
 }
 
 .huge-small-unit{
-    font-size: 4vw;
+    font-size: 36px;
 }
 
 .fa-5x{
@@ -452,23 +450,7 @@ label.btn:active, label.btn.active {
     height: 300px;
 }
 
-@media(min-width:992px) {
-    .huge {
-        font-size: 4.5vw;
-    }
 
-    .huge-small{
-        font-size: 2.8vw;
-    }
-
-    .huge-small-unit{
-        font-size: 2vw;
-    }
-
-    .fa-5x{
-        font-size: 4vw;
-    }
-}
 
 .panel.maximized{
     top: 51px;
@@ -601,7 +583,13 @@ For energy chart in dashboard
 .panel-purple a:hover {
     color: #4c5b83;
 }
-
+.panel-lightpurple-info {
+  padding: 0px 5px;
+  color: #314190;
+  margin: 5px;
+  border-color: #d9def7;
+  background-color: #eef1fb;
+}
 .panel-lightblue-info {
   padding: 0px 5px;
   color: #31708f;
@@ -623,23 +611,32 @@ For energy chart in dashboard
   border-color: #efbab8;
   background-color: #fbf0f0;
 }
-
-
-.indicator{
-    margin-bottom: 0px;
-    margin-top: 0px;
+.panel-lightgreen-info {
+  padding: 0px 5px;
+  color: #1a3f1a;
+  margin: 5px;
+  border-color: #b3e0b3;
+  background-color: #e9f6e9;  
 }
 
-.indicator .panel-heading{
-    padding: 5px 5px;
-    font-size: 14px;
+.indicators {
+  display: inline-block;
+  text-align: center;
+  padding: 6px 6px;
+}
+.indicator {
+
+  display: inline-block;
+  margin: 2px;
 }
 
-.indicators{
-    display:inline-block;
-    height: 50px;
-    padding: 8px 0px;
+.indicator .panel-heading {
+  text-align: center;
+  padding: 1px 5px;
+  font-size: 12px;
 }
+
+
 
 /**
 * DYGRAPH

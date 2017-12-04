@@ -205,6 +205,11 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
     Request->PostResponseLen = strlen(Request->PostData);
     return MHD_YES;
   }
+  if(strcmp(url, "/getNodes") == 0) {
+    Request->PostData = "{ \"IDs\": [0,1], \"Names\": [\"Principal\", \"Secundario\"], \"State\" : [true, false], \"Type\": [\"3Phase\", \"1Phase\"], \"SampleFreq\": [15625, 15625], \"NominalVoltage\": [230, 230], \"MaxCurrent\": [20, 20] }";
+    Request->PostResponseLen = strlen(Request->PostData);
+    return MHD_YES;
+  }
   if(strcmp(url, "/dashboard/getSeriesData") == 0) {
     uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
     bool     IncludeFlag = false;
