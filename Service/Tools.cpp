@@ -190,6 +190,8 @@ bool Tools::Config_Handler(char *section, char *param, char *value) {
       Global.Log = strdup(value);
     } else if(strcmp(param, "pid") == 0) {
       Global.Pid = strdup(value);
+    } else if(strcmp(param, "httpPort") == 0) {
+      Global.HTTPPort = atoi(value);
     }
   } else if(strcmp(section, "database") == 0) {
     if(strcmp(param, "port") == 0) {

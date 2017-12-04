@@ -1,17 +1,17 @@
 /* Opciones por defecto del spinner */
-var SpinnerOpts         = { lines: 10, // The number of lines to draw
+var SpinnerOpts         = { lines: 10,  // The number of lines to draw
                             length: 10, // The length of each line
-                            width: 5, // The line thickness
-                            radius: 10, // The radius of the inner circle
+                            width: 5,   // The line thickness
+                            radius: 10  // The radius of the inner circle
                           };
 /* Añade los flag de eventos a una grafica */
 function AddEvents(result, serieName, graph) {
   var Events = graph.annotations();
-  for(i = 0; i < result['sampletime'].length; i++) {
+  for(i = 0; i < result['Sampletime'].length; i++) {
     if(result['flag'][i] === false) continue;
     var EventID = {
       series: serieName,
-      xval: result['Sampletime'][i] * 1000 + 1000,
+      xval: result['Sampletime'][i],
       shortText: 'EVT',
       text: "Este periodo esta marcado por que contiene un evento"
     };
@@ -109,6 +109,14 @@ function StartPageLoad() {
     $("#page-wrapper").css("margin-top", ($("#Header").height() + 15) + "px");
   });  
 }
+
+
+
+
+
+
+
+
 
 function UpdateHeader(result) {
   if(result.sysinfo) {

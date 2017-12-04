@@ -36,9 +36,9 @@
             <itemPath>WEB/Resources/js/events/events.js</itemPath>
             <itemPath>WEB/Resources/js/events/itic.js</itemPath>
           </logicalFolder>
+          <itemPath>WEB/Resources/Dashboard.js</itemPath>
           <itemPath>WEB/Resources/js/Login.js</itemPath>
           <itemPath>WEB/Resources/js/account.js</itemPath>
-          <itemPath>WEB/Resources/js/dashboard.js</itemPath>
           <itemPath>WEB/Resources/js/live.js</itemPath>
           <itemPath>WEB/Resources/js/settings.js</itemPath>
           <itemPath>WEB/Resources/js/stats.js</itemPath>
@@ -598,6 +598,8 @@
       </item>
       <item path="WEB/Resources/CommonHeader.html" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="WEB/Resources/Dashboard.js" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="WEB/Resources/css/common.css" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/css/login.css" ex="false" tool="3" flavor2="0">
@@ -643,8 +645,6 @@
             ex="false"
             tool="3"
             flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/dashboard.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/js/events/disturbances.js"
             ex="false"

@@ -16,41 +16,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* Solicito datos para grafico de tension de forma periodica */
+/* Grafica de tension */
 var VoltageChart        = null;
 var LastVoltageSample   = 0;
 var VoltageData         = [];
 var VoltageSpinner      = new Spinner(SpinnerOpts);
 function AjaxGetVoltage() {
-  if(LastTimestamp == 0) {
+  if(LastVoltageSample === 0) {
     $('#VoltagePanel').find("*").prop("disabled", true);
     $('#VoltagePanel').css('opacity', '0.6');
     $('#VoltagePanel').append('<div id="SpinnerDivVoltage" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
     VoltageSpinner.spin(document.getElementById('SpinnerDivVoltage'));
   }
-  $.ajax({ url: "dashboard/getSeriesData",
+  $.ajax({ url: "getSeriesData",
            timeout: 20000,
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200, To: 0, Aggreg: "3s", LastSample: LastVoltageSample, Series: 'rms_v, flag', Node: Nodes['IDs'][Node] }),
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastVoltageSample, Series: 'rms_v, flag', Node: Nodes['IDs'][Node] }),
            success: AjaxVoltage
         });
 }
 function AjaxVoltage(result) {
   setTimeout(AjaxGetVoltage, 5000);
-  if((result === null) || (result['sampletime'] === null)) return;
+  if((result === null) || (result['Sampletime'] === null)) return;
   if(LastVoltageSample === 0) {
     VoltageSpinner.stop();
     $('#SpinnerDivVoltage').remove();
     $('#VoltagePanel').css('opacity', '1.0');
     $('#VoltagePanel').find("*").prop("disabled", false);    
   }
-  if(result['sampletime'][0] <= LastVoltageSample) return;
-  for(i = 0; i < result['sampletime'].length; i++) {
-    VoltageData.push([new Date(result['sampletime'][i] * 1000), result['rms_v'][i][0]]);
-    while(VoltageData.length > result['max_samples'])   VoltageData.shift();
-    LastVoltageSample = result['sampletime'][i];
+  if(result['Sampletime'][0] <= LastVoltageSample) return;
+  for(i = 0; i < result['Sampletime'].length; i++) {
+    VoltageData.push([new Date(result['Sampletime'][i]), result['rms_v'][i][0]]);
+    while(VoltageData.length > result['MaxSamples'])   VoltageData.shift();
+    LastVoltageSample = result['Sampletime'][i];
   }
   var UpperRange = -Infinity;
   var LowerRange =  Infinity;
@@ -62,8 +62,8 @@ function AjaxVoltage(result) {
   var Variation = (UpperRange - LowerRange);
   if(Variation < 1) Variation = 1.0;
   UpperRange = UpperRange + Variation * 0.1;
-  LowerRange = LowerRange - Variation * 0.1;
-  $('#labelVoltageAggregation').text('From ' + result['aggregation_source'] + ' aggregation');
+  LowerRange = Math.max(0, LowerRange - Variation * 0.1);
+  $('#labelVoltageAggregation').text('From ' + result['Aggregation_Source'] + ' aggregation');
   if(VoltageChart === null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"),
       VoltageData,
@@ -85,7 +85,7 @@ function AjaxVoltage(result) {
           })
         ],
         valueRange: [LowerRange, UpperRange],
-        dateWindow: [LastVoltageSample * 1000 - 7200000, LastVoltageSample * 1000],
+        dateWindow: [LastVoltageSample - 7200000, LastVoltageSample],
         interactionModel: {},
         underlayCallback: function(canvas, area, g) {
           var NominalVoltage = Nodes['NominalVoltage'][Node];
@@ -126,79 +126,71 @@ function AjaxVoltage(result) {
       }
     );
   } else {
-    VoltageChart.updateOptions({'file': VoltageData, valueRange: [LowerRange, UpperRange], dateWindow: [(LastVoltageSample * 1000) - 7200000, (LastVoltageSample * 1000)]});
+    VoltageChart.updateOptions({'file': VoltageData, valueRange: [LowerRange, UpperRange], dateWindow: [LastVoltageSample - 7200000, LastVoltageSample]});
   }
   AddEvents(result, "Voltage", VoltageChart);
-
-
-  result.lastVoltage = VoltageData[VoltageData.length - 1][1];
-    result.lastCurrent = CurrentData[CurrentData.length - 1][1];
-    result.lastPower = PowerData[PowerData.length - 1][1];
-    result.lastFrequency = FrequencyData[FrequencyData.length - 1][1];
-  
-  UpdateHeader(result);
 }
+$('#maximizeVoltage').click(function() {
+  $('#GraphDialogTitle').text('Voltage');
+  $('#GraphDialog').modal('show');
+  PrevDialogContainer = $('#VoltageCol');
+  DialogElement = $('#VoltageMaximizeDiv').detach();
+  DialogPrevResizeHandler = function() {
+    $(VoltageChart.graphDiv).parent().removeAttr('style');
+  };
+  DialogResizeHandler = function() {
+    VoltageChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
+  };
+  $('#GraphDialogBody').append(DialogElement);
+  $(window).bind('resize', DialogResizeHandler);
+  window.dispatchEvent(new Event('resize'));  
+});
+$('#btnExportVoltage').click(function() {
+  var Data = [];
+  var Filename = "Voltage_" + LastTimestamp + '.csv';
+  Data.push([['Index', 'Voltage']]);
+  Data = Data.concat(VoltageData);
+  exportToCsv(Filename, Data);
+  $(this).removeClass('active');
+  $(this).blur();
+});
 
-
-
-var DialogElement           = null;
-var PrevDialogContainer     = null;
-var DialogResizeHandler     = null;
-var DialogPrevResizeHandler = null;
-var LastTimestamp       = 0;
-var EnergyTimeScale     = 'Day';
-var EnergyKeepNow       = true;
-var LastEnergyTime      = 0;
-var EnergyData          = [];
-var EvolutionDatasets   = [[],[],[],[],[],[]];
-var EvolutionCharts     = [];
-var LastEvolutionSample = 0;
+/* Grafica de corriente */
 var CurrentChart        = null;
-var PowerChart          = null;
-var FrequencyChart      = null;
-var EnergyChart         = null;
-var PowerChartUnits     = 'W';
-var EnergyChartUnits    = 'Wh';
-var EnergyAggregation   = '10m';
-
+var LastCurrentSample   = 0;
 var CurrentData         = [];
-var PowerData           = [];
-var FrequencyData       = [];
-
-var MaxCurrent          = 20;
-
-var EnergySpinner       = new Spinner(SpinnerOpts);
-
 var CurrentSpinner      = new Spinner(SpinnerOpts);
-var PowerSpinner        = new Spinner(SpinnerOpts);
-var FrequencySpinner    = new Spinner(SpinnerOpts);
-var MainParamSpinner    = new Spinner(SpinnerOpts);
-function AjaxSuccess5S(result) {
-  if(result != null && Object.keys(result).length > 0) {
-    if(result['sampletime'][0] <= LastTimestamp) return;
-    for(i = 0; i < result['sampletime'].length; i++) {
-//      VoltageData.push([new Date(result['sampletime'][i] * 1000), result['rms_v'][i][0]]);
-      CurrentData.push([new Date(result['sampletime'][i] * 1000), result['rms_i'][i][0]]);
-      PowerData.push([new Date(result['sampletime'][i] * 1000), result['active_power'][i][0]]);
-      FrequencyData.push([new Date(result['sampletime'][i] * 1000), result['freq'][i]]);
-//      while(VoltageData.length > result['max_samples'])   VoltageData.shift();
-      while(CurrentData.length > result['max_samples'])   CurrentData.shift();
-      while(PowerData.length > result['max_samples'])     PowerData.shift();
-      while(FrequencyData.length > result['max_samples']) FrequencyData.shift();
-      LastTimestamp = result['sampletime'][i];
-    }
-//    UpdateVoltageChart(result);
-    UpdateCurrentChart(result);
-    UpdatePowerChart(result);
-    UpdateFrequencyChart(result);
-    result.lastVoltage = VoltageData[VoltageData.length - 1][1];
-    result.lastCurrent = CurrentData[CurrentData.length - 1][1];
-    result.lastPower = PowerData[PowerData.length - 1][1];
-    result.lastFrequency = FrequencyData[FrequencyData.length - 1][1];
+function AjaxGetCurrent() {
+  if(LastCurrentSample === 0) {
+    $('#CurrentPanel').find("*").prop("disabled", true);
+    $('#CurrentPanel').css('opacity', '0.6');
+    $('#CurrentPanel').append('<div id="SpinnerDivCurrent" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
+    VoltageSpinner.spin(document.getElementById('SpinnerDivCurrent'));
   }
-  UpdateHeader(result);
+  $.ajax({ url: "getSeriesData",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastCurrentSample, Series: 'rms_i', Node: Nodes['IDs'][Node] }),
+           success: AjaxCurrent
+        });
 }
-function UpdateCurrentChart(result) {
+function AjaxCurrent(result) {
+  setTimeout(AjaxGetCurrent, 5000);
+  if((result === null) || (result['Sampletime'] === null)) return;
+  if(LastCurrentSample === 0) {
+    CurrentSpinner.stop();
+    $('#SpinnerDivCurrent').remove();
+    $('#CurrentPanel').css('opacity', '1.0');
+    $('#CurrentPanel').find("*").prop("disabled", false);    
+  }
+  if(result['Sampletime'][0] <= LastCurrentSample) return;
+  for(i = 0; i < result['Sampletime'].length; i++) {
+    CurrentData.push([new Date(result['Sampletime'][i]), result['rms_i'][i][0]]);
+    while(CurrentData.length > result['MaxSamples']) CurrentData.shift();
+    LastCurrentSample = result['Sampletime'][i];
+  }
   var UpperRange = -1000000;
   var LowerRange = 1000000;
   var Avg = 0;
@@ -212,9 +204,9 @@ function UpdateCurrentChart(result) {
   if(Variation < 1) Variation = 1.0;
   UpperRange = UpperRange + Variation * 0.1;
   LowerRange = LowerRange - Variation * 0.1;
-  $('#CurrentAggregation').text('From ' + result['aggregation_source'] + ' aggregation');
+  $('#CurrentAggregation').text('From ' + result['Aggregation_Source'] + ' aggregation');
   if(CurrentChart == null) {
-    CurrentChart = new Dygraph(document.getElementById("current_chart"),
+    CurrentChart = new Dygraph(document.getElementById("CurrentChart"),
       CurrentData,
       { strokeWidth: 1,
         labelsDiv: "CurrentLegend",
@@ -234,9 +226,10 @@ function UpdateCurrentChart(result) {
           })
         ],
         valueRange: [LowerRange, UpperRange],
-        dateWindow: [LastTimestamp - 7200000, LastTimestamp],
+        dateWindow: [LastCurrentSample - 7200000, LastCurrentSample],
         interactionModel: {},
         underlayCallback: function(canvas, area, g) {
+          var MaxCurrent = Nodes['MaxCurrent'][Node];
           var YellowLowA = g.toDomYCoord(MaxCurrent);
           var YellowHeightA = g.toDomYCoord(MaxCurrent - MaxCurrent * 0.10) - YellowLowA;
           var YellowLowB = g.toDomYCoord(-MaxCurrent + MaxCurrent * 0.10);
@@ -274,11 +267,47 @@ function UpdateCurrentChart(result) {
       }
     );
   } else {
-    CurrentChart.updateOptions({'file': CurrentData, valueRange: [LowerRange, UpperRange], dateWindow: [(LastTimestamp * 1000) - 7200000, (LastTimestamp * 1000)]});
+    CurrentChart.updateOptions({'file': CurrentData, valueRange: [LowerRange, UpperRange], dateWindow: [LastCurrentSample - 7200000, LastCurrentSample]});
   }
-  AddEvents(result, "Current", CurrentChart);
 }
-function UpdatePowerChart(result) {
+
+/* Grafica de potencia */
+var PowerChart          = null;
+var LastPowerSample     = 0;
+var PowerData           = [];
+var PowerChartUnits     = 'W';
+var PowerSpinner        = new Spinner(SpinnerOpts);
+function AjaxGetPower() {
+  if(LastPowerSample === 0) {
+    $('#PowerPanel').find("*").prop("disabled", true);
+    $('#PowerPanel').css('opacity', '0.6');
+    $('#PowerPanel').append('<div id="SpinnerDivPower" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
+    PowerSpinner.spin(document.getElementById('SpinnerDivPower'));
+  }
+  $.ajax({ url: "getSeriesData",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastPowerSample, Series: 'active_power', Node: Nodes['IDs'][Node] }),
+           success: AjaxPower
+        });
+}
+function AjaxPower(result) {
+  setTimeout(AjaxGetPower, 5000);
+  if((result === null) || (result['Sampletime'] === null)) return;
+  if(LastPowerSample === 0) {
+    PowerSpinner.stop();
+    $('#SpinnerDivPower').remove();
+    $('#PowerPanel').css('opacity', '1.0');
+    $('#PowerPanel').find("*").prop("disabled", false);    
+  }
+  if(result['Sampletime'][0] <= LastPowerSample) return;
+  for(i = 0; i < result['Sampletime'].length; i++) {
+    PowerData.push([new Date(result['Sampletime'][i]), result['active_power'][i][0]]);
+    while(PowerData.length > result['MaxSamples']) PowerData.shift();
+    LastPowerSample = result['Sampletime'][i];
+  }
   var UpperRange = -1000000;
   var LowerRange = 1000000;
   for (i = 0; i < PowerData.length; i++) {
@@ -306,7 +335,7 @@ function UpdatePowerChart(result) {
     toShow = PowerData;
     PowerChartUnits = 'W';
   }
-  $('#PowerAggregation').text('From ' + result['aggregation_source'] + ' aggregation');
+  $('#PowerAggregation').text('From ' + result['Aggregation_Source'] + ' aggregation');
   if(PowerChart == null) {
     PowerChart = new Dygraph(document.getElementById("power_chart"),
       toShow,
@@ -328,7 +357,7 @@ function UpdatePowerChart(result) {
           })
         ],
         valueRange: [LowerRange, UpperRange],
-        dateWindow: [LastTimestamp - 7200000, LastTimestamp],
+        dateWindow: [LastPowerSample - 7200000, LastPowerSample],
         interactionModel: {},
         axes: {
           y: { pixelsPerLabel: 15,
@@ -352,11 +381,46 @@ function UpdatePowerChart(result) {
       }
     );
   } else {
-    PowerChart.updateOptions({'file': toShow, valueRange: [LowerRange, UpperRange], dateWindow: [(LastTimestamp * 1000) - 7200000, (LastTimestamp * 1000)]});
+    PowerChart.updateOptions({'file': toShow, valueRange: [LowerRange, UpperRange], dateWindow: [LastPowerSample - 7200000, LastPowerSample]});
   }
-  AddEvents(result, "Power", PowerChart);
 }
-function UpdateFrequencyChart(result) {
+
+/* Grafica de frequencia */
+var FrequencyChart      = null;
+var LastFrequencySample = 0;
+var FrequencyData       = [];
+var FrequencySpinner    = new Spinner(SpinnerOpts);
+function AjaxGetFrequency() {
+  if(LastPowerSample === 0) {
+    $('#FrequencyPanel').find("*").prop("disabled", true);
+    $('#FrequencyPanel').css('opacity', '0.6');
+    $('#FrequencyPanel').append('<div id="SpinnerDivFrequency" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
+    PowerSpinner.spin(document.getElementById('SpinnerDivPower'));
+  }
+  $.ajax({ url: "getSeriesData",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastFrequencySample, Series: 'freq', Node: Nodes['IDs'][Node] }),
+           success: AjaxFrequency
+        });
+}
+function AjaxFrequency(result) {
+  setTimeout(AjaxGetFrequency, 5000);
+  if((result === null) || (result['Sampletime'] === null)) return;
+  if(LastFrequencySample === 0) {
+    FrequencySpinner.stop();
+    $('#SpinnerDivFrequency').remove();
+    $('#FrequencyPanel').css('opacity', '1.0');
+    $('#FrequencyPanel').find("*").prop("disabled", false);    
+  }
+  if(result['Sampletime'][0] <= LastFrequencySample) return;
+  for(i = 0; i < result['Sampletime'].length; i++) {
+    FrequencyData.push([new Date(result['Sampletime'][i]), result['freq'][i]]);
+    while(FrequencyData.length > result['MaxSamples']) FrequencyData.shift();
+    LastFrequencySample = result['Sampletime'][i];
+  }
   var UpperRange = -1000000;
   var LowerRange = 1000000;
   for (i = 0; i < FrequencyData.length; i++) {
@@ -368,7 +432,7 @@ function UpdateFrequencyChart(result) {
   if(Variation < 0.5) Variation = 0.5;
   UpperRange = UpperRange + Variation * 0.1;
   LowerRange = LowerRange - Variation * 0.1;
-  $('#FrequencyAggregation').text('From ' + result['aggregation_source'] + ' aggregation');
+  $('#FrequencyAggregation').text('From ' + result['Aggregation_Source'] + ' aggregation');
   if(FrequencyChart == null) {
     FrequencyChart = new Dygraph(document.getElementById("frequency_chart"),
       FrequencyData,
@@ -390,7 +454,7 @@ function UpdateFrequencyChart(result) {
           })
         ],
         valueRange: [LowerRange, UpperRange],
-        dateWindow: [LastTimestamp - 7200000, LastTimestamp],
+        dateWindow: [LastFrequencySample - 7200000, LastFrequencySample],
         interactionModel: {},
         axes: {
           y: { pixelsPerLabel: 15,
@@ -415,56 +479,72 @@ function UpdateFrequencyChart(result) {
     );
     Dygraph.synchronize([VoltageChart, CurrentChart, PowerChart, FrequencyChart], { range: false, zoom: false } );
   } else {
-    FrequencyChart.updateOptions({'file': FrequencyData, valueRange: [LowerRange, UpperRange], dateWindow: [(LastTimestamp * 1000) - 7200000, (LastTimestamp * 1000)]});
+    FrequencyChart.updateOptions({'file': FrequencyData, valueRange: [LowerRange, UpperRange], dateWindow: [LastFrequencySample - 7200000, LastFrequencySample]});
   }
-  AddEvents(result, "Frequency", FrequencyChart);
 }
-function GetValues5S() {
-  if(LastTimestamp == 0) {
-    $('#VoltagePanel').find("*").prop("disabled", true);
-    $('#VoltagePanel').css('opacity', '0.6');
-    $('#VoltagePanel').append('<div id="SpinnerDivVoltage" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    VoltageSpinner.spin(document.getElementById('SpinnerDivVoltage'));
-    $('#CurrentPanel').find("*").prop("disabled", true);
-    $('#CurrentPanel').css('opacity', '0.6');
-    $('#CurrentPanel').append('<div id="SpinnerDivCurrent" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    CurrentSpinner.spin(document.getElementById('SpinnerDivCurrent'));
-    $('#PowerPanel').find("*").prop("disabled", true);
-    $('#PowerPanel').css('opacity', '0.6');
-    $('#PowerPanel').append('<div id="SpinnerDivPower" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    PowerSpinner.spin(document.getElementById('SpinnerDivPower'));
-    $('#FrequencyPanel').find("*").prop("disabled", true);
-    $('#FrequencyPanel').css('opacity', '0.6');
-    $('#FrequencyPanel').append('<div id="SpinnerDivFrequency" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    FrequencySpinner.spin(document.getElementById('SpinnerDivFrequency'));
+
+
+
+
+var DialogElement           = null;
+var PrevDialogContainer     = null;
+var DialogResizeHandler     = null;
+var DialogPrevResizeHandler = null;
+var EnergyTimeScale     = 'Day';
+var EnergyKeepNow       = true;
+var LastEnergyTime      = 0;
+var EnergyData          = [];
+var EvolutionDatasets   = [[],[],[],[],[],[]];
+var EvolutionCharts     = [];
+var LastEvolutionSample = 0;
+
+
+
+var EnergyChart         = null;
+
+var EnergyChartUnits    = 'Wh';
+var EnergyAggregation   = '10m';
+
+
+
+
+
+var EnergySpinner       = new Spinner(SpinnerOpts);
+
+
+var PowerSpinner        = new Spinner(SpinnerOpts);
+var MainParamSpinner    = new Spinner(SpinnerOpts);
+
+function AjaxSuccess5S(result) {
+  if(result != null && Object.keys(result).length > 0) {
+    if(result['sampletime'][0] <= LastTimestamp) return;
+    for(i = 0; i < result['sampletime'].length; i++) {
+//      VoltageData.push([new Date(result['sampletime'][i] * 1000), result['rms_v'][i][0]]);
+//      CurrentData.push([new Date(result['sampletime'][i] * 1000), result['rms_i'][i][0]]);
+//      PowerData.push([new Date(result['sampletime'][i] * 1000), result['active_power'][i][0]]);
+//      FrequencyData.push([new Date(result['sampletime'][i] * 1000), result['freq'][i]]);
+//      while(VoltageData.length > result['max_samples'])   VoltageData.shift();
+//      while(CurrentData.length > result['max_samples'])   CurrentData.shift();
+//      while(PowerData.length > result['max_samples'])     PowerData.shift();
+//      while(FrequencyData.length > result['max_samples']) FrequencyData.shift();
+//      LastTimestamp = result['sampletime'][i];
+    }
+//    UpdateVoltageChart(result);
+//    UpdateCurrentChart(result);
+//    UpdatePowerChart(result);
+//    UpdateFrequencyChart(result);
+    result.lastVoltage = VoltageData[VoltageData.length - 1][1];
+    result.lastCurrent = CurrentData[CurrentData.length - 1][1];
+    result.lastPower = PowerData[PowerData.length - 1][1];
+    result.lastFrequency = FrequencyData[FrequencyData.length - 1][1];
   }
-  $.ajax({ url: "dashboard/getSeriesData",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200, To: 0, Aggreg: "3s", LastSample: LastTimestamp, Series: 'rms_v, rms_i, active_power, freq', Node: 0, IncludeFlag: true }),
-           success: AjaxSuccess5S,
-           complete: function (x) {
-                       VoltageSpinner.stop();
-                       $('#SpinnerDivVoltage').remove();
-                       $('#VoltagePanel').css('opacity', '1.0');
-                       $('#VoltagePanel').find("*").prop("disabled", false);
-                       CurrentSpinner.stop();
-                       $('#SpinnerDivCurrent').remove();
-                       $('#CurrentPanel').css('opacity', '1.0');
-                       $('#CurrentPanel').find("*").prop("disabled", false);
-                       PowerSpinner.stop();
-                       $('#SpinnerDivPower').remove();
-                       $('#PowerPanel').css('opacity', '1.0');
-                       $('#PowerPanel').find("*").prop("disabled", false);
-                       FrequencySpinner.stop();
-                       $('#SpinnerDivFrequency').remove();
-                       $('#FrequencyPanel').css('opacity', '1.0');
-                       $('#FrequencyPanel').find("*").prop("disabled", false);
-                     }
-        });
+  UpdateHeader(result);
 }
+
+
+
+
+
 function AjaxSuccess60S(result) {
   var date = new Date(result['budget_lastcalc'] * 1000);
   $('#budget_lastcalc').text(date.toLocaleDateString() + ' - ' + date.toLocaleTimeString());
@@ -866,21 +946,7 @@ $('#maximizeEnergy').click(function() {
   $(window).bind('resize', DialogResizeHandler);
   window.dispatchEvent(new Event('resize'));  
 });
-$('#maximizeVoltage').click(function() {
-  $('#GraphDialogTitle').text('Voltage');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#VoltageCol');
-  DialogElement = $('#VoltageMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(VoltageChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    VoltageChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
+
 $('#maximizeCurrent').click(function() {
   $('#GraphDialogTitle').text('Current');
   $('#GraphDialog').modal('show');
@@ -941,26 +1007,20 @@ $('#btnExportEnergy').click(function() {
   exportToCsv(Filename, Data);
   $(this).blur();
 });
-$('#btnExportVoltage').click(function() {
-  var Data = [];
-  var Filename = "Voltage_" + LastTimestamp + '.csv';
-  Data.push([['Index', 'Voltage']]);
-  Data = Data.concat(VoltageData);
-  exportToCsv(Filename, Data);
-  $(this).removeClass('active');
-  $(this).blur();
-});
+
 
 function UpdatePage() {
   AjaxGetVoltage();
-
+  AjaxGetCurrent();
+  AjaxGetPower();
+  AjaxGetFrequency();
 
 $(document).ajaxError(function (event, jqxhr, settings, exception) {
 //  if(jqxhr.status === 200) window.location.href = 'login';
 });
 $(document).ready(EnergyGetData(86400, 0, true));
-GetValues5S();
-$(document).ready(setInterval(GetValues5S, 5000));
+
+
 GetValues60S();
 $(document).ready(GetValues60S, 60000);
 GetValues60SMainParameters();

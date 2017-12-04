@@ -23,7 +23,10 @@ bool HTTPServer::Start() {
                             MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int) 15,
                             MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
                             MHD_OPTION_END);
-  return true;
+  if(Daemon == NULL) {
+    Tools::LogMsg("ERROR", "Failed to start WEB server\n");
+  }
+  return (Daemon != NULL);
 }
 HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection* connection) {
   const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "OZM_SESSION");
@@ -210,7 +213,7 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
     Request->PostResponseLen = strlen(Request->PostData);
     return MHD_YES;
   }
-  if(strcmp(url, "/dashboard/getSeriesData") == 0) {
+  if(strcmp(url, "/getSeriesData") == 0) {
     uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
     bool     IncludeFlag = false;
     uint32_t Node = 0;

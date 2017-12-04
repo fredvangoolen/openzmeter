@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
   if(Tools::CreatePidFile() == false) return EXIT_FAILURE;
   if(Tools::CreateLogFile() == false) return EXIT_FAILURE;
-  HTTPServer::Start();
+  if(HTTPServer::Start() == false) return EXIT_FAILURE;
   CaptureInterface **Interfaces = (CaptureInterface**)calloc(sizeof(CaptureInterface*), Tools::Devices.Len);
   for(int i = 0; i < Tools::Devices.Len; i++) {
     if(strcmp(Tools::Devices.Items[i].Type, "Mono") == 0) {

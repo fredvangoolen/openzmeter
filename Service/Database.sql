@@ -1,52 +1,61 @@
-﻿CREATE TABLE IF NOT EXISTS agreg_10c (
-  node                       int NOT NULL,
-  sampletime                 bigint NOT NULL,
-  rms_v                      real,
-  rms_i                      real,
-  active_power               real,
-  reactive_power             real,
-  apparent_power             real,
-  power_factor               real,
-  active_energy              real,
-  reactive_energy            real,
-  fundamental_active_power   real,
-  fundamental_reactive_power real,
-  fundamental_apparent_power real,
-  fundamental_power_factor   real,
-  thd_v                      real,
-  thd_i                      real,
-  freq                       real,
-  phi                        real,
-  flaged                     boolean,
-  harmonics_v                real[],
-  harmonics_i                real[],
-  PRIMARY KEY(node, sampletime)
-) WITH (OIDS=FALSE);
+CREATE DATABASE ozm2
+  WITH OWNER = openzmeter
+       ENCODING = 'UTF8'
+       TABLESPACE = pg_default
+       LC_COLLATE = 'en_US.UTF-8'
+       LC_CTYPE = 'en_US.UTF-8'
+       CONNECTION LIMIT = -1;
+GRANT CONNECT, TEMPORARY ON DATABASE ozm2 TO public;
+GRANT ALL ON DATABASE ozm2 TO openzmeter;
 
-CREATE TABLE IF NOT EXISTS agreg_3s (
-  node                       int NOT NULL,
-  sampletime                 bigint NOT NULL,
-  rms_v                      real,
-  rms_i                      real,
-  active_power               real,
-  reactive_power             real,
-  apparent_power             real,
-  power_factor               real,
-  active_energy              real,
-  reactive_energy            real,
-  fundamental_active_power   real,
-  fundamental_reactive_power real,
-  fundamental_apparent_power real,
-  fundamental_power_factor   real,
-  thd_v                      real,
-  thd_i                      real,
-  freq                       real,
-  phi                        real,
-  flaged                     boolean,
-  harmonics_v                real[],
-  harmonics_i                real[],
-  PRIMARY KEY(node, sampletime)
+CREATE TABLE public.aggreg_10c (
+  node integer NOT NULL,
+  sampletime bigint NOT NULL,
+  rms_v real[],
+  rms_i real[],
+  active_power real[],
+  apparent_power real[],
+  power_factor real[],
+  active_energy real[],
+  fundamental_active_power real[],
+  fundamental_reactive_power real[],
+  fundamental_apparent_power real[],
+  fundamental_power_factor real[],
+  thd_v real[],
+  thd_i real[],
+  freq real,
+  phi real[],
+  flag boolean,
+  harmonics_v real[],
+  harmonics_i real[],
+  CONSTRAINT aggreg_10c_pkey PRIMARY KEY (sampletime, node)
 ) WITH (OIDS=FALSE);
+ALTER TABLE public.aggreg_10c OWNER TO openzmeter;
+
+CREATE TABLE public.aggreg_3s(
+  node integer NOT NULL,
+  sampletime bigint NOT NULL,
+  rms_v real[],
+  rms_i real[],
+  active_power real[],
+  apparent_power real[],
+  power_factor real[],
+  active_energy real[],
+  fundamental_active_power real[],
+  fundamental_reactive_power real[],
+  fundamental_apparent_power real[],
+  fundamental_power_factor real[],
+  thd_v real[],
+  thd_i real[],
+  freq real,
+  phi real[],
+  flag boolean,
+  harmonics_v real[],
+  harmonics_i real[],
+  CONSTRAINT aggreg_3s_pkey PRIMARY KEY (sampletime, node)
+) WITH (OIDS=FALSE);
+ALTER TABLE public.aggreg_3s OWNER TO openzmeter;
+
 
 CREATE TABLE IF NOT EXISTS agreg_1m (
   node                       int NOT NULL,
