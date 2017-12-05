@@ -477,16 +477,13 @@ function AjaxFrequency(result) {
         }
       }
     );
-    Dygraph.synchronize([VoltageChart, CurrentChart, PowerChart, FrequencyChart], { range: false, zoom: false } );
   } else {
     FrequencyChart.updateOptions({'file': FrequencyData, valueRange: [LowerRange, UpperRange], dateWindow: [result['From'], result['To']]});
   }
+  if((VoltageChart != null) && (CurrentChart != null) && (PowerChart != null) && (FrequencyChart != null)) Dygraph.synchronize([VoltageChart, CurrentChart, PowerChart, FrequencyChart], { range: false, zoom: false } );
 }
 
 /* Grafico de energia */
-//var EnergyTimeScale     = 'Day';
-//var EnergyAggregation   = '10m';
-//var EnergyKeepNow       = true;
 var LastEnergySample    = 0;
 var EnergyData          = [];
 var EnergyChart         = null;
@@ -525,7 +522,7 @@ function AjaxGetEnergy() {
  });
 }
 function AjaxEnergy(result) {
-  EnergyTimer = setTimeout(AjaxGetEnergy, 5000);
+  EnergyTimer = setTimeout(AjaxGetEnergy, 60000);
   if((result === null) || (result['Sampletime'] === null)) return;
   if(LastEnergySample === 0) {
     EnergySpinner.stop();
@@ -704,24 +701,32 @@ $('#btnShowEnergyYear').click(function() {
   Cookies.set('GraphPeriod', 31536000000);
   LastEnergySample = 0;
   AjaxGetEnergy();
+  if(EnergyCountersTimer != null) clearInterval(EnergyCountersTimer);
+  AjaxGetEnergyCounters();
 });
 $('#btnShowEnergyMonth').click(function() {
   if(EnergyTimer != null) clearInterval(EnergyTimer);
   Cookies.set('GraphPeriod', 2592000000);
   LastEnergySample = 0;
   AjaxGetEnergy();
+  if(EnergyCountersTimer != null) clearInterval(EnergyCountersTimer);
+  AjaxGetEnergyCounters();
 });
 $('#btnShowEnergyWeek').click(function() {
   if(EnergyTimer != null) clearInterval(EnergyTimer);
   Cookies.set('GraphPeriod', 604800000);
   LastEnergySample = 0;
   AjaxGetEnergy();
+  if(EnergyCountersTimer != null) clearInterval(EnergyCountersTimer);
+  AjaxGetEnergyCounters();
 });
 $('#btnShowEnergyDay').click(function() {
   if(EnergyTimer != null) clearInterval(EnergyTimer);
   Cookies.set('GraphPeriod', 86400000);
   LastEnergySample = 0;
   AjaxGetEnergy();
+  if(EnergyCountersTimer != null) clearInterval(EnergyCountersTimer);
+  AjaxGetEnergyCounters();
 });
 $('#btnEnergyNow').click(function() {
   var End = parseInt(Cookies.get('GraphEnd'));
@@ -759,6 +764,166 @@ $('#btnExportEnergy').click(function() {
   $(this).blur();
 });
 
+/* Contadores de consumo */
+var EnergyCountersTimer  = null;
+function AjaxGetEnergyCounters() {
+  //Voy a obtener varios tipos de datos:
+  //Si
+//  $.ajax({ url: "dashboard/ajaxUpdateValues60S",
+//           timeout: 20000,
+//           type: "POST",
+//           dataType: "json",
+//           data: { energyperiod: EnergyTimeScale, lastevolutiontimestamp: LastEvolutionSample },
+//         success: AjaxSuccess60S,
+//      });
+}
+function EnergyUpdateCounters() {
+  
+  
+}
+
+/* Cuadro Main parameters */
+var EvolutionDatasets   = [[],[],[],[],[],[]];
+var EvolutionCharts     = [];
+var LastEvolutionSample = 0;
+function AjaxGetMainParameters() {
+  if(LastEvolutionSample == 0) {
+    $('#MainParamPanel').find("*").prop("disabled", true);
+    $('#MainParamPanel').css('opacity', '0.6');
+    $('#MainParamPanel').append('<div id="SpinnerDivMain" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
+    MainParamSpinner.spin(document.getElementById('SpinnerDivMain'));
+  }
+  $.ajax({ url: "getSeriesData",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: "1m", LastSample: LastEvolutionSample, Series: 'active_power, fundamental_reactive_power, rms_v, rms_i, power_factor, phi', Node: Nodes['IDs'][Node] }),
+           success: AjaxMainParameters,
+           complete: function (x) {
+                     MainParamSpinner.stop();
+                     $('#SpinnerDivMain').remove();
+                     $('#MainParamPanel').css('opacity', '1.0');
+                     $('#MainParamPanel').find("*").prop("disabled", false);
+                  }
+      });
+}
+function AjaxMainParameters(result) {
+  setTimeout(AjaxGetMainParameters, 60000);
+  for(j = 0; j < result['Sampletime'].length; j++) {
+    EvolutionDatasets[0].push([new Date(result['Sampletime'][j]), result.active_power[j][0]]);
+    EvolutionDatasets[1].push([new Date(result['Sampletime'][j]), result.fundamental_reactive_power[j][0]]);
+    EvolutionDatasets[2].push([new Date(result['Sampletime'][j]), result.rms_v[j][0]]);
+    EvolutionDatasets[3].push([new Date(result['Sampletime'][j]), result.rms_i[j][0]]);
+    EvolutionDatasets[4].push([new Date(result['Sampletime'][j]), result.power_factor[j][0]]);
+    EvolutionDatasets[5].push([new Date(result['Sampletime'][j]), result.phi[j][0]]);
+    LastEvolutionSample = result['Sampletime'][j];
+  }
+  for(i = 0; i < 6; i++) {
+    while(EvolutionDatasets[i].length > result['Max_Samples']) EvolutionDatasets[i].shift();
+  }
+  var SerieNames = ['Active power', 'Reactive power', 'Voltage', 'Current', 'Power factor', 'Phi'];
+  if(EvolutionCharts.length == 0) {
+    for(i = 0; i < 6; i++) {
+      var Str = '<div style="position: relative">' +
+                '  <div id="EvolutionChart' + i + '" class="chart" style="height: 50px' + ((i == 0) ? '; margin-top: 16px; border-top: 1px solid #999"' : '"') + '></div>' +       
+                '  <div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="EvolutionChartLegend' + i + '"></div>' +                    
+                '</div>';
+      $("#EvolutionPanel").append(Str);
+      EvolutionCharts[i] = new Dygraph(document.getElementById("EvolutionChart" + i),
+        EvolutionDatasets[i],
+        { strokeWidth: 0.5,
+          labels: ["Time", SerieNames[i]],
+          colors: ["#d9534f"],
+          gridLineColor: "#999",
+          gridLinePattern: [4, 4],
+          highlightCircleSize: 0,
+          interactionModel: { },
+          labelsDiv: 'EvolutionChartLegend' + i,
+          legend: 'always',
+          legendFormatter: function(data) {
+            if(data.x == null) {
+              return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
+            } else {
+              return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' +
+                      data.xHTML + data.series[0].yHTML;
+            }
+          },
+          xAxisHeight: 0.1,
+          xLabelHeight: 1,
+          plotter: barChartPlotterCubism,
+          dateWindow: [result['From'], result['To']],
+          plugins: [
+            new Dygraph.Plugins.Crosshair({
+              direction: "vertical"
+            })
+          ],
+          axes: {
+            y: { drawAxis: false,
+                 drawGrid:false,
+                 valueFormatter: function (x) {
+                   var Units;
+                   if(this.attributes_.labels_[0] == SerieNames[0]) {
+                     if(x > 1000) {
+                       Units = 'kW';
+                       x = x / 1000;
+                     } else {
+                       Units = 'W';
+                     }
+                   } else if(this.attributes_.labels_[0] == SerieNames[1]) {
+                     if(x > 1000) {
+                       Units = 'kVAr';
+                       x = x / 1000;
+                     } else {
+                       Units = 'VAr';
+                     }
+                   } else if(this.attributes_.labels_[0] == SerieNames[2]) {
+                     Units = 'V';
+                   } else if(this.attributes_.labels_[0] == SerieNames[3]) {
+                     Units = 'A';  
+                   } else if(this.attributes_.labels_[0] == SerieNames[4]) {
+                     Units = '';
+                   } else if(this.attributes_.labels_[0] == SerieNames[5]) {
+                     if(x < 0) {
+                       Units = 'º CAP';
+                       x = -x;
+                     } else if(x > 0) {
+                       Units = 'º IND';
+                     } else {
+                       Units = 'º';
+                     }
+                   }
+                   return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '<em>' + Units + '</em></div>';
+                 }
+               },
+            x: { valueFormatter: function (x) {
+                   var date = new Date(x);
+                   return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
+                 },
+                 axisLabelFormatter: function(x, i) {
+                   if(this.attributes_.labels_[0] == SerieNames[0]) {
+                     var date = new Date(x);
+                     if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
+                       return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + date.toLocaleDateString() + '</div>';
+                     } else {
+                       return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';                       
+                     }
+                   } else {
+                     return null;
+                   }
+                 }
+            }
+          }
+        }
+      );
+    }
+    Dygraph.synchronize(EvolutionCharts, { range: false, zoom: false });
+  } else {
+    for(i = 0; i < 6; i++) {
+      EvolutionCharts[i].updateOptions({ file: EvolutionDatasets[i],dateWindow: [result['From'], result['To']] });
+    }
+  }
+}
 
 
 
@@ -770,9 +935,7 @@ var DialogElement           = null;
 var PrevDialogContainer     = null;
 var DialogResizeHandler     = null;
 var DialogPrevResizeHandler = null;
-var EvolutionDatasets   = [[],[],[],[],[],[]];
-var EvolutionCharts     = [];
-var LastEvolutionSample = 0;
+
 
 
 
@@ -848,153 +1011,6 @@ function AjaxSuccess60S(result) {
   }
   UpdateHeader(result);
 }
-function GetValues60SMainParameters() {
-  if(LastEvolutionSample == 0) {
-    $('#MainParamPanel').find("*").prop("disabled", true);
-    $('#MainParamPanel').css('opacity', '0.6');
-    $('#MainParamPanel').append('<div id="SpinnerDivMain" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    MainParamSpinner.spin(document.getElementById('SpinnerDivMain'));
-  }
-  $.ajax({ url: "dashboard/getSeriesData",
-         timeout: 20000,
-         type: "POST",
-         dataType: "json",
-         contentType: 'application/json',
-         data: JSON.stringify({ Period: 86400, To: 0, Aggreg: "1m", LastSample: LastEvolutionSample, Series: 'active_power, fundamental_reactive_power, rms_v, rms_i, power_factor, phi', Node: 0, IncludeFlag: false }),
-         success: UpdateEvolutionChart,
-         complete: function (x) {
-                     MainParamSpinner.stop();
-                     $('#SpinnerDivMain').remove();
-                     $('#MainParamPanel').css('opacity', '1.0');
-                     $('#MainParamPanel').find("*").prop("disabled", false);
-                  }
-      });
-}
-function GetValues60S() {
-  $.ajax({ url: "dashboard/ajaxUpdateValues60S",
-         timeout: 20000,
-         type: "POST",
-         dataType: "json",
-         data: { energyperiod: EnergyTimeScale, lastevolutiontimestamp: LastEvolutionSample },
-         success: AjaxSuccess60S,
-      });
-}
-
-function UpdateEvolutionChart(result) {
-  for(j = 0; j < result['sampletime'].length; j++) {
-    EvolutionDatasets[0].push([new Date(result['sampletime'][j] * 1000 + 1000), result.active_power[j]]);
-    EvolutionDatasets[1].push([new Date(result['sampletime'][j] * 1000 + 1000), result.fundamental_reactive_power[j]]);
-    EvolutionDatasets[2].push([new Date(result['sampletime'][j] * 1000 + 1000), result.rms_v[j]]);
-    EvolutionDatasets[3].push([new Date(result['sampletime'][j] * 1000 + 1000), result.rms_i[j]]);
-    EvolutionDatasets[4].push([new Date(result['sampletime'][j] * 1000 + 1000), result.power_factor[j]]);
-    EvolutionDatasets[5].push([new Date(result['sampletime'][j] * 1000 + 1000), result.phi[j]]);
-    LastEvolutionSample = result['sampletime'][j];
-  }
-  for(i = 0; i < 6; i++) {
-    while(EvolutionDatasets[i].length > result['max_samples']) EvolutionDatasets[i].shift();
-  }
-  var SerieNames = ['Active power', 'Reactive power', 'Voltage', 'Current', 'Power factor', 'Phi'];
-  if(EvolutionCharts.length == 0) {
-    for(i = 0; i < 6; i++) {
-      var Str = '<div style="position: relative">' +
-                '  <div id="EvolutionChart' + i + '" class="chart" style="height: 50px' + ((i == 0) ? '; margin-top: 16px; border-top: 1px solid #999"' : '"') + '></div>' +       
-                '  <div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="EvolutionChartLegend' + i + '"></div>' +                    
-                '</div>';
-      $("#EvolutionPanel").append(Str);
-      EvolutionCharts[i] = new Dygraph(document.getElementById("EvolutionChart" + i),
-        EvolutionDatasets[i],
-        { strokeWidth: 0.5,
-          labels: ["Time", SerieNames[i]],
-          colors: ["#d9534f"],
-          gridLineColor: "#999",
-          gridLinePattern: [4, 4],
-          highlightCircleSize: 0,
-          interactionModel: { },
-          labelsDiv: 'EvolutionChartLegend' + i,
-          legend: 'always',
-          legendFormatter: function(data) {
-            if(data.x == null) {
-              return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
-            } else {
-              return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' +
-                      data.xHTML + data.series[0].yHTML;
-            }
-          },
-          xAxisHeight: 0.1,
-          xLabelHeight: 1,
-          plotter: barChartPlotterCubism,
-          dateWindow: [(LastEvolutionSample * 1000) - 86400000, LastEvolutionSample * 1000],
-          plugins: [
-            new Dygraph.Plugins.Crosshair({
-              direction: "vertical"
-            })
-          ],
-          axes: {
-            y: { drawAxis: false,
-                 drawGrid:false,
-                 valueFormatter: function (x) {
-                   var Units;
-                   if(this.attributes_.labels_[0] == SerieNames[0]) {
-                     if(x > 1000) {
-                       Units = 'kW';
-                       x = x / 1000;
-                     } else {
-                       Units = 'W';
-                     }
-                   } else if(this.attributes_.labels_[0] == SerieNames[1]) {
-                     if(x > 1000) {
-                       Units = 'kVAr';
-                       x = x / 1000;
-                     } else {
-                       Units = 'VAr';
-                     }
-                   } else if(this.attributes_.labels_[0] == SerieNames[2]) {
-                     Units = 'V';
-                   } else if(this.attributes_.labels_[0] == SerieNames[3]) {
-                     Units = 'A';  
-                   } else if(this.attributes_.labels_[0] == SerieNames[4]) {
-                     Units = '';
-                   } else if(this.attributes_.labels_[0] == SerieNames[5]) {
-                     if(x < 0) {
-                       Units = 'º CAP';
-                       x = -x;
-                     } else if(x > 0) {
-                       Units = 'º IND';
-                     } else {
-                       Units = 'º';
-                     }
-                   }
-                   return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '<em>' + Units + '</em></div>';
-                 }
-               },
-            x: { valueFormatter: function (x) {
-                   var date = new Date(x);
-                   return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
-                 },
-                 axisLabelFormatter: function(x, i) {
-                   if(this.attributes_.labels_[0] == SerieNames[0]) {
-                     var date = new Date(x);
-                     if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
-                       return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + date.toLocaleDateString() + '</div>';
-                     } else {
-                       return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';                       
-                     }
-                   } else {
-                     return null;
-                   }
-                 }
-            }
-          }
-        }
-      );
-    }
-    Dygraph.synchronize(EvolutionCharts, { range: false, zoom: false });
-  } else {
-    for(i = 0; i < 6; i++) {
-      EvolutionCharts[i].updateOptions({ file: EvolutionDatasets[i],dateWindow: [(LastEvolutionSample * 1000) - 86400000, LastEvolutionSample * 1000] });
-    }
-  }
-}
 $('#aggreg_modal_close').click(function() {
   $('#aggreg_modal').modal('hide');
 });
@@ -1057,19 +1073,20 @@ $('#GraphDialogClose').click(function() {
 
 function UpdatePage() {
   AjaxGetEnergy();
+  AjaxGetEnergyCounters();
   AjaxGetVoltage();
   AjaxGetCurrent();
   AjaxGetPower();
   AjaxGetFrequency();
-
-$(document).ajaxError(function (event, jqxhr, settings, exception) {
+  AjaxGetMainParameters();
+//$(document).ajaxError(function (event, jqxhr, settings, exception) {
 //  if(jqxhr.status === 200) window.location.href = 'login';
-});
-$(document).ready(EnergyGetData(86400, 0, true));
+//});
+//$(document).ready(EnergyGetData(86400, 0, true));
 
 
-GetValues60S();
-$(document).ready(GetValues60S, 60000);
-GetValues60SMainParameters();
-$(document).ready(setInterval(GetValues60SMainParameters, 60000));
+//GetValues60S();
+//$(document).ready(GetValues60S, 60000);
+//GetValues60SMainParameters();
+//$(document).ready(setInterval(GetValues60SMainParameters, 60000));
 }
