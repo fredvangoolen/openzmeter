@@ -216,7 +216,6 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
   }
   if(strcmp(url, "/getSeriesData") == 0) {
     uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
-    bool     IncludeFlag = false;
     uint32_t Node = 0;
     char    *Aggreg = NULL, *Series = NULL;
     json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
@@ -227,16 +226,12 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
         Aggreg = (char*)json_object_get_string(JSON_Val);
       else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Period") == 0))      
         Period = json_object_get_int64(JSON_Val);
-      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "From") == 0))  
-        From = json_object_get_int64(JSON_Val);
       else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "To") == 0))
         To = json_object_get_int64(JSON_Val);
       else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastSample") == 0))
         LastSample = json_object_get_int64(JSON_Val);
       else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
         Node = json_object_get_int(JSON_Val);
-      else if((JSON_Type == json_type_boolean) && (strcmp(JSON_Key, "IncludeFlag") == 0))
-        IncludeFlag = json_object_get_boolean(JSON_Val);
       else 
         Error = true;
     }
@@ -272,35 +267,16 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
     From -= PeriodSeconds;
     To   += PeriodSeconds;
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"MaxSamples\", ", (To - From) / PeriodSeconds);
-//    if(strcmp(Aggreg, "3s") == 0) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'%s' AS \"Aggregation_Source\", ", Aggreg);
-//    } else if(strcmp(Aggreg, "1m") == 0) {
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'1 minute' AS \"Aggregation_Source\", ");
-//    } else if(strcmp(Aggreg, "10m") == 0) {
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'10 minutes' AS \"Aggregation_Source\", ");
-//    } else if(strcmp(Aggreg, "1h") == 0) {
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'1 hour' AS \"Aggregation_Source\", ");
-//    }
-//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%s AS \"Update\", ", (LastSample != 0) ? "true" : "false");
-
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'%s' AS \"Aggregation_Source\", ", Aggreg);
     char *Serie = strtok(Series, ", ");
     while(Serie != NULL) {
       QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(%s) AS %s, ", Serie, Serie);
       Serie = strtok(NULL, ", ");
     }
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(sampletime) AS \"Sampletime\" FROM aggreg_%s WHERE sampletime > %llu AND sampletime >= %llu AND sampletime <= %llu AND node = %u ORDER BY \"Sampletime\" ASC) AS Result", Aggreg, LastSample, From, To, Node);
-//    printf(QueryText);
     Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
-    //    if(Text != NULL) {
-
-
-//    echo $row['result'];
-//    return;
-
-  
-
   }
 
 

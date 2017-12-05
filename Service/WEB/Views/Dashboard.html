@@ -59,9 +59,9 @@
                 <div class="pull-right">
                   <span class="small"></span><br>
                   <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs active"   id="btnEnergyNow"      data-toggle="tooltip" title="Move to most recent samples and update in real time"><i class="fa fa-play"></i></button>
-                    <button type="button" class="btn btn-default btn-xs"          id="btnExportEnergy"   data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
-                    <button type="button" class="btn btn-default btn-xs disabled" id="btnMaximizeEnergy" data-toggle="tooltip" title="Maximize graph"><i class="fa fa-expand"></i></button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnEnergyNow"      data-toggle="tooltip" title="Move to most recent samples and update in real time"><i class="fa fa-play"></i></button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnExportEnergy"   data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnMaximizeEnergy" data-toggle="tooltip" title="Maximize graph"><i class="fa fa-expand"></i></button>
                   </div>
                 </div>
                 <div class="pull-right">&nbsp;</div>
@@ -101,7 +101,7 @@
                   <div class="row">
                     <div class="col-xs-6 col-md-12">
                       <div class="panel panel-lightblue-info" id="EnergyBox">
-                        <h4 id="EnergyPeriod">Today</h4>
+                        <h4 id="labelEnergyPeriod">Today</h4>
                         <span id="labelEnergyInteger" class="huge">?</span>
                         <span id="labelEnergyDecimal" class="huge-small"></span>&nbsp;<em class="huge-small-unit" id="labelEnergyUnits">kWh</em>
                         <p><span id="labelPrevEnergyPeriod">Yesterday</span>&nbsp;<span id="labelPrevEnergy">?</span>&nbsp;<em class="small" id="labelPrevEnergyUnits">kWh</em></p>
@@ -112,7 +112,7 @@
                         <h4><span id="labelBudgetPeriod">Today</span> budget</h4>
                         <span id="labelBudgetInteger" class="huge">?</span>
                         <span id="labelBudgetDecimal" class="huge-small"></span>&nbsp;<em class="huge-small-unit" id="labelBudgetUnits">€</em>
-                        <p>Up to <span id="labelBudget_LastCalc">?</span></p>
+                        <p>Up to <span id="labelBudgetLastCalc">?</span></p>
                       </div>
                     </div>
                   </div>
@@ -160,7 +160,7 @@
                   <button type="button" class="btn btn-default btn-xs" id="btnExportVoltage" data-toggle="tooltip" title="Export data to CSV file">
                     <i class="fa fa-table fa-fw"></i>
                   </button>
-                  <button type="button" class="btn btn-default btn-xs" id="maximizeVoltage" data-toggle="tooltip" title="Maximize graph">
+                  <button type="button" class="btn btn-default btn-xs" id="btnMaximizeVoltage" data-toggle="tooltip" title="Maximize graph">
                     <i class="fa fa-expand"></i>
                   </button>
                 </div>
