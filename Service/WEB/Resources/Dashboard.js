@@ -63,7 +63,7 @@ function AjaxVoltage(result) {
   if(Variation < 1) Variation = 1.0;
   UpperRange = UpperRange + Variation * 0.1;
   LowerRange = Math.max(0, LowerRange - Variation * 0.1);
-  $('#labelVoltageAggregation').text('From ' + result['Aggregation_Source'] + ' aggregation');
+  $('#labelVoltageAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(VoltageChart === null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"),
       VoltageData,
@@ -85,7 +85,7 @@ function AjaxVoltage(result) {
           })
         ],
         valueRange: [LowerRange, UpperRange],
-        dateWindow: [LastVoltageSample - 7200000, LastVoltageSample],
+        dateWindow: [result['From'], result['To']],
         interactionModel: {},
         underlayCallback: function(canvas, area, g) {
           var NominalVoltage = Nodes['NominalVoltage'][Node];
@@ -126,7 +126,7 @@ function AjaxVoltage(result) {
       }
     );
   } else {
-    VoltageChart.updateOptions({'file': VoltageData, valueRange: [LowerRange, UpperRange], dateWindow: [LastVoltageSample - 7200000, LastVoltageSample]});
+    VoltageChart.updateOptions({'file': VoltageData, valueRange: [LowerRange, UpperRange], dateWindow: [result['From'], result['To']]});
   }
   AddEvents(result, "Voltage", VoltageChart);
 }
@@ -204,7 +204,7 @@ function AjaxCurrent(result) {
   if(Variation < 1) Variation = 1.0;
   UpperRange = UpperRange + Variation * 0.1;
   LowerRange = LowerRange - Variation * 0.1;
-  $('#CurrentAggregation').text('From ' + result['Aggregation_Source'] + ' aggregation');
+  $('#CurrentAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(CurrentChart == null) {
     CurrentChart = new Dygraph(document.getElementById("CurrentChart"),
       CurrentData,
@@ -226,7 +226,7 @@ function AjaxCurrent(result) {
           })
         ],
         valueRange: [LowerRange, UpperRange],
-        dateWindow: [LastCurrentSample - 7200000, LastCurrentSample],
+        dateWindow: [result['From'], result['To']],
         interactionModel: {},
         underlayCallback: function(canvas, area, g) {
           var MaxCurrent = Nodes['MaxCurrent'][Node];
@@ -267,7 +267,7 @@ function AjaxCurrent(result) {
       }
     );
   } else {
-    CurrentChart.updateOptions({'file': CurrentData, valueRange: [LowerRange, UpperRange], dateWindow: [LastCurrentSample - 7200000, LastCurrentSample]});
+    CurrentChart.updateOptions({'file': CurrentData, valueRange: [LowerRange, UpperRange], dateWindow: [result['From'], result['To']]});
   }
 }
 
@@ -335,7 +335,7 @@ function AjaxPower(result) {
     toShow = PowerData;
     PowerChartUnits = 'W';
   }
-  $('#PowerAggregation').text('From ' + result['Aggregation_Source'] + ' aggregation');
+  $('#PowerAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(PowerChart == null) {
     PowerChart = new Dygraph(document.getElementById("power_chart"),
       toShow,
@@ -357,7 +357,7 @@ function AjaxPower(result) {
           })
         ],
         valueRange: [LowerRange, UpperRange],
-        dateWindow: [LastPowerSample - 7200000, LastPowerSample],
+        dateWindow: [result['From'], result['To']],
         interactionModel: {},
         axes: {
           y: { pixelsPerLabel: 15,
@@ -381,7 +381,7 @@ function AjaxPower(result) {
       }
     );
   } else {
-    PowerChart.updateOptions({'file': toShow, valueRange: [LowerRange, UpperRange], dateWindow: [LastPowerSample - 7200000, LastPowerSample]});
+    PowerChart.updateOptions({'file': toShow, valueRange: [LowerRange, UpperRange], dateWindow: [result['From'], result['To']]});
   }
 }
 
@@ -432,7 +432,7 @@ function AjaxFrequency(result) {
   if(Variation < 0.5) Variation = 0.5;
   UpperRange = UpperRange + Variation * 0.1;
   LowerRange = LowerRange - Variation * 0.1;
-  $('#FrequencyAggregation').text('From ' + result['Aggregation_Source'] + ' aggregation');
+  $('#FrequencyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(FrequencyChart == null) {
     FrequencyChart = new Dygraph(document.getElementById("frequency_chart"),
       FrequencyData,
@@ -454,7 +454,7 @@ function AjaxFrequency(result) {
           })
         ],
         valueRange: [LowerRange, UpperRange],
-        dateWindow: [LastFrequencySample - 7200000, LastFrequencySample],
+        dateWindow: [result['From'], result['To']],
         interactionModel: {},
         axes: {
           y: { pixelsPerLabel: 15,
@@ -479,9 +479,289 @@ function AjaxFrequency(result) {
     );
     Dygraph.synchronize([VoltageChart, CurrentChart, PowerChart, FrequencyChart], { range: false, zoom: false } );
   } else {
-    FrequencyChart.updateOptions({'file': FrequencyData, valueRange: [LowerRange, UpperRange], dateWindow: [LastFrequencySample - 7200000, LastFrequencySample]});
+    FrequencyChart.updateOptions({'file': FrequencyData, valueRange: [LowerRange, UpperRange], dateWindow: [result['From'], result['To']]});
   }
 }
+
+/* Grafico de energia */
+//var EnergyTimeScale     = 'Day';
+//var EnergyAggregation   = '10m';
+//var EnergyKeepNow       = true;
+var LastEnergySample    = 0;
+var EnergyData          = [];
+var EnergyChart         = null;
+var EnergyChartUnits    = 'Wh';
+var EnergySpinner       = new Spinner(SpinnerOpts);
+var EnergyTimer         = null;
+function AjaxGetEnergy() {
+  if(LastEnergySample == 0) {
+    $('#EnergyPanel').find("*").prop("disabled", true);
+    $('#EnergyPanel').css('opacity', '0.6');
+    $('#EnergyPanel').append('<div id="SpinnerDiv" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
+    EnergySpinner.spin(document.getElementById('SpinnerDiv'));
+  }
+  var Period = parseInt(Cookies.get('GraphPeriod'));
+  if(!Period) {
+    Period = 86400000;
+    Cookies.set('GraphPeriod', Period);
+  }
+  var GraphEnd = parseInt(Cookies.get('GraphEnd'));
+  if(!GraphEnd) {
+    GraphEnd = 0;
+    Cookies.set('GraphEnd', 0);
+  } 
+  var GraphAggregation = Cookies.get('GraphAggregation');
+  if(!GraphAggregation || (GetAggregText(GraphAggregation) === false)) {
+    GraphAggregation = '10m';
+    Cookies.set('GraphAggregation', GraphAggregation);
+  }
+  $.ajax({ url: "getSeriesData",
+    timeout: 20000,
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastEnergySample, Series: 'active_energy', Node: Nodes['IDs'][Node]}),
+    success: AjaxEnergy
+ });
+}
+function AjaxEnergy(result) {
+  EnergyTimer = setTimeout(AjaxGetEnergy, 5000);
+  if((result === null) || (result['Sampletime'] === null)) return;
+  if(LastEnergySample === 0) {
+    EnergySpinner.stop();
+    $('#SpinnerDiv').remove();
+    $('#EnergyPanel').css('opacity', '1.0');
+    $('#EnergyPanel').find("*").prop("disabled", false);
+    EnergyData = [];
+  }
+  for(i = 0; i < result['Sampletime'].length; i++) {
+    EnergyData.push([new Date(result['Sampletime'][i]), result['active_energy'][i][0]]);
+    while(EnergyData.length > result['MaxSamples']) EnergyData.shift();
+    LastEnergySample = result['Sampletime'][i];
+  } 
+  $('#EnergyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');  
+  var UpperRange = -1000000;
+  var LowerRange =  1000000;
+  for (i = 0; i < EnergyData.length; i++) {
+    if(EnergyData[i][1] > UpperRange) UpperRange = EnergyData[i][1];
+    if(EnergyData[i][1] < LowerRange) LowerRange = EnergyData[i][1];
+  }
+  var Variation = (UpperRange - LowerRange);
+  if(Variation < 1) Variation = 1.0;
+  if(UpperRange > 0) UpperRange = UpperRange + Variation * 0.1;
+  if(LowerRange < 0) LowerRange = LowerRange - Variation * 0.1;
+  var toShow = [];
+  if((Math.abs(UpperRange) > 1000) || (Math.abs(LowerRange) > 1000)) {
+    EnergyChartUnits = 'kWh';
+    UpperRange = UpperRange / 1000;
+    LowerRange = LowerRange / 1000;
+    for(i = 0; i < EnergyData.length; i++) {
+      toShow.push([EnergyData[i][0], EnergyData[i][1] / 1000.0]);
+    }
+  } else {
+    EnergyChartUnits = 'Wh';
+    for(i = 0; i < EnergyData.length; i++) {
+      toShow.push([EnergyData[i][0], EnergyData[i][1]]);
+    }
+  }
+  if(EnergyChart == null) {
+    EnergyChart = new Dygraph(document.getElementById("EnergyChart"),
+      toShow,
+      { strokeWidth: 1,
+        labelsDiv: "EnergyLegend",
+        labels: ["Time", "Energy"],
+        plotter: barChartPlotterEnergy,
+        stepPlot: true,
+        fillGraph: true,
+        colors: ["#31708f"],
+        gridLineColor: "#999",
+        gridLinePattern: [4, 4],
+        valueRange: [LowerRange, UpperRange],
+        dateWindow: [result['From'], result['To']],
+        zoomCallback: function(minDate, maxDate, yRanges) {
+          clearInterval(EnergyTimer);
+          $('#btnEnergyNow').removeClass('active');
+          Cookies.set('GraphEnd', maxDate);
+          Cookies.set('GraphPeriod', maxDate - minDate);
+          LastEnergySample = 0;
+          AjaxGetEnergy();
+        },
+        interactionModel: {
+          mousedown: mouseDownOZM,
+          mousemove: mouseMoveOZM,
+          mouseup: function(event, g, contex) {
+            mouseUpOZM(event, g, contex);
+            if((contex.isPanning) && (contex.regionWidth > 0)) {
+              clearInterval(EnergyTimer);
+              $('#btnEnergyNow').removeClass('active');
+              Cookies.set('GraphEnd', g.dateWindow_[1]);
+              Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+              LastEnergySample = 0;
+              AjaxGetEnergy();
+            }            
+          },
+          dblclick: function(event, g, context) {
+            dblClickOZM(event, g, context);
+            clearInterval(EnergyTimer);
+            $('#btnEnergyNow').removeClass('active');
+            Cookies.set('GraphEnd', g.dateWindow_[1]);
+            Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+            LastEnergySample = 0;
+            AjaxGetEnergy();
+          }
+        },
+        axes: {
+          y: { pixelsPerLabel: 15,
+               axisLabelWidth: 34,
+               valueFormatter: function (x) {
+                 return Round2(x) + ' <em class="x-small">' + EnergyChartUnits + '</em>';
+               },
+               axisLabelFormatter: function (x) {
+                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
+               }
+             },
+          x: { valueFormatter: function (x) {
+                 var date = new Date(x);
+                 return date.toLocaleDateString() + ' - ' + date.toLocaleTimeString();
+               },
+               axisLabelFormatter: function (x) {
+                 return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + x.toLocaleTimeString() + '<br>' + x.toLocaleDateString() + '</div>';
+               }
+             }
+          }
+        }
+    );
+    $(window).bind('resize', EnergyResizeEvent);
+    $('#energy_day').addClass('active');
+    $('#maximizeEnergy').removeClass('disabled');
+    window.dispatchEvent(new Event('resize'));
+  } else {
+    EnergyChart.updateOptions({'file': toShow, valueRange: [LowerRange, UpperRange], dateWindow: [result['From'], result['To']]});
+  }
+  $('#btnShowEnergyYear').removeClass('active');
+  $('#btnShowEnergyMonth').removeClass('active');
+  $('#btnShowEnergyWeek').removeClass('active');
+  $('#btnShowEnergyDay').removeClass('active');
+  if((result['To'] - result['From']) === 86400000) {
+    $('#btnShowEnergyDay').addClass('active');
+  } else if((result['To'] - result['From']) === 604800000) {
+    $('#btnShowEnergyWeek').addClass('active');
+  } else if((result['To'] - result['From']) === 2592000000) {
+    $('#btnShowEnergyMonth').addClass('active');
+  } else if((result['To'] - result['From']) === 31536000000) {
+    $('#btnShowEnergyYear').addClass('active');
+  }
+  var GraphAggregation = Cookies.get('GraphAggregation');
+  if(GraphAggregation !== result['Aggregation_Source']) {
+    $('#aggreg_modal').modal('show');
+    GraphAggregation = result['Aggregation_Source'];
+  }
+  $('#btnEnergy3S').removeClass('active');
+  $('#btnEnergy1M').removeClass('active');
+  $('#btnEnergy10M').removeClass('active');
+  $('#btnEnergy1H').removeClass('active');
+  if(GraphAggregation == '3s') {
+    $('#btnEnergy3S').addClass('active');
+  } else if(GraphAggregation == '1m') {
+    $('#btnEnergy1M').addClass('active');
+  } else if(GraphAggregation == '10m') {
+    $('#btnEnergy10M').addClass('active');
+  } else if(GraphAggregation == '1h') {
+    $('#btnEnergy1H').addClass('active');
+  }
+  Cookies.set('GraphAggregation', GraphAggregation);
+}
+function EnergyResizeEvent() {
+  var Height = $('#EnergyBox').height() + $('#BudgetBox').height();
+  if(EnergyChart != null) EnergyChart.resize($('#EnergyCol').width(), Height - 12);
+}
+$('#btnEnergy3S').click(function() {
+  if(EnergyTimer != null) clearInterval(EnergyTimer);
+  Cookies.set('GraphAggregation', '3s');
+  LastEnergySample = 0;
+  AjaxGetEnergy();
+});
+$('#btnEnergy1M').click(function() {
+  if(EnergyTimer != null) clearInterval(EnergyTimer);
+  Cookies.set('GraphAggregation', '1m');
+  LastEnergySample = 0;
+  AjaxGetEnergy();
+});
+$('#btnEnergy10M').click(function() {
+  if(EnergyTimer != null) clearInterval(EnergyTimer);
+  Cookies.set('GraphAggregation', '10m');
+  LastEnergySample = 0;
+  AjaxGetEnergy();
+});
+$('#btnEnergy1H').click(function() {
+  if(EnergyTimer != null) clearInterval(EnergyTimer);
+  Cookies.set('GraphAggregation', '1h');
+  LastEnergySample = 0;
+  AjaxGetEnergy();
+});
+$('#btnShowEnergyYear').click(function() {
+  if(EnergyTimer != null) clearInterval(EnergyTimer);
+  Cookies.set('GraphPeriod', 31536000000);
+  LastEnergySample = 0;
+  AjaxGetEnergy();
+});
+$('#btnShowEnergyMonth').click(function() {
+  if(EnergyTimer != null) clearInterval(EnergyTimer);
+  Cookies.set('GraphPeriod', 2592000000);
+  LastEnergySample = 0;
+  AjaxGetEnergy();
+});
+$('#btnShowEnergyWeek').click(function() {
+  if(EnergyTimer != null) clearInterval(EnergyTimer);
+  Cookies.set('GraphPeriod', 604800000);
+  LastEnergySample = 0;
+  AjaxGetEnergy();
+});
+$('#btnShowEnergyDay').click(function() {
+  if(EnergyTimer != null) clearInterval(EnergyTimer);
+  Cookies.set('GraphPeriod', 86400000);
+  LastEnergySample = 0;
+  AjaxGetEnergy();
+});
+$('#btnEnergyNow').click(function() {
+  var End = parseInt(Cookies.get('GraphEnd'));
+  clearInterval(EnergyTimer);
+  if(End === 0) {
+    $('#btnEnergyNow').removeClass('active');
+    Cookies.set('GraphEnd', EnergyChart.getOption('dateWindow')[1]);
+  } else {
+    $('#btnEnergyNow').addClass('active');
+    Cookies.set('GraphEnd', 0);
+    LastEnergySample = 0;
+    AjaxGetEnergy();
+  }
+});
+$('#maximizeEnergy').click(function() {
+  $('#GraphDialogTitle').text('Energy');
+  $('#GraphDialog').modal('show');
+  PrevDialogContainer = $('#EnergyCol');
+  DialogElement = $('#EnergyMaximizeDiv').detach();
+  DialogPrevResizeHandler = EnergyResizeEvent;
+  DialogResizeHandler = function() {
+    EnergyChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 110);
+  };
+  $(window).unbind('resize', EnergyResizeEvent);
+  $('#GraphDialogBody').append(DialogElement);
+  $(window).bind('resize', DialogResizeHandler);
+  window.dispatchEvent(new Event('resize'));  
+});
+$('#btnExportEnergy').click(function() {
+  var Data = [];
+  var Filename = "Energy_" + LastEnergyTime + '.csv';
+  Data.push([['Index', 'Energy']]);
+  Data = Data.concat(EnergyData);
+  exportToCsv(Filename, Data);
+  $(this).blur();
+});
+
+
+
+
 
 
 
@@ -490,29 +770,15 @@ var DialogElement           = null;
 var PrevDialogContainer     = null;
 var DialogResizeHandler     = null;
 var DialogPrevResizeHandler = null;
-var EnergyTimeScale     = 'Day';
-var EnergyKeepNow       = true;
-var LastEnergyTime      = 0;
-var EnergyData          = [];
 var EvolutionDatasets   = [[],[],[],[],[],[]];
 var EvolutionCharts     = [];
 var LastEvolutionSample = 0;
 
 
 
-var EnergyChart         = null;
-
-var EnergyChartUnits    = 'Wh';
-var EnergyAggregation   = '10m';
 
 
 
-
-
-var EnergySpinner       = new Spinner(SpinnerOpts);
-
-
-var PowerSpinner        = new Spinner(SpinnerOpts);
 var MainParamSpinner    = new Spinner(SpinnerOpts);
 
 function AjaxSuccess5S(result) {
@@ -613,205 +879,7 @@ function GetValues60S() {
          success: AjaxSuccess60S,
       });
 }
-function EnergyTickAggregationButtons(aggregation) {
-  $('#energy_3s').removeClass('active');
-  $('#energy_1m').removeClass('active');
-  $('#energy_10m').removeClass('active');
-  $('#energy_1h').removeClass('active');
-  if(aggregation == '3 seconds') {
-    $('#energy_3s').addClass('active');
-    EnergyAggregation = '3s';
-  } else if(aggregation == '1 minute') {
-    $('#energy_1m').addClass('active');
-    EnergyAggregation = '1m';
-  } else if(aggregation == '10 minutes') {
-    $('#energy_10m').addClass('active');
-    EnergyAggregation = '10m';
-  } else if(aggregation == '1 hour') {
-    $('#energy_1h').addClass('active');
-    EnergyAggregation = '1h';
-  }
-}
-function EnergyGetData(period = 0, endDate = 0, AutoUpdate = true) {
-  if((AutoUpdate == false) || (LastEnergyTime == 0)) {
-    $('#EnergyPanel').find("*").prop("disabled", true);
-    $('#EnergyPanel').css('opacity', '0.6');
-    $('#EnergyPanel').append('<div id="SpinnerDiv" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    EnergySpinner.spin(document.getElementById('SpinnerDiv'));
-  }
-  if(period == 0) {
-    var Range = EnergyChart.getOption('dateWindow');
-    period = (Range[1] - Range[0]) / 1000;
-  }
-  $.ajax({ url: "dashboard/getSeriesData",
-    timeout: 20000,
-    type: "POST",
-    dataType: "json",
-    contentType: 'application/json',
-    data: JSON.stringify({ Period: period, To: endDate, Aggreg: EnergyAggregation, LastSample: (AutoUpdate ? LastEnergyTime / 1000 : 0), Series: 'active_energy', Node: 0, IncludeFlag: true }),
-    success: AjaxEnergyUpdate,
-    complete: function() {
-      EnergySpinner.stop();
-      $('#SpinnerDiv').remove();
-      $('#EnergyPanel').css('opacity', '1.0');
-      $('#EnergyPanel').find("*").prop("disabled", false);
-      if(AutoUpdate && EnergyKeepNow) setTimeout(EnergyGetData, 5000);
-    }
- });
-}
-function EnergyButtonsClick() {
-  if(this.checked == false) return;
-  var Range = EnergyChart.getOption('dateWindow');
-  var Period = (Range[1] - Range[0]) / 1000;
-  var PrevScale = EnergyTimeScale;
-  if(($(this).val() == '3s') || ($(this).val() == '1m') || ($(this).val() == '10m') || ($(this).val() == '1h')) {
-    EnergyAggregation = $(this).val();
-  } else if($(this).val() == 'day') {
-    EnergyTimeScale = 'Day';
-    Period = 86400;
-  } else if($(this).val() == 'week') {
-    EnergyTimeScale = 'Week';
-    Period = 604800;
-  } else if($(this).val() == 'month') {
-    EnergyTimeScale = 'Month';
-    Period = 2592000;
-  } else if($(this).val() == 'year') {
-    EnergyTimeScale = 'Year';
-    Period = 31536000;
-  } else if(this.id == 'energynow') {
-    EnergyKeepNow = !EnergyKeepNow;
-    if(EnergyKeepNow) {
-      $(this).addClass('active');
-    } else {
-      $(this).removeClass('active');
-    }
-    $(this).blur();
-    if(EnergyKeepNow) EnergyGetData(Period, 0, true);
-    return;
-  }
-  EnergyGetData(Period, EnergyKeepNow ? 0 : Range[1] / 1000, false);
-  if(EnergyTimeScale != PrevScale) GetValues60S(true, false);
-}
-function AjaxEnergyUpdate(result) {
-  if((result['update'] == true) && (EnergyKeepNow == false)) return;
-  if(((EnergyAggregation == '1h') && (result['aggregation_source'] != '1 hour')) ||
-     ((EnergyAggregation == '10m') && (result['aggregation_source'] != '10 minutes')) ||
-     ((EnergyAggregation == '1m') && (result['aggregation_source'] != '1 minute')) ||
-     ((EnergyAggregation == '3s') && (result['aggregation_source'] != '3 seconds'))) {
-    if(result['update'] == true) return;
-    $('#aggreg_modal').modal('show');
-  }
-  if(result['update'] == false) EnergyData = [];
-  for(i = 0; i < result['sampletime'].length; i++) {
-    LastEnergyTime = result['sampletime'][i] * 1000 + 1000;
-    EnergyData.push([new Date(LastEnergyTime), result['active_energy'][i][0]]);
-  }
-  EnergyTickAggregationButtons(result['aggregation_source']);
-  $('#EnergyAggregation').text('From ' + result['aggregation_source'] + ' aggregation');
-  if(result['update'] == true) {
-    while(EnergyData.length > result['max_samples']) EnergyData.shift();
-  }
-  var UpperRange = -1000000;
-  var LowerRange =  1000000;
-  for (i = 0; i < EnergyData.length; i++) {
-    if(EnergyData[i][1] > UpperRange) UpperRange = EnergyData[i][1];
-    if(EnergyData[i][1] < LowerRange) LowerRange = EnergyData[i][1];
-  }
-  var Variation = (UpperRange - LowerRange);
-  if(Variation < 1) Variation = 1.0;
-  if(UpperRange > 0) UpperRange = UpperRange + Variation * 0.1;
-  if(LowerRange < 0) LowerRange = LowerRange - Variation * 0.1;
-  var toShow = [];
-  if((Math.abs(UpperRange) > 1000) || (Math.abs(LowerRange) > 1000)) {
-    EnergyChartUnits = 'kWh';
-    UpperRange = UpperRange / 1000;
-    LowerRange = LowerRange / 1000;
-    for(i = 0; i < EnergyData.length; i++) {
-      toShow.push([EnergyData[i][0], EnergyData[i][1] / 1000.0]);
-    }
-  } else {
-    EnergyChartUnits = 'Wh';
-    for(i = 0; i < EnergyData.length; i++) {
-      toShow.push([EnergyData[i][0], EnergyData[i][1]]);
-    }
-  }
-  if(EnergyChart == null) {
-    EnergyChart = new Dygraph(document.getElementById("EnergyChart"),
-      toShow,
-      { strokeWidth: 1,
-        labelsDiv: "EnergyLegend",
-        labels: ["Time", "Energy"],
-        plotter: barChartPlotterEnergy,
-        stepPlot: true,
-        fillGraph: true,
-        colors: ["#31708f"],
-        gridLineColor: "#999",
-        gridLinePattern: [4, 4],
-        valueRange: [LowerRange, UpperRange],
-        dateWindow: [result['from'] * 1000 + 1000, result['to'] * 1000 + 1000],
-        zoomCallback: function(minDate, maxDate, yRanges) {
-          EnergyGetData((maxDate - minDate) / 1000, maxDate / 1000, false);
-          $('#energy_year').removeClass('active');
-          $('#energy_month').removeClass('active');
-          $('#energy_week').removeClass('active');
-          $('#energy_day').removeClass('active');
-        },
-        interactionModel: {
-          mousedown: function(event, g, contex) {
-            mouseDownOZM(event, g, contex);
-            $('#energynow').removeClass('active');
-            EnergyKeepNow = false;
-          },
-          mousemove: mouseMoveOZM,
-          mouseup: function(event, g, contex) {
-            mouseUpOZM(event, g, contex);
-            if((contex.isPanning) && (contex.regionWidth > 0)) {
-              var startDate = parseInt(g.dateWindow_[0]);
-              var endDate = parseInt(g.dateWindow_[1]);
-              EnergyGetData((endDate - startDate) / 1000, endDate / 1000, false);
-            }            
-          },
-          dblclick: function(event, g, context) {
-            dblClickOZM(event, g, context);
-            var startDate = parseInt(g.dateWindow_[0]);
-            var endDate = parseInt(g.dateWindow_[1]);
-            EnergyGetData((endDate - startDate) / 1000, endDate / 1000, false);
-          }
-        },
-        axes: {
-          y: { pixelsPerLabel: 15,
-               axisLabelWidth: 34,
-               valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">' + EnergyChartUnits + '</em>';
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-               }
-             },
-          x: { valueFormatter: function (x) {
-                 var date = new Date(x);
-                 return date.toLocaleDateString() + ' - ' + date.toLocaleTimeString();
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + x.toLocaleTimeString() + '<br>' + x.toLocaleDateString() + '</div>';
-               }
-             }
-          }
-        }
-    );
-    $(window).bind('resize', EnergyResizeEvent);
-    $('#energy_day').addClass('active');
-    $('#maximizeEnergy').removeClass('disabled');
-    window.dispatchEvent(new Event('resize'));
-  } else {
-    EnergyChart.updateOptions({'file': toShow, valueRange: [LowerRange, UpperRange], dateWindow: [result['from'] * 1000 + 1000, result['to'] * 1000 + 1000]});
-  }
-  AddEvents(result, "Energy", EnergyChart);
-}
-function EnergyResizeEvent() {
-  var Height = $('#EnergyBox').height() + $('#BudgetBox').height();
-  if(EnergyChart != null) EnergyChart.resize($('#EnergyCol').width(), Height - 12);
-}
+
 function UpdateEvolutionChart(result) {
   for(j = 0; j < result['sampletime'].length; j++) {
     EvolutionDatasets[0].push([new Date(result['sampletime'][j] * 1000 + 1000), result.active_power[j]]);
@@ -930,22 +998,7 @@ function UpdateEvolutionChart(result) {
 $('#aggreg_modal_close').click(function() {
   $('#aggreg_modal').modal('hide');
 });
-$(':input[name="energy_chart_range"]').change(EnergyButtonsClick);
-$('#energynow').click(EnergyButtonsClick);
-$('#maximizeEnergy').click(function() {
-  $('#GraphDialogTitle').text('Energy');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#EnergyCol');
-  DialogElement = $('#EnergyMaximizeDiv').detach();
-  DialogPrevResizeHandler = EnergyResizeEvent;
-  DialogResizeHandler = function() {
-    EnergyChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 110);
-  };
-  $(window).unbind('resize', EnergyResizeEvent);
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
+
 
 $('#maximizeCurrent').click(function() {
   $('#GraphDialogTitle').text('Current');
@@ -999,17 +1052,11 @@ $('#GraphDialogClose').click(function() {
   $('#GraphDialog').modal('hide');
   window.dispatchEvent(new Event('resize'));
 });
-$('#btnExportEnergy').click(function() {
-  var Data = [];
-  var Filename = "Energy_" + LastEnergyTime + '.csv';
-  Data.push([['Index', 'Energy']]);
-  Data = Data.concat(EnergyData);
-  exportToCsv(Filename, Data);
-  $(this).blur();
-});
+
 
 
 function UpdatePage() {
+  AjaxGetEnergy();
   AjaxGetVoltage();
   AjaxGetCurrent();
   AjaxGetPower();

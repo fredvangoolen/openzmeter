@@ -8,7 +8,6 @@
 #include <math.h>
 #include "Database.h"
 #include "Tools.h"
-//bool Database::Initialized = false;
 Database::Database() {
   Params    = NULL;
   Result    = NULL;
@@ -17,8 +16,7 @@ Database::Database() {
   sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", Tools::DB.Host, Tools::DB.Port, Tools::DB.User, Tools::DB.Password, Tools::DB.Database);
   DBConn = PQconnectdb(ConnectionString);
   if(PQstatus(DBConn) == CONNECTION_BAD) {
-    Tools::LogMsg("ERROR", "No se pudo abrir la base de datos (%s)\n", PQerrorMessage(DBConn));
-    PQfinish(DBConn);
+    Tools::LogMsg("ERROR", "No se pudo abrir la base de datos (%s)\n", strtok(PQerrorMessage(DBConn), "\r\n"));
     return;
   }
   ExecSentence("SET synchronous_commit TO OFF");
@@ -27,11 +25,18 @@ Database::~Database() {
   if(Result != NULL) PQclear(Result);
   PQfinish(DBConn);
 }
+bool Database::PrepareDB() {
+  Database DB;
+  if(PQstatus(DB.DBConn) == CONNECTION_BAD) return false;
+  //Empiezo a meter tablas si no estan y procedimientos
+
+  return true;
+}
 bool Database::ExecSentence(const char* sql) {
   if(Result != NULL) PQclear(Result);
   Result = PQexec(DBConn, sql);
   if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
-    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
+    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", strtok(PQerrorMessage(DBConn), "\r\n"));
     PQclear(Result);
     Result = NULL;
     return false;
@@ -45,7 +50,7 @@ char* Database::ExecSentenceJSON(const char* sql, int *len) {
   if(Result != NULL) PQclear(Result);
   Result = PQexec(DBConn, sql);
   if(PQresultStatus(Result) != PGRES_TUPLES_OK) {
-    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
+    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", strtok(PQerrorMessage(DBConn), "\r\n"));
     PQclear(Result);
     Result = NULL;
     return NULL;

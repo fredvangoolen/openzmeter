@@ -240,7 +240,7 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
       else 
         Error = true;
     }
-    if((Aggreg == NULL) || (Series == NULL) || (Error == true)) {    
+    if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0)) || (Series == NULL) || (Error == true)) {    
       Request->ResultCode = MHD_HTTP_BAD_REQUEST;
       Request->PostData = "Invalid JSON params";
       Request->PostResponseLen = strlen(Request->PostData);
@@ -254,6 +254,9 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"From\", ", From);
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"To\", ", To); 
     int MaxPoints = 10000, PeriodSeconds = 3000;
+    if(strcmp(Aggreg, "1m")  == 0) PeriodSeconds = 60000;
+    if(strcmp(Aggreg, "10m") == 0) PeriodSeconds = 600000;
+    if(strcmp(Aggreg, "1h")  == 0) PeriodSeconds = 3600000;
     if((strcmp(Aggreg, "3s") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
       Aggreg = "1m";
       PeriodSeconds = 60000;
@@ -269,16 +272,16 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
     From -= PeriodSeconds;
     To   += PeriodSeconds;
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"MaxSamples\", ", (To - From) / PeriodSeconds);
-    if(strcmp(Aggreg, "3s") == 0) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'3 seconds' AS \"Aggregation_Source\", ");
-    } else if(strcmp(Aggreg, "1m") == 0) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'1 minute' AS \"Aggregation_Source\", ");
-    } else if(strcmp(Aggreg, "10m") == 0) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'10 minutes' AS \"Aggregation_Source\", ");
-    } else if(strcmp(Aggreg, "1h") == 0) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'1 hour' AS \"Aggregation_Source\", ");
-    }
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%s AS \"Update\", ", (LastSample != 0) ? "true" : "false");
+//    if(strcmp(Aggreg, "3s") == 0) {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'%s' AS \"Aggregation_Source\", ", Aggreg);
+//    } else if(strcmp(Aggreg, "1m") == 0) {
+//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'1 minute' AS \"Aggregation_Source\", ");
+//    } else if(strcmp(Aggreg, "10m") == 0) {
+//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'10 minutes' AS \"Aggregation_Source\", ");
+//    } else if(strcmp(Aggreg, "1h") == 0) {
+//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'1 hour' AS \"Aggregation_Source\", ");
+//    }
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%s AS \"Update\", ", (LastSample != 0) ? "true" : "false");
 
     char *Serie = strtok(Series, ", ");
     while(Serie != NULL) {

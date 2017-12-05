@@ -110,8 +110,20 @@ function StartPageLoad() {
   });  
 }
 
-
-
+/* Devuelve el texto completo a partir del texto abreviado de agregacion */
+function GetAggregText(short) {
+  if(short === '1h') {
+    return '1 hour';
+  } else if(short === '10m') {
+    return '10 minutes';
+  } else if(short === '1m') {
+    return '1 minute';
+  } else if(short === '3s') {
+    return '3 seconds';
+  } else {
+    return false;
+  }  
+}
 
 
 

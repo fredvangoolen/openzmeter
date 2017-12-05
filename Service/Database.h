@@ -14,6 +14,8 @@ class Database {
     const char  *Sentence;
     PGresult    *Result;
   public :
+    static bool PrepareDB();
+  public :
     void  PrepareSentence(const char *sentence);
     void  BindSingleUInt32(uint32_t param);
     void  BindSingleUInt64(uint64_t param);
