@@ -96,16 +96,22 @@ function AjaxFrequency(result) {
           })
         ],
         underlayCallback: function(canvas, area, g) {
-//          var YellowLowA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.07);
-//          var YellowHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - YellowLowA;
-//          var YellowLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.07);
+//          var NominalFreq = Nodes['NominalFreq'][Node];
+//          var Top    = g.toDomYCoord(NominalFreq + NominalFreq * 0.1);
+//          var Bottom = g.toDomYCoord(NominalFreq + NominalFreq * 0.01);          
+//          canvas.fillStyle = "rgba(255, 255, 0, 0.15)";
+//          canvas.fillRect(0, Top, area.w, Top - Bottom);
+
+//          var YellowLowA = ;
+//          var YellowHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.1) - YellowLowA;
+//          var YellowLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.01);
 //          var YellowHeightB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.10) - YellowLowB;
+
+          
 //          var RedLowA = g.toDomYCoord(1000);
 //          var RedHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - RedLowA;
 //          var RedLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.10);
 //          var RedHeightB = g.toDomYCoord(0) - RedLowB;
-//          canvas.fillStyle = "rgba(255, 255, 0, 0.15)";
-//          canvas.fillRect(0, YellowLowA, 10000, YellowHeightA);
 //          canvas.fillRect(0, YellowLowB, 10000, YellowHeightB);
 //          canvas.fillStyle = "rgba(180, 0, 0, 0.15)";
 //          canvas.fillRect(0, RedLowA, 10000, RedHeightA);
@@ -310,90 +316,115 @@ $('#btnExportFrequency').click(function() {
   $(this).blur();
 });
 
+/* Contadores de frequencia */
+var FrequencyCountersTimer  = null;
+function AjaxGetFrequencyCounters() {
+  var CountersPeriod = Cookies.get('CountersPeriod');
+  var Current, Period;
+  if(CountersPeriod === 'Week') {
+    Period = 86400000 * 7;
+    Current = GetWeekTimestamp();
+    Aggreg = '10m';
+  } else if(CountersPeriod === 'Month') {
+    Period = 86400000 * 30;
+    Current = GetMonthTimestamp();
+    Aggreg = '1h';
+  } else if(CountersPeriod === 'Year') {
+    Period = 86400000 * 365;
+    Current = GetYearTimestamp();
+    Aggreg = '1h';
+  } else {
+    CountersPeriod = 'Day';
+    Cookies.set('CountersPeriod', CountersPeriod);
+    Period = 86400000;
+    Current = GetDayTimestamp();
+    Aggreg = '1m';
+  }
+  $.ajax({ url: "getSeriesAggreg",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Series: "avg(freq), max(freq), min(freq)", Aggreg: Aggreg, Period: Period, To: Current + Period }),
+           success: FrequencyUpdateCountersCurrent
+  });
+  $.ajax({ url: "getSeriesAggreg",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Series: "avg(freq)", Aggreg: Aggreg, Period: Period, To: Current }),
+           success: FrequencyUpdateCountersPrevs
+  });
+}
+function FrequencyUpdateCountersCurrent(result) {
+  FrequencyCountersTimer = setTimeout(FrequencyCountersTimer, 60000);
+  var CountersPeriod = Cookies.get('CountersPeriod');
+  if(CountersPeriod === 'Week') {
+    $('#labelFrequencyPeriodAVG').text('This week average');
+    $('#labelFrequencyPeriodMAX').text('This week maximum');
+    $('#labelFrequencyPeriodMIN').text('This week minimum');
+  } else if(CountersPeriod === 'Month') {
+    $('#labelFrequencyPeriodAVG').text('This month average');
+    $('#labelFrequencyPeriodMAX').text('This month maximum');
+    $('#labelFrequencyPeriodMIN').text('This month minimum');
+  } else if(CountersPeriod === 'Year') {
+    $('#labelFrequencyPeriodAVG').text('This year average');
+    $('#labelFrequencyPeriodMAX').text('This year maximum');
+    $('#labelFrequencyPeriodMIN').text('This year minimum');
+  } else if(CountersPeriod === 'Day') {
+    $('#labelFrequencyPeriodAVG').text('Today average');
+    $('#labelFrequencyPeriodMAX').text('Today maximum');
+    $('#labelFrequencyPeriodMIN').text('Today minimum');
+  }
+  if(result['avg_freq'] === null) {
+    $('#labelFrequencyCurrentAVG').text('?');
+    $('#labelFrequencyCurrentMAX').text('?');
+    $('#labelFrequencyCurrentMIN').text('?');
+  } else {
+    $('#labelFrequencyCurrentAVG').text(Round2(result['avg_freq']));
+    $('#labelFrequencyCurrentMAX').text(Round2(result['max_freq']));
+    $('#labelFrequencyCurrentMIN').text(Round2(result['min_freq']));
+  }
+}
+function FrequencyUpdateCountersPrevs(result) {
+  var CountersPeriod = Cookies.get('CountersPeriod');
+  if(CountersPeriod === 'Week') {
+    $('#labelFrequencyPrevPeriodAVG').text('Previous week average');
+    $('#labelFrequencyPrevPeriodMAX').text('Previous week maximum');
+    $('#labelFrequencyPrevPeriodMIN').text('Previous week minimum');
+  } else if(CountersPeriod === 'Month') {
+    $('#labelFrequencyPrevPeriodAVG').text('Previous month average');
+    $('#labelFrequencyPrevPeriodMAX').text('Previous month maximum');
+    $('#labelFrequencyPrevPeriodMIN').text('Previous month minimum');
+  } else if(CountersPeriod === 'Year') {
+    $('#labelFrequencyPrevPeriodAVG').text('Previous year average');
+    $('#labelFrequencyPrevPeriodMAX').text('Previous year maximum');
+    $('#labelFrequencyPrevPeriodMIN').text('Previous year minimum');
+  } else if(CountersPeriod === 'Day') {
+    $('#labelFrequencyPrevPeriodAVG').text('Previous day average');
+    $('#labelFrequencyPrevPeriodMAX').text('Previous day maximum');
+    $('#labelFrequencyPrevPeriodMIN').text('Previous day minimum');
+  }
+  if(result['avg_freq'] === null) {
+    $('#labelFrequencyPrevAVG').text('?');
+    $('#labelFrequencyPrevMAX').text('?');
+    $('#labelFrequencyPrevMIN').text('?');
+  } else {
+    $('#labelFrequencyPrevAVG').text(Round2(result['avg_freq']));
+    $('#labelFrequencyPrevMAX').text(Round2(result['max_freq']));
+    $('#labelFrequencyPrevMIN').text(Round2(result['min_freq']));
+  }
+}
 
-
-
-
-
-
-
+/* Ventana de maximizar y de error de agregaciones */
 var DialogElement           = null;
 var PrevDialogContainer     = null;
 var DialogResizeHandler     = null;
 var DialogPrevResizeHandler = null;
-
-//var NominalFrequency      = 50;
-
-var FrequencyAggregation  = '10m';
-var FrequencyTimeScale    = 'Day';
-var FrequencyKeepNow      = true;
-
-function AjaxSuccess5S(result) {
-  if(result != null && Object.keys(result).length > 0) {
-    if(result['harmonics_v']) UpdateHarmonicsChart(result);
-    if(result['fft_v']) UpdateFFTChart(result);
-    if(result['wave_v']) UpdateWaveformChart(result);
-    LastTimestamp = result['sampletime'];
-    result.lastVoltage = result['rms_v'];
-    result.lastCurrent = result['rms_i'];
-    result.lastPower = result['active_power'];
-    result.lastFrequency = result['freq'];
-  } else {
-    $('#frequency_integer').text('?');
-    $('#frequency_decimal').text('');
-    $('#frequency_last_day').text('?');
-    $('#frequency_hour_min').text('?');
-    $('#frequency_hour_max').text('?');
-    $('#frequency_min_day').text('?');
-    $('#frequency_max_day').text('?');
-  }
-  UpdateHeader(result);
-}
-function GetValues5S() {
-  $.ajax({ url: "analysis/ajaxUpdateValues5sFrequency",
-           timeout: 60000,
-           type: "POST",
-           dataType: "json",
-           data: { },
-           success: AjaxSuccess5S,
-           complete: function (x) {
-                       setTimeout(GetValues5S, 5000);
-                     }
-        });
-}
-function AjaxSuccess60S(result) {
-  $('#frequency_hour').text(Round2(result['hour_rms']));
-  $('#frequency_last_day').text(Round2(result['day_rms']));
-  $('#frequency_hour_min').text(Round2(result['hour_min']));
-  $('#frequency_hour_max').text(Round2(result['hour_max']));
-  $('#frequency_min_day').text(Round2(result['day_min']));
-  $('#frequency_max_day').text(Round2(result['day_max']));
-  UpdateHeader(result);
-}
-function GetValues60S(getHarmonics = true) {
-  $.ajax({ url: "analysis/ajaxUpdateValues60sFrequency",
-         timeout: 60000,
-         type: "POST",
-         dataType: "json",
-         data: { },
-         success: AjaxSuccess60S,
-         complete: function (x) {
-                     setTimeout(GetValues60S, getHarmonics ? 60000 : 100);
-                   }
-      });
-}
-
-function UpdatePage() {
-  AjaxGetFrequency();
-}
-
-
-
 $('#aggreg_modal_close').click(function() {
   $('#aggreg_modal').modal('hide');
 });
-
-
 $('#GraphDialogClose').click(function() {
   $(window).unbind('resize', DialogResizeHandler);
   $(window).bind('resize', DialogPrevResizeHandler);
@@ -401,7 +432,7 @@ $('#GraphDialogClose').click(function() {
   $('#GraphDialog').modal('hide');
   window.dispatchEvent(new Event('resize'));
 });
+
 $(document).ajaxError(function (event, jqxhr, settings, exception) {
   //if(jqxhr.status === 200) window.location.href = 'login';
 });
-

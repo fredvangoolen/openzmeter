@@ -484,14 +484,13 @@
           <itemPath>WEB/Views/template/commonHeader.html</itemPath>
           <itemPath>WEB/Views/template/commonScripts.php</itemPath>
         </logicalFolder>
-        <itemPath>WEB/Views/Dashboard.html</itemPath>
-        <itemPath>WEB/Views/Login.html</itemPath>
         <itemPath>WEB/Views/account_view.php</itemPath>
         <itemPath>WEB/Views/settings_view.php</itemPath>
         <itemPath>WEB/Views/stats_view.php</itemPath>
       </logicalFolder>
       <itemPath>WEB/Dashboard.html</itemPath>
       <itemPath>WEB/Frequency.html</itemPath>
+      <itemPath>WEB/Login.html</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -576,6 +575,8 @@
       <item path="WEB/Dashboard.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Frequency.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Login.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/CommonHeader.html" ex="false" tool="3" flavor2="0">
       </item>
@@ -1858,10 +1859,6 @@
       <item path="WEB/Resources/lib/visjs/vis.min.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/openZmeter.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Views/Dashboard.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Views/Login.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Views/account_view.php" ex="false" tool="3" flavor2="0">
       </item>

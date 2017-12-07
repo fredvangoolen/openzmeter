@@ -148,17 +148,6 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
     if(HandleDashboard(connection, url, method) == MHD_YES) return MHD_YES;
     if(HandleAnalysis_Frequency(connection, url, method) == MHD_YES) return MHD_YES;
   }
-  //  Session_t *Session = (Session_t*)*ptr;
-//  if(Session == NULL) return MHD_NO;
-//  if(HandlePostRequest(connection, url, upload_data, upload_data_size, method, ptr) == MHD_YES) return MHD_YES;
-  if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
-    if(Request->Session->User == NULL) return SendRedirect(connection, "/Login");
-    if((strcmp(url, "/") == 0) || (strcmp(url, "/Dashboard") == 0)) {
-    } else if(strcmp(url, "/Analisys_Voltage") == 0) {
-    } else if(strcmp(url, "/Analisys_Current") == 0) {
-    } else if(strcmp(url, "/Analisys_Energy") == 0) {
-    }
-  }
   return SendError(connection, MHD_HTTP_NOT_FOUND, "Page not found");
 }
 int  HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url, const char *method, void **ptr) {
@@ -167,7 +156,7 @@ int  HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url,
     if(Request->Session->User != NULL) return SendRedirect(connection, "/Dashboard");
     char Cookie[256];
     sprintf(Cookie, "OZM_SESSION=%s; httponly; Path=/", Request->Session->ID);
-    return SendFile(connection, (char*)"WEB/Views/Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
+    return SendFile(connection, (char*)"WEB/Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
     int File = -1;
     struct stat FileStat;
     const char *FilePath = "WEB/Views/Login.html";
@@ -215,7 +204,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     }
   }
   if(strcmp(url, "/getNodes") == 0) {
-    Request->PostData = (char*)"{ \"IDs\": [0,1], \"Names\": [\"Principal\", \"Secundario\"], \"State\" : [true, false], \"Type\": [\"3Phase\", \"1Phase\"], \"SampleFreq\": [15625, 15625], \"NominalVoltage\": [230, 230], \"MaxCurrent\": [20, 20] }";
+    Request->PostData = (char*)"{ \"IDs\": [0,1], \"Names\": [\"Principal\", \"Secundario\"], \"State\" : [true, false], \"Type\": [\"3Phase\", \"1Phase\"], \"SampleFreq\": [15625, 15625], \"NominalVoltage\": [230, 230], \"MaxCurrent\": [20, 20], \"NominalFreq\": [50, 50] }";
     Request->PostResponseLen = strlen(Request->PostData);
     return MHD_YES;
   }

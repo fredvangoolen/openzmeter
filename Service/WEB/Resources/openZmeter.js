@@ -125,9 +125,30 @@ function GetAggregText(short) {
   }  
 }
 
+/* Obtiene el timestamp del inicio del dia actual */
+function GetDayTimestamp() {
+  var now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).getTime();
+}
 
+/* Obtiene el timestamp del inicio de la semana actual */
+function GetWeekTimestamp() {
+  var WeekDay = new Date().getDay();
+  var Today = GetDayTimestamp();
+  return Today - 86400 * WeekDay;
+}
 
+/* Obtiene el timestamp del inicio del mes actual */
+function GetMonthTimestamp() {
+  var now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0).getTime();
+}
 
+/* Obtiene el timestamp del inicio del año actual */
+function GetYearTimestamp() {
+  var now = new Date();
+  return new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0).getTime();
+}
 
 
 function UpdateHeader(result) {
