@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="zRed"/>
+    <link rel="shortcut icon" href="favicon.ico"/>
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="lib/metisMenu/metisMenu.min.css"/>
+    <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
+    <link rel="stylesheet" href="css/common.css"/>
+    <title>openZmeter - Analysys - Frequency</title>
+  </head>
+  <body>
+    <nav class="navbar navbar-default navbar-fixed-top" id="Header"></nav>
+    <div class="modal fade" id="aggreg_modal" tabindex="-1" role="dialog" data-backdrop='static'>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title" id="myModalLabel"><i class="fa fa-exclamation-triangle"></i> Aggregation change...</h3>
+          </div>
+          <div class="modal-body">
+            <p>Requested aggregation returns to much points.<br/>Zoom in and try again.</p><p>Aggregation period has been changed to the lowest allowed.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-success" id="aggreg_modal_close"><span class="glyphicon glyphicon-ok"></span>  Continue</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal" id="GraphDialog" tabindex="1" role="dialog" data-backdrop='static'>
+      <div class="modal-dialog" style="width: 100%; height: 100%; padding: 10px; margin: 0px">
+        <div class="modal-content" style="height: 100%" id="GraphDialogContents">
+          <div class="modal-header">
+            <div class="pull-left">
+            <h3 class="modal-title" id="GraphDialogTitle"></h3>
+            </div>
+            <div class="pull-right">
+              <button type="button" class="btn btn-default btn-sm" id="GraphDialogClose">
+                <i class="fa fa-compress"></i>
+              </button>
+            </div>
+            <div class="clearfix"></div>
+          </div>
+          <div class="modal-body" id="GraphDialogBody" style="padding-top: 0px"></div>
+        </div>
+      </div>
+    </div>
+    <div id="wrapper">
+      <div id="page-wrapper">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="panel panel-green">
+              <div class="panel-heading" id="FrequencyPanel">
+                <span class="huge-small">Frequency</span>
+                <div class="pull-right">
+                  <span class="small"></span><br>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs" id="btnFrequencyNow"      data-toggle="tooltip" title="Move to most recent samples and update in real time"><i class="fa fa-play"></i></button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnExportFrequency"   data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnMaximizeFrequency" data-toggle="tooltip" title="Maximize graph"><i class="fa fa-expand"></i></button>
+                  </div>
+                </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="pull-right">
+                  <span class="small">Time scale:</span><br>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowFrequencyYear"  data-toggle="tooltip" title="Zoom the graph to one year, keeping current aggregation level while possible">Year</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowFrequencyMonth" data-toggle="tooltip" title="Zoom the graph to one month, keeping current aggregation level while possible">Month</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowFrequencyWeek"  data-toggle="tooltip" title="Zoom the graph to one week, keeping current aggregation level while possible">Week</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowFrequencyDay"   data-toggle="tooltip" title="Zoom the graph to one day, keeping current aggregation level while possible">Day</button>
+                  </div>
+                </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="pull-right">
+                  <span class="small">Aggregation scale:</span><br>
+                  <div class="btn-group">
+                    <button class="btn btn-default btn-xs" id="btnFrequency3S"  data-toggle="tooltip" title="Fetch graph from 3 seconds aggregation">3 Seconds</button>
+                    <button class="btn btn-default btn-xs" id="btnFrequency1M"  data-toggle="tooltip" title="Fetch graph from 1 minute aggregation">1 Minute</button>
+                    <button class="btn btn-default btn-xs" id="btnFrequency10M" data-toggle="tooltip" title="Fetch graph from 10 minutes aggregation">10 Minutes</button>
+                    <button class="btn btn-default btn-xs" id="btnFrequency1H"  data-toggle="tooltip" title="Fetch graph from 1 hour aggregation">1 Hour</button>
+                  </div>
+                </div>
+                <span class="clearfix"> </span> 
+              </div>
+              <div class="row">
+                <div class="col-md-6 col-lg-3">
+                  <div class="row">
+                    <div class="col-xs-4 col-md-12">
+                      <div class="panel panel-lightgreen-info" id="PanelAvg">
+                        <h4>Last hour RMS</h4>
+                        <span class="huge-small-unit" id="frequency_hour">?</span><em class="huge-small-unit">&nbsp;Hz</em>
+                        <p>24 hours RMS&nbsp;<span id="frequency_last_day">?</span><em class="small">&nbsp;Hz</em></p>
+                      </div>
+                    </div>
+                    <div class="col-xs-4 col-md-12">
+                      <div class="panel panel-lightgreen-info" id="PanelMin">
+                        <h4>Last hour min</h4>
+                        <span class="huge-small-unit" id="frequency_hour_min">?</span><em class="huge-small-unit">&nbsp;Hz</em><br/>
+                        <p>24 hours min&nbsp;<span id="frequency_min_day">?</span><em class="small">&nbsp;Hz</em></p>
+                      </div>
+                    </div>
+                    <div class="col-xs-4 col-md-12">
+                      <div class="panel panel-lightgreen-info" id="PanelMax">
+                        <h4>Last hour max</h4>  
+                        <span class="huge-small-unit" id="frequency_hour_max">?</span><em class="huge-small-unit">&nbsp;Hz</em><br/>
+                        <p>24 hours max&nbsp;<span id="frequency_max_day">?</span><em class="small">&nbsp;Hz</em></p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col col-md-6 col-lg-9" id="FrequencyCol">
+                  <div id="FrequencyMaximizeDiv">
+                    <div style="padding:5px">
+                      <div style="display:inline-block" id="FrequencyAggregation">Loading data...</div>
+                      <div id="FrequencyLegend" style="float: right"></div>
+                    </div>
+                    <div id="FrequencyChart" class="chart big_chart"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="lib/cookie.min.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="lib/metisMenu/metisMenu.min.js"></script>
+    <script src="lib/spin.js/spin.min.js"></script>
+    <script src="lib/dygraph/dygraph.js"></script>
+    <script src="lib/dygraph/crosshair.js"></script>
+    <script src="lib/dygraph/dygraph-interaction.js"></script>
+    <script src="openZmeter.js"></script>
+    <script src="Frequency.js"></script>
+    <script>
+      StartPageLoad();
+    </script>
+  </body>
+</html>

@@ -1,13 +1,13 @@
       <div class="navbar-header">
-        <a class="navbar-brand" href="Dashboard"><i class="fa fa-bolt fa-fw"></i> openZmeter</a>
+        <a class="navbar-brand" href="Dashboard"><span class="glyphicon glyphicon-flash"></span> openZmeter</a>
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
           <span class="sr-only">Toggle navigation</span>
-          <i class="fa fa-bars" aria-hidden="true"></i>
+          <span class="glyphicon glyphicon-menu-hamburger"></span>
         </button> 
       </div>
       <ul class="nav navbar-top-links navbar-right">
         <li class="dropdown">
-          <a class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-eye" aria-hidden="true"></i> <span id="SourceSel"></span> <span class="caret"></span></a>
+          <a class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-eye-open"></span> <span id="SourceSel"></span> <span class="caret"></span></a>
           <ul class="dropdown-menu" id="SourceList">
           </ul>
         </li>
@@ -36,20 +36,20 @@
         <li id="EventsDropdown" class="dropdown">
           <a class="dropdown-toggle" data-toggle="dropdown" href="#">
             <span class="badge alert-danger" id="EventNumber"></span>
-            <i class="fa fa-bell fa-fw"></i><i class="fa fa-caret-down"></i>
+            <span class="glyphicon glyphicon-bell"></span><span class="caret"></span>
           </a>
           <ul class="dropdown-menu dropdown-alerts">
             <li>
               <a class="text-center" href="Disturbances">
                 <strong>See last events </strong>
-                <i class="fa fa-angle-right"></i>
+                <span class="glyphicon glyphicon-menu-right"></span>
               </a>
             </li>
           </ul>
         </li>
         <li class="dropdown">
           <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-            <i class="fa fa-user fa-fw"></i>  <i class="fa fa-caret-down"></i>
+            <i class="fa fa-user fa-fw"></i>  <span class="caret"></span>
           </a>
           <ul class="dropdown-menu dropdown-user">
             <li><a href="Account"><i class="fa fa-gear fa-fw"></i> Account settings</a>
@@ -84,12 +84,12 @@
               <a href="/Dashboard"><i class="fa fa-dashboard fa-fw"></i>Dashboard</a>
             </li>
             <li>
-              <a href="Analysis"><i class="fa fa-search-plus fa-fw"></i>Analysis<span class="caret"></span></a>
+              <a href="Voltage"><i class="fa fa-search-plus fa-fw"></i>Analysis<span class="caret"></span></a>
               <ul class="nav nav-second-level">
-                <li><a href="Analysis/Voltage">Voltage</a></li>
-                <li><a href="Analysis/Current">Current</a></li>
-                <li><a href="Analysis/Energy">Energy</a></li>
-                <li><a href="Analisys/Frequency">Frequency</a></li>
+                <li><a href="Voltage">Voltage</a></li>
+                <li><a href="Current">Current</a></li>
+                <li><a href="Energy">Energy</a></li>
+                <li><a href="Frequency">Frequency</a></li>
               </ul>
             </li>
             <li>

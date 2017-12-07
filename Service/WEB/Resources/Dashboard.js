@@ -28,7 +28,7 @@ function AjaxGetVoltage() {
     $('#VoltagePanel').append('<div id="SpinnerDivVoltage" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
     VoltageSpinner.spin(document.getElementById('SpinnerDivVoltage'));
   }
-  $.ajax({ url: "getSeriesData",
+  $.ajax({ url: "getSeries",
            timeout: 20000,
            type: "POST",
            dataType: "json",
@@ -47,11 +47,9 @@ function AjaxVoltage(result) {
     $('#VoltagePanel').find("*").prop("disabled", false);    
   }
   if(result['Sampletime'][0] <= LastVoltageSample) return;
-  for(i = 0; i < result['Sampletime'].length; i++) {
-    VoltageData.push([new Date(result['Sampletime'][i]), result['rms_v'][i][0]]);
-    while(VoltageData.length > result['MaxSamples'])   VoltageData.shift();
-    LastVoltageSample = result['Sampletime'][i];
-  }
+  for(i = 0; i < result['Sampletime'].length; i++) VoltageData.push([new Date(result['Sampletime'][i]), result['rms_v'][i][0]]);
+  while(VoltageData.length > result['MaxSamples'])   VoltageData.shift();
+  LastVoltageSample = result['Sampletime'][result['Sampletime'].length - 1];
   var UpperRange = -Infinity;
   var LowerRange =  Infinity;
   for (i = 0; i < VoltageData.length; i++) {
@@ -167,7 +165,7 @@ function AjaxGetCurrent() {
     $('#CurrentPanel').append('<div id="SpinnerDivCurrent" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
     VoltageSpinner.spin(document.getElementById('SpinnerDivCurrent'));
   }
-  $.ajax({ url: "getSeriesData",
+  $.ajax({ url: "getSeries",
            timeout: 20000,
            type: "POST",
            dataType: "json",
@@ -299,7 +297,7 @@ function AjaxGetPower() {
     $('#PowerPanel').append('<div id="SpinnerDivPower" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
     PowerSpinner.spin(document.getElementById('SpinnerDivPower'));
   }
-  $.ajax({ url: "getSeriesData",
+  $.ajax({ url: "getSeries",
            timeout: 20000,
            type: "POST",
            dataType: "json",
@@ -412,7 +410,7 @@ function AjaxGetFrequency() {
     $('#FrequencyPanel').append('<div id="SpinnerDivFrequency" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
     PowerSpinner.spin(document.getElementById('SpinnerDivPower'));
   }
-  $.ajax({ url: "getSeriesData",
+  $.ajax({ url: "getSeries",
            timeout: 20000,
            type: "POST",
            dataType: "json",
@@ -527,7 +525,7 @@ function AjaxGetEnergy() {
     GraphAggregation = '10m';
     Cookies.set('GraphAggregation', GraphAggregation);
   }
-  $.ajax({ url: "getSeriesData",
+  $.ajax({ url: "getSeries",
     timeout: 20000,
     type: "POST",
     dataType: "json",
@@ -546,14 +544,12 @@ function AjaxEnergy(result) {
     $('#EnergyPanel').find("*").prop("disabled", false);
     EnergyData = [];
   }
-  for(i = 0; i < result['Sampletime'].length; i++) {
-    EnergyData.push([new Date(result['Sampletime'][i]), result['active_energy'][i][0]]);
-    while(EnergyData.length > result['MaxSamples']) EnergyData.shift();
-    LastEnergySample = result['Sampletime'][i];
-  } 
+  for(i = 0; i < result['Sampletime'].length; i++) EnergyData.push([new Date(result['Sampletime'][i]), result['active_energy'][i][0]]);
+  while(EnergyData.length > result['MaxSamples']) EnergyData.shift();
+  LastEnergySample = result['Sampletime'][result['Sampletime'].length - 1];
   $('#EnergyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');  
-  var UpperRange = -1000000;
-  var LowerRange =  1000000;
+  var UpperRange = -Infinity;
+  var LowerRange =  Infinity;
   for (i = 0; i < EnergyData.length; i++) {
     if(EnergyData[i][1] > UpperRange) UpperRange = EnergyData[i][1];
     if(EnergyData[i][1] < LowerRange) LowerRange = EnergyData[i][1];
@@ -871,7 +867,7 @@ function AjaxGetMainParameters() {
     $('#MainParamPanel').append('<div id="SpinnerDivMain" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
     MainParamSpinner.spin(document.getElementById('SpinnerDivMain'));
   }
-  $.ajax({ url: "getSeriesData",
+  $.ajax({ url: "getSeries",
            timeout: 20000,
            type: "POST",
            dataType: "json",

@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <time.h>
 #include <errno.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include "HTTPServer.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -127,11 +129,11 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
     Request = (Request_t*)*ptr;
     Request->Session = GetSession(connection);
     Request->ResultCode = MHD_HTTP_OK;
-    if(strcmp (method, MHD_HTTP_METHOD_POST) == 0) return MHD_YES;
+    if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) return MHD_YES;
   }
-  if(strcmp (method, MHD_HTTP_METHOD_POST) == 0) {
+  if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
     if(*upload_data_size != 0) {
-      HandlePostRequest(url, upload_data, upload_data_size, ptr);
+      HandlePostRequest(connection, url, upload_data, upload_data_size, ptr);
 	    *upload_data_size = 0;
   	  return MHD_YES;
 	  } else {
@@ -142,8 +144,9 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
       return Return;
     }
   } else if(strcmp (method, MHD_HTTP_METHOD_GET) == 0) {
-    if(HandleLogin(connection, url, upload_data, upload_data_size, method, ptr) == MHD_YES) return MHD_YES;
-    if(HandleDashboard(connection, url, upload_data, upload_data_size, method, ptr) == MHD_YES) return MHD_YES;
+    if(HandleLogin(connection, url, method, ptr) == MHD_YES) return MHD_YES;
+    if(HandleDashboard(connection, url, method) == MHD_YES) return MHD_YES;
+    if(HandleAnalysis_Frequency(connection, url, method) == MHD_YES) return MHD_YES;
   }
   //  Session_t *Session = (Session_t*)*ptr;
 //  if(Session == NULL) return MHD_NO;
@@ -158,7 +161,7 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
   }
   return SendError(connection, MHD_HTTP_NOT_FOUND, "Page not found");
 }
-int  HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, const char *method, void **ptr) {
+int  HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url, const char *method, void **ptr) {
   Request_t *Request = (Request_t*)*ptr;
   if(strcmp(url, "/Login") == 0) {
     if(Request->Session->User != NULL) return SendRedirect(connection, "/Dashboard");
@@ -187,7 +190,7 @@ int  HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url,
   if(Request->Session->User == NULL) return SendRedirect(connection, "/Login");
   return MHD_NO;
 }
-int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
+int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
   Request_t *Request = (Request_t*)*ptr;
   Request->JSONReader = json_tokener_parse(upload_data);
   bool Error = false;
@@ -204,17 +207,20 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
     return MHD_YES;
   }
   if(Request->Session->User == NULL) {
-    Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
-    Request->PostData = "Unauthorided access to API";
-    Request->PostResponseLen = strlen(Request->PostData);
-    return MHD_YES;
+    struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
+    if(((sockaddr_in*)Addr)->sin_addr.s_addr != 0x0100007F) {
+      Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
+      Request->PostData = "Unauthorided access to API";
+      Request->PostResponseLen = strlen(Request->PostData);
+      return MHD_YES;
+    }
   }
   if(strcmp(url, "/getNodes") == 0) {
     Request->PostData = "{ \"IDs\": [0,1], \"Names\": [\"Principal\", \"Secundario\"], \"State\" : [true, false], \"Type\": [\"3Phase\", \"1Phase\"], \"SampleFreq\": [15625, 15625], \"NominalVoltage\": [230, 230], \"MaxCurrent\": [20, 20] }";
     Request->PostResponseLen = strlen(Request->PostData);
     return MHD_YES;
   }
-  if(strcmp(url, "/getSeriesData") == 0) {
+  if(strcmp(url, "/getSeries") == 0) {
     uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
     uint32_t Node = 0;
     char    *Aggreg = NULL, *Series = NULL;
@@ -253,15 +259,15 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
     if(strcmp(Aggreg, "10m") == 0) PeriodSeconds = 600000;
     if(strcmp(Aggreg, "1h")  == 0) PeriodSeconds = 3600000;
     if((strcmp(Aggreg, "3s") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
-      Aggreg = "1m";
+      Aggreg = (char*)"1m";
       PeriodSeconds = 60000;
     } 
     if((strcmp(Aggreg, "1m") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
-      Aggreg = "10m";
+      Aggreg = (char*)"10m";
       PeriodSeconds = 600000;
     } 
     if((strcmp(Aggreg, "10m") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
-      Aggreg = "1h";
+      Aggreg = (char*)"1h";
       PeriodSeconds = 3600000;
     } 
     From -= PeriodSeconds;
@@ -278,12 +284,11 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
   }
-
-
-  if(Request->PostData == NULL) {
-    Request->PostData = "bliu";
-    Request->PostResponseLen = 4;
-  }
+  
+  
+  Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+  Request->PostData = (char*)"Invalid command";
+  Request->PostResponseLen = strlen(Request->PostData);
   return MHD_YES;
 //  if((upload_data != NULL) && (Request->PostData == NULL)) Request->PostData = strdup(upload_data);
 //  if((*upload_data_size != 0) || (upload_data != NULL) || (Request->PostData == NULL)) return MHD_YES;
@@ -372,8 +377,13 @@ int HTTPServer::HandlePostRequest(const char *url, const char *upload_data, size
 //  MHD_destroy_response (response);
 //  return Return;
 }
-int HTTPServer::HandleDashboard(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, const char *method, void **ptr) {
+int HTTPServer::HandleDashboard(struct MHD_Connection *connection, const char *url, const char *method) {
   if((strcmp(method, MHD_HTTP_METHOD_GET) != 0) || ((strcmp(url, "/Dashboard") != 0) && (strcmp(url, "/") != 0))) return MHD_NO;
-  int Return = SendFile(connection,  "WEB/Views/Dashboard.html");
+  int Return = SendFile(connection,  "WEB/Dashboard.html");
+  return Return;
+}
+int HTTPServer::HandleAnalysis_Frequency(struct MHD_Connection *connection, const char *url, const char *method) {
+  if((strcmp(method, MHD_HTTP_METHOD_GET) != 0) || (strcmp(url, "/Frequency") != 0)) return MHD_NO;
+  int Return = SendFile(connection,  "WEB/Frequency.html");
   return Return;
 }

@@ -36,7 +36,6 @@
             <itemPath>WEB/Resources/js/events/events.js</itemPath>
             <itemPath>WEB/Resources/js/events/itic.js</itemPath>
           </logicalFolder>
-          <itemPath>WEB/Resources/Dashboard.js</itemPath>
           <itemPath>WEB/Resources/js/Login.js</itemPath>
           <itemPath>WEB/Resources/js/account.js</itemPath>
           <itemPath>WEB/Resources/js/live.js</itemPath>
@@ -465,6 +464,8 @@
           <itemPath>WEB/Resources/lib/jquery.min.js</itemPath>
         </logicalFolder>
         <itemPath>WEB/Resources/CommonHeader.html</itemPath>
+        <itemPath>WEB/Resources/Dashboard.js</itemPath>
+        <itemPath>WEB/Resources/Frequency.js</itemPath>
         <itemPath>WEB/Resources/favicon.ico</itemPath>
         <itemPath>WEB/Resources/openZmeter.js</itemPath>
       </logicalFolder>
@@ -472,7 +473,6 @@
         <logicalFolder name="analysis" displayName="analysis" projectFiles="true">
           <itemPath>WEB/Views/analysis/Analysis_Current.html</itemPath>
           <itemPath>WEB/Views/analysis/energy_power_view.php</itemPath>
-          <itemPath>WEB/Views/analysis/frequency_view.php</itemPath>
           <itemPath>WEB/Views/analysis/harmonics_view.php</itemPath>
           <itemPath>WEB/Views/analysis/voltage_view.php</itemPath>
         </logicalFolder>
@@ -490,17 +490,8 @@
         <itemPath>WEB/Views/settings_view.php</itemPath>
         <itemPath>WEB/Views/stats_view.php</itemPath>
       </logicalFolder>
-      <itemPath>WEB/Account.php</itemPath>
-      <itemPath>WEB/Analysis.php</itemPath>
-      <itemPath>WEB/Dashboard.php</itemPath>
-      <itemPath>WEB/Data_model.php</itemPath>
-      <itemPath>WEB/Event_model.php</itemPath>
-      <itemPath>WEB/Events.php</itemPath>
-      <itemPath>WEB/Login.php</itemPath>
-      <itemPath>WEB/Settings.php</itemPath>
-      <itemPath>WEB/Stats.php</itemPath>
-      <itemPath>WEB/Sysinfo_model.php</itemPath>
-      <itemPath>WEB/index.php</itemPath>
+      <itemPath>WEB/Dashboard.html</itemPath>
+      <itemPath>WEB/Frequency.html</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -582,23 +573,15 @@
       </item>
       <item path="Tools.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Account.php" ex="false" tool="3" flavor2="0">
+      <item path="WEB/Dashboard.html" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Analysis.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Dashboard.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Data_model.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Event_model.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Events.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Login.php" ex="false" tool="3" flavor2="0">
+      <item path="WEB/Frequency.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/CommonHeader.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Dashboard.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Frequency.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/css/common.css" ex="false" tool="3" flavor2="0">
       </item>
@@ -1876,12 +1859,6 @@
       </item>
       <item path="WEB/Resources/openZmeter.js" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Settings.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Stats.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Sysinfo_model.php" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="WEB/Views/Dashboard.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Views/Login.html" ex="false" tool="3" flavor2="0">
@@ -1894,11 +1871,6 @@
             flavor2="0">
       </item>
       <item path="WEB/Views/analysis/energy_power_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Views/analysis/frequency_view.php"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1933,8 +1905,6 @@
             ex="false"
             tool="3"
             flavor2="0">
-      </item>
-      <item path="WEB/index.php" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>
