@@ -436,3 +436,9 @@ $('#GraphDialogClose').click(function() {
 $(document).ajaxError(function (event, jqxhr, settings, exception) {
   //if(jqxhr.status === 200) window.location.href = 'login';
 });
+
+/* Secuencia de inicio para cargar la pagina */
+function UpdatePage() {
+  AjaxGetFrequency();
+  AjaxGetFrequencyCounters();
+}
