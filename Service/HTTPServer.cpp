@@ -167,8 +167,7 @@ int  HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url,
     if(Request->Session->User != NULL) return SendRedirect(connection, "/Dashboard");
     char Cookie[256];
     sprintf(Cookie, "OZM_SESSION=%s; httponly; Path=/", Request->Session->ID);
-    return SendFile(connection, "WEB/Views/Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
-
+    return SendFile(connection, (char*)"WEB/Views/Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
     int File = -1;
     struct stat FileStat;
     const char *FilePath = "WEB/Views/Login.html";
@@ -243,7 +242,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     }
     if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0)) || (Series == NULL) || (Error == true)) {    
       Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-      Request->PostData = "Invalid JSON params";
+      Request->PostData = (char*)"Invalid JSON params";
       Request->PostResponseLen = strlen(Request->PostData);
       return MHD_YES;
     }
@@ -280,6 +279,70 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       Serie = strtok(NULL, ", ");
     }
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(sampletime) AS \"Sampletime\" FROM aggreg_%s WHERE sampletime > %llu AND sampletime >= %llu AND sampletime <= %llu AND node = %u ORDER BY \"Sampletime\" ASC) AS Result", Aggreg, LastSample, From, To, Node);
+    Request->DB = new Database();
+    Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
+    return MHD_YES;
+  }
+  if(strcmp(url, "/getSeriesAggreg") == 0) {
+    uint64_t Period = 0, From = 0, To = 0;
+    uint32_t Node = 0;
+    char    *Aggreg = NULL, *Series = NULL, *Functions = NULL;
+    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
+        Series = (char*)json_object_get_string(JSON_Val);
+      else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Aggreg") == 0))
+        Aggreg = (char*)json_object_get_string(JSON_Val);
+      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Period") == 0))      
+        Period = json_object_get_int64(JSON_Val);
+      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "To") == 0))
+        To = json_object_get_int64(JSON_Val);
+      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
+        Node = json_object_get_int(JSON_Val);
+      else 
+        Error = true;
+    }
+    if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0)) || (Series == NULL) || (Error == true)) {    
+      Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      Request->PostData = (char*)"Invalid JSON params";
+      Request->PostResponseLen = strlen(Request->PostData);
+      return MHD_YES;
+    }
+    if(To == 0) To = Tools::GetTime();
+    From = To - Period;
+    char QueryText[8192];
+    int  QueryLen = 0;
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT COUNT(*) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu) AS \"Samples\", ", Aggreg, From, To);
+    char *Serie = strtok(Series, ", ");
+    while(Serie != NULL) {
+      char *Oper, *Tmp1 = strchr(Serie, '('), *Tmp2 = strrchr(Serie, ')');
+      if((Tmp1 != NULL) && (Tmp2 != NULL)) {
+        Oper = Serie;
+        Tmp1[0] = 0;
+        Serie = &Tmp1[1];
+        Tmp2[0] = 0;
+      }
+      if((strcmp(Serie, "rms_v") == 0) || (strcmp(Serie, "rms_i") == 0) || (strcmp(Serie, "active_power") == 0) || (strcmp(Serie, "apparent_power") == 0) || (strcmp(Serie, "power_factor") == 0) || (strcmp(Serie, "active_energy") == 0) || (strcmp(Serie, "fundamenta_active_power") == 0) || (strcmp(Serie, "fundamental_reactive_power") == 0) || (strcmp(Serie, "fundamental_apparent_power") == 0) || (strcmp(Serie, "fundamental_power_factor") == 0) || (strcmp(Serie, "thd_v") == 0) || (strcmp(Serie, "thd_i") == 0) || (strcmp(Serie, "phi") == 0) || (strcmp(Serie, "harmonics_i") == 0) || (strcmp(Serie, "harmonics_v") == 0)) {
+        if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT %s(elem) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %llu AND sampletime < %llu GROUP BY rn ORDER BY rn) as %s_%s,", Oper, Aggreg, Serie, From, To, Oper, Serie);
+        } else if(strcmp(Oper, "rms") == 0) {
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT SQRT(SUM(POW(elem, 2.0))/COUNT(*)) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %llu AND sampletime < %llu GROUP BY rn ORDER BY rn) as %s_%s,", Aggreg, Serie, From, To, Oper, Serie);
+        }
+      } else if(strcmp(Serie, "freq") == 0) {
+        if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
+        } else if(strcmp(Oper, "rms") == 0) {
+        }
+      } else if(strcmp(Serie, "flag") == 0) {
+        if((strcmp(Oper, "and") == 0) || (strcmp(Oper, "or") == 0)) {
+          
+        }
+        
+      }
+      Serie = strtok(NULL, ", ");
+    }
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"From\", ", From);
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"To\") AS Result", To); 
     Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
