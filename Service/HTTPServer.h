@@ -31,7 +31,7 @@ class HTTPServer {
     static void       HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe);
     static void       ExpireSessions();
     static void       SetMimeType(struct MHD_Response *response, const char *url);
-    static int        SendFile(struct MHD_Connection *connection, const char *path, char *aditionalheadertype = NULL, char *aditionalheadervalue = NULL);
+    static int        SendFile(struct MHD_Connection *connection, const char *path, const char *aditionalheadertype = NULL, const char *aditionalheadervalue = NULL);
     static int        HandleStaticFiles(struct MHD_Connection *connection, const char *url, const char *method);
     static int        HandleLogin(struct MHD_Connection *connection, const char *url, const char *method, void **ptr);
     static int        HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr);

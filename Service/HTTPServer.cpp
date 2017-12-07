@@ -92,7 +92,7 @@ int  HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url
   MHD_destroy_response (response);
   return Return;
 }
-int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, char *aditionalheadertype, char *aditionalheadervalue) {
+int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, const char *aditionalheadertype, const char *aditionalheadervalue) {
   int File = -1;
   struct stat FileStat;
   if((stat(path, &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) File = open(path, O_RDONLY);
@@ -195,13 +195,13 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
   bool Error = false;
   if(Request->JSONReader == NULL) {
     Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-    Request->PostData = "Expected JSON params";
+    Request->PostData = (char*)"Expected JSON params";
     Request->PostResponseLen = strlen(Request->PostData);
     return MHD_YES;
   }
   if(strcmp(url, "/LogIn") == 0) {
-    Request->Session->User = "root";
-    Request->PostData = "{\"result\":true}";
+    Request->Session->User = (char*)"root";
+    Request->PostData = (char*)"{\"result\":true}";
     Request->PostResponseLen = strlen(Request->PostData);
     return MHD_YES;
   }
@@ -209,13 +209,13 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
     if(((sockaddr_in*)Addr)->sin_addr.s_addr != 0x0100007F) {
       Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
-      Request->PostData = "Unauthorided access to API";
+      Request->PostData = (char*)"Unauthorided access to API";
       Request->PostResponseLen = strlen(Request->PostData);
       return MHD_YES;
     }
   }
   if(strcmp(url, "/getNodes") == 0) {
-    Request->PostData = "{ \"IDs\": [0,1], \"Names\": [\"Principal\", \"Secundario\"], \"State\" : [true, false], \"Type\": [\"3Phase\", \"1Phase\"], \"SampleFreq\": [15625, 15625], \"NominalVoltage\": [230, 230], \"MaxCurrent\": [20, 20] }";
+    Request->PostData = (char*)"{ \"IDs\": [0,1], \"Names\": [\"Principal\", \"Secundario\"], \"State\" : [true, false], \"Type\": [\"3Phase\", \"1Phase\"], \"SampleFreq\": [15625, 15625], \"NominalVoltage\": [230, 230], \"MaxCurrent\": [20, 20] }";
     Request->PostResponseLen = strlen(Request->PostData);
     return MHD_YES;
   }
@@ -327,17 +327,18 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
         if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
           QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT %s(elem) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %llu AND sampletime < %llu GROUP BY rn ORDER BY rn) as %s_%s,", Oper, Aggreg, Serie, From, To, Oper, Serie);
         } else if(strcmp(Oper, "rms") == 0) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT SQRT(SUM(POW(elem, 2.0))/COUNT(*)) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %llu AND sampletime < %llu GROUP BY rn ORDER BY rn) as %s_%s,", Aggreg, Serie, From, To, Oper, Serie);
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT SQRT(SUM(POW(elem, 2.0)) / COUNT(*)) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %llu AND sampletime < %llu GROUP BY rn ORDER BY rn) as %s_%s,", Aggreg, Serie, From, To, Oper, Serie);
         }
       } else if(strcmp(Serie, "freq") == 0) {
         if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT %s(%s) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu) AS %s_%s, ", Oper, Serie, Aggreg, From, To, Oper, Serie);
         } else if(strcmp(Oper, "rms") == 0) {
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT SQRT(SUM(POW(%s, 2.0)) / COUNT(*)) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu) AS %s_%s, ", Serie, Aggreg, From, To, Oper, Serie);
         }
       } else if(strcmp(Serie, "flag") == 0) {
         if((strcmp(Oper, "and") == 0) || (strcmp(Oper, "or") == 0)) {
-          
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT bool_%s(%s) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu) AS %s_%s, ", Oper, Serie, Aggreg, From, To, Oper, Serie);
         }
-        
       }
       Serie = strtok(NULL, ", ");
     }
@@ -347,98 +348,10 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
   }
-  
-  
   Request->ResultCode = MHD_HTTP_BAD_REQUEST;
   Request->PostData = (char*)"Invalid command";
   Request->PostResponseLen = strlen(Request->PostData);
   return MHD_YES;
-//  if((upload_data != NULL) && (Request->PostData == NULL)) Request->PostData = strdup(upload_data);
-//  if((*upload_data_size != 0) || (upload_data != NULL) || (Request->PostData == NULL)) return MHD_YES;
-
-//  json_object *JSONReader = json_tokener_parse((char*)*ptr);
-//  if(JSONReader == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Expected JSON params");
-//  if(strcmp(url, "/GetRows") == 0) {
-//    char    *Table = NULL, *Variables = NULL;
-//    uint64_t Period = 0, From = 0, To = 0;
-//    json_object_object_foreach(JSONReader, JSON_Key, JSON_Val) {
-//      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-//      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "variables") == 0)) 
-//        Variables = strdup(json_object_get_string(JSON_Val));
-//      else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "table") == 0))
-//        Table = strdup(json_object_get_string(JSON_Val));
-//      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "period") == 0))      
-//        Period = json_object_get_int64(JSON_Val);
-//      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "from") == 0))  
-//        From = json_object_get_int64(JSON_Val);
-//      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "to") == 0))
-//        To = json_object_get_int64(JSON_Val);
-//      else 
-//        Error = true;
-//    }
-//    free(JSONReader);
-//    free(*ptr);
-//    if((Variables == NULL) || (Table != NULL) || (Error == true)) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalids params.");
-//    Database DB;
-//    int Len;
-//    char *Text = DB.ExecSentenceJSON("SELECT row_to_json(TmpB) FROM ("
-//                                     " SELECT array_agg(sampletime) AS sampletime, array_agg(rms_i) AS rms_i"
-//                                     " FROM (SELECT sampletime, rms_i FROM agreg_10c WHERE sampletime > 1508917614689 ORDER BY sampletime ASC LIMIT 200) as TmpA) AS TmpB;", &Len);
-//    free(Variables);
-//    free(Table);
-//    if(Text != NULL) {
-//      struct MHD_Response *response = MHD_create_response_from_buffer(Len, Text, MHD_RESPMEM_MUST_FREE);
-//      MHD_add_response_header(response, "Content-Type", "application/json");
-//      int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
-//      MHD_destroy_response (response);
-//      return Return;
-//    }      
-//  } else   if(strcmp(url, "/GetDevices") == 0) {
-//    
-//  } else   if(strcmp(url, "/GetLastValues") == 0) {
-//    json_object *JSONWriter = json_object_new_object();
-//    json_object_object_foreach(JSONReader, JSON_Key, JSON_Val) {
-//      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-//      if(JSON_Type == json_type_array) {
-//        int arraylen = json_object_array_length(JSONReader);
-//        
-//        
-//        //Variables = strdup(json_object_get_string(JSON_Val));
-//      }
-//    }
-//    free(JSONReader);
-//    free(*ptr);
-//
-//
-//
-//
-////    if((Variables != NULL) && (Table != NULL)) {
-////      Database DB;
-////      int Len;
-////      char *Text = DB.ExecSentenceJSON("SELECT row_to_json(TmpB) FROM ("
-////                                       " SELECT array_agg(sampletime) AS sampletime, array_agg(rms_i) AS rms_i"
-////                                       " FROM (SELECT sampletime, rms_i FROM agreg_10c WHERE sampletime > 1508917614689 ORDER BY sampletime ASC LIMIT 200) as TmpA) AS TmpB;", &Len);
-////      free(Variables);
-////      free(Table);
-////      if(Text != NULL) {
-////        struct MHD_Response *response = MHD_create_response_from_buffer(Len, Text, MHD_RESPMEM_MUST_FREE);
-////        MHD_add_response_header(response, "Content-Type", "application/json");
-////        int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
-////        MHD_destroy_response (response);
-////        return Return;
-////      }      
-////    }
-//    struct MHD_Response *response = MHD_create_response_from_buffer(2, (void*)"{}", MHD_RESPMEM_PERSISTENT);
-//    MHD_add_response_header(response, "Content-Type", "application/json");
-//    int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
-//    MHD_destroy_response (response);
-//    return Return;
-//  }
-//  struct MHD_Response *response = MHD_create_response_from_buffer(2, (void*)"{}", MHD_RESPMEM_PERSISTENT);
-//  MHD_add_response_header(response, "Content-Type", "application/json");
-//  int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
-//  MHD_destroy_response (response);
-//  return Return;
 }
 int HTTPServer::HandleDashboard(struct MHD_Connection *connection, const char *url, const char *method) {
   if((strcmp(method, MHD_HTTP_METHOD_GET) != 0) || ((strcmp(url, "/Dashboard") != 0) && (strcmp(url, "/") != 0))) return MHD_NO;
