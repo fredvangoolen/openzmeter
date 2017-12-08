@@ -4,6 +4,21 @@ var SpinnerOpts         = { lines: 10,  // The number of lines to draw
                             width: 5,   // The line thickness
                             radius: 10  // The radius of the inner circle
                           };
+                          
+/* Configuracion del plugin de desconexion */
+Offline.options = {requests: false};
+function DisableUI() {
+  $('#DisableDiv').css('display', 'inherit');
+}
+function EnableUI() {
+  $('#DisableDiv').css('display', 'none');
+}
+Offline.on('confirmed-down', DisableUI);
+Offline.on('confirmed-up',   EnableUI);
+$(document).ajaxError(function (event, jqxhr, settings, exception) {
+  if(jqxhr.status === 401) window.location.href = 'Login';
+});
+
 /* Añade los flag de eventos a una grafica */
 function AddEvents(result, serieName, graph) {
   var Events = graph.annotations();

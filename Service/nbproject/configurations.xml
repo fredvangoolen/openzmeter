@@ -416,6 +416,10 @@
             <itemPath>WEB/Resources/lib/nvd3/nv.d3.css</itemPath>
             <itemPath>WEB/Resources/lib/nvd3/nv.d3.min.js</itemPath>
           </logicalFolder>
+          <logicalFolder name="offline" displayName="offline" projectFiles="true">
+            <itemPath>WEB/Resources/lib/offline/offline.css</itemPath>
+            <itemPath>WEB/Resources/lib/offline/offline.min.js</itemPath>
+          </logicalFolder>
           <logicalFolder name="qtip2" displayName="qtip2" projectFiles="true">
             <itemPath>WEB/Resources/lib/qtip2/imagesloaded.pkg.min.js</itemPath>
             <itemPath>WEB/Resources/lib/qtip2/imagesloaded.pkg.min.js.map</itemPath>
@@ -1716,6 +1720,16 @@
       <item path="WEB/Resources/lib/nvd3/nv.d3.css" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/nvd3/nv.d3.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/lib/offline/offline.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/lib/offline/offline.min.js"
             ex="false"
             tool="3"
             flavor2="0">

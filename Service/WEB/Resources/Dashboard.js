@@ -34,11 +34,11 @@ function AjaxGetVoltage() {
            dataType: "json",
            contentType: 'application/json',
            data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastVoltageSample, Series: 'rms_v, flag', Node: Nodes['IDs'][Node] }),
-           success: AjaxVoltage
+           success: AjaxVoltage,
+           complete: function() { setTimeout(AjaxGetVoltage, 5000); }
         });
 }
 function AjaxVoltage(result) {
-  setTimeout(AjaxGetVoltage, 5000);
   if((result === null) || (result['Sampletime'] === null)) return;
   if(LastVoltageSample === 0) {
     VoltageSpinner.stop();
@@ -171,11 +171,11 @@ function AjaxGetCurrent() {
            dataType: "json",
            contentType: 'application/json',
            data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastCurrentSample, Series: 'rms_i', Node: Nodes['IDs'][Node] }),
-           success: AjaxCurrent
+           success: AjaxCurrent,
+           complete: function() { setTimeout(AjaxGetCurrent, 5000); }
         });
 }
 function AjaxCurrent(result) {
-  setTimeout(AjaxGetCurrent, 5000);
   if((result === null) || (result['Sampletime'] === null)) return;
   if(LastCurrentSample === 0) {
     CurrentSpinner.stop();
@@ -303,11 +303,11 @@ function AjaxGetPower() {
            dataType: "json",
            contentType: 'application/json',
            data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastPowerSample, Series: 'active_power', Node: Nodes['IDs'][Node] }),
-           success: AjaxPower
+           success: AjaxPower,
+           complete: function() { setTimeout(AjaxGetPower, 5000); }
         });
 }
 function AjaxPower(result) {
-  setTimeout(AjaxGetPower, 5000);
   if((result === null) || (result['Sampletime'] === null)) return;
   if(LastPowerSample === 0) {
     PowerSpinner.stop();
@@ -416,11 +416,11 @@ function AjaxGetFrequency() {
            dataType: "json",
            contentType: 'application/json',
            data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastFrequencySample, Series: 'freq', Node: Nodes['IDs'][Node] }),
-           success: AjaxFrequency
+           success: AjaxFrequency,
+           complete: function() { setTimeout(AjaxGetFrequency, 5000); }
         });
 }
 function AjaxFrequency(result) {
-  setTimeout(AjaxGetFrequency, 5000);
   if((result === null) || (result['Sampletime'] === null)) return;
   if(LastFrequencySample === 0) {
     FrequencySpinner.stop();
@@ -535,8 +535,7 @@ function AjaxGetEnergy() {
  });
 }
 function AjaxEnergy(result) {
-  EnergyTimer = setTimeout(AjaxGetEnergy, 60000);
-  if((result === null) || (result['Sampletime'] === null)) return;
+  if(result === null) return;
   if(LastEnergySample === 0) {
     EnergySpinner.stop();
     $('#SpinnerDiv').remove();
@@ -544,9 +543,11 @@ function AjaxEnergy(result) {
     $('#EnergyPanel').find("*").prop("disabled", false);
     EnergyData = [];
   }
-  for(i = 0; i < result['Sampletime'].length; i++) EnergyData.push([new Date(result['Sampletime'][i]), result['active_energy'][i][0]]);
-  while(EnergyData.length > result['MaxSamples']) EnergyData.shift();
-  LastEnergySample = result['Sampletime'][result['Sampletime'].length - 1];
+  if(result['Sampletime'] !== null) {
+    for(i = 0; i < result['Sampletime'].length; i++) EnergyData.push([new Date(result['Sampletime'][i]), result['active_energy'][i][0]]);
+    while(EnergyData.length > result['MaxSamples']) EnergyData.shift();
+    LastEnergySample = result['Sampletime'][result['Sampletime'].length - 1];
+  }
   $('#EnergyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');  
   var UpperRange = -Infinity;
   var LowerRange =  Infinity;
@@ -556,8 +557,8 @@ function AjaxEnergy(result) {
   }
   var Variation = (UpperRange - LowerRange);
   if(Variation < 1) Variation = 1.0;
-  if(UpperRange > 0) UpperRange = UpperRange + Variation * 0.1;
-  if(LowerRange < 0) LowerRange = LowerRange - Variation * 0.1;
+  UpperRange = UpperRange + Variation * 0.1;
+  LowerRange = LowerRange - Variation * 0.1;
   var toShow = [];
   if((Math.abs(UpperRange) > 1000) || (Math.abs(LowerRange) > 1000)) {
     EnergyChartUnits = 'kWh';
@@ -680,6 +681,7 @@ function AjaxEnergy(result) {
   var GraphEnd = parseInt(Cookies.get('GraphEnd'));
   if(GraphEnd === 0) {
     $('#btnEnergyNow').addClass('active');
+    EnergyTimer = setTimeout(AjaxGetEnergy, 5000);
   } else {
     $('#btnEnergyNow').removeClass('active');
   }
@@ -1106,9 +1108,7 @@ function UpdatePage() {
   AjaxGetPower();
   AjaxGetFrequency();
   AjaxGetMainParameters();
-//$(document).ajaxError(function (event, jqxhr, settings, exception) {
-//  if(jqxhr.status === 200) window.location.href = 'login';
-//});
+
 //$(document).ready(EnergyGetData(86400, 0, true));
 
 
