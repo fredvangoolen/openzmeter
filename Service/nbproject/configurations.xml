@@ -535,6 +535,12 @@
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
+        <cTool>
+          <developmentMode>6</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>2</developmentMode>
+        </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
         </fortranCompilerTool>
@@ -542,7 +548,7 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
-          <commandLine>-lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ljson-c</commandLine>
+          <commandLine>-lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ljson-c -lz</commandLine>
         </linkerTool>
       </compileType>
       <item path="CaptureInterface.cpp" ex="false" tool="1" flavor2="0">

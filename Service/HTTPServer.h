@@ -20,6 +20,7 @@ class HTTPServer {
     typedef struct {
       Session_t                *Session;
       char                     *PostData;
+      bool                      Deflate;
       size_t                    PostResponseLen;
       int                       ResultCode;
       Database                 *DB;

@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <zlib.h>
 #include "HTTPServer.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -111,9 +112,10 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
   if(Request->DB) delete Request->DB;
   if(Request->JSONReader) json_object_put(Request->JSONReader);
   if(Request->JSONWriter) json_object_put(Request->JSONWriter);
+  if(Request->Deflate) free(Request->PostData);
   if(Request->Msg) {
     uint64_t EndTime = Tools::GetTime();
-    Tools::LogMsg("DEBUG", "POST request '%s' takes %llumS (%llumS with send)\n", Request->Msg, Request->ProcTime - Request->StartTime, EndTime - Request->StartTime);
+    Tools::LogMsg("DEBUG", "POST request '%s' takes %llumS (%.2fkB send in %llumS)\n", Request->Msg, Request->PostResponseLen / 1024.0, Request->ProcTime - Request->StartTime, EndTime - Request->StartTime);
     free(Request->Msg);
   }
   free(Request);
@@ -145,8 +147,26 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
 	    *upload_data_size = 0;
   	  return MHD_YES;
 	  } else {
+      Request->Deflate = ((strstr(MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT_ENCODING), "deflate") != NULL) && (Request->PostResponseLen > 256));
+      if(Request->Deflate) {
+        char *Tmp = (char*)malloc(Request->PostResponseLen);
+        z_stream Deflate;
+        Deflate.zalloc = Z_NULL;
+        Deflate.zfree = Z_NULL;
+        Deflate.opaque = Z_NULL;
+        Deflate.avail_in = Request->PostResponseLen;
+        Deflate.next_in = (uint8_t*)Request->PostData;
+        Deflate.avail_out = Request->PostResponseLen;
+        Deflate.next_out = (uint8_t*)Tmp;
+        deflateInit(&Deflate, Z_BEST_SPEED);
+        deflate(&Deflate, Z_FINISH);
+        deflateEnd(&Deflate);
+        Request->PostResponseLen = Deflate.total_out;
+        Request->PostData = Tmp;      
+      }
       struct MHD_Response *response = MHD_create_response_from_buffer(Request->PostResponseLen, Request->PostData, MHD_RESPMEM_PERSISTENT);
       MHD_add_response_header(response, "Content-Type", "application/json");
+      if(Request->Deflate) MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_ENCODING, "deflate");
       int Return = MHD_queue_response(connection, Request->ResultCode, response);
       MHD_destroy_response(response);
       Request->ProcTime = Tools::GetTime();
