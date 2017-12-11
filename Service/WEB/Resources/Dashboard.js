@@ -48,7 +48,7 @@ function AjaxVoltage(result) {
   }
   if(result['Sampletime'][0] <= LastVoltageSample) return;
   for(i = 0; i < result['Sampletime'].length; i++) VoltageData.push([new Date(result['Sampletime'][i]), result['rms_v'][i][0]]);
-  while(VoltageData.length > result['MaxSamples'])   VoltageData.shift();
+  while(VoltageData.length > result['MaxSamples']) VoltageData.shift();
   LastVoltageSample = result['Sampletime'][result['Sampletime'].length - 1];
   var UpperRange = -Infinity;
   var LowerRange =  Infinity;
@@ -184,13 +184,11 @@ function AjaxCurrent(result) {
     $('#CurrentPanel').find("*").prop("disabled", false);    
   }
   if(result['Sampletime'][0] <= LastCurrentSample) return;
-  for(i = 0; i < result['Sampletime'].length; i++) {
-    CurrentData.push([new Date(result['Sampletime'][i]), result['rms_i'][i][0]]);
-    while(CurrentData.length > result['MaxSamples']) CurrentData.shift();
-    LastCurrentSample = result['Sampletime'][i];
-  }
-  var UpperRange = -1000000;
-  var LowerRange = 1000000;
+  for(i = 0; i < result['Sampletime'].length; i++) CurrentData.push([new Date(result['Sampletime'][i]), result['rms_i'][i][0]]);
+  while(CurrentData.length > result['MaxSamples']) CurrentData.shift();
+  LastCurrentSample = result['Sampletime'][result['Sampletime'].length - 1];
+  var UpperRange = -Infinity;
+  var LowerRange = Infinity;
   var Avg = 0;
   for (i = 0; i < CurrentData.length; i++) {
     if (CurrentData[i][1] > UpperRange) UpperRange = CurrentData[i][1];
@@ -316,13 +314,11 @@ function AjaxPower(result) {
     $('#PowerPanel').find("*").prop("disabled", false);    
   }
   if(result['Sampletime'][0] <= LastPowerSample) return;
-  for(i = 0; i < result['Sampletime'].length; i++) {
-    PowerData.push([new Date(result['Sampletime'][i]), result['active_power'][i][0]]);
-    while(PowerData.length > result['MaxSamples']) PowerData.shift();
-    LastPowerSample = result['Sampletime'][i];
-  }
-  var UpperRange = -1000000;
-  var LowerRange = 1000000;
+  for(i = 0; i < result['Sampletime'].length; i++) PowerData.push([new Date(result['Sampletime'][i]), result['active_power'][i][0]]);
+  while(PowerData.length > result['MaxSamples']) PowerData.shift();
+  LastPowerSample = result['Sampletime'][result['Sampletime'].length - 1];
+  var UpperRange = -Infinity;
+  var LowerRange = Infinity;
   for (i = 0; i < PowerData.length; i++) {
     if (PowerData[i][1] > UpperRange) UpperRange = PowerData[i][1];
     if (PowerData[i][1] < LowerRange) LowerRange = PowerData[i][1];
@@ -429,13 +425,11 @@ function AjaxFrequency(result) {
     $('#FrequencyPanel').find("*").prop("disabled", false);    
   }
   if(result['Sampletime'][0] <= LastFrequencySample) return;
-  for(i = 0; i < result['Sampletime'].length; i++) {
-    FrequencyData.push([new Date(result['Sampletime'][i]), result['freq'][i]]);
-    while(FrequencyData.length > result['MaxSamples']) FrequencyData.shift();
-    LastFrequencySample = result['Sampletime'][i];
-  }
-  var UpperRange = -1000000;
-  var LowerRange = 1000000;
+  for(i = 0; i < result['Sampletime'].length; i++) FrequencyData.push([new Date(result['Sampletime'][i]), result['freq'][i]]);
+  while(FrequencyData.length > result['MaxSamples']) FrequencyData.shift();
+  LastFrequencySample = result['Sampletime'][result['Sampletime'].length - 1];
+  var UpperRange = -Infinity;
+  var LowerRange = Infinity;
   for (i = 0; i < FrequencyData.length; i++) {
     if (FrequencyData[i][1] > UpperRange) UpperRange = FrequencyData[i][1];
     if (FrequencyData[i][1] < LowerRange) LowerRange = FrequencyData[i][1];
@@ -504,12 +498,9 @@ var EnergyChartUnits    = 'Wh';
 var EnergySpinner       = new Spinner(SpinnerOpts);
 var EnergyTimer         = null;
 function AjaxGetEnergy() {
-  if(LastEnergySample == 0) {
-    $('#EnergyPanel').find("*").prop("disabled", true);
-    $('#EnergyPanel').css('opacity', '0.6');
-    $('#EnergyPanel').append('<div id="SpinnerDiv" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    EnergySpinner.spin(document.getElementById('SpinnerDiv'));
-  }
+  if(EnergyTimer !== null) clearInterval(EnergyTimer);
+  $('#btnEnergyNow').addClass('disabled');
+  if(LastEnergySample === 0) ShowSpinner(EnergySpinner, 'EnergySpinner');
   var Period = parseInt(Cookies.get('GraphPeriod'));
   if(!Period) {
     Period = 86400000;
@@ -531,16 +522,16 @@ function AjaxGetEnergy() {
     dataType: "json",
     contentType: 'application/json',
     data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastEnergySample, Series: 'active_energy', Node: Nodes['IDs'][Node]}),
-    success: AjaxEnergy
+    success: AjaxEnergy,
+    complete: function() { 
+      $('#btnEnergyNow').removeClass('disabled');
+      if(parseInt(Cookies.get('GraphEnd')) === 0) EnergyTimer = setTimeout(AjaxGetEnergy, 3000);
+    }
  });
 }
 function AjaxEnergy(result) {
-  if(result === null) return;
   if(LastEnergySample === 0) {
-    EnergySpinner.stop();
-    $('#SpinnerDiv').remove();
-    $('#EnergyPanel').css('opacity', '1.0');
-    $('#EnergyPanel').find("*").prop("disabled", false);
+    StopSpinner(EnergySpinner, 'EnergySpinner');
     EnergyData = [];
   }
   if(result['Sampletime'] !== null) {
@@ -641,8 +632,6 @@ function AjaxEnergy(result) {
         }
     );
     $(window).bind('resize', EnergyResizeEvent);
-    $('#energy_day').addClass('active');
-    $('#maximizeEnergy').removeClass('disabled');
     window.dispatchEvent(new Event('resize'));
   } else {
     EnergyChart.updateOptions({'file': toShow, valueRange: [LowerRange, UpperRange], dateWindow: [result['From'], result['To']]});
@@ -681,7 +670,6 @@ function AjaxEnergy(result) {
   var GraphEnd = parseInt(Cookies.get('GraphEnd'));
   if(GraphEnd === 0) {
     $('#btnEnergyNow').addClass('active');
-    EnergyTimer = setTimeout(AjaxGetEnergy, 5000);
   } else {
     $('#btnEnergyNow').removeClass('active');
   }
@@ -692,62 +680,50 @@ function EnergyResizeEvent() {
   if(EnergyChart != null) EnergyChart.resize($('#EnergyCol').width(), Height - 12);
 }
 $('#btnEnergy3S').click(function() {
-  if(EnergyTimer != null) clearInterval(EnergyTimer);
   Cookies.set('GraphAggregation', '3s');
   LastEnergySample = 0;
   AjaxGetEnergy();
 });
 $('#btnEnergy1M').click(function() {
-  if(EnergyTimer != null) clearInterval(EnergyTimer);
   Cookies.set('GraphAggregation', '1m');
   LastEnergySample = 0;
   AjaxGetEnergy();
 });
 $('#btnEnergy10M').click(function() {
-  if(EnergyTimer != null) clearInterval(EnergyTimer);
   Cookies.set('GraphAggregation', '10m');
   LastEnergySample = 0;
   AjaxGetEnergy();
 });
 $('#btnEnergy1H').click(function() {
-  if(EnergyTimer != null) clearInterval(EnergyTimer);
   Cookies.set('GraphAggregation', '1h');
   LastEnergySample = 0;
   AjaxGetEnergy();
 });
 $('#btnShowEnergyYear').click(function() {
-  if(EnergyTimer != null) clearInterval(EnergyTimer);
   Cookies.set('GraphPeriod', 31536000000);
   LastEnergySample = 0;
   AjaxGetEnergy();
-  if(EnergyCountersTimer != null) clearInterval(EnergyCountersTimer);
   Cookies.set('CountersPeriod', 'Year');
   AjaxGetEnergyCounters();
 });
 $('#btnShowEnergyMonth').click(function() {
-  if(EnergyTimer != null) clearInterval(EnergyTimer);
   Cookies.set('GraphPeriod', 2592000000);
   LastEnergySample = 0;
   AjaxGetEnergy();
-  if(EnergyCountersTimer != null) clearInterval(EnergyCountersTimer);
   Cookies.set('CountersPeriod', 'Month');
   AjaxGetEnergyCounters();
 });
 $('#btnShowEnergyWeek').click(function() {
-  if(EnergyTimer != null) clearInterval(EnergyTimer);
   Cookies.set('GraphPeriod', 604800000);
   LastEnergySample = 0;
   AjaxGetEnergy();
-  if(EnergyCountersTimer != null) clearInterval(EnergyCountersTimer);
   Cookies.set('CountersPeriod', 'Week');
   AjaxGetEnergyCounters();
 });
 $('#btnShowEnergyDay').click(function() {
-  if(EnergyTimer != null) clearInterval(EnergyTimer);
   Cookies.set('GraphPeriod', 86400000);
   LastEnergySample = 0;
   AjaxGetEnergy();
-  if(EnergyCountersTimer != null) clearInterval(EnergyCountersTimer);
   Cookies.set('CountersPeriod', 'Day');
   AjaxGetEnergyCounters();
 });
@@ -790,15 +766,46 @@ $('#btnExportEnergy').click(function() {
 /* Contadores de consumo */
 var EnergyCountersTimer  = null;
 function AjaxGetEnergyCounters() {
+  if(EnergyCountersTimer !== null) clearInterval(EnergyCountersTimer);
+  EnergyCountersTimer = setTimeout(AjaxGetEnergyCounters, 60000);
   var CountersPeriod = Cookies.get('CountersPeriod');
-  var PrevStart, CurrentStart, End;
+  var Current, Period;
   if(CountersPeriod === 'Week') {
+    Period = 86400000 * 7;
+    Current = GetWeekTimestamp();
+    Aggreg = '10m';
   } else if(CountersPeriod === 'Month') {
+    Period = 86400000 * 30;
+    Current = GetMonthTimestamp();
+    Aggreg = '1h';
   } else if(CountersPeriod === 'Year') {
+    Period = 86400000 * 365;
+    Current = GetYearTimestamp();
+    Aggreg = '1h';
   } else {
     CountersPeriod = 'Day';
     Cookies.set('CountersPeriod', CountersPeriod);
+    Period = 86400000;
+    Current = GetDayTimestamp();
+    Aggreg = '1m';
   }
+  $.ajax({ url: "getSeriesAggreg",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current + Period }),
+           success: EnergyUpdateCountersCurrent
+  });
+  $.ajax({ url: "getSeriesAggreg",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current }),
+           success: EnergyUpdateCountersPrevs
+  });
+}
   
   
 

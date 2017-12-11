@@ -6,9 +6,10 @@
 
 @import url(http://fonts.googleapis.com/css?family=Titillium+Web:400,700,400italic,700italic);
 
-*{
+* {
     font-family: 'Titillium Web', sans-serif;
 }
+
 .gray {
     border-radius: 8px;
     font-size: 1.2em ;
@@ -426,11 +427,14 @@ label.btn:active, label.btn.active {
 }
 
 .huge-small{
-    font-size: 36px;
+    font-size: 30px;
 }
 
 .huge-small-unit{
-    font-size: 36px;
+    font-size: 18px;
+}
+.small-unit {
+  font-size: 10px;
 }
 
 .fa-5x{
@@ -784,4 +788,16 @@ text.area_text {
   top:0px;
   left:0px;
   z-index:1100;
+}
+
+.spinnerdiv {
+  position: absolute; 
+  top: 0;
+  left:0;
+  width:100%;
+  height:100%;
+  z-index:1000;
+  display:none;
+  opacity: 0.8;
+  background-color: #FFF;
 }

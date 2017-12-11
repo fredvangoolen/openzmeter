@@ -23,12 +23,9 @@ var FrequencyData         = [];
 var FrequencySpinner      = new Spinner(SpinnerOpts);
 var FrequencyTimer        = null;
 function AjaxGetFrequency() {
-  if(LastFrequencySample == 0) {
-    $('#FrequencyPanel').find("*").prop("disabled", true);
-    $('#FrequencyPanel').css('opacity', '0.6');
-    $('#FrequencyPanel').append('<div id="SpinnerDiv" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    FrequencySpinner.spin(document.getElementById('SpinnerDiv'));
-  }
+  if(FrequencyTimer !== null) clearInterval(FrequencyTimer);
+  $('#btnFrequencyNow').addClass('disabled');
+  if(LastFrequencySample === 0) ShowSpinner(FrequencySpinner, 'FrequencySpinner');
   var Period = parseInt(Cookies.get('GraphPeriod'));
   if(!Period) {
     Period = 86400000;
@@ -50,25 +47,26 @@ function AjaxGetFrequency() {
     dataType: "json",
     contentType: 'application/json',
     data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastFrequencySample, Series: 'freq', Node: Nodes['IDs'][Node]}),
-    success: AjaxFrequency
+    success: AjaxFrequency,
+    complete: function() {
+      $('#btnFrequencyNow').removeClass('disabled');
+      if(parseInt(Cookies.get('GraphEnd')) === 0) setTimeout(AjaxGetFrequency, 3000);
+    }
  });
 }
 function AjaxFrequency(result) {
-  FrequencyTimer = setTimeout(AjaxGetFrequency, 60000);
-  if((result === null) || (result['Sampletime'] === null)) return;
   if(LastFrequencySample === 0) {
-    FrequencySpinner.stop();
-    $('#SpinnerDiv').remove();
-    $('#FrequencyPanel').css('opacity', '1.0');
-    $('#FrequencyPanel').find("*").prop("disabled", false);
+    StopSpinner(FrequencySpinner, 'FrequencySpinner');
     FrequencyData = [];
   }
-  for(i = 0; i < result['Sampletime'].length; i++) FrequencyData.push([new Date(result['Sampletime'][i]), result['freq'][i]]);
-  while(FrequencyData.length > result['MaxSamples']) FrequencyData.shift();    
-  LastFrequencySample = result['Sampletime'][result['Sampletime'].length - 1];
+  if(result['Sampletime'] !== null) {
+    for(i = 0; i < result['Sampletime'].length; i++) FrequencyData.push([new Date(result['Sampletime'][i]), result['freq'][i]]);
+    while(FrequencyData.length > result['MaxSamples']) FrequencyData.shift();
+    LastFrequencySample = result['Sampletime'][result['Sampletime'].length - 1];
+  }  
   $('#FrequencyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
-  var UpperRange = -1000000;
-  var LowerRange = 1000000;
+  var UpperRange = -Infinity;
+  var LowerRange = Infinity;
   for (i = 0; i < FrequencyData.length; i++) {
     if(FrequencyData[i][1] > UpperRange) UpperRange = FrequencyData[i][1];
     if(FrequencyData[i][1] < LowerRange) LowerRange = FrequencyData[i][1];
@@ -118,7 +116,6 @@ function AjaxFrequency(result) {
 //          canvas.fillRect(0, RedLowB, 10000, RedHeightB);
         },
         zoomCallback: function(minDate, maxDate, yRanges) {
-          clearInterval(FrequencyTimer);
           $('#btnFrequencyNow').removeClass('active');
           Cookies.set('GraphEnd', maxDate);
           Cookies.set('GraphPeriod', maxDate - minDate);
@@ -131,7 +128,6 @@ function AjaxFrequency(result) {
           mouseup: function(event, g, contex) {
             mouseUpOZM(event, g, contex);
             if((contex.isPanning) && (contex.regionWidth > 0)) {
-              clearInterval(FrequencyTimer);
               $('#btnFrequencyNow').removeClass('active');
               Cookies.set('GraphEnd', g.dateWindow_[1]);
               Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
@@ -141,7 +137,6 @@ function AjaxFrequency(result) {
           },
           dblclick: function(event, g, context) {
             dblClickOZM(event, g, context);
-            clearInterval(FrequencyTimer);
             $('#btnFrequencyNow').removeClass('active');
             Cookies.set('GraphEnd', g.dateWindow_[1]);
             Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
@@ -171,8 +166,6 @@ function AjaxFrequency(result) {
         }  
     );
     $(window).bind('resize', FrequencyResizeEvent);
-    $('#frequency_day').addClass('active');
-    $('#maximizeFrequency').removeClass('disabled');
     window.dispatchEvent(new Event('resize'));
   } else {
     FrequencyChart.updateOptions({'file': FrequencyData, valueRange: [LowerRange, UpperRange], dateWindow: [result['From'], result['To']]});
@@ -217,75 +210,63 @@ function AjaxFrequency(result) {
   Cookies.set('GraphAggregation', GraphAggregation);
 }
 function FrequencyResizeEvent() {
-  var Height = $('#PanelAvg').height() + $('#PanelMin').height() + $('#PanelMax').height();
+  var Height = $('#FreqAvgPanel').height() + $('#FreqMaxPanel').height() + $('#FreqMinPanel').height();
   FrequencyChart.resize($('#FrequencyCol').width(), Height - 4);
 }
 $('#btnFrequency3S').click(function() {
-  if(FrequencyTimer != null) clearInterval(FrequencyTimer);
   Cookies.set('GraphAggregation', '3s');
   LastFrequencySample = 0;
   AjaxGetFrequency();
 });
 $('#btnFrequency1M').click(function() {
-  if(FrequencyTimer != null) clearInterval(FrequencyTimer);
   Cookies.set('GraphAggregation', '1m');
   LastFrequencySample = 0;
   AjaxGetFrequency();
 });
 $('#btnFrequency10M').click(function() {
-  if(FrequencyTimer != null) clearInterval(FrequencyTimer);
   Cookies.set('GraphAggregation', '10m');
   LastFrequencySample = 0;
   AjaxGetFrequency();
 });
 $('#btnFrequency1H').click(function() {
-  if(FrequencyTimer != null) clearInterval(FrequencyTimer);
   Cookies.set('GraphAggregation', '1h');
   LastFrequencySample = 0;
   AjaxGetFrequency();
 });
 $('#btnShowFrequencyYear').click(function() {
-  if(FrequencyTimer != null) clearInterval(FrequencyTimer);
   Cookies.set('GraphPeriod', 31536000000);
   LastFrequencySample = 0;
   AjaxGetFrequency();
-  if(FrequencyCountersTimer != null) clearInterval(FrequencyCountersTimer);
   Cookies.set('CountersPeriod', 'Year');
   AjaxGetFrequencyCounters();
 });
 $('#btnShowFrequencyMonth').click(function() {
-  if(FrequencyTimer != null) clearInterval(FrequencyTimer);
   Cookies.set('GraphPeriod', 2592000000);
   LastFrequencySample = 0;
   AjaxGetFrequency();
-  if(FrequencyCountersTimer != null) clearInterval(FrequencyCountersTimer);
   Cookies.set('CountersPeriod', 'Month');
   AjaxGetFrequencyCounters();
 });
 $('#btnShowFrequencyWeek').click(function() {
-  if(FrequencyTimer != null) clearInterval(FrequencyTimer);
   Cookies.set('GraphPeriod', 604800000);
   LastFrequencySample = 0;
   AjaxGetFrequency();
-  if(FrequencyCountersTimer != null) clearInterval(FrequencyCountersTimer);
   Cookies.set('CountersPeriod', 'Week');
   AjaxGetFrequencyCounters();
 });
 $('#btnShowFrequencyDay').click(function() {
-  if(FrequencyTimer != null) clearInterval(FrequencyTimer);
   Cookies.set('GraphPeriod', 86400000);
   LastFrequencySample = 0;
   AjaxGetFrequency();
-  if(FrequencyCountersTimer != null) clearInterval(FrequencyCountersTimer);
   Cookies.set('CountersPeriod', 'Day');
   AjaxGetFrequencyCounters();
 });
 $('#btnFrequencyNow').click(function() {
   var End = parseInt(Cookies.get('GraphEnd'));
-  clearInterval(FrequencyTimer);
   if(End === 0) {
     $('#btnFrequencyNow').removeClass('active');
     Cookies.set('GraphEnd', FrequencyChart.getOption('dateWindow')[1]);
+    if(FrequencyTimer !== null) clearInterval(FrequencyTimer);
   } else {
     $('#btnFrequencyNow').addClass('active');
     Cookies.set('GraphEnd', 0);
@@ -319,6 +300,8 @@ $('#btnExportFrequency').click(function() {
 /* Contadores de frequencia */
 var FrequencyCountersTimer  = null;
 function AjaxGetFrequencyCounters() {
+  if(FrequencyCountersTimer != null) clearInterval(FrequencyCountersTimer);
+  FrequencyCountersTimer = setTimeout(AjaxGetFrequencyCounters, 60000);
   var CountersPeriod = Cookies.get('CountersPeriod');
   var Current, Period;
   if(CountersPeriod === 'Week') {
@@ -353,12 +336,11 @@ function AjaxGetFrequencyCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(freq)", Aggreg: Aggreg, Period: Period, To: Current }),
+           data: JSON.stringify({ Series: "avg(freq), max(freq), min(freq)", Aggreg: Aggreg, Period: Period, To: Current }),
            success: FrequencyUpdateCountersPrevs
   });
 }
 function FrequencyUpdateCountersCurrent(result) {
-  FrequencyCountersTimer = setTimeout(FrequencyCountersTimer, 60000);
   var CountersPeriod = Cookies.get('CountersPeriod');
   if(CountersPeriod === 'Week') {
     $('#labelFrequencyPeriodAVG').text('This week average');

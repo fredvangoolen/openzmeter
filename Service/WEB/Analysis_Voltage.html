@@ -1,12 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <? $this->load->view('template/commonHead', array('title' => 'Analysis | Voltage')) ?>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="zRed"/>
+    <base href="/">
+    <link rel="shortcut icon" href="favicon.ico"/>
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="lib/datatables/css/dataTables.responsive.css" />
     <link rel="stylesheet" href="lib/datatables/css/dataTables.bootstrap.css" />
+    <link rel="stylesheet" href="lib/metisMenu/metisMenu.min.css"/>
+    <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
+    <link rel="stylesheet" href="lib/offline/offline.css" type="text/css"/>
+    <link rel="stylesheet" href="css/common.css"/>
+    <title>openZmeter - Analysys - Frequency</title>
   </head>
   <body>
-    <? $this->load->view('template/header') ?>
+    <div id="DisableDiv" class="overlay"></div>
+    <nav class="navbar navbar-default navbar-fixed-top" id="Header"></nav>
     <div class="modal fade" id="aggreg_modal" tabindex="-1" role="dialog" data-backdrop='static'>
       <div class="modal-dialog">
         <div class="modal-content">
@@ -45,51 +59,45 @@
         <div class="row">
           <div class="col-lg-12">
             <div class="panel panel-red" id="VoltagePanel">
+              <div id="VoltageSpinner" class="spinnerdiv"></div>
               <div class="panel-heading">
                 <span class="huge-small">Voltage</span>
                 <div class="pull-right">
-                  <span class="small">Time scale:</span><br>
-                  <div class="btn-group" data-toggle="buttons">
-                    <label class="btn btn-default btn-sm" id="voltage_year" data-toggle="tooltip" title="Zoom the graph to one year, keeping current aggregation level while possible">
-                      <input type="radio" name="voltage_chart_range" value="year"/>Year
-                    </label>
-                    <label class="btn btn-default btn-sm" id="voltage_month" data-toggle="tooltip" title="Zoom the graph to one month, keeping current aggregation level while possible">
-                      <input type="radio" name="voltage_chart_range" value="month"/>Month
-                    </label>
-                    <label class="btn btn-default btn-sm" id="voltage_week" data-toggle="tooltip" title="Zoom the graph to one week, keeping current aggregation level while possible">
-                      <input type="radio" name="voltage_chart_range" value="week"/>Week
-                    </label>
-                    <label class="btn btn-default btn-sm" id="voltage_day" data-toggle="tooltip" title="Zoom the graph to one day, keeping current aggregation level while possible">
-                      <input type="radio" name="voltage_chart_range" value="day"/>Day
-                    </label>
-                  </div>
-                  <div class="btn-group" data-toggle="buttons">
-                    <label class="btn btn-default btn-sm active" id="voltagenow" data-toggle="tooltip" title="Move to most recent samples and update in real time.">
-                      <input type="checkbox" name="voltage_chart_range" value="now"/><i class="fa fa-chevron-right"></i>
-                    </label>
-                  </div>
+                  <span class="small"></span><br>
                   <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-sm disabled" id="maximizeVoltage">
-                      <i class="fa fa-expand"></i>
-                    </button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnVoltageNow"      data-toggle="tooltip" title="Move to most recent samples and update in real time"><i class="fa fa-play"></i></button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnExportVoltage"   data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnMaximizeVoltage" data-toggle="tooltip" title="Maximize graph"><i class="fa fa-expand"></i></button>
+                  </div>
+                </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="pull-right">
+                  <span class="small">Phase:</span><br>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageAllPhases" data-toggle="tooltip" title="Show sum of all phases">SUM</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageRPhase" data-toggle="tooltip" title="Show phase R">R</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageSPhase" data-toggle="tooltip" title="Show phase S">S</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageTPhase" data-toggle="tooltip" title="Show phase T">T</button>
+                  </div>
+                </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="pull-right">
+                  <span class="small">Time scale:</span><br>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowVoltageYear"  data-toggle="tooltip" title="Zoom the graph to one year, keeping current aggregation level while possible">Year</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowVoltageMonth" data-toggle="tooltip" title="Zoom the graph to one month, keeping current aggregation level while possible">Month</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowVoltageWeek"  data-toggle="tooltip" title="Zoom the graph to one week, keeping current aggregation level while possible">Week</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowVoltageDay"   data-toggle="tooltip" title="Zoom the graph to one day, keeping current aggregation level while possible">Day</button>
                   </div>
                 </div>
                 <div class="pull-right">&nbsp;</div>
                 <div class="pull-right">
                   <span class="small">Aggregation scale:</span><br>
-                  <div class="btn-group" data-toggle="buttons">
-                    <label class="btn btn-default btn-sm" id="voltage_3s" data-toggle="tooltip" title="Fetch graph from 3 seconds aggregation">
-                      <input type="radio" name="voltage_chart_range" value="3s"/>3 Seg
-                    </label>
-                    <label class="btn btn-default btn-sm" id="voltage_1m" data-toggle="tooltip" title="Fetch graph from 1 minute aggregation">
-                      <input type="radio" name="voltage_chart_range" value="1m"/>1 Min
-                    </label>
-                    <label class="btn btn-default btn-sm" id="voltage_10m" data-toggle="tooltip" title="Fetch graph from 10 minutes aggregation">
-                      <input type="radio" name="voltage_chart_range" value="10m"/>10 Min
-                    </label>
-                    <label class="btn btn-default btn-sm" id="voltage_1h" data-toggle="tooltip" title="Fetch graph from 1 hour aggregation">
-                      <input type="radio" name="voltage_chart_range" value="1h"/>1 Hour
-                    </label>
+                  <div class="btn-group">
+                    <button class="btn btn-default btn-xs" id="btnVoltage3S"  data-toggle="tooltip" title="Fetch graph from 3 seconds aggregation">3 Seconds</button>
+                    <button class="btn btn-default btn-xs" id="btnVoltage1M"  data-toggle="tooltip" title="Fetch graph from 1 minute aggregation">1 Minute</button>
+                    <button class="btn btn-default btn-xs" id="btnVoltage10M" data-toggle="tooltip" title="Fetch graph from 10 minutes aggregation">10 Minutes</button>
+                    <button class="btn btn-default btn-xs" id="btnVoltage1H"  data-toggle="tooltip" title="Fetch graph from 1 hour aggregation">1 Hour</button>
                   </div>
                 </div>
                 <span class="clearfix"> </span>
@@ -98,24 +106,24 @@
                 <div class="col-md-6 col-lg-3">
                   <div class="row">
                     <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightred-info" id="PanelAvg">
-                        <h4>Last hour RMS</h4>
-                        <span class="huge-small-unit" id="voltage_hour">?</span><em class="huge-small-unit">&nbsp;V</em>
-                        <p>24 hours RMS&nbsp;<span id="voltage_last_day">?</span><em class="small">&nbsp;V</em></p>
+                      <div class="panel panel-lightred-info" id="VoltageAvgPanel">
+                        <h4 id="labelVoltagePeriodAVG">Loading...</h4>
+                        <span class="huge-small" id="labelVoltageCurrentAVG">?</span>
+                        <p><span id="labelVoltagePrevPeriodAVG"></span> <span id="labelVoltagePrevAVG">Loading...</span></p>
                       </div>
                     </div>
                     <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightred-info" id="PanelMin">
-                        <h4>Last hour min</h4>
-                        <span class="huge-small-unit" id="voltage_hour_min">?</span><em class="huge-small-unit">&nbsp;V</em><br/>
-                        <p>24 hours min&nbsp;<span id="voltage_min_day">?</span><em class="small">&nbsp;V</em></p>
+                      <div class="panel panel-lightred-info" id="VoltageMaxPanel">
+                        <h4 id="labelVoltagePeriodMAX">Loading...</h4>
+                        <span class="huge-small" id="labelVoltageCurrentMAX">?</span>
+                        <p><span id="labelVoltagePrevPeriodMAX"></span> <span id="labelVoltagePrevMAX">Loading...</span></p>
                       </div>
                     </div>
                     <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightred-info" id="PanelMax">
-                        <h4>Last hour max</h4>  
-                        <span class="huge-small-unit" id="voltage_hour_max">?</span><em class="huge-small-unit">&nbsp;V</em><br/>
-                        <p>24 hours max&nbsp;<span id="voltage_max_day">?</span><em class="small">&nbsp;V</em></p>
+                      <div class="panel panel-lightred-info" id="VoltageMinPanel">
+                        <h4 id="labelVoltagePeriodMIN">Loading...</h4>  
+                        <span class="huge-small" id="labelVoltageCurrentMIN">?</span>
+                        <p><span id="labelVoltagePrevPeriodMIN"></span> <span id="labelVoltagePrevMIN">Loading...</span></p>
                       </div>
                     </div>
                   </div>
@@ -126,18 +134,17 @@
                       <div style="display:inline-block" id="VoltageAggregation">Loading data...</div>
                       <div id="VoltageLegend" style="float: right"></div>
                     </div>
-                    <div id="voltage_chart" class="chart big_chart"></div>
+                    <div id="VoltageChart" class="chart big_chart"></div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <!-- /.col-lg-12 -->
         </div>
-        <!-- /.row -->
         <div class="row">
           <div class="col-lg-12">
             <div class="panel panel-default" id="DetailPanel">
+              <div id="DetailSpinner" class="spinnerdiv"></div>
               <div class="panel-heading">
                 <i class="fa fa-area-chart fa-fw"></i>Details
                 <div class="pull-right">
@@ -231,21 +238,26 @@
             </div>
           </div>
         </div>
-        <!-- /.row -->
       </div>
-      <!-- /#page-wrapper -->
     </div>
-    <!-- /#wrapper -->
-    <? $this->load->view('template/commonScripts') ?>
-    <script>events =<?= json_encode($events) ?>;</script>
+    <script src="lib/cookie.min.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="lib/metisMenu/metisMenu.min.js"></script>
+    <script src="lib/spin.js/spin.min.js"></script>
+    <script src="lib/dygraph/dygraph.js"></script>
     <script src="lib/dygraph/crosshair.js"></script>
+    <script src="lib/dygraph/dygraph-interaction.js"></script>
     <script src="lib/dygraph/synchronize.js"></script>
     <script src="lib/dygraph/chart-plotter.js"></script>
-    <script src="lib/spin.js/spin.min.js"></script>
+    <script src="lib/offline/offline.min.js"></script>
     <script src="lib/datatables/js/jquery.dataTables.min.js"></script>
     <script src="lib/datatables/js/dataTables.responsive.min.js"></script>
     <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
-    <script src="js/analysis/analysis.js"></script>
-    <script src="js/analysis/voltage.js"></script>
+    <script src="openZmeter.js"></script>
+    <script src="Analysis_Voltage.js"></script>
+    <script>
+      StartPageLoad();
+    </script>
   </body>
 </html>

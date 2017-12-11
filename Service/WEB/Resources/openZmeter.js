@@ -19,6 +19,16 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
   if(jqxhr.status === 401) window.location.href = 'Login';
 });
 
+/* Muesto/oculto spinner en un div */
+function ShowSpinner(spinner, container) {
+  $('#' + container).css('display', 'inherit');
+  spinner.spin(document.getElementById(container));  
+}
+function StopSpinner(spinner, container) {
+  $('#' + container).css('display', 'none');
+  spinner.stop();  
+}
+
 /* Añade los flag de eventos a una grafica */
 function AddEvents(result, serieName, graph) {
   var Events = graph.annotations();
@@ -33,6 +43,13 @@ function AddEvents(result, serieName, graph) {
     Events.push(EventID);
   }
   graph.setAnnotations(Events);
+}
+
+/* Convierte un array de floats a cadena con dos decimales, separados por el caracter dado */
+function Array_Round2(values, separator, units) {
+  var Tmp = 0;
+  for(i = 0; i < values.length; i++) values[i] = Round2(values[i]) + units;
+  return values.join(separator);
 }
 
 /* Convierte un numero a cadena con dos decimales y muestra el valor en los huecos que se pasen */

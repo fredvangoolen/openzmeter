@@ -467,9 +467,10 @@
           <itemPath>WEB/Resources/lib/cookie.min.js</itemPath>
           <itemPath>WEB/Resources/lib/jquery.min.js</itemPath>
         </logicalFolder>
+        <itemPath>WEB/Resources/Analysis_Frequency.js</itemPath>
+        <itemPath>WEB/Resources/Analysis_Voltage.js</itemPath>
         <itemPath>WEB/Resources/CommonHeader.html</itemPath>
         <itemPath>WEB/Resources/Dashboard.js</itemPath>
-        <itemPath>WEB/Resources/Frequency.js</itemPath>
         <itemPath>WEB/Resources/favicon.ico</itemPath>
         <itemPath>WEB/Resources/openZmeter.js</itemPath>
       </logicalFolder>
@@ -478,7 +479,6 @@
           <itemPath>WEB/Views/analysis/Analysis_Current.html</itemPath>
           <itemPath>WEB/Views/analysis/energy_power_view.php</itemPath>
           <itemPath>WEB/Views/analysis/harmonics_view.php</itemPath>
-          <itemPath>WEB/Views/analysis/voltage_view.php</itemPath>
         </logicalFolder>
         <logicalFolder name="events" displayName="events" projectFiles="true">
           <itemPath>WEB/Views/events/disturbances_view.php</itemPath>
@@ -492,8 +492,9 @@
         <itemPath>WEB/Views/settings_view.php</itemPath>
         <itemPath>WEB/Views/stats_view.php</itemPath>
       </logicalFolder>
+      <itemPath>WEB/Analysis_Frequency.html</itemPath>
+      <itemPath>WEB/Analysis_Voltage.html</itemPath>
       <itemPath>WEB/Dashboard.html</itemPath>
-      <itemPath>WEB/Frequency.html</itemPath>
       <itemPath>WEB/Login.html</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -576,17 +577,24 @@
       </item>
       <item path="Tools.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="WEB/Analysis_Frequency.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Analysis_Voltage.html" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="WEB/Dashboard.html" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Frequency.html" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="WEB/Login.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Analysis_Frequency.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/Analysis_Voltage.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/CommonHeader.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Dashboard.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Frequency.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/css/common.css" ex="false" tool="3" flavor2="0">
       </item>
@@ -1887,11 +1895,6 @@
             flavor2="0">
       </item>
       <item path="WEB/Views/analysis/harmonics_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Views/analysis/voltage_view.php"
             ex="false"
             tool="3"
             flavor2="0">

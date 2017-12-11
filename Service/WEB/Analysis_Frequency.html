@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <meta name="description" content=""/>
     <meta name="author" content="zRed"/>
+    <base href="/">
     <link rel="shortcut icon" href="favicon.ico"/>
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="lib/metisMenu/metisMenu.min.css"/>
@@ -16,6 +17,7 @@
     <title>openZmeter - Analysys - Frequency</title>
   </head>
   <body>
+    <div id="DisableDiv" class="overlay"></div>
     <nav class="navbar navbar-default navbar-fixed-top" id="Header"></nav>
     <div class="modal fade" id="aggreg_modal" tabindex="-1" role="dialog" data-backdrop='static'>
       <div class="modal-dialog">
@@ -55,7 +57,8 @@
         <div class="row">
           <div class="col-lg-12">
             <div class="panel panel-green">
-              <div class="panel-heading" id="FrequencyPanel">
+              <div id="FrequencySpinner" class="spinnerdiv"></div>
+              <div class="panel-heading">
                 <span class="huge-small">Frequency</span>
                 <div class="pull-right">
                   <span class="small"></span><br>
@@ -91,21 +94,21 @@
                 <div class="col-md-6 col-lg-3">
                   <div class="row">
                     <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightgreen-info" id="PanelAvg">
+                      <div class="panel panel-lightgreen-info" id="FreqAvgPanel">
                         <h4 id="labelFrequencyPeriodAVG">Loading...</h4>
                         <span class="huge-small-unit" id="labelFrequencyCurrentAVG">?</span><em class="huge-small-unit">&nbsp;Hz</em>
                         <p><span id="labelFrequencyPrevPeriodAVG"></span> <span id="labelFrequencyPrevAVG">?</span><em class="small">&nbsp;Hz</em></p>
                       </div>
                     </div>
                     <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightgreen-info" id="PanelMin">
+                      <div class="panel panel-lightgreen-info" id="FreqMaxPanel">
                         <h4 id="labelFrequencyPeriodMAX">Loading...</h4>
                         <span class="huge-small-unit" id="labelFrequencyCurrentMAX">?</span><em class="huge-small-unit">&nbsp;Hz</em><br/>
                         <p><span id="labelFrequencyPrevPeriodMAX"></span> <span id="labelFrequencyPrevMAX">?</span><em class="small">&nbsp;Hz</em></p>
                       </div>
                     </div>
                     <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightgreen-info" id="PanelMax">
+                      <div class="panel panel-lightgreen-info" id="FreqMinPanel">
                         <h4 id="labelFrequencyPeriodMIN">Loading...</h4>  
                         <span class="huge-small-unit" id="labelFrequencyCurrentMIN">?</span><em class="huge-small-unit">&nbsp;Hz</em><br/>
                         <p><span id="labelFrequencyPrevPeriodMIN"></span> <span id="labelFrequencyPrevMIN">?</span><em class="small">&nbsp;Hz</em></p>
@@ -138,7 +141,7 @@
     <script src="lib/dygraph/dygraph-interaction.js"></script>
     <script src="lib/offline/offline.min.js"></script>
     <script src="openZmeter.js"></script>
-    <script src="Frequency.js"></script>
+    <script src="Analysis_Frequency.js"></script>
     <script>
       StartPageLoad();
     </script>

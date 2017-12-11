@@ -105,14 +105,6 @@ int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, c
   MHD_destroy_response(response);
   return Return;
 }
-int  HTTPServer::HandleStaticFiles(struct MHD_Connection *connection, const char *url, const char *method) {
-  if(strcmp(method, MHD_HTTP_METHOD_GET) != 0) return MHD_NO;
-  char *FilePath = (char*)malloc(strlen(SERVER_ROOT) + strlen(url) + 1);
-  sprintf(FilePath, "%s%s", SERVER_ROOT, url);
-  int Return = SendFile(connection, FilePath);
-  free(FilePath);
-  return Return;
-}
 void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe) {
   Request_t *Request = (Request_t*)*con_cls;
   if(Request == NULL) return;
@@ -124,7 +116,13 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
   Request_t *Request = (Request_t*)*ptr;
   if(Request == NULL) {
     Tools::LogMsg("DEBUG", "Client %s request '%s'\n", method, url);
-    if(HandleStaticFiles(connection, url, method) == MHD_YES) return MHD_YES;
+    if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
+      char *FilePath = (char*)malloc(strlen(SERVER_ROOT) + strlen(url) + 1);
+      sprintf(FilePath, "%s%s", SERVER_ROOT, url);
+      int Return = SendFile(connection, FilePath);
+      free(FilePath);
+      if(Return == MHD_YES) return MHD_YES;
+    }
     *ptr = (Request_t*)calloc(1, sizeof(Request_t));
     Request = (Request_t*)*ptr;
     Request->Session = GetSession(connection);
@@ -144,39 +142,18 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
       return Return;
     }
   } else if(strcmp (method, MHD_HTTP_METHOD_GET) == 0) {
-    if(HandleLogin(connection, url, method, ptr) == MHD_YES) return MHD_YES;
-    if(HandleDashboard(connection, url, method) == MHD_YES) return MHD_YES;
-    if(HandleAnalysis_Frequency(connection, url, method) == MHD_YES) return MHD_YES;
-  }
-  return SendError(connection, MHD_HTTP_NOT_FOUND, "Page not found");
-}
-int  HTTPServer::HandleLogin(struct MHD_Connection *connection, const char *url, const char *method, void **ptr) {
-  Request_t *Request = (Request_t*)*ptr;
-  if(strcmp(url, "/Login") == 0) {
-    if(Request->Session->User != NULL) return SendRedirect(connection, "/Dashboard");
-    char Cookie[256];
-    sprintf(Cookie, "OZM_SESSION=%s; httponly; Path=/", Request->Session->ID);
-    return SendFile(connection, (char*)"WEB/Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
-    int File = -1;
-    struct stat FileStat;
-    const char *FilePath = "WEB/Views/Login.html";
-    if((stat(FilePath, &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) {
-      File = open(FilePath, O_RDONLY);
-    }
-    if(File >= 0) {
-      struct MHD_Response *response = MHD_create_response_from_fd(FileStat.st_size, File);
-      SetMimeType(response, FilePath);
+    if(strcmp(url, "/Login") == 0) {
+      if(Request->Session->User != NULL) return SendRedirect(connection, "/Dashboard");
       char Cookie[256];
       sprintf(Cookie, "OZM_SESSION=%s; httponly; Path=/", Request->Session->ID);
-      MHD_add_response_header(response, MHD_HTTP_HEADER_SET_COOKIE, Cookie);
-      int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
-      MHD_destroy_response(response);
-      return Return;
+      return SendFile(connection, (char*)"WEB/Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
     }
-    return MHD_NO;
-  }  
-  if(Request->Session->User == NULL) return SendRedirect(connection, "/Login");
-  return MHD_NO;
+    if(Request->Session->User == NULL) return SendRedirect(connection, "/Login");
+    if((strcmp(url, "/Dashboard") == 0) || (strcmp(url, "/") == 0)) return SendFile(connection,  "WEB/Dashboard.html");
+    if(strcmp(url, "/Analysis/Frequency") == 0) return SendFile(connection,  "WEB/Analysis_Frequency.html");
+    if(strcmp(url, "/Analysis/Voltage") == 0) return SendFile(connection,  "WEB/Analysis_Voltage.html");
+  }
+  return SendError(connection, MHD_HTTP_NOT_FOUND, "Page not found");
 }
 int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
   Request_t *Request = (Request_t*)*ptr;
@@ -341,14 +318,4 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
   Request->PostData = (char*)"Invalid command";
   Request->PostResponseLen = strlen(Request->PostData);
   return MHD_YES;
-}
-int HTTPServer::HandleDashboard(struct MHD_Connection *connection, const char *url, const char *method) {
-  if((strcmp(method, MHD_HTTP_METHOD_GET) != 0) || ((strcmp(url, "/Dashboard") != 0) && (strcmp(url, "/") != 0))) return MHD_NO;
-  int Return = SendFile(connection,  "WEB/Dashboard.html");
-  return Return;
-}
-int HTTPServer::HandleAnalysis_Frequency(struct MHD_Connection *connection, const char *url, const char *method) {
-  if((strcmp(method, MHD_HTTP_METHOD_GET) != 0) || (strcmp(url, "/Frequency") != 0)) return MHD_NO;
-  int Return = SendFile(connection,  "WEB/Frequency.html");
-  return Return;
 }
