@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
+#include "CaptureInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   private :
@@ -19,14 +20,15 @@ class Tools {
       char    *Pid;
     } Global_t;
     typedef struct {
-      char    *Type;
-      char    *Serial;
-      uint32_t ID;
-      char    *Name;
-      float    VoltageGain;
-      int      VoltageOffset;
-      float    CurrentGain;
-      int      CurrentOffset;
+      char             *Type;
+      char             *Serial;
+      uint32_t          ID;
+      char             *Name;
+      float             VoltageGain;
+      int               VoltageOffset;
+      float             CurrentGain;
+      int               CurrentOffset;
+      CaptureInterface *Instance;
     } Device_t;
     typedef struct {
       Device_t *Items;

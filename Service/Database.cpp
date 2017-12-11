@@ -46,7 +46,7 @@ bool Database::ExecSentence(const char* sql) {
     return true;  
   }
 }
-char* Database::ExecSentenceJSON(const char* sql, int *len) {
+char* Database::ExecSentenceJSON(const char* sql, size_t *len) {
   if(Result != NULL) PQclear(Result);
   Result = PQexec(DBConn, sql);
   if(PQresultStatus(Result) != PGRES_TUPLES_OK) {
@@ -93,7 +93,7 @@ void Database::BindSingleFloat(float param) {
       Params[ParamsLen] = strdup("NULL");
     } else {
       Params[ParamsLen] = (char*)malloc(sizeof(char) * 16);
-      sprintf(Params[ParamsLen], "%e", param);
+      sprintf(Params[ParamsLen], "%g", param);
     }
     ParamsLen++;
   }
@@ -102,7 +102,7 @@ void Database::BindArrayFloat(float *params, int len) {
   if(ParamsLen < ParamsAlloc) {
     Params[ParamsLen] = (char*)malloc(4 + sizeof(char) * 18 * len);
     int Pos = sprintf(Params[ParamsLen], "'{");
-    for(int i = 0; i < len; i++) Pos += sprintf(&Params[ParamsLen][Pos], isnan(params[i]) ? "NULL, " : "%e, ", params[i]);
+    for(int i = 0; i < len; i++) Pos += sprintf(&Params[ParamsLen][Pos], isnan(params[i]) ? "NULL, " : "%g, ", params[i]);
     if(len > 0) Pos -= 2;
     sprintf(&Params[ParamsLen][Pos], "}'");
     ParamsLen++;

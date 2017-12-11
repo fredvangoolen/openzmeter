@@ -110,6 +110,12 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
   if(Request == NULL) return;
   if(Request->DB) delete Request->DB;
   if(Request->JSONReader) json_object_put(Request->JSONReader);
+  if(Request->JSONWriter) json_object_put(Request->JSONWriter);
+  if(Request->Msg) {
+    uint64_t EndTime = Tools::GetTime();
+    Tools::LogMsg("DEBUG", "POST request '%s' takes %llumS (%llumS with send)\n", Request->Msg, Request->ProcTime - Request->StartTime, EndTime - Request->StartTime);
+    free(Request->Msg);
+  }
   free(Request);
 }
 int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
@@ -125,6 +131,10 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
     }
     *ptr = (Request_t*)calloc(1, sizeof(Request_t));
     Request = (Request_t*)*ptr;
+    if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
+      Request->Msg = strdup(url);
+      Request->StartTime = Tools::GetTime();
+    }
     Request->Session = GetSession(connection);
     Request->ResultCode = MHD_HTTP_OK;
     if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) return MHD_YES;
@@ -139,6 +149,7 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
       MHD_add_response_header(response, "Content-Type", "application/json");
       int Return = MHD_queue_response(connection, Request->ResultCode, response);
       MHD_destroy_response(response);
+      Request->ProcTime = Tools::GetTime();
       return Return;
     }
   } else if(strcmp (method, MHD_HTTP_METHOD_GET) == 0) {
@@ -248,8 +259,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
-  }
-  if(strcmp(url, "/getSeriesAggreg") == 0) {
+  } else if(strcmp(url, "/getSeriesAggreg") == 0) {
     uint64_t Period = 0, From = 0, To = 0;
     uint32_t Node = 0;
     char    *Aggreg = NULL, *Series = NULL, *Functions = NULL;
@@ -313,6 +323,33 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
+  } else if(strcmp(url, "/getSeriesNow") == 0) {
+    uint32_t Node = 0;
+    char    *Series = NULL;
+    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
+        Series = (char*)json_object_get_string(JSON_Val);
+      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
+        Node = json_object_get_int(JSON_Val);
+      else 
+        Error = true;
+    }
+    if((Series == NULL) || (Error == true)) {    
+      Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      Request->PostData = (char*)"Invalid JSON params";
+      Request->PostResponseLen = strlen(Request->PostData);
+      return MHD_YES;
+    }
+    if(Node < Tools::Devices.Len) {
+      Request->JSONWriter = Tools::Devices.Items[Node].Instance->GetJSONCopy(Series);
+      if(Request->JSONWriter == NULL) {
+        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      } else {
+        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
+      }
+      return MHD_YES;
+    }
   }
   Request->ResultCode = MHD_HTTP_BAD_REQUEST;
   Request->PostData = (char*)"Invalid command";

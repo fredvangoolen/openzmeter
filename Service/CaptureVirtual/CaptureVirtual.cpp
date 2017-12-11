@@ -47,7 +47,7 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
     This->SaveWorkParams();
     uint64_t SaveEnd = Tools::GetTime();
     if((SaveEnd - Start) <= 200) usleep((200 - (SaveEnd - Start)) * 1000);
-    Tools::LogMsg("DEBUG", "Process of block %llu takes %umS (%umS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
+    Tools::LogMsg("DEBUG", "Process of block %llu takes %llumS (%llumS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
   }
 }
 CaptureVirtual::CaptureVirtual(uint32_t samplerate, bool triphase, float nominalvoltage, float nominalcurrent, CaptureInterface::Freq_t baseFreq) : CaptureInterface(samplerate, triphase, baseFreq) {
