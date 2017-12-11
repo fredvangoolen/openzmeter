@@ -25,7 +25,7 @@ class Database {
     void  BindSingleString(const char *string);
     bool  ExecSentence();
     bool  ExecSentence(const char *sql);
-    char *ExecSentenceJSON(const char* sql, int *len);
+    char *ExecSentenceJSON(const char* sql, size_t *len);
     Database();
     ~Database();
 };

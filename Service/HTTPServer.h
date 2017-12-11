@@ -20,10 +20,14 @@ class HTTPServer {
     typedef struct {
       Session_t                *Session;
       char                     *PostData;
-      int                       PostResponseLen;
+      size_t                    PostResponseLen;
       int                       ResultCode;
       Database                 *DB;
       json_object              *JSONReader;
+      json_object              *JSONWriter;
+      uint64_t                  StartTime;
+      uint64_t                  ProcTime;
+      char                     *Msg;
     } Request_t;
     static MHD_Daemon *Daemon;
   private :

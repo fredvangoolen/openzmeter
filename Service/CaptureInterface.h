@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <inttypes.h>
 #include <fftw3.h>
+#include <json-c/json.h>
 #include "Database.h"
 //---------------------------------------------------------------------------------------------------------------------
 #define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
@@ -39,29 +40,32 @@ class CaptureInterface : private Database {
       bool      Flag;                       //Periodo marcado
     } Params_t;
     typedef struct {
-      uint64_t  SequenceID;                 //Numero de secuencia del bloque
-      uint32_t  Samples;                    //Cantidad de muestras que componen el bloque
-      float   **VoltageSamples;             //Muestras de tension   (El array almacena hasta 236mS)
-      float   **CurrentSamples;             //Muestras de corriente (El array almacena hasta 236mS) 
-      Cycle_t   Cycles[20];                 //Informacion de los ciclos del bloque
-      uint8_t   Cycles_Len;                 //Numero de ciclos en el bloque
-      Params_t  Params;
-    } Work_t;
-    typedef struct {
-      Params_t Params;                      //Media/RMS de los valores agregados
-      uint32_t Samples;                     //Numero de muestras incluidas en la agregacion
-    } Aggreg_t;
-    typedef struct {
       float Real;                           //Parte real
       float Imag;                           //Parte imaginaria
     } Complex_t;
     typedef struct {
       float     *Input;                     //Muestras de entrada
-      uint32_t   Len;                       //Longitud de la transformada
+//      uint32_t   Len;                       //Longitud de la transformada
       fftwf_plan Plan;                      //Plan para realizar la transformada
       pthread_t  Thread;                    //Hilo de ejecucion
-      Complex_t  Result[1];                 //Datos de salida
+//      Complex_t  Result[0];                 //Datos de salida
     } FFT_t;
+    typedef struct {
+      uint64_t    SequenceID;                 //Numero de secuencia del bloque
+      uint32_t    Samples;                    //Cantidad de muestras que componen el bloque
+      float     **VoltageSamples;             //Muestras de tension   (El array almacena hasta 236mS)
+      float     **CurrentSamples;             //Muestras de corriente (El array almacena hasta 236mS) 
+      Cycle_t     Cycles[20];                 //Informacion de los ciclos del bloque
+      uint8_t     Cycles_Len;                 //Numero de ciclos en el bloque
+      Params_t    Params;                     //Parametros calculados del bloque
+      uint32_t    FFTSamples;                 //Longitud de las transformadas
+      Complex_t **VoltageFFT;                 //Transformada de los canales de tension      
+      Complex_t **CurrentFFT;                 //Transformada de los canales de corriente
+    } Work_t;
+    typedef struct {
+      Params_t Params;                      //Media/RMS de los valores agregados
+      uint32_t Samples;                     //Numero de muestras incluidas en la agregacion
+    } Aggreg_t;
     typedef struct {
       float A0;
       float A1;
@@ -72,15 +76,12 @@ class CaptureInterface : private Database {
       float Z2;
     } Filter_t;
   private :
-    typedef struct Wait_t{
-      Wait_t          *Next;
-      pthread_cond_t   Wait;
-      bool             Ready;
-      Work_t          *Work;
-    } Wait_t;
-  private :
-    Wait_t         *pGetWorksThreads;
-    pthread_mutex_t pGetWorkThreadMutex;
+    uint32_t        pWaitingThreads;       //Hilos esperando datos
+    pthread_mutex_t pWaitingThreadsMutex;  //Mutex para registrar cambios en WaitingThreads
+    pthread_cond_t  pWaitingThreadsWait;   //Variable de condicion para bloquear el analizer
+    bool            pDataReady;            //Datos disponibles
+    pthread_mutex_t pDataReadyMutex;       //Mutex para registrar cambios en DataReady
+    pthread_cond_t  pDataReadyWait;        //Variable de condicion para bloquear los clientes
     uint32_t        pLastCycles[PROCESSING_FREQCYCLES];
     uint32_t        pLastCyclesCount;
     uint32_t        pLastCyclesPos;
@@ -96,7 +97,6 @@ class CaptureInterface : private Database {
   private :    
     bool     SaveParams(Params_t *param, const char *aggreg);
   protected :
-    
     uint64_t    pPrevTimestamp;
     Work_t      pWork;
   protected : 
@@ -118,10 +118,10 @@ class CaptureInterface : private Database {
     static FFT_t *FFT_Start(float *data, uint32_t len);
     static float  CalcPhi(Complex_t voltage, Complex_t current);
   public :
-    bool        Triphase();
-    uint32_t    SampleRate();
-    uint8_t     NominalFreq();
-    Work_t     *GetWorkCopy();
+    bool         Triphase();
+    uint32_t     SampleRate();
+    uint8_t      NominalFreq();
+    json_object *GetJSONCopy(char *series);
   public :
     CaptureInterface(uint32_t samplerate, bool triphase, enum Freq_t freq);
     virtual ~CaptureInterface();
