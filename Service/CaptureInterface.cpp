@@ -137,10 +137,10 @@ bool CaptureInterface::SaveParams(Params_t *params, const char *aggreg) {
   ExecSentence();
 }
 void CaptureInterface::Analyze(float minimunCurrent) {
-  FFT_t *FFT_Voltage[3];
-  FFT_t *FFT_Current[4];
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) FFT_Voltage[i] = FFT_Start(pWork.VoltageSamples[i], pWork.Samples);
-  for(int i = 0; i < (pTriphase ? 4 : 1); i++) FFT_Current[i] = FFT_Start(pWork.CurrentSamples[i], pWork.Samples);
+  FFT_t FFT_Voltage[3];
+  FFT_t FFT_Current[4];
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) FFT_Start(&FFT_Voltage[i], pWork.VoltageSamples[i], pWork.VoltageFFT[i]);
+  for(int i = 0; i < (pTriphase ? 4 : 1); i++) FFT_Start(&FFT_Current[i], pWork.CurrentSamples[i], pWork.CurrentFFT[i]);
   //Calcula valores basicos (RMS, potencia activa y energia) que son validos aun habiendo eventos
   float V[3] = {0.0, 0.0, 0.0};
   float I[4] = {0.0, 0.0, 0.0, 0.0};
@@ -164,23 +164,23 @@ void CaptureInterface::Analyze(float minimunCurrent) {
   }
   pWork.Params.Frequency = pLastCyclesCount / (pLastCyclesLenght / (float)pSampleRate) / 2.0;
   for(int j = 0; j < (pTriphase ? 3 : 1); j++) {
-    FFT_Wait(FFT_Voltage[j]);
+    FFT_Wait(&FFT_Voltage[j]);
     for(int i = 0; i < 50; i++) {
-      pWork.Params.VoltageHarmonics[j][i] = sqrt(pow(FFT_Voltage[j]->Result[10 + i * 10].Real, 2.0) + pow(FFT_Voltage[j]->Result[10 + i * 10].Imag, 2.0)) / M_SQRT2 * 2.0;
+      pWork.Params.VoltageHarmonics[j][i] = sqrt(pow(pWork.VoltageFFT[j][10 + i * 10].Real, 2.0) + pow(pWork.VoltageFFT[j][10 + i * 10].Imag, 2.0)) / M_SQRT2 * 2.0;
       if(i > 0) pWork.Params.THD_V[j] += pow(pWork.Params.VoltageHarmonics[j][i], 2.0);
     }
     pWork.Params.THD_V[j] = sqrt(pWork.Params.THD_V[j]) / pWork.Params.VoltageHarmonics[j][0];
   }
   for(int j = 0; j < (pTriphase ? 4 : 1); j++) {
-    FFT_Wait(FFT_Current[j]);
+    FFT_Wait(&FFT_Current[j]);
     if(pWork.Params.RMS_I[j] < minimunCurrent) continue;
     for(int i = 10; i <= 500 ; i = i + 10) {
       int   Harmonic = (i / 10) - 1;
-      float CurrentHarmonic = sqrt(pow(FFT_Current[j]->Result[i].Real, 2.0) + pow(FFT_Current[j]->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
+      float CurrentHarmonic = sqrt(pow(pWork.CurrentFFT[j][i].Real, 2.0) + pow(pWork.CurrentFFT[j][i].Imag, 2.0)) / M_SQRT2 * 2.0;
       if(Harmonic > 0) pWork.Params.THD_I[j] += pow(CurrentHarmonic, 2.0);
       if(j < 3) {
         float VoltageHarmonic = pWork.Params.VoltageHarmonics[j][Harmonic];
-        float PHI = CalcPhi(FFT_Voltage[j]->Result[i], FFT_Current[j]->Result[i]);
+        float PHI = CalcPhi(pWork.VoltageFFT[j][i], pWork.CurrentFFT[j][i]);
         pWork.Params.CurrentHarmonics[j][Harmonic] = CurrentHarmonic;
         if(Harmonic == 0) {
           pWork.Params.Fundamental_Active_Power[j]   = VoltageHarmonic * CurrentHarmonic * cos(PHI);
@@ -213,8 +213,6 @@ void CaptureInterface::Analyze(float minimunCurrent) {
 //    }
 ////    RequestServer_SetValues(work->Timestamp, Params, work->VoltageSamples, work->CurrentSamples, FFT_V, FFT_I, work->Samples, 600);
   }
-  for(int j = 0; j < (pTriphase ? 3 : 1); j++) free(FFT_Voltage[j]);
-  for(int j = 0; j < (pTriphase ? 4 : 1); j++) free(FFT_Current[j]);
 ////  DB_Save(PARAMS_10C, 0, work->Timestamp, Params, true);
 ////  if((Work->SequenceID % 15) == 0) DB_Save(PARAMS_3S, 0, PrevTimestamp, NULL, true);
 ////  if(((Work->Timestamp / 60000) * 60000) != ((PrevTimestamp / 60000) * 60000)) DB_Save(PARAMS_1M, 0, PrevTimestamp, NULL, true);
@@ -283,14 +281,22 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq
   pthread_cond_init (&pDataReadyWait, NULL);
   if(triphase == true) {
     pWork.VoltageSamples = (float**)malloc(sizeof(float*) * 3);
-    for(int i = 0; i < 3; i++) pWork.VoltageSamples[i] = (float*)malloc(sizeof(float*) * pMaxSamples);
+    pWork.VoltageFFT     = (Complex_t**)malloc(sizeof(Complex_t*) * 3);
+    for(int i = 0; i < 3; i++) pWork.VoltageSamples[i] = (float*)malloc(sizeof(float) * pMaxSamples);
+    for(int i = 0; i < 3; i++) pWork.VoltageFFT[i] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
     pWork.CurrentSamples = (float**)malloc(sizeof(float*) * 4);
-    for(int i = 0; i < 4; i++) pWork.CurrentSamples[i] = (float*)malloc(sizeof(float*) * pMaxSamples);
+    pWork.CurrentFFT     = (Complex_t**)malloc(sizeof(Complex_t*) * 4);
+    for(int i = 0; i < 4; i++) pWork.CurrentSamples[i] = (float*)malloc(sizeof(float) * pMaxSamples);
+    for(int i = 0; i < 4; i++) pWork.CurrentFFT[i] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
   } else {
     pWork.VoltageSamples = (float**)malloc(sizeof(float*) * 1);
-    pWork.VoltageSamples[0] = (float*)malloc(sizeof(float*) * pMaxSamples);  
+    pWork.VoltageFFT     = (Complex_t**)malloc(sizeof(Complex_t*) * 1);
+    pWork.VoltageSamples[0] = (float*)malloc(sizeof(float*) * pMaxSamples);
+    pWork.VoltageFFT[0] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
     pWork.CurrentSamples = (float**)malloc(sizeof(float*) * 1);
-    pWork.CurrentSamples[0] = (float*)malloc(sizeof(float*) * pMaxSamples); 
+    pWork.CurrentFFT     = (Complex_t**)malloc(sizeof(Complex_t*) * 1);
+    pWork.CurrentSamples[0] = (float*)malloc(sizeof(float*) * pMaxSamples);
+    pWork.CurrentFFT[0] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
   }
   AllocParams(&pWork.Params);
   ResetWork();
@@ -339,7 +345,9 @@ void CaptureInterface::ResetParams(Params_t *params) {
 }
 void CaptureInterface::ResetWork() {
   pWork.SequenceID++;
-  pWork.Samples = 0;
+  pWork.Samples    = 0;
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(pWork.VoltageFFT[i], 0, sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
+  for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(pWork.CurrentFFT[i], 0, sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(pWork.VoltageSamples[i], 0, sizeof(float) * pMaxSamples);
   for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(pWork.CurrentSamples[i], 0, sizeof(float) * pMaxSamples);
   memset(pWork.Cycles, 0, sizeof(Cycle_t) * 20);
@@ -384,35 +392,29 @@ float CaptureInterface::ApplyFilter(float in, Filter_t* filter) {
 }
 void  *CaptureInterface::FFT_Thread(void *args) {
   FFT_t *FFT = (FFT_t *)args;
-  fftwf_execute_dft_r2c(FFT->Plan, FFT->Input, (fftwf_complex*)FFT->Result);
+  fftwf_execute_dft_r2c(FFT->Plan, FFT->Input, (fftwf_complex*)FFT->Output);
   for(int i = 0; i < ceil(FFT->Len / 2 + 1); i++) {
-    FFT->Result[i].Real = FFT->Result[i].Real / FFT->Len;
-    FFT->Result[i].Imag = FFT->Result[i].Imag / FFT->Len;
+    FFT->Output[i].Real = FFT->Output[i].Real / FFT->Len;
+    FFT->Output[i].Imag = FFT->Output[i].Imag / FFT->Len;
   }
-  FFT->Len = ceil(FFT->Len / 2 + 1);
   return NULL;  
 }
 void   CaptureInterface::FFT_Wait(FFT_t *fft) {
-  if(pthread_join(fft->Thread, NULL) != 0) {  
-    Tools::LogMsg("ERROR", "%s:%d -> (Unknown)\n", __func__, __LINE__);
-    fftwf_destroy_plan(fft->Plan);
-    return;
-  }
+  if(pthread_join(fft->Thread, NULL) != 0) Tools::LogMsg("ERROR", "%s:%d -> (Unknown)\n", __func__, __LINE__);
   fftwf_destroy_plan(fft->Plan);
   return;
 }
-CaptureInterface::FFT_t *CaptureInterface::FFT_Start(float *data, uint32_t len) {
-  FFT_t *FFT = (FFT_t *)malloc(sizeof(FFT_t) + sizeof(Complex_t) * ceil(len / 2));
-  FFT->Plan = fftwf_plan_dft_r2c_1d(len, data, (fftwf_complex*)FFT->Result, FFTW_ESTIMATE);
-  FFT->Len = len;
-  FFT->Input = data;
-  if(pthread_create(&FFT->Thread, NULL, FFT_Thread, (void*)FFT) != 0) {
+bool CaptureInterface::FFT_Start(FFT_t *fft, float *in, Complex_t *out) {
+  fft->Plan = fftwf_plan_dft_r2c_1d(pWork.Samples, in, (fftwf_complex*)out, FFTW_ESTIMATE);
+  fft->Len = pWork.Samples;
+  fft->Input = in;
+  fft->Output = out;
+  if(pthread_create(&fft->Thread, NULL, FFT_Thread, (void*)fft) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    fftwf_destroy_plan(FFT->Plan);
-    free(FFT);
-    return NULL;
+    fftwf_destroy_plan(fft->Plan);
+    return false;
   }
-  return FFT;
+  return true;
 }
 json_object *CaptureInterface::GetJSONCopy(char *series) {
   pthread_mutex_lock(&pWaitingThreadsMutex);
@@ -509,53 +511,26 @@ json_object *CaptureInterface::GetJSONCopy(char *series) {
           for(int j = 0; j < pWork.Samples; j++) json_object_array_add(Obj2, json_object_new_double(pWork.CurrentSamples[i][j]));
           json_object_array_add(Obj, Obj2);
         }
+      } else if(strcmp(Serie, "fft_v") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
+          json_object *Obj2 = json_object_new_array();
+          for(int j = 0; j < ceil(pWork.Samples / 2) + 1; j++) json_object_array_add(Obj2, json_object_new_double(sqrt(pow(pWork.VoltageFFT[i][j].Real, 2.0) + pow(pWork.VoltageFFT[i][j].Imag, 2.0)) / M_SQRT2 * 2.0));
+          json_object_array_add(Obj, Obj2);
+        }
+      } else if(strcmp(Serie, "fft_i") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < (pTriphase ? 4 : 1); i++) {
+          json_object *Obj2 = json_object_new_array();
+          for(int j = 0; j < ceil(pWork.Samples / 2) + 1; j++) json_object_array_add(Obj2, json_object_new_double(sqrt(pow(pWork.CurrentFFT[i][j].Real, 2.0) + pow(pWork.CurrentFFT[i][j].Imag, 2.0)) / M_SQRT2 * 2.0));
+          json_object_array_add(Obj, Obj2);
+        }
       }
-
-
-
-
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
       if(Obj != NULL) json_object_object_add(Result, Serie, Obj);
       Serie = strtok(NULL, ", ");
     }
     json_object_object_add(Result, "Sampletime", json_object_new_int64(pWork.Params.Timestamp));
   }
-  
-//  Tmp.Wait = PTHREAD_COND_INITIALIZER;
-//  Tmp.Work = (Work_t*)malloc(sizeof(Work_t));
-//  Tmp.Ready = false;
-//  if(pTriphase == true) {
-//    Tmp.Work->VoltageSamples = (float**)malloc(sizeof(float*) * 3);
-//    for(int i = 0; i < 3; i++) Tmp.Work->VoltageSamples[i] = (float*)malloc(sizeof(float*) * pMaxSamples);
-//    Tmp.Work->CurrentSamples = (float**)malloc(sizeof(float*) * 4);
-//    for(int i = 0; i < 4; i++) Tmp.Work->CurrentSamples[i] = (float*)malloc(sizeof(float*) * pMaxSamples);
-//  } else {
-//    Tmp.Work->VoltageSamples = (float**)malloc(sizeof(float*) * 1);
-//    Tmp.Work->VoltageSamples[0] = (float*)malloc(sizeof(float*) * pMaxSamples);  
-//    Tmp.Work->CurrentSamples = (float**)malloc(sizeof(float*) * 1);
-//    Tmp.Work->CurrentSamples[0] = (float*)malloc(sizeof(float*) * pMaxSamples); 
-//  }
-//  AllocParams(&Tmp.Work->Params);
-//  pthread_mutex_lock(&pGetWorkThreadMutex);
-//  Tmp.Next = pGetWorksThreads;
-//  pGetWorksThreads = &Tmp;
-//  pthread_mutex_unlock(&pGetWorkThreadMutex);
-//  pthread_mutex_t Mutex = PTHREAD_MUTEX_INITIALIZER;
-//  while(Tmp.Ready == false) {
-//    if(pTerminate) return Tmp.Work;
-//    pthread_cond_wait(&Tmp.Wait, &Mutex);
-//  }
-  
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads--;
   pthread_cond_signal(&pWaitingThreadsWait);

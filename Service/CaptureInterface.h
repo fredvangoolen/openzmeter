@@ -45,10 +45,10 @@ class CaptureInterface : private Database {
     } Complex_t;
     typedef struct {
       float     *Input;                     //Muestras de entrada
-//      uint32_t   Len;                       //Longitud de la transformada
+      Complex_t *Output;                    //Datos de salida
+      uint32_t   Len;                       //Longitud de la transformada
       fftwf_plan Plan;                      //Plan para realizar la transformada
       pthread_t  Thread;                    //Hilo de ejecucion
-//      Complex_t  Result[0];                 //Datos de salida
     } FFT_t;
     typedef struct {
       uint64_t    SequenceID;                 //Numero de secuencia del bloque
@@ -58,7 +58,6 @@ class CaptureInterface : private Database {
       Cycle_t     Cycles[20];                 //Informacion de los ciclos del bloque
       uint8_t     Cycles_Len;                 //Numero de ciclos en el bloque
       Params_t    Params;                     //Parametros calculados del bloque
-      uint32_t    FFTSamples;                 //Longitud de las transformadas
       Complex_t **VoltageFFT;                 //Transformada de los canales de tension      
       Complex_t **CurrentFFT;                 //Transformada de los canales de corriente
     } Work_t;
@@ -111,11 +110,11 @@ class CaptureInterface : private Database {
     void     Analyze(float minimunCurrent);
     void     AccumulateAggregation(Aggreg_t *dst, Params_t *src);
     void     NormalizeAggregation(Aggreg_t *src);
-  protected :
+    bool     FFT_Start(FFT_t *fft, float *in, Complex_t *out);
+    void     FFT_Wait(FFT_t *fft);
+    protected :
     static void  *FFT_Thread(void *args);
     static float  ApplyFilter(float in, Filter_t *filter);
-    static void   FFT_Wait(FFT_t *fft);
-    static FFT_t *FFT_Start(float *data, uint32_t len);
     static float  CalcPhi(Complex_t voltage, Complex_t current);
   public :
     bool         Triphase();
