@@ -820,8 +820,8 @@ function AjaxGetEnergyCounters() {
 //           data: { energyperiod: EnergyTimeScale, lastevolutiontimestamp: LastEvolutionSample },
 //         success: AjaxSuccess60S,
 //      });
-}
-function EnergyUpdateCounters() {
+//}
+function EnergyUpdateCountersCurrent() {
   EnergyCountersTimer = setTimeout(AjaxGetEnergyCounters, 60000);
   var CountersPeriod = Cookies.get('CountersPeriod');
   if(CountersPeriod === 'Week') {
@@ -864,7 +864,9 @@ function EnergyUpdateCounters() {
   
   
 }
-
+function EnergyUpdateCountersPrevs() {
+  
+}
 /* Cuadro Main parameters */
 var EvolutionDatasets   = [[],[],[],[],[],[]];
 var EvolutionCharts     = [];
