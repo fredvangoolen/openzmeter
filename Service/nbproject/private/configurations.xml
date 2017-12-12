@@ -4,7 +4,7 @@
   <confs>
     <conf name="Default" type="1">
       <toolsSet>
-        <developmentServer>localhost</developmentServer>
+        <developmentServer>root@10.8.0.115:22</developmentServer>
         <platform>2</platform>
       </toolsSet>
       <dbx_gdbdebugger version="1">
@@ -29,8 +29,9 @@
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" --debug</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" --debug --config=openZmeter.ini</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" --debug --config=/etc/openZmeter.ini</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" --debug --config=openZmeter.ini</runcommand>
+        <runcommand>"${OUTPUT_PATH}" --debug --config=/etc/openZmeter.ini</runcommand>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <console-type>2</console-type>

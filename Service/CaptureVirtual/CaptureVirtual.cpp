@@ -50,7 +50,7 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
     Tools::LogMsg("DEBUG", "Process of block %llu takes %llumS (%llumS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
   }
 }
-CaptureVirtual::CaptureVirtual(uint32_t samplerate, bool triphase, float nominalvoltage, float nominalcurrent, CaptureInterface::Freq_t baseFreq) : CaptureInterface(samplerate, triphase, baseFreq) {
+CaptureVirtual::CaptureVirtual(uint32_t samplerate, bool triphase, float nominalvoltage, float nominalcurrent, CaptureInterface::Freq_t baseFreq, uint16_t id) : CaptureInterface(samplerate, triphase, baseFreq, id) {
   Tools::LogMsg("INFO", "Starting CaptureVirtual adquisition thread...\n");
   NominalVoltage   = nominalvoltage;
   NominalCurrent   = nominalcurrent;

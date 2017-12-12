@@ -177,7 +177,6 @@ bool Tools::Config_Handler(char* section) {
     Devices.Items[Devices.Len - 1].VoltageOffset =     292.00000000;
     Devices.Items[Devices.Len - 1].CurrentGain   =      -0.00078125;
     Devices.Items[Devices.Len - 1].CurrentOffset =       0.00000000;
-    Devices.Items[Devices.Len - 1].ID            =                0;
     Devices.Items[Devices.Len - 1].Name          = (char*)"Default";
     Devices.Items[Devices.Len - 1].Serial        =             NULL;
     Devices.Items[Devices.Len - 1].Type          =             NULL;
@@ -227,8 +226,6 @@ bool Tools::Config_Handler(char *section, char *param, char *value) {
       Devices.Items[Devices.Len - 1].CurrentGain = atof(value);
     } else if(strcmp(param, "current_offset") == 0) {
       Devices.Items[Devices.Len - 1].CurrentOffset = atoi(value);
-    } else if(strcmp(param, "id") == 0) {
-      Devices.Items[Devices.Len - 1].ID = atoi(value);
     } else if(strcmp(param, "name") == 0) {
       Devices.Items[Devices.Len - 1].Name = strdup(value);
     } else if(strcmp(param, "serial") == 0) {

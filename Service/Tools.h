@@ -22,7 +22,6 @@ class Tools {
     typedef struct {
       char             *Type;
       char             *Serial;
-      uint32_t          ID;
       char             *Name;
       float             VoltageGain;
       int               VoltageOffset;

@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include "CaptureInterface.h"
 #include "Tools.h"
+pthread_mutex_t CaptureInterface::pFFTPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
 bool CaptureInterface::SaveWorkParams() {
   pthread_mutex_lock(&pDataReadyMutex);
   pDataReady = true;
@@ -52,8 +53,8 @@ bool CaptureInterface::SaveWorkParams() {
     ResetParams(&pAggreg1H.Params);
     pAggreg1H.Samples = 0;
     PrepareSentence("EXECUTE DELETE_OLD_10C(?, ?)");
-    BindSingleUInt32(0);                                       //node
-    BindSingleUInt64(pWork.Params.Timestamp - 3600*24*1000);   //sampletime
+    BindSingleUInt32(pNodeIndex);
+    BindSingleUInt64(pWork.Params.Timestamp - 3600*24*1000);
   }  
   pPrevTimestamp = pWork.Params.Timestamp;
   pthread_mutex_lock(&pWaitingThreadsMutex);
@@ -118,7 +119,7 @@ bool CaptureInterface::SaveParams(Params_t *params, const char *aggreg) {
   Params_t *Aggreg = &pWork.Params;
   PrepareSentence("EXECUTE ?(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   BindSingleString(aggreg);
-  BindSingleUInt32(0);                                                                  //node
+  BindSingleUInt32(pNodeIndex);                                                                  //node
   BindSingleUInt64(params->Timestamp);                                             //sampletime
   BindArrayFloat(params->RMS_V, (pTriphase == true) ? 3 : 1);                      //rms_v 
   BindArrayFloat(params->RMS_I, (pTriphase == true) ? 4 : 1);                      //rms_i
@@ -269,7 +270,8 @@ bool CaptureInterface::AllocParams(Params_t *params) {
   }
   return true;
 }
-CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq_t freq) : Database() {
+CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq_t freq, uint16_t id) : Database() {
+  pNodeIndex           = id;
   pPrevTimestamp       = 0;
   pSampleRate          = samplerate;
   pTriphase            = triphase;
@@ -406,11 +408,15 @@ void  *CaptureInterface::FFT_Thread(void *args) {
 }
 void   CaptureInterface::FFT_Wait(FFT_t *fft) {
   if(pthread_join(fft->Thread, NULL) != 0) Tools::LogMsg("ERROR", "%s:%d -> (Unknown)\n", __func__, __LINE__);
+  pthread_mutex_lock(&pFFTPlannerMutex);
   fftwf_destroy_plan(fft->Plan);
+  pthread_mutex_unlock(&pFFTPlannerMutex);  
   return;
 }
 bool CaptureInterface::FFT_Start(FFT_t *fft, float *in, Complex_t *out) {
+  pthread_mutex_lock(&pFFTPlannerMutex);
   fft->Plan = fftwf_plan_dft_r2c_1d(pWork.Samples, in, (fftwf_complex*)out, FFTW_ESTIMATE);
+  pthread_mutex_unlock(&pFFTPlannerMutex);  
   fft->Len = pWork.Samples;
   fft->Input = in;
   fft->Output = out;

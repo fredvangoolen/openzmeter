@@ -34,7 +34,7 @@ class CaptureVirtual : public CaptureInterface {
   private :
     void   SamplesCopy(float *dest, int32_t offset, uint32_t len);
   public :
-    CaptureVirtual(uint32_t samplerate, bool triphase, float nominalvoltage, float nominalcurrent, CaptureInterface::Freq_t baseFreq);
+    CaptureVirtual(uint32_t samplerate, bool triphase, float nominalvoltage, float nominalcurrent, CaptureInterface::Freq_t baseFreq, uint16_t id);
     ~CaptureVirtual();
 };
 //----------------------------------------------------------------------------------------------------------------------

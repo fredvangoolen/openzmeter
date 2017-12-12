@@ -75,6 +75,8 @@ class CaptureInterface : private Database {
       float Z2;
     } Filter_t;
   private :
+    static pthread_mutex_t pFFTPlannerMutex; //Bloquea el acceso simultaneo al plinificador de FFTs
+  private :
     uint32_t        pWaitingThreads;       //Hilos esperando datos
     pthread_mutex_t pWaitingThreadsMutex;  //Mutex para registrar cambios en WaitingThreads
     pthread_cond_t  pWaitingThreadsWait;   //Variable de condicion para bloquear el analizer
@@ -93,13 +95,13 @@ class CaptureInterface : private Database {
     Aggreg_t        pAggreg1M;
     Aggreg_t        pAggreg10M;
     Aggreg_t        pAggreg1H;
+    uint16_t        pNodeIndex;
   private :    
     bool     SaveParams(Params_t *param, const char *aggreg);
   protected :
     uint64_t    pPrevTimestamp;
     Work_t      pWork;
-  protected : 
-      bool      pTerminate;
+    bool        pTerminate;
   protected :
     bool     AllocParams(Params_t *params);
     void     ResetParams(Params_t *params);
@@ -122,6 +124,6 @@ class CaptureInterface : private Database {
     uint8_t      NominalFreq();
     json_object *GetJSONCopy(char *series);
   public :
-    CaptureInterface(uint32_t samplerate, bool triphase, enum Freq_t freq);
+    CaptureInterface(uint32_t samplerate, bool triphase, enum Freq_t freq, uint16_t id);
     virtual ~CaptureInterface();
 };

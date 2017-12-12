@@ -55,7 +55,7 @@ class CaptureMono : public CaptureInterface {
 //    Params_t *Analyze(Work_t *work);
 //    void   SamplesCopy(float *dest, int32_t offset, uint32_t len);
   public :
-    CaptureMono(const char *serial, uint32_t id, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint32_t bufferLen, enum Freq_t freq);
+    CaptureMono(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint32_t bufferLen, enum Freq_t freq, uint16_t id);
     bool IsRunning();
     ~CaptureMono();
 };

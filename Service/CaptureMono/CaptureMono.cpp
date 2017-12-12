@@ -192,7 +192,7 @@ void  *CaptureMono::Analize_Thread(void* args) {
     Tools::LogMsg("DEBUG", "Process of block %llu takes %umS (%llumS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
   }
 }
-CaptureMono::CaptureMono(const char *serial, uint32_t id, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint32_t bufferLen, enum Freq_t freq) : CaptureInterface(15625, false, freq) {
+CaptureMono::CaptureMono(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint32_t bufferLen, enum Freq_t freq, uint16_t id) : CaptureInterface(15625, false, freq, id) {
   Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
   Buffer           = NULL;
   ReadPos          = 0;
