@@ -45,10 +45,10 @@ int main(int argc, char** argv) {
       printf("Option %s not recogniced. Use --help to show valid options.", argv[i]);
     }
   }
+  if(Daemonize == true) Tools::Daemonize();
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
   setpriority(PRIO_PROCESS, 0, -20);
-  if(Daemonize == true) Tools::Daemonize();
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
   if(Tools::CreatePidFile() == false) return EXIT_FAILURE;
   if(Tools::CreateLogFile() == false) return EXIT_FAILURE;

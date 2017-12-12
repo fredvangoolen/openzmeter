@@ -535,6 +535,14 @@
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
+        <cTool>
+          <developmentMode>0</developmentMode>
+          <commandLine>-Os</commandLine>
+        </cTool>
+        <ccTool>
+          <developmentMode>0</developmentMode>
+          <commandLine>-Os</commandLine>
+        </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
         </fortranCompilerTool>

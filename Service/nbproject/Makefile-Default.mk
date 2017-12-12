@@ -46,11 +46,11 @@ OBJECTFILES= \
 
 
 # C Compiler Flags
-CFLAGS=
+CFLAGS=-Os
 
 # CC Compiler Flags
-CCFLAGS=
-CXXFLAGS=
+CCFLAGS=-Os
+CXXFLAGS=-Os
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -72,42 +72,42 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service: ${OBJECTFILES}
 ${OBJECTDIR}/CaptureInterface.o: CaptureInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureInterface.o CaptureInterface.cpp
+	$(COMPILE.cc) -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureInterface.o CaptureInterface.cpp
 
 ${OBJECTDIR}/CaptureMono/CaptureMono.o: CaptureMono/CaptureMono.cpp
 	${MKDIR} -p ${OBJECTDIR}/CaptureMono
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureMono/CaptureMono.o CaptureMono/CaptureMono.cpp
+	$(COMPILE.cc) -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureMono/CaptureMono.o CaptureMono/CaptureMono.cpp
 
 ${OBJECTDIR}/CaptureVirtual/CaptureVirtual.o: CaptureVirtual/CaptureVirtual.cpp
 	${MKDIR} -p ${OBJECTDIR}/CaptureVirtual
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureVirtual/CaptureVirtual.o CaptureVirtual/CaptureVirtual.cpp
+	$(COMPILE.cc) -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureVirtual/CaptureVirtual.o CaptureVirtual/CaptureVirtual.cpp
 
 ${OBJECTDIR}/Database.o: Database.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Database.o Database.cpp
+	$(COMPILE.cc) -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Database.o Database.cpp
 
 ${OBJECTDIR}/Events.o: Events.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Events.o Events.c
+	$(COMPILE.c) -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Events.o Events.c
 
 ${OBJECTDIR}/HTTPServer.o: HTTPServer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/HTTPServer.o HTTPServer.cpp
+	$(COMPILE.cc) -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/HTTPServer.o HTTPServer.cpp
 
 ${OBJECTDIR}/Main.o: Main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.cpp
+	$(COMPILE.cc) -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.cpp
 
 ${OBJECTDIR}/Tools.o: Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Tools.o Tools.cpp
+	$(COMPILE.cc) -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Tools.o Tools.cpp
 
 # Subprojects
 .build-subprojects:
