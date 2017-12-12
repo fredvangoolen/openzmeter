@@ -6,10 +6,15 @@
     </data>
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Frequency.js</file>
+        <group name="ServiceV2">
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Dashboard.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/CaptureInterface.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Views/Dashboard.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Database.h</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/HTTPServer.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Frequency.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Database.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Main.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/openZmeter.js</file>
         </group>
     </open-files>
 </project-private>

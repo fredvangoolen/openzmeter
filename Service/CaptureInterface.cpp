@@ -51,6 +51,9 @@ bool CaptureInterface::SaveWorkParams() {
     SaveParams(&pAggreg1H.Params, "INSERT_1H");
     ResetParams(&pAggreg1H.Params);
     pAggreg1H.Samples = 0;
+    PrepareSentence("EXECUTE DELETE_OLD_10C(?, ?)");
+    BindSingleUInt32(0);                                       //node
+    BindSingleUInt64(pWork.Params.Timestamp - 3600*24*1000);   //sampletime
   }  
   pPrevTimestamp = pWork.Params.Timestamp;
   pthread_mutex_lock(&pWaitingThreadsMutex);
@@ -321,6 +324,8 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq
   ExecSentence("PREPARE INSERT_1M  AS INSERT INTO aggreg_1m (node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)");  
   ExecSentence("PREPARE INSERT_10M AS INSERT INTO aggreg_10m(node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)");  
   ExecSentence("PREPARE INSERT_1H  AS INSERT INTO aggreg_1h (node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)");
+  ExecSentence("PREPARE DELETE_OLD_10C AS DELETE FROM aggreg_10c WHERE node = $1 AND sampletime < $2");
+
 }
 void CaptureInterface::ResetParams(Params_t *params) {
   params->Timestamp = 0;

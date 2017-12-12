@@ -115,7 +115,7 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
   if(Request->Deflate) free(Request->PostData);
   if(Request->Msg) {
     uint64_t EndTime = Tools::GetTime();
-    Tools::LogMsg("DEBUG", "POST request '%s' takes %llumS (%.2fkB send in %llumS)\n", Request->Msg, Request->PostResponseLen / 1024.0, Request->ProcTime - Request->StartTime, EndTime - Request->StartTime);
+    Tools::LogMsg("DEBUG", "POST request '%s' takes %llumS (%.2fkB send in %llumS)\n", Request->Msg, Request->ProcTime - Request->StartTime, Request->PostResponseLen / 1024.0, EndTime - Request->StartTime);
     free(Request->Msg);
   }
   free(Request);
