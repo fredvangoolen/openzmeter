@@ -56,15 +56,13 @@ int CaptureMono::PlugCallback(struct libusb_context *ctx, struct libusb_device *
   return 0;
 }
 void  *CaptureMono::Capture_Thread(void *args) {
-  struct sched_param Prio;
-  Prio.sched_priority = sched_get_priority_max(SCHED_OTHER);
-  if(pthread_setschedparam(0, SCHED_OTHER, &Prio) == -1) {
+  if(pthread_setschedprio(0, -20) == -1) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL;
   }
   CaptureMono *This = (CaptureMono*)args;
   pthread_setname_np(This->CaptureThread, "CapMono_Init");
-  uint8_t BufferIN[3][8192];
+  uint8_t BufferIN[3][32768];
   struct libusb_transfer *TransferIN[3];
   TransferIN[0] = libusb_alloc_transfer(0);
   TransferIN[1] = libusb_alloc_transfer(0);
@@ -158,6 +156,10 @@ void  *CaptureMono::Capture_Thread(void *args) {
 }
 void  *CaptureMono::Analize_Thread(void* args) {
   CaptureMono *This = (CaptureMono*)args;
+  if(pthread_setschedprio(0, -10) == -1) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    return NULL;
+  }
   pthread_setname_np(This->AnalyzeThread, "AnalysisMono");
   while(!This->pTerminate) {
     pthread_mutex_lock(&This->AnalyzeMutex);

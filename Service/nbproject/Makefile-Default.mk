@@ -46,11 +46,11 @@ OBJECTFILES= \
 
 
 # C Compiler Flags
-CFLAGS=-Os
+CFLAGS=-Os -march=native
 
 # CC Compiler Flags
-CCFLAGS=-Os
-CXXFLAGS=-Os
+CCFLAGS=-Os -march=native
+CXXFLAGS=-Os -march=native
 
 # Fortran Compiler Flags
 FFLAGS=

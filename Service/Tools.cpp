@@ -96,7 +96,7 @@ void Tools::Daemonize() {
     LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     exit(1);
   }
-  chdir("/");
+  Daemonized = true;
   close(STDIN_FILENO);
   close(STDOUT_FILENO);
   close(STDERR_FILENO);

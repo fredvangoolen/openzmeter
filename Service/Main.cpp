@@ -48,7 +48,6 @@ int main(int argc, char** argv) {
   if(Daemonize == true) Tools::Daemonize();
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
-  setpriority(PRIO_PROCESS, 0, -20);
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
   if(Tools::CreatePidFile() == false) return EXIT_FAILURE;
   if(Tools::CreateLogFile() == false) return EXIT_FAILURE;

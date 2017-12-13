@@ -309,7 +309,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     char QueryText[8192];
     int  QueryLen = 0;
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT COUNT(*) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu) AS \"Samples\", ", Aggreg, From, To);
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT COUNT(*) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu AND node = %u) AS \"Samples\", ", Aggreg, From, To, Node);
     char *Serie = strtok(Series, ", ");
     while(Serie != NULL) {
       char *Oper, *Tmp1 = strchr(Serie, '('), *Tmp2 = strrchr(Serie, ')');
@@ -321,19 +321,19 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       }
       if((strcmp(Serie, "rms_v") == 0) || (strcmp(Serie, "rms_i") == 0) || (strcmp(Serie, "active_power") == 0) || (strcmp(Serie, "apparent_power") == 0) || (strcmp(Serie, "power_factor") == 0) || (strcmp(Serie, "active_energy") == 0) || (strcmp(Serie, "fundamenta_active_power") == 0) || (strcmp(Serie, "fundamental_reactive_power") == 0) || (strcmp(Serie, "fundamental_apparent_power") == 0) || (strcmp(Serie, "fundamental_power_factor") == 0) || (strcmp(Serie, "thd_v") == 0) || (strcmp(Serie, "thd_i") == 0) || (strcmp(Serie, "phi") == 0) || (strcmp(Serie, "harmonics_i") == 0) || (strcmp(Serie, "harmonics_v") == 0)) {
         if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT %s(elem) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %llu AND sampletime < %llu GROUP BY rn ORDER BY rn) as %s_%s,", Oper, Aggreg, Serie, From, To, Oper, Serie);
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT %s(elem) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %llu AND sampletime < %llu AND node = %u GROUP BY rn ORDER BY rn) as %s_%s,", Oper, Aggreg, Serie, From, To, Node, Oper, Serie);
         } else if(strcmp(Oper, "rms") == 0) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT SQRT(SUM(POW(elem, 2.0)) / COUNT(*)) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %llu AND sampletime < %llu GROUP BY rn ORDER BY rn) as %s_%s,", Aggreg, Serie, From, To, Oper, Serie);
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT SQRT(SUM(POW(elem, 2.0)) / COUNT(*)) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %llu AND sampletime < %llu AND node = %u GROUP BY rn ORDER BY rn) as %s_%s,", Aggreg, Serie, From, To, Node, Oper, Serie);
         }
       } else if(strcmp(Serie, "freq") == 0) {
         if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT %s(%s) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu) AS %s_%s, ", Oper, Serie, Aggreg, From, To, Oper, Serie);
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT %s(%s) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu AND node = %u) AS %s_%s, ", Oper, Serie, Aggreg, From, To, Node, Oper, Serie);
         } else if(strcmp(Oper, "rms") == 0) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT SQRT(SUM(POW(%s, 2.0)) / COUNT(*)) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu) AS %s_%s, ", Serie, Aggreg, From, To, Oper, Serie);
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT SQRT(SUM(POW(%s, 2.0)) / COUNT(*)) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu AND node = %u) AS %s_%s, ", Serie, Aggreg, From, To, Node, Oper, Serie);
         }
       } else if(strcmp(Serie, "flag") == 0) {
         if((strcmp(Oper, "and") == 0) || (strcmp(Oper, "or") == 0)) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT bool_%s(%s) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu) AS %s_%s, ", Oper, Serie, Aggreg, From, To, Oper, Serie);
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT bool_%s(%s) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu AND node = %u) AS %s_%s, ", Oper, Serie, Aggreg, From, To, Node, Oper, Serie);
         }
       }
       Serie = strtok(NULL, ", ");

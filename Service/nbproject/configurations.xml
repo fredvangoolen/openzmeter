@@ -537,11 +537,11 @@
       <compileType>
         <cTool>
           <developmentMode>0</developmentMode>
-          <commandLine>-Os</commandLine>
+          <commandLine>-Os -march=native</commandLine>
         </cTool>
         <ccTool>
           <developmentMode>0</developmentMode>
-          <commandLine>-Os</commandLine>
+          <commandLine>-Os -march=native</commandLine>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
