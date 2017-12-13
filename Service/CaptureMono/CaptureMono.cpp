@@ -62,11 +62,9 @@ void  *CaptureMono::Capture_Thread(void *args) {
   }
   CaptureMono *This = (CaptureMono*)args;
   pthread_setname_np(This->CaptureThread, "CapMono_Init");
-  uint8_t BufferIN[3][32768];
-  struct libusb_transfer *TransferIN[3];
-  TransferIN[0] = libusb_alloc_transfer(0);
-  TransferIN[1] = libusb_alloc_transfer(0);
-  TransferIN[2] = libusb_alloc_transfer(0);
+  uint8_t BufferIN[32][8192];
+  struct libusb_transfer *TransferIN[32];
+  for(int i = 0; i < 32; i++) TransferIN[i] = libusb_alloc_transfer(0);
   uint32_t Update = 0;
   while(!This->pTerminate) {
     if((Update % 10) == 0) {
@@ -137,10 +135,10 @@ void  *CaptureMono::Capture_Thread(void *args) {
       } else {
         Tools::LogMsg("INFO", "Claimed interface 0 on CaptureMono device with serial %s\n", This->Serial);
       }
-      libusb_fill_bulk_transfer(TransferIN[0], This->DeviceHandle, ADQUISITION_ENDPOINT_IN, BufferIN[0], sizeof(BufferIN[0]), ReadCallback, This, 500);
-      libusb_fill_bulk_transfer(TransferIN[1], This->DeviceHandle, ADQUISITION_ENDPOINT_IN, BufferIN[1], sizeof(BufferIN[1]), ReadCallback, This, 500);
-      libusb_fill_bulk_transfer(TransferIN[2], This->DeviceHandle, ADQUISITION_ENDPOINT_IN, BufferIN[2], sizeof(BufferIN[2]), ReadCallback, This, 500);
-      Result = libusb_submit_transfer(TransferIN[0]) | libusb_submit_transfer(TransferIN[1]) | libusb_submit_transfer(TransferIN[2]);
+      for(int i = 0; i < 32; i++) {
+        libusb_fill_bulk_transfer(TransferIN[i], This->DeviceHandle, ADQUISITION_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, 5000);
+        Result |= libusb_submit_transfer(TransferIN[i]);
+      }
       if(Result != LIBUSB_SUCCESS) {
         Tools::LogMsg("ERROR", "libusb_submit_transfer returns %d\n", Result);
         libusb_close(This->DeviceHandle);
