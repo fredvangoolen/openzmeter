@@ -60,7 +60,7 @@ function AjaxVoltage(result) {
     VoltageData = [];
   }
   if(result['Sampletime'] !== null) {
-    for(i = 0; i < result['Sampletime'].length; i++) VoltageData.push([new Date(result['Sampletime'][i]), result['rms_v'][i][1]]);
+    for(i = 0; i < result['Sampletime'].length; i++) VoltageData.push([new Date(result['Sampletime'][i]), result['rms_v'][i][0]]);
     while(VoltageData.length > result['MaxSamples']) VoltageData.shift();
     LastVoltageSample = result['Sampletime'][result['Sampletime'].length - 1];
   }
@@ -94,6 +94,7 @@ function AjaxVoltage(result) {
           })
         ],
         underlayCallback: function(canvas, area, g) {
+          var NominalVoltage = Nodes['NominalVoltage'][Node];
           var YellowLowA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.07);
           var YellowHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - YellowLowA;
           var YellowLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.07);
@@ -432,29 +433,35 @@ var HarmonicsNames      = [ '1st',  '2nd',  '3rd',  '4th',  '5th',  '6th',  '7th
                             '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th',
                             '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
 
-
-
-function AjaxGetDetails(result) {
-  if(result != null && Object.keys(result).length > 0) {
-    if(result['harmonics_v']) UpdateHarmonicsChart(result);
-    if(result['fft_v']) UpdateFFTChart(result);
-    if(result['wave_v']) UpdateWaveformChart(result);
-    LastTimestamp = result['sampletime'];
-    result.lastVoltage = result['rms_v'];
-    result.lastCurrent = result['rms_i'];
-    result.lastPower = result['active_power'];
-    result.lastFrequency = result['freq'];
-  } else {
-    $('#voltage_integer').text('?');
-    $('#voltage_decimal').text('');
-    $('#voltage_last_day').text('?');
-    $('#voltage_hour_min').text('?');
-    $('#voltage_hour_max').text('?');
-    $('#voltage_min_day').text('?');
-    $('#voltage_max_day').text('?');
+function AjaxGetDetails() {
+  if(HarmonicsChart == null) {
+    $('#DetailPanel').find("*").prop("disabled", true);
+    $('#DetailPanel').css('opacity', '0.6');
+    $('#DetailPanel').append('<div id="SpinnerDivDetail" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
+    DetailSpinner.spin(document.getElementById('SpinnerDivDetail'));
   }
-  UpdateHeader(result);
+  $.ajax({ url: "getSeriesNow",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Series: 'wave_v', Node: Nodes['IDs'][Node]}),
+           success: function(result) {
+             UpdateWaveformChart(result);
+           },
+           error: function() {
+             $('#WaveformTime').text('No stored data');
+           }
+//           complete: function (x) {
+//                       setTimeout(GetV, 5000);
+//                       DetailSpinner.stop();
+//                       $('#SpinnerDivDetail').remove();
+//                       $('#DetailPanel').css('opacity', '1.0');
+//                       $('#DetailPanel').find("*").prop("disabled", false);
+//                     }
+        });
 }
+
 function UpdateHarmonicsChart(result) {
   if(result['harmonics_v']) {
     HarmonicsDataset = [];
@@ -609,16 +616,11 @@ function UpdateFFTChart(result) {
 }
 function UpdateWaveformChart(result) {
   if(result['wave_v']) {
-    if(result['wave_v'].length != 0) {
-      var date = new Date(result.fft_v.time);
-      $('#WaveformTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
-    } else {
-      $('#WaveformTime').text('No stored data');
-      WaveformChart.updateOptions({ file: [[0, 0, 0]]});
-    }
+    var date = new Date(result['Sampletime']);
+    $('#WaveformTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
     WaveformDataset = [];
-    for(i = 0; i < result.wave_v.points.length / 2; i++) {
-      WaveformDataset.push([i, result.wave_v.points[i * 2], result.wave_v.points[i * 2 + 1]]);
+    for(i = 0; i < result['wave_v'][0].length; i++) {
+      WaveformDataset.push([i, result['wave_v'][0][i], 0]);
     }
   }
   var Max_Voltage = 1.0;
@@ -684,7 +686,7 @@ function UpdateWaveformChart(result) {
       x: { ticker: function(min, max, pixels, opts, dygraph, vals) {
              var ticks = [];
              for(var i = 1; i <= Math.floor(max / 312.5); i++) {
-               ticks.push({ v: i * 312.5, label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + Round2((i * 312.5 * 1000) / SampleRate) + '</div>' });
+               ticks.push({ v: i * 312.5, label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + Round2((i * 312.5 * 1000) / Nodes['SampleFreq'][Node]) + '</div>' });
              }
              return ticks;
            },
@@ -698,7 +700,7 @@ function UpdateWaveformChart(result) {
       }
   };
   if(WaveformChart == null) {
-    WaveformChart = new Dygraph(document.getElementById("waveform_chart"), WaveformDataset, Options);
+    WaveformChart = new Dygraph(document.getElementById("WaveformChart"), WaveformDataset, Options);
   } else {
     WaveformChart.updateOptions(Options);
     WaveformChart.updateOptions({ file: WaveformDataset });
@@ -786,28 +788,7 @@ function UpdateEvolutionChart(result) {
     }
   }
 }
-function GetValues5S() {
-  if(HarmonicsChart == null) {
-    $('#DetailPanel').find("*").prop("disabled", true);
-    $('#DetailPanel').css('opacity', '0.6');
-    $('#DetailPanel').append('<div id="SpinnerDivDetail" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    DetailSpinner.spin(document.getElementById('SpinnerDivDetail'));
-  }
-  $.ajax({ url: "analysis/ajaxUpdateValues5sVoltage",
-           timeout: 60000,
-           type: "POST",
-           dataType: "json",
-           data: { paused: Paused },
-           success: AjaxSuccess5S,
-           complete: function (x) {
-                       setTimeout(GetValues5S, 5000);
-                       DetailSpinner.stop();
-                       $('#SpinnerDivDetail').remove();
-                       $('#DetailPanel').css('opacity', '1.0');
-                       $('#DetailPanel').find("*").prop("disabled", false);
-                     }
-        });
-}
+
 function AjaxSuccess60S(result) {
   if(result['evolution_time']) {
     UpdateEvolutionChart(result);
@@ -900,7 +881,6 @@ $(':input[name="detail_change"]').change(TabChange);
 $('#aggreg_modal_close').click(function() {
   $('#aggreg_modal').modal('hide');
 });
-$(':input[name="voltage_chart_range"]').change(VoltageButtonsClick);
 $('#btnPause').change(function () {
   Paused = !Paused;
   if(Paused) {
@@ -1150,4 +1130,5 @@ function UpdatePage() {
   AjaxGetVoltage();
   AjaxGetVoltageCounters();
   AjaxGetDetails();
+  ajaxGetEvolution();
 }

@@ -23,7 +23,7 @@ body {
     background-color: #ffffff;
 }
 
-.navbar{
+.navbar {
     background-color: #6da1c9;
 }
 
@@ -31,22 +31,34 @@ body {
     border-width: 0 0 0px;
 }
 
-.navbar-default{
+.navbar-default {
     border-color: transparent;
 }
-.navbar-default .navbar-brand{
-    color: white;
-    font-weight: bold;
-    font-size:1.5em;
+.navbar-brand {
+  text-align: left;
+  padding-top: 3px;
+}
+.navbar-brand > a, .navbar-brand > a:link, .navbar-brand > a:visited .navbar-brand > a:hover {
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  font-size:25px;
 }
 
-ul.nav.navbar-top-links.navbar-right > li > a{
-    color:white;
+.navbar-brand > span { 
+  color:white;
+  font-weight: normal;
+  font-size: 12px;
+}
+
+
+ul.nav.navbar-top-links.navbar-right > li > a {
+  color:white;
 }
 
 .navbar-default .navbar-brand:hover, .navbar-default .navbar-brand:focus {
-    color: white;
-    background-color: transparent;
+  color: white;
+  background-color: transparent;
 }
 
 #wrapper {

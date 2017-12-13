@@ -85,9 +85,82 @@ function Round2(value) {
 }
 
 /* Actualiza el texto de la cabecera y lanza una nueva llamada de forma periodica */
-function UpdateIndicators() {
-  
+function AjaxGetIndicators() {
+  $.ajax({ url: "getSeriesNow",
+    timeout: 20000,
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({ Series: 'rms_v, rms_i, active_power, freq', Node: Nodes['IDs'][Node]}),
+    success: AjaxIndicators,
+    error: function() {
+      $('#VoltageIndicator').text('Offline');
+      $('#CurrentIndicator').text('Offline');
+      $('#PowerIndicator').text('Offline');
+      $('#FrequencyIndicator').text('Offline');
+      $('NodeTime').text('Offline');
+    },
+    complete: function() {
+      setTimeout(AjaxGetIndicators, 3000);
+    }
+ });
 }
+
+function AjaxIndicators(result) {
+  var Time = new  Date(result['Sampletime']);
+  $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
+  $('#VoltageIndicator').text(Array_Round2(result['rms_v'], ' | ', ''));
+  $('#CurrentIndicator').text(Array_Round2(result['rms_i'], ' | ', ''));
+  var Units = 'W';
+  for(i = 0; i < result['active_power'].length; i++) {
+    if(result['active_power'][i] > 1000) Units = 'kW';
+  }
+  $('#PowerIndicatorUnits').text(Units);
+  if(Units == 'kW') {
+    for(i = 0; i < result['active_power'].length; i++) result['active_power'][i] = result['active_power'][i] / 1000;
+  }
+  $('#PowerIndicator').text(Array_Round2(result['active_power'], ' | ', ''));
+  $('#FrequencyIndicator').text(Round2(result['freq']));
+  //  
+//  if(result.sysinfo) {
+//    $('#ProgressCPU').LineProgressbar( { percentage: result.sysinfo.cpu, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });
+//    $('#CPUText').text(Math.round(result.sysinfo.cpu) + '%');
+//    var RAM = 100 - (result.sysinfo.ram[0] / result.sysinfo.ram[1] * 100);
+//    $('#ProgressRAM').LineProgressbar( { percentage: RAM, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });
+//    $('#RAMText').text(Math.round(RAM) + '% (' + Math.round(result.sysinfo.ram[0] / 1024.0) + 'Mb free)');
+//    var SSD = 100 - (result.sysinfo.ssd[0] / result.sysinfo.ssd[1] * 100);
+//    $('#ProgressSDD').LineProgressbar( { percentage: SSD, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });
+//    $('#SSDText').text(Math.round(SSD) + '% (' + Math.round(result.sysinfo.ssd[0] / 1024.0 / 1024.0) + 'Mb free)');
+//    $('#ProgressBattery').LineProgressbar( { percentage: 0, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });
+//    $('#BatteryText').text('Not avaliable');
+//  }
+//
+//  if(result.lastCurrent) {
+//    $('#current_indicator').text(Round2(result.lastCurrent));
+//  }
+//  if(result.lastPower) {
+//    if(result.lastPower > 1000) {
+//      $('#power_indicator').text(Round2(result.lastPower / 1000));
+//      $('#power_indicator_units').text('kW');
+//    } else {
+//      $('#power_indicator').text(Round2(result.lastPower));
+//      $('#power_indicator_units').text('W');
+//    }
+//  }  
+//  if(result.lastFrequency) {
+//    $('#frequency_indicator').text(Round2(result.lastFrequency));
+//  }
+//  if(result.today_energy) {
+//    if(result['today_energy'] > 1000) {
+//      $('#energy_indicator').text(Round2(result['today_energy'] / 1000));
+//      $('#energy_indicator_units').text('kWh');
+//    } else {
+//      $('#energy_indicator').text(Round2(result['today_energy']));
+//      $('#energy_indicator_units').text('Wh');
+//    }
+//  }
+}
+
 
 /* Actualiza el desplegable de nodos disponibles y selecciona el que este activo para la sesion */
 var Nodes = [];
@@ -102,7 +175,7 @@ function GetNodesCompletes(result) {
     $('#SourceList').append(' <li><a href="">' + result['Names'][i] + ' (' + result['Type'][i] + ')</a></li>');
     if(i === Node) $('#SourceSel').text(result['Names'][i] + ' (' + result['Type'][i] + ')');
   }
-  UpdateIndicators();
+  AjaxGetIndicators();
   UpdatePage();
 }
 
@@ -183,47 +256,6 @@ function GetYearTimestamp() {
 }
 
 
-function UpdateHeader(result) {
-  if(result.sysinfo) {
-    $('#ProgressCPU').LineProgressbar( { percentage: result.sysinfo.cpu, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });
-    $('#CPUText').text(Math.round(result.sysinfo.cpu) + '%');
-    var RAM = 100 - (result.sysinfo.ram[0] / result.sysinfo.ram[1] * 100);
-    $('#ProgressRAM').LineProgressbar( { percentage: RAM, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });
-    $('#RAMText').text(Math.round(RAM) + '% (' + Math.round(result.sysinfo.ram[0] / 1024.0) + 'Mb free)');
-    var SSD = 100 - (result.sysinfo.ssd[0] / result.sysinfo.ssd[1] * 100);
-    $('#ProgressSDD').LineProgressbar( { percentage: SSD, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });
-    $('#SSDText').text(Math.round(SSD) + '% (' + Math.round(result.sysinfo.ssd[0] / 1024.0 / 1024.0) + 'Mb free)');
-    $('#ProgressBattery').LineProgressbar( { percentage: 0, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });
-    $('#BatteryText').text('Not avaliable');
-  }
-  if(result.lastVoltage) {
-    $('#voltage_indicator').text(Round2(result.lastVoltage));
-  }
-  if(result.lastCurrent) {
-    $('#current_indicator').text(Round2(result.lastCurrent));
-  }
-  if(result.lastPower) {
-    if(result.lastPower > 1000) {
-      $('#power_indicator').text(Round2(result.lastPower / 1000));
-      $('#power_indicator_units').text('kW');
-    } else {
-      $('#power_indicator').text(Round2(result.lastPower));
-      $('#power_indicator_units').text('W');
-    }
-  }  
-  if(result.lastFrequency) {
-    $('#frequency_indicator').text(Round2(result.lastFrequency));
-  }
-  if(result.today_energy) {
-    if(result['today_energy'] > 1000) {
-      $('#energy_indicator').text(Round2(result['today_energy'] / 1000));
-      $('#energy_indicator_units').text('kWh');
-    } else {
-      $('#energy_indicator').text(Round2(result['today_energy']));
-      $('#energy_indicator_units').text('Wh');
-    }
-  }
-}
 var energyUnit = 'kWh'
 var today = new Date();
 $('#side-menu').metisMenu();

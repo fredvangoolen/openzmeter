@@ -13,8 +13,6 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
-        <gdb_signals>
-        </gdb_signals>
         <gdb_options>
           <DebugOptions>
             <option name="gdb_follow_fork_mode" value="child"/>
@@ -29,11 +27,11 @@
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" --debug</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" --debug --config=openZmeter.ini</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" --debug --config=/etc/openZmeter.ini --daemon</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" --debug --config=/etc/openZmeter.ini</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" --debug --config=openZmeter.ini</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" --debug --config=/etc/openZmeter.ini</runcommand>
+        <runcommand>"${OUTPUT_PATH}" --debug --config=openZmeter.ini</runcommand>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <console-type>2</console-type>
