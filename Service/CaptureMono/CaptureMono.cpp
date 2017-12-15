@@ -62,9 +62,9 @@ void  *CaptureMono::Capture_Thread(void *args) {
   }
   CaptureMono *This = (CaptureMono*)args;
   pthread_setname_np(This->CaptureThread, "CapMono_Init");
-  uint8_t BufferIN[32][8192];
-  struct libusb_transfer *TransferIN[32];
-  for(int i = 0; i < 32; i++) TransferIN[i] = libusb_alloc_transfer(0);
+  uint8_t BufferIN[CAPTUREMONO_TRANSFERS][8192];
+  struct libusb_transfer *TransferIN[CAPTUREMONO_TRANSFERS];
+  for(int i = 0; i < CAPTUREMONO_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
   uint32_t Update = 0;
   while(!This->pTerminate) {
     if((Update % 10) == 0) {
@@ -135,8 +135,8 @@ void  *CaptureMono::Capture_Thread(void *args) {
       } else {
         Tools::LogMsg("INFO", "Claimed interface 0 on CaptureMono device with serial %s\n", This->Serial);
       }
-      for(int i = 0; i < 32; i++) {
-        libusb_fill_bulk_transfer(TransferIN[i], This->DeviceHandle, ADQUISITION_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, 5000);
+      for(int i = 0; i < CAPTUREMONO_TRANSFERS; i++) {
+        libusb_fill_bulk_transfer(TransferIN[i], This->DeviceHandle, CAPTUREMONO_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, -1);
         Result |= libusb_submit_transfer(TransferIN[i]);
       }
       if(Result != LIBUSB_SUCCESS) {
@@ -166,7 +166,7 @@ void  *CaptureMono::Analize_Thread(void* args) {
       pthread_cond_wait(&This->ReadWait, &This->AnalyzeMutex);
     }
     uint64_t Start = Tools::GetTime();
-    This->pWork.Params.Timestamp = Start - ((This->Used * 1000) / ADQUISITION_SAMPLEFREQ);
+    This->pWork.Params.Timestamp = Start - ((This->Used * 1000) / CAPTUREMONO_SAMPLEFREQ);
     float LastSample = +20; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
     for(This->pWork.Samples = 0; This->pWork.Samples < This->GetMaxSamples(); This->pWork.Samples++) {
       This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
@@ -212,7 +212,7 @@ CaptureMono::CaptureMono(const char *serial, float voltageGain, int voltageOffse
   pthread_mutex_init(&CaptureMutex, NULL);
   for(int i = 0; i < 5; i++) {
     float Q = 1.0;
-    float K = tan(M_PI * ((float)NominalFrequency() / ADQUISITION_SAMPLEFREQ));
+    float K = tan(M_PI * ((float)NominalFrequency() / CAPTUREMONO_SAMPLEFREQ));
     float Norm = 1 / (1 + K / Q + K * K);
     Filters[i].A0 = K / Q * Norm;
     Filters[i].A1 = 0;

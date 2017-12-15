@@ -412,208 +412,93 @@ $('#GraphDialogClose').click(function() {
 });
 
 /* Vista de detalles */
-var ShowCurrent         = false;
-var Paused              = false;
-var HideFundamentals    = false;
-var HarmonicsChart      = null;
-var HarmonicsDataset    = [];
-var HarmonicsOffset     = 0;
-var FFTChart            = null;
-var FFTDataset          = [];
-var FFTOffset           = 0;
-var WaveformChart       = null;
-var WaveformDataset     = [];
-var EvolutionCharts     = [];
-var LastEvolutionSample = 0;
-var EvolutionDatasets   = [];
-var DetailSpinner       = new Spinner(SpinnerOpts);
-var HarmonicsNames      = [ '1st',  '2nd',  '3rd',  '4th',  '5th',  '6th',  '7th',  '8th',  '9th', '10th',
-                            '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th',
-                            '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th',
-                            '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th',
-                            '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
-
 function AjaxGetDetails() {
-  if(HarmonicsChart == null) {
-    $('#DetailPanel').find("*").prop("disabled", true);
-    $('#DetailPanel').css('opacity', '0.6');
-    $('#DetailPanel').append('<div id="SpinnerDivDetail" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    DetailSpinner.spin(document.getElementById('SpinnerDivDetail'));
-  }
+  if(WaveformChart === null) ShowSpinner(DetailSpinner, 'DetailSpinner');
   $.ajax({ url: "getSeriesNow",
            timeout: 20000,
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: 'wave_v', Node: Nodes['IDs'][Node]}),
+           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i', Node: Nodes['IDs'][Node]}),
            success: function(result) {
+             if(WaveformChart === null) StopSpinner(DetailSpinner, 'DetailSpinner');
              UpdateWaveformChart(result);
+             UpdateHarmonicsChart(result);
+             UpdateFFTChart(result);
            },
-           error: function() {
+           error: function(bliu, blau, blu) {
              $('#WaveformTime').text('No stored data');
+             $('#HarmonicsTime').text('No stored data');
+             $('#FFTTime').text('No stored data');
+           },
+           complete: function (x) {
+             setTimeout(AjaxGetDetails, 500);
            }
-//           complete: function (x) {
-//                       setTimeout(GetV, 5000);
-//                       DetailSpinner.stop();
-//                       $('#SpinnerDivDetail').remove();
-//                       $('#DetailPanel').css('opacity', '1.0');
-//                       $('#DetailPanel').find("*").prop("disabled", false);
-//                     }
         });
 }
+$('#btnShowDetailVoltage').click(function() {
+//  $('#btnShowDetailVoltage').addClass('active');
+  $('#btnShowDetailHarmonics').removeClass('active');
+  $('#btnShowDetailEvolution').removeClass('active');
+  $('#btnShowDetailAdvanced').removeClass('active');
+  $('#btnShowDetailEvents').removeClass('active');
+  
+  $('#btnShowDetail1Harmonic').addClass('disabled');
+  $('#btnShowDetailVoltageAndCurrent').removeClass('disabled');
+  $('#btnPauseDetail').removeClass('disabled');
 
-function UpdateHarmonicsChart(result) {
-  if(result['harmonics_v']) {
-    HarmonicsDataset = [];
-    for(i = 0; i < result.harmonics_v.length; i++) {
-      if(result.harmonics_v[i] < 0.000000001) result.harmonics_v[i] = 0.000000001;
-      HarmonicsDataset.push([20.0 * Math.log10(result.harmonics_v[i]), result.harmonics_v[i]]);
-    }
-    HarmonicsOffset = 0;
-    for(i = 0; i < 50; i++) {
-      if(-HarmonicsDataset[i][0] > 0) HarmonicsOffset = Math.max(HarmonicsOffset, -HarmonicsDataset[i][0]);
-    }
-    for(i = 0; i < 50; i++) HarmonicsDataset[i][0] = HarmonicsDataset[i][0] + HarmonicsOffset;
-  }
-  var toShow = [];
-  for(i = (HideFundamentals ? 1 : 0); i < 50; i++) toShow.push([i, HarmonicsDataset[i][0]]);
-  if(HarmonicsChart === null) {
-    HarmonicsChart = new Dygraph(document.getElementById("harmonics_chart"),
-      toShow,
-      { strokeWidth: 1,
-        labelsDiv: "HarmonicsLegend",  
-        labels: ["Harmonic", "dB"],
-        colors: ["#d9534f"],
-        plotter: barChartPlotter,
-        dateWindow: [(HideFundamentals ? 0 : -1), 50],
-        gridLineColor: "#999",
-        gridLinePattern: [4, 4],
-        interactionModel: { },
-        axes: { 
-          y: { pixelsPerLabel: 15,
-               axisLabelWidth: 20,
-               ticker: function(min, max, pixels, opts, dygraph, vals) {
-                         var ticks = [];
-                         for(var i = Math.floor(min - HarmonicsOffset); i < Math.ceil(max - HarmonicsOffset); i++) {
-                           if((i % 10) == 0) {
-                             ticks.push({ v: i + HarmonicsOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
-                           }
-                         }
-                         return ticks;
-                       },
-               valueFormatter: function (x, a, b, c, row, col) {
-                 return Round2(x - HarmonicsOffset) + '<strong style="color: #d9534f">&nbsp;&nbsp;Voltage</strong>: ' + (Round2(HarmonicsDataset[row + (HideFundamentals ? 1 : 0)][1])) + '<em class="small"> V</em>';
-               }
-          },
-          x: { drawGrid: false, 
-               ticker: function (min, max, pixels, opts, dygraph, vals) {
-                         var ticks = [];
-                         for(var i = (HideFundamentals ? 1 : 0); i < 50; i++) {
-                           if(i%2 != 0) continue;
-                           ticks.push({v: i, label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + HarmonicsNames[i] + '</div>' });
-                         }
-                         return ticks;
-                       },
-               valueFormatter: function (y) {
-                                 return HarmonicsNames[y] + ' Harmonic (' + (50 * (y + 1)) + '<em class="small"> Hz</em>)';
-                               }
-          }
-        }
-      }
-    );
-  } else {
-    HarmonicsChart.updateOptions({ file: toShow, dateWindow: [(HideFundamentals ? 0 : -1), 50] });
-  }
-  if(HarmonicsDataset.length > 0) {
-    var date = new Date(result.sampletime * 1000);
-    $('#HarmonicsTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
-  } else {
-    $('#HarmonicsTime').text('No stored data');
-    HarmonicsChart.updateOptions({ file: []});
-  }
-}
-function UpdateFFTChart(result) {
-  FFTDataset = [];
-  if(result['fft_v']) {
-    for(i = 0; i < result.fft_v.points.length; i++) {
-      if(result.fft_v.points[i] < 0.000000001) result.fft_v.points[i] = 0.000000001;
-      FFTDataset.push([20.0 * Math.log10(result.fft_v.points[i]), result.fft_v.points[i]]);
-    }
-    FFTOffset = 0;
-    for(i = 0; i < result.fft_v.points.length; i++) {
-      if(-FFTDataset[i][0] > FFTOffset) FFTOffset = -FFTDataset[i][0];
-    }
-    for(i = 0; i < result.fft_v.points.length; i++) FFTDataset[i][0] = FFTDataset[i][0] + FFTOffset;
-  }
-  var toShow = [];
-  for(i = 0; i < FFTDataset.length; i++) toShow.push([i, FFTDataset[i][0]]);
-  if(FFTChart == null) {
-    FFTChart = new Dygraph(document.getElementById("fft_chart"),
-      toShow,
-      { strokeWidth: 1,
-        labelsDiv: "FFTLegend",  
-        labels: ["Frequency", "dB"],
-        colors: ["#d9534f"],
-        gridLineColor: "#999",
-        gridLinePattern: [4, 4],
-        showRangeSelector: true,
-        rangeSelectorHeight: 20,
-        rangeSelectorPlotFillColor: "#d9534f",
-        rangeSelectorPlotStrokeColor: "#d9534f",
-        xAxisHeight: 10,
-        fillGraph: true,
-        interactionModel: { 
-          mousedown: mouseDownOZM,
-          mousemove: mouseMoveOZM,
-          mouseup  : mouseUpOZM,
-          dblclick : dblClickOZM_Restore  
-        },
-        axes: {
-          y: { pixelsPerLabel: 15,
-               axisLabelWidth: 20,
-               ticker: function(min, max, pixels, opts, dygraph, vals) {
-                         var ticks = [];
-                         for(var i = Math.floor(min - FFTOffset); i < Math.ceil(max - FFTOffset); i++) {
-                           if((i % 10) == 0) {
-                             ticks.push({ v: i + FFTOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' })
-                           }
-                         }
-                         return ticks;
-                       },
-               valueFormatter: function (x, a, b, c, row, col) {
-                 return Round2(x - FFTOffset) + '<strong style="color: #d9534f">&nbsp;&nbsp;Voltage</strong>: ' + (Round2(FFTDataset[row][1])) + '<em class="small"> V</em>';
-               },
-             },
-          x: { ticker: function(min, max, pixels, opts, dygraph, vals) {
-                         var ticks = [];
-                         for(var i = 1; i < max; i++) {
-                           if((i % 10) == 0) {
-                             ticks.push({ v: i, label: '' });
-                           }
-                           if((i % 50) == 0) {
-                             ticks.push({ v: i, label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + (i * 5) + '</div>' });
-                           }
-                         }
-                         return ticks;
-                       },
-               valueFormatter: function (y) {
-                                 return (5 * y) + ' <em class="small">Hz</em>';
-                               },
-             }
-        }
-      }
-    );
-  } else {
-    FFTChart.updateOptions({ file: toShow });
-  }
-  if(FFTDataset.length > 0) {
-    var date = new Date(result.fft_v.time);
-    $('#FFTTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
-  } else {
-    $('#FFTTime').text('No stored data');
-    FFTChart.updateOptions({ file: []});
-  }
-}
+  
+  Cookies.set('VoltageDetailview', 'Waveform');
+  $('#Tabs > div').addClass('hidden');
+  $('#WaveformPanel').removeClass('hidden');
+  $(WaveformChart.graphDiv).parent().removeAttr('style');
+  window.dispatchEvent(new Event('resize'));
+});
+$('#btnShowDetailHarmonics').click(function() {
+  $('#btnShowDetailVoltage').removeClass('active');
+  $('#btnShowDetailEvolution').removeClass('active');
+  $('#btnShowDetailAdvanced').removeClass('active');
+  $('#btnShowDetailEvents').removeClass('active');
+  
+  Cookies.set('VoltageDetailview', 'Harmonics');
+  $('#Tabs > div').addClass('hidden');
+  $('#HarmonicsPanel').removeClass('hidden');
+  $(HarmonicsChart.graphDiv).parent().removeAttr('style');
+  $('#btnShowDetail1Harmonic').removeClass('disabled');
+  $('#btnShowDetailVoltageAndCurrent').removeClass('disabled');
+  window.dispatchEvent(new Event('resize'));
+});
+$('#btnShowDetailEvolution').click(function() {
+  $('#btnShowDetailVoltage').removeClass('active');
+  $('#btnShowDetailHarmonics').removeClass('active');
+  $('#btnShowDetailAdvanced').removeClass('active');
+  $('#btnShowDetailEvents').removeClass('active');
+  
+  Cookies.set('VoltageDetailview', 'Evolution');
+  $('#Tabs > div').addClass('hidden');
+  $('#EvolutionPanel').removeClass('hidden');
+  $(HarmonicsChart.graphDiv).parent().removeAttr('style');
+  $('#btnShowDetail1Harmonic').removeClass('disabled');
+  $('#btnShowDetailVoltageAndCurrent').removeClass('disabled');
+  window.dispatchEvent(new Event('resize'));
+});
+$('#btnShowDetailAdvanced').click(function() {
+  $('#btnShowDetailVoltage').removeClass('active');
+  $('#btnShowDetailEvolution').removeClass('active');
+  $('#btnShowDetailAdvanced').removeClass('active');
+  $('#btnShowDetailEvents').removeClass('active');
+  
+  Cookies.set('VoltageDetailview', 'Evolution');
+  $('#Tabs > div').addClass('hidden');
+  $('#FFTPanel').removeClass('hidden');
+  $(FFTChart.graphDiv).parent().removeAttr('style');
+  $('#btnShowDetail1Harmonic').removeClass('disabled');
+  $('#btnShowDetailVoltageAndCurrent').removeClass('disabled');
+  window.dispatchEvent(new Event('resize'));
+});
+/* Grafica de forma de onda */
+var WaveformChart       = null;
+var WaveformDataset     = [];
 function UpdateWaveformChart(result) {
   if(result['wave_v']) {
     var date = new Date(result['Sampletime']);
@@ -691,7 +576,7 @@ function UpdateWaveformChart(result) {
              return ticks;
            },
            valueFormatter: function (x) {
-             return Round2((x * 1000) / SampleRate) + ' <em class="x-small">ms</em>';
+             return Round2((x * 1000) / Nodes['SampleFreq'][Node]) + ' <em class="x-small">ms</em>';
            },
            axisLabelFormatter: function (x) {
              return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + Round2((x * 1000) / SampleRate) + '</div>';
@@ -708,6 +593,192 @@ function UpdateWaveformChart(result) {
   WaveformChart.updateOptions({ showRangeSelector: false});
   WaveformChart.updateOptions({ showRangeSelector: true});
 }
+
+/* Grafica de armonicos */
+var HarmonicsChart      = null;
+var HarmonicsDataset    = [];
+var HarmonicsOffset     = 0;
+function UpdateHarmonicsChart(result) {
+  if(result['harmonics_v']) {
+    var date = new Date(result['Sampletime']);
+    $('#HarmonicsTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
+    HarmonicsDataset = [];
+    for(i = 0; i < result['harmonics_v'][0].length; i++) {
+    //  if(result.harmonics_v[i] < 0.000000001) result.harmonics_v[i] = 0.000000001;
+      HarmonicsDataset.push([20.0 * Math.log10(result.harmonics_v[0][i]), result.harmonics_v[0][i]]);
+    }
+//    HarmonicsOffset = 0;
+    for(i = 0; i < 50; i++) {
+      if(-HarmonicsDataset[i][0] > 0) HarmonicsOffset = Math.max(HarmonicsOffset, -HarmonicsDataset[i][0]);
+    }
+    for(i = 0; i < 50; i++) HarmonicsDataset[i][0] = HarmonicsDataset[i][0] + HarmonicsOffset;
+  }
+  var toShow = [];
+  for(i = (HideFundamentals ? 1 : 0); i < 50; i++) toShow.push([i, HarmonicsDataset[i][0]]);
+  if(HarmonicsChart === null) {
+    HarmonicsChart = new Dygraph(document.getElementById("HarmonicsChart"),
+      toShow,
+      { strokeWidth: 1,
+        labelsDiv: "HarmonicsLegend",  
+        labels: ["Harmonic", "dB"],
+        colors: ["#d9534f"],
+        plotter: barChartPlotter,
+        dateWindow: [(HideFundamentals ? 0 : -1), 50],
+        gridLineColor: "#999",
+        gridLinePattern: [4, 4],
+        interactionModel: { },
+        axes: { 
+          y: { pixelsPerLabel: 15,
+               axisLabelWidth: 20,
+               ticker: function(min, max, pixels, opts, dygraph, vals) {
+                         var ticks = [];
+                         for(var i = Math.floor(min - HarmonicsOffset); i < Math.ceil(max - HarmonicsOffset); i++) {
+                           if((i % 10) == 0) {
+                             ticks.push({ v: i + HarmonicsOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
+                           }
+                         }
+                         return ticks;
+                       },
+               valueFormatter: function (x, a, b, c, row, col) {
+                 return Round2(x - HarmonicsOffset) + '<strong style="color: #d9534f">&nbsp;&nbsp;Voltage</strong>: ' + (Round2(HarmonicsDataset[row + (HideFundamentals ? 1 : 0)][1])) + '<em class="small"> V</em>';
+               }
+          },
+          x: { drawGrid: false, 
+               ticker: function (min, max, pixels, opts, dygraph, vals) {
+                         var ticks = [];
+                         for(var i = (HideFundamentals ? 1 : 0); i < 50; i++) {
+                           if(i%2 != 0) continue;
+                           ticks.push({v: i, label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + HarmonicsNames[i] + '</div>' });
+                         }
+                         return ticks;
+                       },
+               valueFormatter: function (y) {
+                                 return HarmonicsNames[y] + ' Harmonic (' + (50 * (y + 1)) + '<em class="small"> Hz</em>)';
+                               }
+          }
+        }
+      }
+    );
+  } else {
+    HarmonicsChart.updateOptions({ file: toShow, dateWindow: [(HideFundamentals ? 0 : -1), 50] });
+  }
+  if(HarmonicsDataset.length > 0) {
+    
+    
+  } else {
+    $('#HarmonicsTime').text('No stored data');
+    HarmonicsChart.updateOptions({ file: []});
+  }
+}
+
+/* Grafica de FFT */
+var FFTChart            = null;
+var FFTDataset          = [];
+var FFTOffset           = 0;
+function UpdateFFTChart(result) {
+  FFTDataset = [];
+  if(result['fft_v']) {
+    for(i = 0; i < result['fft_v'][0].length; i++) {
+      if(result['fft_v'][0][i] < 0.000000001) result['fft_v'][0][i] = 0.000000001;
+      FFTDataset.push([20.0 * Math.log10(result['fft_v'][0][i]), result['fft_v'][0][i]]);
+    }
+    FFTOffset = 0;
+    for(i = 0; i < result['fft_v'][0].length; i++) {
+      if(-FFTDataset[i][0] > FFTOffset) FFTOffset = -FFTDataset[i][0];
+    }
+    for(i = 0; i < result['fft_v'][0].length; i++) FFTDataset[i][0] = FFTDataset[i][0] + FFTOffset;
+  }
+  var toShow = [];
+  for(i = 0; i < FFTDataset.length; i++) toShow.push([i, FFTDataset[i][0]]);
+  if(FFTChart == null) {
+    FFTChart = new Dygraph(document.getElementById("fft_chart"),
+      toShow,
+      { strokeWidth: 1,
+        labelsDiv: "FFTLegend",  
+        labels: ["Frequency", "dB"],
+        colors: ["#d9534f"],
+        gridLineColor: "#999",
+        gridLinePattern: [4, 4],
+        showRangeSelector: true,
+        rangeSelectorHeight: 20,
+        rangeSelectorPlotFillColor: "#d9534f",
+        rangeSelectorPlotStrokeColor: "#d9534f",
+        xAxisHeight: 10,
+        fillGraph: true,
+        interactionModel: { 
+          mousedown: mouseDownOZM,
+          mousemove: mouseMoveOZM,
+          mouseup  : mouseUpOZM,
+          dblclick : dblClickOZM_Restore  
+        },
+        axes: {
+          y: { pixelsPerLabel: 15,
+               axisLabelWidth: 20,
+               ticker: function(min, max, pixels, opts, dygraph, vals) {
+                         var ticks = [];
+                         for(var i = Math.floor(min - FFTOffset); i < Math.ceil(max - FFTOffset); i++) {
+                           if((i % 10) == 0) {
+                             ticks.push({ v: i + FFTOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' })
+                           }
+                         }
+                         return ticks;
+                       },
+               valueFormatter: function (x, a, b, c, row, col) {
+                 return Round2(x - FFTOffset) + '<strong style="color: #d9534f">&nbsp;&nbsp;Voltage</strong>: ' + (Round2(FFTDataset[row][1])) + '<em class="small"> V</em>';
+               },
+             },
+          x: { ticker: function(min, max, pixels, opts, dygraph, vals) {
+                         var ticks = [];
+                         for(var i = 1; i < max; i++) {
+                           if((i % 10) == 0) {
+                             ticks.push({ v: i, label: '' });
+                           }
+                           if((i % 50) == 0) {
+                             ticks.push({ v: i, label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + (i * 5) + '</div>' });
+                           }
+                         }
+                         return ticks;
+                       },
+               valueFormatter: function (y) {
+                                 return (5 * y) + ' <em class="small">Hz</em>';
+                               },
+             }
+        }
+      }
+    );
+  } else {
+    FFTChart.updateOptions({ file: toShow });
+  }
+  if(FFTDataset.length > 0) {
+    var date = new Date(result.fft_v.time);
+    $('#FFTTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
+  } else {
+    $('#FFTTime').text('No stored data');
+    FFTChart.updateOptions({ file: []});
+  }
+}
+
+var ShowCurrent         = false;
+var Paused              = false;
+var HideFundamentals    = false;
+
+
+
+
+var EvolutionCharts     = [];
+var LastEvolutionSample = 0;
+var EvolutionDatasets   = [];
+var DetailSpinner       = new Spinner(SpinnerOpts);
+var HarmonicsNames      = [ '1st',  '2nd',  '3rd',  '4th',  '5th',  '6th',  '7th',  '8th',  '9th', '10th',
+                            '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th',
+                            '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th',
+                            '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th',
+                            '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
+
+
+
+
+
 function UpdateEvolutionChart(result) {
   for(i = 0; i < 50; i++) {
     if(EvolutionDatasets.length == i) EvolutionDatasets.push([]);
@@ -861,9 +932,8 @@ function TabChange() {
     $('#btnCurrent').removeClass('active');
     $('#btnCurrent').addClass('disabled');
     $('#btnExport').removeClass('disabled');
-  } else if($(this).val() == 'waveform') {
-    $('#WaveformPanel').removeClass('hidden');
-    if(WaveformChart != null) $(WaveformChart.graphDiv).parent().removeAttr('style');
+  } 
+  
     if(Paused) $('#btnPause').addClass('active');
     $('#btnPause').removeClass('disabled');
     $('#btnFundamental').removeClass('active');
@@ -871,7 +941,8 @@ function TabChange() {
     if(ShowCurrent) $('#btnCurrent').addClass('active');
     $('#btnCurrent').removeClass('disabled');
     $('#btnExport').removeClass('disabled');
-  }
+
+
   window.dispatchEvent(new Event('resize'));
 }
 

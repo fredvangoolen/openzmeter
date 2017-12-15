@@ -32,7 +32,7 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
         This->pWork.VoltageSamples[2][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 2.0 * This->SampleRate() / This->NominalFrequency() / 3.0);
         This->pWork.CurrentSamples[1][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 1.0 * This->SampleRate() / This->NominalFrequency() / 3.0);
         This->pWork.CurrentSamples[2][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 2.0 * This->SampleRate() / This->NominalFrequency() / 3.0);
-        This->pWork.CurrentSamples[3][i] = 0.0;
+        This->pWork.CurrentSamples[3][i] = 0.0000001;
       }
       This->pWork.Samples++;
       if(i == (int)(This->SampleRate() / 2.0 / This->NominalFrequency() * (This->pWork.Cycles_Len + 1))) {

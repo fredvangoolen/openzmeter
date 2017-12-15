@@ -345,7 +345,7 @@ void CaptureInterface::ResetParams(Params_t *params) {
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->THD_V[i] = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->THD_I[i] = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(params->VoltageHarmonics[i], 0, sizeof(float) * 50);
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(params->CurrentHarmonics[i], 0, sizeof(float) * 50);
+  for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(params->CurrentHarmonics[i], 0, sizeof(float) * 50);
   params->Frequency = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Phi[i] = 0;
   params->Flag = false;

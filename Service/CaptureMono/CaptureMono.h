@@ -6,11 +6,12 @@
 #include <libusb-1.0/libusb.h>
 #include "../CaptureInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define CAPTUREMONO_VID             0x0483                //Product ID
-#define CAPTUREMONO_PID             0x7270                //Device ID
-#define ADQUISITION_ENDPOINT_IN       0x81                //Endpoint de lectura de datos
-#define ADQUISITION_SAMPLEFREQ    15625.00         //Frequencia de muestreo
-
+#define CAPTUREMONO_VID             0x0483       //Product ID
+#define CAPTUREMONO_PID             0x7270       //Device ID
+#define CAPTUREMONO_ENDPOINT_IN       0x81       //Endpoint de lectura de datos
+#define CAPTUREMONO_SAMPLEFREQ    15625.00       //Frequencia de muestreo
+#define CAPTUREMONO_BUFFERSIZE    (1024 * 8192)  //Tamaño del buffer
+#define CAPTUREMONO_TRANSFERS          128       //Numero de transferencias a encolar
 
 //#define MAX_FRAME                     3688         //Longitud maxima de muestras de un frame (236ms)
 //#define ADQUISITION_SAFESAMPLES  MAX_FRAME         //Numero de muestras "seguras" antes y despues del punto de lectura 

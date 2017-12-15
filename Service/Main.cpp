@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
   for(int i = 0; i < Tools::Devices.Len; i++) {
     if(strcmp(Tools::Devices.Items[i].Type, "Mono") == 0) {
       Tools::Devices.Items[i].Instance = new CaptureMono(Tools::Devices.Items[i].Serial, Tools::Devices.Items[i].VoltageGain, Tools::Devices.Items[i].VoltageOffset, 
-                                                         Tools::Devices.Items[i].CurrentGain, Tools::Devices.Items[i].CurrentOffset, 128 * 1024, CaptureInterface::FREQ_50, i);
+                                                         Tools::Devices.Items[i].CurrentGain, Tools::Devices.Items[i].CurrentOffset, 8192 * 1024, CaptureInterface::FREQ_50, i);
     } else if(strcmp(Tools::Devices.Items[i].Type, "VirtualMono") == 0) {
       Tools::Devices.Items[i].Instance = new CaptureVirtual(15625, true, 230, 1.0, CaptureInterface::FREQ_50, i);
     }
