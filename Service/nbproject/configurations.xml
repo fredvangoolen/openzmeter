@@ -27,16 +27,13 @@
             <itemPath>WEB/Resources/js/analysis/analysis.js</itemPath>
             <itemPath>WEB/Resources/js/analysis/current.js</itemPath>
             <itemPath>WEB/Resources/js/analysis/energy_power.js</itemPath>
-            <itemPath>WEB/Resources/js/analysis/frequency.js</itemPath>
             <itemPath>WEB/Resources/js/analysis/harmonics.js</itemPath>
-            <itemPath>WEB/Resources/js/analysis/voltage.js</itemPath>
           </logicalFolder>
           <logicalFolder name="events" displayName="events" projectFiles="true">
             <itemPath>WEB/Resources/js/events/disturbances.js</itemPath>
             <itemPath>WEB/Resources/js/events/events.js</itemPath>
             <itemPath>WEB/Resources/js/events/itic.js</itemPath>
           </logicalFolder>
-          <itemPath>WEB/Resources/js/Login.js</itemPath>
           <itemPath>WEB/Resources/js/account.js</itemPath>
           <itemPath>WEB/Resources/js/live.js</itemPath>
           <itemPath>WEB/Resources/js/settings.js</itemPath>
@@ -471,6 +468,7 @@
         <itemPath>WEB/Resources/Analysis_Voltage.js</itemPath>
         <itemPath>WEB/Resources/CommonHeader.html</itemPath>
         <itemPath>WEB/Resources/Dashboard.js</itemPath>
+        <itemPath>WEB/Resources/Login.js</itemPath>
         <itemPath>WEB/Resources/favicon.ico</itemPath>
         <itemPath>WEB/Resources/openZmeter.js</itemPath>
       </logicalFolder>
@@ -604,6 +602,8 @@
       </item>
       <item path="WEB/Resources/Dashboard.js" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="WEB/Resources/Login.js" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="WEB/Resources/css/common.css" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/css/login.css" ex="false" tool="3" flavor2="0">
@@ -615,8 +615,6 @@
       <item path="WEB/Resources/img/loading.gif" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/img/logo.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/Login.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/js/account.js" ex="false" tool="3" flavor2="0">
       </item>
@@ -635,17 +633,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/js/analysis/frequency.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="WEB/Resources/js/analysis/harmonics.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/analysis/voltage.js"
             ex="false"
             tool="3"
             flavor2="0">

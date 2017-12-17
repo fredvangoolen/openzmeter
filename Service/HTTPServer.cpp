@@ -147,7 +147,8 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
 	    *upload_data_size = 0;
   	  return MHD_YES;
 	  } else {
-      Request->Deflate = ((strstr(MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT_ENCODING), "deflate") != NULL) && (Request->PostResponseLen > 256));
+      char *AcceptEncoding = (char*)MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT_ENCODING);
+      Request->Deflate = ((AcceptEncoding != NULL) && (strstr(AcceptEncoding, "deflate") != NULL) && (Request->PostResponseLen > 256));
       if(Request->Deflate) {
         char *Tmp = (char*)malloc(Request->PostResponseLen);
         z_stream Deflate;
@@ -212,8 +213,31 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     }
   }
   if(strcmp(url, "/getNodes") == 0) {
-    Request->PostData = (char*)"{ \"IDs\": [0,1], \"Names\": [\"Principal\", \"Secundario\"], \"State\" : [true, false], \"Type\": [\"3Phase\", \"1Phase\"], \"SampleFreq\": [15625, 15625], \"NominalVoltage\": [230, 230], \"MaxCurrent\": [20, 20], \"NominalFreq\": [50, 50] }";
-    Request->PostResponseLen = strlen(Request->PostData);
+    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+      Error = true;
+    }
+    if(Error == true) {    
+      Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      Request->PostData = (char*)"Invalid JSON params";
+      Request->PostResponseLen = strlen(Request->PostData);
+      return MHD_YES;
+    }
+    Request->JSONWriter = json_object_new_object();
+    json_object_object_add(Request->JSONWriter, "NominalVoltage", json_object_new_int(Tools::Electrical.NominalVoltage));
+    json_object_object_add(Request->JSONWriter, "NominalFreq", json_object_new_int(Tools::Electrical.NominalFrequency));
+    json_object *Devices = json_object_new_array();
+    for(int i = 0; i < Tools::Devices.Len; i++) {
+      json_object *Obj = json_object_new_object();
+      json_object_object_add(Obj, "Name", json_object_new_string(Tools::Devices.Items[i].Name));
+      json_object_object_add(Obj, "Type", json_object_new_string(Tools::Devices.Items[i].Instance->Triphase() ? "3Phase" : "1Phase"));
+      json_object_object_add(Obj, "SampleFreq", json_object_new_int(Tools::Devices.Items[i].Instance->SampleRate()));
+      
+      json_object_object_add(Obj, "MaxCurrent", json_object_new_int(20));
+      
+      json_object_array_add(Devices, Obj);
+    }
+    json_object_object_add(Request->JSONWriter, "Devices", Devices);
+    Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
     return MHD_YES;
   }
   if(strcmp(url, "/getSeries") == 0) {

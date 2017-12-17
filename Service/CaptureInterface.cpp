@@ -16,8 +16,8 @@ bool CaptureInterface::SaveWorkParams() {
   pDataReady = true;
   pthread_cond_broadcast(&pDataReadyWait);
   pthread_mutex_unlock(&pDataReadyMutex);
-  Tools::LogMsg("DEBUG", "Storing 10C aggregation\n");
-  SaveParams(&pWork.Params, "INSERT_10C");
+//  Tools::LogMsg("DEBUG", "Storing 10C aggregation\n");
+//  SaveParams(&pWork.Params, "INSERT_10C");
   if(((pWork.SequenceID % 15) == 0) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
     NormalizeAggregation(&pAggreg3S);

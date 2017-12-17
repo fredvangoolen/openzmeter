@@ -46,7 +46,7 @@ function AjaxGetVoltage() {
     type: "POST",
     dataType: "json",
     contentType: 'application/json',
-    data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastVoltageSample, Series: 'rms_v', Node: Nodes['IDs'][Node]}),
+    data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastVoltageSample, Series: 'rms_v', Node: Node}),
     success: AjaxVoltage,
     complete: function() { 
       $('#btnVoltageNow').removeClass('disabled');
@@ -94,7 +94,7 @@ function AjaxVoltage(result) {
           })
         ],
         underlayCallback: function(canvas, area, g) {
-          var NominalVoltage = Nodes['NominalVoltage'][Node];
+          var NominalVoltage = Nodes['NominalVoltage'];
           var YellowLowA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.07);
           var YellowHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - YellowLowA;
           var YellowLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.07);
@@ -419,7 +419,7 @@ function AjaxGetDetails() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i', Node: Nodes['IDs'][Node]}),
+           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i', Node: Node}),
            success: function(result) {
              if(WaveformChart === null) StopSpinner(DetailSpinner, 'DetailSpinner');
              UpdateWaveformChart(result);
@@ -571,12 +571,12 @@ function UpdateWaveformChart(result) {
       x: { ticker: function(min, max, pixels, opts, dygraph, vals) {
              var ticks = [];
              for(var i = 1; i <= Math.floor(max / 312.5); i++) {
-               ticks.push({ v: i * 312.5, label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + Round2((i * 312.5 * 1000) / Nodes['SampleFreq'][Node]) + '</div>' });
+               ticks.push({ v: i * 312.5, label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + Round2((i * 312.5 * 1000) / Nodes['Devices'][Node]['SampleFreq']) + '</div>' });
              }
              return ticks;
            },
            valueFormatter: function (x) {
-             return Round2((x * 1000) / Nodes['SampleFreq'][Node]) + ' <em class="x-small">ms</em>';
+             return Round2((x * 1000) / Nodes['Devices'][Node]['SampleFreq']) + ' <em class="x-small">ms</em>';
            },
            axisLabelFormatter: function (x) {
              return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + Round2((x * 1000) / SampleRate) + '</div>';

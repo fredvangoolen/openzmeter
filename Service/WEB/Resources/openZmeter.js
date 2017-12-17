@@ -91,7 +91,7 @@ function AjaxGetIndicators() {
     type: "POST",
     dataType: "json",
     contentType: 'application/json',
-    data: JSON.stringify({ Series: 'rms_v, rms_i, active_power, freq', Node: Nodes['IDs'][Node]}),
+    data: JSON.stringify({ Series: 'rms_v, rms_i, active_power, freq', Node: Node}),
     success: AjaxIndicators,
     error: function() {
       $('#VoltageIndicator').text('Offline');
@@ -161,7 +161,6 @@ function AjaxIndicators(result) {
 //  }
 }
 
-
 /* Actualiza el desplegable de nodos disponibles y selecciona el que este activo para la sesion */
 var Nodes = [];
 var Node = parseInt(Cookies.get("SelNode"));
@@ -171,10 +170,18 @@ function GetNodesCompletes(result) {
     Cookies.set("SelNode", 0);
     Node = 0;
   }
-  for(i = 0; i < result['IDs'].length; i++) {
-    $('#SourceList').append(' <li><a href="">' + result['Names'][i] + ' (' + result['Type'][i] + ')</a></li>');
-    if(i === Node) $('#SourceSel').text(result['Names'][i] + ' (' + result['Type'][i] + ')');
+  for(i = 0; i < result['Devices'].length; i++) {
+    if(i === Node) {
+      $('#SourceSel').text(result['Devices'][i]['Name'] + ' (' + result['Devices'][i]['Type'] + ')');
+    } else {
+      $('#SourceList').append(' <li><a href="#" id="Node_' + i + '">' + result['Devices'][i]['Name'] + ' (' + result['Devices'][i]['Type'] + ')</a></li>');      
+    }
   }
+  $('#SourceList li a').click(function(event) {
+    event.preventDefault();
+    Cookies.set('SelNode', this.id.replace('Node_', ''));
+    location.reload(false);
+  });
   AjaxGetIndicators();
   UpdatePage();
 }

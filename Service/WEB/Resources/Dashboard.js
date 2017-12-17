@@ -22,30 +22,20 @@ var LastVoltageSample   = 0;
 var VoltageData         = [];
 var VoltageSpinner      = new Spinner(SpinnerOpts);
 function AjaxGetVoltage() {
-  if(LastVoltageSample === 0) {
-    $('#VoltagePanel').find("*").prop("disabled", true);
-    $('#VoltagePanel').css('opacity', '0.6');
-    $('#VoltagePanel').append('<div id="SpinnerDivVoltage" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    VoltageSpinner.spin(document.getElementById('SpinnerDivVoltage'));
-  }
+  if(LastVoltageSample === 0) ShowSpinner(VoltageSpinner, 'VoltageSpinner');
   $.ajax({ url: "getSeries",
            timeout: 20000,
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastVoltageSample, Series: 'rms_v, flag', Node: Nodes['IDs'][Node] }),
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastVoltageSample, Series: 'rms_v, flag', Node: Node }),
            success: AjaxVoltage,
            complete: function() { setTimeout(AjaxGetVoltage, 5000); }
         });
 }
 function AjaxVoltage(result) {
   if((result === null) || (result['Sampletime'] === null)) return;
-  if(LastVoltageSample === 0) {
-    VoltageSpinner.stop();
-    $('#SpinnerDivVoltage').remove();
-    $('#VoltagePanel').css('opacity', '1.0');
-    $('#VoltagePanel').find("*").prop("disabled", false);    
-  }
+  if(LastVoltageSample === 0) StopSpinner(VoltageSpinner, 'VoltageSpinner');
   if(result['Sampletime'][0] <= LastVoltageSample) return;
   for(i = 0; i < result['Sampletime'].length; i++) VoltageData.push([new Date(result['Sampletime'][i]), result['rms_v'][i][0]]);
   while(VoltageData.length > result['MaxSamples']) VoltageData.shift();
@@ -86,7 +76,7 @@ function AjaxVoltage(result) {
         dateWindow: [result['From'], result['To']],
         interactionModel: {},
         underlayCallback: function(canvas, area, g) {
-          var NominalVoltage = Nodes['NominalVoltage'][Node];
+          var NominalVoltage = Nodes['NominalVoltage'];
           var YellowLowA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.1);
           var YellowHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.07) - YellowLowA;
           var YellowLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.1);
@@ -145,7 +135,7 @@ $('#maximizeVoltage').click(function() {
 });
 $('#btnExportVoltage').click(function() {
   var Data = [];
-  var Filename = "Voltage_" + Nodes['IDs'][Node] + '_' + LastVoltageSample + '.csv';
+  var Filename = "Voltage_" + Node + '_' + LastVoltageSample + '.csv';
   Data.push([['Index', 'Voltage']]);
   Data = Data.concat(VoltageData);
   exportToCsv(Filename, Data);
@@ -159,30 +149,20 @@ var LastCurrentSample   = 0;
 var CurrentData         = [];
 var CurrentSpinner      = new Spinner(SpinnerOpts);
 function AjaxGetCurrent() {
-  if(LastCurrentSample === 0) {
-    $('#CurrentPanel').find("*").prop("disabled", true);
-    $('#CurrentPanel').css('opacity', '0.6');
-    $('#CurrentPanel').append('<div id="SpinnerDivCurrent" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    VoltageSpinner.spin(document.getElementById('SpinnerDivCurrent'));
-  }
+  if(LastCurrentSample === 0) ShowSpinner(CurrentSpinner, 'CurrentSpinner');
   $.ajax({ url: "getSeries",
            timeout: 20000,
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastCurrentSample, Series: 'rms_i', Node: Nodes['IDs'][Node] }),
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastCurrentSample, Series: 'rms_i', Node: Node }),
            success: AjaxCurrent,
            complete: function() { setTimeout(AjaxGetCurrent, 5000); }
         });
 }
 function AjaxCurrent(result) {
   if((result === null) || (result['Sampletime'] === null)) return;
-  if(LastCurrentSample === 0) {
-    CurrentSpinner.stop();
-    $('#SpinnerDivCurrent').remove();
-    $('#CurrentPanel').css('opacity', '1.0');
-    $('#CurrentPanel').find("*").prop("disabled", false);    
-  }
+  if(LastCurrentSample === 0) StopSpinner(CurrentSpinner, 'CurrentSpinner');
   if(result['Sampletime'][0] <= LastCurrentSample) return;
   for(i = 0; i < result['Sampletime'].length; i++) CurrentData.push([new Date(result['Sampletime'][i]), result['rms_i'][i][0]]);
   while(CurrentData.length > result['MaxSamples']) CurrentData.shift();
@@ -225,7 +205,7 @@ function AjaxCurrent(result) {
         dateWindow: [result['From'], result['To']],
         interactionModel: {},
         underlayCallback: function(canvas, area, g) {
-          var MaxCurrent = Nodes['MaxCurrent'][Node];
+          var MaxCurrent = Nodes['Devices'][Node]['MaxCurrent'];
           var YellowLowA = g.toDomYCoord(MaxCurrent);
           var YellowHeightA = g.toDomYCoord(MaxCurrent - MaxCurrent * 0.10) - YellowLowA;
           var YellowLowB = g.toDomYCoord(-MaxCurrent + MaxCurrent * 0.10);
@@ -289,30 +269,20 @@ var PowerData           = [];
 var PowerChartUnits     = 'W';
 var PowerSpinner        = new Spinner(SpinnerOpts);
 function AjaxGetPower() {
-  if(LastPowerSample === 0) {
-    $('#PowerPanel').find("*").prop("disabled", true);
-    $('#PowerPanel').css('opacity', '0.6');
-    $('#PowerPanel').append('<div id="SpinnerDivPower" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    PowerSpinner.spin(document.getElementById('SpinnerDivPower'));
-  }
+  if(LastPowerSample === 0) ShowSpinner(PowerSpinner, 'PowerSpinner');
   $.ajax({ url: "getSeries",
            timeout: 20000,
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastPowerSample, Series: 'active_power', Node: Nodes['IDs'][Node] }),
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastPowerSample, Series: 'active_power', Node: Node }),
            success: AjaxPower,
            complete: function() { setTimeout(AjaxGetPower, 5000); }
         });
 }
 function AjaxPower(result) {
   if((result === null) || (result['Sampletime'] === null)) return;
-  if(LastPowerSample === 0) {
-    PowerSpinner.stop();
-    $('#SpinnerDivPower').remove();
-    $('#PowerPanel').css('opacity', '1.0');
-    $('#PowerPanel').find("*").prop("disabled", false);    
-  }
+  if(LastPowerSample === 0) StopSpinner(PowerSpinner, 'PowerSpinner');
   if(result['Sampletime'][0] <= LastPowerSample) return;
   for(i = 0; i < result['Sampletime'].length; i++) PowerData.push([new Date(result['Sampletime'][i]), result['active_power'][i][0]]);
   while(PowerData.length > result['MaxSamples']) PowerData.shift();
@@ -400,30 +370,20 @@ var LastFrequencySample = 0;
 var FrequencyData       = [];
 var FrequencySpinner    = new Spinner(SpinnerOpts);
 function AjaxGetFrequency() {
-  if(LastPowerSample === 0) {
-    $('#FrequencyPanel').find("*").prop("disabled", true);
-    $('#FrequencyPanel').css('opacity', '0.6');
-    $('#FrequencyPanel').append('<div id="SpinnerDivFrequency" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    PowerSpinner.spin(document.getElementById('SpinnerDivPower'));
-  }
+  if(LastFrequencySample === 0) ShowSpinner(FrequencySpinner, 'FrequencySpinner');
   $.ajax({ url: "getSeries",
            timeout: 20000,
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastFrequencySample, Series: 'freq', Node: Nodes['IDs'][Node] }),
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastFrequencySample, Series: 'freq', Node: Node }),
            success: AjaxFrequency,
            complete: function() { setTimeout(AjaxGetFrequency, 5000); }
         });
 }
 function AjaxFrequency(result) {
   if((result === null) || (result['Sampletime'] === null)) return;
-  if(LastFrequencySample === 0) {
-    FrequencySpinner.stop();
-    $('#SpinnerDivFrequency').remove();
-    $('#FrequencyPanel').css('opacity', '1.0');
-    $('#FrequencyPanel').find("*").prop("disabled", false);    
-  }
+  if(LastFrequencySample === 0) StopSpinner(FrequencySpinner, 'FrequencySpinner');
   if(result['Sampletime'][0] <= LastFrequencySample) return;
   for(i = 0; i < result['Sampletime'].length; i++) FrequencyData.push([new Date(result['Sampletime'][i]), result['freq'][i]]);
   while(FrequencyData.length > result['MaxSamples']) FrequencyData.shift();
@@ -521,7 +481,7 @@ function AjaxGetEnergy() {
     type: "POST",
     dataType: "json",
     contentType: 'application/json',
-    data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastEnergySample, Series: 'active_energy', Node: Nodes['IDs'][Node]}),
+    data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastEnergySample, Series: 'active_energy', Node: Node }),
     success: AjaxEnergy,
     complete: function() { 
       $('#btnEnergyNow').removeClass('disabled');
@@ -883,7 +843,7 @@ function AjaxGetMainParameters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: "1m", LastSample: LastEvolutionSample, Series: 'active_power, fundamental_reactive_power, rms_v, rms_i, power_factor, phi', Node: Nodes['IDs'][Node] }),
+           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: "1m", LastSample: LastEvolutionSample, Series: 'active_power, fundamental_reactive_power, rms_v, rms_i, power_factor, phi', Node: Node }),
            success: AjaxMainParameters
       });
 }
