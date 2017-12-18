@@ -97,7 +97,7 @@ class CaptureInterface : private Database {
     Aggreg_t        pAggreg1H;
     uint16_t        pNodeIndex;
   private :    
-    bool     SaveParams(Params_t *param, const char *aggreg);
+    void     SaveParams(Params_t *param, const char *aggreg);
   protected :
     uint64_t    pPrevTimestamp;
     Work_t      pWork;
@@ -108,7 +108,7 @@ class CaptureInterface : private Database {
     uint8_t  NominalFrequency();
     void     ResetWork();
     uint32_t GetMaxSamples();
-    bool     SaveWorkParams();
+    void     SaveWorkParams();
     void     Analyze(float minimunCurrent);
     void     AccumulateAggregation(Aggreg_t *dst, Params_t *src);
     void     NormalizeAggregation(Aggreg_t *src);

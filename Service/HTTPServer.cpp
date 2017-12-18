@@ -184,6 +184,8 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
     if((strcmp(url, "/Dashboard") == 0) || (strcmp(url, "/") == 0)) return SendFile(connection,  "WEB/Dashboard.html");
     if(strcmp(url, "/Analysis/Frequency") == 0) return SendFile(connection,  "WEB/Analysis_Frequency.html");
     if(strcmp(url, "/Analysis/Voltage") == 0) return SendFile(connection,  "WEB/Analysis_Voltage.html");
+    if(strcmp(url, "/Analysis/Current") == 0) return SendFile(connection,  "WEB/Analysis_Current.html");
+    if(strcmp(url, "/Analysis/EnergyPower") == 0) return SendFile(connection,  "WEB/Analysis_EnergyPower.html");
   }
   return SendError(connection, MHD_HTTP_NOT_FOUND, "Page not found");
 }
@@ -226,14 +228,12 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     json_object_object_add(Request->JSONWriter, "NominalVoltage", json_object_new_int(Tools::Electrical.NominalVoltage));
     json_object_object_add(Request->JSONWriter, "NominalFreq", json_object_new_int(Tools::Electrical.NominalFrequency));
     json_object *Devices = json_object_new_array();
-    for(int i = 0; i < Tools::Devices.Len; i++) {
+    for(uint32_t i = 0; i < Tools::Devices.Len; i++) {
       json_object *Obj = json_object_new_object();
       json_object_object_add(Obj, "Name", json_object_new_string(Tools::Devices.Items[i].Name));
       json_object_object_add(Obj, "Type", json_object_new_string(Tools::Devices.Items[i].Instance->Triphase() ? "3Phase" : "1Phase"));
       json_object_object_add(Obj, "SampleFreq", json_object_new_int(Tools::Devices.Items[i].Instance->SampleRate()));
-      
       json_object_object_add(Obj, "MaxCurrent", json_object_new_int(20));
-      
       json_object_array_add(Devices, Obj);
     }
     json_object_object_add(Request->JSONWriter, "Devices", Devices);
@@ -274,7 +274,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"From\", ", From);
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"To\", ", To); 
-    int MaxPoints = 10000, PeriodSeconds = 3000;
+    uint32_t MaxPoints = 10000, PeriodSeconds = 3000;
     if(strcmp(Aggreg, "1m")  == 0) PeriodSeconds = 60000;
     if(strcmp(Aggreg, "10m") == 0) PeriodSeconds = 600000;
     if(strcmp(Aggreg, "1h")  == 0) PeriodSeconds = 3600000;
@@ -306,7 +306,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
   } else if(strcmp(url, "/getSeriesAggreg") == 0) {
     uint64_t Period = 0, From = 0, To = 0;
     uint32_t Node = 0;
-    char    *Aggreg = NULL, *Series = NULL, *Functions = NULL;
+    char    *Aggreg = NULL, *Series = NULL;
     json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
       enum json_type JSON_Type = json_object_get_type(JSON_Val);
       if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
@@ -336,7 +336,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT COUNT(*) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu AND node = %u) AS \"Samples\", ", Aggreg, From, To, Node);
     char *Serie = strtok(Series, ", ");
     while(Serie != NULL) {
-      char *Oper, *Tmp1 = strchr(Serie, '('), *Tmp2 = strrchr(Serie, ')');
+      char *Oper = NULL, *Tmp1 = strchr(Serie, '('), *Tmp2 = strrchr(Serie, ')');
       if((Tmp1 != NULL) && (Tmp2 != NULL)) {
         Oper = Serie;
         Tmp1[0] = 0;

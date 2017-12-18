@@ -23,12 +23,6 @@
           <itemPath>WEB/Resources/img/logo.png</itemPath>
         </logicalFolder>
         <logicalFolder name="js" displayName="js" projectFiles="true">
-          <logicalFolder name="analysis" displayName="analysis" projectFiles="true">
-            <itemPath>WEB/Resources/js/analysis/analysis.js</itemPath>
-            <itemPath>WEB/Resources/js/analysis/current.js</itemPath>
-            <itemPath>WEB/Resources/js/analysis/energy_power.js</itemPath>
-            <itemPath>WEB/Resources/js/analysis/harmonics.js</itemPath>
-          </logicalFolder>
           <logicalFolder name="events" displayName="events" projectFiles="true">
             <itemPath>WEB/Resources/js/events/disturbances.js</itemPath>
             <itemPath>WEB/Resources/js/events/events.js</itemPath>
@@ -464,6 +458,8 @@
           <itemPath>WEB/Resources/lib/cookie.min.js</itemPath>
           <itemPath>WEB/Resources/lib/jquery.min.js</itemPath>
         </logicalFolder>
+        <itemPath>WEB/Resources/Analysis_Current.js</itemPath>
+        <itemPath>WEB/Resources/Analysis_EnergyPower.js</itemPath>
         <itemPath>WEB/Resources/Analysis_Frequency.js</itemPath>
         <itemPath>WEB/Resources/Analysis_Voltage.js</itemPath>
         <itemPath>WEB/Resources/CommonHeader.html</itemPath>
@@ -473,11 +469,6 @@
         <itemPath>WEB/Resources/openZmeter.js</itemPath>
       </logicalFolder>
       <logicalFolder name="Views" displayName="Views" projectFiles="true">
-        <logicalFolder name="analysis" displayName="analysis" projectFiles="true">
-          <itemPath>WEB/Views/analysis/Analysis_Current.html</itemPath>
-          <itemPath>WEB/Views/analysis/energy_power_view.php</itemPath>
-          <itemPath>WEB/Views/analysis/harmonics_view.php</itemPath>
-        </logicalFolder>
         <logicalFolder name="events" displayName="events" projectFiles="true">
           <itemPath>WEB/Views/events/disturbances_view.php</itemPath>
           <itemPath>WEB/Views/events/itic_view.php</itemPath>
@@ -490,6 +481,8 @@
         <itemPath>WEB/Views/settings_view.php</itemPath>
         <itemPath>WEB/Views/stats_view.php</itemPath>
       </logicalFolder>
+      <itemPath>WEB/Analysis_Current.html</itemPath>
+      <itemPath>WEB/Analysis_EnergyPower.html</itemPath>
       <itemPath>WEB/Analysis_Frequency.html</itemPath>
       <itemPath>WEB/Analysis_Voltage.html</itemPath>
       <itemPath>WEB/Dashboard.html</itemPath>
@@ -534,12 +527,12 @@
       </toolsSet>
       <compileType>
         <cTool>
-          <developmentMode>0</developmentMode>
           <commandLine>-Os -march=native</commandLine>
+          <warningLevel>2</warningLevel>
         </cTool>
         <ccTool>
-          <developmentMode>0</developmentMode>
           <commandLine>-Os -march=native</commandLine>
+          <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -583,6 +576,10 @@
       </item>
       <item path="Tools.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="WEB/Analysis_Current.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Analysis_EnergyPower.html" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="WEB/Analysis_Frequency.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Analysis_Voltage.html" ex="false" tool="3" flavor2="0">
@@ -590,6 +587,13 @@
       <item path="WEB/Dashboard.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Login.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Analysis_Current.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Analysis_EnergyPower.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="WEB/Resources/Analysis_Frequency.js"
             ex="false"
@@ -617,26 +621,6 @@
       <item path="WEB/Resources/img/logo.png" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/js/account.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/analysis/analysis.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/analysis/current.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/analysis/energy_power.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/analysis/harmonics.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="WEB/Resources/js/events/disturbances.js"
             ex="false"
@@ -1879,21 +1863,6 @@
       <item path="WEB/Resources/openZmeter.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Views/account_view.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Views/analysis/Analysis_Current.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Views/analysis/energy_power_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Views/analysis/harmonics_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="WEB/Views/events/disturbances_view.php"
             ex="false"

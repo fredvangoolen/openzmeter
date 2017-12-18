@@ -34,35 +34,31 @@ function AjaxGetVoltage() {
         });
 }
 function AjaxVoltage(result) {
-  if((result === null) || (result['Sampletime'] === null)) return;
+  if(result['Sampletime'] === null) return;
   if(LastVoltageSample === 0) StopSpinner(VoltageSpinner, 'VoltageSpinner');
   if(result['Sampletime'][0] <= LastVoltageSample) return;
-  for(i = 0; i < result['Sampletime'].length; i++) VoltageData.push([new Date(result['Sampletime'][i]), result['rms_v'][i][0]]);
+  for(i = 0; i < result['Sampletime'].length; i++) VoltageData.push([new Date(result['Sampletime'][i])].concat(result['rms_v'][i]));
   while(VoltageData.length > result['MaxSamples']) VoltageData.shift();
   LastVoltageSample = result['Sampletime'][result['Sampletime'].length - 1];
-  var UpperRange = -Infinity;
-  var LowerRange =  Infinity;
-  for (i = 0; i < VoltageData.length; i++) {
-    if (VoltageData[i][1] > UpperRange) UpperRange = VoltageData[i][1];
-    if (VoltageData[i][1] < LowerRange) LowerRange = VoltageData[i][1];
-  }
-  Round2Labels(VoltageData[VoltageData.length - 1][1], $('#labelVoltageInteger'), $('#labelVoltageDecimal'));
-  var Variation = (UpperRange - LowerRange);
-  if(Variation < 1) Variation = 1.0;
-  UpperRange = UpperRange + Variation * 0.1;
-  LowerRange = Math.max(0, LowerRange - Variation * 0.1);
+  $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;&nbsp;', '<em class="huge-small-unit">V</em>', ["#d9534f", "#534fd9", "#4fd953"]));
   $('#labelVoltageAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
+  var VisibleNames = ["Time"];
+  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
+    VisibleNames = VisibleNames.concat(['Voltage (R)', 'Voltage (S)', 'Voltage (T)']);
+  } else {
+    VisibleNames.push('Voltage');
+  }
   if(VoltageChart === null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"),
       VoltageData,
       { strokeWidth: 1, 
         labelsDiv: "VoltageLegend",
-        labels: ["Time", "Voltage"],
+        labels: VisibleNames,
         stepPlot: true,
         drawGapEdgePoints: true,
         connectSeparatedPoints: false,
         fillGraph: false,
-        colors: ["#d9534f"],
+        colors: ["#d9534f", "#534fd9", "#4fd953"],
         gridLineColor: "#999",
         gridLinePattern: [4, 4],
         animatedZooms: true,
@@ -72,7 +68,6 @@ function AjaxVoltage(result) {
             direction: "vertical"
           })
         ],
-        valueRange: [LowerRange, UpperRange],
         dateWindow: [result['From'], result['To']],
         interactionModel: {},
         underlayCallback: function(canvas, area, g) {
@@ -114,10 +109,56 @@ function AjaxVoltage(result) {
       }
     );
   } else {
-    VoltageChart.updateOptions({'file': VoltageData, valueRange: [LowerRange, UpperRange], dateWindow: [result['From'], result['To']]});
+    VoltageChart.updateOptions({'file': VoltageData, dateWindow: [result['From'], result['To']]});
   }
   AddEvents(result, "Voltage", VoltageChart);
+  SetVoltageVisibleSeries();
 }
+function SetVoltageVisibleSeries() {
+  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
+    var ShowR = (Cookies.get('ShowDashboardVoltageR') === 'true');
+    var ShowS = (Cookies.get('ShowDashboardVoltageS') === 'true');
+    var ShowT = (Cookies.get('ShowDashboardVoltageT') === 'true');
+    var VisibleSeries = [ShowR, ShowS, ShowT];
+    var Visibles = [];
+    if(ShowR) Visibles.push(1);
+    if(ShowS) Visibles.push(2);
+    if(ShowT) Visibles.push(3);
+    VoltageChart.updateOptions({ visibility: VisibleSeries, valueRange: CalcRanges(VoltageData, Visibles, false) });
+    if(ShowR === true)
+      $('#btnShowVoltageRPhase').addClass('active');
+    else    
+      $('#btnShowVoltageRPhase').removeClass('active');
+    if(ShowS === true)
+      $('#btnShowVoltageSPhase').addClass('active');
+    else    
+      $('#btnShowVoltageSPhase').removeClass('active');
+    if(ShowT === true)
+      $('#btnShowVoltageTPhase').addClass('active');
+    else    
+      $('#btnShowVoltageTPhase').removeClass('active');
+  } else {
+    VoltageChart.updateOptions({ valueRange: CalcRanges(VoltageData, [1], false) });
+  }
+}
+function ChooseVoltageChannels() {
+  var ShowR = (Cookies.get('ShowDashboardVoltageR') === 'true');
+  var ShowS = (Cookies.get('ShowDashboardVoltageS') === 'true');
+  var ShowT = (Cookies.get('ShowDashboardVoltageT') === 'true');
+  if(this.innerText === 'R') ShowR = !ShowR;
+  if(this.innerText === 'S') ShowS = !ShowS;
+  if(this.innerText === 'T') ShowT = !ShowT;
+  if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
+  if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowS = true;
+  if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowT = true;
+  Cookies.set('ShowDashboardVoltageR', ShowR);
+  Cookies.set('ShowDashboardVoltageS', ShowS);
+  Cookies.set('ShowDashboardVoltageT', ShowT);
+  SetVoltageVisibleSeries();
+}
+$('#btnShowVoltageRPhase').click(ChooseVoltageChannels);
+$('#btnShowVoltageSPhase').click(ChooseVoltageChannels);
+$('#btnShowVoltageTPhase').click(ChooseVoltageChannels);
 $('#maximizeVoltage').click(function() {
   $('#GraphDialogTitle').text('Voltage');
   $('#GraphDialog').modal('show');
@@ -316,7 +357,7 @@ function AjaxPower(result) {
   }
   $('#PowerAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(PowerChart == null) {
-    PowerChart = new Dygraph(document.getElementById("power_chart"),
+    PowerChart = new Dygraph(document.getElementById("PowerChart"),
       toShow,
       { strokeWidth: 1,
         labelsDiv: "PowerLegend",
@@ -401,7 +442,7 @@ function AjaxFrequency(result) {
   LowerRange = LowerRange - Variation * 0.1;
   $('#FrequencyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(FrequencyChart == null) {
-    FrequencyChart = new Dygraph(document.getElementById("frequency_chart"),
+    FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"),
       FrequencyData,
       { strokeWidth: 1,
         labelsDiv: "FrequencyLegend",
@@ -454,7 +495,6 @@ function AjaxFrequency(result) {
 var LastEnergySample    = 0;
 var EnergyData          = [];
 var EnergyChart         = null;
-var EnergyChartUnits    = 'Wh';
 var EnergySpinner       = new Spinner(SpinnerOpts);
 var EnergyTimer         = null;
 function AjaxGetEnergy() {
@@ -495,48 +535,30 @@ function AjaxEnergy(result) {
     EnergyData = [];
   }
   if(result['Sampletime'] !== null) {
-    for(i = 0; i < result['Sampletime'].length; i++) EnergyData.push([new Date(result['Sampletime'][i]), result['active_energy'][i][0]]);
+    for(i = 0; i < result['Sampletime'].length; i++) EnergyData.push([new Date(result['Sampletime'][i])].concat(result['active_energy'][i]));
     while(EnergyData.length > result['MaxSamples']) EnergyData.shift();
     LastEnergySample = result['Sampletime'][result['Sampletime'].length - 1];
   }
   $('#EnergyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');  
-  var UpperRange = -Infinity;
-  var LowerRange =  Infinity;
-  for (i = 0; i < EnergyData.length; i++) {
-    if(EnergyData[i][1] > UpperRange) UpperRange = EnergyData[i][1];
-    if(EnergyData[i][1] < LowerRange) LowerRange = EnergyData[i][1];
-  }
-  var Variation = (UpperRange - LowerRange);
-  if(Variation < 1) Variation = 1.0;
-  UpperRange = UpperRange + Variation * 0.1;
-  LowerRange = LowerRange - Variation * 0.1;
-  var toShow = [];
-  if((Math.abs(UpperRange) > 1000) || (Math.abs(LowerRange) > 1000)) {
-    EnergyChartUnits = 'kWh';
-    UpperRange = UpperRange / 1000;
-    LowerRange = LowerRange / 1000;
-    for(i = 0; i < EnergyData.length; i++) {
-      toShow.push([EnergyData[i][0], EnergyData[i][1] / 1000.0]);
-    }
-  } else {
-    EnergyChartUnits = 'Wh';
-    for(i = 0; i < EnergyData.length; i++) {
-      toShow.push([EnergyData[i][0], EnergyData[i][1]]);
-    }
-  }
   if(EnergyChart == null) {
+    var VisibleNames = ["Time"];
+    if(Nodes['Devices'][Node]['Type'] == '3Phase') {
+      VisibleNames = VisibleNames.concat(['Energy (R)', 'Energy (S)', 'Energy (T)']);
+    } else {
+      VisibleNames.push('Energy');
+    }
     EnergyChart = new Dygraph(document.getElementById("EnergyChart"),
-      toShow,
+      EnergyData,
       { strokeWidth: 1,
         labelsDiv: "EnergyLegend",
-        labels: ["Time", "Energy"],
-        plotter: barChartPlotterEnergy,
+        labels: VisibleNames,
+        plotter: barChartNoSpacedPlotter,
+        stackedGraph: true,
         stepPlot: true,
         fillGraph: true,
-        colors: ["#31708f"],
+        colors: ["#31708f", "#708f31", "#8f3170"],
         gridLineColor: "#999",
         gridLinePattern: [4, 4],
-        valueRange: [LowerRange, UpperRange],
         dateWindow: [result['From'], result['To']],
         zoomCallback: function(minDate, maxDate, yRanges) {
           clearInterval(EnergyTimer);
@@ -574,7 +596,11 @@ function AjaxEnergy(result) {
           y: { pixelsPerLabel: 15,
                axisLabelWidth: 34,
                valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">' + EnergyChartUnits + '</em>';
+                 if(x > 1000) {
+                   return Round2(x / 1000) + ' <em class="x-small">kWh</em>';
+                 } else {
+                   return Round2(x) + ' <em class="x-small">Wh</em>';
+                 }
                },
                axisLabelFormatter: function (x) {
                  return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
@@ -594,8 +620,9 @@ function AjaxEnergy(result) {
     $(window).bind('resize', EnergyResizeEvent);
     window.dispatchEvent(new Event('resize'));
   } else {
-    EnergyChart.updateOptions({'file': toShow, valueRange: [LowerRange, UpperRange], dateWindow: [result['From'], result['To']]});
+    EnergyChart.updateOptions({file: EnergyData, dateWindow: [result['From'], result['To']]});
   }
+  SetEnergyVisibleSeries();
   $('#btnShowEnergyYear').removeClass('active');
   $('#btnShowEnergyMonth').removeClass('active');
   $('#btnShowEnergyWeek').removeClass('active');
@@ -639,6 +666,51 @@ function EnergyResizeEvent() {
   var Height = $('#EnergyBox').height() + $('#BudgetBox').height();
   if(EnergyChart != null) EnergyChart.resize($('#EnergyCol').width(), Height - 12);
 }
+function SetEnergyVisibleSeries() {
+  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
+    var ShowR = (Cookies.get('ShowR') === 'true');
+    var ShowS = (Cookies.get('ShowS') === 'true');
+    var ShowT = (Cookies.get('ShowT') === 'true');
+    var VisibleSeries = [ShowR, ShowS, ShowT];
+    var Visibles = [];
+    if(ShowR) Visibles.push(1);
+    if(ShowS) Visibles.push(2);
+    if(ShowT) Visibles.push(3);
+    EnergyChart.updateOptions({ visibility: VisibleSeries, valueRange: CalcRanges(EnergyData, Visibles, true, false, true) });
+    if(ShowR === true)
+      $('#btnShowEnergyRPhase').addClass('active');
+    else    
+      $('#btnShowEnergyRPhase').removeClass('active');
+    if(ShowS === true)
+      $('#btnShowEnergySPhase').addClass('active');
+    else    
+      $('#btnShowEnergySPhase').removeClass('active');
+    if(ShowT === true)
+      $('#btnShowEnergyTPhase').addClass('active');
+    else    
+      $('#btnShowEnergyTPhase').removeClass('active');
+  } else {
+    VoltageChart.updateOptions({ valueRange: CalcRanges(VoltageData, [1], false) });
+  }
+}
+function ChooseEnergyChannels() {
+  var ShowR = (Cookies.get('ShowR') === 'true');
+  var ShowS = (Cookies.get('ShowS') === 'true');
+  var ShowT = (Cookies.get('ShowT') === 'true');
+  if(this.innerText === 'R') ShowR = !ShowR;
+  if(this.innerText === 'S') ShowS = !ShowS;
+  if(this.innerText === 'T') ShowT = !ShowT;
+  if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
+  if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowS = true;
+  if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowT = true;
+  Cookies.set('ShowR', ShowR);
+  Cookies.set('ShowS', ShowS);
+  Cookies.set('ShowT', ShowT);
+  SetEnergyVisibleSeries();
+}
+$('#btnShowEnergyRPhase').click(ChooseEnergyChannels);
+$('#btnShowEnergySPhase').click(ChooseEnergyChannels);
+$('#btnShowEnergyTPhase').click(ChooseEnergyChannels);
 $('#btnEnergy3S').click(function() {
   Cookies.set('GraphAggregation', '3s');
   LastEnergySample = 0;
@@ -1070,6 +1142,51 @@ $('#GraphDialogClose').click(function() {
 
 
 function UpdatePage() {
+  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+    $('#btnShowEnergyRPhase').removeClass('disabled');
+    $('#btnShowEnergySPhase').removeClass('disabled');
+    $('#btnShowEnergyTPhase').removeClass('disabled');
+    var ShowR = (Cookies.get('ShowR') === 'true');
+    var ShowS = (Cookies.get('ShowS') === 'true');
+    var ShowT = (Cookies.get('ShowT') === 'true');
+    if((ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
+    Cookies.set('ShowR', (ShowR === true)); 
+    Cookies.set('ShowS', (ShowS === true));
+    Cookies.set('ShowT', (ShowT === true));
+    $('#btnShowVoltageRPhase').removeClass('disabled');
+    $('#btnShowVoltageSPhase').removeClass('disabled');
+    $('#btnShowVoltageTPhase').removeClass('disabled');
+    var ShowDashboardVoltageR = (Cookies.get('ShowDashboardVoltageR') === 'true');
+    var ShowDashboardVoltageS = (Cookies.get('ShowDashboardVoltageS') === 'true');
+    var ShowDashboardVoltageT = (Cookies.get('ShowDashboardVoltageT') === 'true');
+    if((ShowDashboardVoltageR !== true) && (ShowDashboardVoltageS !== true) && (ShowDashboardVoltageT !== true)) ShowDashboardVoltageR = true;
+    Cookies.set('ShowDashboardVoltageR', (ShowDashboardVoltageR === true)); 
+    Cookies.set('ShowDashboardVoltageS', (ShowDashboardVoltageS === true));
+    Cookies.set('ShowDashboardVoltageT', (ShowDashboardVoltageT === true));
+    $('#btnShowCurrentRPhase').removeClass('disabled');
+    $('#btnShowCurrentSPhase').removeClass('disabled');
+    $('#btnShowCurrentTPhase').removeClass('disabled');
+    $('#btnShowCurrentNPhase').removeClass('disabled');
+    var ShowDashboardCurrentR = (Cookies.get('ShowDashboardCurrentR') === 'true');
+    var ShowDashboardCurrentS = (Cookies.get('ShowDashboardCurrentS') === 'true');
+    var ShowDashboardCurrentT = (Cookies.get('ShowDashboardCurrentT') === 'true');
+    var ShowDashboardCurrentN = (Cookies.get('ShowDashboardCurrentN') === 'true');
+    if((ShowDashboardCurrentR !== true) && (ShowDashboardCurrentS !== true) && (ShowDashboardCurrentT !== true)) ShowDashboardCurrentR = true;
+    Cookies.set('ShowDashboardCurrentR', (ShowDashboardCurrentR === true)); 
+    Cookies.set('ShowDashboardCurrentS', (ShowDashboardCurrentS === true));
+    Cookies.set('ShowDashboardCurrentT', (ShowDashboardCurrentT === true));
+    Cookies.set('ShowDashboardCurrentN', (ShowDashboardCurrentN === true));
+    $('#btnShowPowerRPhase').removeClass('disabled');
+    $('#btnShowPowerSPhase').removeClass('disabled');
+    $('#btnShowPowerTPhase').removeClass('disabled');
+    var ShowDashboardPowerR = (Cookies.get('ShowDashboardPowerR') === 'true');
+    var ShowDashboardPowerS = (Cookies.get('ShowDashboardPowerS') === 'true');
+    var ShowDashboardPowerT = (Cookies.get('ShowDashboardPowerT') === 'true');
+    if((ShowDashboardPowerR !== true) && (ShowDashboardPowerS !== true) && (ShowDashboardPowerT !== true)) ShowDashboardPowerR = true;
+    Cookies.set('ShowDashboardPowerR', (ShowDashboardPowerR === true)); 
+    Cookies.set('ShowDashboardPowerS', (ShowDashboardPowerS === true));
+    Cookies.set('ShowDashboardPowerT', (ShowDashboardPowerT === true));
+  }
   AjaxGetEnergy();
   AjaxGetEnergyCounters();
   AjaxGetVoltage();

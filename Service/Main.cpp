@@ -52,7 +52,6 @@ int main(int argc, char** argv) {
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
   if(Tools::CreatePidFile() == false) return EXIT_FAILURE;
   if(Tools::CreateLogFile() == false) return EXIT_FAILURE;
-  if(HTTPServer::Start() == false) return EXIT_FAILURE;
   if(Database::PrepareDB() == false) return EXIT_FAILURE;
   //CaptureInterface **Interfaces = (CaptureInterface**)calloc(sizeof(CaptureInterface*), Tools::Devices.Len);
   for(int i = 0; i < Tools::Devices.Len; i++) {
@@ -63,6 +62,7 @@ int main(int argc, char** argv) {
       Tools::Devices.Items[i].Instance = new CaptureVirtual(15625, true, 230, 1.0, CaptureInterface::FREQ_50, i);
     }
   }
+  if(HTTPServer::Start() == false) return EXIT_FAILURE;
     
   //  uint32_t LastPrice;
 //  if(DB_Start(&LastPrice) == true) {

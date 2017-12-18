@@ -46,7 +46,7 @@ function AjaxGetFrequency() {
     type: "POST",
     dataType: "json",
     contentType: 'application/json',
-    data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastFrequencySample, Series: 'freq', Node: Nodes['IDs'][Node]}),
+    data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastFrequencySample, Series: 'freq', Node: Node}),
     success: AjaxFrequency,
     complete: function() {
       $('#btnFrequencyNow').removeClass('disabled');
@@ -413,10 +413,6 @@ $('#GraphDialogClose').click(function() {
   $(PrevDialogContainer).append(DialogElement);
   $('#GraphDialog').modal('hide');
   window.dispatchEvent(new Event('resize'));
-});
-
-$(document).ajaxError(function (event, jqxhr, settings, exception) {
-  //if(jqxhr.status === 200) window.location.href = 'login';
 });
 
 /* Secuencia de inicio para cargar la pagina */

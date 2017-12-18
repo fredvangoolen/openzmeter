@@ -45,10 +45,15 @@ function AddEvents(result, serieName, graph) {
   graph.setAnnotations(Events);
 }
 
-/* Convierte un array de floats a cadena con dos decimales, separados por el caracter dado */
-function Array_Round2(values, separator, units) {
-  var Tmp = 0;
-  for(i = 0; i < values.length; i++) values[i] = Round2(values[i]) + units;
+/* Convierte un array de floats a cadena con dos decimales, separados por el caracter dado y usando los colores que se pongan */
+function Array_Round2(values, separator, units, colors) {
+  for(i = 0; i < values.length; i++) {
+    if((colors !== undefined) && (colors[i] !== undefined)) {
+     values[i] = '<span style="text-decoration: underline; text-decoration-color: ' + colors[i] + '; display:inline-block">' + Round2(values[i]) + '</span>' + units;
+   } else {
+     values[i] = Round2(values[i]) + units;
+   }
+  }
   return values.join(separator);
 }
 
@@ -261,6 +266,53 @@ function GetYearTimestamp() {
   var now = new Date();
   return new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0).getTime();
 }
+
+/* Calcula rango para las graficas, la entrada es un array y un array de columnas a comprobar */
+function CalcRanges(input, cols, fromzero = false, onlypositive = false, sum = false) {
+  var UpperRange = -Infinity;
+  var LowerRange =  Infinity;
+  for(i = 0; i < input.length; i++) {
+    if(sum == false) {
+      for(n = 0; n < cols.length; n++) {
+        if(input[i][cols[n]] > UpperRange) UpperRange = input[i][cols[n]];
+        if(input[i][cols[n]] < LowerRange) LowerRange = input[i][cols[n]];
+      }
+    } else {
+      var Sum = 0; 
+      for(n = 0; n < cols.length; n++) Sum += input[i][cols[n]];
+      if(Sum > UpperRange) UpperRange = Sum;
+      if(Sum < LowerRange) LowerRange = Sum;
+    }
+  }
+  var Variation = (UpperRange - LowerRange);
+  if(Variation < 1) Variation = 1.0;
+  if((fromzero === true) && (UpperRange > 0) && (LowerRange > 0)) {
+    UpperRange = UpperRange + Variation * 0.1;
+    LowerRange = 0;
+  } else if((fromzero === true) && (UpperRange < 0) && (LowerRange < 0)) {
+    UpperRange = 0;
+    LowerRange = LowerRange - Variation * 0.1;
+  } else {
+    UpperRange = UpperRange + Variation * 0.1;
+    LowerRange = LowerRange - Variation * 0.1;
+  }
+  if((onlypositive === true) && (LowerRange < 0)) {
+    LowerRange = 0;
+  }
+  return [LowerRange, UpperRange];  
+}
+
+/* Divide por 1000 los valores de entrada de un array */
+function Div1000(input) {
+  var Result = [];
+  for(i = 0; i < input.length; i++) {
+    Result[i] = [input[i][0]];
+    for(n = 1; n < input[i].lenght; n++) Result[i][n] = input[i][n] / 1000.0;
+  }
+  return Result;
+}
+
+
 
 
 var energyUnit = 'kWh'

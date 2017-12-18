@@ -67,8 +67,7 @@ void Database::PrepareSentence(const char *sentence) {
   }
   ParamsLen = 0;
   ParamsAlloc = 0;
-  char *Ptr = (char*)sentence;
-  for(int i = 0; i < strlen(sentence); i++) {
+  for(size_t i = 0; i < strlen(sentence); i++) {
     if(sentence[i] == '?') ParamsAlloc++;
   }
   if(ParamsAlloc != 0) Params = (char**)malloc(sizeof(char*) * ParamsAlloc);

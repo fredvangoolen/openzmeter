@@ -1,12 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <? $this->load->view('template/commonHead', array('title' => 'Analysis | Energy/Power')) ?>
-    <link rel="stylesheet" href="lib/datatables/css/dataTables.responsive.css" />
-    <link rel="stylesheet" href="lib/datatables/css/dataTables.bootstrap.css" />
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="zRed"/>
+    <base href="/">
+    <link rel="shortcut icon" href="favicon.ico"/>
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="lib/metisMenu/metisMenu.min.css"/>
+    <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
+    <link rel="stylesheet" href="lib/offline/offline.css" type="text/css"/>
+    <link rel="stylesheet" href="css/common.css"/>
+    <title>openZmeter - Analysis - Energy & Power</title>
   </head>
   <body>
-    <? $this->load->view('template/header') ?>
+    <div id="DisableDiv" class="overlay"></div>
+    <nav class="navbar navbar-default navbar-fixed-top" id="Header"></nav>
     <div class="modal fade" id="aggreg_modal" tabindex="-1" role="dialog" data-backdrop='static'>
       <div class="modal-dialog">
         <div class="modal-content">
@@ -44,59 +56,51 @@
       <div id="page-wrapper">
         <div class="row">
           <div class="col-lg-12">
-            <div class="panel panel-info" id="EnergyPanel">
+            <div class="panel panel-info">
+              <div id="EnergyPowerSpinner" class="spinnerdiv"></div>
               <div class="panel-heading">
                 <span class="huge-small" id="EnergyPowerTitle">Energy</span>
                 <div class="pull-right">
-                  <span class="small">Time scale:</span><br>
-                  <div class="btn-group" data-toggle="buttons">
-                    <label class="btn btn-default btn-sm" id="energy_year" data-toggle="tooltip" title="Zoom the graph to one year, keeping current aggregation level while possible">
-                      <input type="radio" name="chart_range" value="year"/>Year
-                    </label>
-                    <label class="btn btn-default btn-sm" id="energy_month" data-toggle="tooltip" title="Zoom the graph to one month, keeping current aggregation level while possible">
-                      <input type="radio" name="chart_range" value="month"/>Month
-                    </label>
-                    <label class="btn btn-default btn-sm" id="energy_week" data-toggle="tooltip" title="Zoom the graph to one week, keeping current aggregation level while possible">
-                      <input type="radio" name="chart_range" value="week"/>Week
-                    </label>
-                    <label class="btn btn-default btn-sm" id="energy_day" data-toggle="tooltip" title="Zoom the graph to one day, keeping current aggregation level while possible">
-                      <input type="radio" name="chart_range" value="day"/>Day
-                    </label>
+                  <span class="small"></span><br>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs" id="btnEnergyPowerNow"      data-toggle="tooltip" title="Move to most recent samples and update in real time"><i class="fa fa-play"></i></button>
                   </div>
-                  <div class="btn-group" data-toggle="buttons">
-                    <label class="btn btn-default btn-sm active" id="energynow" data-toggle="tooltip" title="Move to most recent samples and update in real time.">
-                      <input type="checkbox" name="chart_range" value="now"/><i class="fa fa-chevron-right"></i>
-                    </label>
+                </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="pull-right">
+                  <span class="small">Phase:</span><br>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowEnergyPowerRPhase" data-toggle="tooltip" title="Show phase R">R</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowEnergyPowerSPhase" data-toggle="tooltip" title="Show phase S">S</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowEnergyPowerTPhase" data-toggle="tooltip" title="Show phase T">T</button>
+                  </div>
+                </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="pull-right">
+                  <span class="small">Time scale:</span><br>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEnergyPowerYear"  data-toggle="tooltip" title="Zoom the graph to one year, keeping current aggregation level while possible">Year</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEnergyPowerMonth" data-toggle="tooltip" title="Zoom the graph to one month, keeping current aggregation level while possible">Month</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEnergyPowerWeek"  data-toggle="tooltip" title="Zoom the graph to one week, keeping current aggregation level while possible">Week</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEnergyPowerDay"   data-toggle="tooltip" title="Zoom the graph to one day, keeping current aggregation level while possible">Day</button>
                   </div>
                 </div>
                 <div class="pull-right">&nbsp;</div>
                 <div class="pull-right">
                   <span class="small">Aggregation scale:</span><br>
-                  <div class="btn-group" data-toggle="buttons">
-                    <label class="btn btn-default btn-sm" id="energy_3s" data-toggle="tooltip" title="Fetch graph from 3 seconds aggregation">
-                      <input type="radio" name="chart_range" value="3s"/>3 Seg
-                    </label>
-                    <label class="btn btn-default btn-sm" id="energy_1m" data-toggle="tooltip" title="Fetch graph from 1 minute aggregation">
-                      <input type="radio" name="chart_range" value="1m"/>1 Min
-                    </label>
-                    <label class="btn btn-default btn-sm" id="energy_10m" data-toggle="tooltip" title="Fetch graph from 10 minutes aggregation">
-                      <input type="radio" name="chart_range" value="10m"/>10 Min
-                    </label>
-                    <label class="btn btn-default btn-sm" id="energy_1h" data-toggle="tooltip" title="Fetch graph from 1 hour aggregation">
-                      <input type="radio" name="chart_range" value="1h"/>1 Hour
-                    </label>
+                  <div class="btn-group">
+                    <button class="btn btn-default btn-xs" id="btnEnergyPower3S"  data-toggle="tooltip" title="Fetch graph from 3 seconds aggregation">3 Seconds</button>
+                    <button class="btn btn-default btn-xs" id="btnEnergyPower1M"  data-toggle="tooltip" title="Fetch graph from 1 minute aggregation">1 Minute</button>
+                    <button class="btn btn-default btn-xs" id="btnEnergyPower10M" data-toggle="tooltip" title="Fetch graph from 10 minutes aggregation">10 Minutes</button>
+                    <button class="btn btn-default btn-xs" id="btnEnergyPower1H"  data-toggle="tooltip" title="Fetch graph from 1 hour aggregation">1 Hour</button>
                   </div>
                 </div>
                 <div class="pull-right">&nbsp;</div>
                 <div class="pull-right">
                   <span class="small">&nbsp;</span><br>
-                  <div class="btn-group" data-toggle="buttons">
-                    <label class="btn btn-default btn-sm active">
-                      <input type="radio" name="chart_range" value="energy" checked="checked"/> Energy
-                    </label>
-                    <label class="btn btn-default btn-sm">
-                      <input type="radio" name="chart_range" value="power"/> Power
-                    </label>
+                  <div class="btn-group">
+                    <button class="btn btn-default btn-xs" id="btnShowEnergy" data-toggle="tooltip" title="Show energy graphs">Energy</button>
+                    <button class="btn btn-default btn-xs" id="btnShowPower"  data-toggle="tooltip" title="Show power graphs">Power</button>
                   </div>
                 </div>
                 <span class="clearfix"> </span> 
@@ -106,9 +110,8 @@
                   <div class="panel-info panel-heading">
                     <div style="display:inline-block"><i class="fa fa-area-chart fa-fw"></i>Active energy</div>
                     <div class="pull-right btn-group">
-                      <button type="button" class="btn btn-default btn-sm" id="maximizeActiveEnergy">
-                        <i class="fa fa-expand"></i>
-                      </button>
+                      <button type="button" class="btn btn-default btn-xs" id="btnExportEnergyPower"   data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
+                      <button type="button" class="btn btn-default btn-xs" id="btnMaximizeActiveEnergy" data-toggle="tooltip" title="Maximize graph"><i class="fa fa-expand"></i></button>
                     </div>
                   </div>
                   <div id="ActiveEnergyCol">
@@ -117,7 +120,7 @@
                         <div style="display:inline-block" id="ActiveEnergyAggregation">Loading data...</div>
                         <div id="ActiveEnergyLegend" style="float: right"></div>
                       </div>
-                      <div id="active_energy_chart" class="chart big_chart"></div>
+                      <div id="ActiveEnergyChart" class="chart big_chart"></div>
                     </div>
                   </div>
                 </div>
@@ -137,7 +140,7 @@
                         <div style="display:inline-block" id="ReactiveEnergyAggregation">Loading data...</div>
                         <div id="ReactiveEnergyLegend" style="float: right"></div>
                       </div>
-                      <div id="reactive_energy_chart" class="chart big_chart"></div>
+                      <div id="ReactiveEnergyChart" class="chart big_chart"></div>
                     </div>
                   </div>
                 </div>
@@ -158,7 +161,7 @@
                         <div style="display:inline-block" id="ActivePowerAggregation">Loading data...</div>
                         <div id="ActivePowerLegend" style="float: right"></div>
                       </div>
-                      <div id="active_power_chart" class="chart big_chart"></div>
+                      <div id="ActivePowerChart" class="chart big_chart"></div>
                     </div>
                   </div>
                 </div>
@@ -178,7 +181,7 @@
                         <div style="display:inline-block" id="ReactivePowerAggregation">Loading data...</div>
                         <div id="ReactivePowerLegend" style="float: right"></div>
                       </div>
-                      <div id="reactive_power_chart" class="chart big_chart"></div>
+                      <div id="ReactivePowerChart" class="chart big_chart"></div>
                     </div>
                   </div>
                 </div>
@@ -188,17 +191,21 @@
         </div>
       </div>
     </div>
-    <!-- /#wrapper -->
-    <? $this->load->view('template/commonScripts') ?>
-    <script src="lib/dygraph/chart-plotter.js"></script>
-    <script src="lib/dygraph/synchronize.js"></script>
+    <script src="lib/cookie.min.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="lib/metisMenu/metisMenu.min.js"></script>
     <script src="lib/spin.js/spin.min.js"></script>
-    <script src="lib/datatables/js/jquery.dataTables.min.js"></script>
-    <script src="lib/datatables/js/dataTables.responsive.min.js"></script>
-    <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
-
-    <script src="js/analysis/analysis.js"></script>
-    <script src="js/analysis/energy_power.js"></script>
-
+    <script src="lib/dygraph/dygraph.js"></script>
+    <script src="lib/dygraph/crosshair.js"></script>
+    <script src="lib/dygraph/dygraph-interaction.js"></script>
+    <script src="lib/dygraph/synchronize.js"></script>
+    <script src="lib/dygraph/chart-plotter.js"></script>
+    <script src="lib/offline/offline.min.js"></script>
+    <script src="openZmeter.js"></script>
+    <script src="Analysis_EnergyPower.js"></script>
+    <script>
+      StartPageLoad();
+    </script>
   </body>
 </html>

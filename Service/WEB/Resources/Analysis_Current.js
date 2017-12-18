@@ -782,9 +782,11 @@ $('#GraphDialogClose').click(function() {
   window.dispatchEvent(new Event('resize'));
 });
 
-$(document).ajaxError(function (event, jqxhr, settings, exception) {
-  if(jqxhr.status === 200) window.location.href = 'login';
-});
-$(document).ready(CurrentGetData(86400, 0, true));
-$(document).ready(GetValues60S(false));
-$(document).ready(GetValues5S());
+
+/* Secuencia de inicio para cargar la pagina */
+function UpdatePage() {
+  AjaxGetVoltage();
+  AjaxGetVoltageCounters();
+  AjaxGetDetails();
+  ajaxGetEvolution();
+}
