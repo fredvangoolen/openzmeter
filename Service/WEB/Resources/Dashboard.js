@@ -40,20 +40,14 @@ function AjaxVoltage(result) {
   for(i = 0; i < result['Sampletime'].length; i++) VoltageData.push([new Date(result['Sampletime'][i])].concat(result['rms_v'][i]));
   while(VoltageData.length > result['MaxSamples']) VoltageData.shift();
   LastVoltageSample = result['Sampletime'][result['Sampletime'].length - 1];
-  $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;&nbsp;', '<em class="huge-small-unit">V</em>', ["#d9534f", "#534fd9", "#4fd953"]));
+  $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;&nbsp;', '', ["#d9534f", "#534fd9", "#4fd953"]));
   $('#labelVoltageAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
-  var VisibleNames = ["Time"];
-  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    VisibleNames = VisibleNames.concat(['Voltage (R)', 'Voltage (S)', 'Voltage (T)']);
-  } else {
-    VisibleNames.push('Voltage');
-  }
   if(VoltageChart === null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"),
       VoltageData,
       { strokeWidth: 1, 
         labelsDiv: "VoltageLegend",
-        labels: VisibleNames,
+        labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)'] :['Time', 'Voltage'],
         stepPlot: true,
         drawGapEdgePoints: true,
         connectSeparatedPoints: false,
@@ -202,37 +196,25 @@ function AjaxGetCurrent() {
         });
 }
 function AjaxCurrent(result) {
-  if((result === null) || (result['Sampletime'] === null)) return;
+  if(result['Sampletime'] === null) return;
   if(LastCurrentSample === 0) StopSpinner(CurrentSpinner, 'CurrentSpinner');
   if(result['Sampletime'][0] <= LastCurrentSample) return;
-  for(i = 0; i < result['Sampletime'].length; i++) CurrentData.push([new Date(result['Sampletime'][i]), result['rms_i'][i][0]]);
+  for(i = 0; i < result['Sampletime'].length; i++) CurrentData.push([new Date(result['Sampletime'][i])].concat(result['rms_i'][i]));
   while(CurrentData.length > result['MaxSamples']) CurrentData.shift();
   LastCurrentSample = result['Sampletime'][result['Sampletime'].length - 1];
-  var UpperRange = -Infinity;
-  var LowerRange = Infinity;
-  var Avg = 0;
-  for (i = 0; i < CurrentData.length; i++) {
-    if (CurrentData[i][1] > UpperRange) UpperRange = CurrentData[i][1];
-    if (CurrentData[i][1] < LowerRange) LowerRange = CurrentData[i][1];
-    Avg += Math.pow(CurrentData[i][1], 2.0);
-  }
-  Round2Labels(CurrentData[CurrentData.length - 1][1], $('#current_now_integer'), $('#current_now_decimal'));
-  var Variation = (UpperRange - LowerRange);
-  if(Variation < 1) Variation = 1.0;
-  UpperRange = UpperRange + Variation * 0.1;
-  LowerRange = LowerRange - Variation * 0.1;
+  $('#labelCurrent').html(Array_Round2(result['rms_i'][result['rms_i'].length - 1], '&nbsp;&nbsp;', '', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
   $('#CurrentAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(CurrentChart == null) {
     CurrentChart = new Dygraph(document.getElementById("CurrentChart"),
       CurrentData,
       { strokeWidth: 1,
         labelsDiv: "CurrentLegend",
-        labels: ["Time", "Current"],
+        labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'] :['Time', 'Current'],
         stepPlot: true,
         drawGapEdgePoints: true,
         connectSeparatedPoints: false,
         fillGraph: false,
-        colors: ["#428bca"],
+        colors: ["#428bca", "#42ca81", "#ca428b", "#ca8142"],
         gridLineColor: "#999",
         gridLinePattern: [4, 4],
         animatedZooms: true,
@@ -242,7 +224,6 @@ function AjaxCurrent(result) {
             direction: "vertical"
           })
         ],
-        valueRange: [LowerRange, UpperRange],
         dateWindow: [result['From'], result['To']],
         interactionModel: {},
         underlayCallback: function(canvas, area, g) {
@@ -284,9 +265,66 @@ function AjaxCurrent(result) {
       }
     );
   } else {
-    CurrentChart.updateOptions({'file': CurrentData, valueRange: [LowerRange, UpperRange], dateWindow: [result['From'], result['To']]});
+    CurrentChart.updateOptions({'file': CurrentData, dateWindow: [result['From'], result['To']]});
+  }
+  SetCurrentVisibleSeries();
+}
+function SetCurrentVisibleSeries() {
+  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
+    var ShowR = (Cookies.get('ShowDashboardCurrentR') === 'true');
+    var ShowS = (Cookies.get('ShowDashboardCurrentS') === 'true');
+    var ShowT = (Cookies.get('ShowDashboardCurrentT') === 'true');
+    var ShowN = (Cookies.get('ShowDashboardCurrentN') === 'true');
+    var VisibleSeries = [ShowR, ShowS, ShowT, ShowN];
+    var Visibles = [];
+    if(ShowR) Visibles.push(1);
+    if(ShowS) Visibles.push(2);
+    if(ShowT) Visibles.push(3);
+    if(ShowN) Visibles.push(4);
+    CurrentChart.updateOptions({ visibility: VisibleSeries, valueRange: CalcRanges(CurrentData, Visibles, false) });
+    if(ShowR === true)
+      $('#btnShowCurrentRPhase').addClass('active');
+    else    
+      $('#btnShowCurrentRPhase').removeClass('active');
+    if(ShowS === true)
+      $('#btnShowCurrentSPhase').addClass('active');
+    else    
+      $('#btnShowCurrentSPhase').removeClass('active');
+    if(ShowT === true)
+      $('#btnShowCurrentTPhase').addClass('active');
+    else    
+      $('#btnShowCurrentTPhase').removeClass('active');
+    if(ShowN === true)
+      $('#btnShowCurrentNPhase').addClass('active');
+    else    
+      $('#btnShowCurrentNPhase').removeClass('active');
+  } else {
+    CurrentChart.updateOptions({ valueRange: CalcRanges(CurrentData, [1], false) });
   }
 }
+function ChooseCurrentChannels() {
+  var ShowR = (Cookies.get('ShowDashboardCurrentR') === 'true');
+  var ShowS = (Cookies.get('ShowDashboardCurrentS') === 'true');
+  var ShowT = (Cookies.get('ShowDashboardCurrentT') === 'true');
+  var ShowN = (Cookies.get('ShowDashboardCurrentN') === 'true');
+  if(this.innerText === 'R') ShowR = !ShowR;
+  if(this.innerText === 'S') ShowS = !ShowS;
+  if(this.innerText === 'T') ShowT = !ShowT;
+  if(this.innerText === 'N') ShowN = !ShowN;
+  if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowR = true;
+  if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowS = true;
+  if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowT = true;
+  if((this.innerText === 'N') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowN = true;
+  Cookies.set('ShowDashboardCurrentR', ShowR);
+  Cookies.set('ShowDashboardCurrentS', ShowS);
+  Cookies.set('ShowDashboardCurrentT', ShowT);
+  Cookies.set('ShowDashboardCurrentN', ShowN);
+  SetCurrentVisibleSeries();
+}
+$('#btnShowCurrentRPhase').click(ChooseCurrentChannels);
+$('#btnShowCurrentSPhase').click(ChooseCurrentChannels);
+$('#btnShowCurrentTPhase').click(ChooseCurrentChannels);
+$('#btnShowCurrentNPhase').click(ChooseCurrentChannels);
 $('#maximizeCurrent').click(function() {
   $('#GraphDialogTitle').text('Current');
   $('#GraphDialog').modal('show');
@@ -325,48 +363,22 @@ function AjaxPower(result) {
   if((result === null) || (result['Sampletime'] === null)) return;
   if(LastPowerSample === 0) StopSpinner(PowerSpinner, 'PowerSpinner');
   if(result['Sampletime'][0] <= LastPowerSample) return;
-  for(i = 0; i < result['Sampletime'].length; i++) PowerData.push([new Date(result['Sampletime'][i]), result['active_power'][i][0]]);
+  for(i = 0; i < result['Sampletime'].length; i++) PowerData.push([new Date(result['Sampletime'][i])].concat(result['active_power'][i]));
   while(PowerData.length > result['MaxSamples']) PowerData.shift();
   LastPowerSample = result['Sampletime'][result['Sampletime'].length - 1];
-  var UpperRange = -Infinity;
-  var LowerRange = Infinity;
-  for (i = 0; i < PowerData.length; i++) {
-    if (PowerData[i][1] > UpperRange) UpperRange = PowerData[i][1];
-    if (PowerData[i][1] < LowerRange) LowerRange = PowerData[i][1];
-  }
-  if(PowerData[PowerData.length - 1][1] > 1000) {
-    Round2Labels(PowerData[PowerData.length - 1][1] / 1000.0, $('#power_now_integer'), $('#power_now_decimal'));
-    $('#power_units').text('kW');
-  } else {
-    Round2Labels(PowerData[PowerData.length - 1][1], $('#power_now_integer'), $('#power_now_decimal'));
-    $('#power_units').text('W');
-  }
-  var Variation = (UpperRange - LowerRange);
-  if(Variation < 1) Variation = 1.0;
-  UpperRange = UpperRange + Variation * 0.1;
-  LowerRange = LowerRange - Variation * 0.1;
-  var toShow = [];
-  if((Math.abs(UpperRange) > 1000) || (Math.abs(LowerRange) > 1000)) {
-    PowerChartUnits = 'kW';
-    UpperRange = UpperRange / 1000;
-    LowerRange = LowerRange / 1000;
-    for(i = 0; i < PowerData.length; i++) toShow.push([PowerData[i][0], PowerData[i][1] / 1000.0]);
-  } else {
-    toShow = PowerData;
-    PowerChartUnits = 'W';
-  }
+  $('#labelPower').html(Array_Round2(result['active_power'][result['active_power'].length - 1], '&nbsp;&nbsp;', '', ["#f0ad4e", "#ad4ef0", "#4ef0ad"]));
   $('#PowerAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(PowerChart == null) {
     PowerChart = new Dygraph(document.getElementById("PowerChart"),
       toShow,
       { strokeWidth: 1,
         labelsDiv: "PowerLegend",
-        labels: ["Time", "Power"],
+        labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Power (R)', 'Power (S)', 'Power (T)'] :['Time', 'Power'],
         stepPlot: true,
         drawGapEdgePoints: true,
         connectSeparatedPoints: false,
-        fillGraph: false,
-        colors: ["#f0ad4e"],
+        fillGraph: true,
+        colors: ["#f0ad4e", "#ad4ef0", "#4ef0ad"],
         gridLineColor: "#999",
         gridLinePattern: [4, 4],
         animatedZooms: true,
@@ -401,9 +413,55 @@ function AjaxPower(result) {
       }
     );
   } else {
-    PowerChart.updateOptions({'file': toShow, valueRange: [LowerRange, UpperRange], dateWindow: [result['From'], result['To']]});
+    PowerChart.updateOptions({'file': toShow, dateWindow: [result['From'], result['To']]});
+  }
+  SetPowerVisibleSeries();
+}
+function SetPowerVisibleSeries() {
+  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
+    var ShowR = (Cookies.get('ShowDashboardPowerR') === 'true');
+    var ShowS = (Cookies.get('ShowDashboardPowerS') === 'true');
+    var ShowT = (Cookies.get('ShowDashboardPowerT') === 'true');
+    var VisibleSeries = [ShowR, ShowS, ShowT];
+    var Visibles = [];
+    if(ShowR) Visibles.push(1);
+    if(ShowS) Visibles.push(2);
+    if(ShowT) Visibles.push(3);
+    PowerChart.updateOptions({ visibility: VisibleSeries, valueRange: CalcRanges(PowerData, Visibles, false) });
+    if(ShowR === true)
+      $('#btnShowPowerRPhase').addClass('active');
+    else    
+      $('#btnShowPowerRPhase').removeClass('active');
+    if(ShowS === true)
+      $('#btnShowPowerSPhase').addClass('active');
+    else    
+      $('#btnShowPowerSPhase').removeClass('active');
+    if(ShowT === true)
+      $('#btnShowPowerTPhase').addClass('active');
+    else    
+      $('#btnShowPowerTPhase').removeClass('active');
+  } else {
+    PowerChart.updateOptions({ valueRange: CalcRanges(PowerData, [1], false) });
   }
 }
+function ChoosePowerChannels() {
+  var ShowR = (Cookies.get('ShowDashboardPowerR') === 'true');
+  var ShowS = (Cookies.get('ShowDashboardPowerS') === 'true');
+  var ShowT = (Cookies.get('ShowDashboardPowerT') === 'true');
+  if(this.innerText === 'R') ShowR = !ShowR;
+  if(this.innerText === 'S') ShowS = !ShowS;
+  if(this.innerText === 'T') ShowT = !ShowT;
+  if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
+  if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowS = true;
+  if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowT = true;
+  Cookies.set('ShowDashboardPowerR', ShowR);
+  Cookies.set('ShowDashboardPowerS', ShowS);
+  Cookies.set('ShowDashboardPowerT', ShowT);
+  SetPowerVisibleSeries();
+}
+$('#btnShowPowerRPhase').click(ChoosePowerChannels);
+$('#btnShowPowerSPhase').click(ChoosePowerChannels);
+$('#btnShowPowerTPhase').click(ChoosePowerChannels);
 
 /* Grafica de frequencia */
 var FrequencyChart      = null;
@@ -1171,7 +1229,7 @@ function UpdatePage() {
     var ShowDashboardCurrentS = (Cookies.get('ShowDashboardCurrentS') === 'true');
     var ShowDashboardCurrentT = (Cookies.get('ShowDashboardCurrentT') === 'true');
     var ShowDashboardCurrentN = (Cookies.get('ShowDashboardCurrentN') === 'true');
-    if((ShowDashboardCurrentR !== true) && (ShowDashboardCurrentS !== true) && (ShowDashboardCurrentT !== true)) ShowDashboardCurrentR = true;
+    if((ShowDashboardCurrentR !== true) && (ShowDashboardCurrentS !== true) && (ShowDashboardCurrentT !== true) && (ShowDashboardCurrentN !== true)) ShowDashboardCurrentR = true;
     Cookies.set('ShowDashboardCurrentR', (ShowDashboardCurrentR === true)); 
     Cookies.set('ShowDashboardCurrentS', (ShowDashboardCurrentS === true));
     Cookies.set('ShowDashboardCurrentT', (ShowDashboardCurrentT === true));

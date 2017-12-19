@@ -193,7 +193,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
   Request_t *Request = (Request_t*)*ptr;
   Request->JSONReader = json_tokener_parse(upload_data);
   bool Error = false;
-  if(Request->JSONReader == NULL) {
+  if((Request->JSONReader == NULL) || (json_object_get_type(Request->JSONReader) != json_type_object)) {
     Request->ResultCode = MHD_HTTP_BAD_REQUEST;
     Request->PostData = (char*)"Expected JSON params";
     Request->PostResponseLen = strlen(Request->PostData);

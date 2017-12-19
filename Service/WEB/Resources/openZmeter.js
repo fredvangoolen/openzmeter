@@ -79,13 +79,12 @@ function Round2(value) {
   if(isNaN(value)) {
     return '?';
   } else {
-    var parts = (value + "").split(".");
-    if(parts.length === 1) {
-      return parts[0] + '.00';
-    } else {
-      parts[1] = parts[1] + "0";
-      return parts[0] + '.' + parts[1].substr(0, 2);
-    }
+    value = Math.round(value * 100);
+    value = value.toString();
+    while(value.length < 3) value = value + '0';
+    Integer = value.substr(0, value.length - 2);
+    Fraction = value.substr(value.length - 2, 2);
+    return Integer + '.' + Fraction;
   }
 }
 

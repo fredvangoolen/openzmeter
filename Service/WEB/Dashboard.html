@@ -158,7 +158,7 @@
               </div>
               <div class="panel-footer">
                 <a href="Analysis/Voltage">
-                  <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
+                  <span class="pull-left">View Details <i class="fa fa-arrow-circle-right"></i></span>
                 </a>
                 <div class="btn-group pull-right">
                   <button type="button" class="btn btn-default btn-xs" id="btnExportVoltage" data-toggle="tooltip" title="Export data to CSV file">
@@ -184,11 +184,10 @@
               <div class="panel-heading big-heading">
                 <div class="row">
                   <div class="col-xs-6 col-md-2 col-lg-4">
-                    <span class="huge">C</span><span class="huge-small hidden-md">urrent</span>
+                    <span class="huge-small">Current</span>
                   </div>
                   <div class="col-xs-6  col-md-10 col-lg-8 text-right">
-                    <span id="current_now_integer"  class="huge">?</span>
-                    <span id="current_now_decimal" class="huge-small"></span>
+                    <span id="labelCurrent" class="huge-small">?</span>
                     <em class="huge-small-unit">A</em>
                   </div>
                 </div>
@@ -212,10 +211,10 @@
                 </div>                
                 <div class="pull-right">&nbsp;</div>
                 <div class="btn-group pull-right">
-                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowCurrentNPhase" data-toggle="tooltip" title="Show phase A">N</button>
-                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowCurrentRPhase" data-toggle="tooltip" title="Show phase A">R</button>
-                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowCurrentSPhase" data-toggle="tooltip" title="Show phase B">S</button>
-                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowCurrentTPhase" data-toggle="tooltip" title="Show phase C">T</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowCurrentRPhase" data-toggle="tooltip" title="Show phase R">R</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowCurrentSPhase" data-toggle="tooltip" title="Show phase S">S</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowCurrentTPhase" data-toggle="tooltip" title="Show phase T">T</button>
+                  <button type="button" class="btn btn-default btn-xs disabled" id="btnShowCurrentNPhase" data-toggle="tooltip" title="Show phase N">N</button>
                 </div>
                 <div class="clearfix"></div>
               </div>
