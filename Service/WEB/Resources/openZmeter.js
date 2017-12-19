@@ -301,6 +301,15 @@ function CalcRanges(input, cols, fromzero = false, onlypositive = false, sum = f
   return [LowerRange, UpperRange];  
 }
 
+/* Valor maximo de un array */
+function ArrayMax(array) {
+  var Max = 0;
+  for(i = 0; i < array.length; i++) {
+    if(Math.abs(array[i]) > Max) Max = Math.abs(array[i]);
+  }
+  return Max;
+}
+
 /* Divide por 1000 los valores de entrada de un array */
 function Div1000(input) {
   var Result = [];

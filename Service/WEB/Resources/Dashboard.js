@@ -366,15 +366,24 @@ function AjaxPower(result) {
   for(i = 0; i < result['Sampletime'].length; i++) PowerData.push([new Date(result['Sampletime'][i])].concat(result['active_power'][i]));
   while(PowerData.length > result['MaxSamples']) PowerData.shift();
   LastPowerSample = result['Sampletime'][result['Sampletime'].length - 1];
-  $('#labelPower').html(Array_Round2(result['active_power'][result['active_power'].length - 1], '&nbsp;&nbsp;', '', ["#f0ad4e", "#ad4ef0", "#4ef0ad"]));
+  
+  var Power = result['active_power'][result['active_power'].length - 1];
+  if(ArrayMax(Power) > 1000) {
+    for(i = 0; i < Power.length; i++) Power[i] = Power[i] / 1000;
+    $('#labelPowerUnits').text('kW');
+  } else {
+    $('#labelPowerUnits').text('W');
+  }
+  $('#labelPower').html(Array_Round2(Power, '&nbsp;&nbsp;', '', ["#f0ad4e", "#ad4ef0", "#4ef0ad"]));
   $('#PowerAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(PowerChart == null) {
     PowerChart = new Dygraph(document.getElementById("PowerChart"),
-      toShow,
+      PowerData,
       { strokeWidth: 1,
         labelsDiv: "PowerLegend",
         labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Power (R)', 'Power (S)', 'Power (T)'] :['Time', 'Power'],
         stepPlot: true,
+        stackedGraph: true,
         drawGapEdgePoints: true,
         connectSeparatedPoints: false,
         fillGraph: true,
@@ -388,7 +397,6 @@ function AjaxPower(result) {
             direction: "vertical"
           })
         ],
-        valueRange: [LowerRange, UpperRange],
         dateWindow: [result['From'], result['To']],
         interactionModel: {},
         axes: {
@@ -413,7 +421,7 @@ function AjaxPower(result) {
       }
     );
   } else {
-    PowerChart.updateOptions({'file': toShow, dateWindow: [result['From'], result['To']]});
+    PowerChart.updateOptions({file: PowerData, dateWindow: [result['From'], result['To']]});
   }
   SetPowerVisibleSeries();
 }
@@ -427,7 +435,7 @@ function SetPowerVisibleSeries() {
     if(ShowR) Visibles.push(1);
     if(ShowS) Visibles.push(2);
     if(ShowT) Visibles.push(3);
-    PowerChart.updateOptions({ visibility: VisibleSeries, valueRange: CalcRanges(PowerData, Visibles, false) });
+    PowerChart.updateOptions({ visibility: VisibleSeries, valueRange: CalcRanges(PowerData, Visibles, true, false, true) });
     if(ShowR === true)
       $('#btnShowPowerRPhase').addClass('active');
     else    
@@ -487,17 +495,7 @@ function AjaxFrequency(result) {
   for(i = 0; i < result['Sampletime'].length; i++) FrequencyData.push([new Date(result['Sampletime'][i]), result['freq'][i]]);
   while(FrequencyData.length > result['MaxSamples']) FrequencyData.shift();
   LastFrequencySample = result['Sampletime'][result['Sampletime'].length - 1];
-  var UpperRange = -Infinity;
-  var LowerRange = Infinity;
-  for (i = 0; i < FrequencyData.length; i++) {
-    if (FrequencyData[i][1] > UpperRange) UpperRange = FrequencyData[i][1];
-    if (FrequencyData[i][1] < LowerRange) LowerRange = FrequencyData[i][1];
-  }
-  Round2Labels(FrequencyData[FrequencyData.length - 1][1], $('#frequency_now_integer'), $('#frequency_now_decimal'));
-  var Variation = (UpperRange - LowerRange);
-  if(Variation < 0.5) Variation = 0.5;
-  UpperRange = UpperRange + Variation * 0.1;
-  LowerRange = LowerRange - Variation * 0.1;
+  $('#labelFrequency').text(Round2(result['freq'][result['freq'].length - 1]));
   $('#FrequencyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(FrequencyChart == null) {
     FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"),
@@ -519,7 +517,7 @@ function AjaxFrequency(result) {
             direction: "vertical"
           })
         ],
-        valueRange: [LowerRange, UpperRange],
+        valueRange: CalcRanges(FrequencyData, [1]),
         dateWindow: [result['From'], result['To']],
         interactionModel: {},
         axes: {
@@ -544,7 +542,7 @@ function AjaxFrequency(result) {
       }
     );
   } else {
-    FrequencyChart.updateOptions({'file': FrequencyData, valueRange: [LowerRange, UpperRange], dateWindow: [result['From'], result['To']]});
+    FrequencyChart.updateOptions({'file': FrequencyData, valueRange: CalcRanges(FrequencyData, [1]), dateWindow: [result['From'], result['To']]});
   }
   if((VoltageChart != null) && (CurrentChart != null) && (PowerChart != null) && (FrequencyChart != null)) Dygraph.synchronize([VoltageChart, CurrentChart, PowerChart, FrequencyChart], { range: false, zoom: false } );
 }
