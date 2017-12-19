@@ -15,10 +15,477 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+/* Grafica de corriente */
+var LastCurrentSample   = 0;
+var CurrentChart        = null;
+var CurrentData         = [];
+var CurrentSpinner      = new Spinner(SpinnerOpts);
+var CurrentTimer        = null;
+function AjaxGetCurrent() {
+  if(CurrentTimer !== null) clearInterval(CurrentTimer);
+  $('#btnCurrentNow').addClass('disabled');
+  if(LastCurrentSample === 0) ShowSpinner(CurrentSpinner, 'CurrentSpinner');
+  var Period = parseInt(Cookies.get('GraphPeriod'));
+  if(!Period) {
+    Period = 86400000;
+    Cookies.set('GraphPeriod', Period);
+  }
+  var GraphEnd = parseInt(Cookies.get('GraphEnd'));
+  if(!GraphEnd) {
+    GraphEnd = 0;
+    Cookies.set('GraphEnd', 0);
+  } 
+  var GraphAggregation = Cookies.get('GraphAggregation');
+  if(!GraphAggregation || (GetAggregText(GraphAggregation) === false)) {
+    GraphAggregation = '10m';
+    Cookies.set('GraphAggregation', GraphAggregation);
+  }
+  $.ajax({ url: "getSeries",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastCurrentSample, Series: 'rms_i', Node: Node}),
+           success: AjaxCurrent,
+           complete: function (x) {
+             $('#btnCurrentNow').removeClass('disabled');
+             if(parseInt(Cookies.get('GraphEnd')) === 0) CurrentTimer = setTimeout(AjaxGetCurrent, 3000);
+           }
+  });
+}
+function AjaxCurrent(result) {
+  if(LastCurrentSample === 0) {
+    StopSpinner(CurrentSpinner, 'CurrentSpinner');
+    CurrentData = [];
+  }
+  if(result['Sampletime'] !== null) {
+    for(i = 0; i < result['Sampletime'].length; i++) CurrentData.push([new Date(result['Sampletime'][i])].concat(result['rms_i'][i]));
+    while(CurrentData.length > result['MaxSamples']) CurrentData.shift();
+    LastCurrentSample = result['Sampletime'][result['Sampletime'].length - 1];
+  }
+  $('#CurrentAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
+  if(CurrentChart == null) {
+    CurrentChart = new Dygraph(document.getElementById("CurrentChart"),
+      CurrentData,
+      { strokeWidth: 1,
+        labelsDiv: "CurrentLegend",
+        labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'] :['Time', 'Current'],
+        stepPlot: true,
+        fillGraph: false,
+        colors: ["#428bca", "#42ca81", "#ca428b", "#ca8142"],
+        gridLineColor: "#999",
+        gridLinePattern: [4, 4],
+        dateWindow: [result['From'], result['To']],
+        plugins: [
+          new Dygraph.Plugins.Crosshair({
+            direction: "vertical"
+          })
+        ],
+        underlayCallback: function(canvas, area, g) {
+//          var YellowLowA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.07);
+//          var YellowHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - YellowLowA;
+//          var YellowLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.07);
+//          var YellowHeightB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.10) - YellowLowB;
+//          var RedLowA = g.toDomYCoord(1000);
+//          var RedHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - RedLowA;
+//          var RedLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.10);
+//          var RedHeightB = g.toDomYCoord(0) - RedLowB;
+//          canvas.fillStyle = "rgba(255, 255, 0, 0.15)";
+//          canvas.fillRect(0, YellowLowA, 10000, YellowHeightA);
+//          canvas.fillRect(0, YellowLowB, 10000, YellowHeightB);
+//          canvas.fillStyle = "rgba(180, 0, 0, 0.15)";
+//          canvas.fillRect(0, RedLowA, 10000, RedHeightA);
+//          canvas.fillRect(0, RedLowB, 10000, RedHeightB);
+        },
+        zoomCallback: function(minDate, maxDate, yRanges) {
+          clearInterval(CurrentTimer);
+          $('#btnCurrentNow').removeClass('active');
+          Cookies.set('GraphEnd', maxDate);
+          Cookies.set('GraphPeriod', maxDate - minDate);
+          LastCurrentSample = 0;
+          AjaxGetCurrent();
+        },
+        interactionModel: {
+          mousedown: mouseDownOZM,
+          mousemove: mouseMoveOZM,
+          mouseup: function(event, g, contex) {
+            mouseUpOZM(event, g, contex);
+            if((contex.isPanning) && (contex.regionWidth > 0)) {
+              $('#btnCurrentNow').removeClass('active');
+              Cookies.set('GraphEnd', g.dateWindow_[1]);
+              Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+              LastCurrentSample = 0;
+              AjaxGetCurrent();
+            }            
+          },
+          dblclick: function(event, g, context) {
+            dblClickOZM(event, g, context);
+            $('#btnCurrentNow').removeClass('active');
+            Cookies.set('GraphEnd', g.dateWindow_[1]);
+            Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+            LastCurrentSample = 0;
+            AjaxGetCurrent();
+          }
+        },
+        axes: {
+          y: { pixelsPerLabel: 15,
+               axisLabelWidth: 34,
+               valueFormatter: function (x) {
+                 return Round2(x) + ' <em class="x-small">A</em>';
+               },
+               axisLabelFormatter: function (x) {
+                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
+               }
+             },
+          x: { valueFormatter: function (x) {
+                 var date = new Date(x);
+                 return date.toLocaleDateString() + ' - ' + date.toLocaleTimeString();
+               },
+               axisLabelFormatter: function (x) {
+                 return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + x.toLocaleTimeString() + '<br>' + x.toLocaleDateString() + '</div>';
+               }
+             }
+          }
+        }
+    );
+    $(window).bind('resize', CurrentResizeEvent);
+    window.dispatchEvent(new Event('resize'));
+  } else {
+    CurrentChart.updateOptions({'file': CurrentData, dateWindow: [result['From'], result['To']]});
+  }
+  SetCurrentVisibleSeries();
+  $('#btnShowCurrentYear').removeClass('active');
+  $('#btnShowCurrentMonth').removeClass('active');
+  $('#btnShowCurrentWeek').removeClass('active');
+  $('#btnShowCurrentDay').removeClass('active');
+  if((result['To'] - result['From']) === 86400000) {
+    $('#btnShowCurrentDay').addClass('active');
+  } else if((result['To'] - result['From']) === 604800000) {
+    $('#btnShowCurrentWeek').addClass('active');
+  } else if((result['To'] - result['From']) === 2592000000) {
+    $('#btnShowCurrentMonth').addClass('active');
+  } else if((result['To'] - result['From']) === 31536000000) {
+    $('#btnShowCurrentYear').addClass('active');
+  }
+  var GraphAggregation = Cookies.get('GraphAggregation');
+  if(GraphAggregation !== result['Aggregation_Source']) {
+    $('#aggreg_modal').modal('show');
+    GraphAggregation = result['Aggregation_Source'];
+  }
+  $('#btnCurrent3S').removeClass('active');
+  $('#btnCurrent1M').removeClass('active');
+  $('#btnCurrent10M').removeClass('active');
+  $('#btnCurrent1H').removeClass('active');
+  if(GraphAggregation == '3s') {
+    $('#btnCurrent3S').addClass('active');
+  } else if(GraphAggregation == '1m') {
+    $('#btnCurrent1M').addClass('active');
+  } else if(GraphAggregation == '10m') {
+    $('#btnCurrent10M').addClass('active');
+  } else if(GraphAggregation == '1h') {
+    $('#btnCurrent1H').addClass('active');
+  }
+  var GraphEnd = parseInt(Cookies.get('GraphEnd'));
+  if(GraphEnd === 0) {
+    $('#btnCurrentNow').addClass('active');
+  } else {
+    $('#btnCurrentNow').removeClass('active');
+  }
+  Cookies.set('GraphAggregation', GraphAggregation);
+}
+function CurrentResizeEvent() {
+  var Height = $('#PanelAvg').height() + $('#PanelMin').height() + $('#PanelMax').height();
+  CurrentChart.resize($('#CurrentCol').width(), Height - 4);
+}
+function SetCurrentVisibleSeries() {
+  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
+    var ShowR = (Cookies.get('ShowR') === 'true');
+    var ShowS = (Cookies.get('ShowS') === 'true');
+    var ShowT = (Cookies.get('ShowT') === 'true');
+    var ShowN = (Cookies.get('ShowN') === 'true');
+    var VisibleSeries = [ShowR, ShowS, ShowT, ShowN];
+    var Visibles = [];
+    if(ShowR) Visibles.push(1);
+    if(ShowS) Visibles.push(2);
+    if(ShowT) Visibles.push(3);
+    if(ShowN) Visibles.push(4);
+    CurrentChart.updateOptions({ visibility: VisibleSeries, valueRange: CalcRanges(CurrentData, Visibles, false) });
+    if(ShowR === true)
+      $('#btnShowCurrentRPhase').addClass('active');
+    else    
+      $('#btnShowCurrentRPhase').removeClass('active');
+    if(ShowS === true)
+      $('#btnShowCurrentSPhase').addClass('active');
+    else    
+      $('#btnShowCurrentSPhase').removeClass('active');
+    if(ShowT === true)
+      $('#btnShowCurrentTPhase').addClass('active');
+    else    
+      $('#btnShowCurrentTPhase').removeClass('active');
+    if(ShowN === true)
+      $('#btnShowCurrentNPhase').addClass('active');
+    else    
+      $('#btnShowCurrentNPhase').removeClass('active');
+  } else {
+    CurrentChart.updateOptions({ valueRange: CalcRanges(CurrentData, [1], false) });
+  }
+}
+function ChooseCurrentChannels() {
+  var ShowR = (Cookies.get('ShowR') === 'true');
+  var ShowS = (Cookies.get('ShowS') === 'true');
+  var ShowT = (Cookies.get('ShowT') === 'true');
+  var ShowN = (Cookies.get('ShowN') === 'true');
+  if(this.innerText === 'R') ShowR = !ShowR;
+  if(this.innerText === 'S') ShowS = !ShowS;
+  if(this.innerText === 'T') ShowT = !ShowT;
+  if(this.innerText === 'N') ShowN = !ShowN;
+  if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowR = true;
+  if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowS = true;
+  if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowT = true;
+  if((this.innerText === 'N') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowN = true;
+  Cookies.set('ShowR', ShowR);
+  Cookies.set('ShowS', ShowS);
+  Cookies.set('ShowT', ShowT);
+  Cookies.set('ShowN', ShowN);
+  SetCurrentVisibleSeries();
+}
+$('#btnShowCurrentRPhase').click(ChooseCurrentChannels);
+$('#btnShowCurrentSPhase').click(ChooseCurrentChannels);
+$('#btnShowCurrentTPhase').click(ChooseCurrentChannels);
+$('#btnShowCurrentNPhase').click(ChooseCurrentChannels);
+$('#btnCurrent3S').click(function() {
+  Cookies.set('GraphAggregation', '3s');
+  LastCurrentSample = 0;
+  AjaxGetCurrent();
+});
+$('#btnCurrent1M').click(function() {
+  Cookies.set('GraphAggregation', '1m');
+  LastCurrentSample = 0;
+  AjaxGetCurrent();
+});
+$('#btnCurrent10M').click(function() {
+  Cookies.set('GraphAggregation', '10m');
+  LastCurrentSample = 0;
+  AjaxGetCurrent();
+});
+$('#btnCurrent1H').click(function() {
+  Cookies.set('GraphAggregation', '1h');
+  LastCurrentSample = 0;
+  AjaxGetCurrent();
+});
+$('#btnShowCurrentYear').click(function() {
+  Cookies.set('GraphPeriod', 31536000000);
+  LastCurrentSample = 0;
+  AjaxGetCurrent();
+  Cookies.set('CountersPeriod', 'Year');
+  AjaxGetCurrentCounters();
+});
+$('#btnShowCurrentMonth').click(function() {
+  Cookies.set('GraphPeriod', 2592000000);
+  LastCurrentSample = 0;
+  AjaxGetCurrent();
+  Cookies.set('CountersPeriod', 'Month');
+  AjaxGetCurrentCounters();
+});
+$('#btnShowCurrentWeek').click(function() {
+  Cookies.set('GraphPeriod', 604800000);
+  LastCurrentSample = 0;
+  AjaxGetCurrent();
+  Cookies.set('CountersPeriod', 'Week');
+  AjaxGetCurrentCounters();
+});
+$('#btnShowCurrentDay').click(function() {
+  Cookies.set('GraphPeriod', 86400000);
+  LastCurrentSample = 0;
+  AjaxGetCurrent();
+  Cookies.set('CountersPeriod', 'Day');
+  AjaxGetCurrentCounters();
+});
+$('#btnCurrentNow').click(function() {
+  var End = parseInt(Cookies.get('GraphEnd'));
+  if(End === 0) {
+    $('#btnCurrentNow').removeClass('active');
+    Cookies.set('GraphEnd', CurrentChart.getOption('dateWindow')[1]);
+    if(CurrentTimer !== null) clearInterval(CurrentTimer);
+  } else {
+    $('#btnCurrentNow').addClass('active');
+    Cookies.set('GraphEnd', 0);
+    LastCurrentSample = 0;
+    AjaxGetCurrent();
+  }
+});
+$('#btnMaximizeCurrent').click(function() {
+  $('#GraphDialogTitle').text('Current');
+  $('#GraphDialog').modal('show');
+  PrevDialogContainer = $('#CurrentCol');
+  DialogElement = $('#CurrentMaximizeDiv').detach();
+  DialogPrevResizeHandler = CurrentResizeEvent;
+  DialogResizeHandler = function() {
+    CurrentChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 110);
+  };
+  $(window).unbind('resize', CurrentResizeEvent);
+  $('#GraphDialogBody').append(DialogElement);
+  $(window).bind('resize', DialogResizeHandler);
+  window.dispatchEvent(new Event('resize'));  
+});
+$('#btnExportCurrent').click(function() {
+  var Data = [];
+  var Filename = "Current_" + LastCurrentTime + '.csv';
+  Data.push([['Index', 'Current']]);
+  Data = Data.concat(CurrentData);
+  exportToCsv(Filename, Data);
+  $(this).blur();
+});
+
+/* Contadores de corriente */
+var CurrentCountersTimer  = null;
+function AjaxGetCurrentCounters() {
+  if(CurrentCountersTimer !== null) clearInterval(CurrentCountersTimer);
+  CurrentCountersTimer = setTimeout(AjaxGetCurrentCounters, 60000);
+  var CountersPeriod = Cookies.get('CountersPeriod');
+  var Current, Period;
+  if(CountersPeriod === 'Week') {
+    Period = 86400000 * 7;
+    Current = GetWeekTimestamp();
+    Aggreg = '10m';
+  } else if(CountersPeriod === 'Month') {
+    Period = 86400000 * 30;
+    Current = GetMonthTimestamp();
+    Aggreg = '1h';
+  } else if(CountersPeriod === 'Year') {
+    Period = 86400000 * 365;
+    Current = GetYearTimestamp();
+    Aggreg = '1h';
+  } else {
+    CountersPeriod = 'Day';
+    Cookies.set('CountersPeriod', CountersPeriod);
+    Period = 86400000;
+    Current = GetDayTimestamp();
+    Aggreg = '1m';
+  }
+  $.ajax({ url: "getSeriesAggreg",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Series: "avg(rms_i), max(rms_i), min(rms_i)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Node }),
+           success: CurrentUpdateCountersCurrent
+  });
+  $.ajax({ url: "getSeriesAggreg",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Series: "avg(rms_i), max(rms_i), min(rms_i)", Aggreg: Aggreg, Period: Period, To: Current, Node: Node }),
+           success: CurrentUpdateCountersPrevs
+  });
+}
+function CurrentUpdateCountersCurrent(result) {
+  var CountersPeriod = Cookies.get('CountersPeriod');
+  if(CountersPeriod === 'Week') {
+    $('#labelCurrentPeriodAVG').text('This week average');
+    $('#labelCurrentPeriodMAX').text('This week maximum');
+    $('#labelCurrentPeriodMIN').text('This week minimum');
+  } else if(CountersPeriod === 'Month') {
+    $('#labelCurrentPeriodAVG').text('This month average');
+    $('#labelCurrentPeriodMAX').text('This month maximum');
+    $('#labelCurrentPeriodMIN').text('This month minimum');
+  } else if(CountersPeriod === 'Year') {
+    $('#labelCurrentPeriodAVG').text('This year average');
+    $('#labelCurrentPeriodMAX').text('This year maximum');
+    $('#labelCurrentPeriodMIN').text('This year minimum');
+  } else if(CountersPeriod === 'Day') {
+    $('#labelCurrentPeriodAVG').text('Today average');
+    $('#labelCurrentPeriodMAX').text('Today maximum');
+    $('#labelCurrentPeriodMIN').text('Today minimum');
+  }
+  if(result['avg_rms_v'] === null) {
+    $('#labelCurrentCurrentAVG').text('?');
+    $('#labelCurrentCurrentMAX').text('?');
+    $('#labelCurrentCurrentMIN').text('?');
+  } else {
+    $('#labelCurrentCurrentAVG').html(Array_Round2(result['avg_rms_i'], '&nbsp;&nbsp;', '', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
+    $('#labelCurrentCurrentMAX').html(Array_Round2(result['max_rms_i'], '&nbsp;&nbsp;', '', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
+    $('#labelCurrentCurrentMIN').html(Array_Round2(result['min_rms_i'], '&nbsp;&nbsp;', '', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
+  }
+}
+function CurrentUpdateCountersPrevs(result) {
+  var CountersPeriod = Cookies.get('CountersPeriod');
+  if(CountersPeriod === 'Week') {
+    $('#labelCurrentPrevPeriodAVG').text('Previous week average');
+    $('#labelCurrentPrevPeriodMAX').text('Previous week maximum');
+    $('#labelCurrentPrevPeriodMIN').text('Previous week minimum');
+  } else if(CountersPeriod === 'Month') {
+    $('#labelCurrentPrevPeriodAVG').text('Previous month average');
+    $('#labelCurrentPrevPeriodMAX').text('Previous month maximum');
+    $('#labelCurrentPrevPeriodMIN').text('Previous month minimum');
+  } else if(CountersPeriod === 'Year') {
+    $('#labelCurrentPrevPeriodAVG').text('Previous year average');
+    $('#labelCurrentPrevPeriodMAX').text('Previous year maximum');
+    $('#labelCurrentPrevPeriodMIN').text('Previous year minimum');
+  } else if(CountersPeriod === 'Day') {
+    $('#labelCurrentPrevPeriodAVG').text('Yesterday average');
+    $('#labelCurrentPrevPeriodMAX').text('Yesterday maximum');
+    $('#labelCurrentPrevPeriodMIN').text('Yesterday minimum');
+  }
+  if(result['rms_rms_v'] === null) {
+    $('#labelCurrentPrevAVG').text('?');
+    $('#labelCurrentPrevMAX').text('?');
+    $('#labelCurrentPrevMIN').text('?');
+  } else {
+    $('#labelCurrentPrevAVG').html(Array_Round2(result['avg_rms_i'], '&nbsp;&nbsp;', '', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
+    $('#labelCurrentPrevMAX').html(Array_Round2(result['max_rms_i'], '&nbsp;&nbsp;', '', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
+    $('#labelCurrentPrevMIN').html(Array_Round2(result['min_rms_i'], '&nbsp;&nbsp;', '', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
+  }
+}
+
+/* Ventana de maximizar y de error de agregaciones */
 var DialogElement           = null;
 var PrevDialogContainer     = null;
 var DialogResizeHandler     = null;
 var DialogPrevResizeHandler = null;
+$('#aggreg_modal_close').click(function() {
+  $('#aggreg_modal').modal('hide');
+});
+$('#GraphDialogClose').click(function() {
+  $(window).unbind('resize', DialogResizeHandler);
+  $(window).bind('resize', DialogPrevResizeHandler);
+  $(PrevDialogContainer).append(DialogElement);
+  $('#GraphDialog').modal('hide');
+  window.dispatchEvent(new Event('resize'));
+});
+
+/* Vista de detalles */
+var DetailSpinner       = new Spinner(SpinnerOpts);
+function AjaxGetDetails() {
+  if(WaveformChart === null) ShowSpinner(DetailSpinner, 'DetailSpinner');
+  $.ajax({ url: "getSeriesNow",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i', Node: Node}),
+           success: function(result) {
+             if(WaveformChart === null) StopSpinner(DetailSpinner, 'DetailSpinner');
+             UpdateWaveformChart(result);
+             UpdateHarmonicsChart(result);
+             UpdateFFTChart(result);
+           },
+           error: function() {
+             $('#WaveformTime').text('No stored data');
+             $('#HarmonicsTime').text('No stored data');
+             $('#FFTTime').text('No stored data');
+           },
+           complete: function (x) {
+             setTimeout(AjaxGetDetails, 500);
+           }
+  });
+}
+
+
+
+
 
 var ShowVoltage         = false;
 var Paused              = false;
@@ -34,24 +501,16 @@ var WaveformDataset     = [];
 var EvolutionCharts     = [];
 var LastEvolutionSample = 0;
 var EvolutionDatasets   = [];
-var CurrentChart        = null;
-var CurrentData         = [];
 var CurrentAggregation  = '10m';
 var CurrentTimeScale    = 'Day';
 var CurrentKeepNow      = true;
-var LastCurrentTime     = 0;
 var SampleRate          = 15625;
 var HarmonicsNames      = [ '1st',  '2nd',  '3rd',  '4th',  '5th',  '6th',  '7th',  '8th',  '9th', '10th',
                             '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th',
                             '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th',
                             '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th',
                             '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
-var SpinnerOpts         = { lines : 10, // The number of lines to draw
-                            length: 10, // The length of each line
-                            width :  5, // The line thickness
-                            radius: 10, // The radius of the inner circle
-                          };
-var CurrentSpinner = new Spinner(SpinnerOpts);
+
 var DetailSpinner  = new Spinner(SpinnerOpts);
 function AjaxSuccess5S(result) {
   if(result != null && Object.keys(result).length > 0) {
@@ -226,6 +685,10 @@ function UpdateFFTChart(result) {
     FFTChart.updateOptions({ file: []});
   }
 }
+
+
+
+
 function UpdateWaveformChart(result) {
   if(result['wave_i']) {
     if(result['wave_i'].length != 0) {
@@ -446,22 +909,7 @@ function AjaxSuccess60S(result) {
   $('#current_max_day').text(Round2(result['day_max']));
   UpdateHeader(result);
 }
-function GetValues60S(getHarmonics = true) {
-  $.ajax({ url: "analysis/ajaxUpdateValues60sCurrent",
-         timeout: 60000,
-         type: "POST",
-         dataType: "json",
-         data: { lastevolutiontimestamp: LastEvolutionSample, harmonics: getHarmonics },
-         success: AjaxSuccess60S,
-         complete: function (x) {
-                     setTimeout(GetValues60S, getHarmonics ? 65000 : 100);
-                     DetailSpinner.stop();
-                     $('#SpinnerDivDetail').remove();
-                     $('#DetailPanel').css('opacity', '1.0');
-                     $('#DetailPanel').find("*").prop("disabled", false);
-                   }
-      });
-}
+
 function TabChange() {
   $('#Tabs > div').addClass('hidden');
   if($(this).val() == 'harmonics') {
@@ -526,191 +974,6 @@ function CurrentTickAggregationButtons(aggregation) {
     CurrentAggregation = '1h';
   }
 }
-function CurrentGetData(period = 0, endDate = 0, AutoUpdate = true) {
-  if((AutoUpdate == false) || (LastCurrentTime == 0)) {
-    $('#CurrentPanel').find("*").prop("disabled", true);
-    $('#CurrentPanel').css('opacity', '0.6');
-    $('#CurrentPanel').append('<div id="SpinnerDiv" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    CurrentSpinner.spin(document.getElementById('SpinnerDiv'));
-  }
-  if(period == 0) {
-    var Range = CurrentChart.getOption('dateWindow');
-    period = (Range[1] - Range[0]) / 1000;
-  }
-  $.ajax({ url: "analysis/ajaxUpdateCurrent",
-    timeout: 20000,
-    type: "POST",
-    dataType: "json",
-    data: { period: period, to: endDate, agreg: CurrentAggregation, update: AutoUpdate, lastSample: LastCurrentTime / 1000 },
-    success: AjaxCurrentUpdate,
-    complete: function() {
-      CurrentSpinner.stop();
-      $('#SpinnerDiv').remove();
-      $('#CurrentPanel').css('opacity', '1.0');
-      $('#CurrentPanel').find("*").prop("disabled", false);
-      if(AutoUpdate && CurrentKeepNow) setTimeout(CurrentGetData, 5000);
-    }
-  });
-}
-function CurrentButtonsClick() {
-  if($(this).val() == 'now') {
-    CurrentKeepNow = !CurrentKeepNow;
-    if(CurrentKeepNow) CurrentGetData(Period, 0, true);
-    return;
-  }
-  if(this.checked == false) return;
-  var Range = CurrentChart.getOption('dateWindow');
-  var Period = (Range[1] - Range[0]) / 1000;
-  var PrevScale = CurrentTimeScale;
-  if(($(this).val() == '3s') || ($(this).val() == '1m') || ($(this).val() == '10m') || ($(this).val() == '1h')) {
-    CurrentAggregation = $(this).val();
-  } else if($(this).val() == 'day') {
-    CurrentTimeScale = 'Day';
-    Period = 86400;
-  } else if($(this).val() == 'week') {
-    CurrentTimeScale = 'Week';
-    Period = 604800;
-  } else if($(this).val() == 'month') {
-    CurrentTimeScale = 'Month';
-    Period = 2592000;
-  } else if($(this).val() == 'year') {
-    CurrentTimeScale = 'Year';
-    Period = 31536000;
-  }
-  CurrentGetData(Period, CurrentKeepNow ? 0 : Range[1] / 1000, false);
-  if(CurrentTimeScale != PrevScale) GetValues60S(true, false);
-}
-function AjaxCurrentUpdate(result) {
-  if((result.update == true) && (CurrentKeepNow == false)) return;
-  if(((CurrentAggregation == '1h') && (result.aggregation_source != '1 hour')) ||
-     ((CurrentAggregation == '10m') && (result.aggregation_source != '10 minutes')) ||
-     ((CurrentAggregation == '1m') && (result.aggregation_source != '1 minute')) ||
-     ((CurrentAggregation == '3s') && (result.aggregation_source != '3 seconds'))) {
-    if(result.update == true) return;
-    $('#aggreg_modal').modal('show');
-  }
-  if(result.update == false) CurrentData = [];
-  for(i = 0; i < result.current_range.length; i++) {
-    LastCurrentTime = result['current_range'][i][0] * 1000 + 1000;
-    CurrentData.push([new Date(result['current_range'][i][0] * 1000 + 1000), result['current_range'][i][1]]);
-  }
-  CurrentTickAggregationButtons(result['aggregation_source']);
-  $('#CurrentAggregation').text('From ' + result['aggregation_source'] + ' aggregation');
-  if(result.update == true) {
-    while(CurrentData.length > 10000) CurrentData.shift();    
-  }
-  var UpperRange = -1000000;
-  var LowerRange = 1000000;
-  for (i = 0; i < CurrentData.length; i++) {
-    if (CurrentData[i][1] > UpperRange) UpperRange = CurrentData[i][1];
-    if (CurrentData[i][1] < LowerRange) LowerRange = CurrentData[i][1];
-  }
-  var Variation = (UpperRange - LowerRange);
-  if(Variation < 1) Variation = 1.0;
-  UpperRange = UpperRange + Variation * 0.1;
-  LowerRange = LowerRange - Variation * 0.1;
-  if(CurrentChart == null) {
-    CurrentChart = new Dygraph(document.getElementById("current_chart"),
-      CurrentData,
-      { strokeWidth: 1,
-        labelsDiv: "CurrentLegend",
-        labels: ["Time", "Current"],
-        stepPlot: true,
-        fillGraph: false,
-        colors: ["#31708f"],
-        gridLineColor: "#999",
-        gridLinePattern: [4, 4],
-        animatedZooms: true,
-        valueRange: [LowerRange, UpperRange],
-        dateWindow: [result.from * 1000 + 1000, result.to * 1000 + 1000],
-        plugins: [
-          new Dygraph.Plugins.Crosshair({
-            direction: "vertical"
-          })
-        ],
-        underlayCallback: function(canvas, area, g) {
-//          var YellowLowA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.07);
-//          var YellowHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - YellowLowA;
-//          var YellowLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.07);
-//          var YellowHeightB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.10) - YellowLowB;
-//          var RedLowA = g.toDomYCoord(1000);
-//          var RedHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - RedLowA;
-//          var RedLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.10);
-//          var RedHeightB = g.toDomYCoord(0) - RedLowB;
-//          canvas.fillStyle = "rgba(255, 255, 0, 0.15)";
-//          canvas.fillRect(0, YellowLowA, 10000, YellowHeightA);
-//          canvas.fillRect(0, YellowLowB, 10000, YellowHeightB);
-//          canvas.fillStyle = "rgba(180, 0, 0, 0.15)";
-//          canvas.fillRect(0, RedLowA, 10000, RedHeightA);
-//          canvas.fillRect(0, RedLowB, 10000, RedHeightB);
-        },
-        zoomCallback: function(minDate, maxDate, yRanges) {
-          CurrentGetData((maxDate - minDate) / 1000, maxDate / 1000, false);
-          $('#current_year').removeClass('active');
-          $('#current_month').removeClass('active');
-          $('#current_week').removeClass('active');
-          $('#current_day').removeClass('active');
-        },
-        interactionModel: {
-          mousedown: function(event, g, contex) {
-            mouseDownOZM(event, g, contex);
-            $('#currentnow').removeClass('active');
-            CurrentKeepNow = false;
-          },
-          mousemove: mouseMoveOZM,
-          mouseup: function(event, g, contex) {
-            mouseUpOZM(event, g, contex);
-            if((contex.isPanning) && (contex.regionWidth > 0)) {
-              var startDate = parseInt(g.dateWindow_[0]);
-              var endDate = parseInt(g.dateWindow_[1]);
-              CurrentGetData((endDate - startDate) / 1000, endDate / 1000, false);
-            }
-          },
-          dblclick: function(event, g, context) {
-            dblClickOZM(event, g, context);
-            var startDate = parseInt(g.dateWindow_[0]);
-            var endDate = parseInt(g.dateWindow_[1]);
-            CurrentGetData((endDate - startDate) / 1000, endDate / 1000, false);
-          }
-        },
-        axes: {
-          y: { pixelsPerLabel: 15,
-               axisLabelWidth: 34,
-               valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">A</em>';
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-               }
-             },
-          x: { valueFormatter: function (x) {
-                 var date = new Date(x);
-                 return date.toLocaleDateString() + ' - ' + date.toLocaleTimeString();
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + x.toLocaleTimeString() + '<br>' + x.toLocaleDateString() + '</div>';
-               }
-             }
-          }
-        }
-    );
-    $(window).bind('resize', CurrentResizeEvent);
-    $('#current_day').addClass('active');
-    $('#maximizeCurrent').removeClass('disabled');
-    window.dispatchEvent(new Event('resize'));
-  } else {
-    CurrentChart.updateOptions({'file': CurrentData, valueRange: [LowerRange, UpperRange], dateWindow: [result['from'] * 1000 + 1000, result['to'] * 1000 + 1000]});
-  }
-}
-function CurrentResizeEvent() {
-  var Height = $('#PanelAvg').height() + $('#PanelMin').height() + $('#PanelMax').height();
-  CurrentChart.resize($('#CurrentCol').width(), Height - 4);
-}
-$(':input[name="detail_change"]').change(TabChange);
-$('#aggreg_modal_close').click(function() {
-  $('#aggreg_modal').modal('hide');
-});
-$(':input[name="current_chart_range"]').change(CurrentButtonsClick);
 $('#btnPause').change(function () {
   Paused = !Paused;
   if(Paused) {
@@ -760,33 +1023,33 @@ $('#btnExport').click(function () {
   $(this).removeClass('active');
   $(this).blur();
 });
-$('#maximizeCurrent').click(function() {
-  $('#GraphDialogTitle').text('Current');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#CurrentCol');
-  DialogElement = $('#CurrentMaximizeDiv').detach();
-  DialogPrevResizeHandler = CurrentResizeEvent;
-  DialogResizeHandler = function() {
-    CurrentChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 110);
-  };
-  $(window).unbind('resize', CurrentResizeEvent);
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-$('#GraphDialogClose').click(function() {
-  $(window).unbind('resize', DialogResizeHandler);
-  $(window).bind('resize', DialogPrevResizeHandler);
-  $(PrevDialogContainer).append(DialogElement);
-  $('#GraphDialog').modal('hide');
-  window.dispatchEvent(new Event('resize'));
-});
+
+
 
 
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
-  AjaxGetVoltage();
-  AjaxGetVoltageCounters();
+  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+    $('#btnShowCurrentRPhase').removeClass('disabled');
+    $('#btnShowCurrentSPhase').removeClass('disabled');
+    $('#btnShowCurrentTPhase').removeClass('disabled');
+    $('#btnShowCurrentNPhase').removeClass('disabled');
+    $('#btnShowDetailRPhase').removeClass('disabled');
+    $('#btnShowDetailSPhase').removeClass('disabled');
+    $('#btnShowDetailTPhase').removeClass('disabled');
+    $('#btnShowDetailNPhase').removeClass('disabled');
+    var ShowR = (Cookies.get('ShowR') === 'true');
+    var ShowS = (Cookies.get('ShowS') === 'true');
+    var ShowT = (Cookies.get('ShowT') === 'true');
+    var ShowN = (Cookies.get('ShowT') === 'true');
+    if((ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowR = true;
+    Cookies.set('ShowR', (ShowR === true)); 
+    Cookies.set('ShowS', (ShowS === true));
+    Cookies.set('ShowT', (ShowT === true));
+    Cookies.set('ShowN', (ShowN === true));
+  }
+  AjaxGetCurrent();
+  AjaxGetCurrentCounters();
   AjaxGetDetails();
-  ajaxGetEvolution();
+  //ajaxGetEvolution();
 }

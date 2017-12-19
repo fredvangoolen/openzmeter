@@ -103,24 +103,24 @@
                 <div class="col-md-6 col-lg-3">
                   <div class="row">
                     <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightblue2-info" id="PanelAvg">
-                        <h4>Last hour RMS</h4>
-                        <span class="huge-small-unit" id="current_hour">?</span><em class="huge-small-unit">&nbsp;A</em>
-                        <p>24 hours RMS&nbsp;<span id="current_last_day">?</span><em class="small">&nbsp;A</em></p>
+                      <div class="panel panel-lightblue2-info" id="CurrentAvgPanel">
+                        <h4 id="labelCurrentPeriodAVG">Loading...</h4>
+                        <span class="huge-small" id="labelCurrentCurrentAVG">?</span>
+                        <p><span id="labelCurrentPrevPeriodAVG"></span> <span id="labelCurrentPrevAVG">Loading...</span></p>
                       </div>
                     </div>
                     <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightblue2-info" id="PanelMin">
-                        <h4>Last hour min</h4>
-                        <span class="huge-small-unit" id="current_hour_min">?</span><em class="huge-small-unit">&nbsp;A</em><br/>
-                        <p>24 hours min&nbsp;<span id="current_min_day">?</span><em class="small">&nbsp;A</em></p>
+                      <div class="panel panel-lightblue2-info" id="CurrentMaxPanel">
+                        <h4 id="labelCurrentPeriodMAX">Loading...</h4>
+                        <span class="huge-small" id="labelCurrentCurrentMAX">?</span>
+                        <p><span id="labelCurrentPrevPeriodMAX"></span> <span id="labelCurrentPrevMAX">Loading...</span></p>
                       </div>
                     </div>
                     <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightblue2-info" id="PanelMax">
-                        <h4>Last hour max</h4>  
-                        <span class="huge-small-unit" id="current_hour_max">?</span><em class="huge-small-unit">&nbsp;A</em><br/>
-                        <p>24 hours max&nbsp;<span id="current_max_day">?</span><em class="small">&nbsp;A</em></p>
+                      <div class="panel panel-lightblue2-info" id="CurrentMinPanel">
+                        <h4 id="labelCurrentPeriodMIN">Loading...</h4>  
+                        <span class="huge-small" id="labelCurrentCurrentMIN">?</span>
+                        <p><span id="labelCurrentPrevPeriodMIN"></span> <span id="labelCurrentPrevMIN">Loading...</span></p>
                       </div>
                     </div>
                   </div>
@@ -131,7 +131,7 @@
                       <div style="display:inline-block" id="CurrentAggregation">Loading data...</div>
                       <div id="CurrentLegend" style="float: right"></div>
                     </div>
-                    <div id="current_chart" class="chart big_chart"></div>
+                    <div id="CurrentChart" class="chart big_chart"></div>
                   </div>
                 </div>
               </div>

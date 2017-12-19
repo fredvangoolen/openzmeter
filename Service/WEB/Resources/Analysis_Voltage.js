@@ -42,17 +42,17 @@ function AjaxGetVoltage() {
     Cookies.set('GraphAggregation', GraphAggregation);
   }
   $.ajax({ url: "getSeries",
-    timeout: 20000,
-    type: "POST",
-    dataType: "json",
-    contentType: 'application/json',
-    data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastVoltageSample, Series: 'rms_v', Node: Node}),
-    success: AjaxVoltage,
-    complete: function() { 
-      $('#btnVoltageNow').removeClass('disabled');
-      if(parseInt(Cookies.get('GraphEnd')) === 0) VoltageTimer = setTimeout(AjaxGetVoltage, 3000);
-    }
- });
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastVoltageSample, Series: 'rms_v', Node: Node}),
+           success: AjaxVoltage,
+           complete: function() { 
+             $('#btnVoltageNow').removeClass('disabled');
+             if(parseInt(Cookies.get('GraphEnd')) === 0) VoltageTimer = setTimeout(AjaxGetVoltage, 3000);
+           }
+  });
 }
 function AjaxVoltage(result) {
   if(LastVoltageSample === 0) {
@@ -66,17 +66,11 @@ function AjaxVoltage(result) {
   }
   $('#VoltageAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');  
   if(VoltageChart == null) {
-    var VisibleNames = ["Time"];
-    if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-      VisibleNames = VisibleNames.concat(['Voltage (R)', 'Voltage (S)', 'Voltage (T)']);
-    } else {
-      VisibleNames.push('Voltage');
-    }
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"),
       VoltageData,
       { strokeWidth: 1,
         labelsDiv: "VoltageLegend",
-        labels: VisibleNames,
+        labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)'] :['Time', 'Voltage'],
         stepPlot: true,
         fillGraph: false,
         colors: ["#d9534f", "#534fd9", "#4fd953"],
@@ -453,6 +447,7 @@ $('#GraphDialogClose').click(function() {
 });
 
 /* Vista de detalles */
+var DetailSpinner       = new Spinner(SpinnerOpts);
 function AjaxGetDetails() {
   if(WaveformChart === null) ShowSpinner(DetailSpinner, 'DetailSpinner');
   $.ajax({ url: "getSeriesNow",
@@ -467,7 +462,7 @@ function AjaxGetDetails() {
              UpdateHarmonicsChart(result);
              UpdateFFTChart(result);
            },
-           error: function(bliu, blau, blu) {
+           error: function() {
              $('#WaveformTime').text('No stored data');
              $('#HarmonicsTime').text('No stored data');
              $('#FFTTime').text('No stored data');
@@ -546,7 +541,7 @@ function UpdateWaveformChart(result) {
     $('#WaveformTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
     WaveformDataset = [];
     for(i = 0; i < result['wave_v'][0].length; i++) {
-      WaveformDataset.push([i, result['wave_v'][0][i], 0]);
+      WaveformDataset.push([i, result['wave_v'][0][i], result['wave_v'][1][i],result['wave_v'][2][i]]);
     }
   }
   var Max_Voltage = 1.0;
@@ -558,11 +553,11 @@ function UpdateWaveformChart(result) {
   var Options = { 
     strokeWidth: 1,
     labelsDiv: "WaveformLegend",  
-    labels: ["Time", "Voltage", "Current"],
-    colors: ["#d9534f", "#31708f"],
+    labels: ["Time", "Voltage", "Current", ""],
+    colors: ["#d9534f", "#31708f", "#31708f"],
     gridLineColor: "#999",
     gridLinePattern: [4, 4],
-    visibility: [true, ShowCurrent],
+    visibility: [true, true,true],
     showRangeSelector: true,
     rangeSelectorHeight: 20,
     rangeSelectorPlotFillColor: "#FFFFFF",
@@ -809,7 +804,7 @@ var HideFundamentals    = false;
 var EvolutionCharts     = [];
 var LastEvolutionSample = 0;
 var EvolutionDatasets   = [];
-var DetailSpinner       = new Spinner(SpinnerOpts);
+
 var HarmonicsNames      = [ '1st',  '2nd',  '3rd',  '4th',  '5th',  '6th',  '7th',  '8th',  '9th', '10th',
                             '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th',
                             '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th',

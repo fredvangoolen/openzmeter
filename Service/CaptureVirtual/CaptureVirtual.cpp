@@ -28,10 +28,10 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
       This->pWork.VoltageSamples[0][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency()) + rand() % 40;
       This->pWork.CurrentSamples[0][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency()) + rand() % 40;
       if(This->Triphase()) {
-        This->pWork.VoltageSamples[1][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 1.0 * This->SampleRate() / This->NominalFrequency() / 3.0)+ rand() % 40 + 5;
-        This->pWork.VoltageSamples[2][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 2.0 * This->SampleRate() / This->NominalFrequency() / 3.0)+ rand() % 40 - 5;
-        This->pWork.CurrentSamples[1][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 1.0 * This->SampleRate() / This->NominalFrequency() / 3.0)+ rand() % 40;
-        This->pWork.CurrentSamples[2][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 2.0 * This->SampleRate() / This->NominalFrequency() / 3.0)+ rand() % 40;
+        This->pWork.VoltageSamples[1][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 2.0 * M_PI / 3.0) + rand() % 40 + 5;
+        This->pWork.VoltageSamples[2][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 4.0 * M_PI / 3.0) + rand() % 40 - 5;
+        This->pWork.CurrentSamples[1][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 2.0 * M_PI / 3.0) + rand() % 40;
+        This->pWork.CurrentSamples[2][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 4.0 * M_PI / 3.0) + rand() % 40;
         This->pWork.CurrentSamples[3][i] = 0.0000001;
       }
       This->pWork.Samples++;
