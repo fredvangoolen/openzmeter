@@ -26,20 +26,20 @@ function AjaxGetCurrent() {
   if(CurrentTimer !== null) clearInterval(CurrentTimer);
   $('#btnCurrentNow').addClass('disabled');
   if(LastCurrentSample === 0) ShowSpinner(CurrentSpinner, 'CurrentSpinner');
-  var Period = parseInt(Cookies.get('GraphPeriod'));
+  var Period = parseInt(localStorage.getItem('GraphPeriod'));
   if(!Period) {
     Period = 86400000;
-    Cookies.set('GraphPeriod', Period);
+    localStorage.setItem('GraphPeriod', Period);
   }
-  var GraphEnd = parseInt(Cookies.get('GraphEnd'));
+  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
   if(!GraphEnd) {
     GraphEnd = 0;
-    Cookies.set('GraphEnd', 0);
+    localStorage.setItem('GraphEnd', 0);
   } 
-  var GraphAggregation = Cookies.get('GraphAggregation');
+  var GraphAggregation = localStorage.getItem('GraphAggregation');
   if(!GraphAggregation || (GetAggregText(GraphAggregation) === false)) {
     GraphAggregation = '10m';
-    Cookies.set('GraphAggregation', GraphAggregation);
+    localStorage.setItem('GraphAggregation', GraphAggregation);
   }
   $.ajax({ url: "getSeries",
            timeout: 20000,
@@ -50,7 +50,7 @@ function AjaxGetCurrent() {
            success: AjaxCurrent,
            complete: function (x) {
              $('#btnCurrentNow').removeClass('disabled');
-             if(parseInt(Cookies.get('GraphEnd')) === 0) CurrentTimer = setTimeout(AjaxGetCurrent, 3000);
+             if(parseInt(localStorage.getItem('GraphEnd')) === 0) CurrentTimer = setTimeout(AjaxGetCurrent, 3000);
            }
   });
 }
@@ -101,8 +101,8 @@ function AjaxCurrent(result) {
         zoomCallback: function(minDate, maxDate, yRanges) {
           clearInterval(CurrentTimer);
           $('#btnCurrentNow').removeClass('active');
-          Cookies.set('GraphEnd', maxDate);
-          Cookies.set('GraphPeriod', maxDate - minDate);
+          localStorage.setItem('GraphEnd', maxDate);
+          localStorage.setItem('GraphPeriod', maxDate - minDate);
           LastCurrentSample = 0;
           AjaxGetCurrent();
         },
@@ -113,8 +113,8 @@ function AjaxCurrent(result) {
             mouseUpOZM(event, g, contex);
             if((contex.isPanning) && (contex.regionWidth > 0)) {
               $('#btnCurrentNow').removeClass('active');
-              Cookies.set('GraphEnd', g.dateWindow_[1]);
-              Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+              localStorage.setItem('GraphEnd', g.dateWindow_[1]);
+              localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
               LastCurrentSample = 0;
               AjaxGetCurrent();
             }            
@@ -122,8 +122,8 @@ function AjaxCurrent(result) {
           dblclick: function(event, g, context) {
             dblClickOZM(event, g, context);
             $('#btnCurrentNow').removeClass('active');
-            Cookies.set('GraphEnd', g.dateWindow_[1]);
-            Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+            localStorage.setItem('GraphEnd', g.dateWindow_[1]);
+            localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
             LastCurrentSample = 0;
             AjaxGetCurrent();
           }
@@ -168,7 +168,7 @@ function AjaxCurrent(result) {
   } else if((result['To'] - result['From']) === 31536000000) {
     $('#btnShowCurrentYear').addClass('active');
   }
-  var GraphAggregation = Cookies.get('GraphAggregation');
+  var GraphAggregation = localStorage.getItem('GraphAggregation');
   if(GraphAggregation !== result['Aggregation_Source']) {
     $('#aggreg_modal').modal('show');
     GraphAggregation = result['Aggregation_Source'];
@@ -186,13 +186,13 @@ function AjaxCurrent(result) {
   } else if(GraphAggregation == '1h') {
     $('#btnCurrent1H').addClass('active');
   }
-  var GraphEnd = parseInt(Cookies.get('GraphEnd'));
+  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
   if(GraphEnd === 0) {
     $('#btnCurrentNow').addClass('active');
   } else {
     $('#btnCurrentNow').removeClass('active');
   }
-  Cookies.set('GraphAggregation', GraphAggregation);
+  localStorage.setItem('GraphAggregation', GraphAggregation);
 }
 function CurrentResizeEvent() {
   var Height = $('#PanelAvg').height() + $('#PanelMin').height() + $('#PanelMax').height();
@@ -200,10 +200,10 @@ function CurrentResizeEvent() {
 }
 function SetCurrentVisibleSeries() {
   if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    var ShowR = (Cookies.get('ShowR') === 'true');
-    var ShowS = (Cookies.get('ShowS') === 'true');
-    var ShowT = (Cookies.get('ShowT') === 'true');
-    var ShowN = (Cookies.get('ShowN') === 'true');
+    var ShowR = (localStorage.getItem('ShowR') === 'true');
+    var ShowS = (localStorage.getItem('ShowS') === 'true');
+    var ShowT = (localStorage.getItem('ShowT') === 'true');
+    var ShowN = (localStorage.getItem('ShowN') === 'true');
     var VisibleSeries = [ShowR, ShowS, ShowT, ShowN];
     var Visibles = [];
     if(ShowR) Visibles.push(1);
@@ -232,10 +232,10 @@ function SetCurrentVisibleSeries() {
   }
 }
 function ChooseCurrentChannels() {
-  var ShowR = (Cookies.get('ShowR') === 'true');
-  var ShowS = (Cookies.get('ShowS') === 'true');
-  var ShowT = (Cookies.get('ShowT') === 'true');
-  var ShowN = (Cookies.get('ShowN') === 'true');
+  var ShowR = (localStorage.getItem('ShowR') === 'true');
+  var ShowS = (localStorage.getItem('ShowS') === 'true');
+  var ShowT = (localStorage.getItem('ShowT') === 'true');
+  var ShowN = (localStorage.getItem('ShowN') === 'true');
   if(this.innerText === 'R') ShowR = !ShowR;
   if(this.innerText === 'S') ShowS = !ShowS;
   if(this.innerText === 'T') ShowT = !ShowT;
@@ -244,10 +244,10 @@ function ChooseCurrentChannels() {
   if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowS = true;
   if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowT = true;
   if((this.innerText === 'N') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowN = true;
-  Cookies.set('ShowR', ShowR);
-  Cookies.set('ShowS', ShowS);
-  Cookies.set('ShowT', ShowT);
-  Cookies.set('ShowN', ShowN);
+  localStorage.setItem('ShowR', ShowR);
+  localStorage.setItem('ShowS', ShowS);
+  localStorage.setItem('ShowT', ShowT);
+  localStorage.setItem('ShowN', ShowN);
   SetCurrentVisibleSeries();
 }
 $('#btnShowCurrentRPhase').click(ChooseCurrentChannels);
@@ -255,62 +255,62 @@ $('#btnShowCurrentSPhase').click(ChooseCurrentChannels);
 $('#btnShowCurrentTPhase').click(ChooseCurrentChannels);
 $('#btnShowCurrentNPhase').click(ChooseCurrentChannels);
 $('#btnCurrent3S').click(function() {
-  Cookies.set('GraphAggregation', '3s');
+  localStorage.setItem('GraphAggregation', '3s');
   LastCurrentSample = 0;
   AjaxGetCurrent();
 });
 $('#btnCurrent1M').click(function() {
-  Cookies.set('GraphAggregation', '1m');
+  localStorage.setItem('GraphAggregation', '1m');
   LastCurrentSample = 0;
   AjaxGetCurrent();
 });
 $('#btnCurrent10M').click(function() {
-  Cookies.set('GraphAggregation', '10m');
+  localStorage.setItem('GraphAggregation', '10m');
   LastCurrentSample = 0;
   AjaxGetCurrent();
 });
 $('#btnCurrent1H').click(function() {
-  Cookies.set('GraphAggregation', '1h');
+  localStorage.setItem('GraphAggregation', '1h');
   LastCurrentSample = 0;
   AjaxGetCurrent();
 });
 $('#btnShowCurrentYear').click(function() {
-  Cookies.set('GraphPeriod', 31536000000);
+  localStorage.setItem('GraphPeriod', 31536000000);
   LastCurrentSample = 0;
   AjaxGetCurrent();
-  Cookies.set('CountersPeriod', 'Year');
+  localStorage.setItem('CountersPeriod', 'Year');
   AjaxGetCurrentCounters();
 });
 $('#btnShowCurrentMonth').click(function() {
-  Cookies.set('GraphPeriod', 2592000000);
+  localStorage.setItem('GraphPeriod', 2592000000);
   LastCurrentSample = 0;
   AjaxGetCurrent();
-  Cookies.set('CountersPeriod', 'Month');
+  localStorage.setItem('CountersPeriod', 'Month');
   AjaxGetCurrentCounters();
 });
 $('#btnShowCurrentWeek').click(function() {
-  Cookies.set('GraphPeriod', 604800000);
+  localStorage.setItem('GraphPeriod', 604800000);
   LastCurrentSample = 0;
   AjaxGetCurrent();
-  Cookies.set('CountersPeriod', 'Week');
+  localStorage.setItem('CountersPeriod', 'Week');
   AjaxGetCurrentCounters();
 });
 $('#btnShowCurrentDay').click(function() {
-  Cookies.set('GraphPeriod', 86400000);
+  localStorage.setItem('GraphPeriod', 86400000);
   LastCurrentSample = 0;
   AjaxGetCurrent();
-  Cookies.set('CountersPeriod', 'Day');
+  localStorage.setItem('CountersPeriod', 'Day');
   AjaxGetCurrentCounters();
 });
 $('#btnCurrentNow').click(function() {
-  var End = parseInt(Cookies.get('GraphEnd'));
+  var End = parseInt(localStorage.getItem('GraphEnd'));
   if(End === 0) {
     $('#btnCurrentNow').removeClass('active');
-    Cookies.set('GraphEnd', CurrentChart.getOption('dateWindow')[1]);
+    localStorage.setItem('GraphEnd', CurrentChart.getOption('dateWindow')[1]);
     if(CurrentTimer !== null) clearInterval(CurrentTimer);
   } else {
     $('#btnCurrentNow').addClass('active');
-    Cookies.set('GraphEnd', 0);
+    localStorage.setItem('GraphEnd', 0);
     LastCurrentSample = 0;
     AjaxGetCurrent();
   }
@@ -343,7 +343,7 @@ var CurrentCountersTimer  = null;
 function AjaxGetCurrentCounters() {
   if(CurrentCountersTimer !== null) clearInterval(CurrentCountersTimer);
   CurrentCountersTimer = setTimeout(AjaxGetCurrentCounters, 60000);
-  var CountersPeriod = Cookies.get('CountersPeriod');
+  var CountersPeriod = localStorage.getItem('CountersPeriod');
   var Current, Period;
   if(CountersPeriod === 'Week') {
     Period = 86400000 * 7;
@@ -359,7 +359,7 @@ function AjaxGetCurrentCounters() {
     Aggreg = '1h';
   } else {
     CountersPeriod = 'Day';
-    Cookies.set('CountersPeriod', CountersPeriod);
+    localStorage.setItem('CountersPeriod', CountersPeriod);
     Period = 86400000;
     Current = GetDayTimestamp();
     Aggreg = '1m';
@@ -382,7 +382,7 @@ function AjaxGetCurrentCounters() {
   });
 }
 function CurrentUpdateCountersCurrent(result) {
-  var CountersPeriod = Cookies.get('CountersPeriod');
+  var CountersPeriod = localStorage.getItem('CountersPeriod');
   if(CountersPeriod === 'Week') {
     $('#labelCurrentPeriodAVG').text('This week average');
     $('#labelCurrentPeriodMAX').text('This week maximum');
@@ -411,7 +411,7 @@ function CurrentUpdateCountersCurrent(result) {
   }
 }
 function CurrentUpdateCountersPrevs(result) {
-  var CountersPeriod = Cookies.get('CountersPeriod');
+  var CountersPeriod = localStorage.getItem('CountersPeriod');
   if(CountersPeriod === 'Week') {
     $('#labelCurrentPrevPeriodAVG').text('Previous week average');
     $('#labelCurrentPrevPeriodMAX').text('Previous week maximum');
@@ -1038,15 +1038,15 @@ function UpdatePage() {
     $('#btnShowDetailSPhase').removeClass('disabled');
     $('#btnShowDetailTPhase').removeClass('disabled');
     $('#btnShowDetailNPhase').removeClass('disabled');
-    var ShowR = (Cookies.get('ShowR') === 'true');
-    var ShowS = (Cookies.get('ShowS') === 'true');
-    var ShowT = (Cookies.get('ShowT') === 'true');
-    var ShowN = (Cookies.get('ShowT') === 'true');
+    var ShowR = (localStorage.getItem('ShowR') === 'true');
+    var ShowS = (localStorage.getItem('ShowS') === 'true');
+    var ShowT = (localStorage.getItem('ShowT') === 'true');
+    var ShowN = (localStorage.getItem('ShowT') === 'true');
     if((ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowR = true;
-    Cookies.set('ShowR', (ShowR === true)); 
-    Cookies.set('ShowS', (ShowS === true));
-    Cookies.set('ShowT', (ShowT === true));
-    Cookies.set('ShowN', (ShowN === true));
+    localStorage.setItem('ShowR', (ShowR === true)); 
+    localStorage.setItem('ShowS', (ShowS === true));
+    localStorage.setItem('ShowT', (ShowT === true));
+    localStorage.setItem('ShowN', (ShowN === true));
   }
   AjaxGetCurrent();
   AjaxGetCurrentCounters();

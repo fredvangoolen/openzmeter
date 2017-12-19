@@ -36,20 +36,20 @@ function AjaxGetEnergyPower() {
   if(EnergyPowerTimer !== null) clearInterval(EnergyPowerTimer);
   $('#btnEnergyPowerNow').addClass('disabled');
   if(LastEnergyPowerSample === 0) ShowSpinner(EnergyPowerSpinner, 'EnergyPowerSpinner');
-  var Period = parseInt(Cookies.get('GraphPeriod'));
+  var Period = parseInt(localStorage.getItem('GraphPeriod'));
   if(!Period) {
     Period = 86400000;
-    Cookies.set('GraphPeriod', Period);
+    localStorage.setItem('GraphPeriod', Period);
   }
-  var GraphEnd = parseInt(Cookies.get('GraphEnd'));
+  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
   if(!GraphEnd) {
     GraphEnd = 0;
-    Cookies.set('GraphEnd', 0);
+    localStorage.setItem('GraphEnd', 0);
   } 
-  var GraphAggregation = Cookies.get('GraphAggregation');
+  var GraphAggregation = localStorage.getItem('GraphAggregation');
   if(!GraphAggregation || (GetAggregText(GraphAggregation) === false)) {
     GraphAggregation = '10m';
-    Cookies.set('GraphAggregation', GraphAggregation);
+    localStorage.setItem('GraphAggregation', GraphAggregation);
   }
   $.ajax({ url: "getSeries",
     timeout: 20000,
@@ -60,7 +60,7 @@ function AjaxGetEnergyPower() {
     success: AjaxEnergyPower,
     complete: function() {
       $('#btnEnergyPowerNow').removeClass('disabled');
-      if(parseInt(Cookies.get('GraphEnd')) === 0) setTimeout(AjaxGetEnergyPower, 3000);
+      if(parseInt(localStorage.getItem('GraphEnd')) === 0) setTimeout(AjaxGetEnergyPower, 3000);
     }
  });
 }
@@ -122,8 +122,8 @@ function AjaxEnergyPower(result) {
         ],
         zoomCallback: function(minDate, maxDate, yRanges) {
           $('#btnEnergyPowerNow').removeClass('active');
-          Cookies.set('GraphEnd', maxDate);
-          Cookies.set('GraphPeriod', maxDate - minDate);
+          localStorage.setItem('GraphEnd', maxDate);
+          localStorage.setItem('GraphPeriod', maxDate - minDate);
           LastEnergyPowerSample = 0;
           AjaxGetEnergyPower();
         },
@@ -134,8 +134,8 @@ function AjaxEnergyPower(result) {
             mouseUpOZM(event, g, contex);
             if((contex.isPanning) && (contex.regionWidth > 0)) {
               $('#btnEnergyPowerNow').removeClass('active');
-              Cookies.set('GraphEnd', g.dateWindow_[1]);
-              Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+              localStorage.setItem('GraphEnd', g.dateWindow_[1]);
+              localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
               LastEnergyPowerSample = 0;
               AjaxGetEnergyPower();
             }            
@@ -143,8 +143,8 @@ function AjaxEnergyPower(result) {
           dblclick: function(event, g, context) {
             dblClickOZM(event, g, context);
             $('#btnEnergyPowerNow').removeClass('active');
-              Cookies.set('GraphEnd', g.dateWindow_[1]);
-              Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+              localStorage.setItem('GraphEnd', g.dateWindow_[1]);
+              localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
               LastEnergyPowerSample = 0;
               AjaxGetEnergyPower();
           }
@@ -206,8 +206,8 @@ function AjaxEnergyPower(result) {
         ],
         zoomCallback: function(minDate, maxDate, yRanges) {
           $('#btnEnergyPowerNow').removeClass('active');
-          Cookies.set('GraphEnd', maxDate);
-          Cookies.set('GraphPeriod', maxDate - minDate);
+          localStorage.setItem('GraphEnd', maxDate);
+          localStorage.setItem('GraphPeriod', maxDate - minDate);
           LastEnergyPowerSample = 0;
           AjaxGetEnergyPower();
         },
@@ -218,8 +218,8 @@ function AjaxEnergyPower(result) {
             mouseUpOZM(event, g, contex);
             if((contex.isPanning) && (contex.regionWidth > 0)) {
               $('#btnEnergyPowerNow').removeClass('active');
-              Cookies.set('GraphEnd', g.dateWindow_[1]);
-              Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+              localStorage.setItem('GraphEnd', g.dateWindow_[1]);
+              localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
               LastEnergyPowerSample = 0;
               AjaxGetEnergyPower();
             }            
@@ -227,8 +227,8 @@ function AjaxEnergyPower(result) {
           dblclick: function(event, g, context) {
             dblClickOZM(event, g, context);
             $('#btnEnergyPowerNow').removeClass('active');
-              Cookies.set('GraphEnd', g.dateWindow_[1]);
-              Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+              localStorage.setItem('GraphEnd', g.dateWindow_[1]);
+              localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
               LastEnergyPowerSample = 0;
               AjaxGetEnergyPower();
           }
@@ -290,8 +290,8 @@ function AjaxEnergyPower(result) {
         ],
         zoomCallback: function(minDate, maxDate, yRanges) {
           $('#btnEnergyPowerNow').removeClass('active');
-          Cookies.set('GraphEnd', maxDate);
-          Cookies.set('GraphPeriod', maxDate - minDate);
+          localStorage.setItem('GraphEnd', maxDate);
+          localStorage.setItem('GraphPeriod', maxDate - minDate);
           LastEnergyPowerSample = 0;
           AjaxGetEnergyPower();
         },
@@ -302,8 +302,8 @@ function AjaxEnergyPower(result) {
             mouseUpOZM(event, g, contex);
             if((contex.isPanning) && (contex.regionWidth > 0)) {
               $('#btnEnergyPowerNow').removeClass('active');
-              Cookies.set('GraphEnd', g.dateWindow_[1]);
-              Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+              localStorage.setItem('GraphEnd', g.dateWindow_[1]);
+              localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
               LastEnergyPowerSample = 0;
               AjaxGetEnergyPower();
             }            
@@ -311,8 +311,8 @@ function AjaxEnergyPower(result) {
           dblclick: function(event, g, context) {
             dblClickOZM(event, g, context);
             $('#btnEnergyPowerNow').removeClass('active');
-              Cookies.set('GraphEnd', g.dateWindow_[1]);
-              Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+              localStorage.setItem('GraphEnd', g.dateWindow_[1]);
+              localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
               LastEnergyPowerSample = 0;
               AjaxGetEnergyPower();
           }
@@ -374,8 +374,8 @@ function AjaxEnergyPower(result) {
         ],
         zoomCallback: function(minDate, maxDate, yRanges) {
           $('#btnEnergyPowerNow').removeClass('active');
-          Cookies.set('GraphEnd', maxDate);
-          Cookies.set('GraphPeriod', maxDate - minDate);
+          localStorage.setItem('GraphEnd', maxDate);
+          localStorage.setItem('GraphPeriod', maxDate - minDate);
           LastEnergyPowerSample = 0;
           AjaxGetEnergyPower();
         },
@@ -386,8 +386,8 @@ function AjaxEnergyPower(result) {
             mouseUpOZM(event, g, contex);
             if((contex.isPanning) && (contex.regionWidth > 0)) {
               $('#btnEnergyPowerNow').removeClass('active');
-              Cookies.set('GraphEnd', g.dateWindow_[1]);
-              Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+              localStorage.setItem('GraphEnd', g.dateWindow_[1]);
+              localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
               LastEnergyPowerSample = 0;
               AjaxGetEnergyPower();
             }            
@@ -395,8 +395,8 @@ function AjaxEnergyPower(result) {
           dblclick: function(event, g, context) {
             dblClickOZM(event, g, context);
             $('#btnEnergyPowerNow').removeClass('active');
-              Cookies.set('GraphEnd', g.dateWindow_[1]);
-              Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+              localStorage.setItem('GraphEnd', g.dateWindow_[1]);
+              localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
               LastEnergyPowerSample = 0;
               AjaxGetEnergyPower();
           }
@@ -440,7 +440,7 @@ function AjaxEnergyPower(result) {
   } else if((result['To'] - result['From']) === 31536000000) {
     $('#btnShowEnergyPowerYear').addClass('active');
   }
-  var GraphAggregation = Cookies.get('GraphAggregation');
+  var GraphAggregation = localStorage.getItem('GraphAggregation');
   if(GraphAggregation !== result['Aggregation_Source']) {
     $('#aggreg_modal').modal('show');
     GraphAggregation = result['Aggregation_Source'];
@@ -458,71 +458,71 @@ function AjaxEnergyPower(result) {
   } else if(GraphAggregation == '1h') {
     $('#btnEnergyPower1H').addClass('active');
   }
-  var GraphEnd = parseInt(Cookies.get('GraphEnd'));
+  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
   if(GraphEnd === 0) {
     $('#btnEnergyPowerNow').addClass('active');
   } else {
     $('#btnEnergyPowerNow').removeClass('active');
   }
-  Cookies.set('GraphAggregation', GraphAggregation);
+  localStorage.setItem('GraphAggregation', GraphAggregation);
 }
 $('#btnEnergyPower3S').click(function() {
-  Cookies.set('GraphAggregation', '3s');
+  localStorage.setItem('GraphAggregation', '3s');
   LastEnergyPowerSample = 0;
   AjaxGetEnergyPower();
 });
 $('#btnEnergyPower1M').click(function() {
-  Cookies.set('GraphAggregation', '1m');
+  localStorage.setItem('GraphAggregation', '1m');
   LastEnergyPowerSample = 0;
   AjaxGetEnergyPower();
 });
 $('#btnEnergyPower10M').click(function() {
-  Cookies.set('GraphAggregation', '10m');
+  localStorage.setItem('GraphAggregation', '10m');
   LastEnergyPowerSample = 0;
   AjaxGetEnergyPower();
 });
 $('#btnEnergyPower1H').click(function() {
-  Cookies.set('GraphAggregation', '1h');
+  localStorage.setItem('GraphAggregation', '1h');
   LastEnergyPowerSample = 0;
   AjaxGetEnergyPower();
 });
 $('#btnShowEnergyPowerYear').click(function() {
-  Cookies.set('GraphPeriod', 31536000000);
+  localStorage.setItem('GraphPeriod', 31536000000);
   LastEnergyPowerSample = 0;
   AjaxGetEnergyPower();
-  Cookies.set('CountersPeriod', 'Year');
+  localStorage.setItem('CountersPeriod', 'Year');
   AjaxGetEnergyPowerCounters();
 });
 $('#btnShowEnergyPowerMonth').click(function() {
-  Cookies.set('GraphPeriod', 2592000000);
+  localStorage.setItem('GraphPeriod', 2592000000);
   LastEnergyPowerSample = 0;
   AjaxGetEnergyPower();
-  Cookies.set('CountersPeriod', 'Month');
+  localStorage.setItem('CountersPeriod', 'Month');
   AjaxGetEnergyPowerCounters();
 });
 $('#btnShowEnergyPowerWeek').click(function() {
-  Cookies.set('GraphPeriod', 604800000);
+  localStorage.setItem('GraphPeriod', 604800000);
   LastEnergyPowerSample = 0;
   AjaxGetEnergyPower();
-  Cookies.set('CountersPeriod', 'Week');
+  localStorage.setItem('CountersPeriod', 'Week');
   AjaxGetEnergyPowerCounters();
 });
 $('#btnShowEnergyPowerDay').click(function() {
-  Cookies.set('GraphPeriod', 86400000);
+  localStorage.setItem('GraphPeriod', 86400000);
   LastEnergyPowerSample = 0;
   AjaxGetEnergyPower();
-  Cookies.set('CountersPeriod', 'Day');
+  localStorage.setItem('CountersPeriod', 'Day');
   AjaxGetEnergyPowerCounters();
 });
 $('#btnEnergyPowerNow').click(function() {
-  var End = parseInt(Cookies.get('GraphEnd'));
+  var End = parseInt(localStorage.getItem('GraphEnd'));
   if(End === 0) {
     $('#btnEnergyPowerNow').removeClass('active');
-    Cookies.set('GraphEnd', ActiveEnergyChart.getOption('dateWindow')[1]);
+    localStorage.setItem('GraphEnd', ActiveEnergyChart.getOption('dateWindow')[1]);
     if(EnergyPowerTimer !== null) clearInterval(EnergyPowerTimer);
   } else {
     $('#btnEnergyPowerNow').addClass('active');
-    Cookies.set('GraphEnd', 0);
+    localStorage.setItem('GraphEnd', 0);
     LastEnergyPowerSample = 0;
     AjaxGetEnergyPower();
   }
@@ -536,7 +536,7 @@ $('#btnShowEnergy').click(function() {
   window.dispatchEvent(new Event('resize'));
   $('#btnShowEnergy').addClass('active');
   $('#btnShowPower').removeClass('active');
-  Cookies.set('EnergyPowerTab', 'Energy');
+  localStorage.setItem('EnergyPowerTab', 'Energy');
 });
 $('#btnShowPower').click(function() {
   $('#EnergyPowerTitle').text('Power');
@@ -547,7 +547,7 @@ $('#btnShowPower').click(function() {
   window.dispatchEvent(new Event('resize'));
   $('#btnShowEnergy').removeClass('active');
   $('#btnShowPower').addClass('active');
-  Cookies.set('EnergyPowerTab', 'Power');
+  localStorage.setItem('EnergyPowerTab', 'Power');
 });
 
 
@@ -649,7 +649,7 @@ $('#GraphDialogClose').click(function() {
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
   AjaxGetEnergyPower();
-  var View = Cookies.get('EnergyPowerTab');
+  var View = localStorage.getItem('EnergyPowerTab');
   if(View === 'Power') {
     $('#btnShowPower').trigger('click');
   } else {

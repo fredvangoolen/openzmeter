@@ -110,9 +110,9 @@ function AjaxVoltage(result) {
 }
 function SetVoltageVisibleSeries() {
   if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    var ShowR = (Cookies.get('ShowDashboardVoltageR') === 'true');
-    var ShowS = (Cookies.get('ShowDashboardVoltageS') === 'true');
-    var ShowT = (Cookies.get('ShowDashboardVoltageT') === 'true');
+    var ShowR = (localStorage.getItem('ShowDashboardVoltageR') === 'true');
+    var ShowS = (localStorage.getItem('ShowDashboardVoltageS') === 'true');
+    var ShowT = (localStorage.getItem('ShowDashboardVoltageT') === 'true');
     var VisibleSeries = [ShowR, ShowS, ShowT];
     var Visibles = [];
     if(ShowR) Visibles.push(1);
@@ -136,18 +136,18 @@ function SetVoltageVisibleSeries() {
   }
 }
 function ChooseVoltageChannels() {
-  var ShowR = (Cookies.get('ShowDashboardVoltageR') === 'true');
-  var ShowS = (Cookies.get('ShowDashboardVoltageS') === 'true');
-  var ShowT = (Cookies.get('ShowDashboardVoltageT') === 'true');
+  var ShowR = (localStorage.getItem('ShowDashboardVoltageR') === 'true');
+  var ShowS = (localStorage.getItem('ShowDashboardVoltageS') === 'true');
+  var ShowT = (localStorage.getItem('ShowDashboardVoltageT') === 'true');
   if(this.innerText === 'R') ShowR = !ShowR;
   if(this.innerText === 'S') ShowS = !ShowS;
   if(this.innerText === 'T') ShowT = !ShowT;
   if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
   if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowS = true;
   if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowT = true;
-  Cookies.set('ShowDashboardVoltageR', ShowR);
-  Cookies.set('ShowDashboardVoltageS', ShowS);
-  Cookies.set('ShowDashboardVoltageT', ShowT);
+  localStorage.setItem('ShowDashboardVoltageR', ShowR);
+  localStorage.setItem('ShowDashboardVoltageS', ShowS);
+  localStorage.setItem('ShowDashboardVoltageT', ShowT);
   SetVoltageVisibleSeries();
 }
 $('#btnShowVoltageRPhase').click(ChooseVoltageChannels);
@@ -271,10 +271,10 @@ function AjaxCurrent(result) {
 }
 function SetCurrentVisibleSeries() {
   if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    var ShowR = (Cookies.get('ShowDashboardCurrentR') === 'true');
-    var ShowS = (Cookies.get('ShowDashboardCurrentS') === 'true');
-    var ShowT = (Cookies.get('ShowDashboardCurrentT') === 'true');
-    var ShowN = (Cookies.get('ShowDashboardCurrentN') === 'true');
+    var ShowR = (localStorage.getItem('ShowDashboardCurrentR') === 'true');
+    var ShowS = (localStorage.getItem('ShowDashboardCurrentS') === 'true');
+    var ShowT = (localStorage.getItem('ShowDashboardCurrentT') === 'true');
+    var ShowN = (localStorage.getItem('ShowDashboardCurrentN') === 'true');
     var VisibleSeries = [ShowR, ShowS, ShowT, ShowN];
     var Visibles = [];
     if(ShowR) Visibles.push(1);
@@ -303,10 +303,10 @@ function SetCurrentVisibleSeries() {
   }
 }
 function ChooseCurrentChannels() {
-  var ShowR = (Cookies.get('ShowDashboardCurrentR') === 'true');
-  var ShowS = (Cookies.get('ShowDashboardCurrentS') === 'true');
-  var ShowT = (Cookies.get('ShowDashboardCurrentT') === 'true');
-  var ShowN = (Cookies.get('ShowDashboardCurrentN') === 'true');
+  var ShowR = (localStorage.getItem('ShowDashboardCurrentR') === 'true');
+  var ShowS = (localStorage.getItem('ShowDashboardCurrentS') === 'true');
+  var ShowT = (localStorage.getItem('ShowDashboardCurrentT') === 'true');
+  var ShowN = (localStorage.getItem('ShowDashboardCurrentN') === 'true');
   if(this.innerText === 'R') ShowR = !ShowR;
   if(this.innerText === 'S') ShowS = !ShowS;
   if(this.innerText === 'T') ShowT = !ShowT;
@@ -315,10 +315,10 @@ function ChooseCurrentChannels() {
   if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowS = true;
   if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowT = true;
   if((this.innerText === 'N') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowN = true;
-  Cookies.set('ShowDashboardCurrentR', ShowR);
-  Cookies.set('ShowDashboardCurrentS', ShowS);
-  Cookies.set('ShowDashboardCurrentT', ShowT);
-  Cookies.set('ShowDashboardCurrentN', ShowN);
+  localStorage.setItem('ShowDashboardCurrentR', ShowR);
+  localStorage.setItem('ShowDashboardCurrentS', ShowS);
+  localStorage.setItem('ShowDashboardCurrentT', ShowT);
+  localStorage.setItem('ShowDashboardCurrentN', ShowN);
   SetCurrentVisibleSeries();
 }
 $('#btnShowCurrentRPhase').click(ChooseCurrentChannels);
@@ -427,9 +427,9 @@ function AjaxPower(result) {
 }
 function SetPowerVisibleSeries() {
   if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    var ShowR = (Cookies.get('ShowDashboardPowerR') === 'true');
-    var ShowS = (Cookies.get('ShowDashboardPowerS') === 'true');
-    var ShowT = (Cookies.get('ShowDashboardPowerT') === 'true');
+    var ShowR = (localStorage.getItem('ShowDashboardPowerR') === 'true');
+    var ShowS = (localStorage.getItem('ShowDashboardPowerS') === 'true');
+    var ShowT = (localStorage.getItem('ShowDashboardPowerT') === 'true');
     var VisibleSeries = [ShowR, ShowS, ShowT];
     var Visibles = [];
     if(ShowR) Visibles.push(1);
@@ -453,18 +453,18 @@ function SetPowerVisibleSeries() {
   }
 }
 function ChoosePowerChannels() {
-  var ShowR = (Cookies.get('ShowDashboardPowerR') === 'true');
-  var ShowS = (Cookies.get('ShowDashboardPowerS') === 'true');
-  var ShowT = (Cookies.get('ShowDashboardPowerT') === 'true');
+  var ShowR = (localStorage.getItem('ShowDashboardPowerR') === 'true');
+  var ShowS = (localStorage.getItem('ShowDashboardPowerS') === 'true');
+  var ShowT = (localStorage.getItem('ShowDashboardPowerT') === 'true');
   if(this.innerText === 'R') ShowR = !ShowR;
   if(this.innerText === 'S') ShowS = !ShowS;
   if(this.innerText === 'T') ShowT = !ShowT;
   if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
   if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowS = true;
   if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowT = true;
-  Cookies.set('ShowDashboardPowerR', ShowR);
-  Cookies.set('ShowDashboardPowerS', ShowS);
-  Cookies.set('ShowDashboardPowerT', ShowT);
+  localStorage.setItem('ShowDashboardPowerR', ShowR);
+  localStorage.setItem('ShowDashboardPowerS', ShowS);
+  localStorage.setItem('ShowDashboardPowerT', ShowT);
   SetPowerVisibleSeries();
 }
 $('#btnShowPowerRPhase').click(ChoosePowerChannels);
@@ -557,20 +557,20 @@ function AjaxGetEnergy() {
   if(EnergyTimer !== null) clearInterval(EnergyTimer);
   $('#btnEnergyNow').addClass('disabled');
   if(LastEnergySample === 0) ShowSpinner(EnergySpinner, 'EnergySpinner');
-  var Period = parseInt(Cookies.get('GraphPeriod'));
+  var Period = parseInt(localStorage.getItem('GraphPeriod'));
   if(!Period) {
     Period = 86400000;
-    Cookies.set('GraphPeriod', Period);
+    localStorage.setItem('GraphPeriod', Period);
   }
-  var GraphEnd = parseInt(Cookies.get('GraphEnd'));
+  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
   if(!GraphEnd) {
     GraphEnd = 0;
-    Cookies.set('GraphEnd', 0);
+    localStorage.setItem('GraphEnd', 0);
   } 
-  var GraphAggregation = Cookies.get('GraphAggregation');
+  var GraphAggregation = localStorage.getItem('GraphAggregation');
   if(!GraphAggregation || (GetAggregText(GraphAggregation) === false)) {
     GraphAggregation = '10m';
-    Cookies.set('GraphAggregation', GraphAggregation);
+    localStorage.setItem('GraphAggregation', GraphAggregation);
   }
   $.ajax({ url: "getSeries",
     timeout: 20000,
@@ -581,7 +581,7 @@ function AjaxGetEnergy() {
     success: AjaxEnergy,
     complete: function() { 
       $('#btnEnergyNow').removeClass('disabled');
-      if(parseInt(Cookies.get('GraphEnd')) === 0) EnergyTimer = setTimeout(AjaxGetEnergy, 3000);
+      if(parseInt(localStorage.getItem('GraphEnd')) === 0) EnergyTimer = setTimeout(AjaxGetEnergy, 3000);
     }
  });
 }
@@ -619,8 +619,8 @@ function AjaxEnergy(result) {
         zoomCallback: function(minDate, maxDate, yRanges) {
           clearInterval(EnergyTimer);
           $('#btnEnergyNow').removeClass('active');
-          Cookies.set('GraphEnd', maxDate);
-          Cookies.set('GraphPeriod', maxDate - minDate);
+          localStorage.setItem('GraphEnd', maxDate);
+          localStorage.setItem('GraphPeriod', maxDate - minDate);
           LastEnergySample = 0;
           AjaxGetEnergy();
         },
@@ -632,8 +632,8 @@ function AjaxEnergy(result) {
             if((contex.isPanning) && (contex.regionWidth > 0)) {
               clearInterval(EnergyTimer);
               $('#btnEnergyNow').removeClass('active');
-              Cookies.set('GraphEnd', g.dateWindow_[1]);
-              Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+              localStorage.setItem('GraphEnd', g.dateWindow_[1]);
+              localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
               LastEnergySample = 0;
               AjaxGetEnergy();
             }            
@@ -642,8 +642,8 @@ function AjaxEnergy(result) {
             dblClickOZM(event, g, context);
             clearInterval(EnergyTimer);
             $('#btnEnergyNow').removeClass('active');
-            Cookies.set('GraphEnd', g.dateWindow_[1]);
-            Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+            localStorage.setItem('GraphEnd', g.dateWindow_[1]);
+            localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
             LastEnergySample = 0;
             AjaxGetEnergy();
           }
@@ -692,7 +692,7 @@ function AjaxEnergy(result) {
   } else if((result['To'] - result['From']) === 31536000000) {
     $('#btnShowEnergyYear').addClass('active');
   }
-  var GraphAggregation = Cookies.get('GraphAggregation');
+  var GraphAggregation = localStorage.getItem('GraphAggregation');
   if(GraphAggregation !== result['Aggregation_Source']) {
     $('#aggreg_modal').modal('show');
     GraphAggregation = result['Aggregation_Source'];
@@ -710,13 +710,13 @@ function AjaxEnergy(result) {
   } else if(GraphAggregation == '1h') {
     $('#btnEnergy1H').addClass('active');
   }
-  var GraphEnd = parseInt(Cookies.get('GraphEnd'));
+  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
   if(GraphEnd === 0) {
     $('#btnEnergyNow').addClass('active');
   } else {
     $('#btnEnergyNow').removeClass('active');
   }
-  Cookies.set('GraphAggregation', GraphAggregation);
+  localStorage.setItem('GraphAggregation', GraphAggregation);
 }
 function EnergyResizeEvent() {
   var Height = $('#EnergyBox').height() + $('#BudgetBox').height();
@@ -724,9 +724,9 @@ function EnergyResizeEvent() {
 }
 function SetEnergyVisibleSeries() {
   if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    var ShowR = (Cookies.get('ShowR') === 'true');
-    var ShowS = (Cookies.get('ShowS') === 'true');
-    var ShowT = (Cookies.get('ShowT') === 'true');
+    var ShowR = (localStorage.getItem('ShowR') === 'true');
+    var ShowS = (localStorage.getItem('ShowS') === 'true');
+    var ShowT = (localStorage.getItem('ShowT') === 'true');
     var VisibleSeries = [ShowR, ShowS, ShowT];
     var Visibles = [];
     if(ShowR) Visibles.push(1);
@@ -750,80 +750,80 @@ function SetEnergyVisibleSeries() {
   }
 }
 function ChooseEnergyChannels() {
-  var ShowR = (Cookies.get('ShowR') === 'true');
-  var ShowS = (Cookies.get('ShowS') === 'true');
-  var ShowT = (Cookies.get('ShowT') === 'true');
+  var ShowR = (localStorage.getItem('ShowR') === 'true');
+  var ShowS = (localStorage.getItem('ShowS') === 'true');
+  var ShowT = (localStorage.getItem('ShowT') === 'true');
   if(this.innerText === 'R') ShowR = !ShowR;
   if(this.innerText === 'S') ShowS = !ShowS;
   if(this.innerText === 'T') ShowT = !ShowT;
   if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
   if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowS = true;
   if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowT = true;
-  Cookies.set('ShowR', ShowR);
-  Cookies.set('ShowS', ShowS);
-  Cookies.set('ShowT', ShowT);
+  localStorage.setItem('ShowR', ShowR);
+  localStorage.setItem('ShowS', ShowS);
+  localStorage.setItem('ShowT', ShowT);
   SetEnergyVisibleSeries();
 }
 $('#btnShowEnergyRPhase').click(ChooseEnergyChannels);
 $('#btnShowEnergySPhase').click(ChooseEnergyChannels);
 $('#btnShowEnergyTPhase').click(ChooseEnergyChannels);
 $('#btnEnergy3S').click(function() {
-  Cookies.set('GraphAggregation', '3s');
+  localStorage.setItem('GraphAggregation', '3s');
   LastEnergySample = 0;
   AjaxGetEnergy();
 });
 $('#btnEnergy1M').click(function() {
-  Cookies.set('GraphAggregation', '1m');
+  localStorage.setItem('GraphAggregation', '1m');
   LastEnergySample = 0;
   AjaxGetEnergy();
 });
 $('#btnEnergy10M').click(function() {
-  Cookies.set('GraphAggregation', '10m');
+  localStorage.setItem('GraphAggregation', '10m');
   LastEnergySample = 0;
   AjaxGetEnergy();
 });
 $('#btnEnergy1H').click(function() {
-  Cookies.set('GraphAggregation', '1h');
+  localStorage.setItem('GraphAggregation', '1h');
   LastEnergySample = 0;
   AjaxGetEnergy();
 });
 $('#btnShowEnergyYear').click(function() {
-  Cookies.set('GraphPeriod', 31536000000);
+  localStorage.setItem('GraphPeriod', 31536000000);
   LastEnergySample = 0;
   AjaxGetEnergy();
-  Cookies.set('CountersPeriod', 'Year');
+  localStorage.setItem('CountersPeriod', 'Year');
   AjaxGetEnergyCounters();
 });
 $('#btnShowEnergyMonth').click(function() {
-  Cookies.set('GraphPeriod', 2592000000);
+  localStorage.setItem('GraphPeriod', 2592000000);
   LastEnergySample = 0;
   AjaxGetEnergy();
-  Cookies.set('CountersPeriod', 'Month');
+  localStorage.setItem('CountersPeriod', 'Month');
   AjaxGetEnergyCounters();
 });
 $('#btnShowEnergyWeek').click(function() {
-  Cookies.set('GraphPeriod', 604800000);
+  localStorage.setItem('GraphPeriod', 604800000);
   LastEnergySample = 0;
   AjaxGetEnergy();
-  Cookies.set('CountersPeriod', 'Week');
+  localStorage.setItem('CountersPeriod', 'Week');
   AjaxGetEnergyCounters();
 });
 $('#btnShowEnergyDay').click(function() {
-  Cookies.set('GraphPeriod', 86400000);
+  localStorage.setItem('GraphPeriod', 86400000);
   LastEnergySample = 0;
   AjaxGetEnergy();
-  Cookies.set('CountersPeriod', 'Day');
+  localStorage.setItem('CountersPeriod', 'Day');
   AjaxGetEnergyCounters();
 });
 $('#btnEnergyNow').click(function() {
-  var End = parseInt(Cookies.get('GraphEnd'));
+  var End = parseInt(localStorage.getItem('GraphEnd'));
   clearInterval(EnergyTimer);
   if(End === 0) {
     $('#btnEnergyNow').removeClass('active');
-    Cookies.set('GraphEnd', EnergyChart.getOption('dateWindow')[1]);
+    localStorage.setItem('GraphEnd', EnergyChart.getOption('dateWindow')[1]);
   } else {
     $('#btnEnergyNow').addClass('active');
-    Cookies.set('GraphEnd', 0);
+    localStorage.setItem('GraphEnd', 0);
     LastEnergySample = 0;
     AjaxGetEnergy();
   }
@@ -856,7 +856,7 @@ var EnergyCountersTimer  = null;
 function AjaxGetEnergyCounters() {
   if(EnergyCountersTimer !== null) clearInterval(EnergyCountersTimer);
   EnergyCountersTimer = setTimeout(AjaxGetEnergyCounters, 60000);
-  var CountersPeriod = Cookies.get('CountersPeriod');
+  var CountersPeriod = localStorage.getItem('CountersPeriod');
   var Current, Period;
   if(CountersPeriod === 'Week') {
     Period = 86400000 * 7;
@@ -872,7 +872,7 @@ function AjaxGetEnergyCounters() {
     Aggreg = '1h';
   } else {
     CountersPeriod = 'Day';
-    Cookies.set('CountersPeriod', CountersPeriod);
+    localStorage.setItem('CountersPeriod', CountersPeriod);
     Period = 86400000;
     Current = GetDayTimestamp();
     Aggreg = '1m';
@@ -911,7 +911,7 @@ function AjaxGetEnergyCounters() {
 //}
 function EnergyUpdateCountersCurrent() {
   EnergyCountersTimer = setTimeout(AjaxGetEnergyCounters, 60000);
-  var CountersPeriod = Cookies.get('CountersPeriod');
+  var CountersPeriod = localStorage.getItem('CountersPeriod');
   if(CountersPeriod === 'Week') {
     $('#labelEnergyPeriod').text('This week');
     $('#labelBudgetPeriod').text('This week');
@@ -1202,46 +1202,46 @@ function UpdatePage() {
     $('#btnShowEnergyRPhase').removeClass('disabled');
     $('#btnShowEnergySPhase').removeClass('disabled');
     $('#btnShowEnergyTPhase').removeClass('disabled');
-    var ShowR = (Cookies.get('ShowR') === 'true');
-    var ShowS = (Cookies.get('ShowS') === 'true');
-    var ShowT = (Cookies.get('ShowT') === 'true');
+    var ShowR = (localStorage.getItem('ShowR') === 'true');
+    var ShowS = (localStorage.getItem('ShowS') === 'true');
+    var ShowT = (localStorage.getItem('ShowT') === 'true');
     if((ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
-    Cookies.set('ShowR', (ShowR === true)); 
-    Cookies.set('ShowS', (ShowS === true));
-    Cookies.set('ShowT', (ShowT === true));
+    localStorage.setItem('ShowR', (ShowR === true)); 
+    localStorage.setItem('ShowS', (ShowS === true));
+    localStorage.setItem('ShowT', (ShowT === true));
     $('#btnShowVoltageRPhase').removeClass('disabled');
     $('#btnShowVoltageSPhase').removeClass('disabled');
     $('#btnShowVoltageTPhase').removeClass('disabled');
-    var ShowDashboardVoltageR = (Cookies.get('ShowDashboardVoltageR') === 'true');
-    var ShowDashboardVoltageS = (Cookies.get('ShowDashboardVoltageS') === 'true');
-    var ShowDashboardVoltageT = (Cookies.get('ShowDashboardVoltageT') === 'true');
+    var ShowDashboardVoltageR = (localStorage.getItem('ShowDashboardVoltageR') === 'true');
+    var ShowDashboardVoltageS = (localStorage.getItem('ShowDashboardVoltageS') === 'true');
+    var ShowDashboardVoltageT = (localStorage.getItem('ShowDashboardVoltageT') === 'true');
     if((ShowDashboardVoltageR !== true) && (ShowDashboardVoltageS !== true) && (ShowDashboardVoltageT !== true)) ShowDashboardVoltageR = true;
-    Cookies.set('ShowDashboardVoltageR', (ShowDashboardVoltageR === true)); 
-    Cookies.set('ShowDashboardVoltageS', (ShowDashboardVoltageS === true));
-    Cookies.set('ShowDashboardVoltageT', (ShowDashboardVoltageT === true));
+    localStorage.setItem('ShowDashboardVoltageR', (ShowDashboardVoltageR === true)); 
+    localStorage.setItem('ShowDashboardVoltageS', (ShowDashboardVoltageS === true));
+    localStorage.setItem('ShowDashboardVoltageT', (ShowDashboardVoltageT === true));
     $('#btnShowCurrentRPhase').removeClass('disabled');
     $('#btnShowCurrentSPhase').removeClass('disabled');
     $('#btnShowCurrentTPhase').removeClass('disabled');
     $('#btnShowCurrentNPhase').removeClass('disabled');
-    var ShowDashboardCurrentR = (Cookies.get('ShowDashboardCurrentR') === 'true');
-    var ShowDashboardCurrentS = (Cookies.get('ShowDashboardCurrentS') === 'true');
-    var ShowDashboardCurrentT = (Cookies.get('ShowDashboardCurrentT') === 'true');
-    var ShowDashboardCurrentN = (Cookies.get('ShowDashboardCurrentN') === 'true');
+    var ShowDashboardCurrentR = (localStorage.getItem('ShowDashboardCurrentR') === 'true');
+    var ShowDashboardCurrentS = (localStorage.getItem('ShowDashboardCurrentS') === 'true');
+    var ShowDashboardCurrentT = (localStorage.getItem('ShowDashboardCurrentT') === 'true');
+    var ShowDashboardCurrentN = (localStorage.getItem('ShowDashboardCurrentN') === 'true');
     if((ShowDashboardCurrentR !== true) && (ShowDashboardCurrentS !== true) && (ShowDashboardCurrentT !== true) && (ShowDashboardCurrentN !== true)) ShowDashboardCurrentR = true;
-    Cookies.set('ShowDashboardCurrentR', (ShowDashboardCurrentR === true)); 
-    Cookies.set('ShowDashboardCurrentS', (ShowDashboardCurrentS === true));
-    Cookies.set('ShowDashboardCurrentT', (ShowDashboardCurrentT === true));
-    Cookies.set('ShowDashboardCurrentN', (ShowDashboardCurrentN === true));
+    localStorage.setItem('ShowDashboardCurrentR', (ShowDashboardCurrentR === true)); 
+    localStorage.setItem('ShowDashboardCurrentS', (ShowDashboardCurrentS === true));
+    localStorage.setItem('ShowDashboardCurrentT', (ShowDashboardCurrentT === true));
+    localStorage.setItem('ShowDashboardCurrentN', (ShowDashboardCurrentN === true));
     $('#btnShowPowerRPhase').removeClass('disabled');
     $('#btnShowPowerSPhase').removeClass('disabled');
     $('#btnShowPowerTPhase').removeClass('disabled');
-    var ShowDashboardPowerR = (Cookies.get('ShowDashboardPowerR') === 'true');
-    var ShowDashboardPowerS = (Cookies.get('ShowDashboardPowerS') === 'true');
-    var ShowDashboardPowerT = (Cookies.get('ShowDashboardPowerT') === 'true');
+    var ShowDashboardPowerR = (localStorage.getItem('ShowDashboardPowerR') === 'true');
+    var ShowDashboardPowerS = (localStorage.getItem('ShowDashboardPowerS') === 'true');
+    var ShowDashboardPowerT = (localStorage.getItem('ShowDashboardPowerT') === 'true');
     if((ShowDashboardPowerR !== true) && (ShowDashboardPowerS !== true) && (ShowDashboardPowerT !== true)) ShowDashboardPowerR = true;
-    Cookies.set('ShowDashboardPowerR', (ShowDashboardPowerR === true)); 
-    Cookies.set('ShowDashboardPowerS', (ShowDashboardPowerS === true));
-    Cookies.set('ShowDashboardPowerT', (ShowDashboardPowerT === true));
+    localStorage.setItem('ShowDashboardPowerR', (ShowDashboardPowerR === true)); 
+    localStorage.setItem('ShowDashboardPowerS', (ShowDashboardPowerS === true));
+    localStorage.setItem('ShowDashboardPowerT', (ShowDashboardPowerT === true));
   }
   AjaxGetEnergy();
   AjaxGetEnergyCounters();

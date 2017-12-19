@@ -46,12 +46,12 @@ function AddEvents(result, serieName, graph) {
 }
 
 /* Convierte un array de floats a cadena con dos decimales, separados por el caracter dado y usando los colores que se pongan */
-function Array_Round2(values, separator, units, colors) {
+function Array_Round2(values, separator, colors) {
   for(i = 0; i < values.length; i++) {
     if((colors !== undefined) && (colors[i] !== undefined)) {
-     values[i] = '<span style="text-decoration: underline; text-decoration-color: ' + colors[i] + '; display:inline-block">' + Round2(values[i]) + '</span>' + units;
+     values[i] = '<div style="padding: 0px 5px; border: 1px solid #FFF; border-radius: 5px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]) + '</div>';
    } else {
-     values[i] = Round2(values[i]) + units;
+     values[i] = Round2(values[i]);
    }
   }
   return values.join(separator);
@@ -113,8 +113,8 @@ function AjaxGetIndicators() {
 function AjaxIndicators(result) {
   var Time = new  Date(result['Sampletime']);
   $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
-  $('#VoltageIndicator').text(Array_Round2(result['rms_v'], ' | ', ''));
-  $('#CurrentIndicator').text(Array_Round2(result['rms_i'], ' | ', ''));
+  $('#VoltageIndicator').text(Array_Round2(result['rms_v'], ' | '));
+  $('#CurrentIndicator').text(Array_Round2(result['rms_i'], ' | '));
   var Units = 'W';
   for(i = 0; i < result['active_power'].length; i++) {
     if(result['active_power'][i] > 1000) Units = 'kW';
@@ -167,11 +167,11 @@ function AjaxIndicators(result) {
 
 /* Actualiza el desplegable de nodos disponibles y selecciona el que este activo para la sesion */
 var Nodes = [];
-var Node = parseInt(Cookies.get("SelNode"));
+var Node = parseInt(localStorage.getItem("SelNode"));
 function GetNodesCompletes(result) {
   Nodes = result;
   if(!Node) {
-    Cookies.set("SelNode", 0);
+    localStorage.setItem("SelNode", 0);
     Node = 0;
   }
   for(i = 0; i < result['Devices'].length; i++) {
@@ -183,7 +183,7 @@ function GetNodesCompletes(result) {
   }
   $('#SourceList li a').click(function(event) {
     event.preventDefault();
-    Cookies.set('SelNode', this.id.replace('Node_', ''));
+    localStorage.setItem('SelNode', this.id.replace('Node_', ''));
     location.reload(false);
   });
   AjaxGetIndicators();

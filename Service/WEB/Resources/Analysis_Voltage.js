@@ -26,20 +26,20 @@ function AjaxGetVoltage() {
   if(VoltageTimer !== null) clearInterval(VoltageTimer);
   $('#btnVoltageNow').addClass('disabled');
   if(LastVoltageSample === 0) ShowSpinner(VoltageSpinner, 'VoltageSpinner');
-  var Period = parseInt(Cookies.get('GraphPeriod'));
+  var Period = parseInt(localStorage.getItem('GraphPeriod'));
   if(!Period) {
     Period = 86400000;
-    Cookies.set('GraphPeriod', Period);
+    localStorage.setItem('GraphPeriod', Period);
   }
-  var GraphEnd = parseInt(Cookies.get('GraphEnd'));
+  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
   if(!GraphEnd) {
     GraphEnd = 0;
-    Cookies.set('GraphEnd', 0);
+    localStorage.setItem('GraphEnd', 0);
   } 
-  var GraphAggregation = Cookies.get('GraphAggregation');
+  var GraphAggregation = localStorage.getItem('GraphAggregation');
   if(!GraphAggregation || (GetAggregText(GraphAggregation) === false)) {
     GraphAggregation = '10m';
-    Cookies.set('GraphAggregation', GraphAggregation);
+    localStorage.setItem('GraphAggregation', GraphAggregation);
   }
   $.ajax({ url: "getSeries",
            timeout: 20000,
@@ -50,7 +50,7 @@ function AjaxGetVoltage() {
            success: AjaxVoltage,
            complete: function() { 
              $('#btnVoltageNow').removeClass('disabled');
-             if(parseInt(Cookies.get('GraphEnd')) === 0) VoltageTimer = setTimeout(AjaxGetVoltage, 3000);
+             if(parseInt(localStorage.getItem('GraphEnd')) === 0) VoltageTimer = setTimeout(AjaxGetVoltage, 3000);
            }
   });
 }
@@ -102,8 +102,8 @@ function AjaxVoltage(result) {
         zoomCallback: function(minDate, maxDate, yRanges) {
           clearInterval(VoltageTimer);
           $('#btnVoltageNow').removeClass('active');
-          Cookies.set('GraphEnd', maxDate);
-          Cookies.set('GraphPeriod', maxDate - minDate);
+          localStorage.setItem('GraphEnd', maxDate);
+          localStorage.setItem('GraphPeriod', maxDate - minDate);
           LastVoltageSample = 0;
           AjaxGetVoltage();
         },
@@ -114,8 +114,8 @@ function AjaxVoltage(result) {
             mouseUpOZM(event, g, contex);
             if((contex.isPanning) && (contex.regionWidth > 0)) {
               $('#btnVoltageNow').removeClass('active');
-              Cookies.set('GraphEnd', g.dateWindow_[1]);
-              Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+              localStorage.setItem('GraphEnd', g.dateWindow_[1]);
+              localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
               LastVoltageSample = 0;
               AjaxGetVoltage();
             }            
@@ -123,8 +123,8 @@ function AjaxVoltage(result) {
           dblclick: function(event, g, context) {
             dblClickOZM(event, g, context);
             $('#btnVoltageNow').removeClass('active');
-            Cookies.set('GraphEnd', g.dateWindow_[1]);
-            Cookies.set('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
+            localStorage.setItem('GraphEnd', g.dateWindow_[1]);
+            localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
             LastVoltageSample = 0;
             AjaxGetVoltage();
           }
@@ -169,7 +169,7 @@ function AjaxVoltage(result) {
   } else if((result['To'] - result['From']) === 31536000000) {
     $('#btnShowVoltageYear').addClass('active');
   }
-  var GraphAggregation = Cookies.get('GraphAggregation');
+  var GraphAggregation = localStorage.getItem('GraphAggregation');
   if(GraphAggregation !== result['Aggregation_Source']) {
     $('#aggreg_modal').modal('show');
     GraphAggregation = result['Aggregation_Source'];
@@ -187,13 +187,13 @@ function AjaxVoltage(result) {
   } else if(GraphAggregation == '1h') {
     $('#btnVoltage1H').addClass('active');
   }
-  var GraphEnd = parseInt(Cookies.get('GraphEnd'));
+  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
   if(GraphEnd === 0) {
     $('#btnVoltageNow').addClass('active');
   } else {
     $('#btnVoltageNow').removeClass('active');
   }
-  Cookies.set('GraphAggregation', GraphAggregation);
+  localStorage.setItem('GraphAggregation', GraphAggregation);
 }
 function VoltageResizeEvent() {
   var Height = $('#VoltageAvgPanel').height() + $('#VoltageMaxPanel').height() + $('#VoltageMinPanel').height();
@@ -201,9 +201,9 @@ function VoltageResizeEvent() {
 }
 function SetVoltageVisibleSeries() {
   if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    var ShowR = (Cookies.get('ShowR') === 'true');
-    var ShowS = (Cookies.get('ShowS') === 'true');
-    var ShowT = (Cookies.get('ShowT') === 'true');
+    var ShowR = (localStorage.getItem('ShowR') === 'true');
+    var ShowS = (localStorage.getItem('ShowS') === 'true');
+    var ShowT = (localStorage.getItem('ShowT') === 'true');
     var VisibleSeries = [ShowR, ShowS, ShowT];
     var Visibles = [];
     if(ShowR) Visibles.push(1);
@@ -227,80 +227,80 @@ function SetVoltageVisibleSeries() {
   }
 }
 function ChooseVoltageChannels() {
-  var ShowR = (Cookies.get('ShowR') === 'true');
-  var ShowS = (Cookies.get('ShowS') === 'true');
-  var ShowT = (Cookies.get('ShowT') === 'true');
+  var ShowR = (localStorage.getItem('ShowR') === 'true');
+  var ShowS = (localStorage.getItem('ShowS') === 'true');
+  var ShowT = (localStorage.getItem('ShowT') === 'true');
   if(this.innerText === 'R') ShowR = !ShowR;
   if(this.innerText === 'S') ShowS = !ShowS;
   if(this.innerText === 'T') ShowT = !ShowT;
   if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
   if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowS = true;
   if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowT = true;
-  Cookies.set('ShowR', ShowR);
-  Cookies.set('ShowS', ShowS);
-  Cookies.set('ShowT', ShowT);
+  localStorage.setItem('ShowR', ShowR);
+  localStorage.setItem('ShowS', ShowS);
+  localStorage.setItem('ShowT', ShowT);
   SetVoltageVisibleSeries();
 }
 $('#btnShowVoltageRPhase').click(ChooseVoltageChannels);
 $('#btnShowVoltageSPhase').click(ChooseVoltageChannels);
 $('#btnShowVoltageTPhase').click(ChooseVoltageChannels);
 $('#btnVoltage3S').click(function() {
-  Cookies.set('GraphAggregation', '3s');
+  localStorage.setItem('GraphAggregation', '3s');
   LastVoltageSample = 0;
   AjaxGetVoltage();
 });
 $('#btnVoltage1M').click(function() {
-  Cookies.set('GraphAggregation', '1m');
+  localStorage.setItem('GraphAggregation', '1m');
   LastVoltageSample = 0;
   AjaxGetVoltage();
 });
 $('#btnVoltage10M').click(function() {
-  Cookies.set('GraphAggregation', '10m');
+  localStorage.setItem('GraphAggregation', '10m');
   LastVoltageSample = 0;
   AjaxGetVoltage();
 });
 $('#btnVoltage1H').click(function() {
-  Cookies.set('GraphAggregation', '1h');
+  localStorage.setItem('GraphAggregation', '1h');
   LastVoltageSample = 0;
   AjaxGetVoltage();
 });
 $('#btnShowVoltageYear').click(function() {
-  Cookies.set('GraphPeriod', 31536000000);
+  localStorage.setItem('GraphPeriod', 31536000000);
   LastVoltageSample = 0;
   AjaxGetVoltage();
-  Cookies.set('CountersPeriod', 'Year');
+  localStorage.setItem('CountersPeriod', 'Year');
   AjaxGetVoltageCounters();
 });
 $('#btnShowVoltageMonth').click(function() {
-  Cookies.set('GraphPeriod', 2592000000);
+  localStorage.setItem('GraphPeriod', 2592000000);
   LastVoltageSample = 0;
   AjaxGetVoltage();
-  Cookies.set('CountersPeriod', 'Month');
+  localStorage.setItem('CountersPeriod', 'Month');
   AjaxGetVoltageCounters();
 });
 $('#btnShowVoltageWeek').click(function() {
-  Cookies.set('GraphPeriod', 604800000);
+  localStorage.setItem('GraphPeriod', 604800000);
   LastVoltageSample = 0;
   AjaxGetVoltage();
-  Cookies.set('CountersPeriod', 'Week');
+  localStorage.setItem('CountersPeriod', 'Week');
   AjaxGetVoltageCounters();
 });
 $('#btnShowVoltageDay').click(function() {
-  Cookies.set('GraphPeriod', 86400000);
+  localStorage.setItem('GraphPeriod', 86400000);
   LastVoltageSample = 0;
   AjaxGetVoltage();
-  Cookies.set('CountersPeriod', 'Day');
+  localStorage.setItem('CountersPeriod', 'Day');
   AjaxGetVoltageCounters();
 });
 $('#btnVoltageNow').click(function() {
-  var End = parseInt(Cookies.get('GraphEnd'));
+  var End = parseInt(localStorage.getItem('GraphEnd'));
   if(End === 0) {
     $('#btnVoltageNow').removeClass('active');
-    Cookies.set('GraphEnd', VoltageChart.getOption('dateWindow')[1]);
+    localStorage.setItem('GraphEnd', VoltageChart.getOption('dateWindow')[1]);
     if(VoltageTimer !== null) clearInterval(VoltageTimer);
   } else {
     $('#btnVoltageNow').addClass('active');
-    Cookies.set('GraphEnd', 0);
+    localStorage.setItem('GraphEnd', 0);
     LastVoltageSample = 0;
     AjaxGetVoltage();
   }
@@ -333,7 +333,7 @@ var VoltageCountersTimer  = null;
 function AjaxGetVoltageCounters() {
   if(VoltageCountersTimer !== null) clearInterval(VoltageCountersTimer);
   VoltageCountersTimer = setTimeout(AjaxGetVoltageCounters, 60000);
-  var CountersPeriod = Cookies.get('CountersPeriod');
+  var CountersPeriod = localStorage.getItem('CountersPeriod');
   var Current, Period;
   if(CountersPeriod === 'Week') {
     Period = 86400000 * 7;
@@ -349,7 +349,7 @@ function AjaxGetVoltageCounters() {
     Aggreg = '1h';
   } else {
     CountersPeriod = 'Day';
-    Cookies.set('CountersPeriod', CountersPeriod);
+    localStorage.setItem('CountersPeriod', CountersPeriod);
     Period = 86400000;
     Current = GetDayTimestamp();
     Aggreg = '1m';
@@ -372,7 +372,7 @@ function AjaxGetVoltageCounters() {
   });
 }
 function VoltageUpdateCountersCurrent(result) {
-  var CountersPeriod = Cookies.get('CountersPeriod');
+  var CountersPeriod = localStorage.getItem('CountersPeriod');
   if(CountersPeriod === 'Week') {
     $('#labelVoltagePeriodAVG').text('This week average');
     $('#labelVoltagePeriodMAX').text('This week maximum');
@@ -395,13 +395,13 @@ function VoltageUpdateCountersCurrent(result) {
     $('#labelVoltageCurrentMAX').text('?');
     $('#labelVoltageCurrentMIN').text('?');
   } else {
-    $('#labelVoltageCurrentAVG').html(Array_Round2(result['avg_rms_v'], '&nbsp;&nbsp;', '', ["#d9534f", "#534fd9", "#4fd953"]));
-    $('#labelVoltageCurrentMAX').html(Array_Round2(result['max_rms_v'], '&nbsp;&nbsp;', '', ["#d9534f", "#534fd9", "#4fd953"]));
-    $('#labelVoltageCurrentMIN').html(Array_Round2(result['min_rms_v'], '&nbsp;&nbsp;', '', ["#d9534f", "#534fd9", "#4fd953"]));
+    $('#labelVoltageCurrentAVG').html(Array_Round2(result['avg_rms_v'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
+    $('#labelVoltageCurrentMAX').html(Array_Round2(result['max_rms_v'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
+    $('#labelVoltageCurrentMIN').html(Array_Round2(result['min_rms_v'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
   }
 }
 function VoltageUpdateCountersPrevs(result) {
-  var CountersPeriod = Cookies.get('CountersPeriod');
+  var CountersPeriod = localStorage.getItem('CountersPeriod');
   if(CountersPeriod === 'Week') {
     $('#labelVoltagePrevPeriodAVG').text('Previous week average');
     $('#labelVoltagePrevPeriodMAX').text('Previous week maximum');
@@ -484,7 +484,7 @@ $('#btnShowDetailVoltage').click(function() {
   $('#btnPauseDetail').removeClass('disabled');
 
   
-  Cookies.set('VoltageDetailview', 'Waveform');
+  localStorage.setItem('VoltageDetailview', 'Waveform');
   $('#Tabs > div').addClass('hidden');
   $('#WaveformPanel').removeClass('hidden');
   $(WaveformChart.graphDiv).parent().removeAttr('style');
@@ -496,7 +496,7 @@ $('#btnShowDetailHarmonics').click(function() {
   $('#btnShowDetailAdvanced').removeClass('active');
   $('#btnShowDetailEvents').removeClass('active');
   
-  Cookies.set('VoltageDetailview', 'Harmonics');
+  localStorage.setItem('VoltageDetailview', 'Harmonics');
   $('#Tabs > div').addClass('hidden');
   $('#HarmonicsPanel').removeClass('hidden');
   $(HarmonicsChart.graphDiv).parent().removeAttr('style');
@@ -510,7 +510,7 @@ $('#btnShowDetailEvolution').click(function() {
   $('#btnShowDetailAdvanced').removeClass('active');
   $('#btnShowDetailEvents').removeClass('active');
   
-  Cookies.set('VoltageDetailview', 'Evolution');
+  localStorage.setItem('VoltageDetailview', 'Evolution');
   $('#Tabs > div').addClass('hidden');
   $('#EvolutionPanel').removeClass('hidden');
   $(HarmonicsChart.graphDiv).parent().removeAttr('style');
@@ -524,7 +524,7 @@ $('#btnShowDetailAdvanced').click(function() {
   $('#btnShowDetailAdvanced').removeClass('active');
   $('#btnShowDetailEvents').removeClass('active');
   
-  Cookies.set('VoltageDetailview', 'Evolution');
+  localStorage.setItem('VoltageDetailview', 'Evolution');
   $('#Tabs > div').addClass('hidden');
   $('#FFTPanel').removeClass('hidden');
   $(FFTChart.graphDiv).parent().removeAttr('style');
@@ -554,7 +554,7 @@ function UpdateWaveformChart(result) {
     strokeWidth: 1,
     labelsDiv: "WaveformLegend",  
     labels: ["Time", "Voltage", "Current", ""],
-    colors: ["#d9534f", "#31708f", "#31708f"],
+    colors: ["#d9534f", "#534fd9", "#4fd953"],
     gridLineColor: "#999",
     gridLinePattern: [4, 4],
     visibility: [true, true,true],
@@ -716,7 +716,7 @@ function UpdateFFTChart(result) {
   if(result['fft_v']) {
     for(i = 0; i < result['fft_v'][0].length; i++) {
       if(result['fft_v'][0][i] < 0.000000001) result['fft_v'][0][i] = 0.000000001;
-      FFTDataset.push([20.0 * Math.log10(result['fft_v'][0][i]), result['fft_v'][0][i]]);
+      FFTDataset.push([20.0 * Math.log10(result['fft_v'][0][i]), result['fft_v'][1][i], result['fft_v'][2][i]]);
     }
     FFTOffset = 0;
     for(i = 0; i < result['fft_v'][0].length; i++) {
@@ -1241,13 +1241,13 @@ function UpdatePage() {
     $('#btnShowDetailRPhase').removeClass('disabled');
     $('#btnShowDetailSPhase').removeClass('disabled');
     $('#btnShowDetailTPhase').removeClass('disabled');
-    var ShowR = (Cookies.get('ShowR') === 'true');
-    var ShowS = (Cookies.get('ShowS') === 'true');
-    var ShowT = (Cookies.get('ShowT') === 'true');
+    var ShowR = (localStorage.getItem('ShowR') === 'true');
+    var ShowS = (localStorage.getItem('ShowS') === 'true');
+    var ShowT = (localStorage.getItem('ShowT') === 'true');
     if((ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
-    Cookies.set('ShowR', (ShowR === true)); 
-    Cookies.set('ShowS', (ShowS === true));
-    Cookies.set('ShowT', (ShowT === true));
+    localStorage.setItem('ShowR', (ShowR === true)); 
+    localStorage.setItem('ShowS', (ShowS === true));
+    localStorage.setItem('ShowT', (ShowT === true));
   }
   AjaxGetVoltage();
   AjaxGetVoltageCounters();
