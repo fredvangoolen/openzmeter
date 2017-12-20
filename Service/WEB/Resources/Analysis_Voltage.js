@@ -558,6 +558,7 @@ function DetailsButtonClick(event) {
       if(ShowR === true) $('#btnShowDetailRPhase').addClass('active');
       if(ShowS === true) $('#btnShowDetailSPhase').addClass('active');
       if(ShowT === true) $('#btnShowDetailTPhase').addClass('active');
+      break;
     case 'Evolution' :
       switch(localStorage.getItem('VoltageDetailEvolutionPhase')) {
         case 'PhaseR' :
@@ -639,7 +640,7 @@ $('#btnShowDetailVoltageAndCurrent').click(DetailsButtonClick);
 var WaveformChart       = null;
 var WaveformDataset     = [];
 function UpdateWaveformChart(result) {
-  if((result !== null) && (result['wave_v'] !== null) && (result['wave_i'] !== null)) {
+  if(result !== null) {
     var date = new Date(result['Sampletime']);
     $('#WaveformTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
     WaveformDataset = [];
@@ -701,44 +702,39 @@ function UpdateWaveformChart(result) {
              return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
            }
          },
-        y2: { pixelsPerLabel: 15,
-              axisLabelWidth: ShowCurrent ? 34 : 0,
-              valueRange: Max_Current, 
-              valueFormatter: function (x) {
-                return Round2(x) + ' <em class="x-small">A</em>';
-              },
-              axisLabelFormatter: function (x) {
-                if(ShowCurrent == true) {
-                  return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-                } else {
-                  return '';
-                }
-              }
+      y2: { pixelsPerLabel: 15,
+            axisLabelWidth: ShowCurrent ? 34 : 0,
+            valueRange: Max_Current, 
+            valueFormatter: function (x) {
+              return Round2(x) + ' <em class="x-small">A</em>';
             },
-        x: { ticker: function(min, max, pixels, opts, dygraph, vals) {
-               var ticks = [];
-               for(var i = 1; i <= Math.floor(max / 312.5); i++) {
-                 ticks.push({ v: i * 312.5, label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + Round2((i * 312.5 * 1000) / Nodes['Devices'][Node]['SampleFreq']) + '</div>' });
-               }
-               return ticks;
-             },
-             valueFormatter: function (x) {
-               return Round2((x * 1000) / Nodes['Devices'][Node]['SampleFreq']) + ' <em class="x-small">ms</em>';
-             },
-             axisLabelFormatter: function (x) {
-               return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + Round2((x * 1000) / SampleRate) + '</div>';
+            axisLabelFormatter: function (x) {
+              if(ShowCurrent == true) {
+                return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
+              } else {
+                return '';
+              }
+            }
+          },
+      x: { ticker: function(min, max, pixels, opts, dygraph, vals) {
+             var ticks = [];
+             for(var i = 1; i <= Math.floor(max / Nodes['Devices'][Node]['SampleFreq'] * Nodes['NominalFreq']); i++) {
+               ticks.push({ v: i * Nodes['Devices'][Node]['SampleFreq'] / Nodes['NominalFreq'], label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + Round2(i / Nodes['NominalFreq'] * 1000) + '</div>' });
              }
+             return ticks;
+           },
+           valueFormatter: function (x) {
+             return Round2((x * 1000) / Nodes['Devices'][Node]['SampleFreq']) + ' <em class="x-small">ms</em>';
            }
-        }
-    };
-  
+         }
+    }
+  };
   if(WaveformChart === null) {
     WaveformChart = new Dygraph(document.getElementById("WaveformChart"), WaveformDataset, Options);
   } else {
     WaveformChart.updateOptions(Options, true);
     WaveformChart.updateOptions({ file: WaveformDataset });
   }
-
 }
 
 /* Grafica de armonicos */
@@ -746,12 +742,20 @@ var HarmonicsChart      = null;
 var HarmonicsDataset    = [];
 var HarmonicsOffset     = 0;
 function UpdateHarmonicsChart(result) {
-  if(result['harmonics_v']) {
+  if(result !== null) {
     var date = new Date(result['Sampletime']);
     $('#HarmonicsTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
     HarmonicsDataset = [];
     for(i = 0; i < result['harmonics_v'][0].length; i++) {
-    //  if(result.harmonics_v[i] < 0.000000001) result.harmonics_v[i] = 0.000000001;
+      if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+      
+        HarmonicsDataset.push([i, result['wave_v'][0][i], result['wave_v'][1][i], result['wave_v'][2][i], result['wave_i'][0][i], result['wave_i'][1][i], result['wave_i'][2][i]]);
+      } else {
+        HarmonicsDataset.push([i, result['wave_v'][0][i], result['wave_i'][0][i]]);      
+      }
+      
+      
+      //  if(result.harmonics_v[i] < 0.000000001) result.harmonics_v[i] = 0.000000001;
       HarmonicsDataset.push([20.0 * Math.log10(result.harmonics_v[0][i]), result.harmonics_v[0][i]]);
     }
 //    HarmonicsOffset = 0;
