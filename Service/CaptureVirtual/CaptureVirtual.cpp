@@ -25,13 +25,13 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
     This->pWork.Params.Timestamp = Start;
     This->pWork.Cycles[0].Start = 0;
     for(int i = 0; ; i++) {
-      This->pWork.VoltageSamples[0][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency()) + rand() % 40;
-      This->pWork.CurrentSamples[0][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency()) + rand() % 40;
+      This->pWork.VoltageSamples[0][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency());
+      This->pWork.CurrentSamples[0][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() - 0.1);
       if(This->Triphase()) {
-        This->pWork.VoltageSamples[1][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 2.0 * M_PI / 3.0) + rand() % 40 + 5;
-        This->pWork.VoltageSamples[2][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 4.0 * M_PI / 3.0) + rand() % 40 - 5;
-        This->pWork.CurrentSamples[1][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 2.0 * M_PI / 3.0) + rand() % 40;
-        This->pWork.CurrentSamples[2][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 4.0 * M_PI / 3.0) + rand() % 40;
+        This->pWork.VoltageSamples[1][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 2.0 * M_PI / 3.0);
+        This->pWork.VoltageSamples[2][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 4.0 * M_PI / 3.0);
+        This->pWork.CurrentSamples[1][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 2.0 * M_PI / 3.0 - 0.1);
+        This->pWork.CurrentSamples[2][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 4.0 * M_PI / 3.0 - 0.1);
         This->pWork.CurrentSamples[3][i] = 0.0000001;
       }
       This->pWork.Samples++;
@@ -47,7 +47,7 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
     This->SaveWorkParams();
     uint64_t SaveEnd = Tools::GetTime();
     if((SaveEnd - Start) <= 200) usleep((200 - (SaveEnd - Start)) * 1000);
-    Tools::LogMsg("DEBUG", "Process of block %llu takes %llumS (%llumS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
+    Tools::LogMsg("DEBUG", "Process of block %"PRIu64" takes %"PRIu64"mS (%"PRIu64"mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
   }
   return NULL;
 }

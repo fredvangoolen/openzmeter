@@ -115,7 +115,7 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
   if(Request->Deflate) free(Request->PostData);
   if(Request->Msg) {
     uint64_t EndTime = Tools::GetTime();
-    Tools::LogMsg("DEBUG", "POST request '%s' takes %llumS (%.2fkB send in %llumS)\n", Request->Msg, Request->ProcTime - Request->StartTime, Request->PostResponseLen / 1024.0, EndTime - Request->StartTime);
+    Tools::LogMsg("DEBUG", "POST request '%s' takes %" PRIu64 "mS (%.2fkB send in %" PRIu64 "mS)\n", Request->Msg, Request->ProcTime - Request->StartTime, Request->PostResponseLen / 1024.0, EndTime - Request->StartTime);
     free(Request->Msg);
   }
   free(Request);
@@ -191,6 +191,11 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
 }
 int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
   Request_t *Request = (Request_t*)*ptr;
+  if(Request->JSONReader != NULL) {
+    printf("WTF!\n");
+    fflush(stdout);
+            
+  }
   Request->JSONReader = json_tokener_parse(upload_data);
   bool Error = false;
   if((Request->JSONReader == NULL) || (json_object_get_type(Request->JSONReader) != json_type_object)) {
@@ -272,8 +277,8 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     char QueryText[8192];
     int  QueryLen = 0;
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"From\", ", From);
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"To\", ", To); 
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\", ", To); 
     uint32_t MaxPoints = 10000, PeriodSeconds = 3000;
     if(strcmp(Aggreg, "1m")  == 0) PeriodSeconds = 60000;
     if(strcmp(Aggreg, "10m") == 0) PeriodSeconds = 600000;
@@ -292,14 +297,15 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     } 
     From -= PeriodSeconds;
     To   += PeriodSeconds;
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"MaxSamples\", ", (To - From) / PeriodSeconds);
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"MaxSamples\", ", (To - From) / PeriodSeconds);
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'%s' AS \"Aggregation_Source\", ", Aggreg);
-    char *Serie = strtok(Series, ", ");
+    char *Save;
+    char *Serie = strtok_r(Series, ", ", &Save);
     while(Serie != NULL) {
       QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(%s) AS %s, ", Serie, Serie);
-      Serie = strtok(NULL, ", ");
+      Serie = strtok_r(NULL, ", ", &Save);
     }
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(sampletime) AS \"Sampletime\" FROM aggreg_%s WHERE sampletime > %llu AND sampletime >= %llu AND sampletime <= %llu AND node = %u ORDER BY \"Sampletime\" ASC) AS Result", Aggreg, LastSample, From, To, Node);
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(sampletime) AS \"Sampletime\" FROM aggreg_%s WHERE sampletime > %" PRIu64 " AND sampletime >= %" PRIu64 " AND sampletime <= %" PRIu64 " AND node = %u ORDER BY \"Sampletime\" ASC) AS Result", Aggreg, LastSample, From, To, Node);
     Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
@@ -333,8 +339,9 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     char QueryText[8192];
     int  QueryLen = 0;
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT COUNT(*) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu AND node = %u) AS \"Samples\", ", Aggreg, From, To, Node);
-    char *Serie = strtok(Series, ", ");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT COUNT(*) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u) AS \"Samples\", ", Aggreg, From, To, Node);
+    char *Save;
+    char *Serie = strtok_r(Series, ", ", &Save);
     while(Serie != NULL) {
       char *Oper = NULL, *Tmp1 = strchr(Serie, '('), *Tmp2 = strrchr(Serie, ')');
       if((Tmp1 != NULL) && (Tmp2 != NULL)) {
@@ -345,25 +352,25 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       }
       if((strcmp(Serie, "rms_v") == 0) || (strcmp(Serie, "rms_i") == 0) || (strcmp(Serie, "active_power") == 0) || (strcmp(Serie, "apparent_power") == 0) || (strcmp(Serie, "power_factor") == 0) || (strcmp(Serie, "active_energy") == 0) || (strcmp(Serie, "fundamenta_active_power") == 0) || (strcmp(Serie, "fundamental_reactive_power") == 0) || (strcmp(Serie, "fundamental_apparent_power") == 0) || (strcmp(Serie, "fundamental_power_factor") == 0) || (strcmp(Serie, "thd_v") == 0) || (strcmp(Serie, "thd_i") == 0) || (strcmp(Serie, "phi") == 0) || (strcmp(Serie, "harmonics_i") == 0) || (strcmp(Serie, "harmonics_v") == 0)) {
         if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT %s(elem) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %llu AND sampletime < %llu AND node = %u GROUP BY rn ORDER BY rn) as %s_%s,", Oper, Aggreg, Serie, From, To, Node, Oper, Serie);
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT %s(elem) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u GROUP BY rn ORDER BY rn) as %s_%s,", Oper, Aggreg, Serie, From, To, Node, Oper, Serie);
         } else if(strcmp(Oper, "rms") == 0) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT SQRT(SUM(POW(elem, 2.0)) / COUNT(*)) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %llu AND sampletime < %llu AND node = %u GROUP BY rn ORDER BY rn) as %s_%s,", Aggreg, Serie, From, To, Node, Oper, Serie);
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT SQRT(SUM(POW(elem, 2.0)) / COUNT(*)) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u GROUP BY rn ORDER BY rn) as %s_%s,", Aggreg, Serie, From, To, Node, Oper, Serie);
         }
       } else if(strcmp(Serie, "freq") == 0) {
         if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT %s(%s) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu AND node = %u) AS %s_%s, ", Oper, Serie, Aggreg, From, To, Node, Oper, Serie);
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT %s(%s) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u) AS %s_%s, ", Oper, Serie, Aggreg, From, To, Node, Oper, Serie);
         } else if(strcmp(Oper, "rms") == 0) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT SQRT(SUM(POW(%s, 2.0)) / COUNT(*)) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu AND node = %u) AS %s_%s, ", Serie, Aggreg, From, To, Node, Oper, Serie);
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT SQRT(SUM(POW(%s, 2.0)) / COUNT(*)) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u) AS %s_%s, ", Serie, Aggreg, From, To, Node, Oper, Serie);
         }
       } else if(strcmp(Serie, "flag") == 0) {
         if((strcmp(Oper, "and") == 0) || (strcmp(Oper, "or") == 0)) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT bool_%s(%s) FROM aggreg_%s WHERE sampletime >= %llu AND sampletime < %llu AND node = %u) AS %s_%s, ", Oper, Serie, Aggreg, From, To, Node, Oper, Serie);
+          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT bool_%s(%s) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u) AS %s_%s, ", Oper, Serie, Aggreg, From, To, Node, Oper, Serie);
         }
       }
-      Serie = strtok(NULL, ", ");
+      Serie = strtok_r(NULL, ", ", &Save);
     }
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"From\", ", From);
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%llu AS \"To\") AS Result", To); 
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\") AS Result", To); 
     Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;

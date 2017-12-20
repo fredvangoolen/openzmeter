@@ -455,7 +455,6 @@
             <itemPath>WEB/Resources/lib/visjs/vis.min.css</itemPath>
             <itemPath>WEB/Resources/lib/visjs/vis.min.js</itemPath>
           </logicalFolder>
-          <itemPath>WEB/Resources/lib/cookie.min.js</itemPath>
           <itemPath>WEB/Resources/lib/jquery.min.js</itemPath>
         </logicalFolder>
         <itemPath>WEB/Resources/Analysis_Current.js</itemPath>
@@ -472,10 +471,6 @@
         <logicalFolder name="events" displayName="events" projectFiles="true">
           <itemPath>WEB/Views/events/disturbances_view.php</itemPath>
           <itemPath>WEB/Views/events/itic_view.php</itemPath>
-        </logicalFolder>
-        <logicalFolder name="template" displayName="template" projectFiles="true">
-          <itemPath>WEB/Views/template/commonHeader.html</itemPath>
-          <itemPath>WEB/Views/template/commonScripts.php</itemPath>
         </logicalFolder>
         <itemPath>WEB/Views/account_view.php</itemPath>
         <itemPath>WEB/Views/settings_view.php</itemPath>
@@ -527,10 +522,12 @@
       </toolsSet>
       <compileType>
         <cTool>
+          <standard>3</standard>
           <commandLine>-Os -march=native</commandLine>
           <warningLevel>2</warningLevel>
         </cTool>
         <ccTool>
+          <standard>4</standard>
           <commandLine>-Os -march=native</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
@@ -884,8 +881,6 @@
       <item path="WEB/Resources/lib/c3js/c3.css" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/c3js/c3.min.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/cookie.min.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/cubism/cubism.js" ex="false" tool="3" flavor2="0">
       </item>
@@ -1874,16 +1869,6 @@
       <item path="WEB/Views/settings_view.php" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Views/stats_view.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Views/template/commonHeader.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Views/template/commonScripts.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
     </conf>
   </confs>

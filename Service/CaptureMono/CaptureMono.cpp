@@ -189,7 +189,7 @@ void  *CaptureMono::Analize_Thread(void* args) {
     uint64_t AnalyzeEnd = Tools::GetTime();
     This->SaveWorkParams();
     uint64_t SaveEnd = Tools::GetTime();
-    Tools::LogMsg("DEBUG", "Process of block %llu takes %umS (%llumS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
+    Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %umS (%" PRIu64 "mS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
   }
   return NULL;
 }

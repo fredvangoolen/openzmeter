@@ -445,7 +445,8 @@ json_object *CaptureInterface::GetJSONCopy(char *series) {
   pthread_mutex_unlock(&pDataReadyMutex);
   if(Error == 0) {
     Result = json_object_new_object();
-    char *Serie = strtok(series, ", ");
+    char *Save;
+    char *Serie = strtok_r(series, ", ", &Save);
     while(Serie != NULL) {
       json_object *Obj = NULL;
       if(strcmp(Serie, "rms_v") == 0) {
@@ -538,7 +539,7 @@ json_object *CaptureInterface::GetJSONCopy(char *series) {
         }
       }
       if(Obj != NULL) json_object_object_add(Result, Serie, Obj);
-      Serie = strtok(NULL, ", ");
+      Serie = strtok_r(NULL, ", ", &Save);
     }
     json_object_object_add(Result, "Sampletime", json_object_new_int64(pWork.Params.Timestamp));
   }

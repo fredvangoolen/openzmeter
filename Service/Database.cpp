@@ -16,7 +16,8 @@ Database::Database() {
   sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", Tools::DB.Host, Tools::DB.Port, Tools::DB.User, Tools::DB.Password, Tools::DB.Database);
   DBConn = PQconnectdb(ConnectionString);
   if(PQstatus(DBConn) == CONNECTION_BAD) {
-    Tools::LogMsg("ERROR", "No se pudo abrir la base de datos (%s)\n", strtok(PQerrorMessage(DBConn), "\r\n"));
+    char *Save;
+    Tools::LogMsg("ERROR", "No se pudo abrir la base de datos (%s)\n", strtok_r(PQerrorMessage(DBConn), "\r\n", &Save));
     return;
   }
   ExecSentence("SET synchronous_commit TO OFF");
@@ -36,7 +37,8 @@ bool Database::ExecSentence(const char* sql) {
   if(Result != NULL) PQclear(Result);
   Result = PQexec(DBConn, sql);
   if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
-    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", strtok(PQerrorMessage(DBConn), "\r\n"));
+    char *Save;
+    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", strtok_r(PQerrorMessage(DBConn), "\r\n", &Save));
     PQclear(Result);
     Result = NULL;
     return false;
@@ -50,7 +52,8 @@ char* Database::ExecSentenceJSON(const char* sql, size_t *len) {
   if(Result != NULL) PQclear(Result);
   Result = PQexec(DBConn, sql);
   if(PQresultStatus(Result) != PGRES_TUPLES_OK) {
-    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", strtok(PQerrorMessage(DBConn), "\r\n"));
+    char *Save;
+    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", strtok_r(PQerrorMessage(DBConn), "\r\n", &Save));
     PQclear(Result);
     Result = NULL;
     return NULL;
@@ -82,7 +85,7 @@ void Database::BindSingleUInt32(uint32_t param) {
 void Database::BindSingleUInt64(uint64_t param) {
   if(ParamsLen < ParamsAlloc) {
     Params[ParamsLen] = (char*)malloc(sizeof(char) * 20);
-    sprintf(Params[ParamsLen], "%llu", param);
+    sprintf(Params[ParamsLen], "%" PRIu64, param);
     ParamsLen++;
   }
 }
@@ -206,7 +209,7 @@ bool Database::ExecSentence() {
 //    } while(1);
 //    if(Buffer[ReadPos].Type == PARAMS_10C) {
 //      Params_t *Params = Buffer[ReadPos].Data.Params;
-//      Len  = sprintf(&Buff[Len], "SELECT CREATE_10C(%u, %llu, ", Buffer[ReadPos].Node, Buffer[ReadPos].Timestamp);
+//      Len  = sprintf(&Buff[Len], "SELECT CREATE_10C(%u, %"PRIu64", ", Buffer[ReadPos].Node, Buffer[ReadPos].Timestamp);
 //      Len += isnan(Params->RMS_V) ? sprintf(&Buff[Len], "NULL, ") : sprintf(&Buff[Len], "%e, ", Params->RMS_V);
 //      Len += isnan(Params->RMS_I) ? sprintf(&Buff[Len], "NULL, ") : sprintf(&Buff[Len], "%e, ", Params->RMS_I);
 //      Len += isnan(Params->Active_Power) ? sprintf(&Buff[Len], "NULL, ") : sprintf(&Buff[Len], "%e, ", Params->Active_Power);
@@ -232,32 +235,32 @@ bool Database::ExecSentence() {
 //      PQclear(Result);
 //    } else if(Buffer[ReadPos].Type == PARAMS_3S) {
 ////      LogMsg("DEBUG", "Generando agregacion en tabla 3S\n");
-//      sprintf(Buff, "SELECT AGREGATE_3S(%llu, %u)", Buffer[ReadPos].Timestamp, Buffer[ReadPos].Node);
+//      sprintf(Buff, "SELECT AGREGATE_3S(%"PRIu64", %u)", Buffer[ReadPos].Timestamp, Buffer[ReadPos].Node);
 //      PGresult *Result = PQexec(Database, Buff);
 ////      if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
 //      PQclear(Result);
 //    } else if(Buffer[ReadPos].Type == PARAMS_1M) {
 ////      LogMsg("DEBUG", "Generando agregacion en tabla 1M\n");
-//      sprintf(Buff, "SELECT AGREGATE_1M(%llu, %u)", Buffer[ReadPos].Timestamp, Buffer[ReadPos].Node);
+//      sprintf(Buff, "SELECT AGREGATE_1M(%"PRIu64", %u)", Buffer[ReadPos].Timestamp, Buffer[ReadPos].Node);
 //      PGresult *Result = PQexec(Database, Buff);
 ////      if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
 //      PQclear(Result);
 //    } else if(Buffer[ReadPos].Type == PARAMS_10M) {
 ////      LogMsg("DEBUG", "Generando agregacion en tabla 10M\n");
-//      sprintf(Buff, "SELECT AGREGATE_10M(%llu, %u)", Buffer[ReadPos].Timestamp, Buffer[ReadPos].Node);
+//      sprintf(Buff, "SELECT AGREGATE_10M(%"PRIu64", %u)", Buffer[ReadPos].Timestamp, Buffer[ReadPos].Node);
 //      PGresult *Result = PQexec(Database, Buff);
 ////      if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
 //      PQclear(Result);
 //    } else if(Buffer[ReadPos].Type == PARAMS_1H) {
 ////      LogMsg("DEBUG", "Generando agregacion en tabla 1H\n");
-//      sprintf(Buff, "SELECT AGREGATE_1H(%llu, %u)", Buffer[ReadPos].Timestamp, Buffer[ReadPos].Node);
+//      sprintf(Buff, "SELECT AGREGATE_1H(%"PRIu64", %u)", Buffer[ReadPos].Timestamp, Buffer[ReadPos].Node);
 //      PGresult *Result = PQexec(Database, Buff);
 ////      if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
 //      PQclear(Result);
 //    } else if(Buffer[ReadPos].Type == EVENT) {
 //      Event_t *Event = Buffer[ReadPos].Data.Event;
 //      uint32_t NumSamples = MIN(EVENT_PREINIT + EVENT_POSTINIT + EVENT_PREEND + EVENT_POSTEND, EVENT_PREINIT + Event->Duration + EVENT_POSTEND);
-//      Len = sprintf(Buff, "SELECT create_or_update_event(%llu, %e, ", Event->Start, Event->Duration / ADQUISITION_SAMPLEFREQ);
+//      Len = sprintf(Buff, "SELECT create_or_update_event(%"PRIu64", %e, ", Event->Start, Event->Duration / ADQUISITION_SAMPLEFREQ);
 ////      Len += sprintf(&Buff[Len], "'%s', ", EventType_ToString(Event->Type));
 //      Len += sprintf(&Buff[Len], "%e, ", Event->Voltage);
 //      Len += sprintf(&Buff[Len], "%e, ", Event->Change);
@@ -269,7 +272,7 @@ bool Database::ExecSentence() {
 //      PQclear(Result);
 //    } else if(Buffer[ReadPos].Type == PRICES) {
 //      float *Prices = Buffer[ReadPos].Data.Prices;
-//      Len = sprintf(Buff, "SELECT INSERT_PRICES(%llu, ", Buffer[ReadPos].Timestamp);
+//      Len = sprintf(Buff, "SELECT INSERT_PRICES(%"PRIu64", ", Buffer[ReadPos].Timestamp);
 //      Len += DB_AppendArrayVal(&Buff[Len], 24, Prices);
 //      Len += sprintf(&Buff[Len], ");");
 //      PGresult *Result = PQexec(Database, Buff);
@@ -334,7 +337,7 @@ bool Database::ExecSentence() {
 //  PQclear(Result);
 //  char Tmp[128];
 //  Tools::LogMsg("INFO", "Resuming from last execution...\n");
-//  sprintf(Tmp, "SELECT STARTUP(%llu)", ((uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000));
+//  sprintf(Tmp, "SELECT STARTUP(%"PRIu64")", ((uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000));
 //  Result = PQexec(Database, Tmp);
 ////  if(PQresultStatus(Result) != PGRES_TUPLES_OK) LogMsg("ERROR", "Error in SQL query (%s)\n", PQresultErrorMessage(Result));
 //  *lastprice = (PQgetisnull(Result, 0, 0)) ? (uint32_t)time(NULL) : atol(PQgetvalue(Result, 0, 0));
