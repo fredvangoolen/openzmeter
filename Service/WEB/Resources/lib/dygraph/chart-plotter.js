@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2015 Pedro Sánchez Alguacil
- *
+ *               2017 Eduardo Viciana Gamez
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -24,28 +24,28 @@ function darkenColor(colorStr) {
   return 'rgba(' + color.r + ',' + color.g + ',' + color.b + ', 0.8)';
 }
 
-// This function draws bars for a single series. See
-// multiColumnBarPlotter below for a plotter which can draw multi-series
-// bar charts.
-function barChartPlotter(e) {
-  var ctx = e.drawingContext;
-  var points = e.points;
-  var y_bottom = e.dygraph.toDomYCoord(0);
-  ctx.fillStyle = darkenColor(e.color);
-  var min_sep = Infinity;
-  for (var i = 1; i < points.length; i++) {
-    var sep = points[i].canvasx - points[i - 1].canvasx;
-    if (sep < min_sep)
-      min_sep = sep;
-  }
-  var bar_width = Math.floor(2.0 / 3 * min_sep);
-  for (var i = 0; i < points.length; i++) {
-    var p = points[i];
-    var center_x = p.canvasx;
-    ctx.fillRect(center_x - bar_width / 2, p.canvasy, bar_width, y_bottom - p.canvasy);
-    ctx.strokeRect(center_x - bar_width / 2, p.canvasy, bar_width, y_bottom - p.canvasy);
-  }
-}
+//// This function draws bars for a single series. See
+//// multiColumnBarPlotter below for a plotter which can draw multi-series
+//// bar charts.
+//function barChartPlotter(e) {
+//  var ctx = e.drawingContext;
+//  var points = e.points;
+//  var y_bottom = e.dygraph.toDomYCoord(0);
+//  ctx.fillStyle = darkenColor(e.color);
+//  var min_sep = Infinity;
+//  for (var i = 1; i < points.length; i++) {
+//    var sep = points[i].canvasx - points[i - 1].canvasx;
+//    if (sep < min_sep)
+//      min_sep = sep;
+//  }
+//  var bar_width = Math.floor(2.0 / 3 * min_sep);
+//  for (var i = 0; i < points.length; i++) {
+//    var p = points[i];
+//    var center_x = p.canvasx;
+//    ctx.fillRect(center_x - bar_width / 2, p.canvasy, bar_width, y_bottom - p.canvasy);
+//    ctx.strokeRect(center_x - bar_width / 2, p.canvasy, bar_width, y_bottom - p.canvasy);
+//  }
+//}
 
 /* Draw bars without spacing*/
 function barChartNoSpacedPlotter(e) {
@@ -70,56 +70,33 @@ function barChartNoSpacedPlotter(e) {
   }
 }
 
-
-
-
-
 // Multiple column bar chart
 function multiColumnBarPlotter(e) {
-    // We need to handle all the series simultaneously.
-    if (e.seriesIndex !== 0)
-        return;
+  if(e.seriesIndex !== 0) return;
+  var g = e.dygraph;
+  var ctx = e.drawingContext;
+  var sets = e.allSeriesPoints;
+  var y_bottom = e.dygraph.toDomYCoord(0);
 
-    var g = e.dygraph;
-    var ctx = e.drawingContext;
-    var sets = e.allSeriesPoints;
-    var y_bottom = e.dygraph.toDomYCoord(0);
-
-    // Find the minimum separation between x-values.
-    // This determines the bar width.
-    var min_sep = Infinity;
-    for (var j = 0; j < sets.length; j++) {
-        var points = sets[j];
-        for (var i = 1; i < points.length; i++) {
-            var sep = points[i].canvasx - points[i - 1].canvasx;
-            if (sep < min_sep)
-                min_sep = sep;
-        }
+  var min_sep = Infinity;
+  for(var j = 0; j < sets.length; j++) {
+    for(var i = 1; i < sets[j].length; i++) min_sep = Math.min(sets[j][i].canvasx - sets[j][i - 1].canvasx, min_sep);
+  }
+  var bar_width = Math.floor(2.5 / 3 * min_sep);
+  var subbar_width = bar_width / sets.length;
+  for(var j = 0; j < sets.length; j++) {
+    ctx.strokeStyle = g.getColors()[j];
+    ctx.fillStyle = darkenColor(ctx.strokeStyle);
+    for(var i = 0; i < sets[j].length; i++) {
+      var p = sets[j][i];
+      var x_left = p.canvasx - (subbar_width * sets.length / 2) + j * subbar_width;
+      ctx.fillRect(x_left, p.canvasy, bar_width / sets.length, y_bottom - p.canvasy);
+      ctx.strokeRect(x_left, p.canvasy, bar_width / sets.length, y_bottom - p.canvasy);
     }
-    var bar_width = Math.floor(2.0 / 3 * min_sep);
-
-    var fillColors = [];
-    var strokeColors = g.getColors();
-    for (var i = 0; i < strokeColors.length; i++) {
-        fillColors.push(darkenColor(strokeColors[i]));
-    }
-
-    for (var j = 0; j < sets.length; j++) {
-        ctx.fillStyle = fillColors[j];
-        ctx.strokeStyle = strokeColors[j];
-        for (var i = 0; i < sets[j].length; i++) {
-            var p = sets[j][i];
-            var center_x = p.canvasx;
-            var x_left = center_x - (bar_width / 2) * (1 - j / (sets.length - 1));
-
-            ctx.fillRect(x_left, p.canvasy,
-                    bar_width / sets.length, y_bottom - p.canvasy);
-
-            ctx.strokeRect(x_left, p.canvasy,
-                    bar_width / sets.length, y_bottom - p.canvasy);
-        }
-    }
+  }
 }
+
+/* Dibuja un grafico de forma similar a el plugin Cubism.js */
 function barChartPlotterCubism(e) {
   var ctx = e.drawingContext;
   var area = e.plotArea;
@@ -159,5 +136,23 @@ function barChartPlotterCubism(e) {
         break;
       }
     }
+  }
+}
+
+/* Llamar en underlayCallback para resaltar los fines de semana */
+function HightlightWeekends(color, canvas, area, g) {
+  canvas.fillStyle = color;
+  var fromTimestamp = g.dateWindow_[0];
+  var toTimestamp = g.dateWindow_[1];
+  while(fromTimestamp < toTimestamp) {
+    var FromDate = new Date(fromTimestamp);
+    var Tmp = Math.min(new Date(FromDate.getFullYear(), FromDate.getMonth(), FromDate.getDate() + 1, 0, 0, 0, 0).getTime(), toTimestamp);
+    if((FromDate.getDay() === 6) || (FromDate.getDay() === 0)) {
+      var canvas_left_x = g.toDomXCoord(fromTimestamp);
+      var canvas_right_x = g.toDomXCoord(Tmp);
+      var canvas_width = canvas_right_x - canvas_left_x;
+      canvas.fillRect(canvas_left_x, area.y, canvas_width, area.h);
+    }
+    fromTimestamp = Tmp;
   }
 }

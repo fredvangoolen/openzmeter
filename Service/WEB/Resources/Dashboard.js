@@ -624,6 +624,9 @@ function AjaxEnergy(result) {
           LastEnergySample = 0;
           AjaxGetEnergy();
         },
+        underlayCallback: function(context, area, dygraph) {
+          HightlightWeekends("#EEE", context, area, dygraph);
+        },
         interactionModel: {
           mousedown: mouseDownOZM,
           mousemove: mouseMoveOZM,

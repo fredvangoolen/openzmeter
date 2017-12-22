@@ -476,7 +476,7 @@ function DetailsButtonClick(event) {
   if(this.id === 'btnShowDetailWaveform') localStorage.setItem('VoltageDetailView', 'Waveform');
   if(this.id === 'btnShowDetailHarmonics') localStorage.setItem('VoltageDetailView', 'Harmonics');
   if(this.id === 'btnShowDetailEvolution') localStorage.setItem('VoltageDetailView', 'Evolution');
-  if(this.id === 'btnShowDetailFFT') localStorage.setItem('VoltageDetailView', 'FFT');
+  if(this.id === 'btnShowDetailAdvanced') localStorage.setItem('VoltageDetailView', 'Advanced');
   if(this.id === 'btnShowDetailEvents') localStorage.setItem('VoltageDetailView', 'Events');
   if(this.id === 'btnShowDetail1Harmonic') localStorage.setItem('VoltageDetailFirstHarmonic', (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 'false' : 'true');
   if(this.id === 'btnShowDetailRPhase') {
@@ -504,6 +504,10 @@ function DetailsButtonClick(event) {
     localStorage.setItem('VoltageDetailShowCurrent', (localStorage.getItem('VoltageDetailShowCurrent') === 'true') ? 'false' : 'true');
     WaveformChart.updateOptions({ showRangeSelector: false});
     WaveformChart.updateOptions({ showRangeSelector: true});
+    HarmonicsChart.updateOptions({ showRangeSelector: true});
+    HarmonicsChart.updateOptions({ showRangeSelector: false});
+    FFTChart.updateOptions({ showRangeSelector: true});
+    FFTChart.updateOptions({ showRangeSelector: false});
   }
   $('#btnShowDetailWaveform').removeClass('active');
   $('#btnShowDetailHarmonics').removeClass('active');
@@ -517,7 +521,7 @@ function DetailsButtonClick(event) {
     case 'Evolution' :
       $('#btnShowDetailEvolution').addClass('active');
       break;
-    case 'FFT' :
+    case 'Advanced' :
       $('#btnShowDetailAdvanced').addClass('active');
       break;
     case 'Events' :
@@ -548,7 +552,7 @@ function DetailsButtonClick(event) {
   switch(localStorage.getItem('VoltageDetailView')) {
     case 'Waveform' :
     case 'Harmonics' :
-    case 'FFT' :
+    case 'Advanced' :
       var ShowR = (localStorage.getItem('VoltageDetailPhaseR') === 'true');
       var ShowS = (localStorage.getItem('VoltageDetailPhaseS') === 'true');
       var ShowT = (localStorage.getItem('VoltageDetailPhaseT') === 'true');
@@ -592,7 +596,7 @@ function DetailsButtonClick(event) {
   switch(localStorage.getItem('VoltageDetailView')) {
     case 'Waveform' :
     case 'Harmonics' :
-    case 'FFT' :
+    case 'Advanced' :
       $('#btnShowDetailVoltageAndCurrent').removeClass('disabled');
       if(localStorage.getItem('VoltageDetailShowCurrent') === 'true') {
         $('#btnShowDetailVoltageAndCurrent').addClass('active');
@@ -619,9 +623,10 @@ function DetailsButtonClick(event) {
       $('#EvolutionPanel').removeClass('hidden');
       $(HarmonicsChart.graphDiv).parent().removeAttr('style');
       break;
-    case 'FFT' :
+    case 'Advanced' :
       $('#FFTPanel').removeClass('hidden');
-      $(FFTChart.graphDiv).parent().removeAttr('style');
+      if(FFTChart !== null) $(FFTChart.graphDiv).parent().removeAttr('style');
+      if(FFTChart !== null) UpdateFFTChart(null);
       break;
     case 'Events' :
       $('#btnShowDetailEvents').addClass('active');
@@ -863,95 +868,115 @@ function UpdateHarmonicsChart(result) {
 /* Grafica de FFT */
 var FFTChart            = null;
 var FFTDataset          = [];
-var FFTOffset           = 0;
+var FFTVOffset          = 0;
+var FFTCOffset          = 0;
 function UpdateFFTChart(result) {
-  FFTDataset = [];
-  if(result['fft_v']) {
+  if(result !== null) {
+    var date = new Date(result['Sampletime']);
+    $('#FFTTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
+    FFTDataset = [];
     for(i = 0; i < result['fft_v'][0].length; i++) {
-      if(result['fft_v'][0][i] < 0.000000001) result['fft_v'][0][i] = 0.000000001;
-      FFTDataset.push([20.0 * Math.log10(result['fft_v'][0][i]), result['fft_v'][1][i], result['fft_v'][2][i]]);
+      if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+        FFTDataset.push([i, 20.0 * Math.log10(Math.max(0.000000001, result['fft_v'][0][i])), 20.0 * Math.log10(Math.max(0.000000001, result['fft_v'][1][i])), 20.0 * Math.log10(Math.max(0.000000001, result['fft_v'][2][i])),
+                                 20.0 * Math.log10(Math.max(0.000000001, result['fft_i'][0][i])), 20.0 * Math.log10(Math.max(0.000000001, result['fft_i'][1][i])), 20.0 * Math.log10(Math.max(0.000000001, result['fft_i'][2][i]))]);
+      } else {
+        FFTDataset.push([i, 20.0 * Math.log10(Math.max(0.000000001, result['fft_v'][0][i])), 20.0 * Math.log10(Math.max(0.000000001, result['fft_i'][0][i]))]);      
+      }
     }
-    FFTOffset = 0;
-    for(i = 0; i < result['fft_v'][0].length; i++) {
-      if(-FFTDataset[i][0] > FFTOffset) FFTOffset = -FFTDataset[i][0];
-    }
-    for(i = 0; i < result['fft_v'][0].length; i++) FFTDataset[i][0] = FFTDataset[i][0] + FFTOffset;
   }
-  var toShow = [];
-  for(i = 0; i < FFTDataset.length; i++) toShow.push([i, FFTDataset[i][0]]);
-  if(FFTChart == null) {
-    FFTChart = new Dygraph(document.getElementById("fft_chart"),
-      toShow,
-      { strokeWidth: 1,
+  var ShowR = (localStorage.getItem("VoltageDetailPhaseR") === 'true');
+  var ShowS = (localStorage.getItem("VoltageDetailPhaseS") === 'true');
+  var ShowT = (localStorage.getItem("VoltageDetailPhaseT") === 'true');
+  var ShowCurrent = (localStorage.getItem("VoltageDetailShowCurrent") === 'true');
+  var VoltageSeries = [];
+  var CurrentSeries = [];
+  var Visibility    = [];
+  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+    if(ShowR) VoltageSeries.push(1);
+    if(ShowS) VoltageSeries.push(2);
+    if(ShowT) VoltageSeries.push(3);
+    if(ShowR && ShowCurrent) CurrentSeries.push(4);
+    if(ShowS && ShowCurrent) CurrentSeries.push(5);
+    if(ShowT && ShowCurrent) CurrentSeries.push(6);
+    Visibility = [ShowR, ShowS, ShowT, ShowR && ShowCurrent, ShowS && ShowCurrent, ShowT && ShowCurrent];
+  } else {
+    VoltageSeries.push(1);
+    CurrentSeries.push(2);
+    Visibility = [true, ShowCurrent];
+  }
+  var ToShow = [];
+  var VoltageRange = CalcRanges(FFTDataset, VoltageSeries);
+  var CurrentRange = CalcRanges(FFTDataset, CurrentSeries);
+  FFTVOffset = (VoltageRange[0] < 0.0) ? -VoltageRange[0] : 0.0;
+  FFTCOffset = (CurrentRange[0] < 0.0) ? -CurrentRange[0] : 0.0;
+  for(i = 0; i < FFTDataset.length; i++) {
+    if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+      ToShow.push([i, FFTDataset[i][1] + FFTVOffset, FFTDataset[i][2] + FFTVOffset, FFTDataset[i][3] + FFTVOffset, FFTDataset[i][4] + FFTCOffset, FFTDataset[i][5] + FFTCOffset, FFTDataset[i][6] + FFTCOffset]);
+    } else {
+      ToShow.push([i, FFTDataset[i][1] + FFTVOffset, FFTDataset[i][2] + FFTCOffset]);
+    }
+  }
+  var Options = { strokeWidth: 1,
         labelsDiv: "FFTLegend",  
-        labels: ["Frequency", "dB"],
-        colors: ["#d9534f"],
+        labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)', 'Current (R)', 'Current (S)', 'Current (T)'] : ['Time', 'Voltage', 'Current'],
+        colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#534fd9', '#4fd953', '#428bca', '#42ca81', '#ca428b'] : ['#d9534f', '#428bca'],
+        visibility: Visibility,  
         gridLineColor: "#999",
         gridLinePattern: [4, 4],
-        showRangeSelector: true,
-        rangeSelectorHeight: 20,
-        rangeSelectorPlotFillColor: "#d9534f",
-        rangeSelectorPlotStrokeColor: "#d9534f",
-        xAxisHeight: 10,
-        fillGraph: true,
-        interactionModel: { 
-          mousedown: mouseDownOZM,
-          mousemove: mouseMoveOZM,
-          mouseup  : mouseUpOZM,
-          dblclick : dblClickOZM_Restore  
-        },
-        axes: {
+        interactionModel: { },
+        dateWindow: [0, FFTDataset.length],
+        series: (Nodes['Devices'][Node]['Type'] === '3Phase') ? { 'Current (R)': { axis: 'y2' }, 'Current (S)': { axis: 'y2' }, 'Current (T)': { axis: 'y2'  } } : { 'Current': { axis: 'y2' } },
+        axes: { 
           y: { pixelsPerLabel: 15,
                axisLabelWidth: 20,
+               valueRange: [VoltageRange[0] + FFTVOffset, VoltageRange[1] + FFTVOffset], 
                ticker: function(min, max, pixels, opts, dygraph, vals) {
-                         var ticks = [];
-                         for(var i = Math.floor(min - FFTOffset); i < Math.ceil(max - FFTOffset); i++) {
-                           if((i % 10) == 0) {
-                             ticks.push({ v: i + FFTOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' })
-                           }
-                         }
-                         return ticks;
-                       },
-               valueFormatter: function (x, a, b, c, row, col) {
-                 return Round2(x - FFTOffset) + '<strong style="color: #d9534f">&nbsp;&nbsp;Voltage</strong>: ' + (Round2(FFTDataset[row][1])) + '<em class="small"> V</em>';
+                 var ticks = [];
+                 for(var i = Math.floor(min - HarmonicsVOffset); i < Math.ceil(max - HarmonicsVOffset); i++) {
+                   if((i % 10) == 0) ticks.push({ v: i + HarmonicsVOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
+                 }
+                 return ticks;
                },
-             },
-          x: { ticker: function(min, max, pixels, opts, dygraph, vals) {
-                         var ticks = [];
-                         for(var i = 1; i < max; i++) {
-                           if((i % 10) == 0) {
-                             ticks.push({ v: i, label: '' });
-                           }
-                           if((i % 50) == 0) {
-                             ticks.push({ v: i, label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + (i * 5) + '</div>' });
-                           }
-                         }
-                         return ticks;
-                       },
+               valueFormatter: function (x, a, b, c, row, col) {
+//                 return Round2(x - HarmonicsOffset) + '<strong style="color: #d9534f">&nbsp;&nbsp;Voltage</strong>: ' + (Round2(HarmonicsDataset[row + (HideFundamentals ? 1 : 0)][1])) + '<em class="small"> V</em>';
+               }
+          },
+           y2: { pixelsPerLabel: 15,
+                 axisLabelWidth: ShowCurrent ? 15 : 0,
+                 valueRange: [CurrentRange[0] + FFTCOffset, CurrentRange[1] + FFTCOffset],
+                 valueFormatter: function (x) {
+                   return Round2(x) + ' <em class="x-small">dB</em>';
+                 },
+                 ticker: function(min, max, pixels, opts, dygraph, vals) {
+                   var ticks = [];
+                   for(var i = Math.floor(min - HarmonicsCOffset); i < Math.ceil(max - HarmonicsCOffset); i++) {
+                     if((i % 10) == 0) ticks.push({ v: i + HarmonicsCOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
+                   }
+                   return ticks;
+                 },
+//                 axisLabelFormatter: function (x) {
+//              if(ShowCurrent == true) {
+//                return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
+//              } else {
+//                return '';
+//              }
+//            }
+          },
+          x: { drawGrid: false, 
+
                valueFormatter: function (y) {
-                                 return (5 * y) + ' <em class="small">Hz</em>';
-                               },
-             }
+                                 return HarmonicsNames[y] + ' Harmonic (' + (50 * (y + 1)) + '<em class="small"> Hz</em>)';
+                               }
+          }
         }
-      }
-    );
+      };
+  if(FFTChart === null) {
+    FFTChart = new Dygraph(document.getElementById("FFTChart"), ToShow, Options);
   } else {
-    FFTChart.updateOptions({ file: toShow });
-  }
-  if(FFTDataset.length > 0) {
-    var date = new Date(result.fft_v.time);
-    $('#FFTTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
-  } else {
-    $('#FFTTime').text('No stored data');
-    FFTChart.updateOptions({ file: []});
+    FFTChart.updateOptions(Options, true);
+    FFTChart.updateOptions({ file: ToShow });
   }
 }
-
-var ShowCurrent         = false;
-var Paused              = false;
-var HideFundamentals    = false;
-
-
 
 
 var EvolutionCharts     = [];

@@ -401,6 +401,44 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       }
       return MHD_YES;
     }
+  } else if(strcmp(url, "/getEvents") == 0) {
+    uint32_t Node = 0;
+    uint64_t LastEvent = 0, From = 0, To = 0, Period = 0;
+    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastEvent") == 0))
+        LastEvent = json_object_get_int64(JSON_Val);
+      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Period") == 0))      
+        Period = json_object_get_int64(JSON_Val);
+      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "To") == 0))
+        To = json_object_get_int64(JSON_Val);
+      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
+        Node = json_object_get_int(JSON_Val);
+      else 
+        Error = true;
+    }
+    if(Error == true) {    
+      Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      Request->PostData = (char*)"Invalid JSON params";
+      Request->PostResponseLen = strlen(Request->PostData);
+      return MHD_YES;
+    }
+    if(To == 0) To = Tools::GetTime();
+    From = To - Period;
+    char QueryText[8192];
+    int  QueryLen = 0;
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\", ", To); 
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(starttime) AS \"Starttime\", ");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(duration) AS \"Duration\", ");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(type) AS \"Type\", ");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(voltage) AS \"Voltage\", ");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(percent) AS \"Percentage\" ");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE starttime > %" PRIu64 " AND starttime >= %" PRIu64 " AND starttime <= %" PRIu64 " AND node = %u ORDER BY \"Sampletime\" ASC) AS Result", LastEvent, From, To, Node);
+    Request->DB = new Database();
+    Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
+    return MHD_YES;
   }
   Request->ResultCode = MHD_HTTP_BAD_REQUEST;
   Request->PostData = (char*)"Invalid command";
