@@ -466,6 +466,7 @@
         <itemPath>WEB/Resources/Analysis_Voltage.js</itemPath>
         <itemPath>WEB/Resources/CommonHeader.html</itemPath>
         <itemPath>WEB/Resources/Dashboard.js</itemPath>
+        <itemPath>WEB/Resources/Help.js</itemPath>
         <itemPath>WEB/Resources/Login.js</itemPath>
         <itemPath>WEB/Resources/favicon.ico</itemPath>
         <itemPath>WEB/Resources/openZmeter.js</itemPath>
@@ -601,6 +602,8 @@
       <item path="WEB/Resources/CommonHeader.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Dashboard.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Help.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Login.js" ex="false" tool="3" flavor2="0">
       </item>

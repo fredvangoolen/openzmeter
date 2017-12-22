@@ -222,6 +222,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
   }
   if(strcmp(url, "/getNodes") == 0) {
     json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+      (void)JSON_Key; (void)JSON_Val;      
       Error = true;
     }
     if(Error == true) {    
