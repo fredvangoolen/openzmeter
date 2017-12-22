@@ -106,7 +106,7 @@ function AjaxEnergyPower(result) {
       { strokeWidth: 1,
         labelsDiv: "ActiveEnergyLegend",
         labels: ["Time", "Active Energy"],
-        plotter: barChartPlotterEnergy,
+        plotter: barChartNoSpacedPlotter,
         stepPlot: true,
         fillGraph: true,
         colors: ["#31708f"],
@@ -120,6 +120,9 @@ function AjaxEnergyPower(result) {
             direction: "vertical"
           })
         ],
+        underlayCallback: function(context, area, dygraph) {
+          HightlightWeekends("#EEE", context, area, dygraph);
+        },
         zoomCallback: function(minDate, maxDate, yRanges) {
           $('#btnEnergyPowerNow').removeClass('active');
           localStorage.setItem('GraphEnd', maxDate);
@@ -190,7 +193,7 @@ function AjaxEnergyPower(result) {
       { strokeWidth: 1,
         labelsDiv: "ReactiveEnergyLegend",
         labels: ["Time", "Reactive Energy"],
-        plotter: barChartPlotterEnergy,
+        plotter: barChartNoSpacedPlotter,
         stepPlot: true,
         fillGraph: true,
         colors: ["#31708f"],
@@ -204,6 +207,9 @@ function AjaxEnergyPower(result) {
             direction: "vertical"
           })
         ],
+        underlayCallback: function(context, area, dygraph) {
+          HightlightWeekends("#EEE", context, area, dygraph);
+        },
         zoomCallback: function(minDate, maxDate, yRanges) {
           $('#btnEnergyPowerNow').removeClass('active');
           localStorage.setItem('GraphEnd', maxDate);
@@ -288,6 +294,9 @@ function AjaxEnergyPower(result) {
             direction: "vertical"
           })
         ],
+        underlayCallback: function(context, area, dygraph) {
+          HightlightWeekends("#EEE", context, area, dygraph);
+        },
         zoomCallback: function(minDate, maxDate, yRanges) {
           $('#btnEnergyPowerNow').removeClass('active');
           localStorage.setItem('GraphEnd', maxDate);
@@ -372,6 +381,9 @@ function AjaxEnergyPower(result) {
             direction: "vertical"
           })
         ],
+        underlayCallback: function(context, area, dygraph) {
+          HightlightWeekends("#EEE", context, area, dygraph);
+        },
         zoomCallback: function(minDate, maxDate, yRanges) {
           $('#btnEnergyPowerNow').removeClass('active');
           localStorage.setItem('GraphEnd', maxDate);

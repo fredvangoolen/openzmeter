@@ -481,6 +481,7 @@
       <itemPath>WEB/Analysis_Frequency.html</itemPath>
       <itemPath>WEB/Analysis_Voltage.html</itemPath>
       <itemPath>WEB/Dashboard.html</itemPath>
+      <itemPath>WEB/Help.html</itemPath>
       <itemPath>WEB/Login.html</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -582,6 +583,8 @@
       <item path="WEB/Analysis_Voltage.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Dashboard.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Help.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Login.html" ex="false" tool="3" flavor2="0">
       </item>
