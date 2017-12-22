@@ -12,6 +12,9 @@
       <itemPath>CaptureVirtual/CaptureVirtual.h</itemPath>
     </logicalFolder>
     <logicalFolder name="WEB" displayName="WEB" projectFiles="true">
+      <logicalFolder name="MiniViews" displayName="MiniViews" projectFiles="true">
+        <itemPath>WEB/MiniViews/Voltage.html</itemPath>
+      </logicalFolder>
       <logicalFolder name="Resources" displayName="Resources" projectFiles="true">
         <logicalFolder name="css" displayName="css" projectFiles="true">
           <itemPath>WEB/Resources/css/common.css</itemPath>
@@ -467,15 +470,6 @@
         <itemPath>WEB/Resources/favicon.ico</itemPath>
         <itemPath>WEB/Resources/openZmeter.js</itemPath>
       </logicalFolder>
-      <logicalFolder name="Views" displayName="Views" projectFiles="true">
-        <logicalFolder name="events" displayName="events" projectFiles="true">
-          <itemPath>WEB/Views/events/disturbances_view.php</itemPath>
-          <itemPath>WEB/Views/events/itic_view.php</itemPath>
-        </logicalFolder>
-        <itemPath>WEB/Views/account_view.php</itemPath>
-        <itemPath>WEB/Views/settings_view.php</itemPath>
-        <itemPath>WEB/Views/stats_view.php</itemPath>
-      </logicalFolder>
       <itemPath>WEB/Analysis_Current.html</itemPath>
       <itemPath>WEB/Analysis_EnergyPower.html</itemPath>
       <itemPath>WEB/Analysis_Frequency.html</itemPath>
@@ -587,6 +581,8 @@
       <item path="WEB/Help.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Login.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/MiniViews/Voltage.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Analysis_Current.js" ex="false" tool="3" flavor2="0">
       </item>
@@ -1859,19 +1855,6 @@
       <item path="WEB/Resources/lib/visjs/vis.min.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/openZmeter.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Views/account_view.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Views/events/disturbances_view.php"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Views/events/itic_view.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Views/settings_view.php" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Views/stats_view.php" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>
