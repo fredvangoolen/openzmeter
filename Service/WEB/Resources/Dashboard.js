@@ -885,7 +885,7 @@ function AjaxGetEnergyCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current + Period }),
+           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Node }),
            success: EnergyUpdateCountersCurrent
   });
   $.ajax({ url: "getSeriesAggreg",
@@ -893,7 +893,7 @@ function AjaxGetEnergyCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current }),
+           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current, Node: Node }),
            success: EnergyUpdateCountersPrevs
   });
   $.ajax({ url: "getBudget",
@@ -948,7 +948,6 @@ function EnergyUpdateCountersPrevs(result) {
   for(i = 0; i < result['sum_active_energy'].length; i++) {
     if(result['sum_active_energy'][i] > 1000) Units = 'kWh';
   }
-  $('#labelEnergyUnits').text(Units);
   if(Units == 'kWh') {
     for(i = 0; i < result['sum_active_energy'].length; i++) result['sum_active_energy'][i] = result['sum_active_energy'][i] / 1000;
   }

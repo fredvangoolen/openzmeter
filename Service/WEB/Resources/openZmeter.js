@@ -96,7 +96,24 @@ function AjaxGetIndicators() {
     dataType: "json",
     contentType: 'application/json',
     data: JSON.stringify({ Series: 'rms_v, rms_i, active_power, freq', Node: Node}),
-    success: AjaxIndicators,
+    success: function(result) {
+      var Time = new Date(result['Sampletime']);
+      $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
+      $('#VoltageIndicator').html(Array_Round2(result['rms_v'], ' | '));
+      $('#CurrentIndicator').html(Array_Round2(result['rms_i'], ' | '));
+      var Units = 'W';
+      for (i = 0; i < result['active_power'].length; i++) {
+        if (result['active_power'][i] > 1000)
+          Units = 'kW';
+      }
+      $('#PowerIndicatorUnits').text(Units);
+      if (Units == 'kW') {
+        for (i = 0; i < result['active_power'].length; i++)
+          result['active_power'][i] = result['active_power'][i] / 1000;
+      }
+      $('#PowerIndicator').html(Array_Round2(result['active_power'], ' | ', ''));
+      $('#FrequencyIndicator').html(Round2(result['freq']));
+    },
     error: function() {
       $('#VoltageIndicator').text('Offline');
       $('#CurrentIndicator').text('Offline');
@@ -108,23 +125,32 @@ function AjaxGetIndicators() {
       setTimeout(AjaxGetIndicators, 3000);
     }
  });
+ var From = GetDayTimestamp();
+ $.ajax({ url: "getSeriesAggreg",
+    timeout: 20000,
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: '1m', Period: 86400000, To: From + 86400000, Node: Node }),
+    success: function(result) {
+      var Units = 'Wh';
+      for(i = 0; i < result['sum_active_energy'].length; i++) {
+        if(result['sum_active_energy'][i] > 1000) Units = 'kWh';
+      }
+      $('#EnergyIndicatorUnits').text(Units);
+      if(Units == 'kWh') {
+        for(i = 0; i < result['sum_active_energy'].length; i++) result['sum_active_energy'][i] = result['sum_active_energy'][i] / 1000;
+      }
+      $('#EnergyIndicator').html(Array_Round2(result['sum_active_energy'], ' | ', ''));
+    },
+    error: function() {
+      $('EnergyIndicator').text('Offline');
+    }
+ });
 }
 
 function AjaxIndicators(result) {
-  var Time = new  Date(result['Sampletime']);
-  $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
-  $('#VoltageIndicator').html(Array_Round2(result['rms_v'], ' | '));
-  $('#CurrentIndicator').html(Array_Round2(result['rms_i'], ' | '));
-  var Units = 'W';
-  for(i = 0; i < result['active_power'].length; i++) {
-    if(result['active_power'][i] > 1000) Units = 'kW';
-  }
-  $('#PowerIndicatorUnits').text(Units);
-  if(Units == 'kW') {
-    for(i = 0; i < result['active_power'].length; i++) result['active_power'][i] = result['active_power'][i] / 1000;
-  }
-  $('#PowerIndicator').html(Array_Round2(result['active_power'], ' | ', ''));
-  $('#FrequencyIndicator').html(Round2(result['freq']));
+
   //  
 //  if(result.sysinfo) {
 //    $('#ProgressCPU').LineProgressbar( { percentage: result.sysinfo.cpu, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });
