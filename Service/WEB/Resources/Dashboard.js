@@ -896,43 +896,76 @@ function AjaxGetEnergyCounters() {
            data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current }),
            success: EnergyUpdateCountersPrevs
   });
+  $.ajax({ url: "getBudget",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Period: Period, To: Current, Node: Node }),
+           success: EnergyUpdateCountersBudget
+  });
 }
-  
-  
-
-  
-  
-  //Voy a obtener varios tipos de datos:
-  //Si
-//  $.ajax({ url: "dashboard/ajaxUpdateValues60S",
-//           timeout: 20000,
-//           type: "POST",
-//           dataType: "json",
-//           data: { energyperiod: EnergyTimeScale, lastevolutiontimestamp: LastEvolutionSample },
-//         success: AjaxSuccess60S,
-//      });
-//}
-function EnergyUpdateCountersCurrent() {
+function EnergyUpdateCountersCurrent(result) {
   EnergyCountersTimer = setTimeout(AjaxGetEnergyCounters, 60000);
   var CountersPeriod = localStorage.getItem('CountersPeriod');
   if(CountersPeriod === 'Week') {
     $('#labelEnergyPeriod').text('This week');
-    $('#labelBudgetPeriod').text('This week');
-    $('#labelBudgetPeriod').text('Previous week');    
   } else if(CountersPeriod === 'Month') {
     $('#labelEnergyPeriod').text('This month');
-    $('#labelBudgetPeriod').text('This Mont');
-    $('#labelBudgetPeriod').text('Previous month');
   } else if(CountersPeriod === 'Year') {
     $('#labelEnergyPeriod').text('This year');
-    $('#labelBudgetPeriod').text('This year');
-    $('#labelBudgetPeriod').text('Previous year');
   } else if(CountersPeriod === 'Day') {
     $('#labelEnergyPeriod').text('Today');
-    $('#labelBudgetPeriod').text('Today');
+  }
+  var Units = 'Wh';
+  for(i = 0; i < result['sum_active_energy'].length; i++) {
+    if(result['sum_active_energy'][i] > 1000) Units = 'kWh';
+  }
+  $('#labelEnergyUnits').text(Units);
+  if(Units == 'kWh') {
+    for(i = 0; i < result['sum_active_energy'].length; i++) result['sum_active_energy'][i] = result['sum_active_energy'][i] / 1000;
+  }
+  if(Nodes['Devices'][Node]['Type'] === '1Phase') {  
+    $('#labelEnergy').html(Round2(result['sum_active_energy'][0]));
+  } else {
+    $('#labelEnergy').html(Round2(result['sum_active_energy'][0] + result['sum_active_energy'][1] + result['sum_active_energy'][2]));
+    $('#labelEnergyPhases').html('<br/>By phase&nbsp;&nbsp;<span style="font-size:150%">' + Array_Round2(result['sum_active_energy'], '&nbsp;&nbsp;') + '</span>&nbsp;&nbsp;' + Units);
+  }
+  EnergyResizeEvent();
+}
+function EnergyUpdateCountersPrevs(result) {
+  var CountersPeriod = localStorage.getItem('CountersPeriod');
+  if(CountersPeriod === 'Week') {
+    $('#labelPrevEnergyPeriod').text('Previous week');
+  } else if(CountersPeriod === 'Month') {
+    $('#labelPrevEnergyPeriod').text('Previous month');
+  } else if(CountersPeriod === 'Year') {
+    $('#labelPrevEnergyPeriod').text('Previous year');
+  } else if(CountersPeriod === 'Day') {
     $('#labelPrevEnergyPeriod').text('Yesterday');
   }
-    var date = new Date(result['budget_lastcalc'] * 1000);
+  var Units = 'Wh';
+  for(i = 0; i < result['sum_active_energy'].length; i++) {
+    if(result['sum_active_energy'][i] > 1000) Units = 'kWh';
+  }
+  $('#labelEnergyUnits').text(Units);
+  if(Units == 'kWh') {
+    for(i = 0; i < result['sum_active_energy'].length; i++) result['sum_active_energy'][i] = result['sum_active_energy'][i] / 1000;
+  }
+  if(result['sum_active_energy'].length === 1) {
+    $('#labelPrevEnergy').html(Round2(result['sum_active_energy'][0]));
+  } else if(result['sum_active_energy'].length === 3) {
+    $('#labelPrevEnergy').html(Round2(result['sum_active_energy'][0] + result['sum_active_energy'][1] + result['sum_active_energy'][2]) + '&nbsp;' + Units + 
+      '&nbsp;(' + Array_Round2(result['sum_active_energy'], '&nbsp;&nbsp;') + '</span>&nbsp;&nbsp;By phase)');
+  } else {
+    $('#labelPrevEnergy').html('No data yet!');
+  }
+  EnergyResizeEvent();
+}
+function EnergyUpdateCountersBudget(result) {
+  
+
+var date = new Date(result['budget_lastcalc'] * 1000);
   $('#budget_lastcalc').text(date.toLocaleDateString() + ' - ' + date.toLocaleTimeString());
   
   Round2Labels(result['current_budget'], $('#budget_integer'), $('#budget_decimal'));
@@ -952,10 +985,6 @@ function EnergyUpdateCountersCurrent() {
   }
   
   
-  
-  
-}
-function EnergyUpdateCountersPrevs() {
   
 }
 /* Cuadro Main parameters */

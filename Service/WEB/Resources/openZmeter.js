@@ -84,7 +84,7 @@ function Round2(value) {
     while(value.length < 3) value = value + '0';
     Integer = value.substr(0, value.length - 2);
     Fraction = value.substr(value.length - 2, 2);
-    return Integer + '.' + Fraction;
+    return Integer + '<span style="font-size:80%">.' + Fraction + '</span>';
   }
 }
 
@@ -113,8 +113,8 @@ function AjaxGetIndicators() {
 function AjaxIndicators(result) {
   var Time = new  Date(result['Sampletime']);
   $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
-  $('#VoltageIndicator').text(Array_Round2(result['rms_v'], ' | '));
-  $('#CurrentIndicator').text(Array_Round2(result['rms_i'], ' | '));
+  $('#VoltageIndicator').html(Array_Round2(result['rms_v'], ' | '));
+  $('#CurrentIndicator').html(Array_Round2(result['rms_i'], ' | '));
   var Units = 'W';
   for(i = 0; i < result['active_power'].length; i++) {
     if(result['active_power'][i] > 1000) Units = 'kW';
@@ -123,8 +123,8 @@ function AjaxIndicators(result) {
   if(Units == 'kW') {
     for(i = 0; i < result['active_power'].length; i++) result['active_power'][i] = result['active_power'][i] / 1000;
   }
-  $('#PowerIndicator').text(Array_Round2(result['active_power'], ' | ', ''));
-  $('#FrequencyIndicator').text(Round2(result['freq']));
+  $('#PowerIndicator').html(Array_Round2(result['active_power'], ' | ', ''));
+  $('#FrequencyIndicator').html(Round2(result['freq']));
   //  
 //  if(result.sysinfo) {
 //    $('#ProgressCPU').LineProgressbar( { percentage: result.sysinfo.cpu, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });
