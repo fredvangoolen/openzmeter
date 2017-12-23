@@ -304,10 +304,10 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     char *Save;
     char *Serie = strtok_r(Series, ", ", &Save);
     while(Serie != NULL) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(%s) AS %s, ", Serie, Serie);
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(%s ORDER BY sampletime ASC) AS %s, ", Serie, Serie);
       Serie = strtok_r(NULL, ", ", &Save);
     }
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(sampletime) AS \"Sampletime\" FROM aggreg_%s WHERE sampletime > %" PRIu64 " AND sampletime >= %" PRIu64 " AND sampletime <= %" PRIu64 " AND node = %u ORDER BY \"Sampletime\" ASC) AS Result", Aggreg, LastSample, From, To, Node);
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(sampletime ORDER BY sampletime ASC) AS \"Sampletime\" FROM aggreg_%s WHERE sampletime > %" PRIu64 " AND sampletime >= %" PRIu64 " AND sampletime <= %" PRIu64 " AND node = %u) AS Result", Aggreg, LastSample, From, To, Node);
     Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;

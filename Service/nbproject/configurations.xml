@@ -459,6 +459,7 @@
             <itemPath>WEB/Resources/lib/visjs/vis.min.js</itemPath>
           </logicalFolder>
           <itemPath>WEB/Resources/lib/jquery.min.js</itemPath>
+          <itemPath>WEB/Resources/lib/marked.min.js</itemPath>
         </logicalFolder>
         <itemPath>WEB/Resources/Analysis_Current.js</itemPath>
         <itemPath>WEB/Resources/Analysis_EnergyPower.js</itemPath>
@@ -1671,6 +1672,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="WEB/Resources/lib/marked.min.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/metisMenu/.bower.json"
             ex="false"

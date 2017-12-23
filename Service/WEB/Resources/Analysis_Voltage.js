@@ -978,6 +978,12 @@ function UpdateFFTChart(result) {
   }
 }
 
+var ShowCurrent         = false;
+var Paused              = false;
+var HideFundamentals    = false;
+
+
+
 
 var EvolutionCharts     = [];
 var LastEvolutionSample = 0;
