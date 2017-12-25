@@ -447,9 +447,11 @@ $('#GraphDialogClose').click(function() {
 });
 
 /* Vista de detalles */
-var DetailSpinner       = new Spinner(SpinnerOpts);
+var DetailSpinner = new Spinner(SpinnerOpts);
+var DetailTimer   = null;
 function AjaxGetDetails() {
   if(WaveformChart === null) ShowSpinner(DetailSpinner, 'DetailSpinner');
+  $('#btnPauseDetail').addClass('disabled');
   $.ajax({ url: "getSeriesNow",
            timeout: 20000,
            type: "POST",
@@ -468,10 +470,12 @@ function AjaxGetDetails() {
              $('#FFTTime').text('Node Offline');
            },
            complete: function (x) {
-             setTimeout(AjaxGetDetails, 500);
+             $('#btnPauseDetail').removeClass('disabled');
+             DetailTimer = setTimeout(AjaxGetDetails, 1000);
            }
         });
 }
+var DetailPaused = false;
 function DetailsButtonClick(event) {
   if(this.id === 'btnShowDetailWaveform') localStorage.setItem('VoltageDetailView', 'Waveform');
   if(this.id === 'btnShowDetailHarmonics') localStorage.setItem('VoltageDetailView', 'Harmonics');
@@ -479,6 +483,16 @@ function DetailsButtonClick(event) {
   if(this.id === 'btnShowDetailAdvanced') localStorage.setItem('VoltageDetailView', 'Advanced');
   if(this.id === 'btnShowDetailEvents') localStorage.setItem('VoltageDetailView', 'Events');
   if(this.id === 'btnShowDetail1Harmonic') localStorage.setItem('VoltageDetailFirstHarmonic', (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 'false' : 'true');
+  if(this.id === 'btnPauseDetail') {
+    DetailPaused = !DetailPaused;
+    if(DetailPaused) {
+      $('#btnPauseDetail').addClass('active');
+      if(DetailTimer !== null) clearInterval(DetailTimer);
+    } else {
+      $('#btnPauseDetail').removeClass('active');
+      AjaxGetDetails();
+    }
+  }
   if(this.id === 'btnShowDetailRPhase') {
      if(localStorage.getItem('VoltageDetailView') === 'Evolution') {
        localStorage.setItem('VoltageDetailEvolutionPhase', 'PhaseR');
@@ -605,8 +619,6 @@ function DetailsButtonClick(event) {
       }
       break;
   }  
-
-//  $('#btnPauseDetail').removeClass('disabled');
   $('#Tabs > div').addClass('hidden');
   switch(localStorage.getItem('VoltageDetailView')) {
     case 'Waveform' :
@@ -643,6 +655,9 @@ $('#btnShowDetailRPhase').click(DetailsButtonClick);
 $('#btnShowDetailSPhase').click(DetailsButtonClick);
 $('#btnShowDetailTPhase').click(DetailsButtonClick);
 $('#btnShowDetailVoltageAndCurrent').click(DetailsButtonClick);
+$('#btnShowDetail1Harmonic').click(DetailsButtonClick);
+$('#btnPauseDetail').click(DetailsButtonClick);
+
 /* Grafica de forma de onda */
 var WaveformChart       = null;
 var WaveformDataset     = [];
@@ -702,7 +717,7 @@ function UpdateWaveformChart(result) {
            axisLabelWidth: 34,
            valueRange: Max_Voltage, 
            valueFormatter: function (x) {
-             return Round2(x) + ' <em class="x-small">dB</em>';
+             return Round2(x) + ' <em class="x-small">V</em>';
            },
            axisLabelFormatter: function (x) {
              return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
@@ -755,10 +770,9 @@ function UpdateHarmonicsChart(result) {
     HarmonicsDataset = [];
     for(i = 0; i < result['harmonics_v'][0].length; i++) {
       if(Nodes['Devices'][Node]['Type'] === '3Phase') {
-        HarmonicsDataset.push([i, 20.0 * Math.log10(Math.max(0.000000001, result['harmonics_v'][0][i])), 20.0 * Math.log10(Math.max(0.000000001, result['harmonics_v'][1][i])), 20.0 * Math.log10(Math.max(0.000000001, result['harmonics_v'][2][i])),
-                                  20.0 * Math.log10(Math.max(0.000000001, result['harmonics_i'][0][i])), 20.0 * Math.log10(Math.max(0.000000001, result['harmonics_i'][1][i])), 20.0 * Math.log10(Math.max(0.000000001, result['harmonics_i'][2][i]))]);
+        HarmonicsDataset.push([result['harmonics_v'][0][i], result['harmonics_v'][1][i], result['harmonics_v'][2][i], result['harmonics_i'][0][i], result['harmonics_i'][1][i], result['harmonics_i'][2][i]]);
       } else {
-        HarmonicsDataset.push([i, 20.0 * Math.log10(Math.max(0.000000001, result['harmonics_v'][0][i])), 20.0 * Math.log10(Math.max(0.000000001, result['harmonics_i'][0][i]))]);      
+        HarmonicsDataset.push([result['harmonics_v'][0][i], result['harmonics_i'][0][i]]);      
       }
     }
   }
@@ -770,93 +784,91 @@ function UpdateHarmonicsChart(result) {
   var CurrentSeries = [];
   var Visibility    = [];
   if(Nodes['Devices'][Node]['Type'] === '3Phase') {
-    if(ShowR) VoltageSeries.push(1);
-    if(ShowS) VoltageSeries.push(2);
-    if(ShowT) VoltageSeries.push(3);
-    if(ShowR && ShowCurrent) CurrentSeries.push(4);
-    if(ShowS && ShowCurrent) CurrentSeries.push(5);
-    if(ShowT && ShowCurrent) CurrentSeries.push(6);
+    if(ShowR) VoltageSeries.push(0);
+    if(ShowS) VoltageSeries.push(1);
+    if(ShowT) VoltageSeries.push(2);
+    if(ShowR && ShowCurrent) CurrentSeries.push(3);
+    if(ShowS && ShowCurrent) CurrentSeries.push(4);
+    if(ShowT && ShowCurrent) CurrentSeries.push(5);
     Visibility = [ShowR, ShowS, ShowT, ShowR && ShowCurrent, ShowS && ShowCurrent, ShowT && ShowCurrent];
   } else {
-    VoltageSeries.push(1);
-    CurrentSeries.push(2);
+    VoltageSeries.push(0);
+    CurrentSeries.push(1);
     Visibility = [true, ShowCurrent];
   }
   var ToShow = [];
-  for(i = (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 0 : 1; i < HarmonicsDataset.length; i++) ToShow.push(HarmonicsDataset[i]);
+  for(i = (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 0 : 1; i < HarmonicsDataset.length; i++) {
+    ToShow.push([]);
+    for(n = 0; n < HarmonicsDataset[i].length; n++) ToShow[i][n] = 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][n]));
+  }
   var VoltageRange = CalcRanges(ToShow, VoltageSeries);
   var CurrentRange = CalcRanges(ToShow, CurrentSeries);
   HarmonicsVOffset = (VoltageRange[0] < 0.0) ? -VoltageRange[0] : 0.0;
   HarmonicsCOffset = (CurrentRange[0] < 0.0) ? -CurrentRange[0] : 0.0;
   for(i = 0; i < ToShow.length; i++) {
     if(Nodes['Devices'][Node]['Type'] === '3Phase') {
-      ToShow[i] = [i, ToShow[i][1] + HarmonicsVOffset, ToShow[i][2] + HarmonicsVOffset, ToShow[i][3] + HarmonicsVOffset, ToShow[i][4] + HarmonicsCOffset, ToShow[i][5] + HarmonicsCOffset, ToShow[i][6] + HarmonicsCOffset];
+      ToShow[i] = [i, ToShow[i][0] + HarmonicsVOffset, ToShow[i][1] + HarmonicsVOffset, ToShow[i][2] + HarmonicsVOffset, ToShow[i][3] + HarmonicsCOffset, ToShow[i][4] + HarmonicsCOffset, ToShow[i][5] + HarmonicsCOffset];
     } else {
-      ToShow[i] = [i, ToShow[i][1] + HarmonicsVOffset, ToShow[i][2] + HarmonicsCOffset];
+      ToShow[i] = [i, ToShow[i][0] + HarmonicsVOffset, ToShow[i][1] + HarmonicsCOffset];
     }
   }
   var Options = { strokeWidth: 1,
-        labelsDiv: "HarmonicsLegend",  
-        labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)', 'Current (R)', 'Current (S)', 'Current (T)'] : ['Time', 'Voltage', 'Current'],
-        colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#534fd9', '#4fd953', '#428bca', '#42ca81', '#ca428b'] : ['#d9534f', '#428bca'],
-        visibility: Visibility,  
-        plotter: multiColumnBarPlotter,
-        dateWindow: [(HideFundamentals ? 0 : -1), 50],
-        gridLineColor: "#999",
-        gridLinePattern: [4, 4],
-        interactionModel: { },
-        series: (Nodes['Devices'][Node]['Type'] === '3Phase') ? { 'Current (R)': { axis: 'y2' }, 'Current (S)': { axis: 'y2' }, 'Current (T)': { axis: 'y2'  } } : { 'Current': { axis: 'y2' } },
-        axes: { 
-          y: { pixelsPerLabel: 15,
-               axisLabelWidth: 20,
-               valueRange: [VoltageRange[0] + HarmonicsVOffset, VoltageRange[1] + HarmonicsVOffset], 
-               ticker: function(min, max, pixels, opts, dygraph, vals) {
-                 var ticks = [];
-                 for(var i = Math.floor(min - HarmonicsVOffset); i < Math.ceil(max - HarmonicsVOffset); i++) {
-                   if((i % 10) == 0) ticks.push({ v: i + HarmonicsVOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
-                 }
-                 return ticks;
-               },
-               valueFormatter: function (x, a, b, c, row, col) {
-//                 return Round2(x - HarmonicsOffset) + '<strong style="color: #d9534f">&nbsp;&nbsp;Voltage</strong>: ' + (Round2(HarmonicsDataset[row + (HideFundamentals ? 1 : 0)][1])) + '<em class="small"> V</em>';
-               }
+    labelsDiv: "HarmonicsLegend",  
+    labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)', 'Current (R)', 'Current (S)', 'Current (T)'] : ['Time', 'Voltage', 'Current'],
+    colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#534fd9', '#4fd953', '#428bca', '#42ca81', '#ca428b'] : ['#d9534f', '#428bca'],
+    visibility: Visibility,  
+    plotter: multiColumnBarPlotter,
+    dateWindow: [-0.5, (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 49.5 : 48.5],
+    gridLineColor: "#999",
+    gridLinePattern: [4, 4],
+    interactionModel: { },
+    series: (Nodes['Devices'][Node]['Type'] === '3Phase') ? { 'Current (R)': { axis: 'y2' }, 'Current (S)': { axis: 'y2' }, 'Current (T)': { axis: 'y2'  } } : { 'Current': { axis: 'y2' } },
+    axes: { 
+      y: { pixelsPerLabel: 15,
+           axisLabelWidth: 20,
+           valueRange: [VoltageRange[0] + HarmonicsVOffset, VoltageRange[1] + HarmonicsVOffset], 
+           ticker: function(min, max, pixels, opts, dygraph, vals) {
+             var ticks = [];
+             for(var i = Math.floor(min - HarmonicsVOffset); i < Math.ceil(max - HarmonicsVOffset); i++) {
+               if((i % 10) == 0) ticks.push({ v: i + HarmonicsVOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
+             }
+             return ticks;
+           },
+           valueFormatter: function (x, a, b, c, row, col) {
+             var Row = ((localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 0 : 1) + row;
+             return Round2(x - HarmonicsVOffset) + '&nbsp;<em class="small">dB</em>&nbsp;(' + (Round2(HarmonicsDataset[Row][col - 1])) + '<em class="small">&nbsp;V</em>)';
+           }
+         },
+      y2: { pixelsPerLabel: 15,
+            axisLabelWidth: ShowCurrent ? 15 : 0,
+            valueRange: [CurrentRange[0] + HarmonicsCOffset, CurrentRange[1] + HarmonicsCOffset],
+            valueFormatter: function (x, a, b, c, row, col) {
+              var Row = ((localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 0 : 1) + row;
+              return Round2(x - HarmonicsCOffset) + '&nbsp;<em class="small">dB</em>&nbsp;(' + (Round2(HarmonicsDataset[Row][col - 1])) + '<em class="small">&nbsp;A</em>)';
+            },
+            ticker: function(min, max, pixels, opts, dygraph, vals) {
+              var ticks = [];
+              for(var i = Math.floor(min - HarmonicsCOffset); i < Math.ceil(max - HarmonicsCOffset); i++) {
+                if((i % 10) == 0) ticks.push({ v: i + HarmonicsCOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
+              }
+              return ticks;
+            }
           },
-           y2: { pixelsPerLabel: 15,
-                 axisLabelWidth: ShowCurrent ? 15 : 0,
-                 valueRange: [CurrentRange[0] + HarmonicsCOffset, CurrentRange[1] + HarmonicsCOffset],
-                 valueFormatter: function (x) {
-                   return Round2(x) + ' <em class="x-small">dB</em>';
-                 },
-                 ticker: function(min, max, pixels, opts, dygraph, vals) {
-                   var ticks = [];
-                   for(var i = Math.floor(min - HarmonicsCOffset); i < Math.ceil(max - HarmonicsCOffset); i++) {
-                     if((i % 10) == 0) ticks.push({ v: i + HarmonicsCOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
-                   }
-                   return ticks;
-                 },
-//                 axisLabelFormatter: function (x) {
-//              if(ShowCurrent == true) {
-//                return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-//              } else {
-//                return '';
-//              }
-//            }
-          },
-          x: { drawGrid: false, 
-               ticker: function (min, max, pixels, opts, dygraph, vals) {
-                         var ticks = [];
-                         for(var i = (HideFundamentals ? 1 : 0); i < 50; i++) {
-                           if(i%2 != 0) continue;
-                           ticks.push({v: i, label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + HarmonicsNames[i] + '</div>' });
-                         }
-                         return ticks;
-                       },
-               valueFormatter: function (y) {
-                                 return HarmonicsNames[y] + ' Harmonic (' + (50 * (y + 1)) + '<em class="small"> Hz</em>)';
-                               }
-          }
-        }
-      };
+      x: { drawGrid: false, 
+           ticker: function (min, max, pixels, opts, dygraph, vals) {
+             var ticks = [];
+             for(var i = (HideFundamentals ? 1 : 0); i < 50; i++) {
+               if(i%2 != 0) continue;
+               ticks.push({v: i, label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + HarmonicsNames[i] + '</div>' });
+             }
+             return ticks;
+           },
+           valueFormatter: function (y) {
+             return HarmonicsNames[y] + ' Harmonic (' + (50 * (y + 1)) + '<em class="small"> Hz</em>)';
+           }
+         }
+    }
+  };
   if(HarmonicsChart === null) {
     HarmonicsChart = new Dygraph(document.getElementById("HarmonicsChart"), ToShow, Options);
   } else {

@@ -364,9 +364,9 @@ function FrequencyUpdateCountersCurrent(result) {
     $('#labelFrequencyCurrentMAX').text('?');
     $('#labelFrequencyCurrentMIN').text('?');
   } else {
-    $('#labelFrequencyCurrentAVG').text(Round2(result['avg_freq']));
-    $('#labelFrequencyCurrentMAX').text(Round2(result['max_freq']));
-    $('#labelFrequencyCurrentMIN').text(Round2(result['min_freq']));
+    $('#labelFrequencyCurrentAVG').html(Round2(result['avg_freq']));
+    $('#labelFrequencyCurrentMAX').html(Round2(result['max_freq']));
+    $('#labelFrequencyCurrentMIN').html(Round2(result['min_freq']));
   }
 }
 function FrequencyUpdateCountersPrevs(result) {
@@ -393,9 +393,9 @@ function FrequencyUpdateCountersPrevs(result) {
     $('#labelFrequencyPrevMAX').text('?');
     $('#labelFrequencyPrevMIN').text('?');
   } else {
-    $('#labelFrequencyPrevAVG').text(Round2(result['avg_freq']));
-    $('#labelFrequencyPrevMAX').text(Round2(result['max_freq']));
-    $('#labelFrequencyPrevMIN').text(Round2(result['min_freq']));
+    $('#labelFrequencyPrevAVG').html(Round2(result['avg_freq']));
+    $('#labelFrequencyPrevMAX').html(Round2(result['max_freq']));
+    $('#labelFrequencyPrevMIN').html(Round2(result['min_freq']));
   }
 }
 

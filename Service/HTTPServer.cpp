@@ -13,6 +13,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <zlib.h>
+#include <sys/sysinfo.h>
 #include "HTTPServer.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -403,6 +404,49 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       }
       return MHD_YES;
     }
+  } else if(strcmp(url, "/getSysInfo") == 0) {
+    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+      (void)JSON_Key; (void)JSON_Val;      
+      Error = true;
+    }
+    struct sysinfo Info;
+    if(sysinfo(&Info) != 0) Error = true;
+    if(Error == true) {    
+      Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      Request->PostData = (char*)"Invalid JSON params";
+      Request->PostResponseLen = strlen(Request->PostData);
+      return MHD_YES;
+    }
+    Request->JSONWriter = json_object_new_object();
+    json_object_object_add(Request->JSONWriter, "UpTime", json_object_new_int(Info.uptime));
+//               unsigned long loads[3];  /* 1, 5, and 15 minute load averages */
+//               unsigned long totalram;  /* Total usable main memory size */
+//               unsigned long freeram;   /* Available memory size */
+//               unsigned long sharedram; /* Amount of shared memory */
+//               unsigned long bufferram; /* Memory used by buffers */
+//               unsigned long totalswap; /* Total swap space size */
+//               unsigned long freeswap;  /* Swap space still available */
+//               unsigned short procs;    /* Number of current processes */
+//               unsigned long totalhigh; /* Total high memory size */
+//               unsigned long freehigh;  /* Available high memory size */
+//               unsigned int mem_unit;   /* Memory unit size in bytes */
+//               char _f[20-2*sizeof(long)-sizeof(int)];
+    
+
+    json_object_object_add(Request->JSONWriter, "NominalVoltage", json_object_new_int(Tools::Electrical.NominalVoltage));
+    json_object_object_add(Request->JSONWriter, "NominalFreq", json_object_new_int(Tools::Electrical.NominalFrequency));
+    json_object *Devices = json_object_new_array();
+    for(uint32_t i = 0; i < Tools::Devices.Len; i++) {
+      json_object *Obj = json_object_new_object();
+      json_object_object_add(Obj, "Name", json_object_new_string(Tools::Devices.Items[i].Name));
+      json_object_object_add(Obj, "Type", json_object_new_string(Tools::Devices.Items[i].Instance->Triphase() ? "3Phase" : "1Phase"));
+      json_object_object_add(Obj, "SampleFreq", json_object_new_int(Tools::Devices.Items[i].Instance->SampleRate()));
+      json_object_object_add(Obj, "MaxCurrent", json_object_new_int(20));
+      json_object_array_add(Devices, Obj);
+    }
+    json_object_object_add(Request->JSONWriter, "Devices", Devices);
+    Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
+    return MHD_YES;
   } else if(strcmp(url, "/getEvents") == 0) {
     uint32_t Node = 0;
     uint64_t LastEvent = 0, From = 0, To = 0, Period = 0;

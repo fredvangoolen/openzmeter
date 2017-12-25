@@ -80,11 +80,11 @@ function Round2(value) {
     return '?';
   } else {
     value = Math.round(value * 100);
-    value = value.toString();
-    while(value.length < 3) value = value + '0';
-    Integer = value.substr(0, value.length - 2);
-    Fraction = value.substr(value.length - 2, 2);
-    return Integer + '<span style="font-size:80%">.' + Fraction + '</span>';
+    var Integer = Math.trunc(value / 100);
+    Fraction = Math.abs(value % 100);
+    Fraction = Fraction.toString();
+    while(Fraction.length < 2) Fraction = '0' + Fraction;
+    return Integer.toString() + '<span style="font-size:80%">.' + Fraction + '</span>';
   }
 }
 
