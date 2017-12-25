@@ -1144,86 +1144,7 @@ function GetValues60S(getHarmonics = true) {
                    }
       });
 }
-function TabChange() {
-  $('#Tabs > div').addClass('hidden');
-  if($(this).val() == 'events') {
-    $('#EventsPanel').removeClass('hidden');
-    $(eventChart.graphDiv).parent().removeAttr('style');
-    $('#btnPause').removeClass('active');
-    $('#btnPause').addClass('disabled');
-    $('#btnFundamental').removeClass('active');
-    $('#btnFundamental').addClass('disabled');
-    $('#btnCurrent').removeClass('active');
-    $('#btnCurrent').addClass('disabled');
-    $('#btnExport').addClass('disabled');
-  } else if($(this).val() == 'harmonics') {
-    $('#HarmonicsPanel').removeClass('hidden');
-    $(HarmonicsChart.graphDiv).parent().removeAttr('style');
-    if(Paused) $('#btnPause').addClass('active');
-    $('#btnPause').removeClass('disabled');
-    if(HideFundamentals) $('#btnFundamental').addClass('active');
-    $('#btnFundamental').removeClass('disabled');
-    $('#btnCurrent').removeClass('active');
-    $('#btnCurrent').addClass('disabled');
-    $('#btnExport').removeClass('disabled');
-  } else if($(this).val() == 'evolution') {
-    $('#EvolutionPanel').removeClass('hidden');
-    $('#EvolutionPanel').removeAttr('style');
-    $('#btnPause').removeClass('active');
-    $('#btnPause').addClass('disabled');
-    $('#btnFundamental').removeClass('active');
-    $('#btnFundamental').addClass('disabled');
-    $('#btnCurrent').removeClass('active');
-    $('#btnCurrent').addClass('disabled');
-    $('#btnExport').removeClass('disabled');
-  } else if($(this).val() == 'fft') {
-    $('#FFTPanel').removeClass('hidden');
-    $(FFTChart.graphDiv).parent().removeAttr('style');
-    if(Paused) $('#btnPause').addClass('active');
-    $('#btnPause').removeClass('disabled');
-    $('#btnFundamental').removeClass('active');
-    $('#btnFundamental').addClass('disabled');
-    $('#btnCurrent').removeClass('active');
-    $('#btnCurrent').addClass('disabled');
-    $('#btnExport').removeClass('disabled');
-  } 
-  
-    if(Paused) $('#btnPause').addClass('active');
-    $('#btnPause').removeClass('disabled');
-    $('#btnFundamental').removeClass('active');
-    $('#btnFundamental').addClass('disabled');
-    if(ShowCurrent) $('#btnCurrent').addClass('active');
-    $('#btnCurrent').removeClass('disabled');
-    $('#btnExport').removeClass('disabled');
 
-
-  window.dispatchEvent(new Event('resize'));
-}
-
-
-
-$(':input[name="detail_change"]').change(TabChange);
-$('#aggreg_modal_close').click(function() {
-  $('#aggreg_modal').modal('hide');
-});
-$('#btnPause').change(function () {
-  Paused = !Paused;
-  if(Paused) {
-    $('#btnPause span.live-pause').hide();
-    $('#btnPause span.live-resume').show();
-  } else {
-    $('#btnPause span.live-pause').show();
-    $('#btnPause span.live-resume').hide();
-  }
-});
-$('#btnFundamental').click(function () {
-  HideFundamentals = !HideFundamentals;
-  UpdateHarmonicsChart([]);
-});
-$('#btnCurrent').click(function () {
-  ShowCurrent = !ShowCurrent;
-  UpdateWaveformChart([]);
-});
 $('#btnExport').click(function () {
   var Data = [];
   var Filename;
@@ -1448,7 +1369,7 @@ var eventChart = new Dygraph(document.getElementById("event_chart"),
 //        }
 //);
 
-$('[data-toggle="popover"]').popover();
+
 
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
@@ -1465,7 +1386,6 @@ function UpdatePage() {
     localStorage.setItem('ShowT', (ShowT === true));
   }
   DetailsButtonClick();
-  
   AjaxGetVoltage();
   AjaxGetVoltageCounters();
   AjaxGetDetails();

@@ -17,6 +17,11 @@ function LoadHelpPage(name) {
   });
 }
 
+$('#Topics a').bind('click', function(e) {           
+  LoadHelpPage($(this).attr('href'));
+  e.preventDefault();
+});
+
 function UpdatePage() {
-  LoadHelpPage("API");  
+  LoadHelpPage("Home");  
 }
