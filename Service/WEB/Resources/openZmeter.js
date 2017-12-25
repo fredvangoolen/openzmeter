@@ -5,6 +5,13 @@ var SpinnerOpts         = { lines: 10,  // The number of lines to draw
                             radius: 10  // The radius of the inner circle
                           };
                           
+/* Nombre de los armonicos */
+var HarmonicsNames      = [ '1st',  '2nd',  '3rd',  '4th',  '5th',  '6th',  '7th',  '8th',  '9th', '10th',
+                            '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th',
+                            '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th',
+                            '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th',
+                            '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
+                          
 /* Configuracion del plugin de desconexion */
 Offline.options = {requests: false};
 function DisableUI() {
@@ -45,13 +52,19 @@ function AddEvents(result, serieName, graph) {
   graph.setAnnotations(Events);
 }
 
-/* Convierte un array de floats a cadena con dos decimales, separados por el caracter dado y usando los colores que se pongan */
-function Array_Round2(values, separator, colors) {
+/* Convierte un array de floats a cadena con dos decimales, separados por el caracter dado y usando los colores que se pongan (añadiendo cadena1 si es negativo y cadena2 si positivo)*/
+function Array_Round2(values, separator, colors = undefined, cadena1 = "", cadena2 = "") {
   for(i = 0; i < values.length; i++) {
     if((colors !== undefined) && (colors[i] !== undefined)) {
-     values[i] = '<div style="padding: 0px 5px; border: 1px solid #FFF; border-radius: 5px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]) + '</div>';
+     var Text = '<div style="padding: 0px 5px; border: 1px solid #FFF; border-radius: 5px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]);
+     if(values[i] > 0 ) Text += cadena2;
+     if(values[i] < 0 ) Text += cadena1;
+     values[i] = Text + '</div>';
    } else {
-     values[i] = Round2(values[i]);
+     var Text = Round2(values[i]);
+     if(values[i] > 0 ) Text += cadena2;
+     if(values[i] < 0 ) Text += cadena1;
+     values[i] = Text + '</div>';
    }
   }
   return values.join(separator);
