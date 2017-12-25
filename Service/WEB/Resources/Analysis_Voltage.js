@@ -641,7 +641,7 @@ function DetailsButtonClick(event) {
       if(FFTChart !== null) UpdateFFTChart(null);
       break;
     case 'Events' :
-      $('#btnShowDetailEvents').addClass('active');
+      $('#EventsPanel').removeClass('hidden');
       break;
   }
   window.dispatchEvent(new Event('resize'));

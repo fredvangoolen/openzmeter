@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <? $this->load->view('template/commonHead', array('title' => 'Events | EN50160')) ?>
+    <link href="lib/dc.js/dc.css" rel="stylesheet">
+    <link href="lib/d3-tip/d3-tip.min.css" rel="stylesheet">
+    <link href="lib/d3/colorbrewer.css" rel="stylesheet">
+  </head>
+  <body>
+    <? $this->load->view('template/header') ?>
+    <div id="wrapper">
+      <div id="page-wrapper">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="panel panel-info" id="QualityPanel">
+              <div class="panel-heading">
+                <span class="huge-small">EN50160</span>
+              </div>
+              <div class="panel-body no-padding panel-bigheader">
+                <div class="panel-info panel-heading">
+                  <div style="display:inline-block"><i class="fa fa-calendar fa-fw"></i>Annual objectives</div>
+                  <div style="display:inline-block" class="pull-right small" id="YearLabel">Loading...</div>
+                </div>
+                <div class="row">
+                  <div class="col col-lg-3 col-md-6 col-xs-12">
+                    <div class="panel panel-lightblue-info text-center" id="EnergyBox" style="position: relative">
+                      <div>
+                        <p><span class="huge-small">Voltage swell or dips</span><br/>Less than 1 min and -15%/+10% nominal voltage</p>
+                        <div class="progress" style="margin-bottom:0px">
+                          <div class="progress-bar" id="dip" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%; background-color: #5cb85c"></div>
+                          <span id="dip_text" style="position: absolute; left: 0px; width: 100%; mix-blend-mode: multiply"></span>
+                        </div>
+                        <div class="progress" style="margin-bottom:0px; height: 5px; margin-top: 2px">
+                          <div class="progress-bar" id="dips_year" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%"></div>
+                        </div>
+                        <p>10 to 1000 allowed per year</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col col-lg-3 col-md-6 col-xs-12">
+                    <div class="panel panel-lightblue-info text-center" id="EnergyBox">
+                      <p><span class="huge-small">Short interruptions</span><br/>Less than 3 min and under 1% nominal voltage</p>
+                      <div class="progress" style="margin-bottom:0px">
+                        <div class="progress-bar" id="short" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%; background-color: #5cb85c"></div>
+                        <span id="short_text" style="position: absolute; left: 0px; width: 100%; mix-blend-mode: multiply"></span>
+                      </div>
+                      <div class="progress" style="margin-bottom:0px; height: 5px; margin-top: 2px">
+                        <div class="progress-bar" id="short_year" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%"></div>
+                      </div>
+                      <p>10 to 100 allowed per year</p>
+                    </div>
+                  </div>                    
+                  <div class="col col-lg-3 col-md-6 col-xs-12">
+                   <div class="panel panel-lightblue-info text-center" id="EnergyBox">
+                      <p><span class="huge-small">Long interruptions</span><br/>More than 3 min and under 1% nominal voltage</p>
+                      <div class="progress" style="margin-bottom:0px">
+                        <div class="progress-bar" id="long" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%; background-color: #5cb85c"></div>
+                        <span id="long_text" style="position: absolute; left: 0px; width: 100%; mix-blend-mode: multiply"></span>
+                      </div>
+                        <div class="progress" style="margin-bottom:0px; height: 5px; margin-top: 2px">
+                          <div class="progress-bar" id="long_year" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%"></div>
+                        </div>
+                      <p>10 to 50 allowed per year</p>
+                    </div>
+                  </div>
+                  <div class="col col-lg-3 col-md-6 col-xs-12">
+                   <div class="panel panel-lightblue-info text-center" id="EnergyBox">
+                      <p><span class="huge-small">Grid frequency</span><br/>99.5% of the year between 50±1%Hz</p>
+                      <div class="progress" style="margin-bottom:0px">
+                        <div class="progress-bar" id="freq" role="progressbar" style="width:0%; background-color: #5cb85c"></div>
+                        <span id="freq_text" style="position: absolute; left: 0px; width: 100%; mix-blend-mode: multiply"></span>
+                      </div>
+                        <div class="progress" style="margin-bottom:0px; height: 5px; margin-top: 2px">
+                          <div class="progress-bar" id="freq_year" role="progressbar" style="width:0%"></div>
+                        </div>
+                      <p>No events allowed outside 47 to 52Hz</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel-info panel-heading no-padding"></div>
+                <div class="panel-info panel-heading">
+                  <div style="display:inline-block"><i class="fa fa-calendar fa-fw"></i>Week objectives</div>
+                </div>
+                <div class="row">
+                  <div class="col col-md-12">
+                    <div style="padding: 5px">
+                      <table id="weeks_table" class="table small table-striped table-responsive table-condensed" style="margin-bottom:0px">
+                        <thead>
+                          <tr>
+                            <th class="text-center"><span data-toggle="tooltip" title="Week and year of row statistics">Week</span></th>
+                            <th class="text-center"><span data-toggle="tooltip" title="Percent of the evaluated period covered by capture process, if all 10 minute blocks of the week have stored data this meassure shows 100%, otherwise this value is lower. In current week this meassure is allways lower than 100% and raise as end of week comes">Coverage</span></th>
+                            <th class="text-center" style="width: 33%"><span data-toggle="tooltip" title="Percent of the evaluated period where voltage is outside range of ±10%. The graph range from 0 to 5%">Voltage changes</span></th>
+                            <th class="text-center" style="width: 33%"><span data-toggle="tooltip" title="Percent of the evaluated period where total harmonic distorsion is higger than 8%. The graph range from 0 to 5%">THD</sapn></th>
+                            <th class="text-center" style="width: 33%"><span data-toggle="tooltip" title="Percent of the evaluated period where any of the harmonics is outside range as defined in EN50160. The graph range from 0 to 5%">Harmonics</span></th>
+                          </tr>
+                        </thead>
+                        <tfoot>
+                          <tr>
+                            <td colspan="5" class="text-center h4" id="RowLoading"><img src="img/load.gif" alt="Loading..."/> Wait while week data is calculated</td>
+                          </tr>
+                          <tr>  
+                            <td colspan="5" class="text-center hide" id="RowButton">
+                              <div class="pull-right">
+                                <a class="btn btn-primary" id="LoadNext"><i class="fa fa-database"></i>  Load more</a>
+                                <a class="btn btn-primary" id="LoadAll"><i class="fa fa-database"></i>  Load all</a>
+                              </div>
+                            </td>
+                          </tr>
+                        </tfoot>
+                        <tbody>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /#page-wrapper -->
+    </div>
+    <!-- /#wrapper -->
+    <script>
+
+    </script>
+    <? $this->load->view('template/commonScripts') ?>
+    <script src="lib/dygraph/chart-plotter.js"></script>
+
+    <script src="lib/d3/d3.v3.min.js"></script>
+    <script src="lib/d3/colorbrewer.js"></script>
+    <script src="lib/dc.js/crossfilter.js"></script>
+    <script src="lib/dc.js/dc.min.js"></script>
+    <script src="lib/d3-tip/d3-tip.min.js"></script>
+    <script src="js/events/events.js"></script>
+    <script src="js/events/quality.js"></script>
+
+  </body>
+</html>

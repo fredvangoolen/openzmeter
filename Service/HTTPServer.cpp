@@ -187,6 +187,9 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
     if(strcmp(url, "/Analysis/Voltage") == 0) return SendFile(connection,  "WEB/Analysis_Voltage.html");
     if(strcmp(url, "/Analysis/Current") == 0) return SendFile(connection,  "WEB/Analysis_Current.html");
     if(strcmp(url, "/Analysis/EnergyPower") == 0) return SendFile(connection,  "WEB/Analysis_EnergyPower.html");
+    if(strcmp(url, "/Events/ITIC") == 0) return SendFile(connection,  "WEB/Events_ITIC.html");
+    if(strcmp(url, "/Events/Disturbances") == 0) return SendFile(connection,  "WEB/Events_Disturbances.html");
+    if(strcmp(url, "/Events/EN50160") == 0) return SendFile(connection,  "WEB/Events_EN50160.html");
     if(strcmp(url, "/Help") == 0) return SendFile(connection,  "WEB/Help.html");
   }
   return SendError(connection, MHD_HTTP_NOT_FOUND, "Page not found");
