@@ -520,8 +520,8 @@ function DetailsButtonClick(event) {
     WaveformChart.updateOptions({ showRangeSelector: true});
     HarmonicsChart.updateOptions({ showRangeSelector: true});
     HarmonicsChart.updateOptions({ showRangeSelector: false});
-    FFTChart.updateOptions({ showRangeSelector: true});
     FFTChart.updateOptions({ showRangeSelector: false});
+    FFTChart.updateOptions({ showRangeSelector: true});
   }
   $('#btnShowDetailWaveform').removeClass('active');
   $('#btnShowDetailHarmonics').removeClass('active');
@@ -563,37 +563,39 @@ function DetailsButtonClick(event) {
   $('#btnShowDetailRPhase').removeClass('active');
   $('#btnShowDetailSPhase').removeClass('active');
   $('#btnShowDetailTPhase').removeClass('active');
-  switch(localStorage.getItem('VoltageDetailView')) {
-    case 'Waveform' :
-    case 'Harmonics' :
-    case 'Advanced' :
-      var ShowR = (localStorage.getItem('VoltageDetailPhaseR') === 'true');
-      var ShowS = (localStorage.getItem('VoltageDetailPhaseS') === 'true');
-      var ShowT = (localStorage.getItem('VoltageDetailPhaseT') === 'true');
-      if((ShowR === false) && (ShowS === false) && (ShowT === false)) {
-        ShowR = true;
-        localStorage.setItem('VoltageDetailPhaseR', 'true');
-      }
-      if(ShowR === true) $('#btnShowDetailRPhase').addClass('active');
-      if(ShowS === true) $('#btnShowDetailSPhase').addClass('active');
-      if(ShowT === true) $('#btnShowDetailTPhase').addClass('active');
-      break;
-    case 'Evolution' :
-      switch(localStorage.getItem('VoltageDetailEvolutionPhase')) {
-        case 'PhaseR' :
-          $('#btnShowDetailRPhase').addClass('active');
-          break;
-        case 'PhaseS' :
-          $('#btnShowDetailSPhase').addClass('active');
-          break;
-        case 'PhaseT':
-          $('#btnShowDetailTPhase').addClass('active');
-          break;
-        default:
-          localStorage.setItem('VoltageDetailEvolutionPhase', 'PhaseR');
-          $('#btnShowDetailRPhase').addClass('active');
-          break;
-      }
+  if((Nodes['Devices'][Node]['Type'] === '3Phase') {
+    switch(localStorage.getItem('VoltageDetailView')) {
+      case 'Waveform' :
+      case 'Harmonics' :
+      case 'Advanced' :
+        var ShowR = (localStorage.getItem('VoltageDetailPhaseR') === 'true');
+        var ShowS = (localStorage.getItem('VoltageDetailPhaseS') === 'true');
+        var ShowT = (localStorage.getItem('VoltageDetailPhaseT') === 'true');
+        if((ShowR === false) && (ShowS === false) && (ShowT === false)) {
+          ShowR = true;
+          localStorage.setItem('VoltageDetailPhaseR', 'true');
+        }
+        if(ShowR === true) $('#btnShowDetailRPhase').addClass('active');
+        if(ShowS === true) $('#btnShowDetailSPhase').addClass('active');
+        if(ShowT === true) $('#btnShowDetailTPhase').addClass('active');
+        break;
+      case 'Evolution' :
+        switch(localStorage.getItem('VoltageDetailEvolutionPhase')) {
+          case 'PhaseR' :
+            $('#btnShowDetailRPhase').addClass('active');
+            break;
+          case 'PhaseS' :
+            $('#btnShowDetailSPhase').addClass('active');
+            break;
+          case 'PhaseT':
+            $('#btnShowDetailTPhase').addClass('active');
+            break;
+          default:
+            localStorage.setItem('VoltageDetailEvolutionPhase', 'PhaseR');
+            $('#btnShowDetailRPhase').addClass('active');
+            break;
+        }
+    }
   }
   $('#btnShowDetail1Harmonic').addClass('disabled');
   $('#btnShowDetail1Harmonic').removeClass('active');

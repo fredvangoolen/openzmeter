@@ -150,7 +150,6 @@
           <logicalFolder name="dygraph" displayName="dygraph" projectFiles="true">
             <itemPath>WEB/Resources/lib/dygraph/chart-plotter.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/crosshair.js</itemPath>
-            <itemPath>WEB/Resources/lib/dygraph/dygraph-combined_back.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/dygraph-interaction.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/dygraph.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/dygraph.min.js</itemPath>
@@ -335,11 +334,13 @@
       </toolsSet>
       <compileType>
         <cTool>
+          <developmentMode>0</developmentMode>
           <standard>3</standard>
           <commandLine>-Os -march=native</commandLine>
           <warningLevel>2</warningLevel>
         </cTool>
         <ccTool>
+          <developmentMode>0</developmentMode>
           <standard>4</standard>
           <commandLine>-Os -march=native</commandLine>
           <warningLevel>2</warningLevel>
@@ -811,11 +812,6 @@
             flavor2="0">
       </item>
       <item path="WEB/Resources/lib/dygraph/crosshair.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dygraph/dygraph-combined_back.js"
             ex="false"
             tool="3"
             flavor2="0">

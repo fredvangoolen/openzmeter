@@ -495,7 +495,7 @@ function AjaxFrequency(result) {
   for(i = 0; i < result['Sampletime'].length; i++) FrequencyData.push([new Date(result['Sampletime'][i]), result['freq'][i]]);
   while(FrequencyData.length > result['MaxSamples']) FrequencyData.shift();
   LastFrequencySample = result['Sampletime'][result['Sampletime'].length - 1];
-  $('#labelFrequency').text(Round2(result['freq'][result['freq'].length - 1]));
+  $('#labelFrequency').html(Round2(result['freq'][result['freq'].length - 1]));
   $('#FrequencyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(FrequencyChart == null) {
     FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"),
@@ -952,7 +952,7 @@ function EnergyUpdateCountersPrevs(result) {
     for(i = 0; i < result['sum_active_energy'].length; i++) result['sum_active_energy'][i] = result['sum_active_energy'][i] / 1000;
   }
   if(result['sum_active_energy'].length === 1) {
-    $('#labelPrevEnergy').html(Round2(result['sum_active_energy'][0]));
+    $('#labelPrevEnergy').html(Round2(result['sum_active_energy'][0])) + '&nbsp;' + Units;
   } else if(result['sum_active_energy'].length === 3) {
     $('#labelPrevEnergy').html(Round2(result['sum_active_energy'][0] + result['sum_active_energy'][1] + result['sum_active_energy'][2]) + '&nbsp;' + Units + 
       '&nbsp;(' + Array_Round2(result['sum_active_energy'], '&nbsp;&nbsp;') + '</span>&nbsp;&nbsp;By phase)');

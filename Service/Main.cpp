@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
   if(Tools::CreateLogFile() == false) return EXIT_FAILURE;
   if(Database::PrepareDB() == false) return EXIT_FAILURE;
   //CaptureInterface **Interfaces = (CaptureInterface**)calloc(sizeof(CaptureInterface*), Tools::Devices.Len);
-  for(int i = 0; i < Tools::Devices.Len; i++) {
+  for(uint i = 0; i < Tools::Devices.Len; i++) {
     if(strcmp(Tools::Devices.Items[i].Type, "Mono") == 0) {
       Tools::Devices.Items[i].Instance = new CaptureMono(Tools::Devices.Items[i].Serial, Tools::Devices.Items[i].VoltageGain, Tools::Devices.Items[i].VoltageOffset, 
                                                          Tools::Devices.Items[i].CurrentGain, Tools::Devices.Items[i].CurrentOffset, 8192 * 1024, CaptureInterface::FREQ_50, i);
