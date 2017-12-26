@@ -126,8 +126,9 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
   if(Request == NULL) {
     Tools::LogMsg("DEBUG", "Client %s request '%s'\n", method, url);
     if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
-      char *FilePath = (char*)malloc(strlen(SERVER_ROOT) + strlen(url) + 1);
-      sprintf(FilePath, "%s%s", SERVER_ROOT, url);
+      static const char *Root_Path = "WEB/Resources";
+      char *FilePath = (char*)malloc(strlen(Root_Path) + strlen(url) + 1);
+      sprintf(FilePath, "%s%s", Root_Path, url);
       int Return = SendFile(connection, FilePath);
       free(FilePath);
       if(Return == MHD_YES) return MHD_YES;
@@ -180,6 +181,14 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
       char Cookie[256];
       sprintf(Cookie, "OZM_SESSION=%s; httponly; Path=/", Request->Session->ID);
       return SendFile(connection, (char*)"WEB/Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
+    }
+    if(strncmp(url, "/MiniViews/", 11) == 0) {
+      static const char *Root_Path = "WEB";
+      char *FilePath = (char*)malloc(strlen(Root_Path) + strlen(url) + 6);
+      sprintf(FilePath, "%s%s.html", Root_Path, url);
+      int Return = SendFile(connection, FilePath);
+      free(FilePath);
+      if(Return == MHD_YES) return MHD_YES;
     }
     if(Request->Session->User == NULL) return SendRedirect(connection, "/Login");
     if((strcmp(url, "/Dashboard") == 0) || (strcmp(url, "/") == 0)) return SendFile(connection,  "WEB/Dashboard.html");

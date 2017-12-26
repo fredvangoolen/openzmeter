@@ -334,15 +334,13 @@
       </toolsSet>
       <compileType>
         <cTool>
-          <developmentMode>0</developmentMode>
           <standard>3</standard>
-          <commandLine>-Os -march=native</commandLine>
+          <commandLine>-O0 -march=native</commandLine>
           <warningLevel>2</warningLevel>
         </cTool>
         <ccTool>
-          <developmentMode>0</developmentMode>
           <standard>4</standard>
-          <commandLine>-Os -march=native</commandLine>
+          <commandLine>-O0 -march=native</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>

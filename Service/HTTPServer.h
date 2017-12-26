@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include "Database.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define SERVER_ROOT "WEB/Resources"
 class HTTPServer {
   private :
     typedef struct Session {
