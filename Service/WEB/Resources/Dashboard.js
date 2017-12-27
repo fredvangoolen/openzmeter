@@ -670,7 +670,7 @@ function AjaxEnergy(result) {
                  return date.toLocaleDateString() + ' - ' + date.toLocaleTimeString();
                },
                axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + x.toLocaleTimeString() + '<br>' + x.toLocaleDateString() + '</div>';
+                 return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + x.toLocaleTimeString() + '<br/>' + x.toLocaleDateString() + '</div>';
                }
              }
           }

@@ -47,7 +47,7 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
     This->SaveWorkParams();
     uint64_t SaveEnd = Tools::GetTime();
     if((SaveEnd - Start) <= 200) usleep((200 - (SaveEnd - Start)) * 1000);
-    Tools::LogMsg("DEBUG", "Process of block %"PRIu64" takes %"PRIu64"mS (%"PRIu64"mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
+    Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %" PRIu64 "mS (%" PRIu64 "mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
   }
   return NULL;
 }

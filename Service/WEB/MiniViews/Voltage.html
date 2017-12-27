@@ -17,7 +17,7 @@
     <title>openZmeter - Voltage MiniView</title>
   </head>
   <body>
-    <div id="VoltageChart"></div>
+    <div id="VoltageChart" style="width: 1200px; height: 600px"></div>
     <script src="lib/jquery.min.js"></script>
     <script src="lib/bootstrap/js/bootstrap.min.js"></script>
     <script src="lib/metisMenu/metisMenu.min.js"></script>
@@ -31,20 +31,24 @@
     <script src="lib/offline/offline.min.js"></script>
     <script src="openZmeter.js"></script>
     <script>
+      var url = new URL(window.location.href);
+      var Node = parseInt(url.searchParams.get("Node"));
+      var Period = parseInt(url.searchParams.get("Period"));
+      var To = parseInt(url.searchParams.get("To"));
+      var Aggreg = url.searchParams.get("Aggreg");
       $.ajax({ url: "getSeries",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: 0, Series: 'rms_v', Node: Node }),
-           success: function(result) { 
-             if(result['Sampletime'] === null) return;
+        timeout: 20000,
+        type: "POST",
+        dataType: "json",
+        contentType: 'application/json',
+        data: JSON.stringify({ Period: Period, To: To, Aggreg: Aggreg, LastSample: 0, Series: 'rms_v', Node: Node }),
+        success: function(result) { 
+          if(result['Sampletime'] === null) return;
              var VoltageData = [];
              for(i = 0; i < result['Sampletime'].length; i++) VoltageData.push([new Date(result['Sampletime'][i])].concat(result['rms_v'][i]));
              VoltageChart = new Dygraph(document.getElementById("VoltageChart"),
                VoltageData,
                { strokeWidth: 1, 
-//                 labelsDiv: "VoltageLegend",
                  labels: (VoltageData[0].length === 4) ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)'] : ['Time', 'Voltage'],
                  stepPlot: true,
                  drawGapEdgePoints: true,
@@ -75,19 +79,12 @@
         axes: {
           y: { pixelsPerLabel: 15,
                axisLabelWidth: 34,
-               valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">V</em>';
-               },
                axisLabelFormatter: function (x) {
                  return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
                }
              },
-          x: { valueFormatter: function (x) {
-                 var date = new Date(x);
-                 return date.toLocaleTimeString();
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -4px">' + x.toLocaleTimeString() + '</div>';
+          x: { axisLabelFormatter: function (x) {
+                 return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + x.toLocaleTimeString() + '<br/>' + x.toLocaleDateString() + '</div>';
                }
              }
         }

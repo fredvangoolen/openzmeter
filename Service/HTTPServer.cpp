@@ -14,6 +14,7 @@
 #include <netinet/in.h>
 #include <zlib.h>
 #include <sys/sysinfo.h>
+#include <sys/statvfs.h>
 #include "HTTPServer.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -205,11 +206,6 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
 }
 int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
   Request_t *Request = (Request_t*)*ptr;
-  if(Request->JSONReader != NULL) {
-    printf("WTF!\n");
-    fflush(stdout);
-            
-  }
   Request->JSONReader = json_tokener_parse(upload_data);
   bool Error = false;
   if((Request->JSONReader == NULL) || (json_object_get_type(Request->JSONReader) != json_type_object)) {
@@ -224,15 +220,15 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     Request->PostResponseLen = strlen(Request->PostData);
     return MHD_YES;
   }
-  if(Request->Session->User == NULL) {
-    struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
-    if(((sockaddr_in*)Addr)->sin_addr.s_addr != 0x0100007F) {
-      Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
-      Request->PostData = (char*)"Unauthorided access to API";
-      Request->PostResponseLen = strlen(Request->PostData);
-      return MHD_YES;
-    }
-  }
+//  if(Request->Session->User == NULL) {
+//    struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
+//    if(((sockaddr_in*)Addr)->sin_addr.s_addr != 0x0100007F) {
+//      Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
+//      Request->PostData = (char*)"Unauthorided access to API";
+//      Request->PostResponseLen = strlen(Request->PostData);
+//      return MHD_YES;
+//    }
+//  }
   if(strcmp(url, "/getNodes") == 0) {
     json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
       (void)JSON_Key; (void)JSON_Val;      
@@ -365,7 +361,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
         Serie = &Tmp1[1];
         Tmp2[0] = 0;
       }
-      if((strcmp(Serie, "rms_v") == 0) || (strcmp(Serie, "rms_i") == 0) || (strcmp(Serie, "active_power") == 0) || (strcmp(Serie, "apparent_power") == 0) || (strcmp(Serie, "power_factor") == 0) || (strcmp(Serie, "active_energy") == 0) || (strcmp(Serie, "fundamenta_active_power") == 0) || (strcmp(Serie, "fundamental_reactive_power") == 0) || (strcmp(Serie, "fundamental_apparent_power") == 0) || (strcmp(Serie, "fundamental_power_factor") == 0) || (strcmp(Serie, "thd_v") == 0) || (strcmp(Serie, "thd_i") == 0) || (strcmp(Serie, "phi") == 0) || (strcmp(Serie, "harmonics_i") == 0) || (strcmp(Serie, "harmonics_v") == 0)) {
+      if((strcmp(Serie, "rms_v") == 0) || (strcmp(Serie, "rms_i") == 0) || (strcmp(Serie, "active_power") == 0) || (strcmp(Serie, "apparent_power") == 0) || (strcmp(Serie, "power_factor") == 0) || (strcmp(Serie, "active_energy") == 0) || (strcmp(Serie, "fundamenta_active_power") == 0) || (strcmp(Serie, "fundamental_reactive_power") == 0) || (strcmp(Serie, "fundamental_reactive_energy") == 0) || (strcmp(Serie, "fundamental_apparent_power") == 0) || (strcmp(Serie, "fundamental_power_factor") == 0) || (strcmp(Serie, "thd_v") == 0) || (strcmp(Serie, "thd_i") == 0) || (strcmp(Serie, "phi") == 0) || (strcmp(Serie, "harmonics_i") == 0) || (strcmp(Serie, "harmonics_v") == 0)) {
         if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
           QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT %s(elem) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u GROUP BY rn ORDER BY rn) as %s_%s,", Oper, Aggreg, Serie, From, To, Node, Oper, Serie);
         } else if(strcmp(Oper, "rms") == 0) {
@@ -422,7 +418,15 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       Error = true;
     }
     struct sysinfo Info;
-    if(sysinfo(&Info) != 0) Error = true;
+    struct statvfs Disk;
+    if(sysinfo(&Info) != 0) {
+      Error = true;
+      Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    }
+    if(statvfs("/", &Disk) != 0) {
+      Error = true;
+      Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    }
     if(Error == true) {    
       Request->ResultCode = MHD_HTTP_BAD_REQUEST;
       Request->PostData = (char*)"Invalid JSON params";
@@ -431,32 +435,15 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     }
     Request->JSONWriter = json_object_new_object();
     json_object_object_add(Request->JSONWriter, "UpTime", json_object_new_int(Info.uptime));
-//               unsigned long loads[3];  /* 1, 5, and 15 minute load averages */
-//               unsigned long totalram;  /* Total usable main memory size */
-//               unsigned long freeram;   /* Available memory size */
-//               unsigned long sharedram; /* Amount of shared memory */
-//               unsigned long bufferram; /* Memory used by buffers */
-//               unsigned long totalswap; /* Total swap space size */
-//               unsigned long freeswap;  /* Swap space still available */
-//               unsigned short procs;    /* Number of current processes */
-//               unsigned long totalhigh; /* Total high memory size */
-//               unsigned long freehigh;  /* Available high memory size */
-//               unsigned int mem_unit;   /* Memory unit size in bytes */
-//               char _f[20-2*sizeof(long)-sizeof(int)];
-    
-
-    json_object_object_add(Request->JSONWriter, "NominalVoltage", json_object_new_int(Tools::Electrical.NominalVoltage));
-    json_object_object_add(Request->JSONWriter, "NominalFreq", json_object_new_int(Tools::Electrical.NominalFrequency));
-    json_object *Devices = json_object_new_array();
-    for(uint32_t i = 0; i < Tools::Devices.Len; i++) {
-      json_object *Obj = json_object_new_object();
-      json_object_object_add(Obj, "Name", json_object_new_string(Tools::Devices.Items[i].Name));
-      json_object_object_add(Obj, "Type", json_object_new_string(Tools::Devices.Items[i].Instance->Triphase() ? "3Phase" : "1Phase"));
-      json_object_object_add(Obj, "SampleFreq", json_object_new_int(Tools::Devices.Items[i].Instance->SampleRate()));
-      json_object_object_add(Obj, "MaxCurrent", json_object_new_int(20));
-      json_object_array_add(Devices, Obj);
-    }
-    json_object_object_add(Request->JSONWriter, "Devices", Devices);
+    json_object_object_add(Request->JSONWriter, "Swap_Total", json_object_new_int64(Info.totalswap * Info.mem_unit));
+    json_object_object_add(Request->JSONWriter, "Swap_Free", json_object_new_int64(Info.freeswap * Info.mem_unit));
+    json_object_object_add(Request->JSONWriter, "RAM_Total", json_object_new_int64(Info.totalram * Info.mem_unit));
+    json_object_object_add(Request->JSONWriter, "RAM_Free", json_object_new_int64(Info.freeram* Info.mem_unit));
+    json_object_object_add(Request->JSONWriter, "CPU_Usage", json_object_new_double(Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)));
+    json_object_object_add(Request->JSONWriter, "CPU_Count", json_object_new_int(get_nprocs()));
+    json_object_object_add(Request->JSONWriter, "Disk_Total", json_object_new_int64(Disk.f_blocks * Disk.f_bsize));
+    json_object_object_add(Request->JSONWriter, "Disk_Free", json_object_new_int64(Disk.f_bfree * Disk.f_bsize));
+    json_object_object_add(Request->JSONWriter, "Battery_Percent", json_object_new_int(100));
     Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
     return MHD_YES;
   } else if(strcmp(url, "/getEvents") == 0) {
@@ -493,7 +480,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(type) AS \"Type\", ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(voltage) AS \"Voltage\", ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(percent) AS \"Percentage\" ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE starttime > %" PRIu64 " AND starttime >= %" PRIu64 " AND starttime <= %" PRIu64 " AND node = %u ORDER BY \"Sampletime\" ASC) AS Result", LastEvent, From, To, Node);
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE starttime > %" PRIu64 " AND starttime >= %" PRIu64 " AND starttime <= %" PRIu64 " AND node = %u ORDER BY \"Starttime\" ASC) AS Result", LastEvent, From, To, Node);
     Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;

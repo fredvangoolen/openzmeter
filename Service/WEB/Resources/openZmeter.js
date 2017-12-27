@@ -138,7 +138,10 @@ function AjaxGetIndicators() {
       setTimeout(AjaxGetIndicators, 3000);
     }
  });
- var From = GetDayTimestamp();
+ 
+}
+function AjaxGetIndicatorsB() {
+  var From = GetDayTimestamp();
  $.ajax({ url: "getSeriesAggreg",
     timeout: 20000,
     type: "POST",
@@ -158,10 +161,12 @@ function AjaxGetIndicators() {
     },
     error: function() {
       $('EnergyIndicator').text('Offline');
+    },
+    complete: function() {
+      setTimeout(AjaxGetIndicatorsB, 60000);
     }
  });
 }
-
 function AjaxIndicators(result) {
 
   //  
@@ -226,6 +231,7 @@ function GetNodesCompletes(result) {
     location.reload(false);
   });
   AjaxGetIndicators();
+  AjaxGetIndicatorsB();
   UpdatePage();
 }
 

@@ -1,105 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <? $this->load->view('template/commonHead', array('title' => 'Events | ITIC')) ?>
-        <link href="lib/dc.js/dc.css" rel="stylesheet">
-        <link href="lib/d3-tip/d3-tip.min.css" rel="stylesheet">
-        <link href="lib/d3/colorbrewer.css" rel="stylesheet">
-    </head>
-
-    <body>
-        <? $this->load->view('template/header') ?>
-        <div id="wrapper">
-            <div id="page-wrapper">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <span class="h2">Events</span>
-                        <div class="pull-right">
-                            <div class="btn-group events_sections">
-                                <a class="btn btn-default btn-lg" href="<?= site_url('events/itic') ?>">ITIC</a>
-                                <a class="btn btn-default btn-lg" href="<?= site_url('events/disturbances') ?>">Disturbances</a>
-                            </div>
-                        </div>
-                        <hr>
-                    </div>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="zRed"/>
+    <base href="/">
+    <link rel="shortcut icon" href="favicon.ico"/>
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="lib/datatables/css/dataTables.responsive.css" />
+    <link rel="stylesheet" href="lib/datatables/css/dataTables.bootstrap.css" />
+    <link rel="stylesheet" href="lib/metisMenu/metisMenu.min.css"/>
+    <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
+    <link rel="stylesheet" href="lib/offline/offline.css" type="text/css"/>
+    <link rel="stylesheet" href="css/common.css"/>
+    <title>openZmeter - Events - ITIC</title>
+  </head>
+  <body>
+    <div id="DisableDiv" class="overlay"></div>
+    <nav class="navbar navbar-default navbar-fixed-top" id="Header"></nav>
+    <div id="wrapper">
+      <div id="page-wrapper">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="panel panel-info" id="ITICPanel">
+              <div id="EventSpinner" class="spinnerdiv"></div>
+              <div class="panel-heading">
+                <span class="huge-small">ITIC Curve (CBEMA)</span>
+                <div class="pull-right">
+                  <span class="small">Time scale:</span><br>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEventYear"  data-toggle="tooltip" title="Select exactly a year period from current time">Year</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEventMonth" data-toggle="tooltip" title="Select exactly a month period from current time">Month</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEventWeek"  data-toggle="tooltip" title="Select exactly a week period from current time">Week</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEventDay"   data-toggle="tooltip" title="Select exactly a day period from current time">Day</button>
+                  </div>
+                </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="pull-right">
+                  <span class="huge-small" id="EventsSelection">dfgdf</span><br>
+                </div>
+                <span class="clearfix"> </span>
+              </div>
+              <div class="panel-body no-padding panel-bigheader">
+                <div class="panel-info panel-heading">
+                  <div style="display:inline-block"><span class="glyphicon glyphicon-transfer"></span> Events range</div>
+                  <div style="display:inline-block" class="pull-right small" id="RangeLabel">Loading...</div>
+                  <div id="VoltageRangeChart" class="chart" style="height: 50px"></div>
                 </div>
                 <div class="row">
-                    <div class="col-md-6">
-                        <h3 class="text-center">ITI (CBEMA) Curve <small>(Revised 2000)</small>
-                        </h3>
-                        <div id='itic_chart'>
+                  <div class="col-md-12 col-lg-6" id="ITICDiv">
+                    <div id='itic_chart' style="margin: 5px"></div>
+                  </div> 
+                  <div class="col-md-12 col-lg-6" id="SubGraphsDiv">
+                    <div class="row">
+                      <div class="col-xs-12 col-md-6">
+                        <div class="panel panel-default" style="margin: 5px"> 
+                          <div class="panel-heading">
+                            <span class="glyphicon glyphicon-calendar"></span> By date
+                            <div class="pull-right" id="ByDateLegend"></div>
+                          </div>
+                          <div id="bydate_chart" style="margin: 5px; min-height: 240px"></div>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <h3 class="text-center">Number of events
-                            <div class="pull-right">
-                                <a class="btn btn-sm btn-primary" href="javascript:resetCharts();"><i class="fa fa-bolt fa-eraser"></i>  Reset All</a>
-                            </div>
-                        </h3>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h4 class="text-center">By % RMS <small>(greater than)</small></h4>
-                                <div id='rms_chart'></div>
-                            </div>
-                            <div class="col-md-6">
-                                <h4 class="text-center">By > duration <small>(greater than)</small></h4>
-                                <div id='duration_chart'></div>
-                            </div>
-                            <div class="col-md-12">
-                                <h4 class="text-center">By date
-                                    <div class="pull-right">
-                                        <div class="btn-group" data-toggle="buttons">
-                                            <label class="btn btn-default btn-sm">
-                                                <input type="radio" name="date_chart_range" value="today"/> Today
-                                            </label>
-                                            <label class="btn btn-default btn-sm">
-                                                <input type="radio" name="date_chart_range" value="yesterday"/> Yesterday
-                                            </label>
-                                            <label class="btn btn-default btn-sm active">
-                                                <input type="radio" name="date_chart_range" value="week"  checked="checked"/> This week
-                                            </label>
-                                            <label class="btn btn-default btn-sm">
-                                                <input type="radio" name="date_chart_range" value="month"/> This month
-                                            </label>
-                                        </div>
-                                    </div>
-                                </h4>
-                                <div id='date_chart'></div>
-                                <div class="chart-range" id='date_selector_chart'></div>
-                            </div>
-                            <div class="col-md-4">
-                                <h4 class="text-center">By type</h4>
-                                <div id='type_chart'></div>
-                            </div>
-                            <!-- div class="col-md-4">
-                                <h4 class="text-center">By day of month</h4>
-                                <div id='month_chart'></div>
-                            </div -->
-                            <div class="col-md-4">
-                                <h4 class="text-center">By day of week</h4>
-                                <div id='weekday_chart'></div>
-                            </div>
+                      </div>
+                      <div class="col-xs-12 col-md-6">
+                        <div class="panel panel-default" style="margin: 5px">
+                          <div class="panel-heading">
+                            <i class="fa fa-signal fa-fw"></i> By type
+                            <div class="pull-right" id="ByTypeLegend"></div>
+                          </div>
+                          <div id="bytype_chart" style="margin: 5px; min-height: 240px"></div>
                         </div>
+                      </div>
                     </div>
+                    <div class="row">
+                      <div class="col-xs-12 col-md-6">
+                        <div class="panel panel-default" style="margin: 5px">
+                          <div class="panel-heading">
+                            <i class="fa fa-signal fa-fw"></i> By RMS variation
+                            <div class="pull-right" id="ByRMSLegend"></div>
+                          </div>
+                          <div id="byrms_chart" style="margin: 5px; min-height: 240px"></div>
+                        </div>
+                      </div>
+                      <div class="col-xs-12 col-md-6">
+                        <div class="panel panel-default" style="margin: 5px">
+                          <div class="panel-heading">
+                            <i class="fa fa-clock-o fa-fw"></i> By duration
+                            <div class="pull-right" id="ByDurationLegend"></div>
+                          </div>
+                          <div id="byduration_chart" style="margin: 5px; min-height: 240px"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <!-- /.row -->
+              </div>
             </div>
-            <!-- /#page-wrapper -->
-
+          </div>
         </div>
-        <!-- /#wrapper -->
-        <script>
-            events =<?= json_encode($events) ?>;
-        </script>
-        <? $this->load->view('template/commonScripts') ?>
-
-        <script src="lib/d3/d3.v3.min.js"></script>
-        <script src="lib/d3/colorbrewer.js"></script>
-        <script src="lib/dc.js/crossfilter.js"></script>
-        <script src="lib/dc.js/dc.min.js"></script>
-        <script src="lib/d3-tip/d3-tip.min.js"></script>
-        <script src="js/events/events.js"></script>
-        <script src="js/events/itic.js"></script>
-
-    </body>
+      </div>
+    </div>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="lib/metisMenu/metisMenu.min.js"></script>
+    <script src="lib/spin.js/spin.min.js"></script>
+    <script src="lib/dygraph/dygraph.js"></script>
+    <script src="lib/dygraph/crosshair.js"></script>
+    <script src="lib/dygraph/dygraph-interaction.js"></script>
+    <script src="lib/dygraph/synchronize.js"></script>
+    <script src="lib/dygraph/chart-plotter.js"></script>
+    <script src="lib/offline/offline.min.js"></script>
+    <script src="openZmeter.js"></script>
+    <script src="Events_ITIC.js"></script>
+    <script>
+      StartPageLoad();
+    </script>
+  </body>
 </html>

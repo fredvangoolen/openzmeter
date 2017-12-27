@@ -13,6 +13,12 @@
     </logicalFolder>
     <logicalFolder name="WEB" displayName="WEB" projectFiles="true">
       <logicalFolder name="MiniViews" displayName="MiniViews" projectFiles="true">
+        <itemPath>WEB/MiniViews/Active_Energy.html</itemPath>
+        <itemPath>WEB/MiniViews/Active_Power.html</itemPath>
+        <itemPath>WEB/MiniViews/Current.html</itemPath>
+        <itemPath>WEB/MiniViews/Frequency.html</itemPath>
+        <itemPath>WEB/MiniViews/Fundamental_Reactive_Energy.html</itemPath>
+        <itemPath>WEB/MiniViews/Fundamental_Reactive_Power.html</itemPath>
         <itemPath>WEB/MiniViews/Voltage.html</itemPath>
       </logicalFolder>
       <logicalFolder name="Resources" displayName="Resources" projectFiles="true">
@@ -29,7 +35,6 @@
           <logicalFolder name="events" displayName="events" projectFiles="true">
             <itemPath>WEB/Resources/js/events/disturbances.js</itemPath>
             <itemPath>WEB/Resources/js/events/events.js</itemPath>
-            <itemPath>WEB/Resources/js/events/itic.js</itemPath>
           </logicalFolder>
           <itemPath>WEB/Resources/js/account.js</itemPath>
           <itemPath>WEB/Resources/js/live.js</itemPath>
@@ -279,6 +284,7 @@
         <itemPath>WEB/Resources/Analysis_Voltage.js</itemPath>
         <itemPath>WEB/Resources/CommonHeader.html</itemPath>
         <itemPath>WEB/Resources/Dashboard.js</itemPath>
+        <itemPath>WEB/Resources/Events_ITIC.js</itemPath>
         <itemPath>WEB/Resources/Help.js</itemPath>
         <itemPath>WEB/Resources/Login.js</itemPath>
         <itemPath>WEB/Resources/favicon.ico</itemPath>
@@ -334,13 +340,15 @@
       </toolsSet>
       <compileType>
         <cTool>
+          <developmentMode>0</developmentMode>
           <standard>3</standard>
-          <commandLine>-O0 -march=native</commandLine>
+          <commandLine>-Os -march=native</commandLine>
           <warningLevel>2</warningLevel>
         </cTool>
         <ccTool>
+          <developmentMode>0</developmentMode>
           <standard>4</standard>
-          <commandLine>-O0 -march=native</commandLine>
+          <commandLine>-Os -march=native</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
@@ -405,6 +413,24 @@
       </item>
       <item path="WEB/Login.html" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="WEB/MiniViews/Active_Energy.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/MiniViews/Active_Power.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/MiniViews/Current.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/MiniViews/Frequency.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/MiniViews/Fundamental_Reactive_Energy.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/MiniViews/Fundamental_Reactive_Power.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="WEB/MiniViews/Voltage.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Analysis_Current.js" ex="false" tool="3" flavor2="0">
@@ -424,6 +450,8 @@
       <item path="WEB/Resources/CommonHeader.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Dashboard.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Events_ITIC.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Help.js" ex="false" tool="3" flavor2="0">
       </item>
@@ -449,8 +477,6 @@
             flavor2="0">
       </item>
       <item path="WEB/Resources/js/events/events.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/events/itic.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/js/live.js" ex="false" tool="3" flavor2="0">
       </item>
