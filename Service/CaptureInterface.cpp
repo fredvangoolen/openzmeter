@@ -160,13 +160,14 @@ void CaptureInterface::Analyze(float minimunCurrent) {
   for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Params.Apparent_Power[j] = pWork.Params.RMS_V[j] * pWork.Params.RMS_I[j];
 //  Params->Flag = false; //Events_Detect(This->Work);
   for(int i = 0; i < pWork.Cycles_Len; i++) {
-    if(pLastCyclesCount == PROCESSING_FREQCYCLES) pLastCyclesLenght = pLastCyclesLenght - pLastCycles[pLastCyclesPos];
+//    if(pLastCyclesCount == PROCESSING_FREQCYCLES) 
+    pLastCyclesLenght = pLastCyclesLenght - pLastCycles[pLastCyclesPos];
     pLastCycles[pLastCyclesPos] = pWork.Cycles[i].End - pWork.Cycles[i].Start;
     pLastCyclesLenght = pLastCyclesLenght + pLastCycles[pLastCyclesPos];
     pLastCyclesPos = (pLastCyclesPos + 1) % PROCESSING_FREQCYCLES;
-    if(pLastCyclesCount < PROCESSING_FREQCYCLES) pLastCyclesCount++;
+//    if(pLastCyclesCount < PROCESSING_FREQCYCLES) pLastCyclesCount++;
   }
-  pWork.Params.Frequency = pLastCyclesCount / (pLastCyclesLenght / (float)pSampleRate) / 2.0;
+  pWork.Params.Frequency = PROCESSING_FREQCYCLES / (pLastCyclesLenght / (float)pSampleRate) / 2.0;
   for(int j = 0; j < (pTriphase ? 3 : 1); j++) {
     FFT_Wait(&FFT_Voltage[j]);
     for(int i = 0; i < 50; i++) {
@@ -317,9 +318,12 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq
   AllocParams(&pAggreg1H.Params);
   ResetParams(&pAggreg1H.Params);
   pAggreg1H.Samples = 0;
-  pLastCyclesCount  = 0;
+  for(int i = 0; i < PROCESSING_FREQCYCLES; i++) {
+    uint32_t Samples = (pSampleRate * i / 100);
+    pLastCycles[i] = Samples - pLastCyclesLenght;
+    pLastCyclesLenght += pLastCycles[i]; 
+  }
   pLastCyclesPos    = 0;
-  pLastCyclesLenght = 0;
   pWork.SequenceID  = 0;
 //  ExecSentence("PREPARE INSERT_10C AS INSERT INTO aggreg_10c(node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, fundamental_reactive_energy, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)");
   ExecSentence("PREPARE INSERT_3S  AS INSERT INTO aggreg_3s (node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, fundamental_reactive_energy, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)");    

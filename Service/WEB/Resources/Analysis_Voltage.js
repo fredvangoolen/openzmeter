@@ -41,6 +41,7 @@ function AjaxGetVoltage() {
     GraphAggregation = '10m';
     localStorage.setItem('GraphAggregation', GraphAggregation);
   }
+  if(LastVoltageSample === 0) LastEventStartTime = 0;
   $.ajax({ url: "getSeries",
            timeout: 20000,
            type: "POST",
@@ -49,8 +50,7 @@ function AjaxGetVoltage() {
            data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastVoltageSample, Series: 'rms_v', Node: Node}),
            success: AjaxVoltage,
            complete: function() { 
-             $('#btnVoltageNow').removeClass('disabled');
-             if(parseInt(localStorage.getItem('GraphEnd')) === 0) VoltageTimer = setTimeout(AjaxGetVoltage, 3000);
+             AjaxGetEvents(Period, GraphEnd, Node); 
            }
   });
 }
@@ -563,7 +563,7 @@ function DetailsButtonClick(event) {
   $('#btnShowDetailRPhase').removeClass('active');
   $('#btnShowDetailSPhase').removeClass('active');
   $('#btnShowDetailTPhase').removeClass('active');
-  if((Nodes['Devices'][Node]['Type'] === '3Phase') {
+  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
     switch(localStorage.getItem('VoltageDetailView')) {
       case 'Waveform' :
       case 'Harmonics' :
@@ -1116,36 +1116,6 @@ function UpdateEvolutionChart(result) {
   }
 }
 
-function AjaxSuccess60S(result) {
-  if(result['evolution_time']) {
-    UpdateEvolutionChart(result);
-    $('#HarmonicEvolutionBtn').removeClass("disabled");
-    $('#HarmonicEvolutionLoad').addClass("hidden");
-  }
-  $('#voltage_hour').text(Round2(result['hour_rms']));
-  $('#voltage_last_day').text(Round2(result['day_rms']));
-  $('#voltage_hour_min').text(Round2(result['hour_min']));
-  $('#voltage_hour_max').text(Round2(result['hour_max']));
-  $('#voltage_min_day').text(Round2(result['day_min']));
-  $('#voltage_max_day').text(Round2(result['day_max']));
-  UpdateHeader(result);
-}
-function GetValues60S(getHarmonics = true) {
-  $.ajax({ url: "analysis/ajaxUpdateValues60sVoltage",
-         timeout: 60000,
-         type: "POST",
-         dataType: "json",
-         data: { lastevolutiontimestamp: LastEvolutionSample, harmonics: getHarmonics },
-         success: AjaxSuccess60S,
-         complete: function (x) {
-                     setTimeout(GetValues60S, getHarmonics ? 60000 : 100);
-                     DetailSpinner.stop();
-                     $('#SpinnerDivDetail').remove();
-                     $('#DetailPanel').css('opacity', '1.0');
-                     $('#DetailPanel').find("*").prop("disabled", false);
-                   }
-      });
-}
 
 $('#btnExport').click(function () {
   var Data = [];
@@ -1212,67 +1182,72 @@ $('#GraphDialogClose').click(function() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-function fillEventsTable(events_list) {
-    var table = $('table#events_table tbody');
-    table.html('');
-    var newEvents = [];
-    for (var i in events_list) {
-        //for (var i in events_list[type]) {
-        newEvents.push(events_list[i]);
-        var startTime = new Date(+events_list[i].timestamp);
-        var duration = formatTimeUnit(events_list[i].duration * 1e6);
-        var diff = roundTo((Math.abs(events_list[i].voltage - 230)), 2).toFixed(2);
-        var percent = roundTo(100 - events_list[i].percent, 2).toFixed(2);
-        table.append('<tr>\
-        <td>' + startTime.toLocaleString() + '.' + startTime.getMilliseconds() + '</td>\
-        <td>' + events_list[i].type + '</td>\
-        <td>' + duration + '</td>\
-        <td>' + diff + ' V' + '</td>\
-        <td>' + percent + '%' + '</td>\
-        <td><button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button></td>\
-        </tr>')
-        //}
-    }
-    events = newEvents;
-}
-function generateEventTable(startDate, endDate) {
-    var request = $.ajax({
-        url: "analysis/ajaxGetEvents",
-        timeout: 20000,
-        type: "POST",
-        dataType: "json",
-        data: {
-            startDate: startDate,
-            endDate: endDate,
-            getRVC: true
-        }
-    });
-    request.done(function (result) {
-        table_events.clear();
-        table_events.destroy();
-        fillEventsTable(result);
-        table_events = $('table#events_table').DataTable(
-                {
-                    responsive: true,
-                    "columnDefs": [
-                        {width: '2%', "targets": -1}
-                    ]
-                });
-        if ($('#event_chart div.no-data').length == 0) {
-            $('#event_chart').append('<div class="no-data event_instructions"><div class="alert alert-info">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
-        }
+/* Tabla de eventos */
+var LastEventStartTime = 0;
+var EventsDatasheet    = [];
+var EventsTable        = null;
+function AjaxGetEvents(period, to, node) {
+  $.ajax({ url: "getEvents",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Period: period, To: to, LastEvent: LastEventStartTime, Node: Node}),
+           success: AjaxEvents,
+           complete: function() { 
+             $('#btnVoltageNow').removeClass('disabled');
+             if(parseInt(localStorage.getItem('GraphEnd')) === 0) VoltageTimer = setTimeout(AjaxGetVoltage, 3000);
+           }
     });
 }
+function AjaxEvents(result) {
+  if(EventsTable === null) {
+    EventsTable = $('#EventsTable').DataTable({ responsive: true, 
+                                                columnDefs: [ { width: '2%', "targets": -1 } ],
+                                                order: [0, 'desc']
+    });
+  }
+  EventsTable.clear();
+ //       table_events.destroy();
+        
+        
+  var Table = $('#EventsTable tbody');
+  Table.html('');
+//    var newEvents = [];
+  for(i = 0; i < result['Starttime'].length; i++) {
+    var Time = new Date(result['Starttime'][i]);    
+    Table.append('<tr>\
+      <td>' + Time.toLocaleString() + '.' + Time.getMilliseconds() + '</td>\
+      <td>' + result['Type'][i] + '</td>\
+      <td>' + 0 + '</td>\
+      <td>' + Round2(result['Voltage'][i]) + ' V' + '</td>\
+      <td>' + Round2(result['Percentage'][i]) + '%' + '</td>\
+      <td><button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button></td>\
+      </tr>');
+  }
+//    events = newEvents;
+        
+        
+//        table_events = $('table#events_table').DataTable(
+//                {
+//                    responsive: true,
+//                    "columnDefs": [
+//                        {width: '2%', "targets": -1}
+//                    ]
+//                });
+//        if ($('#event_chart div.no-data').length == 0) {
+//            $('#event_chart').append('<div class="no-data event_instructions"><div class="alert alert-info">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
+//        }
+//    }
+}
+
+
+
+
+
+
+
+
 
 
 /**
@@ -1322,7 +1297,7 @@ $("table#events_table").on('click', 'button.get_samples', function () {
     });
 });
 
-var eventChart = new Dygraph(document.getElementById("event_chart"),
+var eventChart = new Dygraph(document.getElementById("EventChart"),
         [[0, 0]],
         {
             strokeWidth: 2,
@@ -1342,10 +1317,10 @@ var eventChart = new Dygraph(document.getElementById("event_chart"),
             axes: {
                 y: {
                     valueFormatter: function (x) {
-                        return roundTo(x, 2).toFixed(2) + ' <em class="small">V</em>';
+//                        return roundTo(x, 2).toFixed(2) + ' <em class="small">V</em>';
                     },
                     axisLabelFormatter: function (x) {
-                        return '<small>' + roundTo(x, 2).toFixed(2) + ' <em class="small">V</em></small>';
+  //                      return '<small>' + roundTo(x, 2).toFixed(2) + ' <em class="small">V</em></small>';
                     }
                 },
                 x: {
@@ -1361,15 +1336,7 @@ var eventChart = new Dygraph(document.getElementById("event_chart"),
 );
 //$('#event_chart').append('<div class="no-data event_instructions"><div class="alert alert-info">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
 //fillEventsTable(events);
-//var table_events = $('table#events_table').DataTable(
-//        {
-//            responsive: true,
-//            "columnDefs": [
-//                {width: '2%', "targets": -1}
-//            ],
-//            "order": [0, 'desc']
-//        }
-//);
+
 
 
 

@@ -167,46 +167,38 @@ function AjaxGetIndicatorsB() {
     }
  });
 }
-function AjaxIndicators(result) {
 
-  //  
-//  if(result.sysinfo) {
-//    $('#ProgressCPU').LineProgressbar( { percentage: result.sysinfo.cpu, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });
-//    $('#CPUText').text(Math.round(result.sysinfo.cpu) + '%');
-//    var RAM = 100 - (result.sysinfo.ram[0] / result.sysinfo.ram[1] * 100);
-//    $('#ProgressRAM').LineProgressbar( { percentage: RAM, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });
-//    $('#RAMText').text(Math.round(RAM) + '% (' + Math.round(result.sysinfo.ram[0] / 1024.0) + 'Mb free)');
-//    var SSD = 100 - (result.sysinfo.ssd[0] / result.sysinfo.ssd[1] * 100);
-//    $('#ProgressSDD').LineProgressbar( { percentage: SSD, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });
-//    $('#SSDText').text(Math.round(SSD) + '% (' + Math.round(result.sysinfo.ssd[0] / 1024.0 / 1024.0) + 'Mb free)');
-//    $('#ProgressBattery').LineProgressbar( { percentage: 0, radius: '2px', height: '10px', ShowProgressCount: false, duration: 0 });
-//    $('#BatteryText').text('Not avaliable');
-//  }
-//
-//  if(result.lastCurrent) {
-//    $('#current_indicator').text(Round2(result.lastCurrent));
-//  }
-//  if(result.lastPower) {
-//    if(result.lastPower > 1000) {
-//      $('#power_indicator').text(Round2(result.lastPower / 1000));
-//      $('#power_indicator_units').text('kW');
-//    } else {
-//      $('#power_indicator').text(Round2(result.lastPower));
-//      $('#power_indicator_units').text('W');
-//    }
-//  }  
-//  if(result.lastFrequency) {
-//    $('#frequency_indicator').text(Round2(result.lastFrequency));
-//  }
-//  if(result.today_energy) {
-//    if(result['today_energy'] > 1000) {
-//      $('#energy_indicator').text(Round2(result['today_energy'] / 1000));
-//      $('#energy_indicator_units').text('kWh');
-//    } else {
-//      $('#energy_indicator').text(Round2(result['today_energy']));
-//      $('#energy_indicator_units').text('Wh');
-//    }
-//  }
+/* Guardar array como archivo CSV, incluyendo la cabecera */
+function exportToCsv(filename, rows) {
+  var processRow = function (row) {
+    var finalVal = '';
+    for(var j = 0; j < row.length; j++) {
+      var innerValue = row[j] === null ? '' : row[j].toString();
+      if(row[j] instanceof Date) innerValue = row[j].toLocaleString();
+      var result = innerValue.replace(/"/g, '""');
+      if(result.search(/("|;|\n)/g) >= 0) result = '"' + result + '"';
+      if(j > 0) finalVal += ';';
+      finalVal += result;
+    }
+    return finalVal + '\n';
+  };
+  var csvFile = '';
+  for (var i = 0; i < rows.length; i++) csvFile += processRow(rows[i]);
+  var blob = new Blob([csvFile], {type: 'text/csv;charset=utf-8;'});
+  if (navigator.msSaveBlob) { // IE 10+
+    navigator.msSaveBlob(blob, filename);
+  } else {
+    var link = document.createElement("a");
+    if(link.download !== undefined) { // feature detection
+      var url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
 }
 
 /* Actualiza el desplegable de nodos disponibles y selecciona el que este activo para la sesion */
@@ -364,6 +356,13 @@ function Div1000(input) {
   }
   return Result;
 }
+
+
+
+
+
+
+
 
 
 

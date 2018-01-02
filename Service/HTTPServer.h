@@ -13,8 +13,9 @@ class HTTPServer {
     typedef struct Session {
       struct Session *Next;
       char            ID[33];
-      time_t          Start;
+      uint32_t        LastSeen;
       char           *User;
+      uint32_t        References;
     } Session_t;
     typedef struct {
       Session_t                *Session;
@@ -40,8 +41,10 @@ class HTTPServer {
     static int        SendRedirect(struct MHD_Connection *connection, const char *url);
     static int        SendError(struct MHD_Connection *connection, int error, const char *text);
     static Session_t *GetSession(MHD_Connection *connection);
-    static Session_t *Sessions; 
+    static Session_t *Sessions;
+    static pthread_mutex_t SessionMutex;
   public :
     static bool Start();
     static bool stop();
+    static void RemoveExpiredSessions();
 };

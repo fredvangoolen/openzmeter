@@ -1,13 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <? $this->load->view('template/commonHead', array('title' => 'Events | EN50160')) ?>
-    <link href="lib/dc.js/dc.css" rel="stylesheet">
-    <link href="lib/d3-tip/d3-tip.min.css" rel="stylesheet">
-    <link href="lib/d3/colorbrewer.css" rel="stylesheet">
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="zRed"/>
+    <base href="/">
+    <link rel="shortcut icon" href="favicon.ico"/>
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="lib/metisMenu/metisMenu.min.css"/>
+    <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
+    <link rel="stylesheet" href="lib/offline/offline.css" type="text/css"/>
+    <link rel="stylesheet" href="css/common.css"/>
+    <title>openZmeter - Events - EN50160</title>
   </head>
   <body>
-    <? $this->load->view('template/header') ?>
+    <div id="DisableDiv" class="overlay"></div>
+    <nav class="navbar navbar-default navbar-fixed-top" id="Header"></nav>
     <div id="wrapper">
       <div id="page-wrapper">
         <div class="row">
@@ -118,22 +129,21 @@
           </div>
         </div>
       </div>
-      <!-- /#page-wrapper -->
     </div>
-    <!-- /#wrapper -->
-    <script>
-
-    </script>
-    <? $this->load->view('template/commonScripts') ?>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="lib/metisMenu/metisMenu.min.js"></script>
+    <script src="lib/spin.js/spin.min.js"></script>
+    <script src="lib/dygraph/dygraph.js"></script>
+    <script src="lib/dygraph/crosshair.js"></script>
+    <script src="lib/dygraph/dygraph-interaction.js"></script>
+    <script src="lib/dygraph/synchronize.js"></script>
     <script src="lib/dygraph/chart-plotter.js"></script>
-
-    <script src="lib/d3/d3.v3.min.js"></script>
-    <script src="lib/d3/colorbrewer.js"></script>
-    <script src="lib/dc.js/crossfilter.js"></script>
-    <script src="lib/dc.js/dc.min.js"></script>
-    <script src="lib/d3-tip/d3-tip.min.js"></script>
-    <script src="js/events/events.js"></script>
-    <script src="js/events/quality.js"></script>
-
+    <script src="lib/offline/offline.min.js"></script>
+    <script src="openZmeter.js"></script>
+    <script src="Events_EN50160.js"></script>
+    <script>
+      StartPageLoad();
+    </script>
   </body>
 </html>

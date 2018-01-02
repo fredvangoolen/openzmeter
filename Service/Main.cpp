@@ -74,8 +74,12 @@ int main(int argc, char** argv) {
 
 //  Events_Init();
 //  Prices_Start(LastPrice);
+  int Iter = 0;
   while(!Terminate) {
     usleep(1000000);
+    if((Iter % 100) == 0) HTTPServer::RemoveExpiredSessions();
+    Iter++;
+    
 //    Work_t *Work = Adquisition_GetWork();
 //    if(Work->SequenceID == 0) {
 //      free(Work);

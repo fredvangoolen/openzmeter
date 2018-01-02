@@ -20,6 +20,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon            *HTTPServer::Daemon = NULL;
 HTTPServer::Session_t *HTTPServer::Sessions = NULL;
+pthread_mutex_t        HTTPServer::SessionMutex = PTHREAD_MUTEX_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 bool HTTPServer::Start() {
   Daemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, Tools::Global.HTTPPort, NULL, NULL, 
@@ -35,8 +36,9 @@ bool HTTPServer::Start() {
 HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection* connection) {
   const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "OZM_SESSION");
   Session_t *Session = NULL;
+  pthread_mutex_lock(&SessionMutex);
   if(Cookie != NULL) {
-    Session = Sessions;
+    Session         = Sessions;
     while(Session != NULL) {
       if(strcmp(Cookie, Session->ID) == 0) break;
       Session = Session->Next;
@@ -54,8 +56,32 @@ HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection* connection) {
     Session->Next = Sessions;
     Sessions = Session;
   }
-  Session->Start = time(NULL);
+  Session->LastSeen = time(NULL);
+  Session->References++;
+  pthread_mutex_unlock(&SessionMutex);
   return Session;
+}
+void HTTPServer::RemoveExpiredSessions() {
+  pthread_mutex_lock(&SessionMutex);
+  Session_t *Session = Sessions;
+  Session_t *Prev = NULL;
+  uint32_t Time = time(NULL);
+  while(Session != NULL) {
+    if((Session->LastSeen < (Time - 86400)) && (Session->References != 0)) {
+      Tools::LogMsg("DEBUG", "Remove expired session %s\n", Session->ID);
+      Session_t *Tmp = Session;
+      if(Prev == NULL) {
+        Sessions = Session->Next;
+      } else {
+        Prev->Next = Session->Next;
+      }
+      Session = Session->Next;
+      free(Tmp);
+    } else {
+      Prev = Session;
+    }
+  }
+  pthread_mutex_unlock(&SessionMutex);
 }
 void HTTPServer::SetMimeType(struct MHD_Response *response, const char *url) {
   char *MimeType = NULL;
@@ -120,6 +146,7 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
     Tools::LogMsg("DEBUG", "POST request '%s' takes %" PRIu64 "mS (%.2fkB send in %" PRIu64 "mS)\n", Request->Msg, Request->ProcTime - Request->StartTime, Request->PostResponseLen / 1024.0, EndTime - Request->StartTime);
     free(Request->Msg);
   }
+  Request->Session->References++;
   free(Request);
 }
 int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
@@ -200,6 +227,7 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
     if(strcmp(url, "/Events/ITIC") == 0) return SendFile(connection,  "WEB/Events_ITIC.html");
     if(strcmp(url, "/Events/Disturbances") == 0) return SendFile(connection,  "WEB/Events_Disturbances.html");
     if(strcmp(url, "/Events/EN50160") == 0) return SendFile(connection,  "WEB/Events_EN50160.html");
+    if(strcmp(url, "/Stats") == 0) return SendFile(connection,  "WEB/Stats.html");
     if(strcmp(url, "/Help") == 0) return SendFile(connection,  "WEB/Help.html");
   }
   return SendError(connection, MHD_HTTP_NOT_FOUND, "Page not found");

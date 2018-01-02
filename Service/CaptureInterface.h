@@ -84,7 +84,6 @@ class CaptureInterface : private Database {
     pthread_mutex_t pDataReadyMutex;       //Mutex para registrar cambios en DataReady
     pthread_cond_t  pDataReadyWait;        //Variable de condicion para bloquear los clientes
     uint32_t        pLastCycles[PROCESSING_FREQCYCLES];
-    uint32_t        pLastCyclesCount;
     uint32_t        pLastCyclesPos;
     uint32_t        pLastCyclesLenght;
     uint32_t        pSampleRate;
