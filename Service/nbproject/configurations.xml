@@ -287,6 +287,7 @@
         <itemPath>WEB/Resources/Events_ITIC.js</itemPath>
         <itemPath>WEB/Resources/Help.js</itemPath>
         <itemPath>WEB/Resources/Login.js</itemPath>
+        <itemPath>WEB/Resources/Stats.js</itemPath>
         <itemPath>WEB/Resources/favicon.ico</itemPath>
         <itemPath>WEB/Resources/openZmeter.js</itemPath>
       </logicalFolder>
@@ -300,6 +301,7 @@
       <itemPath>WEB/Events_ITIC.html</itemPath>
       <itemPath>WEB/Help.html</itemPath>
       <itemPath>WEB/Login.html</itemPath>
+      <itemPath>WEB/Stats.html</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -340,15 +342,13 @@
       </toolsSet>
       <compileType>
         <cTool>
-          <developmentMode>0</developmentMode>
           <standard>3</standard>
-          <commandLine>-Os -march=native</commandLine>
+          <commandLine>-O0 -march=native</commandLine>
           <warningLevel>2</warningLevel>
         </cTool>
         <ccTool>
-          <developmentMode>0</developmentMode>
           <standard>4</standard>
-          <commandLine>-Os -march=native</commandLine>
+          <commandLine>-O0 -march=native</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
@@ -461,6 +461,8 @@
       <item path="WEB/Resources/Help.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Login.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Stats.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/css/common.css" ex="false" tool="3" flavor2="0">
       </item>
@@ -1185,6 +1187,8 @@
       <item path="WEB/Resources/lib/visjs/vis.min.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/openZmeter.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Stats.html" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>

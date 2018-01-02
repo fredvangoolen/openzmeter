@@ -79,6 +79,7 @@ void HTTPServer::RemoveExpiredSessions() {
       free(Tmp);
     } else {
       Prev = Session;
+      Session = Session->Next;
     }
   }
   pthread_mutex_unlock(&SessionMutex);

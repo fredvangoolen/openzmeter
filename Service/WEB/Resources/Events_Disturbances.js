@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+var Timeline = null;
 function AjaxGetEvents() {
   $.ajax({ url: "getEvents",
            timeout: 20000,
@@ -33,127 +33,95 @@ function AjaxGetEvents() {
   
 }
 function AjaxEvents(result) {
-  // create groups
-var groups = new vis.DataSet([
-    {id: 1, content: 'Dips'},
-    {id: 2, content: 'Swells'},
-    {id: 3, content: 'Interruptions'},
-    {id: 4, content: 'RVC'}
-]);
+  var Groups = new vis.DataSet([
+    { id: 1, content: 'Dips'},
+    { id: 2, content: 'Swells'},
+    { id: 3, content: 'Interruptions'},
+    { id: 4, content: 'RVC'},
+    { id: 5, content: 'Glitchs'}
+  ]);
+  var Items = new vis.DataSet();
+  for(i = 0; i < result['Starttime'].length; i++) {
+    switch(result['Type'][i]) {
+      case 'INTERRUPTION':
+        var className = 'red';
+        var group = 3;
+        break;
+      case 'SWELL':
+        var className = 'blue';
+        var group = 2;
+        break;
+      case 'DIP':
+        var className = 'blue';
+        var group = 1;
+        break;
+      case 'RVC':
+        var className = 'blue';
+        var group = 4;
+        break;
+      }
+      var date = new Date(result['Starttime'][i]);
+      var percent = result['Percentage'][i];
+      var duration = result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq'];
+      var diff = 0;
+  //    var diff = roundTo((Math.abs(events[i].voltage - 230)), 2).toFixed(2);
+  //    var percent = roundTo(100 - events[i].percent, 2).toFixed(2);
+      Items.add({
+          id: i,
+          group: group,
+          start: date,
+          className: className,
+          content: '<strong>Time:</strong> ' + date.toLocaleString() + '.' + date.getMilliseconds() + '\
+                          <br><strong>Duration:</strong> ' + duration + '\
+                          <br><strong>ΔU<sub>max</sub>:</strong> ' + diff + ' V\
+                          <br><strong>% ΔU<sub>max</sub>:</strong>' + percent + '%'
+
+      });
+  }
+
 
 var now = new Date();
 
-// create items
-var items = new vis.DataSet();
-for(i = 0; i < result['Starttime'].length; i++) {
-  switch(result['Type'][i]) {
-    case 'INTERRUPTION':
-      var className = 'red';
-      var group = 3;
-      break;
-    case 'SWELL':
-      var className = 'blue';
-      var group = 2;
-      break;
-    case 'DIP':
-      var className = 'blue';
-      var group = 1;
-      break;
-    case 'RVC':
-      var className = 'blue';
-      var group = 4;
-      break;
-    }
-    var date = new Date(result['Starttime'][i]);
-    var percent = result['Percentage'][i];
-    var duration = result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq'];
-    var diff = 0;
-//    var diff = roundTo((Math.abs(events[i].voltage - 230)), 2).toFixed(2);
-//    var percent = roundTo(100 - events[i].percent, 2).toFixed(2);
-    items.add({
-        id: i,
-        group: group,
-        start: date,
-        className: className,
-        content: '<strong>Time:</strong> ' + date.toLocaleString() + '.' + date.getMilliseconds() + '\
-                        <br><strong>Duration:</strong> ' + duration + '\
-                        <br><strong>ΔU<sub>max</sub>:</strong> ' + diff + ' V\
-                        <br><strong>% ΔU<sub>max</sub>:</strong>' + percent + '%'
-
-    });
-}
-
-
-/*items.add({
- id: 4,
- group: 4,
- start: new Date(now.getTime() - 90112),
- className: 'red',
- content: ''
- });
-
- items.add({
- id: 5,
- group: 4,
- start: new Date(now.getTime() - 92000),
- className: 'red',
- content: ''
- });
-
- items.add({
- id: 6,
- group: 4,
- start: new Date(now.getTime() - 20112),
- className: 'red',
- content: ''
- });*/
 // specify options
 var date = new Date();
 date.setHours(0);
 date.setMinutes(0);
 date.setSeconds(0);
 date.setMilliseconds(0);
-var options = {
+date.setDate(-100);
+  Timeline = new vis.Timeline(document.getElementById('disturbances_chart'), null, {
     stack: false,
     start: date,
     end: now,
     editable: false,
     margin: {
-        item: 10, // minimal margin between items
-        axis: 5   // minimal margin between items and the axis
+      item: 10, // minimal margin between items
+      axis: 5   // minimal margin between items and the axis
     },
     orientation: 'top'
-};
-
-// create a Timeline
-var container = document.getElementById('disturbances_chart');
-timeline = new vis.Timeline(container, null, options);
-timeline.setGroups(groups);
-timeline.setItems(items);
-
-$(document).on("mouseenter", '.vis-item', function ($e) {
-    $(this).qtip({
-        overwrite: false,
-        //hide: 'unfocus',
-        //show: 'click',
-        content: {
-            text: $('.vis-item-content', this).html()
-        },
-        position: {
-            my: 'top left', // Position my top left...
-            at: 'bottom right', // at the bottom right of...
-        },
-        style: {
-            classes: 'qtip-bootstrap'
-        }
-    });
-});
-timeline.on('rangechanged', function () {
-    var range = timeline.getWindow();
+  });
+  Timeline.setGroups(Groups);
+  Timeline.setItems(Items);
+  Timeline.on('rangechanged', function () {
+    var range = Timeline.getWindow();
     generateEventTable(range.start.getTime(), range.end.getTime());
-})
+  });
 }
-
+$(document).on("mouseover", '.vis-item', function ($e) {
+  $(this).qtip({
+    overwrite: false,
+      content: {
+        text: $('.vis-item-content', this).html()
+      },
+      position: {
+        my: 'top left', // Position my top left...
+        at: 'bottom right', // at the bottom right of...
+      },
+      style: {
+        classes: 'qtip-bootstrap'
+      }
+  });
+});
 function UpdatePage() {
   AjaxGetEvents();
 }
