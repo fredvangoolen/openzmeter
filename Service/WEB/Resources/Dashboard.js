@@ -45,7 +45,7 @@ function AjaxVoltage(result) {
   if(VoltageChart === null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"),
       VoltageData,
-      { strokeWidth: 1, 
+      { strokeWidth: 0.5, 
         labelsDiv: "VoltageLegend",
         labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)'] :['Time', 'Voltage'],
         stepPlot: true,
@@ -210,7 +210,7 @@ function AjaxCurrent(result) {
   if(CurrentChart == null) {
     CurrentChart = new Dygraph(document.getElementById("CurrentChart"),
       CurrentData,
-      { strokeWidth: 1,
+      { strokeWidth: 0.5,
         labelsDiv: "CurrentLegend",
         labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'] :['Time', 'Current'],
         stepPlot: true,
@@ -394,7 +394,7 @@ function AjaxPower(result) {
   if(PowerChart == null) {
     PowerChart = new Dygraph(document.getElementById("PowerChart"),
       PowerData,
-      { strokeWidth: 1,
+      { strokeWidth: 0.5,
         labelsDiv: "PowerLegend",
         labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Power (R)', 'Power (S)', 'Power (T)'] :['Time', 'Power'],
         stepPlot: true,
@@ -562,7 +562,7 @@ function AjaxFrequency(result) {
   if(FrequencyChart == null) {
     FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"),
       FrequencyData,
-      { strokeWidth: 1,
+      { strokeWidth: 0.5,
         labelsDiv: "FrequencyLegend",
         labels: ["Time", "Frequency"],
         stepPlot: true,
@@ -690,7 +690,7 @@ function AjaxEnergy(result) {
     }
     EnergyChart = new Dygraph(document.getElementById("EnergyChart"),
       EnergyData,
-      { strokeWidth: 1,
+      { strokeWidth: 0.5,
         labelsDiv: "EnergyLegend",
         labels: VisibleNames,
         plotter: barChartNoSpacedPlotter,

@@ -1201,6 +1201,7 @@ function AjaxGetEvents(period, to, node) {
     });
 }
 function AjaxEvents(result) {
+  return;
   if(EventsTable === null) {
     EventsTable = $('#EventsTable').DataTable({ responsive: true, 
                                                 columnDefs: [ { width: '2%', "targets": -1 } ],

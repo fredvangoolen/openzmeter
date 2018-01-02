@@ -269,7 +269,7 @@ function AjaxEnergyPower(result) {
   if((Math.abs(Range[0]) > 1000) || (Math.abs(Range[1]) > 1000)) {
     ActivePowerChartUnits = 'kW';
     Range[0] = Range[0] / 1000;
-    Range[1] = Ramge[1] / 1000;
+    Range[1] = Range[1] / 1000;
     Div1000(ActivePowerData);
   } else {
     ActivePowerChartUnits = 'W';
