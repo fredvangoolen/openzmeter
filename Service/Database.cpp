@@ -144,8 +144,6 @@ bool Database::ExecSentence() {
       Read++;
     }
     Return = ExecSentence(Buffer);
-//    printf(Buffer);
-//    fflush(stdout);
     free(Buffer);
   } else {
     Tools::LogMsg("ERROR", "There are more placeholders than params!!\n");

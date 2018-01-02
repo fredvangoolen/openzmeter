@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 Pedro Sánchez Alguacil
+ *               2017 Eduardo Viciana Gamez
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,60 +16,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-function fillEventsTable(events_list) {
-    var table = $('table#events_table tbody');
-    table.html('');
-    var newEvents = [];
-    for (var i in events_list) {
-        //for (var i in events_list[type]) {
-        newEvents.push(events_list[i]);
-        var startTime = new Date(+events_list[i].timestamp);
-        var duration = formatTimeUnit(events_list[i].duration * 1e6);
-        var diff = roundTo((Math.abs(events_list[i].voltage - 230)), 2).toFixed(2);
-        var percent = roundTo(100 - events_list[i].percent, 2).toFixed(2);
-        table.append('<tr id="' + (+events_list[i].timestamp) + '">\
-        <td>' + startTime.toLocaleString() + '.' + startTime.getMilliseconds() + '</td>\
-        <td>' + events_list[i].type + '</td>\
-        <td>' + duration + '</td>\
-        <td>' + diff + ' V' + '</td>\
-        <td>' + percent + '%' + '</td>\
-        <td><button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button></td>\
-        </tr>')
-        //}
-    }
-    events = newEvents;
+function AjaxGetEvents() {
+  $.ajax({ url: "getEvents",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Period: 31536000000, To: 0, LastEvent: 0, Node: Node}),
+           success: AjaxEvents,
+           complete: function (x) {
+//             $('#btnCurrentNow').removeClass('disabled');
+//             if(parseInt(localStorage.getItem('GraphEnd')) === 0) CurrentTimer = setTimeout(AjaxGetCurrent, 3000);
+           }
+  }); 
+  
+  
 }
-
-function generateEventTable(startDate, endDate) {
-    var request = $.ajax({
-        url: "analysis/ajaxGetEvents",
-        timeout: 20000,
-        type: "POST",
-        dataType: "json",
-        data: {
-            startDate: startDate,
-            endDate: endDate,
-            getRVC: true
-        }
-    });
-    request.done(function (result) {
-        table_events.clear();
-        table_events.destroy();
-        fillEventsTable(result);
-        table_events = $('table#events_table').DataTable(
-                {
-                    responsive: true,
-                    "columnDefs": [
-                        {width: '2%', "targets": -1}
-                    ]
-                });
-        if ($('#event_chart div.no-data').length == 0) {
-            $('#event_chart').append('<div class="no-data event_instructions"><div class="alert alert-info">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
-        }
-    });
-}
-
-// create groups
+function AjaxEvents(result) {
+  // create groups
 var groups = new vis.DataSet([
     {id: 1, content: 'Dips'},
     {id: 2, content: 'Swells'},
@@ -80,34 +45,35 @@ var now = new Date();
 
 // create items
 var items = new vis.DataSet();
-for (var i in events) {
-    switch (events[i].type) {
-        case 'INTERRUPTION':
-            var className = 'red';
-            var group = 3;
-            break;
-        case 'SWELL':
-            var className = 'blue';
-            var group = 2;
-            break;
-        case 'DIP':
-            var className = 'blue';
-            var group = 1;
-            break;
-        case 'RVC':
-            var className = 'blue';
-            var group = 4;
-            break;
+for(i = 0; i < result['Starttime'].length; i++) {
+  switch(result['Type'][i]) {
+    case 'INTERRUPTION':
+      var className = 'red';
+      var group = 3;
+      break;
+    case 'SWELL':
+      var className = 'blue';
+      var group = 2;
+      break;
+    case 'DIP':
+      var className = 'blue';
+      var group = 1;
+      break;
+    case 'RVC':
+      var className = 'blue';
+      var group = 4;
+      break;
     }
-    var date = new Date(+events[i].timestamp);
-    var percent = events[i].u_max / 230 * 100;
-    var duration = formatTimeUnit(events[i].duration * 1e6);
-    var diff = roundTo((Math.abs(events[i].voltage - 230)), 2).toFixed(2);
-    var percent = roundTo(100 - events[i].percent, 2).toFixed(2);
+    var date = new Date(result['Starttime'][i]);
+    var percent = result['Percentage'][i];
+    var duration = result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq'];
+    var diff = 0;
+//    var diff = roundTo((Math.abs(events[i].voltage - 230)), 2).toFixed(2);
+//    var percent = roundTo(100 - events[i].percent, 2).toFixed(2);
     items.add({
-        id: events[i].type + '_' + i,
+        id: i,
         group: group,
-        start: new Date(+events[i].timestamp),
+        start: date,
         className: className,
         content: '<strong>Time:</strong> ' + date.toLocaleString() + '.' + date.getMilliseconds() + '\
                         <br><strong>Duration:</strong> ' + duration + '\
@@ -182,6 +148,69 @@ $(document).on("mouseenter", '.vis-item', function ($e) {
         }
     });
 });
+timeline.on('rangechanged', function () {
+    var range = timeline.getWindow();
+    generateEventTable(range.start.getTime(), range.end.getTime());
+})
+}
+
+function UpdatePage() {
+  AjaxGetEvents();
+}
+function fillEventsTable(events_list) {
+    var table = $('table#events_table tbody');
+    table.html('');
+    var newEvents = [];
+    for (var i in events_list) {
+        //for (var i in events_list[type]) {
+        newEvents.push(events_list[i]);
+        var startTime = new Date(+events_list[i].timestamp);
+        var duration = formatTimeUnit(events_list[i].duration * 1e6);
+        var diff = roundTo((Math.abs(events_list[i].voltage - 230)), 2).toFixed(2);
+        var percent = roundTo(100 - events_list[i].percent, 2).toFixed(2);
+        table.append('<tr id="' + (+events_list[i].timestamp) + '">\
+        <td>' + startTime.toLocaleString() + '.' + startTime.getMilliseconds() + '</td>\
+        <td>' + events_list[i].type + '</td>\
+        <td>' + duration + '</td>\
+        <td>' + diff + ' V' + '</td>\
+        <td>' + percent + '%' + '</td>\
+        <td><button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button></td>\
+        </tr>')
+        //}
+    }
+    events = newEvents;
+}
+
+function generateEventTable(startDate, endDate) {
+  return;
+    var request = $.ajax({
+        url: "analysis/ajaxGetEvents",
+        timeout: 20000,
+        type: "POST",
+        dataType: "json",
+        data: {
+            startDate: startDate,
+            endDate: endDate,
+            getRVC: true
+        }
+    });
+    request.done(function (result) {
+        table_events.clear();
+        table_events.destroy();
+        fillEventsTable(result);
+        table_events = $('table#events_table').DataTable(
+                {
+                    responsive: true,
+                    "columnDefs": [
+                        {width: '2%', "targets": -1}
+                    ]
+                });
+        if ($('#event_chart div.no-data').length == 0) {
+            $('#event_chart').append('<div class="no-data event_instructions"><div class="alert alert-info">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
+        }
+    });
+}
+
 
 //
 //$('.vis-item').qtip({// Grab some elements to apply the tooltip to
@@ -224,10 +253,7 @@ $(':input[name="disturbances_chart_range"]').change(function () {
     generateEventTable(start.getTime(), end.getTime());
 });
 
-timeline.on('rangechanged', function () {
-    var range = timeline.getWindow();
-    generateEventTable(range.start.getTime(), range.end.getTime());
-})
+
 /**
  * Events
  */
@@ -317,10 +343,10 @@ var eventChart = new Dygraph(document.getElementById("event_chart"),
             axes: {
                 y: {
                     valueFormatter: function (x) {
-                        return roundTo(x, 2).toFixed(2) + ' <em class="small">V</em>';
+                        return Round2(x) + ' <em class="small">V</em>';
                     },
                     axisLabelFormatter: function (x) {
-                        return '<small>' + roundTo(x, 2).toFixed(2) + ' <em class="small">V</em></small>';
+                        return '<small>' + Round2(x) + ' <em class="small">V</em></small>';
                     }
                 },
                 x: {
@@ -335,17 +361,17 @@ var eventChart = new Dygraph(document.getElementById("event_chart"),
         }
 );
 $('#event_chart').append('<div class="no-data event_instructions"><div class="alert alert-info">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
-fillEventsTable(events);
-var table_events = $('table#events_table').DataTable(
-        {
-            responsive: true,
-            "columnDefs": [
-                {width: '2%', "targets": -1}
-            ],
-            "order": [0, 'desc']
-        }
-);
+//fillEventsTable(events);
+//var table_events = $('table#events_table').DataTable(
+//        {
+//            responsive: true,
+//            "columnDefs": [
+//                {width: '2%', "targets": -1}
+//            ],
+//            "order": [0, 'desc']
+//        }
+//);
 
-if (timestamp != null) {
-    $('#events_table tr#' + timestamp + ' button.get_samples').click();
-}
+//if (timestamp != null) {
+//    $('#events_table tr#' + timestamp + ' button.get_samples').click();
+//}

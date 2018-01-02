@@ -33,7 +33,6 @@
         </logicalFolder>
         <logicalFolder name="js" displayName="js" projectFiles="true">
           <logicalFolder name="events" displayName="events" projectFiles="true">
-            <itemPath>WEB/Resources/js/events/disturbances.js</itemPath>
             <itemPath>WEB/Resources/js/events/events.js</itemPath>
           </logicalFolder>
           <itemPath>WEB/Resources/js/account.js</itemPath>
@@ -284,6 +283,7 @@
         <itemPath>WEB/Resources/Analysis_Voltage.js</itemPath>
         <itemPath>WEB/Resources/CommonHeader.html</itemPath>
         <itemPath>WEB/Resources/Dashboard.js</itemPath>
+        <itemPath>WEB/Resources/Events_Disturbances.js</itemPath>
         <itemPath>WEB/Resources/Events_ITIC.js</itemPath>
         <itemPath>WEB/Resources/Help.js</itemPath>
         <itemPath>WEB/Resources/Login.js</itemPath>
@@ -451,6 +451,11 @@
       </item>
       <item path="WEB/Resources/Dashboard.js" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="WEB/Resources/Events_Disturbances.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="WEB/Resources/Events_ITIC.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Help.js" ex="false" tool="3" flavor2="0">
@@ -470,11 +475,6 @@
       <item path="WEB/Resources/img/logo.png" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/js/account.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/events/disturbances.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="WEB/Resources/js/events/events.js" ex="false" tool="3" flavor2="0">
       </item>

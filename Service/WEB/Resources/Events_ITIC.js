@@ -373,27 +373,30 @@ function ITICResizeEvent() {
   if(ITICGraph != null) ITICGraph.resize($('#ITICDiv').width(), Height);
 }
 function CreateVoltageRangeSelector(result) {
-  VoltageData.push([new Date(result['From'] * 1000), 0]);
+  VoltageData.push([new Date(result['From']), Nodes['NominalVoltage']]);
   for(i = 0; i < result['Sampletime'].length; i++) {
-    VoltageData.push([new Date(result['Sampletime'][i] * 1000 + 1000), result['rms_v'][i]]);
+    var Max = -Infinity;
+    for(n = 0; n < result['rms_v'][i].length; n++) Max = Math.max(Max, result['rms_v'][i][n]);
+    VoltageData.push([new Date(result['Sampletime'][i]), Max]);
   }
   VoltageGraph = new Dygraph(document.getElementById("VoltageRangeChart"),
     VoltageData,
     { labels: ["Time", "Voltage"],
       stepPlot: true,
-      dateWindow: [(result['From'] * 1000), (result['To'] * 1000)],
+      dateWindow: [(result['From']), (result['To'])],
       xAxisHeight: 0,
       showRangeSelector: true,
-      rangeSelectorHeight: 50,
+      rangeSelectorHeight: 40,
       legend: "never",
       axisLineColor: "#CCC",
       series: {
         'Voltage': {
-          strokeWidth: 0
-        },
+          strokeWidth: 0,
+          showInRangeSelector: true
+        }
       },
-      rangeSelectorPlotFillColor: "#31708f",
-      rangeSelectorPlotStrokeColor: "#31708f",
+      rangeSelectorPlotFillColor: "#FFFFFF",
+      rangeSelectorPlotStrokeColor: "#d9534f",
       zoomCallback: GenerateGraphs,
       axes: {
         x: { 
