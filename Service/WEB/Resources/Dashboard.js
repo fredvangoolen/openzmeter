@@ -815,6 +815,28 @@ function SetEnergyVisibleSeries() {
   } else {
     VoltageChart.updateOptions({ valueRange: CalcRanges(VoltageData, [1], false) });
   }
+  var Serie = 'Energy';
+  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
+    if(ShowR) Serie = 'Energy (R)';
+    if(ShowS) Serie = 'Energy (S)';
+    if(ShowT) Serie = 'Energy (T)';
+  }
+  var Annotations = [];
+  var MaxFound = [0, -Infinity];
+  for(i = 0; i < EnergyData.length; i++) {
+    var Max = (Nodes['Devices'][Node]['Type'] == '3Phase') ? ((ShowR ? EnergyData[i][1] : 0) + (ShowS ? EnergyData[i][2] : 0) + (ShowT ? EnergyData[i][3] : 0)) : EnergyData[i][1];
+    MaxFound = [EnergyData[i][0], Max];
+  }
+  Annotations.push({
+      series: Serie,
+      xval: MaxFound[0],
+      shortText: 'MAX',
+      text: "Pico de consumo de " + (MaxFound[1] > 1000) ? Round2(MaxFound[1] / 1000.0) + 'kWh' : Round2(MaxFound[1]) + 'Wh'
+    });
+  EnergyChart.setAnnotations(Annotations);
+
+  
+  
 }
 function ChooseEnergyChannels() {
   var ShowR = (localStorage.getItem('ShowR') === 'true');

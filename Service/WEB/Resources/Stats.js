@@ -15,53 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-function filterByDate(val) {
-    var date = new Date();
-    switch (val) {
-        case 'today':
-            var end = date;
-            end.setHours(23);
-            end.setMinutes(59);
-            end.setSeconds(59);
-            var start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-            break;
-        case 'yesterday':
-            var end = date;
-            end.setHours(23);
-            end.setMinutes(59);
-            end.setSeconds(59);
-            end = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1);
-            end.setHours(23);
-            end.setMinutes(59);
-            end.setSeconds(59);
-            start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-            break;
-        case 'week':
-            end = date;
-            start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - end.getDay());
-            break;
-        case 'month':
-            end = date;
-            start = new Date(end.getFullYear(), end.getMonth(), 1);
-            break;
-    }
-
-    brush = dateSelectorChart.brush().extent([start, end]);
-
-    gBrush = dateSelectorChart.svg().select('.brush')
-            .call(brush);
-
-    gBrush.call(brush.event);
+function AjaxGetEnergy() {
+  $.ajax({ url: "getSeries",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Period: 31536000000, To: 0, Aggreg: '1h', LastSample: 0, Series: 'active_energy', Node: Node}),
+           success: AjaxEnergy,
+           complete: function (x) {
+//             $('#btnCurrentNow').removeClass('disabled');
+//             if(parseInt(localStorage.getItem('GraphEnd')) === 0) CurrentTimer = setTimeout(AjaxGetCurrent, 3000);
+           }
+  }); 
+  
+  
 }
-
-function resetCharts() {
-    dc.filterAll();
-    dc.renderAll();
-    filterByDate($(':input[name="date_chart_range"]:checked').val());
-}
-
-
-var scatterTip = d3.tip()
+function AjaxEnergy() {
+  var scatterTip = d3.tip()
         .attr('class', 'd3-tip')
         //.offset([-10, 0])
         .html(function (d) {
@@ -95,7 +66,6 @@ var barDateTip = d3.tip()
             return "<em>" + d.x.toLocaleDateString()
                     + "</em> : " + d.y + (d.y == 1 ? ' events' : ' event');
         });
-
 
 var dateDimension = ndx.dimension(function (d) {
     return new Date(d.time);
@@ -248,4 +218,60 @@ filterByDate('week');
 $(':input[name="date_chart_range"]').change(function () {
     filterByDate($(this).val());
 });
+
+
+
+
+}
+
+
+function UpdatePage() {
+  AjaxGetEnergy();
+}
+function filterByDate(val) {
+    var date = new Date();
+    switch (val) {
+        case 'today':
+            var end = date;
+            end.setHours(23);
+            end.setMinutes(59);
+            end.setSeconds(59);
+            var start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+            break;
+        case 'yesterday':
+            var end = date;
+            end.setHours(23);
+            end.setMinutes(59);
+            end.setSeconds(59);
+            end = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1);
+            end.setHours(23);
+            end.setMinutes(59);
+            end.setSeconds(59);
+            start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+            break;
+        case 'week':
+            end = date;
+            start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - end.getDay());
+            break;
+        case 'month':
+            end = date;
+            start = new Date(end.getFullYear(), end.getMonth(), 1);
+            break;
+    }
+
+    brush = dateSelectorChart.brush().extent([start, end]);
+
+    gBrush = dateSelectorChart.svg().select('.brush')
+            .call(brush);
+
+    gBrush.call(brush.event);
+}
+
+function resetCharts() {
+    dc.filterAll();
+    dc.renderAll();
+    filterByDate($(':input[name="date_chart_range"]:checked').val());
+}
+
+
 

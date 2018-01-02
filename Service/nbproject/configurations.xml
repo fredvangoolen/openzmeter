@@ -38,7 +38,6 @@
           <itemPath>WEB/Resources/js/account.js</itemPath>
           <itemPath>WEB/Resources/js/live.js</itemPath>
           <itemPath>WEB/Resources/js/settings.js</itemPath>
-          <itemPath>WEB/Resources/js/stats.js</itemPath>
           <itemPath>WEB/Resources/js/utils.js</itemPath>
           <itemPath>WEB/Resources/js/zTicker.js</itemPath>
         </logicalFolder>
@@ -483,8 +482,6 @@
       <item path="WEB/Resources/js/live.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/js/settings.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/stats.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/js/utils.js" ex="false" tool="3" flavor2="0">
       </item>
