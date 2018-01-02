@@ -815,3 +815,17 @@ text.area_text {
   opacity: 0.8;
   background-color: #FFF;
 }
+
+.annotation {
+  border: 1px solid black;
+  background-color: white;
+  text-align: center;
+  font-size: 11px !important;
+  font-weight: bold;
+  
+}
+.dygraph-annotation {
+  position: absolute;
+  z-index: 10;
+  overflow: hidden;
+}

@@ -466,6 +466,27 @@ function SetPowerVisibleSeries() {
   } else {
     PowerChart.updateOptions({ valueRange: CalcRanges(PowerData, [1], false) });
   }
+  var Serie = 'Power';
+  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
+    if(ShowT) Serie = 'Power (T)';
+    if(ShowS) Serie = 'Power (S)';
+    if(ShowR) Serie = 'Power (R)';
+  }
+  var Annotations = [];
+  var MaxFound = [0, -Infinity];
+  for(i = 0; i < PowerData.length; i++) {
+    var Max = (Nodes['Devices'][Node]['Type'] == '3Phase') ? ((ShowR ? PowerData[i][1] : 0) + (ShowS ? PowerData[i][2] : 0) + (ShowT ? PowerData[i][3] : 0)) : PowerData[i][1];
+    if(MaxFound[1] <= Max) MaxFound = [PowerData[i][0], Max];
+  }
+  Annotations.push({
+      series: Serie,
+      xval: MaxFound[0].getTime(),
+      shortText: 'MAX',
+      text: 'Active power peak',
+      width: 28,
+      cssClass: 'annotation'
+    });
+  PowerChart.setAnnotations(Annotations);
 }
 function ChoosePowerChannels() {
   var ShowR = (localStorage.getItem('ShowDashboardPowerR') === 'true');
@@ -813,30 +834,29 @@ function SetEnergyVisibleSeries() {
     else    
       $('#btnShowEnergyTPhase').removeClass('active');
   } else {
-    VoltageChart.updateOptions({ valueRange: CalcRanges(VoltageData, [1], false) });
+    EnergyChart.updateOptions({ valueRange: CalcRanges(EnergyData, [1], true, false, true) });
   }
   var Serie = 'Energy';
   if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    if(ShowR) Serie = 'Energy (R)';
-    if(ShowS) Serie = 'Energy (S)';
     if(ShowT) Serie = 'Energy (T)';
+    if(ShowS) Serie = 'Energy (S)';
+    if(ShowR) Serie = 'Energy (R)';
   }
   var Annotations = [];
   var MaxFound = [0, -Infinity];
   for(i = 0; i < EnergyData.length; i++) {
     var Max = (Nodes['Devices'][Node]['Type'] == '3Phase') ? ((ShowR ? EnergyData[i][1] : 0) + (ShowS ? EnergyData[i][2] : 0) + (ShowT ? EnergyData[i][3] : 0)) : EnergyData[i][1];
-    MaxFound = [EnergyData[i][0], Max];
+    if(MaxFound[1] <= Max) MaxFound = [EnergyData[i][0], Max];
   }
   Annotations.push({
       series: Serie,
-      xval: MaxFound[0],
+      xval: MaxFound[0].getTime(),
       shortText: 'MAX',
-      text: "Pico de consumo de " + (MaxFound[1] > 1000) ? Round2(MaxFound[1] / 1000.0) + 'kWh' : Round2(MaxFound[1]) + 'Wh'
+      text: 'Energy peak',
+      width: 28,
+      cssClass: 'annotation'
     });
   EnergyChart.setAnnotations(Annotations);
-
-  
-  
 }
 function ChooseEnergyChannels() {
   var ShowR = (localStorage.getItem('ShowR') === 'true');

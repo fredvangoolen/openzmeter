@@ -154,6 +154,7 @@
             <itemPath>WEB/Resources/lib/dygraph/chart-plotter.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/crosshair.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/dygraph-interaction.js</itemPath>
+            <itemPath>WEB/Resources/lib/dygraph/dygraph.css</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/dygraph.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/dygraph.min.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/synchronize.js</itemPath>
@@ -840,6 +841,11 @@
             flavor2="0">
       </item>
       <item path="WEB/Resources/lib/dygraph/dygraph-interaction.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/lib/dygraph/dygraph.css"
             ex="false"
             tool="3"
             flavor2="0">
