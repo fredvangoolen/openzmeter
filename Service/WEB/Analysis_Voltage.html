@@ -170,6 +170,7 @@
                     <button type="button" class="btn btn-default btn-xs" id="btnShowDetailHarmonics" data-toggle="tooltip" title="Show live harmonics">Harmonics</button>
                     <button type="button" class="btn btn-default btn-xs" id="btnShowDetailEvolution" data-toggle="tooltip" title="Show harmonic evolution">Evolution</button>
                     <button type="button" class="btn btn-default btn-xs" id="btnShowDetailAdvanced" data-toggle="tooltip" title="Show live FFT">Advanced</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailPhasors" data-toggle="tooltip" title="Show voltage and current as phasors">Phasors</button>
                     <button type="button" class="btn btn-default btn-xs" id="btnShowDetailEvents" data-toggle="tooltip" title="Show events in voltage channels">Events</button>
                   </div>
                 </div>
@@ -226,26 +227,38 @@
                 <i class="fa fa-area-chart fa-fw"></i>Voltage parameters
               </div>
               <div class="row">
-                <div class="col-lg-4 col-md-3 col-xs-6">
+                <div class="col-lg-4">
                   <div class="panel panel-lightred-info" style="text-align: center">
                     <h4>Power Factor</h4>
                     <span class="huge-small-unit indicators" id="PowerFactorNow">?</span>
                   </div>
                 </div>
-                <div class="col-lg-4 col-md-3 col-xs-6">
+                <div class="col-lg-8">
+                  <div id="PowerFactorChart" style="padding: 5px; min-height: 70px"></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4">
                   <div class="panel panel-lightred-info" style="text-align: center">
                     <h4>THDv (%)</h4>
                     <span class="huge-small-unit indicators" id="THDNow"></span>
                   </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-xs-12">
+                <div class="col-lg-8">
+                  <div id="THDChart" style="padding: 5px; min-height: 70px"></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4">
                   <div class="panel panel-lightred-info" style="text-align: center">
                     <h4>PHI (º)</h4>
                     <span class="huge-small-unit indicators" id="PHINow">?</span>
                   </div>
                 </div>
+                <div class="col-lg-8">
+                  <div id="PHIChart" style="padding: 5px; min-height: 70px"></div>
+                </div>
               </div>
-              <div id="EvolutionPanel2" style="padding: 5px; min-height: 180px"></div>
             </div>
           </div>
         </div>

@@ -270,7 +270,7 @@ function AjaxEnergyPower(result) {
     ActivePowerChartUnits = 'kW';
     Range[0] = Range[0] / 1000;
     Range[1] = Range[1] / 1000;
-    Div1000(ActivePowerData);
+    toShow = Div1000(ActivePowerData);
   } else {
     ActivePowerChartUnits = 'W';
     toShow = ActivePowerData;

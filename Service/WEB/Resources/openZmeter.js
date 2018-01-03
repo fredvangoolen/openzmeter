@@ -352,7 +352,7 @@ function Div1000(input) {
   var Result = [];
   for(i = 0; i < input.length; i++) {
     Result[i] = [input[i][0]];
-    for(n = 1; n < input[i].lenght; n++) Result[i][n] = input[i][n] / 1000.0;
+    for(n = 1; n < input[i].length; n++) Result[i][n] = input[i][n] / 1000.0;
   }
   return Result;
 }

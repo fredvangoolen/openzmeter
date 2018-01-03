@@ -1360,5 +1360,5 @@ function UpdatePage() {
   AjaxGetVoltageCounters();
   AjaxGetDetails();
   AjaxGetParameters();
-//  ajaxGetEvolution();
+  ajaxGetEvolution();
 }
