@@ -496,21 +496,21 @@ function DetailsButtonClick(event) {
     }
   }
   if(this.id === 'btnShowDetailRPhase') {
-     if(localStorage.getItem('VoltageDetailView') === 'Evolution') {
+     if((localStorage.getItem('VoltageDetailView') === 'Evolution') || (localStorage.getItem('VoltageDetailView') === 'Parameters')) {
        localStorage.setItem('VoltageDetailEvolutionPhase', 'PhaseR');
      } else {
        localStorage.setItem('VoltageDetailPhaseR', (localStorage.getItem('VoltageDetailPhaseR') === 'true') ? 'false' : 'true');
      }
   }
   if(this.id === 'btnShowDetailSPhase') {
-     if(localStorage.getItem('VoltageDetailView') === 'Evolution') {
+    if((localStorage.getItem('VoltageDetailView') === 'Evolution') || (localStorage.getItem('VoltageDetailView') === 'Parameters')) {
        localStorage.setItem('VoltageDetailEvolutionPhase', 'PhaseS');
      } else {
        localStorage.setItem('VoltageDetailPhaseS', (localStorage.getItem('VoltageDetailPhaseS') === 'true') ? 'false' : 'true');
      }
   }
   if(this.id === 'btnShowDetailTPhase') {
-     if(localStorage.getItem('VoltageDetailView') === 'Evolution') {
+    if((localStorage.getItem('VoltageDetailView') === 'Evolution') || (localStorage.getItem('VoltageDetailView') === 'Parameters')) {
        localStorage.setItem('VoltageDetailEvolutionPhase', 'PhaseT');
      } else {
        localStorage.setItem('VoltageDetailPhaseT', (localStorage.getItem('VoltageDetailPhaseT') === 'true') ? 'false' : 'true');
@@ -653,6 +653,9 @@ function DetailsButtonClick(event) {
       break;
     case 'Parameters' :
       $('#ParametersPanel').removeClass('hidden');
+      if(PowerFactorChart !== null) UpdatePowerFactorChart(null);
+      if(THDChart !== null) UpdateTHDChart(null);
+      if(PHIChart !== null) UpdatePHIChart(null);
       break;
     case 'Advanced' :
       $('#FFTPanel').removeClass('hidden');
@@ -1048,12 +1051,12 @@ function AjaxGetParameters() {
 var HarmonicsCharts     = [];
 var LastEvolutionSample = 0;
 var HarmonicsDatasets   = [];
-var PowerFactorCharts   = [];
-var PowerFactorDatasets = [];
-var THDCharts           = [];
-var THDDatasets         = [];
-var PHICharts           = [];
-var PHIDatasets         = [];
+var PowerFactorChart    = null;
+var PowerFactorDataset  = [];
+var THDChart            = null;
+var THDDataset          = [];
+var PHIChart            = null;
+var PHIDataset          = [];
 function AjaxGetEvolution() {
   $.ajax({ url: "getSeries",
            timeout: 20000,
@@ -1077,101 +1080,97 @@ function AjaxEvolutions(result) {
       }
     }
   }
-  for(i = 0; i < result['power_factor'].length; i++) {
-    for(j = 0; j < result['power_factor'][i].length; j++) {
-      if(PowerFactorDatasets[j] === undefined) PowerFactorDatasets[j] = [];
-      PowerFactorDatasets[j].push([new Date(result['Sampletime'][i]), result['power_factor'][i][j]]);
-    }
-  }
-  for(i = 0; i < result['thd_v'].length; i++) {
-    for(j = 0; j < result['thd_v'][i].length; j++) {
-      if(THDDatasets[j] === undefined) THDDatasets[j] = [];
-      THDDatasets[j].push([new Date(result['Sampletime'][i]), result['thd_v'][i][j]]);
-    }
-  }
-  for(i = 0; i < result['phi'].length; i++) {
-    for(j = 0; j < result['phi'][i].length; j++) {
-      if(PHIDatasets[j] === undefined) PHIDatasets[j] = [];
-      PHIDatasets[j].push([new Date(result['Sampletime'][i]), result['phi'][i][j]]);
-    }
-  }
-  LastEvolutionSample = result['Sampletime'][result['Sampletime'].length - 1];
-  for(j = 0; j < HarmonicsDatasets.length; j++) {
-    for(k = 0; k < HarmonicsDatasets[j].length; k++) {
-      while(HarmonicsDatasets[j][k].length > result['MaxSamples']) HarmonicsDatasets[j][k].shift();
-    }
-  }
-  for(k = 0; k < PowerFactorDatasets.length; k++) {
-    while(PowerFactorDatasets[k].length > result['MaxSamples']) PowerFactorDatasets[k].shift();
-  }
-  for(k = 0; k < THDDatasets.length; k++) {
-    while(THDDatasets[k].length > result['MaxSamples']) THDDatasets[k].shift();
-  }
-  for(k = 0; k < PHIDatasets.length; k++) {
-    while(PHIDatasets[k].length > result['MaxSamples']) PHIDatasets[k].shift();
-  }
-  if(PowerFactorCharts.length == 0) {
-    for(i = 0; i < PowerFactorDatasets.length; i++) {
-      var Str = '<div style="position: relative">' +
-                '  <div id="PowerFactorChart_' + i + '" class="chart" style="height: 50px' + ((i == 0) ? '; margin-top: 16px; border-top: 1px solid #999"' : '"') + '></div>' +       
-                '  <div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="PowerFactorChartLegend_' + i + '"></div>' +                    
-                '</div>';
-      $("#PowerFactorChart").append(Str);
-      PowerFactorCharts[i] = new Dygraph(document.getElementById("PowerFactorChart_" + i),
-        PowerFactorDatasets[i],
-        { strokeWidth: 0.5,
-          labels: ["Time", ((i === 0) && (PowerFactorDatasets.length === 1)) ? "Power Factor" : (i === 1) ? "Power Factor (S)" : (i === 2) ? "Power Factor (T)" : "Power Factor (R)"],
-          colors: ["#d9534f"],
-          gridLineColor: "#999",
-          gridLinePattern: [4, 4],
-          highlightCircleSize: 0,
-          interactionModel: { },
-          labelsDiv: 'PowerFactorChartLegend_' + i,
-          legend: 'always',
-          legendFormatter: function(data) {
-            if(data.x == null) {
-              return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
-            } else {
-              return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' +
-                      data.xHTML + data.series[0].yHTML;
-            }
-          },
-          xAxisHeight: 0.1,
-          xLabelHeight: 1,
-          plotter: barChartPlotterCubism,
-          dateWindow: [result['From'], result['To']],
-          plugins: [
-            new Dygraph.Plugins.Crosshair({
-              direction: "vertical"
-            })
-          ],
-          axes: {
-            y: { drawAxis: false,
-                 drawGrid:false,
-                 valueFormatter: function (x) {
-                   return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '</div>';
-                 }
+  for(i = 0; i < result['power_factor'].length; i++) PowerFactorDataset.push([new Date(result['Sampletime'][i])].concat(result['power_factor'][i]));
+  while(PowerFactorDataset.length > result['MaxSamples']) PowerFactorDatasets.shift();
+
+//  for(i = 0; i < result['thd_v'].length; i++) {
+//    for(j = 0; j < result['thd_v'][i].length; j++) {
+//      if(THDDatasets[j] === undefined) THDDatasets[j] = [];
+//      THDDatasets[j].push([new Date(result['Sampletime'][i]), result['thd_v'][i][j]]);
+//    }
+//  }
+//  for(i = 0; i < result['phi'].length; i++) {
+//    for(j = 0; j < result['phi'][i].length; j++) {
+//      if(PHIDatasets[j] === undefined) PHIDatasets[j] = [];
+//      PHIDatasets[j].push([new Date(result['Sampletime'][i]), result['phi'][i][j]]);
+//    }
+//  }
+//  LastEvolutionSample = result['Sampletime'][result['Sampletime'].length - 1];
+//  for(j = 0; j < HarmonicsDatasets.length; j++) {
+//    for(k = 0; k < HarmonicsDatasets[j].length; k++) {
+//      while(HarmonicsDatasets[j][k].length > result['MaxSamples']) HarmonicsDatasets[j][k].shift();
+//    }
+//  }
+//  for(k = 0; k < THDDatasets.length; k++) {
+//    while(THDDatasets[k].length > result['MaxSamples']) THDDatasets[k].shift();
+//  }
+//  for(k = 0; k < PHIDatasets.length; k++) {
+//    while(PHIDatasets[k].length > result['MaxSamples']) PHIDatasets[k].shift();
+//  }
+  UpdatePowerFactorChart(result);
+//  UpdateTHDChart(result);
+//  UpdatePHIChart(result);
+}
+function UpdatePowerFactorChart(result) {
+  var Visibility    = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
+  if(PowerFactorChart === null) {
+    PowerFactorChart = new Dygraph(document.getElementById("PowerFactorChart"),
+      PowerFactorDataset,
+      { strokeWidth: 0.5,
+        labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'Power Factor (R)', 'Power Factor (S)', 'Power Factor (T)'] : ['Time', 'Power Factor'],
+        colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
+        visibility: Visibility,
+        gridLineColor: "#999",
+        gridLinePattern: [4, 4],
+        highlightCircleSize: 0,
+        interactionModel: { },
+        labelsDiv: 'PowerFactorChartLegend',
+        legend: 'always',
+        legendFormatter: function(data) {
+          if(data.x == null) {
+            for(i = 0; i < data.series.length; i++) 
+              if(data.series[i].isVisible) return '<span style="font-size: 18px; font-weight: bold">' + data.series[i].label + '</span>';
+          } else {
+            for(i = 0; i < data.series.length; i++) 
+              if(data.series[i].isVisible) return '<span style="font-size: 15px; font-weight: bold">' + data.series[i].label + '</span><br/>' + data.xHTML + data.series[i].yHTML;
+          }
+        },
+        xAxisHeight: 0.1,
+        xLabelHeight: 1,
+        plotter: barChartPlotterCubism,
+        dateWindow: [result['From'], result['To']],
+        plugins: [
+          new Dygraph.Plugins.Crosshair({
+            direction: "vertical"
+          })
+        ],
+        axes: {
+          y: { drawAxis: false,
+               drawGrid:false,
+               valueFormatter: function (x) {
+                 return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '</div>';
+               }
+             },
+          x: { valueFormatter: function (x) {
+                 var date = new Date(x);
+                 return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
                },
-            x: { valueFormatter: function (x) {
-                   var date = new Date(x);
-                   return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
-                 },
-                 axisLabelFormatter: (i === 0) ? function(x, i) {
-                   if((x.getHours() == 0) && (x.getMinutes() == 0) && (x.getSeconds() == 0)) {
-                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + x.toLocaleDateString() + '</div>';
-                   } else {
-                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + x.toLocaleTimeString() + '</div>';                       
-                   }
-                 } : function() { return null; }
-            }
+               axisLabelFormatter: function(x, i) {
+                 if((x.getHours() == 0) && (x.getMinutes() == 0) && (x.getSeconds() == 0)) {
+                   return '<div style="font-size: 10px; margin-top: -73px; line-height: 10px; font-weight: bold">' + x.toLocaleDateString() + '</div>';
+                 } else {
+                   return '<div style="font-size: 10px; margin-top: -73px; line-height: 10px">' + x.toLocaleTimeString() + '</div>';                       
+                 }
+               }
           }
         }
-      );
-    }
-    Dygraph.synchronize(PowerFactorCharts, { range: false, zoom: false });
+      }
+    );
   } else {
-    for(i = 0; i < PowerFactorCharts.length; i++) PowerFactorCharts[i].updateOptions({ file: PowerFactorDatasets[i], dateWindow: [result['From'], result['To']] });
+    if(result !== null) PowerFactorChart.updateOptions({ PowerFactorChartdateWindow: [result['From'], result['To']] }, true);
+    PowerFactorChart.updateOptions({ file: PowerFactorDataset, visibility: Visibility });
   }
+  return;
   if(THDCharts.length == 0) {
     for(i = 0; i < THDDatasets.length; i++) {
       var Str = '<div style="position: relative">' +
