@@ -481,6 +481,8 @@ function DetailsButtonClick(event) {
   if(this.id === 'btnShowDetailHarmonics') localStorage.setItem('VoltageDetailView', 'Harmonics');
   if(this.id === 'btnShowDetailEvolution') localStorage.setItem('VoltageDetailView', 'Evolution');
   if(this.id === 'btnShowDetailAdvanced') localStorage.setItem('VoltageDetailView', 'Advanced');
+  if(this.id === 'btnShowDetailPhasors') localStorage.setItem('VoltageDetailView', 'Phasors');
+  if(this.id === 'btnShowDetailParameters') localStorage.setItem('VoltageDetailView', 'Parameters');
   if(this.id === 'btnShowDetailEvents') localStorage.setItem('VoltageDetailView', 'Events');
   if(this.id === 'btnShowDetail1Harmonic') localStorage.setItem('VoltageDetailFirstHarmonic', (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 'false' : 'true');
   if(this.id === 'btnPauseDetail') {
@@ -527,6 +529,8 @@ function DetailsButtonClick(event) {
   $('#btnShowDetailHarmonics').removeClass('active');
   $('#btnShowDetailEvolution').removeClass('active');
   $('#btnShowDetailAdvanced').removeClass('active');
+  $('#btnShowDetailPhasors').removeClass('active');
+  $('#btnShowDetailParameters').removeClass('active');
   $('#btnShowDetailEvents').removeClass('active');
   switch(localStorage.getItem('VoltageDetailView')) {
     case 'Harmonics' :
@@ -543,6 +547,12 @@ function DetailsButtonClick(event) {
       break;
     case 'Waveform' :
       $('#btnShowDetailWaveform').addClass('active');
+      break;
+    case 'Parameters' :
+      $('#btnShowDetailParameters').addClass('active');
+      break;
+    case 'Phasors' :
+      $('#btnShowDetailPhasors').addClass('active');
       break;
     default :
       $('#btnShowDetailWaveform').addClass('active');
@@ -567,6 +577,7 @@ function DetailsButtonClick(event) {
     switch(localStorage.getItem('VoltageDetailView')) {
       case 'Waveform' :
       case 'Harmonics' :
+      case 'Phasors' :
       case 'Advanced' :
         var ShowR = (localStorage.getItem('VoltageDetailPhaseR') === 'true');
         var ShowS = (localStorage.getItem('VoltageDetailPhaseS') === 'true');
@@ -579,6 +590,7 @@ function DetailsButtonClick(event) {
         if(ShowS === true) $('#btnShowDetailSPhase').addClass('active');
         if(ShowT === true) $('#btnShowDetailTPhase').addClass('active');
         break;
+      case 'Parameters' :
       case 'Evolution' :
         switch(localStorage.getItem('VoltageDetailEvolutionPhase')) {
           case 'PhaseR' :
@@ -637,6 +649,11 @@ function DetailsButtonClick(event) {
       $('#EvolutionPanel').removeClass('hidden');
       $(HarmonicsChart.graphDiv).parent().removeAttr('style');
       break;
+    case 'Phasors' :
+      break;
+    case 'Parameters' :
+      $('#ParametersPanel').removeClass('hidden');
+      break;
     case 'Advanced' :
       $('#FFTPanel').removeClass('hidden');
       if(FFTChart !== null) $(FFTChart.graphDiv).parent().removeAttr('style');
@@ -651,6 +668,9 @@ function DetailsButtonClick(event) {
 $('#btnShowDetailWaveform').click(DetailsButtonClick);
 $('#btnShowDetailHarmonics').click(DetailsButtonClick);
 $('#btnShowDetailEvolution').click(DetailsButtonClick);
+$('#btnShowDetailPhasors').click(DetailsButtonClick);
+$('#btnShowDetailParameters').click(DetailsButtonClick);
+$('#btnShowDetailAdvanced').click(DetailsButtonClick);
 $('#btnShowDetailAdvanced').click(DetailsButtonClick);
 $('#btnShowDetailEvents').click(DetailsButtonClick);
 $('#btnShowDetailRPhase').click(DetailsButtonClick);
@@ -1025,13 +1045,274 @@ function AjaxGetParameters() {
 }
 
 /* Evolucion de parametros*/
-var EvolutionCharts     = [];
+var HarmonicsCharts     = [];
 var LastEvolutionSample = 0;
-var EvolutionDatasets   = [];
-
-
-
-
+var HarmonicsDatasets   = [];
+var PowerFactorCharts   = [];
+var PowerFactorDatasets = [];
+var THDCharts           = [];
+var THDDatasets         = [];
+var PHICharts           = [];
+var PHIDatasets         = [];
+function AjaxGetEvolution() {
+  $.ajax({ url: "getSeries",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: '1m', LastSample: LastEvolutionSample, Series: 'power_factor, thd_v, phi, harmonics_v', Node: Node}),
+           success: AjaxEvolutions,
+           complete: function() { 
+             setTimeout(AjaxGetEvolution, 60000);
+           }
+  });
+}
+function AjaxEvolutions(result) {  
+  for(i = 0; i < result['harmonics_v'].length; i++) {
+    for(j = 0; j < result['harmonics_v'][i].length; j++) {
+      for(k = 0; k < result['harmonics_v'][i][j].length; k++) {
+        if(HarmonicsDatasets[k] === undefined) HarmonicsDatasets[k] = [];
+        if(HarmonicsDatasets[k][j] === undefined) HarmonicsDatasets[k][j] = [];
+        HarmonicsDatasets[k][j].push([new Date(result['Sampletime'][i]), 20 * Math.log10(result['harmonics_v'][i][j][k])]);
+      }
+    }
+  }
+  for(i = 0; i < result['power_factor'].length; i++) {
+    for(j = 0; j < result['power_factor'][i].length; j++) {
+      if(PowerFactorDatasets[j] === undefined) PowerFactorDatasets[j] = [];
+      PowerFactorDatasets[j].push([new Date(result['Sampletime'][i]), result['power_factor'][i][j]]);
+    }
+  }
+  for(i = 0; i < result['thd_v'].length; i++) {
+    for(j = 0; j < result['thd_v'][i].length; j++) {
+      if(THDDatasets[j] === undefined) THDDatasets[j] = [];
+      THDDatasets[j].push([new Date(result['Sampletime'][i]), result['thd_v'][i][j]]);
+    }
+  }
+  for(i = 0; i < result['phi'].length; i++) {
+    for(j = 0; j < result['phi'][i].length; j++) {
+      if(PHIDatasets[j] === undefined) PHIDatasets[j] = [];
+      PHIDatasets[j].push([new Date(result['Sampletime'][i]), result['phi'][i][j]]);
+    }
+  }
+  LastEvolutionSample = result['Sampletime'][result['Sampletime'].length - 1];
+  for(j = 0; j < HarmonicsDatasets.length; j++) {
+    for(k = 0; k < HarmonicsDatasets[j].length; k++) {
+      while(HarmonicsDatasets[j][k].length > result['MaxSamples']) HarmonicsDatasets[j][k].shift();
+    }
+  }
+  for(k = 0; k < PowerFactorDatasets.length; k++) {
+    while(PowerFactorDatasets[k].length > result['MaxSamples']) PowerFactorDatasets[k].shift();
+  }
+  for(k = 0; k < THDDatasets.length; k++) {
+    while(THDDatasets[k].length > result['MaxSamples']) THDDatasets[k].shift();
+  }
+  for(k = 0; k < PHIDatasets.length; k++) {
+    while(PHIDatasets[k].length > result['MaxSamples']) PHIDatasets[k].shift();
+  }
+  if(PowerFactorCharts.length == 0) {
+    for(i = 0; i < PowerFactorDatasets.length; i++) {
+      var Str = '<div style="position: relative">' +
+                '  <div id="PowerFactorChart_' + i + '" class="chart" style="height: 50px' + ((i == 0) ? '; margin-top: 16px; border-top: 1px solid #999"' : '"') + '></div>' +       
+                '  <div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="PowerFactorChartLegend_' + i + '"></div>' +                    
+                '</div>';
+      $("#PowerFactorChart").append(Str);
+      PowerFactorCharts[i] = new Dygraph(document.getElementById("PowerFactorChart_" + i),
+        PowerFactorDatasets[i],
+        { strokeWidth: 0.5,
+          labels: ["Time", ((i === 0) && (PowerFactorDatasets.length === 1)) ? "Power Factor" : (i === 1) ? "Power Factor (S)" : (i === 2) ? "Power Factor (T)" : "Power Factor (R)"],
+          colors: ["#d9534f"],
+          gridLineColor: "#999",
+          gridLinePattern: [4, 4],
+          highlightCircleSize: 0,
+          interactionModel: { },
+          labelsDiv: 'PowerFactorChartLegend_' + i,
+          legend: 'always',
+          legendFormatter: function(data) {
+            if(data.x == null) {
+              return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
+            } else {
+              return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' +
+                      data.xHTML + data.series[0].yHTML;
+            }
+          },
+          xAxisHeight: 0.1,
+          xLabelHeight: 1,
+          plotter: barChartPlotterCubism,
+          dateWindow: [result['From'], result['To']],
+          plugins: [
+            new Dygraph.Plugins.Crosshair({
+              direction: "vertical"
+            })
+          ],
+          axes: {
+            y: { drawAxis: false,
+                 drawGrid:false,
+                 valueFormatter: function (x) {
+                   return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '</div>';
+                 }
+               },
+            x: { valueFormatter: function (x) {
+                   var date = new Date(x);
+                   return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
+                 },
+                 axisLabelFormatter: (i === 0) ? function(x, i) {
+                   if((x.getHours() == 0) && (x.getMinutes() == 0) && (x.getSeconds() == 0)) {
+                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + x.toLocaleDateString() + '</div>';
+                   } else {
+                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + x.toLocaleTimeString() + '</div>';                       
+                   }
+                 } : function() { return null; }
+            }
+          }
+        }
+      );
+    }
+    Dygraph.synchronize(PowerFactorCharts, { range: false, zoom: false });
+  } else {
+    for(i = 0; i < PowerFactorCharts.length; i++) PowerFactorCharts[i].updateOptions({ file: PowerFactorDatasets[i], dateWindow: [result['From'], result['To']] });
+  }
+  if(THDCharts.length == 0) {
+    for(i = 0; i < THDDatasets.length; i++) {
+      var Str = '<div style="position: relative">' +
+                '  <div id="THDChart_' + i + '" class="chart" style="height: 50px' + ((i == 0) ? '; margin-top: 16px; border-top: 1px solid #999"' : '"') + '></div>' +       
+                '  <div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="THDChartLegend_' + i + '"></div>' +                    
+                '</div>';
+      $("#THDChart").append(Str);
+      THDCharts[i] = new Dygraph(document.getElementById("THDChart_" + i),
+        THDDatasets[i],
+        { strokeWidth: 0.5,
+          labels: ["Time", ((i === 0) && (THDDatasets.length === 1)) ? "THD" : (i === 1) ? "THD (S)" : (i === 2) ? "THD (T)" : "THD (R)"],
+          colors: ["#d9534f"],
+          gridLineColor: "#999",
+          gridLinePattern: [4, 4],
+          highlightCircleSize: 0,
+          interactionModel: { },
+          labelsDiv: 'THDChartLegend_' + i,
+          legend: 'always',
+          legendFormatter: function(data) {
+            if(data.x == null) {
+              return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
+            } else {
+              return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' +
+                      data.xHTML + data.series[0].yHTML;
+            }
+          },
+          xAxisHeight: 0.1,
+          xLabelHeight: 1,
+          plotter: barChartPlotterCubism,
+          dateWindow: [result['From'], result['To']],
+          plugins: [
+            new Dygraph.Plugins.Crosshair({
+              direction: "vertical"
+            })
+          ],
+          axes: {
+            y: { drawAxis: false,
+                 drawGrid:false,
+                 valueFormatter: function (x) {
+                   return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '<em>%</em></div>';
+                 }
+               },
+            x: { valueFormatter: function (x) {
+                   var date = new Date(x);
+                   return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
+                 },
+                 axisLabelFormatter: (i === 0) ? function(x, i) {
+                   if((x.getHours() == 0) && (x.getMinutes() == 0) && (x.getSeconds() == 0)) {
+                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + x.toLocaleDateString() + '</div>';
+                   } else {
+                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + x.toLocaleTimeString() + '</div>';                       
+                   }
+                 } : function() { return null; }
+            }
+          }
+        }
+      );
+    }
+    Dygraph.synchronize(THDCharts, { range: false, zoom: false });
+  } else {
+    for(i = 0; i < THDCharts.length; i++) THDCharts[i].updateOptions({ file: THDDatasets[i], dateWindow: [result['From'], result['To']] });
+  }
+  if(PHICharts.length === 0) {
+    for(i = 0; i < PHIDatasets.length; i++) {
+      var Str = '<div style="position: relative">' +
+                '  <div id="PHIChart_' + i + '" class="chart" style="height: 50px' + ((i == 0) ? '; margin-top: 16px; border-top: 1px solid #999"' : '"') + '></div>' +       
+                '  <div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="PHIChartLegend_' + i + '"></div>' +                    
+                '</div>';
+      $("#PHIChart").append(Str);
+      PHICharts[i] = new Dygraph(document.getElementById("PHIChart_" + i),
+        PHIDatasets[i],
+        { strokeWidth: 0.5,
+          labels: ["Time", ((i === 0) && (THDDatasets.length === 1)) ? "PHI" : (i === 1) ? "PHI (S)" : (i === 2) ? "PHI (T)" : "PHI (R)"],
+          colors: ["#d9534f"],
+          gridLineColor: "#999",
+          gridLinePattern: [4, 4],
+          highlightCircleSize: 0,
+          interactionModel: { },
+          labelsDiv: 'PHIChartLegend_' + i,
+          legend: 'always',
+          legendFormatter: function(data) {
+            if(data.x == null) {
+              return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
+            } else {
+              return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' +
+                      data.xHTML + data.series[0].yHTML;
+            }
+          },
+          xAxisHeight: 0.1,
+          xLabelHeight: 1,
+          plotter: barChartPlotterCubism,
+          dateWindow: [result['From'], result['To']],
+          plugins: [
+            new Dygraph.Plugins.Crosshair({
+              direction: "vertical"
+            })
+          ],
+          axes: {
+            y: { drawAxis: false,
+                 drawGrid:false,
+                 valueFormatter: function (x) {
+                   return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(Math.abs(x)) + '<em>º' + ((x > 0) ? '(CAP)' : (x < 0) ? '(IND)' : '') + '</em></div>';
+                 }
+               },
+            x: { valueFormatter: function (x) {
+                   var date = new Date(x);
+                   return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
+                 },
+                 axisLabelFormatter: (i === 0) ? function(x, i) {
+                   if((x.getHours() == 0) && (x.getMinutes() == 0) && (x.getSeconds() == 0)) {
+                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + x.toLocaleDateString() + '</div>';
+                   } else {
+                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + x.toLocaleTimeString() + '</div>';                       
+                   }
+                 } : function() { return null; }
+            }
+          }
+        }
+      );
+    }
+//    Dygraph.synchronize(PHICharts, { range: false, zoom: false });
+  } else {
+    for(i = 0; i < PHICharts.length; i++) PHICharts[i].updateOptions({ file: PHIDatasets[i], dateWindow: [result['From'], result['To']] });
+  }
+  return;
+//    if(EvolutionDatasets.length == i) EvolutionDatasets.push([]);
+//    for(j = 0; j < result['harmonics_v'][i].length; j++) {
+//    
+//    
+//      
+//      var Value = 20 * Math.log10(result['evolution_v'][j][i]);
+//      EvolutionDatasets[i].push([new Date(result.evolution_time[j]), Value]);
+//
+//      
+//      if(EvolutionDatasets[i].length > 720) EvolutionDatasets[i].shift();
+//    }
+//  }
+//  LastEvolutionSample = result['evolution_time'][result.evolution_time.length - 1];
+  
+  
+}
 
 
 
@@ -1115,8 +1396,6 @@ function UpdateEvolutionChart(result) {
     }
   }
 }
-
-
 $('#btnExport').click(function () {
   var Data = [];
   var Filename;
@@ -1360,5 +1639,5 @@ function UpdatePage() {
   AjaxGetVoltageCounters();
   AjaxGetDetails();
   AjaxGetParameters();
-  ajaxGetEvolution();
+  AjaxGetEvolution();
 }

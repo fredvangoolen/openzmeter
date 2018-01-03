@@ -136,8 +136,8 @@ void CaptureInterface::SaveParams(Params_t *params, const char *aggreg) {
   BindSingleFloat(params->Frequency);                                              //frequency
   BindArrayFloat(params->Phi, (pTriphase == true) ? 3 : 1);                        //phi
   BindSingleBool(params->Flag);                                                    //flaged
-  BindArrayFloat(params->VoltageHarmonics[0], (pTriphase == true) ? 150 : 50);     //harmonics_v
-  BindArrayFloat(params->CurrentHarmonics[0], (pTriphase == true) ? 200 : 50);     //harmonics_i
+  BindArrayArrayFloat(params->VoltageHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_v
+  BindArrayArrayFloat(params->CurrentHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_i
   ExecSentence();
 }
 void CaptureInterface::Analyze(float minimunCurrent) {

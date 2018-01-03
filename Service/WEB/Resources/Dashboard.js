@@ -1113,11 +1113,13 @@ function AjaxGetMainParameters() {
            dataType: "json",
            contentType: 'application/json',
            data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: "1m", LastSample: LastEvolutionSample, Series: 'active_power, fundamental_reactive_power, rms_v, rms_i, power_factor, phi', Node: Node }),
-           success: AjaxMainParameters
+           success: AjaxMainParameters,
+           complete: function() {
+             setTimeout(AjaxGetMainParameters, 60000);
+           }
       });
 }
 function AjaxMainParameters(result) {
-  setTimeout(AjaxGetMainParameters, 60000);
   if(LastEvolutionSample === 0) {
     MainParamSpinner.stop();
     $('#SpinnerDivMain').remove();
