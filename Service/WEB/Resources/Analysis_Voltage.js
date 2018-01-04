@@ -463,11 +463,13 @@ function AjaxGetDetails() {
              UpdateWaveformChart(result);
              UpdateHarmonicsChart(result);
              UpdateFFTChart(result);
+             UpdatePhasorChart(result);
            },
            error: function() {
              $('#WaveformTime').text('Node Offline');
              $('#HarmonicsTime').text('Node Offline');
              $('#FFTTime').text('Node Offline');
+             $('#PhasorTime').text('Node Offline');
            },
            complete: function (x) {
              $('#btnPauseDetail').removeClass('disabled');
@@ -647,9 +649,9 @@ function DetailsButtonClick(event) {
       break;
     case 'Evolution' :
       $('#EvolutionPanel').removeClass('hidden');
-      $(HarmonicsChart.graphDiv).parent().removeAttr('style');
       break;
     case 'Phasors' :
+      $('#PhasorPanel').removeClass('hidden');
       break;
     case 'Parameters' :
       $('#ParametersPanel').removeClass('hidden');
@@ -1025,6 +1027,86 @@ function UpdateFFTChart(result) {
   }
 }
 
+/* Grafico de fasores */
+var PhasorChart = null;
+function UpdatePhasorChart(result) {
+    var Vectors = [[0, 0.0, 230.0], [0, 2.0, 23.5], [0, 120.0, 230.0], [0, 122.0, 23.5], [0, 240.0, 230.0], [0, 242.0, 23.5]];
+    var MaxCurrent = 23.5;
+    var MaxVoltage = 240;
+
+
+  for(i = 0; i < Vectors.length; i += 2) {
+    Vectors[i][2] = Vectors[i][2] / MaxVoltage;
+    Vectors[i + 1][2] = Vectors[i + 1][2] / MaxCurrent;
+  }
+  if(PhasorChart === null) {
+    
+    PhasorChart = new Dygraph(document.getElementById("PhasorChart"),
+      Vectors,
+      { strokeWidth: 0.5,
+        labels: ['Index', 'Phase', 'Magnitude'],
+        colors: ['#d9534f', '#428bca'],
+        gridLineColor: "#999",
+        gridLinePattern: [4, 4],
+        highlightCircleSize: 0,
+        interactionModel: { },
+        legend: 'never',
+        valueRange: [-110, 110],
+        dateWindow: [-110, 110],
+        plotter: polarLinePlotter,
+          xAxisHeight: 0.1,
+          xLabelHeight: 1,
+//          plotter: barChartPlotterCubism,
+//          dateWindow: [result['From'], result['To']],
+//          plugins: [
+//            new Dygraph.Plugins.Crosshair({
+//              direction: "vertical"
+//            })
+//          ],
+          axes: {
+            y: { drawAxis: true,
+                 drawGrid:false,
+                 axisLabelWidth: 0,
+                 axisLineColor: "#FFF",
+                 ticker: function(min, max, pixels, opts, dygraph, vals) {
+                   var ticks = [];
+                   var Width = document.getElementById("PhasorChart").clientWidth / 2 - 1;
+                   for(var i = 1; i <= 4; i++) {
+                     ticks.push({ v: i * 25, label: '<div style="font-size: 10px; background: rgba(255, 255, 255, 0.5); margin-left: ' + Width + 'px; text-align: left; width: 34px; line-height: 18px; overflow: hidden">' + Math.round(i / 4 * MaxVoltage, 0) + '<em>V</em></div>' });
+                   }
+                   return ticks;
+                 },            
+               },
+            x: { drawAxis: true,
+                 drawGrid:false,
+                 axisLabelWidth: 0,
+                 axisLineColor: "#FFF",
+                 ticker: function(min, max, pixels, opts, dygraph, vals) {
+                   var ticks = [];
+                   var Height = document.getElementById("PhasorChart").clientHeight / 2 + 5;
+                   for(var i = 1; i <= 4; i++) {
+                     ticks.push({ v: -i * 25, label: '<div style="font-size: 10px; margin-left: -20px; margin-top: ' + -Height + 'px; text-align: center; width: 40px; line-height: 18px; overflow: hidden">' + Math.round(i / 4 * MaxCurrent, 0) + '<em>A</em></div>' });
+                   }
+                   return ticks;
+                 },            
+                 
+//                   var date = new Date(x);
+//                   if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
+//                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + date.toLocaleDateString() + '</div>';
+//                   } else {
+//                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';                       
+//                   }
+                 }
+//            }
+          }
+        }
+      );
+    
+  }
+  
+  
+}
+
 /* Cuadros de parametros */
 function AjaxGetParameters() {
   $.ajax({ url: "getSeriesNow",
@@ -1071,48 +1153,21 @@ function AjaxGetEvolution() {
   });
 }
 function AjaxEvolutions(result) {  
-  for(i = 0; i < result['harmonics_v'].length; i++) {
-    for(j = 0; j < result['harmonics_v'][i].length; j++) {
-      for(k = 0; k < result['harmonics_v'][i][j].length; k++) {
-        if(HarmonicsDatasets[k] === undefined) HarmonicsDatasets[k] = [];
-        if(HarmonicsDatasets[k][j] === undefined) HarmonicsDatasets[k][j] = [];
-        HarmonicsDatasets[k][j].push([new Date(result['Sampletime'][i]), 20 * Math.log10(result['harmonics_v'][i][j][k])]);
-      }
-    }
-  }
-  for(i = 0; i < result['power_factor'].length; i++) PowerFactorDataset.push([new Date(result['Sampletime'][i])].concat(result['power_factor'][i]));
-  while(PowerFactorDataset.length > result['MaxSamples']) PowerFactorDatasets.shift();
-
-//  for(i = 0; i < result['thd_v'].length; i++) {
-//    for(j = 0; j < result['thd_v'][i].length; j++) {
-//      if(THDDatasets[j] === undefined) THDDatasets[j] = [];
-//      THDDatasets[j].push([new Date(result['Sampletime'][i]), result['thd_v'][i][j]]);
-//    }
-//  }
-//  for(i = 0; i < result['phi'].length; i++) {
-//    for(j = 0; j < result['phi'][i].length; j++) {
-//      if(PHIDatasets[j] === undefined) PHIDatasets[j] = [];
-//      PHIDatasets[j].push([new Date(result['Sampletime'][i]), result['phi'][i][j]]);
-//    }
-//  }
-//  LastEvolutionSample = result['Sampletime'][result['Sampletime'].length - 1];
-//  for(j = 0; j < HarmonicsDatasets.length; j++) {
-//    for(k = 0; k < HarmonicsDatasets[j].length; k++) {
-//      while(HarmonicsDatasets[j][k].length > result['MaxSamples']) HarmonicsDatasets[j][k].shift();
-//    }
-//  }
-//  for(k = 0; k < THDDatasets.length; k++) {
-//    while(THDDatasets[k].length > result['MaxSamples']) THDDatasets[k].shift();
-//  }
-//  for(k = 0; k < PHIDatasets.length; k++) {
-//    while(PHIDatasets[k].length > result['MaxSamples']) PHIDatasets[k].shift();
-//  }
+  UpdateHarmonicsCharts(result);
   UpdatePowerFactorChart(result);
-//  UpdateTHDChart(result);
-//  UpdatePHIChart(result);
+  UpdateTHDChart(result);
+  UpdatePHIChart(result);
+  LastEvolutionSample = result['Sampletime'][result['Sampletime'].length - 1];
+  Dygraph.synchronize([PowerFactorChart, THDChart, PHIChart], { range: false, zoom: false });
 }
+
+/* Graficos de evolucion de parametros */
 function UpdatePowerFactorChart(result) {
-  var Visibility    = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
+  if(result !== null) {
+    for(i = 0; i < result['power_factor'].length; i++) PowerFactorDataset.push([new Date(result['Sampletime'][i])].concat(result['power_factor'][i]));
+    while(PowerFactorDataset.length > result['MaxSamples']) PowerFactorDataset.shift();
+  }
+  var Visibility = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
   if(PowerFactorChart === null) {
     PowerFactorChart = new Dygraph(document.getElementById("PowerFactorChart"),
       PowerFactorDataset,
@@ -1167,194 +1222,179 @@ function UpdatePowerFactorChart(result) {
       }
     );
   } else {
-    if(result !== null) PowerFactorChart.updateOptions({ PowerFactorChartdateWindow: [result['From'], result['To']] }, true);
+    if(result !== null) PowerFactorChart.updateOptions({ dateWindow: [result['From'], result['To']] }, true);
     PowerFactorChart.updateOptions({ file: PowerFactorDataset, visibility: Visibility });
   }
-  return;
-  if(THDCharts.length == 0) {
-    for(i = 0; i < THDDatasets.length; i++) {
-      var Str = '<div style="position: relative">' +
-                '  <div id="THDChart_' + i + '" class="chart" style="height: 50px' + ((i == 0) ? '; margin-top: 16px; border-top: 1px solid #999"' : '"') + '></div>' +       
-                '  <div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="THDChartLegend_' + i + '"></div>' +                    
-                '</div>';
-      $("#THDChart").append(Str);
-      THDCharts[i] = new Dygraph(document.getElementById("THDChart_" + i),
-        THDDatasets[i],
-        { strokeWidth: 0.5,
-          labels: ["Time", ((i === 0) && (THDDatasets.length === 1)) ? "THD" : (i === 1) ? "THD (S)" : (i === 2) ? "THD (T)" : "THD (R)"],
-          colors: ["#d9534f"],
-          gridLineColor: "#999",
-          gridLinePattern: [4, 4],
-          highlightCircleSize: 0,
-          interactionModel: { },
-          labelsDiv: 'THDChartLegend_' + i,
-          legend: 'always',
-          legendFormatter: function(data) {
-            if(data.x == null) {
-              return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
-            } else {
-              return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' +
-                      data.xHTML + data.series[0].yHTML;
-            }
-          },
-          xAxisHeight: 0.1,
-          xLabelHeight: 1,
-          plotter: barChartPlotterCubism,
-          dateWindow: [result['From'], result['To']],
-          plugins: [
-            new Dygraph.Plugins.Crosshair({
-              direction: "vertical"
-            })
-          ],
-          axes: {
-            y: { drawAxis: false,
-                 drawGrid:false,
-                 valueFormatter: function (x) {
-                   return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '<em>%</em></div>';
-                 }
+}
+function UpdateTHDChart(result) {
+  if(result !== null) {
+    for(i = 0; i < result['thd_v'].length; i++) THDDataset.push([new Date(result['Sampletime'][i])].concat(result['thd_v'][i]));
+    while(THDDataset.length > result['MaxSamples']) THDDataset.shift();
+  }
+  var Visibility = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
+  if(THDChart === null) {
+    THDChart = new Dygraph(document.getElementById("THDChart"),
+      THDDataset,
+      { strokeWidth: 0.5,
+        labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'THD (R)', 'THD (S)', 'THD (T)'] : ['Time', 'THD'],
+        colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
+        visibility: Visibility,
+        gridLineColor: "#999",
+        gridLinePattern: [4, 4],
+        highlightCircleSize: 0,
+        interactionModel: { },
+        labelsDiv: 'THDChartLegend',
+        legend: 'always',
+        legendFormatter: function(data) {
+          if(data.x == null) {
+            for(i = 0; i < data.series.length; i++) 
+              if(data.series[i].isVisible) return '<span style="font-size: 18px; font-weight: bold">' + data.series[i].label + '</span>';
+          } else {
+            for(i = 0; i < data.series.length; i++) 
+              if(data.series[i].isVisible) return '<span style="font-size: 15px; font-weight: bold">' + data.series[i].label + '</span><br/>' + data.xHTML + data.series[i].yHTML;
+          }
+        },
+        xAxisHeight: 0.1,
+        xLabelHeight: 1,
+        plotter: barChartPlotterCubism,
+        dateWindow: [result['From'], result['To']],
+        plugins: [
+          new Dygraph.Plugins.Crosshair({
+            direction: "vertical"
+          })
+        ],
+        axes: {
+          y: { drawAxis: false,
+               drawGrid:false,
+               valueFormatter: function (x) {
+                 return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '<em>%</em></div>';
+               }
+             },
+          x: { valueFormatter: function (x) {
+                 var date = new Date(x);
+                 return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
                },
-            x: { valueFormatter: function (x) {
-                   var date = new Date(x);
-                   return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
-                 },
-                 axisLabelFormatter: (i === 0) ? function(x, i) {
-                   if((x.getHours() == 0) && (x.getMinutes() == 0) && (x.getSeconds() == 0)) {
-                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + x.toLocaleDateString() + '</div>';
-                   } else {
-                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + x.toLocaleTimeString() + '</div>';                       
-                   }
-                 } : function() { return null; }
-            }
+               axisLabelFormatter: function(x, i) {
+                 if((x.getHours() == 0) && (x.getMinutes() == 0) && (x.getSeconds() == 0)) {
+                   return '<div style="font-size: 10px; margin-top: -73px; line-height: 10px; font-weight: bold">' + x.toLocaleDateString() + '</div>';
+                 } else {
+                   return '<div style="font-size: 10px; margin-top: -73px; line-height: 10px">' + x.toLocaleTimeString() + '</div>';                       
+                 }
+               }
           }
         }
-      );
-    }
-    Dygraph.synchronize(THDCharts, { range: false, zoom: false });
+      }
+    ); 
   } else {
-    for(i = 0; i < THDCharts.length; i++) THDCharts[i].updateOptions({ file: THDDatasets[i], dateWindow: [result['From'], result['To']] });
+    if(result !== null) THDChart.updateOptions({ dateWindow: [result['From'], result['To']] }, true);
+    THDChart.updateOptions({ file: THDDataset, visibility: Visibility });
   }
-  if(PHICharts.length === 0) {
-    for(i = 0; i < PHIDatasets.length; i++) {
-      var Str = '<div style="position: relative">' +
-                '  <div id="PHIChart_' + i + '" class="chart" style="height: 50px' + ((i == 0) ? '; margin-top: 16px; border-top: 1px solid #999"' : '"') + '></div>' +       
-                '  <div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="PHIChartLegend_' + i + '"></div>' +                    
-                '</div>';
-      $("#PHIChart").append(Str);
-      PHICharts[i] = new Dygraph(document.getElementById("PHIChart_" + i),
-        PHIDatasets[i],
-        { strokeWidth: 0.5,
-          labels: ["Time", ((i === 0) && (THDDatasets.length === 1)) ? "PHI" : (i === 1) ? "PHI (S)" : (i === 2) ? "PHI (T)" : "PHI (R)"],
-          colors: ["#d9534f"],
-          gridLineColor: "#999",
-          gridLinePattern: [4, 4],
-          highlightCircleSize: 0,
-          interactionModel: { },
-          labelsDiv: 'PHIChartLegend_' + i,
-          legend: 'always',
-          legendFormatter: function(data) {
-            if(data.x == null) {
-              return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
-            } else {
-              return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' +
-                      data.xHTML + data.series[0].yHTML;
-            }
-          },
-          xAxisHeight: 0.1,
-          xLabelHeight: 1,
-          plotter: barChartPlotterCubism,
-          dateWindow: [result['From'], result['To']],
-          plugins: [
-            new Dygraph.Plugins.Crosshair({
-              direction: "vertical"
-            })
-          ],
-          axes: {
-            y: { drawAxis: false,
-                 drawGrid:false,
-                 valueFormatter: function (x) {
-                   return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(Math.abs(x)) + '<em>º' + ((x > 0) ? '(CAP)' : (x < 0) ? '(IND)' : '') + '</em></div>';
-                 }
+}
+function UpdatePHIChart(result) {
+  if(result !== null) {
+    for(i = 0; i < result['phi'].length; i++) PHIDataset.push([new Date(result['Sampletime'][i])].concat(result['phi'][i]));
+    while(PHIDataset.length > result['MaxSamples']) PHIDataset.shift();
+  }
+  var Visibility = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
+  if(PHIChart === null) {
+    PHIChart = new Dygraph(document.getElementById("PHIChart"),
+      PHIDataset,
+      { strokeWidth: 0.5,
+        labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'PHI (R)', 'PHI (S)', 'PHI (T)'] : ['Time', 'PHI'],
+        colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
+        visibility: Visibility,
+        gridLineColor: "#999",
+        gridLinePattern: [4, 4],
+        highlightCircleSize: 0,
+        interactionModel: { },
+        labelsDiv: 'PHIChartLegend',
+        legend: 'always',
+        legendFormatter: function(data) {
+          if(data.x == null) {
+            for(i = 0; i < data.series.length; i++) 
+              if(data.series[i].isVisible) return '<span style="font-size: 18px; font-weight: bold">' + data.series[i].label + '</span>';
+          } else {
+            for(i = 0; i < data.series.length; i++) 
+              if(data.series[i].isVisible) return '<span style="font-size: 15px; font-weight: bold">' + data.series[i].label + '</span><br/>' + data.xHTML + data.series[i].yHTML;
+          }
+        },
+        xAxisHeight: 0.1,
+        xLabelHeight: 1,
+        plotter: barChartPlotterCubism,
+        dateWindow: [result['From'], result['To']],
+        plugins: [
+          new Dygraph.Plugins.Crosshair({
+            direction: "vertical"
+          })
+        ],
+        axes: {
+          y: { drawAxis: false,
+               drawGrid:false,
+               valueFormatter: function (x) {
+                 return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(Math.abs(x)) + '<em>º' + ((x > 0) ? '(CAP)' : (x < 0) ? '(IND)' : '') + '</em></div>';
+               }
+             },
+          x: { valueFormatter: function (x) {
+                 var date = new Date(x);
+                 return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
                },
-            x: { valueFormatter: function (x) {
-                   var date = new Date(x);
-                   return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
-                 },
-                 axisLabelFormatter: (i === 0) ? function(x, i) {
-                   if((x.getHours() == 0) && (x.getMinutes() == 0) && (x.getSeconds() == 0)) {
-                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + x.toLocaleDateString() + '</div>';
-                   } else {
-                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + x.toLocaleTimeString() + '</div>';                       
-                   }
-                 } : function() { return null; }
-            }
+               axisLabelFormatter: function(x, i) {
+                 if((x.getHours() == 0) && (x.getMinutes() == 0) && (x.getSeconds() == 0)) {
+                   return '<div style="font-size: 10px; margin-top: -73px; line-height: 10px; font-weight: bold">' + x.toLocaleDateString() + '</div>';
+                 } else {
+                   return '<div style="font-size: 10px; margin-top: -73px; line-height: 10px">' + x.toLocaleTimeString() + '</div>';                       
+                 }
+               }
           }
         }
-      );
-    }
-//    Dygraph.synchronize(PHICharts, { range: false, zoom: false });
+      }
+    );
   } else {
-    for(i = 0; i < PHICharts.length; i++) PHICharts[i].updateOptions({ file: PHIDatasets[i], dateWindow: [result['From'], result['To']] });
+    if(result !== null) PHIChart.updateOptions({ dateWindow: [result['From'], result['To']] }, true);
+    PHIChart.updateOptions({ file: PHIDataset, visibility: Visibility });
   }
-  return;
-//    if(EvolutionDatasets.length == i) EvolutionDatasets.push([]);
-//    for(j = 0; j < result['harmonics_v'][i].length; j++) {
-//    
-//    
-//      
-//      var Value = 20 * Math.log10(result['evolution_v'][j][i]);
-//      EvolutionDatasets[i].push([new Date(result.evolution_time[j]), Value]);
-//
-//      
-//      if(EvolutionDatasets[i].length > 720) EvolutionDatasets[i].shift();
-//    }
-//  }
-//  LastEvolutionSample = result['evolution_time'][result.evolution_time.length - 1];
-  
-  
 }
 
-
-
-function UpdateEvolutionChart(result) {
-  for(i = 0; i < 50; i++) {
-    if(EvolutionDatasets.length == i) EvolutionDatasets.push([]);
-    for(j = 0; j < result.evolution_v.length; j++) {
-      var Value = 20 * Math.log10(result['evolution_v'][j][i]);
-      EvolutionDatasets[i].push([new Date(result.evolution_time[j] * 1000 + 1000), Value]);
-      if(EvolutionDatasets[i].length > 720) EvolutionDatasets[i].shift();
+/* Graficos de evolucion de harmonicos */
+function UpdateHarmonicsCharts(result) {
+  if(result !== null) {
+    while(HarmonicsDatasets.length !== 50) HarmonicsDatasets.push([]);
+    for(k = 0; k < 50; k++) {
+      for(i = 0; i < result['harmonics_v'].length; i++) {
+        var Row = [new Date(result['Sampletime'][i])];
+        for(j = 0; j < result['harmonics_v'][i].length; j++) Row.push(20 * Math.log10(result['harmonics_v'][i][j][k]));
+        HarmonicsDatasets[k].push(Row);
+      }
+      while(HarmonicsDatasets[k].length > result['MaxSamples']) HarmonicsDatasets[k].shift();
     }
   }
-  LastEvolutionSample = result['evolution_time'][result.evolution_time.length - 1];
-  if(EvolutionCharts.length == 0) {
+  var Visibility = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
+  if(HarmonicsCharts.length == 0) {
     for(i = 0; i < 50; i++) {
-      var Str = '<div style="position: relative">' +
-                '  <div id="HarmonicsEvolutionChart' + i + '" class="chart" style="height: 50px' + ((i == 0) ? '; margin-top: 16px; border-top: 1px solid #999"' : '"') + '></div>' +       
-                '  <div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend' + i + '"></div>' +                    
-                '</div>';
-      $("#EvolutionPanel").append(Str);
-      EvolutionCharts[i] = new Dygraph(document.getElementById("HarmonicsEvolutionChart" + i),
-        EvolutionDatasets[i],
+      HarmonicsCharts[i] = new Dygraph(document.getElementById("HarmonicsEvolutionChart_" + i),
+        HarmonicsDatasets[i],
         { strokeWidth: 0.5,
-          labels: ["Time", HarmonicsNames[i]],
-          colors: ["#d9534f"],
+          labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', HarmonicsNames[i] + ' (R)', HarmonicsNames[i] + ' (S)', HarmonicsNames[i] + ' (T)'] : ['Time', HarmonicsNames[i]],
+          colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
+          visibility: Visibility,
           gridLineColor: "#999",
           gridLinePattern: [4, 4],
           highlightCircleSize: 0,
           interactionModel: { },
-          labelsDiv: 'HarmonicsEvolutionChartLegend' + i,
+          labelsDiv: 'HarmonicsEvolutionChartLegend_' + i,
           legend: 'always',
           legendFormatter: function(data) {
+            var Index = (Visibility[0] === true) ? 0 : (Visibility[1] === true) ? 1 : 2;
             if(data.x == null) {
-              return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
+              return '<span style="font-size: 18px; font-weight: bold">' + data.series[Index].label + '</span>';
             } else {
-              return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' +
-                      data.xHTML + data.series[0].yHTML;
+              return '<span style="font-size: 15px; font-weight: bold">' + data.series[Index].label + '</span><br/>' + data.xHTML + data.series[Index].yHTML;
             }
           },
           xAxisHeight: 0.1,
           xLabelHeight: 1,
           plotter: barChartPlotterCubism,
-          dateWindow: [(LastEvolutionSample * 1000) - 43200000, LastEvolutionSample * 1000],
+          dateWindow: [result['From'], result['To']],
           plugins: [
             new Dygraph.Plugins.Crosshair({
               direction: "vertical"
@@ -1371,30 +1411,42 @@ function UpdateEvolutionChart(result) {
                    var date = new Date(x);
                    return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
                  },
-                 axisLabelFormatter: function(x, i) {
-                   if(this.attributes_.labels_[0] == HarmonicsNames[0]) {
-                     var date = new Date(x);
-                     if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
-                       return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + date.toLocaleDateString() + '</div>';
-                     } else {
-                       return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';                       
-                     }
+                 axisLabelFormatter: (i === 0) ? function(x, i) {
+                   var date = new Date(x);
+                   if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
+                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + date.toLocaleDateString() + '</div>';
                    } else {
-                     return null;
+                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';                       
                    }
-                 }
+                 } : function() { return ''; }
             }
           }
         }
       );
     }
-    Dygraph.synchronize(EvolutionCharts, { range: false, zoom: false });
+    Dygraph.synchronize(HarmonicsCharts, { range: false, zoom: false });
   } else {
     for(i = 0; i < 50; i++) {
-      EvolutionCharts[i].updateOptions({ file: EvolutionDatasets[i], dateWindow: [(LastEvolutionSample * 1000) - 43200000, LastEvolutionSample * 1000] });
+      if(result !== null) HarmonicsCharts[i].updateOptions({ dateWindow: [result['From'], result['To']] }, true);
+      HarmonicsCharts[i].updateOptions({ file: HarmonicsDatasets[i], visibility: Visibility });
     }
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 $('#btnExport').click(function () {
   var Data = [];
   var Filename;

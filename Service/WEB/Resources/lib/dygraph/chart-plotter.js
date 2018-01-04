@@ -24,28 +24,49 @@ function darkenColor(colorStr) {
   return 'rgba(' + color.r + ',' + color.g + ',' + color.b + ', 0.8)';
 }
 
-//// This function draws bars for a single series. See
-//// multiColumnBarPlotter below for a plotter which can draw multi-series
-//// bar charts.
-//function barChartPlotter(e) {
-//  var ctx = e.drawingContext;
-//  var points = e.points;
-//  var y_bottom = e.dygraph.toDomYCoord(0);
-//  ctx.fillStyle = darkenColor(e.color);
-//  var min_sep = Infinity;
-//  for (var i = 1; i < points.length; i++) {
-//    var sep = points[i].canvasx - points[i - 1].canvasx;
-//    if (sep < min_sep)
-//      min_sep = sep;
-//  }
-//  var bar_width = Math.floor(2.0 / 3 * min_sep);
-//  for (var i = 0; i < points.length; i++) {
-//    var p = points[i];
-//    var center_x = p.canvasx;
-//    ctx.fillRect(center_x - bar_width / 2, p.canvasy, bar_width, y_bottom - p.canvasy);
-//    ctx.strokeRect(center_x - bar_width / 2, p.canvasy, bar_width, y_bottom - p.canvasy);
-//  }
-//}
+/* Polar coordinate plotter */
+function polarLinePlotter(e) {
+  if(e.seriesIndex !== 0) return;
+  var ctx = e.drawingContext;
+  ctx.lineWidth = 0.5;
+  ctx.strokeStyle = e.dygraph.attrs_.axisLineColor;
+  ctx.beginPath();
+  ctx.moveTo(e.dygraph.toDomXCoord(-100), e.dygraph.toDomYCoord(0));
+  ctx.lineTo(e.dygraph.toDomXCoord(100), e.dygraph.toDomYCoord(0));
+  ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(-100));
+  ctx.lineTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(100));
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.setLineDash(e.dygraph.user_attrs_.gridLinePattern);
+  ctx.strokeStyle = e.dygraph.user_attrs_.gridLineColor;
+  ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(100) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(50) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.fillStyle = '#000';
+  ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), 5, 0, 2 * Math.PI, false);
+  ctx.fill();
+  ctx.setLineDash([]);
+  for(i = 0; i < e.points.length; i++) {
+    var X = e.dygraph.toDomXCoord(100.0 * e.allSeriesPoints[1][i].yval * Math.cos(e.allSeriesPoints[0][i].yval * Math.PI / 180.0));
+    var Y = e.dygraph.toDomYCoord(100.0 * e.allSeriesPoints[1][i].yval * Math.sin(e.allSeriesPoints[0][i].yval * Math.PI / 180.0));
+    e.points[i].canvasx = X;
+    e.points[i].canvasy = Y;
+    ctx.strokeStyle = e.dygraph.getColors()[i % 2];
+    ctx.fillStyle = e.dygraph.getColors()[i % 2];
+    ctx.lineWidth = (i % 2 === 0) ? 4 : 2;
+    ctx.beginPath();
+    ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
+    ctx.lineTo(X, Y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(X, Y, 3, 0, 2 * Math.PI, false);
+    ctx.fill();
+  }
+  
+}
 
 /* Draw bars without spacing*/
 function barChartNoSpacedPlotter(e) {

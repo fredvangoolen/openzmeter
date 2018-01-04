@@ -112,9 +112,6 @@
             <itemPath>WEB/Resources/lib/c3js/c3.css</itemPath>
             <itemPath>WEB/Resources/lib/c3js/c3.min.js</itemPath>
           </logicalFolder>
-          <logicalFolder name="cubism" displayName="cubism" projectFiles="true">
-            <itemPath>WEB/Resources/lib/cubism/cubism.js</itemPath>
-          </logicalFolder>
           <logicalFolder name="d3" displayName="d3" projectFiles="true">
             <itemPath>WEB/Resources/lib/d3/colorbrewer.css</itemPath>
             <itemPath>WEB/Resources/lib/d3/colorbrewer.js</itemPath>
@@ -731,8 +728,6 @@
       <item path="WEB/Resources/lib/c3js/c3.css" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/c3js/c3.min.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/cubism/cubism.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/d3-tip/d3-tip.min.css"
             ex="false"

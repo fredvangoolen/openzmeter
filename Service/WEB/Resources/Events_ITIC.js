@@ -51,9 +51,7 @@ function GenerateGraphs(min, max) {
   $('#RangeLabel').text('From ' + StartDate.toLocaleDateString() + ' at ' + StartDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' to ' + EndDate.toLocaleDateString() + ' at ' + EndDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
   EventsCount = 0;
   GenerateMonths(min, max);
-  if(Dates.length < 3) {
-    GenerateDays(min, max)
-  }
+  if(Dates.length < 3) GenerateDays(min, max);
   var ByDuration = [];
   var ByRMS = [];
   var ByDate = [];
@@ -80,7 +78,7 @@ function GenerateGraphs(min, max) {
       }
     }
     for(j = 0; j < Types.length; j++) {
-      if(EventsData[i][2] == Types[j]) {
+      if(EventsData[i][2] === Types[j]) {
         ByType[j][1] += 1;
         break;
       }
@@ -93,7 +91,7 @@ function GenerateGraphs(min, max) {
     }
   }
   $('#EventsSelection').text(EventsCount + ' events in selection');
-  if(ByDurationGraph == null) {
+  if(ByDurationGraph === null) {
     ByDurationGraph = new Dygraph(document.getElementById("byduration_chart"),
       ByDuration,
       { strokeWidth: 1,
@@ -113,7 +111,7 @@ function GenerateGraphs(min, max) {
                  return x;
                },
                axisLabelFormatter: function (x) {
-                 if((x % 1) != 0) return "";
+                 if((x % 1) !== 0) return "";
                  return '<div style="font-size: 10px; margin-top: -2px">' + x + '</div>';
                }
              },
@@ -133,7 +131,7 @@ function GenerateGraphs(min, max) {
   } else {
     ByDurationGraph.updateOptions({'file': ByDuration});
   }
-  if(ByRMSGraph == null) {
+  if(ByRMSGraph === null) {
     ByRMSGraph = new Dygraph(document.getElementById("byrms_chart"),
       ByRMS,
       { strokeWidth: 1,
@@ -153,20 +151,20 @@ function GenerateGraphs(min, max) {
                  return x;
                },
                axisLabelFormatter: function (x) {
-                 if((x % 1) != 0) return "";
+                 if((x % 1) !== 0) return "";
                  return '<div style="font-size: 10px; margin-top: -2px">' + x + '</div>';
                }
              },
           x: {  pixelsPerLabel: 26,
                 valueFormatter: function (x) {
                   if((x < 0) || (x >= RMSs.length)) return "";
-                  if(RMSs[x] == 0) return 'Low';
+                  if(RMSs[x] === 0) return 'Low';
                   if(RMSs[x] < 0) return '<' + (100 + RMSs[x]) + '%';
                   if(RMSs[x] > 0) return '>' + (100 + RMSs[x]) + '%';
                },
                axisLabelFormatter: function (x) {
                  if((x < 0) || (x >= RMSs.length)) return "";
-                 if(RMSs[x] == 0) return '<div style="font-size: 10px; margin-top: -4px">Low</div>';
+                 if(RMSs[x] === 0) return '<div style="font-size: 10px; margin-top: -4px">Low</div>';
                  if(RMSs[x] < 0) return '<div style="font-size: 10px; margin-top: -4px"><' + (100 + RMSs[x]) + '%</div>';
                  if(RMSs[x] > 0) return '<div style="font-size: 10px; margin-top: -4px">>' + (100 + RMSs[x]) + '%</div>';
                }
@@ -177,7 +175,7 @@ function GenerateGraphs(min, max) {
   } else {
     ByRMSGraph.updateOptions({'file': ByRMS});
   }
-  if(ByDateGraph == null) {
+  if(ByDateGraph === null) {
     ByDateGraph = new Dygraph(document.getElementById("bydate_chart"),
       ByDate,
       { strokeWidth: 1,
@@ -197,7 +195,7 @@ function GenerateGraphs(min, max) {
                  return x;
                },
                axisLabelFormatter: function (x) {
-                 if((x % 1) != 0) return "";
+                 if((x % 1) !== 0) return "";
                  return '<div style="font-size: 10px; margin-top: -2px">' + x + '</div>';
                }
              },
@@ -208,7 +206,7 @@ function GenerateGraphs(min, max) {
                   return Dates[x][2];
                },
                axisLabelFormatter: function (x) {
-                 if((x % 1) != 0) return "";
+                 if((x % 1) !== 0) return "";
                  if((x < 0) || (x >= Dates.length)) return "";
                  return '<div style="font-size: 10px; margin-top: -4px">' + Dates[x][2] + '</div>';
                }
@@ -219,7 +217,7 @@ function GenerateGraphs(min, max) {
   } else {
     ByDateGraph.updateOptions({'file': ByDate, dateWindow: [-1, Dates.length]});
   }
-  if(ByTypeGraph == null) {
+  if(ByTypeGraph === null) {
     ByTypeGraph = new Dygraph(document.getElementById("bytype_chart"),
       ByType,
       { strokeWidth: 1,
@@ -239,18 +237,18 @@ function GenerateGraphs(min, max) {
                  return x;
                },
                axisLabelFormatter: function (x) {
-                 if((x % 1) != 0) return "";
+                 if((x % 1) !== 0) return "";
                  return '<div style="font-size: 10px; margin-top: -2px">' + x + '</div>';
                }
              },
           x: {  pixelsPerLabel: 26,
                 valueFormatter: function (x) {
-                  if((x % 1) != 0) return "";
+                  if((x % 1) !== 0) return "";
                   if((x < 0) || (x >= Types.length)) return "";
                   return Types[x];
                 },
                axisLabelFormatter: function (x) {
-                 if((x % 1) != 0) return "";
+                 if((x % 1) !== 0) return "";
                  if((x < 0) || (x >= RMSs.length)) return "";
                  return '<div style="font-size: 10px; margin-top: -4px">' + Types[x] +'</div>';
                }
@@ -261,7 +259,7 @@ function GenerateGraphs(min, max) {
   } else {
     ByTypeGraph.updateOptions({'file': ByType});
   }
-  if(ITICGraph == null) {
+  if(ITICGraph === null) {
     ITICGraph = new Dygraph(document.getElementById("itic_chart"),
       ByITIC,
       { strokeWidth: 0,
@@ -330,7 +328,7 @@ function GenerateGraphs(min, max) {
           canvas.font = "16px sans-serif";
           canvas.fillStyle = "#555";
           canvas.fillText("No interruption region", c + 5 , g.toDomYCoord(0) - 5);
-          canvas.textAlign = "end"
+          canvas.textAlign = "end";
           canvas.fillText("No damage region",  c + w - 5 , g.toDomYCoord(0) - 5);
           canvas.textBaseline = "top";
           canvas.fillText("Prohibited region", c + w - 5 , 5);
