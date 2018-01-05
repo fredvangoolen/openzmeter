@@ -114,13 +114,38 @@
                       <button type="button" class="btn btn-default btn-xs" id="btnMaximizeActiveEnergy" data-toggle="tooltip" title="Maximize graph"><i class="fa fa-expand"></i></button>
                     </div>
                   </div>
-                  <div id="ActiveEnergyCol">
-                    <div id="ActiveEnergyMaximizeDiv">
-                      <div style="padding:5px">
-                        <div style="display:inline-block" id="ActiveEnergyAggregation">Loading data...</div>
-                        <div id="ActiveEnergyLegend" style="float: right"></div>
+                  <div class="row">
+                    <div class="col-md-6 col-lg-3">
+                      <div class="row">
+                        <div class="col-xs-4 col-md-12">
+                          <div class="panel panel-lightblue2-info" id="ActiveEnergyCurrentPanel">
+                            <h4 id="labelCurrentActiveEnergyPeriod">Loading...</h4>
+                            <span class="huge-small" id="labelCurrentActiveEnergy">?</span>
+                          </div>
+                        </div>
+                        <div class="col-xs-4 col-md-12">
+                          <div class="panel panel-lightblue2-info" id="ActiveEnergyPrevPanel">
+                            <h4 id="labelPrevPeriod">Loading...</h4>
+                            <span class="huge-small" id="labelPrevActiveEnergy">?</span>
+                          </div>
+                        </div>
+                        <div class="col-xs-4 col-md-12">
+                          <div class="panel panel-lightblue2-info" id="ActiveEnergySelectedPanel">
+                            <h4 id="labelSelectedPeriod">Loading...</h4>  
+                            <span class="huge-small" id="labelSelectedActiveEnergy">?</span>
+                            <p><span id="labelSelectedPeriodRange"></span>?</p>
+                          </div>
+                        </div>
                       </div>
-                      <div id="ActiveEnergyChart" class="chart big_chart"></div>
+                    </div>
+                    <div class="col-md-6 col-lg-9" id="ActiveEnergyCol">
+                      <div id="ActiveEnergyMaximizeDiv">
+                        <div style="padding:5px">
+                          <div style="display:inline-block" id="ActiveEnergyAggregation">Loading data...</div>
+                          <div id="ActiveEnergyLegend" style="float: right"></div>
+                        </div>
+                        <div id="ActiveEnergyChart" class="chart big_chart"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
