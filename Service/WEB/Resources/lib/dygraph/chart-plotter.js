@@ -26,7 +26,7 @@ function darkenColor(colorStr) {
 
 /* Polar coordinate plotter */
 function polarLinePlotter(e) {
-  if(e.seriesIndex !== 0) return;
+  if((e.seriesIndex !== 0) || (e.plotArea.h < 0) || (e.plotArea.w < 0)) return;
   var ctx = e.drawingContext;
   ctx.lineWidth = 0.5;
   ctx.strokeStyle = e.dygraph.attrs_.axisLineColor;

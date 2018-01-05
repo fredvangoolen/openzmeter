@@ -652,7 +652,7 @@ function DetailsButtonClick(event) {
       break;
     case 'Phasors' :
       $('#PhasorPanel').removeClass('hidden');
-      if(PhasorChart !== null) $(PhasorChart.graphDiv).parent().removeAttr('style');
+      if(PhasorChart !== null) $(PhasorChart.graphDiv).parent().attr('style', 'width: 504px; height: 494px');
       break;
     case 'Parameters' :
       $('#ParametersPanel').removeClass('hidden');
@@ -1484,22 +1484,11 @@ $('#GraphDialogClose').click(function() {
   window.dispatchEvent(new Event('resize'));
 });
 
-//$(document).ajaxError(function (event, jqxhr, settings, exception) {
-//  //if(jqxhr.status === 200) window.location.href = 'login';
-//});
-//$(document).ready(VoltageGetData(86400, 0, true));
-//$(document).ready(GetValues60S(false));
-//$(document).ready(GetValues5S());
-
-
-
-
-
-
 /* Tabla de eventos */
 var LastEventStartTime = 0;
 var EventsDatasheet    = [];
 var EventsTable        = null;
+var EventChart         = null;
 function AjaxGetEvents(period, to, node) {
   $.ajax({ url: "getEvents",
            timeout: 20000,
@@ -1515,45 +1504,57 @@ function AjaxGetEvents(period, to, node) {
     });
 }
 function AjaxEvents(result) {
-  return;
   if(EventsTable === null) {
     EventsTable = $('#EventsTable').DataTable({ responsive: true, 
-                                                columnDefs: [ { width: '2%', "targets": -1 } ],
+                                                columnDefs: [ { targets: [5], orderable: false }, { targets: [0, 1, 2, 3, 4], searchable: true } ],
                                                 order: [0, 'desc']
     });
   }
-  EventsTable.clear();
- //       table_events.destroy();
-        
-        
-  var Table = $('#EventsTable tbody');
-  Table.html('');
+  if(LastEventStartTime === 0) EventsTable.clear();
 //    var newEvents = [];
   for(i = 0; i < result['Starttime'].length; i++) {
-    var Time = new Date(result['Starttime'][i]);    
-    Table.append('<tr>\
-      <td>' + Time.toLocaleString() + '.' + Time.getMilliseconds() + '</td>\
-      <td>' + result['Type'][i] + '</td>\
-      <td>' + 0 + '</td>\
-      <td>' + Round2(result['Voltage'][i]) + ' V' + '</td>\
-      <td>' + Round2(result['Percentage'][i]) + '%' + '</td>\
-      <td><button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button></td>\
-      </tr>');
+    var Time = new Date(result['Starttime'][i]);
+    EventsTable.row.add( [Time.toLocaleString() + '.' + Time.getMilliseconds(), 
+                          result['Type'][i], 
+                          Round2(result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq']) + ' <em>Sec</em>', 
+                          Round2(result['Voltage'][i]) + ' <em>V</em>', 
+                          Round2(result['Percentage'][i]) + ' <em>%</em>', 
+                          '<button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button>'] ).draw();
   }
-//    events = newEvents;
-        
-        
-//        table_events = $('table#events_table').DataTable(
-//                {
-//                    responsive: true,
-//                    "columnDefs": [
-//                        {width: '2%', "targets": -1}
-//                    ]
-//                });
-//        if ($('#event_chart div.no-data').length == 0) {
-//            $('#event_chart').append('<div class="no-data event_instructions"><div class="alert alert-info">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
-//        }
-//    }
+  if(EventChart === null) {
+    EventChart = new Dygraph(document.getElementById("EventChart"), [[0, 0]], {
+      strokeWidth: 0.5,
+      labels: ["Sample index", "Voltage"],
+      colors: ["#d9534f"],
+      interactionModel: {
+        mousedown: mouseDownOZM,
+        mousemove: mouseMoveOZM,
+        mouseup: mouseUpOZM,
+        click: clickV3,
+        dblclick: dblClickV4,
+        mousewheel: scrollV3
+      },
+      axes: {
+        y: {
+          valueFormatter: function (x) {
+            return Round2(x) + ' <em class="small">V</em>';
+          },
+          axisLabelFormatter: function (x) {
+            return '<small>' + Round2(x) + ' <em class="small">V</em></small>';
+          }
+        },
+        x: {
+          valueFormatter: function (y) {
+            return y;
+          },
+          axisLabelFormatter: function (y) {
+            return y;
+          }
+        }
+      }
+    });
+    $('#EventChart').append('<div class="no-data event_instructions"><div class="alert alert-info">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
+  }
 }
 
 
@@ -1565,9 +1566,7 @@ function AjaxEvents(result) {
 
 
 
-/**
- * Events
- */
+/* Tabla y grafico de eventos */
 
 $("table#events_table").on('click', 'button.get_samples', function () {
     var tr = table_events.row($(this).parents('tr'));
@@ -1612,45 +1611,6 @@ $("table#events_table").on('click', 'button.get_samples', function () {
     });
 });
 
-var eventChart = new Dygraph(document.getElementById("EventChart"),
-        [[0, 0]],
-        {
-            strokeWidth: 2,
-            labels: ["Sample index", "Voltage"],
-            colors: ["#d9534f"],
-            ylabel: 'V',
-            xlabel: 'Sample index',
-            animatedZooms: true,
-            interactionModel: {
-//                'mousedown': mouseDownOZM,
-//                'mousemove': mouseMoveOZM,
-//                'mouseup': mouseUpOZM,
-//                'click': clickV3,
-//                'dblclick': dblClickV4,
-//                'mousewheel': scrollV3
-            },
-            axes: {
-                y: {
-                    valueFormatter: function (x) {
-//                        return roundTo(x, 2).toFixed(2) + ' <em class="small">V</em>';
-                    },
-                    axisLabelFormatter: function (x) {
-  //                      return '<small>' + roundTo(x, 2).toFixed(2) + ' <em class="small">V</em></small>';
-                    }
-                },
-                x: {
-                    valueFormatter: function (y) {
-                        return y;
-                    },
-                    axisLabelFormatter: function (y) {
-                        return y;
-                    }
-                }
-            }
-        }
-);
-//$('#event_chart').append('<div class="no-data event_instructions"><div class="alert alert-info">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
-//fillEventsTable(events);
 
 
 
