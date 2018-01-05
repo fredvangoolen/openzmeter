@@ -786,7 +786,7 @@ function UpdateHarmonicsChart(result) {
   var ShowR = (localStorage.getItem("VoltageDetailPhaseR") === 'true');
   var ShowS = (localStorage.getItem("VoltageDetailPhaseS") === 'true');
   var ShowT = (localStorage.getItem("VoltageDetailPhaseT") === 'true');
-  var ShowCurrent = (localStorage.getItem("VoltageDetailShowCurrent") === 'true');
+  var ShowCurrent = (localStorage.getItem("CurrentDetailShowVoltage") === 'true');
   var VoltageSeries = [];
   var CurrentSeries = [];
   var Visibility    = [];
@@ -903,7 +903,7 @@ function UpdateFFTChart(result) {
   var ShowR = (localStorage.getItem("VoltageDetailPhaseR") === 'true');
   var ShowS = (localStorage.getItem("VoltageDetailPhaseS") === 'true');
   var ShowT = (localStorage.getItem("VoltageDetailPhaseT") === 'true');
-  var ShowCurrent = (localStorage.getItem("VoltageDetailShowCurrent") === 'true');
+  var ShowCurrent = (localStorage.getItem("CurrentDetailShowVoltage") === 'true');
   var VoltageSeries = [];
   var CurrentSeries = [];
   var Visibility    = [];
