@@ -1101,6 +1101,7 @@ function AjaxGetParameters() {
     data: JSON.stringify({ Series: "power_factor, thd_v, phi", Node: Node }),
     success: function(result) {
       $('#PowerFactorNow').html(Array_Round2(result['power_factor'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
+      for(i = 0; i < result['thd_v'].length; i++) result['thd_v'][i] = result['thd_v'][i] * 100;
       $('#THDNow').html(Array_Round2(result['thd_v'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
       $('#PHINow').html(Array_Round2(result['phi'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"], " (IND)", " (CAP)"));
     },
@@ -1212,7 +1213,9 @@ function UpdatePowerFactorChart(result) {
 }
 function UpdateTHDChart(result) {
   if(result !== null) {
-    for(i = 0; i < result['thd_v'].length; i++) THDDataset.push([new Date(result['Sampletime'][i])].concat(result['thd_v'][i]));
+    for(i = 0; i < result['thd_v'].length; i++) {
+      THDDataset.push([new Date(result['Sampletime'][i])].concat(result['thd_v'][i]));
+    }
     while(THDDataset.length > result['MaxSamples']) THDDataset.shift();
   }
   var Visibility = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
@@ -1251,7 +1254,7 @@ function UpdateTHDChart(result) {
           y: { drawAxis: false,
                drawGrid:false,
                valueFormatter: function (x) {
-                 return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '<em>%</em></div>';
+                 return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x * 100) + '<em>%</em></div>';
                }
              },
           x: { valueFormatter: function (x) {
