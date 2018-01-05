@@ -74,7 +74,7 @@ function AjaxEnergyPower(result) {
   }
   if(result['Sampletime'] !== null) {
     for(i = 0; i < result['Sampletime'].length; i++) {
-      ActiveEnergyData.push([new Date(result['Sampletime'][i]), result['active_energy'][i][0]]);
+      ActiveEnergyData.push([new Date(result['Sampletime'][i])].concat(result['active_energy'][i]));
       ReactiveEnergyData.push([new Date(result['Sampletime'][i]), result['fundamental_reactive_energy'][i][0]]);
       ActivePowerData.push([new Date(result['Sampletime'][i]), result['active_power'][i][0]]);
       ReactivePowerData.push([new Date(result['Sampletime'][i]), result['fundamental_reactive_power'][i][0]]);
@@ -100,16 +100,41 @@ function AjaxEnergyPower(result) {
     ActiveEnergyChartUnits = 'Wh';
     toShow = ActiveEnergyData;
   }
+  var Units = 'Wh';
+  var Sum = [0, 0, 0];
+  for(i = 0; i < ActiveEnergyData.length; i++) {
+    for(n = 1; n < ActiveEnergyData[i].length; n++) Sum[n - 1] += ActiveEnergyData[i][n];
+  }  
+  for(i = 0; i < Sum.length; i++) {
+    if(Sum[i] > 1000) Units = 'kWh';
+  }
+  $('#labelSelectedActiveEnergyUnits').text(Units);
+  if(Units == 'kWh') {
+    for(i = 0; i < Sum.length; i++) Sum[i] = Sum[i] / 1000;
+  }
+  if(Nodes['Devices'][Node]['Type'] === '1Phase') {  
+    $('#labelSelectedActiveEnergy').html(Round2(Sum[0]));
+  } else {
+    $('#labelSelectedActiveEnergy').html(Round2(Sum[0] + Sum[1] + Sum[2]));
+    $('#labelSelectedActiveEnergyPhases').html('<br/>By phase&nbsp;&nbsp;<span style="font-size:150%">' + Array_Round2(Sum, '&nbsp;&nbsp;') + '</span>&nbsp;&nbsp;' + Units);
+  }
+  
+  var StartDate = new Date(result['From']);  
+  var EndDate = new Date(result['To']);  
+  $('#labelSelectedPeriodRange').html('From ' + StartDate.toLocaleDateString() + '-' + StartDate.toLocaleTimeString() + ' to ' + EndDate.toLocaleDateString() + '-' + EndDate.toLocaleTimeString());
+  ActiveEnergyResizeEvent();
+ 
   if(ActiveEnergyChart == null) {
     ActiveEnergyChart = new Dygraph(document.getElementById("ActiveEnergyChart"),
       toShow,
       { strokeWidth: 1,
         labelsDiv: "ActiveEnergyLegend",
-        labels: ["Time", "Active Energy"],
+        labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Active energy (R)', 'Active energy (S)', 'Active energy (T)'] : ['Time', 'Active energy'],
         plotter: barChartNoSpacedPlotter,
+        stackedGraph: true,
         stepPlot: true,
         fillGraph: true,
-        colors: ["#31708f"],
+        colors: ["#31708f", "#708f31", "#8f3170"],
         gridLineColor: "#999",
         gridLinePattern: [4, 4],
         valueRange: Range,
@@ -478,6 +503,10 @@ function AjaxEnergyPower(result) {
   }
   localStorage.setItem('GraphAggregation', GraphAggregation);
 }
+function ActiveEnergyResizeEvent() {
+  var Height = $('#ActiveEnergyCurrentPanel').height() + $('#ActiveEnergyPrevPanel').height() + $('#ActiveEnergySelectedPanel').height();
+  if(ActiveEnergyChart !== null) ActiveEnergyChart.resize($('#ActiveEnergyCol').width(), Height + 6);
+}
 $('#btnEnergyPower3S').click(function() {
   localStorage.setItem('GraphAggregation', '3s');
   LastEnergyPowerSample = 0;
@@ -503,28 +532,29 @@ $('#btnShowEnergyPowerYear').click(function() {
   LastEnergyPowerSample = 0;
   AjaxGetEnergyPower();
   localStorage.setItem('CountersPeriod', 'Year');
-  AjaxGetEnergyPowerCounters();
+  AjaxGetEnergyCounters();
 });
 $('#btnShowEnergyPowerMonth').click(function() {
   localStorage.setItem('GraphPeriod', 2592000000);
   LastEnergyPowerSample = 0;
   AjaxGetEnergyPower();
   localStorage.setItem('CountersPeriod', 'Month');
-  AjaxGetEnergyPowerCounters();
+  AjaxGetEnergyCounters();
 });
 $('#btnShowEnergyPowerWeek').click(function() {
   localStorage.setItem('GraphPeriod', 604800000);
   LastEnergyPowerSample = 0;
   AjaxGetEnergyPower();
   localStorage.setItem('CountersPeriod', 'Week');
-  AjaxGetEnergyPowerCounters();
+  AjaxGetEnergyCounters();
 });
 $('#btnShowEnergyPowerDay').click(function() {
   localStorage.setItem('GraphPeriod', 86400000);
   LastEnergyPowerSample = 0;
   AjaxGetEnergyPower();
   localStorage.setItem('CountersPeriod', 'Day');
-  AjaxGetEnergyPowerCounters();
+  AjaxGetEnergyCounters();
+  
 });
 $('#btnEnergyPowerNow').click(function() {
   var End = parseInt(localStorage.getItem('GraphEnd'));
@@ -561,24 +591,6 @@ $('#btnShowPower').click(function() {
   $('#btnShowPower').addClass('active');
   localStorage.setItem('EnergyPowerTab', 'Power');
 });
-
-
-
-function AjaxSuccess60S(result) {
-  if(result['evolution_time']) {
-    UpdateEvolutionChart(result);
-    $('#HarmonicEvolutionBtn').removeClass("disabled");
-    $('#HarmonicEvolutionLoad').addClass("hidden");
-  }
-  $('#voltage_hour').text(Round2(result['hour_rms']));
-  $('#voltage_last_day').text(Round2(result['day_rms']));
-  $('#voltage_hour_min').text(Round2(result['hour_min']));
-  $('#voltage_hour_max').text(Round2(result['hour_max']));
-  $('#voltage_min_day').text(Round2(result['day_min']));
-  $('#voltage_max_day').text(Round2(result['day_max']));
-  UpdateHeader(result);
-}
-
 
 /* Maximizar y minimizar graficos */
 var DialogElement           = null;
@@ -656,7 +668,103 @@ $('#GraphDialogClose').click(function() {
   window.dispatchEvent(new Event('resize'));
 });
 
-
+/* Contadores de energia */
+var EnergyCountersTimer  = null;
+function AjaxGetEnergyCounters() {
+  if(EnergyCountersTimer != null) clearInterval(EnergyCountersTimer);
+  EnergyCountersTimer = setTimeout(EnergyCountersTimer, 60000);
+  var CountersPeriod = localStorage.getItem('CountersPeriod');
+  var Current, Period;
+  if(CountersPeriod === 'Week') {
+    Period = 86400000 * 7;
+    Current = GetWeekTimestamp();
+    Aggreg = '10m';
+  } else if(CountersPeriod === 'Month') {
+    Period = 86400000 * 30;
+    Current = GetMonthTimestamp();
+    Aggreg = '1h';
+  } else if(CountersPeriod === 'Year') {
+    Period = 86400000 * 365;
+    Current = GetYearTimestamp();
+    Aggreg = '1h';
+  } else {
+    CountersPeriod = 'Day';
+    localStorage.setItem('CountersPeriod', CountersPeriod);
+    Period = 86400000;
+    Current = GetDayTimestamp();
+    Aggreg = '1m';
+  }
+  $.ajax({ url: "getSeriesAggreg",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current + Period }),
+           success: EnergyUpdateCountersCurrent
+  });
+  $.ajax({ url: "getSeriesAggreg",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current }),
+           success: EnergyUpdateCountersPrevs
+  });
+}
+function EnergyUpdateCountersCurrent(result) {
+  var CountersPeriod = localStorage.getItem('CountersPeriod');
+  if(CountersPeriod === 'Week') {
+    $('#labelCurrentActiveEnergyPeriod').text('This week');
+  } else if(CountersPeriod === 'Month') {
+    $('#labelCurrentActiveEnergyPeriod').text('This month');
+  } else if(CountersPeriod === 'Year') {
+    $('#labelCurrentActiveEnergyPeriod').text('This year');
+  } else if(CountersPeriod === 'Day') {
+    $('#labelCurrentActiveEnergyPeriod').text('Today');
+  }
+  var Units = 'Wh';
+  for(i = 0; i < result['sum_active_energy'].length; i++) {
+    if(result['sum_active_energy'][i] > 1000) Units = 'kWh';
+  }
+  $('#labelCurrentActiveEnergyUnits').text(Units);
+  if(Units == 'kWh') {
+    for(i = 0; i < result['sum_active_energy'].length; i++) result['sum_active_energy'][i] = result['sum_active_energy'][i] / 1000;
+  }
+  if(Nodes['Devices'][Node]['Type'] === '1Phase') {  
+    $('#labelCurrentActiveEnergy').html(Round2(result['sum_active_energy'][0]));
+  } else {
+    $('#labelCurrentActiveEnergy').html(Round2(result['sum_active_energy'][0] + result['sum_active_energy'][1] + result['sum_active_energy'][2]));
+    $('#labelCurrentActiveEnergyPhases').html('<br/>By phase&nbsp;&nbsp;<span style="font-size:150%">' + Array_Round2(result['sum_active_energy'], '&nbsp;&nbsp;') + '</span>&nbsp;&nbsp;' + Units);
+  }
+  ActiveEnergyResizeEvent();
+}
+function EnergyUpdateCountersPrevs(result) {
+  var CountersPeriod = localStorage.getItem('CountersPeriod');
+  if(CountersPeriod === 'Week') {
+    $('#labelPrevPeriod').text('Previous week');
+  } else if(CountersPeriod === 'Month') {
+    $('#labelPrevPeriod').text('Previous month');
+  } else if(CountersPeriod === 'Year') {
+    $('#labelPrevPeriod').text('Previous year');
+  } else if(CountersPeriod === 'Day') {
+    $('#labelPrevPeriod').text('Previous day');
+  }
+  var Units = 'Wh';
+  for(i = 0; i < result['sum_active_energy'].length; i++) {
+    if(result['sum_active_energy'][i] > 1000) Units = 'kWh';
+  }
+  $('#labelPrevActiveEnergyUnits').text(Units);
+  if(Units == 'kWh') {
+    for(i = 0; i < result['sum_active_energy'].length; i++) result['sum_active_energy'][i] = result['sum_active_energy'][i] / 1000;
+  }
+  if(Nodes['Devices'][Node]['Type'] === '1Phase') {  
+    $('#labelPrevActiveEnergy').html(Round2(result['sum_active_energy'][0]));
+  } else {
+    $('#labelPrevActiveEnergy').html(Round2(result['sum_active_energy'][0] + result['sum_active_energy'][1] + result['sum_active_energy'][2]));
+    $('#labelPrevActiveEnergyPhases').html('<br/>By phase&nbsp;&nbsp;<span style="font-size:150%">' + Array_Round2(result['sum_active_energy'], '&nbsp;&nbsp;') + '</span>&nbsp;&nbsp;' + Units);
+  }
+  ActiveEnergyResizeEvent();
+}
 
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
@@ -667,5 +775,5 @@ function UpdatePage() {
   } else {
     $('#btnShowEnergy').trigger('click');
   }
-//  AjaxGetEnergyPowerCounters();
+  AjaxGetEnergyCounters();
 }

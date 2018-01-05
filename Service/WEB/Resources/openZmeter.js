@@ -293,7 +293,7 @@ function GetDayTimestamp() {
 function GetWeekTimestamp() {
   var WeekDay = new Date().getDay();
   var Today = GetDayTimestamp();
-  return Today - 86400 * WeekDay;
+  return Today - 86400000 * WeekDay;
 }
 
 /* Obtiene el timestamp del inicio del mes actual */

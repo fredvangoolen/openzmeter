@@ -651,17 +651,11 @@ function AjaxEnergy(result) {
   }
   $('#EnergyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');  
   if(EnergyChart == null) {
-    var VisibleNames = ["Time"];
-    if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-      VisibleNames = VisibleNames.concat(['Energy (R)', 'Energy (S)', 'Energy (T)']);
-    } else {
-      VisibleNames.push('Energy');
-    }
     EnergyChart = new Dygraph(document.getElementById("EnergyChart"),
       EnergyData,
       { strokeWidth: 0.5,
         labelsDiv: "EnergyLegend",
-        labels: VisibleNames,
+        labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Energy (R)', 'Energy (S)', 'Energy (T)'] : ['Time', 'Energy'],
         plotter: barChartNoSpacedPlotter,
         stackedGraph: true,
         stepPlot: true,

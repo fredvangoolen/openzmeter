@@ -281,6 +281,7 @@
         <itemPath>WEB/Resources/CommonHeader.html</itemPath>
         <itemPath>WEB/Resources/Dashboard.js</itemPath>
         <itemPath>WEB/Resources/Events_Disturbances.js</itemPath>
+        <itemPath>WEB/Resources/Events_EN50160.js</itemPath>
         <itemPath>WEB/Resources/Events_ITIC.js</itemPath>
         <itemPath>WEB/Resources/Help.js</itemPath>
         <itemPath>WEB/Resources/Login.js</itemPath>
@@ -452,6 +453,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="WEB/Resources/Events_EN50160.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Events_ITIC.js" ex="false" tool="3" flavor2="0">
       </item>

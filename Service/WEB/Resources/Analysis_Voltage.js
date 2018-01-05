@@ -1511,15 +1511,16 @@ function AjaxEvents(result) {
     });
   }
   if(LastEventStartTime === 0) EventsTable.clear();
-//    var newEvents = [];
-  for(i = 0; i < result['Starttime'].length; i++) {
-    var Time = new Date(result['Starttime'][i]);
-    EventsTable.row.add( [Time.toLocaleString() + '.' + Time.getMilliseconds(), 
-                          result['Type'][i], 
-                          Round2(result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq']) + ' <em>Sec</em>', 
-                          Round2(result['Voltage'][i]) + ' <em>V</em>', 
-                          Round2(result['Percentage'][i]) + ' <em>%</em>', 
-                          '<button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button>'] ).draw();
+  if(result['Starttime'] !== null) {
+    for(i = 0; i < result['Starttime'].length; i++) {
+      var Time = new Date(result['Starttime'][i]);
+      EventsTable.row.add( [Time.toLocaleString() + '.' + Time.getMilliseconds(), 
+                            result['Type'][i], 
+                            Round2(result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq']) + ' <em>Sec</em>', 
+                            Round2(result['Voltage'][i]) + ' <em>V</em>', 
+                            Round2(result['Percentage'][i]) + ' <em>%</em>', 
+                            '<button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button>'] ).draw();
+    }
   }
   if(EventChart === null) {
     EventChart = new Dygraph(document.getElementById("EventChart"), [[0, 0]], {
