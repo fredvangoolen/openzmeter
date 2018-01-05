@@ -652,6 +652,7 @@ function DetailsButtonClick(event) {
       break;
     case 'Phasors' :
       $('#PhasorPanel').removeClass('hidden');
+      if(PhasorChart !== null) $(PhasorChart.graphDiv).parent().removeAttr('style');
       break;
     case 'Parameters' :
       $('#ParametersPanel').removeClass('hidden');
@@ -1030,9 +1031,9 @@ function UpdateFFTChart(result) {
 /* Grafico de fasores */
 var PhasorChart = null;
 function UpdatePhasorChart(result) {
-    var Vectors = [[0, 0.0, 230.0], [0, 2.0, 23.5], [0, 120.0, 230.0], [0, 122.0, 23.5], [0, 240.0, 230.0], [0, 242.0, 23.5]];
-    var MaxCurrent = 23.5;
-    var MaxVoltage = 240;
+    var Vectors = [[0, 0.0, 235.0], [0, 2.0, 23.5], [0, 120.0, 237.0], [0, 122.0, 23.5], [0, 240.0, 228.0], [0, 242.0, 23.5]];
+    var MaxCurrent = 25.5;
+    var MaxVoltage = 260;
 
 
   for(i = 0; i < Vectors.length; i += 2) {
@@ -1040,7 +1041,6 @@ function UpdatePhasorChart(result) {
     Vectors[i + 1][2] = Vectors[i + 1][2] / MaxCurrent;
   }
   if(PhasorChart === null) {
-    
     PhasorChart = new Dygraph(document.getElementById("PhasorChart"),
       Vectors,
       { strokeWidth: 0.5,
@@ -1053,58 +1053,42 @@ function UpdatePhasorChart(result) {
         legend: 'never',
         valueRange: [-110, 110],
         dateWindow: [-110, 110],
+        plugins: [ new Dygraph.Plugins.PolarCrosshair( { } ) ],
         plotter: polarLinePlotter,
-          xAxisHeight: 0.1,
-          xLabelHeight: 1,
-//          plotter: barChartPlotterCubism,
-//          dateWindow: [result['From'], result['To']],
-//          plugins: [
-//            new Dygraph.Plugins.Crosshair({
-//              direction: "vertical"
-//            })
-//          ],
-          axes: {
-            y: { drawAxis: true,
-                 drawGrid:false,
-                 axisLabelWidth: 0,
-                 axisLineColor: "#FFF",
-                 ticker: function(min, max, pixels, opts, dygraph, vals) {
-                   var ticks = [];
-                   var Width = document.getElementById("PhasorChart").clientWidth / 2 - 1;
-                   for(var i = 1; i <= 4; i++) {
-                     ticks.push({ v: i * 25, label: '<div style="font-size: 10px; background: rgba(255, 255, 255, 0.5); margin-left: ' + Width + 'px; text-align: left; width: 34px; line-height: 18px; overflow: hidden">' + Math.round(i / 4 * MaxVoltage, 0) + '<em>V</em></div>' });
-                   }
-                   return ticks;
-                 },            
-               },
-            x: { drawAxis: true,
-                 drawGrid:false,
-                 axisLabelWidth: 0,
-                 axisLineColor: "#FFF",
-                 ticker: function(min, max, pixels, opts, dygraph, vals) {
-                   var ticks = [];
-                   var Height = document.getElementById("PhasorChart").clientHeight / 2 + 5;
-                   for(var i = 1; i <= 4; i++) {
-                     ticks.push({ v: -i * 25, label: '<div style="font-size: 10px; margin-left: -20px; margin-top: ' + -Height + 'px; text-align: center; width: 40px; line-height: 18px; overflow: hidden">' + Math.round(i / 4 * MaxCurrent, 0) + '<em>A</em></div>' });
-                   }
-                   return ticks;
-                 },            
-                 
-//                   var date = new Date(x);
-//                   if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
-//                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + date.toLocaleDateString() + '</div>';
-//                   } else {
-//                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';                       
-//                   }
+        xAxisHeight: 0.1,
+        xLabelHeight: 0.1,
+        axes: {
+          y: { drawAxis: true,
+               drawGrid:false,
+               axisLabelWidth: 0,
+               axisLineColor: "#FFF",
+               ticker: function(min, max, pixels, opts, dygraph, vals) {
+                 var ticks = [];
+                 var Width = document.getElementById("PhasorChart").clientWidth / 2 - 1;
+                 for(var i = 1; i <= 4; i++) {
+                   ticks.push({ v: i * 25, label: '<div style="font-size: 10px; background: rgba(255, 255, 255, 0.5); margin-left: ' + Width + 'px; text-align: left; width: 34px; line-height: 18px; overflow: hidden">' + Math.round(i / 4 * MaxVoltage, 0) + '<em>V</em></div>' });
                  }
-//            }
+                 return ticks;
+               },            
+             },
+          x: { drawAxis: true,
+               drawGrid:false,
+               axisLabelWidth: 0,
+               axisLineColor: "#FFF",
+               ticker: function(min, max, pixels, opts, dygraph, vals) {
+                 var ticks = [];
+                 var Height = document.getElementById("PhasorChart").clientHeight / 2 + 5;
+                 for(var i = 1; i <= 4; i++) {
+                   ticks.push({ v: -i * 25, label: '<div style="font-size: 10px; margin-left: -20px; margin-top: ' + -Height + 'px; text-align: center; width: 40px; line-height: 18px; overflow: hidden">' + Math.round(i / 4 * MaxCurrent, 0) + '<em>A</em></div>' });
+                 }
+                 return ticks;
+               }
+             }
           }
         }
       );
-    
   }
-  
-  
+
 }
 
 /* Cuadros de parametros */

@@ -26,6 +26,11 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
   if(jqxhr.status === 401) window.location.href = 'Login';
 });
 
+/* Previene que los botones se queden pulsados */
+$(':button').mousedown(function(e) {
+  e.preventDefault();
+});
+
 /* Muesto/oculto spinner en un div */
 function ShowSpinner(spinner, container) {
   $('#' + container).css('display', 'inherit');

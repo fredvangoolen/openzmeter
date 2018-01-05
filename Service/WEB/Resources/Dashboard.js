@@ -169,16 +169,7 @@ $('#btnMaximizeVoltage').click(function() {
   window.dispatchEvent(new Event('resize'));  
 });
 $('#btnExportVoltage').click(function() {
-  var Data = [];
-  var Filename = "Voltage_" + Node + '_' + LastVoltageSample + '.csv';
-  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    Data.push(['DateTime', 'Voltage R', 'Voltage S', 'Voltage T']); 
-  } else {
-    Data.push(['DateTime', 'Voltage']);
-  }
-  Data = Data.concat(VoltageData);
-  exportToCsv(Filename, Data);
-  $(this).blur();
+  exportToCsv("Voltage_" + Node + '_' + LastVoltageSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Voltage R', 'Voltage S', 'Voltage T']] : [['DateTime', 'Voltage']]).concat(VoltageData));
 });
 
 /* Grafica de corriente */
@@ -328,7 +319,7 @@ $('#btnShowCurrentRPhase').click(ChooseCurrentChannels);
 $('#btnShowCurrentSPhase').click(ChooseCurrentChannels);
 $('#btnShowCurrentTPhase').click(ChooseCurrentChannels);
 $('#btnShowCurrentNPhase').click(ChooseCurrentChannels);
-$('#maximizeCurrent').click(function() {
+$('#btnMaximizeCurrent').click(function() {
   $('#GraphDialogTitle').text('Current');
   $('#GraphDialog').modal('show');
   PrevDialogContainer = $('#CurrentCol');
@@ -344,16 +335,7 @@ $('#maximizeCurrent').click(function() {
   window.dispatchEvent(new Event('resize'));  
 });
 $('#btnExportCurrent').click(function() {
-  var Data = [];
-  var Filename = "Current_" + Node + '_' + LastVoltageSample + '.csv';
-  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    Data.push(['DateTime', 'Current R', 'Current S', 'Current T']); 
-  } else {
-    Data.push(['DateTime', 'Current']);
-  }
-  Data = Data.concat(CurrentData);
-  exportToCsv(Filename, Data);
-  $(this).blur();
+  exportToCsv("Current_" + Node + '_' + LastCurrentSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Current R', 'Current S', 'Current T', 'Current (N)']] : [['DateTime', 'Current']]).concat(CurrentData));
 });
 
 /* Grafica de potencia */
@@ -506,33 +488,25 @@ function ChoosePowerChannels() {
 $('#btnShowPowerRPhase').click(ChoosePowerChannels);
 $('#btnShowPowerSPhase').click(ChoosePowerChannels);
 $('#btnShowPowerTPhase').click(ChoosePowerChannels);
-$('#maximizePower').click(function() {
+$('#btnMaximizePower').click(function() {
   $('#GraphDialogTitle').text('Power');
   $('#GraphDialog').modal('show');
   PrevDialogContainer = $('#PowerCol');
   DialogElement = $('#PowerMaximizeDiv').detach();
   DialogPrevResizeHandler = function() {
-    $(CurrentChart.graphDiv).parent().removeAttr('style');
+    $(PowerChart.graphDiv).parent().removeAttr('style');
   };
   DialogResizeHandler = function() {
-    CurrentChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
+    PowerChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
   };
   $('#GraphDialogBody').append(DialogElement);
   $(window).bind('resize', DialogResizeHandler);
   window.dispatchEvent(new Event('resize'));  
 });
 $('#btnExportPower').click(function() {
-  var Data = [];
-  var Filename = "Power_" + Node + '_' + LastVoltageSample + '.csv';
-  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    Data.push(['DateTime', 'Power R', 'Power S', 'Power T']); 
-  } else {
-    Data.push(['DateTime', 'Power']);
-  }
-  Data = Data.concat(PowerData);
-  exportToCsv(Filename, Data);
-  $(this).blur();
+  exportToCsv("Power_" + Node + '_' + LastPowerSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Power R', 'Power S', 'Power T']] : [['DateTime', 'Power']]).concat(PowerData));
 });
+
 /* Grafica de frequencia */
 var FrequencyChart      = null;
 var LastFrequencySample = 0;
@@ -608,28 +582,23 @@ function AjaxFrequency(result) {
   }
   if((VoltageChart != null) && (CurrentChart != null) && (PowerChart != null) && (FrequencyChart != null)) Dygraph.synchronize([VoltageChart, CurrentChart, PowerChart, FrequencyChart], { range: false, zoom: false } );
 }
-$('#maximizeFrequency').click(function() {
+$('#btnMaximizeFrequency').click(function() {
   $('#GraphDialogTitle').text('Frequency');
   $('#GraphDialog').modal('show');
   PrevDialogContainer = $('#FrequencyCol');
   DialogElement = $('#FrequencyMaximizeDiv').detach();
   DialogPrevResizeHandler = function() {
-    $(CurrentChart.graphDiv).parent().removeAttr('style');
+    $(FrequencyChart.graphDiv).parent().removeAttr('style');
   };
   DialogResizeHandler = function() {
-    CurrentChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
+    FrequencyChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
   };
   $('#GraphDialogBody').append(DialogElement);
   $(window).bind('resize', DialogResizeHandler);
   window.dispatchEvent(new Event('resize'));  
 });
 $('#btnExportFrequency').click(function() {
-  var Data = [];
-  var Filename = "Frequency_" + Node + '_' + LastVoltageSample + '.csv';
-  Data.push(['DateTime', 'Frequency']);
-  Data = Data.concat(FrequencyData);
-  exportToCsv(Filename, Data);
-  $(this).blur();
+  exportToCsv("Frequency_" + Node + '_' + LastFrequencySample + '.csv', ([['DateTime', 'Frequency']]).concat(FrequencyData));
 });
 
 /* Grafico de energia */
@@ -952,16 +921,7 @@ $('#btnMaximizeEnergy').click(function() {
   window.dispatchEvent(new Event('resize'));  
 });
 $('#btnExportEnergy').click(function() {
-  var Data = [];
-  var Filename = "ActiveEnergy_" + Node + "_" + LastEnergyTime + '.csv';
-  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    Data.push(['DateTime', 'Energy R', 'Energy S', 'Energy T']);
-  } else {
-    Data.push([['DateTime', 'Energy']]);
-  }  
-  Data = Data.concat(EnergyData);
-  exportToCsv(Filename, Data);
-  $(this).blur();
+  exportToCsv("ActiveEnergy_" + Node + '_' + LastEnergySample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Energy R', 'Energy S', 'Energy T']] : [['DateTime', 'Energy']]).concat(EnergyData));
 });
 
 /* Contadores de consumo */

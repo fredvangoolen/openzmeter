@@ -41,8 +41,13 @@ function polarLinePlotter(e) {
   ctx.strokeStyle = e.dygraph.user_attrs_.gridLineColor;
   ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(100) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
   ctx.stroke();
+  ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(75) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
+  ctx.stroke();
   ctx.beginPath();
   ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(50) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(25) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
   ctx.stroke();
   ctx.beginPath();
   ctx.fillStyle = '#000';
@@ -65,8 +70,42 @@ function polarLinePlotter(e) {
     ctx.arc(X, Y, 3, 0, 2 * Math.PI, false);
     ctx.fill();
   }
-  
 }
+
+/* PolarCrosshair */
+Dygraph.Plugins.PolarCrosshair = (function() {
+  "use strict";
+  var polarCrosshair = function(opt_options) {
+    this.canvas_ = document.createElement("canvas");
+    opt_options = opt_options || {};
+  };
+  polarCrosshair.prototype.toString = function() {
+    return "PolarCrosshair Plugin";
+  };
+  polarCrosshair.prototype.activate = function(g) {
+    g.graphDiv.appendChild(this.canvas_);
+    return { select: this.select, deselect: this.deselect };
+  };
+  polarCrosshair.prototype.select = function(e) {
+    this.canvas_.width = e.dygraph.width_;
+    this.canvas_.height = e.dygraph.height_;
+    var ctx = this.canvas_.getContext("2d");
+    ctx.clearRect(0, 0, width, height);
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.3)";
+    ctx.beginPath();
+    ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(e.dygraph.selPoints_[1].yval * 100.0) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.closePath();
+  };
+  polarCrosshair.prototype.deselect = function(e) {
+    var ctx = this.canvas_.getContext("2d");
+    ctx.clearRect(0, 0, this.canvas_.width, this.canvas_.height);
+  };
+  polarCrosshair.prototype.destroy = function() {
+    this.canvas_ = null;
+  };
+  return polarCrosshair;
+})();
 
 /* Draw bars without spacing*/
 function barChartNoSpacedPlotter(e) {
