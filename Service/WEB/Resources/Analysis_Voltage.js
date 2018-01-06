@@ -467,7 +467,7 @@ function AjaxGetDetails() {
              $('#PowerFactorNow').html(Array_Round2(result['power_factor'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
              for(i = 0; i < result['thd_v'].length; i++) result['thd_v'][i] = result['thd_v'][i] * 100;
              $('#THDNow').html(Array_Round2(result['thd_v'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
-             $('#PHINow').html(Array_Round2(result['phi'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"], " (IND)", " (CAP)"));
+             $('#PHINow').html(Array_Round2(result['phi'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"], " (CAP)", " (IND)"));
            },
            error: function() {
              $('#WaveformTime').text('Node Offline');
@@ -1038,12 +1038,17 @@ function UpdateFFTChart(result) {
 /* Grafico de fasores */
 var PhasorChart = null;
 function UpdatePhasorChart(result) {
-   $('#PhasorTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
-    var Vectors = [[0, 0.0, 235.0], [0, 2.0, 23.5], [0, 120.0, 237.0], [0, 122.0, 23.5], [0, 240.0, 228.0], [0, 242.0, 23.5]];
-    var MaxCurrent = 25.5;
-    var MaxVoltage = 260;
-
-
+  var date = new Date(result['Sampletime']);
+  $('#PhasorTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
+  var Vectors = [];
+  var MaxCurrent = 0;
+  var MaxVoltage = 0;
+  for(i = 0; i < result['rms_v'].length; i++) {
+    Vectors.push([2 * i, 120 * i, result['rms_v'][i]]);
+    Vectors.push([2 * i + 1, 120 * i + result['phi'][i], result['rms_i'][i]]);
+    MaxVoltage = Math.max(MaxVoltage, result['rms_v'][i]);
+    MaxCurrent = Math.max(MaxCurrent, result['rms_i'][i]);
+  }
   for(i = 0; i < Vectors.length; i += 2) {
     Vectors[i][2] = Vectors[i][2] / MaxVoltage;
     Vectors[i + 1][2] = Vectors[i + 1][2] / MaxCurrent;
@@ -1074,7 +1079,7 @@ function UpdatePhasorChart(result) {
                  var ticks = [];
                  var Width = document.getElementById("PhasorChart").clientWidth / 2 - 1;
                  for(var i = 1; i <= 4; i++) {
-                   ticks.push({ v: i * 25, label: '<div style="font-size: 10px; background: rgba(255, 255, 255, 0.5); margin-left: ' + Width + 'px; text-align: left; width: 34px; line-height: 18px; overflow: hidden">' + Math.round(i / 4 * MaxVoltage, 0) + '<em>V</em></div>' });
+                   ticks.push({ v: i * 25, label: '<div style="font-size: 11px; background: rgba(255, 255, 255, 0.8); margin-left: ' + Width + 'px; text-align: left; width: 44px; line-height: 12px">' + Round2(i / 4 * MaxVoltage) + '<em>V</em></div>' });
                  }
                  return ticks;
                },            
@@ -1085,9 +1090,9 @@ function UpdatePhasorChart(result) {
                axisLineColor: "#FFF",
                ticker: function(min, max, pixels, opts, dygraph, vals) {
                  var ticks = [];
-                 var Height = document.getElementById("PhasorChart").clientHeight / 2 + 5;
+                 var Height = document.getElementById("PhasorChart").clientHeight / 2 + 2;
                  for(var i = 1; i <= 4; i++) {
-                   ticks.push({ v: -i * 25, label: '<div style="font-size: 10px; margin-left: -20px; margin-top: ' + -Height + 'px; text-align: center; width: 40px; line-height: 18px; overflow: hidden">' + Math.round(i / 4 * MaxCurrent, 0) + '<em>A</em></div>' });
+                   ticks.push({ v: -i * 25, label: '<div style="font-size: 11px; background: rgba(255, 255, 255, 0.8); margin-left: -20px; margin-top: ' + -Height + 'px; text-align: center; width: 40px; line-height: 12px">' + Round2(i / 4 * MaxCurrent) + '<em>A</em></div>' });
                  }
                  return ticks;
                }
@@ -1095,8 +1100,9 @@ function UpdatePhasorChart(result) {
           }
         }
       );
+  } else {
+    PhasorChart.updateOptions({ file: Vectors });
   }
-
 }
 
 /* Evolucion de parametros*/
@@ -1303,7 +1309,7 @@ function UpdatePHIChart(result) {
           y: { drawAxis: false,
                drawGrid:false,
                valueFormatter: function (x) {
-                 return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(Math.abs(x)) + '<em>º' + ((x > 0) ? '(CAP)' : (x < 0) ? '(IND)' : '') + '</em></div>';
+                 return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(Math.abs(x)) + '<em>º' + ((x > 0) ? '(IND)' : (x < 0) ? '(CAP)' : '') + '</em></div>';
                }
              },
           x: { valueFormatter: function (x) {
