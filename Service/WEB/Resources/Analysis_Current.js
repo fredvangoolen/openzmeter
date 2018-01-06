@@ -714,7 +714,7 @@ function UpdateWaveformChart(result) {
     showRangeSelector: true,
     rangeSelectorHeight: 20,
     rangeSelectorPlotFillColor: "#FFFFFF",
-    rangeSelectorPlotStrokeColor: "#d9534f",
+    rangeSelectorPlotStrokeColor: "#428bca",
     xAxisHeight: 10,
     interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
     series: (Nodes['Devices'][Node]['Type'] === '3Phase') ? { 'Current (R)': { showInRangeSelector: true }, 'Voltage (R)': { axis: 'y2' }, 'Voltage (S)': { axis: 'y2' }, 'Voltage (T)': { axis: 'y2'  } } : { 'Current': { showInRangeSelector: true }, 'Voltage': { axis: 'y2' } },
@@ -777,36 +777,36 @@ function UpdateHarmonicsChart(result) {
     HarmonicsDataset = [];
     for(i = 0; i < result['harmonics_v'][0].length; i++) {
       if(Nodes['Devices'][Node]['Type'] === '3Phase') {
-        HarmonicsDataset.push([result['harmonics_v'][0][i], result['harmonics_v'][1][i], result['harmonics_v'][2][i], result['harmonics_i'][0][i], result['harmonics_i'][1][i], result['harmonics_i'][2][i]]);
+        HarmonicsDataset.push([result['harmonics_i'][0][i], result['harmonics_i'][1][i], result['harmonics_i'][2][i], result['harmonics_v'][0][i], result['harmonics_v'][1][i], result['harmonics_v'][2][i]]);
       } else {
-        HarmonicsDataset.push([result['harmonics_v'][0][i], result['harmonics_i'][0][i]]);      
+        HarmonicsDataset.push([result['harmonics_i'][0][i], result['harmonics_v'][0][i]]);      
       }
     }
   }
-  var ShowR = (localStorage.getItem("VoltageDetailPhaseR") === 'true');
-  var ShowS = (localStorage.getItem("VoltageDetailPhaseS") === 'true');
-  var ShowT = (localStorage.getItem("VoltageDetailPhaseT") === 'true');
-  var ShowCurrent = (localStorage.getItem("CurrentDetailShowVoltage") === 'true');
+  var ShowR = (localStorage.getItem("CurrentDetailPhaseR") === 'true');
+  var ShowS = (localStorage.getItem("CurrentDetailPhaseS") === 'true');
+  var ShowT = (localStorage.getItem("CurrentDetailPhaseT") === 'true');
+  var ShowVoltage = (localStorage.getItem("CurrentDetailShowVoltage") === 'true');
   var VoltageSeries = [];
   var CurrentSeries = [];
   var Visibility    = [];
   if(Nodes['Devices'][Node]['Type'] === '3Phase') {
-    if(ShowR) VoltageSeries.push(0);
-    if(ShowS) VoltageSeries.push(1);
-    if(ShowT) VoltageSeries.push(2);
-    if(ShowR && ShowCurrent) CurrentSeries.push(3);
-    if(ShowS && ShowCurrent) CurrentSeries.push(4);
-    if(ShowT && ShowCurrent) CurrentSeries.push(5);
-    Visibility = [ShowR, ShowS, ShowT, ShowR && ShowCurrent, ShowS && ShowCurrent, ShowT && ShowCurrent];
+    if(ShowR) CurrentSeries.push(0);
+    if(ShowS) CurrentSeries.push(1);
+    if(ShowT) CurrentSeries.push(2);
+    if(ShowR && ShowVoltage) VoltageSeries.push(3);
+    if(ShowS && ShowVoltage) VoltageSeries.push(4);
+    if(ShowT && ShowVoltage) VoltageSeries.push(5);
+    Visibility = [ShowR, ShowS, ShowT, ShowR && ShowVoltage, ShowS && ShowVoltage, ShowT && ShowVoltage];
   } else {
-    VoltageSeries.push(0);
-    CurrentSeries.push(1);
-    Visibility = [true, ShowCurrent];
+    VoltageSeries.push(1);
+    CurrentSeries.push(0);
+    Visibility = [true, ShowVoltage];
   }
   var ToShow = [];
-  for(i = (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 0 : 1; i < HarmonicsDataset.length; i++) {
+  for(i = (localStorage.getItem('CurrentDetailFirstHarmonic') === 'true') ? 0 : 1; i < HarmonicsDataset.length; i++) {
     ToShow.push([]);
-    var Pos = (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? i : i - 1
+    var Pos = (localStorage.getItem('CurrentDetailFirstHarmonic') === 'true') ? i : i - 1
     for(n = 0; n < HarmonicsDataset[i].length; n++) ToShow[Pos][n] = 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[Pos][n]));
   }
   var VoltageRange = CalcRanges(ToShow, VoltageSeries);
@@ -815,57 +815,57 @@ function UpdateHarmonicsChart(result) {
   HarmonicsCOffset = (CurrentRange[0] < 0.0) ? -CurrentRange[0] : 0.0;
   for(i = 0; i < ToShow.length; i++) {
     if(Nodes['Devices'][Node]['Type'] === '3Phase') {
-      ToShow[i] = [i, ToShow[i][0] + HarmonicsVOffset, ToShow[i][1] + HarmonicsVOffset, ToShow[i][2] + HarmonicsVOffset, ToShow[i][3] + HarmonicsCOffset, ToShow[i][4] + HarmonicsCOffset, ToShow[i][5] + HarmonicsCOffset];
+      ToShow[i] = [i, ToShow[i][0] + HarmonicsCOffset, ToShow[i][1] + HarmonicsCOffset, ToShow[i][2] + HarmonicsCOffset, ToShow[i][3] + HarmonicsVOffset, ToShow[i][4] + HarmonicsVOffset, ToShow[i][5] + HarmonicsVOffset];
     } else {
-      ToShow[i] = [i, ToShow[i][0] + HarmonicsVOffset, ToShow[i][1] + HarmonicsCOffset];
+      ToShow[i] = [i, ToShow[i][0] + HarmonicsCOffset, ToShow[i][1] + HarmonicsVOffset];
     }
   }
   var Options = { 
     strokeWidth: 1,
     labelsDiv: "HarmonicsLegend",  
-    labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)', 'Current (R)', 'Current (S)', 'Current (T)'] : ['Time', 'Voltage', 'Current'],
-    colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#534fd9', '#4fd953', '#428bca', '#42ca81', '#ca428b'] : ['#d9534f', '#428bca'],
+    labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'Current (R)', 'Current (S)', 'Current (T)', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)'] : ['Time', 'Current', 'Voltage'],
+    colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#428bca', '#42ca81', '#ca428b', '#d9534f', '#534fd9', '#4fd953'] : ['#428bca', '#d9534f'],
     visibility: Visibility,  
     plotter: multiColumnBarPlotter,
-    dateWindow: [-0.5, (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 49.5 : 48.5],
+    dateWindow: [-0.5, (localStorage.getItem('CurrentDetailFirstHarmonic') === 'true') ? 49.5 : 48.5],
     gridLineColor: "#999",
     gridLinePattern: [4, 4],
     interactionModel: { },
-    series: (Nodes['Devices'][Node]['Type'] === '3Phase') ? { 'Current (R)': { axis: 'y2' }, 'Current (S)': { axis: 'y2' }, 'Current (T)': { axis: 'y2'  } } : { 'Current': { axis: 'y2' } },
+    series: (Nodes['Devices'][Node]['Type'] === '3Phase') ? { 'Voltage (R)': { axis: 'y2' }, 'Voltage (S)': { axis: 'y2' }, 'Voltage (T)': { axis: 'y2'  } } : { 'Voltage': { axis: 'y2' } },
     axes: { 
       y: { pixelsPerLabel: 15,
            axisLabelWidth: 20,
-           valueRange: [VoltageRange[0] + HarmonicsVOffset, VoltageRange[1] + HarmonicsVOffset], 
+           valueRange: [CurrentRange[0] + HarmonicsCOffset, CurrentRange[1] + HarmonicsCOffset],
            ticker: function(min, max, pixels, opts, dygraph, vals) {
              var ticks = [];
-             for(var i = Math.floor(min - HarmonicsVOffset); i < Math.ceil(max - HarmonicsVOffset); i++) {
-               if((i % 10) == 0) ticks.push({ v: i + HarmonicsVOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
+             for(var i = Math.floor(min - HarmonicsCOffset); i < Math.ceil(max - HarmonicsCOffset); i++) {
+               if((i % 10) == 0) ticks.push({ v: i + HarmonicsCOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
              }
              return ticks;
            },
            valueFormatter: function (x, a, b, c, row, col) {
-             var Row = ((localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 0 : 1) + row;
-             return Round2(x - HarmonicsVOffset) + '&nbsp;<em class="small">dB</em>&nbsp;(' + (Round2(HarmonicsDataset[Row][col - 1])) + '<em class="small">&nbsp;V</em>)';
+             var Row = ((localStorage.getItem('CurrentDetailFirstHarmonic') === 'true') ? 0 : 1) + row;
+             return Round2(x - HarmonicsCOffset) + '&nbsp;<em class="small">dB</em>&nbsp;(' + (Round2(HarmonicsDataset[Row][col - 1])) + '<em class="small">&nbsp;A</em>)';
            }
          },
       y2: { pixelsPerLabel: 15,
-            axisLabelWidth: ShowCurrent ? 15 : 0,
-            valueRange: [CurrentRange[0] + HarmonicsCOffset, CurrentRange[1] + HarmonicsCOffset],
+            axisLabelWidth: ShowVoltage ? 15 : 0,
+            valueRange: [VoltageRange[0] + HarmonicsVOffset, VoltageRange[1] + HarmonicsVOffset], 
             valueFormatter: function (x, a, b, c, row, col) {
-              var Row = ((localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 0 : 1) + row;
-              return Round2(x - HarmonicsCOffset) + '&nbsp;<em class="small">dB</em>&nbsp;(' + (Round2(HarmonicsDataset[Row][col - 1])) + '<em class="small">&nbsp;A</em>)';
+              var Row = ((localStorage.getItem('CurrentDetailFirstHarmonic') === 'true') ? 0 : 1) + row;
+              return Round2(x - HarmonicsVOffset) + '&nbsp;<em class="small">dB</em>&nbsp;(' + (Round2(HarmonicsDataset[Row][col - 1])) + '<em class="small">&nbsp;V</em>)';
             },
             ticker: function(min, max, pixels, opts, dygraph, vals) {
               var ticks = [];
-              for(var i = Math.floor(min - HarmonicsCOffset); i < Math.ceil(max - HarmonicsCOffset); i++) {
-                if((i % 10) == 0) ticks.push({ v: i + HarmonicsCOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
+              for(var i = Math.floor(min - HarmonicsVOffset); i < Math.ceil(max - HarmonicsVOffset); i++) {
+                if((i % 10) == 0) ticks.push({ v: i + HarmonicsVOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
               }
               return ticks;
             }
           },
       x: { drawGrid: false, 
            axisLabelFormatter: function (x) {
-             if(localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') return '<div style="font-size: 10px; margin-top: -2px">' + HarmonicsNames[x] + '</div>';
+             if(localStorage.getItem('CurrentDetailFirstHarmonic') === 'true') return '<div style="font-size: 10px; margin-top: -2px">' + HarmonicsNames[x] + '</div>';
              return '<div style="font-size: 10px; margin-top: -2px">' + HarmonicsNames[x + 1] + '</div>';
            },
            valueFormatter: function (y) {
@@ -1283,6 +1283,7 @@ function UpdatePage() {
     localStorage.setItem('ShowT', (ShowT === true));
     localStorage.setItem('ShowN', (ShowN === true));
   }
+  DetailsButtonClick();
   AjaxGetCurrent();
   AjaxGetCurrentCounters();
   AjaxGetDetails();

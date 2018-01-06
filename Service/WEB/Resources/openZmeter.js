@@ -308,6 +308,11 @@ function GetYearTimestamp() {
   return new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0).getTime();
 }
 
+function GetEndYearTimestamp() {
+  var now = new Date();
+  return new Date(now.getFullYear() + 1, 0, 1, 0, 0, 0, 0).getTime();
+}
+
 /* Calcula rango para las graficas, la entrada es un array y un array de columnas a comprobar */
 function CalcRanges(input, cols, fromzero = false, onlypositive = false, sum = false) {
   var UpperRange = -Infinity;

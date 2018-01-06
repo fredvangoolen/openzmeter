@@ -28,10 +28,8 @@ function AjaxGetEnergy() {
 //             if(parseInt(localStorage.getItem('GraphEnd')) === 0) CurrentTimer = setTimeout(AjaxGetCurrent, 3000);
            }
   }); 
-  
-  
 }
-function AjaxEnergy() {
+function AjaxEnergy(result) {
   var scatterTip = d3.tip()
         .attr('class', 'd3-tip')
         //.offset([-10, 0])
@@ -43,11 +41,11 @@ function AjaxEnergy() {
 
 
 var data = [];// [{duration: 1323133, rms: 3, id_event: 9, type: 0, time: 1434711599000}, {duration: 5234432, rms: 453, id_event: 10, type: 1, time: 1434721599000}, {duration: 2344, rms: 200, id_event: 15, type: 1, time: 1434731599000}, {duration: 10, rms: 80, id_event: 15, type: 2, time: 1434751599000}];
-for (var i in energy) {
-    var val = roundTo(energy[i].value / 1000, 2);
+for(i = 0; i < result['Sampletime'].length; i++) {
+    var val = result['active_energy'][i][0] / 1000;
     data.push({
         value: isNaN(val) ? 0 : val,
-        time: new Date(+energy[i].time)
+        time: new Date(result['Sampletime'][i])
     });
 }
 
@@ -190,7 +188,7 @@ dayOfMonthChart.width($('#monthday_chart').parent().width())
 var weekChart = dc.rowChart('#week_chart');
 var week = ndx.dimension(function (d) {
     var date = new Date(d.time);
-    return date.getWeek();
+    return 0;//date.getWeek();
 });
 
 var weekGroup = week.group().reduceSum(function (d) {
@@ -268,9 +266,9 @@ function filterByDate(val) {
 }
 
 function resetCharts() {
-    dc.filterAll();
-    dc.renderAll();
-    filterByDate($(':input[name="date_chart_range"]:checked').val());
+  dc.filterAll();
+  dc.renderAll();
+  filterByDate($(':input[name="date_chart_range"]:checked').val());
 }
 
 

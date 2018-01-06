@@ -109,12 +109,14 @@ function SetYearEvents(result) {
   GetWeekInfo(result['Year'], 0);
 }
 function GetYearInfo(reqyear) {
-  $.ajax({ url: "events/getYearEvents",
+  var End = GetEndYearTimestamp();
+  var Start = GetYearTimestamp();
+  $.ajax({ url: "getEvents",
            timeout: 20000,
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Year: reqyear }),
+           data: JSON.stringify({ Node : Node, To: End, Period: End - Start }),
            success: SetYearEvents
          });
 }
@@ -129,3 +131,4 @@ $('#LoadAll').click(function() {
   LoadWeek = 60;
   GetWeekInfo(LastYear, LastWeek);
 });
+}
