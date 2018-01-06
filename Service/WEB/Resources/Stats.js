@@ -117,7 +117,7 @@ dateChart
         .alwaysUseRounding(true)
         .brushOn(false)
         .title(function (d) {
-            return roundTo(d.value, 2).toFixed(2) + ' kWh';
+            return Round2(d.value) + ' kWh';
         })
         .zoomScale([1, 14]);
 
@@ -150,7 +150,7 @@ dayOfWeekChart.width($('#weekday_chart').parent().width())
         .label(function (d) {
             return d.key.split('.')[1];
         }).title(function (d) {
-    return roundTo(d.value, 2).toFixed(2) + ' kWh';
+    return Round2(d.value) + ' kWh';
 })
         .elasticX(true)
         .xAxis().ticks(4);
@@ -176,7 +176,7 @@ dayOfMonthChart.width($('#monthday_chart').parent().width())
         .group(dayOfMonthGroup)
         .dimension(dayOfMonth)
         .title(function (d) {
-            return roundTo(d.value, 2).toFixed(2) + ' kWh';
+            return Round2(d.value) + ' kWh';
         })
         .elasticX(true)
         .xAxis().ticks(4);
@@ -201,7 +201,7 @@ weekChart.width($('#week_chart').parent().width())
         .margins({top: 20, left: 10, right: 10, bottom: 20})
         .group(weekGroup)
         .dimension(week).title(function (d) {
-    return roundTo(d.value, 2).toFixed(2) + ' kWh';
+    return Round2(d.value) + ' kWh';
 })
         .elasticX(true)
         .xAxis().ticks(4);
@@ -257,12 +257,12 @@ function filterByDate(val) {
             break;
     }
 
-    brush = dateSelectorChart.brush().extent([start, end]);
+//    brush = dateSelectorChart.brush().extent([start, end]);
 
-    gBrush = dateSelectorChart.svg().select('.brush')
-            .call(brush);
+//    gBrush = dateSelectorChart.svg().select('.brush')
+//            .call(brush);
 
-    gBrush.call(brush.event);
+//    gBrush.call(brush.event);
 }
 
 function resetCharts() {

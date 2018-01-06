@@ -453,23 +453,30 @@ function AjaxGetDetails() {
   if(WaveformChart === null) ShowSpinner(DetailSpinner, 'DetailSpinner');
   $('#btnPauseDetail').addClass('disabled');
   $.ajax({ url: "getSeriesNow",
-           timeout: 20000,
+           timeout: 60000,
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i', Node: Node}),
+           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_v, phi, rms_v, rms_i', Node: Node}),
            success: function(result) {
              if(WaveformChart === null) StopSpinner(DetailSpinner, 'DetailSpinner');
              UpdateWaveformChart(result);
              UpdateHarmonicsChart(result);
              UpdateFFTChart(result);
              UpdatePhasorChart(result);
+             $('#PowerFactorNow').html(Array_Round2(result['power_factor'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
+             for(i = 0; i < result['thd_v'].length; i++) result['thd_v'][i] = result['thd_v'][i] * 100;
+             $('#THDNow').html(Array_Round2(result['thd_v'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
+             $('#PHINow').html(Array_Round2(result['phi'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"], " (IND)", " (CAP)"));
            },
            error: function() {
              $('#WaveformTime').text('Node Offline');
              $('#HarmonicsTime').text('Node Offline');
              $('#FFTTime').text('Node Offline');
              $('#PhasorTime').text('Node Offline');
+             $('#PowerFactorNow').text('Offline');
+             $('#THDNow').text('Offline');
+             $('#PHINow').text('Offline');
            },
            complete: function (x) {
              $('#btnPauseDetail').removeClass('disabled');
@@ -1031,6 +1038,7 @@ function UpdateFFTChart(result) {
 /* Grafico de fasores */
 var PhasorChart = null;
 function UpdatePhasorChart(result) {
+   $('#PhasorTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
     var Vectors = [[0, 0.0, 235.0], [0, 2.0, 23.5], [0, 120.0, 237.0], [0, 122.0, 23.5], [0, 240.0, 228.0], [0, 242.0, 23.5]];
     var MaxCurrent = 25.5;
     var MaxVoltage = 260;
@@ -1089,29 +1097,6 @@ function UpdatePhasorChart(result) {
       );
   }
 
-}
-
-/* Cuadros de parametros */
-function AjaxGetParameters() {
-  $.ajax({ url: "getSeriesNow",
-    timeout: 20000,
-    type: "POST",
-    dataType: "json",
-    contentType: 'application/json',
-    data: JSON.stringify({ Series: "power_factor, thd_v, phi", Node: Node }),
-    success: function(result) {
-      $('#PowerFactorNow').html(Array_Round2(result['power_factor'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
-      for(i = 0; i < result['thd_v'].length; i++) result['thd_v'][i] = result['thd_v'][i] * 100;
-      $('#THDNow').html(Array_Round2(result['thd_v'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
-      $('#PHINow').html(Array_Round2(result['phi'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"], " (IND)", " (CAP)"));
-    },
-    error: function() {
-      $('#PowerFactorNow').text('Offline');
-    },
-    complete: function (x) {
-      setTimeout(AjaxGetParameters, 1000);
-    }
-  });
 }
 
 /* Evolucion de parametros*/
@@ -1637,6 +1622,5 @@ function UpdatePage() {
   AjaxGetVoltage();
   AjaxGetVoltageCounters();
   AjaxGetDetails();
-  AjaxGetParameters();
   AjaxGetEvolution();
 }
