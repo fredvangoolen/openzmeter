@@ -659,7 +659,7 @@ function DetailsButtonClick(event) {
       break;
     case 'Phasors' :
       $('#PhasorPanel').removeClass('hidden');
-      if(PhasorChart !== null) $(PhasorChart.graphDiv).parent().attr('style', 'width: 504px; height: 494px');
+      if(PhasorChart !== null) $(PhasorChart.graphDiv).parent().attr('style', 'width: 404px; height: 394px');
       break;
     case 'Parameters' :
       $('#ParametersPanel').removeClass('hidden');
