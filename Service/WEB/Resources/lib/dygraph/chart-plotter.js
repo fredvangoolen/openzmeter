@@ -55,8 +55,16 @@ function polarLinePlotter(e) {
   ctx.fill();
   ctx.setLineDash([]);
   for(i = 0; i < e.points.length; i++) {
-    var X = e.dygraph.toDomXCoord(100.0 * e.allSeriesPoints[1][i].yval * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0));
-    var Y = e.dygraph.toDomYCoord(100.0 * e.allSeriesPoints[1][i].yval * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0));
+    var X = e.dygraph.toDomXCoord((100.0 * e.allSeriesPoints[1][i].yval - 5) * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0));
+    var Y = e.dygraph.toDomYCoord((100.0 * e.allSeriesPoints[1][i].yval - 5) * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0));
+    if(i % 2) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.beginPath();
+      ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
+      ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(100) - e.dygraph.toDomXCoord(0), e.dygraph.file_[i - 1][1] * Math.PI / -180.0, e.dygraph.file_[i][1] * Math.PI / -180.0, true);
+      ctx.lineTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
+      ctx.fill();
+    }
     e.points[i].canvasx = X;
     e.points[i].canvasy = Y;
     ctx.strokeStyle = e.dygraph.getColors()[i % 2];
@@ -66,9 +74,15 @@ function polarLinePlotter(e) {
     ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
     ctx.lineTo(X, Y);
     ctx.stroke();
+    ctx.save();
     ctx.beginPath();
-    ctx.arc(X, Y, 3, 0, 2 * Math.PI, false);
+    ctx.translate(X, Y);
+    ctx.rotate(e.dygraph.file_[i][1] * Math.PI / -180.0);
+    ctx.moveTo(-5, 4);
+    ctx.lineTo(10, 0);
+    ctx.lineTo(-5, -4);
     ctx.fill();
+    ctx.restore();
   }
 }
 
