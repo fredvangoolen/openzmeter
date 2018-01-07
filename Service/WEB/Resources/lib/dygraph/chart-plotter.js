@@ -55,8 +55,8 @@ function polarLinePlotter(e) {
   ctx.fill();
   ctx.setLineDash([]);
   for(i = 0; i < e.points.length; i++) {
-    var X = e.dygraph.toDomXCoord(100.0 * e.allSeriesPoints[1][i].yval * Math.cos(e.allSeriesPoints[0][i].yval * Math.PI / 180.0));
-    var Y = e.dygraph.toDomYCoord(100.0 * e.allSeriesPoints[1][i].yval * Math.sin(e.allSeriesPoints[0][i].yval * Math.PI / 180.0));
+    var X = e.dygraph.toDomXCoord(100.0 * e.allSeriesPoints[1][i].yval * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0));
+    var Y = e.dygraph.toDomYCoord(100.0 * e.allSeriesPoints[1][i].yval * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0));
     e.points[i].canvasx = X;
     e.points[i].canvasy = Y;
     ctx.strokeStyle = e.dygraph.getColors()[i % 2];
