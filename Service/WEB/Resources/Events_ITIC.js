@@ -26,7 +26,7 @@ var ByDurationGraph = null;
 var Durations = [[0, '<20ms'], [20, '<50mS'], [50, '<100mS'], [100, '<200mS'], [200, '<500mS'], [500, '<1S'], [1000, '<2S'], [2000, '<5S'], [5000, '<10S' ], [10000, '<20S' ], [20000, '<50S'], [50000, '<100S'], [Infinity, 'Others']];
 var RMSs      = [-100, -80, -50, -20, -15, -10, -5, 0, 5, 10, 15, 20, 50, 100];
 var Dates     = [];
-var Types     = ['RVC', 'DIP', 'SWELL', 'INT'];
+var Types     = ['RVC', 'DIP', 'SWELL', 'INTERRUPTION'];
 function GenerateMonths(min, max) {
   var Start = new Date(min), End = new Date(max);
   Start = new Date(Start.getFullYear(), Start.getMonth(), 1);

@@ -72,7 +72,10 @@ function GetWeekInfo(reqyear, reqweek) {
          });
 }
 function SetYearEvents(result) {
-  $('#YearLabel').text('Year ' + result['Year']);
+  $('#labelYear').text('Year ' + new Date(result['From']).getFullYear());
+  
+  
+  
   var Day = result['Day'];
   var YearProgress = Day * 100 / result['Days'];
   var Dip = result['Dip'];
@@ -109,8 +112,10 @@ function SetYearEvents(result) {
   GetWeekInfo(result['Year'], 0);
 }
 function GetYearInfo(reqyear) {
-  var End = GetEndYearTimestamp();
-  var Start = GetYearTimestamp();
+  if(reqyear === 0) {
+    var End = GetEndYearTimestamp() - 365 * 24 * 3600 * 1000;
+    var Start = GetYearTimestamp() - 365 * 24 * 3600 * 1000;
+  }
   $.ajax({ url: "getEvents",
            timeout: 20000,
            type: "POST",
@@ -121,14 +126,13 @@ function GetYearInfo(reqyear) {
          });
 }
 function UpdatePage() {
-
-$(document).ready(GetYearInfo(0));
-$('#LoadNext').click(function() {
-  LoadWeek = 5;
-  GetWeekInfo(LastYear, LastWeek);
-});
-$('#LoadAll').click(function() {
-  LoadWeek = 60;
-  GetWeekInfo(LastYear, LastWeek);
-});
+  GetYearInfo(0);
+//$('#LoadNext').click(function() {
+//  LoadWeek = 5;
+//  GetWeekInfo(LastYear, LastWeek);
+//});
+//$('#LoadAll').click(function() {
+//  LoadWeek = 60;
+//  GetWeekInfo(LastYear, LastWeek);
+//});
 }

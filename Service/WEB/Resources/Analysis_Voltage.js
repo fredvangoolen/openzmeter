@@ -1004,7 +1004,7 @@ function UpdateFFTChart(result) {
             ticker: function(min, max, pixels, opts, dygraph, vals) {
               var ticks = [];
               for(var i = Math.floor(min - FFTCOffset); i < Math.ceil(max - FFTCOffset); i++) {
-                if((i % 10) == 0) ticks.push({ v: i + HarmonicsCOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
+                if((i % 10) == 0) ticks.push({ v: i + FFTCOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
               }
               return ticks;
             }
@@ -1012,7 +1012,7 @@ function UpdateFFTChart(result) {
       x: { drawGrid: true,
            axisLabelFormatter: function (y) {
              y = (y / 10 * Nodes['NominalFreq']);
-             if(y > 1000) {
+             if(y >= 1000) {
                y = y / 1000;
                if((y % 1) != 0) return "";
                return y + '<em class="small"> kHz</em>';
@@ -1037,6 +1037,7 @@ function UpdateFFTChart(result) {
 
 /* Grafico de fasores */
 var PhasorChart = null;
+var PhasorTable = null;
 function UpdatePhasorChart(result) {
   var date = new Date(result['Sampletime']);
   $('#PhasorTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
@@ -1053,55 +1054,71 @@ function UpdatePhasorChart(result) {
     Vectors[i][2] = Vectors[i][2] / MaxVoltage;
     Vectors[i + 1][2] = Vectors[i + 1][2] / MaxCurrent;
   }
-  if(PhasorChart === null) {
-    PhasorChart = new Dygraph(document.getElementById("PhasorChart"),
-      Vectors,
-      { strokeWidth: 0.5,
-        labels: ['Index', 'Phase', 'Magnitude'],
-        colors: ['#d9534f', '#428bca'],
-        gridLineColor: "#999",
-        gridLinePattern: [4, 4],
-        highlightCircleSize: 0,
-        interactionModel: { },
-        legend: 'never',
-        valueRange: [-110, 110],
-        dateWindow: [-110, 110],
-        plugins: [ new Dygraph.Plugins.PolarCrosshair( { } ) ],
-        plotter: polarLinePlotter,
-        xAxisHeight: 0.1,
-        xLabelHeight: 0.1,
-        axes: {
-          y: { drawAxis: true,
-               drawGrid:false,
-               axisLabelWidth: 0,
-               axisLineColor: "#FFF",
-               ticker: function(min, max, pixels, opts, dygraph, vals) {
-                 var ticks = [];
-                 var Width = document.getElementById("PhasorChart").clientWidth / 2 - 1;
-                 for(var i = 1; i <= 4; i++) {
-                   ticks.push({ v: i * 25, label: '<div style="font-size: 11px; background: rgba(255, 255, 255, 0.8); margin-left: ' + Width + 'px; text-align: left; width: 44px; line-height: 12px">' + Round2(i / 4 * MaxVoltage) + '<em>V</em></div>' });
-                 }
-                 return ticks;
-               },            
-             },
-          x: { drawAxis: true,
-               drawGrid:false,
-               axisLabelWidth: 0,
-               axisLineColor: "#FFF",
-               ticker: function(min, max, pixels, opts, dygraph, vals) {
-                 var ticks = [];
-                 var Height = document.getElementById("PhasorChart").clientHeight / 2 + 2;
-                 for(var i = 1; i <= 4; i++) {
-                   ticks.push({ v: -i * 25, label: '<div style="font-size: 11px; background: rgba(255, 255, 255, 0.8); margin-left: -20px; margin-top: ' + -Height + 'px; text-align: center; width: 40px; line-height: 12px">' + Round2(i / 4 * MaxCurrent) + '<em>A</em></div>' });
-                 }
-                 return ticks;
-               }
+  var Options = { 
+    strokeWidth: 0.5,
+    labels: ['Index', 'Phase', 'Magnitude'],
+    colors: ['#d9534f', '#428bca'],
+    gridLineColor: "#999",
+    gridLinePattern: [4, 4],
+    highlightCircleSize: 0,
+    interactionModel: { },
+    legend: 'never',
+    valueRange: [-102, 102],
+    dateWindow: [-102, 102],
+    plugins: [ new Dygraph.Plugins.PolarCrosshair( { } ) ],
+    plotter: polarLinePlotter,
+    xAxisHeight: 0.1,
+    xLabelHeight: 0.1,
+    axes: {
+      y: { drawAxis: true,
+           drawGrid:false,
+           axisLabelWidth: 0,
+           axisLineColor: "#FFF",
+           ticker: function(min, max, pixels, opts, dygraph, vals) {
+             var ticks = [];
+             var Width = document.getElementById("PhasorChart").clientWidth / 2 - 1;
+             for(var i = 1; i <= 4; i++) {
+               ticks.push({ v: i * 25, label: '<div style="font-size: 11px; background: rgba(255, 255, 255, 0.8); margin-left: ' + Width + 'px; text-align: left; width: 44px; line-height: 12px">' + Round2(i / 4 * MaxVoltage) + '<em>V</em></div>' });
              }
-          }
-        }
-      );
+             return ticks;
+           },            
+         },
+      x: { drawAxis: true,
+           drawGrid:false,
+           axisLabelWidth: 0,
+           axisLineColor: "#FFF",
+           ticker: function(min, max, pixels, opts, dygraph, vals) {
+             var ticks = [];
+             var Height = document.getElementById("PhasorChart").clientHeight / 2 + 2;
+             for(var i = 1; i <= 4; i++) {
+               ticks.push({ v: -i * 25, label: '<div style="font-size: 11px; background: rgba(255, 255, 255, 0.8); margin-left: -20px; margin-top: ' + -Height + 'px; text-align: center; width: 40px; line-height: 12px">' + Round2(i / 4 * MaxCurrent) + '<em>A</em></div>' });
+             }
+             return ticks;
+           }
+         }
+      }
+    };
+  if(PhasorChart === null) {
+    PhasorChart = new Dygraph(document.getElementById("PhasorChart"), Vectors, Options);
   } else {
-    PhasorChart.updateOptions({ file: Vectors });
+    PhasorChart.updateOptions({ file: Vectors }, true);
+    PhasorChart.updateOptions(Options);
+  }
+  if(PhasorTable === null) {
+    PhasorTable = $('#PhasorsTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
+                                                 columnDefs: [ { targets: [0, 1, 2, 3], searchable: false } ],                            
+    });
+  }
+  PhasorTable.clear();
+  for(i = 0; i < result['rms_v'].length; i++) {
+    var PhaseName = "L";
+    if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+      if(i === 0) PhaseName = "R";
+      if(i === 1) PhaseName = "S";
+      if(i === 2) PhaseName = "T";
+    }
+    PhasorTable.row.add( [PhaseName, "Voltage", Round2(i * 120) + 'º', Round2(result['rms_v'][i]) + '<em> V</em>'] ).draw(false);
+    PhasorTable.row.add( [PhaseName, "Current", Round2(i * 120 + result['phi'][i]) + 'º', Round2(result['rms_i'][i]) + '<em> A</em>'] ).draw();
   }
 }
 
