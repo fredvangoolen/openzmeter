@@ -27,7 +27,14 @@
 	};
 }(jQuery));
 var Calendar = null;
+var WeekTable = null;
+var MonthTable = null;
+var DayArray   = [];
+var WeekArray  = [];
+var MonthArray = [];
+var Spinner = new Spinner(SpinnerOpts);
 function GetDataRanges() {
+  ShowSpinner(Spinner, 'StatsSpinner');
   $.ajax({ url: "getSamplesRange",
            timeout: 20000,
            type: "POST",
@@ -35,79 +42,100 @@ function GetDataRanges() {
            contentType: 'application/json',
            data: JSON.stringify({ Aggreg: '1h', Node: Node}),
            success: function(result) {
-             var From = new Date(result['From']);
-             From = new Date(From.getFullYear(), From.getMonth(), From.getDate(), 0, 0, 0, 0);
-             Calendar = $('#Calendar').calendar( { minDate: From, maxDate: new Date(result['To']), language: "custom",
-               yearChanged: function(e) {
-                 e.preventRendering = true;
-                 var To = new Date(e.currentYear, 11, 31, 23, 59, 59, 999).getTime();
-                 var From = new Date(e.currentYear, 0, 1, 0, 0, 0, 0).getTime();
-                 $.ajax({ url: "getSeries",
-                   timeout: 20000,
-                   type: "POST",
-                   dataType: "json",
-                   contentType: 'application/json',
-                   data: JSON.stringify({ Period: To - From, To: To, Aggreg: '1h', LastSample: 0, Series: 'active_energy', Node: Node}),
-                   success: AjaxEnergy
-                 }); 
-//                 $(e.target).append('<div style="text-align:center"><img src="your-loading-image.gif" /></div>');
-               }
-             });
-             
-           },
-           complete: function (x) {
-//             $('#btnCurrentNow').removeClass('disabled');
-//             if(parseInt(localStorage.getItem('GraphEnd')) === 0) CurrentTimer = setTimeout(AjaxGetCurrent, 3000);
+             //Relleno los años que tengo y selecciono el ultimo
+             AjaxGetEnergy(2018);
            }
   }); 
-  
-  
 }
-function AjaxEnergy(result) {
-  var DayArray = [];
-  for(i = 0; i < result['Sampletime'].length; i++) {
-    var Idx = new Date(result['Sampletime'][i]);
-    Idx = Idx.getFullYear() + '-' + (Idx.getMonth() + 1) + '-' + Idx.getDate();
-    if(!DayArray[Idx]) {
-      DayArray[Idx] = result['active_energy'][i];
-    } else {
-      for(n = 0; n < result['active_energy'][i].length; n++) DayArray[Idx][n] = DayArray[Idx][n] + result['active_energy'][i][n];
-    }
-  }
+function AjaxGetEnergy(selected_year) {
+  ShowSpinner(Spinner, 'StatsSpinner');
+  var To = new Date(Date.UTC(selected_year, 11, 31, 23, 59, 59, 999)).getTime();
+  var From = new Date(Date.UTC(selected_year, 0, 1, 0, 0, 0, 0)).getTime();
+  $.ajax({ url: "getSeries",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Period: To - From, To: To, Aggreg: '1h', LastSample: 0, Series: 'active_energy', Node: Node}),
+           success: function(result) {
+             DayArray   = [];
+             WeekArray  = [];
+             MonthArray = [];
+             for(i = 0; i < result['Sampletime'].length; i++) {
+               var Day = GetDayOfYear(result['Sampletime'][i]);
+               var Week = GetWeekOfYear(result['Sampletime'][i]);
+               var Month = new Date(result['Sampletime'][i]).getMonth();
+               if(!DayArray[Day]) DayArray[Day] = [0, 0, 0];
+               if(!WeekArray[Week]) WeekArray[Week] = [0, 0, 0];
+               if(!MonthArray[Week]) MonthArray[Month] = [0, 0, 0];
+               for(n = 0; n < result['active_energy'][i].length; n++) {
+                 DayArray[Day][n] = DayArray[Day][n] + result['active_energy'][i][n];
+                 WeekArray[Week][n] = WeekArray[Week][n] + result['active_energy'][i][n];
+                 MonthArray[Month][n] = MonthArray[Month][n] + result['active_energy'][i][n];
+               }
+             }
+             AjaxEnergy(selected_year);
+           }
+  }); 
+}
+function AjaxEnergy(selected_year) {
+  if(Calendar === null) Calendar = $('#Calendar').calendar({ language: "custom" });
   var Max = -Infinity;
   var Min =  Infinity;
   for(i in DayArray) {
     Max = Math.max(Max, DayArray[i][0]);
     Min = Math.min(Min, DayArray[i][0]);
   }
+  Calendar.setYear(selected_year);
   Calendar.setCustomDayRenderer(function(element, date) {
-      var Idx = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
-      if(DayArray[Idx] === undefined) {
-        $(element.parentElement).addClass('disabled');
-      } else {
-        var Energy = DayArray[Idx][0];
-        var Color = 'rgba(255, 0, 0,' +  Energy / Max + ')';
-        $(element).css('background-color', Color);
-        $(element).css('border', '1px solid #fff');
-        var Units = 'Wh';
-        if(Energy > 1000) {
-          Units = 'kWh';
-          Energy = Energy / 1000;
-        }
-        $(element).on("mouseover", null, function ($e) {
-          $(this).qtip({
-            overwrite: false,
-              content: {
-                text: "<div>" + Round2(Energy) + Units + "</div>"
-              },
-              style: {
-                classes: 'qtip-bootstrap'
-              }
-          });
-        });
+    var Day = GetDayOfYear(date.getTime());
+    if(DayArray[Day] === undefined) {
+      $(element.parentElement).addClass('disabled');
+    } else {
+      var Energy = DayArray[Day][0];
+      var Color = 'rgba(255, 0, 0,' +  Energy / Max + ')';
+      $(element).css('background-color', Color);
+      $(element).css('border', '1px solid #fff');
+      var Units = 'Wh';
+      if(Energy > 1000) {
+        Units = 'kWh';
+        Energy = Energy / 1000;
       }
-  
+      $(element).on("mouseover", null, function ($e) {
+        $(this).qtip({
+          overwrite: false,
+            content: {
+              text: "<div>" + Round2(Energy) + Units + "</div>"
+            },
+            style: {
+              classes: 'qtip-bootstrap'
+            }
+        });
+      });
+    }
   });
+  if(WeekTable === null) {
+    WeekTable = $('#WeekTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
+                                            columnDefs: [ { targets: [5], orderable: false }, { targets: [0, 1, 2, 3, 4], searchable: true } ],
+                                            order: [0, 'desc']
+    });
+  }
+  WeekTable.clear();
+  for(i in WeekArray) {
+//    var Time = new Date(result['Starttime'][i]);
+    WeekTable.row.add( [i, '?', '?', Round2(WeekArray[i][0]), Round2(WeekArray[i][0]), Round2(WeekArray[i][0])
+//                          result['Type'][i], 
+//                          Round2(result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq']) + ' <em>Sec</em>', 
+//                          Round2(result['Voltage'][i]) + ' <em>V</em>', 
+//                          Round2(result['Percentage'][i]) + ' <em>%</em>', 
+//                          '<button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button>'
+                          ] ).draw();
+  }
+  
+  
+  
+  
+  StopSpinner(Spinner, 'StatsSpinner');
   return;
   
   

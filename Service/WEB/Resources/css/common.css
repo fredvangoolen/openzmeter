@@ -830,6 +830,9 @@ text.area_text {
   overflow: hidden;
 }
 
+.calendar-header {
+  display: none;
+}
 .calendar .month-container {
   height: 210px;
 }

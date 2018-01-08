@@ -404,7 +404,7 @@ function CreateVoltageRangeSelector(result) {
       },
       axes: {
         x: { 
-          drawAxis: false,
+          drawAxis: false
         },
         y: { 
           drawAxis: false
@@ -423,7 +423,7 @@ function GetEvents() {
            contentType: 'application/json',
            data: JSON.stringify({ Period: 31536000000, To: 0, LastEvent: 0, Node: 0 }),
            success: function(result) {
-             if(result['Starttime'] != null) {
+             if(result['Starttime'] !== null) {
                for(i = 0; i < result['Starttime'].length; i++) EventsData.push([result['Starttime'][i], result['Duration'][i] / 15.6250, result['Type'][i], result['Voltage'][i], result['Percentage'][i]]);
              }
              GetVoltageData();
@@ -437,7 +437,7 @@ function GetVoltageData() {
            dataType: "json",
            contentType: 'application/json',
            data: JSON.stringify({ Period: 31536000000, To: 0, Aggreg: "1h", LastSample: 0, Series: 'rms_v', Node: Node }),
-           success: CreateVoltageRangeSelector,
+           success: CreateVoltageRangeSelector
          });
 }
 

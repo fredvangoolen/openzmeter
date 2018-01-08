@@ -51,10 +51,31 @@
                 </div>
                 <span class="clearfix"> </span>
               </div>
-              <div id="Calendar"></div>
-              
-
-   
+              <div id="DayPanel">
+                <div id="Calendar"></div>
+              </div>
+              <div id="WeekPanel" style="padding: 5px">
+                <table id="WeekTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
+                  <thead>
+                    <tr>
+                      <th>Week</th><th>From</th><th>To</th><th>Weekdays</th><th>Weekend</th><th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+              <div id="MonthPanel" style="padding: 5px">
+                <table id="MonthTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
+                  <thead>
+                    <tr>
+                      <th>Month</th><th>From</th><th>To</th><th>Weekdays</th><th>Weekend</th><th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -140,6 +161,9 @@
     <script src="lib/d3-tip/d3-tip.min.js"></script>
     <script src="lib/offline/offline.min.js"></script>
     <script src="lib/bootstrap-year-calendar/bootstrap-year-calendar.min.js"></script>
+    <script src="lib/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="lib/datatables/js/dataTables.responsive.min.js"></script>
+    <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
     <script src="openZmeter.js"></script>
     <script src="lib/momentjs/moment.js"></script>
     <script src="lib/momentjs/moment-duration-format.js"></script>

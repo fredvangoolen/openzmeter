@@ -324,6 +324,25 @@ function GetAggregText(short) {
   }  
 }
 
+/* Obtiene el numero de dia dentro del año de un timestamp */
+function GetDayOfYear(timestamp) {
+  var now = new Date(timestamp);
+  var start = new Date(now.getFullYear(), 0, 0);
+  var diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+  var oneDay = 1000 * 60 * 60 * 24;
+  var day = Math.floor(diff / oneDay);
+  return day;
+}
+
+/* Obtiene el numero de semana dentro del año de un timestamp */
+function GetWeekOfYear(timestamp) {
+  var date = new Date(timestamp);
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+  var week1 = new Date(date.getFullYear(), 0, 4);
+  return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+}
+
 /* Obtiene el timestamp del inicio del dia actual */
 function GetDayTimestamp() {
   var now = new Date();
