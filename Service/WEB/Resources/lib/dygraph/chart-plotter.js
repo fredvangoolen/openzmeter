@@ -61,7 +61,11 @@ function polarLinePlotter(e) {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
       ctx.beginPath();
       ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
-      ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(100) - e.dygraph.toDomXCoord(0), e.dygraph.file_[i - 1][1] * Math.PI / -180.0, e.dygraph.file_[i][1] * Math.PI / -180.0, true);
+      if(e.dygraph.file_[i - 1][1] < e.dygraph.file_[i][1]) {
+        ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(100) - e.dygraph.toDomXCoord(0), e.dygraph.file_[i - 1][1] * Math.PI / -180.0, e.dygraph.file_[i][1] * Math.PI / -180.0, true);
+      } else {
+        ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(100) - e.dygraph.toDomXCoord(0), e.dygraph.file_[i][1] * Math.PI / -180.0, e.dygraph.file_[i - 1][1] * Math.PI / -180.0, true);
+      }
       ctx.lineTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
       ctx.fill();
     }
