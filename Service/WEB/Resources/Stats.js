@@ -88,6 +88,7 @@ function AjaxEnergy(result) {
         var Energy = DayArray[Idx][0];
         var Color = 'rgba(255, 0, 0,' +  Energy / Max + ')';
         $(element).css('background-color', Color);
+        $(element).css('border', '1px solid #fff');
         var Units = 'Wh';
         if(Energy > 1000) {
           Units = 'kWh';

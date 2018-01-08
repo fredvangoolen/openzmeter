@@ -829,3 +829,7 @@ text.area_text {
   z-index: 10;
   overflow: hidden;
 }
+
+.calendar .month-container {
+  height: 210px;
+}
