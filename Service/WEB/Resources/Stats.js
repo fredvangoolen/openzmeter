@@ -15,7 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-function AjaxGetEnergy() {
+;(function($){
+  $.fn.calendar.dates['custom'] = {
+	  days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+		daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+		daysMin: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+		months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+		monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+		weekShort: 'W',
+		weekStart: 1
+	};
+}(jQuery));
+function AjaxGetEnergy(To) {
   $.ajax({ url: "getSeries",
            timeout: 20000,
            type: "POST",
@@ -30,6 +41,47 @@ function AjaxGetEnergy() {
   }); 
 }
 function AjaxEnergy(result) {
+  var DayArray = [];
+  for(i = 0; i < result['Sampletime'].length; i++) {
+    var Day = GetDayOfYear(result['Sampletime'][i]);
+    if(!DayArray[Day]) {
+      DayArray[Day] = result['active_energy'][i];
+    } else {
+      for(n = 0; n < result['active_energy'][i].length; n++) DayArray[Day][n] = DayArray[Day][n] + result['active_energy'][i][n];
+    }
+  }
+  var Max = -Infinity;
+  var Min =  Infinity;
+  for(i = 0; i < DayArray.length; i++) {
+    if(DayArray[i] === undefined) continue;
+    Max = Math.max(Max, DayArray[i][0]);
+    Min = Math.min(Min, DayArray[i][0]);
+  }
+  
+  $('#Calendar').calendar( { minDate: new Date(result['From']), maxDate: new Date(result['To']), language: "custom",
+    customDayRenderer: function(element, date) {
+      
+      var Day = GetDayOfYear(date.getTime());
+      if(DayArray[Day] === undefined) return;
+      var Color = 'rgba(255, 0, 0,' +  DayArray[Day][0] / Max + ')';
+      $(element).css('background-color', Color);
+    }
+  
+  });
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   var scatterTip = d3.tip()
         .attr('class', 'd3-tip')
         //.offset([-10, 0])
@@ -224,7 +276,7 @@ $(':input[name="date_chart_range"]').change(function () {
 
 
 function UpdatePage() {
-  AjaxGetEnergy();
+  AjaxGetEnergy(0);
 }
 function filterByDate(val) {
     var date = new Date();

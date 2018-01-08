@@ -15,15 +15,63 @@
     <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css"/>
     <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
     <link rel="stylesheet" href="lib/offline/offline.css" type="text/css"/>
+    <link rel="stylesheet" href="lib/bootstrap-year-calendar/bootstrap-year-calendar.min.css" type="text/css"/>
     <link rel="stylesheet" href="css/common.css"/>
     <title>openZmeter - Stats</title>
   </head>
   <body>
     <div id="DisableDiv" class="overlay"></div>
     <nav class="navbar navbar-default navbar-fixed-top" id="Header"></nav>
-
     <div id="wrapper">
       <div id="page-wrapper">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="panel panel-yellow">
+              <div id="StatsSpinner" class="spinnerdiv"></div>
+              <div class="panel-heading">
+                <span class="huge">Anual stats</span>
+                <div class="pull-right">
+                  <span class="small">Calc period:</span><br>
+                  <div class="btn-group">                    
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowVoltageMonth" data-toggle="tooltip" title="Zoom the graph to one month, keeping current aggregation level while possible">Month</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowVoltageWeek"  data-toggle="tooltip" title="Zoom the graph to one week, keeping current aggregation level while possible">Week</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowVoltageDay"   data-toggle="tooltip" title="Zoom the graph to one day, keeping current aggregation level while possible">Day</button>
+                  </div>
+                </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="pull-right">
+                  <span class="small">Phase:</span><br>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageTPhase" data-toggle="tooltip" title="Show phase T">ALL</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageRPhase" data-toggle="tooltip" title="Show phase R">R</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageSPhase" data-toggle="tooltip" title="Show phase S">S</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageTPhase" data-toggle="tooltip" title="Show phase T">T</button>
+                  </div>
+                </div>
+                <span class="clearfix"> </span>
+              </div>
+              <div class="row">
+                <div class="col-lg-12">
+                  <div id="Calendar" style="padding: 5px"></div>
+                  <span class="clearfix"> </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
         <div class="row">
           <div class="col-lg-12">
             <span class="h2">Stats</span>
@@ -92,7 +140,10 @@
     <script src="lib/dc.js/dc.min.js"></script>
     <script src="lib/d3-tip/d3-tip.min.js"></script>
     <script src="lib/offline/offline.min.js"></script>
+    <script src="lib/bootstrap-year-calendar/bootstrap-year-calendar.min.js"></script>
     <script src="openZmeter.js"></script>
+    <script src="lib/momentjs/moment.js"></script>
+    <script src="lib/momentjs/moment-duration-format.js"></script>    
     <script src="Stats.js"></script>
     <script>
       StartPageLoad();

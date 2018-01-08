@@ -513,6 +513,8 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
+    
+    
   } else if(strcmp(url, "/getFirstSample") == 0) {
     uint32_t Node = 0;
     uint64_t LastEvent = 0, From = 0, To = 0, Period = 0;

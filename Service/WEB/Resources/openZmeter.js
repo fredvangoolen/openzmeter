@@ -75,6 +75,19 @@ function Array_Round2(values, separator, colors = undefined, cadena1 = "", caden
   return values.join(separator);
 }
 
+/* Busca el mejor divisor y unidades para un valor de entrada, ya sea B, kB, MB o GB */
+function GetBestUnits(value) {
+  if(value > 1024 * 1024 * 1024) {
+    return [1024 * 1024 * 1024, 'GB'];
+  } else if(value > 1024 * 1024) {
+    return [1024 * 1024, 'MB'];
+  } else if(value > 1024) {
+    return [1024, 'kB'];
+  } else {
+    return [1, 'B'];
+  }
+}
+
 /* Convierte un numero a cadena con dos decimales y muestra el valor en los huecos que se pasen */
 function Round2Labels(value, integer, fraction) {
   if(isNaN(value)) {
@@ -143,7 +156,6 @@ function AjaxGetIndicators() {
       setTimeout(AjaxGetIndicators, 3000);
     }
  });
- 
 }
 function AjaxGetIndicatorsB() {
   var From = GetDayTimestamp();
@@ -171,6 +183,34 @@ function AjaxGetIndicatorsB() {
       setTimeout(AjaxGetIndicatorsB, 60000);
     }
  });
+}
+function AjaxGetSysStats() {
+  $.ajax({ url: "getSysInfo",
+    timeout: 20000,
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({ }),
+    success: function(result) {
+      $('#CPUPercent').css('width', result['CPU_Usage'] / result['CPU_Count'] * 100 + '%');
+      $('#CPUText').html(Round2(result['CPU_Usage'] / result['CPU_Count'] * 100) + '%');
+      var Units = GetBestUnits(result['RAM_Total']);
+      $('#RAMPercent').css('width', (result['RAM_Total'] - result['RAM_Free']) / result['RAM_Total'] * 100 + '%');
+      $('#RAMText').html(Round2((result['RAM_Total'] - result['RAM_Free']) / Units[0]) + '/' + Round2(result['RAM_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
+      Units = GetBestUnits(result['Swap_Total']);
+      $('#SwapPercent').css('width', (result['Swap_Total'] - result['Swap_Free']) / result['Swap_Total'] * 100 + '%');
+      $('#SwapText').html(Round2((result['Swap_Total'] - result['Swap_Free']) / Units[0]) + '/' + Round2(result['Swap_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
+      Units = GetBestUnits(result['Disk_Total']);
+      $('#DiskPercent').css('width', (result['Disk_Total'] - result['Disk_Free']) / result['Disk_Total'] * 100 + '%');
+      $('#DiskText').html(Round2((result['Disk_Total'] - result['Disk_Free']) / Units[0]) + '/' + Round2(result['Disk_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
+      $('#UptimeText').html(moment.duration(result['UpTime'], "seconds").format("d [days] h [hours] m [minutes]"));
+      $('#BatteryPercent').css('width', result['Battery_Percent'] + '%');
+      $('#BatteryText').html(Round2(result['Battery_Percent']) + '%');
+    },
+    complete: function() {
+      setTimeout(AjaxGetSysStats, 3000);
+    }
+  });  
 }
 
 /* Guardar array como archivo CSV, incluyendo la cabecera */
@@ -229,6 +269,7 @@ function GetNodesCompletes(result) {
   });
   AjaxGetIndicators();
   AjaxGetIndicatorsB();
+  AjaxGetSysStats();
   UpdatePage();
 }
 
@@ -281,6 +322,16 @@ function GetAggregText(short) {
   } else {
     return false;
   }  
+}
+
+/* Obtiene el numero de dia dentro del año de un timestamp */
+function GetDayOfYear(timestamp) {
+  var now = new Date(timestamp);
+  var start = new Date(now.getFullYear(), 0, 0);
+  var diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+  var oneDay = 1000 * 60 * 60 * 24;
+  var day = Math.floor(diff / oneDay);
+  return day;
 }
 
 /* Obtiene el timestamp del inicio del dia actual */

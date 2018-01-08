@@ -18,23 +18,57 @@
           <a class="dropdown-toggle" data-toggle="dropdown" href="#">
             <i class="fa fa-thermometer-full" aria-hidden="true"></i> <span class="caret"></span>
           </a>
-          <ul class="dropdown-menu dropdown-user" style="font-size: 10px">
-            <li>
-              <span style="padding-left: 5px">CPU:</span><span style="float: right; padding-right: 5px" id="CPUText"></span><div style="padding: 0px 5px 0px 5px" id="ProgressCPU"></div>
-              <div class="clearfix"></div>
-            </li>
-            <li>
-              <span style="padding-left: 5px">RAM:</span><span style="float: right; padding-right: 5px" id="RAMText"></span><div style="padding: 0px 5px 0px 5px" id="ProgressRAM"></div>
-              <div class="clearfix"></div>
-            </li>
-            <li>
-              <span style="padding-left: 5px">Storage:</span><span style="float: right; padding-right: 5px" id="SSDText"></span><div style="padding: 0px 5px 0px 5px" id="ProgressSDD"></div>
-              <div class="clearfix"></div>
-            </li>
-            <li>
-              <span style="padding-left: 5px">Battery:</span><span style="float: right; padding-right: 5px" id="BatteryText"></span><div class="disabled" style="padding: 0px 5px 0px 5px" id="ProgressBattery"></div>
-            </li>
-          </ul>
+          <table class="dropdown-menu dropdown-user" style="width: 300px">
+            <tr>
+              <td style="padding: 5px">CPU:</td>
+              <td style="padding: 5px; width: 100%">
+                <div class="progress" style="margin-bottom:0px; position:relative">
+                  <div class="progress-bar" id="CPUPercent" role="progressbar" style="width:0%"></div>
+                  <span style="position: absolute; left:0px; text-align: center; width: 100%" id="CPUText"></span>
+                </div>
+              </td>
+            </tr>              
+            <tr>
+              <td style="padding: 5px">RAM:</td>
+              <td style="padding: 5px; width: 100%">
+                <div class="progress" style="margin-bottom:0px; position:relative">
+                  <div class="progress-bar" id="RAMPercent" role="progressbar" style="width:0%"></div>
+                  <span style="position: absolute; left:0px; text-align: center; width: 100%" id="RAMText"></span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 5px">Swap:</td>
+              <td style="padding: 5px; width: 100%">
+                <div class="progress" style="margin-bottom:0px; position:relative">
+                  <div class="progress-bar" id="SwapPercent" role="progressbar" style="width:0%"></div>
+                  <span style="position: absolute; left:0px; text-align: center; width: 100%" id="SwapText"></span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 5px">Disk:</td>
+              <td style="padding: 5px; width: 100%">
+                <div class="progress" style="margin-bottom:0px; position:relative">
+                  <div class="progress-bar" id="DiskPercent" role="progressbar" style="width:0%"></div>
+                  <span style="position: absolute; left:0px; text-align: center; width: 100%" id="DiskText"></span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 5px">Uptime:</td>
+              <td id="UptimeText" style="padding: 5px; text-align: center"></td>
+            </tr>
+            <tr>
+              <td style="padding: 5px">Battery:</td>
+              <td style="padding: 5px; width: 100%">
+                <div class="progress" style="margin-bottom:0px; position:relative">
+                  <div class="progress-bar" id="BatteryPercent" role="progressbar" style="width:0%"></div>
+                  <span style="position: absolute; left:0px; text-align: center; width: 100%" id="BatteryText"></span>
+                </div>
+              </td>
+            </tr>
+          </table>
         </li>
         <li id="EventsDropdown" class="dropdown">
           <a class="dropdown-toggle" data-toggle="dropdown" href="#">

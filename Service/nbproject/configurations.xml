@@ -58,16 +58,8 @@
               <itemPath>WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff</itemPath>
             </logicalFolder>
             <logicalFolder name="js" displayName="js" projectFiles="true">
-              <itemPath>WEB/Resources/lib/bootstrap/js/bootstrap.js</itemPath>
               <itemPath>WEB/Resources/lib/bootstrap/js/bootstrap.min.js</itemPath>
             </logicalFolder>
-          </logicalFolder>
-          <logicalFolder name="bootstrap-datetimepicker"
-                         displayName="bootstrap-datetimepicker"
-                         projectFiles="true">
-            <itemPath>WEB/Resources/lib/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css</itemPath>
-            <itemPath>WEB/Resources/lib/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js</itemPath>
-            <itemPath>WEB/Resources/lib/bootstrap-datetimepicker/moment.min.js</itemPath>
           </logicalFolder>
           <logicalFolder name="bootstrap-validator"
                          displayName="bootstrap-validator"
@@ -107,6 +99,12 @@
             </logicalFolder>
             <itemPath>WEB/Resources/lib/bootstrap-validator/bootstrapValidator.min.css</itemPath>
             <itemPath>WEB/Resources/lib/bootstrap-validator/bootstrapValidator.min.js</itemPath>
+          </logicalFolder>
+          <logicalFolder name="bootstrap-year-calendar"
+                         displayName="bootstrap-year-calendar"
+                         projectFiles="true">
+            <itemPath>WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.css</itemPath>
+            <itemPath>WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.js</itemPath>
           </logicalFolder>
           <logicalFolder name="c3js" displayName="c3js" projectFiles="true">
             <itemPath>WEB/Resources/lib/c3js/c3.css</itemPath>
@@ -488,21 +486,6 @@
       </item>
       <item path="WEB/Resources/js/zTicker.js" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-datetimepicker/moment.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="WEB/Resources/lib/bootstrap-validator/bootstrapValidator.min.css"
             ex="false"
             tool="3"
@@ -668,6 +651,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.css"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="WEB/Resources/lib/bootstrap/css/bootstrap-theme.css"
             ex="false"
             tool="3"
@@ -714,11 +707,6 @@
             flavor2="0">
       </item>
       <item path="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/js/bootstrap.js"
             ex="false"
             tool="3"
             flavor2="0">
