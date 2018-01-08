@@ -995,7 +995,7 @@ function EnergyUpdateCountersCurrent(result) {
     $('#labelEnergy').html(Round2(result['sum_active_energy'][0] + result['sum_active_energy'][1] + result['sum_active_energy'][2]));
     $('#labelEnergyPhases').html('<br/>By phase&nbsp;&nbsp;<span style="font-size:150%">' + Array_Round2(result['sum_active_energy'], '&nbsp;&nbsp;') + '</span>&nbsp;&nbsp;' + Units);
   }
-  EnergyResizeEvent();
+  window.dispatchEvent(new Event('resize'));
 }
 function EnergyUpdateCountersPrevs(result) {
   var CountersPeriod = localStorage.getItem('CountersPeriod');
@@ -1023,12 +1023,10 @@ function EnergyUpdateCountersPrevs(result) {
   } else {
     $('#labelPrevEnergy').html('No data yet!');
   }
-  EnergyResizeEvent();
+  window.dispatchEvent(new Event('resize'));
 }
 function EnergyUpdateCountersBudget(result) {
-  
-
-var date = new Date(result['budget_lastcalc'] * 1000);
+  var date = new Date(result['budget_lastcalc'] * 1000);
   $('#budget_lastcalc').text(date.toLocaleDateString() + ' - ' + date.toLocaleTimeString());
   
   Round2Labels(result['current_budget'], $('#budget_integer'), $('#budget_decimal'));
@@ -1046,9 +1044,6 @@ var date = new Date(result['budget_lastcalc'] * 1000);
     $('#PrevEnergy').text(Round2(result['prev_energy'] / 1000.0));
     $('#PrevEnergyUnits').text('kWh');
   }
-  
-  
-  
 }
 /* Cuadro Main parameters */
 var EvolutionDatasets   = [[],[],[],[],[],[]];

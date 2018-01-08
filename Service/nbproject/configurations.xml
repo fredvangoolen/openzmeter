@@ -215,6 +215,7 @@
             <itemPath>WEB/Resources/lib/metisMenu/metisMenu.min.js</itemPath>
           </logicalFolder>
           <logicalFolder name="momentjs" displayName="momentjs" projectFiles="true">
+            <itemPath>WEB/Resources/lib/momentjs/moment-duration-format.js</itemPath>
             <itemPath>WEB/Resources/lib/momentjs/moment.js</itemPath>
           </logicalFolder>
           <logicalFolder name="nvd3" displayName="nvd3" projectFiles="true">
@@ -338,13 +339,15 @@
       </toolsSet>
       <compileType>
         <cTool>
+          <developmentMode>0</developmentMode>
           <standard>3</standard>
-          <commandLine>-O0 -march=native</commandLine>
+          <commandLine>-Os -march=native</commandLine>
           <warningLevel>2</warningLevel>
         </cTool>
         <ccTool>
+          <developmentMode>0</developmentMode>
           <standard>4</standard>
-          <commandLine>-O0 -march=native</commandLine>
+          <commandLine>-Os -march=native</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
@@ -1011,6 +1014,11 @@
             flavor2="0">
       </item>
       <item path="WEB/Resources/lib/metisMenu/metisMenu.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/lib/momentjs/moment-duration-format.js"
             ex="false"
             tool="3"
             flavor2="0">

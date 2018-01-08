@@ -26,49 +26,88 @@
 		weekStart: 1
 	};
 }(jQuery));
-function AjaxGetEnergy(To) {
-  $.ajax({ url: "getSeries",
+var Calendar = null;
+function GetDataRanges() {
+  $.ajax({ url: "getSamplesRange",
            timeout: 20000,
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 31536000000, To: 0, Aggreg: '1h', LastSample: 0, Series: 'active_energy', Node: Node}),
-           success: AjaxEnergy,
+           data: JSON.stringify({ Aggreg: '1h', Node: Node}),
+           success: function(result) {
+             var From = new Date(result['From']);
+             From = new Date(From.getFullYear(), From.getMonth(), From.getDate(), 0, 0, 0, 0);
+             Calendar = $('#Calendar').calendar( { minDate: From, maxDate: new Date(result['To']), language: "custom",
+               yearChanged: function(e) {
+                 e.preventRendering = true;
+                 var To = new Date(e.currentYear, 11, 31, 23, 59, 59, 999).getTime();
+                 var From = new Date(e.currentYear, 0, 1, 0, 0, 0, 0).getTime();
+                 $.ajax({ url: "getSeries",
+                   timeout: 20000,
+                   type: "POST",
+                   dataType: "json",
+                   contentType: 'application/json',
+                   data: JSON.stringify({ Period: To - From, To: To, Aggreg: '1h', LastSample: 0, Series: 'active_energy', Node: Node}),
+                   success: AjaxEnergy
+                 }); 
+//                 $(e.target).append('<div style="text-align:center"><img src="your-loading-image.gif" /></div>');
+               }
+             });
+             
+           },
            complete: function (x) {
 //             $('#btnCurrentNow').removeClass('disabled');
 //             if(parseInt(localStorage.getItem('GraphEnd')) === 0) CurrentTimer = setTimeout(AjaxGetCurrent, 3000);
            }
   }); 
+  
+  
 }
 function AjaxEnergy(result) {
   var DayArray = [];
   for(i = 0; i < result['Sampletime'].length; i++) {
-    var Day = GetDayOfYear(result['Sampletime'][i]);
-    if(!DayArray[Day]) {
-      DayArray[Day] = result['active_energy'][i];
+    var Idx = new Date(result['Sampletime'][i]);
+    Idx = Idx.getFullYear() + '-' + (Idx.getMonth() + 1) + '-' + Idx.getDate();
+    if(!DayArray[Idx]) {
+      DayArray[Idx] = result['active_energy'][i];
     } else {
-      for(n = 0; n < result['active_energy'][i].length; n++) DayArray[Day][n] = DayArray[Day][n] + result['active_energy'][i][n];
+      for(n = 0; n < result['active_energy'][i].length; n++) DayArray[Idx][n] = DayArray[Idx][n] + result['active_energy'][i][n];
     }
   }
   var Max = -Infinity;
   var Min =  Infinity;
-  for(i = 0; i < DayArray.length; i++) {
-    if(DayArray[i] === undefined) continue;
+  for(i in DayArray) {
     Max = Math.max(Max, DayArray[i][0]);
     Min = Math.min(Min, DayArray[i][0]);
   }
-  
-  $('#Calendar').calendar( { minDate: new Date(result['From']), maxDate: new Date(result['To']), language: "custom",
-    customDayRenderer: function(element, date) {
-      
-      var Day = GetDayOfYear(date.getTime());
-      if(DayArray[Day] === undefined) return;
-      var Color = 'rgba(255, 0, 0,' +  DayArray[Day][0] / Max + ')';
-      $(element).css('background-color', Color);
-    }
+  Calendar.setCustomDayRenderer(function(element, date) {
+      var Idx = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+      if(DayArray[Idx] === undefined) {
+        $(element.parentElement).addClass('disabled');
+      } else {
+        var Energy = DayArray[Idx][0];
+        var Color = 'rgba(255, 0, 0,' +  Energy / Max + ')';
+        $(element).css('background-color', Color);
+        var Units = 'Wh';
+        if(Energy > 1000) {
+          Units = 'kWh';
+          Energy = Energy / 1000;
+        }
+        $(element).on("mouseover", null, function ($e) {
+          $(this).qtip({
+            overwrite: false,
+              content: {
+                text: "<div>" + Round2(Energy) + Units + "</div>"
+              },
+              style: {
+                classes: 'qtip-bootstrap'
+              }
+          });
+        });
+      }
   
   });
-  
+  return;
   
   
   
@@ -276,7 +315,7 @@ $(':input[name="date_chart_range"]').change(function () {
 
 
 function UpdatePage() {
-  AjaxGetEnergy(0);
+  GetDataRanges();
 }
 function filterByDate(val) {
     var date = new Date();
