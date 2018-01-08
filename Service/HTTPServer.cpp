@@ -470,8 +470,8 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     json_object_object_add(Request->JSONWriter, "RAM_Free", json_object_new_int64(Info.freeram* Info.mem_unit));
     json_object_object_add(Request->JSONWriter, "CPU_Usage", json_object_new_double(Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)));
     json_object_object_add(Request->JSONWriter, "CPU_Count", json_object_new_int(get_nprocs()));
-    json_object_object_add(Request->JSONWriter, "Disk_Total", json_object_new_int64(Disk.f_blocks * Disk.f_bsize));
-    json_object_object_add(Request->JSONWriter, "Disk_Free", json_object_new_int64(Disk.f_bfree * Disk.f_bsize));
+    json_object_object_add(Request->JSONWriter, "Disk_Total", json_object_new_int64((uint64_t)Disk.f_blocks * Disk.f_frsize));
+    json_object_object_add(Request->JSONWriter, "Disk_Free", json_object_new_int64((uint64_t)Disk.f_bfree * Disk.f_frsize));
     json_object_object_add(Request->JSONWriter, "Battery_Percent", json_object_new_int(100));
     Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
     return MHD_YES;
