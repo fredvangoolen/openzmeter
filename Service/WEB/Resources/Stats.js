@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-;(function($){
+;(function($) {
   $.fn.calendar.dates['custom'] = {
 	  days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
 		daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -29,9 +29,12 @@
 var Calendar = null;
 var WeekTable = null;
 var MonthTable = null;
+var WeekDayTable = null;
 var DayArray   = [];
-var WeekArray  = [];
+var WeekDayArray  = [];
+var WeekEndArray  = [];
 var MonthArray = [];
+var WeekDayNumArray = [];
 var Spinner = new Spinner(SpinnerOpts);
 function GetDataRanges() {
   ShowSpinner(Spinner, 'StatsSpinner');
@@ -61,16 +64,24 @@ function AjaxGetEnergy(selected_year) {
              DayArray   = [];
              WeekArray  = [];
              MonthArray = [];
+             WeekDayNumArray = [];
              for(i = 0; i < result['Sampletime'].length; i++) {
                var Day = GetDayOfYear(result['Sampletime'][i]);
                var Week = GetWeekOfYear(result['Sampletime'][i]);
+               var DayOfWeek =  new Date(result['Sampletime'][i]).getDay();
                var Month = new Date(result['Sampletime'][i]).getMonth();
                if(!DayArray[Day]) DayArray[Day] = [0, 0, 0];
-               if(!WeekArray[Week]) WeekArray[Week] = [0, 0, 0];
+               if(!WeekDayArray[Week]) WeekDayArray[Week] = [0, 0, 0];
+               if(!WeekEndArray[Week]) WeekEndArray[Week] = [0, 0, 0];
+               if(!WeekDayNumArray[DayOfWeek]) WeekDayNumArray[DayOfWeek] = [0, 0, 0];
                if(!MonthArray[Week]) MonthArray[Month] = [0, 0, 0];
                for(n = 0; n < result['active_energy'][i].length; n++) {
                  DayArray[Day][n] = DayArray[Day][n] + result['active_energy'][i][n];
-                 WeekArray[Week][n] = WeekArray[Week][n] + result['active_energy'][i][n];
+                 if((DayOfWeek === 0) || (DayOfWeek === 6)) 
+                   WeekEndArray[Week][n] = WeekEndArray[Week][n] + result['active_energy'][i][n];
+                 else
+                   WeekDayArray[Week][n] = WeekDayArray[Week][n] + result['active_energy'][i][n];
+                 WeekDayNumArray[DayOfWeek][n] = WeekDayNumArray[DayOfWeek][n] + result['active_energy'][i][n];
                  MonthArray[Month][n] = MonthArray[Month][n] + result['active_energy'][i][n];
                }
              }
@@ -114,282 +125,99 @@ function AjaxEnergy(selected_year) {
       });
     }
   });
-  if(WeekTable === null) {
-    WeekTable = $('#WeekTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
-                                            columnDefs: [ { targets: [5], orderable: false }, { targets: [0, 1, 2, 3, 4], searchable: true } ],
-                                            order: [0, 'desc']
-    });
+  if(WeekTable !== null) {
+    WeekTable.clear();
+    WeekTable.destroy();
   }
-  WeekTable.clear();
-  for(i in WeekArray) {
-//    var Time = new Date(result['Starttime'][i]);
-    WeekTable.row.add( [i, '?', '?', Round2(WeekArray[i][0]), Round2(WeekArray[i][0]), Round2(WeekArray[i][0])
-//                          result['Type'][i], 
-//                          Round2(result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq']) + ' <em>Sec</em>', 
-//                          Round2(result['Voltage'][i]) + ' <em>V</em>', 
-//                          Round2(result['Percentage'][i]) + ' <em>%</em>', 
-//                          '<button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button>'
-                          ] ).draw();
+  var Max = -Infinity;
+  var Min =  Infinity;
+  for(i in WeekDayArray) {
+    Max = Math.max(Max, WeekDayArray[i][0] + WeekEndArray[i][0]);
+    Min = Math.min(Min, WeekDayArray[i][0] + WeekEndArray[i][0]);
   }
-  
-  
-  
-  
+  var Contents = $('#WeekTable tbody');
+  for(i = 1; ;i++) {
+    var startDate = GetDateOfISOWeek(i, selected_year);
+    var endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 6);
+    if(endDate.getFullYear() !== selected_year) break;
+    var WeekDay = (WeekDayArray[i] !== undefined) ? WeekDayArray[i][0] : 0;
+    var WeekEnd = (WeekEndArray[i] !== undefined) ? WeekEndArray[i][0] : 0;
+    Contents.append('<tr>' +
+      '<td>' + i + '</td>' + 
+      '<td data-sort="' + startDate.getTime() + '">' + startDate.toLocaleDateString() + '</td>' + 
+      '<td data-sort="' + endDate.getTime() + '">' + endDate.toLocaleDateString() + '</td>' + 
+      '<td data-sort="' + WeekDay + '"><div class="progress" style="margin-bottom:0px; height: 16px; position:relative">' +
+      '<div class="progress-bar" role="progressbar" style="width:' + (100 * WeekDay / Max) + '%"></div>' +
+      '<span style="position: absolute; left:0px; text-align: center; width: 100%">' + FormatKMG(WeekDay, '<em>Wh</em>', '<em>kWh</em>') + '</span>' +
+      '</div></td>' +
+      '<td data-sort="' + WeekEnd + '"><div class="progress" style="margin-bottom:0px; position:relative">' +
+      '<div class="progress-bar" role="progressbar" style="width:' + (100 * WeekEnd / Max) + '%"></div>' +
+      '<span style="position: absolute; left:0px;  padding-top: 2px; text-align: center; width: 100%">' + FormatKMG(WeekEnd, '<em>Wh</em>', '<em>kWh</em>') + '</span>' +
+      '</div></td>' +
+      '<td data-sort="' + (WeekDay + WeekEnd) + '"><div class="progress" style="margin-bottom:0px; position:relative">' +
+      '<div class="progress-bar" role="progressbar" style="width:' + (100 * (WeekDay + WeekEnd) / Max) + '%"></div>' +
+      '<span style="position: absolute; left:0px; padding-top: 2px; text-align: center; width: 100%">' + FormatKMG(WeekDay + WeekEnd, '<em>Wh</em>', '<em>kWh</em>') + '</span>' +
+      '</div></td>');
+  }
+  WeekTable = $('#WeekTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
+                                          columnDefs: [ { targets: [0, 1, 2, 3, 4, 5], searchable: true } ],
+                                          order: [0, 'asc']
+  });  
+  if(MonthTable !== null) {
+    MonthTable.clear();
+    MonthTable.destroy();
+  }
+  var Max = -Infinity;
+  var Min =  Infinity;
+  for(i in MonthArray) {
+    Max = Math.max(Max, MonthArray[i][0]);
+    Min = Math.min(Min, MonthArray[i][0]);
+  }
+  var Contents = $('#MonthTable tbody');
+  for(i = 0; i < 12; i++) {
+    var startDate = new Date(startDate.getFullYear(), i, 1);
+    var endDate = new Date(startDate.getFullYear(), i + 1, 0);
+    var Energy = (MonthArray[i] !== undefined) ? MonthArray[i][0] : 0;
+    Contents.append('<tr>' +
+      '<td data-sort="' + i + '">' + $.fn.calendar.dates['custom']['monthsShort'][i] + '</td>' + 
+      '<td data-sort="' + startDate.getTime() + '">' + startDate.toLocaleDateString() + '</td>' + 
+      '<td data-sort="' + endDate.getTime() + '">' + endDate.toLocaleDateString() + '</td>' + 
+      '<td data-sort="' + Energy + '"><div class="progress" style="margin-bottom:0px; position:relative">' +
+      '<div class="progress-bar" role="progressbar" style="width:' + (100 * Energy / Max) + '%"></div>' +
+      '<span style="position: absolute; left:0px; padding-top: 2px; text-align: center; width: 100%">' + FormatKMG(Energy, '<em>Wh</em>', '<em>kWh</em>') + '</span>' +
+      '</div></td>');
+  }
+  MonthTable = $('#MonthTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
+                                            columnDefs: [ { targets: [0, 1, 2, 3], searchable: true } ],
+                                            order: [0, 'asc']
+  });
+  if(WeekDayTable !== null) {
+    WeekDayTable.clear();
+    WeekDayTable.destroy();
+  }
+  var Max = -Infinity;
+  var Min =  Infinity;
+  for(i in WeekDayNumArray) {
+    Max = Math.max(Max, WeekDayNumArray[i][0]);
+    Min = Math.min(Min, WeekDayNumArray[i][0]);
+  }
+  var Contents = $('#WeekDayTable tbody');
+  for(i = 0; i < 7; i++) {
+    var Energy = (WeekDayNumArray[i] !== undefined) ? WeekDayNumArray[i][0] : 0;
+    Contents.append('<tr>' +
+      '<td data-sort="' + ((i === 0) ? 7 : i) + '">' + $.fn.calendar.dates['custom']['daysShort'][i] + '</td>' + 
+      '<td data-sort="' + Energy + '"><div class="progress" style="margin-bottom:0px; position:relative">' +
+      '<div class="progress-bar" role="progressbar" style="width:' + (100 * Energy / Max) + '%"></div>' +
+      '<span style="position: absolute; left:0px; padding-top: 2px; text-align: center; width: 100%">' + FormatKMG(Energy, '<em>Wh</em>', '<em>kWh</em>') + '</span>' +
+      '</div></td>');
+  }
+  WeekDayTable = $('#WeekDayTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
+                                                columnDefs: [ { targets: [0, 1], searchable: true } ],
+                                                order: [0, 'asc']
+  });
   StopSpinner(Spinner, 'StatsSpinner');
-  return;
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  var scatterTip = d3.tip()
-        .attr('class', 'd3-tip')
-        //.offset([-10, 0])
-        .html(function (d) {
-            var date = new Date(d.key[2]);
-            return "<p><em>" + getStringEventType(d.key[0])
-                    + "</em></p><ul class='small'><li>" + date.toLocaleString() + "." + date.getMilliseconds() + "</li><li>RMS : " + roundTo(d.value, 2).toFixed(2) + "%</li><li>Duration: " + formatTimeUnit(d.key[1]) + "</li></ul>";
-        });
-
-
-var data = [];// [{duration: 1323133, rms: 3, id_event: 9, type: 0, time: 1434711599000}, {duration: 5234432, rms: 453, id_event: 10, type: 1, time: 1434721599000}, {duration: 2344, rms: 200, id_event: 15, type: 1, time: 1434731599000}, {duration: 10, rms: 80, id_event: 15, type: 2, time: 1434751599000}];
-for(i = 0; i < result['Sampletime'].length; i++) {
-    var val = result['active_energy'][i][0] / 1000;
-    data.push({
-        value: isNaN(val) ? 0 : val,
-        time: new Date(result['Sampletime'][i])
-    });
+  Calendar.translate;
 }
-
-
-var ndx = crossfilter(data);
-var all = ndx.groupAll();
-
-/**
- * Events by date
- */
-
-var barDateTip = d3.tip()
-        .attr('class', 'd3-tip')
-        //.offset([-10, 0])
-        .html(function (d) {
-            return "<em>" + d.x.toLocaleDateString()
-                    + "</em> : " + d.y + (d.y == 1 ? ' events' : ' event');
-        });
-
-var dateDimension = ndx.dimension(function (d) {
-    return new Date(d.time);
-});
-
-/*var dateDimensionGroup = dateDimension.group(function (d) {
- return d3.time.day(d);
- });*/
-
-var dateDimensionGroup = dateDimension.group(function (d) {
-    return d3.time.day(d);
-}).reduceSum(function (d) {
-    return d.value;
-});
-
-var dateSelectorChart = dc.barChart('#date_selector_chart');
-
-var date = new Date();
-dateSelectorChart
-        .width($('#date_selector_chart').parent().width())
-        .height(60)
-        .margins({top: 10, right: 20, bottom: 20, left: 30})
-        .dimension(dateDimension)
-        .group(dateDimensionGroup)
-        .centerBar(true)
-        .gap(1)
-        .x(d3.time.scale().domain([new Date(date.getFullYear() - 1, date.getMonth(), date.getDate()), date]))
-        .round(d3.time.days.round)
-        .renderHorizontalGridLines(true)
-        .alwaysUseRounding(true)
-        .xUnits(d3.time.days)
-        .yAxis().tickFormat(d3.format("d")).ticks(1).tickSubdivide(0);
-
-var dateChart = dc.barChart('#date_chart');
-
-
-dateChart
-        .width($('#date_chart').parent().width())
-        .height(180)
-        .rangeChart(dateSelectorChart)
-        .dimension(dateDimension)
-        .group(dateDimensionGroup)
-        .margins({top: 20, right: 20, bottom: 20, left: 20})
-        .mouseZoomable(true)
-        .centerBar(true)
-        .elasticY(true)
-        .x(d3.time.scale().domain([new Date(date.getFullYear() - 1, date.getMonth(), date.getDate()), date]))
-        .xUnits(d3.time.days)
-        .renderHorizontalGridLines(true)
-        .round(d3.time.days.round)
-        .alwaysUseRounding(true)
-        .brushOn(false)
-        .title(function (d) {
-            return Round2(d.value) + ' kWh';
-        })
-        .zoomScale([1, 14]);
-
-dateChart.yAxis().tickFormat(d3.format("d"))
-        .tickSubdivide(0);
-
-/**
- * DAY OF WEEK
- */
-
-var dayOfWeekChart = dc.rowChart('#weekday_chart');
-
-var dayOfWeek = ndx.dimension(function (d) {
-    var date = new Date(d.time);
-    var day = date.getDay();
-    var name = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    return day + '.' + name[day];
-});
-var dayOfWeekGroup = dayOfWeek.group().reduceSum(function (d) {
-    return d.value;
-});
-
-
-dayOfWeekChart.width($('#weekday_chart').parent().width())
-        .height($('#weekday_chart').parent().width() / 2)
-        .margins({top: 20, left: 10, right: 10, bottom: 20})
-        .group(dayOfWeekGroup)
-        .dimension(dayOfWeek)
-        .ordinalColors(['#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#dadaeb'])
-        .label(function (d) {
-            return d.key.split('.')[1];
-        }).title(function (d) {
-    return Round2(d.value) + ' kWh';
-})
-        .elasticX(true)
-        .xAxis().ticks(4);
-
-/**
- * DAY OF MONTH
- */
-
-var dayOfMonthChart = dc.rowChart('#monthday_chart');
-
-var dayOfMonth = ndx.dimension(function (d) {
-    var date = new Date(d.time);
-    return date.getDate();
-});
-var dayOfMonthGroup = dayOfMonth.group().reduceSum(function (d) {
-    return d.value;
-});
-
-
-dayOfMonthChart.width($('#monthday_chart').parent().width())
-        .height($('#monthday_chart').parent().width() / 2)
-        .margins({top: 20, left: 10, right: 10, bottom: 20})
-        .group(dayOfMonthGroup)
-        .dimension(dayOfMonth)
-        .title(function (d) {
-            return Round2(d.value) + ' kWh';
-        })
-        .elasticX(true)
-        .xAxis().ticks(4);
-
-/**
- * WEEK NUMBER
- */
-
-var weekChart = dc.rowChart('#week_chart');
-var week = ndx.dimension(function (d) {
-    var date = new Date(d.time);
-    return 0;//date.getWeek();
-});
-
-var weekGroup = week.group().reduceSum(function (d) {
-    return d.value;
-});
-
-
-weekChart.width($('#week_chart').parent().width())
-        .height(300)
-        .margins({top: 20, left: 10, right: 10, bottom: 20})
-        .group(weekGroup)
-        .dimension(week).title(function (d) {
-    return Round2(d.value) + ' kWh';
-})
-        .elasticX(true)
-        .xAxis().ticks(4);
-
-
-
-dc.renderAll();
-
-
-filterByDate('week');
-
-$(':input[name="date_chart_range"]').change(function () {
-    filterByDate($(this).val());
-});
-
-
-
-
-}
-
-
 function UpdatePage() {
   GetDataRanges();
 }
-function filterByDate(val) {
-    var date = new Date();
-    switch (val) {
-        case 'today':
-            var end = date;
-            end.setHours(23);
-            end.setMinutes(59);
-            end.setSeconds(59);
-            var start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-            break;
-        case 'yesterday':
-            var end = date;
-            end.setHours(23);
-            end.setMinutes(59);
-            end.setSeconds(59);
-            end = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1);
-            end.setHours(23);
-            end.setMinutes(59);
-            end.setSeconds(59);
-            start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-            break;
-        case 'week':
-            end = date;
-            start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - end.getDay());
-            break;
-        case 'month':
-            end = date;
-            start = new Date(end.getFullYear(), end.getMonth(), 1);
-            break;
-    }
-
-//    brush = dateSelectorChart.brush().extent([start, end]);
-
-//    gBrush = dateSelectorChart.svg().select('.brush')
-//            .call(brush);
-
-//    gBrush.call(brush.event);
-}
-
-function resetCharts() {
-  dc.filterAll();
-  dc.renderAll();
-  filterByDate($(':input[name="date_chart_range"]:checked').val());
-}
-
-
-
