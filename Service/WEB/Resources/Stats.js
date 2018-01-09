@@ -162,7 +162,7 @@ function AjaxEnergy(selected_year) {
       '</div></td>');
   }
   WeekTable = $('#WeekTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
-                                          columnDefs: [ { targets: [0, 1, 2, 3, 4, 5], searchable: true } ],
+                                          columnDefs: [ { targets: [0, 1, 2, 3, 4, 5], searchable: true, className: "text-center" } ],
                                           order: [0, 'asc']
   });  
   if(MonthTable !== null) {
@@ -189,8 +189,8 @@ function AjaxEnergy(selected_year) {
       '<span style="position: absolute; left:0px; padding-top: 2px; text-align: center; width: 100%">' + FormatKMG(Energy, '<em>Wh</em>', '<em>kWh</em>') + '</span>' +
       '</div></td>');
   }
-  MonthTable = $('#MonthTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
-                                            columnDefs: [ { targets: [0, 1, 2, 3], searchable: true } ],
+  MonthTable = $('#MonthTable').DataTable({ responsive: true, paging: false, info: false, searching: false, 
+                                            columnDefs: [ { targets: [0, 1, 2, 3], searchable: true, className: "text-center" } ],
                                             order: [0, 'asc']
   });
   if(WeekDayTable !== null) {
@@ -214,7 +214,7 @@ function AjaxEnergy(selected_year) {
       '</div></td>');
   }
   WeekDayTable = $('#WeekDayTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
-                                                columnDefs: [ { targets: [0, 1], searchable: true } ],
+                                                columnDefs: [ { targets: [0, 1], searchable: true, className: "text-center" } ],
                                                 order: [0, 'asc']
   });
   StopSpinner(Spinner, 'StatsSpinner');
