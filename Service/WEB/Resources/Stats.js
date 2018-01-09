@@ -45,12 +45,14 @@ function GetDataRanges() {
            contentType: 'application/json',
            data: JSON.stringify({ Aggreg: '1h', Node: Node}),
            success: function(result) {
-             //Relleno los años que tengo y selecciono el ultimo
-             AjaxGetEnergy(2018);
+             for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) $('#YearSelector').append('<button type="button" class="btn btn-default btn-xs" id="btnSelYear' + year + '" onclick="AjaxGetEnergy(' + year + ')">' + year + '</button>');
+             AjaxGetEnergy(new Date(result['To']).getFullYear());
            }
   }); 
 }
 function AjaxGetEnergy(selected_year) {
+  $('#YearSelector button').removeClass('active');
+  $('#btnSelYear' + selected_year).addClass('active');
   ShowSpinner(Spinner, 'StatsSpinner');
   var To = new Date(Date.UTC(selected_year, 11, 31, 23, 59, 59, 999)).getTime();
   var From = new Date(Date.UTC(selected_year, 0, 1, 0, 0, 0, 0)).getTime();
