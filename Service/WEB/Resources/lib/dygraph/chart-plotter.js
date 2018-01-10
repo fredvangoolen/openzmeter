@@ -73,7 +73,7 @@ function polarLinePlotter(e) {
     e.points[i].canvasy = Y;
     ctx.strokeStyle = e.dygraph.getColors()[i % 2];
     ctx.fillStyle = e.dygraph.getColors()[i % 2];
-    ctx.lineWidth = (i % 2 === 0) ? 4 : 2;
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
     ctx.lineTo(X, Y);
@@ -85,6 +85,14 @@ function polarLinePlotter(e) {
     ctx.moveTo(-5, 4);
     ctx.lineTo(10, 0);
     ctx.lineTo(-5, -4);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(21, 0, 10, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.font = "bold 12px sans";
+    ctx.fillStyle = "#FFF";
+    ctx.fillText((i % 2) ? "A" : "V", 17, 4);
     ctx.fill();
     ctx.restore();
   }

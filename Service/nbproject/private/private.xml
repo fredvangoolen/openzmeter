@@ -7,19 +7,18 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Analysis_Voltage.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Analysis_Voltage.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Events_Disturbances.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Dashboard.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Analysis_Current.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Dashboard.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Stats.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Main.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/css/common.css</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Stats.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Analysis_Voltage.js</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Events_Disturbances.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/CommonHeader.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Analysis_Voltage.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Events_ITIC.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap/css/bootstrap.css</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Events_ITIC.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Stats.html</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/openZmeter.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Analysis_EnergyPower.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/css/common.css</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/dygraph/chart-plotter.js</file>
         </group>
     </open-files>
 </project-private>

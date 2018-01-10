@@ -10,6 +10,12 @@
     font-family: 'Titillium Web', sans-serif;
 }
 
+.float-left {
+  float: left;
+}
+.float-right {
+  float: right;
+}
 .gray {
     border-radius: 8px;
     font-size: 1.2em ;

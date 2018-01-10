@@ -50,7 +50,7 @@ function AjaxGetVoltage() {
            data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastVoltageSample, Series: 'rms_v', Node: Node}),
            success: AjaxVoltage,
            complete: function() { 
-             AjaxGetEvents(Period, GraphEnd, Node); 
+             AjaxGetEvents(Period, GraphEnd, Node);
            }
   });
 }
@@ -64,7 +64,7 @@ function AjaxVoltage(result) {
     while(VoltageData.length > result['MaxSamples']) VoltageData.shift();
     LastVoltageSample = result['Sampletime'][result['Sampletime'].length - 1];
   }
-  $('#VoltageAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');  
+  $('#VoltageAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(VoltageChart == null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"),
       VoltageData,
@@ -674,6 +674,7 @@ function DetailsButtonClick(event) {
       break;
     case 'Events' :
       $('#EventsPanel').removeClass('hidden');
+      if(EventChart !== null) $(EventChart.graphDiv).parent().removeAttr('style');
       break;
   }
   window.dispatchEvent(new Event('resize'));
@@ -835,7 +836,7 @@ function UpdateHarmonicsChart(result) {
   for(i = (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 0 : 1; i < HarmonicsDataset.length; i++) {
     ToShow.push([]);
     var Pos = (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? i : i - 1
-    for(n = 0; n < HarmonicsDataset[i].length; n++) ToShow[Pos][n] = 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[Pos][n]));
+    for(n = 0; n < HarmonicsDataset[i].length; n++) ToShow[Pos][n] = 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][n]));
   }
   var VoltageRange = CalcRanges(ToShow, VoltageSeries);
   var CurrentRange = CalcRanges(ToShow, CurrentSeries);
@@ -1046,7 +1047,7 @@ function UpdatePhasorChart(result) {
   var MaxVoltage = 0;
   for(i = 0; i < result['rms_v'].length; i++) {
     Vectors.push([2 * i, 120 * i, result['rms_v'][i]]);
-    Vectors.push([2 * i + 1, 120 * i + result['phi'][i], result['rms_i'][i]]);
+    Vectors.push([2 * i + 1, 120 * i - result['phi'][i], result['rms_i'][i]]);
     MaxVoltage = Math.max(MaxVoltage, result['rms_v'][i]);
     MaxCurrent = Math.max(MaxCurrent, result['rms_i'][i]);
   }
@@ -1063,8 +1064,8 @@ function UpdatePhasorChart(result) {
     highlightCircleSize: 0,
     interactionModel: { },
     legend: 'never',
-    valueRange: [-102, 102],
-    dateWindow: [-102, 102],
+    valueRange: [-115, 115],
+    dateWindow: [-115, 115],
     plugins: [ new Dygraph.Plugins.PolarCrosshair( { } ) ],
     plotter: polarLinePlotter,
     xAxisHeight: 0.1,
@@ -1118,7 +1119,7 @@ function UpdatePhasorChart(result) {
       if(i === 2) PhaseName = "T";
     }
     PhasorTable.row.add( [PhaseName, "Voltage", Round2(i * 120) + 'º', Round2(result['rms_v'][i]) + '<em> V</em>'] ).draw(false);
-    PhasorTable.row.add( [PhaseName, "Current", Round2(i * 120 + result['phi'][i]) + 'º', Round2(result['rms_i'][i]) + '<em> A</em>'] ).draw();
+    PhasorTable.row.add( [PhaseName, "Current", Round2(i * 120 + -result['phi'][i]) + 'º', Round2(result['rms_i'][i]) + '<em> A</em>'] ).draw();
   }
 }
 
@@ -1516,23 +1517,25 @@ function AjaxGetEvents(period, to, node) {
 }
 function AjaxEvents(result) {
   if(EventsTable === null) {
-    EventsTable = $('#EventsTable').DataTable({ responsive: true, 
+    EventsTable = $('#EventsTable').DataTable({ responsive: true, paging: false, scrollCollapse: true, scrollY: '298px', dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">', language: { info: "_MAX_ events in selected period", infoEmpty: "No events in selection"},
                                                 columnDefs: [ { targets: [5], orderable: false }, { targets: [0, 1, 2, 3, 4], searchable: true } ],
                                                 order: [0, 'desc']
     });
   }
-  if(LastEventStartTime === 0) EventsTable.clear();
+  if(LastEventStartTime === 0) EventsTable.clear().draw();
   if(result['Starttime'] !== null) {
     for(i = 0; i < result['Starttime'].length; i++) {
       var Time = new Date(result['Starttime'][i]);
       EventsTable.row.add( [Time.toLocaleString() + '.' + Time.getMilliseconds(), 
                             result['Type'][i], 
-                            Round2(result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq']) + ' <em>Sec</em>', 
-                            Round2(result['Voltage'][i]) + ' <em>V</em>', 
-                            Round2(result['Percentage'][i]) + ' <em>%</em>', 
+                            Round2(result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq']), 
+                            Round2(result['Voltage'][i]), 
+                            Round2(result['Percentage'][i]), 
                             '<button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button>'] ).draw();
+      LastEventStartTime = result['Starttime'][i];
     }
   }
+  
   if(EventChart === null) {
     EventChart = new Dygraph(document.getElementById("EventChart"), [[0, 0]], {
       strokeWidth: 0.5,
