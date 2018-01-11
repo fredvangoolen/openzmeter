@@ -1517,7 +1517,7 @@ function AjaxGetEvents(period, to, node) {
 }
 function AjaxEvents(result) {
   if(EventsTable === null) {
-    EventsTable = $('#EventsTable').DataTable({ responsive: true, paging: false, scrollCollapse: true, scrollY: '298px', dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">', language: { info: "_MAX_ events in selected period", infoEmpty: "No events in selection"},
+    EventsTable = $('#EventsTable').DataTable({ responsive: true, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">', language: { info: "_MAX_ events in selected period", infoEmpty: "No events in selection"},
                                                 columnDefs: [ { targets: [5], orderable: false }, { targets: [0, 1, 2, 3, 4], searchable: true } ],
                                                 order: [0, 'desc']
     });

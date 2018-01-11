@@ -88,6 +88,25 @@ function GetBestUnits(value) {
   }
 }
 
+/* Busca el mejor divisor y unidades para un valor de entrada, ya sea en blanco, k, M */
+function GetBestUnitsEnergy(value) {
+  if(value > 1000000) {
+   return [1000000, 'M'];
+  } else if(value > 1000) {
+    return [1000, 'k'];
+  } else {
+    return [1, ''];
+  }
+}
+
+/* Formato rapido en multiplos de mil si es necesario */
+function FormatKMG(value, unit, unitK, unitsM, unitsG) {
+  if(value > 1000000000) return Round2(value / 1000000000) + unitG; 
+  if(value > 1000000) return Round2(value / 1000000) + unitM; 
+  if(value > 1000) return Round2(value / 1000) + unitK; 
+  return Round2(value) + unit; 
+}
+
 /* Convierte un numero a cadena con dos decimales y muestra el valor en los huecos que se pasen */
 function Round2Labels(value, integer, fraction) {
   if(isNaN(value)) {
@@ -353,14 +372,6 @@ function GetWeekOfYear(timestamp) {
   date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
   var week1 = new Date(date.getFullYear(), 0, 4);
   return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-}
-
-/* Formato rapido en multiplos de mil si es necesario */
-function FormatKMG(value, unit, unitK, unitsM, unitsG) {
-  if(value > 1000000000) return Round2(value / 1000000000) + unitG; 
-  if(value > 1000000) return Round2(value / 1000000) + unitM; 
-  if(value > 1000) return Round2(value / 1000) + unitK; 
-  return Round2(value) + unit; 
 }
 
 /* Obtiene el timestamp del inicio del dia actual */
