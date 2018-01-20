@@ -140,6 +140,116 @@ void CaptureInterface::SaveParams(Params_t *params, const char *aggreg) {
   BindArrayArrayFloat(params->CurrentHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_i
   ExecSentence();
 }
+float CaptureInterface::PercentChange(float in, float reference) {
+  return ((in - reference) / reference) * 100;
+}
+void CaptureInterface::EventsDetect() {
+  for(int i = 0; i < pWork.Cycles_Len; i++) {
+    //Introduzco ciclo en la lista y calculo sus parametros de longitud y RMS
+    EventCycle_t *Cycle = &pPrevCycles[pPrevCyclesWrite];
+    Cycle->Len = pWork.Cycles[i].End - pWork.Cycles[i].Start;
+    for(uint n = 0; n < (pTriphase ? 3 : 1); n++) {
+      Cycle->RMS[n] = 0.0;
+      for(uint j = 0; j < Cycle->Len; j++) 
+        Cycle->RMS[n] += pow(pWork.VoltageSamples[n][j + pWork.Cycles[i].Start], 2);
+      Cycle->RMS[n] = sqrt(Cycle->RMS[n] / Cycle->Len);
+    }
+    pPrevCyclesWrite = (pPrevCyclesWrite + 1) % 100;
+    if(pPrevCyclesLen < 100) pPrevCyclesLen++;
+
+    //Calculo tension media de los ultimos 100 ciclos y determino si estoy en regimen estacionario
+    float *RMS_Avg = (float*)malloc(sizeof(float) * (pTriphase ? 3 : 1));
+    bool Stationary = false;
+    float Tolerance = (pRunningEvent.Type != EVT_NONE) ? EVENT_RVC_HYSTERESIS : EVENT_RVC;
+    if(pPrevCyclesLen == 100) {
+      Stationary = true;
+      for(int n = 0; n < (pTriphase ? 3 : 1); n++) {
+        RMS_Avg[n] = 0.0;
+        for(int j = 0; j < pPrevCyclesLen; j++) RMS_Avg[n] += pPrevCycles[j].RMS[n];
+        RMS_Avg[n] = RMS_Avg[n] / pPrevCyclesLen;
+        if(Stationary == true) {
+          for(int j = 0; j < pPrevCyclesLen; j++) {
+            if(fabs(PercentChange(pPrevCycles[j].RMS[n], RMS_Avg[n])) > Tolerance) {
+              Stationary = false;
+              break;
+            }
+          }
+        }
+      }
+    }
+    //Compruebo si algun evento ha finalizado
+    bool EventEnd = (pRunningEvent.Type != EVT_NONE);
+    if(pRunningEvent.Type == EVT_RVC) {
+      if(Stationary == false) EventEnd = false;
+    } else if((pRunningEvent.Type == EVT_DIP) || (pRunningEvent.Type == EVT_SWELL) || (pRunningEvent.Type == EVT_INTERRUPTION)) {
+      for(int n = 0; n < (pTriphase ? 3 : 1); n++) {
+        if(fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) < EVENT_HYSTERESIS) continue;
+        EventEnd = false;
+        break;
+      }
+    }
+    if(EventEnd == true) {
+//          Adquisition_SamplesCopy(RunningEvent->End, work->Samples - work->Cycles[i].Start + MAX_FRAME, MAX_FRAME * 2);
+//          DB_Save(EVENT, 0, RunningEvent->Start, RunningEvent, true);
+          pRunningEvent.Type = EVT_NONE;
+    }
+    for(int n = 0; n < (pTriphase ? 3 : 1); n++) {
+      //Inicio eventos tipo RVC si procede
+      if((pRunningEvent.Type == EVT_NONE) && (pPrevStationary == true) && (Stationary == false)) {
+        pRunningEvent.Type     = EVT_RVC;
+        pRunningEvent.Start    = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
+        pRunningEvent.Duration = 0;
+//        Adquisition_SamplesCopy(RunningEvent->Begin, (work->Samples - work->Cycles[i].Start) + MAX_FRAME, MAX_FRAME * 2);
+      }
+      //Un evento DIP o SWELL se produce cuando un ciclo sale de los valores establecidos y si no habia eventos anteriores o era un RVC
+      if(((pRunningEvent.Type == EVT_NONE) || (pRunningEvent.Type == EVT_RVC)) && (fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) > EVENT_DIP_SWELL)) {
+        pRunningEvent.Type     = (Cycle->RMS[n] > Tools::Electrical.NominalVoltage) ? EVT_SWELL : EVT_DIP;
+        pRunningEvent.Start    = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
+        pRunningEvent.Duration = 0;
+//        Adquisition_SamplesCopy(RunningEvent->Begin, (work->Samples - work->Cycles[i].Start) + MAX_FRAME, MAX_FRAME * 2);
+      }
+      if(((pRunningEvent.Type == EVT_NONE) || (pRunningEvent.Type == EVT_RVC) || (pRunningEvent.Type == EVT_DIP) || (pRunningEvent.Type == EVT_SWELL)) && (fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) > EVENT_INTERRUPTION)) {
+        pRunningEvent.Type     = EVT_INTERRUPTION;
+        pRunningEvent.Start    = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
+        pRunningEvent.Duration = 0;
+//          Adquisition_SamplesCopy(RunningEvent->Begin, (work->Samples - work->Cycles[i].Start) + MAX_FRAME, MAX_FRAME * 2);
+      }
+      if((pRunningEvent.Type == EVT_RVC) && ((pRunningEvent.Duration == 0) || (fabs(pRunningEvent.Voltage) < fabs(Cycle->RMS[n] - pStationaryRMS[n])))) {
+        pRunningEvent.Voltage = Cycle->RMS[n] - pStationaryRMS[n];
+        pRunningEvent.Change  = PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage);          
+      }
+      if(((pRunningEvent.Type == EVT_DIP) || (pRunningEvent.Type == EVT_SWELL) || (pRunningEvent.Type == EVT_INTERRUPTION))  && ((pRunningEvent.Duration == 0) || (fabs(pRunningEvent.Voltage) < fabs(Cycle->RMS[n] - Tools::Electrical.NominalVoltage)))) {
+        pRunningEvent.Voltage  = Cycle->RMS[n] - Tools::Electrical.NominalVoltage;
+        pRunningEvent.Change   = PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage);
+        if((pRunningEvent.Type == EVT_DIP) && (Cycle->RMS[n] > Tools::Electrical.NominalVoltage)) pRunningEvent.Type = EVT_SWELL;
+        if((pRunningEvent.Type == EVT_SWELL) && (Cycle->RMS[n] < Tools::Electrical.NominalVoltage)) pRunningEvent.Type = EVT_DIP;
+      }
+    }
+    if(pRunningEvent.Type != EVT_NONE) {
+      if(pRunningEvent.Type != EVT_RVC) pWork.Params.Flag = true;
+      SaveEvent();
+      pRunningEvent.Duration += Cycle->Len;
+    }
+    if((pPrevStationary == false) && (Stationary == true)) Tools::LogMsg("DEBUG", "Stationary voltage reached in node %d\n", pNodeIndex);
+    if(Stationary == true) {
+      free(pStationaryRMS);
+      pStationaryRMS = RMS_Avg;
+    }
+    pPrevStationary = Stationary;
+  }
+}
+void CaptureInterface::SaveEvent() {
+  char *Type = (char*)"UNKNOWN";
+  if(pRunningEvent.Type == EVT_RVC) Type = (char*)"RVC";
+  if(pRunningEvent.Type == EVT_DIP) Type = (char*)"DIP";  
+  if(pRunningEvent.Type == EVT_SWELL) Type = (char*)"SWELL";
+  if(pRunningEvent.Type == EVT_INTERRUPTION) Type = (char*)"INTERRUPTION";
+  if(pRunningEvent.Type == EVT_GLITCH) Type = (char*)"GLITCH";
+  
+  if(pRunningEvent.Duration == 0) {
+    Tools::LogMsg("INFO", "New %s event detected on node %d\n", Type, pNodeIndex);
+  }
+}
 void CaptureInterface::Analyze(float minimunCurrent) {
   FFT_t FFT_Voltage[3];
   FFT_t FFT_Current[4];
@@ -158,14 +268,12 @@ void CaptureInterface::Analyze(float minimunCurrent) {
   for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Params.RMS_V[j] = sqrt(V[j] / pWork.Samples);
   for(int j = 0; j < (pTriphase ? 4 : 1); j++) pWork.Params.RMS_I[j] = sqrt(I[j] / pWork.Samples);
   for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Params.Apparent_Power[j] = pWork.Params.RMS_V[j] * pWork.Params.RMS_I[j];
-//  Params->Flag = false; //Events_Detect(This->Work);
+  EventsDetect();
   for(int i = 0; i < pWork.Cycles_Len; i++) {
-//    if(pLastCyclesCount == PROCESSING_FREQCYCLES) 
     pLastCyclesLenght = pLastCyclesLenght - pLastCycles[pLastCyclesPos];
     pLastCycles[pLastCyclesPos] = pWork.Cycles[i].End - pWork.Cycles[i].Start;
     pLastCyclesLenght = pLastCyclesLenght + pLastCycles[pLastCyclesPos];
     pLastCyclesPos = (pLastCyclesPos + 1) % PROCESSING_FREQCYCLES;
-//    if(pLastCyclesCount < PROCESSING_FREQCYCLES) pLastCyclesCount++;
   }
   pWork.Params.Frequency = PROCESSING_FREQCYCLES / (pLastCyclesLenght / (float)pSampleRate) / 2.0;
   for(int j = 0; j < (pTriphase ? 3 : 1); j++) {
@@ -204,28 +312,7 @@ void CaptureInterface::Analyze(float minimunCurrent) {
       pWork.Params.Power_Factor[j] = pWork.Params.Active_Power[j] / pWork.Params.Apparent_Power[j];
       pWork.Params.Fundamental_Reactive_Energy[j] = (pWork.Params.Fundamental_Reactive_Power[j] * pWork.Samples) / (pSampleRate * 3600.0);
     }
-//  } else {
-//    Params->RMS_I = 0.0;
-//    memset(work->CurrentSamples, 0, work->Samples * sizeof(float));
-//    memset(FFT_Current->Result, 0, FFT_Current->Len * sizeof(Complex_t));
-//  }
-//  if(((work->SequenceID) % 15 == 0) && (work->Cycles_Len == 20)) {
-//    float FFT_V[600];
-//    float FFT_I[600];
-//    for(int i = 0; i < 600; i++) {
-//      FFT_V[i] = sqrt(pow(FFT_Voltage->Result[i].Real, 2.0) + pow(FFT_Voltage->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
-//      FFT_I[i] = sqrt(pow(FFT_Current->Result[i].Real, 2.0) + pow(FFT_Current->Result[i].Imag, 2.0)) / M_SQRT2 * 2.0;
-//    }
-////    RequestServer_SetValues(work->Timestamp, Params, work->VoltageSamples, work->CurrentSamples, FFT_V, FFT_I, work->Samples, 600);
   }
-////  DB_Save(PARAMS_10C, 0, work->Timestamp, Params, true);
-////  if((Work->SequenceID % 15) == 0) DB_Save(PARAMS_3S, 0, PrevTimestamp, NULL, true);
-////  if(((Work->Timestamp / 60000) * 60000) != ((PrevTimestamp / 60000) * 60000)) DB_Save(PARAMS_1M, 0, PrevTimestamp, NULL, true);
-////  if(((Work->Timestamp / 600000) * 600000) != ((PrevTimestamp / 600000) * 600000)) DB_Save(PARAMS_10M, 0, PrevTimestamp, NULL, true);
-////  if(((Work->Timestamp / 3600000) * 3600000) != ((PrevTimestamp / 3600000) * 3600000)) DB_Save(PARAMS_1H, 0, PrevTimestamp, NULL, true);
-//  PrevTimestamp = work->Timestamp;
-//  free(work);
-//  return Params;
 }
 bool CaptureInterface::AllocParams(Params_t *params) {
   if(pTriphase == true) {
@@ -271,13 +358,12 @@ bool CaptureInterface::AllocParams(Params_t *params) {
   }
   return true;
 }
-CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq_t freq, uint16_t id) : Database() {
+CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t id) : Database() {
   pNodeIndex           = id;
   pPrevTimestamp       = 0;
   pSampleRate          = samplerate;
   pTriphase            = triphase;
-  pNominalFreq         = freq;
-  pMaxSamples          = ceil(samplerate * 10.0 / (freq == FREQ_50 ? 42.5 : 51.0));
+  pMaxSamples          = ceil(samplerate * 10.0 / ((Tools::Electrical.NominalFrequency == 50) ? 42.5 : 51.0));
   pWaitingThreads      = 0;
   pDataReady           = false;
   pTerminate           = false;
@@ -323,6 +409,12 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, enum Freq
     pLastCycles[i] = Samples - pLastCyclesLenght;
     pLastCyclesLenght += pLastCycles[i]; 
   }
+  
+  for(int i = 0; i < 100; i ++) pPrevCycles[i].RMS = (float*)malloc(sizeof(float) * (pTriphase ? 3 : 1));
+  pStationaryRMS = NULL;
+  pPrevCyclesLen = 0;
+  pPrevCyclesWrite = 0;
+  pPrevStationary = false;  
   pLastCyclesPos    = 0;
   pWork.SequenceID  = 0;
 //  ExecSentence("PREPARE INSERT_10C AS INSERT INTO aggreg_10c(node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, fundamental_reactive_energy, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)");
@@ -373,13 +465,10 @@ uint32_t CaptureInterface::GetMaxSamples() {
 uint32_t CaptureInterface::SampleRate() {
   return pSampleRate;
 }
-uint8_t CaptureInterface::NominalFrequency() {
-  return (pNominalFreq == FREQ_50) ? 50 : 60;
-}
 bool CaptureInterface::Triphase() {
   return pTriphase;
 }
-float  CaptureInterface::CalcPhi(Complex_t voltage, Complex_t current) {
+float CaptureInterface::CalcPhi(Complex_t voltage, Complex_t current) {
   float Tmp;
   if((voltage.Real == 0) && (voltage.Imag == 0)) 
     Tmp = 0;
@@ -401,7 +490,7 @@ float CaptureInterface::ApplyFilter(float in, Filter_t* filter) {
   filter->Z2 = in * filter->A2 - filter->B2 * out;
   return out;
 }
-void  *CaptureInterface::FFT_Thread(void *args) {
+void *CaptureInterface::FFT_Thread(void *args) {
   FFT_t *FFT = (FFT_t *)args;
   fftwf_execute_dft_r2c(FFT->Plan, FFT->Input, (fftwf_complex*)FFT->Output);
   for(int i = 0; i < ceil(FFT->Len / 2 + 1); i++) {
@@ -410,7 +499,7 @@ void  *CaptureInterface::FFT_Thread(void *args) {
   }
   return NULL;  
 }
-void   CaptureInterface::FFT_Wait(FFT_t *fft) {
+void CaptureInterface::FFT_Wait(FFT_t *fft) {
   if(pthread_join(fft->Thread, NULL) != 0) Tools::LogMsg("ERROR", "%s:%d -> (Unknown)\n", __func__, __LINE__);
   pthread_mutex_lock(&pFFTPlannerMutex);
   fftwf_destroy_plan(fft->Plan);

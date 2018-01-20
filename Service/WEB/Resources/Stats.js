@@ -26,18 +26,14 @@
 		weekStart: 1
 	};
 }(jQuery));
-var Calendar = null;
-var WeekTable = null;
-var MonthTable = null;
+var Calendar     = null;
+var WeekTable    = null;
+var MonthTable   = null;
 var WeekDayTable = null;
-var DayArray   = [];
-var WeekDayArray  = [];
-var WeekEndArray  = [];
-var MonthWeekDayArray = [];
-var MonthWeekEndArray = [];
-var WeekDayNumArray = [];
-var WeekDayCountArray = [];
-var Spinner = new Spinner(SpinnerOpts);
+var Spinner      = new Spinner(SpinnerOpts);
+var EnergyData   = [];
+var SelectedYear;
+var SelectedPhase = [];
 function GetDataRanges() {
   ShowSpinner(Spinner, 'StatsSpinner');
   $.ajax({ url: "getSamplesRange",
@@ -55,6 +51,7 @@ function GetDataRanges() {
 function AjaxGetEnergy(selected_year) {
   $('#YearSelector button').removeClass('active');
   $('#btnSelYear' + selected_year).addClass('active');
+  SelectedYear = selected_year; 
   ShowSpinner(Spinner, 'StatsSpinner');
   var To = new Date(Date.UTC(selected_year, 11, 31, 23, 59, 59, 999)).getTime();
   var From = new Date(Date.UTC(selected_year, 0, 1, 0, 0, 0, 0)).getTime();
@@ -63,79 +60,53 @@ function AjaxGetEnergy(selected_year) {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: To - From, To: To, Aggreg: '1h', LastSample: 0, Series: 'active_energy', Node: Node}),
+           data: JSON.stringify({ Period: To - From, To: To, Aggreg: '10m', LastSample: 0, Series: 'active_energy', Node: Node}),
            success: function(result) {
-             DayArray   = [];
-             WeekDayArray  = [];
-             WeekEndArray  = [];
-             MonthWeekDayArray = [];
-             MonthWeekEndArray = [];
-             WeekDayNumArray = [];
-             WeekDayCountArray = [];
-             for(i = 0; i < result['Sampletime'].length; i++) {
-               var Day = GetDayOfYear(result['Sampletime'][i]);
-               var Week = GetWeekOfYear(result['Sampletime'][i]);
-               var DayOfWeek =  new Date(result['Sampletime'][i]).getDay();
-               var Month = new Date(result['Sampletime'][i]).getMonth();
-               if(!DayArray[Day]) DayArray[Day] = [0, 0, 0];
-               if(!WeekDayArray[Week]) WeekDayArray[Week] = [0, 0, 0];
-               if(!WeekEndArray[Week]) WeekEndArray[Week] = [0, 0, 0];
-               if(!WeekDayNumArray[DayOfWeek]) WeekDayNumArray[DayOfWeek] = [0, 0, 0];
-               if(!MonthWeekDayArray[Month]) MonthWeekDayArray[Month] = [0, 0, 0];
-               if(!MonthWeekEndArray[Month]) MonthWeekEndArray[Month] = [0, 0, 0];
-               if(!WeekDayCountArray[DayOfWeek]) WeekDayCountArray[DayOfWeek] = 0;
-               for(n = 0; n < result['active_energy'][i].length; n++) {
-                 DayArray[Day][n] = DayArray[Day][n] + result['active_energy'][i][n];
-                 if((DayOfWeek === 0) || (DayOfWeek === 6)) {
-                   WeekEndArray[Week][n] = WeekEndArray[Week][n] + result['active_energy'][i][n];
-                   MonthWeekEndArray[Month][n] = MonthWeekEndArray[Month][n] + result['active_energy'][i][n];
-                 } else {
-                   WeekDayArray[Week][n] = WeekDayArray[Week][n] + result['active_energy'][i][n];
-                   MonthWeekDayArray[Month][n] = MonthWeekDayArray[Month][n] + result['active_energy'][i][n];
-                 }
-                 WeekDayNumArray[DayOfWeek][n] = WeekDayNumArray[DayOfWeek][n] + result['active_energy'][i][n];
-               }
-               WeekDayCountArray[DayOfWeek] = WeekDayCountArray[DayOfWeek] + 1;
-             }
-             AjaxEnergy(selected_year, result);
+             EnergyData = [];
+             for(i = 0; i < result['Sampletime'].length; i++) EnergyData.push([result['Sampletime'][i], result['active_energy'][i]]);
+             ButtonClick();
+             StopSpinner(Spinner, 'StatsSpinner');
            }
-  }); 
+  });
 }
-
 function ShowColorScale(scale, outerdiv) {
   scale.out('hex');
   var width = outerdiv.width() - 1;
   for(i = 0; i < width; i++) outerdiv.append('<div style="width:1px; height:10px; display:inline-block; background:' + scale(i / width) + '"></div>');
 }
-
-function AjaxEnergy(selected_year, result) {
+function UpdateCalendar() {
+  var DayArray = [];
   var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]);
   if(Calendar === null) {
     Calendar = $('#Calendar').calendar({ language: "custom" });
     ShowColorScale(ColorScale, $('#CalendarScale'));
   }
+  for(i = 0; i < EnergyData.length; i++) {
+    var Day = GetDayOfYear(EnergyData[i][0]);
+    if(!DayArray[Day]) DayArray[Day] = 0;
+    DayArray[Day] = DayArray[Day] + EnergyData[i][1][SelectedPhase];
+  }
   var Max = -Infinity;
   var Min =  Infinity;
   for(i in DayArray) {
-    Max = Math.max(Max, DayArray[i][0]);
-    Min = Math.min(Min, DayArray[i][0]);
+    Max = Math.max(Max, DayArray[i]);
+    Min = Math.min(Min, DayArray[i]);
   }
   Min = 0;
   var Units = GetBestUnitsEnergy(Math.max(Math.abs(Min), Math.abs(Max)));
   $('#CalendarMin').html(Round2(Min / Units[0]));
   $('#CalendarMax').html(Round2(Max / Units[0]));
   $('#CalendarUnits').html('<em>' + Units[1] + 'Wh</em>');
-  Calendar.setYear(selected_year);
+  Calendar.setYear(SelectedYear);
   var Disabled = [];
   Calendar.setCustomDayRenderer(function(element, date) {
     var Day = GetDayOfYear(date.getTime());
     if(DayArray[Day] === undefined) {
       Disabled.push(new Date(date));
     } else {
-      var Energy = DayArray[Day][0];
+      var Energy = DayArray[Day];
       var Color = ColorScale((Energy - Min) / (Max - Min));
       var Text = chroma(Color).luminance() > 0.5 ? '#000' : '#FFF';
-      
       $(element).css('background-color', Color);
       $(element).css('color', Text);
       $(element).css('border', '1px solid #fff');
@@ -153,27 +124,41 @@ function AjaxEnergy(selected_year, result) {
     }
   });
   Calendar.setDisabledDays(Disabled);
-  
+}
+function UpdateWeeks() {
   if(WeekTable !== null) {
     WeekTable.clear();
     WeekTable.destroy();
   }
+  var WeekDayArray  = [];
+  var WeekEndArray  = [];
+  for(i = 0; i < EnergyData.length; i++) {
+    var Week = GetWeekOfYear(EnergyData[i][0]);
+    var DayOfWeek =  new Date(EnergyData[i][0]).getDay();
+    if(!WeekDayArray[Week]) WeekDayArray[Week] = 0.0;
+    if(!WeekEndArray[Week]) WeekEndArray[Week] = 0.0;
+    if((DayOfWeek === 0) || (DayOfWeek === 6)) {
+      WeekEndArray[Week] = WeekEndArray[Week] + EnergyData[i][1][SelectedPhase];
+    } else {
+      WeekDayArray[Week] = WeekDayArray[Week] + EnergyData[i][1][SelectedPhase];
+    }
+  }
   var Max = -Infinity;
   var Min =  Infinity;
   for(i in WeekDayArray) {
-    Max = Math.max(Max, WeekDayArray[i][0] + WeekEndArray[i][0]);
-    Min = Math.min(Min, WeekDayArray[i][0] + WeekEndArray[i][0]);
+    Max = Math.max(Max, WeekDayArray[i] + WeekEndArray[i]);
+    Min = Math.min(Min, WeekDayArray[i] + WeekEndArray[i]);
   }
   Min = 0;
   var Units = GetBestUnitsEnergy(Math.max(Math.abs(Min), Math.abs(Max)));
   $('#WeekUnits').html('<em>' + Units[1] + 'Wh</em>');
   var Contents = $('#WeekTable tbody');
   for(i = 1; ;i++) {
-    var startDate = GetDateOfISOWeek(i, selected_year);
+    var startDate = GetDateOfISOWeek(i, SelectedYear);
     var endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 6);
-    if(endDate.getFullYear() !== selected_year) break;
-    var WeekDay = (WeekDayArray[i] !== undefined) ? WeekDayArray[i][0] : 0;
-    var WeekEnd = (WeekEndArray[i] !== undefined) ? WeekEndArray[i][0] : 0;
+    if(endDate.getFullYear() !== SelectedYear) break;
+    var WeekDay = (WeekDayArray[i] !== undefined) ? WeekDayArray[i] : 0;
+    var WeekEnd = (WeekEndArray[i] !== undefined) ? WeekEndArray[i] : 0;
     Contents.append('<tr>' +
       '<td id="Week_' + i + '">' + i + '</td>' + 
       '<td><div class="progress" style="margin-bottom:0px; height: 16px; position:relative">' +
@@ -195,25 +180,40 @@ function AjaxEnergy(selected_year, result) {
                                           columnDefs: [ { targets: [1], sortable: false }, { targets: [0, 2, 3, 4], sortable: true, className: "text-center" } ],
                                           order: [0, 'asc']
   });
+}
+function UpdateMonths() {
   if(MonthTable !== null) {
     MonthTable.clear();
     MonthTable.destroy();
   }
+  var MonthWeekDayArray = [];
+  var MonthWeekEndArray = [];
+  for(i = 0; i < EnergyData.length; i++) {
+    var DayOfWeek =  new Date(EnergyData[i][0]).getDay();
+    var Month = new Date(EnergyData[i][0]).getMonth();
+    if(!MonthWeekDayArray[Month]) MonthWeekDayArray[Month] = 0.0;
+    if(!MonthWeekEndArray[Month]) MonthWeekEndArray[Month] = 0.0;
+    if((DayOfWeek === 0) || (DayOfWeek === 6)) {
+      MonthWeekEndArray[Month] = MonthWeekEndArray[Month] + EnergyData[i][1][SelectedPhase];
+    } else {
+      MonthWeekDayArray[Month] = MonthWeekDayArray[Month] + EnergyData[i][1][SelectedPhase];
+    }
+  }
   var Max = -Infinity;
   var Min =  Infinity;
   for(i in MonthWeekDayArray) {
-    Max = Math.max(Max, MonthWeekDayArray[i][0] + MonthWeekEndArray[i][0]);
-    Min = Math.min(Min, MonthWeekDayArray[i][0] + MonthWeekEndArray[i][0]);
+    Max = Math.max(Max, MonthWeekDayArray[i] + MonthWeekEndArray[i]);
+    Min = Math.min(Min, MonthWeekDayArray[i] + MonthWeekEndArray[i]);
   }
   Min = 0;
   var Units = GetBestUnitsEnergy(Math.max(Math.abs(Min), Math.abs(Max)));
   $('#MonthUnits').html('<em>' + Units[1] + 'Wh</em>');
   var Contents = $('#MonthTable tbody');
   for(i = 0; i < 12; i++) {
-    var startDate = new Date(startDate.getFullYear(), i, 1);
-    var endDate = new Date(startDate.getFullYear(), i + 1, 0);
-    var WeekDay = (MonthWeekDayArray[i] !== undefined) ? MonthWeekDayArray[i][0] : 0;
-    var WeekEnd = (MonthWeekEndArray[i] !== undefined) ? MonthWeekEndArray[i][0] : 0;
+    var startDate = new Date(SelectedYear, i, 1);
+    var endDate = new Date(SelectedYear, i + 1, 0);
+    var WeekDay = (MonthWeekDayArray[i] !== undefined) ? MonthWeekDayArray[i] : 0;
+    var WeekEnd = (MonthWeekEndArray[i] !== undefined) ? MonthWeekEndArray[i] : 0;
     Contents.append('<tr>' +
       '<td data-sort="' + i + '">' + $.fn.calendar.dates['custom']['monthsShort'][i] + '</td>' + 
       '<td><div class="progress" style="margin-bottom:0px; position:relative">' +
@@ -229,23 +229,34 @@ function AjaxEnergy(selected_year, result) {
                                             columnDefs: [ { targets: [1], sortable: false }, { targets: [0, 2, 3, 4], sortable: true, className: "text-center" } ],
                                             order: [0, 'asc']
   });
+}      
+function UpdateWeekDays() {
   if(WeekDayTable !== null) {
     WeekDayTable.clear();
     WeekDayTable.destroy();
   }
+  WeekDayNumArray = [];
+  WeekDayCountArray = [];
+  for(i = 0; i < EnergyData.length; i++) {
+    var DayOfWeek =  new Date(EnergyData[i][0]).getDay();
+    if(!WeekDayNumArray[DayOfWeek]) WeekDayNumArray[DayOfWeek] = 0.0;
+    if(!WeekDayCountArray[DayOfWeek]) WeekDayCountArray[DayOfWeek] = 0;   
+    WeekDayNumArray[DayOfWeek] = WeekDayNumArray[DayOfWeek] + EnergyData[i][1][SelectedPhase];
+    WeekDayCountArray[DayOfWeek] = WeekDayCountArray[DayOfWeek] + 1;
+  }
   var Max = -Infinity;
   var Min =  Infinity;
   for(i in WeekDayNumArray) {
-    Max = Math.max(Max, WeekDayNumArray[i][0] / ((WeekDayCountArray[i] !== undefined) ? WeekDayCountArray[i] / 24 : 0));
-    Min = Math.min(Min, WeekDayNumArray[i][0] / ((WeekDayCountArray[i] !== undefined) ? WeekDayCountArray[i] / 24 : 0));
+    Max = Math.max(Max, WeekDayNumArray[i] / ((WeekDayCountArray[i] !== undefined) ? WeekDayCountArray[i] / 144 : 0));
+    Min = Math.min(Min, WeekDayNumArray[i] / ((WeekDayCountArray[i] !== undefined) ? WeekDayCountArray[i] / 144 : 0));
   }
   Min = 0;
   var Units = GetBestUnitsEnergy(Math.max(Math.abs(Min), Math.abs(Max)));
   $('#WeekDayUnits').html('<em>' + Units[1] + 'Wh</em>');
   var Contents = $('#WeekDayTable tbody');
   for(i = 0; i < 7; i++) {
-    var Energy = (WeekDayNumArray[i] !== undefined) ? WeekDayNumArray[i][0] : 0;
-    var Count  = (WeekDayCountArray[i] !== undefined) ? WeekDayCountArray[i] / 24 : 0;
+    var Energy = (WeekDayNumArray[i] !== undefined) ? WeekDayNumArray[i] : 0;
+    var Count  = (WeekDayCountArray[i] !== undefined) ? WeekDayCountArray[i] / 144 : 0;
     Contents.append('<tr>' +
       '<td data-sort="' + ((i === 0) ? 7 : i) + '">' + $.fn.calendar.dates['custom']['daysShort'][i] + '</td>' + 
       '<td data-sort="' + Energy + '"><div class="progress" style="margin-bottom:0px; position:relative">' +
@@ -259,65 +270,164 @@ function AjaxEnergy(selected_year, result) {
                                                 columnDefs: [ { targets: [1], sortable: false }, { targets: [2, 3], sortable: true, className: "text-right" }, { targets: [0], sortable: true, className: "text-center" } ],
                                                 order: [0, 'asc']
   });
+}             
+function UpdateHeatMap() {
+  var Count = 1;
+  if($('#btnHeatmap1Hour').hasClass('active')) Count = 6;
+  if($('#btnHeatmap30Min').hasClass('active')) Count = 3;
+  if($('#btnHeatmap20Min').hasClass('active')) Count = 2;
+  if($('#btnHeatmap10Min').hasClass('active')) Count = 1;
+  var Header = $('#HeatMap thead tr');
+  Header.html('<td style="width:22px">Day</td><td style="width:54px">Date</td>');
+  for(i = 0; i < 24; i++) Header.append('<td colspan="' + (6 / Count) + '" style="border: 1px solid #888">' + ((i < 10) ? '0' + i : i) + '</td>');
+  var Body = $('#HeatMap tbody');
+  Body.html("");
+  var FirstDay = null;
+  var DayNum = null;
+  var PrevDay = null;
+  var Cells = [];
+  for(i = 0; i < EnergyData.length; i++) {
+    var Day = new Date(EnergyData[i][0]);
+    if(Day.getUTCFullYear() !== SelectedYear) continue;
+    DayNum = GetDayOfYear(Day.getTime());
+    if(FirstDay == null) FirstDay = DayNum;
+    var Slot = Math.trunc((EnergyData[i][0] % 86400000) / (600000 * Count));
+    var SlotName = DayNum + '_' + Slot;
+    if(!Cells[SlotName]) Cells[SlotName] = 0.0;
+    Cells[SlotName] = Cells[SlotName] + EnergyData[i][1][SelectedPhase];
+  }
   var Max = -Infinity;
   var Min =  Infinity;
-  for(i = 0; i < result['active_energy'].length; i++) {
-    Max = Math.max(Max, result['active_energy'][i][0]);
-    Min = Math.min(Min, result['active_energy'][i][0]);
+  for(i in Cells) {
+    Max = Math.max(Max, Cells[i]);
+    Min = Math.min(Min, Cells[i]);
   }
   Min = 0;
   var Units = GetBestUnitsEnergy(Math.max(Math.abs(Min), Math.abs(Max)));
-  $('#HeatMap tbody').html("");
-  var Contents = $('#HeatMap tbody');
-
-  var PrevDate = null;
-  for(i = 0; i < result['active_energy'].length; i++) {
-    var Day = new Date(result['Sampletime'][i]);
-    var DayNum = GetDayOfYear(Day.getTime());
-    if(DayNum === PrevDate) continue;
+  var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]);
+  for(; FirstDay <= DayNum; FirstDay++) {
+    var Day = new Date(SelectedYear, 0, FirstDay);
     var Row = '<td style="width:22px; font-weight: bold">' + $.fn.calendar.dates['custom']['daysShort'][Day.getDay()] + '</td><td style="width: 54px">' + Day.toLocaleDateString() + '</td>';
-    if(Day.getFullYear() !== selected_year) break;
-    for(n = 0; n < 24; n++) Row = Row + ('<td style="background-color: #EEE" id="Day_' + DayNum + '_Hour_' + n + '"></td>');
-    Contents.append('<tr>' + Row + '</tr>');
-    PrevDate = DayNum;
+    for(n = 0; n < 24 * (6 / Count); n++) {
+      var SlotName = FirstDay + '_' + n;
+      var Color = (!Cells[SlotName] ? '#EEE' : ColorScale((Cells[SlotName] - Min) / (Max - Min)));
+      Row = Row + ('<td style="border:1px solid #888; background-color: ' + Color + '" + class="TimeSlot"><div class="hidden">' + (!Cells[SlotName] ? 'No data for this period' : Round2(Cells[SlotName] / Units[0]) + Units[1] + 'Wh') + '</div></td>');
+    }
+    Body.append('<tr>' + Row + '</tr>');
   }
-
-  for(i = 0; i < result['active_energy'].length; i++) {
-    var Day = new Date(result['Sampletime'][i]);
-    var DayNum = GetDayOfYear(Day.getTime());
-    var HourNum = Day.getHours();
-    $('#Day_' + DayNum + '_Hour_' + HourNum).css('background-color', ColorScale((result['active_energy'][i][0] - Min) / (Max - Min)));
-    $('#Day_' + DayNum + '_Hour_' + HourNum).qtip({
-        content: { text: "<div>" + Round2(result['active_energy'][i][0] / Units[0]) + Units[1] + "Wh</div>" },
-        style: { classes: 'qtip-bootstrap' },
-        show: { event: 'mouseover', delay: 0  },
-        hide: { event: 'mouseout' }
-      });
-    
-  }
-  
-  StopSpinner(Spinner, 'StatsSpinner');
+  $('.TimeSlot').each(function() {
+    $(this).qtip({
+      content: { text: $(this)[0].firstChild.innerHTML },
+      style: { classes: 'qtip-bootstrap' },
+      show: { event: 'mouseover', delay: 0  },
+      hide: { event: 'mouseout' }
+    });
+  });  
 }
-$('#btnShowAsTable').click(function() {
-  $('#btnShowAsTable').addClass('active');
-  $('#btnShowAsHeatmap').removeClass('active');
-  $('#ShowAsTables').removeClass('hidden');
-  $('#ShowAsHeatmap').addClass('hidden');
-  localStorage.setItem("StatsView", "Tables");
-});
-$('#btnShowAsHeatmap').click(function() {
-  $('#btnShowAsHeatmap').addClass('active');
-  $('#btnShowAsTable').removeClass('active');
-  $('#ShowAsTables').addClass('hidden');
-  $('#ShowAsHeatmap').removeClass('hidden');
-  localStorage.setItem("StatsView", "Heatmap");
-});
-
-function UpdatePage() {
-  if(localStorage.getItem("StatsView") === "Tables") 
-    $('#btnShowAsTable').click();
-  else
-    $('#btnShowAsHeatmap').click();
+function ButtonClick(event) {
+  if(this.id === 'btnShowAsTable')   localStorage.setItem('StatView', 'Table');
+  if(this.id === 'btnShowAsHeatmap') localStorage.setItem('StatView', 'Heatmap');
+  if(this.id === 'btnHeatmap1Hour') localStorage.setItem('StatBlocks', '1h');
+  if(this.id === 'btnHeatmap30Min') localStorage.setItem('StatBlocks', '30m');
+  if(this.id === 'btnHeatmap20Min') localStorage.setItem('StatBlocks', '20m');
+  if(this.id === 'btnHeatmap10Min') localStorage.setItem('StatBlocks', '10m');
+  if(this.id === 'btnStatsALLPhase') localStorage.setItem('StatPhase', 'ALL');
+  if(this.id === 'btnStatsRPhase') localStorage.setItem('StatPhase', 'R');
+  if(this.id === 'btnStatsSPhase') localStorage.setItem('StatPhase', 'S');
+  if(this.id === 'btnStatsTPhase') localStorage.setItem('StatPhase', 'T');
   
-  GetDataRanges();
+  $('#ShowAsHeatmap').addClass('hidden');
+  $('#ShowAsTables').addClass('hidden');
+  $('#btnShowAsTable').removeClass('active');
+  $('#btnShowAsHeatmap').removeClass('active');
+  $('#btnHeatmap1Hour').addClass('disabled');
+  $('#btnHeatmap30Min').addClass('disabled');
+  $('#btnHeatmap20Min').addClass('disabled');
+  $('#btnHeatmap10Min').addClass('disabled');
+  $('#btnHeatmap1Hour').removeClass('active');
+  $('#btnHeatmap30Min').removeClass('active');
+  $('#btnHeatmap20Min').removeClass('active');
+  $('#btnHeatmap10Min').removeClass('active');
+  $('#btnStatsALLPhase').removeClass('active');
+  $('#btnStatsRPhase').removeClass('active');
+  $('#btnStatsSPhase').removeClass('active');
+  $('#btnStatsTPhase').removeClass('active');
+  $('#btnStatsALLPhase').addClass('disabled');
+  $('#btnStatsRPhase').addClass('disabled');
+  $('#btnStatsSPhase').addClass('disabled');
+  $('#btnStatsTPhase').addClass('disabled');
+  switch(localStorage.getItem('StatView')) {
+    case 'Table' : 
+      $('#btnShowAsTable').addClass('active');
+      $('#ShowAsTables').removeClass('hidden');
+      break;
+    default :
+      $('#btnShowAsHeatmap').addClass('active');
+      $('#ShowAsHeatmap').removeClass('hidden');
+      $('#btnHeatmap1Hour').removeClass('disabled');
+      $('#btnHeatmap30Min').removeClass('disabled');
+      $('#btnHeatmap20Min').removeClass('disabled');
+      $('#btnHeatmap10Min').removeClass('disabled');
+      break;
+  } 
+  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+    $('#btnStatsALLPhase').removeClass('disabled');
+    $('#btnStatsRPhase').removeClass('disabled');
+    $('#btnStatsSPhase').removeClass('disabled');
+    $('#btnStatsTPhase').removeClass('disabled');
+  }
+  switch(localStorage.getItem('StatPhase')) {
+    case 'R' :
+      $('#btnStatsRPhase').addClass('active');
+      SelectedPhase = [0];
+      break;
+    case 'S' :
+      $('#btnStatsSPhase').addClass('active');
+      SelectedPhase = [1];
+      break;
+    case 'T' :
+      $('#btnStatsTPhase').addClass('active');
+      SelectedPhase = [2];
+      break;
+    default :
+      $('#btnStatsALLPhase').addClass('active');
+      SelectedPhase = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [0, 1, 2] : [0];
+      break;
+  }
+  if(localStorage.getItem('StatView') === 'Heatmap') {
+    switch(localStorage.getItem('StatBlocks')) {
+      case '30m' :
+        $('#btnHeatmap30Min').addClass('active');
+        break;
+      case '20m' :
+        $('#btnHeatmap20Min').addClass('active');
+        break;
+      case '10m' :
+        $('#btnHeatmap10Min').addClass('active');
+        break;
+      default :
+        $('#btnHeatmap1Hour').addClass('active');
+        break;
+    }
+  }
+  if((this.id === 'btnShowAsTable') || (this.id === 'btnShowAsHeatmap')) return;
+  UpdateHeatMap();
+  if((this.id === 'btnHeatmap1Hour') || (this.id === 'btnHeatmap30Min') || (this.id === 'btnHeatmap20Min') || (this.id === 'btnHeatmap10Min')) return;
+  UpdateCalendar();
+  UpdateWeeks();
+  UpdateMonths();
+  UpdateWeekDays();
+}
+$('#btnShowAsTable').click(ButtonClick);
+$('#btnShowAsHeatmap').click(ButtonClick);
+$('#btnStatsRPhase').click(ButtonClick);
+$('#btnStatsSPhase').click(ButtonClick);
+$('#btnStatsTPhase').click(ButtonClick);
+$('#btnStatsALLPhase').click(ButtonClick);
+$('#btnHeatmap1Hour').click(ButtonClick);
+$('#btnHeatmap30Min').click(ButtonClick);
+$('#btnHeatmap20Min').click(ButtonClick);
+$('#btnHeatmap10Min').click(ButtonClick);
+function UpdatePage() {
+  GetDataRanges();  
 }

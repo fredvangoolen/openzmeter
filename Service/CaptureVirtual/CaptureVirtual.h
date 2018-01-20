@@ -16,7 +16,6 @@ class CaptureVirtual : public CaptureInterface {
       float CurrentC;                                    //Valor de corriente
       float CurrentD;                                    //Valor de corriente
     } Sample_t;
-    float                        NominalVoltage;          //Tension nominal
     float                        NominalCurrent;          //Corriente nominal
     bool                         Terminate;               //Señal para detener el hilo de captura
 
@@ -34,7 +33,7 @@ class CaptureVirtual : public CaptureInterface {
   private :
     void   SamplesCopy(float *dest, int32_t offset, uint32_t len);
   public :
-    CaptureVirtual(uint32_t samplerate, bool triphase, float nominalvoltage, float nominalcurrent, CaptureInterface::Freq_t baseFreq, uint16_t id);
+    CaptureVirtual(uint32_t samplerate, bool triphase, float nominalcurrent, uint16_t id);
     ~CaptureVirtual();
 };
 //----------------------------------------------------------------------------------------------------------------------

@@ -19,20 +19,20 @@
 // Funciones ===========================================================================================================
 void   CaptureMono::ReadCallback(struct libusb_transfer *transfer) {
   int16_t *Buff16 = (int16_t*)transfer->buffer;
-  int      Len = transfer->actual_length / 4;
+  uint     Len = transfer->actual_length / 4;
   CaptureMono *This = (CaptureMono*)transfer->user_data;
   pthread_mutex_lock(&This->CaptureMutex);
-  while(This->Used > (This->Size - Len)) {
+  while(This->Used > (CAPTUREMONO_BUFFERSIZE - Len)) {
     if(This->pTerminate) return;
     Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
     pthread_cond_wait(&This->WriteWait, &This->CaptureMutex);
   }
-  for(int i = 0; i < Len; i++) {
+  for(uint i = 0; i < Len; i++) {
     int16_t Voltage = Buff16[i * 2 + 0];
     uint16_t Current = Buff16[i * 2 + 1];
     This->Buffer[This->WritePos].Voltage = (Voltage - This->VoltageOffset) * This->VoltageGain;
     This->Buffer[This->WritePos].Current = (Current - This->CurrentOffset) * This->CurrentGain;
-    This->WritePos = (This->WritePos + 1) % This->Size;
+    This->WritePos = (This->WritePos + 1) % CAPTUREMONO_BUFFERSIZE;
   }
   This->Used += Len;
   pthread_cond_signal(&This->ReadWait);
@@ -56,10 +56,9 @@ int CaptureMono::PlugCallback(struct libusb_context *ctx, struct libusb_device *
   return 0;
 }
 void  *CaptureMono::Capture_Thread(void *args) {
-  if(pthread_setschedprio(0, -20) == -1) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return NULL;
-  }
+  struct sched_param Param;
+  Param.sched_priority = 99;
+  if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   CaptureMono *This = (CaptureMono*)args;
   pthread_setname_np(This->CaptureThread, "CapMono_Init");
   uint8_t BufferIN[CAPTUREMONO_TRANSFERS][8192];
@@ -69,7 +68,7 @@ void  *CaptureMono::Capture_Thread(void *args) {
   while(!This->pTerminate) {
     if((Update % 10) == 0) {
       char ThreadName[16];
-      sprintf(ThreadName, "CapMono_%03d", This->Used * 100 / This->Size);
+      sprintf(ThreadName, "CapMono_%03d", This->Used * 100 / CAPTUREMONO_BUFFERSIZE);
       pthread_setname_np(This->CaptureThread, ThreadName);
     }
     Update++;
@@ -125,7 +124,7 @@ void  *CaptureMono::Capture_Thread(void *args) {
           Tools::LogMsg("INFO", "Kernel driver dettached for CaptureMono device with serial %s\n", This->Serial);
         }
       }
-      Result = libusb_claim_interface(This->DeviceHandle, 0);
+      Result = libusb_claim_interface(This->DeviceHandle, 1);
       if(Result != LIBUSB_SUCCESS) {
         Tools::LogMsg("ERROR", "libusb_claim_interface returns %d\n", Result);
         libusb_close(This->DeviceHandle);
@@ -133,7 +132,7 @@ void  *CaptureMono::Capture_Thread(void *args) {
         This->NewDevice = NULL;
         continue;
       } else {
-        Tools::LogMsg("INFO", "Claimed interface 0 on CaptureMono device with serial %s\n", This->Serial);
+        Tools::LogMsg("INFO", "Claimed interface 1 on CaptureMono device with serial %s\n", This->Serial);
       }
       for(int i = 0; i < CAPTUREMONO_TRANSFERS; i++) {
         libusb_fill_bulk_transfer(TransferIN[i], This->DeviceHandle, CAPTUREMONO_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, -1);
@@ -159,6 +158,7 @@ void  *CaptureMono::Analize_Thread(void* args) {
     return NULL;
   }
   pthread_setname_np(This->AnalyzeThread, "AnalysisMono");
+  int Discard = 100;
   while(!This->pTerminate) {
     pthread_mutex_lock(&This->AnalyzeMutex);
     while(This->Used < (This->GetMaxSamples())) {
@@ -180,25 +180,29 @@ void  *CaptureMono::Analize_Thread(void* args) {
         This->pWork.Cycles[This->pWork.Cycles_Len].Start = This->pWork.Samples;
       }
       LastSample = Out;
-      This->ReadPos = (This->ReadPos + 1) % This->Size;
+      This->ReadPos = (This->ReadPos + 1) % CAPTUREMONO_BUFFERSIZE;
     }
     This->Used -= This->pWork.Samples;
     pthread_cond_signal(&This->WriteWait);
     pthread_mutex_unlock(&This->AnalyzeMutex);
-    This->Analyze(0.1);
-    uint64_t AnalyzeEnd = Tools::GetTime();
-    This->SaveWorkParams();
-    uint64_t SaveEnd = Tools::GetTime();
-    Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %umS (%" PRIu64 "mS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
+    if(Discard > 0) {
+      Discard--;
+      This->ResetWork();
+    } else {
+      This->Analyze(0.1);
+      uint64_t AnalyzeEnd = Tools::GetTime();
+      This->SaveWorkParams();
+      uint64_t SaveEnd = Tools::GetTime();
+      Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %umS (%" PRIu64 "mS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
+    }
   }
   return NULL;
 }
-CaptureMono::CaptureMono(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint32_t bufferLen, enum Freq_t freq, uint16_t id) : CaptureInterface(15625, false, freq, id) {
+CaptureMono::CaptureMono(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint16_t id) : CaptureInterface(CAPTUREMONO_SAMPLEFREQ, false, id) {
   Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
   Buffer           = NULL;
   ReadPos          = 0;
   WritePos         = 0;
-  Size             = bufferLen;
   Used             = 0;
   DeviceHandle     = NULL;
   NewDevice        = NULL;
@@ -213,7 +217,7 @@ CaptureMono::CaptureMono(const char *serial, float voltageGain, int voltageOffse
   pthread_mutex_init(&CaptureMutex, NULL);
   for(int i = 0; i < 5; i++) {
     float Q = 1.0;
-    float K = tan(M_PI * ((float)NominalFrequency() / CAPTUREMONO_SAMPLEFREQ));
+    float K = tan(M_PI * ((float)Tools::Electrical.NominalFrequency / CAPTUREMONO_SAMPLEFREQ));
     float Norm = 1 / (1 + K / Q + K * K);
     Filters[i].A0 = K / Q * Norm;
     Filters[i].A1 = 0;
@@ -228,7 +232,7 @@ CaptureMono::CaptureMono(const char *serial, float voltageGain, int voltageOffse
     Tools::LogMsg("ERROR", "Fallo la apertura de libUSB...\n");
     return;
   }
-  Buffer = (Sample_t*)malloc(bufferLen * sizeof(Sample_t));
+  Buffer = (Sample_t*)malloc(CAPTUREMONO_BUFFERSIZE * sizeof(Sample_t));
   if(Buffer == NULL) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(NULL);

@@ -32,12 +32,22 @@
               <div class="panel-heading">
                 <span class="huge">Anual stats</span>
                 <div class="pull-right">
+                  <span class="small">Blocks:</span><br>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnHeatmap1Hour" data-toggle="tooltip" title="Show 1 hour divisions">1 hour</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnHeatmap30Min" data-toggle="tooltip" title="Show 30 minutes divisions">30 minutes</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnHeatmap20Min" data-toggle="tooltip" title="Show 20 minutes divisions">20 minutes</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnHeatmap10Min" data-toggle="tooltip" title="Show 10 minutes divisions">10 minutes</button>
+                  </div>
+                </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="pull-right">
                   <span class="small">Phase:</span><br>
                   <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageALLPhase" data-toggle="tooltip" title="Show sum of all phases">ALL</button>
-                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageRPhase" data-toggle="tooltip" title="Show phase R">R</button>
-                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageSPhase" data-toggle="tooltip" title="Show phase S">S</button>
-                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowVoltageTPhase" data-toggle="tooltip" title="Show phase T">T</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnStatsALLPhase" data-toggle="tooltip" title="Show sum of all phases">ALL</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnStatsRPhase" data-toggle="tooltip" title="Show phase R">R</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnStatsSPhase" data-toggle="tooltip" title="Show phase S">S</button>
+                    <button type="button" class="btn btn-default btn-xs disabled" id="btnStatsTPhase" data-toggle="tooltip" title="Show phase T">T</button>
                   </div>
                 </div>
                 <div class="pull-right">&nbsp;</div>
@@ -56,13 +66,11 @@
                 <span class="clearfix"> </span>
               </div>
               <div id="ShowAsHeatmap" style="padding: 5px">
-                <table id="HeatMap" style="width: 100%; font-size: 9px; text-align:center;">
+                <table id="HeatMap" style="width: 100%; font-size: 9px; text-align:center; table-layout: fixed">
                   <thead style="font-weight: bold">
-                    <tr>
-                      <td style="width:22px">Day</td><td style="width:54px">Date</td><td>00</td><td>01</td><td>02</td><td>03</td><td>04</td><td>05</td><td>06</td><td>07</td><td>08</td><td>09</td><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td><td>20</td><td>21</td><td>22</td><td>23</td>
-                    </tr>
+                    <tr></tr>
                   </thead>
-                  <tbody style="border: 1px solid #CCC">
+                  <tbody style="border: 1px solid #888">
                   </tbody>
                 </table>
               </div>
@@ -72,7 +80,7 @@
                     <div class="panel panel-default" style="margin: 5px"> 
                       <div class="panel-heading">
                         <span class="glyphicon glyphicon-calendar"></span> By day
-                        <div style="padding: 5px; float: right; width: 200px; margin-top: -18px">
+                        <div style="float: right; width: 200px">
                           <div id="CalendarScale" style="margin-bottom: -10px; width: 200px"></div>
                           <div style="float: left; font-size: 80%" id="CalendarMin">?</div>
                           <div style="float: right; font-size: 80%" id="CalendarMax">?</div>

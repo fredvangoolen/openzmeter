@@ -47,6 +47,9 @@ int main(int argc, char** argv) {
   }
   if(Daemonize == true) Tools::Daemonize();
   setpriority(PRIO_PROCESS, 0, -20);
+  struct sched_param Param;
+  Param.sched_priority = -10;
+  if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "Non preemptive kernel or unprivileged user!!\n");
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
@@ -57,9 +60,9 @@ int main(int argc, char** argv) {
   for(uint i = 0; i < Tools::Devices.Len; i++) {
     if(strcmp(Tools::Devices.Items[i].Type, "Mono") == 0) {
       Tools::Devices.Items[i].Instance = new CaptureMono(Tools::Devices.Items[i].Serial, Tools::Devices.Items[i].VoltageGain, Tools::Devices.Items[i].VoltageOffset, 
-                                                         Tools::Devices.Items[i].CurrentGain, Tools::Devices.Items[i].CurrentOffset, 8192 * 1024, CaptureInterface::FREQ_50, i);
+                                                         Tools::Devices.Items[i].CurrentGain, Tools::Devices.Items[i].CurrentOffset, i);
     } else if(strcmp(Tools::Devices.Items[i].Type, "VirtualMono") == 0) {
-      Tools::Devices.Items[i].Instance = new CaptureVirtual(15625, true, 230, 1.0, CaptureInterface::FREQ_50, i);
+      Tools::Devices.Items[i].Instance = new CaptureVirtual(15625, true, 1.0, i);
     }
   }
   if(HTTPServer::Start() == false) return EXIT_FAILURE;

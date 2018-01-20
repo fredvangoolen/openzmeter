@@ -10,8 +10,8 @@
 #define CAPTUREMONO_PID             0x7270       //Device ID
 #define CAPTUREMONO_ENDPOINT_IN       0x81       //Endpoint de lectura de datos
 #define CAPTUREMONO_SAMPLEFREQ    15625.00       //Frequencia de muestreo
-#define CAPTUREMONO_BUFFERSIZE    (1024 * 8192)  //Tamaño del buffer
-#define CAPTUREMONO_TRANSFERS          128       //Numero de transferencias a encolar
+#define CAPTUREMONO_BUFFERSIZE    156250         //Tamaño del buffer (10 segundos)
+#define CAPTUREMONO_TRANSFERS          32       //Numero de transferencias a encolar
 
 //#define MAX_FRAME                     3688         //Longitud maxima de muestras de un frame (236ms)
 //#define ADQUISITION_SAFESAMPLES  MAX_FRAME         //Numero de muestras "seguras" antes y despues del punto de lectura 
@@ -32,7 +32,6 @@ class CaptureMono : public CaptureInterface {
     Sample_t                    *Buffer;                  //Donde almaceno muestras leidas (RingBuffer)
     uint32_t                     ReadPos;                 //Posicion de lectura del buffer
     uint32_t                     WritePos;                //Posicion de escritura del buffer
-    uint32_t                     Size;                    //Tamaño total del buffer
     uint32_t                     Used;                    //Muestras en uso del buffer
     pthread_mutex_t              CaptureMutex;            //Mutex para bloquear acceso al buffer
     pthread_mutex_t              AnalyzeMutex;            //Mutex para bloquear acceso a muestras y resultados
@@ -56,7 +55,7 @@ class CaptureMono : public CaptureInterface {
 //    Params_t *Analyze(Work_t *work);
 //    void   SamplesCopy(float *dest, int32_t offset, uint32_t len);
   public :
-    CaptureMono(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint32_t bufferLen, enum Freq_t freq, uint16_t id);
+    CaptureMono(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint16_t id);
     bool IsRunning();
     ~CaptureMono();
 };

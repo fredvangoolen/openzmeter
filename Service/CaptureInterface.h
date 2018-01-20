@@ -10,10 +10,16 @@
 #include "Database.h"
 //---------------------------------------------------------------------------------------------------------------------
 #define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
+#define EVENT_RVC                     5.00        //Variacion en % para generar RVC
+#define EVENT_RVC_HYSTERESIS          3.00        //Variacion en % para finalizar RVC
+#define EVENT_DIP_SWELL               10.0        //Variacion en % para generar subida o bajada
+#define EVENT_INTERRUPTION            90.0        //Bajada en % para generar interrupcion
+#define EVENT_HYSTERESIS              06.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
 //---------------------------------------------------------------------------------------------------------------------
 class CaptureInterface : private Database {
   public :
-    enum Freq_t {FREQ_50, FREQ_60};
+//    enum Freq_t {FREQ_50, FREQ_60};
+    enum Event_Type { EVT_NONE, EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC, EVT_GLITCH };
     typedef struct {
       uint32_t Start;                       //Muestra dentro del bloque que inicia el ciclo
       uint32_t End;                         //Muestra dentro del bloque que finaliza el ciclo
@@ -75,6 +81,21 @@ class CaptureInterface : private Database {
       float Z2;
     } Filter_t;
   private :
+    typedef struct {
+      float    *RMS;
+      uint64_t  Timestamp;
+      uint32_t  Len;
+    } EventCycle_t;
+    typedef struct {
+      enum Event_Type Type;                 //Tipo de evento (puede cambiar durante el evento)
+      uint64_t        Start;                //Timestamp de inicio
+      uint64_t        Duration;             //Duracion en samples
+      float           Voltage;              //Tension maxima o minima durante el evento
+      float           Change;               //Porcentage de desviacion del evento
+//      float           Begin[MAX_FRAME * 2]; //Ciclos al inicio del evento
+//      float           End[MAX_FRAME * 2];   //Ciclos al final del evento
+    } Event_t;
+  private :
     static pthread_mutex_t pFFTPlannerMutex; //Bloquea el acceso simultaneo al plinificador de FFTs
   private :
     uint32_t        pWaitingThreads;       //Hilos esperando datos
@@ -88,15 +109,22 @@ class CaptureInterface : private Database {
     uint32_t        pLastCyclesLenght;
     uint32_t        pSampleRate;
     uint32_t        pMaxSamples;
-    enum Freq_t     pNominalFreq;
     bool            pTriphase;
     Aggreg_t        pAggreg3S;
     Aggreg_t        pAggreg1M;
     Aggreg_t        pAggreg10M;
     Aggreg_t        pAggreg1H;
     uint16_t        pNodeIndex;
-  private :    
-    void     SaveParams(Params_t *param, const char *aggreg);
+    EventCycle_t    pPrevCycles[100];     //Informacion de ciclos anteriores para calculo de eventos
+    uint8_t         pPrevCyclesLen;       //Tamaño de buffer de ciclos
+    uint8_t         pPrevCyclesWrite;     //Posicion actual del buffer de ciclos
+    float          *pStationaryRMS;       //Valores de tension estacionarios
+    bool            pPrevStationary;      //Almacena el estado del flag de regimen estacionario
+    Event_t         pRunningEvent;        //Evento en curso
+  private :
+    void  SaveParams(Params_t *param, const char *aggreg);
+    void  SaveEvent();
+    float PercentChange(float in, float reference);
   protected :
     uint64_t    pPrevTimestamp;
     Work_t      pWork;
@@ -104,11 +132,11 @@ class CaptureInterface : private Database {
   protected :
     bool     AllocParams(Params_t *params);
     void     ResetParams(Params_t *params);
-    uint8_t  NominalFrequency();
     void     ResetWork();
     uint32_t GetMaxSamples();
     void     SaveWorkParams();
     void     Analyze(float minimunCurrent);
+    void     EventsDetect();
     void     AccumulateAggregation(Aggreg_t *dst, Params_t *src);
     void     NormalizeAggregation(Aggreg_t *src);
     bool     FFT_Start(FFT_t *fft, float *in, Complex_t *out);
@@ -123,6 +151,6 @@ class CaptureInterface : private Database {
     uint8_t      NominalFreq();
     json_object *GetJSONCopy(char *series);
   public :
-    CaptureInterface(uint32_t samplerate, bool triphase, enum Freq_t freq, uint16_t id);
+    CaptureInterface(uint32_t samplerate, bool triphase, uint16_t id);
     virtual ~CaptureInterface();
 };

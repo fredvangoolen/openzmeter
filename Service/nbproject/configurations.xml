@@ -216,7 +216,7 @@
           </logicalFolder>
           <logicalFolder name="momentjs" displayName="momentjs" projectFiles="true">
             <itemPath>WEB/Resources/lib/momentjs/moment-duration-format.js</itemPath>
-            <itemPath>WEB/Resources/lib/momentjs/moment.js</itemPath>
+            <itemPath>WEB/Resources/lib/momentjs/moment.min.js</itemPath>
           </logicalFolder>
           <logicalFolder name="nvd3" displayName="nvd3" projectFiles="true">
             <itemPath>WEB/Resources/lib/nvd3/nv.d3.css</itemPath>
@@ -299,6 +299,7 @@
       <itemPath>WEB/Events_ITIC.html</itemPath>
       <itemPath>WEB/Help.html</itemPath>
       <itemPath>WEB/Login.html</itemPath>
+      <itemPath>WEB/Settings.html</itemPath>
       <itemPath>WEB/Stats.html</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -313,7 +314,6 @@
     <itemPath>CaptureInterface.h</itemPath>
     <itemPath>Database.cpp</itemPath>
     <itemPath>Database.h</itemPath>
-    <itemPath>Events.c</itemPath>
     <itemPath>HTTPServer.cpp</itemPath>
     <itemPath>HTTPServer.h</itemPath>
     <itemPath>Main.cpp</itemPath>
@@ -342,13 +342,13 @@
         <cTool>
           <developmentMode>0</developmentMode>
           <standard>3</standard>
-          <commandLine>-Os -march=native</commandLine>
+          <commandLine>-march=native -Os</commandLine>
           <warningLevel>2</warningLevel>
         </cTool>
         <ccTool>
           <developmentMode>0</developmentMode>
           <standard>4</standard>
-          <commandLine>-Os -march=native</commandLine>
+          <commandLine>-march=native -Os</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
@@ -376,8 +376,6 @@
       <item path="Database.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Database.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Events.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="HTTPServer.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -1026,7 +1024,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/momentjs/moment.js"
+      <item path="WEB/Resources/lib/momentjs/moment.min.js"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1187,6 +1185,8 @@
       <item path="WEB/Resources/lib/visjs/vis.min.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/openZmeter.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Settings.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Stats.html" ex="false" tool="3" flavor2="0">
       </item>

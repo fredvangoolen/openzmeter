@@ -25,17 +25,17 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
     This->pWork.Params.Timestamp = Start;
     This->pWork.Cycles[0].Start = 0;
     for(int i = 0; ; i++) {
-      This->pWork.VoltageSamples[0][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency());
-      This->pWork.CurrentSamples[0][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() - 0.1);
+      This->pWork.VoltageSamples[0][i] = Tools::Electrical.NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * Tools::Electrical.NominalFrequency);
+      This->pWork.CurrentSamples[0][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * Tools::Electrical.NominalFrequency - 0.1);
       if(This->Triphase()) {
-        This->pWork.VoltageSamples[1][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 2.0 * M_PI / 3.0);
-        This->pWork.VoltageSamples[2][i] = This->NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 4.0 * M_PI / 3.0);
-        This->pWork.CurrentSamples[1][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 2.0 * M_PI / 3.0 - 0.1);
-        This->pWork.CurrentSamples[2][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * This->NominalFrequency() + 4.0 * M_PI / 3.0 - 0.1);
+        This->pWork.VoltageSamples[1][i] = Tools::Electrical.NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * Tools::Electrical.NominalFrequency + 2.0 * M_PI / 3.0);
+        This->pWork.VoltageSamples[2][i] = Tools::Electrical.NominalVoltage * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * Tools::Electrical.NominalFrequency + 4.0 * M_PI / 3.0);
+        This->pWork.CurrentSamples[1][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * Tools::Electrical.NominalFrequency + 2.0 * M_PI / 3.0 - 0.1);
+        This->pWork.CurrentSamples[2][i] = This->NominalCurrent * M_SQRT2 * sin(2.0 * M_PI * i / This->SampleRate() * Tools::Electrical.NominalFrequency + 4.0 * M_PI / 3.0 - 0.1);
         This->pWork.CurrentSamples[3][i] = 0.0000001;
       }
       This->pWork.Samples++;
-      if(i == (int)(This->SampleRate() / 2.0 / This->NominalFrequency() * (This->pWork.Cycles_Len + 1))) {
+      if(i == (int)(This->SampleRate() / 2.0 / Tools::Electrical.NominalFrequency * (This->pWork.Cycles_Len + 1))) {
         This->pWork.Cycles[This->pWork.Cycles_Len].End = This->pWork.Samples;
         This->pWork.Cycles_Len++;
         if(This->pWork.Cycles_Len == 20) break;
@@ -51,9 +51,8 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
   }
   return NULL;
 }
-CaptureVirtual::CaptureVirtual(uint32_t samplerate, bool triphase, float nominalvoltage, float nominalcurrent, CaptureInterface::Freq_t baseFreq, uint16_t id) : CaptureInterface(samplerate, triphase, baseFreq, id) {
+CaptureVirtual::CaptureVirtual(uint32_t samplerate, bool triphase, float nominalcurrent, uint16_t id) : CaptureInterface(samplerate, triphase, id) {
   Tools::LogMsg("INFO", "Starting CaptureVirtual adquisition thread...\n");
-  NominalVoltage   = nominalvoltage;
   NominalCurrent   = nominalcurrent;
   Terminate        = false;
   if(pthread_create(&AnalyzeThread, NULL, Analize_Thread, this) != 0) {

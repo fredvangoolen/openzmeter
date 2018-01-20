@@ -52,7 +52,7 @@ HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection* connection) {
     }
     sprintf(Session->ID, "%08X%08X%08X%08X", (uint32_t)random(), (uint32_t)random(), (uint32_t)random(), (uint32_t)random());
     Tools::LogMsg("DEBUG", "New HTTP client with ID %s\n", Session->ID);
-    Session->User = NULL;
+    Session->Logged = false;
     Session->Next = Sessions;
     Sessions = Session;
   }
@@ -95,6 +95,8 @@ void HTTPServer::SetMimeType(struct MHD_Response *response, const char *url) {
     MimeType = (char*)"image/x-icon";
   else if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".png")) == 0) 
     MimeType = (char*)"image/png";
+  else if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".svg")) == 0) 
+    MimeType = (char*)"image/svg+xml";
   else if((strlen(url) >= 5) && (strcmp(&url[FileNameLen - 5], ".html")) == 0) 
     MimeType = (char*)"text/html";
   else {
@@ -206,7 +208,7 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
     }
   } else if(strcmp (method, MHD_HTTP_METHOD_GET) == 0) {
     if(strcmp(url, "/Login") == 0) {
-      if(Request->Session->User != NULL) return SendRedirect(connection, "/Dashboard");
+      if(Request->Session->Logged == true) return SendRedirect(connection, "/Dashboard");
       char Cookie[256];
       sprintf(Cookie, "OZM_SESSION=%s; httponly; Path=/", Request->Session->ID);
       return SendFile(connection, (char*)"WEB/Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
@@ -219,7 +221,8 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
       free(FilePath);
       if(Return == MHD_YES) return MHD_YES;
     }
-    if(Request->Session->User == NULL) return SendRedirect(connection, "/Login");
+    if(Request->Session->Logged == false) 
+      return SendRedirect(connection, "/Login");
     if((strcmp(url, "/Dashboard") == 0) || (strcmp(url, "/") == 0)) return SendFile(connection,  "WEB/Dashboard.html");
     if(strcmp(url, "/Analysis/Frequency") == 0) return SendFile(connection,  "WEB/Analysis_Frequency.html");
     if(strcmp(url, "/Analysis/Voltage") == 0) return SendFile(connection,  "WEB/Analysis_Voltage.html");
@@ -229,7 +232,12 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
     if(strcmp(url, "/Events/Disturbances") == 0) return SendFile(connection,  "WEB/Events_Disturbances.html");
     if(strcmp(url, "/Events/EN50160") == 0) return SendFile(connection,  "WEB/Events_EN50160.html");
     if(strcmp(url, "/Stats") == 0) return SendFile(connection,  "WEB/Stats.html");
+    if(strcmp(url, "/Settings") == 0) return SendFile(connection,  "WEB/Settings.html");
     if(strcmp(url, "/Help") == 0) return SendFile(connection,  "WEB/Help.html");
+    if(strcmp(url, "/Logout") == 0) {
+      Request->Session->Logged = false;
+      return SendRedirect(connection, "/Login");
+    }
   }
   return SendError(connection, MHD_HTTP_NOT_FOUND, "Page not found");
 }
@@ -244,20 +252,20 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     return MHD_YES;
   }
   if(strcmp(url, "/LogIn") == 0) {
-    Request->Session->User = (char*)"root";
+    Request->Session->Logged = true;
     Request->PostData = (char*)"{\"result\":true}";
     Request->PostResponseLen = strlen(Request->PostData);
     return MHD_YES;
   }
-//  if(Request->Session->User == NULL) {
-//    struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
-//    if(((sockaddr_in*)Addr)->sin_addr.s_addr != 0x0100007F) {
-//      Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
-//      Request->PostData = (char*)"Unauthorided access to API";
-//      Request->PostResponseLen = strlen(Request->PostData);
-//      return MHD_YES;
-//    }
-//  }
+  if(Request->Session->Logged == false) {
+    struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
+    if(((sockaddr_in*)Addr)->sin_addr.s_addr != 0x0100007F) {
+      Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
+      Request->PostData = (char*)"Unauthorided access to API";
+      Request->PostResponseLen = strlen(Request->PostData);
+      return MHD_YES;
+    }
+  }
   if(strcmp(url, "/getNodes") == 0) {
     json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
       (void)JSON_Key; (void)JSON_Val;      
@@ -319,7 +327,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\", ", To); 
-    uint32_t MaxPoints = 10000, PeriodSeconds = 3000;
+    uint32_t MaxPoints = 100000, PeriodSeconds = 3000;
     if(strcmp(Aggreg, "1m")  == 0) PeriodSeconds = 60000;
     if(strcmp(Aggreg, "10m") == 0) PeriodSeconds = 600000;
     if(strcmp(Aggreg, "1h")  == 0) PeriodSeconds = 3600000;

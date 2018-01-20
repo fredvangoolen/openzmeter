@@ -39,18 +39,17 @@ OBJECTFILES= \
 	${OBJECTDIR}/CaptureMono/CaptureMono.o \
 	${OBJECTDIR}/CaptureVirtual/CaptureVirtual.o \
 	${OBJECTDIR}/Database.o \
-	${OBJECTDIR}/Events.o \
 	${OBJECTDIR}/HTTPServer.o \
 	${OBJECTDIR}/Main.o \
 	${OBJECTDIR}/Tools.o
 
 
 # C Compiler Flags
-CFLAGS=-Os -march=native
+CFLAGS=-march=native -Os
 
 # CC Compiler Flags
-CCFLAGS=-Os -march=native
-CXXFLAGS=-Os -march=native
+CCFLAGS=-march=native -Os
+CXXFLAGS=-march=native -Os
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -88,11 +87,6 @@ ${OBJECTDIR}/Database.o: Database.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -Wall -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Database.o Database.cpp
-
-${OBJECTDIR}/Events.o: Events.c
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -Wall -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Events.o Events.c
 
 ${OBJECTDIR}/HTTPServer.o: HTTPServer.cpp
 	${MKDIR} -p ${OBJECTDIR}

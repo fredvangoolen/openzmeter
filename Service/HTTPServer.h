@@ -14,7 +14,7 @@ class HTTPServer {
       struct Session *Next;
       char            ID[33];
       uint32_t        LastSeen;
-      char           *User;
+      bool            Logged;
       uint32_t        References;
     } Session_t;
     typedef struct {
