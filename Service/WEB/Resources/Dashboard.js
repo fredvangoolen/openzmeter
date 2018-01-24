@@ -105,7 +105,13 @@ function AjaxVoltage(result) {
   } else {
     VoltageChart.updateOptions({'file': VoltageData, dateWindow: [result['From'], result['To']]});
   }
-  AddEvents(result, "Voltage", VoltageChart);
+  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
+    AddEvents(result, "Voltage (R)", VoltageChart);
+    AddEvents(result, "Voltage (S)", VoltageChart);
+    AddEvents(result, "Voltage (T)", VoltageChart);
+  } else {
+    AddEvents(result, "Voltage", VoltageChart);
+  }
   SetVoltageVisibleSeries();
 }
 function SetVoltageVisibleSeries() {

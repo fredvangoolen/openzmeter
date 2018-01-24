@@ -50,7 +50,7 @@ function AddEvents(result, serieName, graph) {
       series: serieName,
       xval: result['Sampletime'][i],
       shortText: 'EVT',
-      text: "Este periodo esta marcado por que contiene un evento"
+      text: "This aggregation period contains an event"
     };
     Events.push(EventID);
   }

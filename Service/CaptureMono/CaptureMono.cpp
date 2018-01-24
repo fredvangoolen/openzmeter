@@ -272,10 +272,11 @@ CaptureMono::~CaptureMono() {
     free(Buffer);
   }
 }
-//void CaptureMono::SamplesCopy(float *dest, int32_t offset, uint32_t len) {
+uint32_t CaptureMono::SamplesCopy(float **dest, int32_t offset, uint32_t len) {
 //  for(int i = 0; i < len; i++) 
-//    dest[i] = Buffer[(ReadPos - offset + i) % Size].Voltage;
-//}
+//    dest[i] = Buffer[(ReadPos + offset + i) % Size].Voltage;
+  return 0;
+}
 //void Adquisition_SetLEDs(float voltage, float current) {
 //  uint8_t Val = 0;
 //  int Voltage = round(((voltage / EVENT_VOLTAGE) - 1.0) * 50.0 + 4.0);

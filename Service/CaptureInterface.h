@@ -10,11 +10,12 @@
 #include "Database.h"
 //---------------------------------------------------------------------------------------------------------------------
 #define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
-#define EVENT_RVC                     5.00        //Variacion en % para generar RVC
-#define EVENT_RVC_HYSTERESIS          3.00        //Variacion en % para finalizar RVC
+#define EVENT_RVC                      5.0        //Variacion en % para generar RVC
+#define EVENT_RVC_HYSTERESIS           3.0        //Variacion en % para finalizar RVC
 #define EVENT_DIP_SWELL               10.0        //Variacion en % para generar subida o bajada
 #define EVENT_INTERRUPTION            90.0        //Bajada en % para generar interrupcion
 #define EVENT_HYSTERESIS              06.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
+#define EVENT_ENVELOPETIME             1.0        //Tiempo en segundos que se guarda antes y despues de un evento
 //---------------------------------------------------------------------------------------------------------------------
 class CaptureInterface : private Database {
   public :
@@ -135,14 +136,16 @@ class CaptureInterface : private Database {
     void     SaveWorkParams();
     void     Analyze(float minimunCurrent);
     void     EventsDetect();
+    void     ResetEvent();
     void     AccumulateAggregation(Params_t *dst, Params_t *src);
-//    void     NormalizeAggregation(Params_t *src);
     bool     FFT_Start(FFT_t *fft, float *in, Complex_t *out);
     void     FFT_Wait(FFT_t *fft);
-    protected :
+  protected :
     static void  *FFT_Thread(void *args);
     static float  ApplyFilter(float in, Filter_t *filter);
     static float  CalcPhi(Complex_t voltage, Complex_t current);
+  protected :
+    virtual uint32_t SamplesCopy(float **dest, int32_t offset, uint32_t len) = 0;
   public :
     bool         Triphase();
     uint32_t     SampleRate();
