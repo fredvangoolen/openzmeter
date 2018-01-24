@@ -12,8 +12,16 @@ CND_ARTIFACT_DIR_Default=dist/Default/GNU-Linux
 CND_ARTIFACT_NAME_Default=service
 CND_ARTIFACT_PATH_Default=dist/Default/GNU-Linux/service
 CND_PACKAGE_DIR_Default=dist/Default/GNU-Linux/package
-CND_PACKAGE_NAME_Default=service.tar
-CND_PACKAGE_PATH_Default=dist/Default/GNU-Linux/package/service.tar
+CND_PACKAGE_NAME_Default=service.deb
+CND_PACKAGE_PATH_Default=dist/Default/GNU-Linux/package/service.deb
+# Release_ARMHF configuration
+CND_PLATFORM_Release_ARMHF=GNU-Linux
+CND_ARTIFACT_DIR_Release_ARMHF=dist/Release_ARMHF/GNU-Linux
+CND_ARTIFACT_NAME_Release_ARMHF=openZmeter
+CND_ARTIFACT_PATH_Release_ARMHF=dist/Release_ARMHF/GNU-Linux/openZmeter
+CND_PACKAGE_DIR_Release_ARMHF=dist/Release_ARMHF/GNU-Linux/package
+CND_PACKAGE_NAME_Release_ARMHF=openZmeter.deb
+CND_PACKAGE_PATH_Release_ARMHF=dist/Release_ARMHF/GNU-Linux/package/openZmeter.deb
 #
 # include compiler specific variables
 #

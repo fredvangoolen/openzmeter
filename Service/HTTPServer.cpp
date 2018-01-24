@@ -353,7 +353,13 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(%s ORDER BY sampletime ASC) AS %s, ", Serie, Serie);
       Serie = strtok_r(NULL, ", ", &Save);
     }
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(sampletime ORDER BY sampletime ASC) AS \"Sampletime\" FROM aggreg_%s WHERE sampletime > %" PRIu64 " AND sampletime >= %" PRIu64 " AND sampletime <= %" PRIu64 " AND node = %u) AS Result", Aggreg, LastSample, From, To, Node);
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(sampletime ORDER BY sampletime ASC) AS \"Sampletime\" FROM ");
+    if(strcmp(Aggreg, "1m") == 0) {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1m, aggreg_ext_1m WHERE aggreg_1m.node = aggreg_ext_1m.node_ext AND aggreg_1m.sampletime = aggreg_ext_1m.sampletime_ext) AS Tmp");
+    } else {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "aggreg_%s", Aggreg);
+    }
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, " WHERE sampletime > %" PRIu64 " AND sampletime >= %" PRIu64 " AND sampletime <= %" PRIu64 " AND node = %u) AS Result", LastSample, From, To, Node);    
     Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
@@ -456,6 +462,9 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     }
     struct sysinfo Info;
     struct statvfs Disk;
+
+
+    
     if(sysinfo(&Info) != 0) {
       Error = true;
       Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -475,7 +484,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     json_object_object_add(Request->JSONWriter, "Swap_Total", json_object_new_int64(Info.totalswap * Info.mem_unit));
     json_object_object_add(Request->JSONWriter, "Swap_Free", json_object_new_int64(Info.freeswap * Info.mem_unit));
     json_object_object_add(Request->JSONWriter, "RAM_Total", json_object_new_int64(Info.totalram * Info.mem_unit));
-    json_object_object_add(Request->JSONWriter, "RAM_Free", json_object_new_int64(Info.freeram* Info.mem_unit));
+    json_object_object_add(Request->JSONWriter, "RAM_Free", json_object_new_int64(((uint64_t)Info.bufferram + Info.freeram) * Info.mem_unit));
     json_object_object_add(Request->JSONWriter, "CPU_Usage", json_object_new_double(Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)));
     json_object_object_add(Request->JSONWriter, "CPU_Count", json_object_new_int(get_nprocs()));
     json_object_object_add(Request->JSONWriter, "Disk_Total", json_object_new_int64((uint64_t)Disk.f_blocks * Disk.f_frsize));
@@ -512,17 +521,15 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\", ", To); 
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(starttime) AS \"Starttime\", ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(duration) AS \"Duration\", ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(type) AS \"Type\", ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(voltage) AS \"Voltage\", ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(percent) AS \"Percentage\" ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE starttime > %" PRIu64 " AND starttime >= %" PRIu64 " AND starttime <= %" PRIu64 " AND node = %u ORDER BY \"Starttime\" ASC) AS Result", LastEvent, From, To, Node);
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(starttime ORDER BY starttime ASC) AS \"Starttime\", ");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(duration ORDER BY starttime ASC) AS \"Duration\", ");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(type ORDER BY starttime ASC) AS \"Type\", ");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(voltage ORDER BY starttime ASC) AS \"Voltage\", ");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(percent ORDER BY starttime ASC) AS \"Percentage\" ");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE starttime > %" PRIu64 " AND starttime >= %" PRIu64 " AND starttime <= %" PRIu64 " AND node = %u) AS Result", LastEvent, From, To, Node);
     Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
-    
-    
   } else if(strcmp(url, "/getSamplesRange") == 0) {
     uint32_t Node = 0;
     char *Aggreg = NULL;

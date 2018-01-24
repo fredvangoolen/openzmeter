@@ -3,7 +3,7 @@
     <type>org.netbeans.modules.cnd.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>Service</name>
+            <name>openZmeter</name>
             <c-extensions/>
             <cpp-extensions>cpp</cpp-extensions>
             <header-extensions>h</header-extensions>
@@ -20,6 +20,10 @@
             <confList>
                 <confElem>
                     <name>Default</name>
+                    <type>1</type>
+                </confElem>
+                <confElem>
+                    <name>Release_ARMHF</name>
                     <type>1</type>
                 </confElem>
             </confList>

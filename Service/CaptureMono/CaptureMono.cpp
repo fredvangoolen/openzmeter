@@ -29,7 +29,7 @@ void   CaptureMono::ReadCallback(struct libusb_transfer *transfer) {
   }
   for(uint i = 0; i < Len; i++) {
     int16_t Voltage = Buff16[i * 2 + 0];
-    uint16_t Current = Buff16[i * 2 + 1];
+    int16_t Current = Buff16[i * 2 + 1];
     This->Buffer[This->WritePos].Voltage = (Voltage - This->VoltageOffset) * This->VoltageGain;
     This->Buffer[This->WritePos].Current = (Current - This->CurrentOffset) * This->CurrentGain;
     This->WritePos = (This->WritePos + 1) % CAPTUREMONO_BUFFERSIZE;
@@ -188,6 +188,7 @@ void  *CaptureMono::Analize_Thread(void* args) {
     if(Discard > 0) {
       Discard--;
       This->ResetWork();
+      This->ResetParams(&This->pWork.Params);
     } else {
       This->Analyze(0.1);
       uint64_t AnalyzeEnd = Tools::GetTime();

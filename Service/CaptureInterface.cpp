@@ -16,46 +16,29 @@ void CaptureInterface::SaveWorkParams() {
   pDataReady = true;
   pthread_cond_broadcast(&pDataReadyWait);
   pthread_mutex_unlock(&pDataReadyMutex);
-//  Tools::LogMsg("DEBUG", "Storing 10C aggregation\n");
-//  SaveParams(&pWork.Params, "INSERT_10C");
   if(((pWork.SequenceID % 15) == 0) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
-    NormalizeAggregation(&pAggreg3S);
-    SaveParams(&pAggreg3S.Params, "INSERT_3S");
-    ResetParams(&pAggreg3S.Params);
-    pAggreg3S.Samples = 0;
+    SaveParams(&pAggreg3S);
   }
   AccumulateAggregation(&pAggreg3S, &pWork.Params);
   if(((pWork.Params.Timestamp / 60000) > (pPrevTimestamp / 60000)) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 1M aggregation\n");
-    NormalizeAggregation(&pAggreg1M);
-    AccumulateAggregation(&pAggreg10M, &pAggreg1M.Params);
-    pAggreg1M.Params.Timestamp = pAggreg1M.Params.Timestamp / 60000 * 60000 + 59999;
-    SaveParams(&pAggreg1M.Params, "INSERT_1M");
-    ResetParams(&pAggreg1M.Params);
-    pAggreg1M.Samples = 0;
+    pAggreg1M.Timestamp = pAggreg1M.Timestamp / 60000 * 60000 + 59999;
+    SaveParams(&pAggreg1M);
   }
   AccumulateAggregation(&pAggreg1M, &pWork.Params);
   if(((pWork.Params.Timestamp / 600000) > (pPrevTimestamp / 600000)) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
-    NormalizeAggregation(&pAggreg10M);
-    AccumulateAggregation(&pAggreg1H, &pAggreg10M.Params);
-    pAggreg10M.Params.Timestamp = pAggreg10M.Params.Timestamp / 600000 * 600000 + 599996;
-    SaveParams(&pAggreg10M.Params, "INSERT_10M");
-    ResetParams(&pAggreg10M.Params);
-    pAggreg10M.Samples = 0;
+    pAggreg10M.Timestamp = pAggreg10M.Timestamp / 600000 * 600000 + 599999;
+    SaveParams(&pAggreg10M);
   }
+  AccumulateAggregation(&pAggreg10M, &pWork.Params);
   if(((pWork.Params.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
-    NormalizeAggregation(&pAggreg1H);
-    pAggreg1H.Params.Timestamp = pAggreg1H.Params.Timestamp / 3600000 * 3600000 + 3599999;
-    SaveParams(&pAggreg1H.Params, "INSERT_1H");
-    ResetParams(&pAggreg1H.Params);
-    pAggreg1H.Samples = 0;
-//    PrepareSentence("EXECUTE DELETE_OLD_10C(?, ?)");
-//    BindSingleUInt32(pNodeIndex);
-//    BindSingleUInt64(pWork.Params.Timestamp - 3600*24*1000);
-  }  
+    pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
+    SaveParams(&pAggreg1H);
+  }
+  AccumulateAggregation(&pAggreg1H, &pWork.Params);
   pPrevTimestamp = pWork.Params.Timestamp;
   pthread_mutex_lock(&pWaitingThreadsMutex);
   while(pWaitingThreads != 0) {
@@ -66,79 +49,88 @@ void CaptureInterface::SaveWorkParams() {
   pDataReady = false;
   pthread_mutex_unlock(&pDataReadyMutex);
   ResetWork();
+  ResetParams(&pWork.Params);
 }
-void CaptureInterface::AccumulateAggregation(Aggreg_t *dst, Params_t *src) {
-  dst->Params.Timestamp = src->Timestamp;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.RMS_V[i] += pow(src->RMS_V[i], 2.0);
-  for(int i = 0; i < (pTriphase ? 4 : 1); i++) dst->Params.RMS_I[i] += pow(src->RMS_I[i], 2.0);
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Active_Power[i] += src->Active_Power[i];
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Apparent_Power[i] += src->Apparent_Power[i];
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Power_Factor[i] += src->Power_Factor[i];
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Fundamental_Active_Power[i] += src->Fundamental_Active_Power[i];
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Fundamental_Apparent_Power[i] += src->Fundamental_Apparent_Power[i];
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Fundamental_Reactive_Power[i] += src->Fundamental_Reactive_Power[i];
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Fundamental_Power_Factor[i] += src->Fundamental_Power_Factor[i];
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Fundamental_Reactive_Energy[i] += src->Fundamental_Reactive_Energy[i];
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Active_Energy[i] += src->Active_Energy[i];
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.THD_V[i] += pow(src->THD_V[i], 2.0);
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.THD_I[i] += pow(src->THD_I[i], 2.0);
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
-    for(int j = 0; j < 50; j++) dst->Params.VoltageHarmonics[i][j] += pow(src->VoltageHarmonics[i][j], 2.0);
+void CaptureInterface::AccumulateAggregation(Params_t *dst, Params_t *src) {
+  dst->Timestamp = src->Timestamp;
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->RMS_V[i] += pow(src->RMS_V[i], 2.0);
+  for(int i = 0; i < (pTriphase ? 4 : 1); i++) dst->RMS_I[i] += pow(src->RMS_I[i], 2.0);
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Active_Power[i] += src->Active_Power[i];
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Active_Energy[i] += src->Active_Energy[i];
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Fundamental_Reactive_Power[i] += src->Fundamental_Reactive_Power[i];
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Fundamental_Reactive_Energy[i] += src->Fundamental_Reactive_Energy[i];
+  dst->Flag |= src->Flag;
+  dst->Frequency += src->Frequency;
+  if(dst->Type == AGGREG_1M) {
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Power_Factor[i] += src->Power_Factor[i];
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->THD_V[i] += pow(src->THD_V[i], 2.0);
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->THD_I[i] += pow(src->THD_I[i], 2.0);
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
+      for(int j = 0; j < 50; j++) dst->VoltageHarmonics[i][j] += pow(src->VoltageHarmonics[i][j], 2.0);
+    }
+    for(int i = 0; i < (pTriphase ? 4 : 1); i++) {
+      for(int j = 0; j < 50; j++) dst->CurrentHarmonics[i][j] += pow(src->CurrentHarmonics[i][j], 2.0);
+    }
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Phi[i] += src->Phi[i];
   }
-  for(int i = 0; i < (pTriphase ? 4 : 1); i++) {
-    for(int j = 0; j < 50; j++) dst->Params.CurrentHarmonics[i][j] += pow(src->CurrentHarmonics[i][j], 2.0);
-  }
-  dst->Params.Frequency += src->Frequency;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Params.Phi[i] += src->Phi[i];
-  dst->Params.Flag |= src->Flag;
   dst->Samples++;
 }
-void CaptureInterface::NormalizeAggregation(Aggreg_t *src) {
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.RMS_V[i] = sqrt(src->Params.RMS_V[i] / src->Samples);
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.RMS_I[i] = sqrt(src->Params.RMS_I[i] / src->Samples);
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Active_Power[i] = src->Params.Active_Power[i] / src->Samples;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Apparent_Power[i] = src->Params.Apparent_Power[i] / src->Samples;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Power_Factor[i] = src->Params.Power_Factor[i] / src->Samples;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Fundamental_Active_Power[i] = src->Params.Fundamental_Active_Power[i] / src->Samples;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Fundamental_Apparent_Power[i] = src->Params.Fundamental_Apparent_Power[i] / src->Samples;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Fundamental_Reactive_Power[i] = src->Params.Fundamental_Reactive_Power[i] / src->Samples;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Fundamental_Power_Factor[i] = src->Params.Fundamental_Power_Factor[i] / src->Samples;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.THD_V[i] = sqrt(src->Params.THD_V[i] / src->Samples);
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.THD_I[i] = sqrt(src->Params.THD_I[i] / src->Samples);
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
-    for(int j = 0; j < 50; j++) src->Params.VoltageHarmonics[i][j] = sqrt(src->Params.VoltageHarmonics[i][j] / src->Samples);
+void CaptureInterface::SaveParams(Params_t *params) {
+  if(params->Samples > 1) {
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->RMS_V[i] = sqrt(params->RMS_V[i] / params->Samples);
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->RMS_I[i] = sqrt(params->RMS_I[i] / params->Samples);
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Active_Power[i] = params->Active_Power[i] / params->Samples;
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Fundamental_Reactive_Power[i] = params->Fundamental_Reactive_Power[i] / params->Samples;
+    params->Frequency = params->Frequency / params->Samples;
+    if(params->Type == AGGREG_1M) {
+      for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Power_Factor[i] = params->Power_Factor[i] / params->Samples;
+      for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->THD_V[i] = sqrt(params->THD_V[i] / params->Samples);
+      for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->THD_I[i] = sqrt(params->THD_I[i] / params->Samples);
+      for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Phi[i] = params->Phi[i] / params->Samples;
+      for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
+        for(int j = 0; j < 50; j++) params->VoltageHarmonics[i][j] = sqrt(params->VoltageHarmonics[i][j] / params->Samples);
+      }
+      for(int i = 0; i < (pTriphase ? 4 : 1); i++) {
+        for(int j = 0; j < 50; j++) params->CurrentHarmonics[i][j] = sqrt(params->CurrentHarmonics[i][j] / params->Samples);
+      }
+    }
   }
-  for(int i = 0; i < (pTriphase ? 4 : 1); i++) {
-    for(int j = 0; j < 50; j++) src->Params.CurrentHarmonics[i][j] = sqrt(src->Params.CurrentHarmonics[i][j] / src->Samples);
-  }
-  src->Params.Frequency = src->Params.Frequency / src->Samples;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) src->Params.Phi[i] = src->Params.Phi[i] / src->Samples;
-  src->Samples = 1;
-}
-void CaptureInterface::SaveParams(Params_t *params, const char *aggreg) {
-  PrepareSentence("EXECUTE ?(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-  BindSingleString(aggreg);
+  if(params->Type == AGGREG_3S)  
+    PrepareSentence("EXECUTE SAVE_3S(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+  else if(params->Type == AGGREG_1M)  
+    PrepareSentence("EXECUTE SAVE_1M(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+  else if(params->Type == AGGREG_10M)  
+    PrepareSentence("EXECUTE SAVE_10M(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+  else if(params->Type == AGGREG_1H)  
+    PrepareSentence("EXECUTE SAVE_1H(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   BindSingleUInt32(pNodeIndex);                                                    //node
   BindSingleUInt64(params->Timestamp);                                             //sampletime
   BindArrayFloat(params->RMS_V, (pTriphase == true) ? 3 : 1);                      //rms_v 
   BindArrayFloat(params->RMS_I, (pTriphase == true) ? 4 : 1);                      //rms_i
   BindArrayFloat(params->Active_Power, (pTriphase == true) ? 3 : 1);               //active_power
-  BindArrayFloat(params->Apparent_Power, (pTriphase == true) ? 3 : 1);             //apparent_power
-  BindArrayFloat(params->Power_Factor, (pTriphase == true) ? 3 : 1);               //power_factor
   BindArrayFloat(params->Active_Energy, (pTriphase == true) ? 3 : 1);              //active_energy
-  BindArrayFloat(params->Fundamental_Active_Power, (pTriphase == true) ? 3 : 1);   //fundamental_active_power
   BindArrayFloat(params->Fundamental_Reactive_Power, (pTriphase == true) ? 3 : 1); //fundamental_reactive_power
-  BindArrayFloat(params->Fundamental_Apparent_Power, (pTriphase == true) ? 3 : 1); //fundamental_apparent_power
-  BindArrayFloat(params->Fundamental_Power_Factor, (pTriphase == true) ? 3 : 1);   //fundamental_power_factor
   BindArrayFloat(params->Fundamental_Reactive_Energy, (pTriphase == true) ? 3 : 1);//fundamental_reactive_energy
-  BindArrayFloat(params->THD_V, (pTriphase == true) ? 3 : 1);                      //thd_v
-  BindArrayFloat(params->THD_I, (pTriphase == true) ? 4 : 1);                      //thd_i
   BindSingleFloat(params->Frequency);                                              //frequency
-  BindArrayFloat(params->Phi, (pTriphase == true) ? 3 : 1);                        //phi
   BindSingleBool(params->Flag);                                                    //flaged
-  BindArrayArrayFloat(params->VoltageHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_v
-  BindArrayArrayFloat(params->CurrentHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_i
   ExecSentence();
+  if(params->Type == AGGREG_1M) {
+    PrepareSentence("EXECUTE SAVE_1M_EXT(?, ?, ?, ?, ?, ?, ?, ?)");
+    BindSingleUInt32(pNodeIndex);                                                    //node
+    BindSingleUInt64(params->Timestamp);                                             //sampletime
+    BindArrayFloat(params->Power_Factor, (pTriphase == true) ? 3 : 1);               //power_factor
+    BindArrayFloat(params->THD_V, (pTriphase == true) ? 3 : 1);                      //thd_v
+    BindArrayFloat(params->THD_I, (pTriphase == true) ? 4 : 1);                      //thd_i
+    BindArrayFloat(params->Phi, (pTriphase == true) ? 3 : 1);                        //phi
+    BindArrayArrayFloat(params->VoltageHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_v
+    BindArrayArrayFloat(params->CurrentHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_i
+    ExecSentence();
+    PrepareSentence("EXECUTE DELETE_1M_EXT(?, ?)");
+    BindSingleUInt32(pNodeIndex);                                                    //node
+    BindSingleUInt64(params->Timestamp - 86400000);                                  //sampletime
+    ExecSentence();
+  }
+  ResetParams(params);
 }
 float CaptureInterface::PercentChange(float in, float reference) {
   return ((in - reference) / reference) * 100;
@@ -190,8 +182,8 @@ void CaptureInterface::EventsDetect() {
     }
     if(EventEnd == true) {
 //          Adquisition_SamplesCopy(RunningEvent->End, work->Samples - work->Cycles[i].Start + MAX_FRAME, MAX_FRAME * 2);
-//          DB_Save(EVENT, 0, RunningEvent->Start, RunningEvent, true);
-          pRunningEvent.Type = EVT_NONE;
+      SaveEvent();
+      pRunningEvent.Type = EVT_NONE;
     }
     for(int n = 0; n < (pTriphase ? 3 : 1); n++) {
       //Inicio eventos tipo RVC si procede
@@ -227,8 +219,8 @@ void CaptureInterface::EventsDetect() {
     }
     if(pRunningEvent.Type != EVT_NONE) {
       if(pRunningEvent.Type != EVT_RVC) pWork.Params.Flag = true;
-      SaveEvent();
       pRunningEvent.Duration += Cycle->Len;
+      SaveEvent();
     }
     if((pPrevStationary == false) && (Stationary == true)) Tools::LogMsg("DEBUG", "Stationary voltage reached in node %d\n", pNodeIndex);
     if(Stationary == true) {
@@ -245,10 +237,15 @@ void CaptureInterface::SaveEvent() {
   if(pRunningEvent.Type == EVT_SWELL) Type = (char*)"SWELL";
   if(pRunningEvent.Type == EVT_INTERRUPTION) Type = (char*)"INTERRUPTION";
   if(pRunningEvent.Type == EVT_GLITCH) Type = (char*)"GLITCH";
-  
-  if(pRunningEvent.Duration == 0) {
-    Tools::LogMsg("INFO", "New %s event detected on node %d\n", Type, pNodeIndex);
-  }
+  PrepareSentence("EXECUTE SAVE_EVENT(?, ?, ?, ?, ?, ?, ?)");
+  BindSingleUInt32(pNodeIndex);                                                                       //node
+  BindSingleUInt64(pRunningEvent.Start);                                                              //starttime
+  BindSingleFloat(pRunningEvent.Duration / pSampleRate);                                              //duration
+  BindSingleString(Type);                                                                             //type
+  BindSingleFloat(pRunningEvent.Voltage);                                                             //voltage
+  BindSingleFloat(pRunningEvent.Change);                                                              //change
+  BindArrayArrayFloat(pRunningEvent.Samples, pRunningEvent.Samples_Len, (pTriphase == true) ? 3 : 1); //samples
+  ExecSentence();
 }
 void CaptureInterface::Analyze(float minimunCurrent) {
   FFT_t FFT_Voltage[3];
@@ -314,49 +311,32 @@ void CaptureInterface::Analyze(float minimunCurrent) {
     }
   }
 }
-bool CaptureInterface::AllocParams(Params_t *params) {
-  if(pTriphase == true) {
-    params->RMS_V = (float*)malloc(sizeof(float*) * 3);
-    params->RMS_I = (float*)malloc(sizeof(float*) * 4);
-    params->Active_Power = (float*)malloc(sizeof(float*) * 3);
-    params->Apparent_Power = (float*)malloc(sizeof(float*) * 3);
-    params->Power_Factor = (float*)malloc(sizeof(float*) * 3);
-    params->Fundamental_Active_Power = (float*)malloc(sizeof(float*) * 3);
-    params->Fundamental_Apparent_Power = (float*)malloc(sizeof(float*) * 3);
-    params->Fundamental_Reactive_Power = (float*)malloc(sizeof(float*) * 3);
-    params->Fundamental_Power_Factor = (float*)malloc(sizeof(float*) * 3);
-    params->Fundamental_Reactive_Energy = (float*)malloc(sizeof(float*) * 3);
-    params->Active_Energy = (float*)malloc(sizeof(float*) * 3);
-    params->THD_V = (float*)malloc(sizeof(float*) * 3);
-    params->THD_I = (float*)malloc(sizeof(float*) * 3);
-    params->VoltageHarmonics = (float**)malloc(sizeof(float*) * 3);
-    for(int i = 0; i < 3; i++) params->VoltageHarmonics[i] = (float*)malloc(sizeof(float*) * 50);
-    params->CurrentHarmonics = (float**)malloc(sizeof(float*) * 4);
-    for(int i = 0; i < 4; i++) params->CurrentHarmonics[i] = (float*)malloc(sizeof(float*) * 50);
-    params->Phi = (float*)malloc(sizeof(float*) * 3);
-  } else {
-    params->RMS_V = (float*)malloc(sizeof(float*) * 1);
-    params->RMS_I = (float*)malloc(sizeof(float*) * 1);
-    params->RMS_V = (float*)malloc(sizeof(float*) * 1);
-    params->RMS_I = (float*)malloc(sizeof(float*) * 1);
-    params->Active_Power = (float*)malloc(sizeof(float*) * 1);
-    params->Apparent_Power = (float*)malloc(sizeof(float*) * 1);
-    params->Power_Factor = (float*)malloc(sizeof(float*) * 1);
-    params->Fundamental_Active_Power = (float*)malloc(sizeof(float*) * 1);
-    params->Fundamental_Apparent_Power = (float*)malloc(sizeof(float*) * 1);
-    params->Fundamental_Reactive_Power = (float*)malloc(sizeof(float*) * 1);
-    params->Fundamental_Power_Factor = (float*)malloc(sizeof(float*) * 1);
-    params->Fundamental_Reactive_Energy = (float*)malloc(sizeof(float*) * 1);
-    params->Active_Energy = (float*)malloc(sizeof(float*) * 1);
-    params->THD_V = (float*)malloc(sizeof(float*) * 1);
-    params->THD_I = (float*)malloc(sizeof(float*) * 1);
-    params->VoltageHarmonics = (float**)malloc(sizeof(float*) * 1);
-    params->VoltageHarmonics[0] = (float*)malloc(sizeof(float*) * 50);
-    params->CurrentHarmonics = (float**)malloc(sizeof(float*) * 4);
-    params->CurrentHarmonics[0] = (float*)malloc(sizeof(float*) * 50);
-    params->Phi = (float*)malloc(sizeof(float*) * 1);
+void CaptureInterface::AllocParams(Params_t *params, Aggreg_Type type) {
+  params->RMS_V = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+  params->RMS_I = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 4 : 1));
+  params->Active_Power = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+  params->Fundamental_Reactive_Power = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+  params->Fundamental_Reactive_Energy = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+  params->Active_Energy = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+  if(type == AGGREG_10C) {
+    params->Apparent_Power = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+    params->Fundamental_Active_Power = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+    params->Fundamental_Apparent_Power = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+    params->Fundamental_Power_Factor = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1)); 
   }
-  return true;
+  if((type == AGGREG_10C) || (type == AGGREG_1M)) {
+    params->Power_Factor = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+    params->THD_V = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+    params->THD_I = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 4 : 1));
+    
+    params->VoltageHarmonics = (float**)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+    for(int i = 0; i < ((pTriphase == true) ? 3 : 1); i++) params->VoltageHarmonics[i] = (float*)malloc(sizeof(float*) * 50);
+    params->CurrentHarmonics = (float**)malloc(sizeof(float*) * ((pTriphase == true) ? 4 : 1));
+    for(int i = 0; i < ((pTriphase == true) ? 4 : 1); i++) params->CurrentHarmonics[i] = (float*)malloc(sizeof(float*) * 50);
+    params->Phi = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+  }
+  params->Type = type;
+  ResetParams(params);
 }
 CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t id) : Database() {
   pNodeIndex           = id;
@@ -390,20 +370,12 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t 
     pWork.CurrentSamples[0] = (float*)malloc(sizeof(float*) * pMaxSamples);
     pWork.CurrentFFT[0] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
   }
-  AllocParams(&pWork.Params);
+  AllocParams(&pWork.Params, AGGREG_10C);
   ResetWork();
-  AllocParams(&pAggreg3S.Params);
-  ResetParams(&pAggreg3S.Params);
-  pAggreg3S.Samples = 0;
-  AllocParams(&pAggreg1M.Params);
-  ResetParams(&pAggreg1M.Params);
-  pAggreg1M.Samples = 0;
-  AllocParams(&pAggreg10M.Params);
-  ResetParams(&pAggreg10M.Params);
-  pAggreg10M.Samples = 0;
-  AllocParams(&pAggreg1H.Params);
-  ResetParams(&pAggreg1H.Params);
-  pAggreg1H.Samples = 0;
+  AllocParams(&pAggreg3S, AGGREG_3S);
+  AllocParams(&pAggreg1M, AGGREG_1M);
+  AllocParams(&pAggreg10M, AGGREG_10M);
+  AllocParams(&pAggreg1H, AGGREG_1H);
   for(int i = 0; i < PROCESSING_FREQCYCLES; i++) {
     uint32_t Samples = (pSampleRate * i / 100);
     pLastCycles[i] = Samples - pLastCyclesLenght;
@@ -417,45 +389,51 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t 
   pPrevStationary = false;  
   pLastCyclesPos    = 0;
   pWork.SequenceID  = 0;
-//  ExecSentence("PREPARE INSERT_10C AS INSERT INTO aggreg_10c(node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, fundamental_reactive_energy, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)");
-  ExecSentence("PREPARE INSERT_3S  AS INSERT INTO aggreg_3s (node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, fundamental_reactive_energy, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)");    
-  ExecSentence("PREPARE INSERT_1M  AS INSERT INTO aggreg_1m (node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, fundamental_reactive_energy, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)");  
-  ExecSentence("PREPARE INSERT_10M AS INSERT INTO aggreg_10m(node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, fundamental_reactive_energy, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)");  
-  ExecSentence("PREPARE INSERT_1H  AS INSERT INTO aggreg_1h (node, sampletime, rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, fundamental_reactive_energy, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)");
-//  ExecSentence("PREPARE DELETE_OLD_10C AS DELETE FROM aggreg_10c WHERE node = $1 AND sampletime < $2");
-
+  ExecSentence("PREPARE SAVE_3S       AS INSERT INTO aggreg_3s (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");    
+  ExecSentence("PREPARE SAVE_1M       AS INSERT INTO aggreg_1m (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
+  ExecSentence("PREPARE SAVE_1M_EXT   AS INSERT INTO aggreg_ext_1m (node_ext, sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8)");  
+  ExecSentence("PREPARE SAVE_10M      AS INSERT INTO aggreg_10m(node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
+  ExecSentence("PREPARE SAVE_1H       AS INSERT INTO aggreg_1h (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");
+  ExecSentence("PREPARE DELETE_1M_EXT AS DELETE FROM aggreg_ext_1m WHERE node_ext = $1 AND sampletime_ext < $2");
+  ExecSentence("PREPARE SAVE_EVENT    AS INSERT INTO events (node, starttime, duration, type, voltage, percent, samples) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (starttime, node) DO UPDATE SET duration = $3, type = $4, voltage = $5, percent = $6, samples = events.samples || $7");
 }
 void CaptureInterface::ResetParams(Params_t *params) {
   params->Timestamp = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->RMS_V[i] = 0;
   for(int i = 0; i < (pTriphase ? 4 : 1); i++) params->RMS_I[i] = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Active_Power[i] = 0;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Apparent_Power[i] = 0;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Power_Factor[i] = 0;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Fundamental_Active_Power[i] = 0;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Fundamental_Apparent_Power[i] = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Fundamental_Reactive_Power[i] = 0;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Fundamental_Power_Factor[i] = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Fundamental_Reactive_Energy[i] = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Active_Energy[i] = 0;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->THD_V[i] = 0;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->THD_I[i] = 0;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(params->VoltageHarmonics[i], 0, sizeof(float) * 50);
-  for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(params->CurrentHarmonics[i], 0, sizeof(float) * 50);
   params->Frequency = 0;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Phi[i] = 0;
   params->Flag = false;
+  
+  if((params->Type == AGGREG_10C) || (params->Type == AGGREG_1M)) {
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->THD_V[i] = 0;
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->THD_I[i] = 0;
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Phi[i] = 0;
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Power_Factor[i] = 0; 
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(params->VoltageHarmonics[i], 0, sizeof(float) * 50);
+    for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(params->CurrentHarmonics[i], 0, sizeof(float) * 50);
+  }
+  if(params->Type == AGGREG_10C) {
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Fundamental_Active_Power[i] = 0;
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Fundamental_Apparent_Power[i] = 0;
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Apparent_Power[i] = 0;
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Fundamental_Power_Factor[i] = 0;
+  }
+  params->Samples = 0;
 }
 void CaptureInterface::ResetWork() {
   pWork.SequenceID++;
-  pWork.Samples    = 0;
+  pWork.Samples = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(pWork.VoltageFFT[i], 0, sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
   for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(pWork.CurrentFFT[i], 0, sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(pWork.VoltageSamples[i], 0, sizeof(float) * pMaxSamples);
   for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(pWork.CurrentSamples[i], 0, sizeof(float) * pMaxSamples);
   memset(pWork.Cycles, 0, sizeof(Cycle_t) * 20);
   pWork.Cycles_Len = 0;
-  ResetParams(&pWork.Params);
+//  ResetParams(&pWork.Params);
 }
 CaptureInterface::~CaptureInterface() {
 }
@@ -551,9 +529,9 @@ json_object *CaptureInterface::GetJSONCopy(char *series) {
       } else if(strcmp(Serie, "active_power") == 0) {
         Obj = json_object_new_array();
         for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Active_Power[i]));
-      } else if(strcmp(Serie, "apparent_power") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Apparent_Power[i]));
+//      } else if(strcmp(Serie, "apparent_power") == 0) {
+//        Obj = json_object_new_array();
+//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Apparent_Power[i]));
       } else if(strcmp(Serie, "power_factor") == 0) {
         Obj = json_object_new_array();
         for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Power_Factor[i]));
@@ -566,12 +544,12 @@ json_object *CaptureInterface::GetJSONCopy(char *series) {
       } else if(strcmp(Serie, "fundamental_reactive_power") == 0) {
         Obj = json_object_new_array();
         for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Reactive_Power[i]));
-      } else if(strcmp(Serie, "fundamental_apparent_power") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Apparent_Power[i]));
-      } else if(strcmp(Serie, "fundamental_power_factor") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Power_Factor[i]));
+//      } else if(strcmp(Serie, "fundamental_apparent_power") == 0) {
+//        Obj = json_object_new_array();
+//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Apparent_Power[i]));
+//      } else if(strcmp(Serie, "fundamental_power_factor") == 0) {
+//        Obj = json_object_new_array();
+//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Power_Factor[i]));
       } else if(strcmp(Serie, "fundamental_reactive_energy") == 0) {
         Obj = json_object_new_array();
         for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Reactive_Energy[i]));

@@ -221,7 +221,7 @@ function AjaxEnergyPower(result) {
         plotter: barChartNoSpacedPlotter,
         stepPlot: true,
         fillGraph: true,
-        colors: ["#31708f"],
+        colors: ["#314190"],
         gridLineColor: "#999",
         gridLinePattern: [4, 4],
         valueRange: Range,
@@ -308,7 +308,7 @@ function AjaxEnergyPower(result) {
         labels: ["Time", "Active Power"],
         stepPlot: true,
         fillGraph: true,
-        colors: ["#31708f"],
+        colors: ["#f0ad4e"],
         gridLineColor: "#999",
         gridLinePattern: [4, 4],
         valueRange: Range,
@@ -380,7 +380,7 @@ function AjaxEnergyPower(result) {
   var toSHow = [];
   if((Math.abs(Range[0]) > 1000) || (Math.abs(Range[1]) > 1000)) {
     ReactivePowerChartUnits = 'kvar';
-    Ramge[0] = Range[0] / 1000;
+    Range[0] = Range[0] / 1000;
     Range[1] = Range[1] / 1000;
     toShow = Div1000(ReactivePowerData);
   } else {
@@ -395,7 +395,7 @@ function AjaxEnergyPower(result) {
         labels: ["Time", "Reactive Power"],
         stepPlot: true,
         fillGraph: true,
-        colors: ["#31708f"],
+        colors: ["#314190"],
         gridLineColor: "#999",
         gridLinePattern: [4, 4],
         valueRange: Range,

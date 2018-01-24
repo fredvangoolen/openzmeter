@@ -1,0 +1,12 @@
+[Unit]
+Description=openZmeter Service
+
+[Service]
+Type=forking
+PIDFile=/var/run/openZmeter.pid
+ExecStart=/opt/openZmeter/bin/openZmeter --daemon
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target
+Alias=openZmeter.service"

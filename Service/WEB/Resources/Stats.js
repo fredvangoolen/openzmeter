@@ -279,7 +279,7 @@ function UpdateHeatMap() {
   if($('#btnHeatmap10Min').hasClass('active')) Count = 1;
   var Header = $('#HeatMap thead tr');
   Header.html('<td style="width:22px">Day</td><td style="width:54px">Date</td>');
-  for(i = 0; i < 24; i++) Header.append('<td colspan="' + (6 / Count) + '" style="border: 1px solid #888">' + ((i < 10) ? '0' + i : i) + '</td>');
+  for(i = 0; i < 24; i++) Header.append('<td colspan="' + (6 / Count) + '" style="border-left: 1px solid #888">' + ((i < 10) ? '0' + i : i) + '</td>');
   var Body = $('#HeatMap tbody');
   Body.html("");
   var FirstDay = null;
@@ -311,7 +311,7 @@ function UpdateHeatMap() {
     for(n = 0; n < 24 * (6 / Count); n++) {
       var SlotName = FirstDay + '_' + n;
       var Color = (!Cells[SlotName] ? '#EEE' : ColorScale((Cells[SlotName] - Min) / (Max - Min)));
-      Row = Row + ('<td style="border:1px solid #888; background-color: ' + Color + '" + class="TimeSlot"><div class="hidden">' + (!Cells[SlotName] ? 'No data for this period' : Round2(Cells[SlotName] / Units[0]) + Units[1] + 'Wh') + '</div></td>');
+      Row = Row + ('<td style="background-color: ' + Color + '" + class="TimeSlot"><div class="hidden">' + (!Cells[SlotName] ? 'No data for this period' : Round2(Cells[SlotName] / Units[0]) + Units[1] + 'Wh') + '</div></td>');
     }
     Body.append('<tr>' + Row + '</tr>');
   }

@@ -46,6 +46,7 @@ int main(int argc, char** argv) {
     }
   }
   if(Daemonize == true) Tools::Daemonize();
+//  chdir("/opt/openZmeter");
   setpriority(PRIO_PROCESS, 0, -20);
   struct sched_param Param;
   Param.sched_priority = -10;

@@ -5,6 +5,12 @@
 #pragma once
 #include "../CaptureInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
+#define CAPTUREVIRTUAL_SAMPLEFREQ    15625.00       //Frequencia de muestreo
+#define CAPTUREVIRTUAL_BUFFERSIZE    156250         //Tamaño del buffer (10 segundos)
+#define CAPTUREVIRTUAL_SAMPLESREAD       64         //Numero de muestras generado cada vez
+#define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
+#define PROCESSING_CURRENTOFFSET      0.10        //Corriente minima para realizar calculos
+//----------------------------------------------------------------------------------------------------------------------
 class CaptureVirtual : public CaptureInterface {
   private :
     typedef struct {
@@ -16,22 +22,28 @@ class CaptureVirtual : public CaptureInterface {
       float CurrentC;                                    //Valor de corriente
       float CurrentD;                                    //Valor de corriente
     } Sample_t;
-    float                        NominalCurrent;          //Corriente nominal
-    bool                         Terminate;               //Señal para detener el hilo de captura
-
-
-//    uint32_t                     LastCycles[PROCESSING_FREQCYCLES];
-//    uint32_t                     LastCyclesCount;
-//    uint32_t                     LastCyclesPos;
-//    uint32_t                     LastCyclesLenght;
-//    pthread_mutex_t              AnalyzeMutex;                 //Mutex para bloquear acceso a muestras y resultados
-    pthread_t                    AnalyzeThread;                //Descriptor del hilo de analisis
-//    uint64_t                     PrevTimestamp;
-//    uint64_t                     Agreg3S_Start;
+    Sample_t                    *Buffer;                  //Donde almaceno muestras leidas (RingBuffer)
+    uint32_t                     ReadPos;                 //Posicion de lectura del buffer
+    uint32_t                     WritePos;                //Posicion de escritura del buffer
+    uint32_t                     Used;                    //Muestras en uso del buffer
+    pthread_mutex_t              CaptureMutex;            //Mutex para bloquear acceso al buffer
+    pthread_mutex_t              AnalyzeMutex;            //Mutex para bloquear acceso a muestras y resultados
+    pthread_cond_t               WriteWait;               //Variable de condicion para esperar si buffer esta lleno
+    pthread_cond_t               ReadWait;                //Variable de condicion para esperar si buffer esta vacio
+    pthread_t                    CaptureThread;           //Descriptor del hilo de captura
+    pthread_t                    AnalyzeThread;           //Descriptor del hilo de analisis
+    Filter_t                     Filters[5];              //Filtros paso banda para deteccion de paso por cero
   private : 
+    static void  *Capture_Thread(void *args);
     static void  *Analize_Thread(void *args);
+    static void   ReadCallback(struct libusb_transfer *transfer);
+    static int    PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
-    void   SamplesCopy(float *dest, int32_t offset, uint32_t len);
+    float CalculateFrequency(Work_t* work);
+  private :
+//    Work_t   *GetWork();
+//    Params_t *Analyze(Work_t *work);
+//    void   SamplesCopy(float *dest, int32_t offset, uint32_t len);
   public :
     CaptureVirtual(uint32_t samplerate, bool triphase, float nominalcurrent, uint16_t id);
     ~CaptureVirtual();

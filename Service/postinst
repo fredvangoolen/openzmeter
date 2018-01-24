@@ -1,0 +1,12 @@
+#!/bin/sh
+# installation script for openZmeter debian package
+echo "Initializing or updating DB"
+su postgres -c "psql" <  /opt/openZmeter/Database.sql > /dev/null
+
+systemctl stop openZmeter.service
+systemctl disable openZmeter.service
+systemctl daemon-reload
+echo "Installing service"
+echo "Enabling service"
+systemctl enable openZmeter.service
+systemctl start openZmeter.service

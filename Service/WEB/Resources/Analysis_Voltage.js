@@ -1102,7 +1102,7 @@ function UpdatePhasorChart(result) {
   if(PhasorChart === null) {
     PhasorChart = new Dygraph(document.getElementById("PhasorChart"), Vectors, Options);
   } else {
-    PhasorChart.updateOptions({ file: Vectors }, true);
+    PhasorChart.updateOptions({ file: Vectors });
     PhasorChart.updateOptions(Options);
   }
   if(PhasorTable === null) {

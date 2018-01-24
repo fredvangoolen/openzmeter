@@ -133,7 +133,8 @@ void Database::BindSingleBool(bool param) {
 }
 void Database::BindSingleString(const char *string) {
   if(ParamsLen < ParamsAlloc) {
-    Params[ParamsLen] = strdup(string);
+    Params[ParamsLen] = (char*)malloc(sizeof(char) * strlen(string) + 3);
+    sprintf(Params[ParamsLen], "'%s'", string);
     ParamsLen++;
   }  
 }
