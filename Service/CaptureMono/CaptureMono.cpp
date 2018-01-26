@@ -56,9 +56,14 @@ int CaptureMono::PlugCallback(struct libusb_context *ctx, struct libusb_device *
   return 0;
 }
 void  *CaptureMono::Capture_Thread(void *args) {
-  struct sched_param Param;
-  Param.sched_priority = 99;
-  if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  int Prio = sched_get_priority_max(SCHED_RR);
+  if(Prio == -1) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  } else {
+    struct sched_param Param;
+    Param.sched_priority = Prio - 5;
+    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  }
   CaptureMono *This = (CaptureMono*)args;
   pthread_setname_np(This->CaptureThread, "CapMono_Init");
   uint8_t BufferIN[CAPTUREMONO_TRANSFERS][8192];

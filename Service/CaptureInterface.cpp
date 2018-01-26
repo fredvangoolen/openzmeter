@@ -7,6 +7,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <sys/param.h>
 #include <unistd.h>
 #include "CaptureInterface.h"
 #include "Tools.h"
@@ -135,11 +136,6 @@ void CaptureInterface::SaveParams(Params_t *params) {
 float CaptureInterface::PercentChange(float in, float reference) {
   return ((in - reference) / reference) * 100;
 }
-void CaptureInterface::ResetEvent() {
-  pRunningEvent.Type = EVT_NONE;
-  pRunningEvent.Duration = 0;
-  pRunningEvent.Samples_Len = 0;
-}
 void CaptureInterface::EventsDetect() {
   if(pWork.Cycles_Len != 20) {
     pWork.Params.Flag = true;
@@ -189,29 +185,21 @@ void CaptureInterface::EventsDetect() {
         break;
       }
     }
-    if(EventEnd == true) {
-//          Adquisition_SamplesCopy(RunningEvent->End, work->Samples - work->Cycles[i].Start + MAX_FRAME, MAX_FRAME * 2);
-      SaveEvent();
-      ResetEvent();
-    }
+    if(EventEnd == true) SaveEvent(i, true);
     for(int n = 0; n < (pTriphase ? 3 : 1); n++) {
       //Inicio eventos tipo RVC si procede
       if((pRunningEvent.Type == EVT_NONE) && (pPrevStationary == true) && (Stationary == false)) {
         pRunningEvent.Type     = EVT_RVC;
         pRunningEvent.Start    = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
-//        SamplesCopy(RunningEvent->Begin, (work->Samples - work->Cycles[i].Start) + MAX_FRAME, MAX_FRAME * 2);
       }
       //Un evento DIP o SWELL se produce cuando un ciclo sale de los valores establecidos y si no habia eventos anteriores o era un RVC
       if(((pRunningEvent.Type == EVT_NONE) || (pRunningEvent.Type == EVT_RVC)) && (fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) > EVENT_DIP_SWELL)) {
         pRunningEvent.Type     = (Cycle->RMS[n] > Tools::Electrical.NominalVoltage) ? EVT_SWELL : EVT_DIP;
         pRunningEvent.Start    = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
-        pRunningEvent.Samples_Len = SamplesCopy(&pRunningEvent.Samples[pRunningEvent.Samples_Len], -pWork.Cycles[19].End + pWork.Cycles[i].Start - pSampleRate * EVENT_ENVELOPETIME, EVENT_ENVELOPETIME * 2 * pSampleRate);
       }
       if(((pRunningEvent.Type == EVT_NONE) || (pRunningEvent.Type == EVT_RVC) || (pRunningEvent.Type == EVT_DIP) || (pRunningEvent.Type == EVT_SWELL)) && (fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) > EVENT_INTERRUPTION)) {
         pRunningEvent.Type     = EVT_INTERRUPTION;
         pRunningEvent.Start    = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
-        pRunningEvent.Duration = 0;
-//          Adquisition_SamplesCopy(RunningEvent->Begin, (work->Samples - work->Cycles[i].Start) + MAX_FRAME, MAX_FRAME * 2);
       }
       if((pRunningEvent.Type == EVT_RVC) && ((pRunningEvent.Duration == 0) || (fabs(pRunningEvent.Voltage) < fabs(Cycle->RMS[n] - pStationaryRMS[n])))) {
         pRunningEvent.Voltage = Cycle->RMS[n] - pStationaryRMS[n];
@@ -224,15 +212,7 @@ void CaptureInterface::EventsDetect() {
         if((pRunningEvent.Type == EVT_SWELL) && (Cycle->RMS[n] < Tools::Electrical.NominalVoltage)) pRunningEvent.Type = EVT_DIP;
       }
     }
-    if(pRunningEvent.Type != EVT_NONE) {
-      if(pRunningEvent.Type != EVT_RVC) {
-        pWork.Params.Flag = true;
-        pPrevCyclesLen = 0;
-        pPrevStationary = false;
-      }
-      pRunningEvent.Duration += Cycle->Len;
-      SaveEvent();
-    }
+    if(pRunningEvent.Type != EVT_NONE) SaveEvent(i, false);
     if((pPrevStationary == false) && (Stationary == true)) Tools::LogMsg("DEBUG", "Stationary voltage reached in node %d\n", pNodeIndex);
     if(Stationary == true) {
       free(pStationaryRMS);
@@ -241,7 +221,30 @@ void CaptureInterface::EventsDetect() {
     pPrevStationary = Stationary;
   }
 }
-void CaptureInterface::SaveEvent() {
+void CaptureInterface::SaveEvent(uint8_t cycle, bool end) {
+  float **Samples     = NULL;
+  uint32_t SamplesLen = 0;
+  if(end == false) {
+    if(pRunningEvent.Type != EVT_RVC) {
+      pWork.Params.Flag = true;
+      pPrevCyclesLen = 0;
+      pPrevStationary = false;
+    }
+    if(pRunningEvent.Duration == 0) {
+      SamplesLen = EVENT_ENVELOPETIME * 2 * pSampleRate;
+      Samples = (float**)malloc(sizeof(float*) * SamplesLen);
+      for(uint32_t i = 0; i < SamplesLen; i++) Samples[i] = (float*)malloc(sizeof(float) * ((pTriphase == true) ? 3 : 1));
+      SamplesLen = SamplesCopy(Samples, -pWork.Cycles[19].End + pWork.Cycles[cycle].Start - pSampleRate * EVENT_ENVELOPETIME, SamplesLen);
+    }
+    pRunningEvent.Duration += pWork.Cycles[cycle].End - pWork.Cycles[cycle].Start;
+  } else {
+    SamplesLen = MIN(EVENT_ENVELOPETIME * 2 * pSampleRate, pRunningEvent.Duration);
+    Samples = (float**)malloc(sizeof(float*) * SamplesLen);
+    for(uint32_t i = 0; i < SamplesLen; i++) Samples[i] = (float*)malloc(sizeof(float) * ((pTriphase == true) ? 3 : 1));
+//    SamplesLen = SamplesCopy(Samples, -pWork.Cycles[19].End + pWork.Cycles[cycle].Start - pSampleRate * EVENT_ENVELOPETIME, SamplesLen);
+  }
+  
+  
   char *Type = (char*)"UNKNOWN";
   if(pRunningEvent.Type == EVT_RVC) Type = (char*)"RVC";
   if(pRunningEvent.Type == EVT_DIP) Type = (char*)"DIP";  
@@ -255,9 +258,16 @@ void CaptureInterface::SaveEvent() {
   BindSingleString(Type);                                                                             //type
   BindSingleFloat(pRunningEvent.Voltage);                                                             //voltage
   BindSingleFloat(pRunningEvent.Change);                                                              //change
-  BindArrayArrayFloat(pRunningEvent.Samples, pRunningEvent.Samples_Len, (pTriphase == true) ? 3 : 1); //samples
-  pRunningEvent.Samples_Len = 0;
+  BindArrayArrayFloat(Samples, SamplesLen, (pTriphase == true) ? 3 : 1);                              //samples
   ExecSentence();
+  if(end == true) {
+    pRunningEvent.Type = EVT_NONE;
+    pRunningEvent.Duration = 0;
+  }
+  if(Samples != NULL) {
+    for(uint32_t i = 0; i < SamplesLen; i++) free(Samples[i]);  
+    free(Samples);
+  }
 }
 void CaptureInterface::Analyze(float minimunCurrent) {
   FFT_t FFT_Voltage[3];
@@ -373,7 +383,8 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t 
   for(int i = 0; i < ((triphase == true) ? 4 : 1); i++) pWork.CurrentFFT[i] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
   AllocParams(&pWork.Params, AGGREG_10C);
   ResetWork();
-  ResetEvent();
+  pRunningEvent.Type = EVT_NONE;
+  pRunningEvent.Duration = 0;
   AllocParams(&pAggreg3S, AGGREG_3S);
   AllocParams(&pAggreg1M, AGGREG_1M);
   AllocParams(&pAggreg10M, AGGREG_10M);
@@ -383,9 +394,6 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t 
     pLastCycles[i] = Samples - pLastCyclesLenght;
     pLastCyclesLenght += pLastCycles[i]; 
   }
-  int Len = EVENT_ENVELOPETIME * pSampleRate * 2;
-  pRunningEvent.Samples = (float**)malloc(sizeof(float*) * Len);
-  for(int i = 0; i < Len; i++) pRunningEvent.Samples[i] = (float*)malloc(sizeof(float) * ((triphase == true) ? 3 : 1));
   for(int i = 0; i < 100; i ++) pPrevCycles[i].RMS = (float*)malloc(sizeof(float) * (pTriphase ? 3 : 1));
   pStationaryRMS = NULL;
   pPrevCyclesLen = 0;
@@ -439,8 +447,7 @@ void CaptureInterface::ResetWork() {
   pWork.Cycles_Len = 0;
 }
 CaptureInterface::~CaptureInterface() {
-  for(int i = 0; i < EVENT_ENVELOPETIME * pSampleRate * 2; i++) free(pRunningEvent.Samples[i]);  
-  free(pRunningEvent.Samples);
+
 }
 uint32_t CaptureInterface::GetMaxSamples() {
   return pMaxSamples;

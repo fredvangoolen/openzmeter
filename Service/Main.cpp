@@ -46,11 +46,14 @@ int main(int argc, char** argv) {
     }
   }
   if(Daemonize == true) Tools::Daemonize();
-//  chdir("/opt/openZmeter");
-  setpriority(PRIO_PROCESS, 0, -20);
-  struct sched_param Param;
-  Param.sched_priority = -10;
-  if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "Non preemptive kernel or unprivileged user!!\n");
+  int Prio = sched_get_priority_max(SCHED_RR);
+  if(Prio == -1) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  } else {
+    struct sched_param Param;
+    Param.sched_priority = Prio;
+    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  }
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;

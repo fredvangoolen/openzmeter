@@ -15,7 +15,7 @@
 #define EVENT_DIP_SWELL               10.0        //Variacion en % para generar subida o bajada
 #define EVENT_INTERRUPTION            90.0        //Bajada en % para generar interrupcion
 #define EVENT_HYSTERESIS              06.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
-#define EVENT_ENVELOPETIME             1.0        //Tiempo en segundos que se guarda antes y despues de un evento
+#define EVENT_ENVELOPETIME             0.2        //Tiempo en segundos que se guarda antes y despues de un evento
 //---------------------------------------------------------------------------------------------------------------------
 class CaptureInterface : private Database {
   public :
@@ -91,8 +91,6 @@ class CaptureInterface : private Database {
       uint64_t        Duration;             //Duracion en samples
       float           Voltage;              //Tension maxima o minima durante el evento
       float           Change;               //Porcentage de desviacion del evento
-      float         **Samples;              //Muesrtras del evento
-      uint32_t        Samples_Len;          //Longitud de muestras tomadas
     } Event_t;
   private :
     static pthread_mutex_t pFFTPlannerMutex; //Bloquea el acceso simultaneo al plinificador de FFTs
@@ -122,7 +120,7 @@ class CaptureInterface : private Database {
     Event_t         pRunningEvent;        //Evento en curso
   private :
     void  SaveParams(Params_t *param);
-    void  SaveEvent();
+    void  SaveEvent(uint8_t cycle, bool end);
     float PercentChange(float in, float reference);
   protected :
     uint64_t    pPrevTimestamp;
@@ -136,7 +134,6 @@ class CaptureInterface : private Database {
     void     SaveWorkParams();
     void     Analyze(float minimunCurrent);
     void     EventsDetect();
-    void     ResetEvent();
     void     AccumulateAggregation(Params_t *dst, Params_t *src);
     bool     FFT_Start(FFT_t *fft, float *in, Complex_t *out);
     void     FFT_Wait(FFT_t *fft);

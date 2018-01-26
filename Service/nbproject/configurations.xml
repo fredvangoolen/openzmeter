@@ -398,12 +398,21 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
+          <linkerAddLib>
+            <pElem>/usr/local/lib</pElem>
+          </linkerAddLib>
           <commandLine>-lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ljson-c -lz</commandLine>
         </linkerTool>
       </compileType>
       <packaging>
         <packType>Debian</packType>
         <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
                             from="${OUTPUT_PATH}"
@@ -3035,6 +3044,12 @@
                             to="/lib/systemd/system/openZmeter.service"
                             from="openZmeter.service"
                             perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
                             owner="root"
                             group="bin"/>
           <packFileListElem type="File"

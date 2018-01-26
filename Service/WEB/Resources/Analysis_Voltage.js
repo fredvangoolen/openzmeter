@@ -1506,18 +1506,17 @@ function AjaxEvents(result) {
   }
 }
 $("table#EventsTable").on('click', 'button.get_samples', function () {
-  var tr = EventsTable.row($(this).parents('tr'));
+  var Row = EventsTable.row($(this).parents('tr'));
   $('#EventChart div.no-data').addClass('hidden');
   EventsTable.rows().nodes().to$().removeClass('info');
-  $(tr.node()).addClass('info');
-  var index = tr.index();
+  $(Row.node()).addClass('info');
   ShowSpinner(EventSpinner, 'EventSpinner');
   $.ajax({
     url: "events/ajaxGetEventSamples",
     type: "POST",
     dataType: "json",
     data: {
-      timestamp: +events[index].timestamp
+      timestamp: EventsDatasheet[Row.index()].timestamp
     }
   });
 //    request.done(function (result) {

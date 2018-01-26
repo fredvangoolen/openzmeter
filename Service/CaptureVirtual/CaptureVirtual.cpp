@@ -26,9 +26,14 @@ float Variation(uint64_t step, float from, float to, uint64_t repeat) {
   }
 }
 void  *CaptureVirtual::Capture_Thread(void *args) {
-  struct sched_param Param;
-  Param.sched_priority = 99;
-  if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  int Prio = sched_get_priority_max(SCHED_RR);
+  if(Prio == -1) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  } else {
+    struct sched_param Param;
+    Param.sched_priority = Prio - 20;
+    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  }
   CaptureVirtual *This = (CaptureVirtual*)args;
   pthread_setname_np(This->CaptureThread, "CapVirt_Init");
   uint32_t Update = 0;
@@ -192,7 +197,7 @@ CaptureVirtual::~CaptureVirtual() {
   }
 }
 uint32_t CaptureVirtual::SamplesCopy(float **dest, int32_t offset, uint32_t len) {
-  for(int i = 0; i < len; i++) {
+  for(uint i = 0; i < len; i++) {
     dest[i][0] = Buffer[(ReadPos + offset + i) % CAPTUREVIRTUAL_BUFFERSIZE].VoltageA;
     if(Triphase()) {
       dest[i][1] = Buffer[(ReadPos + offset + i) % CAPTUREVIRTUAL_BUFFERSIZE].VoltageB;
