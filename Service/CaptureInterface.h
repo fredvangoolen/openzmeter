@@ -142,7 +142,7 @@ class CaptureInterface : private Database {
     static float  ApplyFilter(float in, Filter_t *filter);
     static float  CalcPhi(Complex_t voltage, Complex_t current);
   protected :
-    virtual uint32_t SamplesCopy(float **dest, int32_t offset, uint32_t len) = 0;
+    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
   public :
     bool         Triphase();
     uint32_t     SampleRate();

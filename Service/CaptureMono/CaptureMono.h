@@ -49,7 +49,7 @@ class CaptureMono : public CaptureInterface {
     static int    PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
     float    CalculateFrequency(Work_t* work);
-    uint32_t SamplesCopy(float **dest, int32_t offset, uint32_t len);
+    uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len);
   public :
     CaptureMono(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint16_t id);
     ~CaptureMono();

@@ -166,7 +166,7 @@ void  *CaptureMono::Analize_Thread(void* args) {
   int Discard = 100;
   while(!This->pTerminate) {
     pthread_mutex_lock(&This->AnalyzeMutex);
-    while(This->Used < (This->GetMaxSamples())) {
+    while(This->Used < (This->GetMaxSamples() + This->SampleRate() * EVENT_ENVELOPETIME)) {
       if(This->pTerminate) return NULL;
       pthread_cond_wait(&This->ReadWait, &This->AnalyzeMutex);
     }
@@ -277,10 +277,12 @@ CaptureMono::~CaptureMono() {
     free(Buffer);
   }
 }
-uint32_t CaptureMono::SamplesCopy(float **dest, int32_t offset, uint32_t len) {
-//  for(int i = 0; i < len; i++) 
-//    dest[i] = Buffer[(ReadPos + offset + i) % Size].Voltage;
-  return 0;
+uint32_t CaptureMono::SamplesCopy(float **dest, uint32_t offset, uint32_t len) {
+  for(uint i = 0; i < len; i++) {
+    uint32_t Pos = ((ReadPos + CAPTUREMONO_BUFFERSIZE) - offset + i) % CAPTUREMONO_BUFFERSIZE;
+    dest[i][0] = Buffer[Pos].Voltage;
+  }
+  return len;
 }
 //void Adquisition_SetLEDs(float voltage, float current) {
 //  uint8_t Val = 0;

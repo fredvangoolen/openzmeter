@@ -92,7 +92,7 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
   int Discard = 10;
   while(!This->pTerminate) {
     pthread_mutex_lock(&This->AnalyzeMutex);
-    while(This->Used < (This->GetMaxSamples())) {
+    while(This->Used < (This->GetMaxSamples() + This->SampleRate() * EVENT_ENVELOPETIME)) {
       if(This->pTerminate) return NULL;
       pthread_cond_wait(&This->ReadWait, &This->AnalyzeMutex);
     }
@@ -196,12 +196,13 @@ CaptureVirtual::~CaptureVirtual() {
     free(Buffer);
   }
 }
-uint32_t CaptureVirtual::SamplesCopy(float **dest, int32_t offset, uint32_t len) {
+uint32_t CaptureVirtual::SamplesCopy(float **dest, uint32_t offset, uint32_t len) {
   for(uint i = 0; i < len; i++) {
-    dest[i][0] = Buffer[(ReadPos + offset + i) % CAPTUREVIRTUAL_BUFFERSIZE].VoltageA;
+    uint32_t Pos = ((ReadPos + CAPTUREVIRTUAL_BUFFERSIZE) - offset + i) % CAPTUREVIRTUAL_BUFFERSIZE;
+    dest[i][0] = Buffer[Pos].VoltageA;
     if(Triphase()) {
-      dest[i][1] = Buffer[(ReadPos + offset + i) % CAPTUREVIRTUAL_BUFFERSIZE].VoltageB;
-      dest[i][2] = Buffer[(ReadPos + offset + i) % CAPTUREVIRTUAL_BUFFERSIZE].VoltageC;
+      dest[i][1] = Buffer[Pos].VoltageB;
+      dest[i][2] = Buffer[Pos].VoltageC;
     }
   }
   return len;

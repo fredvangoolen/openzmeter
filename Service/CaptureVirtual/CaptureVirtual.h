@@ -40,7 +40,7 @@ class CaptureVirtual : public CaptureInterface {
     static int    PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
     float    CalculateFrequency(Work_t* work);
-    uint32_t SamplesCopy(float **dest, int32_t offset, uint32_t len);
+    uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len);
   public :
     CaptureVirtual(uint32_t samplerate, bool triphase, float nominalcurrent, uint16_t id);
     ~CaptureVirtual();

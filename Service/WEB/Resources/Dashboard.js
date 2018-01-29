@@ -103,7 +103,7 @@ function AjaxVoltage(result) {
       }
     );
   } else {
-    VoltageChart.updateOptions({'file': VoltageData, dateWindow: [result['From'], result['To']]});
+    VoltageChart.updateOptions({ file: VoltageData, dateWindow: [result['From'], result['To']]});
   }
   if(Nodes['Devices'][Node]['Type'] == '3Phase') {
     AddEvents(result, "Voltage (R)", VoltageChart);

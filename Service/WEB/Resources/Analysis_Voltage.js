@@ -320,12 +320,7 @@ $('#btnMaximizeVoltage').click(function() {
   window.dispatchEvent(new Event('resize'));  
 });
 $('#btnExportVoltage').click(function() {
-  var Data = [];
-  var Filename = "Voltage_" + LastVoltageTime + '.csv';
-  Data.push([['Index', 'Voltage']]);
-  Data = Data.concat(VoltageData);
-  exportToCsv(Filename, Data);
-  $(this).blur();
+  exportToCsv("Voltage_" + Node + '_' + LastVoltageSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Voltage R', 'Voltage S', 'Voltage T']] : [['DateTime', 'Voltage']]).concat(VoltageData));
 });
 
 /* Contadores de voltage */
@@ -449,6 +444,7 @@ $('#GraphDialogClose').click(function() {
 /* Vista de detalles */
 var DetailSpinner = new Spinner(SpinnerOpts);
 var DetailTimer   = null;
+var DetailTimestamp = 0;
 function AjaxGetDetails() {
   if(WaveformChart === null) ShowSpinner(DetailSpinner, 'DetailSpinner');
   $('#btnPauseDetail').addClass('disabled');
@@ -460,6 +456,7 @@ function AjaxGetDetails() {
            data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_v, phi, rms_v, rms_i', Node: Node}),
            success: function(result) {
              if(WaveformChart === null) StopSpinner(DetailSpinner, 'DetailSpinner');
+             DetailTimestamp = result['Sampletime'];
              UpdateWaveformChart(result);
              UpdateHarmonicsChart(result);
              UpdateFFTChart(result);
@@ -1456,7 +1453,10 @@ function AjaxEvents(result) {
                                                 order: [0, 'desc']
     });
   }
-  if(LastEventStartTime === 0) EventsTable.clear().draw();
+  if(LastEventStartTime === 0) {
+    EventsTable.clear().draw();
+    EventsDatasheet = [];
+  }
   if(result['Starttime'] !== null) {
     for(i = 0; i < result['Starttime'].length; i++) {
       var Time = new Date(result['Starttime'][i]);
@@ -1467,40 +1467,18 @@ function AjaxEvents(result) {
                             Round2(result['Percentage'][i]), 
                             '<button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button>'] ).draw();
       LastEventStartTime = result['Starttime'][i];
+      EventsDatasheet.push(result['Starttime'][i]);
     }
   }
-  
   if(EventChart === null) {
-    EventChart = new Dygraph(document.getElementById("EventChart"), [[0, 0]], {
+    EventChart = new Dygraph(document.getElementById("EventChart"), (Nodes['Devices'][Node]['Type'] == '3Phase') ? [[0, 0, 0, 0]] : [[0, 0]], {
       strokeWidth: 0.5,
-      labels: ["Sample index", "Voltage"],
-      colors: ["#d9534f"],
-      interactionModel: {
-        mousedown: mouseDownOZM,
-        mousemove: mouseMoveOZM,
-        mouseup: mouseUpOZM,
-        click: clickV3,
-        dblclick: dblClickV4,
-        mousewheel: scrollV3
-      },
-      axes: {
-        y: {
-          valueFormatter: function (x) {
-            return Round2(x) + ' <em class="small">V</em>';
-          },
-          axisLabelFormatter: function (x) {
-            return '<small>' + Round2(x) + ' <em class="small">V</em></small>';
-          }
-        },
-        x: {
-          valueFormatter: function (y) {
-            return y;
-          },
-          axisLabelFormatter: function (y) {
-            return y;
-          }
-        }
-      }
+      gridLineColor: "#999",
+      gridLinePattern: [4, 4],
+      labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)'] :['Time', 'Voltage'],
+      colors: ["#d9534f", "#534fd9", "#4fd953"],
+      interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
+      labelsDiv: "EventChartLegend"
     });
     $('#EventChart').append('<div class="no-data event_instructions"><div class="alert alert-info">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
   }
@@ -1512,66 +1490,137 @@ $("table#EventsTable").on('click', 'button.get_samples', function () {
   $(Row.node()).addClass('info');
   ShowSpinner(EventSpinner, 'EventSpinner');
   $.ajax({
-    url: "events/ajaxGetEventSamples",
+    url: "getEventSamples",
     type: "POST",
     dataType: "json",
-    data: {
-      timestamp: EventsDatasheet[Row.index()].timestamp
-    }
+    contentType: 'application/json',
+    data: JSON.stringify({ Node: Node, Starttime: EventsDatasheet[Row.index()] }),
+    success: AjaxSamples,
   });
-//    request.done(function (result) {
-//        spinner.stop();
-//        var eventDataset = [];
-//        var len = result.length;
-//        for (var i = 0; i < len / 2; i++) {
-//            eventDataset.push([i/*new Date(+result[i].timestamp)*/, result[i]/*.value*/]);
-//        }
-//        for (var j = 0; j < 100; j++) {
-//            eventDataset.push([i++, null]);
-//        }
-//        for (i = i; i < len; i++) {
-//            eventDataset.push([i/*new Date(+result[i].timestamp)*/, result[i - 100]/*.value*/]);
-//        }
-//        eventChart.updateOptions({'file': eventDataset, dateWindow: [0, result.length], underlayCallback: function (canvas, area, g) {
-//                var bottom_left = g.toDomCoords(len / 2, -20);
-//                var top_right = g.toDomCoords(len / 2 + 100, +20);
-//
-//                var left = bottom_left[0];
-//                var right = top_right[0];
-//
-//                canvas.fillStyle = "rgba(240, 240, 240, 1.0)";
-//                canvas.fillRect(left, area.y, right - left, area.h);
-//            }});
-//    });
 });
+function AjaxSamples(result) {
+  StopSpinner(EventSpinner, 'EventSpinner');
+  var ToShow = [];
+  for(i = 0; i < result['Samples'].length; i++) {
+    if((result['Duration'] > result['Envelope'] * 4) && (i > result['Envelope'] * 2)) {
+      ToShow.push([i + 100].concat(result['Samples'][i]));
+    } else {
+      ToShow.push([i].concat(result['Samples'][i]));
+    }
+    if((result['Duration'] > result['Envelope'] * 4) && (i === result['Envelope'] * 2)) {
+      for(n = 0; n < 100; n++) ToShow.push([i + n + 1].concat(Nodes['Devices'][Node]['Type'] == '3Phase') ? ['NaN', 'NaN', 'NaN'] : ['NaN']);
+    }
+  }
+  var Options = {
+    panEdgeFraction: 0.000000001,
+    file: ToShow,
+    dateWindow: [0, result['Samples'].length + ((result['Duration'] > result['Envelope'] * 4) ? 100 : 0)],
+    valueRange: CalcRanges(result['Samples'], (Nodes['Devices'][Node]['Type'] == '3Phase') ? [1, 2, 3] : [1]),
+    underlayCallback: function(canvas, area, g) {
+      canvas.fillStyle = "#EEE";
+      canvas.fillRect(g.toDomXCoord(0), 0, g.toDomXCoord(result['Envelope']) - g.toDomXCoord(0), g.height_);
+      canvas.fillRect(g.toDomXCoord(ToShow.length - result['Envelope']), 0, g.toDomXCoord(ToShow.length), g.height_);
+      var NominalVoltage = Nodes['NominalVoltage'] * Math.SQRT2;
+      canvas.beginPath();
+      canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(NominalVoltage));
+      canvas.lineTo(g.width_, g.toDomYCoord(NominalVoltage));
+      canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(-NominalVoltage));
+      canvas.lineTo(g.width_, g.toDomYCoord(-NominalVoltage));
+      canvas.strokeStyle = '#f00';
+      canvas.lineWidth = 0.5;
+      canvas.stroke();
+      if(result['Duration'] > result['Envelope'] * 4) {
+        canvas.fillStyle = "#fff";
+        canvas.fillRect(g.toDomXCoord(result['Envelope'] * 2), 0, g.toDomXCoord(result['Envelope'] * 2 + 100) - g.toDomXCoord(result['Envelope'] * 2), g.height_);
+        canvas.beginPath();
+        canvas.moveTo(g.toDomXCoord(result['Envelope'] * 2), 0);
+        canvas.lineTo(g.toDomXCoord(result['Envelope'] * 2), g.height_);
+        canvas.moveTo(g.toDomXCoord(result['Envelope'] * 2 + 100), 0);
+        canvas.lineTo(g.toDomXCoord(result['Envelope'] * 2 + 100), g.height_);
+        canvas.strokeStyle = '#000';
+        canvas.lineWidth = 0.5;
+        canvas.stroke();
+      }
+      canvas.beginPath();
+      canvas.moveTo(g.toDomXCoord(result['Envelope']), 0);
+      canvas.lineTo(g.toDomXCoord(result['Envelope']), g.height_);
+      canvas.moveTo(g.toDomXCoord(ToShow.length - result['Envelope']), 0);
+      canvas.lineTo(g.toDomXCoord(ToShow.length - result['Envelope']), g.height_);
+      canvas.strokeStyle = '#000';
+      canvas.lineWidth = 0.5;
+      canvas.stroke();
+    },
+    axes: {
+      y: {
+        valueFormatter: function (x) {
+          return Round2(x) + ' <em class="small">V</em>';
+        },
+        axisLabelFormatter: function (x) {
+          return '<small>' + Round2(x) + ' <em class="small">V</em></small>';
+        }
+      },
+      x: {
+        valueFormatter: function (y) {
+          if((result['Duration'] > result['Envelope'] * 4) && (y <= result['Envelope'] * 2)) {
+            return Round2((y - result['Envelope']) / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
+          } else if((result['Duration'] > result['Envelope'] * 4) && (y > result['Envelope'] * 2 + 100)) {
+            return Round2((y - result['Envelope'] * 3  - 100) / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
+          } else if(result['Duration'] > result['Envelope'] * 4) {
+            return "";
+          } else {
+            return Round2(y / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
+          }
+        },
+        axisLabelFormatter: function (y) {
+          if((result['Duration'] > result['Envelope'] * 4) && (y <= result['Envelope'] * 2)) {
+            return Round2((y - result['Envelope']) / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
+          } else if((result['Duration'] > result['Envelope'] * 4) && (y > result['Envelope'] * 2 + 100)) {
+            return Round2((y - result['Envelope'] * 3  - 100) / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
+          } else if(result['Duration'] > result['Envelope'] * 4) {
+            return "";
+          } else {
+            return Round2(y / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
+          }
+        }
+      }
+    }
+  };
+  EventChart.updateOptions(Options);
+}
 
-
-
-
-
-
-
-
-
-
-
-$('#btnExport').click(function () {
+/* Exportar y ampliar graficas de detalles */
+$('#btnExportDetail').click(function () {
   var Data = [];
   var Filename;
-  if($('#WaveformPanel').hasClass('hidden') == false) {
-    Filename = 'voltage_waveform_' + LastTimestamp + '.csv'
-    Data.push([['Index', 'Voltage', 'Current']]);
-    Data = Data.concat(WaveformDataset);
-  } else if($('#FFTPanel').hasClass('hidden') == false) {
-    Filename = 'voltage_fft_' + LastTimestamp + '.csv';
-    Data = [['Index', 'dB', 'V_rms', 'Note: This is the result of our FFT algorithm. The index colum should be multiplied by 5 in order to get the frequencies.']];
-    for(i = 0; i < FFTDataset.length; i++) Data.push([i, FFTDataset[i][0]- FFTOffset, FFTDataset[i][1]]);
+  if($('#WaveformPanel').hasClass('hidden') === false) {
+    exportToCsv("Voltage_Waveform_" + Node + '_' + DetailTimestamp + '.csv', ((Nodes['Devices'][Node]['Type'] === '3Phase') ? [['DateTime', 'Voltage R', 'Voltage S', 'Voltage T', 'Current R', 'Current S', 'Current T']] : [['DateTime', 'Voltage', 'Current']]).concat(WaveformDataset));
+  } else if($('#FFTPanel').hasClass('hidden') === false) {
+    Data = [['Index'].concat(((Nodes['Devices'][Node]['Type'] === '3Phase') ? ['dB (R)', 'V_rms (R)', 'dB (S)', 'V_rms (S)', 'dB (T)', 'V_rms (T)', 'dB (R)', 'I_rms (R)', 'dB (S)', 'I_rms (S)', 'dB (T)', 'I_rms (T)'] : ['dB', 'V_rms', 'dB', 'I_rms'])).concat('Note: This is the result of our FFT algorithm. The index colum should be multiplied by 5 in order to get the frequencies.')];
+    for(i = 0; i < FFTDataset.length; i++) {
+      if(Nodes['Devices'][Node]['Type'] === '3Phase') {    
+        Data.push([i, 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][0])), FFTDataset[i][0], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][1])), FFTDataset[i][1],
+                      20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][2])), FFTDataset[i][2], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][3])), FFTDataset[i][3],
+                      20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][4])), FFTDataset[i][4], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][5])), FFTDataset[i][5]]);
+      } else {
+        Data.push([i, 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][0])), FFTDataset[i][0], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][1])), FFTDataset[i][1]]);
+      }
+    }
+    exportToCsv("Voltage_FFT_" + Node + '_' + DetailTimestamp + '.csv', Data);
   } else if($('#HarmonicsPanel').hasClass('hidden') == false) {
-    Filename = 'voltage_harmonics_' + LastTimestamp + '.csv';
-    Data = [['Order', 'dB', 'V_rms', ' Freq = ' + $('#frequency_indicator').text(), 'Note: This frequency is the result of our zero crossing algorithm for the last 10 seconds, as stated by IEC 61000-4-30.']];
-    for(i = 0; i < HarmonicsDataset.length; i++) Data.push([(i + 1), HarmonicsDataset[i][0] - HarmonicsOffset, HarmonicsDataset[i][1]])  
+    Data = [['Harmonic'].concat(((Nodes['Devices'][Node]['Type'] === '3Phase') ? ['dB (R)', 'V_rms (R)', 'dB (S)', 'V_rms (S)', 'dB (T)', 'V_rms (T)', 'dB (R)', 'I_rms (R)', 'dB (S)', 'I_rms (S)', 'dB (T)', 'I_rms (T)'] : ['dB', 'V_rms', 'dB', 'I_rms'])).concat('Note: This is the result of our FFT algorithm.')];
+    for(i = 0; i < HarmonicsDataset.length; i++) {
+      if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+        Data.push([HarmonicsNames[i], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][0])), HarmonicsDataset[i][0], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][1])), HarmonicsDataset[i][1],
+                                      20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][2])), HarmonicsDataset[i][2], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][3])), HarmonicsDataset[i][3],
+                                      20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][4])), HarmonicsDataset[i][4], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][5])), HarmonicsDataset[i][5]]);
+      } else {
+        Data.push([HarmonicsNames[i], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][0])), HarmonicsDataset[i][0], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][1])), HarmonicsDataset[i][1]]);
+      }
+    }
+    exportToCsv("Voltage_Harmonics_" + Node + '_' + DetailTimestamp + '.csv', Data);
   } else if($('#EvolutionPanel').hasClass('hidden') == false) {
-    Filename = 'voltage_harmonics_evolution' + LastTimestamp + '.csv';
+
+    Filename = 'Voltage_Harmonics_Evolution' + LastTimestamp + '.csv';
     Data = [['Date/Time']];
     Data[0] = Data[0].concat(HarmonicsNames);
     for(i = 0; i <  EvolutionDatasets[0].length; i++) {
@@ -1581,10 +1630,8 @@ $('#btnExport').click(function () {
       }
       Data.push(Row);
     }
+    exportToCsv("Voltage_Harmonics_Evolution" + ((Nodes['Devices'][Node]['Type'] === '3Phase') ? '(' + localStorage.getItem('VoltageDetailEvolutionPhase') + ')_' : '_') + Node + '_' + DetailTimestamp + '.csv', Data);  
   }
-  exportToCsv(Filename, Data);
-  $(this).removeClass('active');
-  $(this).blur();
 });
 $('#maximizeVoltage').click(function() {
   $('#GraphDialogTitle').text('Voltage');

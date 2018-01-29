@@ -234,17 +234,15 @@ void CaptureInterface::SaveEvent(uint8_t cycle, bool end) {
       SamplesLen = EVENT_ENVELOPETIME * 2 * pSampleRate;
       Samples = (float**)malloc(sizeof(float*) * SamplesLen);
       for(uint32_t i = 0; i < SamplesLen; i++) Samples[i] = (float*)malloc(sizeof(float) * ((pTriphase == true) ? 3 : 1));
-      SamplesLen = SamplesCopy(Samples, -pWork.Cycles[19].End + pWork.Cycles[cycle].Start - pSampleRate * EVENT_ENVELOPETIME, SamplesLen);
+      SamplesLen = SamplesCopy(Samples, pWork.Cycles[19].End - pWork.Cycles[cycle].Start + pSampleRate * EVENT_ENVELOPETIME, SamplesLen);
     }
     pRunningEvent.Duration += pWork.Cycles[cycle].End - pWork.Cycles[cycle].Start;
   } else {
     SamplesLen = MIN(EVENT_ENVELOPETIME * 2 * pSampleRate, pRunningEvent.Duration);
     Samples = (float**)malloc(sizeof(float*) * SamplesLen);
     for(uint32_t i = 0; i < SamplesLen; i++) Samples[i] = (float*)malloc(sizeof(float) * ((pTriphase == true) ? 3 : 1));
-//    SamplesLen = SamplesCopy(Samples, -pWork.Cycles[19].End + pWork.Cycles[cycle].Start - pSampleRate * EVENT_ENVELOPETIME, SamplesLen);
+    SamplesLen = SamplesCopy(Samples, pWork.Cycles[19].End - pWork.Cycles[cycle].Start - EVENT_ENVELOPETIME * pSampleRate + SamplesLen, SamplesLen);
   }
-  
-  
   char *Type = (char*)"UNKNOWN";
   if(pRunningEvent.Type == EVT_RVC) Type = (char*)"RVC";
   if(pRunningEvent.Type == EVT_DIP) Type = (char*)"DIP";  
