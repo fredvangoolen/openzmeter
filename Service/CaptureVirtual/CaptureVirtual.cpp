@@ -41,7 +41,7 @@ void  *CaptureVirtual::Capture_Thread(void *args) {
   uint64_t GeneratedSamples = 0;
   while(!This->pTerminate) {
     pthread_mutex_lock(&This->CaptureMutex);
-    while(This->Used > (CAPTUREVIRTUAL_BUFFERSIZE - CAPTUREVIRTUAL_SAMPLESREAD)) {
+    while(This->Used > (CAPTUREVIRTUAL_BUFFERSIZE - CAPTUREVIRTUAL_SAMPLESREAD - This->SampleRate() * EVENT_ENVELOPETIME)) {
       if(This->pTerminate) return NULL;
       Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
       pthread_cond_wait(&This->WriteWait, &This->CaptureMutex);
@@ -72,7 +72,7 @@ void  *CaptureVirtual::Capture_Thread(void *args) {
     This->Used += CAPTUREVIRTUAL_SAMPLESREAD;
     pthread_cond_signal(&This->ReadWait);
     pthread_mutex_unlock(&This->CaptureMutex);
-    while((StartTime + (GeneratedSamples / This->SampleRate()) * 1000.0) > Tools::GetTime()) usleep(10);
+    while((StartTime + (GeneratedSamples / This->SampleRate()) * 1000.0) > Tools::GetTime()) usleep(1000);
     if((Update % 10) == 0) {
       char ThreadName[16];
       sprintf(ThreadName, "CapVirt_%03d", This->Used * 100 / CAPTUREVIRTUAL_BUFFERSIZE);

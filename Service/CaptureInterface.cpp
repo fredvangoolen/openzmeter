@@ -12,34 +12,42 @@
 #include "CaptureInterface.h"
 #include "Tools.h"
 pthread_mutex_t CaptureInterface::pFFTPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
+const float CaptureInterface::FrequencyRanges[] = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, -0.01, 0.01, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
+
+
 void CaptureInterface::SaveWorkParams() {
   pthread_mutex_lock(&pDataReadyMutex);
   pDataReady = true;
   pthread_cond_broadcast(&pDataReadyWait);
   pthread_mutex_unlock(&pDataReadyMutex);
-  if(((pWork.SequenceID % 15) == 0) && (pPrevTimestamp != 0)) {
-    Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
-    SaveParams(&pAggreg3S);
+  if(((pWork.Params.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
+    Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
+    pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
+    SaveParams(&pAggreg1H);
+    ResetStats();
   }
-  AccumulateAggregation(&pAggreg3S, &pWork.Params);
-  if(((pWork.Params.Timestamp / 60000) > (pPrevTimestamp / 60000)) && (pPrevTimestamp != 0)) {
-    Tools::LogMsg("DEBUG", "Storing 1M aggregation\n");
-    pAggreg1M.Timestamp = pAggreg1M.Timestamp / 60000 * 60000 + 59999;
-    SaveParams(&pAggreg1M);
-  }
-  AccumulateAggregation(&pAggreg1M, &pWork.Params);
+  AccumulateAggregation(&pAggreg1H, &pWork.Params);
   if(((pWork.Params.Timestamp / 600000) > (pPrevTimestamp / 600000)) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
     pAggreg10M.Timestamp = pAggreg10M.Timestamp / 600000 * 600000 + 599999;
     SaveParams(&pAggreg10M);
   }
-  AccumulateAggregation(&pAggreg10M, &pWork.Params);
-  if(((pWork.Params.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
-    Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
-    pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
-    SaveParams(&pAggreg1H);
+  AccumulateAggregation(&pAggreg10M, &pWork.Params);  
+  if(((pWork.Params.Timestamp / 60000) > (pPrevTimestamp / 60000)) && (pPrevTimestamp != 0)) {
+    Tools::LogMsg("DEBUG", "Storing 1M aggregation\n");
+    pAggreg1M.Timestamp = pAggreg1M.Timestamp / 60000 * 60000 + 59999;
+    SaveParams(&pAggreg1M);
   }
-  AccumulateAggregation(&pAggreg1H, &pWork.Params);
+  AccumulateAggregation(&pAggreg1M, &pWork.Params);  
+  if(((pWork.SequenceID % 15) == 0) && (pPrevTimestamp != 0)) {
+    Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
+    SaveParams(&pAggreg3S);
+    float Variation = PercentChange(pWork.Params.Frequency, Tools::Electrical.NominalFrequency);
+    for(uint Range = 1; Range < (sizeof(FrequencyRanges) / sizeof(float)); Range++) {
+      if((Variation >= FrequencyRanges[Range - 1]) && (Variation < FrequencyRanges[Range])) pStats.Frequency[Range - 1]++;
+    }
+  }
+  AccumulateAggregation(&pAggreg3S, &pWork.Params);
   pPrevTimestamp = pWork.Params.Timestamp;
   pthread_mutex_lock(&pWaitingThreadsMutex);
   while(pWaitingThreads != 0) {
@@ -103,7 +111,7 @@ void CaptureInterface::SaveParams(Params_t *params) {
   else if(params->Type == AGGREG_10M)  
     PrepareSentence("EXECUTE SAVE_10M(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1H)  
-    PrepareSentence("EXECUTE SAVE_1H(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("EXECUTE SAVE_1H(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   BindSingleUInt32(pNodeIndex);                                                    //node
   BindSingleUInt64(params->Timestamp);                                             //sampletime
   BindArrayFloat(params->RMS_V, (pTriphase == true) ? 3 : 1);                      //rms_v 
@@ -114,6 +122,12 @@ void CaptureInterface::SaveParams(Params_t *params) {
   BindArrayFloat(params->Fundamental_Reactive_Energy, (pTriphase == true) ? 3 : 1);//fundamental_reactive_energy
   BindSingleFloat(params->Frequency);                                              //frequency
   BindSingleBool(params->Flag);                                                    //flaged
+  if(params->Type == AGGREG_1H) {
+    BindArrayUInt16(pStats.Frequency, sizeof(FrequencyRanges) / sizeof(float) - 1); //estadisticas de frequencia
+    BindArrayUInt16(NULL, 0);
+    BindArrayUInt16(NULL, 0);
+    BindArrayUInt16(NULL, 0);
+  }
   ExecSentence();
   if(params->Type == AGGREG_1M) {
     PrepareSentence("EXECUTE SAVE_1M_EXT(?, ?, ?, ?, ?, ?, ?, ?)");
@@ -348,7 +362,6 @@ void CaptureInterface::AllocParams(Params_t *params, Aggreg_Type type) {
     params->Power_Factor = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
     params->THD_V = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
     params->THD_I = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 4 : 1));
-    
     params->VoltageHarmonics = (float**)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
     for(int i = 0; i < ((pTriphase == true) ? 3 : 1); i++) params->VoltageHarmonics[i] = (float*)malloc(sizeof(float*) * 50);
     params->CurrentHarmonics = (float**)malloc(sizeof(float*) * ((pTriphase == true) ? 4 : 1));
@@ -387,6 +400,8 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t 
   AllocParams(&pAggreg1M, AGGREG_1M);
   AllocParams(&pAggreg10M, AGGREG_10M);
   AllocParams(&pAggreg1H, AGGREG_1H);
+  pStats.Frequency = (uint16_t*)malloc((sizeof(FrequencyRanges) / sizeof(float) - 1) * sizeof(uint16_t));
+  ResetStats();
   for(int i = 0; i < PROCESSING_FREQCYCLES; i++) {
     uint32_t Samples = (pSampleRate * i / 100);
     pLastCycles[i] = Samples - pLastCyclesLenght;
@@ -403,7 +418,7 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t 
   ExecSentence("PREPARE SAVE_1M       AS INSERT INTO aggreg_1m (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
   ExecSentence("PREPARE SAVE_1M_EXT   AS INSERT INTO aggreg_ext_1m (node_ext, sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8)");  
   ExecSentence("PREPARE SAVE_10M      AS INSERT INTO aggreg_10m(node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
-  ExecSentence("PREPARE SAVE_1H       AS INSERT INTO aggreg_1h (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");
+  ExecSentence("PREPARE SAVE_1H       AS INSERT INTO aggreg_1h (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)");
   ExecSentence("PREPARE DELETE_1M_EXT AS DELETE FROM aggreg_ext_1m WHERE node_ext = $1 AND sampletime_ext < $2");
   ExecSentence("PREPARE SAVE_EVENT    AS INSERT INTO events (node, starttime, duration, type, voltage, percent, samples) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (starttime, node) DO UPDATE SET duration = $3, type = $4, voltage = $5, percent = $6, samples = events.samples || $7");
 }
@@ -443,6 +458,9 @@ void CaptureInterface::ResetWork() {
   for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(pWork.CurrentSamples[i], 0, sizeof(float) * pMaxSamples);
   memset(pWork.Cycles, 0, sizeof(Cycle_t) * 20);
   pWork.Cycles_Len = 0;
+}
+void CaptureInterface::ResetStats() {
+  memset(pStats.Frequency, 0, (sizeof(FrequencyRanges) / sizeof(float) - 1) * sizeof(uint16_t));
 }
 CaptureInterface::~CaptureInterface() {
 

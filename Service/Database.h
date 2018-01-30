@@ -22,6 +22,7 @@ class Database {
     void  BindSingleFloat(float param);
     void  BindArrayArrayFloat(float **params, int lenA, int lenB);
     void  BindArrayFloat(float *params, int len);
+    void  BindArrayUInt16(uint16_t *params, int len);
     void  BindSingleBool(bool param);
     void  BindSingleString(const char *string);
     bool  ExecSentence();

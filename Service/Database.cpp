@@ -115,6 +115,17 @@ void Database::BindArrayArrayFloat(float **params, int lenA, int lenB) {
     ParamsLen++;    
   }
 }
+void Database::BindArrayUInt16(uint16_t *params, int len) {
+  if(ParamsLen < ParamsAlloc) {
+    Params[ParamsLen] = (char*)malloc(4 + sizeof(char) * 5 * len);
+    int Pos = sprintf(Params[ParamsLen], "'{");
+    for(int i = 0; i < len; i++) Pos += sprintf(&Params[ParamsLen][Pos], "%u, ", params[i]);
+    if(len > 0) Pos -= 2;
+    sprintf(&Params[ParamsLen][Pos], "}'");
+    ParamsLen++;
+  }
+}
+
 void Database::BindArrayFloat(float *params, int len) {
   if(ParamsLen < ParamsAlloc) {
     Params[ParamsLen] = (char*)malloc(4 + sizeof(char) * 18 * len);

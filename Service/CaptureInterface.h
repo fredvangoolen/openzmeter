@@ -15,12 +15,13 @@
 #define EVENT_DIP_SWELL               10.0        //Variacion en % para generar subida o bajada
 #define EVENT_INTERRUPTION            90.0        //Bajada en % para generar interrupcion
 #define EVENT_HYSTERESIS              06.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
-#define EVENT_ENVELOPETIME             0.2        //Tiempo en segundos que se guarda antes y despues de un evento
+#define EVENT_ENVELOPETIME             0.1        //Tiempo en segundos que se guarda antes y despues de un evento
 //---------------------------------------------------------------------------------------------------------------------
 class CaptureInterface : private Database {
   public :
     enum Aggreg_Type { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
     enum Event_Type  { EVT_NONE, EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC, EVT_GLITCH };
+    static const float FrequencyRanges[];   //Rangos de frecuencias para estadisticas
     typedef struct {
       uint32_t Start;                       //Muestra dentro del bloque que inicia el ciclo
       uint32_t End;                         //Muestra dentro del bloque que finaliza el ciclo
@@ -59,6 +60,13 @@ class CaptureInterface : private Database {
       float     **CurrentHarmonics;           //Armonicos del canal de corriente
       float      *Phi;                        //Angulo de Phi
     } Params_t;
+    typedef struct {
+      uint16_t    *Frequency;                 //Distribucion de frecuencias (Segun valores de arriba)
+//      uint16_t    *Voltage;                   //Cada posicion representa un rango desde -10% hasta +10% (y el ultimo otros valores)
+      
+//      uint16_t    THD[40];                    //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
+//      uint16_t    Harmonics[2];               //Numero de muestras que cumplen los limites de harmonicos / no cumplen
+    } Stats_t;
     typedef struct {
       uint64_t    SequenceID;                 //Numero de secuencia del bloque
       uint32_t    Samples;                    //Cantidad de muestras que componen el bloque
@@ -112,6 +120,7 @@ class CaptureInterface : private Database {
     Params_t        pAggreg10M;
     Params_t        pAggreg1H;
     uint16_t        pNodeIndex;
+    Stats_t         pStats;
     EventCycle_t    pPrevCycles[100];     //Informacion de ciclos anteriores para calculo de eventos
     uint8_t         pPrevCyclesLen;       //Tamaño de buffer de ciclos
     uint8_t         pPrevCyclesWrite;     //Posicion actual del buffer de ciclos
@@ -130,6 +139,7 @@ class CaptureInterface : private Database {
     void     AllocParams(Params_t *params, Aggreg_Type type);
     void     ResetParams(Params_t *params);
     void     ResetWork();
+    void     ResetStats();
     uint32_t GetMaxSamples();
     void     SaveWorkParams();
     void     Analyze(float minimunCurrent);

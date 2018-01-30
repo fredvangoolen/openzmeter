@@ -22,14 +22,14 @@ void   CaptureMono::ReadCallback(struct libusb_transfer *transfer) {
   uint     Len = transfer->actual_length / 4;
   CaptureMono *This = (CaptureMono*)transfer->user_data;
   pthread_mutex_lock(&This->CaptureMutex);
-  while(This->Used > (CAPTUREMONO_BUFFERSIZE - Len)) {
+  while(This->Used > (CAPTUREMONO_BUFFERSIZE - Len - This->SampleRate() * EVENT_ENVELOPETIME)) {
     if(This->pTerminate) return;
     Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
     pthread_cond_wait(&This->WriteWait, &This->CaptureMutex);
   }
   for(uint i = 0; i < Len; i++) {
     int16_t Voltage = Buff16[i * 2 + 0];
-    int16_t Current = Buff16[i * 2 + 1];
+    uint16_t Current = Buff16[i * 2 + 1];
     This->Buffer[This->WritePos].Voltage = (Voltage - This->VoltageOffset) * This->VoltageGain;
     This->Buffer[This->WritePos].Current = (Current - This->CurrentOffset) * This->CurrentGain;
     This->WritePos = (This->WritePos + 1) % CAPTUREMONO_BUFFERSIZE;
