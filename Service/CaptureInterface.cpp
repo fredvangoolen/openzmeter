@@ -226,7 +226,6 @@ void CaptureInterface::EventsDetect() {
         if((pRunningEvent.Type == EVT_SWELL) && (Cycle->RMS[n] < Tools::Electrical.NominalVoltage)) pRunningEvent.Type = EVT_DIP;
       }
     }
-    if(pRunningEvent.Type != EVT_NONE) SaveEvent(i, false);
     if((pPrevStationary == false) && (Stationary == true)) Tools::LogMsg("DEBUG", "Stationary voltage reached in node %d\n", pNodeIndex);
     if(Stationary == true) {
       free(pStationaryRMS);
@@ -234,6 +233,7 @@ void CaptureInterface::EventsDetect() {
     }
     pPrevStationary = Stationary;
   }
+  if(pRunningEvent.Type != EVT_NONE) SaveEvent(i, false);
 }
 void CaptureInterface::SaveEvent(uint8_t cycle, bool end) {
   float **Samples     = NULL;
