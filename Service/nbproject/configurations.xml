@@ -382,11 +382,13 @@
       </toolsSet>
       <compileType>
         <cTool>
+          <developmentMode>0</developmentMode>
           <standard>3</standard>
           <commandLine>-march=native -O3</commandLine>
           <warningLevel>2</warningLevel>
         </cTool>
         <ccTool>
+          <developmentMode>0</developmentMode>
           <standard>4</standard>
           <commandLine>-march=native -O3</commandLine>
           <warningLevel>2</warningLevel>
@@ -407,6 +409,12 @@
       <packaging>
         <packType>Debian</packType>
         <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
                             from="${OUTPUT_PATH}"
@@ -3062,6 +3070,12 @@
                             to="/lib/systemd/system/openZmeter.service"
                             from="openZmeter.service"
                             perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
                             owner="root"
                             group="bin"/>
           <packFileListElem type="File"

@@ -140,6 +140,7 @@ class CaptureInterface : private Database {
   protected :
     void     AllocParams(Params_t *params, Aggreg_Type type);
     void     ResetParams(Params_t *params);
+    void     NormalizeParams(Params_t *params);
     void     ResetWork();
     void     ResetStats();
     uint32_t GetMaxSamples();

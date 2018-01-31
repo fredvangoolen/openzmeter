@@ -30,6 +30,7 @@ void CaptureInterface::SaveWorkParams() {
         if((Variation >= FrequencyRanges[Range - 1]) && (Variation < FrequencyRanges[Range])) pStats.Frequency[Range - 1]++;
       }
     }
+    NormalizeParams(&pAggreg3S);
     SaveParams(&pAggreg3S);
   }
   AccumulateAggregation(&pAggreg3S, &pWork.Params);
@@ -37,6 +38,7 @@ void CaptureInterface::SaveWorkParams() {
   if(((pWork.Params.Timestamp / 60000) > (pPrevTimestamp / 60000)) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 1M aggregation\n");
     pAggreg1M.Timestamp = pAggreg1M.Timestamp / 60000 * 60000 + 59999;
+    NormalizeParams(&pAggreg1M);
     SaveParams(&pAggreg1M);
   }
   AccumulateAggregation(&pAggreg1M, &pWork.Params);    
@@ -44,19 +46,20 @@ void CaptureInterface::SaveWorkParams() {
   if(((pWork.Params.Timestamp / 600000) > (pPrevTimestamp / 600000)) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
     pAggreg10M.Timestamp = pAggreg10M.Timestamp / 600000 * 600000 + 599999;
+    NormalizeParams(&pAggreg10M);
     if(pAggreg10M.Flag == false) {
       for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
         float Variation = PercentChange(pAggreg10M.RMS_V[i], Tools::Electrical.NominalVoltage);
         for(uint Range = 1; Range < (sizeof(VoltageRanges) / sizeof(float)); Range++) {
           if((Variation >= VoltageRanges[Range - 1]) && (Variation < VoltageRanges[Range])) pStats.Voltage[Range - 1]++;
         }
-        Variation = PercentChange(pAggreg10M.THD_V[i], 0);
+        Variation = pAggreg10M.THD_V[i] * 100.0;
         for(uint Range = 1; Range < (sizeof(THDRanges) / sizeof(float)); Range++) {
           if((Variation >= THDRanges[Range - 1]) && (Variation < THDRanges[Range])) pStats.THD[Range - 1]++;
         }
         bool HarmonicsInRange = true;
         for(int n = 0; n < 25; n++) {
-          Variation = PercentChange(pAggreg10M.VoltageHarmonics[i][n + 1], 0);
+          Variation = PercentChange(pAggreg10M.VoltageHarmonics[i][n + 1], Tools::Electrical.NominalVoltage);
           if(Variation > HarmonicsAllowed[n]) {
             HarmonicsInRange = false;
             break;
@@ -76,6 +79,7 @@ void CaptureInterface::SaveWorkParams() {
   if(((pWork.Params.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
     pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
+    NormalizeParams(&pAggreg1H);
     SaveParams(&pAggreg1H);
     ResetStats();
   }
@@ -119,7 +123,7 @@ void CaptureInterface::AccumulateAggregation(Params_t *dst, Params_t *src) {
   }
   dst->Samples++;
 }
-void CaptureInterface::SaveParams(Params_t *params) {
+void CaptureInterface::NormalizeParams(Params_t *params) {
   if(params->Samples > 1) {
     for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->RMS_V[i] = sqrt(params->RMS_V[i] / params->Samples);
     for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->RMS_I[i] = sqrt(params->RMS_I[i] / params->Samples);
@@ -128,17 +132,21 @@ void CaptureInterface::SaveParams(Params_t *params) {
     params->Frequency = params->Frequency / params->Samples;
     if(params->Type == AGGREG_1M) {
       for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Power_Factor[i] = params->Power_Factor[i] / params->Samples;
-      for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->THD_V[i] = sqrt(params->THD_V[i] / params->Samples);
       for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->THD_I[i] = sqrt(params->THD_I[i] / params->Samples);
       for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Phi[i] = params->Phi[i] / params->Samples;
-      for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
-        for(int j = 0; j < 50; j++) params->VoltageHarmonics[i][j] = sqrt(params->VoltageHarmonics[i][j] / params->Samples);
-      }
       for(int i = 0; i < (pTriphase ? 4 : 1); i++) {
         for(int j = 0; j < 50; j++) params->CurrentHarmonics[i][j] = sqrt(params->CurrentHarmonics[i][j] / params->Samples);
       }
     }
+    if((params->Type == AGGREG_1M) || (params->Type == AGGREG_1M)) {
+      for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->THD_V[i] = sqrt(params->THD_V[i] / params->Samples);
+      for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
+        for(int j = 0; j < 50; j++) params->VoltageHarmonics[i][j] = sqrt(params->VoltageHarmonics[i][j] / params->Samples);
+      }    
+    }
   }
+}
+void CaptureInterface::SaveParams(Params_t *params) {
   if(params->Type == AGGREG_3S)  
     PrepareSentence("EXECUTE SAVE_3S(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1M)  
