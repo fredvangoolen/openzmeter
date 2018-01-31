@@ -12,14 +12,67 @@
 #include "CaptureInterface.h"
 #include "Tools.h"
 pthread_mutex_t CaptureInterface::pFFTPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
-const float CaptureInterface::FrequencyRanges[] = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, -0.01, 0.01, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
-
-
+const float CaptureInterface::FrequencyRanges[]  = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
+const float CaptureInterface::VoltageRanges[]    = {-INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY};
+const float CaptureInterface::THDRanges[]        = {0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY};
+const float CaptureInterface::HarmonicsAllowed[] = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
 void CaptureInterface::SaveWorkParams() {
   pthread_mutex_lock(&pDataReadyMutex);
   pDataReady = true;
   pthread_cond_broadcast(&pDataReadyWait);
   pthread_mutex_unlock(&pDataReadyMutex);
+
+  if(((pWork.SequenceID % 15) == 0) && (pPrevTimestamp != 0)) {
+    Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
+    if(pAggreg3S.Flag == false) {
+      float Variation = PercentChange(pAggreg3S.Frequency, Tools::Electrical.NominalFrequency);
+      for(uint Range = 1; Range < (sizeof(FrequencyRanges) / sizeof(float)); Range++) {
+        if((Variation >= FrequencyRanges[Range - 1]) && (Variation < FrequencyRanges[Range])) pStats.Frequency[Range - 1]++;
+      }
+    }
+    SaveParams(&pAggreg3S);
+  }
+  AccumulateAggregation(&pAggreg3S, &pWork.Params);
+
+  if(((pWork.Params.Timestamp / 60000) > (pPrevTimestamp / 60000)) && (pPrevTimestamp != 0)) {
+    Tools::LogMsg("DEBUG", "Storing 1M aggregation\n");
+    pAggreg1M.Timestamp = pAggreg1M.Timestamp / 60000 * 60000 + 59999;
+    SaveParams(&pAggreg1M);
+  }
+  AccumulateAggregation(&pAggreg1M, &pWork.Params);    
+
+  if(((pWork.Params.Timestamp / 600000) > (pPrevTimestamp / 600000)) && (pPrevTimestamp != 0)) {
+    Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
+    pAggreg10M.Timestamp = pAggreg10M.Timestamp / 600000 * 600000 + 599999;
+    if(pAggreg10M.Flag == false) {
+      for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
+        float Variation = PercentChange(pAggreg10M.RMS_V[i], Tools::Electrical.NominalVoltage);
+        for(uint Range = 1; Range < (sizeof(VoltageRanges) / sizeof(float)); Range++) {
+          if((Variation >= VoltageRanges[Range - 1]) && (Variation < VoltageRanges[Range])) pStats.Voltage[Range - 1]++;
+        }
+        Variation = PercentChange(pAggreg10M.THD_V[i], 0);
+        for(uint Range = 1; Range < (sizeof(THDRanges) / sizeof(float)); Range++) {
+          if((Variation >= THDRanges[Range - 1]) && (Variation < THDRanges[Range])) pStats.THD[Range - 1]++;
+        }
+        bool HarmonicsInRange = true;
+        for(int n = 0; n < 25; n++) {
+          Variation = PercentChange(pAggreg10M.VoltageHarmonics[i][n + 1], 0);
+          if(Variation > HarmonicsAllowed[n]) {
+            HarmonicsInRange = false;
+            break;
+          }
+        }
+        if(HarmonicsInRange == true) {
+          pStats.Harmonics[0]++;
+        } else {
+          pStats.Harmonics[1]++;
+        }
+      }
+    }
+    SaveParams(&pAggreg10M);
+  }
+  AccumulateAggregation(&pAggreg10M, &pWork.Params);
+  
   if(((pWork.Params.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
     pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
@@ -27,27 +80,7 @@ void CaptureInterface::SaveWorkParams() {
     ResetStats();
   }
   AccumulateAggregation(&pAggreg1H, &pWork.Params);
-  if(((pWork.Params.Timestamp / 600000) > (pPrevTimestamp / 600000)) && (pPrevTimestamp != 0)) {
-    Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
-    pAggreg10M.Timestamp = pAggreg10M.Timestamp / 600000 * 600000 + 599999;
-    SaveParams(&pAggreg10M);
-  }
-  AccumulateAggregation(&pAggreg10M, &pWork.Params);  
-  if(((pWork.Params.Timestamp / 60000) > (pPrevTimestamp / 60000)) && (pPrevTimestamp != 0)) {
-    Tools::LogMsg("DEBUG", "Storing 1M aggregation\n");
-    pAggreg1M.Timestamp = pAggreg1M.Timestamp / 60000 * 60000 + 59999;
-    SaveParams(&pAggreg1M);
-  }
-  AccumulateAggregation(&pAggreg1M, &pWork.Params);  
-  if(((pWork.SequenceID % 15) == 0) && (pPrevTimestamp != 0)) {
-    Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
-    SaveParams(&pAggreg3S);
-    float Variation = PercentChange(pWork.Params.Frequency, Tools::Electrical.NominalFrequency);
-    for(uint Range = 1; Range < (sizeof(FrequencyRanges) / sizeof(float)); Range++) {
-      if((Variation >= FrequencyRanges[Range - 1]) && (Variation < FrequencyRanges[Range])) pStats.Frequency[Range - 1]++;
-    }
-  }
-  AccumulateAggregation(&pAggreg3S, &pWork.Params);
+  
   pPrevTimestamp = pWork.Params.Timestamp;
   pthread_mutex_lock(&pWaitingThreadsMutex);
   while(pWaitingThreads != 0) {
@@ -72,15 +105,17 @@ void CaptureInterface::AccumulateAggregation(Params_t *dst, Params_t *src) {
   dst->Frequency += src->Frequency;
   if(dst->Type == AGGREG_1M) {
     for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Power_Factor[i] += src->Power_Factor[i];
-    for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->THD_V[i] += pow(src->THD_V[i], 2.0);
     for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->THD_I[i] += pow(src->THD_I[i], 2.0);
-    for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
-      for(int j = 0; j < 50; j++) dst->VoltageHarmonics[i][j] += pow(src->VoltageHarmonics[i][j], 2.0);
-    }
     for(int i = 0; i < (pTriphase ? 4 : 1); i++) {
       for(int j = 0; j < 50; j++) dst->CurrentHarmonics[i][j] += pow(src->CurrentHarmonics[i][j], 2.0);
     }
     for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->Phi[i] += src->Phi[i];
+  }
+  if((dst->Type == AGGREG_1M) || (dst->Type == AGGREG_10M)) {
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->THD_V[i] += pow(src->THD_V[i], 2.0);
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
+      for(int j = 0; j < 50; j++) dst->VoltageHarmonics[i][j] += pow(src->VoltageHarmonics[i][j], 2.0);
+    }
   }
   dst->Samples++;
 }
@@ -123,10 +158,10 @@ void CaptureInterface::SaveParams(Params_t *params) {
   BindSingleFloat(params->Frequency);                                              //frequency
   BindSingleBool(params->Flag);                                                    //flaged
   if(params->Type == AGGREG_1H) {
+    BindArrayUInt16(pStats.Voltage, sizeof(VoltageRanges) / sizeof(float) - 1);     //estadisticas de tension
     BindArrayUInt16(pStats.Frequency, sizeof(FrequencyRanges) / sizeof(float) - 1); //estadisticas de frequencia
-    BindArrayUInt16(NULL, 0);
-    BindArrayUInt16(NULL, 0);
-    BindArrayUInt16(NULL, 0);
+    BindArrayUInt16(pStats.THD, sizeof(THDRanges) / sizeof(float) - 1);             //estadisticas de distorsion harmonica
+    BindArrayUInt16(pStats.Harmonics, 2);                                           //estadisticas de harmonicos en rango
   }
   ExecSentence();
   if(params->Type == AGGREG_1M) {
@@ -226,6 +261,7 @@ void CaptureInterface::EventsDetect() {
         if((pRunningEvent.Type == EVT_SWELL) && (Cycle->RMS[n] < Tools::Electrical.NominalVoltage)) pRunningEvent.Type = EVT_DIP;
       }
     }
+    if(pRunningEvent.Type != EVT_NONE) SaveEvent(i, false);
     if((pPrevStationary == false) && (Stationary == true)) Tools::LogMsg("DEBUG", "Stationary voltage reached in node %d\n", pNodeIndex);
     if(Stationary == true) {
       free(pStationaryRMS);
@@ -233,7 +269,6 @@ void CaptureInterface::EventsDetect() {
     }
     pPrevStationary = Stationary;
   }
-  if(pRunningEvent.Type != EVT_NONE) SaveEvent(i, false);
 }
 void CaptureInterface::SaveEvent(uint8_t cycle, bool end) {
   float **Samples     = NULL;
@@ -250,31 +285,34 @@ void CaptureInterface::SaveEvent(uint8_t cycle, bool end) {
       for(uint32_t i = 0; i < SamplesLen; i++) Samples[i] = (float*)malloc(sizeof(float) * ((pTriphase == true) ? 3 : 1));
       SamplesLen = SamplesCopy(Samples, pWork.Cycles[19].End - pWork.Cycles[cycle].Start + pSampleRate * EVENT_ENVELOPETIME, SamplesLen);
     }
-    pRunningEvent.Duration += pWork.Cycles[cycle].End - pWork.Cycles[cycle].Start;
   } else {
     SamplesLen = MIN(EVENT_ENVELOPETIME * 2 * pSampleRate, pRunningEvent.Duration);
     Samples = (float**)malloc(sizeof(float*) * SamplesLen);
     for(uint32_t i = 0; i < SamplesLen; i++) Samples[i] = (float*)malloc(sizeof(float) * ((pTriphase == true) ? 3 : 1));
     SamplesLen = SamplesCopy(Samples, pWork.Cycles[19].End - pWork.Cycles[cycle].Start - EVENT_ENVELOPETIME * pSampleRate + SamplesLen, SamplesLen);
   }
-  char *Type = (char*)"UNKNOWN";
-  if(pRunningEvent.Type == EVT_RVC) Type = (char*)"RVC";
-  if(pRunningEvent.Type == EVT_DIP) Type = (char*)"DIP";  
-  if(pRunningEvent.Type == EVT_SWELL) Type = (char*)"SWELL";
-  if(pRunningEvent.Type == EVT_INTERRUPTION) Type = (char*)"INTERRUPTION";
-  if(pRunningEvent.Type == EVT_GLITCH) Type = (char*)"GLITCH";
-  PrepareSentence("EXECUTE SAVE_EVENT(?, ?, ?, ?, ?, ?, ?)");
-  BindSingleUInt32(pNodeIndex);                                                                       //node
-  BindSingleUInt64(pRunningEvent.Start);                                                              //starttime
-  BindSingleFloat(pRunningEvent.Duration);                                                            //duration
-  BindSingleString(Type);                                                                             //type
-  BindSingleFloat(pRunningEvent.Voltage);                                                             //voltage
-  BindSingleFloat(pRunningEvent.Change);                                                              //change
-  BindArrayArrayFloat(Samples, SamplesLen, (pTriphase == true) ? 3 : 1);                              //samples
-  ExecSentence();
+  if((end == true) || (pRunningEvent.Duration != 0)) {
+    char *Type = (char*)"UNKNOWN";
+    if(pRunningEvent.Type == EVT_RVC) Type = (char*)"RVC";
+    if(pRunningEvent.Type == EVT_DIP) Type = (char*)"DIP";  
+    if(pRunningEvent.Type == EVT_SWELL) Type = (char*)"SWELL";
+    if(pRunningEvent.Type == EVT_INTERRUPTION) Type = (char*)"INTERRUPTION";
+    if(pRunningEvent.Type == EVT_GLITCH) Type = (char*)"GLITCH";
+    PrepareSentence("EXECUTE SAVE_EVENT(?, ?, ?, ?, ?, ?, ?)");
+    BindSingleUInt32(pNodeIndex);                                                                       //node
+    BindSingleUInt64(pRunningEvent.Start);                                                              //starttime
+    BindSingleFloat(pRunningEvent.Duration);                                                            //duration
+    BindSingleString(Type);                                                                             //type
+    BindSingleFloat(pRunningEvent.Voltage);                                                             //voltage
+    BindSingleFloat(pRunningEvent.Change);                                                              //change
+    BindArrayArrayFloat(Samples, SamplesLen, (pTriphase == true) ? 3 : 1);                              //samples
+    ExecSentence();
+  }
   if(end == true) {
     pRunningEvent.Type = EVT_NONE;
     pRunningEvent.Duration = 0;
+  } else {
+    pRunningEvent.Duration += pWork.Cycles[cycle].End - pWork.Cycles[cycle].Start;
   }
   if(Samples != NULL) {
     for(uint32_t i = 0; i < SamplesLen; i++) free(Samples[i]);  
@@ -358,12 +396,14 @@ void CaptureInterface::AllocParams(Params_t *params, Aggreg_Type type) {
     params->Fundamental_Apparent_Power = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
     params->Fundamental_Power_Factor = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1)); 
   }
-  if((type == AGGREG_10C) || (type == AGGREG_1M)) {
-    params->Power_Factor = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+  if((type == AGGREG_10C) || (type == AGGREG_1M) || (type == AGGREG_10M)) {
     params->THD_V = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
-    params->THD_I = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 4 : 1));
     params->VoltageHarmonics = (float**)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
     for(int i = 0; i < ((pTriphase == true) ? 3 : 1); i++) params->VoltageHarmonics[i] = (float*)malloc(sizeof(float*) * 50);
+  }
+  if((type == AGGREG_10C) || (type == AGGREG_1M)) {
+    params->Power_Factor = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+    params->THD_I = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 4 : 1));
     params->CurrentHarmonics = (float**)malloc(sizeof(float*) * ((pTriphase == true) ? 4 : 1));
     for(int i = 0; i < ((pTriphase == true) ? 4 : 1); i++) params->CurrentHarmonics[i] = (float*)malloc(sizeof(float*) * 50);
     params->Phi = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
@@ -400,7 +440,9 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t 
   AllocParams(&pAggreg1M, AGGREG_1M);
   AllocParams(&pAggreg10M, AGGREG_10M);
   AllocParams(&pAggreg1H, AGGREG_1H);
+  pStats.Voltage   = (uint16_t*)malloc((sizeof(VoltageRanges) / sizeof(float) - 1) * sizeof(uint16_t));
   pStats.Frequency = (uint16_t*)malloc((sizeof(FrequencyRanges) / sizeof(float) - 1) * sizeof(uint16_t));
+  pStats.THD       = (uint16_t*)malloc((sizeof(THDRanges) / sizeof(float) - 1) * sizeof(uint16_t));
   ResetStats();
   for(int i = 0; i < PROCESSING_FREQCYCLES; i++) {
     uint32_t Samples = (pSampleRate * i / 100);
@@ -432,14 +474,15 @@ void CaptureInterface::ResetParams(Params_t *params) {
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Active_Energy[i] = 0;
   params->Frequency = 0;
   params->Flag = false;
-  
   if((params->Type == AGGREG_10C) || (params->Type == AGGREG_1M)) {
-    for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->THD_V[i] = 0;
     for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->THD_I[i] = 0;
     for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Phi[i] = 0;
     for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Power_Factor[i] = 0; 
-    for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(params->VoltageHarmonics[i], 0, sizeof(float) * 50);
     for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(params->CurrentHarmonics[i], 0, sizeof(float) * 50);
+  }
+  if((params->Type == AGGREG_10C) || (params->Type == AGGREG_1M) || (params->Type == AGGREG_10M)) {
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->THD_V[i] = 0;
+    for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(params->VoltageHarmonics[i], 0, sizeof(float) * 50);
   }
   if(params->Type == AGGREG_10C) {
     for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->Fundamental_Active_Power[i] = 0;
@@ -460,10 +503,13 @@ void CaptureInterface::ResetWork() {
   pWork.Cycles_Len = 0;
 }
 void CaptureInterface::ResetStats() {
+  memset(pStats.Voltage, 0, (sizeof(VoltageRanges) / sizeof(float) - 1) * sizeof(uint16_t));
   memset(pStats.Frequency, 0, (sizeof(FrequencyRanges) / sizeof(float) - 1) * sizeof(uint16_t));
+  memset(pStats.THD, 0, (sizeof(THDRanges) / sizeof(float) - 1) * sizeof(uint16_t));
+  memset(pStats.Harmonics, 0, 2 * sizeof(uint16_t));
 }
 CaptureInterface::~CaptureInterface() {
-
+  //Libero todas las estructuras
 }
 uint32_t CaptureInterface::GetMaxSamples() {
   return pMaxSamples;

@@ -5,8 +5,8 @@
 #pragma once
 #include "../CaptureInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define CAPTUREVIRTUAL_SAMPLEFREQ     15625.00        //Frequencia de muestreo
-#define CAPTUREVIRTUAL_BUFFERSIZE    1562500           //Tamaño del buffer (100 segundos)
+#define CAPTUREVIRTUAL_SAMPLEFREQ      6000.00        //Frequencia de muestreo
+#define CAPTUREVIRTUAL_BUFFERSIZE     60000           //Tamaño del buffer (100 segundos)
 #define CAPTUREVIRTUAL_SAMPLESREAD       64           //Numero de muestras generado cada vez
 #define PROCESSING_FREQCYCLES           500           //Numero de ciclos usados para calcular frequencia
 #define PROCESSING_CURRENTOFFSET          0.10        //Corriente minima para realizar calculos
