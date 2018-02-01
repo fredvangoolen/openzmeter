@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
       Tools::Devices.Items[i].Instance = new CaptureMono(Tools::Devices.Items[i].Serial, Tools::Devices.Items[i].VoltageGain, Tools::Devices.Items[i].VoltageOffset, 
                                                          Tools::Devices.Items[i].CurrentGain, Tools::Devices.Items[i].CurrentOffset, i);
     } else if(strcmp(Tools::Devices.Items[i].Type, "VirtualMono") == 0) {
-      Tools::Devices.Items[i].Instance = new CaptureVirtual(15625, true, 1.0, i);
+      Tools::Devices.Items[i].Instance = new CaptureVirtual(true, 1.0, i);
     }
   }
   if(HTTPServer::Start() == false) return EXIT_FAILURE;

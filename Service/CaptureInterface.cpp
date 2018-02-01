@@ -24,13 +24,13 @@ void CaptureInterface::SaveWorkParams() {
 
   if(((pWork.SequenceID % 15) == 0) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
+    NormalizeParams(&pAggreg3S);
     if(pAggreg3S.Flag == false) {
       float Variation = PercentChange(pAggreg3S.Frequency, Tools::Electrical.NominalFrequency);
       for(uint Range = 1; Range < (sizeof(FrequencyRanges) / sizeof(float)); Range++) {
         if((Variation >= FrequencyRanges[Range - 1]) && (Variation < FrequencyRanges[Range])) pStats.Frequency[Range - 1]++;
       }
     }
-    NormalizeParams(&pAggreg3S);
     SaveParams(&pAggreg3S);
   }
   AccumulateAggregation(&pAggreg3S, &pWork.Params);
@@ -53,7 +53,7 @@ void CaptureInterface::SaveWorkParams() {
         for(uint Range = 1; Range < (sizeof(VoltageRanges) / sizeof(float)); Range++) {
           if((Variation >= VoltageRanges[Range - 1]) && (Variation < VoltageRanges[Range])) pStats.Voltage[Range - 1]++;
         }
-        Variation = pAggreg10M.THD_V[i] * 100.0;
+        Variation = pAggreg10M.THD_V[i];
         for(uint Range = 1; Range < (sizeof(THDRanges) / sizeof(float)); Range++) {
           if((Variation >= THDRanges[Range - 1]) && (Variation < THDRanges[Range])) pStats.THD[Range - 1]++;
         }
@@ -452,6 +452,7 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t 
   pStats.Frequency = (uint16_t*)malloc((sizeof(FrequencyRanges) / sizeof(float) - 1) * sizeof(uint16_t));
   pStats.THD       = (uint16_t*)malloc((sizeof(THDRanges) / sizeof(float) - 1) * sizeof(uint16_t));
   ResetStats();
+  pLastCyclesLenght = 0;
   for(int i = 0; i < PROCESSING_FREQCYCLES; i++) {
     uint32_t Samples = (pSampleRate * i / 100);
     pLastCycles[i] = Samples - pLastCyclesLenght;

@@ -137,7 +137,7 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
   }
   return NULL;
 }
-CaptureVirtual::CaptureVirtual(uint32_t samplerate, bool triphase, float nominalcurrent, uint16_t id) : CaptureInterface(samplerate, triphase, id) {
+CaptureVirtual::CaptureVirtual(bool triphase, float nominalcurrent, uint16_t id) : CaptureInterface(CAPTUREVIRTUAL_SAMPLEFREQ, triphase, id) {
   Tools::LogMsg("INFO", "Starting CaptureVirtual adquisition thread...\n");
   Buffer           = NULL;
   ReadPos          = 0;
@@ -159,11 +159,6 @@ CaptureVirtual::CaptureVirtual(uint32_t samplerate, bool triphase, float nominal
     Filters[i].B2 = (1 - K / Q + K * K) * Norm;
     Filters[i].Z1 = 0.0;
     Filters[i].Z2 = 0.0;            
-  }
-  int Error = libusb_init(NULL);
-  if(Error < 0) {
-    Tools::LogMsg("ERROR", "Fallo la apertura de libUSB...\n");
-    return;
   }
   Buffer = (Sample_t*)malloc(CAPTUREVIRTUAL_BUFFERSIZE * sizeof(Sample_t));
   if(Buffer == NULL) {

@@ -148,7 +148,7 @@ function AjaxFrequency(result) {
           y: { pixelsPerLabel: 15,
                axisLabelWidth: 34,
                valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">V</em>';
+                 return Round2(x) + ' <em class="x-small">Hz</em>';
                },
                axisLabelFormatter: function (x) {
                  return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
@@ -328,7 +328,7 @@ function AjaxGetFrequencyCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(freq), max(freq), min(freq)", Aggreg: Aggreg, Period: Period, To: Current + Period }),
+           data: JSON.stringify({ Series: "avg(freq), max(freq), min(freq)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Node }),
            success: FrequencyUpdateCountersCurrent
   });
   $.ajax({ url: "getSeriesAggreg",
@@ -336,7 +336,7 @@ function AjaxGetFrequencyCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(freq), max(freq), min(freq)", Aggreg: Aggreg, Period: Period, To: Current }),
+           data: JSON.stringify({ Series: "avg(freq), max(freq), min(freq)", Aggreg: Aggreg, Period: Period, To: Current, Node: Node }),
            success: FrequencyUpdateCountersPrevs
   });
 }
