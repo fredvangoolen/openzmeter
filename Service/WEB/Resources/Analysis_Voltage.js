@@ -1515,7 +1515,7 @@ function AjaxSamples(result) {
     panEdgeFraction: 0.000000001,
     file: ToShow,
     dateWindow: [0, result['Samples'].length + ((result['Duration'] > result['Envelope'] * 4) ? 100 : 0)],
-    valueRange: CalcRanges(result['Samples'], (Nodes['Devices'][Node]['Type'] == '3Phase') ? [1, 2, 3] : [1]),
+    valueRange: CalcRanges(ToShow, (Nodes['Devices'][Node]['Type'] == '3Phase') ? [1, 2, 3] : [1]),
     underlayCallback: function(canvas, area, g) {
       canvas.fillStyle = "#EEE";
       canvas.fillRect(g.toDomXCoord(0), 0, g.toDomXCoord(result['Envelope']) - g.toDomXCoord(0), g.height_);

@@ -71,7 +71,7 @@ bool Tools::CreatePidFile() {
   char PID_Number[64];
   int Len = sprintf(PID_Number, "%d", getpid());
   remove(Global.Pid);
-  int File = open(Global.Pid, O_CREAT, O_WRONLY);
+  int File = open(Global.Pid, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
   if(File < 0) {
     LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return false;
@@ -105,6 +105,7 @@ bool Tools::ReadConfig(char *file) {
   Global.Pid      = (char*)"/var/run/openZmeter.pid";
   Global.Log      = (char*)"/var/log/openZmeter.log";
   Global.HTTPPort = 8080;
+  Global.HTTPPath = (char*)"/usr/share/openZmeter/";
   DB.Database     = (char*)"openzmeter";
   DB.Host         = (char*)"127.0.0.1";
   DB.Port         = 5432;
@@ -191,6 +192,8 @@ bool Tools::Config_Handler(char *section, char *param, char *value) {
       Global.Pid = strdup(value);
     } else if(strcmp(param, "httpPort") == 0) {
       Global.HTTPPort = atoi(value);
+    } else if(strcmp(param, "httpPath") == 0) {
+      Global.HTTPPath = strdup(value);
     }
   } else if(strcmp(section, "database") == 0) {
     if(strcmp(param, "port") == 0) {

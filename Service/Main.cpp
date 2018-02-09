@@ -69,6 +69,7 @@ int main(int argc, char** argv) {
       Tools::Devices.Items[i].Instance = new CaptureVirtual(true, 1.0, i);
     }
   }
+//  chdir("/opt/openZmeter");
   if(HTTPServer::Start() == false) return EXIT_FAILURE;
     
   //  uint32_t LastPrice;

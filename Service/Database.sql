@@ -42,15 +42,15 @@ CREATE TABLE IF NOT EXISTS aggreg_1m (
 ALTER TABLE aggreg_1m OWNER TO openzmeter;
 
 CREATE TABLE IF NOT EXISTS aggreg_ext_1m (
-  node smallint NOT NULL,
-  sampletime bigint NOT NULL,
+  node_ext smallint NOT NULL,
+  sampletime_ext bigint NOT NULL,
   power_factor real[],
   thd_v real[],
   thd_i real[],
   phi real[],
   harmonics_v real[],
   harmonics_i real[],
-  CONSTRAINT aggreg_ext_1m_pkey PRIMARY KEY (sampletime, node)
+  CONSTRAINT aggreg_ext_1m_pkey PRIMARY KEY (sampletime_ext, node_ext)
 ) WITH (OIDS=FALSE);
 ALTER TABLE aggreg_ext_1m OWNER TO openzmeter;
 
@@ -80,22 +80,24 @@ CREATE TABLE IF NOT EXISTS aggreg_1h (
   freq real,
   flag boolean,
   fundamental_reactive_energy real[],
+  stat_voltage smallint[],
+  stat_frequency smallint[],
+  stat_thd smallint[],
+  stat_harmonics smallint[],
   CONSTRAINT aggreg_1h_pkey PRIMARY KEY (sampletime, node)
 ) WITH (OIDS=FALSE);
 ALTER TABLE aggreg_1h OWNER TO openzmeter;
 
 CREATE TABLE IF NOT EXISTS events (
-  starttime bigint NOT NULL CONSTRAINT events_pkey PRIMARY KEY,
-  duration  real,
-  eventtype character varying(16),
-  rms_v     real,
-  variation real,
-  samples   real[]
+  node smallint NOT NULL,  
+  starttime bigint NOT NULL,
+  duration  bigint,
+  type character varying(16),
+  voltage real,
+  percent real,
+  samples real[],
+  CONSTRAINT events_pkey PRIMARY KEY (starttime, node)
 ) WITH (OIDS=FALSE);
 ALTER TABLE events OWNER TO openzmeter;
 
-CREATE TABLE IF NOT EXISTS prices (
-  starttime bigint NOT NULL CONSTRAINT prices_pkey PRIMARY KEY,
-  price     real
-) WITH (OIDS=FALSE);
-ALTER TABLE prices OWNER TO openzmeter;
+

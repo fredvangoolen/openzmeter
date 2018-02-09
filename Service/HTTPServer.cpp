@@ -128,7 +128,9 @@ int  HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url
 int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, const char *aditionalheadertype, const char *aditionalheadervalue) {
   int File = -1;
   struct stat FileStat;
-  if((stat(path, &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) File = open(path, O_RDONLY);
+  char *Path = (char*)malloc(sizeof(char) * (strlen(path) + strlen(Tools::Global.HTTPPath) + 1));
+  sprintf(Path, "%s%s", Tools::Global.HTTPPath, path);
+  if((stat(Path, &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) File = open(Path, O_RDONLY);
   if(File == -1) return MHD_NO;
   struct MHD_Response *response = MHD_create_response_from_fd(FileStat.st_size, File);
   SetMimeType(response, path);
@@ -136,6 +138,7 @@ int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, c
   MHD_add_response_header(response, "Cache-Control", "public, max-age=2592000");
   int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
   MHD_destroy_response(response);
+  free(Path);
   return Return;
 }
 void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe) {
@@ -158,9 +161,8 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
   if(Request == NULL) {
     Tools::LogMsg("DEBUG", "Client %s request '%s'\n", method, url);
     if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
-      static const char *Root_Path = "WEB/Resources";
-      char *FilePath = (char*)malloc(strlen(Root_Path) + strlen(url) + 1);
-      sprintf(FilePath, "%s%s", Root_Path, url);
+      char *FilePath = (char*)malloc(strlen(url) + 10);
+      sprintf(FilePath, "Resources%s", url);
       int Return = SendFile(connection, FilePath);
       free(FilePath);
       if(Return == MHD_YES) return MHD_YES;
@@ -212,29 +214,28 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
       if(Request->Session->Logged == true) return SendRedirect(connection, "/Dashboard");
       char Cookie[256];
       sprintf(Cookie, "OZM_SESSION=%s; httponly; Path=/", Request->Session->ID);
-      return SendFile(connection, (char*)"WEB/Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
+      return SendFile(connection, (char*)"Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
     }
     if(strncmp(url, "/MiniViews/", 11) == 0) {
-      static const char *Root_Path = "WEB";
-      char *FilePath = (char*)malloc(strlen(Root_Path) + strlen(url) + 6);
-      sprintf(FilePath, "%s%s.html", Root_Path, url);
+      char *FilePath = (char*)malloc(strlen(url) + 6);
+      sprintf(FilePath, "%s.html", &url[1]);
       int Return = SendFile(connection, FilePath);
       free(FilePath);
       if(Return == MHD_YES) return MHD_YES;
     }
     if(Request->Session->Logged == false) 
       return SendRedirect(connection, "/Login");
-    if((strcmp(url, "/Dashboard") == 0) || (strcmp(url, "/") == 0)) return SendFile(connection,  "WEB/Dashboard.html");
-    if(strcmp(url, "/Analysis/Frequency") == 0) return SendFile(connection,  "WEB/Analysis_Frequency.html");
-    if(strcmp(url, "/Analysis/Voltage") == 0) return SendFile(connection,  "WEB/Analysis_Voltage.html");
-    if(strcmp(url, "/Analysis/Current") == 0) return SendFile(connection,  "WEB/Analysis_Current.html");
-    if(strcmp(url, "/Analysis/EnergyPower") == 0) return SendFile(connection,  "WEB/Analysis_EnergyPower.html");
-    if(strcmp(url, "/Events/ITIC") == 0) return SendFile(connection,  "WEB/Events_ITIC.html");
-    if(strcmp(url, "/Events/Disturbances") == 0) return SendFile(connection,  "WEB/Events_Disturbances.html");
-    if(strcmp(url, "/Events/EN50160") == 0) return SendFile(connection,  "WEB/Events_EN50160.html");
-    if(strcmp(url, "/Stats") == 0) return SendFile(connection,  "WEB/Stats.html");
-    if(strcmp(url, "/Settings") == 0) return SendFile(connection,  "WEB/Settings.html");
-    if(strcmp(url, "/Help") == 0) return SendFile(connection,  "WEB/Help.html");
+    if((strcmp(url, "/Dashboard") == 0) || (strcmp(url, "/") == 0)) return SendFile(connection,  "Dashboard.html");
+    if(strcmp(url, "/Analysis/Frequency") == 0) return SendFile(connection, "Analysis_Frequency.html");
+    if(strcmp(url, "/Analysis/Voltage") == 0) return SendFile(connection, "Analysis_Voltage.html");
+    if(strcmp(url, "/Analysis/Current") == 0) return SendFile(connection, "Analysis_Current.html");
+    if(strcmp(url, "/Analysis/EnergyPower") == 0) return SendFile(connection, "Analysis_EnergyPower.html");
+    if(strcmp(url, "/Events/ITIC") == 0) return SendFile(connection, "Events_ITIC.html");
+    if(strcmp(url, "/Events/Disturbances") == 0) return SendFile(connection, "Events_Disturbances.html");
+    if(strcmp(url, "/Events/EN50160") == 0) return SendFile(connection, "Events_EN50160.html");
+    if(strcmp(url, "/Stats") == 0) return SendFile(connection, "Stats.html");
+    if(strcmp(url, "/Settings") == 0) return SendFile(connection, "Settings.html");
+    if(strcmp(url, "/Help") == 0) return SendFile(connection, "Help.html");
     if(strcmp(url, "/Logout") == 0) {
       Request->Session->Logged = false;
       return SendRedirect(connection, "/Login");

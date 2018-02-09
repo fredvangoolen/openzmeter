@@ -82,7 +82,7 @@ ul.nav.navbar-top-links.navbar-right > li > a {
 @media(min-width:768px) {
     #page-wrapper {
         position: inherit;
-        margin: 65px 0 0 160px;
+        margin: 65px 0 0 164px;
     }
 }
 
@@ -256,7 +256,7 @@ legend{
     .sidebar {
         z-index: 1;
         position: absolute;
-        width: 160px;
+        width: 164px;
         margin-top: 0px;
         text-align: left;
         font-size: 120%;

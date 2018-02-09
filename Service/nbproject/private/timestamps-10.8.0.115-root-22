@@ -1,4 +1,4 @@
-#Thu Feb 01 09:52:29 CET 2018
+#Wed Feb 07 11:27:39 CET 2018
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/examples/navigate/arrow-right.gif=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/visjs/img/network/plus.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/jquery.min.js=c1507189006000
@@ -87,6 +87,7 @@
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/1e/bf9c31c54515b6da24797ae664f8de37fbac30=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/5e/103c7be75f0360dde2b29214af9e93a2f08ae3=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/9c/107f32d9cd1ad66092c169cf1706194bbc6ccb=c1507152121000
+/home/edu/Proyectos/zMeter/V2/Service/openZmeter.pid=c1517832070000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/47/9d617db3627585008de73cdadeaefef036bebc=c1507189343000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/examples/navigate/index.html=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/3e/dc16393a5b0023512536e438b050cb77be4115=c1507189343000
@@ -145,7 +146,7 @@
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/jquery.min.js=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/d5/cb14b743d9bf7c482122026645a28c40995148=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/Main.h=c1510142146000
-/home/edu/Proyectos/zMeter/V2/Service/HTTPServer.h=c1516267553000
+/home/edu/Proyectos/zMeter/V2/Service/HTTPServer.h=c1517830579000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/jquery.flot.time.js=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/bootstrap-validator/language/nl_NL.js=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Captura\ de\ pantalla\ 2017-11-25\ a\ las\ 13.36.41.png=c1513952649000
@@ -208,7 +209,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.svg=c1512396200000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/jquery.flot.stack.js=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/examples/axes-time-zones/tz/australasia=c1507189006000
-/home/edu/Proyectos/zMeter/V2/Service/nbproject/Package-Release_ARMHF.bash=c1517403299000
+/home/edu/Proyectos/zMeter/V2/Service/nbproject/Package-Release_ARMHF.bash=c1517831569000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/jQRangeSlider/jQDateRangeSlider-withRuler-min.js=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/c2/c596f32e2089d60cca49de56d90fc928f9350c=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff=c1507189006000
@@ -247,7 +248,7 @@
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Dashboard.php=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/2d/c9ce4d12325470193e0b26ee3a34f118bdf671=c1507906235000
 /home/edu/Proyectos/zMeter/ServiceV2/Tools.h=c1510141025000
-/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Analysis_Voltage.js=c1517234369000
+/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Analysis_Voltage.js=c1517822205000
 /home/edu/Proyectos/zMeter/V2/Service/dygraph.min.js=c1512119083000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/23/8264a08314d2e10560505a2759757f1679f017=c1508332008000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/08/98891486fb9b21f92148c40e521c35ee6875c8=c1507118194000
@@ -272,7 +273,7 @@
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/d5/562c8467bf61b11625100215bf4b30ebf59267=c1507118194000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/flot/examples/axes-time-zones/tz/backward=e0
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/08/331c1cb9442742b42e8ee2c76132c8aaf08f0f=c1507118194000
-/home/edu/Proyectos/zMeter/V2/Service/CaptureInterface.cpp=c1517475139000
+/home/edu/Proyectos/zMeter/V2/Service/CaptureInterface.cpp=c1517995436000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/28/e4e6b34392bfb2ab6b97bb5f1c3a6961bfc84c=c1507736112000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.css=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/78/ef4230d3307d1dc9dccfa54044e3e4219c232d=c1507118194000
@@ -280,7 +281,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Views/errors/cli/error_exception.php=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/77/2d7a439e082c18eb9b6b0b825cdbdb12aec82b=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/examples/axes-time/index.html=c1507189006000
-/home/edu/Proyectos/zMeter/V2/Service/openZmeter.ini=c1516744344000
+/home/edu/Proyectos/zMeter/V2/Service/openZmeter.ini=c1517829699000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/bb/85d00b8a9c2328ab55334ad0e4758dc900cbed=c1507189343000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/71/739b226ba20ea8cbb9a4005e422333a1f31342=c1507912653000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/flot/examples/axes-time-zones/tz/yearistype.sh=e0
@@ -306,7 +307,7 @@
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/jquery.flot.fillbetween.min.js=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/jquery.flot.resize.js=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/a1/d5c05837576a37a8a7631d8549472154a74807=c1507118194000
-/home/edu/Proyectos/zMeter/V2/Service/.dep.inc=c1517432970000
+/home/edu/Proyectos/zMeter/V2/Service/.dep.inc=c1517832069000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/14/25cadc67d86885250d3421e8fa23ad6f043254=c1507152097000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/6f/3295a70ee4923df428a1ef7479b01c2481afc6=c1507118194000
 /home/edu/Proyectos/zMeter/V2/Service/CaptureVirtual/CaptureVirtual.h=c1517406649000
@@ -324,7 +325,7 @@
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/visjs/img/network/cross.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/flot/examples/stacking/index.html=e0
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/flot/jquery.flot.time.min.js=e0
-/home/edu/Proyectos/zMeter/V2/Service/CaptureVirtual/CaptureVirtual.cpp=c1517432779000
+/home/edu/Proyectos/zMeter/V2/Service/CaptureVirtual/CaptureVirtual.cpp=c1517822435000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.js=c1515401629000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/91/ece3c77e89991ccdab695fd6b3956ac936c35c=c1507189343000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/js/analysis/current.js=c1507189006000
@@ -351,7 +352,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Views/stats_view.php=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/08/2893a7c762e4fd89e79bbadb73f26a6b05523f=c1507189343000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/04/4a4210987e0c922287120d19919f7dfd011149=c1507136482000
-/home/edu/Proyectos/zMeter/V2/Service/postinst=c1516648665000
+/home/edu/Proyectos/zMeter/V2/Service/postinst=c1517824820000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/0e/0ad36d912bf1e9869b6510b4af8300823e0732=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/96/9ee78a3d5d4b9e999288d6ec1cc90386e1eb73=c1507118318000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/50/c8341cc0be5c558a243f16c3f7bd757832f5a4=c1508505051000
@@ -368,7 +369,7 @@
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/ee/c23eff81f553e0e01771afa6a3c7f1efceff50=c1509108738000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/.git/hooks/pre-push.sample=c1513952640000
 /home/edu/Proyectos/zMeter/ServiceV2/Tools.cpp=c1510141387000
-/home/edu/Proyectos/zMeter/V2/Service/openZmeter.log=c1517433132000
+/home/edu/Proyectos/zMeter/V2/Service/openZmeter.log=c1517843260000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/92/0764f5e7c623d79e6a02981656fc1049ccf0e2=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/e8/620f545c16fce6c38ab5abb527ef9ea051a1bf=c1507118318000
@@ -378,7 +379,7 @@
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/6d/a6962cfd1168dd1f0a3bac0b2053cead44c57b=c1508332012000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/b3/635781faa9e2351f48209406205896cd7d29f5=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/55/369c971ebfb552515e5e22a09957977aa2a93b=c1508505051000
-/home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-Default.mk=c1517474506000
+/home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-Default.mk=c1517833997000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/6f/de4d16844c9ae35f5096c30ba6eeb4cff1ec62=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/86/917491d37fcadfce546683852ac0960ea1050e=c1509108738000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap/css/bootstrap.min.css=c1507189006000
@@ -466,7 +467,7 @@
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/92/d60b415e26ff49bc049822ac4dba561cc5f198=c1507118318000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/fe/660582f4e879ab060433ec7ed5160f82991169=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/80/88419e3ad0e0bde36571c5c2b29bb08d0f132a=c1507136572000
-/home/edu/Proyectos/zMeter/V2/Service/nbproject/Package-Default.bash=c1517403299000
+/home/edu/Proyectos/zMeter/V2/Service/nbproject/Package-Default.bash=c1517831569000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/js/analysis/voltage.js=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/37/85904513eb6b0b0f49633d99567e6506450f72=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/ff/ef272d2e9ac5116dc869c7b3d3cea5da01eaf0=c1507118194000
@@ -487,7 +488,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/flot/jquery.flot.canvas.min.js=e0
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/0a/26f320652d79c3bf62abc0fe43ab0369a5610a=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/62/8b6a52a87e62c6f22426e17c01f6a303aa194e=c1507118194000
-/home/edu/Proyectos/zMeter/V2/Service/Tools.h=c1513076963000
+/home/edu/Proyectos/zMeter/V2/Service/Tools.h=c1517825680000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/99/26db788d564d4b0598475f804bf86e5f94b078=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/jquery.flot.crosshair.js=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/js/login.js=c1508752852000
@@ -647,7 +648,7 @@
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.ttf=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/3F.png=c1513952649000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/22/95527b9d7933597a427f618c72a31600fb9ec5=c1507118194000
-/home/edu/Proyectos/zMeter/V2/Service/CaptureMono/CaptureMono.cpp=c1517304647000
+/home/edu/Proyectos/zMeter/V2/Service/CaptureMono/CaptureMono.cpp=c1517995698000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/.git/hooks/commit-msg.sample=c1513952640000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/03/7dd0561510db605878e08bc9b513d79ffc9782=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/examples/percentiles/index.html=c1507189006000
@@ -709,7 +710,7 @@
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/jquery.flot.pie.js=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/2d/72941510e1e1d382ab2182736bd177c0121c85=c1507209154000
 /home/edu/Proyectos/zMeter/ServiceV2/nbproject/project.xml=c1508324365000
-/home/edu/Proyectos/zMeter/V2/Service/Database.sql=c1516658426000
+/home/edu/Proyectos/zMeter/V2/Service/Database.sql=c1517565264000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/flot/examples/basic-options/index.html=e0
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/10/6b7922446e62bc6d6dd8581217f1dff037c753=c1509108738000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/b8/64477c3a0c4fbb7980c64dfac4b5553f9cdba0=c1508505051000
@@ -840,7 +841,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/d3/colorbrewer.js=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/examples/axes-time-zones/tz/etcetera=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/95/3fe5430810418ffc9064433bd7989a090d95f4=c1507118194000
-/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/css/common.css=c1515578774000
+/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/css/common.css=c1517833178000
 /home/edu/Proyectos/zMeter/V2/Service/Makefile=c1507118295000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/1d/8e98b070365da596140ac934f0456fd82ea7e3=c1507209154000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/flot/examples/series-types/index.html=e0
@@ -1090,7 +1091,7 @@ VERSION=1.3
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/79/e7bb17033c5393393fc97d242d104b68b577eb=c1508332008000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/21/c2d82534464383458cc36cd4b3a6435325ffe2=c1508505051000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/fb/764cdab4857721f6d9d037e3f4a306dbdf6d82=c1507118194000
-/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/CommonHeader.html=c1516615293000
+/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/CommonHeader.html=c1517833114000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/.git/hooks/pre-applypatch.sample=c1513952640000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/6c/63ed4c4d2735410ea039fe35a07762adb3710b=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/03/cff01ef4cd6c4e618bf7e7b6de5da6fdbe398c=c1507209154000
@@ -1233,7 +1234,7 @@ VERSION=1.3
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/CodeCogsEqn.png=c1513952649000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/26/fe6e065452f91cfb666b2e0e4abd6244ee481d=c1507136572000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/flot/jquery.flot.symbol.min.js=e0
-/home/edu/Proyectos/zMeter/V2/Service/Tools.cpp=c1513123216000
+/home/edu/Proyectos/zMeter/V2/Service/Tools.cpp=c1517832204000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/33/38cccf43176eb9dcf38c7a4e73d7517915e99d=c1507906275000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/examples/categories/index.html=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap-validator/language/ua_UA.js=c1507189006000
@@ -1324,7 +1325,7 @@ VERSION=1.3
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_222222_256x240.png=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/2d/1be6037a960fb15167d84e1becfabbde7afada=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/spin.js/spin.min.js=c1507189006000
-/home/edu/Proyectos/zMeter/V2/Service/openZmeter.service=c1516644657000
+/home/edu/Proyectos/zMeter/V2/Service/openZmeter.service=c1517823979000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/bootstrap-validator/language/fa_IR.js=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/3d/8d3788c4b1af8a8c60bc24837026ceed117332=c1507189343000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.ttf=c1507189006000
@@ -1340,7 +1341,7 @@ VERSION=1.3
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/2f/9b2579714997092e497a19dd4d16e05602d069=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/b8/eb465d2e3e5b23bbdab5bc070b3fe78d7b1b9c=c1507118323000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap-validator/language/ar_MA.js=c1507189006000
-/home/edu/Proyectos/zMeter/V2/Service/HTTPServer.cpp=c1517227823000
+/home/edu/Proyectos/zMeter/V2/Service/HTTPServer.cpp=c1517832065000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/80/3c0bc1c265e6044cf5efc53d41fe41cf0802af=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/1c/a7ea07c600a5e267deccb8651469ed61fc58c7=c1507118194000
@@ -1494,7 +1495,7 @@ VERSION=1.3
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/08/3f59199a2b0b0756729ec5c43cc7a5927c012e=c1507118194000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/aa/0a55b0b65bcccc77b95f00cdd1c94d4753fe2d=c1507189343000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/71/9da064fefb4e2f99ca269f32a2e4432ce052fb=c1507118194000
-/home/edu/Proyectos/zMeter/V2/Service/Main.cpp=c1517406702000
+/home/edu/Proyectos/zMeter/V2/Service/Main.cpp=c1517823987000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Resources/lib/flot/examples/ajax/data-eu-gdp-growth-2.json=c1507189006000
 /home/edu/Proyectos/zMeter/ServiceV2/WEB/Views/Login.html=c1508745266000
 /home/edu/Proyectos/zMeter/ServiceV2/.git/objects/e5/4632e2a5bacf4d19171b65c8c76ccd8bfb7ed1=c1507209154000

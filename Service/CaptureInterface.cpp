@@ -41,7 +41,7 @@ void CaptureInterface::SaveWorkParams() {
     NormalizeParams(&pAggreg1M);
     SaveParams(&pAggreg1M);
   }
-  AccumulateAggregation(&pAggreg1M, &pWork.Params);    
+  AccumulateAggregation(&pAggreg1M, &pWork.Params);
 
   if(((pWork.Params.Timestamp / 600000) > (pPrevTimestamp / 600000)) && (pPrevTimestamp != 0)) {
     Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
@@ -299,7 +299,7 @@ void CaptureInterface::SaveEvent(uint8_t cycle, bool end) {
     for(uint32_t i = 0; i < SamplesLen; i++) Samples[i] = (float*)malloc(sizeof(float) * ((pTriphase == true) ? 3 : 1));
     SamplesLen = SamplesCopy(Samples, pWork.Cycles[19].End - pWork.Cycles[cycle].Start - EVENT_ENVELOPETIME * pSampleRate + SamplesLen, SamplesLen);
   }
-  if((end == true) || (pRunningEvent.Duration != 0)) {
+  if((end == true) || (pRunningEvent.Duration == 0)) {
     char *Type = (char*)"UNKNOWN";
     if(pRunningEvent.Type == EVT_RVC) Type = (char*)"RVC";
     if(pRunningEvent.Type == EVT_DIP) Type = (char*)"DIP";  
@@ -346,13 +346,17 @@ void CaptureInterface::Analyze(float minimunCurrent) {
   for(int j = 0; j < (pTriphase ? 4 : 1); j++) pWork.Params.RMS_I[j] = sqrt(I[j] / pWork.Samples);
   for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Params.Apparent_Power[j] = pWork.Params.RMS_V[j] * pWork.Params.RMS_I[j];
   EventsDetect();
-  for(int i = 0; i < pWork.Cycles_Len; i++) {
-    pLastCyclesLenght = pLastCyclesLenght - pLastCycles[pLastCyclesPos];
-    pLastCycles[pLastCyclesPos] = pWork.Cycles[i].End - pWork.Cycles[i].Start;
-    pLastCyclesLenght = pLastCyclesLenght + pLastCycles[pLastCyclesPos];
-    pLastCyclesPos = (pLastCyclesPos + 1) % PROCESSING_FREQCYCLES;
+  if(pRunningEvent.Type != EVT_INTERRUPTION) {
+    for(int i = 0; i < pWork.Cycles_Len; i++) {
+      pLastCyclesLenght = pLastCyclesLenght - pLastCycles[pLastCyclesPos];
+      pLastCycles[pLastCyclesPos] = pWork.Cycles[i].End - pWork.Cycles[i].Start;
+      pLastCyclesLenght = pLastCyclesLenght + pLastCycles[pLastCyclesPos];
+      pLastCyclesPos = (pLastCyclesPos + 1) % PROCESSING_FREQCYCLES;
+    }
+    pWork.Params.Frequency = PROCESSING_FREQCYCLES / (pLastCyclesLenght / (float)pSampleRate) / 2.0;
+  } else {
+    pWork.Params.Frequency = NAN;
   }
-  pWork.Params.Frequency = PROCESSING_FREQCYCLES / (pLastCyclesLenght / (float)pSampleRate) / 2.0;
   for(int j = 0; j < (pTriphase ? 3 : 1); j++) {
     FFT_Wait(&FFT_Voltage[j]);
     for(int i = 0; i < 50; i++) {

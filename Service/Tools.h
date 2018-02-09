@@ -15,7 +15,7 @@ class Tools {
   public :
     typedef struct {
       uint16_t HTTPPort;
-      char    *Listen;
+      char    *HTTPPath;
       char    *Log;
       char    *Pid;
     } Global_t;

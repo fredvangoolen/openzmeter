@@ -55,7 +55,7 @@ void  *CaptureVirtual::Capture_Thread(void *args) {
       float VoltageB = Variation(GeneratedSamples, Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 310.0 * This->SampleRate());
       float VoltageC = Variation(GeneratedSamples, Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 320.0 * This->SampleRate());
       if(((GeneratedSamples / This->SampleRate()) >= 10) && ((GeneratedSamples / This->SampleRate()) < 20)) {
-        VoltageB = Tools::Electrical.NominalVoltage * 0.8;
+        VoltageB = Tools::Electrical.NominalVoltage * 0.001;
       }
       This->Buffer[This->WritePos].VoltageA = VoltageA * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency);
       This->Buffer[This->WritePos].CurrentA = CurrentA * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency + CurrentPhaseShift);
