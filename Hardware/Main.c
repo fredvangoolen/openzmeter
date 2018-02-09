@@ -1,298 +1,186 @@
-//El micro tiene 192kbytes de RAM:
-//  - La captura se hace a 768000Hz, en los 6 canales.
-//    · La captura la hace el DMA, cuando tengo bloques disponibles, hago downsampling(x64) con un lowpass de 18750Hz y
-//      lo paso a buffer, durante el downsampling se calculan los pasos por 0 y se marcan bloques. Este proceso se hace
-//      de forma continua.
-//  - Buffer de captura -> 0.236mS * 6 Canales * 16bits * 18750Hz = 53100 Bytes
-//    · Cuando completo 10 ciclos, calculo valores RMS.
-//    · Calculo FFT de cada canal de tension y corriente, guardo los 50 harmonicos y los valores de activa y reactiva.
-//    · Cada FFT ocuparia unos 8kB.
-//    · Todos los parametros calculados ocuparian 1kB, hay que cachearlos hasta que se envien por la wifi.
-
-
-
-
+#include "stm32f10x.h"
+#include "usb_lib.h"
+#include "USB.h"
+#include "usb_pwr.h"
 #include <string.h>
-#include "stm32f4xx.h"
-#include "USB_CDC.h"
-//#include "usb_pwr.h"
-
-//----------------------------------------------------------------------------------------------------------------------
-#define INBUFFER_LEN   16384
+//Tipos de datos -------------------------------------------------------------------------------------------------------
+#define INBUFFER_LEN   1024
 typedef struct {
-  int16_t Voltage;
-  int16_t Current;
+  int16_t Voltage[3];
+  int16_t Current[4];
 } Sample_t;
 //----------------------------------------------------------------------------------------------------------------------
-uint8_t  Buffer[INBUFFER_LEN];
-uint16_t ReadPos   = 0;
-uint16_t WritePos  = 0;
-uint16_t Used      = 0;
-uint8_t  LedStatus = 0x0F;
-//uint32_t Sequence  = 0;
+Sample_t INBuff[INBUFFER_LEN];
+uint64_t Samples = 0;
+uint16_t INRead  = 0;
+uint16_t INWrite = 0;
+uint16_t INSize  = 0;
 //----------------------------------------------------------------------------------------------------------------------
-void SetLeds(uint8_t type) {
-  if(type == 0) {
-    uint8_t Val = (LedStatus >> 4) & 0x0F;
-    if(Val > 8) GPIO_SetBits(GPIOB, GPIO_Pin_8);
-    if(Val > 7) GPIO_SetBits(GPIOB, GPIO_Pin_7);
-    if(Val > 6) GPIO_SetBits(GPIOB, GPIO_Pin_6);
-    if(Val > 5) GPIO_SetBits(GPIOB, GPIO_Pin_5);
-    if(Val > 4) GPIO_SetBits(GPIOB, GPIO_Pin_4);
-    if(Val > 3) GPIO_SetBits(GPIOB, GPIO_Pin_3);
-    if(Val > 2) GPIO_SetBits(GPIOA, GPIO_Pin_15);
-    if(Val > 1) GPIO_SetBits(GPIOF, GPIO_Pin_7);
-    if(Val > 0) GPIO_SetBits(GPIOF, GPIO_Pin_6);
-    GPIO_SetBits(GPIOA, GPIO_Pin_0);
-  } else if(type == 1) {
-    uint8_t Val = LedStatus & 0x0F;
-    if(Val != 0x0F) {
-      if(Val > 7) GPIO_SetBits(GPIOB, GPIO_Pin_8);
-      if(Val > 6) GPIO_SetBits(GPIOB, GPIO_Pin_7);
-      if(Val > 5) GPIO_SetBits(GPIOB, GPIO_Pin_6);
-      if(Val > 4) GPIO_SetBits(GPIOB, GPIO_Pin_5);
-      GPIO_SetBits(GPIOB, GPIO_Pin_4);
-      if(Val < 4) GPIO_SetBits(GPIOB, GPIO_Pin_3);
-      if(Val < 3) GPIO_SetBits(GPIOA, GPIO_Pin_15);
-      if(Val < 2) GPIO_SetBits(GPIOF, GPIO_Pin_7);
-      if(Val < 1) GPIO_SetBits(GPIOF, GPIO_Pin_6);
+/*void UsbSendData(const uint8_t *data, int len) {
+  for (int i = 0; i < len; i++) {
+    USART_Rx_Buffer[USART_Rx_ptr_in++] = data[i];
+    if(USART_Rx_ptr_in == USART_RX_DATA_SIZE) {
+      USART_Rx_ptr_in = 0;
+      USART_Rx_Buffer[USART_Rx_ptr_in++] = 0xFF; 
+      USART_Rx_Buffer[USART_Rx_ptr_in++] = 0xFF;
+      USART_Rx_Buffer[USART_Rx_ptr_in++] = 0xFF; 
+      USART_Rx_Buffer[USART_Rx_ptr_in++] = 0xFF;
     }
-    GPIO_SetBits(GPIOA, GPIO_Pin_1);
   }
-}
-void ClearLeds() {
-  GPIO_ResetBits(GPIOA, GPIO_Pin_0);
-  GPIO_ResetBits(GPIOA, GPIO_Pin_1);
-  GPIO_ResetBits(GPIOB, GPIO_Pin_4); 
-  GPIO_ResetBits(GPIOB, GPIO_Pin_5);
-  GPIO_ResetBits(GPIOB, GPIO_Pin_6);
-  GPIO_ResetBits(GPIOB, GPIO_Pin_7);
-  GPIO_ResetBits(GPIOB, GPIO_Pin_8);
-  GPIO_ResetBits(GPIOB, GPIO_Pin_3);
-  GPIO_ResetBits(GPIOA, GPIO_Pin_15);
-  GPIO_ResetBits(GPIOF, GPIO_Pin_7);
-  GPIO_ResetBits(GPIOF, GPIO_Pin_6);
-}
-/* PC => ARM */
-void EP3_OUT_Callback(void) {
-  PMAToUserBufferCopy(&LedStatus, ENDP3_RXADDR, 1);
-  SetEPRxValid(ENDP3);
-}
+}*/
+
+
 /* ARM => PC */
 void EP1_IN_Callback(void) {
-  if(Used < VIRTUAL_COM_PORT_DATA_SIZE) return;
-  UserToPMABufferCopy(&Buffer[ReadPos], ENDP1_TXADDR, VIRTUAL_COM_PORT_DATA_SIZE);
-  SetEPTxCount(ENDP1, VIRTUAL_COM_PORT_DATA_SIZE);
-  SetEPTxValid(ENDP1);
-  ReadPos = (ReadPos + VIRTUAL_COM_PORT_DATA_SIZE) % INBUFFER_LEN;
-  Used -= VIRTUAL_COM_PORT_DATA_SIZE;
-//Sequence++;
+
+		/* Endpoint type is Bulk and Double Buffer enabled*/
+		
+		if (GetENDPOINT(ENDP1 & 0x7F) & EP_DTOG_RX) { // NOT TX ie SW_BUF
+//			UserToPMABufferCopy(pBufferPointer, GetEPDblBuf0Addr(ENDP1 & 0x7F), wBufferSize);
+			SetEPDblBuf0Count((ENDP1 & 0x7F), EP_DBUF_IN, 64);
+		} else {
+//			UserToPMABufferCopy(pBufferPointer, GetEPDblBuf1Addr(bEpAddr & 0x7F), wBufferSize);
+			SetEPDblBuf1Count((ENDP1 & 0x7F), EP_DBUF_IN, 64);
+		}
+		FreeUserBuffer((ENDP1 & 0x7F), EP_DBUF_IN); // Toggles EP_DTOG_RX / SW_BUF
+
+  
+  
+  
+  
+  
+  
+  
+ // if(INSize < 64) return;
+  //UserToPMABufferCopy(&INBuff[INRead], ENDP1_TXADDR, 64);
+//  SetEPTxCount(ENDP1, 64);
+//  SetEPTxValid(ENDP1);
+ // INRead = (INRead + 64) % INBUFFER_LEN;
+ // INSize -= 64;
 }
 /* Start Of Frame */
 void SOF_Callback(void) {
   EP1_IN_Callback();
 }
 void TIM2_IRQHandler() {
-  while(SDADC_GetFlagStatus(SDADC3, SDADC_FLAG_REOC) == RESET);
-//  int16_t Current = SDADC_GetConversionValue(SDADC1);
- 
-  GPIO_ResetBits(GPIOA, GPIO_Pin_4);                                  /* SPI enable to low and setup ADC channel */
-  while(SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
-  SPI_I2S_SendData16(SPI1, 0xFFFF);                                   /* Load data to transfer by SPI */
-  while(SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
-  GPIO_SetBits(GPIOA, GPIO_Pin_4);                                    /* SPI disable */
-  int16_t Current = SPI_I2S_ReceiveData16(SPI1);                      /* Read current value */
-  Current = (Current - 4096) * 8;
- 
-  int16_t Voltage = SDADC_GetConversionValue(SDADC3);
+  if(TIM_GetITStatus(TIM2, TIM_IT_Update) == RESET) return;
   TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-  if(Used < INBUFFER_LEN) {
-    Sample_t *Sample = (Sample_t*)&Buffer[WritePos];
-    Sample->Current = Current;
-    Sample->Voltage = Voltage;
-    Used += sizeof(Sample_t);
-    WritePos = (WritePos + sizeof(Sample_t)) % INBUFFER_LEN;
-  } 
-//  SDADC_ClearITPendingBit(SDADC1, SDADC_IT_JEOC | SDADC_IT_EOCAL | SDADC_IT_JOVR | SDADC_IT_ROVR);
-  SDADC_ClearITPendingBit(SDADC3, SDADC_IT_JEOC | SDADC_IT_EOCAL | SDADC_IT_JOVR | SDADC_IT_ROVR);
-//  SDADC_SoftwareStartConv(SDADC1);
-  SDADC_SoftwareStartConv(SDADC3);
+//  if((fPortOpen == false) || (INSize >= INBUFFER_LEN)) {
+//    GPIO_SetBits(GPIOC, GPIO_Pin_13);                                 /* Turn OFF connection/congestion LED */
+//    return;
+//  }
+  GPIO_ResetBits(GPIOC, GPIO_Pin_13);                                 /* Turn ON connection/congestion LED */
+  Sample_t *Sample = (Sample_t*)&INBuff[INWrite];
+  GPIO_ResetBits(GPIOB, GPIO_Pin_12);                                 /* SPI enable to low and setup ADC channel */
+  ADC_RegularChannelConfig(ADC1, ADC_Channel_0, 1, ADC_SampleTime_13Cycles5);
+  while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET);
+  SPI_I2S_SendData(SPI2, 0xFFFF);                                     /* Load data to transfer by SPI */
+	ADC_SoftwareStartConvCmd(ADC1, ENABLE);                             /* Start ADC conversion */
+  while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_RXNE) == RESET);
+  while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET);              /* Wait for completion of reads */
+  GPIO_SetBits(GPIOB, GPIO_Pin_12);                                   /* SPI disable */
+//  Sample->Voltage = ADC_GetConversionValue(ADC1) & 0x0FFF;            /* Read voltage value */
+//  Sample->Current = SPI_I2S_ReceiveData(SPI2)  & 0x0FFF;              /* Read current value */
+  INWrite = (INWrite + sizeof(Sample_t)) % INBUFFER_LEN;
+  INSize += sizeof(Sample_t);
 }
-//Inicia los LEDs y buzzer de señalizacion al usuario
-void UserSignals() {
-  GPIO_InitTypeDef        GPIO_InitStructure;
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA | RCC_AHBPeriph_GPIOB | RCC_AHBPeriph_GPIOF, ENABLE);
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;                       /* Output for LEDs*/
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;                      /* Push-pull */
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;                   /* Pin max speed 50MHz */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_7 | GPIO_Pin_6 | GPIO_Pin_5 | GPIO_Pin_4 | GPIO_Pin_3;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);                              /* Config pins */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15 | GPIO_Pin_0 | GPIO_Pin_1;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);                              /* Config pins */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_6;
-  GPIO_Init(GPIOF, &GPIO_InitStructure);                              /* Config pins */
-}
-//Inicia el bus SPI (Solo si se lee del Infineon)
-void Init_SPI() {
+
+int main(void) {
+  ADC_InitTypeDef         ADC_InitStructure;
   SPI_InitTypeDef         SPI_InitStructure; 
   GPIO_InitTypeDef        GPIO_InitStructure;
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);                 /* Clock used devices */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
+  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure; 
+  NVIC_InitTypeDef        NVIC_InitStructure;         
+  RCC_ADCCLKConfig(RCC_PCLK2_Div6);                                   /* Set ADC prescaler (72MHz / 6 -> 12MHz) */
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);                /* Select ADC1 clock source */
+  ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;                  /* ADC1 and ADC2 works independenly */
+  ADC_InitStructure.ADC_ScanConvMode = DISABLE;                       /* Disable the scan conversion so we do one at a time */
+  ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;                 /* Don't do contimuous conversions - do them on demand */
+  ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None; /* Start conversin by software, not an external trigger */
+  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;              /* Conversions are 12 bit - put them in the lower 12 bits of the result */
+  ADC_InitStructure.ADC_NbrOfChannel = 1;                             /* Say how many channels would be used by the sequencer */
+  ADC_Init(ADC1, &ADC_InitStructure);                                 /* Init ADC1 */
+  ADC_Cmd(ADC1, ENABLE);                                              /* Enable ADC1 */
+  ADC_ResetCalibration(ADC1);                                         /* Enable ADC1 reset calibaration register */
+  while(ADC_GetResetCalibrationStatus(ADC1));                         /* Check the end of ADC1 reset calibration register */
+  ADC_StartCalibration(ADC1);                                         /* Start ADC1 calibaration */
+  while(ADC_GetCalibrationStatus(ADC1));                              /* Check the end of ADC1 calibration */
   
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;                           /* CS pin */
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;                       /* Alternate function */
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;                      /* Push-pull */
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;                   /* Pin max speed 50MHz */
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;                           /* Config ANALOG IN on pin 0*/
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;                       /* Setup mode */
   GPIO_Init(GPIOA, &GPIO_InitStructure);                              /* Config pin */
-
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7; /* Configuring SCK, MISO and MOSI */
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;                        /* Alternate function */
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;                        /* Pull up enabled */
-  GPIO_Init(GPIOA, &GPIO_InitStructure);                              /* Config pins */
-
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource5, GPIO_AF_5);                /* Select SPI1 Alternate function*/
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource6, GPIO_AF_5);
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_5);
   
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC, ENABLE);
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);                /* Set clock source for SPI devices */
+
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;                          /* Configuring congestion LED */
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;                    /* Alternate function */
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;                   /* Pin max speed 50MHz */
+  GPIO_Init(GPIOC, &GPIO_InitStructure);                              /* Config pins */
+
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_15;            /* Configuring SCK, MOSI */
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;                     /* Alternate function */
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;                   /* Pin max speed 50MHz */
+  GPIO_Init(GPIOB, &GPIO_InitStructure);                              /* Config pins */
+
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_14;                          /* Configuring MISO */
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;                   /* Pin max speed 50MHz */
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;                       /* Input with pullup */
+  GPIO_Init(GPIOB, &GPIO_InitStructure);                              /* Config pins */
+  
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;                          /* CS pin */
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;                    /* Output push pull */
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;                   /* Pin max speed 50MHz */
+  GPIO_Init(GPIOB, &GPIO_InitStructure);                              /* Config pin */
+
   SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;  /* Read only SPI */
   SPI_InitStructure.SPI_Mode = SPI_Mode_Master;                       /* Master mode SPI */
   SPI_InitStructure.SPI_DataSize = SPI_DataSize_16b;                  /* 16 bits word size */
   SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;                          /* Clk idle low */
-  SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;                        /* First transition is first bit */
+  SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;                        /* First transition is first bit */
   SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;                           /* Software slave management */
   SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;                  /* Byte order */
-  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_16; /* SPI prescaler */
+  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_32; /* SPI prescaler */
   SPI_InitStructure.SPI_CRCPolynomial = 7;                            /* SPI CRC polynomial */
-  SPI_Init(SPI1, &SPI_InitStructure);                                 /* Init SPI2 */
-  SPI_CalculateCRC(SPI1, DISABLE);                                    /* Disable CRC */
-  SPI_Cmd(SPI1, ENABLE);                                              /* Enable SPI2 */
-}
-//Inicia el ADC usado para tension
-void Init_SDADC() {
-  SDADC_InitTypeDef       SDADC_InitStruct;
-  SDADC_AINStructTypeDef  SDADC_AINStructure;
-  GPIO_InitTypeDef        GPIO_InitStructure;
-  NVIC_InitTypeDef        NVIC_InitStructure;
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);                 /* Clock used devices */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_14;/* Config ANALOG IN on pin PB0, PB1 and PB14*/
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;                        /* Setup mode */
-  GPIO_Init(GPIOB, &GPIO_InitStructure);                              /* Config pin */
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);
-  PWR_SDADCAnalogCmd(PWR_SDADCAnalog_1 | PWR_SDADCAnalog_3, ENABLE);  /* Enable SDADC1 and SDADC3 */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SDADC1 | RCC_APB2Periph_SDADC3, ENABLE);
-  RCC_SDADCCLKConfig(RCC_SDADCCLK_SYSCLK_Div6);                      /* Set ADC prescaler (72MHz / 12 -> 6MHz) */
-  SDADC_VREFSelect(SDADC_VREF_VDDA);                                  /* External reference */
-//  SDADC_Cmd(SDADC1, ENABLE);
-  SDADC_Cmd(SDADC3, ENABLE);
-//  while(SDADC_GetFlagStatus(SDADC1, SDADC_FLAG_STABIP) == RESET);     /* Wait stabilization */
-  while(SDADC_GetFlagStatus(SDADC3, SDADC_FLAG_STABIP) == RESET);     /* Wait stabilization */
-  
-//  SDADC_InitModeCmd(SDADC1, ENABLE);                                  /* Enter initialization mode */
-  SDADC_InitModeCmd(SDADC3, ENABLE);
-//  while(SDADC_GetFlagStatus(SDADC1, SDADC_FLAG_INITRDY) == RESET);
-  while(SDADC_GetFlagStatus(SDADC3, SDADC_FLAG_INITRDY) == RESET);
+  SPI_Init(SPI2, &SPI_InitStructure);                                 /* Init SPI2 */
+  SPI_CalculateCRC(SPI2, DISABLE);                                    /* Disable CRC */
+  SPI_Cmd(SPI2, ENABLE);                                              /* Enable SPI2 */
 
-  SDADC_InitStruct.SDADC_Channel = SDADC_Channel_6;
-  SDADC_InitStruct.SDADC_ContinuousConvMode = DISABLE;
-  SDADC_InitStruct.SDADC_FastConversionMode = DISABLE;
-  SDADC_Init(SDADC1, &SDADC_InitStruct);
-  SDADC_InitStruct.SDADC_Channel = SDADC_Channel_8;
-  SDADC_Init(SDADC3, &SDADC_InitStruct);
-
-//  SDADC_AINStructure.SDADC_InputMode = SDADC_InputMode_Diff;/* Configure Analog input */
-  SDADC_AINStructure.SDADC_Gain = SDADC_Gain_1;
-  SDADC_AINStructure.SDADC_CommonMode = SDADC_CommonMode_VSSA;
-  SDADC_AINStructure.SDADC_Offset = 0;
-  SDADC_AINInit(SDADC1, SDADC_Conf_0, &SDADC_AINStructure);
-  SDADC_AINStructure.SDADC_InputMode = SDADC_InputMode_SEZeroReference;/* Configure Analog input */
-  SDADC_AINInit(SDADC3, SDADC_Conf_0, &SDADC_AINStructure);
-  
-//  SDADC_ChannelConfig(SDADC1, SDADC_Channel_6, SDADC_Conf_0);         /* Init ADC input configuration */
-  SDADC_ChannelConfig(SDADC3, SDADC_Channel_8, SDADC_Conf_0);         /* Init ADC input configuration */
-  SDADC_RegularSynchroSDADC1(SDADC3, ENABLE);
-
-//  SDADC_InitModeCmd(SDADC1, DISABLE);
-  SDADC_InitModeCmd(SDADC3, DISABLE);
-//  SDADC_CalibrationSequenceConfig(SDADC1, SDADC_CalibrationSequence_1);
-  SDADC_CalibrationSequenceConfig(SDADC3, SDADC_CalibrationSequence_1);
-//  SDADC_StartCalibration(SDADC1);
-  SDADC_StartCalibration(SDADC3);
-//  while(SDADC_GetFlagStatus(SDADC1, SDADC_FLAG_EOCAL) == RESET);
-  while(SDADC_GetFlagStatus(SDADC3, SDADC_FLAG_EOCAL) == RESET);
-//  SDADC_SoftwareStartConv(SDADC1);
-  SDADC_SoftwareStartConv(SDADC3);
-}
-void Init_Timer() {
-  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
-  NVIC_InitTypeDef        NVIC_InitStructure;
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);                /* Set clock source for TIM2 */
-  TIM_TimeBaseStructure.TIM_Prescaler = 0;                            /* Timer prescaler -> 1uS */
+  TIM_TimeBaseStructure.TIM_Prescaler = 71;                           /* Timer prescaler -> 1uS */
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;         /* Count mode */
-  TIM_TimeBaseStructure.TIM_Period = 4607;                            /* Reset period (16kHz) */
+  TIM_TimeBaseStructure.TIM_Period = 24;                              /* Reset period (25uS) */
   TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;             /* */
   TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;                    /* */
   TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);                     /* Configure TIM2 */
   TIM_Cmd(TIM2, ENABLE);                                              /* Enable TIM2 */ 
   TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);                          /* Enable overflow interrupt */
 
-//  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
+  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
   NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;                     /* Interruption source */
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;           /* Priority */
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;           /* Priority */
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;                  /* Subpriority */
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                     /* Enable */
   NVIC_Init(&NVIC_InitStructure);                                     /* Configure TIM2 interrupt */
-}
-void Init_USB_HW() {
-  NVIC_InitTypeDef        NVIC_InitStructure;         
-  GPIO_InitTypeDef        GPIO_InitStructure;
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
-  NVIC_InitStructure.NVIC_IRQChannel = USB_LP_IRQn;                   /* Interruption source */
+
+  NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;          /* Interruption source */
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;           /* Priority */
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;                  /* Subpriority */
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                     /* Enable */
   NVIC_Init(&NVIC_InitStructure);                                     /* Configure USB interrupt */
   
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12;            /* Configure USB pins */
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;                   /* High speed */
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;                        /* Alternate function */
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;                      /* Push-Pull */
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;                    /* */
-  GPIO_Init(GPIOA, &GPIO_InitStructure);                              /* Set configuration */
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource11, GPIO_AF_14);              /* Usb pins alternate function */
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource12, GPIO_AF_14);
+
   RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);                    /* Select USBCLK source */
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);                 /* Enable the USB clock */
 	USB_Init();
-}
-int main(void) {
+
+	while(1) {
 
   
-  //Init_SPI();
-  Init_SDADC();
-  Init_SPI();
-    Init_Timer();
-  Init_USB_HW();
-
-
   
-//  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);                /* Set clock source for TIM2 */
-//  TIM_TimeBaseStructure.TIM_Prescaler = 71;                           /* Timer prescaler -> 1uS */
-//  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;         /* Count mode */
-//  TIM_TimeBaseStructure.TIM_Period = 63;                              /* Reset period (64uS) */
-//  TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;             /* */
-//  TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;                    /* */
-//  TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);                     /* Configure TIM2 */
-//  TIM_Cmd(TIM2, ENABLE);                                              /* Enable TIM2 */ 
-//  TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);                          /* Enable overflow interrupt */
-
-//  
-//  NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;                     /* Interruption source */
-//  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;           /* Priority */
-//  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;                  /* Subpriority */
-//  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                     /* Enable */
-//  NVIC_Init(&NVIC_InitStructure);                                     /* Configure TIM2 interrupt */
-
-  while(1) {
-
+  
+  
+  
+  
   }
 }

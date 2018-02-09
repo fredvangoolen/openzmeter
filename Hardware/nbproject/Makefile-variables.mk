@@ -9,19 +9,19 @@ CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=arm-none-eabi-Linux
 CND_ARTIFACT_DIR_Debug=dist/Debug/arm-none-eabi-Linux
-CND_ARTIFACT_NAME_Debug=hardwarev2
-CND_ARTIFACT_PATH_Debug=dist/Debug/arm-none-eabi-Linux/hardwarev2
+CND_ARTIFACT_NAME_Debug=hardware
+CND_ARTIFACT_PATH_Debug=dist/Debug/arm-none-eabi-Linux/hardware
 CND_PACKAGE_DIR_Debug=dist/Debug/arm-none-eabi-Linux/package
-CND_PACKAGE_NAME_Debug=hardwarev2.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/arm-none-eabi-Linux/package/hardwarev2.tar
+CND_PACKAGE_NAME_Debug=hardware.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/arm-none-eabi-Linux/package/hardware.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux
 CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux
-CND_ARTIFACT_NAME_Release=hardwarev2
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/hardwarev2
+CND_ARTIFACT_NAME_Release=hardware
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/hardware
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux/package
-CND_PACKAGE_NAME_Release=hardwarev2.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/hardwarev2.tar
+CND_PACKAGE_NAME_Release=hardware.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/hardware.tar
 #
 # include compiler specific variables
 #

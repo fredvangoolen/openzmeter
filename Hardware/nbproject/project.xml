@@ -10,7 +10,11 @@
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>
             <sourceRootList>
-                <sourceRootElem>.</sourceRootElem>
+                <sourceRootElem>STM32_USB-FS-Device_Driver</sourceRootElem>
+                <sourceRootElem>STM32F10x_StdPeriph_Driver</sourceRootElem>
+                <sourceRootElem>cmsis</sourceRootElem>
+                <sourceRootElem>cmsis_boot</sourceRootElem>
+                <sourceRootElem>CMSIS</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

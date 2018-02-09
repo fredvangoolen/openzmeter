@@ -21,6 +21,13 @@
             <file>file:/home/edu/Proyectos/zMeter/STM32/USB_CDC.c</file>
         </group>
         <group/>
-        <group name="ServiceV2"/>
+        <group name="ServiceV2">
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/Main.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_cortex.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/USB.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/USB.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/CMSIS/RTOS/Template/cmsis_os.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h</file>
+        </group>
     </open-files>
 </project-private>

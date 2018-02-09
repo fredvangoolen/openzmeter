@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=HardwareV2
+PROJECTNAME=Hardware
 
 # Active Configuration
 DEFAULTCONF=Debug

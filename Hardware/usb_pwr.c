@@ -1,9 +1,9 @@
-#include "stm32f37x.h"
+#include "stm32f10x.h"
 #include "usb_lib.h"
 #include "usb_conf.h"
-//#include "usb_pwr.h"
-#include "USB_CDC.h"
-extern __IO uint32_t bDeviceState; /* USB device status */
+#include "usb_pwr.h"
+#include "USB.h"
+
 struct {
   __IO RESUME_STATE eState;
   __IO uint8_t bESOFcnt;

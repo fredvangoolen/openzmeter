@@ -1,7 +1,7 @@
-//#include "stm32f10x_it.h"
+#include "stm32f10x_it.h"
 #include "usb_lib.h"
 #include "usb_istr.h"
-#include "USB_CDC.h"
+#include "USB.h"
 
 /*******************************************************************************
  * Function Name  : NMI_Handler

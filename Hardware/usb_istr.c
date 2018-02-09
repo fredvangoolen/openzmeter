@@ -1,5 +1,5 @@
 #include "usb_lib.h"
-//#include "usb_pwr.h"
+#include "usb_pwr.h"
 #include "usb_istr.h"
 
 __IO uint16_t wIstr; /* ISTR register last read value */
@@ -22,7 +22,7 @@ void (*pEpInt_IN[7])(void) ={
 void (*pEpInt_OUT[7])(void) ={
   NOP_Process,
   NOP_Process,
-  EP3_OUT_Callback,
+  NOP_Process,
   NOP_Process,
   NOP_Process,
   NOP_Process,
@@ -37,7 +37,7 @@ void (*pEpInt_OUT[7])(void) ={
  * Output         :
  * Return         :
  *******************************************************************************/
-void USB_LP_IRQHandler(void) {
+void USB_LP_CAN1_RX0_IRQHandler(void) {
 
   wIstr = _GetISTR();
 
