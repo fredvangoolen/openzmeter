@@ -1,5 +1,6 @@
 [Unit]
 Description=openZmeter Service
+After=chrony.service
 
 [Service]
 Type=forking
