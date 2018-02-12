@@ -29,6 +29,29 @@ void (*pEpInt_OUT[7])(void) ={
   NOP_Process,
 };
 
+
+/******************************************************************************/
+/*                 STM32F10x Peripherals Interrupt Handlers                   */
+/*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
+/*  available peripheral interrupt handler's name please refer to the startup */
+/*  file (startup_stm32f10x_xx.s).                                            */
+/******************************************************************************/
+
+/*******************************************************************************
+* Function Name  : USB_HP_CAN_TX_IRQHandler
+* Description    : This function handles USB High Priority or CAN TX interrupts
+*                  requests.
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void USB_HP_CAN1_TX_IRQHandler(void)
+{
+  CTR_HP();
+}
+
+
+
 #define SOF_CALLBACK
 /*******************************************************************************
  * Function Name  : USB_Istr

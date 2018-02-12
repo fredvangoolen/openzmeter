@@ -1,8 +1,8 @@
-#include "stm32f10x.h"
+#include "stm32f30x.h"
 #include "usb_lib.h"
 #include "usb_conf.h"
 #include "usb_pwr.h"
-#include "USB.h"
+#include "USB_Class.h"
 
 struct {
   __IO RESUME_STATE eState;
