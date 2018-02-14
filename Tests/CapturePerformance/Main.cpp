@@ -130,8 +130,8 @@ int main(void) {
     if(((Osc % Div) == 0) && ((Osc % (Div * 4)) == 0)) {
       int SampleRate = Osc / Div;
       int Freq = SampleRate / 4;
-      if(SampleRate > 212000) continue;
-      if((Freq >= 5000) && (Freq <= 120000) && (((Freq % 100) == 0)  || ((Freq % 120) == 0))) {
+      if(SampleRate > 250000) continue;
+      if((Freq >= 5000) && (Freq <= 200000) && (((Freq % 100) == 0)  || ((Freq % 120) == 0))) {
         printf("Order %d -> Freq %d, SampleRate %d, Oversample (4x)\n", Order, Freq, SampleRate);
         Order++;
       }
@@ -141,9 +141,20 @@ int main(void) {
     if(((Osc % Div) == 0) && ((Osc % (Div * 16)) == 0)) {
       int SampleRate = Osc / Div;
       int Freq = SampleRate / 16;
-      if(SampleRate > 212000) continue;
-      if((Freq >= 5000) && (Freq <= 120000) && (((Freq % 100) == 0)  || ((Freq % 120) == 0))) {
+      if(SampleRate > 250000) continue;
+      if((Freq >= 5000) && (Freq <= 200000) && (((Freq % 100) == 0)  || ((Freq % 120) == 0))) {
         printf("Order %d -> Freq %d, SampleRate %d, Oversample (16x)\n", Order, Freq, SampleRate);
+        Order++;
+      }
+    }
+  }
+  for(int Div = 1; Div < Osc / 64; Div++) {
+    if(((Osc % Div) == 0) && ((Osc % (Div * 16)) == 0)) {
+      int SampleRate = Osc / Div;
+      int Freq = SampleRate / 64;
+      if(SampleRate > 250000) continue;
+      if((Freq >= 5000) && (Freq <= 200000) && (((Freq % 100) == 0)  || ((Freq % 120) == 0))) {
+        printf("Order %d -> Freq %d, SampleRate %d, Oversample (64x)\n", Order, Freq, SampleRate);
         Order++;
       }
     }
