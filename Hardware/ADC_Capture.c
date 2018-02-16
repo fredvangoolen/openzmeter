@@ -7,6 +7,8 @@
 #include "stm32f30x_adc.h"
 #include "stm32f30x_gpio.h"
 #include "stm32f30x_misc.h"
+uint8_t Oversample = 4;
+
 
 //Tipos y funciones externas ---------------------------------------------------
 typedef struct {
@@ -26,19 +28,18 @@ typedef struct {
   int16_t VoltageT;  //ADC4_IN3
 } ADCSample_ADC4;
 extern void AppendSample(int16_t value);
-
 // Buffers de captura para el DMA ----------------------------------------------
 ADCSample_ADC1 ADC1_Buffer[32];     //El maximo oversampling que se permite es 16x
 ADCSample_ADC2 ADC2_Buffer[32];     //El maximo oversampling que se permite es 16x
 ADCSample_ADC2 ADC3_Buffer[32];     //El maximo oversampling que se permite es 16x
 ADCSample_ADC2 ADC4_Buffer[32];     //El maximo oversampling que se permite es 16x
-
 /* Calibra el ADC*/
 void ADC_InitADC(ADC_TypeDef* ADCx, uint8_t channel1, uint8_t channel2, uint16_t *dst, DMA_Channel_TypeDef *dma) {
   //Configuro ADC
   ADC_InitTypeDef ADC_InitStructure;
   ADC_CommonInitTypeDef ADC_CommonInitStructure;
   ADC_VoltageRegulatorCmd(ADCx, ENABLE);
+  for(int i = 0; i < 10000; i++);
   ADC_CommonInitStructure.ADC_Mode = ADC_Mode_Independent;
   ADC_CommonInitStructure.ADC_Clock = ADC_Clock_AsynClkMode;
   ADC_CommonInitStructure.ADC_DMAAccessMode = ADC_DMAAccessMode_1;
@@ -59,10 +60,11 @@ void ADC_InitADC(ADC_TypeDef* ADCx, uint8_t channel1, uint8_t channel2, uint16_t
   while(ADC_GetCalibrationStatus(ADCx) != RESET);
   ADC_Cmd(ADCx, ENABLE);
   while(!ADC_GetFlagStatus(ADCx, ADC_FLAG_RDY));
-  ADC_DMACmd(ADCx, ENABLE);
+  ADC_DMAConfig(ADCx, ADC_DMAMode_Circular);
   //Configuro secuencia de captura
   ADC_RegularChannelConfig(ADCx, channel1,  1, ADC_SampleTime_1Cycles5);
   ADC_RegularChannelConfig(ADCx, channel2,  2, ADC_SampleTime_1Cycles5);
+  ADC_DMACmd(ADCx, ENABLE);
   //Configuro DMA
   DMA_InitTypeDef  DMA_InitStructure;
   DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADCx->DR;
@@ -76,11 +78,12 @@ void ADC_InitADC(ADC_TypeDef* ADCx, uint8_t channel1, uint8_t channel2, uint16_t
   DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;  
   DMA_InitStructure.DMA_Priority = DMA_Priority_High;
   DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-  DMA_Init(DMA1_Channel1, &DMA_InitStructure);
+  DMA_Init(dma, &DMA_InitStructure);
   DMA_Cmd(dma, ENABLE);
+  ADC_StartConversion(ADCx);
 }
 /* Configura los pins de captura como analogicos */
-void ADC_ConfigInputs() {
+void ADC_Configure() {
   //Activo los canales ADC y los puertos involucrados
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA | RCC_AHBPeriph_GPIOB | RCC_AHBPeriph_ADC12 | RCC_AHBPeriph_ADC34 | RCC_AHBPeriph_DMA1 | RCC_AHBPeriph_DMA2, ENABLE);
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
@@ -108,32 +111,32 @@ void ADC_ConfigInputs() {
   NVIC_Init(&NVIC_InitStructure);
   //Configuro TIMER1 CC3 que es compartido por los 4 ADCs
   TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure; 
-  TIM_TimeBaseStructure.TIM_Prescaler = 0;
+  TIM_TimeBaseStructure.TIM_Prescaler = 72;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
   TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
   TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
-  TIM_TimeBaseStructure.TIM_Period = 720000;
+  TIM_TimeBaseStructure.TIM_Period = 10000;
   TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
   TIM_OCInitTypeDef TIM_OCInitStructure;
   TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
   TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_OutputNState = TIM_OutputState_Disable;
-  TIM_OCInitStructure.TIM_Pulse = 1;
-  TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-  TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_Low;
-  TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Reset;
-  TIM_OCInitStructure.TIM_OCNIdleState =  TIM_OCIdleState_Set;
+  TIM_OCInitStructure.TIM_Pulse = 10;
+  TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;
   TIM_OC3Init(TIM1, &TIM_OCInitStructure);
+  //TIM_OC3PreloadConfig(TIM1, TIM_OCPreload_Enable);
   TIM_Cmd(TIM1, ENABLE);
+  TIM_CtrlPWMOutputs(TIM1, ENABLE);
+  //  TIM_ITConfig(TIM1, TIM_IT_CC3, ENABLE);
+//  TIM_GenerateEvent(TIM1, TIM_EventSource_CC3);
 }
 void DMA1_Channel1_IRQHandler(void) {
-  uint8_t  Start;
-  uint16_t Accum = 0;
+//  uint8_t  Start;
+//  uint16_t Accum = 0;
   if(DMA_GetITStatus(DMA1_IT_TC1)) {
-    Start = 0;
+//    Start = 0;
     DMA_ClearITPendingBit(DMA1_IT_TC1);
   } else if(DMA_GetITStatus(DMA1_IT_HT1)) {
-    Start = 16;
+//    Start = 16;
     DMA_ClearITPendingBit(DMA1_IT_HT1);
   }
   //Leo las 4, 16 o 64 muestras, y copio las necesarias a la posicion del buffer que corresponda

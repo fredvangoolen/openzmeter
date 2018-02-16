@@ -113,10 +113,10 @@
     </logicalFolder>
     <itemPath>ADC_Capture.c</itemPath>
     <itemPath>Main.c</itemPath>
+    <itemPath>Main.h</itemPath>
     <itemPath>SysHandlers.c</itemPath>
     <itemPath>USB_Class.c</itemPath>
     <itemPath>USB_Class.h</itemPath>
-    <itemPath>hw_config.h</itemPath>
     <itemPath>stm32f30x_conf.h</itemPath>
     <itemPath>usb_conf.h</itemPath>
     <itemPath>usb_istr.c</itemPath>
@@ -151,7 +151,7 @@
             <pElem>CMSIS/Include</pElem>
             <pElem>.</pElem>
           </incDir>
-          <commandLine>-mcpu=cortex-m3 -mthumb -g -g2 -Os</commandLine>
+          <commandLine>-mcpu=cortex-m3 -mthumb -g -g2 -O0</commandLine>
           <preprocessorList>
             <Elem>STM32F303xC</Elem>
             <Elem>USE_STDPERIPH_DRIVER</Elem>
@@ -201,6 +201,8 @@
       <item path="CMSIS/Source/system_stm32f30x.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="Main.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="Main.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="STM32F30x_StdPeriph_Driver/Release_Notes.html"
             ex="false"
@@ -522,8 +524,6 @@
       <item path="USB_Class.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="USB_Class.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="hw_config.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="stm32f30x_conf.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -598,6 +598,8 @@
       </item>
       <item path="Main.c" ex="false" tool="0" flavor2="0">
       </item>
+      <item path="Main.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="STM32F30x_StdPeriph_Driver/Release_Notes.html"
             ex="false"
             tool="3"
@@ -918,8 +920,6 @@
       <item path="USB_Class.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="USB_Class.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="hw_config.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="stm32f30x_conf.h" ex="false" tool="3" flavor2="0">
       </item>

@@ -41,7 +41,7 @@
 #define __USB_LIB_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "hw_config.h"
+#include "Main.h"
 #include "usb_type.h"
 #include "usb_regs.h"
 #include "usb_def.h"
