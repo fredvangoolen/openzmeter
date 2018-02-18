@@ -3,11 +3,6 @@
  * Author:   Eduardo Viciana (2017)
  * ---------------------------------------------------------------------------- */
 #pragma once
-//#include "stm32f10x_it.h"
-//#include "usb_lib.h"
-//#include "usb_pwr.h"
-//#include <usb_type.h>
-//#include <stdbool.h>
 //Descriptor defines ---------------------------------------------------------------------------------------------------
 #define USB_DEVICE_DESCRIPTOR_TYPE              0x01
 #define USB_CONFIGURATION_DESCRIPTOR_TYPE       0x02
@@ -23,18 +18,19 @@
 #define STRING_PRODUCT_SIZE                       58
 #define STRING_SERIAL_SIZE                        50
 //Packet buffer area definition ----------------------------------------------------------------------------------------
-#define BTABLE_ADDRESS                       (0x000)   /* Table start */
-#define ENDP0_RXADDR           (BTABLE_ADDRESS + 32)   /* EP0 - OUT */
-#define ENDP0_TXADDR           (ENDP0_RXADDR   + 64)   /* EP0 - IN */
-#define ENDP1_BUF0ADDR         (ENDP0_TXADDR   + 64)   /* EP1 - IN (Buff1) */
-#define ENDP1_BUF1ADDR       (ENDP1_BUF0ADDR   + 64)   /* EP1 - IN (Buff2) */
+#define BTABLE_ADDRESS                         0x000    /* Table start */
+#define ENDP0_RXADDR                           0x040    /* EP0 - OUT */
+#define ENDP0_TXADDR                           0x080    /* EP0 - IN */
+#define ENDP1_BUF0ADDR                         0x0C0    /* EP1 - IN (Buff1) */
+#define ENDP1_BUF1ADDR                         0x100    /* EP1 - IN (Buff2) */
 //Class command defines ------------------------------------------------------------------------------------------------
 #define FIRM_SETUP_CAPTURE                      0x00
 //USB and CDC enums ----------------------------------------------------------------------------------------------------
 typedef enum _RESUME_STATE { RESUME_EXTERNAL, RESUME_INTERNAL, RESUME_LATER, RESUME_WAIT, RESUME_START, RESUME_ON, RESUME_OFF, RESUME_ESOF } RESUME_STATE;
 typedef enum _DEVICE_STATE { UNCONNECTED, ATTACHED, POWERED, SUSPENDED, ADDRESSED, CONFIGURED } DEVICE_STATE;
-
 //USB application functions --------------------------------------------------------------------------------------------
+void USB_Init();
+
 //void   USB_LP_CAN1_RX0_IRQHandler(void);
 
 //void   Suspend(void);

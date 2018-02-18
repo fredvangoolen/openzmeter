@@ -1,20 +1,18 @@
-//#include "stm32f10x.h"
-#include "usb_lib.h"
+/* ================================ openZmeter ================================
+ * File:     Main.c
+ * Author:   Eduardo Viciana (2017)
+ * ---------------------------------------------------------------------------- */
+#include "Main.h"
+#include "usb_regs.h"
 #include "USB_Class.h"
 #include "usb_pwr.h"
 #include <string.h>
-//Tipos de datos -------------------------------------------------------------------------------------------------------
-#define INBUFFER_LEN   1024
-typedef struct {
-  int16_t Voltage[3];
-  int16_t Current[4];
-} Sample_t;
 //----------------------------------------------------------------------------------------------------------------------
-Sample_t INBuff[INBUFFER_LEN];
-uint64_t Samples = 0;
-uint16_t INRead  = 0;
-uint16_t INWrite = 0;
-uint16_t INSize  = 0;
+uint16_t INBuff[INBUFFER_LEN];
+uint64_t SamplesCount = 0;
+uint16_t INReadPos    = 0;
+uint16_t INWritePos   = 0;
+uint16_t INSizeSize   = 0;
 //----------------------------------------------------------------------------------------------------------------------
 /*void UsbSendData(const uint8_t *data, int len) {
   for (int i = 0; i < len; i++) {
@@ -31,38 +29,7 @@ uint16_t INSize  = 0;
 
 
 /* ARM => PC */
-void EP1_IN_Callback(void) {
 
-		/* Endpoint type is Bulk and Double Buffer enabled*/
-		
-		if (GetENDPOINT(ENDP1 & 0x7F) & EP_DTOG_RX) { // NOT TX ie SW_BUF
-//			UserToPMABufferCopy(pBufferPointer, GetEPDblBuf0Addr(ENDP1 & 0x7F), wBufferSize);
-			SetEPDblBuf0Count((ENDP1 & 0x7F), EP_DBUF_IN, 64);
-		} else {
-//			UserToPMABufferCopy(pBufferPointer, GetEPDblBuf1Addr(bEpAddr & 0x7F), wBufferSize);
-			SetEPDblBuf1Count((ENDP1 & 0x7F), EP_DBUF_IN, 64);
-		}
-		FreeUserBuffer((ENDP1 & 0x7F), EP_DBUF_IN); // Toggles EP_DTOG_RX / SW_BUF
-
-  
-  
-    		SetEPTxValid(ENDP1);
-  
-  
-  
-  
-  
- // if(INSize < 64) return;
-  //UserToPMABufferCopy(&INBuff[INRead], ENDP1_TXADDR, 64);
-//  SetEPTxCount(ENDP1, 64);
-//  SetEPTxValid(ENDP1);
- // INRead = (INRead + 64) % INBUFFER_LEN;
- // INSize -= 64;
-}
-/* Start Of Frame */
-void SOF_Callback(void) {
-  EP1_IN_Callback();
-}
 void TIM2_IRQHandler() {
 //  if(TIM_GetITStatus(TIM2, TIM_IT_Update) == RESET) return;
 //  TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
@@ -85,10 +52,11 @@ void TIM2_IRQHandler() {
 //  INWrite = (INWrite + sizeof(Sample_t)) % INBUFFER_LEN;
 //  INSize += sizeof(Sample_t);
 }
-
 int main(void) {
-  ADC_ConfigInputs();
-//  ADC_InitTypeDef         ADC_InitStructure;
+  ADC_Configure();
+  USB_Configure();
+
+  //  ADC_InitTypeDef         ADC_InitStructure;
 //  SPI_InitTypeDef         SPI_InitStructure; 
 //  GPIO_InitTypeDef        GPIO_InitStructure;
 //  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure; 
@@ -165,29 +133,14 @@ int main(void) {
 //  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                     /* Enable */
 //  NVIC_Init(&NVIC_InitStructure);                                     /* Configure TIM2 interrupt */
 
-//  NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;          /* Interruption source */
-//  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;           /* Priority */
-//  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;                  /* Subpriority */
-//  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                     /* Enable */
-//  NVIC_Init(&NVIC_InitStructure);                                     /* Configure USB interrupt */
-
-//  NVIC_InitStructure.NVIC_IRQChannel = USB_HP_CAN1_TX_IRQn;          /* Interruption source */
-//  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;           /* Priority */
-//  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;                  /* Subpriority */
-//  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                     /* Enable */
-//  NVIC_Init(&NVIC_InitStructure);                                     /* Configure USB interrupt */  
-
-//  RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);                    /* Select USBCLK source */
-//  RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);                 /* Enable the USB clock */
-//	USB_Init();
 //  GPIO_SetBits(GPIOC, GPIO_Pin_13);
 	while(1) {
 
   
+//  ADC_StartConversion(ADC1);
   
   
-  
-  
-  
+//  while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOS) == RESET) { }
+    __NOP();
   }
 }

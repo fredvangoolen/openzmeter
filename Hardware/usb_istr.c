@@ -2,54 +2,13 @@
 #include "usb_pwr.h"
 #include "usb_istr.h"
 
-__IO uint16_t wIstr; /* ISTR register last read value */
+__IO uint16_t wIstr;          /* ISTR register last read value */
 __IO uint8_t bIntPackSOF = 0; /* SOFs received between 2 consecutive packets */
 
 /* Extern variables ----------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 /* function pointers to non-control endpoints service routines */
-void (*pEpInt_IN[7])(void) ={
-  EP1_IN_Callback,
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-};
-
-void (*pEpInt_OUT[7])(void) ={
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-};
-
-
-/******************************************************************************/
-/*                 STM32F10x Peripherals Interrupt Handlers                   */
-/*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
-/*  available peripheral interrupt handler's name please refer to the startup */
-/*  file (startup_stm32f10x_xx.s).                                            */
-/******************************************************************************/
-
-/*******************************************************************************
-* Function Name  : USB_HP_CAN_TX_IRQHandler
-* Description    : This function handles USB High Priority or CAN TX interrupts
-*                  requests.
-* Input          : None
-* Output         : None
-* Return         : None
-*******************************************************************************/
-void USB_HP_CAN1_TX_IRQHandler(void)
-{
-  CTR_HP();
-}
-
 
 
 #define SOF_CALLBACK

@@ -4,6 +4,7 @@
  * ---------------------------------------------------------------------------- */
 #include <stdint.h>
 #include "stm32f30x.h"
+#include "stm32f30x_misc.h"
 #include "usb_lib.h"
 #include "USB_Class.h"
 //Descriptores USB -----------------------------------------------------------------------------------------------------
@@ -90,6 +91,44 @@ DEVICE Device_Table = {
   1                                       /* Number of configuration available */
 };
 __IO uint32_t bDeviceState = UNCONNECTED; /* USB device status */
+//Interrupciones -------------------------------------------------------------------------------------------------------
+void EP1_IN_Callback(void) {
+  //Si tengo muestras {
+		/* Endpoint type is Bulk and Double Buffer enabled*/
+		
+		if (GetENDPOINT(ENDP1 & 0x7F) & EP_DTOG_RX) { // NOT TX ie SW_BUF
+//			UserToPMABufferCopy(pBufferPointer, GetEPDblBuf0Addr(ENDP1 & 0x7F), wBufferSize);
+			SetEPDblBuf0Count((ENDP1 & 0x7F), EP_DBUF_IN, 64);
+		} else {
+//			UserToPMABufferCopy(pBufferPointer, GetEPDblBuf1Addr(bEpAddr & 0x7F), wBufferSize);
+			SetEPDblBuf1Count((ENDP1 & 0x7F), EP_DBUF_IN, 64);
+		}
+		FreeUserBuffer((ENDP1 & 0x7F), EP_DBUF_IN); // Toggles EP_DTOG_RX / SW_BUF
+ 
+    		SetEPTxValid(ENDP1);
+  //}  
+  
+  
+  
+ // if(INSize < 64) return;
+  //UserToPMABufferCopy(&INBuff[INRead], ENDP1_TXADDR, 64);
+//  SetEPTxCount(ENDP1, 64);
+//  SetEPTxValid(ENDP1);
+ // INRead = (INRead + 64) % INBUFFER_LEN;
+ // INSize -= 64;
+}
+/* Start Of Frame */
+void SOF_Callback(void) {
+  EP1_IN_Callback();
+}
+void (*pEpInt_IN[7])(void) = { EP1_IN_Callback, NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process };
+void (*pEpInt_OUT[7])(void) ={ NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process };
+void USB_HP_CAN1_TX_IRQHandler(void) {
+  CTR_HP();
+}
+
+
+
 //Funciones auxiliares -------------------------------------------------------------------------------------------------
 void IntToUnicode(uint32_t value, uint8_t *pbuf) {
   for(uint8_t i = 0; i < 8; i++) {
@@ -123,9 +162,9 @@ RESULT PowerOn(void) {
 }
 //DEVICE_PROP ----------------------------------------------------------------------------------------------------------
 void USB_Class_Init(void) {
-  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7E8), &StringSerial[2]);  
-  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7EC), &StringSerial[18]);
-  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7F0), &StringSerial[34]);
+  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7AC), &StringSerial[2]);  
+  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7B0), &StringSerial[18]);
+  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7B4), &StringSerial[34]);
   pInformation->Current_Configuration = 0;
   PowerOn();
   USB_SIL_Init();
@@ -154,7 +193,7 @@ void USB_Class_Reset(void) {
 
   ClearDTOG_TX(ENDP1);  // USB PERIPHERAL
   ClearDTOG_RX(ENDP1);  // SW_BUF for APPLICATION
-  ToggleDTOG_TX(ENDP1); // NOT TX ie SW_BUF <- this is actually set which buffer will be first for usb periph and which first for software/firmware
+  ToggleDTOG_TX(ENDP1); // NOT TX ie SW_BUF this is actually set which buffer will be first for usb periph and which first for software/firmware
   SetEPTxStatus(ENDP1, EP_TX_DIS);
   SetEPRxStatus(ENDP1, EP_TX_DIS);
 
@@ -164,7 +203,15 @@ void USB_Class_Reset(void) {
 RESULT USB_Class_DataSetup(uint8_t RequestNo) {
   if(Type_Recipient != (CLASS_REQUEST | INTERFACE_RECIPIENT)) return USB_SUCCESS;
     return USB_UNSUPPORT;
+  //GetStatus, que devuelve bateria y estado de botones
+    
+  //setCaptureMode, que le entra el modo
   
+  
+  //SetParams, que le entra WIFI, hora, y un parametro de los analizados, cada vez que llega uno se cambiara la pantalla para mostrarlo
+  //Lo que llega es texto (Primera linea seria el nombre y luego una o varias lineas a mostrar
+    
+    
   //  uint8_t * (*CopyRoutine)(uint16_t);
 //  CopyRoutine = NULL;
 
@@ -190,7 +237,7 @@ RESULT USB_Class_NoDataSetup(uint8_t RequestNo) {
     
   } else {
     return USB_UNSUPPORT;
-    pInformation->USBwValues;
+//    pInformation->USBwValues;
   }
   return USB_SUCCESS;
 }
@@ -242,9 +289,6 @@ USER_STANDARD_REQUESTS User_Standard_Requests = {
   USB_Class_SetDeviceAddress
 };
 //----------------------------------------------------------------------------------------------------------------------
-//uint8_t       Request         = 0;
-
-//__IO bool     fSuspendEnabled = false;       /* true when suspend is possible */
 
 
 
@@ -262,13 +306,13 @@ USER_STANDARD_REQUESTS User_Standard_Requests = {
  * Output         : None.
  * Return         : Linecoding structure base address.
  *******************************************************************************/
-uint8_t *CDC_GetLineCoding(uint16_t Length) {
+//uint8_t *CDC_GetLineCoding(uint16_t Length) {
 //  if(Length == 0) {
 //    pInformation->Ctrl_Info.Usb_wLength = sizeof (linecoding);
 //    return NULL;
 //  }
 //  return (uint8_t *)&linecoding;
-}
+//}
 
 /*******************************************************************************
  * Function Name  : CDC_SetLineCoding.
@@ -277,13 +321,13 @@ uint8_t *CDC_GetLineCoding(uint16_t Length) {
  * Output         : None.
  * Return         : Linecoding structure base address.
  *******************************************************************************/
-uint8_t *CDC_SetLineCoding(uint16_t Length) {
+//uint8_t *CDC_SetLineCoding(uint16_t Length) {
 //  if(Length == 0) {
 //    pInformation->Ctrl_Info.Usb_wLength = sizeof (linecoding);
 //    return NULL;
 //  }
 //  return (uint8_t *)&linecoding;
-}
+//}
 
 /*******************************************************************************
  * Description    : Restores system clocks and power while exiting suspend mode
@@ -308,3 +352,31 @@ void USB_Cable_Config(FunctionalState NewState) {
 
 
 
+void USB_Configure() {
+  NVIC_InitTypeDef NVIC_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure;
+  NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;          /* Interruption source */
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;           /* Priority */
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;                  /* Subpriority */
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                     /* Enable */
+  NVIC_Init(&NVIC_InitStructure);                                     /* Configure USB interrupt */
+  NVIC_InitStructure.NVIC_IRQChannel = USB_HP_CAN1_TX_IRQn;           /* Interruption source */
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;           /* Priority */
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;                  /* Subpriority */
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                     /* Enable */
+  NVIC_Init(&NVIC_InitStructure);                                     /* Configure USB interrupt */  
+  GPIO_PinAFConfig(GPIOA, GPIO_PinSource11, GPIO_AF_14);
+  GPIO_PinAFConfig(GPIOA, GPIO_PinSource12, GPIO_AF_14);
+  RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);                    /* Select USBCLK source */
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);                 /* Enable the USB clock */
+	USB_Init();
+}

@@ -25,18 +25,19 @@
             <file>file:/home/edu/Proyectos/zMeter/STM32/inc/USB_CDC.h</file>
             <file>file:/home/edu/Proyectos/zMeter/STM32/USB_CDC.c</file>
         </group>
-        <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/Main.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_cortex.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/USB.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/USB.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/CMSIS/RTOS/Template/cmsis_os.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h</file>
-        </group>
         <group>
             <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/STM32F30x_StdPeriph_Driver/inc/stm32f30x_adc.h</file>
             <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/STM32F30x_StdPeriph_Driver/src/stm32f30x_adc.c</file>
             <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/ADC_Capture.c</file>
+        </group>
+        <group name="ServiceV2">
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/STM32F30x_StdPeriph_Driver/src/stm32f30x_adc.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/CMSIS/Source/system_stm32f30x.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/SysHandlers.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/STM32F30x_StdPeriph_Driver/src/stm32f30x_tim.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/STM32F30x_StdPeriph_Driver/inc/stm32f30x_tim.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/Main.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/ADC_Capture.c</file>
         </group>
     </open-files>
 </project-private>
