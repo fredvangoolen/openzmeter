@@ -26,12 +26,22 @@
             <div class="panel panel-info" id="QualityPanel">
               <div class="panel-heading">
                 <span class="huge-small">EN50160</span>
-              </div>
-              <div class="panel-body no-padding panel-bigheader">
-                <div class="panel-info panel-heading">
-                  <div style="display:inline-block"><i class="fa fa-calendar fa-fw"></i>Annual objectives</div>
-                  <div style="display:inline-block" class="pull-right small" id="labelYear">Loading...</div>
+                <div class="pull-right">
+                  <span class="small">Year:</span><br>
+                  <div class="btn-group" id="YearSelector">
+                  </div>
                 </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="pull-right">
+                  <span class="small">View:</span><br>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowAsHeatmap" data-toggle="tooltip" title="Show energy usage along year as heatmap">Totals</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowAsTable" data-toggle="tooltip" title="Show statistics in table form">Weeks</button>
+                  </div>
+                </div>
+                <span class="clearfix"> </span>
+              </div>
+              <div id="ShowAnual" style="padding: 5px">
                 <div class="row">
                   <div class="col col-lg-3 col-md-6 col-xs-12">
                     <div class="panel panel-lightblue-info text-center" id="EnergyBox" style="position: relative">
@@ -87,6 +97,17 @@
                       <p>No events allowed outside 47 to 52Hz</p>
                     </div>
                   </div>
+                </div>
+
+
+
+              </div>
+              
+              
+              <div class="panel-body no-padding panel-bigheader">
+                <div class="panel-info panel-heading">
+                  <div style="display:inline-block"><i class="fa fa-calendar fa-fw"></i>Annual objectives</div>
+                  <div style="display:inline-block" class="pull-right small" id="labelYear">Loading...</div>
                 </div>
                 <div class="panel-info panel-heading no-padding"></div>
                 <div class="panel-info panel-heading">
