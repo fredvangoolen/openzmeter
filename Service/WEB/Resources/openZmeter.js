@@ -58,7 +58,7 @@ function AddEvents(result, serieName, graph) {
 }
 
 /* Convierte un array de floats a cadena con dos decimales, separados por el caracter dado y usando los colores que se pongan (añadiendo cadena1 si es negativo y cadena2 si positivo)*/
-function Array_Round2(values, separator, colors = undefined, cadena1 = "", cadena2 = "") {
+function Array_Round2(values, separator, colors, cadena1, cadena2) {
   for(i = 0; i < values.length; i++) {
     if((colors !== undefined) && (colors[i] !== undefined)) {
      var Text = '<div style="padding: 0px 5px; border: 1px solid #FFF; border-radius: 5px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]);
@@ -329,14 +329,14 @@ function StartPageLoad() {
 }
 
 /* Devuelve el texto completo a partir del texto abreviado de agregacion */
-function GetAggregText(short) {
-  if(short === '1h') {
+function GetAggregText(shortText) {
+  if(shortText === '1h') {
     return '1 hour';
-  } else if(short === '10m') {
+  } else if(shortText === '10m') {
     return '10 minutes';
-  } else if(short === '1m') {
+  } else if(shortText === '1m') {
     return '1 minute';
-  } else if(short === '3s') {
+  } else if(shortText === '3s') {
     return '3 seconds';
   } else {
     return false;
@@ -405,7 +405,7 @@ function GetEndYearTimestamp() {
 }
 
 /* Calcula rango para las graficas, la entrada es un array y un array de columnas a comprobar */
-function CalcRanges(input, cols, fromzero = false, onlypositive = false, sum = false) {
+function CalcRanges(input, cols, fromzero, onlypositive, sum) {
   var UpperRange = -Infinity;
   var LowerRange =  Infinity;
   for(i = 0; i < input.length; i++) {
