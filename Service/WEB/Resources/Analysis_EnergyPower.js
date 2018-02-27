@@ -600,7 +600,7 @@ var DialogPrevResizeHandler = null;
 $('#aggreg_modal_close').click(function() {
   $('#aggreg_modal').modal('hide');
 });
-$('#maximizeActiveEnergy').click(function() {
+$('#btnMaximizeActiveEnergy').click(function() {
   $('#GraphDialogTitle').text('Active Energy');
   $('#GraphDialog').modal('show');
   PrevDialogContainer = $('#ActiveEnergyCol');
@@ -615,7 +615,7 @@ $('#maximizeActiveEnergy').click(function() {
   $(window).bind('resize', DialogResizeHandler);
   window.dispatchEvent(new Event('resize'));  
 });
-$('#maximizeReactiveEnergy').click(function() {
+$('#btnMaximizeReactiveEnergy').click(function() {
   $('#GraphDialogTitle').text('Reactive Energy');
   $('#GraphDialog').modal('show');
   PrevDialogContainer = $('#ReactiveEnergyCol');
@@ -630,7 +630,7 @@ $('#maximizeReactiveEnergy').click(function() {
   $(window).bind('resize', DialogResizeHandler);
   window.dispatchEvent(new Event('resize'));  
 });
-$('#maximizeActivePower').click(function() {
+$('#btnMaximizeActivePower').click(function() {
   $('#GraphDialogTitle').text('Active Power');
   $('#GraphDialog').modal('show');
   PrevDialogContainer = $('#ActivePowerCol');
@@ -645,7 +645,7 @@ $('#maximizeActivePower').click(function() {
   $(window).bind('resize', DialogResizeHandler);
   window.dispatchEvent(new Event('resize'));  
 });
-$('#maximizeReactivePower').click(function() {
+$('#btnMaximizeReactivePower').click(function() {
   $('#GraphDialogTitle').text('Reactive Power');
   $('#GraphDialog').modal('show');
   PrevDialogContainer = $('#ReactivePowerCol');
@@ -777,3 +777,17 @@ function UpdatePage() {
   }
   AjaxGetEnergyCounters();
 }
+
+/* Exportar datos */
+$('#btnExportActivePower').click(function() {
+  exportToCsv("ActivePower_" + Node + '_' + LastEnergyPowerSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Active Power R', 'Active Power S', 'Active Power T']] : [['DateTime', 'Active Power']]).concat(ActivePowerData));
+});
+$('#btnExportReactivePower').click(function() {
+  exportToCsv("ReactivePower_" + Node + '_' + LastEnergyPowerSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Reactive Power R', 'Reactive Power S', 'Reactive Power T']] : [['DateTime', 'Reactive Power']]).concat(ReactivePowerData));
+});
+$('#btnExportActiveEnergy').click(function() {
+  exportToCsv("ActiveEnergy_" + Node + '_' + LastEnergyPowerSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Active Energy R', 'Active Energy S', 'Active Energy T']] : [['DateTime', 'Active Energy']]).concat(ActiveEnergyData));
+});
+$('#btnExportReactiveEnergy').click(function() {
+  exportToCsv("ReactiveEnergy_" + Node + '_' + LastEnergyPowerSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Reactive Energy R', 'Reactive Energy S', 'Reactive Energy T']] : [['DateTime', 'Reactive Energy']]).concat(ReactiveEnergyData));
+});
