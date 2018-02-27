@@ -7,6 +7,7 @@
 #include "stm32f30x_misc.h"
 #include "usb_lib.h"
 #include "USB_Class.h"
+#include "Main.h"
 //Descriptores USB -----------------------------------------------------------------------------------------------------
 const uint8_t CDC_DeviceDescriptor[DEVICE_DESC_SIZE] = {
   0x12,                                   /* bLength */
@@ -91,41 +92,59 @@ DEVICE Device_Table = {
   1                                       /* Number of configuration available */
 };
 __IO uint32_t bDeviceState = UNCONNECTED; /* USB device status */
+uint8_t USB_Tx_State = 0;
 //Interrupciones -------------------------------------------------------------------------------------------------------
 void EP1_IN_Callback(void) {
-  //Si tengo muestras {
-		/* Endpoint type is Bulk and Double Buffer enabled*/
-		
-		if (GetENDPOINT(ENDP1 & 0x7F) & EP_DTOG_RX) { // NOT TX ie SW_BUF
-//			UserToPMABufferCopy(pBufferPointer, GetEPDblBuf0Addr(ENDP1 & 0x7F), wBufferSize);
-			SetEPDblBuf0Count((ENDP1 & 0x7F), EP_DBUF_IN, 64);
-		} else {
-//			UserToPMABufferCopy(pBufferPointer, GetEPDblBuf1Addr(bEpAddr & 0x7F), wBufferSize);
-			SetEPDblBuf1Count((ENDP1 & 0x7F), EP_DBUF_IN, 64);
-		}
-		FreeUserBuffer((ENDP1 & 0x7F), EP_DBUF_IN); // Toggles EP_DTOG_RX / SW_BUF
- 
-    		SetEPTxValid(ENDP1);
-  //}  
+  if(USB_Tx_State == 1) {
+    if(INBuffUsed < 28) {
+      USB_Tx_State = 0;
+    } else {
+      UserToPMABufferCopy((uint8_t*)&Sequence, ENDP1_BUF0ADDR, 8);
+      SetEPTxCount(ENDP1, 64);
+      SetEPTxValid(ENDP1);
+      INReadPos = (INReadPos + 28) % INBUFFER_LEN;
+      INBuffUsed -= 28;
+      Sequence++;    
+    }
+  }
+//  if(INBuffUsed < 28) {
+//  SetEPTxStatus(ENDP1, EP_TX_NAK);
+//  SetEPRxStatus(ENDP1, EP_RX_NAK);
+//    return; //Si hay menos de 56bytes salgo 
+//  }
+  
+  
+
+  return;
   
   
   
- // if(INSize < 64) return;
-  //UserToPMABufferCopy(&INBuff[INRead], ENDP1_TXADDR, 64);
-//  SetEPTxCount(ENDP1, 64);
-//  SetEPTxValid(ENDP1);
- // INRead = (INRead + 64) % INBUFFER_LEN;
- // INSize -= 64;
+	if(GetENDPOINT(ENDP1) & EP_DTOG_RX) {
+    UserToPMABufferCopy((uint8_t*)&Sequence, GetEPDblBuf0Addr(ENDP1), 8);
+    //UserToPMABufferCopy((uint8_t*)&INBuff[INReadPos], GetEPDblBuf0Addr(ENDP1 & 0x7F) + 8, 56);
+    SetEPDblBuf0Count((ENDP1), EP_DBUF_IN, 64);
+  } else {
+    UserToPMABufferCopy((uint8_t*)&Sequence, GetEPDblBuf1Addr(ENDP1), 8);
+    //UserToPMABufferCopy((uint8_t*)&INBuff[INReadPos], GetEPDblBuf1Addr(ENDP1 & 0x7F) + 8, 56);
+    SetEPDblBuf1Count((ENDP1 & 0x7F), EP_DBUF_IN, 64);
+  }
+  FreeUserBuffer((ENDP1 & 0x7F), EP_DBUF_IN); // Toggles EP_DTOG_RX / SW_BUF
+  SetEPTxValid(ENDP1);
+  INReadPos = (INReadPos + 28) % INBUFFER_LEN;
+  INBuffUsed -= 28;
+  Sequence++;
 }
 /* Start Of Frame */
 void SOF_Callback(void) {
-  EP1_IN_Callback();
+  if(bDeviceState == CONFIGURED) {
+    if(USB_Tx_State != 1) {
+      USB_Tx_State = 1;
+      EP1_IN_Callback();
+    }
+  }
 }
 void (*pEpInt_IN[7])(void) = { EP1_IN_Callback, NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process };
 void (*pEpInt_OUT[7])(void) ={ NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process };
-void USB_HP_CAN1_TX_IRQHandler(void) {
-  CTR_HP();
-}
 
 
 
@@ -176,8 +195,7 @@ void USB_Class_Reset(void) {
   pInformation->Current_Interface     = 0;
   SetBTABLE(BTABLE_ADDRESS);
 
-  /* Initialize Endpoint 0 */
-  SetEPType(ENDP0, EP_CONTROL);
+  SetEPType(ENDP0, EP_CONTROL);       // Initialize Endpoint 0
   SetEPTxStatus(ENDP0, EP_TX_NAK);
   SetEPRxAddr(ENDP0, ENDP0_RXADDR);
   SetEPRxCount(ENDP0, USB_DATA_SIZE);
@@ -185,61 +203,45 @@ void USB_Class_Reset(void) {
   Clear_Status_Out(ENDP0);
   SetEPRxValid(ENDP0);
 
-  /* Initialize Endpoint 1 */
   SetEPType(ENDP1, EP_BULK);
+  SetEPTxAddr(ENDP1, ENDP1_BUF0ADDR);
+  SetEPTxStatus(ENDP1, EP_TX_NAK);
+  SetEPRxStatus(ENDP1, EP_RX_DIS);
+  
+/*
+  SetEPType(ENDP1, EP_BULK);          // Initialize Endpoint 1
   SetEPDoubleBuff(ENDP1);
   SetEPDblBuffAddr(ENDP1, ENDP1_BUF0ADDR, ENDP1_BUF1ADDR);
   SetEPDblBuffCount(ENDP1, EP_DBUF_IN, USB_DATA_SIZE);
-
-  ClearDTOG_TX(ENDP1);  // USB PERIPHERAL
-  ClearDTOG_RX(ENDP1);  // SW_BUF for APPLICATION
-  ToggleDTOG_TX(ENDP1); // NOT TX ie SW_BUF this is actually set which buffer will be first for usb periph and which first for software/firmware
+  ClearDTOG_TX(ENDP1);                // USB PERIPHERAL
+  ClearDTOG_RX(ENDP1);                // SW_BUF for APPLICATION
+  ToggleDTOG_RX(ENDP1);               // NOT TX ie SW_BUF this is actually set which buffer will be first for usb periph and which first for software/firmware
   SetEPTxStatus(ENDP1, EP_TX_DIS);
-  SetEPRxStatus(ENDP1, EP_TX_DIS);
-
+  SetEPRxStatus(ENDP1, EP_RX_DIS);
+*/
   SetDeviceAddress(0);
   bDeviceState = ATTACHED;
 }
 RESULT USB_Class_DataSetup(uint8_t RequestNo) {
   if(Type_Recipient != (CLASS_REQUEST | INTERFACE_RECIPIENT)) return USB_SUCCESS;
-    return USB_UNSUPPORT;
-  //GetStatus, que devuelve bateria y estado de botones
-    
-  //setCaptureMode, que le entra el modo
-  
-  
-  //SetParams, que le entra WIFI, hora, y un parametro de los analizados, cada vez que llega uno se cambiara la pantalla para mostrarlo
-  //Lo que llega es texto (Primera linea seria el nombre y luego una o varias lineas a mostrar
-    
-    
-  //  uint8_t * (*CopyRoutine)(uint16_t);
-//  CopyRoutine = NULL;
-
-//  if (RequestNo == GET_LINE_CODING) {
-//    if(Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT)) CopyRoutine = CDC_GetLineCoding;
-//  } else if(RequestNo == SET_LINE_CODING) {
-//    if(Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT)) CopyRoutine = CDC_SetLineCoding;
-//    Request = SET_LINE_CODING;
-//  } 
-//  if(CopyRoutine == NULL) 
   return USB_UNSUPPORT;
-
-//  pInformation->Ctrl_Info.CopyData = CopyRoutine;
-//  pInformation->Ctrl_Info.Usb_wOffset = 0;
-//  (*CopyRoutine)(0);
-//  return USB_SUCCESS;
 }
 RESULT USB_Class_NoDataSetup(uint8_t RequestNo) {
   if(Type_Recipient != (CLASS_REQUEST | INTERFACE_RECIPIENT)) return USB_SUCCESS;
   if(RequestNo == FIRM_SETUP_CAPTURE) {
-    GPIO_ResetBits(GPIOC, GPIO_Pin_13);
-    SetEPRxStatus(ENDP1, EP_TX_VALID);
-    
-  } else {
-    return USB_UNSUPPORT;
-//    pInformation->USBwValues;
+    ResetBuffers();
+    if((pInformation->USBwValues.bw.bb1 & 0x7F) == 0x00) {
+      ADC_StopCapture();
+      SetEPTxStatus(ENDP1, EP_TX_DIS);
+//      SetEPRxStatus(ENDP1, EP_RX_DIS);
+    } else {
+      ADC_StartCapture(pInformation->USBwValues.bw.bb1 & 0x7F, pInformation->USBwValues.bw.bb0);
+      USB_Tx_State = 0;
+      SetEPTxStatus(ENDP1, EP_TX_NAK);
+    }
+    return USB_SUCCESS;
   }
-  return USB_SUCCESS;
+  return USB_UNSUPPORT;
 }
 RESULT USB_Class_GetInterfaceSetting(uint8_t Interface, uint8_t AlternateSetting) {
   if((AlternateSetting != 0) || (Interface != 1)) return USB_UNSUPPORT;
@@ -360,11 +362,11 @@ void USB_Configure() {
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;                  /* Subpriority */
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                     /* Enable */
   NVIC_Init(&NVIC_InitStructure);                                     /* Configure USB interrupt */
-  NVIC_InitStructure.NVIC_IRQChannel = USB_HP_CAN1_TX_IRQn;           /* Interruption source */
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;           /* Priority */
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;                  /* Subpriority */
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                     /* Enable */
-  NVIC_Init(&NVIC_InitStructure);                                     /* Configure USB interrupt */  
+//  NVIC_InitStructure.NVIC_IRQChannel = USB_HP_CAN1_TX_IRQn;           /* Interruption source */
+//  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;           /* Priority */
+//  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;                  /* Subpriority */
+//  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                     /* Enable */
+//  NVIC_Init(&NVIC_InitStructure);                                     /* Configure USB interrupt */  
   GPIO_PinAFConfig(GPIOA, GPIO_PinSource11, GPIO_AF_14);
   GPIO_PinAFConfig(GPIOA, GPIO_PinSource12, GPIO_AF_14);
   RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);                    /* Select USBCLK source */

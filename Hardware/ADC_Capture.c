@@ -2,13 +2,10 @@
  * File:     ADC_Capture.h
  * Author:   Eduardo Viciana (2017)
  * ---------------------------------------------------------------------------- */
-#include <inttypes.h>
-#include "stm32f30x_rcc.h"
-#include "stm32f30x_adc.h"
-#include "stm32f30x_gpio.h"
-#include "stm32f30x_misc.h"
-uint8_t Oversample = 4;
-
+#include "Main.h"
+static uint8_t Oversample;
+static uint8_t ChannelMask;
+static uint8_t ChannelsCount;
 
 //Tipos y funciones externas ---------------------------------------------------
 typedef struct {
@@ -31,8 +28,8 @@ extern void AppendSample(int16_t value);
 // Buffers de captura para el DMA ----------------------------------------------
 ADCSample_ADC1 ADC1_Buffer[32];     //El maximo oversampling que se permite es 16x
 ADCSample_ADC2 ADC2_Buffer[32];     //El maximo oversampling que se permite es 16x
-ADCSample_ADC2 ADC3_Buffer[32];     //El maximo oversampling que se permite es 16x
-ADCSample_ADC2 ADC4_Buffer[32];     //El maximo oversampling que se permite es 16x
+ADCSample_ADC3 ADC3_Buffer[32];     //El maximo oversampling que se permite es 16x
+ADCSample_ADC4 ADC4_Buffer[32];     //El maximo oversampling que se permite es 16x
 /* Calibra el ADC*/
 void ADC_InitADC(ADC_TypeDef* ADCx, uint8_t channel1, uint8_t channel2, uint16_t *dst, DMA_Channel_TypeDef *dma) {
   //Configuro ADC
@@ -109,45 +106,58 @@ void ADC_Configure() {
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
+}
+void ADC_StartCapture(uint8_t channels, uint8_t mode) {
+  ChannelMask = channels;
+  ChannelsCount = 7;
+  ResetBuffers();
   //Configuro TIMER1 CC3 que es compartido por los 4 ADCs
   TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure; 
-  TIM_TimeBaseStructure.TIM_Prescaler = 72;
+  TIM_TimeBaseStructure.TIM_Prescaler = 0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
   TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
   TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
-  TIM_TimeBaseStructure.TIM_Period = 10000;
+  TIM_TimeBaseStructure.TIM_Period = 89;
   TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
   TIM_OCInitTypeDef TIM_OCInitStructure;
   TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
   TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_Pulse = 10;
+  TIM_OCInitStructure.TIM_Pulse = 1;
   TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;
   TIM_OC3Init(TIM1, &TIM_OCInitStructure);
-  //TIM_OC3PreloadConfig(TIM1, TIM_OCPreload_Enable);
-  TIM_Cmd(TIM1, ENABLE);
   TIM_CtrlPWMOutputs(TIM1, ENABLE);
-  //  TIM_ITConfig(TIM1, TIM_IT_CC3, ENABLE);
-//  TIM_GenerateEvent(TIM1, TIM_EventSource_CC3);
+  TIM_Cmd(TIM1, ENABLE);
 }
+void ADC_StopCapture() {
+  TIM_Cmd(TIM1, DISABLE);
+}
+void AppendBuffer(uint16_t sample) {
+  INBuff[INWritePos] = sample;
+  INBuffUsed++;
+  INWritePos = (INWritePos + 1) % INBUFFER_LEN;
+}
+
 void DMA1_Channel1_IRQHandler(void) {
-//  uint8_t  Start;
+  uint8_t  Start;
 //  uint16_t Accum = 0;
   if(DMA_GetITStatus(DMA1_IT_TC1)) {
-//    Start = 0;
+    Start = 0;
     DMA_ClearITPendingBit(DMA1_IT_TC1);
   } else if(DMA_GetITStatus(DMA1_IT_HT1)) {
-//    Start = 16;
+    Start = 16;
     DMA_ClearITPendingBit(DMA1_IT_HT1);
   }
-  //Leo las 4, 16 o 64 muestras, y copio las necesarias a la posicion del buffer que corresponda
-}
-
-
-
-void ADC_StartCapture(uint8_t mode) {
-  //Configuro los buffers
-  //Configuro DMAs
-  //Configuro interrupciones
-
-
+  __disable_irq();
+  if(INBuffUsed >= (INBUFFER_LEN - ChannelsCount)) {
+    ResetBuffers();
+  } else {
+    if((ChannelMask & 0x01) == 0x01) AppendBuffer(ADC2_Buffer[Start].VoltageR);
+    if((ChannelMask & 0x02) == 0x02) AppendBuffer(ADC3_Buffer[Start].VoltageS);
+    if((ChannelMask & 0x04) == 0x04) AppendBuffer(ADC4_Buffer[Start].VoltageT);
+    if((ChannelMask & 0x08) == 0x08) AppendBuffer(ADC1_Buffer[Start].CurrentR);
+    if((ChannelMask & 0x10) == 0x10) AppendBuffer(ADC2_Buffer[Start].CurrentS);
+    if((ChannelMask & 0x20) == 0x20) AppendBuffer(ADC4_Buffer[Start].CurrentT);
+    if((ChannelMask & 0x40) == 0x40) AppendBuffer(ADC3_Buffer[Start].CurrentN);
+  }
+  __enable_irq();
 }

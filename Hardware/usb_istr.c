@@ -23,17 +23,7 @@ void USB_LP_CAN1_RX0_IRQHandler(void) {
 
   wIstr = _GetISTR();
 
-#if (IMR_MSK & ISTR_SOF)
-  if (wIstr & ISTR_SOF & wInterrupt_Mask) {
-    _SetISTR((uint16_t) CLR_SOF);
-    bIntPackSOF++;
-
-#ifdef SOF_CALLBACK
-    SOF_Callback();
-#endif
-  }
-#endif
-  /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+ /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
 #if (IMR_MSK & ISTR_CTR)
   if (wIstr & ISTR_CTR & wInterrupt_Mask) {
@@ -102,7 +92,17 @@ void USB_LP_CAN1_RX0_IRQHandler(void) {
   }
 #endif
   /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+#if (IMR_MSK & ISTR_SOF)
+  if (wIstr & ISTR_SOF & wInterrupt_Mask) {
+    _SetISTR((uint16_t) CLR_SOF);
+    bIntPackSOF++;
 
+#ifdef SOF_CALLBACK
+    SOF_Callback();
+#endif
+  }
+#endif
+  
 #if (IMR_MSK & ISTR_ESOF)
   if (wIstr & ISTR_ESOF & wInterrupt_Mask) {
     _SetISTR((uint16_t) CLR_ESOF);

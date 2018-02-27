@@ -74,7 +74,7 @@ OBJECTFILES= \
 
 
 # C Compiler Flags
-CFLAGS=-mcpu=cortex-m3 -mthumb -g -g2 -O0
+CFLAGS=-mcpu=cortex-m3 -mthumb -g -g2 -O2
 
 # CC Compiler Flags
 CCFLAGS=

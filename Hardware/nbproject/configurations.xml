@@ -151,7 +151,7 @@
             <pElem>CMSIS/Include</pElem>
             <pElem>.</pElem>
           </incDir>
-          <commandLine>-mcpu=cortex-m3 -mthumb -g -g2 -O0</commandLine>
+          <commandLine>-mcpu=cortex-m3 -mthumb -g -g2 -O2</commandLine>
           <preprocessorList>
             <Elem>STM32F303xC</Elem>
             <Elem>USE_STDPERIPH_DRIVER</Elem>

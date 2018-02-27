@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 var Spinner        = new Spinner(SpinnerOpts);
+var Timestamps     = [];
 var EventsData     = [];
 var StatsFrequency = [];
 var FrequencySamples;
@@ -128,6 +129,10 @@ function SetYearEvents(result) {
   $('#LongEvents').css('width', LongProgress  +'%');
   $('#LongEventsText').text(Long + ' events');
   if(Long > 100) $('#LongEvents').css('background-color', '#d9534f"');  
+}
+function GenerateWeekGraphs() {
+  
+  
 }
 function GenerateAnualGraphs() {
   var Frequency = [];
@@ -347,7 +352,6 @@ function GenerateAnualGraphs() {
   for(i = 0; i < StatsHarmonics.length; i++) {
     HarmonicsSamples = HarmonicsSamples + StatsHarmonics[i][0] + StatsHarmonics[i][1];
     HarmonicsIn = HarmonicsIn + StatsHarmonics[i][1];
-    
   }
   HarmonicsIn = (HarmonicsIn / HarmonicsSamples) * 100.0;
   $('#HarmonicsInRange').css('width', (HarmonicsIn - 90) * 10 +'%');
@@ -382,15 +386,22 @@ function GetVoltageData(selected_year) {
            contentType: 'application/json',
            data: JSON.stringify({ Period: 31536000000, To: To, Aggreg: "1h", LastSample: 0, Series: 'stat_frequency, stat_voltage, stat_thd, stat_harmonics', Node: Node }),
            success: function(result) {
+             Timestamps     = result['Sampletime'];
              StatsFrequency = result['stat_frequency'];
              StatsVoltage   = result['stat_voltage'];
              StatsTHD       = result['stat_thd'];
              StatsHarmonics = result['stat_harmonics'];
              MaxTimestamp = result['Sampletime'][result['Sampletime'].length - 1];
-             var From = new Date(Date.UTC(SelectedYear, 0, 1, 0, 0, 0, 0)).getTime();
+             var From = new Date(Date.UTC(selected_year, 0, 1, 0, 0, 0, 0)).getTime();
              var Elapsed = (MaxTimestamp - From) * 100 / 31536000000;
              $('#ProgressYear').css('width', Elapsed  +'%');
+             
+             //Creo listado de semanas del año
+             
+             
              GenerateAnualGraphs();
+             GenerateWeekGraphs();
+             ButtonClick();
              StopSpinner(Spinner, 'EN50160Spinner');
            }
          });
@@ -404,22 +415,34 @@ function GetDataRanges() {
            contentType: 'application/json',
            data: JSON.stringify({ Aggreg: '1h', Node: Node}),
            success: function(result) {
-             for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) $('#YearSelector').append('<button type="button" class="btn btn-default btn-xs" id="btnSelYear' + year + '" onclick="AjaxGetEnergy(' + year + ')">' + year + '</button>');
+             for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) $('#YearSelector').append('<button type="button" class="btn btn-default btn-xs" id="btnSelYear' + year + '" onclick="AjaxGetEvents(' + year + ')">' + year + '</button>');
              AjaxGetEvents(new Date(result['To']).getFullYear());
            }
   }); 
 }
+function ButtonClick(event) {
+  if(this.id === 'btnShowTotals')   localStorage.setItem('EN50160View', 'Totals');
+  if(this.id === 'btnShowWeeks')    localStorage.setItem('EN50160View', 'Weeks');
+  $('#ShowAnual').addClass('hidden');
+  $('#ShowWeeks').addClass('hidden');
+  $('#btnShowTotals').removeClass('active');
+  $('#btnShowWeeks').removeClass('active');
+  switch(localStorage.getItem('EN50160View')) {
+    case 'Weeks' : 
+      $('#btnShowWeeks').addClass('active');
+      $('#ShowWeeks').removeClass('hidden');
+      break;
+    default :
+      $('#btnShowTotals').addClass('active');
+      $('#ShowAnual').removeClass('hidden');
+      break;
+  } 
+}
+$('#btnShowTotals').click(ButtonClick);
+$('#btnShowWeeks').click(ButtonClick);
+
 function UpdatePage() {
   $('#GridNominalFreq').text(Nodes['NominalFreq']);
   $('#GridNominalVoltage').text(Nodes['NominalVoltage']);
   GetDataRanges(); 
-//  GetYearInfo(0);
-//$('#LoadNext').click(function() {
-//  LoadWeek = 5;
-//  GetWeekInfo(LastYear, LastWeek);
-//});
-//$('#LoadAll').click(function() {
-//  LoadWeek = 60;
-//  GetWeekInfo(LastYear, LastWeek);
-//});
 }
