@@ -249,9 +249,20 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
   bool Error = false;
   if((Request->JSONReader == NULL) || (json_object_get_type(Request->JSONReader) != json_type_object)) goto InvalidParams;
   if(strcmp(url, "/LogIn") == 0) {
-    Request->Session->Logged = true;
-    Request->PostData = (char*)"{\"result\":true}";
-    Request->PostResponseLen = strlen(Request->PostData);
+    char *Password = NULL;
+    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) Password = (char*)json_object_get_string(JSON_Val);
+    }
+    if(Password == NULL) goto InvalidParams;
+    Request->JSONWriter = json_object_new_object();
+    if(strcmp(Password, Tools::Global.HTTPPass) != 0) {
+      json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(false));
+    } else {
+      Request->Session->Logged = true;
+      json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(true));    
+    }
+    Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
     return MHD_YES;
   }
   if(Request->Session->Logged == false) {
@@ -342,7 +353,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     }
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(sampletime ORDER BY sampletime ASC) AS \"Sampletime\" FROM ");
     if(strcmp(Aggreg, "1m") == 0) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1m, aggreg_ext_1m WHERE aggreg_1m.node = aggreg_ext_1m.node_ext AND aggreg_1m.sampletime = aggreg_ext_1m.sampletime_ext) AS Tmp");
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1m LEFT JOIN aggreg_ext_1m ON aggreg_1m.node = aggreg_ext_1m.node_ext AND aggreg_1m.sampletime = aggreg_ext_1m.sampletime_ext) AS Tmp");
     } else {
       QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "aggreg_%s", Aggreg);
     }
@@ -448,12 +459,14 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     }
     if(Error == true) goto InvalidParams;
+    uint64_t TotalRam, FreeRam;
+    if(Tools::GetMemory(&TotalRam, &FreeRam) == false) goto InvalidParams;
     Request->JSONWriter = json_object_new_object();
     json_object_object_add(Request->JSONWriter, "UpTime", json_object_new_int(Info.uptime));
     json_object_object_add(Request->JSONWriter, "Swap_Total", json_object_new_int64(Info.totalswap * Info.mem_unit));
     json_object_object_add(Request->JSONWriter, "Swap_Free", json_object_new_int64(Info.freeswap * Info.mem_unit));
-    json_object_object_add(Request->JSONWriter, "RAM_Total", json_object_new_int64(Info.totalram * Info.mem_unit));
-    json_object_object_add(Request->JSONWriter, "RAM_Free", json_object_new_int64(((uint64_t)Info.bufferram + Info.freeram) * Info.mem_unit));
+    json_object_object_add(Request->JSONWriter, "RAM_Total", json_object_new_int64(TotalRam));
+    json_object_object_add(Request->JSONWriter, "RAM_Free", json_object_new_int64(FreeRam));
     json_object_object_add(Request->JSONWriter, "CPU_Usage", json_object_new_double(Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)));
     json_object_object_add(Request->JSONWriter, "CPU_Count", json_object_new_int(get_nprocs()));
     json_object_object_add(Request->JSONWriter, "Disk_Total", json_object_new_int64((uint64_t)Disk.f_blocks * Disk.f_frsize));

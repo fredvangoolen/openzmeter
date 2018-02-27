@@ -196,7 +196,7 @@ function AjaxCurrent(result) {
   localStorage.setItem('GraphAggregation', GraphAggregation);
 }
 function CurrentResizeEvent() {
-  var Height = $('#PanelAvg').height() + $('#PanelMin').height() + $('#PanelMax').height();
+  var Height = $('#CurrentAvgPanel').height() + $('#CurrentMaxPanel').height() + $('#CurrentMinPanel').height();
   CurrentChart.resize($('#CurrentCol').width(), Height - 4);
 }
 function SetCurrentVisibleSeries() {
@@ -332,7 +332,7 @@ $('#btnMaximizeCurrent').click(function() {
 });
 $('#btnExportCurrent').click(function() {
   var Data = [];
-  var Filename = "Current_" + LastCurrentTime + '.csv';
+  var Filename = "Current_" + LastCurrentSample + '.csv';
   Data.push([['Index', 'Current']]);
   Data = Data.concat(CurrentData);
   exportToCsv(Filename, Data);
@@ -460,19 +460,26 @@ $('#GraphDialogClose').click(function() {
 /* Vista de detalles */
 var DetailSpinner = new Spinner(SpinnerOpts);
 var DetailTimer   = null;
+var DetailTimestamp = 0;
 function AjaxGetDetails() {
   if(WaveformChart === null) ShowSpinner(DetailSpinner, 'DetailSpinner');
+  $('#btnPauseDetail').addClass('disabled');
   $.ajax({ url: "getSeriesNow",
            timeout: 20000,
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i', Node: Node}),
+           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_i, phi', Node: Node}),
            success: function(result) {
              if(WaveformChart === null) StopSpinner(DetailSpinner, 'DetailSpinner');
+             DetailTimestamp = result['Sampletime'];
              UpdateWaveformChart(result);
              UpdateHarmonicsChart(result);
              UpdateFFTChart(result);
+             $('#PowerFactorNow').html(Array_Round2(result['power_factor'], '&nbsp;&nbsp;', ['#428bca', '#42ca81', '#ca428b']));
+             for(i = 0; i < result['thd_i'].length; i++) result['thd_i'][i] = result['thd_i'][i] * 100;
+             $('#THDNow').html(Array_Round2(result['thd_i'], '&nbsp;&nbsp;', ['#428bca', '#42ca81', '#ca428b']));
+             $('#PHINow').html(Array_Round2(result['phi'], '&nbsp;&nbsp;', ['#428bca', '#42ca81', '#ca428b'], " (CAP)", " (IND)"));
            },
            error: function() {
              $('#WaveformTime').text('No stored data');
@@ -491,6 +498,7 @@ function DetailsButtonClick(event) {
   if(this.id === 'btnShowDetailHarmonics') localStorage.setItem('CurrentDetailView', 'Harmonics');
   if(this.id === 'btnShowDetailEvolution') localStorage.setItem('CurrentDetailView', 'Evolution');
   if(this.id === 'btnShowDetailAdvanced') localStorage.setItem('CurrentDetailView', 'Advanced');
+  if(this.id === 'btnShowDetailParameters') localStorage.setItem('CurrentDetailView', 'Parameters');
   if(this.id === 'btnShowDetail1Harmonic') localStorage.setItem('CurrentDetailFirstHarmonic', (localStorage.getItem('CurrentDetailFirstHarmonic') === 'true') ? 'false' : 'true');
   if(this.id === 'btnPauseDetail') {
     DetailPaused = !DetailPaused;
@@ -503,21 +511,21 @@ function DetailsButtonClick(event) {
     }
   }
   if(this.id === 'btnShowDetailRPhase') {
-     if(localStorage.getItem('CurrentDetailView') === 'Evolution') {
+     if((localStorage.getItem('CurrentDetailView') === 'Evolution') || (localStorage.getItem('CurrentDetailView') === 'Parameters')) {
        localStorage.setItem('CurrentDetailEvolutionPhase', 'PhaseR');
      } else {
        localStorage.setItem('CurrentDetailPhaseR', (localStorage.getItem('CurrentDetailPhaseR') === 'true') ? 'false' : 'true');
      }
   }
   if(this.id === 'btnShowDetailSPhase') {
-     if(localStorage.getItem('CurrentDetailView') === 'Evolution') {
+     if((localStorage.getItem('CurrentDetailView') === 'Evolution')  || (localStorage.getItem('CurrentDetailView') === 'Parameters')) {
        localStorage.setItem('CurrentDetailEvolutionPhase', 'PhaseS');
      } else {
        localStorage.setItem('CurrentDetailPhaseS', (localStorage.getItem('CurrentDetailPhaseS') === 'true') ? 'false' : 'true');
      }
   }
   if(this.id === 'btnShowDetailTPhase') {
-     if(localStorage.getItem('CurrentDetailView') === 'Evolution') {
+     if((localStorage.getItem('CurrentDetailView') === 'Evolution')  || (localStorage.getItem('CurrentDetailView') === 'Parameters')) {
        localStorage.setItem('CurrentDetailEvolutionPhase', 'PhaseT');
      } else {
        localStorage.setItem('CurrentDetailPhaseT', (localStorage.getItem('CurrentDetailPhaseT') === 'true') ? 'false' : 'true');
@@ -536,6 +544,7 @@ function DetailsButtonClick(event) {
   $('#btnShowDetailHarmonics').removeClass('active');
   $('#btnShowDetailEvolution').removeClass('active');
   $('#btnShowDetailAdvanced').removeClass('active');
+  $('#btnShowDetailParameters').removeClass('active');
   $('#btnShowDetailEvents').removeClass('active');
   switch(localStorage.getItem('CurrentDetailView')) {
     case 'Harmonics' :
@@ -549,6 +558,9 @@ function DetailsButtonClick(event) {
       break;
     case 'Waveform' :
       $('#btnShowDetailWaveform').addClass('active');
+      break;
+    case 'Parameters' :
+      $('#btnShowDetailParameters').addClass('active');
       break;
     default :
       $('#btnShowDetailWaveform').addClass('active');
@@ -585,6 +597,7 @@ function DetailsButtonClick(event) {
         if(ShowS === true) $('#btnShowDetailSPhase').addClass('active');
         if(ShowT === true) $('#btnShowDetailTPhase').addClass('active');
         break;
+      case 'Parameters' :
       case 'Evolution' :
         switch(localStorage.getItem('CurrentDetailEvolutionPhase')) {
           case 'PhaseR' :
@@ -626,7 +639,26 @@ function DetailsButtonClick(event) {
         $('#btnShowDetailVoltageAndCurrent').removeClass('active');
       }
       break;
-  }  
+  }
+    $('#btnMaximizeDetail').addClass('disabled');
+  switch(localStorage.getItem('CurrentDetailView')) {
+    case 'Waveform' :
+    case 'Harmonics' :
+    case 'Advanced' :
+      $('#btnMaximizeDetail').removeClass('disabled');
+      break;
+    case 'Events' :
+      if(EventLoaded) $('#btnMaximizeDetail').removeClass('disabled');
+      break;
+  }
+  $('#btnExportDetail').addClass('disabled');
+    switch(localStorage.getItem('CurrentDetailView')) {
+    case 'Waveform' :
+    case 'Harmonics' :
+    case 'Advanced' :
+      $('#btnExportDetail').removeClass('disabled');
+      break;
+  }
   $('#Tabs > div').addClass('hidden');
   switch(localStorage.getItem('CurrentDetailView')) {
     case 'Waveform' :
@@ -641,15 +673,17 @@ function DetailsButtonClick(event) {
       break;
     case 'Evolution' :
       $('#EvolutionPanel').removeClass('hidden');
-      $(HarmonicsChart.graphDiv).parent().removeAttr('style');
       break;
     case 'Advanced' :
       $('#FFTPanel').removeClass('hidden');
       if(FFTChart !== null) $(FFTChart.graphDiv).parent().removeAttr('style');
       if(FFTChart !== null) UpdateFFTChart(null);
       break;
-    case 'Events' :
-      $('#EventsPanel').removeClass('hidden');
+    case 'Parameters' :
+      $('#ParametersPanel').removeClass('hidden');
+      if(PowerFactorChart !== null) UpdatePowerFactorChart(null);
+      if(THDChart !== null) UpdateTHDChart(null);
+      if(PHIChart !== null) UpdatePHIChart(null);
       break;
   }
   window.dispatchEvent(new Event('resize'));
@@ -657,6 +691,7 @@ function DetailsButtonClick(event) {
 $('#btnShowDetailWaveform').click(DetailsButtonClick);
 $('#btnShowDetailHarmonics').click(DetailsButtonClick);
 $('#btnShowDetailEvolution').click(DetailsButtonClick);
+$('#btnShowDetailParameters').click(DetailsButtonClick);
 $('#btnShowDetailAdvanced').click(DetailsButtonClick);
 $('#btnShowDetailRPhase').click(DetailsButtonClick);
 $('#btnShowDetailSPhase').click(DetailsButtonClick);
@@ -857,8 +892,10 @@ function UpdateHarmonicsChart(result) {
             },
             ticker: function(min, max, pixels, opts, dygraph, vals) {
               var ticks = [];
-              for(var i = Math.floor(min - HarmonicsVOffset); i < Math.ceil(max - HarmonicsVOffset); i++) {
-                if((i % 10) == 0) ticks.push({ v: i + HarmonicsVOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
+              if(ShowVoltage == true) {
+                for(var i = Math.floor(min - HarmonicsVOffset); i < Math.ceil(max - HarmonicsVOffset); i++) {
+                  if((i % 10) == 0) ticks.push({ v: i + HarmonicsVOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
+                }
               }
               return ticks;
             }
@@ -903,22 +940,22 @@ function UpdateFFTChart(result) {
   var ShowR = (localStorage.getItem("VoltageDetailPhaseR") === 'true');
   var ShowS = (localStorage.getItem("VoltageDetailPhaseS") === 'true');
   var ShowT = (localStorage.getItem("VoltageDetailPhaseT") === 'true');
-  var ShowCurrent = (localStorage.getItem("CurrentDetailShowVoltage") === 'true');
+  var ShowVoltage = (localStorage.getItem("CurrentDetailShowVoltage") === 'true');
   var VoltageSeries = [];
   var CurrentSeries = [];
   var Visibility    = [];
   if(Nodes['Devices'][Node]['Type'] === '3Phase') {
-    if(ShowR) VoltageSeries.push(0);
-    if(ShowS) VoltageSeries.push(1);
-    if(ShowT) VoltageSeries.push(2);
-    if(ShowR && ShowCurrent) CurrentSeries.push(3);
-    if(ShowS && ShowCurrent) CurrentSeries.push(4);
-    if(ShowT && ShowCurrent) CurrentSeries.push(5);
-    Visibility = [ShowR, ShowS, ShowT, ShowR && ShowCurrent, ShowS && ShowCurrent, ShowT && ShowCurrent];
+    if(ShowR && ShowVoltage) VoltageSeries.push(0);
+    if(ShowS && ShowVoltage) VoltageSeries.push(1);
+    if(ShowT && ShowVoltage) VoltageSeries.push(2);
+    if(ShowR) CurrentSeries.push(3);
+    if(ShowS) CurrentSeries.push(4);
+    if(ShowT) CurrentSeries.push(5);
+    Visibility = [ShowR && ShowVoltage, ShowS && ShowVoltage, ShowT && ShowVoltage, ShowR, ShowS, ShowT];
   } else {
     VoltageSeries.push(0);
     CurrentSeries.push(1);
-    Visibility = [true, ShowCurrent];
+    Visibility = [ShowVoltage, true];
   }
   var ToShow = [];
   for(i = 0; i < FFTDataset.length; i++) {
@@ -948,35 +985,37 @@ function UpdateFFTChart(result) {
     showRangeSelector: true,
     rangeSelectorHeight: 20,
     rangeSelectorPlotFillColor: "#FFFFFF",
-    rangeSelectorPlotStrokeColor: "#d9534f",
-    interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
-    series: (Nodes['Devices'][Node]['Type'] === '3Phase') ? { 'Voltage (R)': { showInRangeSelector: true }, 'Current (R)': { axis: 'y2' }, 'Current (S)': { axis: 'y2' }, 'Current (T)': { axis: 'y2'  } } : { 'Current': { axis: 'y2' } },
+    rangeSelectorPlotStrokeColor: "#428bca",
+    interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup : mouseUpOZM, dblclick : dblClickOZM_Restore },
+    series: (Nodes['Devices'][Node]['Type'] === '3Phase') ? { 'Current (R)': { showInRangeSelector: true }, 'Voltage (R)': { axis: 'y2' }, 'Voltage (S)': { axis: 'y2' }, 'Voltage (T)': { axis: 'y2'  } } : { 'Current': { showInRangeSelector: true }, 'Voltage': { axis: 'y2' } },
     plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
     axes: { 
       y: { pixelsPerLabel: 15,
            axisLabelWidth: 20,
-           valueRange: [VoltageRange[0] + FFTVOffset, VoltageRange[1] + FFTVOffset], 
+           valueRange: [CurrentRange[0] + FFTCOffset, CurrentRange[1] + FFTCOffset], 
            ticker: function(min, max, pixels, opts, dygraph, vals) {
              var ticks = [];
-             for(var i = Math.floor(min - FFTVOffset); i < Math.ceil(max - FFTVOffset); i++) {
-               if((i % 10) == 0) ticks.push({ v: i + FFTVOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
+             for(var i = Math.floor(min - FFTCOffset); i < Math.ceil(max - FFTCOffset); i++) {
+               if((i % 10) == 0) ticks.push({ v: i + FFTCOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
              }
              return ticks;
            },
            valueFormatter: function (x, a, b, c, row, col) {
-             return Round2(x - FFTVOffset) + '&nbsp;<em class="small">dB</em>&nbsp;(' + (Round2(FFTDataset[row][col - 1])) + '<em class="small">&nbsp;V</em>)';
+             return Round2(x - FFTCOffset) + '&nbsp;<em class="small">dB</em>&nbsp;(' + (Round2(FFTDataset[row][col - 1])) + '<em class="small">&nbsp;A</em>)';
            }
          },
       y2: { pixelsPerLabel: 15,
-            axisLabelWidth: ShowCurrent ? 15 : 0,
-            valueRange: [CurrentRange[0] + FFTCOffset, CurrentRange[1] + FFTCOffset],
+            axisLabelWidth: ShowVoltage ? 15 : 0,
+            valueRange: [VoltageRange[0] + FFTVOffset, VoltageRange[1] + FFTVOffset],
             valueFormatter: function (x, a, b, c, row, col) {
-              return Round2(x - FFTCOffset) + '&nbsp;<em class="small">dB</em>&nbsp;(' + (Round2(FFTDataset[row][col - 1])) + '<em class="small">&nbsp;A</em>)';
+              return Round2(x - FFTVOffset) + '&nbsp;<em class="small">dB</em>&nbsp;(' + (Round2(FFTDataset[row][col - 1])) + '<em class="small">&nbsp;V</em>)';
             },
             ticker: function(min, max, pixels, opts, dygraph, vals) {
               var ticks = [];
-              for(var i = Math.floor(min - FFTCOffset); i < Math.ceil(max - FFTCOffset); i++) {
-                if((i % 10) == 0) ticks.push({ v: i + HarmonicsCOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
+              if(ShowVoltage == true) {
+                for(var i = Math.floor(min - FFTCOffset); i < Math.ceil(max - FFTCOffset); i++) {
+                  if((i % 10) == 0) ticks.push({ v: i + FFTVOffset, label: '<div style="font-size: 10px; margin-top: -2px; text-align: right">' + i + '</div>' });
+                }
               }
               return ticks;
             }
@@ -1007,67 +1046,273 @@ function UpdateFFTChart(result) {
   }
 }
 
-/* Cuadros de parametros */
-function AjaxGetParameters() {
-  $.ajax({ url: "getSeriesNow",
-    timeout: 20000,
-    type: "POST",
-    dataType: "json",
-    contentType: 'application/json',
-    data: JSON.stringify({ Series: "power_factor, thd_v, phi", Node: Node }),
-    success: function(result) {
-      $('#PowerFactorNow').html(Array_Round2(result['power_factor'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
-      $('#THDNow').html(Array_Round2(result['thd_v'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
-      $('#PHINow').html(Array_Round2(result['phi'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"], " (IND)", " (CAP)"));
-    },
-    error: function() {
-      $('#PowerFactorNow').text('Offline');
-    },
-    complete: function (x) {
-      setTimeout(AjaxGetParameters, 1000);
-    }
+/* Evolucion de parametros*/
+var HarmonicsCharts     = [];
+var LastEvolutionSample = 0;
+var HarmonicsDatasets   = [];
+var PowerFactorChart    = null;
+var PowerFactorDataset  = [];
+var THDChart            = null;
+var THDDataset          = [];
+var PHIChart            = null;
+var PHIDataset          = [];
+function AjaxGetEvolution() {
+  $.ajax({ url: "getSeries",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: '1m', LastSample: LastEvolutionSample, Series: 'power_factor, thd_i, phi, harmonics_i', Node: Node}),
+           success: AjaxEvolutions,
+           complete: function() { 
+             setTimeout(AjaxGetEvolution, 60000);
+           }
   });
 }
-function UpdateEvolutionChart(result) {
-  for(i = 0; i < 50; i++) {
-    if(EvolutionDatasets.length == i) EvolutionDatasets.push([]);
-    for(j = 0; j < result.evolution_i.length; j++) {
-      var Value = 20 * Math.log10(result['evolution_i'][j][i]);
-      EvolutionDatasets[i].push([new Date(result.evolution_time[j] * 1000 + 1000), Value]);
-      if(EvolutionDatasets[i].length > 720) EvolutionDatasets[i].shift();
+function AjaxEvolutions(result) {  
+  UpdateHarmonicsCharts(result);
+  UpdatePowerFactorChart(result);
+  UpdateTHDChart(result);
+  UpdatePHIChart(result);
+  LastEvolutionSample = result['Sampletime'][result['Sampletime'].length - 1];
+  Dygraph.synchronize([PowerFactorChart, THDChart, PHIChart], { range: false, zoom: false });
+}
+
+/* Graficos de evolucion de parametros */
+function UpdatePowerFactorChart(result) {
+  if(result !== null) {
+    for(i = 0; i < result['power_factor'].length; i++) PowerFactorDataset.push([new Date(result['Sampletime'][i])].concat(result['power_factor'][i]));
+    while(PowerFactorDataset.length > result['MaxSamples']) PowerFactorDataset.shift();
+  }
+  var Visibility = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
+  if(PowerFactorChart === null) {
+    PowerFactorChart = new Dygraph(document.getElementById("PowerFactorChart"),
+      PowerFactorDataset,
+      { strokeWidth: 0.5,
+        labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'Power Factor (R)', 'Power Factor (S)', 'Power Factor (T)'] : ['Time', 'Power Factor'],
+        colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
+        visibility: Visibility,
+        gridLineColor: "#999",
+        gridLinePattern: [4, 4],
+        highlightCircleSize: 0,
+        interactionModel: { },
+        labelsDiv: 'PowerFactorChartLegend',
+        legend: 'always',
+        legendFormatter: function(data) {
+          if(data.x == null) {
+            for(i = 0; i < data.series.length; i++) 
+              if(data.series[i].isVisible) return '<span style="font-size: 18px; font-weight: bold">' + data.series[i].label + '</span>';
+          } else {
+            for(i = 0; i < data.series.length; i++) 
+              if(data.series[i].isVisible) return '<span style="font-size: 15px; font-weight: bold">' + data.series[i].label + '</span><br/>' + data.xHTML + data.series[i].yHTML;
+          }
+        },
+        xAxisHeight: 0.1,
+        xLabelHeight: 1,
+        plotter: barChartPlotterCubism,
+        dateWindow: [result['From'], result['To']],
+        plugins: [
+          new Dygraph.Plugins.Crosshair({
+            direction: "vertical"
+          })
+        ],
+        axes: {
+          y: { drawAxis: false,
+               drawGrid:false,
+               valueFormatter: function (x) {
+                 return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '</div>';
+               }
+             },
+          x: { valueFormatter: function (x) {
+                 var date = new Date(x);
+                 return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
+               },
+               axisLabelFormatter: function(x, i) {
+                 if((x.getHours() == 0) && (x.getMinutes() == 0) && (x.getSeconds() == 0)) {
+                   return '<div style="font-size: 10px; margin-top: -73px; line-height: 10px; font-weight: bold">' + x.toLocaleDateString() + '</div>';
+                 } else {
+                   return '<div style="font-size: 10px; margin-top: -73px; line-height: 10px">' + x.toLocaleTimeString() + '</div>';                       
+                 }
+               }
+          }
+        }
+      }
+    );
+  } else {
+    if(result !== null) PowerFactorChart.updateOptions({ dateWindow: [result['From'], result['To']] }, true);
+    PowerFactorChart.updateOptions({ file: PowerFactorDataset, visibility: Visibility });
+  }
+}
+function UpdateTHDChart(result) {
+  if(result !== null) {
+    for(i = 0; i < result['thd_i'].length; i++) {
+      THDDataset.push([new Date(result['Sampletime'][i])].concat(result['thd_i'][i]));
+    }
+    while(THDDataset.length > result['MaxSamples']) THDDataset.shift();
+  }
+  var Visibility = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
+  if(THDChart === null) {
+    THDChart = new Dygraph(document.getElementById("THDChart"),
+      THDDataset,
+      { strokeWidth: 0.5,
+        labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'THD (R)', 'THD (S)', 'THD (T)'] : ['Time', 'THD'],
+        colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
+        visibility: Visibility,
+        gridLineColor: "#999",
+        gridLinePattern: [4, 4],
+        highlightCircleSize: 0,
+        interactionModel: { },
+        labelsDiv: 'THDChartLegend',
+        legend: 'always',
+        legendFormatter: function(data) {
+          if(data.x == null) {
+            for(i = 0; i < data.series.length; i++) 
+              if(data.series[i].isVisible) return '<span style="font-size: 18px; font-weight: bold">' + data.series[i].label + '</span>';
+          } else {
+            for(i = 0; i < data.series.length; i++) 
+              if(data.series[i].isVisible) return '<span style="font-size: 15px; font-weight: bold">' + data.series[i].label + '</span><br/>' + data.xHTML + data.series[i].yHTML;
+          }
+        },
+        xAxisHeight: 0.1,
+        xLabelHeight: 1,
+        plotter: barChartPlotterCubism,
+        dateWindow: [result['From'], result['To']],
+        plugins: [
+          new Dygraph.Plugins.Crosshair({
+            direction: "vertical"
+          })
+        ],
+        axes: {
+          y: { drawAxis: false,
+               drawGrid:false,
+               valueFormatter: function (x) {
+                 return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x * 100) + '<em>%</em></div>';
+               }
+             },
+          x: { valueFormatter: function (x) {
+                 var date = new Date(x);
+                 return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
+               },
+               axisLabelFormatter: function(x, i) {
+                 if((x.getHours() == 0) && (x.getMinutes() == 0) && (x.getSeconds() == 0)) {
+                   return '<div style="font-size: 10px; margin-top: -73px; line-height: 10px; font-weight: bold">' + x.toLocaleDateString() + '</div>';
+                 } else {
+                   return '<div style="font-size: 10px; margin-top: -73px; line-height: 10px">' + x.toLocaleTimeString() + '</div>';                       
+                 }
+               }
+          }
+        }
+      }
+    ); 
+  } else {
+    if(result !== null) THDChart.updateOptions({ dateWindow: [result['From'], result['To']] }, true);
+    THDChart.updateOptions({ file: THDDataset, visibility: Visibility });
+  }
+}
+function UpdatePHIChart(result) {
+  if(result !== null) {
+    for(i = 0; i < result['phi'].length; i++) PHIDataset.push([new Date(result['Sampletime'][i])].concat(result['phi'][i]));
+    while(PHIDataset.length > result['MaxSamples']) PHIDataset.shift();
+  }
+  var Visibility = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
+  if(PHIChart === null) {
+    PHIChart = new Dygraph(document.getElementById("PHIChart"),
+      PHIDataset,
+      { strokeWidth: 0.5,
+        labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'PHI (R)', 'PHI (S)', 'PHI (T)'] : ['Time', 'PHI'],
+        colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
+        visibility: Visibility,
+        gridLineColor: "#999",
+        gridLinePattern: [4, 4],
+        highlightCircleSize: 0,
+        interactionModel: { },
+        labelsDiv: 'PHIChartLegend',
+        legend: 'always',
+        legendFormatter: function(data) {
+          if(data.x == null) {
+            for(i = 0; i < data.series.length; i++) 
+              if(data.series[i].isVisible) return '<span style="font-size: 18px; font-weight: bold">' + data.series[i].label + '</span>';
+          } else {
+            for(i = 0; i < data.series.length; i++) 
+              if(data.series[i].isVisible) return '<span style="font-size: 15px; font-weight: bold">' + data.series[i].label + '</span><br/>' + data.xHTML + data.series[i].yHTML;
+          }
+        },
+        xAxisHeight: 0.1,
+        xLabelHeight: 1,
+        plotter: barChartPlotterCubism,
+        dateWindow: [result['From'], result['To']],
+        plugins: [
+          new Dygraph.Plugins.Crosshair({
+            direction: "vertical"
+          })
+        ],
+        axes: {
+          y: { drawAxis: false,
+               drawGrid:false,
+               valueFormatter: function (x) {
+                 return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(Math.abs(x)) + '<em>º' + ((x > 0) ? '(IND)' : (x < 0) ? '(CAP)' : '') + '</em></div>';
+               }
+             },
+          x: { valueFormatter: function (x) {
+                 var date = new Date(x);
+                 return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
+               },
+               axisLabelFormatter: function(x, i) {
+                 if((x.getHours() == 0) && (x.getMinutes() == 0) && (x.getSeconds() == 0)) {
+                   return '<div style="font-size: 10px; margin-top: -73px; line-height: 10px; font-weight: bold">' + x.toLocaleDateString() + '</div>';
+                 } else {
+                   return '<div style="font-size: 10px; margin-top: -73px; line-height: 10px">' + x.toLocaleTimeString() + '</div>';                       
+                 }
+               }
+          }
+        }
+      }
+    );
+  } else {
+    if(result !== null) PHIChart.updateOptions({ dateWindow: [result['From'], result['To']] }, true);
+    PHIChart.updateOptions({ file: PHIDataset, visibility: Visibility });
+  }
+}
+/* Graficos de evolucion de harmonicos */
+function UpdateHarmonicsCharts(result) {
+  if(result !== null) {
+    while(HarmonicsDatasets.length !== 50) HarmonicsDatasets.push([]);
+    for(k = 0; k < 50; k++) {
+      for(i = 0; i < result['harmonics_i'].length; i++) {
+        var Row = [new Date(result['Sampletime'][i])];
+        for(j = 0; j < result['harmonics_i'][i].length; j++) Row.push(20 * Math.log10(result['harmonics_i'][i][j][k]));
+        HarmonicsDatasets[k].push(Row);
+      }
+      while(HarmonicsDatasets[k].length > result['MaxSamples']) HarmonicsDatasets[k].shift();
     }
   }
-  LastEvolutionSample = result['evolution_time'][result.evolution_time.length - 1];
-  if(EvolutionCharts.length == 0) {
+  var Visibility = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
+  if(HarmonicsCharts.length == 0) {
     for(i = 0; i < 50; i++) {
-      var Str = '<div style="position: relative">' +
-                '  <div id="HarmonicsEvolutionChart' + i + '" class="chart" style="height: 50px' + ((i == 0) ? '; margin-top: 16px; border-top: 1px solid #999"' : '"') + '></div>' +       
-                '  <div style="pointer-events: none; position: absolute; top: -2px; width: 70px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend' + i + '"></div>' +
-                '</div>';
-      $("#EvolutionPanel").append(Str);
-      EvolutionCharts[i] = new Dygraph(document.getElementById("HarmonicsEvolutionChart" + i),
-        EvolutionDatasets[i],
+      HarmonicsCharts[i] = new Dygraph(document.getElementById("HarmonicsEvolutionChart_" + i),
+        HarmonicsDatasets[i],
         { strokeWidth: 0.5,
-          labels: ["Time", HarmonicsNames[i]],
-          colors: ["#d9534f"],
+          labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', HarmonicsNames[i] + ' (R)', HarmonicsNames[i] + ' (S)', HarmonicsNames[i] + ' (T)'] : ['Time', HarmonicsNames[i]],
+          colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
+          visibility: Visibility,
           gridLineColor: "#999",
           gridLinePattern: [4, 4],
           highlightCircleSize: 0,
           interactionModel: { },
-          labelsDiv: 'HarmonicsEvolutionChartLegend' + i,
+          labelsDiv: 'HarmonicsEvolutionChartLegend_' + i,
           legend: 'always',
           legendFormatter: function(data) {
+            var Index = (Visibility[0] === true) ? 0 : (Visibility[1] === true) ? 1 : 2;
             if(data.x == null) {
-              return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
+              return '<span style="font-size: 18px; font-weight: bold">' + data.series[Index].label + '</span>';
             } else {
-              return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' +
-                      data.xHTML + data.series[0].yHTML;
+              return '<span style="font-size: 15px; font-weight: bold">' + data.series[Index].label + '</span><br/>' + data.xHTML + data.series[Index].yHTML;
             }
           },
           xAxisHeight: 0.1,
           xLabelHeight: 1,
           plotter: barChartPlotterCubism,
-          dateWindow: [(LastEvolutionSample * 1000) - 43200000, LastEvolutionSample * 1000],
+          dateWindow: [result['From'], result['To']],
           plugins: [
             new Dygraph.Plugins.Crosshair({
               direction: "vertical"
@@ -1084,166 +1329,60 @@ function UpdateEvolutionChart(result) {
                    var date = new Date(x);
                    return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
                  },
-                 axisLabelFormatter: function(x, i) {
-                   if(this.attributes_.labels_[0] == HarmonicsNames[0]) {
-                     var date = new Date(x);
-                     if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
-                       return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + date.toLocaleDateString() + '</div>';
-                     } else {
-                       return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';                       
-                     }
+                 axisLabelFormatter: (i === 0) ? function(x, i) {
+                   var date = new Date(x);
+                   if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
+                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + date.toLocaleDateString() + '</div>';
                    } else {
-                     return null;
+                     return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';                       
                    }
-                 }
+                 } : function() { return ''; }
             }
           }
         }
       );
     }
-    Dygraph.synchronize(EvolutionCharts);
+    Dygraph.synchronize(HarmonicsCharts, { range: false, zoom: false });
   } else {
     for(i = 0; i < 50; i++) {
-      EvolutionCharts[i].updateOptions({ file: EvolutionDatasets[i], dateWindow: [(LastEvolutionSample * 1000) - 43200000, LastEvolutionSample * 1000] });
+      if(result !== null) HarmonicsCharts[i].updateOptions({ dateWindow: [result['From'], result['To']] }, true);
+      HarmonicsCharts[i].updateOptions({ file: HarmonicsDatasets[i], visibility: Visibility });
     }
   }
 }
-function GetValues5S() {
-  if(HarmonicsChart == null) {
-    $('#DetailPanel').find("*").prop("disabled", true);
-    $('#DetailPanel').css('opacity', '0.6');
-    $('#DetailPanel').append('<div id="SpinnerDivDetail" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    DetailSpinner.spin(document.getElementById('SpinnerDivDetail'));
-  }
-  $.ajax({ url: "analysis/ajaxUpdateValues5sCurrent",
-           timeout: 60000,
-           type: "POST",
-           dataType: "json",
-           data: { paused: Paused },
-           success: AjaxSuccess5S,
-           complete: function (x) {
-                       setTimeout(GetValues5S, 5000);
-                       DetailSpinner.stop();
-                       $('#SpinnerDivDetail').remove();
-                       $('#DetailPanel').css('opacity', '1.0');
-                       $('#DetailPanel').find("*").prop("disabled", false);
-                     }
-        });
-}
-function AjaxSuccess60S(result) {
-  if(result['evolution_time']) {
-    UpdateEvolutionChart(result);
-    $('#HarmonicEvolutionBtn').removeClass("disabled");
-    $('#HarmonicEvolutionLoad').addClass("hidden");
-  }
-  $('#current_hour').text(Round2(result['hour_rms']));
-  $('#current_last_day').text(Round2(result['day_rms']));
-  $('#current_hour_min').text(Round2(result['hour_min']));
-  $('#current_hour_max').text(Round2(result['hour_max']));
-  $('#current_min_day').text(Round2(result['day_min']));
-  $('#current_max_day').text(Round2(result['day_max']));
-  UpdateHeader(result);
-}
 
-function TabChange() {
-  $('#Tabs > div').addClass('hidden');
-  if($(this).val() == 'harmonics') {
-    $('#HarmonicsPanel').removeClass('hidden');
-    $(HarmonicsChart.graphDiv).parent().removeAttr('style');
-    if(Paused) $('#btnPause').addClass('active');
-    $('#btnPause').removeClass('disabled');
-    if(HideFundamentals) $('#btnFundamental').addClass('active');
-    $('#btnFundamental').removeClass('disabled');
-    $('#btnVoltage').removeClass('active');
-    $('#btnVoltage').addClass('disabled');
-    $('#btnExport').removeClass('disabled');
-  } else if($(this).val() == 'evolution') {
-    $('#EvolutionPanel').removeClass('hidden');
-    $('#EvolutionPanel').removeAttr('style');
-    $('#btnPause').removeClass('active');
-    $('#btnPause').addClass('disabled');
-    $('#btnFundamental').removeClass('active');
-    $('#btnFundamental').addClass('disabled');
-    $('#btnVoltage').removeClass('active');
-    $('#btnVoltage').addClass('disabled');
-    $('#btnExport').removeClass('disabled');
-  } else if($(this).val() == 'fft') {
-    $('#FFTPanel').removeClass('hidden');
-    $(FFTChart.graphDiv).parent().removeAttr('style');
-    if(Paused) $('#btnPause').addClass('active');
-    $('#btnPause').removeClass('disabled');
-    $('#btnFundamental').removeClass('active');
-    $('#btnFundamental').addClass('disabled');
-    $('#btnVoltage').removeClass('active');
-    $('#btnVoltage').addClass('disabled');
-    $('#btnExport').removeClass('disabled');
-  } else if($(this).val() == 'waveform') {
-    $('#WaveformPanel').removeClass('hidden');
-    if(WaveformChart != null) $(WaveformChart.graphDiv).parent().removeAttr('style');
-    if(Paused) $('#btnPause').addClass('active');
-    $('#btnPause').removeClass('disabled');
-    $('#btnFundamental').removeClass('active');
-    $('#btnFundamental').addClass('disabled');
-    if(ShowVoltage) $('#btnVoltage').addClass('active');
-    $('#btnVoltage').removeClass('disabled');
-    $('#btnExport').removeClass('disabled');
-  }
-  window.dispatchEvent(new Event('resize'));
-}
-function CurrentTickAggregationButtons(aggregation) {
-  $('#current_3s').removeClass('active');
-  $('#current_1m').removeClass('active');
-  $('#current_10m').removeClass('active');
-  $('#current_1h').removeClass('active');
-  if(aggregation == '3 seconds') {
-    $('#current_3s').addClass('active');
-    CurrentAggregation = '3s';
-  } else if(aggregation == '1 minute') {
-    $('#current_1m').addClass('active');
-    CurrentAggregation = '1m'; 
-  } else if(aggregation == '10 minutes') {
-    $('#current_10m').addClass('active');
-    CurrentAggregation = '10m';
-  } else if(aggregation == '1 hour') {
-    $('#current_1h').addClass('active');
-    CurrentAggregation = '1h';
-  }
-}
-$('#btnPause').change(function () {
-  Paused = !Paused;
-  if(Paused) {
-    $('#btnPause span.live-pause').hide();
-    $('#btnPause span.live-resume').show();
-  } else {
-    $('#btnPause span.live-pause').show();
-    $('#btnPause span.live-resume').hide();
-  }
-});
-$('#btnFundamental').click(function () {
-  HideFundamentals = !HideFundamentals;
-  UpdateHarmonicsChart([]);
-});
-$('#btnVoltage').click(function () {
-  ShowVoltage = !ShowVoltage;
-  UpdateWaveformChart([]);
-});
-$('#btnExport').click(function () {
+/* Exportar y ampliar graficas de detalles */
+$('#btnExportDetail').click(function () {
   var Data = [];
   var Filename;
-  if($('#WaveformPanel').hasClass('hidden') == false) {
-    Filename = 'current_waveform_' + LastTimestamp + '.csv'
-    Data.push([['Index', 'Current', 'Voltage']]);
-    Data = Data.concat(WaveformDataset);
-  } else if($('#FFTPanel').hasClass('hidden') == false) {
-    Filename = 'current_fft_' + LastTimestamp + '.csv';
-    Data = [['Index', 'dB', 'I_rms', 'Note: This is the result of our FFT algorithm. The index colum should be multiplied by 5 in order to get the frequencies.']];
-    for(i = 0; i < FFTDataset.length; i++) Data.push([i, FFTDataset[i][0]- FFTOffset, FFTDataset[i][1]]);
+  if($('#WaveformPanel').hasClass('hidden') === false) {
+    exportToCsv("Current_Waveform_" + Node + '_' + DetailTimestamp + '.csv', ((Nodes['Devices'][Node]['Type'] === '3Phase') ? [['DateTime', 'Voltage R', 'Voltage S', 'Voltage T', 'Current R', 'Current S', 'Current T']] : [['DateTime', 'Voltage', 'Current']]).concat(WaveformDataset));
+  } else if($('#FFTPanel').hasClass('hidden') === false) {
+    Data = [['Index'].concat(((Nodes['Devices'][Node]['Type'] === '3Phase') ? ['dB (R)', 'V_rms (R)', 'dB (S)', 'V_rms (S)', 'dB (T)', 'V_rms (T)', 'dB (R)', 'I_rms (R)', 'dB (S)', 'I_rms (S)', 'dB (T)', 'I_rms (T)'] : ['dB', 'V_rms', 'dB', 'I_rms'])).concat('Note: This is the result of our FFT algorithm. The index colum should be multiplied by 5 in order to get the frequencies.')];
+    for(i = 0; i < FFTDataset.length; i++) {
+      if(Nodes['Devices'][Node]['Type'] === '3Phase') {    
+        Data.push([i, 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][0])), FFTDataset[i][0], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][1])), FFTDataset[i][1],
+                      20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][2])), FFTDataset[i][2], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][3])), FFTDataset[i][3],
+                      20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][4])), FFTDataset[i][4], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][5])), FFTDataset[i][5]]);
+      } else {
+        Data.push([i, 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][0])), FFTDataset[i][0], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][1])), FFTDataset[i][1]]);
+      }
+    }
+    exportToCsv("Current_FFT_" + Node + '_' + DetailTimestamp + '.csv', Data);
   } else if($('#HarmonicsPanel').hasClass('hidden') == false) {
-    Filename = 'current_harmonics_' + LastTimestamp + '.csv';
-    Data = [['Order', 'dB', 'I_rms', ' Freq = ' + $('#frequency_indicator').text(), 'Note: This frequency is the result of our zero crossing algorithm for the last 10 seconds, as stated by IEC 61000-4-30.']];
-    for(i = 0; i < HarmonicsDataset.length; i++) Data.push([(i + 1), HarmonicsDataset[i][0] - HarmonicsOffset, HarmonicsDataset[i][1]])  
+    Data = [['Harmonic'].concat(((Nodes['Devices'][Node]['Type'] === '3Phase') ? ['dB (R)', 'V_rms (R)', 'dB (S)', 'V_rms (S)', 'dB (T)', 'V_rms (T)', 'dB (R)', 'I_rms (R)', 'dB (S)', 'I_rms (S)', 'dB (T)', 'I_rms (T)'] : ['dB', 'V_rms', 'dB', 'I_rms'])).concat('Note: This is the result of our FFT algorithm.')];
+    for(i = 0; i < HarmonicsDataset.length; i++) {
+      if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+        Data.push([HarmonicsNames[i], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][0])), HarmonicsDataset[i][0], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][1])), HarmonicsDataset[i][1],
+                                      20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][2])), HarmonicsDataset[i][2], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][3])), HarmonicsDataset[i][3],
+                                      20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][4])), HarmonicsDataset[i][4], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][5])), HarmonicsDataset[i][5]]);
+      } else {
+        Data.push([HarmonicsNames[i], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][0])), HarmonicsDataset[i][0], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][1])), HarmonicsDataset[i][1]]);
+      }
+    }
+    exportToCsv("Current_Harmonics_" + Node + '_' + DetailTimestamp + '.csv', Data);
   } else if($('#EvolutionPanel').hasClass('hidden') == false) {
-    Filename = 'current_harmonics_evolution' + LastTimestamp + '.csv';
+    Filename = 'Current_Harmonics_Evolution' + LastTimestamp + '.csv';
     Data = [['Date/Time']];
     Data[0] = Data[0].concat(HarmonicsNames);
     for(i = 0; i <  EvolutionDatasets[0].length; i++) {
@@ -1253,14 +1392,57 @@ $('#btnExport').click(function () {
       }
       Data.push(Row);
     }
+    exportToCsv("Current_Harmonics_Evolution" + ((Nodes['Devices'][Node]['Type'] === '3Phase') ? '(' + localStorage.getItem('VoltageDetailEvolutionPhase') + ')_' : '_') + Node + '_' + DetailTimestamp + '.csv', Data);  
   }
-  exportToCsv(Filename, Data);
-  $(this).removeClass('active');
-  $(this).blur();
 });
-
-
-
+$('#btnMaximizeDetail').click(function() {
+  if(localStorage.getItem('CurrentDetailView') === 'Waveform') {
+    $('#GraphDialogTitle').text('Waveform');
+    PrevDialogContainer = $('#WaveformPanel');
+  } else if(localStorage.getItem('CurrentDetailView') === 'Harmonics') {
+    $('#GraphDialogTitle').text('Harmonics');
+    PrevDialogContainer = $('#HarmonicsPanel');
+  } else if(localStorage.getItem('CurrentDetailView') === 'Advanced') {
+    $('#GraphDialogTitle').text('Advanced');
+    PrevDialogContainer = $('#FFTPanel');
+  }
+  $('#GraphDialog').modal('show');
+  if(localStorage.getItem('CurrentDetailView') === 'Waveform') {
+    DialogElement = $('#WaveformMaximize').detach();
+    DialogPrevResizeHandler = function() {
+      $(WaveformChart.graphDiv).parent().removeAttr('style');
+    };
+    DialogResizeHandler = function() {
+      WaveformChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 110);
+    };
+  } else if(localStorage.getItem('CurrentDetailView') === 'Harmonics') {
+    DialogElement = $('#HarmonicsMaximize').detach();
+    DialogPrevResizeHandler = function() {
+      $(HarmonicsChart.graphDiv).parent().removeAttr('style');
+    };
+    DialogResizeHandler = function() {
+      HarmonicsChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 110);
+    };
+  } else if(localStorage.getItem('CurrentDetailView') === 'Advanced') {
+    DialogElement = $('#FFTMaximize').detach();
+    DialogPrevResizeHandler = function() {
+      $(FFTChart.graphDiv).parent().removeAttr('style');
+    };
+    DialogResizeHandler = function() {
+      FFTChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 110);
+    };
+  }
+  $('#GraphDialogBody').append(DialogElement);
+  $(window).bind('resize', DialogResizeHandler);
+  window.dispatchEvent(new Event('resize'));  
+});
+$('#GraphDialogClose').click(function() {
+  $(window).unbind('resize', DialogResizeHandler);
+  $(window).bind('resize', DialogPrevResizeHandler);
+  $(PrevDialogContainer).append(DialogElement);
+  $('#GraphDialog').modal('hide');
+  window.dispatchEvent(new Event('resize'));
+});
 
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
@@ -1287,5 +1469,5 @@ function UpdatePage() {
   AjaxGetCurrent();
   AjaxGetCurrentCounters();
   AjaxGetDetails();
-  //ajaxGetEvolution();
+  AjaxGetEvolution();
 }

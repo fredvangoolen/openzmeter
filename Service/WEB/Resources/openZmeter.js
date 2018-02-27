@@ -62,13 +62,13 @@ function Array_Round2(values, separator, colors, cadena1, cadena2) {
   for(i = 0; i < values.length; i++) {
     if((colors !== undefined) && (colors[i] !== undefined)) {
      var Text = '<div style="padding: 0px 5px; border: 1px solid #FFF; border-radius: 5px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]);
-     if(values[i] > 0 ) Text += cadena2;
-     if(values[i] < 0 ) Text += cadena1;
+     if((values[i] > 0) && (cadena2 !== undefined)) Text += cadena2;
+     if((values[i] < 0) && (cadena1 !== undefined)) Text += cadena1;
      values[i] = Text + '</div>';
    } else {
      var Text = Round2(values[i]);
-     if(values[i] > 0 ) Text += cadena2;
-     if(values[i] < 0 ) Text += cadena1;
+     if((values[i] > 0) && (cadena2 !== undefined)) Text += cadena2;
+     if((values[i] < 0) && (cadena1 !== undefined)) Text += cadena1;
      values[i] = Text + '</div>';
    }
   }
@@ -281,6 +281,7 @@ function GetNodesCompletes(result) {
       $('#SourceList').append(' <li><a href="#" id="Node_' + i + '">' + result['Devices'][i]['Name'] + ' (' + result['Devices'][i]['Type'] + ')</a></li>');      
     }
   }
+  if(result['Devices'].length == 1) $('#SourcesMenu').addClass('hidden');
   $('#SourceList li a').click(function(event) {
     event.preventDefault();
     localStorage.setItem('SelNode', this.id.replace('Node_', ''));

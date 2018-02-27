@@ -106,6 +106,7 @@ bool Tools::ReadConfig(char *file) {
   Global.Log      = (char*)"/var/log/openZmeter.log";
   Global.HTTPPort = 8080;
   Global.HTTPPath = (char*)"/usr/share/openZmeter/";
+  Global.HTTPPass = (char*)"admin";
   DB.Database     = (char*)"openzmeter";
   DB.Host         = (char*)"127.0.0.1";
   DB.Port         = 5432;
@@ -194,6 +195,8 @@ bool Tools::Config_Handler(char *section, char *param, char *value) {
       Global.HTTPPort = atoi(value);
     } else if(strcmp(param, "httpPath") == 0) {
       Global.HTTPPath = strdup(value);
+    } else if(strcmp(param, "httpPass") == 0) {
+      Global.HTTPPass = strdup(value);
     }
   } else if(strcmp(section, "database") == 0) {
     if(strcmp(param, "port") == 0) {
@@ -288,4 +291,25 @@ uint64_t Tools::GetTime() {
     return 0;
   }
   return (uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000;
+}
+uint64_t Tools::ParseProcMem(char *name, char *buff) {
+  char *hit = strstr(buff, name);
+  if(hit == NULL) return 0;
+  errno = 0;
+  long Val = strtol(hit + strlen(name), NULL, 10);
+  if(errno != 0) return 0;
+  return Val * 1024;
+}
+bool Tools::GetMemory(uint64_t *total, uint64_t *available) {
+  char Buffer[8192];
+  FILE *FD = fopen("/proc/meminfo", "r");
+  if(FD == NULL) return false;
+  size_t Len = fread(Buffer, 1, sizeof(Buffer), FD);
+  fclose(FD);
+  if(Len == 0) return false;
+  Buffer[Len] = 0;
+  *total = ParseProcMem((char*)"MemTotal:", Buffer);
+  *available = ParseProcMem((char*)"MemFree:", Buffer) + ParseProcMem((char*)"Cached:", Buffer) + ParseProcMem((char*)"Buffers:", Buffer);
+
+  return ((*total != 0) && (*available != 0));
 }

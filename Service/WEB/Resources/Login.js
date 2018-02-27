@@ -7,7 +7,7 @@ $('form').submit(function (e) {
     type: "POST",
     contentType: 'application/json',
     dataType: "json",
-    data: JSON.stringify({ User: $('#user').val(), Password: $('#password').val() }),
+    data: JSON.stringify({ Password: $('#password').val() }),
     success: function (response) {
       $('.alert-danger').slideUp(500, function () {
         if (response == null || response['result'] == false) {

@@ -16,6 +16,7 @@ class Tools {
     typedef struct {
       uint16_t HTTPPort;
       char    *HTTPPath;
+      char    *HTTPPass;
       char    *Log;
       char    *Pid;
     } Global_t;
@@ -61,6 +62,8 @@ class Tools {
     static bool CreateLogFile();
     static bool CreatePidFile();
     static bool RemovePidFile();
+    static bool GetMemory(uint64_t *total, uint64_t *available);
     static uint64_t GetTime();
+    static uint64_t ParseProcMem(char *name, char *buff);
 };
 //----------------------------------------------------------------------------------------------------------------------

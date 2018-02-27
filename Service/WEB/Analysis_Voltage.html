@@ -179,25 +179,31 @@
               </div>
               <div class="panel-body" id="Tabs" style="padding:5px">
                 <div class="no-padding" id="WaveformPanel">
-                  <div style="padding:5px">
-                    <div style="display:inline-block" id="WaveformTime">Loading data...</div>
-                    <div id="WaveformLegend" style="float: right"></div>
+                  <div id="WaveformMaximize">
+                    <div style="padding:5px">
+                      <div style="display:inline-block" id="WaveformTime">Loading data...</div>
+                      <div id="WaveformLegend" style="float: right"></div>
+                    </div>
+                    <div id="WaveformChart" class="chart big_chart"></div>
                   </div>
-                  <div id="WaveformChart" class="chart big_chart"></div>
                 </div>
                 <div class="hidden" id="HarmonicsPanel">
-                  <div style="padding:5px">
-                    <div style="display:inline-block" id="HarmonicsTime">Loading data...</div>
-                    <div id="HarmonicsLegend" style="float: right"></div>
-                  </div>                  
-                  <div id="HarmonicsChart" class="chart big_chart"></div>
+                  <div id="HarmonicsMaximize">
+                    <div style="padding:5px">
+                      <div style="display:inline-block" id="HarmonicsTime">Loading data...</div>
+                      <div id="HarmonicsLegend" style="float: right"></div>
+                    </div>                  
+                    <div id="HarmonicsChart" class="chart big_chart"></div>
+                </div>
                 </div>
                 <div class="hidden" id="FFTPanel">
-                  <div style="padding:5px">
-                    <div style="display:inline-block" id="FFTTime">Loading data...</div>
-                    <div id="FFTLegend" style="float: right"></div>
+                  <div id="FFTMaximize">
+                    <div style="padding:5px">
+                      <div style="display:inline-block" id="FFTTime">Loading data...</div>
+                      <div id="FFTLegend" style="float: right"></div>
+                    </div>
+                    <div id="FFTChart" class="chart big_chart"></div>
                   </div>
-                  <div id="FFTChart" class="chart big_chart"></div>
                 </div>
                 <div class="hidden" id="EvolutionPanel">
                   <div style="position: relative"><div id="HarmonicsEvolutionChart_0" class="chart" style="height: 50px; margin-top: 16px; border-top: 1px solid #999"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_0"></div></div>
@@ -333,11 +339,15 @@
                   </div>
                   <div class="col col-md-7">
                     <div id="EventSpinner" class="spinnerdiv"></div>
-                    <div style="padding:5px">
-                      <div style="display:inline-block">&nbsp;</div>
-                      <div id="EventChartLegend" style="float: right"></div>
+                    <div id="EventWaveformPanel">
+                      <div id="EventWaveformMaximize">
+                        <div style="padding:5px">
+                          <div style="display:inline-block">&nbsp;</div>
+                          <div id="EventChartLegend" style="float: right"></div>
+                        </div>
+                        <div id="EventChart" class="chart big_chart"></div>
+                      </div>
                     </div>
-                    <div id="EventChart" class="chart big_chart"></div>
                   </div>
                 </div>
               </div>

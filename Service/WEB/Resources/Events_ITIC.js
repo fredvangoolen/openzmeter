@@ -264,7 +264,7 @@ function GenerateGraphs(min, max) {
       ByITIC,
       { strokeWidth: 0,
         labels: ["Duration", "Variation"],
-        legend: "never",
+        labelsDiv: "ITICLegend",
         drawPoints: true, 
         pointSize: 3,
         colors: ["#d9534f"],
@@ -395,8 +395,9 @@ function CreateVoltageRangeSelector(result) {
       },
       rangeSelectorPlotFillColor: "#FFFFFF",
       rangeSelectorPlotStrokeColor: "#d9534f",
-      zoomCallback: function(min, max) {
-        GenerateGraphs(min, max);
+      drawCallback: function(dygraph, is_initial) {
+        if(is_initial) return;
+        GenerateGraphs(dygraph.dateWindow_[0], dygraph.dateWindow_[1]);
         $('#btnShowEventYear').removeClass('active');
         $('#btnShowEventMonth').removeClass('active');
         $('#btnShowEventWeek').removeClass('active');
