@@ -324,6 +324,7 @@
         <itemPath>WEB/Resources/Events_ITIC.js</itemPath>
         <itemPath>WEB/Resources/Help.js</itemPath>
         <itemPath>WEB/Resources/Login.js</itemPath>
+        <itemPath>WEB/Resources/Logo.svgz</itemPath>
         <itemPath>WEB/Resources/Stats.js</itemPath>
         <itemPath>WEB/Resources/favicon.ico</itemPath>
         <itemPath>WEB/Resources/openZmeter.js</itemPath>
@@ -408,6 +409,18 @@
       <packaging>
         <packType>Debian</packType>
         <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
                             from="${OUTPUT_PATH}"
@@ -748,6 +761,8 @@
             flavor2="0">
       </item>
       <item path="WEB/Resources/Login.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Logo.svgz" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Stats.js" ex="false" tool="3" flavor2="0">
       </item>
@@ -3150,6 +3165,18 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -3437,6 +3464,8 @@
             flavor2="0">
       </item>
       <item path="WEB/Resources/Login.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Logo.svgz" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Stats.js" ex="false" tool="3" flavor2="0">
       </item>
