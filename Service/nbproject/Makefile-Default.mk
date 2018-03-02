@@ -41,6 +41,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/Database.o \
 	${OBJECTDIR}/HTTPServer.o \
 	${OBJECTDIR}/Main.o \
+	${OBJECTDIR}/Prices.o \
 	${OBJECTDIR}/Tools.o
 
 
@@ -97,6 +98,11 @@ ${OBJECTDIR}/Main.o: Main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -Wall -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.cpp
+
+${OBJECTDIR}/Prices.o: Prices.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -Wall -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Prices.o Prices.cpp
 
 ${OBJECTDIR}/Tools.o: Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}

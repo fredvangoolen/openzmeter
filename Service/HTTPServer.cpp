@@ -341,8 +341,6 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       Aggreg = (char*)"1h";
       PeriodSeconds = 3600000;
     } 
-    From -= PeriodSeconds;
-    To   += PeriodSeconds;
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"MaxSamples\", ", (To - From) / PeriodSeconds);
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'%s' AS \"Aggregation_Source\", ", Aggreg);
     char *Save;

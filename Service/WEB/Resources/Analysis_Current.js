@@ -842,7 +842,7 @@ function UpdateHarmonicsChart(result) {
   for(i = (localStorage.getItem('CurrentDetailFirstHarmonic') === 'true') ? 0 : 1; i < HarmonicsDataset.length; i++) {
     ToShow.push([]);
     var Pos = (localStorage.getItem('CurrentDetailFirstHarmonic') === 'true') ? i : i - 1
-    for(n = 0; n < HarmonicsDataset[i].length; n++) ToShow[Pos][n] = 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[Pos][n]));
+    for(n = 0; n < HarmonicsDataset[i].length; n++) ToShow[Pos][n] = 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][n]));
   }
   var VoltageRange = CalcRanges(ToShow, VoltageSeries);
   var CurrentRange = CalcRanges(ToShow, CurrentSeries);

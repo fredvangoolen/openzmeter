@@ -14,91 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-var Spinner            = new Spinner(SpinnerOpts);
-var WeekStats          = [];
-var FrequencyYearChart = null;
-var VoltageYearChart   = null;
-var THDYearChart       = null;
-var FrequencyWeekChart = null;
-var VoltageWeekChart   = null;
-var THDWeekChart       = null;
-var Frequencies        = [ -Math.INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, Math.INFINITY ];
-var Voltages           = [-Math.INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, Math.INFINITY];
-var THDs               = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, Math.INFINITY];
+var Spinner        = new Spinner(SpinnerOpts);
+var WeekStats      = [];
+var FrequencyChart = null;
+var VoltageChart   = null;
+var THDChart       = null;
+var Frequencies    = [ -Math.INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, Math.INFINITY ];
+var Voltages       = [-Math.INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, Math.INFINITY];
+var THDs           = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, Math.INFINITY];
 
-//var LoadWeek;
-//var LastWeek;
-//var LastYear;
-//function SetWeekEvents(result) {
-//  var Table = $('#weeks_table tbody');
-//  var VoltagePercent = (result['Samples'] - result['Voltage']) * 100 / result['Samples'];
-//  var THDPercent = (result['Samples'] - result['THD']) * 100 / result['Samples'];
-//  var HarmonicsPercent = (result['Samples'] - result['Harmonics']) * 100 / result['Samples'];
-//  var Row = '<tr><td class="text-center"><strong>' + result['Week'] + "</strong>&nbsp;(" + result['Year'] + ')</td>' +
-//            '<td class="text-center">' + Round2(result['Samples'] * 100 / 1008) + '%</td>';
-//  if(result['Samples'] > 0) {
-//    Row += '<td>' +
-//           '  <div class="progress text-center" style="margin-bottom:0px; position: relative">' +
-//           '    <div class="progress-bar" role="progressbar" style="width:' + Math.min(100, VoltagePercent * 20) + '%; background-color: #5cb85c"></div>' +
-//           '    <span style="top: 2px; left: 0px; position: absolute; width: 100%; mix-blend-mode: multiply">' + Round2(VoltagePercent) + '% of time outside range</span>' +
-//           '  </div>' +
-//           '</td>' +
-//           '<td>' +
-//           '  <div class="progress text-center" style="margin-bottom:0px; position: relative">' +
-//           '    <div class="progress-bar" role="progressbar" style="width:' + Math.min(100, THDPercent * 20) + '%; background-color: #5cb85c"></div>' +
-//           '    <span style="top: 2px; left: 0px; position: absolute; width: 100%; mix-blend-mode: multiply">' + Round2(THDPercent) + '% of time outside range</span>' +
-//           '  </div>' +
-//           '</td>' +
-//           '<td>' +
-//           '  <div class="progress text-center" style="margin-bottom:0px; position: relative">' +
-//           '    <div class="progress-bar" role="progressbar" style="width:' + Math.min(100, HarmonicsPercent * 20) + '%; background-color: #5cb85c"></div>' +
-//           '    <span style="top: 2px; left: 0px; position: absolute; width: 100%; mix-blend-mode: multiply">' + Round2(HarmonicsPercent) + '% of time outside range</span>' +
-//           '  </div>' +
-//           '</td>';
-//  } else {
-//    Row += '<td colspan="4" class="text-center">No samples for this week</td>';
-//  }
-//  Table.append(Row + '</tr>');
-//  LastWeek = result['Week'];
-//  LastYear = result['Year'];
-//  if(result['Week'] === 1) {
-//    $('#weeks_table tfoot').hide();
-//  } else if(LoadWeek === 1) {
-//    $('#RowLoading').addClass('hide');
-//    $('#RowButton').removeClass('hide');
-//  } else {
-//    LoadWeek--;
-//    GetWeekInfo(result['Year'], LastWeek - 1);
-//  }
-//}
-//function GetWeekInfo(reqyear, reqweek) {
-//  $('#RowLoading').removeClass('hide');
-//  $('#RowButton').addClass('hide');
-//  $.ajax({ url: "events/getWeekEvents",
-//           timeout: 20000,
-//           type: "POST",
-//           dataType: "json",
-//           contentType: 'application/json',
-//           data: JSON.stringify({ Year: reqyear, Week: reqweek }),
-//           success: SetWeekEvents
-//         });
-//}
-//function GetYearInfo(reqyear) {
-//  if(reqyear === 0) {
-//    var End = GetEndYearTimestamp() - 365 * 24 * 3600 * 1000;
-//    var Start = GetYearTimestamp() - 365 * 24 * 3600 * 1000;
-//  }
-//  $.ajax({ url: "getEvents",
-//           timeout: 20000,
-//           type: "POST",
-//           dataType: "json",
-//           contentType: 'application/json',
-//           data: JSON.stringify({ Node : Node, To: End, Period: End - Start }),
-//           success: SetYearEvents
-//         });
-//}
-
-function GenerateYearFreqGraph(distribution, total_samples, inrange_samples, type) {
+function GenerateFreqGraph(week) {
   var Options = { 
     strokeWidth: 1,
     labels: ["Variation", "Time"],
@@ -114,10 +39,10 @@ function GenerateYearFreqGraph(distribution, total_samples, inrange_samples, typ
       y: { pixelsPerLabel: 24,
            axisLabelWidth: 24,
            valueFormatter: function (x) {
-             return Round2(x * 100.0 / Samples) + ' %';
+             return Round2(x * 100.0 / WeekStats[week].FrequencySamples) + ' %';
            },
            axisLabelFormatter: function (x) {
-             return '<div style="font-size: 10px; margin-top: -2px">' + Math.round(x * 100 / Samples, 0) + '%</div>';
+             return '<div style="font-size: 10px; margin-top: -2px">' + Math.round(x * 100 / WeekStats[week].FrequencySamples, 0) + '%</div>';
            }
          },
       x: { pixelsPerLabel: 30,
@@ -145,9 +70,9 @@ function GenerateYearFreqGraph(distribution, total_samples, inrange_samples, typ
          }
     }
   };
-  var In = 0;
-  for(i = 5; i < 36; i++) In += distribution[i];
-  In  = (In / Samples) * 100.0;
+  var In  = (WeekStats[week].FrequencyIN / WeekStats[week].FrequencySamples) * 100.0;
+  var ToShow = [];
+  for(i = 0; i < WeekStats[week].Frequency.length; i++) ToShow.push([i, WeekStats[week].Frequency[i]]);
   if(In < 99.5) {
     $('#FreqWarning').removeClass('hidden');
   } else {
@@ -155,18 +80,14 @@ function GenerateYearFreqGraph(distribution, total_samples, inrange_samples, typ
   }
   $('#FreqInRange').css('width', (In - 90) * 10 +'%');
   $('#FreqInRangeText').html(Round2(In) + '% of time in range');
-  var ToShow = [];
-  for(i = 0; i < distribution.length; i++) ToShow.push([i, distribution[i]]);
-  if(FrequencyYearChart === null) {
-    FrequencyYearChart = new Dygraph(document.getElementById("FrequencyChart"), ToShow, Options);
+  if(FrequencyChart === null) {
+    FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"), ToShow, Options);
   } else {
-    FrequencyYearChart.updateOptions({'file': ToShow}, true);
-    FrequencyYearChart.updateOptions(Options);
+    Options.file = ToShow;
+    FrequencyChart.updateOptions(Options);
   }
 }
-function GenerateYearVoltGraph(distribution) {
-  var Samples = 0;
-  for(i = 0; i < distribution.length; i++) Samples += distribution[i];
+function GenerateVoltGraph(week) {
   var Options = { 
     strokeWidth: 1,
     labels: ["Variation", "Time"],
@@ -182,10 +103,10 @@ function GenerateYearVoltGraph(distribution) {
       y: { pixelsPerLabel: 24,
            axisLabelWidth: 24,
            valueFormatter: function (x) {
-             return Round2(x * 100.0 / Samples) + ' %';
+             return Round2(x * 100.0 / WeekStats[week].VoltageSamples) + ' %';
            },
            axisLabelFormatter: function (x) {
-             return '<div style="font-size: 10px; margin-top: -2px">' + Math.round(x * 100 / Samples, 0) + '%</div>';
+             return '<div style="font-size: 10px; margin-top: -2px">' + Math.round(x * 100 / WeekStats[week].VoltageSamples, 0) + '%</div>';
            }
          },
       x: {  pixelsPerLabel: 30,
@@ -213,9 +134,9 @@ function GenerateYearVoltGraph(distribution) {
           }
     }
   };
-  var In = 0;
-  for(i = 3; i < 24; i++) In += distribution[i];
-  In  = (In / Samples) * 100.0;
+  var In  = (WeekStats[week].VoltageIN / WeekStats[week].VoltageSamples) * 100.0;
+  var ToShow = [];
+  for(i = 0; i < WeekStats[week].Voltage.length; i++) ToShow.push([i, WeekStats[week].Voltage[i]]);
   if(In < 95) {
     $('#VoltageWarning').removeClass('hidden');
   } else {
@@ -223,18 +144,14 @@ function GenerateYearVoltGraph(distribution) {
   }
   $('#VoltageInRange').css('width', (In - 90) * 10 +'%');
   $('#VoltageInRangeText').html(Round2(In) + '% of time in range');
-  var ToShow = [];
-  for(i = 0; i < distribution.length; i++) ToShow.push([i, distribution[i]]);
-  if(VoltageYearChart === null) {
-    VoltageYearChart = new Dygraph(document.getElementById("VoltageChart"), ToShow, Options);
+  if(VoltageChart === null) {
+    VoltageChart = new Dygraph(document.getElementById("VoltageChart"), ToShow, Options);
   } else {
-    VoltageYearChart.updateOptions({'file': ToShow}, true);
-    VoltageYearChart.updateOptions(Options);
+    Options.file = ToShow;
+    VoltageChart.updateOptions(Options);
   }
 }
-function GenerateYearTHDGraph(distribution) {
-  Samples = 0;
-  for(i = 0; i < distribution.length; i++) Samples += distribution[i];
+function GenerateTHDGraph(week) {
   var Options = {
     strokeWidth: 1,
     labels: ["Distorsion", "Time"],
@@ -250,10 +167,10 @@ function GenerateYearTHDGraph(distribution) {
       y: { pixelsPerLabel: 24,
            axisLabelWidth: 24,
            valueFormatter: function (x) {
-             return Round2(x * 100.0 / THDSamples) + ' %';
+             return Round2(x * 100.0 / WeekStats[week].THDSamples) + ' %';
            },
            axisLabelFormatter: function (x) {
-             return '<div style="font-size: 10px; margin-top: -2px">' + Math.round(x * 100 / THDSamples, 0) + '%</div>';
+             return '<div style="font-size: 10px; margin-top: -2px">' + Math.round(x * 100 / WeekStats[week].THDSamples, 0) + '%</div>';
            }
          },
       x: {  pixelsPerLabel: 30,
@@ -277,9 +194,9 @@ function GenerateYearTHDGraph(distribution) {
          }
     }
   };
-  var In = 0;
-  for(i = 0; i < 16; i++) In += distribution[i];
-  In = (In / Samples) * 100.0;
+  var In = (WeekStats[week].THDIN / WeekStats[week].THDSamples) * 100.0;
+  var ToShow = [];
+  for(i = 0; i < WeekStats[week].THD.length; i++) ToShow.push([i, WeekStats[week].THD[i]]);
   if(In < 100) {
     $('#THDWarning').removeClass('hidden');
   } else {
@@ -287,142 +204,159 @@ function GenerateYearTHDGraph(distribution) {
   }
   $('#THDInRange').css('width', (In - 90) * 10 +'%');
   $('#THDInRangeText').html(Round2(In) + '% of time in range');
-  var ToShow = [];
-  for(i = 0; i < distribution.length; i++) ToShow.push([i, distribution[i]]);
-  if(THDYearChart === null) {
-    THDYearChart = new Dygraph(document.getElementById("THDChart"), ToShow, Options);
+  if(THDChart === null) {
+    THDChart = new Dygraph(document.getElementById("THDChart"), ToShow, Options);
   } else {
-    THDYearChart.updateOptions({'file': ToShow}, true);
-    THDYearChart.updateOptions(Options);
+    Options.file = ToShow;
+    THDChart.updateOptions(Options);
   }  
 }
-function GenerateYearHarmonicsGraph(distribution) {  
-  var Samples = 0;
-  for(i = 0; i < distribution.length; i++) Samples += distribution[i];
-  var In = 0;
-  for(i = 0; i < StatsHarmonics.length; i++) {
-    HarmonicsSamples = HarmonicsSamples + StatsHarmonics[i][0] + StatsHarmonics[i][1];
-    HarmonicsIn = HarmonicsIn + StatsHarmonics[i][1];
-  }
-  HarmonicsIn = (HarmonicsIn / HarmonicsSamples) * 100.0;
-  $('#HarmonicsInRange').css('width', (HarmonicsIn - 90) * 10 +'%');
-  $('#HarmonicsInRangeText').html(Round2(HarmonicsIn) + '% of time in range');
+function GenerateHarmonicsGraph(week) {
+  var In = (WeekStats[week].HarmonicsIN / WeekStats[week].HarmonicsSamples) * 100.0;
+  $('#HarmonicsInRange').css('width', (In - 90) * 10 +'%');
+  $('#HarmonicsInRangeText').html(Round2(In) + '% of time in range');
+}
+function GenerateEventsGraph(week) {
+  var DipProgress = WeekStats[week].Dip * 100 / 1000;
+  $('#DipEvents').css('width', DipProgress  +'%');
+  $('#DipEventsText').text(WeekStats[week].Dip + ' events');
+  if(WeekStats[week].Dip > 1000) $('#DipEvents').css('background-color', '#d9534f"');
+  var ShortProgress = WeekStats[week].Short * 100 / 100;
+  $('#ShortEvents').css('width', ShortProgress  +'%');
+  $('#ShortEventsText').text(WeekStats[week].Short + ' events');
+  if(WeekStats[week].Short > 100) $('#ShortEvents').css('background-color', '#d9534f"');
+  var LongProgress = WeekStats[week].Long * 100 / 50;
+  $('#LongEvents').css('width', LongProgress  +'%');
+  $('#LongEventsText').text(WeekStats[week].Long + ' events');
+  if(WeekStats[week].Long > 100) $('#LongEvents').css('background-color', '#d9534f"');  
 }
 function AjaxGetEvents(selected_year) {
-  var To = new Date(Date.UTC(selected_year, 11, 31, 23, 59, 59, 999)).getTime();
+  var From = new Date(selected_year, 0, 1, 0, 0, 0, 0).getTime();
+  var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
   $.ajax({ url: "getEvents",
            timeout: 20000,
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 31536000000, To: To, LastEvent: 0, Node: 0 }),
+           data: JSON.stringify({ Period: To - From, To: To, LastEvent: 0, Node: 0 }),
            success: function(result) {
-             var Dip = 0;
-             var Short = 0;
-             var Long = 0;
-             for(i = 0; i < result['Starttime'].length; i++) {
-               var Duration = result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq'];
-               var Percent = result['Percentage'][i];
-               if((Duration < 60) && ((Percent < -15) || (Percent > -10))) Dip++;
-               if((Duration < 180) && (Percent < -99)) Short++;
-               if((Duration > 180) && (Percent < -99)) Short++;
+             WeekStats = [];
+             if(result['Starttime'] != null) {
+               if(WeekStats[0] === undefined) InitWeek(0, new Date(selected_year, 0, 1, 0, 0, 0, 0), new Date(selected_year, 11, 31, 23, 59, 59, 999));
+               for(i = 0; i < result['Starttime'].length; i++) {
+                 var Week = GetWeekOfYear(result['Starttime'][i]);
+                 if(WeekStats[Week] === undefined) {
+                   var Start = GetDateOfISOWeek(Week, selected_year);
+                   var End = new Date(Start.getFullYear(), Start.getMonth(), Start.getDate() + 6);
+                   InitWeek(Week, Start, End);
+                 }
+                 var Duration = result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq'];
+                 var Percent = result['Percentage'][i];
+                 if((Duration < 60) && ((Percent < -15) || (Percent > -10))) {
+                   WeekStats[Week].Dip = WeekStats[Week].Dip + 1;
+                   WeekStats[0].Dip = WeekStats[0].Dip + 1;
+                 }
+                 if((Duration < 180) && (Percent < -99)) {
+                   WeekStats[Week].Short = WeekStats[Week].Short + 1;
+                   WeekStats[0].Short = WeekStats[0].Short + 1;
+                 }
+                 if((Duration > 180) && (Percent < -99)) {
+                   WeekStats[Week].Long = WeekStats[Week].Long + 1;
+                   WeekStats[0].Long = WeekStats[0].Long + 1;
+                 }
+               }
              }
-             var DipProgress = Dip * 100 / 1000;
-             $('#DipEvents').css('width', DipProgress  +'%');
-             $('#DipEventsText').text(Dip + ' events');
-             if(Dip > 1000) $('#DipEvents').css('background-color', '#d9534f"');
-             var ShortProgress = Short * 100 / 100;
-             $('#ShortEvents').css('width', ShortProgress  +'%');
-             $('#ShortEventsText').text(Short + ' events');
-             if(Short > 100) $('#ShortEvents').css('background-color', '#d9534f"');
-             var LongProgress = Long * 100 / 50;
-             $('#LongEvents').css('width', LongProgress  +'%');
-             $('#LongEventsText').text(Long + ' events');
-             if(Long > 100) $('#LongEvents').css('background-color', '#d9534f"');  
-             GetVoltageData(selected_year);
+             GetStatsData(selected_year);
            }
          });  
 }
-function GetVoltageData(selected_year) {
+function InitWeek(week, start, end) {
+  WeekStats[week] = [];
+  WeekStats[week].Start            = start;
+  WeekStats[week].End              = end;
+  WeekStats[week].Frequency        = [];
+  WeekStats[week].FrequencySamples = 0;
+  WeekStats[week].FrequencyIN      = 0;
+  WeekStats[week].Voltage          = [];
+  WeekStats[week].VoltageSamples   = 0;
+  WeekStats[week].VoltageIN        = 0;
+  WeekStats[week].THD              = [];
+  WeekStats[week].THDSamples       = 0;
+  WeekStats[week].THDIN            = 0;
+  WeekStats[week].HarmonicsSamples = 0;
+  WeekStats[week].HarmonicsIN      = 0;
+  WeekStats[week].Dip              = 0;
+  WeekStats[week].Short            = 0;
+  WeekStats[week].Long             = 0;
+  for(j = 0; j < Frequencies.length - 1; j++) WeekStats[week].Frequency.push(0);
+  for(j = 0; j < Voltages.length - 1; j++) WeekStats[week].Voltage.push(0);
+  for(j = 0; j < THDs.length - 1; j++) WeekStats[week].THD.push(0);
+}
+function GetStatsData(selected_year) {
   $('#YearSelector button').removeClass('active');
   $('#btnSelYear' + selected_year).addClass('active');
-  var To = new Date(Date.UTC(selected_year, 11, 31, 23, 59, 59, 999)).getTime();
+  var From = new Date(selected_year, 0, 1, 0, 0, 0, 0).getTime();
+  var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
   $.ajax({ url: "getSeries",
            timeout: 20000,
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 31536000000, To: To, Aggreg: "1h", LastSample: 0, Series: 'stat_frequency, stat_voltage, stat_thd, stat_harmonics', Node: Node }),
+           data: JSON.stringify({ Period: To - From, To: To, Aggreg: "1h", LastSample: 0, Series: 'stat_frequency, stat_voltage, stat_thd, stat_harmonics', Node: Node }),
            success: function(result) {
              $('#ProgressYear').css('width', ((result['Sampletime'][result['Sampletime'].length - 1] - new Date(Date.UTC(selected_year, 0, 1, 0, 0, 0, 0)).getTime()) * 100 / 31536000000)  +'%');
-             var Frequency = [];
-             var Voltage = [];
-             for(j = 0; j < Frequencies.length - 1; j++) Frequency.push(0);
-             for(j = 0; j < Voltages.length - 1; j++) Voltage.push(0);
-             WeekStats = [];
+             if(WeekStats[0] === undefined) InitWeek(0, new Date(selected_year, 0, 1, 0, 0, 0, 0), new Date(selected_year, 11, 31, 23, 59, 59, 999));
              for(i = 0; i < result['Sampletime'].length - 1; i++) {
                var Week = GetWeekOfYear(result['Sampletime'][i]);
                if(WeekStats[Week] === undefined) {
-                 WeekStats[Week] = [];
-                 WeekStats[Week].Start = GetDateOfISOWeek(Week, selected_year);
-                 WeekStats[Week].End = new Date(WeekStats[Week].Start.getFullYear(), WeekStats[Week].Start.getMonth(), WeekStats[Week].Start.getDate() + 6);
-                 WeekStats[Week].Frequency = [];
-                 for(j = 0; j < Frequencies.length - 1; j++) WeekStats[Week].Frequency.push(0);
-                 WeekStats[Week].Voltage = [];
-                 for(j = 0; j < Voltages.length - 1; j++) WeekStats[Week].Voltage.push(0);
-                 WeekStats[Week].THD = [];
-                 WeekStats[Week].Harmonics = [];
+                 var Start = GetDateOfISOWeek(Week, selected_year);
+                 var End = new Date(Start.getFullYear(), Start.getMonth(), Start.getDate() + 6);
+                 InitWeek(Week, Start, End);
                }
                for(j = 0; j < Frequencies.length - 1; j++) {
                  WeekStats[Week].Frequency[j] = WeekStats[Week].Frequency[j] + result['stat_frequency'][i][j];
-                 Frequency[j] = Frequency[j] +  result['stat_frequency'][i][j];
+                 WeekStats[0].Frequency[j] = WeekStats[0].Frequency[j] +  result['stat_frequency'][i][j];
+                 WeekStats[0].FrequencySamples = WeekStats[0].FrequencySamples + result['stat_frequency'][i][j];
+                 WeekStats[Week].FrequencySamples = WeekStats[Week].FrequencySamples + result['stat_frequency'][i][j];
+                 if((j > 4) && (j < 36)) {
+                   WeekStats[0].FrequencyIN = WeekStats[0].FrequencyIN + result['stat_frequency'][i][j];
+                   WeekStats[Week].FrequencyIN = WeekStats[Week].FrequencyIN + result['stat_frequency'][i][j];
+                 }
                }
                for(j = 0; j < Voltages.length - 1; j++) {
                  WeekStats[Week].Voltage[j] = WeekStats[Week].Voltage[j] + result['stat_voltage'][i][j];
-                 Voltage[j] = Voltage[j] +  result['stat_voltage'][i][j];
+                 WeekStats[0].Voltage[j] = WeekStats[0].Voltage[j] + result['stat_voltage'][i][j];
+                 WeekStats[0].VoltageSamples = WeekStats[0].VoltageSamples + result['stat_voltage'][i][j];
+                 WeekStats[Week].VoltageSamples = WeekStats[Week].VoltageSamples + result['stat_voltage'][i][j];
+                 if((j > 2) && (j < 24)) {
+                   WeekStats[0].VoltageIN = WeekStats[0].VoltageIN + result['stat_voltage'][i][j];
+                   WeekStats[Week].VoltageIN = WeekStats[Week].VoltageIN + result['stat_voltage'][i][j];
+                 }
                }
+               for(j = 0; j < THDs.length - 1; j++) {
+                 WeekStats[Week].THD[j] = WeekStats[Week].THD[j] + result['stat_thd'][i][j];
+                 WeekStats[0].THD[j] = WeekStats[0].THD[j] + result['stat_thd'][i][j];
+                 WeekStats[0].THDSamples = WeekStats[0].THDSamples + result['stat_thd'][i][j];
+                 WeekStats[Week].THDSamples = WeekStats[Week].THDSamples + result['stat_thd'][i][j];
+                 if(j < 16) {
+                   WeekStats[0].THDIN = WeekStats[0].THDIN + result['stat_thd'][i][j];
+                   WeekStats[Week].THDIN = WeekStats[Week].THDIN + result['stat_thd'][i][j];
+                 }
+               }
+               WeekStats[Week].HarmonicsSamples = WeekStats[Week].HarmonicsSamples + result['stat_harmonics'][i][0] + result['stat_harmonics'][i][1];
+               WeekStats[0].HarmonicsSamples = WeekStats[0].HarmonicsSamples + result['stat_harmonics'][i][0] + result['stat_harmonics'][i][1];
+               WeekStats[0].HarmonicsIN = WeekStats[0].HarmonicsIN + result['stat_harmonics'][i][1];
+               WeekStats[Week].HarmonicsIN = WeekStats[Week].HarmonicsIN + result['stat_harmonics'][i][1];
              }
-             var VoltageSamples = 0;
-             for(i = 0; i < Voltage.length; i++) VoltageSamples += Voltage[i];
-             
-             
-             
-             GenerateYearFreqGraph(Frequency);
-             GenerateYearVoltGraph(Voltage);
-             GenerateYearTHDGraph(THD);
-             return;
-             //             
-             //             
-             //          
-//             FrequencySamples = 0;
-//             FrequencyIn = 0;
-            for(i = 0; i < Frequencies.length - 1; i++) Frequency.push([i, 0]);
-            for(i = 0; i < StatsFrequency.length; i++) {
-              for(j = 0; j < Frequencies.length - 1; j++) {
-                Frequency[j][1] = Frequency[j][1] + StatsFrequency[i][j];
-                FrequencySamples = FrequencySamples + StatsFrequency[i][j];
-                if((j > 4) && (j < 36)) FrequencyIn = FrequencyIn + StatsFrequency[i][j];
-              }
-            }
-             
-             
-             
-             
-             $('#WeekList').html('');
-  for(i = 1; ; i++) {
-    var startDate = GetDateOfISOWeek(i, selected_year);
-    var endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 6);
-    if(endDate.getFullYear() !== selected_year) break;
-//               var WeekDay = (WeekDayArray[i] !== undefined) ? WeekDayArray[i] : 0;
-//               var WeekEnd = (WeekEndArray[i] !== undefined) ? WeekEndArray[i] : 0;
-               $('#WeekList').append('<button type="button" class="btn btn-default btn-xs" id="btnWeek_' + i + '" data-toggle="tooltip" title="From ' + startDate.toLocaleDateString() + " to " + endDate.toLocaleDateString() + '">' + i + '<br/><i class="fa fa-warning" style="color: #d9534f"></i></button>');
-  }
-             
-             
-             
-//             GenerateAnualGraphs();
-//             GenerateWeekGraphs();
-             ButtonClick();
+             for(var Week in WeekStats) {
+               if((WeekStats[Week].FrequencySamples == 0) || (WeekStats[Week].VoltageSamples == 0) || (WeekStats[Week].THDSamples == 0) || (WeekStats[Week].HarmonicsSamples == 0)) continue;
+               var InRange = (((WeekStats[Week].FrequencyIN / WeekStats[Week].FrequencySamples) * 100.0 >= 99.5) && 
+                              ((WeekStats[Week].VoltageIN / WeekStats[Week].VoltageSamples) * 100.0 >= 95.0) && 
+                              ((WeekStats[Week].THDIN / WeekStats[Week].VoltageSamples) * 100.0 >= 100.0) &&
+                              ((WeekStats[Week].HarmonicsIN / WeekStats[Week].HarmonicsSamples) * 100.0 >= 100.0));
+               $('#WeekList').append('<button type="button" class="btn btn-default btn-xs" id="btnWeek_' + Week + '" onclick="LoadWeek(' + Week + ')" data-toggle="tooltip" title="From ' + WeekStats[Week].Start.toLocaleDateString() + " to " + WeekStats[Week].End.toLocaleDateString() + '" ' + (InRange ? '' : 'style="color:#d9534f;font-weight:bold"') + '>' + ((Week == 0) ? 'Totals' : Week) + '</button>');
+             }
+             LoadWeek(0);
              StopSpinner(Spinner, 'EN50160Spinner');
            }
          });
@@ -441,27 +375,15 @@ function GetDataRanges() {
            }
   }); 
 }
-function ButtonClick(event) {
-  if(this.id === 'btnShowTotals')   localStorage.setItem('EN50160View', 'Totals');
-  if(this.id === 'btnShowWeeks')    localStorage.setItem('EN50160View', 'Weeks');
-  $('#ShowAnual').addClass('hidden');
-  $('#ShowWeeks').addClass('hidden');
-  $('#btnShowTotals').removeClass('active');
-  $('#btnShowWeeks').removeClass('active');
-  switch(localStorage.getItem('EN50160View')) {
-    case 'Weeks' : 
-      $('#btnShowWeeks').addClass('active');
-      $('#ShowWeeks').removeClass('hidden');
-      break;
-    default :
-      $('#btnShowTotals').addClass('active');
-      $('#ShowAnual').removeClass('hidden');
-      break;
-  } 
+function LoadWeek(week) {
+  $('#WeekList button').removeClass('active');
+  GenerateFreqGraph(week);
+  GenerateVoltGraph(week);
+  GenerateTHDGraph(week);
+  GenerateHarmonicsGraph(week);
+  GenerateEventsGraph(week);
+  $('#btnWeek_' + week).addClass('active');  
 }
-$('#btnShowTotals').click(ButtonClick);
-$('#btnShowWeeks').click(ButtonClick);
-
 function UpdatePage() {
   $('#GridNominalFreq').text(Nodes['NominalFreq']);
   $('#GridNominalVoltage').text(Nodes['NominalVoltage']);

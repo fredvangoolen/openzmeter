@@ -138,6 +138,21 @@ function Round2(value) {
   }
 }
 
+/* Retorna un numero como cadena con dos decimales pero sin formato html */
+function Round2Plain(value) {
+  if(isNaN(value)) {
+    return '?';
+  } else {
+    value = Math.round(value * 100);
+    var Integer = Math.trunc(value / 100);
+    Fraction = Math.abs(value % 100);
+    Fraction = Fraction.toString();
+    while(Fraction.length < 2) Fraction = '0' + Fraction;
+    return Integer.toString() + '.' + Fraction;
+  }
+}
+
+
 /* Actualiza el texto de la cabecera y lanza una nueva llamada de forma periodica */
 function AjaxGetIndicators() {
   $.ajax({ url: "getSeriesNow",
@@ -359,8 +374,8 @@ function GetDateOfISOWeek(w, y) {
 /* Obtiene el numero de dia dentro del año de un timestamp */
 function GetDayOfYear(timestamp) {
   var now = new Date(timestamp);
-  var start = new Date(now.getUTCFullYear(), 0, 0);
-  var diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+  var start = new Date(now.getFullYear(), 0, 0);
+  var diff = (now - start);
   var oneDay = 1000 * 60 * 60 * 24;
   var day = Math.floor(diff / oneDay);
   return day;
