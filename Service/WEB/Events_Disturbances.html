@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="lib/qtip2/jquery.qtip.min.css" type="text/css"/>
     <link rel="stylesheet" href="lib/visjs/vis.min.css" type="text/css"/>
     <link rel="stylesheet" href="lib/offline/offline.css" type="text/css"/>
-    <link rel="stylesheet" href="css/common.css"/>
+    <link rel="stylesheet" href="openZmeter.css"/>
     <title>openZmeter - Events - Disturbances</title>
   </head>
   <body>
@@ -25,39 +25,42 @@
       <div id="page-wrapper">
         <div class="row">
           <div class="col-lg-12">
-            <div class="text-right">
-              <div class="btn-group" data-toggle="buttons">
-                <label class="btn btn-default btn-sm active">
-                  <input type="radio" name="disturbances_chart_range" value="today"/> Today
-                </label>
-                <label class="btn btn-default btn-sm">
-                  <input type="radio" name="disturbances_chart_range" value="yesterday"/> Yesterday
-                </label>
-                <label class="btn btn-default btn-sm ">
-                  <input type="radio" name="disturbances_chart_range" value="week"  checked="checked"/> This week
-                </label>
-                <label class="btn btn-default btn-sm">
-                  <input type="radio" name="disturbances_chart_range" value="month"/> This month
-                </label>
+            <div class="panel panel-info" id="DisturbancesPanel">
+              <div id="DisturbancesSpinner" class="spinnerdiv"></div>
+              <div class="panel-heading">
+                <span class="huge-small">Disturbances</span>
+                <div class="pull-right">
+                  <span class="small"></span><br>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs" id="btnDisturbancesNow" data-toggle="tooltip" title="Move to most recent samples and update in real time"><i class="fa fa-play"></i></button>
+                  </div>
+                </div>
+                <div class="pull-right">&nbsp;</div>
+                <div class="pull-right">
+                  <span class="small">Time scale:</span><br>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEventYear"  data-toggle="tooltip" title="Select exactly a year period from current time">Year</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEventMonth" data-toggle="tooltip" title="Select exactly a month period from current time">Month</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEventWeek"  data-toggle="tooltip" title="Select exactly a week period from current time">Week</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowEventDay"   data-toggle="tooltip" title="Select exactly a day period from current time">Day</button>
+                  </div>
+                </div>
+                <span class="clearfix"> </span>
               </div>
-            </div>
-            <br>
-            <div id="disturbances_chart">
-            </div>
-            <br>
-            <div class="row">
-              <div class="col-lg-12">
+              <div class="panel-body panel-bigheader">
+                <div id="disturbances_chart"></div>
+                <br>
                 <div class="panel panel-default">
                   <div class="panel-heading">
                     <i class="fa fa-table fa-fw"></i> Details
                   </div>
                   <div class="panel-body">
-                    <div class="events row">
+                    <div class="row">
                       <div class="col col-md-5">
-                        <table id="events_table" class="table small table-striped table-responsive" cellspacing="0" width="100%">
+                        <table id="EventsTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
                           <thead>
                             <tr>
-                              <th>Date</th><th>Type</th><th>Duration</th><th>ΔU<sub>max</sub></th><th>ΔU<sub>max</sub> (%)</th><th class="all"></th>
+                              <th style="width: 130px">Date</th><th>Type</th><th>Duration <em>(s)</em></th><th>ΔU <em>(V)</em></th><th>ΔU <em>(%)</em></th><th style="width: 60px"></th>
                             </tr>
                           </thead>
                           <tbody>
@@ -65,7 +68,16 @@
                         </table>
                       </div>
                       <div class="col col-md-7">
-                        <div id="event_chart" class="chart big_chart"></div>
+                        <div id="EventSpinner" class="spinnerdiv"></div>
+                        <div id="EventWaveformPanel">
+                          <div id="EventWaveformMaximize">
+                            <div style="padding:5px">
+                              <div style="display:inline-block">&nbsp;</div>
+                              <div id="EventChartLegend" style="float: right"></div>
+                            </div>
+                            <div id="EventChart" class="chart big_chart"></div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -89,7 +101,10 @@
     <script src="lib/qtip2/jquery.qtip.min.js"></script>
     <script src="lib/visjs/vis.min.js"></script>
     <script src="lib/momentjs/moment.min.js"></script>
-    <script src="lib/momentjs/moment-duration-format.js"></script>    
+    <script src="lib/momentjs/moment-duration-format.js"></script>
+    <script src="lib/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="lib/datatables/js/dataTables.responsive.min.js"></script>
+    <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
     <script src="openZmeter.js"></script>
     <script src="Events_Disturbances.js"></script>
     <script>

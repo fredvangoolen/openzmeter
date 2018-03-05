@@ -1,20 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
- * File:   Prices.h
- * Author: edu
- *
- * Created on 2 de marzo de 2018, 14:31
- */
-
-#ifndef PRICES_H
-#define PRICES_H
-
-
-
-#endif /* PRICES_H */
-
+/* ================================== zMeter ===========================================================================
+ * File:     Prices.cpp
+ * Author:   Eduardo Viciana (20 de marzo de 2017)
+ * ------------------------------------------------------------------------------------------------------------------ */
+#pragma once
+#include "Database.h"
+class Prices : private Database {
+  private :
+    bool      pTerminate;
+    pthread_t pThread;
+    uint64_t  pLastCheck;
+    uint64_t  pLastPrice;
+  private : 
+    static void *Update_Thread(void *args);
+  public :
+    Prices(uint32_t interval);
+    ~Prices();
+};

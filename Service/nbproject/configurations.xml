@@ -22,10 +22,6 @@
         <itemPath>WEB/MiniViews/Voltage.html</itemPath>
       </logicalFolder>
       <logicalFolder name="Resources" displayName="Resources" projectFiles="true">
-        <logicalFolder name="css" displayName="css" projectFiles="true">
-          <itemPath>WEB/Resources/css/common.css</itemPath>
-          <itemPath>WEB/Resources/css/login.css</itemPath>
-        </logicalFolder>
         <logicalFolder name="HelpPages" displayName="HelpPages" projectFiles="true">
           <itemPath>WEB/Resources/HelpPages/1F.png</itemPath>
           <itemPath>WEB/Resources/HelpPages/311-interharmonics.pdf</itemPath>
@@ -104,45 +100,6 @@
               <itemPath>WEB/Resources/lib/bootstrap/js/bootstrap.min.js</itemPath>
             </logicalFolder>
           </logicalFolder>
-          <logicalFolder name="bootstrap-validator"
-                         displayName="bootstrap-validator"
-                         projectFiles="true">
-            <logicalFolder name="language" displayName="language" projectFiles="true">
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/ar_MA.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/be_FR.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/be_NL.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/bg_BG.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/cs_CZ.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/da_DK.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/de_DE.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/en_US.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/es_CL.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/es_ES.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/fa_IR.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/fr_FR.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/gr_EL.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/hu_HU.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/id_ID.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/it_IT.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/ja_JP.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/nl_NL.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/no_NO.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/pl_PL.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/pt_BR.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/ro_RO.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/ru_RU.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/sr_RS.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/sv_SE.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/th_TH.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/tr_TR.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/ua_UA.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/vi_VN.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/zh_CN.js</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap-validator/language/zh_TW.js</itemPath>
-            </logicalFolder>
-            <itemPath>WEB/Resources/lib/bootstrap-validator/bootstrapValidator.min.css</itemPath>
-            <itemPath>WEB/Resources/lib/bootstrap-validator/bootstrapValidator.min.js</itemPath>
-          </logicalFolder>
           <logicalFolder name="bootstrap-year-calendar"
                          displayName="bootstrap-year-calendar"
                          projectFiles="true">
@@ -183,11 +140,6 @@
               <itemPath>WEB/Resources/lib/datatables/js/jquery.dataTables.min.js</itemPath>
             </logicalFolder>
           </logicalFolder>
-          <logicalFolder name="dc.js" displayName="dc.js" projectFiles="true">
-            <itemPath>WEB/Resources/lib/dc.js/crossfilter.js</itemPath>
-            <itemPath>WEB/Resources/lib/dc.js/dc.css</itemPath>
-            <itemPath>WEB/Resources/lib/dc.js/dc.min.js</itemPath>
-          </logicalFolder>
           <logicalFolder name="dygraph" displayName="dygraph" projectFiles="true">
             <itemPath>WEB/Resources/lib/dygraph/chart-plotter.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/crosshair.js</itemPath>
@@ -215,42 +167,13 @@
             <itemPath>WEB/Resources/lib/jQRangeSlider/jQDateRangeSlider.css</itemPath>
             <itemPath>WEB/Resources/lib/jQRangeSlider/jquery.mousewheel.min.js</itemPath>
           </logicalFolder>
-          <logicalFolder name="jquery-ui" displayName="jquery-ui" projectFiles="true">
-            <logicalFolder name="css" displayName="css" projectFiles="true">
-              <logicalFolder name="smoothness" displayName="smoothness" projectFiles="true">
-                <logicalFolder name="images" displayName="images" projectFiles="true">
-                  <itemPath>WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_flat_0_aaaaaa_40x100.png</itemPath>
-                  <itemPath>WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_flat_75_ffffff_40x100.png</itemPath>
-                  <itemPath>WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_55_fbf9ee_1x400.png</itemPath>
-                  <itemPath>WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_65_ffffff_1x400.png</itemPath>
-                  <itemPath>WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_dadada_1x400.png</itemPath>
-                  <itemPath>WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_e6e6e6_1x400.png</itemPath>
-                  <itemPath>WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_95_fef1ec_1x400.png</itemPath>
-                  <itemPath>WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png</itemPath>
-                  <itemPath>WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_222222_256x240.png</itemPath>
-                  <itemPath>WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_2e83ff_256x240.png</itemPath>
-                  <itemPath>WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_454545_256x240.png</itemPath>
-                  <itemPath>WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_888888_256x240.png</itemPath>
-                  <itemPath>WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_cd0a0a_256x240.png</itemPath>
-                </logicalFolder>
-                <itemPath>WEB/Resources/lib/jquery-ui/css/smoothness/jquery-ui-1.8.10.custom.css</itemPath>
-              </logicalFolder>
-            </logicalFolder>
-            <logicalFolder name="js" displayName="js" projectFiles="true">
-              <itemPath>WEB/Resources/lib/jquery-ui/js/jquery-ui.min.js</itemPath>
-            </logicalFolder>
-          </logicalFolder>
           <logicalFolder name="jquery.lineProgressbar"
                          displayName="jquery.lineProgressbar"
                          projectFiles="true">
             <itemPath>WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.css</itemPath>
             <itemPath>WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.js</itemPath>
           </logicalFolder>
-          <logicalFolder name="livestamp" displayName="livestamp" projectFiles="true">
-            <itemPath>WEB/Resources/lib/livestamp/livestamp.min.js</itemPath>
-          </logicalFolder>
           <logicalFolder name="metisMenu" displayName="metisMenu" projectFiles="true">
-            <itemPath>WEB/Resources/lib/metisMenu/.bower.json</itemPath>
             <itemPath>WEB/Resources/lib/metisMenu/metisMenu.css</itemPath>
             <itemPath>WEB/Resources/lib/metisMenu/metisMenu.js</itemPath>
             <itemPath>WEB/Resources/lib/metisMenu/metisMenu.min.css</itemPath>
@@ -309,7 +232,7 @@
             <itemPath>WEB/Resources/lib/visjs/vis.min.css</itemPath>
             <itemPath>WEB/Resources/lib/visjs/vis.min.js</itemPath>
           </logicalFolder>
-          <itemPath>WEB/Resources/lib/chroma.min.js</itemPath>
+          <itemPath>WEB/Resources/lib/chroma.js</itemPath>
           <itemPath>WEB/Resources/lib/jquery.min.js</itemPath>
           <itemPath>WEB/Resources/lib/marked.min.js</itemPath>
         </logicalFolder>
@@ -362,6 +285,8 @@
     <itemPath>Makefile</itemPath>
     <itemPath>Prices.cpp</itemPath>
     <itemPath>Prices.h</itemPath>
+    <itemPath>Resources.cpp</itemPath>
+    <itemPath>Resources.h</itemPath>
     <itemPath>Tools.cpp</itemPath>
     <itemPath>Tools.h</itemPath>
   </logicalFolder>
@@ -391,6 +316,9 @@
         <ccTool>
           <developmentMode>0</developmentMode>
           <standard>4</standard>
+          <incDir>
+            <pElem>/usr/include/libxml2</pElem>
+          </incDir>
           <commandLine>-march=native -O2</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
@@ -528,6 +456,10 @@
       <item path="Prices.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Prices.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Resources.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Resources.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Tools.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -775,10 +707,6 @@
       </item>
       <item path="WEB/Resources/Stats.js" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/css/common.css" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/css/login.css" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="WEB/Resources/favicon.ico" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/img/load.gif" ex="false" tool="3" flavor2="0">
@@ -798,171 +726,6 @@
       <item path="WEB/Resources/js/utils.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/js/zTicker.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/bootstrapValidator.min.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/bootstrapValidator.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/ar_MA.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/be_FR.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/be_NL.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/bg_BG.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/cs_CZ.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/da_DK.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/de_DE.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/en_US.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/es_CL.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/es_ES.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/fa_IR.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/fr_FR.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/gr_EL.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/hu_HU.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/id_ID.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/it_IT.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/ja_JP.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/nl_NL.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/no_NO.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/pl_PL.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/pt_BR.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/ro_RO.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/ru_RU.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/sr_RS.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/sv_SE.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/th_TH.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/tr_TR.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/ua_UA.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/vi_VN.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/zh_CN.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/zh_TW.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.css"
             ex="false"
@@ -1033,7 +796,7 @@
       </item>
       <item path="WEB/Resources/lib/c3js/c3.min.js" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/chroma.min.js" ex="false" tool="3" flavor2="0">
+      <item path="WEB/Resources/lib/chroma.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/d3-tip/d3-tip.min.css"
             ex="false"
@@ -1122,15 +885,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/dc.js/crossfilter.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dc.js/dc.css" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dc.js/dc.min.js" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="WEB/Resources/lib/dygraph/chart-plotter.js"
             ex="false"
             tool="3"
@@ -1206,81 +960,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_flat_0_aaaaaa_40x100.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_flat_75_ffffff_40x100.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_55_fbf9ee_1x400.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_65_ffffff_1x400.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_dadada_1x400.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_e6e6e6_1x400.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_95_fef1ec_1x400.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_222222_256x240.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_2e83ff_256x240.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_454545_256x240.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_888888_256x240.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_cd0a0a_256x240.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/jquery-ui-1.8.10.custom.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/js/jquery-ui.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.css"
             ex="false"
             tool="3"
@@ -1293,17 +972,7 @@
       </item>
       <item path="WEB/Resources/lib/jquery.min.js" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/livestamp/livestamp.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="WEB/Resources/lib/marked.min.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/metisMenu/.bower.json"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="WEB/Resources/lib/metisMenu/metisMenu.css"
             ex="false"
@@ -3240,6 +2909,10 @@
       </item>
       <item path="Prices.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="Resources.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Resources.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="Tools.cpp" ex="false" tool="1" flavor2="4">
       </item>
       <item path="Tools.h" ex="false" tool="3" flavor2="0">
@@ -3486,10 +3159,6 @@
       </item>
       <item path="WEB/Resources/Stats.js" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/css/common.css" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/css/login.css" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="WEB/Resources/favicon.ico" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/img/load.gif" ex="false" tool="3" flavor2="0">
@@ -3509,171 +3178,6 @@
       <item path="WEB/Resources/js/utils.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/js/zTicker.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/bootstrapValidator.min.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/bootstrapValidator.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/ar_MA.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/be_FR.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/be_NL.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/bg_BG.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/cs_CZ.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/da_DK.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/de_DE.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/en_US.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/es_CL.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/es_ES.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/fa_IR.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/fr_FR.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/gr_EL.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/hu_HU.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/id_ID.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/it_IT.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/ja_JP.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/nl_NL.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/no_NO.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/pl_PL.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/pt_BR.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/ro_RO.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/ru_RU.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/sr_RS.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/sv_SE.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/th_TH.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/tr_TR.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/ua_UA.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/vi_VN.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/zh_CN.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-validator/language/zh_TW.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.css"
             ex="false"
@@ -3744,7 +3248,7 @@
       </item>
       <item path="WEB/Resources/lib/c3js/c3.min.js" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/chroma.min.js" ex="false" tool="3" flavor2="0">
+      <item path="WEB/Resources/lib/chroma.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/d3-tip/d3-tip.min.css"
             ex="false"
@@ -3833,15 +3337,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/dc.js/crossfilter.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dc.js/dc.css" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dc.js/dc.min.js" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="WEB/Resources/lib/dygraph/chart-plotter.js"
             ex="false"
             tool="3"
@@ -3917,81 +3412,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_flat_0_aaaaaa_40x100.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_flat_75_ffffff_40x100.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_55_fbf9ee_1x400.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_65_ffffff_1x400.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_dadada_1x400.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_e6e6e6_1x400.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_95_fef1ec_1x400.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_222222_256x240.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_2e83ff_256x240.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_454545_256x240.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_888888_256x240.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_cd0a0a_256x240.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/css/smoothness/jquery-ui-1.8.10.custom.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery-ui/js/jquery-ui.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.css"
             ex="false"
             tool="3"
@@ -4004,17 +3424,7 @@
       </item>
       <item path="WEB/Resources/lib/jquery.min.js" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/livestamp/livestamp.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="WEB/Resources/lib/marked.min.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/metisMenu/.bower.json"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="WEB/Resources/lib/metisMenu/metisMenu.css"
             ex="false"
