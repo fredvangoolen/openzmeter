@@ -42,7 +42,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/HTTPServer.o \
 	${OBJECTDIR}/Main.o \
 	${OBJECTDIR}/Prices.o \
-	${OBJECTDIR}/Resources.o \
 	${OBJECTDIR}/Tools.o
 
 
@@ -104,11 +103,6 @@ ${OBJECTDIR}/Prices.o: Prices.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -Wall -I/usr/bin/arm-linux-gnueabihf-/include/ -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Prices.o Prices.cpp
-
-${OBJECTDIR}/Resources.o: Resources.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -Wall -I/usr/bin/arm-linux-gnueabihf-/include/ -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Resources.o Resources.cpp
 
 ${OBJECTDIR}/Tools.o: Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}

@@ -22,6 +22,12 @@
         <itemPath>WEB/MiniViews/Voltage.html</itemPath>
       </logicalFolder>
       <logicalFolder name="Resources" displayName="Resources" projectFiles="true">
+        <logicalFolder name="Fonts" displayName="Fonts" projectFiles="true">
+          <itemPath>WEB/Resources/Fonts/TitilliumWebBold.woff2</itemPath>
+          <itemPath>WEB/Resources/Fonts/TitilliumWebBoldItalic.woff2</itemPath>
+          <itemPath>WEB/Resources/Fonts/TitilliumWebItalic.woff2</itemPath>
+          <itemPath>WEB/Resources/Fonts/TitilliumWebRegular.woff2</itemPath>
+        </logicalFolder>
         <logicalFolder name="HelpPages" displayName="HelpPages" projectFiles="true">
           <itemPath>WEB/Resources/HelpPages/1F.png</itemPath>
           <itemPath>WEB/Resources/HelpPages/311-interharmonics.pdf</itemPath>
@@ -83,51 +89,33 @@
         <logicalFolder name="lib" displayName="lib" projectFiles="true">
           <logicalFolder name="bootstrap" displayName="bootstrap" projectFiles="true">
             <logicalFolder name="css" displayName="css" projectFiles="true">
-              <itemPath>WEB/Resources/lib/bootstrap/css/bootstrap-theme.css</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap/css/bootstrap-theme.css.map</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap/css/bootstrap-theme.min.css</itemPath>
               <itemPath>WEB/Resources/lib/bootstrap/css/bootstrap.css</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap/css/bootstrap.css.map</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap/css/bootstrap.min.css</itemPath>
             </logicalFolder>
             <logicalFolder name="fonts" displayName="fonts" projectFiles="true">
               <itemPath>WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.eot</itemPath>
               <itemPath>WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.svg</itemPath>
               <itemPath>WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.ttf</itemPath>
               <itemPath>WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff</itemPath>
+              <itemPath>WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff2</itemPath>
             </logicalFolder>
             <logicalFolder name="js" displayName="js" projectFiles="true">
-              <itemPath>WEB/Resources/lib/bootstrap/js/bootstrap.min.js</itemPath>
+              <itemPath>WEB/Resources/lib/bootstrap/js/bootstrap.js</itemPath>
             </logicalFolder>
           </logicalFolder>
           <logicalFolder name="bootstrap-year-calendar"
                          displayName="bootstrap-year-calendar"
                          projectFiles="true">
-            <itemPath>WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.css</itemPath>
-            <itemPath>WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.js</itemPath>
+            <itemPath>WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.css</itemPath>
+            <itemPath>WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.js</itemPath>
           </logicalFolder>
-          <logicalFolder name="c3js" displayName="c3js" projectFiles="true">
-            <itemPath>WEB/Resources/lib/c3js/c3.css</itemPath>
-            <itemPath>WEB/Resources/lib/c3js/c3.min.js</itemPath>
-          </logicalFolder>
-          <logicalFolder name="d3" displayName="d3" projectFiles="true">
-            <itemPath>WEB/Resources/lib/d3/colorbrewer.css</itemPath>
-            <itemPath>WEB/Resources/lib/d3/colorbrewer.js</itemPath>
-            <itemPath>WEB/Resources/lib/d3/d3.v3.min.js</itemPath>
-            <itemPath>WEB/Resources/lib/d3/d3.v3.min_bak.js</itemPath>
-          </logicalFolder>
-          <logicalFolder name="d3-tip" displayName="d3-tip" projectFiles="true">
-            <itemPath>WEB/Resources/lib/d3-tip/d3-tip.min.css</itemPath>
-            <itemPath>WEB/Resources/lib/d3-tip/d3-tip.min.js</itemPath>
+          <logicalFolder name="chroma" displayName="chroma" projectFiles="true">
+            <itemPath>WEB/Resources/lib/chroma/chroma.js</itemPath>
           </logicalFolder>
           <logicalFolder name="datatables" displayName="datatables" projectFiles="true">
             <logicalFolder name="css" displayName="css" projectFiles="true">
               <itemPath>WEB/Resources/lib/datatables/css/dataTables.bootstrap.css</itemPath>
-              <itemPath>WEB/Resources/lib/datatables/css/dataTables.responsive.css</itemPath>
-              <itemPath>WEB/Resources/lib/datatables/css/jquery.dataTables.min.css</itemPath>
             </logicalFolder>
             <logicalFolder name="images" displayName="images" projectFiles="true">
-              <itemPath>WEB/Resources/lib/datatables/images/favicon.ico</itemPath>
               <itemPath>WEB/Resources/lib/datatables/images/sort_asc.png</itemPath>
               <itemPath>WEB/Resources/lib/datatables/images/sort_asc_disabled.png</itemPath>
               <itemPath>WEB/Resources/lib/datatables/images/sort_both.png</itemPath>
@@ -136,21 +124,22 @@
             </logicalFolder>
             <logicalFolder name="js" displayName="js" projectFiles="true">
               <itemPath>WEB/Resources/lib/datatables/js/dataTables.bootstrap.js</itemPath>
-              <itemPath>WEB/Resources/lib/datatables/js/dataTables.responsive.min.js</itemPath>
-              <itemPath>WEB/Resources/lib/datatables/js/jquery.dataTables.min.js</itemPath>
+              <itemPath>WEB/Resources/lib/datatables/js/jquery.dataTables.js</itemPath>
             </logicalFolder>
           </logicalFolder>
           <logicalFolder name="dygraph" displayName="dygraph" projectFiles="true">
             <itemPath>WEB/Resources/lib/dygraph/chart-plotter.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/crosshair.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/dygraph-interaction.js</itemPath>
-            <itemPath>WEB/Resources/lib/dygraph/dygraph.css</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/dygraph.js</itemPath>
             <itemPath>WEB/Resources/lib/dygraph/synchronize.js</itemPath>
           </logicalFolder>
           <logicalFolder name="font-awesome"
                          displayName="font-awesome"
                          projectFiles="true">
+            <logicalFolder name="css" displayName="css" projectFiles="true">
+              <itemPath>WEB/Resources/lib/font-awesome/css/font-awesome.css</itemPath>
+            </logicalFolder>
             <logicalFolder name="fonts" displayName="fonts" projectFiles="true">
               <itemPath>WEB/Resources/lib/font-awesome/fonts/FontAwesome.otf</itemPath>
               <itemPath>WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.eot</itemPath>
@@ -158,14 +147,9 @@
               <itemPath>WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.ttf</itemPath>
               <itemPath>WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff</itemPath>
             </logicalFolder>
-            <itemPath>WEB/Resources/lib/font-awesome/font-awesome.min.css</itemPath>
           </logicalFolder>
-          <logicalFolder name="jQRangeSlider"
-                         displayName="jQRangeSlider"
-                         projectFiles="true">
-            <itemPath>WEB/Resources/lib/jQRangeSlider/jQDateRangeSlider-withRuler-min.js</itemPath>
-            <itemPath>WEB/Resources/lib/jQRangeSlider/jQDateRangeSlider.css</itemPath>
-            <itemPath>WEB/Resources/lib/jQRangeSlider/jquery.mousewheel.min.js</itemPath>
+          <logicalFolder name="jquery" displayName="jquery" projectFiles="true">
+            <itemPath>WEB/Resources/lib/jquery/jquery.js</itemPath>
           </logicalFolder>
           <logicalFolder name="jquery.lineProgressbar"
                          displayName="jquery.lineProgressbar"
@@ -173,38 +157,27 @@
             <itemPath>WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.css</itemPath>
             <itemPath>WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.js</itemPath>
           </logicalFolder>
+          <logicalFolder name="marked" displayName="marked" projectFiles="true">
+            <itemPath>WEB/Resources/lib/marked/marked.min.js</itemPath>
+          </logicalFolder>
           <logicalFolder name="metisMenu" displayName="metisMenu" projectFiles="true">
             <itemPath>WEB/Resources/lib/metisMenu/metisMenu.css</itemPath>
             <itemPath>WEB/Resources/lib/metisMenu/metisMenu.js</itemPath>
-            <itemPath>WEB/Resources/lib/metisMenu/metisMenu.min.css</itemPath>
-            <itemPath>WEB/Resources/lib/metisMenu/metisMenu.min.js</itemPath>
           </logicalFolder>
           <logicalFolder name="momentjs" displayName="momentjs" projectFiles="true">
             <itemPath>WEB/Resources/lib/momentjs/moment-duration-format.js</itemPath>
-            <itemPath>WEB/Resources/lib/momentjs/moment.min.js</itemPath>
-          </logicalFolder>
-          <logicalFolder name="nvd3" displayName="nvd3" projectFiles="true">
-            <itemPath>WEB/Resources/lib/nvd3/nv.d3.css</itemPath>
-            <itemPath>WEB/Resources/lib/nvd3/nv.d3.min.js</itemPath>
+            <itemPath>WEB/Resources/lib/momentjs/moment.js</itemPath>
           </logicalFolder>
           <logicalFolder name="offline" displayName="offline" projectFiles="true">
             <itemPath>WEB/Resources/lib/offline/offline.css</itemPath>
-            <itemPath>WEB/Resources/lib/offline/offline.min.js</itemPath>
+            <itemPath>WEB/Resources/lib/offline/offline.js</itemPath>
           </logicalFolder>
           <logicalFolder name="qtip2" displayName="qtip2" projectFiles="true">
-            <itemPath>WEB/Resources/lib/qtip2/imagesloaded.pkg.min.js</itemPath>
-            <itemPath>WEB/Resources/lib/qtip2/imagesloaded.pkg.min.js.map</itemPath>
             <itemPath>WEB/Resources/lib/qtip2/jquery.qtip.css</itemPath>
             <itemPath>WEB/Resources/lib/qtip2/jquery.qtip.js</itemPath>
-            <itemPath>WEB/Resources/lib/qtip2/jquery.qtip.min.css</itemPath>
-            <itemPath>WEB/Resources/lib/qtip2/jquery.qtip.min.js</itemPath>
-            <itemPath>WEB/Resources/lib/qtip2/jquery.qtip.min.js.map</itemPath>
-          </logicalFolder>
-          <logicalFolder name="scrollto" displayName="scrollto" projectFiles="true">
-            <itemPath>WEB/Resources/lib/scrollto/jquery.scrollTo.min.js</itemPath>
           </logicalFolder>
           <logicalFolder name="spin.js" displayName="spin.js" projectFiles="true">
-            <itemPath>WEB/Resources/lib/spin.js/spin.min.js</itemPath>
+            <itemPath>WEB/Resources/lib/spin.js/spin.js</itemPath>
           </logicalFolder>
           <logicalFolder name="visjs" displayName="visjs" projectFiles="true">
             <logicalFolder name="img" displayName="img" projectFiles="true">
@@ -229,12 +202,9 @@
                 <itemPath>WEB/Resources/lib/visjs/img/timeline/delete.png</itemPath>
               </logicalFolder>
             </logicalFolder>
-            <itemPath>WEB/Resources/lib/visjs/vis.min.css</itemPath>
-            <itemPath>WEB/Resources/lib/visjs/vis.min.js</itemPath>
+            <itemPath>WEB/Resources/lib/visjs/vis.css</itemPath>
+            <itemPath>WEB/Resources/lib/visjs/vis.js</itemPath>
           </logicalFolder>
-          <itemPath>WEB/Resources/lib/chroma.js</itemPath>
-          <itemPath>WEB/Resources/lib/jquery.min.js</itemPath>
-          <itemPath>WEB/Resources/lib/marked.min.js</itemPath>
         </logicalFolder>
         <itemPath>WEB/Resources/Analysis_Current.js</itemPath>
         <itemPath>WEB/Resources/Analysis_EnergyPower.js</itemPath>
@@ -249,6 +219,7 @@
         <itemPath>WEB/Resources/Login.js</itemPath>
         <itemPath>WEB/Resources/Stats.js</itemPath>
         <itemPath>WEB/Resources/favicon.ico</itemPath>
+        <itemPath>WEB/Resources/openZmeter.css</itemPath>
         <itemPath>WEB/Resources/openZmeter.js</itemPath>
       </logicalFolder>
       <itemPath>WEB/Analysis_Current.html</itemPath>
@@ -269,6 +240,7 @@
                    projectFiles="false"
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Database.sql</itemPath>
+      <itemPath>GenRes.sh</itemPath>
       <itemPath>Makefile</itemPath>
       <itemPath>openZmeter.ini</itemPath>
       <itemPath>openZmeter.service</itemPath>
@@ -285,8 +257,6 @@
     <itemPath>Makefile</itemPath>
     <itemPath>Prices.cpp</itemPath>
     <itemPath>Prices.h</itemPath>
-    <itemPath>Resources.cpp</itemPath>
-    <itemPath>Resources.h</itemPath>
     <itemPath>Tools.cpp</itemPath>
     <itemPath>Tools.h</itemPath>
   </logicalFolder>
@@ -308,18 +278,16 @@
       </toolsSet>
       <compileType>
         <cTool>
-          <developmentMode>0</developmentMode>
           <standard>3</standard>
-          <commandLine>-march=native -O2</commandLine>
+          <commandLine>-march=native -O0</commandLine>
           <warningLevel>2</warningLevel>
         </cTool>
         <ccTool>
-          <developmentMode>0</developmentMode>
           <standard>4</standard>
           <incDir>
             <pElem>/usr/include/libxml2</pElem>
           </incDir>
-          <commandLine>-march=native -O2</commandLine>
+          <commandLine>-march=native -O0</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
@@ -332,12 +300,24 @@
           <linkerAddLib>
             <pElem>/usr/local/lib</pElem>
           </linkerAddLib>
-          <commandLine>-lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ljson-c -lz</commandLine>
+          <commandLine>-lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ljson-c -lz -lcurl build/ResourceFiles.o</commandLine>
         </linkerTool>
       </compileType>
       <packaging>
         <packType>Debian</packType>
         <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
                             from="${OUTPUT_PATH}"
@@ -457,10 +437,6 @@
       </item>
       <item path="Prices.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Resources.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="Resources.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="Tools.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Tools.h" ex="false" tool="3" flavor2="0">
@@ -531,6 +507,26 @@
       <item path="WEB/Resources/Events_EN50160.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Events_ITIC.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Fonts/TitilliumWebBold.woff2"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/Fonts/TitilliumWebBoldItalic.woff2"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/Fonts/TitilliumWebItalic.woff2"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/Fonts/TitilliumWebRegular.woff2"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="WEB/Resources/Help.js" ex="false" tool="3" flavor2="0">
       </item>
@@ -727,42 +723,17 @@
       </item>
       <item path="WEB/Resources/js/zTicker.js" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.css"
+      <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.css"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/css/bootstrap-theme.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/css/bootstrap-theme.css.map"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/css/bootstrap-theme.min.css"
+      <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.js"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
       <item path="WEB/Resources/lib/bootstrap/css/bootstrap.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/css/bootstrap.css.map"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/css/bootstrap.min.css"
             ex="false"
             tool="3"
             flavor2="0">
@@ -787,60 +758,19 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/bootstrap/js/bootstrap.min.js"
+      <item path="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff2"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/c3js/c3.css" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/c3js/c3.min.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/chroma.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/d3-tip/d3-tip.min.css"
+      <item path="WEB/Resources/lib/bootstrap/js/bootstrap.js"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/d3-tip/d3-tip.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/d3/colorbrewer.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/d3/colorbrewer.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/d3/d3.v3.min.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/d3/d3.v3.min_bak.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="WEB/Resources/lib/chroma/chroma.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/datatables/css/dataTables.bootstrap.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/css/dataTables.responsive.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/css/jquery.dataTables.min.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/images/favicon.ico"
             ex="false"
             tool="3"
             flavor2="0">
@@ -875,12 +805,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/datatables/js/dataTables.responsive.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/js/jquery.dataTables.min.js"
+      <item path="WEB/Resources/lib/datatables/js/jquery.dataTables.js"
             ex="false"
             tool="3"
             flavor2="0">
@@ -900,11 +825,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/dygraph/dygraph.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="WEB/Resources/lib/dygraph/dygraph.js"
             ex="false"
             tool="3"
@@ -915,7 +835,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/font-awesome/font-awesome.min.css"
+      <item path="WEB/Resources/lib/font-awesome/css/font-awesome.css"
             ex="false"
             tool="3"
             flavor2="0">
@@ -945,21 +865,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/jQRangeSlider/jQDateRangeSlider-withRuler-min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jQRangeSlider/jQDateRangeSlider.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jQRangeSlider/jquery.mousewheel.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.css"
             ex="false"
             tool="3"
@@ -970,9 +875,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/jquery.min.js" ex="false" tool="3" flavor2="0">
+      <item path="WEB/Resources/lib/jquery/jquery.js" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/marked.min.js" ex="false" tool="3" flavor2="0">
+      <item path="WEB/Resources/lib/marked/marked.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="WEB/Resources/lib/metisMenu/metisMenu.css"
             ex="false"
@@ -984,29 +892,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/metisMenu/metisMenu.min.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/metisMenu/metisMenu.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="WEB/Resources/lib/momentjs/moment-duration-format.js"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/momentjs/moment.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/nvd3/nv.d3.css" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/nvd3/nv.d3.min.js"
+      <item path="WEB/Resources/lib/momentjs/moment.js"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1016,17 +907,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/offline/offline.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/qtip2/imagesloaded.pkg.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/qtip2/imagesloaded.pkg.min.js.map"
+      <item path="WEB/Resources/lib/offline/offline.js"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1041,30 +922,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/qtip2/jquery.qtip.min.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/qtip2/jquery.qtip.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/qtip2/jquery.qtip.min.js.map"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/scrollto/jquery.scrollTo.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/spin.js/spin.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="WEB/Resources/lib/spin.js/spin.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/visjs/img/network/acceptDeleteIcon.png"
             ex="false"
@@ -1146,12 +1004,11 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/vis.min.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="WEB/Resources/lib/visjs/vis.css" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/vis.min.js" ex="false" tool="3" flavor2="0">
+      <item path="WEB/Resources/lib/visjs/vis.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/openZmeter.css" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/openZmeter.js" ex="false" tool="3" flavor2="0">
       </item>
@@ -2861,6 +2718,18 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -2908,10 +2777,6 @@
       <item path="Prices.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Prices.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Resources.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="Resources.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Tools.cpp" ex="false" tool="1" flavor2="4">
       </item>
@@ -2983,6 +2848,26 @@
       <item path="WEB/Resources/Events_EN50160.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Events_ITIC.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Fonts/TitilliumWebBold.woff2"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/Fonts/TitilliumWebBoldItalic.woff2"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/Fonts/TitilliumWebItalic.woff2"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/Fonts/TitilliumWebRegular.woff2"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="WEB/Resources/Help.js" ex="false" tool="3" flavor2="0">
       </item>
@@ -3179,42 +3064,17 @@
       </item>
       <item path="WEB/Resources/js/zTicker.js" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.css"
+      <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.css"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/css/bootstrap-theme.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/css/bootstrap-theme.css.map"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/css/bootstrap-theme.min.css"
+      <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.js"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
       <item path="WEB/Resources/lib/bootstrap/css/bootstrap.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/css/bootstrap.css.map"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/css/bootstrap.min.css"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3239,60 +3099,19 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/bootstrap/js/bootstrap.min.js"
+      <item path="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff2"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/c3js/c3.css" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/c3js/c3.min.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/chroma.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/d3-tip/d3-tip.min.css"
+      <item path="WEB/Resources/lib/bootstrap/js/bootstrap.js"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/d3-tip/d3-tip.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/d3/colorbrewer.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/d3/colorbrewer.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/d3/d3.v3.min.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/d3/d3.v3.min_bak.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="WEB/Resources/lib/chroma/chroma.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/datatables/css/dataTables.bootstrap.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/css/dataTables.responsive.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/css/jquery.dataTables.min.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/images/favicon.ico"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3327,12 +3146,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/datatables/js/dataTables.responsive.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/js/jquery.dataTables.min.js"
+      <item path="WEB/Resources/lib/datatables/js/jquery.dataTables.js"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3352,11 +3166,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/dygraph/dygraph.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="WEB/Resources/lib/dygraph/dygraph.js"
             ex="false"
             tool="3"
@@ -3367,7 +3176,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/font-awesome/font-awesome.min.css"
+      <item path="WEB/Resources/lib/font-awesome/css/font-awesome.css"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3397,21 +3206,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/jQRangeSlider/jQDateRangeSlider-withRuler-min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jQRangeSlider/jQDateRangeSlider.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jQRangeSlider/jquery.mousewheel.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.css"
             ex="false"
             tool="3"
@@ -3422,9 +3216,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/jquery.min.js" ex="false" tool="3" flavor2="0">
+      <item path="WEB/Resources/lib/jquery/jquery.js" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/marked.min.js" ex="false" tool="3" flavor2="0">
+      <item path="WEB/Resources/lib/marked/marked.min.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="WEB/Resources/lib/metisMenu/metisMenu.css"
             ex="false"
@@ -3436,29 +3233,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/metisMenu/metisMenu.min.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/metisMenu/metisMenu.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="WEB/Resources/lib/momentjs/moment-duration-format.js"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/momentjs/moment.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/nvd3/nv.d3.css" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/nvd3/nv.d3.min.js"
+      <item path="WEB/Resources/lib/momentjs/moment.js"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3468,17 +3248,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/offline/offline.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/qtip2/imagesloaded.pkg.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/qtip2/imagesloaded.pkg.min.js.map"
+      <item path="WEB/Resources/lib/offline/offline.js"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3493,30 +3263,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/qtip2/jquery.qtip.min.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/qtip2/jquery.qtip.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/qtip2/jquery.qtip.min.js.map"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/scrollto/jquery.scrollTo.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/spin.js/spin.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="WEB/Resources/lib/spin.js/spin.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/visjs/img/network/acceptDeleteIcon.png"
             ex="false"
@@ -3598,12 +3345,11 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/vis.min.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="WEB/Resources/lib/visjs/vis.css" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/vis.min.js" ex="false" tool="3" flavor2="0">
+      <item path="WEB/Resources/lib/visjs/vis.js" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/openZmeter.css" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/openZmeter.js" ex="false" tool="3" flavor2="0">
       </item>

@@ -22,6 +22,49 @@ Tools::DB_t         Tools::DB;
 Tools::Electrical_t Tools::Electrical;
 Tools::Devices_t    Tools::Devices;
 //----------------------------------------------------------------------------------------------------------------------
+extern char _binary_ResourceFiles_start[];
+extern char _binary_ResourceFiles_end[];
+Tools::File_t *Tools::Files = NULL;
+uint32_t Tools::FileCount = 0;
+uint8_t *Tools::GetFile(const char* name, uint32_t* size) {
+  if(Files == NULL) {
+    char *Ptr   = _binary_ResourceFiles_start;
+    FileCount = atoi(Ptr);
+    Files = (File_t*)malloc(sizeof(File_t) * FileCount);
+    Ptr = &Ptr[strlen(Ptr) + 1];
+    for(uint32_t i = 0; i < FileCount; i++) {
+      Files[i].Name = strdup(Ptr);
+      Ptr = &Ptr[strlen(Ptr) + 1];
+      Files[i].Size = atoi(Ptr);
+      Ptr = &Ptr[strlen(Ptr) + 1];
+      Files[i].Ptr = (uint8_t*)Ptr;
+      Ptr = &Ptr[Files[i].Size];
+    }
+  }
+  for(uint32_t i = 0; i < FileCount; i++) {
+    if(strcmp(name, Files[i].Name) == 0) {
+      *size = Files[i].Size;
+      return Files[i].Ptr;
+    }
+  }
+  return NULL;
+  
+  int First = 0;
+  int Last = FileCount - 1;
+  while(First <= Last) {
+    int Middle = (First + Last) / 2;
+    int Comp = strcmp(Files[Middle].Name, name);
+    if(Comp == 0) {
+      *size = Files[Middle].Size;
+      return Files[Middle].Ptr;
+    } else if(Comp < 0) {
+      First = Middle + 1;
+    } else {
+      Last = Middle - 1;
+    }
+  }
+  return NULL;
+}
 void Tools::LogMsg(const char *level, const char *msg, ...) {
   if((Debug == false) && (strcmp(level, "DEBUG") == 0)) return;
   va_list args;
