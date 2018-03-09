@@ -35,13 +35,12 @@
           <itemPath>WEB/Resources/HelpPages/Configuration.md</itemPath>
           <itemPath>WEB/Resources/HelpPages/Desbalanceo y potencia en sistemas trifasicos.pdf</itemPath>
           <itemPath>WEB/Resources/HelpPages/Estandar EN 50160.md</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Estandar IEC61000-4-30.md</itemPath>
           <itemPath>WEB/Resources/HelpPages/Hardware (English).md</itemPath>
           <itemPath>WEB/Resources/HelpPages/Hardware.md</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Home (English).md</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Home.md</itemPath>
+          <itemPath>WEB/Resources/HelpPages/Home.html</itemPath>
           <itemPath>WEB/Resources/HelpPages/Interharmonics- basic concepts and techniques for their detection and measurement  .pdf</itemPath>
           <itemPath>WEB/Resources/HelpPages/Measured variables.md</itemPath>
+          <itemPath>WEB/Resources/HelpPages/Standard IEC61000-4-30.html</itemPath>
           <itemPath>WEB/Resources/HelpPages/Standard IEC61000-4-30.md</itemPath>
           <itemPath>WEB/Resources/HelpPages/Variables medidas.md</itemPath>
           <itemPath>WEB/Resources/HelpPages/Zero Crossing.md</itemPath>
@@ -504,11 +503,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/HelpPages/Estandar IEC61000-4-30.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="WEB/Resources/HelpPages/Hardware (English).md"
             ex="false"
             tool="3"
@@ -519,12 +513,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/HelpPages/Home (English).md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Home.md" ex="false" tool="3" flavor2="0">
+      <item path="WEB/Resources/HelpPages/Home.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/HelpPages/Interharmonics- basic concepts and techniques for their detection and measurement  .pdf"
             ex="false"
@@ -532,6 +521,11 @@
             flavor2="0">
       </item>
       <item path="WEB/Resources/HelpPages/Measured variables.md"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/HelpPages/Standard IEC61000-4-30.html"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1251,11 +1245,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/HelpPages/Estandar IEC61000-4-30.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="WEB/Resources/HelpPages/Hardware (English).md"
             ex="false"
             tool="3"
@@ -1266,12 +1255,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/HelpPages/Home (English).md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Home.md" ex="false" tool="3" flavor2="0">
+      <item path="WEB/Resources/HelpPages/Home.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/HelpPages/Interharmonics- basic concepts and techniques for their detection and measurement  .pdf"
             ex="false"
@@ -1279,6 +1263,11 @@
             flavor2="0">
       </item>
       <item path="WEB/Resources/HelpPages/Measured variables.md"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/HelpPages/Standard IEC61000-4-30.html"
             ex="false"
             tool="3"
             flavor2="0">
