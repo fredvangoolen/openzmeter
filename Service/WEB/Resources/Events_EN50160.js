@@ -354,7 +354,7 @@ function GetStatsData(selected_year) {
                               ((WeekStats[Week].VoltageIN / WeekStats[Week].VoltageSamples) * 100.0 >= 95.0) && 
                               ((WeekStats[Week].THDIN / WeekStats[Week].VoltageSamples) * 100.0 >= 100.0) &&
                               ((WeekStats[Week].HarmonicsIN / WeekStats[Week].HarmonicsSamples) * 100.0 >= 100.0));
-               $('#WeekList').append('<button type="button" class="btn btn-default btn-xs" id="btnWeek_' + Week + '" onclick="LoadWeek(' + Week + ')" data-toggle="tooltip" title="From ' + WeekStats[Week].Start.toLocaleDateString() + " to " + WeekStats[Week].End.toLocaleDateString() + '" ' + (InRange ? '' : 'style="color:#d9534f;font-weight:bold"') + '>' + ((Week == 0) ? 'Totals' : Week) + '</button>');
+               $('#WeekList').append('<button type="button" class="btn btn-default btn-xs" id="btnWeek_' + Week + '" onclick="LoadWeek(' + Week + ')" data-toggle="tooltip" title="From ' + WeekStats[Week].Start.toLocaleDateString() + " to " + WeekStats[Week].End.toLocaleDateString() + '">' + ((Week == 0) ? 'Totals' : Week) + (InRange ? '' : ' <i class="fa fa-warning"></i>') + '</button>');
              }
              LoadWeek(0);
              StopSpinner(Spinner, 'EN50160Spinner');

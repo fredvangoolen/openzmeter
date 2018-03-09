@@ -15,14 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-var Timeline = null;
 
 /* Tabla de eventos */
-var LastEventStartTime = 0;
-var EventsTable        = null;
-var EventChart         = null;
-var EventSpinner       = new Spinner(SpinnerOpts);
-var DisturbancesTimer  = null;
+var TimeLine            = null;
+var TimeLineDataset     = null;
+var EventsDataset       = [];
+var LastEventStarttime  = 0;
+var EventsTable         = null;
+var EventChart          = null;
+var EventSpinner        = new Spinner(SpinnerOpts);
+var DisturbancesSpinner = new Spinner(SpinnerOpts);
+var DisturbancesTimer   = null;
+var AjaxQuery           = null;
 function AjaxEvents(result) {
   $('#btnShowEventYear').removeClass('active');
   $('#btnShowEventMonth').removeClass('active');
@@ -49,22 +53,33 @@ function AjaxEvents(result) {
                                                 order: [0, 'desc']
     });
   }
-  if(LastEventStartTime === 0) {
-    EventsTable.clear().draw();
-    EventsDatasheet = [];
-  }
-  if(result['Starttime'] !== null) {
-    for(i = 0; i < result['Starttime'].length; i++) {
-      var Time = new Date(result['Starttime'][i]);
-      EventsTable.row.add( [Time.toLocaleString() + '.' + Time.getMilliseconds(), 
-                            result['Type'][i], 
-                            Round2(result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq']), 
-                            Round2(result['Voltage'][i]), 
-                            Round2(result['Percentage'][i]), 
-                            '<button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button>'] ).draw();
-      LastEventStartTime = result['Starttime'][i];
-      EventsDatasheet.push(result['Starttime'][i]);
-    }
+  if(TimeLine == null) {
+    TimeLine = new vis.Timeline(document.getElementById('disturbances_chart'), null, {
+      stack: false,
+      editable: false,
+      margin: {
+        item: 10, // minimal margin between items
+        axis: 5   // minimal margin between items and the axis
+      },
+      orientation: 'top'
+    });
+    TimeLine.on('rangechanged', function(evt) {
+      if(evt.byUser === false) return;
+      clearInterval(DisturbancesTimer);
+      $('#btnDisturbancesNow').removeClass('active');
+      localStorage.setItem('GraphEnd', evt.end.getTime());
+      localStorage.setItem('GraphPeriod', evt.end.getTime() - evt.start.getTime());
+      LastEventStarttime = 0;
+      AjaxGetEvents();
+    });
+    var Groups = new vis.DataSet([
+      { id: 1, content: 'Dips'},
+      { id: 2, content: 'Swells'},
+      { id: 3, content: 'Interruptions'},
+      { id: 4, content: 'RVC'},
+      { id: 5, content: 'Glitchs'}
+    ]);
+    TimeLine.setGroups(Groups);
   }
   if(EventChart === null) {
     EventChart = new Dygraph(document.getElementById("EventChart"), (Nodes['Devices'][Node]['Type'] == '3Phase') ? [[0, 0, 0, 0]] : [[0, 0]], {
@@ -78,76 +93,51 @@ function AjaxEvents(result) {
     });
     $('#EventChart').append('<div class="no-data event_instructions"><div class="alert alert-info">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
   }
-  
-  
-  
-  
-  
-  
-  var Groups = new vis.DataSet([
-    { id: 1, content: 'Dips'},
-    { id: 2, content: 'Swells'},
-    { id: 3, content: 'Interruptions'},
-    { id: 4, content: 'RVC'},
-    { id: 5, content: 'Glitchs'}
-  ]);
-  var Items = new vis.DataSet();
-  for(i = 0; i < result['Starttime'].length; i++) {
-    switch(result['Type'][i]) {
-      case 'INTERRUPTION':
-        var className = 'red';
-        var group = 3;
-        break;
-      case 'SWELL':
-        var className = 'blue';
-        var group = 2;
-        break;
-      case 'DIP':
-        var className = 'blue';
-        var group = 1;
-        break;
-      case 'RVC':
-        var className = 'blue';
-        var group = 4;
-        break;
-      }
-      var date = new Date(result['Starttime'][i]);
-      var percent = result['Percentage'][i];
-      var duration = result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq'];
-      var diff = 0;
-      Items.add({
-          id: i,
-          group: group,
-          start: date,
-          className: className,
-          content: '<strong>Time:</strong> ' + date.toLocaleString() + '.' + date.getMilliseconds() + '<br><strong>Duration:</strong> ' + duration + '<br><strong>ΔU<sub>max</sub>:</strong> ' + diff + ' V<br><strong>% ΔU<sub>max</sub>:</strong>' + percent + '%'
-      });
+  if(LastEventStarttime === 0) {
+//    StopSpinner(DisturbancesSpinner, 'DisturbancesSpinner');
+    EventsTable.clear().draw();
+    EventsDataset = [];
+    TimeLineDataset = new vis.DataSet();
   }
-
-
-
-Timeline = new vis.Timeline(document.getElementById('disturbances_chart'), null, {
-  stack: false,
-  start: result['From'],
-  end: result['To'],
-  editable: false,
-  margin: {
-    item: 10, // minimal margin between items
-    axis: 5   // minimal margin between items and the axis
-  },
-  orientation: 'top'
-});
-  Timeline.setGroups(Groups);
-  Timeline.setItems(Items);
-  Timeline.on('rangechanged', function () {
-    var range = Timeline.getWindow();
-    generateEventTable(range.start.getTime(), range.end.getTime());
-  });
-  
-  
-
-  
-  
+  if(result['Starttime'] !== null) {
+    for(i = 0; i < result['Starttime'].length; i++) {
+      var Time = new Date(result['Starttime'][i]);
+      EventsTable.row.add( [Time.toLocaleString() + '.' + Time.getMilliseconds(), 
+                            result['Type'][i], 
+                            Round2(result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq']), 
+                            Round2(result['Voltage'][i]), 
+                            Round2(result['Percentage'][i]), 
+                            '<button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button>'] ).draw();
+      EventsDataset.push(result['Starttime'][i]);
+      var Item = { 
+          id: i, 
+          start: Time,
+          content: '<table>' +
+                   '<tr><td><strong>Time</strong></td><td> : ' + Time.toLocaleString() + '.' + Time.getMilliseconds() + '</td></tr>' +
+                   '<tr><td><strong>Duration</strong></td><td> : ' + (result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq']) + '</td></tr>' +
+                   '<tr><td><strong>ΔU<sub>max</sub></strong></td><td> : ' + Round2Plain(result['Voltage'][i]) + ' V</td></tr>' +
+                   '<tr><td><strong>% ΔU<sub>max</sub></strong></td><td> : ' + Round2Plain(result['Percentage'][i]) + '%</td></tr>' + 
+                   '</table>'
+      };
+      if(result['Type'][i] == 'INTERRUPTION') {
+        Item.className = 'red';
+        Item.group = 3;
+      } else if(result['Type'][i] == 'SWELL') {
+        Item.className = 'blue';
+        Item.group = 2;
+      } else if(result['Type'][i] == 'DIP') {
+        Item.className = 'blue';
+        Item.group = 1;
+      } else if(result['Type'][i] == 'RVC') {
+        Item.className = 'blue';
+        Item.group = 4;
+      }
+      TimeLineDataset.add(Item);
+    }
+  }
+  LastEventStarttime = result['To'];
+  TimeLine.setItems(TimeLineDataset);
+  TimeLine.setWindow(result['From'], result['To']);
 }
 $(document).on("mouseover", '.vis-item', function ($e) {
   $(this).qtip({
@@ -157,14 +147,14 @@ $(document).on("mouseover", '.vis-item', function ($e) {
       },
       position: {
         my: 'top left', // Position my top left...
-        at: 'bottom right', // at the bottom right of...
+        at: 'bottom left', // at the bottom right of...
       },
       style: {
         classes: 'qtip-bootstrap'
       }
   });
+  $(this).qtip().show();
 });
-
 $("table#EventsTable").on('click', 'button.get_samples', function () {
   var Row = EventsTable.row($(this).parents('tr'));
   $('#EventChart div.no-data').addClass('hidden');
@@ -176,7 +166,7 @@ $("table#EventsTable").on('click', 'button.get_samples', function () {
     type: "POST",
     dataType: "json",
     contentType: 'application/json',
-    data: JSON.stringify({ Node: Node, Starttime: EventsDatasheet[Row.index()] }),
+    data: JSON.stringify({ Node: Node, Starttime: EventsDataset[Row.index()] }),
     success: AjaxSamples
   });
 });
@@ -273,7 +263,7 @@ function AjaxSamples(result) {
 function AjaxGetEvents() {
   if(DisturbancesTimer !== null) clearInterval(DisturbancesTimer);
   $('#btnDisturbancesNow').addClass('disabled');
-  if(LastEventStartTime === 0) ShowSpinner(EventSpinner, 'EventSpinner');
+//  if(LastEventStarttime === 0) ShowSpinner(DisturbancesSpinner, 'DisturbancesSpinner');
   var Period = parseInt(localStorage.getItem('GraphPeriod'));
   if(!Period) {
     Period = 86400000;
@@ -284,16 +274,21 @@ function AjaxGetEvents() {
     GraphEnd = 0;
     localStorage.setItem('GraphEnd', 0);
   } 
-  $.ajax({ url: "getEvents",
+  if(AjaxQuery != null) {
+    AjaxQuery.abort();
+    AjaxQuery = null;
+  }
+  AjaxQuery = $.ajax({ url: "getEvents",
            timeout: 20000,
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: Period, To: GraphEnd, LastEvent: LastEventStartTime, Node: Node}),
+           data: JSON.stringify({ Period: Period, To: GraphEnd, LastEvent: LastEventStarttime, Node: Node}),
            success: AjaxEvents,
            complete: function() { 
              $('#btnDisturbancesNow').removeClass('disabled');
              if(parseInt(localStorage.getItem('GraphEnd')) === 0) DisturbancesTimer = setTimeout(AjaxGetEvents, 3000);
+             AjaxQuery = null;
            }
   }); 
 }

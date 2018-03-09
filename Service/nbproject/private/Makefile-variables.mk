@@ -3,5 +3,5 @@
 #
 # NOCDDL
 #
-# Default configuration
-# Release_ARMHF configuration
+# Release configuration
+# Debug configuration

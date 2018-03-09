@@ -23,7 +23,7 @@ AS=as
 # Macros
 CND_PLATFORM=GNU-Linux
 CND_DLIB_EXT=so
-CND_CONF=Release_ARMHF
+CND_CONF=Debug
 CND_DISTDIR=dist
 CND_BUILDDIR=build
 
@@ -46,11 +46,11 @@ OBJECTFILES= \
 
 
 # C Compiler Flags
-CFLAGS=-Os
+CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-Os
-CXXFLAGS=-Os
+CCFLAGS=
+CXXFLAGS=
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -59,55 +59,55 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L/usr/bin/arm-linux-gnueabihf-/lib/ -L/usr/lib/arm-linux-gnueabihf
+LDLIBSOPTIONS=-L/usr/local/lib
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter: ${OBJECTFILES}
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter ${OBJECTFILES} ${LDLIBSOPTIONS} -lfftw3f -lpthread -lusb-1.0 -lpq -lz -ljson-c -lmicrohttpd
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service ${OBJECTFILES} ${LDLIBSOPTIONS} -lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ljson-c -lz -lcurl
 
 ${OBJECTDIR}/CaptureInterface.o: CaptureInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -Wall -I/usr/bin/arm-linux-gnueabihf-/include/ -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureInterface.o CaptureInterface.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureInterface.o CaptureInterface.cpp
 
 ${OBJECTDIR}/CaptureMono/CaptureMono.o: CaptureMono/CaptureMono.cpp
 	${MKDIR} -p ${OBJECTDIR}/CaptureMono
 	${RM} "$@.d"
-	$(COMPILE.cc) -Wall -I/usr/bin/arm-linux-gnueabihf-/include/ -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureMono/CaptureMono.o CaptureMono/CaptureMono.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureMono/CaptureMono.o CaptureMono/CaptureMono.cpp
 
 ${OBJECTDIR}/CaptureVirtual/CaptureVirtual.o: CaptureVirtual/CaptureVirtual.cpp
 	${MKDIR} -p ${OBJECTDIR}/CaptureVirtual
 	${RM} "$@.d"
-	$(COMPILE.cc) -Wall -I/usr/bin/arm-linux-gnueabihf-/include/ -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureVirtual/CaptureVirtual.o CaptureVirtual/CaptureVirtual.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CaptureVirtual/CaptureVirtual.o CaptureVirtual/CaptureVirtual.cpp
 
 ${OBJECTDIR}/Database.o: Database.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -Wall -I/usr/bin/arm-linux-gnueabihf-/include/ -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Database.o Database.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Database.o Database.cpp
 
 ${OBJECTDIR}/HTTPServer.o: HTTPServer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -Wall -I/usr/bin/arm-linux-gnueabihf-/include/ -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/HTTPServer.o HTTPServer.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/HTTPServer.o HTTPServer.cpp
 
 ${OBJECTDIR}/Main.o: Main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -Wall -I/usr/bin/arm-linux-gnueabihf-/include/ -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.cpp
 
 ${OBJECTDIR}/Prices.o: Prices.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -Wall -I/usr/bin/arm-linux-gnueabihf-/include/ -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Prices.o Prices.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Prices.o Prices.cpp
 
 ${OBJECTDIR}/Tools.o: Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -Wall -I/usr/bin/arm-linux-gnueabihf-/include/ -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Tools.o Tools.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Tools.o Tools.cpp
 
 # Subprojects
 .build-subprojects:

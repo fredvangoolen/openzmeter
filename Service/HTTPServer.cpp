@@ -128,7 +128,7 @@ int  HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url
   return Return;
 }
 int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, const char *aditionalheadertype, const char *aditionalheadervalue) {
-#if 1
+#ifndef EMBED_RESOURCES
   int File = -1;
   struct stat FileStat;
   char *Path = (char*)malloc(sizeof(char) * (strlen(path) + strlen(Tools::Global.HTTPPath) + 1));

@@ -30,14 +30,6 @@
             <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/STM32F30x_StdPeriph_Driver/src/stm32f30x_adc.c</file>
             <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/ADC_Capture.c</file>
         </group>
-        <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/STM32F30x_StdPeriph_Driver/src/stm32f30x_adc.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/CMSIS/Source/system_stm32f30x.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/SysHandlers.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/STM32F30x_StdPeriph_Driver/src/stm32f30x_tim.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/STM32F30x_StdPeriph_Driver/inc/stm32f30x_tim.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/Main.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/ADC_Capture.c</file>
-        </group>
+        <group name="ServiceV2"/>
     </open-files>
 </project-private>

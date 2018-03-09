@@ -22,6 +22,7 @@ Tools::DB_t         Tools::DB;
 Tools::Electrical_t Tools::Electrical;
 Tools::Devices_t    Tools::Devices;
 //----------------------------------------------------------------------------------------------------------------------
+#ifdef EMBED_RESOURCES
 extern char _binary_ResourceFiles_start[];
 extern char _binary_ResourceFiles_end[];
 Tools::File_t *Tools::Files = NULL;
@@ -48,23 +49,8 @@ uint8_t *Tools::GetFile(const char* name, uint32_t* size) {
     }
   }
   return NULL;
-  
-  int First = 0;
-  int Last = FileCount - 1;
-  while(First <= Last) {
-    int Middle = (First + Last) / 2;
-    int Comp = strcmp(Files[Middle].Name, name);
-    if(Comp == 0) {
-      *size = Files[Middle].Size;
-      return Files[Middle].Ptr;
-    } else if(Comp < 0) {
-      First = Middle + 1;
-    } else {
-      Last = Middle - 1;
-    }
-  }
-  return NULL;
 }
+#endif
 void Tools::LogMsg(const char *level, const char *msg, ...) {
   if((Debug == false) && (strcmp(level, "DEBUG") == 0)) return;
   va_list args;

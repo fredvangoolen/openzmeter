@@ -12,15 +12,6 @@
       <itemPath>CaptureVirtual/CaptureVirtual.h</itemPath>
     </logicalFolder>
     <logicalFolder name="WEB" displayName="WEB" projectFiles="true">
-      <logicalFolder name="MiniViews" displayName="MiniViews" projectFiles="true">
-        <itemPath>WEB/MiniViews/Active_Energy.html</itemPath>
-        <itemPath>WEB/MiniViews/Active_Power.html</itemPath>
-        <itemPath>WEB/MiniViews/Current.html</itemPath>
-        <itemPath>WEB/MiniViews/Frequency.html</itemPath>
-        <itemPath>WEB/MiniViews/Fundamental_Reactive_Energy.html</itemPath>
-        <itemPath>WEB/MiniViews/Fundamental_Reactive_Power.html</itemPath>
-        <itemPath>WEB/MiniViews/Voltage.html</itemPath>
-      </logicalFolder>
       <logicalFolder name="Resources" displayName="Resources" projectFiles="true">
         <logicalFolder name="Fonts" displayName="Fonts" projectFiles="true">
           <itemPath>WEB/Resources/Fonts/TitilliumWebBold.woff2</itemPath>
@@ -70,21 +61,6 @@
           <itemPath>WEB/Resources/HelpPages/thd_v.png</itemPath>
           <itemPath>WEB/Resources/HelpPages/zeroC.png</itemPath>
           <itemPath>WEB/Resources/HelpPages/zeroC_interharmonic.png</itemPath>
-        </logicalFolder>
-        <logicalFolder name="img" displayName="img" projectFiles="true">
-          <itemPath>WEB/Resources/img/load.gif</itemPath>
-          <itemPath>WEB/Resources/img/loading.gif</itemPath>
-          <itemPath>WEB/Resources/img/logo.png</itemPath>
-        </logicalFolder>
-        <logicalFolder name="js" displayName="js" projectFiles="true">
-          <logicalFolder name="events" displayName="events" projectFiles="true">
-            <itemPath>WEB/Resources/js/events/events.js</itemPath>
-          </logicalFolder>
-          <itemPath>WEB/Resources/js/account.js</itemPath>
-          <itemPath>WEB/Resources/js/live.js</itemPath>
-          <itemPath>WEB/Resources/js/settings.js</itemPath>
-          <itemPath>WEB/Resources/js/utils.js</itemPath>
-          <itemPath>WEB/Resources/js/zTicker.js</itemPath>
         </logicalFolder>
         <logicalFolder name="lib" displayName="lib" projectFiles="true">
           <logicalFolder name="bootstrap" displayName="bootstrap" projectFiles="true">
@@ -206,6 +182,15 @@
             <itemPath>WEB/Resources/lib/visjs/vis.js</itemPath>
           </logicalFolder>
         </logicalFolder>
+        <logicalFolder name="MiniViews" displayName="MiniViews" projectFiles="true">
+          <itemPath>WEB/Resources/MiniViews/Active_Energy.html</itemPath>
+          <itemPath>WEB/Resources/MiniViews/Active_Power.html</itemPath>
+          <itemPath>WEB/Resources/MiniViews/Current.html</itemPath>
+          <itemPath>WEB/Resources/MiniViews/Frequency.html</itemPath>
+          <itemPath>WEB/Resources/MiniViews/Fundamental_Reactive_Energy.html</itemPath>
+          <itemPath>WEB/Resources/MiniViews/Fundamental_Reactive_Power.html</itemPath>
+          <itemPath>WEB/Resources/MiniViews/Voltage.html</itemPath>
+        </logicalFolder>
         <itemPath>WEB/Resources/Analysis_Current.js</itemPath>
         <itemPath>WEB/Resources/Analysis_EnergyPower.js</itemPath>
         <itemPath>WEB/Resources/Analysis_Frequency.js</itemPath>
@@ -254,7 +239,6 @@
     <itemPath>HTTPServer.h</itemPath>
     <itemPath>Main.cpp</itemPath>
     <itemPath>Main.h</itemPath>
-    <itemPath>Makefile</itemPath>
     <itemPath>Prices.cpp</itemPath>
     <itemPath>Prices.h</itemPath>
     <itemPath>Tools.cpp</itemPath>
@@ -270,7 +254,7 @@
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
-    <conf name="Default" type="1">
+    <conf name="Release" type="1">
       <toolsSet>
         <compilerSet>GNU|GNU</compilerSet>
         <dependencyChecking>true</dependencyChecking>
@@ -278,17 +262,24 @@
       </toolsSet>
       <compileType>
         <cTool>
+          <developmentMode>0</developmentMode>
+          <stripSymbols>true</stripSymbols>
           <standard>3</standard>
-          <commandLine>-march=native -O0</commandLine>
-          <warningLevel>2</warningLevel>
+          <commandLine>-march=native -Os</commandLine>
+          <warningLevel>3</warningLevel>
         </cTool>
         <ccTool>
+          <developmentMode>0</developmentMode>
+          <stripSymbols>true</stripSymbols>
           <standard>4</standard>
           <incDir>
             <pElem>/usr/include/libxml2</pElem>
           </incDir>
-          <commandLine>-march=native -O0</commandLine>
-          <warningLevel>2</warningLevel>
+          <commandLine>-march=native -Os</commandLine>
+          <preprocessorList>
+            <Elem>EMBED_RESOURCES</Elem>
+          </preprocessorList>
+          <warningLevel>3</warningLevel>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -297,6 +288,7 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter</output>
           <linkerAddLib>
             <pElem>/usr/local/lib</pElem>
           </linkerAddLib>
@@ -305,89 +297,30 @@
       </compileType>
       <packaging>
         <packType>Debian</packType>
+        <packTopDir>/usr</packTopDir>
         <packFileList>
           <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
+                            to="/etc/openZmeter.ini"
+                            from="openZmeter.ini"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}/share/openZmeter/Database.sql"
+                            from="Database.sql"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to=""
+                            from="postinst"
                             perm="755"
                             owner="root"
                             group="bin"/>
           <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="755"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="755"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="755"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="755"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="755"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="755"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="755"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="755"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="755"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="755"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="755"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="755"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="755"
+                            to="/lib/systemd/system/openZmeter.service"
+                            from="openZmeter.service"
+                            perm="644"
                             owner="root"
                             group="bin"/>
           <packFileListElem type="File"
@@ -431,8 +364,6 @@
       </item>
       <item path="Main.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Makefile" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="Prices.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Prices.h" ex="false" tool="3" flavor2="0">
@@ -460,26 +391,6 @@
       <item path="WEB/Help.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Login.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/MiniViews/Active_Energy.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/MiniViews/Active_Power.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/MiniViews/Current.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/MiniViews/Frequency.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/MiniViews/Fundamental_Reactive_Energy.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/MiniViews/Fundamental_Reactive_Power.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/MiniViews/Voltage.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Analysis_Current.js" ex="false" tool="3" flavor2="0">
       </item>
@@ -701,27 +612,44 @@
       </item>
       <item path="WEB/Resources/Login.js" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="WEB/Resources/MiniViews/Active_Energy.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/MiniViews/Active_Power.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/MiniViews/Current.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/MiniViews/Frequency.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/MiniViews/Fundamental_Reactive_Energy.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/MiniViews/Fundamental_Reactive_Power.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/MiniViews/Voltage.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="WEB/Resources/Stats.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/favicon.ico" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/img/load.gif" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/img/loading.gif" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/img/logo.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/account.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/events/events.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/live.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/settings.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/utils.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/zTicker.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.css"
             ex="false"
@@ -1017,7 +945,7 @@
       <item path="WEB/Stats.html" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
-    <conf name="Release_ARMHF" type="1">
+    <conf name="Debug" type="1">
       <toolsSet>
         <compilerSet>GNU|GNU</compilerSet>
         <dependencyChecking>true</dependencyChecking>
@@ -1025,21 +953,14 @@
       </toolsSet>
       <compileType>
         <cTool>
-          <developmentMode>0</developmentMode>
           <standard>3</standard>
-          <incDir>
-            <pElem>/usr/bin/arm-linux-gnueabihf-/include/</pElem>
-          </incDir>
-          <commandLine>-Os</commandLine>
           <warningLevel>2</warningLevel>
         </cTool>
         <ccTool>
-          <developmentMode>0</developmentMode>
           <standard>4</standard>
           <incDir>
-            <pElem>/usr/bin/arm-linux-gnueabihf-/include/</pElem>
+            <pElem>/usr/include/libxml2</pElem>
           </incDir>
-          <commandLine>-Os</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
@@ -1049,1595 +970,20 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter</output>
           <linkerAddLib>
-            <pElem>/usr/bin/arm-linux-gnueabihf-/lib/</pElem>
-            <pElem>/usr/lib/arm-linux-gnueabihf</pElem>
+            <pElem>/usr/local/lib</pElem>
           </linkerAddLib>
-          <commandLine>-lfftw3f -lpthread -lusb-1.0 -lpq -lz -ljson-c -lmicrohttpd</commandLine>
+          <commandLine>-lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ljson-c -lz -lcurl</commandLine>
         </linkerTool>
       </compileType>
       <packaging>
         <packType>Debian</packType>
-        <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/openZmeter.deb</output>
-        <packTopDir>/opt/openZmeter</packTopDir>
+        <output></output>
         <packFileList>
           <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Events_EN50160.html"
-                            from="WEB/Events_EN50160.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Analysis_EnergyPower.html"
-                            from="WEB/Analysis_EnergyPower.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Events_ITIC.html"
-                            from="WEB/Events_ITIC.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Help.html"
-                            from="WEB/Help.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Analysis_Frequency.js"
-                            from="WEB/Resources/Analysis_Frequency.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Route_1Phase_4.svg"
-                            from="WEB/Resources/Route_1Phase_4.svg"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/datatables/js/dataTables.bootstrap.js"
-                            from="WEB/Resources/lib/datatables/js/dataTables.bootstrap.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/datatables/js/dataTables.responsive.min.js"
-                            from="WEB/Resources/lib/datatables/js/dataTables.responsive.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/datatables/js/jquery.dataTables.min.js"
-                            from="WEB/Resources/lib/datatables/js/jquery.dataTables.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/datatables/images/sort_desc_disabled.png"
-                            from="WEB/Resources/lib/datatables/images/sort_desc_disabled.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/datatables/images/sort_asc_disabled.png"
-                            from="WEB/Resources/lib/datatables/images/sort_asc_disabled.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/datatables/images/favicon.ico"
-                            from="WEB/Resources/lib/datatables/images/favicon.ico"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/datatables/images/sort_both.png"
-                            from="WEB/Resources/lib/datatables/images/sort_both.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/datatables/images/sort_asc.png"
-                            from="WEB/Resources/lib/datatables/images/sort_asc.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/datatables/images/sort_desc.png"
-                            from="WEB/Resources/lib/datatables/images/sort_desc.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/datatables/css/dataTables.bootstrap.css"
-                            from="WEB/Resources/lib/datatables/css/dataTables.bootstrap.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/datatables/css/jquery.dataTables.min.css"
-                            from="WEB/Resources/lib/datatables/css/jquery.dataTables.min.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/datatables/css/dataTables.responsive.css"
-                            from="WEB/Resources/lib/datatables/css/dataTables.responsive.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/dc.js/dc.min.js"
-                            from="WEB/Resources/lib/dc.js/dc.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/dc.js/dc.css"
-                            from="WEB/Resources/lib/dc.js/dc.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/dc.js/crossfilter.js"
-                            from="WEB/Resources/lib/dc.js/crossfilter.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/scrollto/jquery.scrollTo.min.js"
-                            from="WEB/Resources/lib/scrollto/jquery.scrollTo.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/spin.js/spin.min.js"
-                            from="WEB/Resources/lib/spin.js/spin.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/metisMenu/metisMenu.min.css"
-                            from="WEB/Resources/lib/metisMenu/metisMenu.min.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/metisMenu/metisMenu.js"
-                            from="WEB/Resources/lib/metisMenu/metisMenu.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/metisMenu/.bower.json"
-                            from="WEB/Resources/lib/metisMenu/.bower.json"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/metisMenu/metisMenu.css"
-                            from="WEB/Resources/lib/metisMenu/metisMenu.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/metisMenu/metisMenu.min.js"
-                            from="WEB/Resources/lib/metisMenu/metisMenu.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/nvd3/nv.d3.min.js"
-                            from="WEB/Resources/lib/nvd3/nv.d3.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/nvd3/nv.d3.css"
-                            from="WEB/Resources/lib/nvd3/nv.d3.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/ja_JP.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/ja_JP.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/no_NO.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/no_NO.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/en_US.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/en_US.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/sv_SE.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/sv_SE.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/zh_CN.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/zh_CN.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/th_TH.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/th_TH.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/ua_UA.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/ua_UA.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/ro_RO.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/ro_RO.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/id_ID.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/id_ID.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/da_DK.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/da_DK.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/vi_VN.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/vi_VN.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/hu_HU.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/hu_HU.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/be_FR.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/be_FR.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/ru_RU.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/ru_RU.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/zh_TW.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/zh_TW.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/de_DE.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/de_DE.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/be_NL.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/be_NL.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/es_ES.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/es_ES.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/nl_NL.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/nl_NL.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/gr_EL.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/gr_EL.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/es_CL.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/es_CL.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/sr_RS.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/sr_RS.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/tr_TR.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/tr_TR.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/fr_FR.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/fr_FR.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/pl_PL.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/pl_PL.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/it_IT.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/it_IT.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/pt_BR.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/pt_BR.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/bg_BG.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/bg_BG.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/cs_CZ.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/cs_CZ.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/ar_MA.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/ar_MA.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/language/fa_IR.js"
-                            from="WEB/Resources/lib/bootstrap-validator/language/fa_IR.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/bootstrapValidator.min.css"
-                            from="WEB/Resources/lib/bootstrap-validator/bootstrapValidator.min.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-validator/bootstrapValidator.min.js"
-                            from="WEB/Resources/lib/bootstrap-validator/bootstrapValidator.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/qtip2/jquery.qtip.min.js"
-                            from="WEB/Resources/lib/qtip2/jquery.qtip.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/qtip2/jquery.qtip.js"
-                            from="WEB/Resources/lib/qtip2/jquery.qtip.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/qtip2/jquery.qtip.css"
-                            from="WEB/Resources/lib/qtip2/jquery.qtip.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/qtip2/imagesloaded.pkg.min.js"
-                            from="WEB/Resources/lib/qtip2/imagesloaded.pkg.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/qtip2/imagesloaded.pkg.min.js.map"
-                            from="WEB/Resources/lib/qtip2/imagesloaded.pkg.min.js.map"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/qtip2/jquery.qtip.min.js.map"
-                            from="WEB/Resources/lib/qtip2/jquery.qtip.min.js.map"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/qtip2/jquery.qtip.min.css"
-                            from="WEB/Resources/lib/qtip2/jquery.qtip.min.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/font-awesome/font-awesome.min.css"
-                            from="WEB/Resources/lib/font-awesome/font-awesome.min.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.ttf"
-                            from="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.ttf"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/font-awesome/fonts/FontAwesome.otf"
-                            from="WEB/Resources/lib/font-awesome/fonts/FontAwesome.otf"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.svg"
-                            from="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.svg"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff"
-                            from="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff2"
-                            from="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff2"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.eot"
-                            from="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.eot"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/font-awesome/css/font-awesome.min.css"
-                            from="WEB/Resources/lib/font-awesome/css/font-awesome.min.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery.min.js"
-                            from="WEB/Resources/lib/jquery.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.js"
-                            from="WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.css"
-                            from="WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/c3js/c3.min.js"
-                            from="WEB/Resources/lib/c3js/c3.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/c3js/c3.css"
-                            from="WEB/Resources/lib/c3js/c3.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap/js/bootstrap.min.js"
-                            from="WEB/Resources/lib/bootstrap/js/bootstrap.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff"
-                            from="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.eot"
-                            from="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.eot"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.ttf"
-                            from="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.ttf"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.svg"
-                            from="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.svg"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap/css/bootstrap-theme.css"
-                            from="WEB/Resources/lib/bootstrap/css/bootstrap-theme.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap/css/bootstrap.min.css"
-                            from="WEB/Resources/lib/bootstrap/css/bootstrap.min.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap/css/bootstrap.css.map"
-                            from="WEB/Resources/lib/bootstrap/css/bootstrap.css.map"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap/css/bootstrap-theme.css.map"
-                            from="WEB/Resources/lib/bootstrap/css/bootstrap-theme.css.map"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap/css/bootstrap-theme.min.css"
-                            from="WEB/Resources/lib/bootstrap/css/bootstrap-theme.min.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap/css/bootstrap.css"
-                            from="WEB/Resources/lib/bootstrap/css/bootstrap.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/js/jquery-ui.min.js"
-                            from="WEB/Resources/lib/jquery-ui/js/jquery-ui.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_flat_0_aaaaaa_40x100.png"
-                            from="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_flat_0_aaaaaa_40x100.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_65_ffffff_1x400.png"
-                            from="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_65_ffffff_1x400.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png"
-                            from="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_highlight-soft_75_cccccc_1x100.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_95_fef1ec_1x400.png"
-                            from="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_95_fef1ec_1x400.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_2e83ff_256x240.png"
-                            from="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_2e83ff_256x240.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_e6e6e6_1x400.png"
-                            from="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_e6e6e6_1x400.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_222222_256x240.png"
-                            from="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_222222_256x240.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_454545_256x240.png"
-                            from="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_454545_256x240.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_flat_75_ffffff_40x100.png"
-                            from="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_flat_75_ffffff_40x100.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_55_fbf9ee_1x400.png"
-                            from="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_55_fbf9ee_1x400.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_888888_256x240.png"
-                            from="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_888888_256x240.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_dadada_1x400.png"
-                            from="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-bg_glass_75_dadada_1x400.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_cd0a0a_256x240.png"
-                            from="WEB/Resources/lib/jquery-ui/css/smoothness/images/ui-icons_cd0a0a_256x240.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jquery-ui/css/smoothness/jquery-ui-1.8.10.custom.css"
-                            from="WEB/Resources/lib/jquery-ui/css/smoothness/jquery-ui-1.8.10.custom.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.css"
-                            from="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.js"
-                            from="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jQRangeSlider/jQDateRangeSlider.css"
-                            from="WEB/Resources/lib/jQRangeSlider/jQDateRangeSlider.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jQRangeSlider/jquery.mousewheel.min.js"
-                            from="WEB/Resources/lib/jQRangeSlider/jquery.mousewheel.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/jQRangeSlider/jQDateRangeSlider-withRuler-min.js"
-                            from="WEB/Resources/lib/jQRangeSlider/jQDateRangeSlider-withRuler-min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/chroma.min.js"
-                            from="WEB/Resources/lib/chroma.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/offline/offline.css"
-                            from="WEB/Resources/lib/offline/offline.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/offline/offline.min.js"
-                            from="WEB/Resources/lib/offline/offline.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/d3-tip/d3-tip.min.css"
-                            from="WEB/Resources/lib/d3-tip/d3-tip.min.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/d3-tip/d3-tip.min.js"
-                            from="WEB/Resources/lib/d3-tip/d3-tip.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/dygraph/chart-plotter.js"
-                            from="WEB/Resources/lib/dygraph/chart-plotter.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/dygraph/dygraph.js"
-                            from="WEB/Resources/lib/dygraph/dygraph.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/dygraph/crosshair.js"
-                            from="WEB/Resources/lib/dygraph/crosshair.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/dygraph/dygraph.css"
-                            from="WEB/Resources/lib/dygraph/dygraph.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/dygraph/synchronize.js"
-                            from="WEB/Resources/lib/dygraph/synchronize.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/dygraph/dygraph-interaction.js"
-                            from="WEB/Resources/lib/dygraph/dygraph-interaction.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/dygraph/dygraph.min.js"
-                            from="WEB/Resources/lib/dygraph/dygraph.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/momentjs/moment.min.js"
-                            from="WEB/Resources/lib/momentjs/moment.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/momentjs/moment-duration-format.js"
-                            from="WEB/Resources/lib/momentjs/moment-duration-format.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/livestamp/livestamp.min.js"
-                            from="WEB/Resources/lib/livestamp/livestamp.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/marked.min.js"
-                            from="WEB/Resources/lib/marked.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/d3/colorbrewer.css"
-                            from="WEB/Resources/lib/d3/colorbrewer.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/d3/colorbrewer.js"
-                            from="WEB/Resources/lib/d3/colorbrewer.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/d3/d3.v3.min_bak.js"
-                            from="WEB/Resources/lib/d3/d3.v3.min_bak.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/d3/d3.v3.min.js"
-                            from="WEB/Resources/lib/d3/d3.v3.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/vis.min.js"
-                            from="WEB/Resources/lib/visjs/vis.min.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/vis.min.css"
-                            from="WEB/Resources/lib/visjs/vis.min.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/zoomExtends.png"
-                            from="WEB/Resources/lib/visjs/img/network/zoomExtends.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/cross.png"
-                            from="WEB/Resources/lib/visjs/img/network/cross.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/upArrow.png"
-                            from="WEB/Resources/lib/visjs/img/network/upArrow.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/editIcon.png"
-                            from="WEB/Resources/lib/visjs/img/network/editIcon.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/deleteIcon.png"
-                            from="WEB/Resources/lib/visjs/img/network/deleteIcon.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/leftArrow.png"
-                            from="WEB/Resources/lib/visjs/img/network/leftArrow.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/rightArrow.png"
-                            from="WEB/Resources/lib/visjs/img/network/rightArrow.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/minus.png"
-                            from="WEB/Resources/lib/visjs/img/network/minus.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/backIcon.png"
-                            from="WEB/Resources/lib/visjs/img/network/backIcon.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/addNodeIcon.png"
-                            from="WEB/Resources/lib/visjs/img/network/addNodeIcon.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/acceptDeleteIcon.png"
-                            from="WEB/Resources/lib/visjs/img/network/acceptDeleteIcon.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/downArrow.png"
-                            from="WEB/Resources/lib/visjs/img/network/downArrow.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/plus.png"
-                            from="WEB/Resources/lib/visjs/img/network/plus.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/connectIcon.png"
-                            from="WEB/Resources/lib/visjs/img/network/connectIcon.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/network/cross2.png"
-                            from="WEB/Resources/lib/visjs/img/network/cross2.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/lib/visjs/img/timeline/delete.png"
-                            from="WEB/Resources/lib/visjs/img/timeline/delete.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Events_Disturbances.js"
-                            from="WEB/Resources/Events_Disturbances.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Dashboard.js"
-                            from="WEB/Resources/Dashboard.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Analysis_Current.js"
-                            from="WEB/Resources/Analysis_Current.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Help.js"
-                            from="WEB/Resources/Help.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/img/loading.gif"
-                            from="WEB/Resources/img/loading.gif"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/img/logo.png"
-                            from="WEB/Resources/img/logo.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/img/load.gif"
-                            from="WEB/Resources/img/load.gif"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Analysis_EnergyPower.js"
-                            from="WEB/Resources/Analysis_EnergyPower.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Stats.js"
-                            from="WEB/Resources/Stats.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/js/live.js"
-                            from="WEB/Resources/js/live.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/js/utils.js"
-                            from="WEB/Resources/js/utils.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/js/settings.js"
-                            from="WEB/Resources/js/settings.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/js/zTicker.js"
-                            from="WEB/Resources/js/zTicker.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/js/events/events.js"
-                            from="WEB/Resources/js/events/events.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/js/account.js"
-                            from="WEB/Resources/js/account.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Route_1Phase_2.svg"
-                            from="WEB/Resources/Route_1Phase_2.svg"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Analysis_Voltage.js"
-                            from="WEB/Resources/Analysis_Voltage.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/CommonHeader.html"
-                            from="WEB/Resources/CommonHeader.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Route_3Phase.svg"
-                            from="WEB/Resources/Route_3Phase.svg"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/openZmeter.js"
-                            from="WEB/Resources/openZmeter.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Login.js"
-                            from="WEB/Resources/Login.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Events_EN50160.js"
-                            from="WEB/Resources/Events_EN50160.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/favicon.ico"
-                            from="WEB/Resources/favicon.ico"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Route_1Phase_1.svg"
-                            from="WEB/Resources/Route_1Phase_1.svg"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/3f.png"
-                            from="WEB/Resources/HelpPages/3f.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/ozm.png"
-                            from="WEB/Resources/HelpPages/ozm.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Configuración.md"
-                            from="WEB/Resources/HelpPages/Configuración.md"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/oZmlink.md"
-                            from="WEB/Resources/HelpPages/oZmlink.md"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Variables medidas.md"
-                            from="WEB/Resources/HelpPages/Variables medidas.md"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/fundamental_reactive_power.png"
-                            from="WEB/Resources/HelpPages/fundamental_reactive_power.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/rms_i.png"
-                            from="WEB/Resources/HelpPages/rms_i.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/thd_i.png"
-                            from="WEB/Resources/HelpPages/thd_i.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/API.md"
-                            from="WEB/Resources/HelpPages/API.md"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Hardware (English).md"
-                            from="WEB/Resources/HelpPages/Hardware (English).md"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Zero Crossing.md"
-                            from="WEB/Resources/HelpPages/Zero Crossing.md"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/CodeCogsEqn.png"
-                            from="WEB/Resources/HelpPages/CodeCogsEqn.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Captura de pantalla 2017-12-10 a las 18.18.02.png"
-                            from="WEB/Resources/HelpPages/Captura de pantalla 2017-12-10 a las 18.18.02.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/fundamental_apparent_power.png"
-                            from="WEB/Resources/HelpPages/fundamental_apparent_power.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Hardware.md"
-                            from="WEB/Resources/HelpPages/Hardware.md"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/active_power.png.png"
-                            from="WEB/Resources/HelpPages/active_power.png.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/apparent_power.png"
-                            from="WEB/Resources/HelpPages/apparent_power.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/reactive_power.png"
-                            from="WEB/Resources/HelpPages/reactive_power.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/power_system_freq_meas.pdf"
-                            from="WEB/Resources/HelpPages/power_system_freq_meas.pdf"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/CodeCogsEqn (1).png"
-                            from="WEB/Resources/HelpPages/CodeCogsEqn (1).png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/1F.png"
-                            from="WEB/Resources/HelpPages/1F.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/active_power.png"
-                            from="WEB/Resources/HelpPages/active_power.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/fundamental_active_power.png"
-                            from="WEB/Resources/HelpPages/fundamental_active_power.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Estandar EN 50160.md"
-                            from="WEB/Resources/HelpPages/Estandar EN 50160.md"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/311-interharmonics.pdf"
-                            from="WEB/Resources/HelpPages/311-interharmonics.pdf"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Standard IEC61000-4-30.md"
-                            from="WEB/Resources/HelpPages/Standard IEC61000-4-30.md"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/3F.png"
-                            from="WEB/Resources/HelpPages/3F.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/zeroC_interharmonic.png"
-                            from="WEB/Resources/HelpPages/zeroC_interharmonic.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Home (English).md"
-                            from="WEB/Resources/HelpPages/Home (English).md"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Measured variables.md"
-                            from="WEB/Resources/HelpPages/Measured variables.md"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/rms_v.png"
-                            from="WEB/Resources/HelpPages/rms_v.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Home.md"
-                            from="WEB/Resources/HelpPages/Home.md"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Desbalanceo y potencia en sistemas trifásicos.pdf"
-                            from="WEB/Resources/HelpPages/Desbalanceo y potencia en sistemas trifasicos.pdf"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/4cuadrantes.png"
-                            from="WEB/Resources/HelpPages/4cuadrantes.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/thd_v.png"
-                            from="WEB/Resources/HelpPages/thd_v.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Captura de pantalla 2017-11-25 a las 13.36.41.png"
-                            from="WEB/Resources/HelpPages/Captura de pantalla 2017-11-25 a las 13.36.41.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/zeroC.png"
-                            from="WEB/Resources/HelpPages/zeroC.png"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/4cuadrantes.jpg"
-                            from="WEB/Resources/HelpPages/4cuadrantes.jpg"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Interharmonics- basic concepts and techniques for their detection and measurement  .pdf"
-                            from="WEB/Resources/HelpPages/Interharmonics- basic concepts and techniques for their detection and measurement  .pdf"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/objects/pack/pack-6f25feb59ab279e75710a75546fcc009124b1673.idx"
-                            from="WEB/Resources/HelpPages/.git/objects/pack/pack-6f25feb59ab279e75710a75546fcc009124b1673.idx"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/objects/pack/pack-6f25feb59ab279e75710a75546fcc009124b1673.pack"
-                            from="WEB/Resources/HelpPages/.git/objects/pack/pack-6f25feb59ab279e75710a75546fcc009124b1673.pack"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/logs/refs/remotes/origin/HEAD"
-                            from="WEB/Resources/HelpPages/.git/logs/refs/remotes/origin/HEAD"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/logs/refs/heads/master"
-                            from="WEB/Resources/HelpPages/.git/logs/refs/heads/master"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/logs/HEAD"
-                            from="WEB/Resources/HelpPages/.git/logs/HEAD"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/description"
-                            from="WEB/Resources/HelpPages/.git/description"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/refs/remotes/origin/HEAD"
-                            from="WEB/Resources/HelpPages/.git/refs/remotes/origin/HEAD"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/refs/heads/master"
-                            from="WEB/Resources/HelpPages/.git/refs/heads/master"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/config"
-                            from="WEB/Resources/HelpPages/.git/config"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/packed-refs"
-                            from="WEB/Resources/HelpPages/.git/packed-refs"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/info/exclude"
-                            from="WEB/Resources/HelpPages/.git/info/exclude"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/index"
-                            from="WEB/Resources/HelpPages/.git/index"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/hooks/pre-receive.sample"
-                            from="WEB/Resources/HelpPages/.git/hooks/pre-receive.sample"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/hooks/pre-commit.sample"
-                            from="WEB/Resources/HelpPages/.git/hooks/pre-commit.sample"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/hooks/pre-push.sample"
-                            from="WEB/Resources/HelpPages/.git/hooks/pre-push.sample"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/hooks/pre-rebase.sample"
-                            from="WEB/Resources/HelpPages/.git/hooks/pre-rebase.sample"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/hooks/update.sample"
-                            from="WEB/Resources/HelpPages/.git/hooks/update.sample"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/hooks/applypatch-msg.sample"
-                            from="WEB/Resources/HelpPages/.git/hooks/applypatch-msg.sample"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/hooks/commit-msg.sample"
-                            from="WEB/Resources/HelpPages/.git/hooks/commit-msg.sample"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/hooks/pre-applypatch.sample"
-                            from="WEB/Resources/HelpPages/.git/hooks/pre-applypatch.sample"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/hooks/post-update.sample"
-                            from="WEB/Resources/HelpPages/.git/hooks/post-update.sample"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/hooks/prepare-commit-msg.sample"
-                            from="WEB/Resources/HelpPages/.git/hooks/prepare-commit-msg.sample"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/.git/HEAD"
-                            from="WEB/Resources/HelpPages/.git/HEAD"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Configuration.md"
-                            from="WEB/Resources/HelpPages/Configuration.md"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/HelpPages/Estandar IEC61000-4-30.md"
-                            from="WEB/Resources/HelpPages/Estandar IEC61000-4-30.md"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/css/common.css"
-                            from="WEB/Resources/css/common.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/css/login.css"
-                            from="WEB/Resources/css/login.css"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Events_ITIC.js"
-                            from="WEB/Resources/Events_ITIC.js"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Resources/Route_1Phase_3.svg"
-                            from="WEB/Resources/Route_1Phase_3.svg"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Events_Disturbances.html"
-                            from="WEB/Events_Disturbances.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Stats.html"
-                            from="WEB/Stats.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Settings.html"
-                            from="WEB/Settings.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Login.html"
-                            from="WEB/Login.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Analysis_Frequency.html"
-                            from="WEB/Analysis_Frequency.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Analysis_Voltage.html"
-                            from="WEB/Analysis_Voltage.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Analysis_Current.html"
-                            from="WEB/Analysis_Current.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/Dashboard.html"
-                            from="WEB/Dashboard.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/MiniViews/Fundamental_Reactive_Power.html"
-                            from="WEB/MiniViews/Fundamental_Reactive_Power.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/MiniViews/Active_Energy.html"
-                            from="WEB/MiniViews/Active_Energy.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/MiniViews/Fundamental_Reactive_Energy.html"
-                            from="WEB/MiniViews/Fundamental_Reactive_Energy.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/MiniViews/Voltage.html"
-                            from="WEB/MiniViews/Voltage.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/MiniViews/Frequency.html"
-                            from="WEB/MiniViews/Frequency.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/MiniViews/Current.html"
-                            from="WEB/MiniViews/Current.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}WEB/MiniViews/Active_Power.html"
-                            from="WEB/MiniViews/Active_Power.html"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="/etc/openZmeter.ini"
-                            from="openZmeter.ini"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="/DEBIAN/postinst"
-                            from="postinst"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
                             perm="755"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}Database.sql"
-                            from="Database.sql"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="/lib/systemd/system/openZmeter.service"
-                            from="openZmeter.service"
-                            perm="644"
                             owner="root"
                             group="bin"/>
           <packFileListElem type="File"
@@ -2739,13 +1085,6 @@
           <packInfoListElem name="Description"
                             value="Power usage and electrical monitoring tool with WEB frontend"
                             mandatory="false"/>
-          <packInfoListElem name="Depends"
-                            value="libpq5 (>= 9.5.10), libjson-c3 (>= 0.12.1), libusb-1.0-0"
-                            mandatory="false"/>
-          <packInfoListElem name="Homepage"
-                            value="http://www.openzmeter.com/"
-                            mandatory="false"/>
-          <packInfoListElem name="Recommends" value="chrony" mandatory="false"/>
         </packInfoList>
       </packaging>
       <item path="CaptureInterface.cpp" ex="false" tool="1" flavor2="4">
@@ -2772,9 +1111,7 @@
       </item>
       <item path="Main.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Makefile" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Prices.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Prices.cpp" ex="false" tool="1" flavor2="4">
       </item>
       <item path="Prices.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -2801,26 +1138,6 @@
       <item path="WEB/Help.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Login.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/MiniViews/Active_Energy.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/MiniViews/Active_Power.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/MiniViews/Current.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/MiniViews/Frequency.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/MiniViews/Fundamental_Reactive_Energy.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/MiniViews/Fundamental_Reactive_Power.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/MiniViews/Voltage.html" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Analysis_Current.js" ex="false" tool="3" flavor2="0">
       </item>
@@ -3042,27 +1359,44 @@
       </item>
       <item path="WEB/Resources/Login.js" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="WEB/Resources/MiniViews/Active_Energy.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/MiniViews/Active_Power.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/MiniViews/Current.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/MiniViews/Frequency.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/MiniViews/Fundamental_Reactive_Energy.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/MiniViews/Fundamental_Reactive_Power.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/MiniViews/Voltage.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="WEB/Resources/Stats.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/favicon.ico" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/img/load.gif" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/img/loading.gif" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/img/logo.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/account.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/events/events.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/live.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/settings.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/utils.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/js/zTicker.js" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.css"
             ex="false"

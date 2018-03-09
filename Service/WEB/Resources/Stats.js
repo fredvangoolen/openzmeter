@@ -305,7 +305,7 @@ function UpdateHeatMap() {
       Row = Row + ('<td style="background-color: ' + Color + '" data-toogle="tooltip" title="' + (!Cells[SlotName] ? 'No data for this period' : Round2Plain(Cells[SlotName] / Units[0]) + Units[1] + 'Wh') + '"></td>');
     }
     Body.append('<tr>' + Row + '</tr>');
-  }  
+  }
 }
 function ButtonClick(event) {
   if(this.id === 'btnShowAsTable')   localStorage.setItem('StatView', 'Table');
@@ -345,6 +345,7 @@ function ButtonClick(event) {
       $('#ShowAsTables').removeClass('hidden');
       break;
     default :
+      localStorage.setItem('StatView', 'Heatmap');
       $('#btnShowAsHeatmap').addClass('active');
       $('#ShowAsHeatmap').removeClass('hidden');
       $('#btnHeatmap1Hour').removeClass('disabled');
