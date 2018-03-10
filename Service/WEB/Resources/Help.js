@@ -1,27 +1,46 @@
 function LoadHelpPage(name) {
-  $.ajax({ url: "HelpPages/" + name + ".md",
+  $.ajax({ url: name,
            timeout: 20000,
            type: "GET",
            success: function(result) {
-             var renderer = new marked.Renderer();
-             renderer.image = function (href, title, text) {
-               var out = '<img src="/HelpPages/' + href + '" alt="' + text + '"';
-               if (title) {
-                 out += ' title="' + title + '"';
+             $('#Contents').html('<h3>' + name + '<hr/></h3>' + result); 
+             $('#Contents').find('a').bind('click', function(e) {
+               if((location.host == this.host) && (true)) {
+                 LoadHelpPage($(this).attr('href'));
+                 e.preventDefault();
                }
-               out += this.options.xhtml ? '/>' : '>';
-               return out;
-             };
-             document.getElementById('Contents').innerHTML = '<h3>' + name + '<hr/></h3>' + marked(result, {renderer:renderer}); 
+             });
+//             var renderer = new marked.Renderer();
+//             renderer.image = function (href, title, text) {
+//               var out = '<img src="/HelpPages/' + href + '" alt="' + text + '"';
+//               if (title) {
+//                 out += ' title="' + title + '"';
+//               }
+//               out += this.options.xhtml ? '/>' : '>';
+//               return out;
+//             };
+             
            }
   });
 }
-
-$('#Topics a').bind('click', function(e) {           
-  LoadHelpPage($(this).attr('href'));
+function HandleRebase() {
+  $('#Contents').find('a').bind('click', function(e) {
+    if((location.host == this.host) && (this.href.endsWith(".html"))) {
+      $('#Contents').load($(this).attr('href'));
+      e.preventDefault();
+    }
+  });
+//  $('#Contents').find('img').bind('click', function(e) {
+//    if((location.host == this.host) && (true)) {
+//      $('#Contents').load("/HelpPages/" + $(this).attr('href'));
+//      e.preventDefault();
+//    }
+//  });
+}
+$('#Topics a').bind('click', function(e) {
+  $('#Contents').load("/HelpPages/" + $(this).attr('href'));
   e.preventDefault();
 });
-
 function UpdatePage() {
-  LoadHelpPage("Home");  
+  $('#Contents').load("HelpPages/Home.html", HandleRebase);
 }

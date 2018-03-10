@@ -8,12 +8,12 @@
     <meta name="author" content="zRed"/>
     <base href="/">
     <link rel="shortcut icon" href="favicon.ico"/>
-    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="lib/metisMenu/metisMenu.min.css"/>
-    <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css"/>
+    <link rel="stylesheet" href="lib/metisMenu/metisMenu.css"/>
+    <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.css"/>
     <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
     <link rel="stylesheet" href="lib/offline/offline.css" type="text/css"/>
-    <link rel="stylesheet" href="css/common.css"/>
+    <link rel="stylesheet" href="openZmeter.css"/>
     <title>openZmeter - Events - EN50160</title>
   </head>
   <body>
@@ -34,11 +34,8 @@
                 </div>
                 <div class="pull-right">&nbsp;</div>
                 <div class="pull-right">
-                  <span class="small">View:</span><br>
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowTotals" data-toggle="tooltip" title="Show anual statistics">Totals</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">Weeks</button>
-                  </div>
+                  <span class="small">Weeks:</span><br>
+                  <div class="btn-group" id="WeekList"></div>
                 </div>
                 <div class="pull-right">&nbsp;</div>
                 <div class="pull-right" style="width: 200px">
@@ -153,117 +150,22 @@
                   </div>
                 </div>
               </div>
-              <div id="ShowWeeks" class="hidden">
-                <div class="panel-body no-padding panel-bigheader">
-                  <div class="panel-info panel-heading">
-                    <div class="pull-right">
-                      <span class="small">Week number and compliance:</span><br/>
-                      <div class="btn-group" id="WeekList">
-                        <button type="button" class="btn btn-default btn-xs" id="btnShowTotals" data-toggle="tooltip" title="Show anual statistics">1</button>
-                        <button type="button" class="btn btn-default btn-xs" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2<br/><i class="fa fa-warning" style="color: #d9534f"></i></button>
-                        <button type="button" class="btn btn-default btn-xs" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2<br/><i class="fa fa-check-square-o" style="color: #3c763d"></i></button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs" id="btnShowTotals" data-toggle="tooltip" title="Show anual statistics">1</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                                                <button type="button" class="btn btn-default btn-xs" id="btnShowTotals" data-toggle="tooltip" title="Show anual statistics">1</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                                                <button type="button" class="btn btn-default btn-xs" id="btnShowTotals" data-toggle="tooltip" title="Show anual statistics">1</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                                                <button type="button" class="btn btn-default btn-xs" id="btnShowTotals" data-toggle="tooltip" title="Show anual statistics">1</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                                                <button type="button" class="btn btn-default btn-xs" id="btnShowTotals" data-toggle="tooltip" title="Show anual statistics">1</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                        <button type="button" class="btn btn-default btn-xs active" id="btnShowWeeks" data-toggle="tooltip" title="Show statistics week by week">2</button>
-                      </div>
-                    </div>
-                    <div class="clearfix"></div>
-                  </div>
-
-                  
-
-                <div class="row">
-                  <div class="col col-md-12">
-                    <div style="padding: 5px">
-                      <table id="weeks_table" class="table small table-striped table-responsive table-condensed" style="margin-bottom:0px">
-                        <thead>
-                          <tr>
-                            <th class="text-center"><span data-toggle="tooltip" title="Week and year of row statistics">Week</span></th>
-                            <th class="text-center"><span data-toggle="tooltip" title="Percent of the evaluated period covered by capture process, if all 10 minute blocks of the week have stored data this meassure shows 100%, otherwise this value is lower. In current week this meassure is allways lower than 100% and raise as end of week comes">Coverage</span></th>
-                            <th class="text-center" style="width: 33%"><span data-toggle="tooltip" title="Percent of the evaluated period where voltage is outside range of ±10%. The graph range from 0 to 5%">Voltage changes</span></th>
-                            <th class="text-center" style="width: 33%"><span data-toggle="tooltip" title="Percent of the evaluated period where total harmonic distorsion is higger than 8%. The graph range from 0 to 5%">THD</sapn></th>
-                            <th class="text-center" style="width: 33%"><span data-toggle="tooltip" title="Percent of the evaluated period where any of the harmonics is outside range as defined in EN50160. The graph range from 0 to 5%">Harmonics</span></th>
-                          </tr>
-                        </thead>
-                        <tfoot>
-                          <tr>
-                            <td colspan="5" class="text-center h4" id="RowLoading"><img src="img/load.gif" alt="Loading..."/> Wait while week data is calculated</td>
-                          </tr>
-                          <tr>  
-                            <td colspan="5" class="text-center hide" id="RowButton">
-                              <div class="pull-right">
-                                <a class="btn btn-primary" id="LoadNext"><i class="fa fa-database"></i>  Load more</a>
-                                <a class="btn btn-primary" id="LoadAll"><i class="fa fa-database"></i>  Load all</a>
-                              </div>
-                            </td>
-                          </tr>
-                        </tfoot>
-                        <tbody>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <script src="lib/jquery.min.js"></script>
-    <script src="lib/bootstrap/js/bootstrap.min.js"></script>
-    <script src="lib/metisMenu/metisMenu.min.js"></script>
-    <script src="lib/spin.js/spin.min.js"></script>
+    <script src="lib/jquery/jquery.js"></script>
+    <script src="lib/bootstrap/js/bootstrap.js"></script>
+    <script src="lib/metisMenu/metisMenu.js"></script>
+    <script src="lib/spin.js/spin.js"></script>
     <script src="lib/dygraph/dygraph.js"></script>
     <script src="lib/dygraph/crosshair.js"></script>
     <script src="lib/dygraph/dygraph-interaction.js"></script>
     <script src="lib/dygraph/synchronize.js"></script>
     <script src="lib/dygraph/chart-plotter.js"></script>
-    <script src="lib/offline/offline.min.js"></script>
-    <script src="lib/momentjs/moment.min.js"></script>
+    <script src="lib/offline/offline.js"></script>
+    <script src="lib/momentjs/moment.js"></script>
     <script src="lib/momentjs/moment-duration-format.js"></script>    
     <script src="openZmeter.js"></script>
     <script src="Events_EN50160.js"></script>

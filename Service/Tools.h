@@ -10,8 +10,16 @@
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   private :
-    static bool  Daemonized;
-    static FILE *LogFile;
+    typedef struct {
+      char    *Name;
+      uint32_t Size;
+      uint8_t *Ptr;
+    } File_t;
+  private :
+    static bool      Daemonized;
+    static FILE     *LogFile;
+    static File_t   *Files;
+    static uint32_t  FileCount;
   public :
     typedef struct {
       uint16_t HTTPPort;
@@ -65,5 +73,6 @@ class Tools {
     static bool GetMemory(uint64_t *total, uint64_t *available);
     static uint64_t GetTime();
     static uint64_t ParseProcMem(char *name, char *buff);
+    static uint8_t *GetFile(const char *mame, uint32_t *size);
 };
 //----------------------------------------------------------------------------------------------------------------------

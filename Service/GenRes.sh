@@ -1,33 +1,38 @@
 #!/bin/bash
-FILES=`find ./WEB ! -type d -print`
-TMPOUT=build/Resources.bin
-TMPFILE=build/MinifyResource.tmp
-OBJECTFILE=build/Resources.o
-TESTARCHFILE=build/Default/GNU-Linux/Main.o
-rm $TMPFILE $TMPOUT $OBJECTFILE
-LEN=`find ./WEB ! -type d -print | wc -l`
+IFS=$'\n'
+cd WEB
+FILES=`find ./ ! -type d -print | sort`
+BUILDDIR=../build/
+TMPOUT=../build/ResourceFiles
+TMPFILE=../build/MinifyResource.tmp
+mkdir -p $BUILDDIR
+rm -rf $TMPFILE $TMPOUT
+LEN=`find ./ ! -type d -print | wc -l`
 printf "%s\x00" $LEN > $TMPOUT
-ELFARCH=`objdump -f $TESTARCHFILE | grep -o 'elf.*'`
-OUTARCH=`objdump -f $TESTARCHFILE | head -3 | tail -1 | grep -o :.*: | cut -d : -f 2-2`
-echo "Saving " $LEN " files in arch " $ELFARCH
+echo "Saving " $LEN " files"
 for FILE in $FILES
 do
+    SHORTFILENAME=`echo $FILE | cut -c3-`
     case $FILE in
-        *.css|*.js) echo -n "Append and minimify " $FILE
+        *.css|*.js) echo -n "Append and minimify " $SHORTFILENAME
                     yui-compressor $FILE > $TMPFILE
-                    printf "%s\x00\%d\x00" $FILE `stat --printf="%s" $TMPFILE` >> $TMPOUT
+                    printf "%s\x00%d\x00" $SHORTFILENAME `stat --printf="%s" $TMPFILE` >> $TMPOUT
                     INSIZE=`stat --printf="%s" $FILE`
                     OUTSIZE=`stat --printf="%s" $TMPFILE`
                     PERCENT=$(( 100 - (100 * $OUTSIZE) / $INSIZE))
                     printf  " from %d to %d (%d%% saved)\n" $INSIZE $OUTSIZE $PERCENT
                     cat $TMPFILE >> $TMPOUT
+                    rm $TMPFILE 
         ;;
-        *) echo "Append " $FILE
-           printf "%s\x00\%d\x00" $FILE `stat --printf="%s" $FILE` >> $TMPOUT
+        *) echo "Append " $SHORTFILENAME
+           printf "%s\x00%d\x00" $SHORTFILENAME `stat --printf="%s" $FILE` >> $TMPOUT
            cat $FILE >> $TMPOUT
     esac
 done
 echo "Pack finished, total size => " `stat --printf="%s" $TMPOUT`
-objcopy --input binary --output $ELFARCH --binary-architecture $OUTARCH --rename-section .data=.rodata,load,alloc,readonly,data,contents $TMPOUT $OBJECTFILE
-rm $TMPOUT
-objdump -f $OBJECTFILE
+cd ..
+cd build
+ld -r -b binary -o ResourceFiles.o ResourceFiles
+rm ResourceFiles
+objdump -t ResourceFiles.o
+cd ..

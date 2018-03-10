@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 Pedro Sánchez Alguacil
+ *               2017 Eduardo Viciana Gamez
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,8 +54,8 @@ function AjaxGetEnergy(selected_year) {
   $('#btnSelYear' + selected_year).addClass('active');
   SelectedYear = selected_year; 
   ShowSpinner(Spinner, 'StatsSpinner');
-  var To = new Date(Date.UTC(selected_year, 11, 31, 23, 59, 59, 999)).getTime();
-  var From = new Date(Date.UTC(selected_year, 0, 1, 0, 0, 0, 0)).getTime();
+  var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
+  var From = new Date(selected_year, 0, 1, 0, 0, 0, 0).getTime();
   $.ajax({ url: "getSeries",
            timeout: 20000,
            type: "POST",
@@ -110,17 +111,13 @@ function UpdateCalendar() {
       $(element).css('background-color', Color);
       $(element).css('color', Text);
       $(element).css('border', '1px solid #fff');
+      $(element).prop('data-toggle', 'tooltip');
       var Units = 'Wh';
       if(Energy > 1000) {
         Units = 'kWh';
         Energy = Energy / 1000;
       }
-      $(element).qtip( {
-        content: { text: "<div>" + Round2(Energy) + Units + "</div>" },
-        style: { classes: 'qtip-bootstrap' },
-        show: { event: 'mouseover', delay: 0  },
-        hide: { event: 'mouseout' }
-      });
+      $(element).prop('title', Round2Plain(Energy) + Units);
     }
   });
   Calendar.setDisabledDays(Disabled);
@@ -160,8 +157,8 @@ function UpdateWeeks() {
     var WeekDay = (WeekDayArray[i] !== undefined) ? WeekDayArray[i] : 0;
     var WeekEnd = (WeekEndArray[i] !== undefined) ? WeekEndArray[i] : 0;
     Contents.append('<tr>' +
-      '<td id="Week_' + i + '">' + i + '</td>' + 
-      '<td><div class="progress" style="margin-bottom:0px; height: 16px; position:relative">' +
+      '<td data-toogle="tooltip" title="From ' + startDate.toLocaleDateString() + ' to ' + endDate.toLocaleDateString() + '">' + i + '</td>' + 
+      '<td><div class="progress" style="margin-bottom:0px; position:relative">' +
       '<div class="progress-bar" role="progressbar" style="width:' + (100 * WeekDay / Max) + '%"></div>' +
       '<div class="progress-bar" role="progressbar" style="background-color: #7eb0db; width:' + (100 * WeekEnd / Max) + '%"></div>' +
       '</div></td>' +
@@ -169,12 +166,6 @@ function UpdateWeeks() {
       '<td data-sort="' + WeekEnd + '">' + Round2(WeekEnd / Units[0]) + '</td>' +
       '<td data-sort="' + (WeekDay + WeekEnd) + '">' + Round2((WeekDay + WeekEnd) / Units[0]) + '</td>' +
       '</tr>');
-      $('#Week_' + i).qtip({
-        content: { text: "<div>From " + startDate.toLocaleDateString() + " to " + endDate.toLocaleDateString() + "</div>" },
-        style: { classes: 'qtip-bootstrap' },
-        show: { event: 'mouseover', delay: 0  },
-        hide: { event: 'mouseout' }
-      });
   }
   WeekTable = $('#WeekTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
                                           columnDefs: [ { targets: [1], sortable: false }, { targets: [0, 2, 3, 4], sortable: true, className: "text-center" } ],
@@ -288,10 +279,10 @@ function UpdateHeatMap() {
   var Cells = [];
   for(i = 0; i < EnergyData.length; i++) {
     var Day = new Date(EnergyData[i][0]);
-    if(Day.getUTCFullYear() !== SelectedYear) continue;
     DayNum = GetDayOfYear(Day.getTime());
     if(FirstDay == null) FirstDay = DayNum;
-    var Slot = Math.trunc((EnergyData[i][0] % 86400000) / (600000 * Count));
+    var DayStart = new Date(Day.getFullYear(), 0, DayNum, 0, 0, 0, 0);
+    var Slot = Math.trunc((EnergyData[i][0] - DayStart) / (600000 * Count));
     var SlotName = DayNum + '_' + Slot;
     if(!Cells[SlotName]) Cells[SlotName] = 0.0;
     Cells[SlotName] = Cells[SlotName] + EnergyData[i][1][SelectedPhase];
@@ -311,18 +302,10 @@ function UpdateHeatMap() {
     for(n = 0; n < 24 * (6 / Count); n++) {
       var SlotName = FirstDay + '_' + n;
       var Color = (!Cells[SlotName] ? '#EEE' : ColorScale((Cells[SlotName] - Min) / (Max - Min)));
-      Row = Row + ('<td style="background-color: ' + Color + '" + class="TimeSlot"><div class="hidden">' + (!Cells[SlotName] ? 'No data for this period' : Round2(Cells[SlotName] / Units[0]) + Units[1] + 'Wh') + '</div></td>');
+      Row = Row + ('<td style="background-color: ' + Color + '" data-toogle="tooltip" title="' + (!Cells[SlotName] ? 'No data for this period' : Round2Plain(Cells[SlotName] / Units[0]) + Units[1] + 'Wh') + '"></td>');
     }
     Body.append('<tr>' + Row + '</tr>');
   }
-  $('.TimeSlot').each(function() {
-    $(this).qtip({
-      content: { text: $(this)[0].firstChild.innerHTML },
-      style: { classes: 'qtip-bootstrap' },
-      show: { event: 'mouseover', delay: 0  },
-      hide: { event: 'mouseout' }
-    });
-  });  
 }
 function ButtonClick(event) {
   if(this.id === 'btnShowAsTable')   localStorage.setItem('StatView', 'Table');
@@ -362,6 +345,7 @@ function ButtonClick(event) {
       $('#ShowAsTables').removeClass('hidden');
       break;
     default :
+      localStorage.setItem('StatView', 'Heatmap');
       $('#btnShowAsHeatmap').addClass('active');
       $('#ShowAsHeatmap').removeClass('hidden');
       $('#btnHeatmap1Hour').removeClass('disabled');
@@ -376,23 +360,27 @@ function ButtonClick(event) {
     $('#btnStatsSPhase').removeClass('disabled');
     $('#btnStatsTPhase').removeClass('disabled');
   }
-  switch(localStorage.getItem('StatPhase')) {
-    case 'R' :
-      $('#btnStatsRPhase').addClass('active');
-      SelectedPhase = [0];
-      break;
-    case 'S' :
-      $('#btnStatsSPhase').addClass('active');
-      SelectedPhase = [1];
-      break;
-    case 'T' :
-      $('#btnStatsTPhase').addClass('active');
-      SelectedPhase = [2];
-      break;
-    default :
-      $('#btnStatsALLPhase').addClass('active');
-      SelectedPhase = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [0, 1, 2] : [0];
-      break;
+  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+    switch(localStorage.getItem('StatPhase')) {
+      case 'R' :
+        $('#btnStatsRPhase').addClass('active');
+        SelectedPhase = [0];
+        break;
+      case 'S' :
+        $('#btnStatsSPhase').addClass('active');
+        SelectedPhase = [1];
+        break;
+      case 'T' :
+        $('#btnStatsTPhase').addClass('active');
+        SelectedPhase = [2];
+        break;
+      default :
+        $('#btnStatsALLPhase').addClass('active');
+        SelectedPhase = [0, 1, 2];
+        break;
+    }
+  } else {
+    SelectedPhase = [0];
   }
   if(localStorage.getItem('StatView') === 'Heatmap') {
     switch(localStorage.getItem('StatBlocks')) {

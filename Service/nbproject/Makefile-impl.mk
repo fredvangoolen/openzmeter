@@ -27,11 +27,11 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 PROJECTNAME=Service
 
 # Active Configuration
-DEFAULTCONF=Default
+DEFAULTCONF=Release
 CONF=${DEFAULTCONF}
 
 # All Configurations
-ALLCONFS=Default Release_ARMHF 
+ALLCONFS=Release Debug 
 
 
 # build

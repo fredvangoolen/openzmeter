@@ -19,11 +19,11 @@
             </sourceRootList>
             <confList>
                 <confElem>
-                    <name>Default</name>
+                    <name>Release</name>
                     <type>1</type>
                 </confElem>
                 <confElem>
-                    <name>Release_ARMHF</name>
+                    <name>Debug</name>
                     <type>1</type>
                 </confElem>
             </confList>

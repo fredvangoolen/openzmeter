@@ -1717,7 +1717,6 @@ $('#GraphDialogClose').click(function() {
   window.dispatchEvent(new Event('resize'));
 });
 
-
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
   if(Nodes['Devices'][Node]['Type'] === '3Phase') {

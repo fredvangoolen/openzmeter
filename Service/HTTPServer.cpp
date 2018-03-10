@@ -100,6 +100,8 @@ void HTTPServer::SetMimeType(struct MHD_Response *response, const char *url) {
     MimeType = (char*)"image/svg+xml";
   else if((strlen(url) >= 5) && (strcmp(&url[FileNameLen - 5], ".html")) == 0) 
     MimeType = (char*)"text/html";
+  else if((strlen(url) >= 5) && (strcmp(&url[FileNameLen - 6], ".woff2")) == 0) 
+    MimeType = (char*)"font/woff2";
   else {
     MimeType = (char*)"application/octet-stream";
     Tools::LogMsg("DEBUG", "No mimetype defined for request '%s', '%s' used\n", url, MimeType);
@@ -126,6 +128,7 @@ int  HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url
   return Return;
 }
 int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, const char *aditionalheadertype, const char *aditionalheadervalue) {
+#ifndef EMBED_RESOURCES
   int File = -1;
   struct stat FileStat;
   char *Path = (char*)malloc(sizeof(char) * (strlen(path) + strlen(Tools::Global.HTTPPath) + 1));
@@ -140,6 +143,18 @@ int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, c
   MHD_destroy_response(response);
   free(Path);
   return Return;
+#else
+  uint32_t Size;
+  uint8_t *Ptr = Tools::GetFile(path, &Size);
+  if(Ptr == NULL) return MHD_NO;
+  struct MHD_Response *response = MHD_create_response_from_buffer(Size, Ptr, MHD_RESPMEM_PERSISTENT);
+  SetMimeType(response, path);
+  if((aditionalheadertype != NULL) && (aditionalheadervalue != NULL )) MHD_add_response_header(response, aditionalheadertype, aditionalheadervalue);
+  MHD_add_response_header(response, "Cache-Control", "public, max-age=2592000");
+  int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
+  MHD_destroy_response(response);
+  return Return;
+#endif
 }
 void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe) {
   Request_t *Request = (Request_t*)*con_cls;
@@ -341,8 +356,6 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       Aggreg = (char*)"1h";
       PeriodSeconds = 3600000;
     } 
-    From -= PeriodSeconds;
-    To   += PeriodSeconds;
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"MaxSamples\", ", (To - From) / PeriodSeconds);
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'%s' AS \"Aggregation_Source\", ", Aggreg);
     char *Save;

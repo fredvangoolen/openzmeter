@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="zRed"/>
+    <base href="/">
+    <link rel="shortcut icon" href="favicon.ico"/>
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css"/>
+    <link rel="stylesheet" href="lib/metisMenu/metisMenu.css"/>
+    <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.css"/>
+    <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
+    <link rel="stylesheet" href="lib/offline/offline.css" type="text/css"/>
+    <link rel="stylesheet" href="openZmeter.css"/>
+    <title>openZmeter - Voltage MiniView</title>
+  </head>
+  <body>
+    <div id="CurrentChart" style="width: 1200px; height: 600px"></div>
+    <script src="lib/jquery/jquery.js"></script>
+    <script src="lib/bootstrap/js/bootstrap.js"></script>
+    <script src="lib/metisMenu/metisMenu.js"></script>
+    <script src="lib/spin.js/spin.js"></script>
+    <script src="lib/dygraph/dygraph.js"></script>
+    <script src="lib/dygraph/crosshair.js"></script>
+    <script src="lib/dygraph/dygraph-interaction.js"></script>
+    <script src="lib/dygraph/chart-plotter.js"></script>
+    <script src="lib/dygraph/synchronize.js"></script>
+    <script src="lib/jquery.lineProgressbar/jquery.lineProgressbar.js"></script>
+    <script src="lib/offline/offline.js"></script>
+    <script src="openZmeter.js"></script>
+    <script>
+      var url = new URL(window.location.href);
+      var Node = parseInt(url.searchParams.get("Node"));
+      var Period = parseInt(url.searchParams.get("Period"));
+      var To = parseInt(url.searchParams.get("To"));
+      var Aggreg = url.searchParams.get("Aggreg");
+      $.ajax({ url: "getSeries",
+        timeout: 20000,
+        type: "POST",
+        dataType: "json",
+        contentType: 'application/json',
+        data: JSON.stringify({ Period: Period, To: To, Aggreg: Aggreg, LastSample: 0, Series: 'rms_i', Node: Node }),
+        success: function(result) { 
+          if(result['Sampletime'] === null) return;
+             var CurrentData = [];
+             for(i = 0; i < result['Sampletime'].length; i++) CurrentData.push([new Date(result['Sampletime'][i])].concat(result['rms_i'][i]));
+             CurrentChart = new Dygraph(document.getElementById("CurrentChart"),
+               CurrentData,
+               { strokeWidth: 1, 
+                 labels: (CurrentData[0].length === 5) ? ['Time', 'Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'] :['Time', 'Current'],
+                 stepPlot: true,
+                 drawGapEdgePoints: true,
+                 connectSeparatedPoints: false,
+                 fillGraph: false,
+                 colors: ["#428bca", "#42ca81", "#ca428b", "#ca8142"],
+                 gridLineColor: "#999",
+                 gridLinePattern: [4, 4],
+                 dateWindow: [result['From'], result['To']],
+                 interactionModel: {},
+                 underlayCallback: function(canvas, area, g) {
+                   var NominalVoltage = Nodes['NominalVoltage'];
+                   var YellowLowA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.1);
+                   var YellowHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.07) - YellowLowA;
+                   var YellowLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.1);
+                   var YellowHeightB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.07) - YellowLowB;
+                   var RedLowA = g.toDomYCoord(1000);
+                   var RedHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - RedLowA;
+                   var RedLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.10);
+                   var RedHeightB = g.toDomYCoord(0) - RedLowB;
+                   canvas.fillStyle = "rgba(255, 255, 0, 0.15)";
+                   canvas.fillRect(0, YellowLowA, 10000, YellowHeightA);
+                   canvas.fillRect(0, YellowLowB, 10000, YellowHeightB);
+                   canvas.fillStyle = "rgba(180, 0, 0, 0.15)";
+                   canvas.fillRect(0, RedLowA, 10000, RedHeightA);
+                   canvas.fillRect(0, RedLowB, 10000, RedHeightB);
+                 },
+        axes: {
+          y: { pixelsPerLabel: 15,
+               axisLabelWidth: 34,
+               axisLabelFormatter: function (x) {
+                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
+               }
+             },
+          x: { axisLabelFormatter: function (x) {
+                 return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + x.toLocaleTimeString() + '<br/>' + x.toLocaleDateString() + '</div>';
+               }
+             }
+        }
+      }
+    );
+
+  
+  }
+        });
+
+      
+    </script>
+  </body>
+</html>
