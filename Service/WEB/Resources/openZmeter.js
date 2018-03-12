@@ -425,16 +425,20 @@ function CalcRanges(input, cols, fromzero, onlypositive, sum) {
   var UpperRange = -Infinity;
   var LowerRange =  Infinity;
   for(i = 0; i < input.length; i++) {
-    if(sum == false) {
+    if(sum == true) {
+      var Sum = 0; 
       for(n = 0; n < cols.length; n++) {
+        if(input[i][cols[n]] == null) continue;
+        Sum += input[i][cols[n]];
+      }
+      if(Sum > UpperRange) UpperRange = Sum;
+      if(Sum < LowerRange) LowerRange = Sum;
+    } else {
+      for(n = 0; n < cols.length; n++) {
+        if(input[i][cols[n]] == null) continue;
         if(input[i][cols[n]] > UpperRange) UpperRange = input[i][cols[n]];
         if(input[i][cols[n]] < LowerRange) LowerRange = input[i][cols[n]];
       }
-    } else {
-      var Sum = 0; 
-      for(n = 0; n < cols.length; n++) Sum += input[i][cols[n]];
-      if(Sum > UpperRange) UpperRange = Sum;
-      if(Sum < LowerRange) LowerRange = Sum;
     }
   }
   var Variation = (UpperRange - LowerRange);

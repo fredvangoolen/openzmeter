@@ -65,16 +65,16 @@ function AjaxFrequency(result) {
     LastFrequencySample = result['Sampletime'][result['Sampletime'].length - 1];
   }  
   $('#FrequencyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
-  var UpperRange = -Infinity;
-  var LowerRange = Infinity;
-  for (i = 0; i < FrequencyData.length; i++) {
-    if(FrequencyData[i][1] > UpperRange) UpperRange = FrequencyData[i][1];
-    if(FrequencyData[i][1] < LowerRange) LowerRange = FrequencyData[i][1];
-  }
-  var Variation = (UpperRange - LowerRange);
-  if(Variation < 1) Variation = 1.0;
-  UpperRange = UpperRange + Variation * 0.1;
-  LowerRange = LowerRange - Variation * 0.1;
+//  var UpperRange = -Infinity;
+//  var LowerRange = Infinity;
+//  for (i = 0; i < FrequencyData.length; i++) {
+//    if(FrequencyData[i][1] > UpperRange) UpperRange = FrequencyData[i][1];
+//    if(FrequencyData[i][1] < LowerRange) LowerRange = FrequencyData[i][1];
+//  }
+//  var Variation = (UpperRange - LowerRange);
+//  if(Variation < 1) Variation = 1.0;
+//  UpperRange = UpperRange + Variation * 0.1;
+//  LowerRange = LowerRange - Variation * 0.1;
   if(FrequencyChart == null) {
     FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"),
       FrequencyData,
@@ -86,7 +86,7 @@ function AjaxFrequency(result) {
         colors: ["#5cb85c"],
         gridLineColor: "#999",
         gridLinePattern: [4, 4],
-        valueRange: [LowerRange, UpperRange],
+        valueRange: CalcRanges(FrequencyData, [1], false),
         dateWindow: [result['From'], result['To']],
         plugins: [
           new Dygraph.Plugins.Crosshair({
@@ -168,7 +168,7 @@ function AjaxFrequency(result) {
     $(window).bind('resize', FrequencyResizeEvent);
     window.dispatchEvent(new Event('resize'));
   } else {
-    FrequencyChart.updateOptions({'file': FrequencyData, valueRange: [LowerRange, UpperRange], dateWindow: [result['From'], result['To']]});
+    FrequencyChart.updateOptions({'file': FrequencyData, valueRange: CalcRanges(FrequencyData, [1], false), dateWindow: [result['From'], result['To']]});
   }
   $('#btnShowFrequencyYear').removeClass('active');
   $('#btnShowFrequencyMonth').removeClass('active');

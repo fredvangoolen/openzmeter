@@ -1,0 +1,50 @@
+<h1>Home</h1>
+<hr/>
+<p>
+  openzmeter (<strong>oZm</strong>) is an Open Source system devoted to power quality analysis and smart energy metering in power networks.<br>
+  It has been designed to comply with international standards <a href="HelpPages/Standard%20IEC61000-4-30.html">IEC 61000-4-30</a> and <a href="HelpPages/Standard%20EN50160.html">EN 50160</a>.
+  It is able to measure RMS voltages with an accuracy up to 0.1%, frequency up to 10 mHz (between 42.5 and 57.5 Hz) and RMS currents according to different sensor probes (the basic version can handle up to 240 V and 50 A RMS using an onboard Hall effect sensor with a precision of 1%).
+</p>
+<p>
+  Although there is a wide variety of devices on the market that can measure and control the electrical consumption of a typical home, in general, they lack of accuracy, are too expensive or use non-open protocols.<br>
+  <strong>oZm</strong> has born as a collaborative project between the <a href="https://www.ual.es/">University of Almeria UAL</a> and the <a href="http://www.ugr.es/">University of Granada UGR</a> based on some strong ideas: to offer an effective tool that transparently applies advanced mathematical algorithms to obtain accuracy electrical measurements, open the system to the community and promote awareness in energy saving. Based on the aforementioned ideas and the social responsibility of the university, we feel the commitment to open this result to the community.
+</p>
+<p>The main features of the project are:</p>
+<ul>
+  <li>Open source system: free software and open hardware.</li>
+  <li><a href="HelpPages/Electrical%20measurements.html">Electrical measurements</a> in real time:
+    <ul>
+      <li>RMS values for voltage and current</li>
+      <li>Active, reactive, apparent and distortion power</li>
+      <li>Power Factor, Fundamental power factor and Phi</li>
+      <li>Harmonics for current and voltage (up to 50th order)</li>
+      <li>Active and reactive energy</li>
+      <li>Frequency</li>
+      <li>Voltage events (swell, sags/dips, interruptions, etc)</li>
+      <li>Full spectrum and waveform in voltage and current channels</li>
+    </ul>
+  </li>
+  <li>4 quadrant measurements that allows to measure consumption and generation of energy. Valid for renewable energy systems.</li>
+  <li>In accordance with international standards <a href="HelpPages/Standard%20IEC61000-4-30.html">IEC 61000-4-30</a> and EN 50160. Voltage measurement up to 0.1% accuracy. Frequency measurement up to 10 mHz (42.5-57.5 Hz). Current measurement up to 50 A with integrated Hall effect sensor (current clamp or Rogowski probes as an option)</li>
+  <li>Adjustable Sampling frequency from 6kHz to 100kHz (fixed to 16525Hz in standard version)</li>
+  <li>[[Aggregation|Standard IEC61000-4-30]] for the voltage channel of 10 cycles, 3 seconds, and 10 minutes (according to standard) and one hour as extra aggregation for energy metering purposes.</li>
+  <li>Innovative and responsive web SCADA based on HTML5, CSS3 and JavaScript for data analysis.</li>
+  <li>Alert system and event management (ITIC / CBEMA, frequency, etc.)</li>
+  <li>Custom implementation and adaptation for FFT and zero-crossing algorithms</li>
+  <li>Friendly and intuitive interface for skilled and non-experienced users.</li>
+  <li>Modular by design for a simple and easy extension</li>
+  <li>USB ports (Wi-Fi dongle, 3G / LTE / 4G, etc.), ethernet port and Wi-Fi. SPI, I2C, UART and PWM are also available</li>
+  <li>Connection to the spanish <a href="https://www.esios.ree.es/es">ESIOS</a> API to get daily energy prices.</li>
+  <li>Awesome integration with <a href="http://www.telegram.org">Telegram</a> via custom bot for realtime alerting and monitoring.</li>
+  <li>API for third party integration using JSON</li>
+</ul>
+<p>The system is suitable for all king of single-phase electrical installations (the three-phase version will be released shortly). It is designed to be ran in Linux equipment (especially embedded ARM).</p>
+<p>Depending on the [[Hardware|Hardware]] used, it can be adapted to any type of [[ Configuration|Configuration]] (direct current, single-phase and soon, three-phase) in low voltage (230/400 V) for a very wide range of power and current (according to current sensor). It allows to store the extracted data in a <a href="https://www.postgresql.org/">PostgreSQL</a> database for later analysis and visualization using a modern web interface based on HTML5, CSS3 and JavaScript.</p>
+<h2><a id="Architecture_35"></a>Architecture</h2>
+<p>openZmeter relies on several basic components:</p>
+<ul>
+  <li>A custom hardware shield has been designed for capturing raw samples (Analog Front End or AFE ) and adapting the voltage and current wave (in one or several phases)  to the ADC inputs using an STM32 microcontroller. The samples are sent to the embedded ARM unit (the host for openZmeter service daemon) for its processing. A relatively heavy computation is made in the [[AFE|Hardware]] microcontroller, but also serving the raw data to the Linux core for more complex calculations (FFT and zero crossing).</li>
+  <li>NanoPi and OrangePi ARM boards.</li>
+  <li>A PostgreSQL database server that stores the data processed by openZmeter or transmitted by the AFE.</li>
+  <li>Powerful daemon in C for processing  and serving data via <a href="https://www.gnu.org/software/libmicrohttpd/">libmicrohttpd</a> interface.</li>
+</ul>

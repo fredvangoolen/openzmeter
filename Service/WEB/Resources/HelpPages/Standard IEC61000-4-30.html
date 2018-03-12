@@ -1,0 +1,148 @@
+Esta parte de la Norma IEC 61000-4 define los métodos de medida y la interpretación de los resultados de los parámetros de calidad de suministro de las redes de energía eléctrica con una frecuencia fundamental declarada de 50 Hz o 60 Hz.
+
+Los parámetros de calidad de suministro considerados en esta norma son:
+
+* la frecuencia
+* la amplitud de la tensión de alimentación
+* el flicker
+* los huecos de tensión, las sobretensiones, las interrupciones de tensión y las tensiones transitorias
+* el desequilibrio de tensión
+* los armónicos e interarmónicos de tensión
+* las señales de transmisión por la red
+* las variaciones rápidas de tensión
+* las mediciones de corriente
+* las emisiones en el rango de 2 kHz a 150 kHz 
+
+De la anterior lista, no se implementa la detección de flicker por considerarse que su principal efecto (parpadeo en la iluminación) tiende a desaparecer debido a la masiva implantación de iluminación led. Tampoco se analizan las emisiones por encima de 2500 Hz ni el desequilibrio de tensión en las versiones de hardware monofásicas.
+
+## Generalidades
+
+La norma establece 2 métodos de medida denominados **Clase A y S**. oZm implementa los métodos de la **Clase S**, aunque en muchas ocasiones también cumple los de la **Clase A**.  
+De manera general, se usará la clase A cuando se requiera de:
+
+* medidas muy precisas para asuntos contractuales
+* verificación de cumplimiento de standards
+* para resolver disputas. 
+
+Por contra, se hará uso de la clase S cuando se requiera de:
+
+* muestreos estadísticos de calidad
+* diagnóstico de problemas con baja incertidumbre.
+
+### Valores eléctricos
+
+Para la versión monofásica de oZm, solamente se utiliza como base para las mediciones, el único canal de tensión existente, es decir, fase-neutro.  También se mide el canal de corriente, aunque sobre él no se realiza ningún estudio de calidad eléctrica, más allá de un análisis espectral.
+
+### Agregaciones
+
+La idea de agregación surge de la necesidad de poder ofrecer un cierto nivel de zoom o detalle en las medidas eléctricas en función del horizonte temporal seleccionado. No es lo mismo analizar la información de meses completos, donde normalmente es suficiente con disponer de valores horarios o diarios, que analizar franjas horarias donde se necesita un nivel de detalle del orden de minutos o segundos.
+
+La norma establece también que la medida de 10/12 periodos debe re-sincronizarse en cada UTC (tiempo universal coordinado) de 10 min. Para garantizar esta medida, el sistema incorpora una sincronización constante mediante protocolo NTP.
+
+El servicio está pensado para funcionar de forma continua, de forma que se realizan algunas optimizaciones destinadas a reducir el uso de recursos y mejorar la velocidad de funcionamiento:
+- Al iniciarse el servicio, se comprueba que no existan agregaciones pendientes en la base de datos. Una agregación pendiente es aquella que no se ha generado, pero que ha expirado el plazo en que debería de haberse generado. Por ejemplo:
+    - El servicio se cierra a las 10:58:10 y se abre nuevamente a las 11:10:00. En este caso faltaría la agregación del cambio de hora, la de 10 minutos y la de minuto ya que el plazo para generarlas se ha sobrepasado.
+    - El servicio se cierra a las 10:58:10 y se abre nuevamente a las 10:59:10. En este caso falta la agregación de 1 minuto, pero no la de cambio de hora.
+
+Para mantener un tamaño razonable de las tablas, los registros antiguos se eliminan en función de la configuración, permitiendo limitar el numero de muestras en cada nivel de agregación. Este sistema permite que las tablas que almacenan los datos no varíen su tamaño con el tiempo y las nuevas muestras sustituyan a las mas antiguas. Por defecto se almacenan 72000 muestras por nivel, que equivalen a:
+- En la agregacion de 10 ciclos: 4 horas. (La muestra caduca al cumplirse 4 horas desde su generacion, la poder variar la duracion de las muestras en este periodo de agregacion el numero total de muestras no tiene que ser exactamente el establecido).
+- En la agregacion de 3 segundos: 60 horas. (Mismas condiciones que la anterior).
+- En la agregacion de 1 minuto: 50 dias. (Esta agregacion si contiene periodos de igual longitud, con lo que el numero de muestras almacenado es exactamente el configurado, siempre que el servicio funcione de forma continuada).
+- En la agregacion de 10 minutos: 500 dias. (Mismas condiciones que la anterior).
+- En la agregacion de 1 hora: 3000 dias. (Mismas condiciones que la anterior).
+
+#### 10 ciclos
+Es el periodo base en el que se realizan los cálculos de partida. Además, es el que ofrece el mayor nivel de detalle para los [[parámetros y variables eléctricas medidas|Variables medidas]].
+Cabe destacar que la oZm debe ser capaz de medir en el rango de 50Hz±15% (Europa) o 60±15% (América), por lo que la duración de la captura de 10 ciclos puede variar según lo siguiente:
+- 50Hz - Ventana nominal de 200ms, aunque puede variar entre 173.9ms y 236ms.
+- 60Hz - Ventana nominal de 166.66ms, aunque puede variar entre 144.9ms y 196ms.
+- En caso de DC, la duración sera constante 200ms.
+
+Al ser el periodo de muestreo muy corto, los datos obtenidos en este nivel pueden no ser exactos y variar de un periodo al siguiente.
+
+#### 150/180 ciclos (3 segundos).
+Esta agregación contiene los últimos 3 segundos de muestras. Se elige la implementación del método de la Clase A, es decir, 15 intervalos seguidos (sin separación) de 10 ciclos con re-sincronización cada 10 minutos UTC. Las medidas de tensión y corriente eficaz, así como armónicos y distorsión armónica siguen el patrón dictado por la norma. 
+
+<!-- 
+Sin embargo, otras medidas como la frecuencia se agregan de forma diferente. Por ejemplo, la norma indica que la frecuencia se mida cada 10 segundos, aunque oZm la mide cada 10 ciclos y la agrega también cada 150/180, realizando la media aritmética.
+-->
+
+Otras variables, no incluidas en la norma IEC 61000-4-30, se agregan también según el patrón de 150/180 como:
+
+- Potencias y factor de potencia: Se calcula la media aritmética.
+- Energía activa y energía reactiva: Los valores de las muestras se suman.
+
+#### 1 minuto
+Esta agregación no es obligada por la norma, pero introducida en oZm. Contiene 1 minuto de muestras. La agregación se produce antes del cambio de minuto real. El numero de muestras de origen usadas para la agregación puede variar. Los métodos de agregación son iguales a los anteriores.
+
+#### 10 minutos
+Esta agregación contiene 10 minutos de muestras (3000 intervalos de 10 ciclos). La agregación se produce antes del cambio de minuto real. El numero de muestras de origen usadas para la agregación puede variar.
+Los métodos de agregación son iguales a los anteriores.
+
+#### 1 hora
+Esta agregación contiene 60 minuto de muestras. La agregación se produce antes del cambio de hora real. El numero de muestras de origen usadas para la agregación puede variar.
+Los métodos de agregación son iguales a los anteriores.
+
+
+### Incertidumbre en el reloj de tiempo
+La incertidumbre del reloj de tiempo se define con relación al tiempo universal coordinado (UTC). Para el método de la Clase A,  la incertidumbre del reloj de tiempo no debe sobrepasar ±20 ms para 50 Hz o ±16,7 ms para 60 Hz, independientemente del intervalo total de tiempo, con una tolerancia máxima de 1 s cada 24 horas en caso de no haber conectividad externa. Esto se puede conseguir de diversas formas, aunque los métodos preferidos son el uso de servidores de sincronización NTP o mediante GPS. Puesto que oZm corre sobre equipos linux, la instalación de cualquier _daemon_ NTP permite acceder a una fuente externa de sincronización temporal. En caso de ausencia de conexión, la arquitectura interna del sistema permite no desviarse más allá de 1 s cada 24 horas. Una lista completa de daemons NTP puede ser consultada [aquí](https://en.wikipedia.org/wiki/Ntpd#Implementations).
+La implementación elegida en oZm es la proporcionada por [Chrony](http://chrony.tuxfamily.org/) debido a las [mejoras](http://thegeekdiary.com/centos-rhel-7-chrony-vs-ntp-differences-between-ntpd-and-chronyd/) que incorpora respecto a la versión oficial ntpd.  
+Cabe destacar que oZm puede soportar, opcionalmente, la sincronización mediante GPS gracias al paquete [gpsd](http://www.catb.org/gpsd/).
+
+### Concepto de marcado
+Como parte de la norma, sobre cada bloque debe realizarse una detección de distintos tipos de eventos. En el caso de oZm se detectan todos los tipos definidos que se catalogan como INTERRUPTION, DIP, SWELL o RVC. El concepto de marcado es necesario no solo para localizar los bloques en los que se ha producido un evento, si no para informar de que las medidas del periodo afectado pueden haber sido influidas por el evento que contiene.
+
+El concepto de marcado se extiende a las agregaciones superiores de modo que los periodos de 3 segundos, 1 minuto, 10 minutos y 1 hora que contengan uno o mas eventos son marcados igualmente, este marcado es visible en los diferentes gráficos de cada vista.
+<p style="color:red;background-color: yellow">TODO</p>
+
+## Parámetros de calidad de suministro
+### Frecuencia
+Según la norma, la indicación de la frecuencia debe obtenerse cada 10 segundos, aunque también permite el uso de tiempos más cortos. En el caso de oZm, la frecuencia se calcula a partir de los 500 últimos ciclos (10 segundos para redes de 50Hz), actualizándose la medida en cada periodo de 10 ciclos teniendo en cuenta que el rango de medida puede extenderse un ±15%. El algoritmo empleado es de tipo [["paso por cero" o "zero crossing"|Zero Crossing]] el cual hace uso de filtros digitales para minimizar el efecto de interarmónicos  o ruido. El valor final  es el resultado de contar el tiempo que tarda la onda en completar los 500 ciclos mencionados.
+Se realizan agregaciones de 150 ciclos, 1 minuto, 10 minutos y 1 hora.
+
+<p style="color:red;background-color: yellow">Los intervalos de tiempo de medición no deben solaparse. Los periodos individuales que se solapen en la frontera de un intervalo de 10 s son rechazados. Cada intervalo de 10 s debe comenzar en un tiempo absoluto de 10 s de reloj, con una incertidumbre como se define en el apartado 4.6.<sup>[es necesario verificar lo que se empieza en golpes de reloj de 10 s absolutos]</sup></p>
+
+### Amplitud de la tensión de suministro
+La medición es el valor eficaz de la amplitud de la tensión en un intervalo de tiempo de 10 periodos para las redes de 50 Hz (intervalo de tiempo de 12 periodos para las redes de 60 Hz). Los intervalo de 10/12 periodos son contiguos. La incertidumbre de la medición no sobrepasa el ±0,1% de la tensión nominal 230 V, en el rango de 10% a 150% de dicha tensión.
+
+### Flicker
+
+No se realiza cálculo de flicker.
+
+### Huecos de tensión y sobretensiones
+Se usa la tensión eficaz de medio ciclo <img src="http://latex.codecogs.com/gif.latex?U_{rms(1/2)}"/> para la caracterización de un hueco de tensión o de una sobretensión.
+#### Detección y evaluación del hueco 
+<p style="color:white;background-color: blue">Hablar de cómo lo hacemos nosotros</p>
+<p style="color:red;background-color: yellow">La norma dice:</p>
+
+<p style="color:red;background-color: yellow">El umbral del hueco de tensión es un porcentaje de Udin o de la referencia de la tensión deslizante Usr (véase 5.4.4). La selección de la tensión de referencia utilizada debe ser declarada por el usuario.</p>
+
+<p style="color:red;background-color: yellow">– En los sistemas monofásicos, un hueco de tensión comienza cuando la tensión Urms cae por debajo del umbral del hueco, y termina cuando la tensión Urms es igual o superior al umbral del hueco más la histéresis de tensión.</p>
+
+<p style="color:red;background-color: yellow">El umbral del hueco y la histéresis de tensión se determinan por el usuario en función de la aplicación.</p>
+
+<p style="color:red;background-color: yellow">Un hueco de tensión se caracteriza por un par de datos, la tensión residual (Ures) o la profundidad y la duración:</p>
+<p style="color:red;background-color: yellow">– la tensión residual de un hueco es el menor valor de Urms (1/2) medido en cualquier canal durante el hueco;</p>
+<p style="color:red;background-color: yellow">– la profundidad de un hueco es la diferencia entre la tensión de referencia (Udin o Usr) y la tensión residual. En general se expresa en porcentaje de la tensión de referencia;</p>
+
+<p style="color:red;background-color: yellow">El tiempo de inicio de un hueco debe ser fechado con el tiempo del comienzo de Urms del canal en el que se inició el evento y el tiempo final del hueco debe ser fechado con el tiempo del final de Urms con el que se terminó el evento, tal como se define por el umbral más la histéresis.</p>
+<p style="color:red;background-color: yellow">La duración de un hueco de tensión es la diferencia de tiempo entre el inicio y el fin del hueco de tensión.</p>
+
+#### Detección y evaluación de la sobretensión
+ 
+<p style="color:white;background-color: blue">Hablar de cómo lo hacemos nosotros. Idem del anterior</p>
+
+
+### Interrupciones
+<p style="color:white;background-color: blue">Hablar de cómo lo hacemos nosotros. Idem del anterior</p>
+
+### Armónicos e Interarmónicos de tensión
+La norma remite a la norma IEC 61000-4-7 Clase I para medidas tipo Clase A o Clase II para medidas tipo Clase S. Actualmente, no se realiza una agrupación en grupos y subgrupos tal y como recomienda la norma. Esto es debido a que oZm realiza una implementación de la FFT con 3 segundos de muestras, con lo que se tiene una resolución frecuencial <img src="http://latex.codecogs.com/gif.latex?f_\Delta"/> de 0.33Hz
+
+&nbsp;&nbsp;&nbsp;&nbsp; <img src="http://latex.codecogs.com/gif.latex?f_\Delta=\frac{1}{\Delta T}=\frac{1}{3}=0.33\textup{ Hz}"/>
+
+En vez de usar la tradicional resolución de 5 Hz que aconseja la norma, el uso de esta gran resolución permite identificar claramente la posición de cada armónico e interarmónico y minimizar los efectos de _spectral leakage_ o desparramamiento de energía.
+Para una mayor información, pueden consultarse las referencias [Power Quality Application Guide - Harmonics](311-interharmonics.pdf) e [Interharmonics- basic concepts and techniques for their detection and measurement](Interharmonics- basic concepts and techniques for their detection and measurement  .pdf)
+
+### Variaciones rápidas de tensión (RVC)
+<p style="color:white;background-color: blue">Hablar de cómo lo hacemos nosotros</p>
