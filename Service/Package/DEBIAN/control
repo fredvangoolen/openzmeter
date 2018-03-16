@@ -1,0 +1,6 @@
+Package: openZmeter
+Version: 2.0
+Architecture: armhf
+Maintainer: Edu (zRed)
+Description: Power usage and electrical monitoring tool with WEB frontend
+Depends: libfftw3-single3 (>= 3.3.4), libmicrohttpd10 (>= 0.9.44), libusb-1.0-0, libpq5 (>= 9.6.6), libjson-c3 (>= 0.12.1), libcurl3 (>= 7.47.0) 

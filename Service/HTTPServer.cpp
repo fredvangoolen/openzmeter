@@ -267,9 +267,12 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     char *Password = NULL;
     json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
       enum json_type JSON_Type = json_object_get_type(JSON_Val);
-      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) Password = (char*)json_object_get_string(JSON_Val);
+      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) 
+        Password = (char*)json_object_get_string(JSON_Val);
+      else 
+        Error = true;
     }
-    if(Password == NULL) goto InvalidParams;
+    if((Password == NULL) || (Error == true)) goto InvalidParams;
     Request->JSONWriter = json_object_new_object();
     if(strcmp(Password, Tools::Global.HTTPPass) != 0) {
       json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(false));

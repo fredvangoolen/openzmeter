@@ -1,0 +1,25 @@
+[global]                                                            
+httpPort = 80
+httpPass = admin
+log      = /var/log/openZmeter.log
+pid      = /var/run/openZmeter.pid
+
+[database]                                                          
+host    = 127.0.0.1
+port    = 5432
+database= openzmeter
+user    = openzmeter
+pass    = openzmeter
+
+[electrical]
+nominal_frequency = 50
+nominal_voltage   = 230
+
+[device]
+type           = Mono
+name           = Real
+serial         = 3FFFFFFFFFFFFFFFFFFFFFFF
+voltage_gain   = 0.01160
+voltage_offset = 348.00
+current_gain   = -0.00078125
+current_offset = 32768

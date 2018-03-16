@@ -19,9 +19,9 @@ CND_PLATFORM_Debug=GNU-Linux
 CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux
 CND_ARTIFACT_NAME_Debug=service
 CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux/service
-CND_PACKAGE_DIR_Debug=
-CND_PACKAGE_NAME_Debug=
-CND_PACKAGE_PATH_Debug=
+CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux/package
+CND_PACKAGE_NAME_Debug=service.deb
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux/package/service.deb
 #
 # include compiler specific variables
 #

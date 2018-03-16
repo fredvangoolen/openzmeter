@@ -3,8 +3,8 @@
 echo "Initializing or updating DB"
 su postgres -c "psql" <  /usr/share/openZmeter/Database.sql &> /dev/null
 
-systemctl stop openZmeter.service
-systemctl disable openZmeter.service
+systemctl stop openZmeter.service &> /dev/null
+systemctl disable openZmeter.service &> /dev/null
 systemctl daemon-reload
 echo "Installing service"
 echo "Enabling service"

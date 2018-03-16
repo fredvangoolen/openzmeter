@@ -54,11 +54,15 @@ function copyFileToTmpDir
 
 # Setup
 cd "${TOP}"
-mkdir -p null
+mkdir -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package
 rm -rf ${NBTMPDIR}
 mkdir -p ${NBTMPDIR}
 
 # Copy files and create directories and links
+cd "${TOP}"
+makeDirectory "${NBTMPDIR}//usr/bin"
+copyFileToTmpDir "${OUTPUT_PATH}" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}" 0755
+
 cd "${TOP}"
 makeDirectory "${NBTMPDIR}//usr/bin"
 copyFileToTmpDir "${OUTPUT_PATH}" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}" 0755
@@ -143,10 +147,10 @@ cd "${NBTMPDIR}/.."
 dpkg-deb  --build ${TMPDIRNAME}
 checkReturnCode
 cd "${TOP}"
-mkdir -p  null
-mv ${NBTMPDIR}.deb 
+mkdir -p  ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package
+mv ${NBTMPDIR}.deb ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/service.deb
 checkReturnCode
-echo Debian: 
+echo Debian: ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/service.deb
 
 # Cleanup
 cd "${TOP}"

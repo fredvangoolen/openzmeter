@@ -5,10 +5,9 @@ After=chrony.service
 [Service]
 Type=forking
 PIDFile=/var/run/openZmeter.pid
-WorkingDirectory=/opt/openZmeter/
-ExecStart=/opt/openZmeter/openZmeter --daemon
+ExecStart=/usr/sbin/openZmeter --daemon
 StandardOutput=null
 
 [Install]
 WantedBy=multi-user.target
-Alias=openZmeter.service"
+Alias=openZmeter.service
