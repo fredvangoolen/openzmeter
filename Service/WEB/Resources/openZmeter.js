@@ -500,8 +500,6 @@ $(window).bind("load resize", function () {
     if (width < 768) {
         $('div.navbar-collapse').addClass('collapse');
         topOffset = 100; // 2-row-menu
-    } else {
-        $('div.navbar-collapse').removeClass('collapse');
     }
 
     height = ((this.window.innerHeight > 0) ? this.window.innerHeight : this.screen.height) - 1;
