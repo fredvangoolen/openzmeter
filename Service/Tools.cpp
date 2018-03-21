@@ -65,8 +65,10 @@ void Tools::LogMsg(const char *level, const char *msg, ...) {
     flockfile(stdout);
     if(strcmp(level, "ERROR") == 0) {
       printf("\033[1;31m%s\033[0m", DateStr);
-    } else if(strcmp(level, "DEBUG") == 0) {
+    } else if(strcmp(level, "WARN") == 0) {
       printf("\033[1;33m%s\033[0m", DateStr);
+    } else if(strcmp(level, "DEBUG") == 0) {
+      printf("\033[1;37m%s\033[0m", DateStr);
     } else if(strcmp(level, "INFO") == 0) {
       printf("\033[1;34m%s\033[0m", DateStr);
     } else {
@@ -91,8 +93,8 @@ bool Tools::CreateLogFile() {
   LogFile = fopen(Global.Log, "at");
   if(!LogFile) LogFile = fopen(Global.Log, "wt");
   if(!LogFile) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return false;
+    Tools::LogMsg("WARN", "Can not create or open log file (%d)\n", errno);
+    return true;
   }
   return true;
 }
@@ -102,8 +104,8 @@ bool Tools::CreatePidFile() {
   remove(Global.Pid);
   int File = open(Global.Pid, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
   if(File < 0) {
-    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return false;
+    LogMsg("WARN", "Can not create PID file (%d)\n", errno);
+    return true;
   }
   write(File, PID_Number, Len);
   close(File);
@@ -134,7 +136,7 @@ bool Tools::ReadConfig(char *file) {
   Global.Pid      = (char*)"/var/run/openZmeter.pid";
   Global.Log      = (char*)"/var/log/openZmeter.log";
   Global.HTTPPort = 8080;
-  Global.HTTPPath = (char*)"/usr/share/openZmeter/";
+  Global.HTTPPath = (char*)"./WEB/";
   Global.HTTPPass = (char*)"admin";
   DB.Database     = (char*)"openzmeter";
   DB.Host         = (char*)"127.0.0.1";
@@ -150,8 +152,8 @@ bool Tools::ReadConfig(char *file) {
   LogMsg("INFO", "Loading config file...\n");
   FILE *File = fopen(file, "r");
   if(!File) {
-    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return false;
+    LogMsg("WARN", "Can not open config file (%d)\n", errno);
+    return true;
   }
   char Line[256];
   char Section[256] = "";

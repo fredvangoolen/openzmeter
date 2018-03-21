@@ -42,87 +42,216 @@
     <div id="wrapper">
       <div id="page-wrapper">
         <div class="row">
-          <div class="col-lg-4">
+          <div class="col-lg-6 col-xs-12">
             <div class="panel panel-info">
               <div class="panel-heading">
-                <i class="fa fa-user fa-fw"></i> User
+                <i class="fa fa-user fa-bug"></i> System tools
               </div>
               <div class="panel-body">
                 <div class="row">
-                  <div class="col-lg-12">
-                    <button type="button" class="btn btn-sm btn-primary" style="width: 100%">Change password</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="panel panel-info">
-              <div class="panel-heading">
-                <i class="fa fa-bug" aria-hidden="true"></i> System messages
-              </div>
-              <div class="panel-body">
-                <div class="row">
-                  <div class="col-lg-12">
-                    <button type="button" class="btn btn-sm btn-primary" style="width: 100%">Get logged messages</button>
+                  <div class="col-xs-12">
+                    <button type="button" class="btn btn-sm btn-default" style="width: 100%">Change password</button>
                     <div style="margin: 5px"></div>
-                    <button type="button" class="btn btn-sm btn-danger" style="width: 100%">Clear logged messages</button>
+                    <button type="button" class="btn btn-sm btn-default" style="width: 100%">openZmeter log</button>
+                    <div style="margin: 5px"></div>
+                    <button type="button" class="btn btn-sm btn-default" style="width: 100%">System log</button>
+                    <div style="margin: 5px"></div>
+                    <button type="button" class="btn btn-sm btn-default" style="width: 100%">Reboot</button>
                   </div>
                 </div>
-              </div>
-            </div>
-            
-            <div class="panel panel-info">
-              <div class="panel-heading">
-                <i class="fa fa-database fa-fw"></i> Database <em>(PostgreSQL)</em>
-              </div>
-              <div class="panel-body">
-                <form id="database">
-                  <div class="row">
-                    <div class="col-lg-12">
-                      <div class="row">
-                        <div class="col-md-4">
-                          <div class="form-group">
-                            <label class="control-label">Host</label>
-                            <input class="form-control" name="host" data-bv-regexp="true" data-bv-regexp-regexp="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$" data-bv-regexp-message="Invalid ip" required/>
-                          </div>
-                        </div>
-                        <div class="col-md-3">
-                          <div class="form-group">
-                            <label class="control-label">Port</label>
-                            <input class="form-control" name="port" data-bv-digits required/>
-                          </div>
-                        </div>
-                        <div class="col-md-5">
-                          <div class="form-group">
-                            <label class="control-label">Database</label>
-                            <input class="form-control" name="database" required />
-                          </div>
-                        </div>
-                      </div>
-                      <div class="row">
-                        <div class="col-md-6">
-                          <div class="form-group">
-                            <label class="control-label">Username</label>
-                            <input class="form-control" name="user" required/>
-                          </div>
-                        </div>
-                        <div class="col-md-6">
-                          <div class="form-group">
-                            <label class="control-label">Password</label>
-                            <input class="form-control" name="pass" required/>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="row">
-                        <div class="col-md-12">
-                          <button type="button" class="btn btn-sm btn-danger" style="width: 100%">Clear entire database</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </form>
               </div>
             </div>
           </div>
+          <div class="col-lg-6 col-xs-12">
+            <div class="panel panel-info">
+              <div class="panel-heading">
+                <i class="fa fa-cog fa-fw"></i> System settings
+              </div>
+              <div class="panel-body">
+                <fieldset>
+                  <div class="row">
+                    <div class="col-md-12">
+                      <label class="control-label">NTP Server</label>
+                        <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>                             
+                      </div>
+                      <div class="col-md-12">
+                        <label class="control-label">Time zone</label>
+                        <select id="id_certificadora" name="nominal_frequency" class="form-control" default="50">
+                          <option value="50">Europe/Madrid (GTM+1)</option>
+                          <option value="60">Static</option>
+                        </select>
+                      </div>
+                    </div>
+                </fieldset>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="panel panel-info">
+              <div class="panel-heading">
+                <i class="fa fa-database fa-fw"></i> Database
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-lg-6 col-xs-12">
+                    <table id="WifiTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
+                      <thead>
+                        <tr>
+                          <th style="width: 60px">Node</th><th>Name</th><th style="width: 80px">Type</th><th style="width: 80px">First sample</th><th style="width: 100px">Last sample</th><th style="width: 100px">Total samples</th><td></td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>0</td>
+                          <td>Entrada 1</td>
+                          <td>1phase</td>
+                          <td>01/01/2017</td>
+                          <td>02/03/2018</td>
+                          <td>150000</td>
+                          <td><button class="btn btn-xs btn-primary get_samples" style="width: 100%">Clear</button></td>
+                        </tr>
+                        <tr>
+                          <td>1</td>
+                          <td>Entrada 2</td>
+                          <td>1phase</td>
+                          <td>01/01/2017</td>
+                          <td>02/03/2018</td>
+                          <td>150000</td>
+                          <td><button class="btn btn-xs btn-primary get_samples" style="width: 100%">Clear</button></td>
+                        </tr>
+                        <tr>
+                          <td>2</td>
+                          <td>Entrada 3</td>
+                          <td>1phase</td>
+                          <td>01/01/2017</td>
+                          <td>02/03/2018</td>
+                          <td>150000</td>
+                          <td><button class="btn btn-xs btn-primary get_samples" style="width: 100%">Clear</button></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    
+                    
+                    1.46Gb used for 360000 samples and 4.10Gb free (~800 days)<br/>First sample on 21/12/2017 and last on 19/03/2018
+                  </div>
+                  <div class="col-lg-6 col-xs-12">
+                    <div class="row">
+                      <div class="col-lg-6 col-xs-12">
+                        <button type="button" class="btn btn-sm btn-default" style="width: 100%">Full vacuum</button>
+                      </div>
+                      <div class="col-lg-6 col-xs-12">
+                        <button type="button" class="btn btn-sm btn-default" style="width: 100%">Clean</button>
+                      </div>
+                    </div>
+                    <div style="margin: 5px"></div>
+                    <div class="row">
+                      <div class="col-lg-6 col-xs-12">
+                        <button type="button" class="btn btn-sm btn-default" style="width: 100%">Backup</button>
+                      </div>
+                      <div class="col-lg-6 col-xs-12">
+                        <button type="button" class="btn btn-sm btn-default" style="width: 100%">Restore backup</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-12">
+            <div class="panel panel-info">
+              <div class="panel-heading">
+                <i class="fa fa-wifi fa-fw"></i> Wifi connection
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-lg-6 col-sm-12">
+                    <table id="WifiTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
+                      <thead>
+                        <tr>
+                          <th style="width: 100px">Status</th><th>BSSID</th><th style="width: 80px">Channel</th><th style="width: 100px">Encryption</th><th>Power</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Connected</td>
+                          <td>zRed</td>
+                          <td>6</td>
+                          <td>WPA2/PSK</td>
+                          <td>
+                            <div class="progress" style="margin: 0px">
+                              <div class="progress-bar" role="progressbar" style="width:87%"></div>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Configured</td>
+                          <td>AFOUNDRY</td>
+                          <td>8</td>
+                          <td>WPA2/PSK</td>
+                          <td>
+                            <div class="progress" style="margin: 0px">
+                              <div class="progress-bar" role="progressbar" style="width:80%"></div>
+                            </div>
+                          </td>
+                        </tr> 
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="col-lg-6 col-sm-12">
+                    <div class="panel panel-default" style="margin: 5px">
+                      <div class="panel-heading">
+                        <i class="fa fa-cog fa-fw"></i> Configuration
+                      </div>
+                      <div class="panel-body">
+                        <fieldset>
+                          <div class="row">
+                            <div class="col-md-12">
+                              <label class="control-label">Password</label>
+                              <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>                             
+                            </div>
+                            <div class="col-md-12">
+                              <label class="control-label">Network address</label>
+                              <select id="id_certificadora" name="nominal_frequency" class="form-control" default="50">
+                                <option value="50">DHCP</option>
+                                <option value="60">Static</option>
+                              </select>
+                            </div>
+                            <div class="col-md-12 col-lg-6">
+                              <label class="control-label">IP address</label>
+                              <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>
+                            </div>
+                            <div class="col-md-12 col-lg-6">
+                              <label class="control-label">Gateway address</label>
+                              <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>
+                            </div>
+                            <div class="col-md-12 col-lg-6">
+                              <label class="control-label">DNS1 address</label>
+                              <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>
+                            </div>
+                            <div class="col-md-12 col-lg-6">
+                              <label class="control-label">DNS2 address</label>
+                              <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>
+                            </div>
+                          </div>
+                        </fieldset>
+                        <hr>
+                        <div class="row">
+                          <div class="col-md-12 col-lg-6">
+                            <button type="button" class="btn btn-sm btn-default" style="width: 100%">Save</button>
+                          </div>
+                          <div class="col-md-12 col-lg-6">
+                            <button type="button" class="btn btn-sm btn-default" style="width: 100%">Connect</button>
+                          </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
           <div class="col-lg-4">
             <div class="panel panel-info">
               <div class="panel-heading">
