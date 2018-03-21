@@ -14,9 +14,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 //----------------------------------------------------------------------------------------------------------------------
-bool  Tools::Daemonized = false;
-bool  Tools::Debug = false;
-FILE *Tools::LogFile = NULL;
+bool                Tools::Daemonized = false;
+bool                Tools::Debug      = false;
+FILE               *Tools::LogFile    = NULL;
+DBusConnection     *Tools::DBus       = NULL;
 Tools::Global_t     Tools::Global;
 Tools::DB_t         Tools::DB;
 Tools::Electrical_t Tools::Electrical;
@@ -51,6 +52,34 @@ uint8_t *Tools::GetFile(const char* name, uint32_t* size) {
   return NULL;
 }
 #endif
+
+void Tools::GetNetworks() {
+  DBusConnection *DBus;
+  DBusError Error;
+  dbus_error_init(&Error);
+  if(DBus == NULL) {
+    DBus = dbus_bus_get(DBUS_BUS_SESSION, &Error);
+    if(dbus_error_is_set(&Error)) {
+      LogMsg("ERROR", "Can not open DBus connection (%s)\n", Error.message); 
+      dbus_error_free(&Error);
+    }
+    if(DBus == NULL) return;
+    int Return = dbus_bus_request_name(DBus, "openZmeter", DBUS_NAME_FLAG_REPLACE_EXISTING, &Error);
+    if(dbus_error_is_set(&Error)) { 
+      LogMsg("ERROR", "Cant get DBus name (%s)\n", Error.message); 
+      dbus_error_free(&Error);
+      return;
+    }
+    if(Return != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER) {
+      LogMsg("ERROR", "DBus name request failed\n"); 
+      return;
+    }
+  }
+
+  
+  
+  
+}
 void Tools::LogMsg(const char *level, const char *msg, ...) {
   if((Debug == false) && (strcmp(level, "DEBUG") == 0)) return;
   va_list args;

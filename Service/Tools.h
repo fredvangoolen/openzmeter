@@ -3,10 +3,11 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
+#include "CaptureInterface.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
-#include "CaptureInterface.h"
+#include <dbus/dbus.h>
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   private :
@@ -16,10 +17,11 @@ class Tools {
       uint8_t *Ptr;
     } File_t;
   private :
-    static bool      Daemonized;
-    static FILE     *LogFile;
-    static File_t   *Files;
-    static uint32_t  FileCount;
+    static bool            Daemonized;
+    static FILE           *LogFile;
+    static File_t         *Files;
+    static uint32_t        FileCount;
+    static DBusConnection *DBus;
   public :
     typedef struct {
       uint16_t HTTPPort;
@@ -57,22 +59,23 @@ class Tools {
     static Electrical_t  Electrical;
     static DB_t          DB;
     static Devices_t     Devices;
+    static bool          Debug;    
   private :
-    static char *rstrip(char* s);
-    static char *lskip(const char* s);
-    static bool  Config_Handler(char *section, char *param, char *value);
-    static bool  Config_Handler(char *section);
-  public :
-    static bool Debug;
-    static bool ReadConfig(char *file);
-    static void LogMsg(const char *level, const char *msg, ...);
-    static void Daemonize();
-    static bool CreateLogFile();
-    static bool CreatePidFile();
-    static bool RemovePidFile();
-    static bool GetMemory(uint64_t *total, uint64_t *available);
-    static uint64_t GetTime();
+    static char    *rstrip(char* s);
+    static char    *lskip(const char* s);
+    static bool     Config_Handler(char *section, char *param, char *value);
+    static bool     Config_Handler(char *section);
     static uint64_t ParseProcMem(char *name, char *buff);
+  public :
+    static bool     ReadConfig(char *file);
+    static void     LogMsg(const char *level, const char *msg, ...);
+    static void     Daemonize();
+    static bool     CreateLogFile();
+    static bool     CreatePidFile();
+    static bool     RemovePidFile();
+    static bool     GetMemory(uint64_t *total, uint64_t *available);
+    static uint64_t GetTime();
     static uint8_t *GetFile(const char *mame, uint32_t *size);
+    static void     GetNetworks();
 };
 //----------------------------------------------------------------------------------------------------------------------
