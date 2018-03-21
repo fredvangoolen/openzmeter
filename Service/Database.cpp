@@ -17,7 +17,7 @@ Database::Database() {
   DBConn = PQconnectdb(ConnectionString);
   if(PQstatus(DBConn) == CONNECTION_BAD) {
     char *Save;
-    Tools::LogMsg("ERROR", "No se pudo abrir la base de datos (%s)\n", strtok_r(PQerrorMessage(DBConn), "\r\n", &Save));
+    Tools::LogMsg("ERROR", "Cant open database (%s)\n", strtok_r(PQerrorMessage(DBConn), "\r\n", &Save));
     return;
   }
   ExecSentence("SET synchronous_commit TO OFF");

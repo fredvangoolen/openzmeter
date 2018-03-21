@@ -236,7 +236,7 @@ function AjaxSamples(result) {
           if((result['Duration'] > result['Envelope'] * 4) && (y <= result['Envelope'] * 2)) {
             return Round2((y - result['Envelope']) / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
           } else if((result['Duration'] > result['Envelope'] * 4) && (y > result['Envelope'] * 2 + 100)) {
-            return Round2((y - result['Envelope'] * 3  - 100) / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
+            return Round2(((Result['Duration'] + y - result['Envelope'] * 3  - 100)) / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
           } else if(result['Duration'] > result['Envelope'] * 4) {
             return "";
           } else {

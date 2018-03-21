@@ -250,13 +250,13 @@ void CaptureInterface::EventsDetect() {
         pRunningEvent.Start    = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
       }
       //Un evento DIP o SWELL se produce cuando un ciclo sale de los valores establecidos y si no habia eventos anteriores o era un RVC
-      if(((pRunningEvent.Type == EVT_NONE) || (pRunningEvent.Type == EVT_RVC)) && (fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) > EVENT_DIP_SWELL)) {
-        pRunningEvent.Type     = (Cycle->RMS[n] > Tools::Electrical.NominalVoltage) ? EVT_SWELL : EVT_DIP;
-        pRunningEvent.Start    = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
+      if(fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) > EVENT_DIP_SWELL) {
+        if(pRunningEvent.Type == EVT_NONE) pRunningEvent.Start = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
+        if((pRunningEvent.Type == EVT_NONE) || (pRunningEvent.Type == EVT_RVC)) pRunningEvent.Type = (Cycle->RMS[n] > Tools::Electrical.NominalVoltage) ? EVT_SWELL : EVT_DIP;
       }
-      if(((pRunningEvent.Type == EVT_NONE) || (pRunningEvent.Type == EVT_RVC) || (pRunningEvent.Type == EVT_DIP) || (pRunningEvent.Type == EVT_SWELL)) && (fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) > EVENT_INTERRUPTION)) {
-        pRunningEvent.Type     = EVT_INTERRUPTION;
-        pRunningEvent.Start    = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
+      if(fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) > EVENT_INTERRUPTION) {
+        if(pRunningEvent.Type == EVT_NONE) pRunningEvent.Start = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
+        if((pRunningEvent.Type == EVT_NONE) || (pRunningEvent.Type == EVT_RVC) || (pRunningEvent.Type == EVT_DIP) || (pRunningEvent.Type == EVT_SWELL)) pRunningEvent.Type     = EVT_INTERRUPTION;
       }
       if((pRunningEvent.Type == EVT_RVC) && ((pRunningEvent.Duration == 0) || (fabs(pRunningEvent.Voltage) < fabs(Cycle->RMS[n] - pStationaryRMS[n])))) {
         pRunningEvent.Voltage = Cycle->RMS[n] - pStationaryRMS[n];
