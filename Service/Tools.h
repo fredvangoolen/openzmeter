@@ -7,8 +7,12 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <json-c/json.h>
+#include <dbus/dbus.h>
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
+  private :
+    static const uint32_t NM_DEVICE_TYPE_WIFI;
   private :
     typedef struct {
       char    *Name;
@@ -64,15 +68,25 @@ class Tools {
     static bool     Config_Handler(char *section, char *param, char *value);
     static bool     Config_Handler(char *section);
     static uint64_t ParseProcMem(char *name, char *buff);
-  public :
-    static bool     ReadConfig(char *file);
-    static void     LogMsg(const char *level, const char *msg, ...);
-    static void     Daemonize();
-    static bool     CreateLogFile();
-    static bool     CreatePidFile();
-    static bool     RemovePidFile();
     static bool     GetMemory(uint64_t *total, uint64_t *available);
-    static uint64_t GetTime();
-    static uint8_t *GetFile(const char *mame, uint32_t *size);
+    static bool     SendGetDevices(DBusConnection *bus, json_object *json);
+    static bool     RecvGetDevices(DBusConnection *bus, json_object *json, DBusMessage *reply);
+    static bool     SendGetDeviceType(DBusConnection *bus, json_object *json, char *devicePath);
+    static bool     RecvGetDeviceType(DBusConnection *bus, json_object *json, DBusMessage *reply, char *devicePath);
+    static bool     SendGetAccessPoints(DBusConnection *bus, json_object *json, char *devicePath);
+    static bool     RecvGetAccessPoints(DBusConnection *bus, json_object *json, DBusMessage *reply);
+    static bool     SendGetAPProperties(DBusConnection *bus, json_object *json, char *path);
+    static bool     RecvGetAPProperties(DBusConnection *bus, json_object *json, DBusMessage *reply);
+  public :
+    static bool         ReadConfig(char *file);
+    static void         LogMsg(const char *level, const char *msg, ...);
+    static void         Daemonize();
+    static bool         CreateLogFile();
+    static bool         CreatePidFile();
+    static bool         RemovePidFile();
+    static uint64_t     GetTime();
+    static uint8_t     *GetFile(const char *mame, uint32_t *size);
+    static json_object *GetJSONSysInfo();
+    static json_object *GetJSONNetworks();
 };
 //----------------------------------------------------------------------------------------------------------------------

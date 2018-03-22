@@ -13,11 +13,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <zlib.h>
-#include <sys/sysinfo.h>
-#include <sys/statvfs.h>
 #include "HTTPServer.h"
 #include "Tools.h"
 #include "CaptureInterface.h"
+#include "NetworkManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon            *HTTPServer::Daemon = NULL;
 HTTPServer::Session_t *HTTPServer::Sessions = NULL;
@@ -460,35 +459,30 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       return MHD_YES;
     }
   } else if(strcmp(url, "/getSysInfo") == 0) {
+    char *Type = NULL;
     json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
-      (void)JSON_Key; (void)JSON_Val;      
-      Error = true;
+      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Type") == 0)) 
+        Type = (char*)json_object_get_string(JSON_Val);
+      else
+        Error = true;
     }
-    struct sysinfo Info;
-    struct statvfs Disk;
-    if(sysinfo(&Info) != 0) {
-      Error = true;
-      Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    if((Type == NULL) || (Error == true)) goto InvalidParams;
+    if(strcmp(Type, "Performance") == 0) {
+      Request->JSONWriter = Tools::GetJSONSysInfo();
+      if(Request->JSONWriter == NULL) {
+        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      } else {
+        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
+      }
+    } else if(strcmp(Type, "Connectivity") == 0) {
+      Request->JSONWriter = Tools::GetJSONNetworks();
+      if(Request->JSONWriter == NULL) {
+        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      } else {
+        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
+      }
     }
-    if(statvfs("/", &Disk) != 0) {
-      Error = true;
-      Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    }
-    if(Error == true) goto InvalidParams;
-    uint64_t TotalRam, FreeRam;
-    if(Tools::GetMemory(&TotalRam, &FreeRam) == false) goto InvalidParams;
-    Request->JSONWriter = json_object_new_object();
-    json_object_object_add(Request->JSONWriter, "UpTime", json_object_new_int(Info.uptime));
-    json_object_object_add(Request->JSONWriter, "Swap_Total", json_object_new_int64(Info.totalswap * Info.mem_unit));
-    json_object_object_add(Request->JSONWriter, "Swap_Free", json_object_new_int64(Info.freeswap * Info.mem_unit));
-    json_object_object_add(Request->JSONWriter, "RAM_Total", json_object_new_int64(TotalRam));
-    json_object_object_add(Request->JSONWriter, "RAM_Free", json_object_new_int64(FreeRam));
-    json_object_object_add(Request->JSONWriter, "CPU_Usage", json_object_new_double(Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)));
-    json_object_object_add(Request->JSONWriter, "CPU_Count", json_object_new_int(get_nprocs()));
-    json_object_object_add(Request->JSONWriter, "Disk_Total", json_object_new_int64((uint64_t)Disk.f_blocks * Disk.f_frsize));
-    json_object_object_add(Request->JSONWriter, "Disk_Free", json_object_new_int64((uint64_t)Disk.f_bfree * Disk.f_frsize));
-    json_object_object_add(Request->JSONWriter, "Battery_Percent", json_object_new_int(100));
-    Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
     return MHD_YES;
   } else if(strcmp(url, "/getEvents") == 0) {
     uint32_t Node = 0;

@@ -27,9 +27,10 @@ void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
 }
 int main(int argc, char** argv) {
-  NetworkManager *Networks = new NetworkManager();
-  Networks->SendGetDevices();
-  return 0;
+//  NetworkManager *Networks = new NetworkManager();
+//  Networks->SendGetDevices();
+//  Tools::GetJSONNetworks();
+//  return 0;
   
   
   

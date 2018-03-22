@@ -589,7 +589,7 @@ json_object *CaptureInterface::GetJSONCopy(char *series) {
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads++;
   pthread_mutex_unlock(&pWaitingThreadsMutex);
-  json_object *Result = NULL;  
+  json_object *Result = NULL;
   pthread_mutex_lock(&pDataReadyMutex);
   int Error = 0;
   while((pDataReady == false) && (Error == 0)) {

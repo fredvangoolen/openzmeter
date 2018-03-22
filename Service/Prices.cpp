@@ -121,6 +121,7 @@ size_t Prices_ReadCallback(void *contents, size_t size, size_t nmemb, void *user
 //  mem->Size += realsize;
 //  mem->Buffer[mem->Size] = 0;
 //  return realsize;
+  return 0;
 }
 //======================================================================================================================
 

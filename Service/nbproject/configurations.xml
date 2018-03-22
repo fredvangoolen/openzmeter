@@ -235,8 +235,6 @@
     <itemPath>HTTPServer.h</itemPath>
     <itemPath>Main.cpp</itemPath>
     <itemPath>Main.h</itemPath>
-    <itemPath>NerworkManager.cpp</itemPath>
-    <itemPath>NetworkManager.h</itemPath>
     <itemPath>Prices.cpp</itemPath>
     <itemPath>Prices.h</itemPath>
     <itemPath>Tools.cpp</itemPath>
@@ -345,6 +343,18 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -379,10 +389,6 @@
       <item path="Main.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Main.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="NerworkManager.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="NetworkManager.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Prices.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -1111,6 +1117,18 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -1145,10 +1163,6 @@
       <item path="Main.cpp" ex="false" tool="1" flavor2="4">
       </item>
       <item path="Main.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="NerworkManager.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="NetworkManager.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Prices.cpp" ex="false" tool="1" flavor2="4">
       </item>

@@ -41,7 +41,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/Database.o \
 	${OBJECTDIR}/HTTPServer.o \
 	${OBJECTDIR}/Main.o \
-	${OBJECTDIR}/NerworkManager.o \
 	${OBJECTDIR}/Prices.o \
 	${OBJECTDIR}/Tools.o
 
@@ -99,11 +98,6 @@ ${OBJECTDIR}/Main.o: Main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.cpp
-
-${OBJECTDIR}/NerworkManager.o: NerworkManager.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/NerworkManager.o NerworkManager.cpp
 
 ${OBJECTDIR}/Prices.o: Prices.cpp
 	${MKDIR} -p ${OBJECTDIR}
