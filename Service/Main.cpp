@@ -16,6 +16,7 @@
 #include "Main.h"
 #include "Tools.h"
 #include "HTTPServer.h"
+#include "NetworkManager.h"
 #include "CaptureInterface.h"
 #include "CaptureMono/CaptureMono.h"
 #include "CaptureVirtual/CaptureVirtual.h"
@@ -26,6 +27,12 @@ void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
 }
 int main(int argc, char** argv) {
+  NetworkManager *Networks = new NetworkManager();
+  Networks->SendGetDevices();
+  return 0;
+  
+  
+  
   char *ConfigFile = (char*)"/etc/openZmeter.ini";
   bool  Daemonize  = false;
   for(int i = 1; i != argc; i++) {

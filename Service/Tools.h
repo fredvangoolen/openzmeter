@@ -7,7 +7,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <dbus/dbus.h>
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   private :
@@ -21,7 +20,6 @@ class Tools {
     static FILE           *LogFile;
     static File_t         *Files;
     static uint32_t        FileCount;
-    static DBusConnection *DBus;
   public :
     typedef struct {
       uint16_t HTTPPort;
@@ -76,6 +74,5 @@ class Tools {
     static bool     GetMemory(uint64_t *total, uint64_t *available);
     static uint64_t GetTime();
     static uint8_t *GetFile(const char *mame, uint32_t *size);
-    static void     GetNetworks();
 };
 //----------------------------------------------------------------------------------------------------------------------
