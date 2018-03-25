@@ -16,7 +16,6 @@
 #include "Main.h"
 #include "Tools.h"
 #include "HTTPServer.h"
-#include "NetworkManager.h"
 #include "CaptureInterface.h"
 #include "CaptureMono/CaptureMono.h"
 #include "CaptureVirtual/CaptureVirtual.h"

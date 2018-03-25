@@ -47,6 +47,11 @@
     font-family: 'Titillium Web', sans-serif;
 }
 
+.datatable-toolbar {
+  position: absolute;
+  top: -8px;
+}
+
 .float-left {
   float: left;
 }

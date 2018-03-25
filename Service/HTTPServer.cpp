@@ -16,7 +16,6 @@
 #include "HTTPServer.h"
 #include "Tools.h"
 #include "CaptureInterface.h"
-#include "NetworkManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon            *HTTPServer::Daemon = NULL;
 HTTPServer::Session_t *HTTPServer::Sessions = NULL;

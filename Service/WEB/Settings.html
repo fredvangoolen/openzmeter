@@ -22,6 +22,61 @@
   <body>
     <div id="DisableDiv" class="overlay"></div>
     <nav class="navbar navbar-default navbar-fixed-top" id="Header"></nav>
+    <div class="modal fade" id="NetworkModal" tabindex="-1" role="dialog" data-backdrop='static'>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title"><i class="fa fa-wifi fa-fw"></i> Wifi settings</h3>
+          </div>
+          <div class="modal-body">
+            <fieldset>
+              <div class="row">
+                <div class="col-md-6">
+                  <label class="control-label">SSID</label>
+                  <input type="text" class="form-control" disabled="disabled" name="nominal_voltage" data-bv-numeric required>                             
+                </div>
+                <div class="col-md-6">
+                  <label class="control-label">BSSID</label>
+                  <input type="text" class="form-control" disabled="disabled" name="nominal_voltage" data-bv-numeric required>                             
+                </div>
+                <div class="col-md-6">
+                  <label class="control-label">Password</label>
+                  <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>                             
+                </div>
+                <div class="col-md-6">
+                  <label class="control-label">Network address</label>
+                  <select id="id_certificadora" name="nominal_frequency" class="form-control" default="50">
+                    <option value="50">DHCP</option>
+                    <option value="60">Static</option>
+                  </select>
+                </div>
+                <div class="col-md-12 col-lg-6">
+                  <label class="control-label">IP address</label>
+                  <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>
+                </div>
+                <div class="col-md-12 col-lg-6">
+                  <label class="control-label">Gateway address</label>
+                  <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>
+                </div>
+                <div class="col-md-12 col-lg-6">
+                  <label class="control-label">DNS1 address</label>
+                  <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>
+                </div>
+                <div class="col-md-12 col-lg-6">
+                  <label class="control-label">DNS2 address</label>
+                  <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-success" id="NetworkConfigSave"><span class="glyphicon glyphicon-floppy-disk"></span>Save</button>
+            <button type="button" class="btn btn-default" id="NetworkConfigClose"><span class="glyphicon glyphicon-remove"></span>Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="modal fade" id="save_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-backdrop='static'>
       <div class="modal-dialog">
         <div class="modal-content">
@@ -72,16 +127,16 @@
                   <div class="row">
                     <div class="col-md-12">
                       <label class="control-label">NTP Server</label>
-                        <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>                             
-                      </div>
-                      <div class="col-md-12">
-                        <label class="control-label">Time zone</label>
-                        <select id="id_certificadora" name="nominal_frequency" class="form-control" default="50">
-                          <option value="50">Europe/Madrid (GTM+1)</option>
-                          <option value="60">Static</option>
-                        </select>
-                      </div>
+                      <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>                             
                     </div>
+                    <div class="col-md-12">
+                      <label class="control-label">Time zone</label>
+                      <select id="id_certificadora" name="nominal_frequency" class="form-control" default="50">
+                        <option value="50">Europe/Madrid (GTM+1)</option>
+                        <option value="60">Static</option>
+                      </select>
+                    </div>
+                  </div>
                 </fieldset>
               </div>
             </div>
@@ -96,7 +151,7 @@
               <div class="panel-body">
                 <div class="row">
                   <div class="col-lg-6 col-xs-12">
-                    <table id="WifiTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
+                    <table id="NodesTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
                       <thead>
                         <tr>
                           <th style="width: 60px">Node</th><th>Name</th><th style="width: 80px">Type</th><th style="width: 80px">First sample</th><th style="width: 100px">Last sample</th><th style="width: 100px">Total samples</th><td></td>
@@ -132,8 +187,8 @@
                         </tr>
                       </tbody>
                     </table>
-                    
-                    
+
+
                     1.46Gb used for 360000 samples and 4.10Gb free (~800 days)<br/>First sample on 21/12/2017 and last on 19/03/2018
                   </div>
                   <div class="col-lg-6 col-xs-12">
@@ -166,92 +221,17 @@
               </div>
               <div class="panel-body">
                 <div class="row">
-                  <div class="col-lg-6 col-sm-12">
-                    <table id="WifiTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
-                      <thead>
-                        <tr>
-                          <th style="width: 100px">Status</th><th>BSSID</th><th style="width: 80px">Channel</th><th style="width: 100px">Encryption</th><th>Power</th>
-                        </tr>
-                      </thead>
+                  <div class="col-sm-12">
+                    <table id="NetworksTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
+                      <thead><tr><th>Status</th><th>SSID</th><th>BSSID</th><th>Channel</th><th>Mode</th><th>Power</th><th></th></tr></thead>
                       <tbody>
-                        <tr>
-                          <td>Connected</td>
-                          <td>zRed</td>
-                          <td>6</td>
-                          <td>WPA2/PSK</td>
-                          <td>
-                            <div class="progress" style="margin: 0px">
-                              <div class="progress-bar" role="progressbar" style="width:87%"></div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Configured</td>
-                          <td>AFOUNDRY</td>
-                          <td>8</td>
-                          <td>WPA2/PSK</td>
-                          <td>
-                            <div class="progress" style="margin: 0px">
-                              <div class="progress-bar" role="progressbar" style="width:80%"></div>
-                            </div>
-                          </td>
-                        </tr> 
                       </tbody>
                     </table>
-                  </div>
-                  <div class="col-lg-6 col-sm-12">
-                    <div class="panel panel-default" style="margin: 5px">
-                      <div class="panel-heading">
-                        <i class="fa fa-cog fa-fw"></i> Configuration
-                      </div>
-                      <div class="panel-body">
-                        <fieldset>
-                          <div class="row">
-                            <div class="col-md-12">
-                              <label class="control-label">Password</label>
-                              <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>                             
-                            </div>
-                            <div class="col-md-12">
-                              <label class="control-label">Network address</label>
-                              <select id="id_certificadora" name="nominal_frequency" class="form-control" default="50">
-                                <option value="50">DHCP</option>
-                                <option value="60">Static</option>
-                              </select>
-                            </div>
-                            <div class="col-md-12 col-lg-6">
-                              <label class="control-label">IP address</label>
-                              <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>
-                            </div>
-                            <div class="col-md-12 col-lg-6">
-                              <label class="control-label">Gateway address</label>
-                              <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>
-                            </div>
-                            <div class="col-md-12 col-lg-6">
-                              <label class="control-label">DNS1 address</label>
-                              <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>
-                            </div>
-                            <div class="col-md-12 col-lg-6">
-                              <label class="control-label">DNS2 address</label>
-                              <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>
-                            </div>
-                          </div>
-                        </fieldset>
-                        <hr>
-                        <div class="row">
-                          <div class="col-md-12 col-lg-6">
-                            <button type="button" class="btn btn-sm btn-default" style="width: 100%">Save</button>
-                          </div>
-                          <div class="col-md-12 col-lg-6">
-                            <button type="button" class="btn btn-sm btn-default" style="width: 100%">Connect</button>
-                          </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
           <div class="col-lg-4">
             <div class="panel panel-info">
               <div class="panel-heading">
@@ -471,9 +451,9 @@
                     <div style="margin: 10px" class="hidden">
                       <img src="Route_1Phase_4.svg" style="width:100%" />
                     </div>
-                    
-                    
-                    
+
+
+
                   </div>
                 </div>
                 <div class="row">
@@ -605,11 +585,11 @@
           </div>
 
         </div>
-        
-        
-        
-        
-        
+
+
+
+
+
         <!-- /.row -->
         <div class="text-right hidden-lg">
           <div class="btn btn-lg btn-success save"><i class="fa fa-save fa-fw"></i>  Save settings</div>
@@ -627,11 +607,9 @@
     <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
     <script src="lib/momentjs/moment.js"></script>
     <script src="lib/momentjs/moment-duration-format.js"></script>
-    <script src="openZmeter.js"></script>
-
+    <script src="Settings.js"></script>
     <script src="openZmeter.js"></script>
     <script>
-      function UpdatePage() {}
       StartPageLoad();
     </script>
   </body>

@@ -177,7 +177,7 @@ function AjaxGetIndicators() {
           result['active_power'][i] = result['active_power'][i] / 1000;
       }
       $('#PowerIndicator').html(Array_Round2(result['active_power'], ' | ', ''));
-      $('#FrequencyIndicator').html(Round2(result['freq']));
+      $('#FrequencyIndicator').html(Round2(result['freq']) + ' Hz');
     },
     error: function() {
       $('#VoltageIndicator').text('Offline');
@@ -224,7 +224,7 @@ function AjaxGetSysStats() {
     type: "POST",
     dataType: "json",
     contentType: 'application/json',
-    data: JSON.stringify({ }),
+    data: JSON.stringify({ Type: 'Performance' }),
     success: function(result) {
       $('#CPUPercent').css('width', result['CPU_Usage'] / result['CPU_Count'] * 100 + '%');
       $('#CPUText').html(Round2(result['CPU_Usage'] / result['CPU_Count'] * 100) + '%');
@@ -296,14 +296,18 @@ function GetNodesCompletes(result) {
       $('#SourceList').append(' <li><a href="#" id="Node_' + i + '">' + result['Devices'][i]['Name'] + ' (' + result['Devices'][i]['Type'] + ')</a></li>');      
     }
   }
-  if(result['Devices'].length == 1) $('#SourcesMenu').addClass('hidden');
+  if(result['Devices'].length <= 1) {
+    $('#SourcesMenu').addClass('hidden');
+  }
   $('#SourceList li a').click(function(event) {
     event.preventDefault();
     localStorage.setItem('SelNode', this.id.replace('Node_', ''));
     location.reload(false);
   });
-  AjaxGetIndicators();
-  AjaxGetIndicatorsB();
+  if(result['Devices'].length != 0) {
+    AjaxGetIndicators();
+    AjaxGetIndicatorsB();
+  }
   AjaxGetSysStats();
   UpdatePage();
 }
