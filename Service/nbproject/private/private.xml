@@ -13,7 +13,17 @@
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/openZmeter.js</file>
         </group>
         <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/DEBIAN/control</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Analysis_Voltage.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/datatables/css/dataTables.bootstrap.css</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/CommonHeader.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Analysis_Voltage.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Tools.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/openZmeter.css</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Settings.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Settings.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/HTTPServer.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Tools.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Main.cpp</file>
         </group>
     </open-files>
 </project-private>

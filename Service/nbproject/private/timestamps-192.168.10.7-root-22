@@ -1,5 +1,5 @@
-#Fri Mar 23 13:03:36 CET 2018
-/home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-Debug.mk=c1521796663000
+#Mon Mar 26 20:21:55 CEST 2018
+/home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-Debug.mk=c1522074372000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Firmware_SETUP_CAPTURE.png=c1519034874000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/momentjs/moment-duration-format.js=c1515416851000
 /home/edu/Proyectos/zMeter/V2/Service/GenRes.sh=c1520298609000
@@ -42,7 +42,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.eot=c1512396200000
 /home/edu/Proyectos/zMeter/V2/Service/Package/DEBIAN/control=c1521046527000
 /home/edu/Proyectos/zMeter/V2/Service/CaptureV2/CaptureV2.h=c1517226070000
-/home/edu/Proyectos/zMeter/V2/Service/Tools.cpp=c1521794747000
+/home/edu/Proyectos/zMeter/V2/Service/Tools.cpp=c1522088496000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Fonts/TitilliumWebBoldItalic.woff2=c1520241139000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Hardware\ (English).md=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Configuracion.md=c1513952649000
@@ -57,7 +57,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/Database.sql=c1517565264000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/visjs/img/network/cross.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/zeroC.png=c1513952649000
-/home/edu/Proyectos/zMeter/V2/Service/nbproject/Package-Debug.bash=c1521796663000
+/home/edu/Proyectos/zMeter/V2/Service/nbproject/Package-Debug.bash=c1522058593000
 /home/edu/Proyectos/zMeter/V2/Service/CaptureMono/CaptureMono.h=c1517226070000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Electrical\ measurements.html=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/datatables/images/sort_asc_disabled.png=c1507189006000
@@ -88,7 +88,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/datatables/js/jquery.dataTables.js=c1520326961000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Variables\ medidas.md=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Dashboard.html=c1520328976000
-/home/edu/Proyectos/zMeter/V2/Service/Tools.h=c1521794747000
+/home/edu/Proyectos/zMeter/V2/Service/Tools.h=c1522088380000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Events_ITIC.html=c1520329191000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap/css/bootstrap.css=c1520326132000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff2=c1469450582000
@@ -125,7 +125,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/font-awesome/css/font-awesome.css=c1520327825000
 /home/edu/Proyectos/zMeter/V2/Service/Database.cpp=c1521544618000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Events_Disturbances.js=c1521226023000
-/home/edu/Proyectos/zMeter/V2/Service/nbproject/Package-Release.bash=c1521794795000
+/home/edu/Proyectos/zMeter/V2/Service/nbproject/Package-Release.bash=c1522056695000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/datatables/images/sort_desc.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Standard\ IEC61000-4-30.md=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-Release.mk=c1521794747000
@@ -139,12 +139,12 @@
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/visjs/img/network/acceptDeleteIcon.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.css=c1520325503000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/fundamental_apparent_power.png=c1513952649000
-/home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-variables.mk=c1521796663000
+/home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-variables.mk=c1522058593000
 /home/edu/Proyectos/zMeter/V2/Service/HTTPServer.cpp=c1521796710000
 /home/edu/Proyectos/zMeter/V2/Service/CaptureInterface.cpp=c1521794747000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/dygraph/crosshair.js=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Analysis_Frequency.html=c1520328976000
-/home/edu/Proyectos/zMeter/V2/Service/WEB/Settings.html=c1521806603000
+/home/edu/Proyectos/zMeter/V2/Service/WEB/Settings.html=c1521806670000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/openZmeter.ini_sample=c1520943115000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Captura\ de\ pantalla\ 2017-11-25\ a\ las\ 13.36.41.png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/oZmlink.md=c1513952649000
