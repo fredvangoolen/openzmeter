@@ -1,4 +1,4 @@
-#Mon Mar 26 20:21:55 CEST 2018
+#Tue Mar 27 01:30:23 CEST 2018
 /home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-Debug.mk=c1522074372000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Firmware_SETUP_CAPTURE.png=c1519034874000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/momentjs/moment-duration-format.js=c1515416851000
@@ -28,7 +28,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Desbalanceo\ y\ potencia\ en\ sistemas\ trifasicos.pdf=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/metisMenu/metisMenu.js=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/visjs/img/network/rightArrow.png=c1507189006000
-/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Settings.js=c1521806175000
+/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Settings.js=c1522107019000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/CodeCogsEqn.png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/momentjs/moment.js=c1520293055000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Route_1Phase_3.svg=c1516284687000
@@ -142,20 +142,20 @@
 /home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-variables.mk=c1522058593000
 /home/edu/Proyectos/zMeter/V2/Service/HTTPServer.cpp=c1521796710000
 /home/edu/Proyectos/zMeter/V2/Service/CaptureInterface.cpp=c1521794747000
-/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/dygraph/crosshair.js=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Analysis_Frequency.html=c1520328976000
+/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/dygraph/crosshair.js=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Settings.html=c1521806670000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/openZmeter.ini_sample=c1520943115000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Captura\ de\ pantalla\ 2017-11-25\ a\ las\ 13.36.41.png=c1513952649000
-/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/oZmlink.md=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/openzmeter_2.00_armhf.deb=c1521046561000
-/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/dygraph/chart-plotter.js=c1515512279000
-/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/metisMenu/metisMenu.css=c1507189006000
+/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/oZmlink.md=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-impl.mk=c1520408641000
+/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/metisMenu/metisMenu.css=c1507189006000
+/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/dygraph/chart-plotter.js=c1515512279000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/active_power.png.png=c1513952649000
-/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff=c1469450582000
-/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/visjs/vis.css=c1520507286000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Events_ITIC.js=c1520514990000
+/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/visjs/vis.css=c1520507286000
+/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff=c1469450582000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Route_1Phase_1.svg=c1516284630000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/thd_i.png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/openZmeter.css=c1521804064000
@@ -174,12 +174,12 @@
 /home/edu/Proyectos/zMeter/V2/Service/Main.cpp=c1521796725000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Configuration.md=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Fonts/TitilliumWebBold.woff2=c1520241198000
-/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/visjs/img/network/addNodeIcon.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/power_system_freq_meas.pdf=c1513952649000
+/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/visjs/img/network/addNodeIcon.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Route_1Phase_4.svg=c1516284700000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/MiniViews/Fundamental_Reactive_Energy.html=c1520328976000
-/home/edu/Proyectos/zMeter/V2/Service/WEB/Events_Disturbances.html=c1520328976000
 VERSION=1.3
+/home/edu/Proyectos/zMeter/V2/Service/WEB/Events_Disturbances.html=c1520328976000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/visjs/img/network/deleteIcon.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap/js/bootstrap.js=c1520325844000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.svg=c1469450582000
