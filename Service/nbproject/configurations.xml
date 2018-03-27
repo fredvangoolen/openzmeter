@@ -990,6 +990,7 @@
       <compileType>
         <cTool>
           <standard>3</standard>
+          <commandLine>-O0 -march=native</commandLine>
           <warningLevel>3</warningLevel>
         </cTool>
         <ccTool>
@@ -998,8 +999,8 @@
             <pElem>/usr/include/libxml2</pElem>
             <pElem>/usr/include/dbus-1.0</pElem>
             <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
-            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
           </incDir>
+          <commandLine>-O0 -march=native</commandLine>
           <warningLevel>3</warningLevel>
         </ccTool>
         <fortranCompilerTool>

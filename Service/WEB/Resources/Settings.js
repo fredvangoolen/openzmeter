@@ -30,7 +30,8 @@ function AddNetworkToList(item) {
 }
 function AjaxNetworks(result) {
   if(NetworksTable === null) {
-    NetworksTable = $('#NetworksTable').DataTable({ responsive: false, paging: false, dom: '<"top datatable-toolbar"i><"top float-right"f><"clear">t<"clear">', language: { info: '<button class="btn btn-sm btn-default"><i class="fa fa-refresh fa-fw"></i></button> _MAX_ networks found', infoEmpty: "No networks in range"},
+    var Buttons = '<button class="btn btn-sm btn-default" onclick="AjaxGetNetworks()"><i class="fa fa-refresh"></i></button>';
+    NetworksTable = $('#NetworksTable').DataTable({ responsive: false, paging: false, dom: '<"top datatable-toolbar"i><"top float-right"f><"clear">t<"clear">', language: { info: Buttons + ' _MAX_ networks found', infoEmpty: Buttons + 'No networks in range'},
                                                     columns: [ { width: '50px', orderable: false }, 
                                                                { orderable: false }, 
                                                                { width: '105px', orderable: false },
@@ -86,8 +87,10 @@ function AjaxNetworks(result) {
 //  }
 }
 $("table#NetworksTable").on('click', 'button.edit', function () {
-$('#NetworkModal').modal('show');
+  $('#NetworkModal').modal('show');
 });
+
+$('button.NetworkRefresh').click(AjaxGetNetworks);
 
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {

@@ -83,6 +83,10 @@ class Tools {
     static bool     RecvGetConnectionProperties(DBusConnection *bus, json_object *json, DBusMessage* reply, bool *isWifi);
     static bool     SendGetIP4Properties(DBusConnection *bus, json_object *json, char *path);
     static bool     RecvGetIP4Properties(DBusConnection *bus, json_object *json, DBusMessage* reply);
+    static bool     SendGetSettingsPaths(DBusConnection *bus, json_object *json);
+    static bool     RecvGetSettingsPaths(DBusConnection *bus, json_object *json, DBusMessage* reply);
+    static bool     SendGetSettings(DBusConnection *bus, json_object *json, char *path);
+    static bool     RecvGetSettings(DBusConnection *bus, json_object *json, DBusMessage* reply, bool *iswifi);
   public :
     static bool         ReadConfig(char *file);
     static void         LogMsg(const char *level, const char *msg, ...);
