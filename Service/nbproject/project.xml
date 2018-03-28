@@ -16,6 +16,12 @@
                 <sourceRootElem>VirtualCapture</sourceRootElem>
                 <sourceRootElem>CaptureMono</sourceRootElem>
                 <sourceRootElem>CaptureVirtual</sourceRootElem>
+                <sourceRootElem>WEB</sourceRootElem>
+                <sourceRootElem>Resources</sourceRootElem>
+                <sourceRootElem>BasicCapture</sourceRootElem>
+                <sourceRootElem>VirtualCapture</sourceRootElem>
+                <sourceRootElem>CaptureMono</sourceRootElem>
+                <sourceRootElem>CaptureVirtual</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

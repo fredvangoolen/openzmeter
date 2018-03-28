@@ -228,6 +228,14 @@
       <itemPath>Makefile</itemPath>
       <itemPath>Package</itemPath>
     </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>GenRes.sh</itemPath>
+      <itemPath>Makefile</itemPath>
+      <itemPath>Package</itemPath>
+    </logicalFolder>
     <itemPath>CaptureInterface.cpp</itemPath>
     <itemPath>CaptureInterface.h</itemPath>
     <itemPath>Database.cpp</itemPath>
@@ -242,6 +250,12 @@
     <itemPath>Tools.h</itemPath>
   </logicalFolder>
   <sourceRootList>
+    <Elem>WEB</Elem>
+    <Elem>Resources</Elem>
+    <Elem>BasicCapture</Elem>
+    <Elem>VirtualCapture</Elem>
+    <Elem>CaptureMono</Elem>
+    <Elem>CaptureVirtual</Elem>
     <Elem>WEB</Elem>
     <Elem>Resources</Elem>
     <Elem>BasicCapture</Elem>
@@ -318,6 +332,12 @@
                             to="/lib/systemd/system/openZmeter.service"
                             from="openZmeter.service"
                             perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
                             owner="root"
                             group="bin"/>
           <packFileListElem type="File"
@@ -999,8 +1019,9 @@
             <pElem>/usr/include/libxml2</pElem>
             <pElem>/usr/include/dbus-1.0</pElem>
             <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
           </incDir>
-          <commandLine>-O0 -march=native</commandLine>
+          <commandLine>-O0</commandLine>
           <warningLevel>3</warningLevel>
         </ccTool>
         <fortranCompilerTool>
@@ -1019,6 +1040,12 @@
       <packaging>
         <packType>Debian</packType>
         <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
                             from="${OUTPUT_PATH}"
