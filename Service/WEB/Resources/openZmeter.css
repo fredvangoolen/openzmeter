@@ -887,5 +887,6 @@ text.area_text {
 
 .table>tbody>tr>td {
   padding-top: 2px;
-  padding-bottom: 2px;  
+  padding-bottom: 2px;
+  vertical-align: middle;
 }

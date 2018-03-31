@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
 //  Tools::GetJSONNetworks();
 //  return 0;
   Tools::GetJSONNetworks();
-  return 0;
+//  return 0;
   
   char *ConfigFile = (char*)"/etc/openZmeter.ini";
   bool  Daemonize  = false;

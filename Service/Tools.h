@@ -69,6 +69,7 @@ class Tools {
     static bool     Config_Handler(char *section);
     static uint64_t ParseProcMem(char *name, char *buff);
     static bool     GetMemory(uint64_t *total, uint64_t *available);
+    static void     GetUUID(char *buff);
     static void     SendGetDevices(DBusConnection *bus, json_object *json);
     static void     RecvGetDevices(DBusConnection *bus, json_object *json, DBusMessage *reply);
     static void     SendGetDeviceType(DBusConnection *bus, json_object *json, char *devicePath);
@@ -76,7 +77,7 @@ class Tools {
     static void     SendGetAccessPoints(DBusConnection *bus, json_object *json, char *devicePath);
     static void     RecvGetAccessPoints(DBusConnection *bus, json_object *json, DBusMessage *reply);
     static void     SendGetAPProperties(DBusConnection *bus, json_object *json, char *path);
-    static void     RecvGetAPProperties(DBusConnection *bus, json_object *json, DBusMessage *reply);
+    static bool     RecvGetAPProperties(DBusConnection *bus, json_object *json, DBusMessage *reply);
     static void     SendGetActiveConnections(DBusConnection *bus, json_object *json);
     static void     RecvGetActiveConnections(DBusConnection *bus, json_object *json, DBusMessage* reply);
     static void     SendGetConnectionProperties(DBusConnection *bus, json_object *json, char *path);

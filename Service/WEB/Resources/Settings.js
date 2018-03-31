@@ -1,6 +1,14 @@
 /* Configuracion de la Wifi */
-var NetworksTable   = null;
+var NetworksTable = null;
 var NetworksDataset = [];
+function WpaFlagsToString(flags) {
+  var Mode = 'Unknown';
+  if(flags === 0) Mode = 'Open';
+  if((flags & 0x00000033) !== 0) Mode = 'WEP';
+  if((flags & 0x00000044) !== 0) Mode = 'WPA';
+  if((flags & 0x00000088) !== 0) Mode = 'WPA2';
+  return Mode;
+}
 function AjaxGetNetworks() {
   $.ajax({ url: "getSysInfo",
            timeout: 20000,
@@ -11,80 +19,95 @@ function AjaxGetNetworks() {
            success: AjaxNetworks
     });
 }
-function AddNetworkToList(item) {
-  if(NetworksDataset[item['MAC']] !== undefined) return;
-  var Mode = [];
-  if(item['Flags'] == 0) Mode.push('Open');
-  if((item['Flags'] & 0x00000033) != 0) Mode.push('WEP');
-  if((item['Flags'] & 0x00000044) != 0) Mode.push('WPA');
-  if((item['Flags'] & 0x00000088) != 0) Mode.push('WPA2');
-  if((item['Flags'] & 0x00000100) != 0) Mode.push('PSK');
-  if((item['Flags'] & 0x00000200) != 0) Mode.push('802.1X');
-  NetworksDataset[item['MAC']] = { 
-    Mode: ((item['Mode'] == 1) ? 'ADHOC' : 'AP') + ' (' + Mode.join([separador = ', ']) + ')',
-    SSID: item['SSID'],
-    Channel: (item['Freq'] - 2412) / 5 + 1,
-    Power: item['Power'],
-    Status: ''
-  };
-}
 function AjaxNetworks(result) {
-  if(NetworksTable === null) {
-    var Buttons = '<button class="btn btn-sm btn-default" onclick="AjaxGetNetworks()"><i class="fa fa-refresh"></i></button>';
-    NetworksTable = $('#NetworksTable').DataTable({ responsive: false, paging: false, dom: '<"top datatable-toolbar"i><"top float-right"f><"clear">t<"clear">', language: { info: Buttons + ' _MAX_ networks found', infoEmpty: Buttons + 'No networks in range'},
-                                                    columns: [ { width: '50px', orderable: false }, 
-                                                               { orderable: false }, 
-                                                               { width: '105px', orderable: false },
-                                                               { width: '20px', orderable: false, className: 'dataTables_empty' },
-                                                               { width: '120px', orderable: false },
-                                                               { width: '20px', orderable: false },
-                                                               { width: '200px', orderable: false, searchable: false }
-                                                             ],
-                                                    order: [5, 'desc']
-    });
-  }
-  NetworksTable.clear().draw();
   NetworksDataset = [];
-  for(i = 0; i < result['AccessPoints'].length; i++) {
-    AddNetworkToList(result['AccessPoints'][i]);
-  }
+  for(i = 0; i < result['AccessPoints'].length; i++) NetworksDataset.push( { MAC: result['AccessPoints'][i]['MAC'], Mode: WpaFlagsToString(result['AccessPoints'][i]['Flags']), SSID: result['AccessPoints'][i]['SSID'], Channel: (result['AccessPoints'][i]['Freq'] - 2412) / 5 + 1, Power: result['AccessPoints'][i]['Power'], Status: '' } );
   for(i = 0; i < result['ActiveConnections'].length; i++) {
-    AddNetworkToList(result['ActiveConnections'][i]);
-    var Item = NetworksDataset[result['ActiveConnections'][i]['MAC']];
-    Item['Status'] = 'Connected';
-    NetworksDataset[result['ActiveConnections'][i]['MAC']] = Item;   
+    for(n = 0; n < NetworksDataset.length; n++) {
+      if((NetworksDataset[n]['SSID'] === result['ActiveConnections'][i]['SSID']) && (NetworksDataset[n]['MAC'] === result['ActiveConnections'][i]['MAC'])) {
+        var Item = NetworksDataset[n];
+        Item['Status'] = 'Connected';
+        if(result['ActiveConnections'][i]['IP'] !== undefined) Item['IP'] = result['ActiveConnections'][i]['IP'];
+        if(result['ActiveConnections'][i]['Mask'] !== undefined) Item['IP'] = result['ActiveConnections'][i]['Mask'];
+        if(result['ActiveConnections'][i]['Gateway'] !== undefined) Item['IP'] = result['ActiveConnections'][i]['Gateway'];
+        if(result['ActiveConnections'][i]['DNS1'] !== undefined) Item['IP'] = result['ActiveConnections'][i]['DNS1'];
+        if(result['ActiveConnections'][i]['DNS2'] !== undefined) Item['IP'] = result['ActiveConnections'][i]['DNS2'];
+        if(result['ActiveConnections'][i]['DHCP'] !== undefined) Item['IP'] = result['ActiveConnections'][i]['DHCP'];
+        NetworksDataset[n] = Item;
+      }
+    }
   }
-  for(var MAC in NetworksDataset) {
+  for(i = 0; i < result['Settings'].length; i++) {
+    var Found = 0;
+    for(n = 0; n < NetworksDataset.length; n++) {
+      if((NetworksDataset[n]['SSID'] === result['Settings'][i]['SSID']) && ((NetworksDataset[n]['MAC'] === result['Settings'][i]['MAC']) || (result['Settings'][i]['MAC'] === undefined))) {
+        var Item = NetworksDataset[n];
+        if(Item['Status'] === '') Item['Status'] = 'Configured';
+        Item['ConfigPath'] = result['Settings'][i]['ConfigPath'];
+        if(result['Settings'][i]['IP'] !== undefined) Item['IP'] = result['Settings'][i]['IP'];
+        if(result['Settings'][i]['Mask'] !== undefined) Item['IP'] = result['Settings'][i]['Mask'];
+        if(result['Settings'][i]['Gateway'] !== undefined) Item['IP'] = result['Settings'][i]['Gateway'];
+        if(result['Settings'][i]['DNS1'] !== undefined) Item['IP'] = result['Settings'][i]['DNS1'];
+        if(result['Settings'][i]['DNS2'] !== undefined) Item['IP'] = result['Settings'][i]['DNS2'];
+        if(result['Settings'][i]['DHCP'] !== undefined) Item['IP'] = result['Settings'][i]['DHCP'];
+        NetworksDataset[n] = Item;
+        Found++;
+      }
+    }
+    if(Found === 0) {
+      var Item = [];
+      Item['Status'] = 'Out of range';
+      Item['ConfigPath'] = result['Settings'][i]['ConfigPath'];
+      Item.MAC = (result['Settings'][i]['MAC'] !== undefined) ? result['Settings'][i]['MAC'] : '';
+      Item.Mode = '?';
+      //      NetworksDataset.push( { Mode: WpaFlagsToString(result['AccessPoints'][i]['Flags']), 
+      Item.SSID = result['Settings'][i]['SSID'];
+      Item.Channel = '';
+      Item.Power = 0;
+      if(result['Settings'][i]['IP'] !== undefined) Item['IP'] = result['Settings'][i]['IP'];
+      if(result['Settings'][i]['Mask'] !== undefined) Item['IP'] = result['Settings'][i]['Mask'];
+      if(result['Settings'][i]['Gateway'] !== undefined) Item['IP'] = result['Settings'][i]['Gateway'];
+      if(result['Settings'][i]['DNS1'] !== undefined) Item['IP'] = result['Settings'][i]['DNS1'];
+      if(result['Settings'][i]['DNS2'] !== undefined) Item['IP'] = result['Settings'][i]['DNS2'];
+      if(result['Settings'][i]['DHCP'] !== undefined) Item['IP'] = result['Settings'][i]['DHCP'];
+      NetworksDataset.push(Item);
+      
+    }
+  }
+  var Contents = $('#NetworksTable tbody');
+  Contents.html('');
+  for(n = 0; n < NetworksDataset.length; n++) {
     var Buttons = '';
-    if(NetworksDataset[MAC].Status === 'Connected') {
+    if(NetworksDataset[n].ConfigPath !== undefined) {
       Buttons += '<button class="btn btn-xs btn-default edit" style="width:50%"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>';
       Buttons += '<button class="btn btn-xs btn-default edit" style="width:50%"><i class="fa fa-times" aria-hidden="true"></i> Forget</button>';
     } else {
       Buttons += '<button class="btn btn-xs btn-default edit" style="width:100%"><i class="fa fa-plus" aria-hidden="true"></i> Configure</button>';
     }
-    NetworksTable.row.add( [NetworksDataset[MAC].Status, 
-                            NetworksDataset[MAC].SSID, 
-                            MAC, 
-                            NetworksDataset[MAC].Channel,
-                            NetworksDataset[MAC].Mode, 
-                            '<div class="progress" style="margin-bottom:0px; position:relative">' +
-                            '  <div class="progress-bar" role="progressbar" style="width:' + NetworksDataset[MAC].Power + '%"></div>' +
-                            '  <span style="position: absolute; left:0px; top: 2px; text-align: center; width: 100%">'+ NetworksDataset[MAC].Power + '%</span>' + 
-                            '</div>', '<div class="btn-group" style="width: 100%">' + Buttons + '</div>'] ).draw();
-    if(NetworksDataset[MAC].Status === 'Connected') $(NetworksTable.row(NetworksTable.data().length - 1).node()).addClass('info');
+    Contents.append('<tr class="' + ((NetworksDataset[n].Status === 'Connected') ? 'info' : '') + '">' +
+      '<td>' + NetworksDataset[n].Status + '</td>' +
+      '<td>' + NetworksDataset[n].SSID + '</td>' +
+      '<td>' + NetworksDataset[n].MAC + '</td>' +
+      '<td>' + NetworksDataset[n].Channel + '</td>' +
+      '<td>' + NetworksDataset[n].Mode + '</td>' +
+      '<td data-sort="' + NetworksDataset[n].Power + '"><div class="progress" style="margin-bottom:0px">' +
+      '  <div class="progress-bar" role="progressbar" style="width:' + NetworksDataset[n].Power + '%"></div>' +
+      '</div></td>' +
+      '<td><div class="btn-group" style="width: 100%">' + Buttons + '</div></td></tr>');
   }
-//  if(EventChart === null) {
-//    EventChart = new Dygraph(document.getElementById("EventChart"), (Nodes['Devices'][Node]['Type'] == '3Phase') ? [[0, 0, 0, 0]] : [[0, 0]], {
-//      strokeWidth: 0.5,
-//      gridLineColor: "#999",
-//      gridLinePattern: [4, 4],
-//      labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)'] :['Time', 'Voltage'],
-//      colors: ["#d9534f", "#534fd9", "#4fd953"],
-//      interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
-//      labelsDiv: "EventChartLegend"
-//    });
-//    $('#EventChart').append('<div class="no-data event_instructions"><div class="alert alert-info">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
-//  }
+  if(NetworksTable !== null) NetworksTable.destroy();    
+  var Buttons = '<button class="btn btn-sm btn-default" onclick="AjaxGetNetworks()"><i class="fa fa-refresh"></i></button>';
+  NetworksTable = $('#NetworksTable').DataTable({ responsive: false, paging: false, dom: '<"top datatable-toolbar"i><"top float-right"f><"clear">t<"clear">', language: { info: Buttons + ' _MAX_ networks found', infoEmpty: Buttons + 'No networks in range'},
+                                                  columns: [ { width: '105px', orderable: false }, 
+                                                             { orderable: false }, 
+                                                             { width: '105px', orderable: false },
+                                                             { width: '20px', orderable: false, className: 'dataTables_empty' },
+                                                             { width: '20px', orderable: false },
+                                                             { width: '40px', orderable: false },
+                                                             { width: '200px', orderable: false, searchable: false }
+                                                           ],
+                                                  order: [5, 'desc']
+  });
 }
 $("table#NetworksTable").on('click', 'button.edit', function () {
   $('#NetworkModal').modal('show');

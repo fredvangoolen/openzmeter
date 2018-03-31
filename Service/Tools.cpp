@@ -139,7 +139,7 @@ void Tools::Daemonize() {
 bool Tools::ReadConfig(char *file) {
   Global.Pid      = (char*)"/var/run/openZmeter.pid";
   Global.Log      = (char*)"/var/log/openZmeter.log";
-  Global.HTTPPort = 8080;
+  Global.HTTPPort = 80;
   Global.HTTPPath = (char*)"./WEB/";
   Global.HTTPPass = (char*)"admin";
   DB.Database     = (char*)"openzmeter";
@@ -431,11 +431,7 @@ void Tools::RecvGetAccessPoints(DBusConnection *bus, json_object *json, DBusMess
       if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_OBJECT_PATH) {
         char *Path;
         dbus_message_iter_get_basic(&Array, &Path);
-        if(Path) {
-          json_object *AccessPoint = json_object_new_object();
-          SendGetAPProperties(bus, AccessPoint, Path);
-          json_object_array_add(json, AccessPoint);
-        }
+        if(Path) SendGetAPProperties(bus, json, Path);
       }
     } while(dbus_message_iter_next(&Array));
   }
@@ -449,9 +445,17 @@ void Tools::SendGetAPProperties(DBusConnection *bus, json_object *json, char *pa
     if(!dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &Param)) return;
     Msg = dbus_connection_send_with_reply_and_block(bus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
   }
-  if(Msg) RecvGetAPProperties(bus, json, Msg);
+  if(Msg) {
+    json_object *AccessPoint = json_object_new_object();
+    if(RecvGetAPProperties(bus, json, Msg) == false) {
+      json_object_put(AccessPoint);
+    } else {
+      json_object_array_add(json, AccessPoint);
+    }    
+  }
 }
-void Tools::RecvGetAPProperties(DBusConnection *bus, json_object *json, DBusMessage* reply) {
+bool Tools::RecvGetAPProperties(DBusConnection *bus, json_object *json, DBusMessage* reply) {
+  bool IsAP = true;
   DBusMessageIter Struct;
   if(dbus_message_iter_init(reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
     DBusMessageIter Array;
@@ -489,12 +493,13 @@ void Tools::RecvGetAPProperties(DBusConnection *bus, json_object *json, DBusMess
                 uint32_t Flags;
                 dbus_message_iter_get_basic(&Variant, &Flags);
                 json_object_object_add(json, "Flags", json_object_new_int(Flags));
+                if(Flags & 0x00000200) IsAP = false;
                 break;
               }
               if((strcmp(Key, "Mode") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_UINT32)) {
                 uint32_t Mode;
                 dbus_message_iter_get_basic(&Variant, &Mode);
-                json_object_object_add(json, "Mode", json_object_new_int(Mode));
+                if(Mode != 2) IsAP = false;
                 break;
               }
               if((strcmp(Key, "Frequency") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_UINT32)) {
@@ -514,7 +519,8 @@ void Tools::RecvGetAPProperties(DBusConnection *bus, json_object *json, DBusMess
         } while (dbus_message_iter_next(&Dict));
       }
     } while (dbus_message_iter_next(&Array));
-  } 
+  }
+  return IsAP;
 }
 void Tools::SendGetActiveConnections(DBusConnection *bus, json_object *json) {
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager", "org.freedesktop.DBus.Properties", "Get");
