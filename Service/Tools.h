@@ -8,11 +8,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <json-c/json.h>
-#include <dbus/dbus.h>
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
-  private :
-    static const uint32_t NM_DEVICE_TYPE_WIFI;
   private :
     typedef struct {
       char    *Name;
@@ -69,29 +66,6 @@ class Tools {
     static bool     Config_Handler(char *section);
     static uint64_t ParseProcMem(char *name, char *buff);
     static bool     GetMemory(uint64_t *total, uint64_t *available);
-    static void     GetUUID(char *buff);
-    static void     SendGetDevices(DBusConnection *bus, json_object *json);
-    static void     RecvGetDevices(DBusConnection *bus, json_object *json, DBusMessage *reply);
-    static void     SendGetDeviceType(DBusConnection *bus, json_object *json, char *devicePath);
-    static void     RecvGetDeviceType(DBusConnection *bus, json_object *json, DBusMessage *reply, char *devicePath);
-    static void     SendGetAccessPoints(DBusConnection *bus, json_object *json, char *devicePath);
-    static void     RecvGetAccessPoints(DBusConnection *bus, json_object *json, DBusMessage *reply);
-    static void     SendGetAPProperties(DBusConnection *bus, json_object *json, char *path);
-    static bool     RecvGetAPProperties(DBusConnection *bus, json_object *json, DBusMessage *reply);
-    static void     SendGetActiveConnections(DBusConnection *bus, json_object *json);
-    static void     RecvGetActiveConnections(DBusConnection *bus, json_object *json, DBusMessage* reply);
-    static void     SendGetConnectionProperties(DBusConnection *bus, json_object *json, char *path);
-    static bool     RecvGetConnectionProperties(DBusConnection *bus, json_object *json, DBusMessage* reply);
-    static void     SendGetIP4Properties(DBusConnection *bus, json_object *json, char *path);
-    static void     RecvGetIP4Properties(DBusConnection *bus, json_object *json, DBusMessage* reply);
-    static void     SendGetSettingsPaths(DBusConnection *bus, json_object *json);
-    static void     RecvGetSettingsPaths(DBusConnection *bus, json_object *json, DBusMessage* reply);
-    static void     SendGetSettings(DBusConnection *bus, json_object *json, char *path);
-    static bool     RecvGetSettings(DBusConnection *bus, json_object *json, DBusMessage* reply);
-    
-    static bool     SendAddSettings(DBusConnection *bus, json_object *json);
-//    static bool     RecvGetSettings(DBusConnection *bus, json_object *json, DBusMessage* reply);
-    static DBusConnection *GetDBUSConnection();
   public :
     static bool         ReadConfig(char *file);
     static void         LogMsg(const char *level, const char *msg, ...);

@@ -41,6 +41,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/Database.o \
 	${OBJECTDIR}/HTTPServer.o \
 	${OBJECTDIR}/Main.o \
+	${OBJECTDIR}/NetworkManager.o \
 	${OBJECTDIR}/Prices.o \
 	${OBJECTDIR}/Tools.o
 
@@ -98,6 +99,11 @@ ${OBJECTDIR}/Main.o: Main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.cpp
+
+${OBJECTDIR}/NetworkManager.o: NetworkManager.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/NetworkManager.o NetworkManager.cpp
 
 ${OBJECTDIR}/Prices.o: Prices.cpp
 	${MKDIR} -p ${OBJECTDIR}
