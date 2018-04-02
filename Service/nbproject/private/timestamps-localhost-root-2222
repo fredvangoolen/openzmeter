@@ -1,4 +1,4 @@
-#Sat Mar 31 13:12:30 CEST 2018
+#Mon Apr 02 01:45:25 CEST 2018
 /home/maria/Proyectos/zMeter/V2/Service/HTTPServer.cpp=c1522475919000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/Route_1Phase_1.svg=c1518192002000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/MiniViews/Fundamental_Reactive_Power.html=c1520709167000
@@ -25,7 +25,7 @@
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Events_ITIC.html=c1520709167000
 /home/maria/Proyectos/zMeter/V2/Service/Package/lib/systemd/system/openZmeter.service=c1522475919000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/zeroC.png=c1520855069000
-/home/maria/Proyectos/zMeter/V2/Service/nbproject/Package-Debug.bash=c1522479104000
+/home/maria/Proyectos/zMeter/V2/Service/nbproject/Package-Debug.bash=c1522562499000
 /home/maria/Proyectos/zMeter/V2/Service/CaptureVirtual/CaptureVirtual.h=c1518192002000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/dygraph/crosshair.js=c1518192002000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/Analysis_Voltage.js=c1520709167000
@@ -41,13 +41,13 @@
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/fundamental_active_power.png=c1520855069000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.css=c1520709167000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/font-awesome/fonts/FontAwesome.otf=c1518192002000
-/home/maria/Proyectos/zMeter/V2/Service/Main.cpp=c1522480931000
+/home/maria/Proyectos/zMeter/V2/Service/Main.cpp=c1522577597000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Interharmonics-\ basic\ concepts\ and\ techniques\ for\ their\ detection\ and\ measurement\ \ .pdf=c1520855069000
-/home/maria/Proyectos/zMeter/V2/Service/nbproject/Package-Release.bash=c1522479103000
+/home/maria/Proyectos/zMeter/V2/Service/nbproject/Package-Release.bash=c1522562499000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/active_power.png.png=c1520855069000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Firmware.html=c1520855069000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff2=c1520709167000
-/home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/openZmeter.js=c1522475919000
+/home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/openZmeter.js=c1522573395000
 /home/maria/Proyectos/zMeter/V2/Service/CaptureMono/CaptureMono.cpp=c1522475919000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/fundamental_apparent_power.png=c1520855069000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/apparent_power.png=c1520855069000
@@ -71,7 +71,7 @@
 /home/maria/Proyectos/zMeter/V2/Service/CaptureInterface.h=c1518192002000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/Logo2.svg=c1520709167000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/Fonts/TitilliumWebRegular.woff2=c1520709167000
-/home/maria/Proyectos/zMeter/V2/Service/.dep.inc=c1518192002000
+/home/maria/Proyectos/zMeter/V2/Service/.dep.inc=c1522616560000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/momentjs/moment.js=c1520709167000
 /home/maria/Proyectos/zMeter/V2/Service/CaptureInterface.cpp=c1522475919000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/dygraph/dygraph.js=c1518192002000
@@ -88,7 +88,7 @@
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/zeroC_interharmonic.png=c1520855069000
 /home/maria/Proyectos/zMeter/V2/Service/CaptureV2/CaptureV2.cpp=c1520709167000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/Route_1Phase_3.svg=c1518192002000
-/home/maria/Proyectos/zMeter/V2/Service/Tools.h=c1522488612000
+/home/maria/Proyectos/zMeter/V2/Service/Tools.h=c1522577393000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/visjs/img/network/cross.png=c1518192002000
 /home/maria/Proyectos/zMeter/V2/Service/Package/DEBIAN/postinst=c1522475919000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/chroma/chroma.js=c1520709167000
@@ -105,7 +105,7 @@
 /home/maria/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/openZmeter.ini_sample=c1522475919000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/Dashboard.js=c1518192002000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/Analysis_EnergyPower.js=c1520709167000
-/home/maria/Proyectos/zMeter/V2/Service/WEB/Settings.html=c1522475919000
+/home/maria/Proyectos/zMeter/V2/Service/WEB/Settings.html=c1522574524000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff=c1518192002000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Zero\ Crossing.md=c1520855069000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/ozm.png=c1520855069000
@@ -126,7 +126,7 @@
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/visjs/img/network/downArrow.png=c1518192002000
 /home/maria/Proyectos/zMeter/V2/Service/CaptureV2/CaptureV2.h=c1520709167000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/datatables/css/dataTables.bootstrap.css=c1520709167000
-/home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/Settings.js=c1522494743000
+/home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/Settings.js=c1522617406000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/visjs/img/network/addNodeIcon.png=c1518192002000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/power_system_freq_meas.pdf=c1520855069000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/datatables/images/sort_both.png=c1518192002000
@@ -182,6 +182,6 @@ VERSION=1.3
 /home/maria/Proyectos/zMeter/V2/Service/Database.h=c1518192002000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/datatables/js/dataTables.bootstrap.js=c1520709167000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.js=c1520709167000
-/home/maria/Proyectos/zMeter/V2/Service/Tools.cpp=c1522488612000
+/home/maria/Proyectos/zMeter/V2/Service/Tools.cpp=c1522626246000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Resources/lib/dygraph/synchronize.js=c1518192002000
 /home/maria/Proyectos/zMeter/V2/Service/WEB/Analysis_Current.html=c1522475919000

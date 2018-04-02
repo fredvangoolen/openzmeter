@@ -88,6 +88,10 @@ class Tools {
     static void     RecvGetSettingsPaths(DBusConnection *bus, json_object *json, DBusMessage* reply);
     static void     SendGetSettings(DBusConnection *bus, json_object *json, char *path);
     static bool     RecvGetSettings(DBusConnection *bus, json_object *json, DBusMessage* reply);
+    
+    static bool     SendAddSettings(DBusConnection *bus, json_object *json);
+//    static bool     RecvGetSettings(DBusConnection *bus, json_object *json, DBusMessage* reply);
+    static DBusConnection *GetDBUSConnection();
   public :
     static bool         ReadConfig(char *file);
     static void         LogMsg(const char *level, const char *msg, ...);
@@ -98,6 +102,7 @@ class Tools {
     static uint64_t     GetTime();
     static uint8_t     *GetFile(const char *mame, uint32_t *size);
     static json_object *GetJSONSysInfo();
+    static json_object *SetJSONNetworkConfig(json_object *json);
     static json_object *GetJSONNetworks();
 };
 //----------------------------------------------------------------------------------------------------------------------

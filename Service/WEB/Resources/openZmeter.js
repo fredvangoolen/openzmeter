@@ -491,7 +491,6 @@ function Div1000(input) {
 
 
 
-
 var energyUnit = 'kWh'
 var today = new Date();
 $('#side-menu').metisMenu();

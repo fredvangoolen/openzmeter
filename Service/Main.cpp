@@ -26,15 +26,16 @@ void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
 }
 int main(int argc, char** argv) {
-  for(int i = 0; i < 20; i++) {
-    //printf("Esperando al depurador (%d)\n", i);
-   // sleep(1);
-  }
+//  for(int i = 0; i < 20; i++) {
+//    printf("Esperando al depurador (%d)\n", i);
+//    fflush(stdout);
+//    sleep(1);
+//  }
 //  NetworkManager *Networks = new NetworkManager();
 //  Networks->SendGetDevices();
 //  Tools::GetJSONNetworks();
 //  return 0;
-  Tools::GetJSONNetworks();
+  Tools::SetJSONNetworkConfig(NULL);
 //  return 0;
   
   char *ConfigFile = (char*)"/etc/openZmeter.ini";
