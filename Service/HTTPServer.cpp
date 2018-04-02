@@ -16,6 +16,7 @@
 #include "HTTPServer.h"
 #include "Tools.h"
 #include "CaptureInterface.h"
+#include "NetworkManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon            *HTTPServer::Daemon = NULL;
 HTTPServer::Session_t *HTTPServer::Sessions = NULL;
@@ -475,7 +476,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
         Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
       }
     } else if(strcmp(Type, "Connectivity") == 0) {
-      Request->JSONWriter = Tools::GetJSONNetworks();
+      Request->JSONWriter = NetworkManager::GetJSONNetworks();
       if(Request->JSONWriter == NULL) {
         Request->ResultCode = MHD_HTTP_BAD_REQUEST;
       } else {

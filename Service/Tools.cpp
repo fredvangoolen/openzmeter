@@ -372,33 +372,3 @@ json_object *Tools::GetJSONSysInfo() {
   json_object_object_add(Result, "Battery_Percent", json_object_new_int(100));
   return Result;
 }
-json_object *Tools::SetJSONNetworkConfig(json_object *json) {
-  NetworkManager NM;
-  json_object *Result = json_object_new_object();
-  NM.SendAddSettings(json);
-  return NULL;
-  //DBusConnection *DBus = GetDBUSConnection();
-  //if(DBus == NULL) return NULL;
-//  return Result;
-}
-json_object *Tools::GetJSONNetworks() {
-  NetworkManager NM;
-  
-//  DBusConnection *DBus = GetDBUSConnection();
-//  if(DBus == NULL) return NULL;
-  json_object *Result = json_object_new_object();
-  json_object *AccessPoints = json_object_new_array();
-  NM.SendGetDevices(AccessPoints);
-  json_object_object_add(Result, "AccessPoints", AccessPoints);
-  json_object *ActiveConnections = json_object_new_array();
-  NM.SendGetActiveConnections(ActiveConnections);
-  json_object_object_add(Result, "ActiveConnections", ActiveConnections);
-  json_object *Settings = json_object_new_array();
-  NM.SendGetSettingsPaths(Settings);
-  json_object_object_add(Result, "Settings", Settings);
-//  dbus_connection_unref(DBus);
-  size_t Size;
-  char *Tmp = (char*)json_object_to_json_string_length(Result, JSON_C_TO_STRING_PRETTY, &Size);
-  printf("%s\n", Tmp);
-  return Result;
-}

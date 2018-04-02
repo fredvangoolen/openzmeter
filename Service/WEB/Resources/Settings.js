@@ -2,14 +2,6 @@
 var NetworksTable = null;
 var NetworksDataset = [];
 var EditingPos = -1;
-function WpaFlagsToString(flags) {
-  var Mode = 'Unknown';
-  if(flags === 0) Mode = 'Open';
-  if((flags & 0x00000033) !== 0) Mode = 'WEP';
-  if((flags & 0x00000044) !== 0) Mode = 'WPA';
-  if((flags & 0x00000088) !== 0) Mode = 'WPA2';
-  return Mode;
-}
 function AjaxGetNetworks() {
   $.ajax({ url: "getSysInfo",
            timeout: 20000,
@@ -22,7 +14,7 @@ function AjaxGetNetworks() {
 }
 function setConnProperties(index, status, attribs) {
   var Item = NetworksDataset[index];
-  if(Item['ConfigPath'] === undefined) Item['Status'] = status;
+  if(Item['Status'] === '') Item['Status'] = status;
   if(attribs['IP']         !== undefined) Item['IP']         = attribs['IP'];
   if(attribs['Mask']       !== undefined) Item['Mask']       = attribs['Mask'];
   if(attribs['Gateway']    !== undefined) Item['Gateway']    = attribs['Gateway'];
@@ -34,7 +26,7 @@ function setConnProperties(index, status, attribs) {
 }
 function AjaxNetworks(result) {
   NetworksDataset = [];
-  for(i = 0; i < result['AccessPoints'].length; i++) NetworksDataset.push( { MAC: result['AccessPoints'][i]['MAC'], Mode: WpaFlagsToString(result['AccessPoints'][i]['Flags']), SSID: result['AccessPoints'][i]['SSID'], Channel: (result['AccessPoints'][i]['Freq'] - 2412) / 5 + 1, Power: result['AccessPoints'][i]['Power'], Status: '' } );
+  for(i = 0; i < result['AccessPoints'].length; i++) NetworksDataset.push( { MAC: result['AccessPoints'][i]['MAC'], Mode: result['AccessPoints'][i]['Mode'], SSID: result['AccessPoints'][i]['SSID'], Channel: (result['AccessPoints'][i]['Freq'] - 2412) / 5 + 1, Power: result['AccessPoints'][i]['Power'], Status: '' } );
   for(i = 0; i < result['ActiveConnections'].length; i++) {
     for(n = 0; n < NetworksDataset.length; n++) {
       if((NetworksDataset[n]['SSID'] === result['ActiveConnections'][i]['SSID']) && (NetworksDataset[n]['MAC'] === result['ActiveConnections'][i]['MAC'])) {
@@ -51,7 +43,7 @@ function AjaxNetworks(result) {
       }
     }
     if(Found === 0) {
-      NetworksDataset.push( { MAC: result['Settings'][i]['MAC'], Mode: '?', SSID: result['Settings'][i]['SSID'], Channel: '', Power: 0, Status: '' } );
+      NetworksDataset.push( { MAC: (result['Settings'][i]['MAC'] === undefined) ? 'ANY' : result['Settings'][i]['MAC'], Mode: result['Settings'][i]['Mode'], SSID: result['Settings'][i]['SSID'], Channel: '', Power: 0, Status: '' } );
       setConnProperties(NetworksDataset.length - 1, 'Out of range', result['Settings'][i]);
     }
   }
@@ -133,7 +125,7 @@ function NetworkEdit(index) {
   $('#NetworkSSID').val(NetworksDataset[index].SSID);
   $('#NetworkSSID').prop('disabled', 'true');  
   $('#NetworkBSSID').val(NetworksDataset[index].BSSID);
-  $('#NetworkKeyType').val((NetworksDataset[index].KeyType === undefined) ? 'Open' : NetworksDataset[index].KeyType);
+  $('#NetworkKeyType').val((NetworksDataset[index].Mode === undefined) ? 'Open' : NetworksDataset[index].Mode);
   $('#NetworkKeyType').change();
   $('#NetworkDHCP').val((NetworksDataset[index].DHCP === true) ? 'DHCP' : 'Static');
   $('#NetworkDHCP').change();

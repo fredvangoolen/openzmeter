@@ -76,7 +76,5 @@ class Tools {
     static uint64_t     GetTime();
     static uint8_t     *GetFile(const char *mame, uint32_t *size);
     static json_object *GetJSONSysInfo();
-    static json_object *SetJSONNetworkConfig(json_object *json);
-    static json_object *GetJSONNetworks();
 };
 //----------------------------------------------------------------------------------------------------------------------

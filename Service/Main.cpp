@@ -19,7 +19,7 @@
 #include "CaptureInterface.h"
 #include "CaptureMono/CaptureMono.h"
 #include "CaptureVirtual/CaptureVirtual.h"
-
+#include "NetworkManager.h"
 bool  Terminate = false;
 
 void SignalHandler(int signal) {
@@ -35,7 +35,8 @@ int main(int argc, char** argv) {
 //  Networks->SendGetDevices();
 //  Tools::GetJSONNetworks();
 //  return 0;
-  Tools::SetJSONNetworkConfig(NULL);
+//  NetworkManager::SetJSONNetworkConfig(NULL);
+  NetworkManager::GetJSONNetworks();
 //  return 0;
   
   char *ConfigFile = (char*)"/etc/openZmeter.ini";
