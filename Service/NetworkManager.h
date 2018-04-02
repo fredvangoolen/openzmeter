@@ -10,7 +10,7 @@ class NetworkManager {
     static const uint32_t NM_DEVICE_TYPE_WIFI;
   private :
     DBusConnection *DBus;
-    void SendGetDevices(json_object *json);
+    
     void RecvGetDevices(json_object *json, DBusMessage *reply);
     void SendGetDeviceType(json_object *json, char *devicePath);
     void RecvGetDeviceType(json_object *json, DBusMessage *reply, char *devicePath);
@@ -18,7 +18,7 @@ class NetworkManager {
     void RecvGetAccessPoints(json_object *json, DBusMessage *reply);
     void SendGetAPProperties(json_object *json, char *path);
     bool RecvGetAPProperties(json_object *json, DBusMessage *reply);
-    void SendGetActiveConnections(json_object *json);
+    
     void RecvGetActiveConnections(json_object *json, DBusMessage* reply);
     void SendGetConnectionProperties(json_object *json, char *path);
     bool RecvGetConnectionProperties(json_object *json, DBusMessage* reply);
@@ -28,11 +28,14 @@ class NetworkManager {
     void RecvGetSettingsPaths(json_object *json, DBusMessage* reply);
     void SendGetSettings(json_object *json, char *path);
     bool RecvGetSettings(json_object *json, DBusMessage* reply);
-    bool SendAddSettings(json_object *json);
+    
 //    static bool     RecvGetSettings(DBusConnection *bus, json_object *json, DBusMessage* reply);
 public:
   NetworkManager();
   virtual ~NetworkManager();
+  void SendGetActiveConnections(json_object *json);
+  void SendGetDevices(json_object *json);
+  bool SendAddSettings(json_object *json);
 private:
 
 };

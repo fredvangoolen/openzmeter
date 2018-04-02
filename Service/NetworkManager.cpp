@@ -5,6 +5,10 @@
 #include "Tools.h"
 #include "NetworkManager.h"
 #include <string.h>
+#include <arpa/inet.h>
+//----------------------------------------------------------------------------------------------------------------------
+const uint32_t NetworkManager::NM_DEVICE_TYPE_WIFI = 2;
+//----------------------------------------------------------------------------------------------------------------------
 NetworkManager::NetworkManager() {
   DBusError Error;
   dbus_error_init(&Error);
@@ -13,6 +17,9 @@ NetworkManager::NetworkManager() {
     Tools::LogMsg("ERROR", "Can not open DBus connection (%s)\n", Error.message);
     dbus_error_free(&Error);
   }
+}
+NetworkManager::~NetworkManager() {
+  dbus_connection_unref(DBus);
 }
 void NetworkManager::SendGetDevices(json_object *json) {
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager", "org.freedesktop.NetworkManager", "GetDevices");
@@ -343,12 +350,12 @@ void NetworkManager::RecvGetIP4Properties(json_object* json, DBusMessage* reply)
     } while(dbus_message_iter_next(&Array));
   }
 }
-void NetworkManager::SendGetSettingsPaths(DBusConnection *bus, json_object *json) {
+void NetworkManager::SendGetSettingsPaths(json_object *json) {
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager/Settings", "org.freedesktop.NetworkManager.Settings", "ListConnections");
-  if(Msg) Msg = dbus_connection_send_with_reply_and_block(bus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
-  if(Msg) RecvGetSettingsPaths(bus, json, Msg);
+  if(Msg) Msg = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  if(Msg) RecvGetSettingsPaths(json, Msg);
 }
-void NetworkManager::RecvGetSettingsPaths(DBusConnection *bus, json_object *json, DBusMessage* reply) {
+void NetworkManager::RecvGetSettingsPaths(json_object *json, DBusMessage* reply) {
   DBusMessageIter Struct;
   if(dbus_message_iter_init(reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
     DBusMessageIter Array;
@@ -357,18 +364,18 @@ void NetworkManager::RecvGetSettingsPaths(DBusConnection *bus, json_object *json
       if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_OBJECT_PATH) {
         char *Path;
         dbus_message_iter_get_basic(&Array, &Path);
-        if(Path) SendGetSettings(bus, json, Path);
+        if(Path) SendGetSettings(json, Path);
       }
     } while(dbus_message_iter_next(&Array));
   }
 }
-void NetworkManager::SendGetSettings(DBusConnection *bus, json_object *json, char *path) {
+void NetworkManager::SendGetSettings(json_object *json, char *path) {
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", path, "org.freedesktop.NetworkManager.Settings.Connection", "GetSettings");
-  if(Msg) Msg = dbus_connection_send_with_reply_and_block(bus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  if(Msg) Msg = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
   if(Msg) {
     json_object *Setting = json_object_new_object();
     json_object_object_add(Setting, "ConfigPath", json_object_new_string(path));
-    if(RecvGetSettings(bus, Setting, Msg) == false) {
+    if(RecvGetSettings(Setting, Msg) == false) {
       json_object_put(Setting);
     } else {
       json_object_array_add(json, Setting);
@@ -669,11 +676,11 @@ bool NetworkManager::SendAddSettings(json_object *json) {
     
     
     if(!dbus_message_iter_close_container(&ArgsIter, &Array)) return false;
-    Msg = dbus_connection_send_with_reply_and_block(bus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+    Msg = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
   }
   if(Msg) {
     json_object *Setting = json_object_new_object();
-    if(RecvGetSettings(bus, Setting, Msg) == false) {
+    if(RecvGetSettings(Setting, Msg) == false) {
       json_object_put(Setting);
     } else {
       json_object_array_add(json, Setting);

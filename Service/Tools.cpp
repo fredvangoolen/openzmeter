@@ -3,6 +3,7 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #include "Tools.h"
+#include "NetworkManager.h"
 #include <string.h>
 #include <time.h>
 #include <errno.h>
@@ -15,9 +16,7 @@
 #include <sys/stat.h>
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
-#include <arpa/inet.h>
 //----------------------------------------------------------------------------------------------------------------------
-const uint32_t      Tools::NM_DEVICE_TYPE_WIFI = 2;
 bool                Tools::Daemonized = false;
 bool                Tools::Debug      = false;
 FILE               *Tools::LogFile    = NULL;
@@ -374,26 +373,30 @@ json_object *Tools::GetJSONSysInfo() {
   return Result;
 }
 json_object *Tools::SetJSONNetworkConfig(json_object *json) {
-  DBusConnection *DBus = GetDBUSConnection();
-  if(DBus == NULL) return NULL;
+  NetworkManager NM;
   json_object *Result = json_object_new_object();
-  SendAddSettings(DBus, json);
-  return Result;
+  NM.SendAddSettings(json);
+  return NULL;
+  //DBusConnection *DBus = GetDBUSConnection();
+  //if(DBus == NULL) return NULL;
+//  return Result;
 }
 json_object *Tools::GetJSONNetworks() {
-  DBusConnection *DBus = GetDBUSConnection();
-  if(DBus == NULL) return NULL;
+  NetworkManager NM;
+  
+//  DBusConnection *DBus = GetDBUSConnection();
+//  if(DBus == NULL) return NULL;
   json_object *Result = json_object_new_object();
   json_object *AccessPoints = json_object_new_array();
-  SendGetDevices(DBus, AccessPoints);
+  NM.SendGetDevices(AccessPoints);
   json_object_object_add(Result, "AccessPoints", AccessPoints);
   json_object *ActiveConnections = json_object_new_array();
-  SendGetActiveConnections(DBus, ActiveConnections);
+  NM.SendGetActiveConnections(ActiveConnections);
   json_object_object_add(Result, "ActiveConnections", ActiveConnections);
   json_object *Settings = json_object_new_array();
-  SendGetSettingsPaths(DBus, Settings);
+  NM.SendGetSettingsPaths(Settings);
   json_object_object_add(Result, "Settings", Settings);
-  dbus_connection_unref(DBus);
+//  dbus_connection_unref(DBus);
   size_t Size;
   char *Tmp = (char*)json_object_to_json_string_length(Result, JSON_C_TO_STRING_PRETTY, &Size);
   printf("%s\n", Tmp);
