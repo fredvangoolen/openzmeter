@@ -1,7 +1,7 @@
 /* Configuracion de la Wifi */
 var NetworksTable = null;
 var NetworksDataset = [];
-var EditingPos = -1;
+var EditingNetwork = null;
 function AjaxGetNetworks() {
   $.ajax({ url: "getSysInfo",
            timeout: 20000,
@@ -69,9 +69,12 @@ function AjaxNetworks(result) {
       '<td><div class="btn-group" style="width: 100%">' + Buttons + '</div></td></tr>');
   }
   if(NetworksTable !== null) NetworksTable.destroy();    
-  var Buttons = '<button class="btn btn-sm btn-default" onclick="AjaxGetNetworks()"><i class="fa fa-refresh"></i></button>';
+  var Buttons = '<div class="btn-group">' +
+                '  <button class="btn btn-sm btn-default" onclick="AjaxGetNetworks()"><i class="fa fa-refresh"></i> Refresh</button>' +
+                '  <button class="btn btn-sm btn-default" onclick="NetworkAdd()"><i class="fa fa-plus-square-o" aria-hidden="true"></i> Add</button>' +
+                '</div>';
   NetworksTable = $('#NetworksTable').DataTable({ responsive: false, paging: false, dom: '<"top datatable-toolbar"i><"top float-right"f><"clear">t<"clear">', language: { info: Buttons + ' _MAX_ networks found', infoEmpty: Buttons + 'No networks in range'},
-                                                  columns: [ { width: '105px', orderable: false }, 
+                                                  columns: [ { width: '105px', orderable: false },
                                                              { orderable: false }, 
                                                              { width: '105px', orderable: false },
                                                              { width: '20px', orderable: false, className: 'dataTables_empty' },
@@ -82,6 +85,9 @@ function AjaxNetworks(result) {
                                                   order: [5, 'desc']
   });
 }
+$('#NetworkDialogBody').on('focus', '*', function() {
+  $('#NetworkErrorBox').hide(500);
+});
 $('#NetworkKeyType').change(function() {
   if((this.value === "WEP") || (this.value === "WPA")) {
     $('#NetworkPassword').val('00000000');
@@ -108,6 +114,61 @@ $('#NetworkConfigClose').click(function() {
   $('#NetworkModal').modal('hide');
 });
 $('#NetworkConfigSave').click(function() {
+  $('#NetworkDialogBody :focus').blur();
+  //valido campos
+  if($('#NetworkSSID').val().length === 0) {
+    $('#NetworkError').text('SSID can not be empty.');
+    $('#NetworkErrorBox').slideDown(500);
+    return;
+  }
+  if($('#NetworkBSSID').val().length !== 0) {
+    var Regex = new RegExp("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$");
+    if(Regex.test($('#NetworkBSSID').val()) === false) {
+      $('#NetworkError').text('BSSID must be a valid MAC address or left blank.');
+      $('#NetworkErrorBox').slideDown(500);
+      return;
+    }
+  }
+  if(($('#NetworkKeyType').val() === 'WEP') || ($('#NetworkKeyType').val() === 'WPA')) {
+    if($('#NetworkPassword').val().length === 0) {
+      $('#NetworkError').text('Password can not be empty.');
+      $('#NetworkErrorBox').slideDown(500);
+      return;
+    }
+  }
+  if($('#NetworkDHCP').val() === 'Static') {
+    var Regex = new RegExp("^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+    if(Regex.test($('#NetworkIP').val()) === false) {
+      $('#NetworkError').text('IP address must be a valid IPv4 address.');
+      $('#NetworkErrorBox').slideDown(500);
+      return;
+    }
+    if(Regex.test($('#NetworkGateway').val()) === false) {
+      $('#NetworkError').text('Gateway address must be a valid IPv4 address.');
+      $('#NetworkErrorBox').slideDown(500);
+      return;
+    }
+    if($('#NetworkDNS1').val().length === 0) {
+      $('#NetworkError').text('At least DNS1 is necesary.');
+      $('#NetworkErrorBox').slideDown(500);
+      return;
+    }
+    if(Regex.test($('#NetworkDNS1').val()) === false) {
+      $('#NetworkError').text('DNS1 address must be a valid IPv4 address.');
+      $('#NetworkErrorBox').slideDown(500);
+      return;
+    }
+    if($('#NetworkDNS1').val().length !== 0) {
+      if(Regex.test($('#NetworkDNS1').val()) === false) {
+        $('#NetworkError').text('DNS2 address must be a valid IPv4 address.');
+        $('#NetworkErrorBox').slideDown(500);
+        return;
+      }
+      }
+  }
+  
+  
+  
   $.ajax({ url: "setSysInfo",
            timeout: 20000,
            type: "POST",
@@ -115,26 +176,40 @@ $('#NetworkConfigSave').click(function() {
            contentType: 'application/json',
            data: JSON.stringify({ Type: 'Connectivity' }),
            success: function(result) {
-             
+             $('#NetworkModal').modal('hide');
+             EditingNetwork = null;        
            }
   });
-  $('#NetworkModal').modal('hide');
 });
-function NetworkEdit(index) {
-  EditingPos = index;
-  $('#NetworkSSID').val(NetworksDataset[index].SSID);
-  $('#NetworkSSID').prop('disabled', 'true');  
-  $('#NetworkBSSID').val(NetworksDataset[index].BSSID);
-  $('#NetworkKeyType').val((NetworksDataset[index].Mode === undefined) ? 'Open' : NetworksDataset[index].Mode);
+function NetworDialogShow() {
+  if(EditingNetwork['SSID'] === undefined) {
+    $('#NetworkSSID').removeProp('disabled');
+    $('#NetworkSSID').val('');
+  } else {
+    $('#NetworkSSID').prop('disabled', 'true');
+    $('#NetworkSSID').val(EditingNetwork['SSID']);
+  }
+  $('#NetworkBSSID').val((EditingNetwork['BSSID'] === undefined) ? '' : EditingNetwork['BSSID']);
+  $('#NetworkKeyType').val((EditingNetwork['Mode'] === undefined) ? 'Open' : EditingNetwork['Mode']);
   $('#NetworkKeyType').change();
-  $('#NetworkDHCP').val((NetworksDataset[index].DHCP === true) ? 'DHCP' : 'Static');
+  $('#NetworkDHCP').val((EditingNetwork['DHCP'] === undefined) ? false : EditingNetwork['DHCP'] ? 'DHCP' : 'Static');    
   $('#NetworkDHCP').change();
-  $('#NetworkIP').val(NetworksDataset[index].IP);
-  $('#NetworkGateway').val(NetworksDataset[index].Gateway);
-  $('#NetworkDNS1').val(NetworksDataset[index].DNS1);
-  $('#NetworkDNS2').val(NetworksDataset[index].DNS2);
-  $('#NetworkNetmask').text('/' + NetworksDataset[index].Mask);
-  $('#NetworkModal').modal('show');
+  $('#NetworkIP').val((EditingNetwork['IP'] === undefined) ? '' : EditingNetwork['IP']);
+  $('#NetworkGateway').val((EditingNetwork['Gateway'] === undefined) ? '' : EditingNetwork['Gateway']);
+  $('#NetworkDNS1').val((EditingNetwork['DNS1'] === undefined) ? '' : EditingNetwork['DNS1']);
+  $('#NetworkDNS2').val((EditingNetwork['DNS2'] === undefined) ? '' : EditingNetwork['DNS2']);
+  $('#NetworkNetmask').text((EditingNetwork['Mask'] === undefined) ? '24' : EditingNetwork['Mask']);
+  $('#NetworkModal').modal('show');  
+}
+function NetworkEdit(index) {
+  EditingNetwork = NetworksDataset[index];
+  NetworDialogShow();
+}
+function NetworkAdd() {
+  EditingNetwork = [];
+  EditingNetwork['DHCP'] = true;
+  EditingNetwork['Mask'] = 24;
+  NetworDialogShow();
 }
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {

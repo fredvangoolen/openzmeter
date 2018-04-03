@@ -484,6 +484,28 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       }
     }
     return MHD_YES;
+  } else if(strcmp(url, "/setSysInfo") == 0) {
+    char        *Type   = NULL;
+    json_object *Params = NULL;
+    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Type") == 0)) 
+        Type = (char*)json_object_get_string(JSON_Val);
+      else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Params") == 0))
+        Params = JSON_Val;
+      else
+        Error = true;
+    }
+    if((Type == NULL) || (Params == NULL) || (Error == true)) 
+    if(strcmp(Type, "Connectivity") == 0) {
+      Request->JSONWriter = NetworkManager::SetJSONNetworkConfig(Params);
+      if(Request->JSONWriter == NULL) {
+        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      } else {
+        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
+      }
+    }
+    return MHD_YES;
   } else if(strcmp(url, "/getEvents") == 0) {
     uint32_t Node = 0;
     uint64_t LastEvent = 0, From = 0, To = 0, Period = 0;

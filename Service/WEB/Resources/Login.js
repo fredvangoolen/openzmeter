@@ -11,7 +11,7 @@ $('form').submit(function (e) {
     success: function (response) {
       $('.alert-danger').slideUp(500, function () {
         if (response == null || response['result'] == false) {
-          $('.alert-danger').slideDown(500);
+          $('.alert-danger').hide(500);
           $('form button').removeAttr('disabled');
         } else {
           $('.alert-success').slideDown(500, function () {
