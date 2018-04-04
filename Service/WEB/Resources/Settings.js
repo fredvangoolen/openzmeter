@@ -164,11 +164,8 @@ $('#NetworkConfigSave').click(function() {
         $('#NetworkErrorBox').slideDown(500);
         return;
       }
-      }
+    }
   }
-  
-  
-  
   $.ajax({ url: "setSysInfo",
            timeout: 20000,
            type: "POST",

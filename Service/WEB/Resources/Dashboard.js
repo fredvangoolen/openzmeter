@@ -377,7 +377,7 @@ function AjaxPower(result) {
   } else {
     $('#labelPowerUnits').text('W');
   }
-  $('#labelPower').html(Array_Round2(Power, '&nbsp;&nbsp;', '', ["#f0ad4e", "#ad4ef0", "#4ef0ad"]));
+  $('#labelPower').html(Array_Round2(Power, '&nbsp;&nbsp;', ["#f0ad4e", "#ad4ef0", "#4ef0ad"]));
   $('#PowerAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(PowerChart == null) {
     PowerChart = new Dygraph(document.getElementById("PowerChart"),
