@@ -498,12 +498,9 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     }
     if((Type == NULL) || (Params == NULL) || (Error == true)) 
     if(strcmp(Type, "Connectivity") == 0) {
-      Request->JSONWriter = NetworkManager::SetJSONNetworkConfig(Params);
-      if(Request->JSONWriter == NULL) {
-        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-      } else {
-        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
-      }
+      Request->JSONWriter = json_object_new_object();
+      json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(NetworkManager::SetJSONNetworkConfig(Params)));
+      Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
     }
     return MHD_YES;
   } else if(strcmp(url, "/getEvents") == 0) {

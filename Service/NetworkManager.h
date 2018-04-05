@@ -27,7 +27,7 @@ class NetworkManager {
     NetworkManager();
     ~NetworkManager();    
   public :
-    static json_object *SetJSONNetworkConfig(json_object *json);
+    static bool SetJSONNetworkConfig(json_object *json);
     static json_object *GetJSONNetworks();
 
 };

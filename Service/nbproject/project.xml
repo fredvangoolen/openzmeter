@@ -22,6 +22,7 @@
                 <sourceRootElem>VirtualCapture</sourceRootElem>
                 <sourceRootElem>CaptureMono</sourceRootElem>
                 <sourceRootElem>CaptureVirtual</sourceRootElem>
+                <sourceRootElem>Scripts</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

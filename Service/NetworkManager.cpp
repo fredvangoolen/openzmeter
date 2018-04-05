@@ -21,7 +21,7 @@ NetworkManager::NetworkManager() {
 NetworkManager::~NetworkManager() {
   dbus_connection_unref(DBus);
 }
-json_object *NetworkManager::SetJSONNetworkConfig(json_object *json) {
+bool NetworkManager::SetJSONNetworkConfig(json_object *json) {
   NetworkManager NM;
   if(NM.DBus == NULL) return NULL;  
 
@@ -591,6 +591,7 @@ bool NetworkManager::SendGetSettings(json_object *json, char *path) {
   return (IsWifi && ValidAuth);
 }
 bool NetworkManager::SendAddSettings(json_object *json) {
+  return true;
   char     *NetworkSSID  = (char*)"zRed";
   uint8_t   NetworkBSSID[] = {255, 230, 222, 220, 230, 84};
   bool      DHCP = false;

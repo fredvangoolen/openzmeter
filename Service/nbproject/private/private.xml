@@ -16,15 +16,18 @@
             <file>file:/home/maria/Proyectos/zMeter/V2/Service/Tools.cpp</file>
         </group>
         <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/datatables/css/dataTables.bootstrap.css</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Stats.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Login.js</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Tools.cpp</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/NetworkManager.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/openZmeter.css</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/CaptureInterface.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/NetworkManager.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Login.html</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Settings.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Scripts/SetupBluetoothPAN.py</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Settings.js</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/HTTPServer.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Tools.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Main.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/HTTPServer.h</file>
         </group>
     </open-files>
 </project-private>
