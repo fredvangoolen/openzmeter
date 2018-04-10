@@ -114,6 +114,7 @@ $('#NetworkConfigClose').click(function() {
   $('#NetworkModal').modal('hide');
 });
 $('#NetworkConfigSave').click(function() {
+  var SaveParams = [];
   $('#NetworkDialogBody :focus').blur();
   if($('#NetworkSSID').val().length === 0) {
     $('#NetworkError').text('SSID can not be empty.');
@@ -129,7 +130,7 @@ $('#NetworkConfigSave').click(function() {
       return;
     }
   }
-  EditingNetwork['BSSID'] = $('#NetworkBSSID').val();
+  EditingNetwork['MAC'] = $('#NetworkBSSID').val();
   if(($('#NetworkKeyType').val() === 'WEP') || ($('#NetworkKeyType').val() === 'WPA')) {
     if($('#NetworkPassword').val().length === 0) {
       $('#NetworkError').text('Password can not be empty.');
@@ -194,7 +195,7 @@ function NetworDialogShow() {
     $('#NetworkSSID').prop('disabled', 'true');
     $('#NetworkSSID').val(EditingNetwork['SSID']);
   }
-  $('#NetworkBSSID').val((EditingNetwork['BSSID'] === undefined) ? '' : EditingNetwork['BSSID']);
+  $('#NetworkBSSID').val((EditingNetwork['MAC'] === undefined) ? '' : EditingNetwork['MAC']);
   $('#NetworkKeyType').val((EditingNetwork['Mode'] === undefined) ? 'Open' : EditingNetwork['Mode']);
   $('#NetworkKeyType').change();
   $('#NetworkDHCP').val((EditingNetwork['DHCP'] === undefined) ? false : EditingNetwork['DHCP'] ? 'DHCP' : 'Static');    

@@ -496,7 +496,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       else
         Error = true;
     }
-    if((Type == NULL) || (Params == NULL) || (Error == true)) 
+    if((Type == NULL) || (Params == NULL) || (Error == true)) goto InvalidParams;
     if(strcmp(Type, "Connectivity") == 0) {
       Request->JSONWriter = json_object_new_object();
       json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(NetworkManager::SetJSONNetworkConfig(Params)));

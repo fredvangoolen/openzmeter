@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, print_function, unicode_literals
 
-from optparse import OptionParser
-import sys
 import dbus
 import dbus.service
 import dbus.mainloop.glib
 import gobject as GObject
 import subprocess
-import os
 
 BUS_NAME = "org.bluez"
 ADAPTER_INTERFACE = BUS_NAME + ".Adapter1"
@@ -89,13 +86,7 @@ def pair_error(error):
 	mainloop.quit()
 def main():
 	print("Bluetooth PAN server configuration for NanoPI Air (openZmeter)")
-	brctl = subprocess.Popen(['brctl', 'show', "br0"], stdout=open(os.devnull, 'wb'), stderr=subprocess.PIPE)
-	brctl_stderr = brctl.stderr.read()
-	if brctl.wait() or brctl_stderr:
-		subprocess.call(['brctl', 'addbr', "br0"])
-	subprocess.call(['ifconfig', 'br0', "10.0.0.1"])
-	subprocess.call(['ifconfig', 'br0', "up"])
-	subprocess.Popen(['dnsmasq', '--interface', 'br0', '--no-daemon', '--dhcp-range', '10.0.0.2,10.0.0.8'], stdout=open(os.devnull, 'wb'))
+
 	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 	bus = dbus.SystemBus()
 
@@ -106,7 +97,7 @@ def main():
 	adapter_props.Set(ADAPTER_INTERFACE, "Pairable", dbus.Boolean(1))
 	print("HCI0 set as powered, discoverable and pairable")
 
-	agent = Agent(bus, AGENT_PATH)
+	Agent(bus, AGENT_PATH)
 	obj = bus.get_object(BUS_NAME, "/org/bluez");
 	manager = dbus.Interface(obj, "org.bluez.AgentManager1")
 	manager.RegisterAgent(AGENT_PATH, "NoInputNoOutput")
@@ -126,10 +117,7 @@ if __name__ == '__main__':
 	except KeyboardInterrupt:
 		bus = dbus.SystemBus()
 		adapter_props = dbus.Interface(bus.get_object('org.bluez', '/org/bluez/hci0'), "org.freedesktop.DBus.Properties");
-		adapter_props.Set(ADAPTER_INTERFACE, "Powered", dbus.Boolean(0))
-		adapter_props.Set(ADAPTER_INTERFACE, "Pairable", dbus.Boolean(0))
 		adapter_props.Set(ADAPTER_INTERFACE, "Discoverable", dbus.Boolean(0))
+		adapter_props.Set(ADAPTER_INTERFACE, "Pairable", dbus.Boolean(0))
+		adapter_props.Set(ADAPTER_INTERFACE, "Powered", dbus.Boolean(0))
 		print("HCI0 set as non powered, non discoverable and non pairable")
-		subprocess.call(['ifconfig', 'br0', "down"])
-		subprocess.call(['brctl', 'delbr', "br0"])
-		print("Removed br0 interface")

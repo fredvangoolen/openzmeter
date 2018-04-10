@@ -24,3 +24,4 @@ network manager to take control. Add this lines to /etc/network/interfaces:
 dnsmasq need to be configured to provide DHCP service on the bridge, add this lines to /etc/dnsmasq.conf
   interface=br0
   dhcp-range=10.0.0.2,10.0.0.8,12h
+

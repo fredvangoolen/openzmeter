@@ -24,13 +24,7 @@ NetworkManager::~NetworkManager() {
 bool NetworkManager::SetJSONNetworkConfig(json_object *json) {
   NetworkManager NM;
   if(NM.DBus == NULL) return NULL;  
-
-  json_object *Result = json_object_new_object();
-  NM.SendAddSettings(json);
-  return NULL;
-  //DBusConnection *DBus = GetDBUSConnection();
-  //if(DBus == NULL) return NULL;
-//  return Result;
+  return NM.SendAddSettings(json);
 }
 json_object *NetworkManager::GetJSONNetworks() {
   NetworkManager NM;
@@ -163,9 +157,11 @@ bool NetworkManager::SendGetAPProperties(json_object *json, char *path) {
                   if (hwAddress) json_object_object_add(json, "MAC", json_object_new_string(hwAddress));
                   break;
                 }
-                if((strcmp(Key, "WpaFlags") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_UINT32)) {
+                if((strcmp(Key, "RsnFlags") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_UINT32)) {
                   uint32_t Flags;
+                  
                   dbus_message_iter_get_basic(&Variant, &Flags);
+                  printf("0x%08X\n", Flags);
                   if(Flags == 0) json_object_object_add(json, "Mode", json_object_new_string("Open"));
                   if((Flags & 0x00000033) != 0) json_object_object_add(json, "Mode", json_object_new_string("WEP"));
                   if(((Flags & 0x00000044) != 0) || ((Flags & 0x00000088) != 0)) json_object_object_add(json, "Mode", json_object_new_string("WPA"));
@@ -333,9 +329,8 @@ void NetworkManager::SendGetIP4Properties(json_object *json, char *path) {
                     if(dbus_message_iter_get_arg_type(&VariantMember) == DBUS_TYPE_UINT32) {
                       struct in_addr DNS;
                       dbus_message_iter_get_basic(&VariantMember, &DNS);
-                      i++;
                       char DNSName[16];
-                      sprintf(DNSName, "DNS%d", i);
+                      sprintf(DNSName, "DNS%d", i++);
                       json_object_object_add(json, DNSName, json_object_new_string(inet_ntoa(DNS)));
                     }
                   } while(dbus_message_iter_next(&VariantMember));
@@ -605,10 +600,10 @@ bool NetworkManager::SendAddSettings(json_object *json) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "SSID") == 0))
       SSID = (char*)json_object_get_string(JSON_Val);
-    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "BSSID") == 0))      
+    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "MAC") == 0))      
       BSSID = (char*)json_object_get_string(JSON_Val);
     else if((JSON_Type == json_type_boolean) && (strcmp(JSON_Key, "DHCP") == 0))
-      DHCP = json_object_get_string(JSON_Val);
+      DHCP = json_object_get_boolean(JSON_Val);
     else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "IP") == 0))
       IP = (char*)json_object_get_string(JSON_Val);
     else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "DNS0") == 0))
@@ -621,30 +616,21 @@ bool NetworkManager::SendAddSettings(json_object *json) {
       Mode = (char*)json_object_get_string(JSON_Val);
     else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0))
       Password = (char*)json_object_get_string(JSON_Val);
-    else 
-      Error = true;
   }
-  uint8_t MAC[6];
+  if(strlen(SSID) > 32) Error = true;
+  int MAC[6];
   if(BSSID != NULL) {
-    sscanf(macStr, "%x:%x:%x:%x:%x:%x", &Mac[0], &Mac[1], &Mac[2], &Mac[3], &iMac[4], &iMac[5]);
-    
-    if(strlen(BSSID) != 17) {
-      Error = true;
-    } else {
-      
-    }
+    int Bytes = sscanf(BSSID, "%02x:%02x:%02x:%02x:%02x:%02x", &MAC[0], &MAC[1], &MAC[2], &MAC[3], &MAC[4], &MAC[5]);
+    if((Bytes != 6) || (strlen(BSSID) != 17)) Error = true;
   }
-  if(DHCP == true) {
-  
-  
-  }
-
-
-
-
-
-
-
+  if((strcmp("Open", Mode) != 0) && (strcmp("WPA", Mode) != 0) && (strcmp("WEB", Mode) != 0)) Error = true;
+  if((strcmp("Open", Mode) != 0) && (Password == NULL)) Error = true;  
+  uint32_t bDNS0, bDNS1, bGateway, bIP, bMask = 24;
+  if((DHCP == false) && ((IP == NULL) || (DNS0 == NULL) || (Gateway == NULL))) Error = true;
+  if((IP != NULL) && (inet_aton(IP, (struct in_addr *)&bIP) == 0)) Error = true;
+  if((Gateway != NULL) && (inet_aton(Gateway, (struct in_addr *)&bGateway) == 0)) Error = true;
+  if((DNS0 != NULL) && (inet_aton(DNS0, (struct in_addr *)&bDNS0) == 0)) Error = true;
+  if((DNS1 != NULL) && (inet_aton(DNS1, (struct in_addr *)&bDNS1) == 0)) Error = true;
 
   const char *Strings[] = { "Setup by openZmeter", "connection", "id", "type", "802-11-wireless", "ssid", "bssid", "ipv4", "method", "auto", "manual", "dns", "addresses", "802-11-wireless-security", "key-mgmt", "none", "wpa-psk", "wep-key0", "psk" };
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager/Settings", "org.freedesktop.NetworkManager.Settings", "AddConnection");
@@ -677,16 +663,16 @@ bool NetworkManager::SendAddSettings(json_object *json) {
   dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[5]);
   dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, "ay", &Variant);
   dbus_message_iter_open_container(&Variant, DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE_AS_STRING, &VariantArray);
-  for(int i = 0; i < strlen(NetworkSSID); i++) dbus_message_iter_append_basic(&VariantArray, DBUS_TYPE_BYTE, &NetworkSSID[i]);
+  for(int i = 0; i < strlen(SSID); i++) dbus_message_iter_append_basic(&VariantArray, DBUS_TYPE_BYTE, &SSID[i]);
   dbus_message_iter_close_container(&Variant, &VariantArray);
   dbus_message_iter_close_container(&SubDict, &Variant);
   dbus_message_iter_close_container(&SubArray, &SubDict);
-  if(NetworkBSSID) {
+  if(BSSID) {
     dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict);
     dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[6]);
     dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, "ay", &Variant);
     dbus_message_iter_open_container(&Variant, DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE_AS_STRING, &VariantArray);
-    for(int i = 0; i < 6; i++) dbus_message_iter_append_basic(&VariantArray, DBUS_TYPE_BYTE, &NetworkBSSID[i]);
+    for(int i = 0; i < 6; i++) dbus_message_iter_append_basic(&VariantArray, DBUS_TYPE_BYTE, &MAC[i]);
     dbus_message_iter_close_container(&Variant, &VariantArray);
     dbus_message_iter_close_container(&SubDict, &Variant);
     dbus_message_iter_close_container(&SubArray, &SubDict);
@@ -708,7 +694,8 @@ bool NetworkManager::SendAddSettings(json_object *json) {
     dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[11]);
     dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, "au", &Variant);
     dbus_message_iter_open_container(&Variant, DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32_AS_STRING, &VariantArray);
-    for(int i = 0; i < 2; i++) dbus_message_iter_append_basic(&VariantArray, DBUS_TYPE_UINT32, &DNS[i]);
+    if(DNS0) dbus_message_iter_append_basic(&VariantArray, DBUS_TYPE_UINT32, &bDNS0);
+    if(DNS1) dbus_message_iter_append_basic(&VariantArray, DBUS_TYPE_UINT32, &bDNS1);
     dbus_message_iter_close_container(&Variant, &VariantArray);
     dbus_message_iter_close_container(&SubDict, &Variant);
     dbus_message_iter_close_container(&SubArray, &SubDict);
@@ -717,9 +704,9 @@ bool NetworkManager::SendAddSettings(json_object *json) {
     dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, "aau", &Variant);
     dbus_message_iter_open_container(&Variant, DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32_AS_STRING, &VariantArray);
     dbus_message_iter_open_container(&VariantArray, DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32_AS_STRING, &VariantSubArray);
-    dbus_message_iter_append_basic(&VariantSubArray, DBUS_TYPE_UINT32, &IP);
-    dbus_message_iter_append_basic(&VariantSubArray, DBUS_TYPE_UINT32, &Mask);
-    dbus_message_iter_append_basic(&VariantSubArray, DBUS_TYPE_UINT32, &Gateway);
+    dbus_message_iter_append_basic(&VariantSubArray, DBUS_TYPE_UINT32, &bIP);
+    dbus_message_iter_append_basic(&VariantSubArray, DBUS_TYPE_UINT32, &bMask);
+    dbus_message_iter_append_basic(&VariantSubArray, DBUS_TYPE_UINT32, &bGateway);
     dbus_message_iter_close_container(&VariantArray, &VariantSubArray);
     dbus_message_iter_close_container(&Variant, &VariantArray);
     dbus_message_iter_close_container(&SubDict, &Variant);
@@ -730,16 +717,16 @@ bool NetworkManager::SendAddSettings(json_object *json) {
   //802-11-wireless-security
   dbus_message_iter_open_container(&Array, DBUS_TYPE_DICT_ENTRY, NULL, &Dict);
   dbus_message_iter_append_basic(&Dict, DBUS_TYPE_STRING, &Strings[13]);
-  if(strcmp("Open", KeyType) != 0) {
+  if(strcmp("Open", Mode) != 0) {
     dbus_message_iter_open_container(&Dict, DBUS_TYPE_ARRAY, "{sv}", &SubArray);
     dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict);
     dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[14]);
     dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, DBUS_TYPE_STRING_AS_STRING, &Variant);
-    dbus_message_iter_append_basic(&Variant, DBUS_TYPE_STRING, &Strings[(strcmp("WEP", KeyType) == 0) ? 15 : 16]);
+    dbus_message_iter_append_basic(&Variant, DBUS_TYPE_STRING, &Strings[(strcmp("WEP", Mode) == 0) ? 15 : 16]);
     dbus_message_iter_close_container(&SubDict, &Variant);
     dbus_message_iter_close_container(&SubArray, &SubDict);
     dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict);
-    dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[(strcmp("WEP", KeyType) == 0) ? 17 : 18]);
+    dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[(strcmp("WEP", Mode) == 0) ? 17 : 18]);
     dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, DBUS_TYPE_STRING_AS_STRING, &Variant);
     dbus_message_iter_append_basic(&Variant, DBUS_TYPE_STRING, &Password);
     dbus_message_iter_close_container(&SubDict, &Variant);

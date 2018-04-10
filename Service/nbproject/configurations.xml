@@ -36,6 +36,8 @@
           <itemPath>WEB/Resources/HelpPages/Desbalanceo y potencia en sistemas trifasicos.pdf</itemPath>
           <itemPath>WEB/Resources/HelpPages/Electrical measurements.html</itemPath>
           <itemPath>WEB/Resources/HelpPages/Estandar EN 50160.md</itemPath>
+          <itemPath>WEB/Resources/HelpPages/Firmware.html</itemPath>
+          <itemPath>WEB/Resources/HelpPages/Firmware_SETUP_CAPTURE.png</itemPath>
           <itemPath>WEB/Resources/HelpPages/Hardware (English).md</itemPath>
           <itemPath>WEB/Resources/HelpPages/Hardware.md</itemPath>
           <itemPath>WEB/Resources/HelpPages/Home.html</itemPath>
@@ -121,6 +123,7 @@
               <itemPath>WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.svg</itemPath>
               <itemPath>WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.ttf</itemPath>
               <itemPath>WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff</itemPath>
+              <itemPath>WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff2</itemPath>
             </logicalFolder>
           </logicalFolder>
           <logicalFolder name="jquery" displayName="jquery" projectFiles="true">
@@ -201,6 +204,13 @@
         <itemPath>WEB/Resources/Events_ITIC.js</itemPath>
         <itemPath>WEB/Resources/Help.js</itemPath>
         <itemPath>WEB/Resources/Login.js</itemPath>
+        <itemPath>WEB/Resources/Logo.svg</itemPath>
+        <itemPath>WEB/Resources/Logo2.svg</itemPath>
+        <itemPath>WEB/Resources/Route_1Phase_1.svg</itemPath>
+        <itemPath>WEB/Resources/Route_1Phase_2.svg</itemPath>
+        <itemPath>WEB/Resources/Route_1Phase_3.svg</itemPath>
+        <itemPath>WEB/Resources/Route_1Phase_4.svg</itemPath>
+        <itemPath>WEB/Resources/Route_3Phase.svg</itemPath>
         <itemPath>WEB/Resources/Settings.js</itemPath>
         <itemPath>WEB/Resources/Stats.js</itemPath>
         <itemPath>WEB/Resources/favicon.ico</itemPath>
@@ -219,14 +229,6 @@
       <itemPath>WEB/Login.html</itemPath>
       <itemPath>WEB/Settings.html</itemPath>
       <itemPath>WEB/Stats.html</itemPath>
-    </logicalFolder>
-    <logicalFolder name="ExternalFiles"
-                   displayName="Important Files"
-                   projectFiles="false"
-                   kind="IMPORTANT_FILES_FOLDER">
-      <itemPath>GenRes.sh</itemPath>
-      <itemPath>Makefile</itemPath>
-      <itemPath>Package</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -335,6 +337,12 @@
                             to="/lib/systemd/system/openZmeter.service"
                             from="openZmeter.service"
                             perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
                             owner="root"
                             group="bin"/>
           <packFileListElem type="File"
@@ -623,6 +631,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="WEB/Resources/HelpPages/Firmware.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/HelpPages/Firmware_SETUP_CAPTURE.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="WEB/Resources/HelpPages/Hardware (English).md"
             ex="false"
             tool="3"
@@ -721,6 +739,10 @@
       </item>
       <item path="WEB/Resources/Login.js" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="WEB/Resources/Logo.svg" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Logo2.svg" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="WEB/Resources/MiniViews/Active_Energy.html"
             ex="false"
             tool="3"
@@ -755,6 +777,16 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="WEB/Resources/Route_1Phase_1.svg" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Route_1Phase_2.svg" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Route_1Phase_3.svg" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Route_1Phase_4.svg" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Route_3Phase.svg" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Settings.js" ex="false" tool="3" flavor2="0">
       </item>
@@ -900,6 +932,11 @@
             flavor2="0">
       </item>
       <item path="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff2"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1287,6 +1324,12 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -1471,6 +1514,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="WEB/Resources/HelpPages/Firmware.html"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/HelpPages/Firmware_SETUP_CAPTURE.png"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="WEB/Resources/HelpPages/Hardware (English).md"
             ex="false"
             tool="3"
@@ -1569,6 +1622,10 @@
       </item>
       <item path="WEB/Resources/Login.js" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="WEB/Resources/Logo.svg" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Logo2.svg" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="WEB/Resources/MiniViews/Active_Energy.html"
             ex="false"
             tool="3"
@@ -1603,6 +1660,16 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="WEB/Resources/Route_1Phase_1.svg" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Route_1Phase_2.svg" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Route_1Phase_3.svg" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Route_1Phase_4.svg" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WEB/Resources/Route_3Phase.svg" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WEB/Resources/Settings.js" ex="false" tool="3" flavor2="0">
       </item>
@@ -1748,6 +1815,11 @@
             flavor2="0">
       </item>
       <item path="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff2"
             ex="false"
             tool="3"
             flavor2="0">
