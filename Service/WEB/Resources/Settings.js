@@ -136,6 +136,7 @@ $('#NetworkConfigSave').click(function() {
       $('#NetworkErrorBox').slideDown(500);
       return;
     }
+    EditingNetwork['Password'] = $('#NetworkPassword').val();
   }
   EditingNetwork['Mode'] = $('#NetworkKeyType').val();
   if($('#NetworkDHCP').val() === 'Static') {

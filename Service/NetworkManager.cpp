@@ -591,16 +591,61 @@ bool NetworkManager::SendGetSettings(json_object *json, char *path) {
   return (IsWifi && ValidAuth);
 }
 bool NetworkManager::SendAddSettings(json_object *json) {
-  return true;
-  char     *NetworkSSID  = (char*)"zRed";
-  uint8_t   NetworkBSSID[] = {255, 230, 222, 220, 230, 84};
+  char     *SSID  = NULL;
+  char     *BSSID = NULL;
   bool      DHCP = false;
-  uint32_t  DNS[] = { 134744072, 134744073 };
-  uint32_t  IP = 134744076;
-  uint32_t  Mask = 24;
-  uint32_t  Gateway = 134744070;
-  char     *KeyType = (char*)"WPA";
-  char     *Password = (char*)"orangepinano23";
+  char     *IP = NULL;
+  char     *DNS0 = NULL;
+  char     *DNS1 = NULL;
+  char     *Gateway = NULL;
+  char     *Mode = NULL;
+  char     *Password = NULL;
+  bool      Error = false;
+  json_object_object_foreach(json, JSON_Key, JSON_Val) {
+    enum json_type JSON_Type = json_object_get_type(JSON_Val);
+    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "SSID") == 0))
+      SSID = (char*)json_object_get_string(JSON_Val);
+    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "BSSID") == 0))      
+      BSSID = (char*)json_object_get_string(JSON_Val);
+    else if((JSON_Type == json_type_boolean) && (strcmp(JSON_Key, "DHCP") == 0))
+      DHCP = json_object_get_string(JSON_Val);
+    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "IP") == 0))
+      IP = (char*)json_object_get_string(JSON_Val);
+    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "DNS0") == 0))
+      DNS0 = (char*)json_object_get_string(JSON_Val);
+    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "DNS1") == 0))
+      DNS1 = (char*)json_object_get_string(JSON_Val);
+    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Gateway") == 0))
+      Gateway = (char*)json_object_get_string(JSON_Val);
+    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Mode") == 0))
+      Mode = (char*)json_object_get_string(JSON_Val);
+    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0))
+      Password = (char*)json_object_get_string(JSON_Val);
+    else 
+      Error = true;
+  }
+  uint8_t MAC[6];
+  if(BSSID != NULL) {
+    sscanf(macStr, "%x:%x:%x:%x:%x:%x", &Mac[0], &Mac[1], &Mac[2], &Mac[3], &iMac[4], &iMac[5]);
+    
+    if(strlen(BSSID) != 17) {
+      Error = true;
+    } else {
+      
+    }
+  }
+  if(DHCP == true) {
+  
+  
+  }
+
+
+
+
+
+
+
+
   const char *Strings[] = { "Setup by openZmeter", "connection", "id", "type", "802-11-wireless", "ssid", "bssid", "ipv4", "method", "auto", "manual", "dns", "addresses", "802-11-wireless-security", "key-mgmt", "none", "wpa-psk", "wep-key0", "psk" };
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager/Settings", "org.freedesktop.NetworkManager.Settings", "AddConnection");
   DBusMessageIter ArgsIter, Array, Dict, SubArray, SubDict, Variant, VariantArray, VariantSubArray;
@@ -637,77 +682,75 @@ bool NetworkManager::SendAddSettings(json_object *json) {
   dbus_message_iter_close_container(&SubDict, &Variant);
   dbus_message_iter_close_container(&SubArray, &SubDict);
   if(NetworkBSSID) {
-    if(!dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict)) return false;
-    if(!dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[6])) return false;
-    if(!dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, "ay", &Variant)) return false;
-    if(!dbus_message_iter_open_container(&Variant, DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE_AS_STRING, &VariantArray)) return false;
-    for(int i = 0; i < 6; i++) {
-      if(!dbus_message_iter_append_basic(&VariantArray, DBUS_TYPE_BYTE, &NetworkBSSID[i])) return false;
-    }
-    if(!dbus_message_iter_close_container(&Variant, &VariantArray)) return false;
-    if(!dbus_message_iter_close_container(&SubDict, &Variant)) return false;
-    if(!dbus_message_iter_close_container(&SubArray, &SubDict)) return false;
+    dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict);
+    dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[6]);
+    dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, "ay", &Variant);
+    dbus_message_iter_open_container(&Variant, DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE_AS_STRING, &VariantArray);
+    for(int i = 0; i < 6; i++) dbus_message_iter_append_basic(&VariantArray, DBUS_TYPE_BYTE, &NetworkBSSID[i]);
+    dbus_message_iter_close_container(&Variant, &VariantArray);
+    dbus_message_iter_close_container(&SubDict, &Variant);
+    dbus_message_iter_close_container(&SubArray, &SubDict);
   }
-    if(!dbus_message_iter_close_container(&Dict, &SubArray)) return false;
-    if(!dbus_message_iter_close_container(&Array, &Dict)) return false;
-    //ipv4
-    if(!dbus_message_iter_open_container(&Array, DBUS_TYPE_DICT_ENTRY, NULL, &Dict)) return false;
-    if(!dbus_message_iter_append_basic(&Dict, DBUS_TYPE_STRING, &Strings[7])) return false;
-    if(!dbus_message_iter_open_container(&Dict, DBUS_TYPE_ARRAY, "{sv}", &SubArray)) return false;
-    if(!dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict)) return false;
-    if(!dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[8])) return false;
-    if(!dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, DBUS_TYPE_STRING_AS_STRING, &Variant)) return false;
-    if(!dbus_message_iter_append_basic(&Variant, DBUS_TYPE_STRING, &Strings[DHCP ? 9 : 10])) return false;
-    if(!dbus_message_iter_close_container(&SubDict, &Variant)) return false;
-    if(!dbus_message_iter_close_container(&SubArray, &SubDict)) return false;
-    if(!dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict)) return false;
-    if(!dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[11])) return false;
-    if(!dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, "au", &Variant)) return false;
-    if(!dbus_message_iter_open_container(&Variant, DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32_AS_STRING, &VariantArray)) return false;
-    for(int i = 0; i < 2; i++) {
-      if(!dbus_message_iter_append_basic(&VariantArray, DBUS_TYPE_UINT32, &DNS[i])) return false;
-    }
-    if(!dbus_message_iter_close_container(&Variant, &VariantArray)) return false;
-    if(!dbus_message_iter_close_container(&SubDict, &Variant)) return false;
-    if(!dbus_message_iter_close_container(&SubArray, &SubDict)) return false;
-    if(!dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict)) return false;
-    if(!dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[12])) return false;
-    if(!dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, "aau", &Variant)) return false;
-    if(!dbus_message_iter_open_container(&Variant, DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32_AS_STRING, &VariantArray)) return false;
-    if(!dbus_message_iter_open_container(&VariantArray, DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32_AS_STRING, &VariantSubArray)) return false;
-    if(!dbus_message_iter_append_basic(&VariantSubArray, DBUS_TYPE_UINT32, &IP)) return false;
-    if(!dbus_message_iter_append_basic(&VariantSubArray, DBUS_TYPE_UINT32, &Mask)) return false;
-    if(!dbus_message_iter_append_basic(&VariantSubArray, DBUS_TYPE_UINT32, &Gateway)) return false;
-    if(!dbus_message_iter_close_container(&VariantArray, &VariantSubArray)) return false;
-    if(!dbus_message_iter_close_container(&Variant, &VariantArray)) return false;
-    if(!dbus_message_iter_close_container(&SubDict, &Variant)) return false;
-    if(!dbus_message_iter_close_container(&SubArray, &SubDict)) return false;
-    if(!dbus_message_iter_close_container(&Dict, &SubArray)) return false;
-    if(!dbus_message_iter_close_container(&Array, &Dict)) return false;
-    //802-11-wireless-security
-    if(strcmp("Open", KeyType) != 0) {
-      if(!dbus_message_iter_open_container(&Array, DBUS_TYPE_DICT_ENTRY, NULL, &Dict)) return false;
-      if(!dbus_message_iter_append_basic(&Dict, DBUS_TYPE_STRING, &Strings[13])) return false;
-      if(!dbus_message_iter_open_container(&Dict, DBUS_TYPE_ARRAY, "{sv}", &SubArray)) return false;
-      if(!dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict)) return false;
-      if(!dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[14])) return false;
-      if(!dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, DBUS_TYPE_STRING_AS_STRING, &Variant)) return false;
-      if(!dbus_message_iter_append_basic(&Variant, DBUS_TYPE_STRING, &Strings[(strcmp("WEP", KeyType) == 0) ? 15 : 16])) return false;
-      if(!dbus_message_iter_close_container(&SubDict, &Variant)) return false;
-      if(!dbus_message_iter_close_container(&SubArray, &SubDict)) return false;
-      if(!dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict)) return false;
-      if(!dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[(strcmp("WEP", KeyType) == 0) ? 17 : 18])) return false;
-      if(!dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, DBUS_TYPE_STRING_AS_STRING, &Variant)) return false;
-      if(!dbus_message_iter_append_basic(&Variant, DBUS_TYPE_STRING, &Password)) return false;
-      if(!dbus_message_iter_close_container(&SubDict, &Variant)) return false;
-      if(!dbus_message_iter_close_container(&SubArray, &SubDict)) return false;
-      if(!dbus_message_iter_close_container(&Dict, &SubArray)) return false;
-      if(!dbus_message_iter_close_container(&Array, &Dict)) return false;
-    }
-    if(!dbus_message_iter_close_container(&ArgsIter, &Array)) return false;
-    Msg = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
-  
-  if(Msg) {
+  dbus_message_iter_close_container(&Dict, &SubArray);
+  dbus_message_iter_close_container(&Array, &Dict);
+  //ipv4
+  dbus_message_iter_open_container(&Array, DBUS_TYPE_DICT_ENTRY, NULL, &Dict);
+  dbus_message_iter_append_basic(&Dict, DBUS_TYPE_STRING, &Strings[7]);
+  dbus_message_iter_open_container(&Dict, DBUS_TYPE_ARRAY, "{sv}", &SubArray);
+  dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict);
+  dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[8]);
+  dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, DBUS_TYPE_STRING_AS_STRING, &Variant);
+  dbus_message_iter_append_basic(&Variant, DBUS_TYPE_STRING, &Strings[DHCP ? 9 : 10]);
+  dbus_message_iter_close_container(&SubDict, &Variant);
+  dbus_message_iter_close_container(&SubArray, &SubDict);
+  if(!DHCP) {
+    dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict);
+    dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[11]);
+    dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, "au", &Variant);
+    dbus_message_iter_open_container(&Variant, DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32_AS_STRING, &VariantArray);
+    for(int i = 0; i < 2; i++) dbus_message_iter_append_basic(&VariantArray, DBUS_TYPE_UINT32, &DNS[i]);
+    dbus_message_iter_close_container(&Variant, &VariantArray);
+    dbus_message_iter_close_container(&SubDict, &Variant);
+    dbus_message_iter_close_container(&SubArray, &SubDict);
+    dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict);
+    dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[12]);
+    dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, "aau", &Variant);
+    dbus_message_iter_open_container(&Variant, DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32_AS_STRING, &VariantArray);
+    dbus_message_iter_open_container(&VariantArray, DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32_AS_STRING, &VariantSubArray);
+    dbus_message_iter_append_basic(&VariantSubArray, DBUS_TYPE_UINT32, &IP);
+    dbus_message_iter_append_basic(&VariantSubArray, DBUS_TYPE_UINT32, &Mask);
+    dbus_message_iter_append_basic(&VariantSubArray, DBUS_TYPE_UINT32, &Gateway);
+    dbus_message_iter_close_container(&VariantArray, &VariantSubArray);
+    dbus_message_iter_close_container(&Variant, &VariantArray);
+    dbus_message_iter_close_container(&SubDict, &Variant);
+    dbus_message_iter_close_container(&SubArray, &SubDict);
+  }
+  dbus_message_iter_close_container(&Dict, &SubArray);
+  dbus_message_iter_close_container(&Array, &Dict);
+  //802-11-wireless-security
+  dbus_message_iter_open_container(&Array, DBUS_TYPE_DICT_ENTRY, NULL, &Dict);
+  dbus_message_iter_append_basic(&Dict, DBUS_TYPE_STRING, &Strings[13]);
+  if(strcmp("Open", KeyType) != 0) {
+    dbus_message_iter_open_container(&Dict, DBUS_TYPE_ARRAY, "{sv}", &SubArray);
+    dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict);
+    dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[14]);
+    dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, DBUS_TYPE_STRING_AS_STRING, &Variant);
+    dbus_message_iter_append_basic(&Variant, DBUS_TYPE_STRING, &Strings[(strcmp("WEP", KeyType) == 0) ? 15 : 16]);
+    dbus_message_iter_close_container(&SubDict, &Variant);
+    dbus_message_iter_close_container(&SubArray, &SubDict);
+    dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict);
+    dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[(strcmp("WEP", KeyType) == 0) ? 17 : 18]);
+    dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, DBUS_TYPE_STRING_AS_STRING, &Variant);
+    dbus_message_iter_append_basic(&Variant, DBUS_TYPE_STRING, &Password);
+    dbus_message_iter_close_container(&SubDict, &Variant);
+    dbus_message_iter_close_container(&SubArray, &SubDict);
+  }
+  dbus_message_iter_close_container(&Dict, &SubArray);
+  dbus_message_iter_close_container(&Array, &Dict);
+
+  dbus_message_iter_close_container(&ArgsIter, &Array);
+  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  if(Reply) {
 //    json_object *Setting = json_object_new_object();
 //    if(RecvGetSettings(Setting, Msg) == false) {
 //      json_object_put(Setting);

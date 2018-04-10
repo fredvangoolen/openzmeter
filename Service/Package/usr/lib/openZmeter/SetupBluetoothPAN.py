@@ -70,11 +70,7 @@ class Agent(dbus.service.Object):
 		raise Rejected("Passkey doesn't match")
 	@dbus.service.method(AGENT_INTERFACE, in_signature="o", out_signature="")
 	def RequestAuthorization(self, device):
-		print("RequestAuthorization (%s)" % (device))
-		auth = ask("Authorize? (yes/no): ")
-		if (auth == "yes"):
-			return
-		raise Rejected("Pairing rejected")
+		return
 	@dbus.service.method(AGENT_INTERFACE, in_signature="", out_signature="")
 	def Cancel(self):
 		print("Cancel")
@@ -97,19 +93,17 @@ def main():
 	brctl_stderr = brctl.stderr.read()
 	if brctl.wait() or brctl_stderr:
 		subprocess.call(['brctl', 'addbr', "br0"])
-		subprocess.call(['ifconfig', 'br0', "10.0.0.1"])
-		subprocess.call(['ifconfig', 'br0', "up"])
-		subprocess.Popen(['dnsmasq', '--interface', 'br0', '--no-daemon', '--dhcp-range', '10.0.0.2,10.0.0.8'], stdout=open(os.devnull, 'wb'))
-	else:
-		print("Bridge br0 allready exist")
-		sys.exit()
+	subprocess.call(['ifconfig', 'br0', "10.0.0.1"])
+	subprocess.call(['ifconfig', 'br0', "up"])
+	subprocess.Popen(['dnsmasq', '--interface', 'br0', '--no-daemon', '--dhcp-range', '10.0.0.2,10.0.0.8'], stdout=open(os.devnull, 'wb'))
 	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 	bus = dbus.SystemBus()
 
 	adapter_props = dbus.Interface(bus.get_object('org.bluez', '/org/bluez/hci0'), "org.freedesktop.DBus.Properties");
+	adapter_props.Set(ADAPTER_INTERFACE, "Alias", dbus.String("openZmeter"))
 	adapter_props.Set(ADAPTER_INTERFACE, "Powered", dbus.Boolean(1))
-	adapter_props.Set(ADAPTER_INTERFACE, "Pairable", dbus.Boolean(1))
 	adapter_props.Set(ADAPTER_INTERFACE, "Discoverable", dbus.Boolean(1))
+	adapter_props.Set(ADAPTER_INTERFACE, "Pairable", dbus.Boolean(1))
 	print("HCI0 set as powered, discoverable and pairable")
 
 	agent = Agent(bus, AGENT_PATH)

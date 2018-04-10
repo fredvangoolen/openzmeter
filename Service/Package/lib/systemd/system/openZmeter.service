@@ -1,6 +1,7 @@
 [Unit]
 Description=openZmeter Service
 After=chrony.service
+Requires=postgresql.service
 
 [Service]
 Type=forking
