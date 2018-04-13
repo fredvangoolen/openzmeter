@@ -18,7 +18,7 @@
 #define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
 #define PROCESSING_CURRENTOFFSET      0.10        //Corriente minima para realizar calculos
 //----------------------------------------------------------------------------------------------------------------------
-class CaptureMono : public CaptureInterface {
+class CaptureV2 : public CaptureInterface {
   private :
     typedef struct {
       float Voltage;                                      //Valor de tension
@@ -51,7 +51,7 @@ class CaptureMono : public CaptureInterface {
     float    CalculateFrequency(Work_t* work);
     uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len);
   public :
-    CaptureMono(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint16_t id);
-    ~CaptureMono();
+    CaptureV2(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint16_t id);
+    ~CaptureV2();
 };
 //----------------------------------------------------------------------------------------------------------------------

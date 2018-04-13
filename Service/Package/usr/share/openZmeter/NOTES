@@ -8,8 +8,6 @@ This distribution has some bugs that need to be solved manually:
     · Especified port must be changed to ttyS3 where bluetooth is connected.
     ·  MAC addres is Invalid, and equal for every device, this can be solved replacing the line with:
       MAC_ADDR=`ifconfig wlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`
-  - /etc/defaults/brcm40183
-    · Same changes here.
 
 For bluetooth a bridge with DHCP service is needed. Is prefered to configure it in /etc/network/interfaces to avoid
 network manager to take control. Add this lines to /etc/network/interfaces:
@@ -25,3 +23,4 @@ dnsmasq need to be configured to provide DHCP service on the bridge, add this li
   interface=br0
   dhcp-range=10.0.0.2,10.0.0.8,12h
 
+change bluetooth config and set class to 0x020510 and set timeouts to 0

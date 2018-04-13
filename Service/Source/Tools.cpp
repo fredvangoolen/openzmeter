@@ -25,35 +25,6 @@ Tools::DB_t         Tools::DB;
 Tools::Electrical_t Tools::Electrical;
 Tools::Devices_t    Tools::Devices;
 //----------------------------------------------------------------------------------------------------------------------
-#ifdef EMBED_RESOURCES
-extern char _binary_ResourceFiles_start[];
-extern char _binary_ResourceFiles_end[];
-Tools::File_t *Tools::Files = NULL;
-uint32_t Tools::FileCount = 0;
-uint8_t *Tools::GetFile(const char* name, uint32_t* size) {
-  if(Files == NULL) {
-    char *Ptr   = _binary_ResourceFiles_start;
-    FileCount = atoi(Ptr);
-    Files = (File_t*)malloc(sizeof(File_t) * FileCount);
-    Ptr = &Ptr[strlen(Ptr) + 1];
-    for(uint32_t i = 0; i < FileCount; i++) {
-      Files[i].Name = strdup(Ptr);
-      Ptr = &Ptr[strlen(Ptr) + 1];
-      Files[i].Size = atoi(Ptr);
-      Ptr = &Ptr[strlen(Ptr) + 1];
-      Files[i].Ptr = (uint8_t*)Ptr;
-      Ptr = &Ptr[Files[i].Size];
-    }
-  }
-  for(uint32_t i = 0; i < FileCount; i++) {
-    if(strcmp(name, Files[i].Name) == 0) {
-      *size = Files[i].Size;
-      return Files[i].Ptr;
-    }
-  }
-  return NULL;
-}
-#endif
 void Tools::LogMsg(const char *level, const char *msg, ...) {
   if((Debug == false) && (strcmp(level, "DEBUG") == 0)) return;
   va_list args;
@@ -110,7 +81,7 @@ bool Tools::CreatePidFile() {
     LogMsg("WARN", "Can not create PID file (%d)\n", errno);
     return true;
   }
-  write(File, PID_Number, Len);
+  ssize_t i = write(File, PID_Number, Len);
   close(File);
   return true;
 }
@@ -138,8 +109,8 @@ void Tools::Daemonize() {
 bool Tools::ReadConfig(char *file) {
   Global.Pid      = (char*)"/var/run/openZmeter.pid";
   Global.Log      = (char*)"/var/log/openZmeter.log";
-  Global.HTTPPort = 80;
-  Global.HTTPPath = (char*)"./WEB/";
+  Global.HTTPPort = 8080;
+  Global.HTTPPath = (char*)"/usr/lib/openZmeter/WEB/";
   Global.HTTPPass = (char*)"admin";
   DB.Database     = (char*)"openzmeter";
   DB.Host         = (char*)"127.0.0.1";

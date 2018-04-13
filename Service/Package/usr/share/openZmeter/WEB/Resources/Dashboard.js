@@ -40,7 +40,7 @@ function AjaxVoltage(result) {
   for(i = 0; i < result['Sampletime'].length; i++) VoltageData.push([new Date(result['Sampletime'][i])].concat(result['rms_v'][i]));
   while(VoltageData.length > result['MaxSamples']) VoltageData.shift();
   LastVoltageSample = result['Sampletime'][result['Sampletime'].length - 1];
-  $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;&nbsp;', '', ["#d9534f", "#534fd9", "#4fd953"]));
+  $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
   $('#labelVoltageAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(VoltageChart === null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"),
@@ -202,7 +202,7 @@ function AjaxCurrent(result) {
   for(i = 0; i < result['Sampletime'].length; i++) CurrentData.push([new Date(result['Sampletime'][i])].concat(result['rms_i'][i]));
   while(CurrentData.length > result['MaxSamples']) CurrentData.shift();
   LastCurrentSample = result['Sampletime'][result['Sampletime'].length - 1];
-  $('#labelCurrent').html(Array_Round2(result['rms_i'][result['rms_i'].length - 1], '&nbsp;&nbsp;', '', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
+  $('#labelCurrent').html(Array_Round2(result['rms_i'][result['rms_i'].length - 1], '&nbsp;&nbsp;', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
   $('#CurrentAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(CurrentChart == null) {
     CurrentChart = new Dygraph(document.getElementById("CurrentChart"),

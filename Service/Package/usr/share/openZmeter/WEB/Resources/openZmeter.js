@@ -61,7 +61,7 @@ function AddEvents(result, serieName, graph) {
 function Array_Round2(values, separator, colors, cadena1, cadena2) {
   for(i = 0; i < values.length; i++) {
     if((colors !== undefined) && (colors[i] !== undefined)) {
-     var Text = '<div style="padding: 0px 5px; border: 1px solid #FFF; border-radius: 5px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]);
+     var Text = '<div style="padding: 0px 5px; border-radius: 5px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]);
      if((values[i] > 0) && (cadena2 !== undefined)) Text += cadena2;
      if((values[i] < 0) && (cadena1 !== undefined)) Text += cadena1;
      values[i] = Text + '</div>';

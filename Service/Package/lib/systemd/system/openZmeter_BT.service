@@ -1,11 +1,10 @@
 [Unit]
 Description=openZmeter BT Service
-After=chrony.service
-Requires=bluetooth.service
+After=bluetooth.service
 
 [Service]
 Type=simple
-ExecStart=/usr/lib/openZmeter/SetupBluetoothPAN.py
+ExecStart=/usr/share/openZmeter/SetupBluetoothPAN.py
 
 [Install]
 WantedBy=multi-user.target
