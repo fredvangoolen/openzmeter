@@ -1,10 +1,10 @@
-[global]                                                            
+[global]
 httpPort = 80
 httpPass = admin
 log      = /var/log/openZmeter.log
 pid      = /var/run/openZmeter.pid
 
-[database]                                                          
+[database]
 host    = 127.0.0.1
 port    = 5432
 database= openzmeter

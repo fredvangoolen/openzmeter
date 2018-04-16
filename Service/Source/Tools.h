@@ -74,7 +74,6 @@ class Tools {
     static bool         CreatePidFile();
     static bool         RemovePidFile();
     static uint64_t     GetTime();
-    static uint8_t     *GetFile(const char *mame, uint32_t *size);
     static json_object *GetJSONSysInfo();
 };
 //----------------------------------------------------------------------------------------------------------------------

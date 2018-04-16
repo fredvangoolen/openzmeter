@@ -14,13 +14,13 @@
 #include <math.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
-#include "CaptureMono.h"
+#include "CaptureV2.h"
 #include "../Tools.h"
 // Funciones ===========================================================================================================
-void   CaptureMono::ReadCallback(struct libusb_transfer *transfer) {
+void   CaptureV2::ReadCallback(struct libusb_transfer *transfer) {
   int16_t *Buff16 = (int16_t*)transfer->buffer;
   uint     Len = transfer->actual_length / 4;
-  CaptureMono *This = (CaptureMono*)transfer->user_data;
+  CaptureV2 *This = (CaptureV2*)transfer->user_data;
   pthread_mutex_lock(&This->CaptureMutex);
   while(This->Used > (CAPTUREMONO_BUFFERSIZE - Len - This->SampleRate() * EVENT_ENVELOPETIME)) {
     if(This->pTerminate) return;
@@ -39,8 +39,8 @@ void   CaptureMono::ReadCallback(struct libusb_transfer *transfer) {
   pthread_mutex_unlock(&This->CaptureMutex);
   if(This->pTerminate == false) libusb_submit_transfer(transfer);
 }
-int CaptureMono::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
-  CaptureMono *This = (CaptureMono*)user_data;
+int CaptureV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
+  CaptureV2 *This = (CaptureV2*)user_data;
   if((event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) && (This->DeviceHandle == NULL)) {
     This->NewDevice = dev;
   } else if(event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
@@ -55,7 +55,7 @@ int CaptureMono::PlugCallback(struct libusb_context *ctx, struct libusb_device *
   }
   return 0;
 }
-void  *CaptureMono::Capture_Thread(void *args) {
+void  *CaptureV2::Capture_Thread(void *args) {
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -64,7 +64,7 @@ void  *CaptureMono::Capture_Thread(void *args) {
     Param.sched_priority = Prio - 5;
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   }
-  CaptureMono *This = (CaptureMono*)args;
+  CaptureV2 *This = (CaptureV2*)args;
   pthread_setname_np(This->CaptureThread, "CapMono_Init");
   uint8_t BufferIN[CAPTUREMONO_TRANSFERS][8192];
   struct libusb_transfer *TransferIN[CAPTUREMONO_TRANSFERS];
@@ -156,8 +156,8 @@ void  *CaptureMono::Capture_Thread(void *args) {
   }
   return NULL;
 }
-void  *CaptureMono::Analize_Thread(void* args) {
-  CaptureMono *This = (CaptureMono*)args;
+void  *CaptureV2::Analize_Thread(void* args) {
+  CaptureV2 *This = (CaptureV2*)args;
   if(pthread_setschedprio(0, -10) == -1) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL;
@@ -204,7 +204,7 @@ void  *CaptureMono::Analize_Thread(void* args) {
   }
   return NULL;
 }
-CaptureMono::CaptureMono(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint16_t id) : CaptureInterface(CAPTUREMONO_SAMPLEFREQ, false, id) {
+CaptureV2::CaptureV2(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint16_t id) : CaptureInterface(CAPTUREMONO_SAMPLEFREQ, false, id) {
   Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
   Buffer           = NULL;
   ReadPos          = 0;
@@ -266,7 +266,7 @@ CaptureMono::CaptureMono(const char *serial, float voltageGain, int voltageOffse
     return;
   }
 }
-CaptureMono::~CaptureMono() {
+CaptureV2::~CaptureV2() {
   if(Buffer) {
     pthread_cond_signal(&WriteWait);
     pthread_cond_signal(&ReadWait);
@@ -277,7 +277,7 @@ CaptureMono::~CaptureMono() {
     free(Buffer);
   }
 }
-uint32_t CaptureMono::SamplesCopy(float **dest, uint32_t offset, uint32_t len) {
+uint32_t CaptureV2::SamplesCopy(float **dest, uint32_t offset, uint32_t len) {
   for(uint i = 0; i < len; i++) {
     uint32_t Pos = ((ReadPos + CAPTUREMONO_BUFFERSIZE) - offset + i) % CAPTUREMONO_BUFFERSIZE;
     dest[i][0] = Buffer[Pos].Voltage;

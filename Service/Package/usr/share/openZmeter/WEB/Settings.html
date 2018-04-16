@@ -28,7 +28,7 @@
           <div class="modal-header">
             <h3 class="modal-title"><i class="fa fa-wifi fa-fw"></i> Wifi settings</h3>
           </div>
-          <div class="modal-body">
+          <div class="modal-body" id="NetworkDialogBody">
             <fieldset>
               <div class="row">
                 <div class="col-md-6">
@@ -62,7 +62,7 @@
                   <label class="control-label">IP address</label>
                   <div class="input-group">
                     <input type="text" class="form-control" id="NetworkIP">
-                    <span class="input-group-addon" id="NetworkNetmask">/24</span>
+                    <span class="input-group-addon">/<span  id="NetworkNetmask">24</span></span>
                   </div>
                 </div>
                 <div class="col-md-12 col-lg-6">
@@ -70,15 +70,18 @@
                   <input type="text" class="form-control" id="NetworkGateway">
                 </div>
                 <div class="col-md-12 col-lg-6">
-                  <label class="control-label">DNS1 address</label>
-                  <input type="text" class="form-control" id="NetworkDNS1">
+                  <label class="control-label">Primary DNS address</label>
+                  <input type="text" class="form-control" id="NetworkDNS0">
                 </div>
                 <div class="col-md-12 col-lg-6">
-                  <label class="control-label">DNS2 address</label>
-                  <input type="text" class="form-control" id="NetworkDNS2">
+                  <label class="control-label">Secondary DNS address</label>
+                  <input type="text" class="form-control" id="NetworkDNS1">
                 </div>
               </div>
             </fieldset>
+          </div>
+          <div class="alert alert-danger text-center" id="NetworkErrorBox" style="display:none; margin: 0px 15px 15px 15px;">
+            <i class="fa fa-times"></i> <span id="NetworkError"></span>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-success" id="NetworkConfigSave"><span class="glyphicon glyphicon-floppy-disk"></span>Save</button>
@@ -107,6 +110,27 @@
     </div>
     <div id="wrapper">
       <div id="page-wrapper">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="panel panel-info">
+              <div id="WifiSpinner" class="spinnerdiv"></div>
+              <div class="panel-heading">
+                <i class="fa fa-wifi fa-fw"></i> Wifi connection
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-sm-12">
+                    <table id="NetworksTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
+                      <thead><tr><th>Status</th><th>SSID</th><th>BSSID</th><th>Channel</th><th>Mode</th><th>Power</th><th></th></tr></thead>
+                      <tbody>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>        
         <div class="row">
           <div class="col-lg-6 col-xs-12">
             <div class="panel panel-info">
@@ -142,7 +166,7 @@
                     </div>
                     <div class="col-md-12">
                       <label class="control-label">Time zone</label>
-                      <select id="id_certificadora" name="nominal_frequency" class="form-control" default="50">
+                      <select id="TimeZone" class="form-control" default="50">
                         <option value="50">Europe/Madrid (GTM+1)</option>
                         <option value="60">Static</option>
                       </select>
@@ -153,7 +177,7 @@
             </div>
           </div>
         </div>
-        <div class="row">
+        <!--div class="row">
           <div class="col-lg-12">
             <div class="panel panel-info">
               <div class="panel-heading">
@@ -220,24 +244,6 @@
                         <button type="button" class="btn btn-sm btn-default" style="width: 100%">Restore backup</button>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-12">
-            <div class="panel panel-info">
-              <div class="panel-heading">
-                <i class="fa fa-wifi fa-fw"></i> Wifi connection
-              </div>
-              <div class="panel-body">
-                <div class="row">
-                  <div class="col-sm-12">
-                    <table id="NetworksTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
-                      <thead><tr><th>Status</th><th>SSID</th><th>BSSID</th><th>Channel</th><th>Mode</th><th>Power</th><th></th></tr></thead>
-                      <tbody>
-                      </tbody>
-                    </table>
                   </div>
                 </div>
               </div>
@@ -594,14 +600,7 @@
               </div>
             </div>
           </div>
-
-        </div>
-
-
-
-
-
-        <!-- /.row -->
+        </div-->
         <div class="text-right hidden-lg">
           <div class="btn btn-lg btn-success save"><i class="fa fa-save fa-fw"></i>  Save settings</div>
         </div>
@@ -618,8 +617,8 @@
     <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
     <script src="lib/momentjs/moment.js"></script>
     <script src="lib/momentjs/moment-duration-format.js"></script>
-    <script src="Settings.js"></script>
     <script src="openZmeter.js"></script>
+    <script src="Settings.js"></script>
     <script>
       StartPageLoad();
     </script>

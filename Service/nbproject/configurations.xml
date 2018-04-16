@@ -1,269 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <logicalFolder name="CaptureMono" displayName="CaptureMono" projectFiles="true">
-      <itemPath>CaptureMono/CaptureMono.cpp</itemPath>
-      <itemPath>CaptureMono/CaptureMono.h</itemPath>
-    </logicalFolder>
-    <logicalFolder name="CaptureVirtual"
-                   displayName="CaptureVirtual"
-                   projectFiles="true">
-      <itemPath>CaptureVirtual/CaptureVirtual.cpp</itemPath>
-      <itemPath>CaptureVirtual/CaptureVirtual.h</itemPath>
-    </logicalFolder>
-    <logicalFolder name="WEB" displayName="WEB" projectFiles="true">
-      <logicalFolder name="Resources" displayName="Resources" projectFiles="true">
-        <logicalFolder name="Fonts" displayName="Fonts" projectFiles="true">
-          <itemPath>WEB/Resources/Fonts/TitilliumWebBold.woff2</itemPath>
-          <itemPath>WEB/Resources/Fonts/TitilliumWebBoldItalic.woff2</itemPath>
-          <itemPath>WEB/Resources/Fonts/TitilliumWebItalic.woff2</itemPath>
-          <itemPath>WEB/Resources/Fonts/TitilliumWebRegular.woff2</itemPath>
-        </logicalFolder>
-        <logicalFolder name="HelpPages" displayName="HelpPages" projectFiles="true">
-          <itemPath>WEB/Resources/HelpPages/1F.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/311-interharmonics.pdf</itemPath>
-          <itemPath>WEB/Resources/HelpPages/3F.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/3f.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/4cuadrantes.jpg</itemPath>
-          <itemPath>WEB/Resources/HelpPages/4cuadrantes.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/API.md</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Captura de pantalla 2017-11-25 a las 13.36.41.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Captura de pantalla 2017-12-10 a las 18.18.02.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/CodeCogsEqn (1).png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/CodeCogsEqn.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Configuracion.md</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Configuration.md</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Desbalanceo y potencia en sistemas trifasicos.pdf</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Electrical measurements.html</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Estandar EN 50160.md</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Hardware (English).md</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Hardware.md</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Home.html</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Interharmonics- basic concepts and techniques for their detection and measurement  .pdf</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Standard IEC61000-4-30.html</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Standard IEC61000-4-30.md</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Variables medidas.md</itemPath>
-          <itemPath>WEB/Resources/HelpPages/Zero Crossing.md</itemPath>
-          <itemPath>WEB/Resources/HelpPages/active_power.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/active_power.png.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/apparent_power.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/fundamental_active_power.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/fundamental_apparent_power.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/fundamental_reactive_power.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/oZmlink.md</itemPath>
-          <itemPath>WEB/Resources/HelpPages/ozm.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/power_system_freq_meas.pdf</itemPath>
-          <itemPath>WEB/Resources/HelpPages/reactive_power.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/rms_i.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/rms_v.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/thd_i.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/thd_v.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/zeroC.png</itemPath>
-          <itemPath>WEB/Resources/HelpPages/zeroC_interharmonic.png</itemPath>
-        </logicalFolder>
-        <logicalFolder name="lib" displayName="lib" projectFiles="true">
-          <logicalFolder name="bootstrap" displayName="bootstrap" projectFiles="true">
-            <logicalFolder name="css" displayName="css" projectFiles="true">
-              <itemPath>WEB/Resources/lib/bootstrap/css/bootstrap.css</itemPath>
-            </logicalFolder>
-            <logicalFolder name="fonts" displayName="fonts" projectFiles="true">
-              <itemPath>WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.eot</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.svg</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.ttf</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff</itemPath>
-              <itemPath>WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff2</itemPath>
-            </logicalFolder>
-            <logicalFolder name="js" displayName="js" projectFiles="true">
-              <itemPath>WEB/Resources/lib/bootstrap/js/bootstrap.js</itemPath>
-            </logicalFolder>
-          </logicalFolder>
-          <logicalFolder name="bootstrap-year-calendar"
-                         displayName="bootstrap-year-calendar"
-                         projectFiles="true">
-            <itemPath>WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.css</itemPath>
-            <itemPath>WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.js</itemPath>
-          </logicalFolder>
-          <logicalFolder name="chroma" displayName="chroma" projectFiles="true">
-            <itemPath>WEB/Resources/lib/chroma/chroma.js</itemPath>
-          </logicalFolder>
-          <logicalFolder name="datatables" displayName="datatables" projectFiles="true">
-            <logicalFolder name="css" displayName="css" projectFiles="true">
-              <itemPath>WEB/Resources/lib/datatables/css/dataTables.bootstrap.css</itemPath>
-            </logicalFolder>
-            <logicalFolder name="images" displayName="images" projectFiles="true">
-              <itemPath>WEB/Resources/lib/datatables/images/sort_asc.png</itemPath>
-              <itemPath>WEB/Resources/lib/datatables/images/sort_asc_disabled.png</itemPath>
-              <itemPath>WEB/Resources/lib/datatables/images/sort_both.png</itemPath>
-              <itemPath>WEB/Resources/lib/datatables/images/sort_desc.png</itemPath>
-              <itemPath>WEB/Resources/lib/datatables/images/sort_desc_disabled.png</itemPath>
-            </logicalFolder>
-            <logicalFolder name="js" displayName="js" projectFiles="true">
-              <itemPath>WEB/Resources/lib/datatables/js/dataTables.bootstrap.js</itemPath>
-              <itemPath>WEB/Resources/lib/datatables/js/jquery.dataTables.js</itemPath>
-            </logicalFolder>
-          </logicalFolder>
-          <logicalFolder name="dygraph" displayName="dygraph" projectFiles="true">
-            <itemPath>WEB/Resources/lib/dygraph/chart-plotter.js</itemPath>
-            <itemPath>WEB/Resources/lib/dygraph/crosshair.js</itemPath>
-            <itemPath>WEB/Resources/lib/dygraph/dygraph-interaction.js</itemPath>
-            <itemPath>WEB/Resources/lib/dygraph/dygraph.js</itemPath>
-            <itemPath>WEB/Resources/lib/dygraph/synchronize.js</itemPath>
-          </logicalFolder>
-          <logicalFolder name="font-awesome"
-                         displayName="font-awesome"
-                         projectFiles="true">
-            <logicalFolder name="css" displayName="css" projectFiles="true">
-              <itemPath>WEB/Resources/lib/font-awesome/css/font-awesome.css</itemPath>
-            </logicalFolder>
-            <logicalFolder name="fonts" displayName="fonts" projectFiles="true">
-              <itemPath>WEB/Resources/lib/font-awesome/fonts/FontAwesome.otf</itemPath>
-              <itemPath>WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.eot</itemPath>
-              <itemPath>WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.svg</itemPath>
-              <itemPath>WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.ttf</itemPath>
-              <itemPath>WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff</itemPath>
-            </logicalFolder>
-          </logicalFolder>
-          <logicalFolder name="jquery" displayName="jquery" projectFiles="true">
-            <itemPath>WEB/Resources/lib/jquery/jquery.js</itemPath>
-          </logicalFolder>
-          <logicalFolder name="jquery.lineProgressbar"
-                         displayName="jquery.lineProgressbar"
-                         projectFiles="true">
-            <itemPath>WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.css</itemPath>
-            <itemPath>WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.js</itemPath>
-          </logicalFolder>
-          <logicalFolder name="marked" displayName="marked" projectFiles="true">
-            <itemPath>WEB/Resources/lib/marked/marked.min.js</itemPath>
-          </logicalFolder>
-          <logicalFolder name="metisMenu" displayName="metisMenu" projectFiles="true">
-            <itemPath>WEB/Resources/lib/metisMenu/metisMenu.css</itemPath>
-            <itemPath>WEB/Resources/lib/metisMenu/metisMenu.js</itemPath>
-          </logicalFolder>
-          <logicalFolder name="momentjs" displayName="momentjs" projectFiles="true">
-            <itemPath>WEB/Resources/lib/momentjs/moment-duration-format.js</itemPath>
-            <itemPath>WEB/Resources/lib/momentjs/moment.js</itemPath>
-          </logicalFolder>
-          <logicalFolder name="offline" displayName="offline" projectFiles="true">
-            <itemPath>WEB/Resources/lib/offline/offline.css</itemPath>
-            <itemPath>WEB/Resources/lib/offline/offline.js</itemPath>
-          </logicalFolder>
-          <logicalFolder name="qtip2" displayName="qtip2" projectFiles="true">
-            <itemPath>WEB/Resources/lib/qtip2/jquery.qtip.css</itemPath>
-            <itemPath>WEB/Resources/lib/qtip2/jquery.qtip.js</itemPath>
-          </logicalFolder>
-          <logicalFolder name="spin.js" displayName="spin.js" projectFiles="true">
-            <itemPath>WEB/Resources/lib/spin.js/spin.js</itemPath>
-          </logicalFolder>
-          <logicalFolder name="visjs" displayName="visjs" projectFiles="true">
-            <logicalFolder name="img" displayName="img" projectFiles="true">
-              <logicalFolder name="network" displayName="network" projectFiles="true">
-                <itemPath>WEB/Resources/lib/visjs/img/network/acceptDeleteIcon.png</itemPath>
-                <itemPath>WEB/Resources/lib/visjs/img/network/addNodeIcon.png</itemPath>
-                <itemPath>WEB/Resources/lib/visjs/img/network/backIcon.png</itemPath>
-                <itemPath>WEB/Resources/lib/visjs/img/network/connectIcon.png</itemPath>
-                <itemPath>WEB/Resources/lib/visjs/img/network/cross.png</itemPath>
-                <itemPath>WEB/Resources/lib/visjs/img/network/cross2.png</itemPath>
-                <itemPath>WEB/Resources/lib/visjs/img/network/deleteIcon.png</itemPath>
-                <itemPath>WEB/Resources/lib/visjs/img/network/downArrow.png</itemPath>
-                <itemPath>WEB/Resources/lib/visjs/img/network/editIcon.png</itemPath>
-                <itemPath>WEB/Resources/lib/visjs/img/network/leftArrow.png</itemPath>
-                <itemPath>WEB/Resources/lib/visjs/img/network/minus.png</itemPath>
-                <itemPath>WEB/Resources/lib/visjs/img/network/plus.png</itemPath>
-                <itemPath>WEB/Resources/lib/visjs/img/network/rightArrow.png</itemPath>
-                <itemPath>WEB/Resources/lib/visjs/img/network/upArrow.png</itemPath>
-                <itemPath>WEB/Resources/lib/visjs/img/network/zoomExtends.png</itemPath>
-              </logicalFolder>
-              <logicalFolder name="timeline" displayName="timeline" projectFiles="true">
-                <itemPath>WEB/Resources/lib/visjs/img/timeline/delete.png</itemPath>
-              </logicalFolder>
-            </logicalFolder>
-            <itemPath>WEB/Resources/lib/visjs/vis.css</itemPath>
-            <itemPath>WEB/Resources/lib/visjs/vis.js</itemPath>
-          </logicalFolder>
-        </logicalFolder>
-        <logicalFolder name="MiniViews" displayName="MiniViews" projectFiles="true">
-          <itemPath>WEB/Resources/MiniViews/Active_Energy.html</itemPath>
-          <itemPath>WEB/Resources/MiniViews/Active_Power.html</itemPath>
-          <itemPath>WEB/Resources/MiniViews/Current.html</itemPath>
-          <itemPath>WEB/Resources/MiniViews/Frequency.html</itemPath>
-          <itemPath>WEB/Resources/MiniViews/Fundamental_Reactive_Energy.html</itemPath>
-          <itemPath>WEB/Resources/MiniViews/Fundamental_Reactive_Power.html</itemPath>
-          <itemPath>WEB/Resources/MiniViews/Voltage.html</itemPath>
-        </logicalFolder>
-        <itemPath>WEB/Resources/Analysis_Current.js</itemPath>
-        <itemPath>WEB/Resources/Analysis_EnergyPower.js</itemPath>
-        <itemPath>WEB/Resources/Analysis_Frequency.js</itemPath>
-        <itemPath>WEB/Resources/Analysis_Voltage.js</itemPath>
-        <itemPath>WEB/Resources/CommonHeader.html</itemPath>
-        <itemPath>WEB/Resources/Dashboard.js</itemPath>
-        <itemPath>WEB/Resources/Events_Disturbances.js</itemPath>
-        <itemPath>WEB/Resources/Events_EN50160.js</itemPath>
-        <itemPath>WEB/Resources/Events_ITIC.js</itemPath>
-        <itemPath>WEB/Resources/Help.js</itemPath>
-        <itemPath>WEB/Resources/Login.js</itemPath>
-        <itemPath>WEB/Resources/Settings.js</itemPath>
-        <itemPath>WEB/Resources/Stats.js</itemPath>
-        <itemPath>WEB/Resources/favicon.ico</itemPath>
-        <itemPath>WEB/Resources/openZmeter.css</itemPath>
-        <itemPath>WEB/Resources/openZmeter.js</itemPath>
+    <logicalFolder name="Source" displayName="Source" projectFiles="true">
+      <logicalFolder name="CaptureMono" displayName="CaptureMono" projectFiles="true">
+        <itemPath>Source/CaptureMono/CaptureMono.cpp</itemPath>
+        <itemPath>Source/CaptureMono/CaptureMono.h</itemPath>
       </logicalFolder>
-      <itemPath>WEB/Analysis_Current.html</itemPath>
-      <itemPath>WEB/Analysis_EnergyPower.html</itemPath>
-      <itemPath>WEB/Analysis_Frequency.html</itemPath>
-      <itemPath>WEB/Analysis_Voltage.html</itemPath>
-      <itemPath>WEB/Dashboard.html</itemPath>
-      <itemPath>WEB/Events_Disturbances.html</itemPath>
-      <itemPath>WEB/Events_EN50160.html</itemPath>
-      <itemPath>WEB/Events_ITIC.html</itemPath>
-      <itemPath>WEB/Help.html</itemPath>
-      <itemPath>WEB/Login.html</itemPath>
-      <itemPath>WEB/Settings.html</itemPath>
-      <itemPath>WEB/Stats.html</itemPath>
+      <logicalFolder name="CaptureV2" displayName="CaptureV2" projectFiles="true">
+        <itemPath>Source/CaptureV2/CaptureV2.cpp</itemPath>
+        <itemPath>Source/CaptureV2/CaptureV2.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="CaptureVirtual"
+                     displayName="CaptureVirtual"
+                     projectFiles="true">
+        <itemPath>Source/CaptureVirtual/CaptureVirtual.cpp</itemPath>
+        <itemPath>Source/CaptureVirtual/CaptureVirtual.h</itemPath>
+      </logicalFolder>
+      <itemPath>Source/CaptureInterface.cpp</itemPath>
+      <itemPath>Source/CaptureInterface.h</itemPath>
+      <itemPath>Source/Database.cpp</itemPath>
+      <itemPath>Source/Database.h</itemPath>
+      <itemPath>Source/HTTPServer.cpp</itemPath>
+      <itemPath>Source/HTTPServer.h</itemPath>
+      <itemPath>Source/Main.cpp</itemPath>
+      <itemPath>Source/Main.h</itemPath>
+      <itemPath>Source/NetworkManager.cpp</itemPath>
+      <itemPath>Source/NetworkManager.h</itemPath>
+      <itemPath>Source/Prices.cpp</itemPath>
+      <itemPath>Source/Prices.h</itemPath>
+      <itemPath>Source/Tools.cpp</itemPath>
+      <itemPath>Source/Tools.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
                    projectFiles="false"
                    kind="IMPORTANT_FILES_FOLDER">
-      <itemPath>GenRes.sh</itemPath>
       <itemPath>Makefile</itemPath>
       <itemPath>Package</itemPath>
     </logicalFolder>
-    <logicalFolder name="ExternalFiles"
-                   displayName="Important Files"
-                   projectFiles="false"
-                   kind="IMPORTANT_FILES_FOLDER">
-      <itemPath>GenRes.sh</itemPath>
-      <itemPath>Makefile</itemPath>
-      <itemPath>Package</itemPath>
-    </logicalFolder>
-    <itemPath>CaptureInterface.cpp</itemPath>
-    <itemPath>CaptureInterface.h</itemPath>
-    <itemPath>Database.cpp</itemPath>
-    <itemPath>Database.h</itemPath>
-    <itemPath>HTTPServer.cpp</itemPath>
-    <itemPath>HTTPServer.h</itemPath>
-    <itemPath>Main.cpp</itemPath>
-    <itemPath>Main.h</itemPath>
-    <itemPath>NetworkManager.cpp</itemPath>
-    <itemPath>NetworkManager.h</itemPath>
-    <itemPath>Prices.cpp</itemPath>
-    <itemPath>Prices.h</itemPath>
-    <itemPath>Tools.cpp</itemPath>
-    <itemPath>Tools.h</itemPath>
   </logicalFolder>
   <sourceRootList>
-    <Elem>WEB</Elem>
-    <Elem>Resources</Elem>
-    <Elem>BasicCapture</Elem>
-    <Elem>VirtualCapture</Elem>
-    <Elem>CaptureMono</Elem>
-    <Elem>CaptureVirtual</Elem>
-    <Elem>WEB</Elem>
-    <Elem>Resources</Elem>
-    <Elem>BasicCapture</Elem>
-    <Elem>VirtualCapture</Elem>
-    <Elem>CaptureMono</Elem>
-    <Elem>CaptureVirtual</Elem>
+    <Elem>Source</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -287,11 +64,11 @@
           <standard>4</standard>
           <incDir>
             <pElem>/usr/include/libxml2</pElem>
+            <pElem>/usr/include/dbus-1.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
           </incDir>
           <commandLine>-march=native -Os</commandLine>
-          <preprocessorList>
-            <Elem>EMBED_RESOURCES</Elem>
-          </preprocessorList>
           <warningLevel>3</warningLevel>
         </ccTool>
         <fortranCompilerTool>
@@ -305,7 +82,7 @@
           <linkerAddLib>
             <pElem>/usr/local/lib</pElem>
           </linkerAddLib>
-          <commandLine>-lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ljson-c -lz -lcurl build/ResourceFiles.o</commandLine>
+          <commandLine>-lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ldbus-1 -ljson-c -lz -lcurl build/ResourceFiles.o</commandLine>
         </linkerTool>
       </compileType>
       <packaging>
@@ -420,6 +197,36 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -431,610 +238,51 @@
                             mandatory="false"/>
         </packInfoList>
       </packaging>
-      <item path="CaptureInterface.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/CaptureInterface.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="CaptureInterface.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/CaptureInterface.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="CaptureMono/CaptureMono.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/CaptureMono/CaptureMono.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="CaptureMono/CaptureMono.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/CaptureMono/CaptureMono.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="CaptureVirtual/CaptureVirtual.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/CaptureV2/CaptureV2.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="CaptureVirtual/CaptureVirtual.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/CaptureV2/CaptureV2.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Database.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="Database.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="HTTPServer.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="HTTPServer.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Main.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="Main.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="NetworkManager.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="NetworkManager.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Prices.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="Prices.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Tools.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="Tools.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Analysis_Current.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Analysis_EnergyPower.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Analysis_Frequency.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Analysis_Voltage.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Dashboard.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Events_Disturbances.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Events_EN50160.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Events_ITIC.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Help.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Login.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Analysis_Current.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Analysis_EnergyPower.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Analysis_Frequency.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Analysis_Voltage.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/CommonHeader.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Dashboard.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Events_Disturbances.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Events_EN50160.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Events_ITIC.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Fonts/TitilliumWebBold.woff2"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Fonts/TitilliumWebBoldItalic.woff2"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Fonts/TitilliumWebItalic.woff2"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Fonts/TitilliumWebRegular.woff2"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Help.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/1F.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/311-interharmonics.pdf"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/3F.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/3f.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/4cuadrantes.jpg"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/4cuadrantes.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/API.md" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Captura de pantalla 2017-11-25 a las 13.36.41.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Captura de pantalla 2017-12-10 a las 18.18.02.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/CodeCogsEqn (1).png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/CodeCogsEqn.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Configuracion.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Configuration.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Desbalanceo y potencia en sistemas trifasicos.pdf"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Electrical measurements.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Estandar EN 50160.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Hardware (English).md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Hardware.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Home.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Interharmonics- basic concepts and techniques for their detection and measurement  .pdf"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Standard IEC61000-4-30.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Standard IEC61000-4-30.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Variables medidas.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Zero Crossing.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/active_power.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/active_power.png.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/apparent_power.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/fundamental_active_power.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/fundamental_apparent_power.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/fundamental_reactive_power.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/oZmlink.md" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/ozm.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/power_system_freq_meas.pdf"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/reactive_power.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/rms_i.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/rms_v.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/thd_i.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/thd_v.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/zeroC.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/zeroC_interharmonic.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Login.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/MiniViews/Active_Energy.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/MiniViews/Active_Power.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/MiniViews/Current.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/MiniViews/Frequency.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/MiniViews/Fundamental_Reactive_Energy.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/MiniViews/Fundamental_Reactive_Power.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/MiniViews/Voltage.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Settings.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Stats.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/favicon.ico" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/css/bootstrap.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.eot"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.svg"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.ttf"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff2"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/js/bootstrap.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/chroma/chroma.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/css/dataTables.bootstrap.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/images/sort_asc.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/images/sort_asc_disabled.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/images/sort_both.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/images/sort_desc.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/images/sort_desc_disabled.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/js/dataTables.bootstrap.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/js/jquery.dataTables.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dygraph/chart-plotter.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dygraph/crosshair.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dygraph/dygraph-interaction.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dygraph/dygraph.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dygraph/synchronize.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/font-awesome/css/font-awesome.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/font-awesome/fonts/FontAwesome.otf"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.eot"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.svg"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.ttf"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery/jquery.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/marked/marked.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/metisMenu/metisMenu.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/metisMenu/metisMenu.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/momentjs/moment-duration-format.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/momentjs/moment.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/offline/offline.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/offline/offline.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/qtip2/jquery.qtip.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/qtip2/jquery.qtip.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/spin.js/spin.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/acceptDeleteIcon.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/addNodeIcon.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/backIcon.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/connectIcon.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/cross.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/cross2.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/deleteIcon.png"
+      <item path="Source/CaptureVirtual/CaptureVirtual.cpp"
             ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/downArrow.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/editIcon.png"
-            ex="false"
-            tool="3"
+            tool="1"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/img/network/leftArrow.png"
+      <item path="Source/CaptureVirtual/CaptureVirtual.h"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/img/network/minus.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="Source/Database.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/img/network/plus.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="Source/Database.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/img/network/rightArrow.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/img/network/upArrow.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="Source/HTTPServer.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/img/network/zoomExtends.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="Source/Main.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/img/timeline/delete.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="Source/Main.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/vis.css" ex="false" tool="3" flavor2="0">
+      <item path="Source/NetworkManager.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/vis.js" ex="false" tool="3" flavor2="0">
+      <item path="Source/NetworkManager.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/openZmeter.css" ex="false" tool="3" flavor2="0">
+      <item path="Source/Prices.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="WEB/Resources/openZmeter.js" ex="false" tool="3" flavor2="0">
+      <item path="Source/Prices.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Settings.html" ex="false" tool="3" flavor2="0">
+      <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="WEB/Stats.html" ex="false" tool="3" flavor2="0">
+      <item path="Source/Tools.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
     <conf name="Debug" type="1">
@@ -1250,6 +498,36 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -1261,610 +539,51 @@
                             mandatory="false"/>
         </packInfoList>
       </packaging>
-      <item path="CaptureInterface.cpp" ex="false" tool="1" flavor2="4">
+      <item path="Source/CaptureInterface.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="CaptureInterface.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/CaptureInterface.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="CaptureMono/CaptureMono.cpp" ex="false" tool="1" flavor2="4">
+      <item path="Source/CaptureMono/CaptureMono.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="CaptureMono/CaptureMono.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/CaptureMono/CaptureMono.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="CaptureVirtual/CaptureVirtual.cpp" ex="false" tool="1" flavor2="4">
+      <item path="Source/CaptureV2/CaptureV2.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="CaptureVirtual/CaptureVirtual.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/CaptureV2/CaptureV2.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Database.cpp" ex="false" tool="1" flavor2="4">
-      </item>
-      <item path="Database.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="HTTPServer.cpp" ex="false" tool="1" flavor2="4">
-      </item>
-      <item path="HTTPServer.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Main.cpp" ex="false" tool="1" flavor2="4">
-      </item>
-      <item path="Main.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="NetworkManager.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="NetworkManager.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Prices.cpp" ex="false" tool="1" flavor2="4">
-      </item>
-      <item path="Prices.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Tools.cpp" ex="false" tool="1" flavor2="4">
-      </item>
-      <item path="Tools.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Analysis_Current.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Analysis_EnergyPower.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Analysis_Frequency.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Analysis_Voltage.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Dashboard.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Events_Disturbances.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Events_EN50160.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Events_ITIC.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Help.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Login.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Analysis_Current.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Analysis_EnergyPower.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Analysis_Frequency.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Analysis_Voltage.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/CommonHeader.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Dashboard.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Events_Disturbances.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Events_EN50160.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Events_ITIC.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Fonts/TitilliumWebBold.woff2"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Fonts/TitilliumWebBoldItalic.woff2"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Fonts/TitilliumWebItalic.woff2"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Fonts/TitilliumWebRegular.woff2"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Help.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/1F.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/311-interharmonics.pdf"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/3F.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/3f.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/4cuadrantes.jpg"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/4cuadrantes.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/API.md" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Captura de pantalla 2017-11-25 a las 13.36.41.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Captura de pantalla 2017-12-10 a las 18.18.02.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/CodeCogsEqn (1).png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/CodeCogsEqn.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Configuracion.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Configuration.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Desbalanceo y potencia en sistemas trifasicos.pdf"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Electrical measurements.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Estandar EN 50160.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Hardware (English).md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Hardware.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Home.html" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Interharmonics- basic concepts and techniques for their detection and measurement  .pdf"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Standard IEC61000-4-30.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Standard IEC61000-4-30.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Variables medidas.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/Zero Crossing.md"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/active_power.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/active_power.png.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/apparent_power.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/fundamental_active_power.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/fundamental_apparent_power.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/fundamental_reactive_power.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/oZmlink.md" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/ozm.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/power_system_freq_meas.pdf"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/reactive_power.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/rms_i.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/rms_v.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/thd_i.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/thd_v.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/zeroC.png" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/HelpPages/zeroC_interharmonic.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Login.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/MiniViews/Active_Energy.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/MiniViews/Active_Power.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/MiniViews/Current.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/MiniViews/Frequency.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/MiniViews/Fundamental_Reactive_Energy.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/MiniViews/Fundamental_Reactive_Power.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/MiniViews/Voltage.html"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/Settings.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/Stats.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/favicon.ico" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/css/bootstrap.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.eot"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.svg"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.ttf"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff2"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/bootstrap/js/bootstrap.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/chroma/chroma.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/css/dataTables.bootstrap.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/images/sort_asc.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/images/sort_asc_disabled.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/images/sort_both.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/images/sort_desc.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/images/sort_desc_disabled.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/js/dataTables.bootstrap.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/datatables/js/jquery.dataTables.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dygraph/chart-plotter.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dygraph/crosshair.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dygraph/dygraph-interaction.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dygraph/dygraph.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/dygraph/synchronize.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/font-awesome/css/font-awesome.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/font-awesome/fonts/FontAwesome.otf"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.eot"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.svg"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.ttf"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/jquery/jquery.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/marked/marked.min.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/metisMenu/metisMenu.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/metisMenu/metisMenu.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/momentjs/moment-duration-format.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/momentjs/moment.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/offline/offline.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/offline/offline.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/qtip2/jquery.qtip.css"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/qtip2/jquery.qtip.js"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/spin.js/spin.js" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/acceptDeleteIcon.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/addNodeIcon.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/backIcon.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/connectIcon.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/cross.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/cross2.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/deleteIcon.png"
+      <item path="Source/CaptureVirtual/CaptureVirtual.cpp"
             ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/downArrow.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="WEB/Resources/lib/visjs/img/network/editIcon.png"
-            ex="false"
-            tool="3"
+            tool="1"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/img/network/leftArrow.png"
+      <item path="Source/CaptureVirtual/CaptureVirtual.h"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/img/network/minus.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="Source/Database.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/img/network/plus.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="Source/Database.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/img/network/rightArrow.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/img/network/upArrow.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="Source/HTTPServer.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/img/network/zoomExtends.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="Source/Main.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/img/timeline/delete.png"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="Source/Main.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/vis.css" ex="false" tool="3" flavor2="0">
+      <item path="Source/NetworkManager.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="WEB/Resources/lib/visjs/vis.js" ex="false" tool="3" flavor2="0">
+      <item path="Source/NetworkManager.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Resources/openZmeter.css" ex="false" tool="3" flavor2="0">
+      <item path="Source/Prices.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="WEB/Resources/openZmeter.js" ex="false" tool="3" flavor2="0">
+      <item path="Source/Prices.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WEB/Settings.html" ex="false" tool="3" flavor2="0">
+      <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="WEB/Stats.html" ex="false" tool="3" flavor2="0">
+      <item path="Source/Tools.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>

@@ -12,6 +12,7 @@ class NetworkManager {
     DBusConnection *DBus;
     void SendGetDevices(json_object *json);
     void SendGetDeviceType(json_object *json, char *devicePath);
+    void SendRequestScan(char *devicePath);
     void SendGetAccessPoints(json_object *json, char *devicePath);
     bool SendGetAPProperties(json_object *json, char *path);
     void SendGetActiveConnections(json_object *json);
@@ -20,15 +21,13 @@ class NetworkManager {
     void SendGetSettingsPaths(json_object *json);
     void RecvGetSettingsPaths(json_object *json, DBusMessage* reply);
     bool SendGetSettings(json_object *json, char *path);
-
-    bool SendAddSettings(json_object *json);    
-//    static bool     RecvGetSettings(DBusConnection *bus, json_object *json, DBusMessage* reply);
+    bool SendSaveSettings(json_object *json);    
+    void SendEnable(int state);
   private:
     NetworkManager();
     ~NetworkManager();    
   public :
-    static json_object *SetJSONNetworkConfig(json_object *json);
+    static bool SetJSONNetworkConfig(json_object *json);
     static json_object *GetJSONNetworks();
-
 };
 

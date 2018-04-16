@@ -127,7 +127,6 @@ int  HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url
   return Return;
 }
 int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, const char *aditionalheadertype, const char *aditionalheadervalue) {
-#ifndef EMBED_RESOURCES
   int File = -1;
   struct stat FileStat;
   char *Path = (char*)malloc(sizeof(char) * (strlen(path) + strlen(Tools::Global.HTTPPath) + 1));
@@ -142,18 +141,6 @@ int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, c
   MHD_destroy_response(response);
   free(Path);
   return Return;
-#else
-  uint32_t Size;
-  uint8_t *Ptr = Tools::GetFile(path, &Size);
-  if(Ptr == NULL) return MHD_NO;
-  struct MHD_Response *response = MHD_create_response_from_buffer(Size, Ptr, MHD_RESPMEM_PERSISTENT);
-  SetMimeType(response, path);
-  if((aditionalheadertype != NULL) && (aditionalheadervalue != NULL )) MHD_add_response_header(response, aditionalheadertype, aditionalheadervalue);
-  MHD_add_response_header(response, "Cache-Control", "public, max-age=2592000");
-  int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
-  MHD_destroy_response(response);
-  return Return;
-#endif
 }
 void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe) {
   Request_t *Request = (Request_t*)*con_cls;
@@ -482,6 +469,25 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       } else {
         Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
       }
+    }
+    return MHD_YES;
+  } else if(strcmp(url, "/setSysInfo") == 0) {
+    char        *Type   = NULL;
+    json_object *Params = NULL;
+    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Type") == 0)) 
+        Type = (char*)json_object_get_string(JSON_Val);
+      else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Params") == 0))
+        Params = JSON_Val;
+      else
+        Error = true;
+    }
+    if((Type == NULL) || (Params == NULL) || (Error == true)) goto InvalidParams;
+    if(strcmp(Type, "Connectivity") == 0) {
+      Request->JSONWriter = json_object_new_object();
+      json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(NetworkManager::SetJSONNetworkConfig(Params)));
+      Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
     }
     return MHD_YES;
   } else if(strcmp(url, "/getEvents") == 0) {

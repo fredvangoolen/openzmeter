@@ -1,0 +1,26 @@
+INSTALLATION IN ARMBIAN
+-----------------------
+
+This software have been tested in Armbian 5.37 (using a modified kernel 3.4.114 with RT patch)
+This distribution has some bugs that need to be solved manually:
+  - firmware package need to be updated after installation
+  - /etc/defaults/ap6212:
+    · Especified port must be changed to ttyS3 where bluetooth is connected.
+    ·  MAC addres is Invalid, and equal for every device, this can be solved replacing the line with:
+      MAC_ADDR=`ifconfig wlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`
+
+For bluetooth a bridge with DHCP service is needed. Is prefered to configure it in /etc/network/interfaces to avoid
+network manager to take control. Add this lines to /etc/network/interfaces:
+  # Bluetooth bridge
+  auto br0
+  iface br0 inet static
+        bridge_ports none
+        bridge_stp off
+        address 10.0.0.1
+        netmask 255.255.255.0
+
+dnsmasq need to be configured to provide DHCP service on the bridge, add this lines to /etc/dnsmasq.conf
+  interface=br0
+  dhcp-range=10.0.0.2,10.0.0.8,12h
+
+change bluetooth config and set class to 0x020510 and set timeouts to 0
