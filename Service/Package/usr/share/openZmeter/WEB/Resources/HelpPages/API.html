@@ -1,15 +1,21 @@
-Se ha implementado una API para acceder en tiempo real a los parámetros característicos del oZm
+<h1>API</h1>
+<hr/>
+<p><em>openZmeter</em> is designed to inter operate with other systems to expands it funtionality. All analisys parameters are accesible via HTTP/JSON POST queries. Some functions to retrieve and manipulate system config are exposed too. Basically all functions and data showed in WEB interface are managed via this API.</p>
 
-La comunicación se realiza a través de peticiones  POST al servidor WEB integrado, obteniendo como resultado una respuesta en JSON. Por defecto, el servidor WEB requiere autorización (haber iniciado sesión en la WEB), aunque los accesos originados en <code>localhost</code> no tienen restricciones. 
+<p>Integrated HTTP C server can process POST requests in parallel with very low latency and overhead, allowing many queries at a time. Access to the API is restricted to logged users in the WEB interface, but access from <code>localhost</code> is allowed without authentication, witch allow even use it from shell scripts using <code>'curl'</code> tool.<br/>`curl --compress localhost:port/functionName -d '{"param1":"value1", "param2":"value2", ...}'`</p>
 
-Las series de datos que se almacenan y pueden ser consultadas son:
 
-<table style="border:1px solid black">
-  <tr>
-    <th>Parámetro</th>
-    <th >Tipo</th>
-    <th>Descripción</th>
-  </tr>
+
+
+echo -n "VALUES|0" | socat unix-connect:/var/run/openZmeter.sock STDIO | curl -XPOST '10.8.0.103:9200/paco/sample' -d @-
+curl localhost:80/getSeriesNow -d '{"Node":0, "Series":"rms_v, rms_i, active_power, apparent_power, power_factor, active_energy, fundamental_active_power, fundamental_reactive_power, fundamental_apparent_power, fundamental_power_factor, thd_v, thd_i, freq, phi, flag, harmonics_v, harmonics_i" }' 
+
+
+<p>The main porpouse of this API is to access the analysis result of monitored load, each parameter is designed by a name from the list:
+  <table style="padding-left:10px">
+    <tr>
+      <th>Parameter</th><th>Phases</th><th>Type</th><th>Descripción</th>
+    </tr>
 
   <tr>
     <td>`rms_v` </td>
@@ -90,7 +96,7 @@ Las series de datos que se almacenan y pueden ser consultadas son:
     <td>Armónicos de corriente (del 1 al 50)</td>
   </tr>
 </table>
-
+</p>
 Las funciones son fácilmente accesibles desde cualquier lenguaje, incluso pueden lanzarse desde linea de comandos usando el comando <code>curl</code>. Por defecto, el puerto es el 80 y debe indicarse la opción `--compress` ya que se usa compresión gzip.
 
 `curl --compress localhost:port/functionName -d '{"param1":"value1", "param2":"value2", ...}'`

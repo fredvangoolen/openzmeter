@@ -1,15 +1,3 @@
-<html>
-  <head>
-    <title>Firmware</title>
-    <style>
-      p, li { text-align: justify; }
-      h1 {border-bottom: 1px solid black; }
-      li {margin: 5px 0px 5px 0px; }
-      img { float: right; margin-left: 10px; }
-      .freqs {width:100px; display: inline-block }
-    </style>
-  </head>
-  <body>
     <h1>Firmware</h1>
       <p>El proceso de captura de datos, es realizado por un microcontrolador STM32, que lee los canales ADC de tension y corriente, almacena estos valores en un buffer y realiza el envio, a traves del puerto USB al controlador que procesara estos valores (<em>NanoPi Neo Air</em>). Adicionalmente el firmware realiza otras funciones auxiliares:</p>
       <ul>
@@ -87,7 +75,4 @@ Speed: Determina la velocidad de captura. Esta viene determinada por
 
 
 Stat1: Informa de estado de CPU y RAM. Bits [7..4]: Nivel de uso de CPU (entre 0 y 15). Bits [ 3..0]: Nivel de uso de RAM (entre 0 y 15). Stat2: Informa del estado del almacenamiento y la red. Bits[7..4]: Nivel de uso del almacenamiento (Entre 0 y 15). Bits[3..0]: Estado de la red, donde: 0000 indica que se esta en modo AP (sin configurar). 0001 indica que se esta en modo STA pero sin conexion. 0010 a 1111 indica que se esta conectado, y el nivel de se&ntilde;al de la red. Timestamp: Fecha del sistema.</p>
-  
-  
-  </body>
-</html>
+

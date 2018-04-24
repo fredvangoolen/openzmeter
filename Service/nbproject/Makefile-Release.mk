@@ -69,57 +69,47 @@ LDLIBSOPTIONS=-L/usr/local/lib
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter ${OBJECTFILES} ${LDLIBSOPTIONS} -lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ldbus-1 -ljson-c -lz -lcurl build/ResourceFiles.o
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter ${OBJECTFILES} ${LDLIBSOPTIONS} -lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ldbus-1 -ljson-c -lz -lcurl -s
 
 ${OBJECTDIR}/Source/CaptureInterface.o: Source/CaptureInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
-	${RM} "$@.d"
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/CaptureInterface.o Source/CaptureInterface.cpp
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/CaptureInterface.o Source/CaptureInterface.cpp
 
 ${OBJECTDIR}/Source/CaptureMono/CaptureMono.o: Source/CaptureMono/CaptureMono.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/CaptureMono
-	${RM} "$@.d"
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/CaptureMono/CaptureMono.o Source/CaptureMono/CaptureMono.cpp
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/CaptureMono/CaptureMono.o Source/CaptureMono/CaptureMono.cpp
 
 ${OBJECTDIR}/Source/CaptureV2/CaptureV2.o: Source/CaptureV2/CaptureV2.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/CaptureV2
-	${RM} "$@.d"
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/CaptureV2/CaptureV2.o Source/CaptureV2/CaptureV2.cpp
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/CaptureV2/CaptureV2.o Source/CaptureV2/CaptureV2.cpp
 
 ${OBJECTDIR}/Source/CaptureVirtual/CaptureVirtual.o: Source/CaptureVirtual/CaptureVirtual.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/CaptureVirtual
-	${RM} "$@.d"
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/CaptureVirtual/CaptureVirtual.o Source/CaptureVirtual/CaptureVirtual.cpp
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/CaptureVirtual/CaptureVirtual.o Source/CaptureVirtual/CaptureVirtual.cpp
 
 ${OBJECTDIR}/Source/Database.o: Source/Database.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
-	${RM} "$@.d"
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Database.o Source/Database.cpp
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/Database.o Source/Database.cpp
 
 ${OBJECTDIR}/Source/HTTPServer.o: Source/HTTPServer.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
-	${RM} "$@.d"
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/HTTPServer.o Source/HTTPServer.cpp
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/HTTPServer.o Source/HTTPServer.cpp
 
 ${OBJECTDIR}/Source/Main.o: Source/Main.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
-	${RM} "$@.d"
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Main.o Source/Main.cpp
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/Main.o Source/Main.cpp
 
 ${OBJECTDIR}/Source/NetworkManager.o: Source/NetworkManager.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
-	${RM} "$@.d"
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/NetworkManager.o Source/NetworkManager.cpp
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/NetworkManager.o Source/NetworkManager.cpp
 
 ${OBJECTDIR}/Source/Prices.o: Source/Prices.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
-	${RM} "$@.d"
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Prices.o Source/Prices.cpp
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/Prices.o Source/Prices.cpp
 
 ${OBJECTDIR}/Source/Tools.o: Source/Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
-	${RM} "$@.d"
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Tools.o Source/Tools.cpp
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/Tools.o Source/Tools.cpp
 
 # Subprojects
 .build-subprojects:
@@ -130,8 +120,3 @@ ${OBJECTDIR}/Source/Tools.o: Source/Tools.cpp
 
 # Subprojects
 .clean-subprojects:
-
-# Enable dependency checking
-.dep.inc: .depcheck-impl
-
-include .dep.inc

@@ -47,7 +47,7 @@
     <conf name="Release" type="1">
       <toolsSet>
         <compilerSet>GNU|GNU</compilerSet>
-        <dependencyChecking>true</dependencyChecking>
+        <dependencyChecking>false</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
@@ -82,7 +82,8 @@
           <linkerAddLib>
             <pElem>/usr/local/lib</pElem>
           </linkerAddLib>
-          <commandLine>-lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ldbus-1 -ljson-c -lz -lcurl build/ResourceFiles.o</commandLine>
+          <stripSymbols>true</stripSymbols>
+          <commandLine>-lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ldbus-1 -ljson-c -lz -lcurl</commandLine>
         </linkerTool>
       </compileType>
       <packaging>

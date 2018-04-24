@@ -30,12 +30,13 @@ function HandleRebase() {
       e.preventDefault();
     }
   });
-//  $('#Contents').find('img').bind('click', function(e) {
+  $('#Contents').find('img').bind('load', function(e) {
+    $(this).attr('src', "HelpPages/" + $(this).attr('href')) 
 //    if((location.host == this.host) && (true)) {
 //      $('#Contents').load("/HelpPages/" + $(this).attr('href'));
 //      e.preventDefault();
 //    }
-//  });
+  });
 }
 $('#Topics a').bind('click', function(e) {
   $('#Contents').load("/HelpPages/" + $(this).attr('href'));

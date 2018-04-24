@@ -52,7 +52,6 @@ void Tools::LogMsg(const char *level, const char *msg, ...) {
     fflush(stdout);
     funlockfile(stdout);
   }
-
   if(LogFile) {
     va_start(args, msg);
     flockfile(LogFile);
@@ -110,7 +109,7 @@ bool Tools::ReadConfig(char *file) {
   Global.Pid      = (char*)"/var/run/openZmeter.pid";
   Global.Log      = (char*)"/var/log/openZmeter.log";
   Global.HTTPPort = 8080;
-  Global.HTTPPath = (char*)"/usr/lib/openZmeter/WEB/";
+  Global.HTTPPath = (char*)"/usr/share/openZmeter/WEB/";
   Global.HTTPPass = (char*)"admin";
   DB.Database     = (char*)"openzmeter";
   DB.Host         = (char*)"127.0.0.1";
