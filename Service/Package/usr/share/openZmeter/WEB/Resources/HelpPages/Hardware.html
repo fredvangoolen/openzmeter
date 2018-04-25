@@ -48,6 +48,9 @@
   <li>Referencia de 3.3v y referencia de 1.65v, ambas se generan a partir de un CI especifico de alta estabilidad (REF2033), estan aisladas del resto de tensiones para evitar ruido y se utilizan como referencia para el ADC y como punto medio para la digitalizacion de tension y corriente (en caso de usar transformador de corriente o rogowski).</li>
 </ul>
 
+<h2>Signal conditioning</h2>
+
+
 
 <p>
   El proceso de captura de datos, es realizado por un microcontrolador STM32, que lee los canales ADC de tension y corriente, almacena estos valores en un buffer y realiza el envio, a traves del puerto USB al controlador que procesara estos valores (<em>NanoPi Neo Air</em>). Adicionalmente el firmware realiza otras funciones auxiliares:</p>

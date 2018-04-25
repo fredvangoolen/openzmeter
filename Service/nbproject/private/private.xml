@@ -15,19 +15,6 @@
             <file>file:/home/maria/Proyectos/zMeter/V2/Service/Main.cpp</file>
             <file>file:/home/maria/Proyectos/zMeter/V2/Service/Tools.cpp</file>
         </group>
-        <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Analysis_Voltage.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Tools.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Dashboard.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/NetworkManager.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/CaptureInterface.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/NetworkManager.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/NOTES</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Settings.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/lib/systemd/system/openZmeter.service</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Settings.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Main.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/openZmeter.js</file>
-        </group>
+        <group name="ServiceV2"/>
     </open-files>
 </project-private>
