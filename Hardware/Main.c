@@ -26,7 +26,18 @@ void ResetBuffers() {
 
 /* ARM => PC */
 
+void Hardware_Config() {
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  
+  GPIO_ResetBits(GPIOA, GPIO_Pin_8);
+}
 int main(void) {
+  Hardware_Config();
   ADC_Configure();
   USB_Configure();
 
