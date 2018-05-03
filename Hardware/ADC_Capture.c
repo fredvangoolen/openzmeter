@@ -1,13 +1,18 @@
-/* ================================ openZmeter ================================
+/* ================================ openZmeter =========================================================================
  * File:     ADC_Capture.h
  * Author:   Eduardo Viciana (2017)
- * ---------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 #include "Main.h"
-static uint8_t Oversample;
-static uint8_t ChannelMask;
-static uint8_t ChannelsCount;
-
-//Tipos y funciones externas ---------------------------------------------------
+//Definiciones locales -------------------------------------------------------------------------------------------------
+typedef struct {
+  float A0;
+  float A1;
+  float A2;
+  float B1;
+  float B2;
+  float Z1;
+  float Z2;
+} Filter_t;
 typedef struct {
   int16_t CurrentR;  //ADC1_IN4
   int16_t Battery;   //ADC1_IN1
@@ -24,13 +29,25 @@ typedef struct {
   int16_t CurrentT;  //ADC4_IN5
   int16_t VoltageT;  //ADC4_IN3
 } ADCSample_ADC4;
+//Variables locales ----------------------------------------------------------------------------------------------------
+static Filter_t       Filters[7];      //Almacena los coeficientes y muestras de los filtros de cada canal
+static uint8_t        ChannelMask;     //Mascara de canales en uso
+static uint8_t        SampleCounter;   //La parte alta tiene el tipo de oversample y la baja el contador de muestras procesadas
+static ADCSample_ADC1 ADC1_Buffer[32]; //Buffer de captura para Voltage_R y Current_R
+static ADCSample_ADC2 ADC2_Buffer[32]; //Buffer de captura para Voltage_S y Current_S
+static ADCSample_ADC3 ADC3_Buffer[32]; //Buffer de captura para Voltage_T y Current_T
+static ADCSample_ADC4 ADC4_Buffer[32]; //Buffer de captura para Battery y Current_N
+//Tipos y funciones externas -------------------------------------------------------------------------------------------
 extern void AppendSample(int16_t value);
-// Buffers de captura para el DMA ----------------------------------------------
-ADCSample_ADC1 ADC1_Buffer[32];     //El maximo oversampling que se permite es 16x
-ADCSample_ADC2 ADC2_Buffer[32];     //El maximo oversampling que se permite es 16x
-ADCSample_ADC3 ADC3_Buffer[32];     //El maximo oversampling que se permite es 16x
-ADCSample_ADC4 ADC4_Buffer[32];     //El maximo oversampling que se permite es 16x
-/* Calibra el ADC*/
+//----------------------------------------------------------------------------------------------------------------------
+/**
+ * Configura la captura de un ADC para leer dos canales secuencialmente.
+ * @param ADCx ADC a configurar ADC1, ADC2, ADC3 o ADC4
+ * @param channel1 primer canal de entrada al ADC
+ * @param channel2 segundo canal de entrada al ADC
+ * @param dst direccion del buffer del DMA usado para guardar las muestras
+ * @param dma controador y canal DMA usado para la transferencia
+ */
 void ADC_InitADC(ADC_TypeDef* ADCx, uint8_t channel1, uint8_t channel2, uint16_t *dst, DMA_Channel_TypeDef *dma) {
   //Configuro ADC
   ADC_InitTypeDef ADC_InitStructure;
@@ -79,7 +96,9 @@ void ADC_InitADC(ADC_TypeDef* ADCx, uint8_t channel1, uint8_t channel2, uint16_t
   DMA_Cmd(dma, ENABLE);
   ADC_StartConversion(ADCx);
 }
-/* Configura los pins de captura como analogicos */
+/**
+ * Configura todos los ADCs usados, timer necesario para la captura, controlador DMA e interrupciones
+ */
 void ADC_Configure() {
   //Activo los canales ADC y los puertos involucrados
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA | RCC_AHBPeriph_GPIOB | RCC_AHBPeriph_ADC12 | RCC_AHBPeriph_ADC34 | RCC_AHBPeriph_DMA1 | RCC_AHBPeriph_DMA2, ENABLE);
@@ -107,9 +126,15 @@ void ADC_Configure() {
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
 }
-void ADC_StartCapture(uint8_t channels, uint8_t mode) {
+/**
+ * Inicia la captura de muestras
+ * @param channels mascara de bits que indica que canales capturar el orden es [xx Vr Cr Vs Cs Vt Ct Cn]
+ * @param mode modo de captura
+ * @return 
+ */
+bool ADC_StartCapture(uint8_t channels, uint8_t mode) {
   ChannelMask = channels;
-  ChannelsCount = 7;
+  SampleCounter = mode & 0xC0;
   ResetBuffers();
   //Configuro TIMER1 CC3 que es compartido por los 4 ADCs
   TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure; 
