@@ -28,7 +28,7 @@ void ResetBuffers();
 void AppendBuffer(uint16_t sample);
 //Funciones del ADC ----------------------------------------------------------------------------------------------------
 void ADC_Configure();
-void ADC_StartCapture(uint8_t channels, uint8_t mode);
+bool ADC_StartCapture(uint8_t channels, uint8_t mode);
 void ADC_StopCapture();
 //Funciones del USB ----------------------------------------------------------------------------------------------------
 void USB_Configure();

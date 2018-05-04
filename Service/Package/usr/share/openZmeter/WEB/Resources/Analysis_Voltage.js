@@ -1564,6 +1564,15 @@ function AjaxSamples(result) {
         canvas.strokeStyle = '#000';
         canvas.lineWidth = 0.5;
         canvas.stroke();
+        canvas.save();
+        canvas.translate(g.toDomXCoord(result['Envelope'] * 2 + 50), g.height_ / 2);
+        canvas.rotate(-Math.PI / 2);
+        canvas.textAlign = 'center';
+        canvas.textBaseline = 'middle';
+        canvas.font = "12px sans-serif";
+        canvas.fillStyle = "#555";
+        canvas.fillText(Round2Plain((result['Duration'] - result['Envelope'] * 2) / Nodes['Devices'][Node]['SampleFreq']) + " seconds gap", 0 , 0, g.height_);
+        canvas.restore();
       }
       canvas.beginPath();
       canvas.moveTo(g.toDomXCoord(result['Envelope']), 0);
@@ -1585,26 +1594,34 @@ function AjaxSamples(result) {
       },
       x: {
         valueFormatter: function (y) {
+          var Label = '';
           if((result['Duration'] > result['Envelope'] * 4) && (y <= result['Envelope'] * 2)) {
-            return Round2((y - result['Envelope']) / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
+            Label = Round2((y - result['Envelope']) / Nodes['Devices'][Node]['SampleFreq'] * 1000);
+          } else if((result['Duration'] > result['Envelope'] * 4) && (y > result['Envelope'] * 3 + 100)) {
+            Label = 'd+' + Round2((y - result['Envelope'] * 3  - 100) / Nodes['Devices'][Node]['SampleFreq'] * 1000);
           } else if((result['Duration'] > result['Envelope'] * 4) && (y > result['Envelope'] * 2 + 100)) {
-            return Round2((y - result['Envelope'] * 3  - 100) / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
+            Label = 'd-' + Round2((y - result['Envelope'] * 3  - 100) / Nodes['Devices'][Node]['SampleFreq'] * -1000);
           } else if(result['Duration'] > result['Envelope'] * 4) {
-            return "";
+            Label = "";
           } else {
-            return Round2(y / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
+            Label = Round2((y - result['Envelope']) / Nodes['Devices'][Node]['SampleFreq'] * 1000);
           }
+          return Label + ' ms';
         },
         axisLabelFormatter: function (y) {
+          var Label = '';
           if((result['Duration'] > result['Envelope'] * 4) && (y <= result['Envelope'] * 2)) {
-            return Round2((y - result['Envelope']) / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
+            Label = Round2((y - result['Envelope']) / Nodes['Devices'][Node]['SampleFreq'] * 1000);
+          } else if((result['Duration'] > result['Envelope'] * 4) && (y > result['Envelope'] * 3 + 100)) {
+            Label = 'd+' + Round2((y - result['Envelope'] * 3  - 100) / Nodes['Devices'][Node]['SampleFreq'] * 1000);
           } else if((result['Duration'] > result['Envelope'] * 4) && (y > result['Envelope'] * 2 + 100)) {
-            return Round2((y - result['Envelope'] * 3  - 100) / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
+            Label = 'd-' + Round2((y - result['Envelope'] * 3  - 100) / Nodes['Devices'][Node]['SampleFreq'] * -1000);
           } else if(result['Duration'] > result['Envelope'] * 4) {
-            return "";
+            Label = "";
           } else {
-            return Round2(y / Nodes['Devices'][Node]['SampleFreq'] * 1000) + 'ms';
+            Label = Round2((y - result['Envelope']) / Nodes['Devices'][Node]['SampleFreq'] * 1000);
           }
+          return '<div style="font-size: 10px; margin-top: -4px">' + Label + ' <em class="small">ms</em></div>';
         }
       }
     }

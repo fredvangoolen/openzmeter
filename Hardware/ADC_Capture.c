@@ -2,6 +2,8 @@
  * File:     ADC_Capture.h
  * Author:   Eduardo Viciana (2017)
  * ------------------------------------------------------------------------------------------------------------------ */
+#include <arm_math.h>
+//#include <stdbool.h>
 #include "Main.h"
 //Definiciones locales -------------------------------------------------------------------------------------------------
 typedef struct {
@@ -10,8 +12,8 @@ typedef struct {
   float A2;
   float B1;
   float B2;
-  float Z1;
-  float Z2;
+  float Z1[7];
+  float Z2[7];
 } Filter_t;
 typedef struct {
   int16_t CurrentR;  //ADC1_IN4
@@ -30,7 +32,7 @@ typedef struct {
   int16_t VoltageT;  //ADC4_IN3
 } ADCSample_ADC4;
 //Variables locales ----------------------------------------------------------------------------------------------------
-static Filter_t       Filters[7];      //Almacena los coeficientes y muestras de los filtros de cada canal
+static Filter_t       Filters;         //Almacena los coeficientes y muestras de los filtros de cada canal
 static uint8_t        ChannelMask;     //Mascara de canales en uso
 static uint8_t        SampleCounter;   //La parte alta tiene el tipo de oversample y la baja el contador de muestras procesadas
 static ADCSample_ADC1 ADC1_Buffer[32]; //Buffer de captura para Voltage_R y Current_R
@@ -126,16 +128,50 @@ void ADC_Configure() {
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
 }
+float ADC_Filter(float in, Filter_t* filter) {
+//  float out = in * filter->A0 + filter->Z1;
+//  filter->Z1 = in * filter->A1 + filter->Z2 - filter->B1 * out;
+//  filter->Z2 = in * filter->A2 - filter->B2 * out;
+//  return out;
+  return 0.0;
+}
 /**
- * Inicia la captura de muestras
+ * Inicia la captura de muestras, iniciando los parametros de los filtros si son necesarios
  * @param channels mascara de bits que indica que canales capturar el orden es [xx Vr Cr Vs Cs Vt Ct Cn]
- * @param mode modo de captura
- * @return 
+ * @param mode modo de captura, los dos bits mas significativos son el oversample (00=1x, 01=4x, 10=16x, 11=64x)
+ *             los demas bits determinan la velocidad de captura
+ * @return el valor devuelto es true si los parametros son validos y la captura se inicia correctamente
  */
 bool ADC_StartCapture(uint8_t channels, uint8_t mode) {
+  ADC_StopCapture();
   ChannelMask = channels;
   SampleCounter = mode & 0xC0;
-  ResetBuffers();
+  for(int i = 0; i < 7; i++) {
+    Filters.Z1[i] = 0.0;
+    Filters.Z2[i] = 0.0;
+  }
+  //Recuento de canales activos
+  uint8_t Channels = 0;
+  for(uint8_t Mask = 0x80; Mask != 0; Mask >>= 1) {
+    if(channels & Mask) Channels++;
+  }
+  if(Channels == 0) return;
+  
+//Busco las frequencias y canales que hay para determinar si puedo procesar o es excesivo
+
+  float Q = 1.0f / sqrt(2.0f);
+  float Fc = 1.0f;
+  if(SampleCounter == 0xC0) Fc = Fc / 4.0;
+  if(SampleCounter == 0xC0) Fc = Fc / 16.0;
+  if(SampleCounter == 0xC0) Fc = Fc / 64.0;
+  float K    = tan(PI * Fc);
+  float Norm = 1 / (1 + K / Q + K * K);
+  Filters.A0 = K * K * Norm;
+  Filters.A1 = 2 * Filters.A0;
+  Filters.A2 = Filters.A0;
+  Filters.B1 = 2 * (K * K - 1) * Norm;
+  Filters.B2 = (1 - K / Q + K * K) * Norm;
+//  ResetBuffers();
   //Configuro TIMER1 CC3 que es compartido por los 4 ADCs
   TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure; 
   TIM_TimeBaseStructure.TIM_Prescaler = 0;
@@ -152,7 +188,11 @@ bool ADC_StartCapture(uint8_t channels, uint8_t mode) {
   TIM_OC3Init(TIM1, &TIM_OCInitStructure);
   TIM_CtrlPWMOutputs(TIM1, ENABLE);
   TIM_Cmd(TIM1, ENABLE);
+  return TRUE;
 }
+/**
+ * Detiene la captura
+ */
 void ADC_StopCapture() {
   TIM_Cmd(TIM1, DISABLE);
 }
@@ -173,16 +213,16 @@ void DMA1_Channel1_IRQHandler(void) {
     DMA_ClearITPendingBit(DMA1_IT_HT1);
   }
   __disable_irq();
-  if(INBuffUsed >= (INBUFFER_LEN - ChannelsCount)) {
-    ResetBuffers();
-  } else {
-    if((ChannelMask & 0x01) == 0x01) AppendBuffer(ADC2_Buffer[Start].VoltageR);
-    if((ChannelMask & 0x02) == 0x02) AppendBuffer(ADC3_Buffer[Start].VoltageS);
-    if((ChannelMask & 0x04) == 0x04) AppendBuffer(ADC4_Buffer[Start].VoltageT);
-    if((ChannelMask & 0x08) == 0x08) AppendBuffer(ADC1_Buffer[Start].CurrentR);
-    if((ChannelMask & 0x10) == 0x10) AppendBuffer(ADC2_Buffer[Start].CurrentS);
-    if((ChannelMask & 0x20) == 0x20) AppendBuffer(ADC4_Buffer[Start].CurrentT);
-    if((ChannelMask & 0x40) == 0x40) AppendBuffer(ADC3_Buffer[Start].CurrentN);
-  }
+//  if(INBuffUsed >= (INBUFFER_LEN - ChannelsCount)) {
+//    ResetBuffers();
+//  } else {
+//    if((ChannelMask & 0x01) == 0x01) AppendBuffer(ADC2_Buffer[Start].VoltageR);
+//    if((ChannelMask & 0x02) == 0x02) AppendBuffer(ADC3_Buffer[Start].VoltageS);
+//    if((ChannelMask & 0x04) == 0x04) AppendBuffer(ADC4_Buffer[Start].VoltageT);
+//    if((ChannelMask & 0x08) == 0x08) AppendBuffer(ADC1_Buffer[Start].CurrentR);
+//    if((ChannelMask & 0x10) == 0x10) AppendBuffer(ADC2_Buffer[Start].CurrentS);
+//    if((ChannelMask & 0x20) == 0x20) AppendBuffer(ADC4_Buffer[Start].CurrentT);
+//    if((ChannelMask & 0x40) == 0x40) AppendBuffer(ADC3_Buffer[Start].CurrentN);
+//  }
   __enable_irq();
 }
