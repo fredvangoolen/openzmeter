@@ -112,6 +112,7 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
     <itemPath>ADC_Capture.c</itemPath>
+    <itemPath>Buffer.c</itemPath>
     <itemPath>Main.c</itemPath>
     <itemPath>Main.h</itemPath>
     <itemPath>SysHandlers.c</itemPath>
@@ -164,6 +165,8 @@
         </linkerTool>
       </compileType>
       <item path="ADC_Capture.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="Buffer.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="CMSIS/Include/arm_common_tables.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -560,6 +563,8 @@
         </asmTool>
       </compileType>
       <item path="ADC_Capture.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="Buffer.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="CMSIS/Include/arm_common_tables.h" ex="false" tool="3" flavor2="0">
       </item>

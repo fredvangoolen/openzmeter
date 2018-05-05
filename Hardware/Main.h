@@ -14,7 +14,7 @@
 
 
 //Configuracion del firmware -------------------------------------------------------------------------------------------
-#define INBUFFER_LEN   1024
+#define INBUFFER_LEN   8192
 //Variables exportadas -------------------------------------------------------------------------------------------------
 extern uint64_t Sequence;
 extern uint16_t INBuff[];
@@ -23,8 +23,8 @@ extern uint16_t INWritePos;
 extern uint16_t INBuffUsed;
 //extern uint8_t  ChannelMask;
 //Funciones del buffer -------------------------------------------------------------------------------------------------
-void ResetBuffers();
-void AppendBuffer(uint16_t sample);
+void Buffers_Reset();
+void Buffer_Append(float *samples, uint8_t count);
 //Modulo ADC  ----------------------------------------------------------------------------------------------------------
 void ADC_Configure();
 bool ADC_StartCapture(uint8_t channels, uint8_t mode);

@@ -25,11 +25,16 @@
             <file>file:/home/edu/Proyectos/zMeter/STM32/inc/USB_CDC.h</file>
             <file>file:/home/edu/Proyectos/zMeter/STM32/USB_CDC.c</file>
         </group>
+        <group name="ServiceV2"/>
         <group>
             <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/STM32F30x_StdPeriph_Driver/inc/stm32f30x_adc.h</file>
+            <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/Main.h</file>
+            <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/SysHandlers.c</file>
             <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/STM32F30x_StdPeriph_Driver/src/stm32f30x_adc.c</file>
+            <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/USB_Class.c</file>
+            <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/Main.c</file>
+            <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/Buffer.c</file>
             <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/ADC_Capture.c</file>
         </group>
-        <group name="ServiceV2"/>
     </open-files>
 </project-private>

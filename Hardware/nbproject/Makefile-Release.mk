@@ -36,6 +36,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/ADC_Capture.o \
+	${OBJECTDIR}/Buffer.o \
 	${OBJECTDIR}/CMSIS/Source/startup_stm32f303xc.o \
 	${OBJECTDIR}/CMSIS/Source/system_stm32f30x.o \
 	${OBJECTDIR}/Main.o \
@@ -101,6 +102,11 @@ ${OBJECTDIR}/ADC_Capture.o: ADC_Capture.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ADC_Capture.o ADC_Capture.c
+
+${OBJECTDIR}/Buffer.o: Buffer.c
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Buffer.o Buffer.c
 
 ${OBJECTDIR}/CMSIS/Source/startup_stm32f303xc.o: CMSIS/Source/startup_stm32f303xc.s
 	${MKDIR} -p ${OBJECTDIR}/CMSIS/Source

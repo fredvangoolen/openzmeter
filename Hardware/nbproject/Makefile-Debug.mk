@@ -36,6 +36,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/ADC_Capture.o \
+	${OBJECTDIR}/Buffer.o \
 	${OBJECTDIR}/CMSIS/Source/startup_stm32f303xc.o \
 	${OBJECTDIR}/CMSIS/Source/system_stm32f30x.o \
 	${OBJECTDIR}/Main.o \
@@ -100,6 +101,10 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/hardware: ${OBJECTFILES}
 ${OBJECTDIR}/ADC_Capture.o: ADC_Capture.c
 	${MKDIR} -p ${OBJECTDIR}
 	$(COMPILE.c) -Wall -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -ISTM32_USB-FS-Device_Driver/inc -ISTM32F30x_StdPeriph_Driver/inc -ICMSIS/Include -I. -std=c99 -o ${OBJECTDIR}/ADC_Capture.o ADC_Capture.c
+
+${OBJECTDIR}/Buffer.o: Buffer.c
+	${MKDIR} -p ${OBJECTDIR}
+	$(COMPILE.c) -Wall -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -ISTM32_USB-FS-Device_Driver/inc -ISTM32F30x_StdPeriph_Driver/inc -ICMSIS/Include -I. -std=c99 -o ${OBJECTDIR}/Buffer.o Buffer.c
 
 ${OBJECTDIR}/CMSIS/Source/startup_stm32f303xc.o: CMSIS/Source/startup_stm32f303xc.s
 	${MKDIR} -p ${OBJECTDIR}/CMSIS/Source

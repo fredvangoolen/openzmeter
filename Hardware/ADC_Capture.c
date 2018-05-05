@@ -14,7 +14,6 @@ typedef struct {
   float B2;
   float Z1[7];
   float Z2[7];
-  float Out[7];
 } Filter_t;
 typedef struct {
   int16_t CurrentR;  //ADC1_IN4
@@ -99,6 +98,7 @@ void ADC_InitADC(ADC_TypeDef* ADCx, uint8_t channel1, uint8_t channel2, uint16_t
   DMA_Cmd(dma, ENABLE);
   ADC_StartConversion(ADCx);
 }
+
 /**
  * Configura todos los ADCs usados, timer necesario para la captura, controlador DMA e interrupciones
  */
@@ -129,13 +129,24 @@ void ADC_Configure() {
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
 }
-void ADC_Filter(float in, uint8_t channel) {
-//  float out = in * filter->A0 + filter->Z1;
-//  filter->Z1 = in * filter->A1 + filter->Z2 - filter->B1 * out;
-//  filter->Z2 = in * filter->A2 - filter->B2 * out;
-//  return out;
-  Filters.Out[channel] = 0.0;
+
+/**
+ * Filtra una muestra en de entrada segun los parametros configurados del filtro
+ * @param in muestra de entrada a añadir al filtro
+ * @param channel canal de la muestra
+ * @return filtered value
+ */
+float ADC_Filter(float in, uint8_t channel) {
+  if(ChannelMask & 0xC0) {
+    float Out = in * Filters.A0 + Filters.Z1[channel];
+    Filters.Z1[channel] = in * Filters.A1 + Filters.Z2[channel] - Filters.B1 * Out;
+    Filters.Z2[channel] = in * Filters.A2 - Filters.B2 * Out;
+    return Out;
+  } else {
+    return in;
+  }
 }
+
 /**
  * Inicia la captura de muestras, iniciando los parametros de los filtros si son necesarios
  * @param channels mascara de bits que indica que canales capturar el orden es [xx Vr Cr Vs Cs Vt Ct Cn]
@@ -197,45 +208,29 @@ bool ADC_StartCapture(uint8_t channels, uint8_t mode) {
 void ADC_StopCapture() {
   TIM_Cmd(TIM1, DISABLE);
 }
-void AppendBuffer(uint16_t sample) {
-  INBuff[INWritePos] = sample;
-  INBuffUsed++;
-  INWritePos = (INWritePos + 1) % INBUFFER_LEN;
-}
 
+/**
+ * Control de la interrupcion del DMA del ADC, se llama cada vez que tenemos 16
+ * muestras para procesar (medio buffer). Los pasos en cada interrupcion son
+ * determinar el trozo de buffer a procesar, pasar por el filtro los canales
+ * activos, 
+ * 
+ */
 void DMA1_Channel1_IRQHandler(void) {
-  uint8_t  Start = DMA_GetITStatus(DMA1_IT_TC1) ? 16 : 0;
+  float   Values[7];
+  uint8_t Start = DMA_GetITStatus(DMA1_IT_TC1) ? 16 : 0;
+  uint8_t Pos   = 0;
   DMA_ClearITPendingBit(DMA1_IT_HT1 | DMA1_IT_TC1);
   for(uint8_t Count = 0; Count < 16; Count++) {
-    if(ChannelMask & 0x40) ADC_Filter(ADC2_Buffer[Start].VoltageR, 6);
-    if(ChannelMask & 0x02) ADC_Filter(ADC2_Buffer[Start].CurrentS, 5);
-    if(ChannelMask & 0x04) ADC_Filter(ADC4_Buffer[Start].VoltageT, 4);
-    if(ChannelMask & 0x08) ADC_Filter(ADC1_Buffer[Start].CurrentR, 3);
-    if(ChannelMask & 0x10) ADC_Filter(ADC2_Buffer[Start].CurrentS, 2);
-    if(ChannelMask & 0x20) ADC_Filter(ADC4_Buffer[Start].CurrentT, 1);
-    if(ChannelMask & 0x40) ADC_Filter(ADC3_Buffer[Start].CurrentN, 0);
+    if(ChannelMask & 0x40) Values[Pos++] = ADC_Filter(ADC2_Buffer[Start].VoltageR, 6);
+    if(ChannelMask & 0x02) Values[Pos++] = ADC_Filter(ADC2_Buffer[Start].CurrentS, 5);
+    if(ChannelMask & 0x04) Values[Pos++] = ADC_Filter(ADC4_Buffer[Start].VoltageT, 4);
+    if(ChannelMask & 0x08) Values[Pos++] = ADC_Filter(ADC1_Buffer[Start].CurrentR, 3);
+    if(ChannelMask & 0x10) Values[Pos++] = ADC_Filter(ADC2_Buffer[Start].CurrentS, 2);
+    if(ChannelMask & 0x20) Values[Pos++] = ADC_Filter(ADC4_Buffer[Start].CurrentT, 1);
+    if(ChannelMask & 0x40) Values[Pos++] = ADC_Filter(ADC3_Buffer[Start].CurrentN, 0);
     if((SampleCounter == 0x00) || (SampleCounter == 0x43) || (SampleCounter == 0x8F) || (SampleCounter == 0xFF)) {
-      for(uint8_t Mask = 0x40, Channels = 0, Pos = 0; Mask != 0; Mask >>= 1, Pos++) {
-        if(ChannelMask & Mask) Filters.Out[Channels++] = Filters.Out[Pos]; 
-      }
-
-  __disable_irq();
-//  if(INBuffUsed >= (INBUFFER_LEN - ChannelsCount)) {
-//    ResetBuffers();
-//  } else {
-//    if((ChannelMask & 0x01) == 0x01) AppendBuffer(ADC2_Buffer[Start].VoltageR);
-//    if((ChannelMask & 0x02) == 0x02) AppendBuffer(ADC3_Buffer[Start].VoltageS);
-//    if((ChannelMask & 0x04) == 0x04) AppendBuffer(ADC4_Buffer[Start].VoltageT);
-//    if((ChannelMask & 0x08) == 0x08) AppendBuffer(ADC1_Buffer[Start].CurrentR);
-//    if((ChannelMask & 0x10) == 0x10) AppendBuffer(ADC2_Buffer[Start].CurrentS);
-//    if((ChannelMask & 0x20) == 0x20) AppendBuffer(ADC4_Buffer[Start].CurrentT);
-//    if((ChannelMask & 0x40) == 0x40) AppendBuffer(ADC3_Buffer[Start].CurrentN);
-//  }
-  __enable_irq();
-      
-      
-      
-      
+      Buffer_Append(Values, Pos);
       SampleCounter &= 0xC0;
     } else {
       SampleCounter++;
