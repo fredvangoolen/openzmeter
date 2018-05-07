@@ -17,7 +17,7 @@
 //Funciones del buffer -------------------------------------------------------------------------------------------------
 void Buffers_Init(uint8_t channels);
 void Buffer_AppendSamples(float *samples);
-bool Buffers_BuildPacket(uint8_t *dst);
+bool Buffers_ToPMA(uint16_t dst);
 //Modulo ADC  ----------------------------------------------------------------------------------------------------------
 void ADC_Configure();
 bool ADC_StartCapture(uint8_t channels, uint8_t mode);

@@ -16,13 +16,11 @@ static uint16_t INBuffUsed;
  * Reinicia los contadores del buffer a sus valores por defecto
  */
 void Buffers_Reset() {
-  __disable_irq();
   Sequence   = 0;
   INReadPos  = 0;
   INWritePos = 0;
   INBuffUsed = 0;
   Channels   = Channels & 0x0F;
-  __enable_irq();
 }
 
 /**
@@ -40,13 +38,11 @@ void Buffers_Init(uint8_t channels) {
  */
 void Buffer_AppendSamples(float *samples) {
   if(INBuffUsed >= (INBUFFER_LEN - Channels)) Buffers_Reset();
-  __disable_irq();
-  for(int i = 0; i < Channels; i++) {
+  for(uint8_t i = 0; i < Channels; i++) {
     INBuff[INWritePos++] = (uint16_t)samples[i];
-    INBuffUsed++;
     INWritePos = INWritePos % INBUFFER_LEN;
   }
-  __enable_irq();
+  INBuffUsed = INBuffUsed + Channels;
 }
 
 /**
@@ -57,26 +53,14 @@ void Buffer_AppendSamples(float *samples) {
  * @param dst posicion de escritura del buffer (debe de tener al menos 64 bytes)
  * @return TRUE si hay datos para enviar, FALSE en otro caso
  */
-bool Buffers_BuildPacket(uint8_t *dst) {
-  if(INBuffUsed == 0) return FALSE;
-  *dst++ = Sequence++;
-  
-  
-  
-/*
-      if(INBuffUsed < 28) {
-      USB_Tx_State = 0;
-    } else {
-      UserToPMABufferCopy((uint8_t*)&Sequence, ENDP1_BUF0ADDR, 8);
-      SetEPTxCount(ENDP1, 64);
-      SetEPTxValid(ENDP1);
-      INReadPos = (INReadPos + 28) % INBUFFER_LEN;
-      INBuffUsed -= 28;
-      Sequence++;    
-    }
-
-*/
-  
-  
+bool Buffers_ToPMA(uint16_t dst) {
+  uint32_t *Ptr = (uint32_t *)(dst * 2 + PMAAddr);
+  uint8_t   AvaliableSamples = (INBuffUsed > 31) ? 31 : INBuffUsed;
+  INBuffUsed = INBuffUsed - AvaliableSamples;
+  *Ptr++ = Sequence++ | (AvaliableSamples << 8);
+  while(AvaliableSamples--) {
+    *Ptr++ = INBuff[INReadPos++];
+    INReadPos = INReadPos % INBUFFER_LEN;
+  }
   return TRUE;
 }

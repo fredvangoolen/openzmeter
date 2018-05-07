@@ -96,11 +96,11 @@ uint8_t USB_Tx_State = 0;
 //Interrupciones -------------------------------------------------------------------------------------------------------
 void EP1_IN_Callback(void) {
   if(USB_Tx_State == 1) {
-    uint8_t Buff[64];
-    if(Buffers_BuildPacket(Buff) == FALSE) {
+//    uint8_t Buff[64];
+    if(Buffers_ToPMA(ENDP1_BUF0ADDR) == FALSE) {
       USB_Tx_State = 0;
     } else {
-      UserToPMABufferCopy(Buff, ENDP1_BUF0ADDR, 64);
+//      UserToPMABufferCopy(Buff, ENDP1_BUF0ADDR, 64);
       SetEPTxCount(ENDP1, 64);
       SetEPTxValid(ENDP1);
     }

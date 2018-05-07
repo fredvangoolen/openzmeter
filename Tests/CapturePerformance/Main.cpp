@@ -16,14 +16,14 @@ struct libusb_device        *NewDeviceArrive = NULL;
 struct libusb_device_handle *Device          = NULL;
 struct libusb_transfer      *Transfer[TRANSFERS];
 static uint8_t Buffer[TRANSFERS][LEN_IN_BUFFER];
-enum Sync_t {RESET, SEND, SYNC};
+enum Sync_t {RESET, WAIT, SYNC};
 //Temporizacion y control del programa ---------------------------------------------------------------------------------
 bool     Terminate = false;
 Sync_t   Sync      = RESET;
 uint64_t Time      = 0;
 uint32_t Packets   = 0;
 uint32_t Bytes     = 0;
-uint64_t Sequence  = 0;
+uint8_t  Sequence  = 0;
 //----------------------------------------------------------------------------------------------------------------------
 void SendSetupCommand(uint8_t channels, uint8_t mode) {
   Sequence = 0;
@@ -61,30 +61,36 @@ int HotPlug_Callback(struct libusb_context *ctx, struct libusb_device *dev, libu
 }
 void In_Callback(struct libusb_transfer *transfer) {
   if(transfer->status == LIBUSB_TRANSFER_COMPLETED) {
+    uint8_t *Ptr = transfer->buffer;
     for(int i = 0; i < transfer->actual_length / 64; i++) {
-      uint64_t Seq = *(uint64_t*)&transfer->buffer[i * 64];
-      if((Sync == SEND) && (Seq == 0)) {
-        Sequence = 0;
+      uint8_t Seq = Ptr[0];
+      Sequence++;
+      if((Sync == SYNC) && (Seq != Sequence)) {
+        printf("Fallo de sincronizacion (Recibido %d - Esperado %d)!!\n", Seq, Sequence);
+        Sync = WAIT;          
+      }
+      if(Sync == WAIT) {
+        Sequence = Seq;
+        printf("Sincronizando -> %d\n", Sequence);
         Sync = SYNC;
       }
-      if(Sync != SYNC) continue;
-      if(Seq != Sequence) {
-        printf("Error de sincronizacion! Recupernado se esperaba %llu, recibido %llu\n", Sequence, Seq);
-        Sequence = Seq + 1;
-      } else if(Sequence == Seq) {
-        Packets++;
-        Bytes += 28;
-        if(Packets == 10000) {
-          uint64_t Now = GetTime();
-          double Diff = Now - Time;
-          printf("Received %u transfers and %u bytes in %.1f ms, %.1f kSamples/s\n", Packets, Bytes, Diff / 1000.0, (Bytes / 1000.0) / (Diff / 1000000.0));
-          fflush(stdout);
-          Time = GetTime();
-          Bytes = 0;
-          Packets = 0;
-        }
-        Sequence++;
+      if(Sync == RESET) {
+        Ptr = &Ptr[64];
+        printf("Omitiendo datos no esperados!!\n");
+        continue;
       }
+      Packets++;
+      Bytes += Ptr[1] * 2;
+      if(Packets == 10000) {
+        uint64_t Now = GetTime();
+        double Diff = Now - Time;
+        printf("Received %u transfers and %u bytes in %.1f ms, %.1f kSamples/s\n", Packets, Bytes, Diff / 1000.0, (Bytes / 2000.0) / (Diff / 1000000.0));
+        fflush(stdout);
+        Time = GetTime();
+        Bytes = 0;
+        Packets = 0;
+      }
+      Ptr = &Ptr[64];
     }
   }
   libusb_submit_transfer(transfer);
@@ -160,10 +166,10 @@ int main(void) {
     struct timeval Timeout = { 1, 0 };
     int Error = libusb_handle_events_timeout_completed(NULL, &Timeout, NULL);
     if((Device != NULL) && (Sync == RESET)) {
-      uint8_t Channels = 0x01;
-      uint8_t Mode = 0x01;
+      uint8_t Channels = 0x0F;
+      uint8_t Mode = 0x1F;
+      Sync = WAIT;
       SendSetupCommand(Channels, Mode);
-      Sync = SEND;
     }
     if(Error < 0) { // negative values are errors
       printf("Error in libusb_handle_events_timeout_completed (%d)\n", Error);

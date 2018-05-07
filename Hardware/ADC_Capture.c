@@ -225,16 +225,16 @@ void DMA1_Channel1_IRQHandler(void) {
   uint8_t Start = DMA_GetITStatus(DMA1_IT_TC1) ? 16 : 0;
   DMA_ClearITPendingBit(DMA1_IT_HT1 | DMA1_IT_TC1);
   for(uint8_t Count = 0; Count < 16; Count++) {
-    if(ChannelMask & 0x40) *Ptr++ = ADC_Filter(ADC2_Buffer[Start].VoltageR, 6);
-    if(ChannelMask & 0x02) *Ptr++ = ADC_Filter(ADC2_Buffer[Start].CurrentS, 5);
-    if(ChannelMask & 0x04) *Ptr++ = ADC_Filter(ADC4_Buffer[Start].VoltageT, 4);
-    if(ChannelMask & 0x08) *Ptr++ = ADC_Filter(ADC1_Buffer[Start].CurrentR, 3);
-    if(ChannelMask & 0x10) *Ptr++ = ADC_Filter(ADC2_Buffer[Start].CurrentS, 2);
-    if(ChannelMask & 0x20) *Ptr++ = ADC_Filter(ADC4_Buffer[Start].CurrentT, 1);
-    if(ChannelMask & 0x40) *Ptr++ = ADC_Filter(ADC3_Buffer[Start].CurrentN, 0);
+    if(ChannelMask & 0x40) *Ptr++ = ADC_Filter(ADC2_Buffer[Start + Count].VoltageR, 6);
+    if(ChannelMask & 0x02) *Ptr++ = ADC_Filter(ADC2_Buffer[Start + Count].CurrentS, 5);
+    if(ChannelMask & 0x04) *Ptr++ = ADC_Filter(ADC4_Buffer[Start + Count].VoltageT, 4);
+    if(ChannelMask & 0x08) *Ptr++ = ADC_Filter(ADC1_Buffer[Start + Count].CurrentR, 3);
+    if(ChannelMask & 0x10) *Ptr++ = ADC_Filter(ADC2_Buffer[Start + Count].CurrentS, 2);
+    if(ChannelMask & 0x20) *Ptr++ = ADC_Filter(ADC4_Buffer[Start + Count].CurrentT, 1);
+    if(ChannelMask & 0x40) *Ptr++ = ADC_Filter(ADC3_Buffer[Start + Count].CurrentN, 0);
     if((SampleCounter == 0x00) || (SampleCounter == 0x43) || (SampleCounter == 0x8F) || (SampleCounter == 0xFF)) {
       Buffer_AppendSamples(Values);
-      SampleCounter &= 0xC0;
+      SampleCounter = SampleCounter & 0xC0;
     } else {
       SampleCounter++;
     }
