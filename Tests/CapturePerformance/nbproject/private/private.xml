@@ -10,6 +10,8 @@
             <file>file:/home/edu/Proyectos/zMeter/Test/Main.cpp</file>
         </group>
         <group name="ServiceV2"/>
-        <group/>
+        <group>
+            <file>file:/home/maria/Proyectos/zMeter/V2/Tests/CapturePerformance/Main.cpp</file>
+        </group>
     </open-files>
 </project-private>

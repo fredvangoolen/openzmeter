@@ -2,9 +2,8 @@
  * File:     ADC_Capture.h
  * Author:   Eduardo Viciana (2017)
  * ------------------------------------------------------------------------------------------------------------------ */
-#include <arm_math.h>
-//#include <stdbool.h>
 #include "Main.h"
+#include <arm_math.h>
 //Definiciones locales -------------------------------------------------------------------------------------------------
 typedef struct {
   float A0;
@@ -154,7 +153,20 @@ float ADC_Filter(float in, uint8_t channel) {
  *             los demas bits determinan la velocidad de captura
  * @return el valor devuelto es true si los parametros son validos y la captura se inicia correctamente
  */
+const uint16_t ADC_TimerDivs[] = { 150,  180,  200,  225,  250,  300,  260,  375,  450,  500,  600,  625,  750,  900, 1000,  1125,  1250, 
+                                  1500, 1800, 1875, 2250, 2500, 3000, 3125, 3750, 4500, 5000, 5625, 6250, 7500, 9000, 9375, 11250, 12500};
 bool ADC_StartCapture(uint8_t channels, uint8_t mode) {
+  //Recuento de canales activos
+  uint8_t Channels = 0;
+  for(uint8_t Mask = 0x40; Mask != 0; Mask >>= 1) {
+    if(channels & Mask) Channels++;
+  }
+  if((Channels == 0) || ((mode & 0x3F) > 33)) return FALSE;
+  uint32_t Freq = SystemCoreClock / ADC_TimerDivs[mode & 0x3F];
+  if((mode & 0xC0) == 0x40) Freq = Freq / 4;
+  if((mode & 0xC0) == 0x80) Freq = Freq / 16;
+  if((mode & 0xC0) == 0xC0) Freq = Freq / 64;
+  if(((Freq * Channels) > 360000) || (Freq < 5000)) return FALSE;
   ADC_StopCapture();
   ChannelMask = channels;
   SampleCounter = mode & 0xC0;
@@ -162,15 +174,6 @@ bool ADC_StartCapture(uint8_t channels, uint8_t mode) {
     Filters.Z1[i] = 0.0;
     Filters.Z2[i] = 0.0;
   }
-  //Recuento de canales activos
-  uint8_t Channels = 0;
-  for(uint8_t Mask = 0x40; Mask != 0; Mask >>= 1) {
-    if(channels & Mask) Channels++;
-  }
-  if(Channels == 0) return FALSE;
-  
-//Busco las frequencias y canales que hay para determinar si puedo procesar o es excesivo
-
   float Q = 1.0f / sqrt(2.0f);
   float Fc = 1.0f;
   if(SampleCounter == 0xC0) Fc = Fc / 4.0;
@@ -183,14 +186,14 @@ bool ADC_StartCapture(uint8_t channels, uint8_t mode) {
   Filters.A2 = Filters.A0;
   Filters.B1 = 2 * (K * K - 1) * Norm;
   Filters.B2 = (1 - K / Q + K * K) * Norm;
-//  ResetBuffers();
+  Buffers_Init(Channels);
   //Configuro TIMER1 CC3 que es compartido por los 4 ADCs
   TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure; 
   TIM_TimeBaseStructure.TIM_Prescaler = 0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
   TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
   TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
-  TIM_TimeBaseStructure.TIM_Period = 89;
+  TIM_TimeBaseStructure.TIM_Period = ADC_TimerDivs[mode & 0x3F] - 1;
   TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
   TIM_OCInitTypeDef TIM_OCInitStructure;
   TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
@@ -218,19 +221,19 @@ void ADC_StopCapture() {
  */
 void DMA1_Channel1_IRQHandler(void) {
   float   Values[7];
+  float  *Ptr = Values;
   uint8_t Start = DMA_GetITStatus(DMA1_IT_TC1) ? 16 : 0;
-  uint8_t Pos   = 0;
   DMA_ClearITPendingBit(DMA1_IT_HT1 | DMA1_IT_TC1);
   for(uint8_t Count = 0; Count < 16; Count++) {
-    if(ChannelMask & 0x40) Values[Pos++] = ADC_Filter(ADC2_Buffer[Start].VoltageR, 6);
-    if(ChannelMask & 0x02) Values[Pos++] = ADC_Filter(ADC2_Buffer[Start].CurrentS, 5);
-    if(ChannelMask & 0x04) Values[Pos++] = ADC_Filter(ADC4_Buffer[Start].VoltageT, 4);
-    if(ChannelMask & 0x08) Values[Pos++] = ADC_Filter(ADC1_Buffer[Start].CurrentR, 3);
-    if(ChannelMask & 0x10) Values[Pos++] = ADC_Filter(ADC2_Buffer[Start].CurrentS, 2);
-    if(ChannelMask & 0x20) Values[Pos++] = ADC_Filter(ADC4_Buffer[Start].CurrentT, 1);
-    if(ChannelMask & 0x40) Values[Pos++] = ADC_Filter(ADC3_Buffer[Start].CurrentN, 0);
+    if(ChannelMask & 0x40) *Ptr++ = ADC_Filter(ADC2_Buffer[Start].VoltageR, 6);
+    if(ChannelMask & 0x02) *Ptr++ = ADC_Filter(ADC2_Buffer[Start].CurrentS, 5);
+    if(ChannelMask & 0x04) *Ptr++ = ADC_Filter(ADC4_Buffer[Start].VoltageT, 4);
+    if(ChannelMask & 0x08) *Ptr++ = ADC_Filter(ADC1_Buffer[Start].CurrentR, 3);
+    if(ChannelMask & 0x10) *Ptr++ = ADC_Filter(ADC2_Buffer[Start].CurrentS, 2);
+    if(ChannelMask & 0x20) *Ptr++ = ADC_Filter(ADC4_Buffer[Start].CurrentT, 1);
+    if(ChannelMask & 0x40) *Ptr++ = ADC_Filter(ADC3_Buffer[Start].CurrentN, 0);
     if((SampleCounter == 0x00) || (SampleCounter == 0x43) || (SampleCounter == 0x8F) || (SampleCounter == 0xFF)) {
-      Buffer_Append(Values, Pos);
+      Buffer_AppendSamples(Values);
       SampleCounter &= 0xC0;
     } else {
       SampleCounter++;

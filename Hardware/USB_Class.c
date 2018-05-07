@@ -96,44 +96,18 @@ uint8_t USB_Tx_State = 0;
 //Interrupciones -------------------------------------------------------------------------------------------------------
 void EP1_IN_Callback(void) {
   if(USB_Tx_State == 1) {
-    if(INBuffUsed < 28) {
+    uint8_t Buff[64];
+    if(Buffers_BuildPacket(Buff) == FALSE) {
       USB_Tx_State = 0;
     } else {
-      UserToPMABufferCopy((uint8_t*)&Sequence, ENDP1_BUF0ADDR, 8);
+      UserToPMABufferCopy(Buff, ENDP1_BUF0ADDR, 64);
       SetEPTxCount(ENDP1, 64);
       SetEPTxValid(ENDP1);
-      INReadPos = (INReadPos + 28) % INBUFFER_LEN;
-      INBuffUsed -= 28;
-      Sequence++;    
     }
   }
-//  if(INBuffUsed < 28) {
-//  SetEPTxStatus(ENDP1, EP_TX_NAK);
-//  SetEPRxStatus(ENDP1, EP_RX_NAK);
-//    return; //Si hay menos de 56bytes salgo 
-//  }
-  
-  
-
   return;
-  
-  
-  
-	if(GetENDPOINT(ENDP1) & EP_DTOG_RX) {
-    UserToPMABufferCopy((uint8_t*)&Sequence, GetEPDblBuf0Addr(ENDP1), 8);
-    //UserToPMABufferCopy((uint8_t*)&INBuff[INReadPos], GetEPDblBuf0Addr(ENDP1 & 0x7F) + 8, 56);
-    SetEPDblBuf0Count((ENDP1), EP_DBUF_IN, 64);
-  } else {
-    UserToPMABufferCopy((uint8_t*)&Sequence, GetEPDblBuf1Addr(ENDP1), 8);
-    //UserToPMABufferCopy((uint8_t*)&INBuff[INReadPos], GetEPDblBuf1Addr(ENDP1 & 0x7F) + 8, 56);
-    SetEPDblBuf1Count((ENDP1 & 0x7F), EP_DBUF_IN, 64);
-  }
-  FreeUserBuffer((ENDP1 & 0x7F), EP_DBUF_IN); // Toggles EP_DTOG_RX / SW_BUF
-  SetEPTxValid(ENDP1);
-  INReadPos = (INReadPos + 28) % INBUFFER_LEN;
-  INBuffUsed -= 28;
-  Sequence++;
 }
+
 /* Start Of Frame */
 void SOF_Callback(void) {
   if(bDeviceState == CONFIGURED) {
@@ -229,7 +203,7 @@ RESULT USB_Class_DataSetup(uint8_t RequestNo) {
 RESULT USB_Class_NoDataSetup(uint8_t RequestNo) {
   if(Type_Recipient != (CLASS_REQUEST | INTERFACE_RECIPIENT)) return USB_SUCCESS;
   if(RequestNo == FIRM_SETUP_CAPTURE) {
-    Buffers_Reset();
+//  Buffers_Reset();
     if((pInformation->USBwValues.bw.bb1 & 0x7F) == 0x00) {
       ADC_StopCapture();
       SetEPTxStatus(ENDP1, EP_TX_DIS);

@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdint.h>
 #include <libusb-1.0/libusb.h>
 //Constantes del puerto USB ----------------------------------------------------
 #define USB_VENDOR_ID      0x0483                      /* USB vendor ID used by the device 0x0483 is STMs ID */
@@ -123,42 +124,21 @@ bool ConnectToDevice() {
   return true;
 }
 int main(void) {
-//  int Osc = 72000000;
-//  int Order = 0;
-//  for(int Div = 1; Div < Osc / 4; Div++) {
-//    if(((Osc % Div) == 0) && ((Osc % (Div * 4)) == 0)) {
-//      int SampleRate = Osc / Div;
-//      int Freq = SampleRate / 4;
-//      if(SampleRate > 480000) continue;
-//      if((Freq >= 5000) && (Freq <= 200000) && (((Freq % 100) == 0)  || ((Freq % 120) == 0))) {
-//        printf("Order %d -> Freq %d, SampleRate %d, Oversample (4x)\n", Order, Freq, SampleRate);
-//        Order++;
-//      }
-//    }
-//  }
-//  for(int Div = 1; Div < Osc / 16; Div++) {
-//    if(((Osc % Div) == 0) && ((Osc % (Div * 16)) == 0)) {
-//      int SampleRate = Osc / Div;
-//      int Freq = SampleRate / 16;
-//      if(SampleRate > 480000) continue;
-//      if((Freq >= 5000) && (Freq <= 200000) && (((Freq % 100) == 0)  || ((Freq % 120) == 0))) {
-//        printf("Order %d -> Freq %d, SampleRate %d, Oversample (16x)\n", Order, Freq, SampleRate);
-//        Order++;
-//      }
-//    }
-//  }
-//  for(int Div = 1; Div < Osc / 64; Div++) {
-//    if(((Osc % Div) == 0) && ((Osc % (Div * 16)) == 0)) {
-//      int SampleRate = Osc / Div;
-//      int Freq = SampleRate / 64;
-//      if(SampleRate > 480000) continue;
-//      if((Freq >= 5000) && (Freq <= 200000) && (((Freq % 100) == 0)  || ((Freq % 120) == 0))) {
-//        printf("Order %d -> Freq %d, SampleRate %d, Oversample (64x)\n", Order, Freq, SampleRate);
-//        Order++;
-//      }
-//    }
-//  }
+  uint64_t Osc = 72000000;
+  int Order = 0;
+  for(int Div = 1; Div < Osc / 1; Div++) {
+    if((Osc % Div) == 0) {
+      int SampleRate = Osc / Div;
+      if(SampleRate > 480000) continue;
+      if((SampleRate % 64) != 0) continue;
+      if((SampleRate >= 5000)) {
+        printf("Order %d (%d) -> SampleRate %d (4x -> %f) (16x -> %f) (64x -> %f)\n", Order, Div, SampleRate, SampleRate / 4.0, SampleRate / 16.0, SampleRate / 64.0);
+        Order++;
+      }
+    }
+  }
 
+  //return 0;
   
   
   
@@ -180,7 +160,7 @@ int main(void) {
     struct timeval Timeout = { 1, 0 };
     int Error = libusb_handle_events_timeout_completed(NULL, &Timeout, NULL);
     if((Device != NULL) && (Sync == RESET)) {
-      uint8_t Channels = 0x7F;
+      uint8_t Channels = 0x01;
       uint8_t Mode = 0x01;
       SendSetupCommand(Channels, Mode);
       Sync = SEND;
