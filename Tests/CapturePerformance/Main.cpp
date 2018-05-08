@@ -171,7 +171,7 @@ int main(void) {
     int Error = libusb_handle_events_timeout_completed(NULL, &Timeout, NULL);
     if((Device != NULL) && (Sync == RESET)) {
       uint8_t Channels = 0x01;
-      uint8_t Mode = 0x4F;
+      uint8_t Mode = 0xC0;
       Sync = WAIT;
       SendSetupCommand(Channels, Mode);
     }
