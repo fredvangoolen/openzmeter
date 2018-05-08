@@ -39,8 +39,8 @@ void Buffers_Init(uint8_t channels) {
 void Buffer_AppendSamples(float *samples) {
   if(INBuffUsed >= (INBUFFER_LEN - Channels)) Buffers_Reset();
   for(uint8_t i = 0; i < Channels; i++) {
-    INBuff[INWritePos++] = (uint16_t)samples[i];
-    INWritePos = INWritePos % INBUFFER_LEN;
+    INBuff[INWritePos] = (uint16_t)samples[i];
+    INWritePos = (INWritePos + 1) % INBUFFER_LEN;
   }
   INBuffUsed = INBuffUsed + Channels;
 }
@@ -56,11 +56,11 @@ void Buffer_AppendSamples(float *samples) {
 bool Buffers_ToPMA(uint16_t dst) {
   uint32_t *Ptr = (uint32_t *)(dst * 2 + PMAAddr);
   uint8_t   AvaliableSamples = (INBuffUsed > 31) ? 31 : INBuffUsed;
-  INBuffUsed = INBuffUsed - AvaliableSamples;
-  *Ptr++ = Sequence++ | (AvaliableSamples << 8);
-  while(AvaliableSamples--) {
-    *Ptr++ = INBuff[INReadPos++];
-    INReadPos = INReadPos % INBUFFER_LEN;
+  Ptr[0] = (uint16_t)(Sequence++ | (AvaliableSamples << 8));
+  for(uint8_t i = 0; i < AvaliableSamples; i++) {
+    Ptr[i + 1] = INBuff[INReadPos];
+    INReadPos = (INReadPos + 1) % INBUFFER_LEN;
   }
+  INBuffUsed = INBuffUsed - AvaliableSamples;
   return TRUE;
 }

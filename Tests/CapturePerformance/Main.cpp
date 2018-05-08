@@ -22,8 +22,9 @@ bool     Terminate = false;
 Sync_t   Sync      = RESET;
 uint64_t Time      = 0;
 uint32_t Packets   = 0;
-uint32_t Bytes     = 0;
+uint32_t Samples   = 0;
 uint8_t  Sequence  = 0;
+float    AVG       = 0;
 //----------------------------------------------------------------------------------------------------------------------
 void SendSetupCommand(uint8_t channels, uint8_t mode) {
   Sequence = 0;
@@ -80,15 +81,18 @@ void In_Callback(struct libusb_transfer *transfer) {
         continue;
       }
       Packets++;
-      Bytes += Ptr[1] * 2;
+      Samples += Ptr[1];
+//      printf("Muestra 0x%02X%02X\n", Ptr[3], Ptr[2]);
+      for(int n = 0; n < Ptr[1]; n++) AVG += (float)(Ptr[3 + n * 2] << 8 | Ptr[2 + n * 2]);
       if(Packets == 10000) {
         uint64_t Now = GetTime();
         double Diff = Now - Time;
-        printf("Received %u transfers and %u bytes in %.1f ms, %.1f kSamples/s\n", Packets, Bytes, Diff / 1000.0, (Bytes / 2000.0) / (Diff / 1000000.0));
+        printf("Received %u transfers and %u samples in %.1f ms, %.1f kSamples/s (AVG: %.4f)\n", Packets, Samples, Diff / 1000.0, (Samples / 1000.0) / (Diff / 1000000.0), (AVG / Samples) / 4096.0);
         fflush(stdout);
         Time = GetTime();
-        Bytes = 0;
+        Samples = 0;
         Packets = 0;
+        AVG = 0;
       }
       Ptr = &Ptr[64];
     }
@@ -166,8 +170,8 @@ int main(void) {
     struct timeval Timeout = { 1, 0 };
     int Error = libusb_handle_events_timeout_completed(NULL, &Timeout, NULL);
     if((Device != NULL) && (Sync == RESET)) {
-      uint8_t Channels = 0x0F;
-      uint8_t Mode = 0x1F;
+      uint8_t Channels = 0x01;
+      uint8_t Mode = 0x4F;
       Sync = WAIT;
       SendSetupCommand(Channels, Mode);
     }
