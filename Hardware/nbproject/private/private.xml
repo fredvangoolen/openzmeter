@@ -36,6 +36,7 @@
             <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/CMSIS/Source/startup_stm32f303xc.s</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/Main.h</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/CMSIS/Include/arm_math.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/Link.ld</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/ADC_Capture.c</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/Buffer.c</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/Main.c</file>

@@ -65,7 +65,7 @@ void ADC_InitADC(ADC_TypeDef* ADCx, uint8_t channel1, uint8_t channel2, uint16_t
   ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
   ADC_InitStructure.ADC_ExternalTrigConvEvent = ADC_ExternalTrigConvEvent_2;
   ADC_InitStructure.ADC_ExternalTrigEventEdge = ADC_ExternalTrigEventEdge_RisingEdge;
-  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
+  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Left;
   ADC_InitStructure.ADC_OverrunMode = ADC_OverrunMode_Disable;
   ADC_InitStructure.ADC_AutoInjMode = ADC_AutoInjec_Disable;
   ADC_InitStructure.ADC_NbrOfRegChannel = 2;

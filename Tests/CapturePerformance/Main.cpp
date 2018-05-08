@@ -87,7 +87,7 @@ void In_Callback(struct libusb_transfer *transfer) {
       if(Packets == 10000) {
         uint64_t Now = GetTime();
         double Diff = Now - Time;
-        printf("Received %u transfers and %u samples in %.1f ms, %.1f kSamples/s (AVG: %.4f)\n", Packets, Samples, Diff / 1000.0, (Samples / 1000.0) / (Diff / 1000000.0), (AVG / Samples) / 4096.0);
+        printf("Received %u transfers and %u samples in %.1f ms, %.1f kSamples/s (AVG: %.5f)\n", Packets, Samples, Diff / 1000.0, (Samples / 1000.0) / (Diff / 1000000.0), (AVG / Samples) / 4096.0);
         fflush(stdout);
         Time = GetTime();
         Samples = 0;
@@ -134,19 +134,19 @@ bool ConnectToDevice() {
   return true;
 }
 int main(void) {
-  uint64_t Osc = 72000000;
-  int Order = 0;
-  for(int Div = 1; Div < Osc / 1; Div++) {
-    if((Osc % Div) == 0) {
-      int SampleRate = Osc / Div;
-      if(SampleRate > 480000) continue;
-      if((SampleRate % 64) != 0) continue;
-      if((SampleRate >= 5000)) {
-        printf("Order %d (%d) -> SampleRate %d (4x -> %f) (16x -> %f) (64x -> %f)\n", Order, Div, SampleRate, SampleRate / 4.0, SampleRate / 16.0, SampleRate / 64.0);
-        Order++;
-      }
-    }
-  }
+//  uint64_t Osc = 72000000;
+//  int Order = 0;
+//  for(int Div = 1; Div < Osc / 1; Div++) {
+//    if((Osc % Div) == 0) {
+//      int SampleRate = Osc / Div;
+//      if(SampleRate > 480000) continue;
+//      if((SampleRate % 64) != 0) continue;
+//      if((SampleRate >= 5000)) {
+//        printf("Order %d (%d) -> SampleRate %d (4x -> %f) (16x -> %f) (64x -> %f)\n", Order, Div, SampleRate, SampleRate / 4.0, SampleRate / 16.0, SampleRate / 64.0);
+//        Order++;
+//      }
+//    }
+//  }
 
   //return 0;
   
@@ -170,7 +170,7 @@ int main(void) {
     struct timeval Timeout = { 1, 0 };
     int Error = libusb_handle_events_timeout_completed(NULL, &Timeout, NULL);
     if((Device != NULL) && (Sync == RESET)) {
-      uint8_t Channels = 0x01;
+      uint8_t Channels = 0x03;
       uint8_t Mode = 0xC0;
       Sync = WAIT;
       SendSetupCommand(Channels, Mode);

@@ -4,9 +4,9 @@
  * ------------------------------------------------------------------------------------------------------------------ */
 #include "Main.h"
 //----------------------------------------------------------------------------------------------------------------------
-static uint8_t  Sequence;
-static uint8_t  Channels;
-static uint16_t INBuff[INBUFFER_LEN];
+static uint16_t Sequence;             //Numero de sequencia (se usan 11 bits)
+static uint8_t  Channels;             //Total canales
+static uint16_t INBuff[INBUFFER_LEN]; //Buffer de muestras
 static uint16_t INReadPos;
 static uint16_t INWritePos;
 static uint16_t INBuffUsed;
@@ -28,7 +28,7 @@ void Buffers_Reset() {
  * @param channels numero de canales usados
  */
 void Buffers_Init(uint8_t channels) {
-  Channels = channels & 0x0F;
+  Channels = channels & 0x07;
   Buffers_Reset();
 }
 
@@ -55,8 +55,9 @@ void Buffer_AppendSamples(float *samples) {
  */
 bool Buffers_ToPMA(uint16_t dst) {
   uint32_t *Ptr = (uint32_t *)(dst * 2 + PMAAddr);
-  uint8_t   AvaliableSamples = (INBuffUsed > 31) ? 31 : INBuffUsed;
-  Ptr[0] = (uint16_t)(Sequence++ | (AvaliableSamples << 8));
+  uint8_t AvaliableSamples = (INBuffUsed > 31) ? 31 : INBuffUsed;
+  Ptr[0] = Sequence | (AvaliableSamples << 11);
+  Sequence = (Sequence + 1) & 0x07FF;
   for(uint8_t i = 0; i < AvaliableSamples; i++) {
     Ptr[i + 1] = INBuff[INReadPos];
     INReadPos = (INReadPos + 1) % INBUFFER_LEN;

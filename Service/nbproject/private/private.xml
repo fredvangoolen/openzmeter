@@ -9,6 +9,11 @@
     </data>
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/NetworkManager.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Main.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/NOTES</file>
+        </group>
         <group name="ServiceV2">
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/openZmeter.js</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureMono/CaptureMono.h</file>
@@ -16,12 +21,10 @@
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureMono/CaptureMono.cpp</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Events_ITIC.js</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureV2/CaptureV2.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Tools.cpp</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureV2/CaptureV2.h</file>
-        </group>
-        <group>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/NetworkManager.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Main.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/NOTES</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureVirtual/CaptureVirtual.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureInterface.h</file>
         </group>
     </open-files>
 </project-private>
