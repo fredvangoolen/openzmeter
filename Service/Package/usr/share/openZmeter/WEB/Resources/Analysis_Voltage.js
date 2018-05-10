@@ -1484,12 +1484,8 @@ function AjaxEvents(result) {
   if(result['Starttime'] !== null) {
     for(i = 0; i < result['Starttime'].length; i++) {
       var Time = new Date(result['Starttime'][i]);
-      EventsTable.row.add( [Time.toLocaleString() + '.' + Time.getMilliseconds(), 
-                            result['Type'][i], 
-                            Round2(result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq']), 
-                            Round2(result['Voltage'][i]), 
-                            Round2(result['Percentage'][i]), 
-                            '<button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button>'] ).draw();
+      var RowText = $('<tr>').append('<td data-search="' + result['Starttime'][i] + '">' + Time.toLocaleString() + '.' + Time.getMilliseconds() + '</td><td>' + result['Type'][i] + '</td><td>' + Round2(result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq']) + '</td><td>' + Round2(result['Voltage'][i]) + '</td><td>' + Round2(result['Percentage'][i]) + '</td><td><button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button></td>');
+      EventsTable.row.add(RowText).draw();
       LastEventStartTime = result['Starttime'][i];
       EventsDatasheet.push(result['Starttime'][i]);
     }
