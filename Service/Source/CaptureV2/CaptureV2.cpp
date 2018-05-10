@@ -18,7 +18,7 @@
 #include "../Tools.h"
 // Funciones ===========================================================================================================
 void   CaptureV2::ReadCallback(struct libusb_transfer *transfer) {
-  int16_t *Buff16 = (int16_t*)transfer->buffer;
+  uint16_t *Buff16 = (uint16_t*)transfer->buffer;
   uint     Len = transfer->actual_length / 4;
   CaptureV2 *This = (CaptureV2*)transfer->user_data;
   pthread_mutex_lock(&This->CaptureMutex);

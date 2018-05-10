@@ -75,7 +75,7 @@ OBJECTFILES= \
 
 
 # C Compiler Flags
-CFLAGS=-mcpu=cortex-m4 -mthumb -g -mfloat-abi=hard -fsingle-precision-constant -mfpu=fpv4-sp-d16 -O2
+CFLAGS=-mcpu=cortex-m4 -mthumb -g -mfloat-abi=hard -fsingle-precision-constant -mfpu=fpv4-sp-d16 -Os
 
 # CC Compiler Flags
 CCFLAGS=

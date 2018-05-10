@@ -152,7 +152,7 @@
             <pElem>CMSIS/Include</pElem>
             <pElem>.</pElem>
           </incDir>
-          <commandLine>-mcpu=cortex-m4 -mthumb -g -mfloat-abi=hard -fsingle-precision-constant -mfpu=fpv4-sp-d16 -O2</commandLine>
+          <commandLine>-mcpu=cortex-m4 -mthumb -g -mfloat-abi=hard -fsingle-precision-constant -mfpu=fpv4-sp-d16 -Os</commandLine>
           <preprocessorList>
             <Elem>ARM_MATH_CM4</Elem>
             <Elem>STM32F303xC</Elem>

@@ -4,8 +4,7 @@
  * ------------------------------------------------------------------------------------------------------------------ */
 #include "Main.h"
 //----------------------------------------------------------------------------------------------------------------------
-static uint16_t Sequence;             //Numero de sequencia (se usan 11 bits)
-static uint8_t  Channels;             //Total canales
+static uint8_t  Status;               //[7] Stream reset, [2-0]   Channel count
 static uint16_t INBuff[INBUFFER_LEN]; //Buffer de muestras
 static uint16_t INReadPos;
 static uint16_t INWritePos;
@@ -16,11 +15,10 @@ static uint16_t INBuffUsed;
  * Reinicia los contadores del buffer a sus valores por defecto
  */
 void Buffers_Reset() {
-  Sequence   = 0;
   INReadPos  = 0;
   INWritePos = 0;
   INBuffUsed = 0;
-  Channels   = Channels & 0x0F;
+  Status     = Status | 0x80;
 }
 
 /**
@@ -28,7 +26,7 @@ void Buffers_Reset() {
  * @param channels numero de canales usados
  */
 void Buffers_Init(uint8_t channels) {
-  Channels = channels & 0x07;
+  Status = channels & 0x07;
   Buffers_Reset();
 }
 
@@ -37,9 +35,16 @@ void Buffers_Init(uint8_t channels) {
  * @param samples muestras a añadir, segun la cantidad de canales
  */
 void Buffer_AppendSamples(float *samples) {
+  uint8_t Channels = (Status & 0x07);
   if(INBuffUsed >= (INBUFFER_LEN - Channels)) Buffers_Reset();
   for(uint8_t i = 0; i < Channels; i++) {
-    INBuff[INWritePos] = (uint16_t)samples[i];
+    float    Value = samples[i] * 8.0 + 0.5;
+    if(Value < 0) 
+      INBuff[INWritePos] = 0;
+    else if(Value > 65534)
+      INBuff[INWritePos] = 65534;
+    else
+       INBuff[INWritePos] = (uint16_t)Value;
     INWritePos = (INWritePos + 1) % INBUFFER_LEN;
   }
   INBuffUsed = INBuffUsed + Channels;
@@ -47,21 +52,29 @@ void Buffer_AppendSamples(float *samples) {
 
 /**
  * Genera un paquete de datos para ser enviado por USB. El tamaño del paquete
- * es de 64 bytes. El primer byte contiene un numero de sequencia que se incrementa
- * en cada paquete enviado. El bits [7-5] del segundo byte indican el primer canal
- * que contiene el paquete, los bits [4-0] indican el numero de muestras del paquete.
- * @param dst posicion de escritura del buffer (debe de tener al menos 64 bytes)
+ * es de 64 bytes donde entra un maximo de 32 muestras.
+ *   Si no hay datos para enviar se devuelve FALSE
+ *   Si el buffer esta en estado de reset la primera muestra es 0xFFFF, y se limpiara el estado de reset
+ *   Si una muestra no se usa (el buffer tiene menos de 32 muestras) se usara el valor 0xFFFF para indicarlo
+ * @param dst posicion de escritura del buffer (debe de tener 64 bytes)
  * @return TRUE si hay datos para enviar, FALSE en otro caso
  */
 bool Buffers_ToPMA(uint16_t dst) {
-  uint32_t *Ptr = (uint32_t *)(dst * 2 + PMAAddr);
-  uint8_t AvaliableSamples = (INBuffUsed > 31) ? 31 : INBuffUsed;
-  Ptr[0] = Sequence | (AvaliableSamples << 11);
-  Sequence = (Sequence + 1) & 0x07FF;
-  for(uint8_t i = 0; i < AvaliableSamples; i++) {
-    Ptr[i + 1] = INBuff[INReadPos];
-    INReadPos = (INReadPos + 1) % INBUFFER_LEN;
+  if(INBuffUsed == 0) return FALSE;
+  uint32_t *Ptr  = (uint32_t *)(dst * 2 + PMAAddr);
+  uint8_t   Pos = 0;
+  if(Status & 0x80) {
+    Ptr[Pos++] = 0xFFFF;
+    Status = Status & 0x7F;
   }
-  INBuffUsed = INBuffUsed - AvaliableSamples;
+  while(Pos < 32) {
+    if(INBuffUsed) {
+      Ptr[Pos++] = INBuff[INReadPos];
+      INReadPos = (INReadPos + 1) % INBUFFER_LEN;
+      INBuffUsed--;
+    } else {
+      Ptr[Pos++] = 0xFFFF;
+    }
+  }
   return TRUE;
 }

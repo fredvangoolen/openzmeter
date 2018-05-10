@@ -1,25 +1,45 @@
-[global]
-httpPort = 80
-httpPass = admin
-log      = /var/log/openZmeter.log
-pid      = /var/run/openZmeter.pid
-
-[database]
-host    = 127.0.0.1
-port    = 5432
-database= openzmeter
-user    = openzmeter
-pass    = openzmeter
-
-[electrical]
-nominal_frequency = 50
-nominal_voltage   = 230
-
-[device]
-type           = Mono
-name           = Real
-serial         = 3FFFFFFFFFFFFFFFFFFFFFFF
-voltage_gain   = 0.01160
-voltage_offset = 348.00
-current_gain   = -0.00078125
-current_offset = 32768
+{
+  "HTTPPort": 80,
+  "HTTPPass": "admin",
+  "LastLogin": 120000000,
+  "LogFile": "/var/log/openZmeter.log",
+  "PidFile": "/var/run/openZmeter.pid",
+  "PostgreServer": {
+    "host": "127.0.0.1",
+    "port": 5432,
+    "database": "openzmeter",
+    "user": "openzmeter",
+    "pass": "openzmeter",
+  },
+  "Electrical": {
+    "NominalFrequency": 50,
+    "NominalVoltage": 230,
+  },
+  "CaptureMono": {
+    "DisplayName": "Real",
+    "Serial": "3FFFFFFFFFFFFFFFFFFFFFFF",
+    "VoltageGain": 0.01160,
+    "VoltageOffset": 348.00,
+    "CurrentGain": -0.00078125,
+    "CurrentOffset": 32768,
+  },
+  "CaptureV2": {
+    "SampleRate": 30000,
+    "Oversample": 4,
+    "Serial": "3FFFFFFFFFFFFFFFFFFFFFFF",
+    "VoltageGain": [0.01160, 0, 0],
+    "VoltageOffset": [348.00, 0, 0],
+    "CurrentGain": [-0.00078125, 0, 0, 0],
+    "CurrentOffset": [32768, 0, 0, 0],
+    "Output": {
+      "DisplayName": "Output1",
+      "Mode": "3Phase+N"
+    },
+    "Output": {
+      "DisplayName": "Output1",
+      "Mode": "1Phase",
+      "VoltageChannel": "R",
+      "CurrentChannel": "T"
+    }
+  }
+}

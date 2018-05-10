@@ -6,23 +6,20 @@
 #include <libusb-1.0/libusb.h>
 #include "../CaptureInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define CAPTUREMONO_VID             0x0483       //Product ID
-#define CAPTUREMONO_PID             0x7270       //Device ID
-#define CAPTUREMONO_ENDPOINT_IN       0x81       //Endpoint de lectura de datos
-#define CAPTUREMONO_SAMPLEFREQ    15625.00       //Frequencia de muestreo
-#define CAPTUREMONO_BUFFERSIZE    156250         //Tamaño del buffer (10 segundos)
-#define CAPTUREMONO_TRANSFERS          32       //Numero de transferencias a encolar
-
-//#define MAX_FRAME                     3688         //Longitud maxima de muestras de un frame (236ms)
-//#define ADQUISITION_SAFESAMPLES  MAX_FRAME         //Numero de muestras "seguras" antes y despues del punto de lectura 
+#define CAPTURE_V2_VID             0x0483        //Product ID
+#define CAPTURE_V2_PID             0x7270        //Device ID
+#define CAPTURE_V2_ENDPOINT_IN       0x81        //Endpoint de lectura de datos
+#define CAPTURE_V2_SAMPLEFREQ     15625.00       //Frequencia de muestreo
+#define CAPTURE_V2_BUFFERSIZE     156250         //Tamaño del buffer (10 segundos)
+#define CAPTURE_V2_TRANSFERS            32       //Numero de transferencias a encolar
 #define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
 #define PROCESSING_CURRENTOFFSET      0.10        //Corriente minima para realizar calculos
 //----------------------------------------------------------------------------------------------------------------------
 class CaptureV2 : public CaptureInterface {
   private :
     typedef struct {
-      float Voltage;                                      //Valor de tension
-      float Current;                                      //Valor de corriente
+      float Voltage[3];                                   //Valor de tension
+      float Current[4];                                   //Valor de corriente
     } Sample_t;
     float                        VoltageGain;             //Ganancia de tension
     float                        CurrentGain;             //Ganancia de corriente

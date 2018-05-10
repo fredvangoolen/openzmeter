@@ -65,7 +65,7 @@ void ADC_InitADC(ADC_TypeDef* ADCx, uint8_t channel1, uint8_t channel2, uint16_t
   ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
   ADC_InitStructure.ADC_ExternalTrigConvEvent = ADC_ExternalTrigConvEvent_2;
   ADC_InitStructure.ADC_ExternalTrigEventEdge = ADC_ExternalTrigEventEdge_RisingEdge;
-  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Left;
+  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
   ADC_InitStructure.ADC_OverrunMode = ADC_OverrunMode_Disable;
   ADC_InitStructure.ADC_AutoInjMode = ADC_AutoInjec_Disable;
   ADC_InitStructure.ADC_NbrOfRegChannel = 2;
@@ -127,23 +127,6 @@ void ADC_Configure() {
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
-}
-
-/**
- * Filtra una muestra en de entrada segun los parametros configurados del filtro
- * @param in muestra de entrada a añadir al filtro
- * @param channel canal de la muestra
- * @return filtered value
- */
-float ADC_Filter(float in, uint8_t channel) {
-  if(ChannelMask & 0xC0) {
-    float Out = in * Filters.A0 + Filters.Z1[channel];
-    Filters.Z1[channel] = in * Filters.A1 + Filters.Z2[channel] - Filters.B1 * Out;
-    Filters.Z2[channel] = in * Filters.A2 - Filters.B2 * Out;
-    return Out;
-  } else {
-    return in;
-  }
 }
 
 /**
@@ -213,6 +196,23 @@ void ADC_StopCapture() {
 }
 
 /**
+ * Filtra una muestra en de entrada segun los parametros configurados del filtro
+ * @param in muestra de entrada a añadir al filtro
+ * @param channel canal de la muestra
+ * @return filtered value
+ */
+static inline float ADC_Filter(float in, uint8_t channel) {
+  if(ChannelMask & 0xC0) {
+    float Out = in * Filters.A0 + Filters.Z1[channel];
+    Filters.Z1[channel] = in * Filters.A1 + Filters.Z2[channel] - Filters.B1 * Out;
+    Filters.Z2[channel] = in * Filters.A2 - Filters.B2 * Out;
+    return Out;
+  } else {
+    return in;
+  }
+}
+
+/**
  * Control de la interrupcion del DMA del ADC, se llama cada vez que tenemos 16
  * muestras para procesar (medio buffer). Los pasos en cada interrupcion son
  * determinar el trozo de buffer a procesar, pasar por el filtro los canales
@@ -223,6 +223,40 @@ void DMA1_Channel1_IRQHandler(void) {
   float   Values[7];
   uint8_t Start = DMA_GetITStatus(DMA1_IT_TC1) ? 16 : 0;
   DMA_ClearITPendingBit(DMA1_IT_HT1 | DMA1_IT_TC1);
+  for(uint8_t Pos = Start; Pos < Start + 16; Pos++) {
+    float *Ptr = Values;
+    if(ChannelMask & 0x01) *Ptr++ = ADC1_Buffer[Pos].CurrentN;
+    if(ChannelMask & 0x02) *Ptr++ = ADC4_Buffer[Pos].CurrentT;
+    if(ChannelMask & 0x04) *Ptr++ = ADC4_Buffer[Pos].VoltageT;
+    if(ChannelMask & 0x08) *Ptr++ = ADC3_Buffer[Pos].CurrentS; 
+    if(ChannelMask & 0x10) *Ptr++ = ADC3_Buffer[Pos].VoltageS;
+    if(ChannelMask & 0x20) *Ptr++ = ADC2_Buffer[Pos].CurrentR;
+    if(ChannelMask & 0x40) *Ptr++ = ADC2_Buffer[Pos].VoltageR;
+    if(SampleCounter == 0x00) {
+      Buffer_AppendSamples(Values); 
+    } else {
+      float *Z1 = Filters.Z1;
+      float *Z2 = Filters.Z2;
+      Ptr = Values;
+      for(uint8_t Channel = 0; Channel < 7; Channel++) {
+        float Out = *Ptr * Filters.A0 + *Z1;
+        *Z1 = *Ptr * Filters.A1 + *Z2 - Filters.B1 * Out;
+        *Z2 = *Ptr * Filters.A2 - Filters.B2 * Out;
+        *Ptr = Out;
+        Ptr++;
+        Z1++;
+        Z2++;
+        if((SampleCounter == 0x43) || (SampleCounter == 0x8F) || (SampleCounter == 0xFF)) {
+          Buffer_AppendSamples(Values);
+          SampleCounter = SampleCounter & 0xC0;
+        } else {
+          SampleCounter++;
+        }  
+      }
+    }
+  }
+  
+/*
   for(uint8_t Count = 0; Count < 16; Count++) {
     float *Ptr = Values;
     if(ChannelMask & 0x40) *Ptr++ = ADC_Filter(ADC2_Buffer[Start + Count].VoltageR, 6);
@@ -232,11 +266,6 @@ void DMA1_Channel1_IRQHandler(void) {
     if(ChannelMask & 0x04) *Ptr++ = ADC_Filter(ADC4_Buffer[Start + Count].VoltageT, 2);
     if(ChannelMask & 0x02) *Ptr++ = ADC_Filter(ADC4_Buffer[Start + Count].CurrentT, 1);
     if(ChannelMask & 0x01) *Ptr++ = ADC_Filter(ADC1_Buffer[Start + Count].CurrentN, 0);
-    if((SampleCounter == 0x00) || (SampleCounter == 0x43) || (SampleCounter == 0x8F) || (SampleCounter == 0xFF)) {
-      Buffer_AppendSamples(Values);
-      SampleCounter = SampleCounter & 0xC0;
-    } else {
-      SampleCounter++;
-    }
   }
+*/
 }
