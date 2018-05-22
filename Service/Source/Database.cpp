@@ -8,29 +8,62 @@
 #include <math.h>
 #include "Database.h"
 #include "Tools.h"
+//----------------------------------------------------------------------------------------------------------------------
+bool Database::Initialized   = false;
+char *Database::DatabaseName = (char*)"openzmeter";
+char *Database::Host         = (char*)"127.0.0.1";;
+int   Database::Port         = 5432;
+char *Database::User         = (char*)"openzmeter";;
+char *Database::Password     = (char*)"";;
+//----------------------------------------------------------------------------------------------------------------------
 Database::Database() {
   Params    = NULL;
   Result    = NULL;
   ParamsLen = 0;
+}
+Database *Database::GetInstance() {
+  Database *DB = new Database();
   char ConnectionString[512];
-  sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", Tools::DB.Host, Tools::DB.Port, Tools::DB.User, Tools::DB.Password, Tools::DB.Database);
-  DBConn = PQconnectdb(ConnectionString);
-  if(PQstatus(DBConn) == CONNECTION_BAD) {
+  sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", Host, Port, User, Password, DatabaseName);
+  DB->DBConn = PQconnectdb(ConnectionString);
+  if(PQstatus(DB->DBConn) == CONNECTION_BAD) {
     char *Save;
-    Tools::LogMsg("ERROR", "Cant open database (%s)\n", strtok_r(PQerrorMessage(DBConn), "\r\n", &Save));
-    return;
+    if(Initialized == false) Tools::LogMsg("ERROR", "Cant open database (%s)\n", strtok_r(PQerrorMessage(DB->DBConn), "\r\n", &Save));
+    delete DB;
+    return NULL;
   }
-  ExecSentence("SET synchronous_commit TO OFF");
+  DB->ExecSentence("SET synchronous_commit TO OFF");
+  return DB;
 }
 Database::~Database() {
   if(Result != NULL) PQclear(Result);
   PQfinish(DBConn);
 }
-bool Database::PrepareDB() {
-  Database DB;
-  if(PQstatus(DB.DBConn) == CONNECTION_BAD) return false;
+bool Database::PrepareDB(json_object *config) {
+  json_object_object_foreach(config, JSON_Key, JSON_Val) {
+    enum json_type JSON_Type = json_object_get_type(JSON_Val);
+    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "HostName") == 0)) {
+      Host = (char*)json_object_get_string(JSON_Val);
+    } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) {
+      Port = json_object_get_int(JSON_Val);
+    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Database") == 0)) {
+      DatabaseName = (char*)json_object_get_string(JSON_Val);
+    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "UserName") == 0)) {
+      User = (char*)json_object_get_string(JSON_Val);
+    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) {
+      Password = (char*)json_object_get_string(JSON_Val);
+    }
+  }
+  Database *DB = GetInstance();
+  if(DB == NULL) return false;
+  
+  
+  
+  
+  
   //Empiezo a meter tablas si no estan y procedimientos
-
+  Initialized = true;
+  delete DB;
   return true;
 }
 bool Database::ExecSentence(const char* sql) {

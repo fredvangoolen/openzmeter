@@ -17,7 +17,7 @@
 #define EVENT_HYSTERESIS              06.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
 #define EVENT_ENVELOPETIME             0.1        //Tiempo en segundos que se guarda antes y despues de un evento
 //---------------------------------------------------------------------------------------------------------------------
-class CaptureInterface : private Database {
+class CaptureInterface {
   public :
     enum Aggreg_Type { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
     enum Event_Type  { EVT_NONE, EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC, EVT_GLITCH };
@@ -105,6 +105,7 @@ class CaptureInterface : private Database {
   private :
     static pthread_mutex_t pFFTPlannerMutex; //Bloquea el acceso simultaneo al plinificador de FFTs
   private :
+    Database       *pDatabase;             //Conexion a la base de datos
     uint32_t        pWaitingThreads;       //Hilos esperando datos
     pthread_mutex_t pWaitingThreadsMutex;  //Mutex para registrar cambios en WaitingThreads
     pthread_cond_t  pWaitingThreadsWait;   //Variable de condicion para bloquear el analizer

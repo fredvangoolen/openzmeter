@@ -4,6 +4,7 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #include "Tools.h"
 #include "NetworkManager.h"
+#include "HTTPServer.h"
 #include <string.h>
 #include <time.h>
 #include <errno.h>
@@ -23,8 +24,6 @@ bool                Tools::Debug      = false;
 int                 Tools::LogFile    = -1;
 json_object        *Tools::Config     = NULL;
 char               *Tools::PidFile    = NULL;
-Tools::Global_t     Tools::Global;
-Tools::DB_t         Tools::DB;
 Tools::Electrical_t Tools::Electrical;
 Tools::Devices_t    Tools::Devices;
 //----------------------------------------------------------------------------------------------------------------------
@@ -75,7 +74,7 @@ bool Tools::CreateLogFile() {
   return true;
 }
 bool Tools::CreatePidFile(char *name) {
-  PidFile = strdup(name);
+  PidFile = name;
   char PID_Number[64];
   int Len = sprintf(PID_Number, "%d", getpid());
   if(PidFile) remove(PidFile);
@@ -153,8 +152,10 @@ bool Tools::ReadConfig(char *file) {
       } else {
         if(CreatePidFile((char*)json_object_get_string(JSON_Val)) == false) Error = true;
       }
-    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "PostgreServer") == 0)) {
-      
+    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Database") == 0)) {
+      if(Database::PrepareDB(JSON_Val) == false) Error = true;
+    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "HTTPServer") == 0)) {
+      if(HTTPServer::Start(JSON_Val) == false) Error = true;
     }
   }
   

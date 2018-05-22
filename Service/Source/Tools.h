@@ -11,24 +11,18 @@
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   private :
-    typedef struct {
-      char    *Name;
-      uint32_t Size;
-      uint8_t *Ptr;
-    } File_t;
-  private :
     static bool            Daemonized;
     static int             LogFile;
     static json_object    *Config;
     static char           *PidFile;
   public :
-    typedef struct {
-      uint16_t HTTPPort;
-      char    *HTTPPath;
-      char    *HTTPPass;
-//      char    *Log;
-//      char    *Pid;
-    } Global_t;
+//    typedef struct {
+//      uint16_t HTTPPort;
+//      char    *HTTPPath;
+//      char    *HTTPPass;
+////      char    *Log;
+////      char    *Pid;
+//    } Global_t;
     typedef struct {
       char             *Type;
       char             *Serial;
@@ -47,16 +41,7 @@ class Tools {
       int       NominalFrequency;
       float     NominalVoltage;
     } Electrical_t;
-    typedef struct {
-      char *Database;
-      char *Host;
-      int   Port;
-      char *User;
-      char *Password;
-    } DB_t;
-    static Global_t      Global;
     static Electrical_t  Electrical;
-    static DB_t          DB;
     static Devices_t     Devices;
     static bool          Debug;
   private :

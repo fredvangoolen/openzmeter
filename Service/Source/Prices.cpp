@@ -13,7 +13,7 @@
 #include "Tools.h"
 #include "Prices.h"
 /* Genera consultas de forma periodica a la pagina de REE para descargar las tarifas y calcular el precio del consumo */
-Prices::Prices(uint32_t interval) : Database() {
+Prices::Prices(uint32_t interval) {
   curl_global_init(CURL_GLOBAL_DEFAULT);
   pTerminate = false;
   pLastCheck = 0;

@@ -2,16 +2,17 @@
   "LogFile": "/var/log/openZmeter.log",
   "PidFile": "/var/run/openZmeter.pid",
   "HTTPServer": {  
-    "Port": 80,
+    "Port": 8080,
     "Password": "admin",
+    "FilePath": "/usr/share/openZmeter/WEB/",
     "LastLogin": 120000000
   },
-  "PostgreServer": {
-    "host": "127.0.0.1",
-    "port": 5432,
-    "database": "openzmeter",
-    "user": "openzmeter",
-    "pass": "openzmeter",
+  "Database": {
+    "Hostname": "127.0.0.1",
+    "Port": 5432,
+    "Database": "openzmeter",
+    "UserName": "openzmeter",
+    "Password": "openzmeter",
   },
   "Electrical": {
     "NominalFrequency": 50,

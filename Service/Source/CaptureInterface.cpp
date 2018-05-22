@@ -148,45 +148,45 @@ void CaptureInterface::NormalizeParams(Params_t *params) {
 }
 void CaptureInterface::SaveParams(Params_t *params) {
   if(params->Type == AGGREG_3S)  
-    PrepareSentence("EXECUTE SAVE_3S(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    pDatabase->PrepareSentence("EXECUTE SAVE_3S(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1M)  
-    PrepareSentence("EXECUTE SAVE_1M(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    pDatabase->PrepareSentence("EXECUTE SAVE_1M(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_10M)  
-    PrepareSentence("EXECUTE SAVE_10M(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    pDatabase->PrepareSentence("EXECUTE SAVE_10M(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1H)  
-    PrepareSentence("EXECUTE SAVE_1H(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-  BindSingleUInt32(pNodeIndex);                                                    //node
-  BindSingleUInt64(params->Timestamp);                                             //sampletime
-  BindArrayFloat(params->RMS_V, (pTriphase == true) ? 3 : 1);                      //rms_v 
-  BindArrayFloat(params->RMS_I, (pTriphase == true) ? 4 : 1);                      //rms_i
-  BindArrayFloat(params->Active_Power, (pTriphase == true) ? 3 : 1);               //active_power
-  BindArrayFloat(params->Active_Energy, (pTriphase == true) ? 3 : 1);              //active_energy
-  BindArrayFloat(params->Fundamental_Reactive_Power, (pTriphase == true) ? 3 : 1); //fundamental_reactive_power
-  BindArrayFloat(params->Fundamental_Reactive_Energy, (pTriphase == true) ? 3 : 1);//fundamental_reactive_energy
-  BindSingleFloat(params->Frequency);                                              //frequency
-  BindSingleBool(params->Flag);                                                    //flaged
+    pDatabase->PrepareSentence("EXECUTE SAVE_1H(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+  pDatabase->BindSingleUInt32(pNodeIndex);                                                    //node
+  pDatabase->BindSingleUInt64(params->Timestamp);                                             //sampletime
+  pDatabase->BindArrayFloat(params->RMS_V, (pTriphase == true) ? 3 : 1);                      //rms_v 
+  pDatabase->BindArrayFloat(params->RMS_I, (pTriphase == true) ? 4 : 1);                      //rms_i
+  pDatabase->BindArrayFloat(params->Active_Power, (pTriphase == true) ? 3 : 1);               //active_power
+  pDatabase->BindArrayFloat(params->Active_Energy, (pTriphase == true) ? 3 : 1);              //active_energy
+  pDatabase->BindArrayFloat(params->Fundamental_Reactive_Power, (pTriphase == true) ? 3 : 1); //fundamental_reactive_power
+  pDatabase->BindArrayFloat(params->Fundamental_Reactive_Energy, (pTriphase == true) ? 3 : 1);//fundamental_reactive_energy
+  pDatabase->BindSingleFloat(params->Frequency);                                              //frequency
+  pDatabase->BindSingleBool(params->Flag);                                                    //flaged
   if(params->Type == AGGREG_1H) {
-    BindArrayUInt16(pStats.Voltage, sizeof(VoltageRanges) / sizeof(float) - 1);     //estadisticas de tension
-    BindArrayUInt16(pStats.Frequency, sizeof(FrequencyRanges) / sizeof(float) - 1); //estadisticas de frequencia
-    BindArrayUInt16(pStats.THD, sizeof(THDRanges) / sizeof(float) - 1);             //estadisticas de distorsion harmonica
-    BindArrayUInt16(pStats.Harmonics, 2);                                           //estadisticas de harmonicos en rango
+    pDatabase->BindArrayUInt16(pStats.Voltage, sizeof(VoltageRanges) / sizeof(float) - 1);     //estadisticas de tension
+    pDatabase->BindArrayUInt16(pStats.Frequency, sizeof(FrequencyRanges) / sizeof(float) - 1); //estadisticas de frequencia
+    pDatabase->BindArrayUInt16(pStats.THD, sizeof(THDRanges) / sizeof(float) - 1);             //estadisticas de distorsion harmonica
+    pDatabase->BindArrayUInt16(pStats.Harmonics, 2);                                           //estadisticas de harmonicos en rango
   }
-  ExecSentence();
+  pDatabase->ExecSentence();
   if(params->Type == AGGREG_1M) {
-    PrepareSentence("EXECUTE SAVE_1M_EXT(?, ?, ?, ?, ?, ?, ?, ?)");
-    BindSingleUInt32(pNodeIndex);                                                    //node
-    BindSingleUInt64(params->Timestamp);                                             //sampletime
-    BindArrayFloat(params->Power_Factor, (pTriphase == true) ? 3 : 1);               //power_factor
-    BindArrayFloat(params->THD_V, (pTriphase == true) ? 3 : 1);                      //thd_v
-    BindArrayFloat(params->THD_I, (pTriphase == true) ? 4 : 1);                      //thd_i
-    BindArrayFloat(params->Phi, (pTriphase == true) ? 3 : 1);                        //phi
-    BindArrayArrayFloat(params->VoltageHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_v
-    BindArrayArrayFloat(params->CurrentHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_i
-    ExecSentence();
-    PrepareSentence("EXECUTE DELETE_1M_EXT(?, ?)");
-    BindSingleUInt32(pNodeIndex);                                                    //node
-    BindSingleUInt64(params->Timestamp - 86400000);                                  //sampletime
-    ExecSentence();
+    pDatabase->PrepareSentence("EXECUTE SAVE_1M_EXT(?, ?, ?, ?, ?, ?, ?, ?)");
+    pDatabase->BindSingleUInt32(pNodeIndex);                                                    //node
+    pDatabase->BindSingleUInt64(params->Timestamp);                                             //sampletime
+    pDatabase->BindArrayFloat(params->Power_Factor, (pTriphase == true) ? 3 : 1);               //power_factor
+    pDatabase->BindArrayFloat(params->THD_V, (pTriphase == true) ? 3 : 1);                      //thd_v
+    pDatabase->BindArrayFloat(params->THD_I, (pTriphase == true) ? 4 : 1);                      //thd_i
+    pDatabase->BindArrayFloat(params->Phi, (pTriphase == true) ? 3 : 1);                        //phi
+    pDatabase->BindArrayArrayFloat(params->VoltageHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_v
+    pDatabase->BindArrayArrayFloat(params->CurrentHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_i
+    pDatabase->ExecSentence();
+    pDatabase->PrepareSentence("EXECUTE DELETE_1M_EXT(?, ?)");
+    pDatabase->BindSingleUInt32(pNodeIndex);                                                    //node
+    pDatabase->BindSingleUInt64(params->Timestamp - 86400000);                                  //sampletime
+    pDatabase->ExecSentence();
   }
   ResetParams(params);
 }
@@ -306,15 +306,15 @@ void CaptureInterface::SaveEvent(uint8_t cycle, bool end) {
     if(pRunningEvent.Type == EVT_SWELL) Type = (char*)"SWELL";
     if(pRunningEvent.Type == EVT_INTERRUPTION) Type = (char*)"INTERRUPTION";
     if(pRunningEvent.Type == EVT_GLITCH) Type = (char*)"GLITCH";
-    PrepareSentence("EXECUTE SAVE_EVENT(?, ?, ?, ?, ?, ?, ?)");
-    BindSingleUInt32(pNodeIndex);                                                                       //node
-    BindSingleUInt64(pRunningEvent.Start);                                                              //starttime
-    BindSingleFloat(pRunningEvent.Duration);                                                            //duration
-    BindSingleString(Type);                                                                             //type
-    BindSingleFloat(pRunningEvent.Voltage);                                                             //voltage
-    BindSingleFloat(pRunningEvent.Change);                                                              //change
-    BindArrayArrayFloat(Samples, SamplesLen, (pTriphase == true) ? 3 : 1);                              //samples
-    ExecSentence();
+    pDatabase->PrepareSentence("EXECUTE SAVE_EVENT(?, ?, ?, ?, ?, ?, ?)");
+    pDatabase->BindSingleUInt32(pNodeIndex);                                                                       //node
+    pDatabase->BindSingleUInt64(pRunningEvent.Start);                                                              //starttime
+    pDatabase->BindSingleFloat(pRunningEvent.Duration);                                                            //duration
+    pDatabase->BindSingleString(Type);                                                                             //type
+    pDatabase->BindSingleFloat(pRunningEvent.Voltage);                                                             //voltage
+    pDatabase->BindSingleFloat(pRunningEvent.Change);                                                              //change
+    pDatabase->BindArrayArrayFloat(Samples, SamplesLen, (pTriphase == true) ? 3 : 1);                              //samples
+    pDatabase->ExecSentence();
   }
   if(end == true) {
     pRunningEvent.Type = EVT_NONE;
@@ -423,7 +423,7 @@ void CaptureInterface::AllocParams(Params_t *params, Aggreg_Type type) {
   params->Type = type;
   ResetParams(params);
 }
-CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t id) : Database() {
+CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t id) {
   pNodeIndex           = id;
   pPrevTimestamp       = 0;
   pSampleRate          = samplerate;
@@ -469,13 +469,13 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t 
   pPrevStationary = false;  
   pLastCyclesPos    = 0;
   pWork.SequenceID  = 0;
-  ExecSentence("PREPARE SAVE_3S       AS INSERT INTO aggreg_3s (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");    
-  ExecSentence("PREPARE SAVE_1M       AS INSERT INTO aggreg_1m (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
-  ExecSentence("PREPARE SAVE_1M_EXT   AS INSERT INTO aggreg_ext_1m (node_ext, sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8)");  
-  ExecSentence("PREPARE SAVE_10M      AS INSERT INTO aggreg_10m(node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
-  ExecSentence("PREPARE SAVE_1H       AS INSERT INTO aggreg_1h (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)");
-  ExecSentence("PREPARE DELETE_1M_EXT AS DELETE FROM aggreg_ext_1m WHERE node_ext = $1 AND sampletime_ext < $2");
-  ExecSentence("PREPARE SAVE_EVENT    AS INSERT INTO events (node, starttime, duration, type, voltage, percent, samples) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (starttime, node) DO UPDATE SET duration = $3, type = $4, voltage = $5, percent = $6, samples = events.samples || $7");
+  pDatabase->ExecSentence("PREPARE SAVE_3S       AS INSERT INTO aggreg_3s (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");    
+  pDatabase->ExecSentence("PREPARE SAVE_1M       AS INSERT INTO aggreg_1m (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
+  pDatabase->ExecSentence("PREPARE SAVE_1M_EXT   AS INSERT INTO aggreg_ext_1m (node_ext, sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8)");  
+  pDatabase->ExecSentence("PREPARE SAVE_10M      AS INSERT INTO aggreg_10m(node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
+  pDatabase->ExecSentence("PREPARE SAVE_1H       AS INSERT INTO aggreg_1h (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)");
+  pDatabase->ExecSentence("PREPARE DELETE_1M_EXT AS DELETE FROM aggreg_ext_1m WHERE node_ext = $1 AND sampletime_ext < $2");
+  pDatabase->ExecSentence("PREPARE SAVE_EVENT    AS INSERT INTO events (node, starttime, duration, type, voltage, percent, samples) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (starttime, node) DO UPDATE SET duration = $3, type = $4, voltage = $5, percent = $6, samples = events.samples || $7");
 }
 void CaptureInterface::ResetParams(Params_t *params) {
   params->Timestamp = 0;

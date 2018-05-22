@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------------------------------ */
 #pragma once
 #include "Database.h"
-class Prices : private Database {
+class Prices {
   private :
     bool      pTerminate;
     pthread_t pThread;

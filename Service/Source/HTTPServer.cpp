@@ -18,19 +18,33 @@
 #include "CaptureInterface.h"
 #include "NetworkManager.h"
 //----------------------------------------------------------------------------------------------------------------------
-MHD_Daemon            *HTTPServer::Daemon = NULL;
-HTTPServer::Session_t *HTTPServer::Sessions = NULL;
+MHD_Daemon            *HTTPServer::Daemon       = NULL;
+HTTPServer::Session_t *HTTPServer::Sessions     = NULL;
 pthread_mutex_t        HTTPServer::SessionMutex = PTHREAD_MUTEX_INITIALIZER;
+char                  *HTTPServer::FilePath     = (char*)"/usr/share/openZmeter/WEB/";
+char                  *HTTPServer::Password     = (char*)"admin";
+uint64_t               HTTPServer::LastLogin    = 0;
 //----------------------------------------------------------------------------------------------------------------------
-bool HTTPServer::Start() {
-  Daemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, Tools::Global.HTTPPort, NULL, NULL, 
+bool HTTPServer::Start(json_object *config) {
+  uint16_t Port = 8080;
+  json_object_object_foreach(config, JSON_Key, JSON_Val) {
+    enum json_type JSON_Type = json_object_get_type(JSON_Val);
+    if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastLogin") == 0)) {
+      LastLogin = json_object_get_int64(JSON_Val);
+    } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) {
+      Port = json_object_get_int(JSON_Val);
+    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "FilePath") == 0)) {
+      FilePath = (char*)json_object_get_string(JSON_Val);
+    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) {
+      Password = (char*)json_object_get_string(JSON_Val);
+    }
+  }
+  Daemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, Port, NULL, NULL, 
                             &HandleClient, NULL,
                             MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int) 15,
                             MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
                             MHD_OPTION_END);
-  if(Daemon == NULL) {
-    Tools::LogMsg("ERROR", "Failed to start WEB server\n");
-  }
+  if(Daemon == NULL) Tools::LogMsg("ERROR", "Failed to start WEB server\n");
   return (Daemon != NULL);
 }
 HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection* connection) {
@@ -129,8 +143,8 @@ int  HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url
 int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, const char *aditionalheadertype, const char *aditionalheadervalue) {
   int File = -1;
   struct stat FileStat;
-  char *Path = (char*)malloc(sizeof(char) * (strlen(path) + strlen(Tools::Global.HTTPPath) + 1));
-  sprintf(Path, "%s%s", Tools::Global.HTTPPath, path);
+  char *Path = (char*)malloc(sizeof(char) * (strlen(path) + strlen(FilePath) + 1));
+  sprintf(Path, "%s%s", FilePath, path);
   if((stat(Path, &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) File = open(Path, O_RDONLY);
   if(File == -1) return MHD_NO;
   struct MHD_Response *response = MHD_create_response_from_fd(FileStat.st_size, File);
@@ -260,7 +274,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     }
     if((Password == NULL) || (Error == true)) goto InvalidParams;
     Request->JSONWriter = json_object_new_object();
-    if(strcmp(Password, Tools::Global.HTTPPass) != 0) {
+    if(strcmp(Password, Password) != 0) {
       json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(false));
     } else {
       Request->Session->Logged = true;
@@ -360,7 +374,8 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "aggreg_%s", Aggreg);
     }
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, " WHERE sampletime > %" PRIu64 " AND sampletime >= %" PRIu64 " AND sampletime <= %" PRIu64 " AND node = %u) AS Result", LastSample, From, To, Node);    
-    Request->DB = new Database();
+    Request->DB = Database::GetInstance();
+    if(Request->DB == NULL) return MHD_NO;
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
   } else if(strcmp(url, "/getSeriesAggreg") == 0) {
@@ -420,7 +435,8 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     }
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\") AS Result", To); 
-    Request->DB = new Database();
+    Request->DB = Database::GetInstance();
+    if(Request->DB == NULL) return MHD_NO;
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
   } else if(strcmp(url, "/getSeriesNow") == 0) {
@@ -520,7 +536,8 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(voltage ORDER BY starttime ASC) AS \"Voltage\", ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(percent ORDER BY starttime ASC) AS \"Percentage\" ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE starttime > %" PRIu64 " AND starttime >= %" PRIu64 " AND starttime <= %" PRIu64 " AND node = %u) AS Result", LastEvent, From, To, Node);
-    Request->DB = new Database();
+    Request->DB = Database::GetInstance();
+    if(Request->DB == NULL) return MHD_NO;
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
   } else if(strcmp(url, "/getSamplesRange") == 0) {
@@ -542,7 +559,8 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "max(sampletime) AS \"To\", ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "min(sampletime) AS \"From\" ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM aggreg_%s WHERE node = %u) AS Result", Aggreg, Node);
-    Request->DB = new Database();
+    Request->DB = Database::GetInstance();
+    if(Request->DB == NULL) return MHD_NO;
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
   } else if(strcmp(url, "/getEventSamples") == 0) {
@@ -565,7 +583,8 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "duration AS \"Duration\", ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "samples AS \"Samples\" ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE node = %u AND Starttime = %" PRIu64 ") AS Result", Node, Starttime);
-    Request->DB = new Database();
+    Request->DB = Database::GetInstance();
+    if(Request->DB == NULL) return MHD_NO;
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
   }
