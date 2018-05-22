@@ -4,7 +4,8 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <libusb-1.0/libusb.h>
-#include "../CaptureInterface.h"
+#include "../Analyzer.h"
+#include "../Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define CAPTURE_V2_VID              0x0483        //Product ID
 #define CAPTURE_V2_PID              0x7270        //Device ID
@@ -15,12 +16,13 @@
 #define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
 #define PROCESSING_CURRENTOFFSET      0.10        //Corriente minima para realizar calculos
 //----------------------------------------------------------------------------------------------------------------------
-class CaptureV2 : public CaptureInterface {
+class CaptureV2 {
   private :
 //    typedef struct {
 //      float Voltage[3];                                   //Valor de tension
 //      float Current[4];                                   //Valor de corriente
 //    } Sample_t;
+    Analyzer                    *Analyzers[1];     //Interfaces de captura
     uint8_t                      CurrentChannel;          //Canal actual de lectura
     uint8_t                      ChannelsCount;           //Numero de canales de lectura
     float                        Samplerate;              //Frecuencia de muestreo
@@ -39,7 +41,7 @@ class CaptureV2 : public CaptureInterface {
     pthread_cond_t               ReadWait;                //Variable de condicion para esperar si buffer esta vacio
     pthread_t                    CaptureThread;           //Descriptor del hilo de captura
     pthread_t                    AnalyzeThread;           //Descriptor del hilo de analisis
-    Filter_t                     Filters[5];              //Filtros paso banda para deteccion de paso por cero
+    Analyzer::Filter_t                     Filters[5];              //Filtros paso banda para deteccion de paso por cero
     struct libusb_device_handle *DeviceHandle;            //Dispositivo de captura
     struct libusb_device        *NewDevice;               //Dispositivo que se conecta
   private : 
@@ -48,10 +50,11 @@ class CaptureV2 : public CaptureInterface {
     static void   ReadCallback(struct libusb_transfer *transfer);
     static int    PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
-    float    CalculateFrequency(Work_t* work);
+    float    CalculateFrequency(Analyzer::Work_t* work);
     uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len);
+    CaptureV2();
   public :
-    CaptureV2(const char *serial, float *voltageGain, int *voltageOffset, float *currentGain, int *currentOffset, uint16_t id);
+    bool CreateInstance(json_object *config);  
     ~CaptureV2();
 };
 //----------------------------------------------------------------------------------------------------------------------

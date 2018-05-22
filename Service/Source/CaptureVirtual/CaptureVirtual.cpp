@@ -137,7 +137,7 @@ void  *CaptureVirtual::Analize_Thread(void* args) {
   }
   return NULL;
 }
-CaptureVirtual::CaptureVirtual(bool triphase, float nominalcurrent, uint16_t id) : CaptureInterface(CAPTUREVIRTUAL_SAMPLEFREQ, triphase, id) {
+CaptureVirtual::CaptureVirtual(bool triphase, float nominalcurrent, uint16_t id) : Analyzer(CAPTUREVIRTUAL_SAMPLEFREQ, triphase, id) {
   Tools::LogMsg("INFO", "Starting CaptureVirtual adquisition thread...\n");
   Buffer           = NULL;
   ReadPos          = 0;

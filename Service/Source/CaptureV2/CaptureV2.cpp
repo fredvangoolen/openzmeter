@@ -22,11 +22,11 @@ void   CaptureV2::ReadCallback(struct libusb_transfer *transfer) {
   uint     Len = transfer->actual_length / 4;
   CaptureV2 *This = (CaptureV2*)transfer->user_data;
   pthread_mutex_lock(&This->CaptureMutex);
-  while(This->Used > (CAPTURE_V2_BUFFERSIZE - Len - This->SampleRate() * EVENT_ENVELOPETIME)) {
-    if(This->pTerminate) return;
-    Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
-    pthread_cond_wait(&This->WriteWait, &This->CaptureMutex);
-  }
+//  while(This->Used > (CAPTURE_V2_BUFFERSIZE - Len - This->SampleRate() * EVENT_ENVELOPETIME)) {
+//    if(This->pTerminate) return;
+//    Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
+//    pthread_cond_wait(&This->WriteWait, &This->CaptureMutex);
+//  }
   for(uint i = 0; i < Len; i++) {
     int16_t Voltage = Buff16[i * 2 + 0];
     uint16_t Current = Buff16[i * 2 + 1];
@@ -37,7 +37,7 @@ void   CaptureV2::ReadCallback(struct libusb_transfer *transfer) {
   This->Used += Len;
   pthread_cond_signal(&This->ReadWait);
   pthread_mutex_unlock(&This->CaptureMutex);
-  if(This->pTerminate == false) libusb_submit_transfer(transfer);
+  if(Tools::Terminate == false) libusb_submit_transfer(transfer);
 }
 int CaptureV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
   CaptureV2 *This = (CaptureV2*)user_data;
@@ -70,7 +70,7 @@ void  *CaptureV2::Capture_Thread(void *args) {
   struct libusb_transfer *TransferIN[CAPTURE_V2_TRANSFERS];
   for(int i = 0; i < CAPTURE_V2_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
   uint32_t Update = 0;
-  while(!This->pTerminate) {
+  while(!Tools::Terminate) {
     if((Update % 10) == 0) {
       char ThreadName[16];
       sprintf(ThreadName, "CapV2_%03d", This->Used * 100 / CAPTURE_V2_BUFFERSIZE);
@@ -164,55 +164,74 @@ void  *CaptureV2::Analize_Thread(void* args) {
   }
   pthread_setname_np(This->AnalyzeThread, "AnalysisMono");
   int Discard = 100;
-  while(!This->pTerminate) {
+  while(!Tools::Terminate) {
     pthread_mutex_lock(&This->AnalyzeMutex);
-    while(This->Used < (This->GetMaxSamples() + This->SampleRate() * EVENT_ENVELOPETIME)) {
-      if(This->pTerminate) return NULL;
-      pthread_cond_wait(&This->ReadWait, &This->AnalyzeMutex);
-    }
+//    while(This->Used < (This->GetMaxSamples() + This->SampleRate() * EVENT_ENVELOPETIME)) {
+//      if(This->pTerminate) return NULL;
+//      pthread_cond_wait(&This->ReadWait, &This->AnalyzeMutex);
+//    }
     uint64_t Start = Tools::GetTime();
 //    This->pWork.Params.Timestamp = Start - ((This->Used * 1000) / CAPTUREMONO_SAMPLEFREQ);
     float LastSample = +20; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
-    for(This->pWork.Samples = 0; This->pWork.Samples < This->GetMaxSamples(); This->pWork.Samples++) {
+//    for(This->pWork.Samples = 0; This->pWork.Samples < This->GetMaxSamples(); This->pWork.Samples++) {
 //      This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
 //      This->pWork.CurrentSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Current;
-      float Out = This->pWork.VoltageSamples[0][This->pWork.Samples];
-      for(int i = 0; i < 5; i++) Out = ApplyFilter(Out, &This->Filters[i]);
-      if(((LastSample >= 0.0) && (Out < 0.0)) || ((LastSample <= 0.0) && (Out > 0.0))) {
-        This->pWork.Cycles[This->pWork.Cycles_Len].End = This->pWork.Samples;
-        This->pWork.Cycles_Len++;
-        if(This->pWork.Cycles_Len == 20) break;
-        This->pWork.Cycles[This->pWork.Cycles_Len].Start = This->pWork.Samples;
-      }
-      LastSample = Out;
+//      float Out = This->pWork.VoltageSamples[0][This->pWork.Samples];
+//      for(int i = 0; i < 5; i++) Out = ApplyFilter(Out, &This->Filters[i]);
+//      if(((LastSample >= 0.0) && (Out < 0.0)) || ((LastSample <= 0.0) && (Out > 0.0))) {
+//        This->pWork.Cycles[This->pWork.Cycles_Len].End = This->pWork.Samples;
+//        This->pWork.Cycles_Len++;
+//        if(This->pWork.Cycles_Len == 20) break;
+//        This->pWork.Cycles[This->pWork.Cycles_Len].Start = This->pWork.Samples;
+//      }
+//      LastSample = Out;
 //      This->ReadPos = (This->ReadPos + 1) % CAPTUREMONO_BUFFERSIZE;
-    }
-    This->Used -= This->pWork.Samples;
+//    }
+//    This->Used -= This->pWork.Samples;
     pthread_cond_signal(&This->WriteWait);
     pthread_mutex_unlock(&This->AnalyzeMutex);
     if(Discard > 0) {
       Discard--;
-      This->ResetWork();
-      This->ResetParams(&This->pWork.Params);
+//      This->ResetWork();
+//      This->ResetParams(&This->pWork.Params);
     } else {
-      This->Analyze(0.1);
+//      This->Analyze(0.1);
       uint64_t AnalyzeEnd = Tools::GetTime();
-      This->SaveWorkParams();
+//      This->SaveWorkParams();
       uint64_t SaveEnd = Tools::GetTime();
-      Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %umS (%" PRIu64 "mS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
+//      Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %umS (%" PRIu64 "mS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
     }
   }
   return NULL;
 }
-CaptureV2::CaptureV2(const char *serial, float *voltageGain, int *voltageOffset, float *currentGain, int *currentOffset, uint16_t id) : CaptureInterface(CAPTURE_V2_SAMPLEFREQ, false, id) {
-  Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
+bool CaptureV2::CreateInstance(json_object* config) {
+  //Leo configuracion, por si es del tipo que quiero
+  //Si lo es inicio creo una instancia y añado los dispositivos necesarios
+//    json_object_object_foreach(config, JSON_Key, JSON_Val) {
+//    enum json_type JSON_Type = json_object_get_type(JSON_Val);
+//    if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastLogin") == 0)) {
+//      LastLogin = json_object_get_int64(JSON_Val);
+//    } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) {
+//      Port = json_object_get_int(JSON_Val);
+//    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "FilePath") == 0)) {
+//      FilePath = (char*)json_object_get_string(JSON_Val);
+//    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) {
+//      Password = (char*)json_object_get_string(JSON_Val);
+//    }
+//  }
+  CaptureV2 *Device = new CaptureV2();
+  Device->Analyzers[0] = new Analyzer(30000, true, 4);
+  return false;
+}
+CaptureV2::CaptureV2(/*const char *serial, float *voltageGain, int *voltageOffset, float *currentGain, int *currentOffset, uint16_t id*/) {
+  Tools::LogMsg("INFO", "Starting CaptureV2 adquisition thread...\n");
   Buffer           = NULL;
   ReadPos          = 0;
   WritePos         = 0;
   Used             = 0;
   DeviceHandle     = NULL;
   NewDevice        = NULL;
-  Serial           = serial;
+//  Serial           = serial;
 //  VoltageGain      = voltageGain;
 //  CurrentGain      = currentGain;
 //  VoltageOffset    = voltageOffset;
@@ -253,14 +272,14 @@ CaptureV2::CaptureV2(const char *serial, float *voltageGain, int *voltageOffset,
   Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , CAPTURE_V2_VID, CAPTURE_V2_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
   if(Error < 0) {
     Tools::LogMsg("ERROR", "Fallo al registrar callback de escucha libUSB...\n");
-    pTerminate = true;
+//    pTerminate = true;
     pthread_join(CaptureThread, NULL);
     free(Buffer);
     return;
   }
   if(pthread_create(&AnalyzeThread, NULL, Analize_Thread, this) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    pTerminate = true;
+//    pTerminate = true;
     pthread_join(CaptureThread, NULL);
     free(Buffer);
     return;
@@ -270,7 +289,6 @@ CaptureV2::~CaptureV2() {
   if(Buffer) {
     pthread_cond_signal(&WriteWait);
     pthread_cond_signal(&ReadWait);
-    pTerminate = true;
     Tools::LogMsg("INFO", "Waiting for adquisition thread ends...\n");
     pthread_join(CaptureThread, NULL);
     pthread_join(AnalyzeThread, NULL);

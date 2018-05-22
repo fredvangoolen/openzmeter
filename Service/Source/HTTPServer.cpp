@@ -15,7 +15,7 @@
 #include <zlib.h>
 #include "HTTPServer.h"
 #include "Tools.h"
-#include "CaptureInterface.h"
+#include "Analyzer.h"
 #include "NetworkManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon            *HTTPServer::Daemon       = NULL;

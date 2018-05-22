@@ -3,7 +3,7 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
-#include "../CaptureInterface.h"
+#include "../Analyzer.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define CAPTUREVIRTUAL_SAMPLEFREQ      6000.00        //Frequencia de muestreo
 #define CAPTUREVIRTUAL_BUFFERSIZE     60000           //Tamaño del buffer (100 segundos)
@@ -11,7 +11,7 @@
 #define PROCESSING_FREQCYCLES           500           //Numero de ciclos usados para calcular frequencia
 #define PROCESSING_CURRENTOFFSET          0.10        //Corriente minima para realizar calculos
 //----------------------------------------------------------------------------------------------------------------------
-class CaptureVirtual : public CaptureInterface {
+class CaptureVirtual : public Analyzer {
   private :
     typedef struct {
       float VoltageA;                                    //Valor de tension

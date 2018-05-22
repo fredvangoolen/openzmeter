@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <unistd.h>
@@ -16,15 +15,11 @@
 #include "Main.h"
 #include "Tools.h"
 #include "HTTPServer.h"
-#include "CaptureInterface.h"
+#include "Analyzer.h"
 #include "CaptureMono/CaptureMono.h"
 #include "CaptureVirtual/CaptureVirtual.h"
 #include "NetworkManager.h"
-bool  Terminate = false;
 
-void SignalHandler(int signal) {
-  if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
-}
 int main(int argc, char** argv) {
 //  for(int i = 0; i < 20; i++) {
 //    printf("Esperando al depurador (%d)\n", i);
@@ -67,8 +62,7 @@ int main(int argc, char** argv) {
     Param.sched_priority = Prio;
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
   }
-  signal(SIGINT, SignalHandler);
-  signal(SIGTERM, SignalHandler);
+  Tools::RegisterHandlers();
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
 //  if(Tools::CreatePidFile() == false) return EXIT_FAILURE;
   if(Tools::CreateLogFile() == false) return EXIT_FAILURE;
@@ -94,7 +88,7 @@ int main(int argc, char** argv) {
 //  Events_Init();
 //  Prices_Start(LastPrice);
   int Iter = 0;
-  while(!Terminate) {
+  while(!Tools::Terminate) {
     usleep(1000000);
     if((Iter % 100) == 0) HTTPServer::RemoveExpiredSessions();
     Iter++;

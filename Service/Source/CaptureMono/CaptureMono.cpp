@@ -204,7 +204,7 @@ void  *CaptureMono::Analize_Thread(void* args) {
   }
   return NULL;
 }
-CaptureMono::CaptureMono(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint16_t id) : CaptureInterface(CAPTUREMONO_SAMPLEFREQ, false, id) {
+CaptureMono::CaptureMono(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint16_t id) : Analyzer(CAPTUREMONO_SAMPLEFREQ, false, id) {
   Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
   Buffer           = NULL;
   ReadPos          = 0;

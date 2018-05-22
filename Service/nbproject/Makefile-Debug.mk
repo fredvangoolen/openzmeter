@@ -35,7 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/Source/CaptureInterface.o \
+	${OBJECTDIR}/Source/Analyzer.o \
 	${OBJECTDIR}/Source/CaptureMono/CaptureMono.o \
 	${OBJECTDIR}/Source/CaptureV2/CaptureV2.o \
 	${OBJECTDIR}/Source/CaptureVirtual/CaptureVirtual.o \
@@ -71,10 +71,10 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service ${OBJECTFILES} ${LDLIBSOPTIONS} -lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ljson-c -lz -lcurl -ldbus-1
 
-${OBJECTDIR}/Source/CaptureInterface.o: Source/CaptureInterface.cpp
+${OBJECTDIR}/Source/Analyzer.o: Source/Analyzer.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/CaptureInterface.o Source/CaptureInterface.cpp
+	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Analyzer.o Source/Analyzer.cpp
 
 ${OBJECTDIR}/Source/CaptureMono/CaptureMono.o: Source/CaptureMono/CaptureMono.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/CaptureMono

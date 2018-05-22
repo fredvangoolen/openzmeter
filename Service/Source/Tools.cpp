@@ -6,6 +6,7 @@
 #include "NetworkManager.h"
 #include "HTTPServer.h"
 #include <string.h>
+#include <signal.h>
 #include <time.h>
 #include <errno.h>
 #include <unistd.h>
@@ -19,6 +20,8 @@
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
 //----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+bool                Tools::Terminate  = false;
 bool                Tools::Daemonized = false;
 bool                Tools::Debug      = false;
 int                 Tools::LogFile    = -1;
@@ -27,6 +30,13 @@ char               *Tools::PidFile    = NULL;
 Tools::Electrical_t Tools::Electrical;
 Tools::Devices_t    Tools::Devices;
 //----------------------------------------------------------------------------------------------------------------------
+void Tools::SignalHandler(int signal) {
+  if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
+}
+void Tools::RegisterHandlers() {
+  signal(SIGINT, SignalHandler);
+  signal(SIGTERM, SignalHandler);
+}
 void Tools::LogMsg(const char *level, const char *msg, ...) {
   if((Debug == false) && (strcmp(level, "DEBUG") == 0)) return;
   va_list args;
@@ -158,16 +168,6 @@ bool Tools::ReadConfig(char *file) {
       if(HTTPServer::Start(JSON_Val) == false) Error = true;
     }
   }
-  
-  
-  //  Global.HTTPPort = 8080;
-//  Global.HTTPPath = (char*)"/usr/share/openZmeter/WEB/";
-//  Global.HTTPPass = (char*)"admin";
-//  DB.Database     = (char*)"openzmeter";
-//  DB.Host         = (char*)"127.0.0.1";
-//  DB.Port         = 5432;
-//  DB.User         = (char*)"openzmeter";
-//  DB.Password     = (char*)"";
   Devices.Items   = NULL;
   Devices.Len     = 0;
   Electrical.NominalFrequency = 50;
@@ -218,29 +218,29 @@ bool Tools::ReadConfig(char *file) {
 //  fclose(File);
   return !Error;
 }
-char *Tools::rstrip(char* s) {
-  char *p = s + strlen(s);
-  while(p > s && isspace((unsigned char)(*--p))) *p = '\0';
-  return s;
-}
-char *Tools::lskip(const char* s) {
-  while (*s && isspace((unsigned char)(*s))) s++;
-  return (char*)s;
-}
-bool Tools::Config_Handler(char* section) {
-  if(strcmp(section, "device") == 0) {
-    Tools::Devices.Len++;
-    Devices.Items = (Device_t*)realloc(Devices.Items, Devices.Len * sizeof(Device_t));
-    Devices.Items[Devices.Len - 1].VoltageGain   =       0.01200000;
-    Devices.Items[Devices.Len - 1].VoltageOffset =     292.00000000;
-    Devices.Items[Devices.Len - 1].CurrentGain   =      -0.00078125;
-    Devices.Items[Devices.Len - 1].CurrentOffset =       0.00000000;
-    Devices.Items[Devices.Len - 1].Name          = (char*)"Default";
-    Devices.Items[Devices.Len - 1].Serial        =             NULL;
-    Devices.Items[Devices.Len - 1].Type          =             NULL;
-  }
-  return true;
-}
+//char *Tools::rstrip(char* s) {
+//  char *p = s + strlen(s);
+//  while(p > s && isspace((unsigned char)(*--p))) *p = '\0';
+//  return s;
+//}
+//char *Tools::lskip(const char* s) {
+//  while (*s && isspace((unsigned char)(*s))) s++;
+//  return (char*)s;
+//}
+//bool Tools::Config_Handler(char* section) {
+//  if(strcmp(section, "device") == 0) {
+//    Tools::Devices.Len++;
+//    Devices.Items = (Device_t*)realloc(Devices.Items, Devices.Len * sizeof(Device_t));
+//    Devices.Items[Devices.Len - 1].VoltageGain   =       0.01200000;
+//    Devices.Items[Devices.Len - 1].VoltageOffset =     292.00000000;
+//    Devices.Items[Devices.Len - 1].CurrentGain   =      -0.00078125;
+//    Devices.Items[Devices.Len - 1].CurrentOffset =       0.00000000;
+//    Devices.Items[Devices.Len - 1].Name          = (char*)"Default";
+//    Devices.Items[Devices.Len - 1].Serial        =             NULL;
+//    Devices.Items[Devices.Len - 1].Type          =             NULL;
+//  }
+//  return true;
+//}
 //bool Tools::Config_Handler(char *section, char *param, char *value) {
 //  if(strcmp(section, "global") == 0) {
 //    if(strcmp(param, "log") == 0) {

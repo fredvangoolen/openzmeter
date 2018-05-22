@@ -9,14 +9,14 @@
 #include <sys/time.h>
 #include <sys/param.h>
 #include <unistd.h>
-#include "CaptureInterface.h"
+#include "Analyzer.h"
 #include "Tools.h"
-pthread_mutex_t CaptureInterface::pFFTPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
-const float CaptureInterface::FrequencyRanges[]  = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
-const float CaptureInterface::VoltageRanges[]    = {-INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY};
-const float CaptureInterface::THDRanges[]        = {0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY};
-const float CaptureInterface::HarmonicsAllowed[] = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
-void CaptureInterface::SaveWorkParams() {
+pthread_mutex_t Analyzer::pFFTPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
+const float Analyzer::FrequencyRanges[]  = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
+const float Analyzer::VoltageRanges[]    = {-INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY};
+const float Analyzer::THDRanges[]        = {0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY};
+const float Analyzer::HarmonicsAllowed[] = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
+void Analyzer::SaveWorkParams() {
   pthread_mutex_lock(&pDataReadyMutex);
   pDataReady = true;
   pthread_cond_broadcast(&pDataReadyWait);
@@ -97,7 +97,7 @@ void CaptureInterface::SaveWorkParams() {
   ResetWork();
   ResetParams(&pWork.Params);
 }
-void CaptureInterface::AccumulateAggregation(Params_t *dst, Params_t *src) {
+void Analyzer::AccumulateAggregation(Params_t *dst, Params_t *src) {
   dst->Timestamp = src->Timestamp;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) dst->RMS_V[i] += pow(src->RMS_V[i], 2.0);
   for(int i = 0; i < (pTriphase ? 4 : 1); i++) dst->RMS_I[i] += pow(src->RMS_I[i], 2.0);
@@ -123,7 +123,7 @@ void CaptureInterface::AccumulateAggregation(Params_t *dst, Params_t *src) {
   }
   dst->Samples++;
 }
-void CaptureInterface::NormalizeParams(Params_t *params) {
+void Analyzer::NormalizeParams(Params_t *params) {
   if(params->Samples > 1) {
     for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->RMS_V[i] = sqrt(params->RMS_V[i] / params->Samples);
     for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->RMS_I[i] = sqrt(params->RMS_I[i] / params->Samples);
@@ -146,7 +146,7 @@ void CaptureInterface::NormalizeParams(Params_t *params) {
     }
   }
 }
-void CaptureInterface::SaveParams(Params_t *params) {
+void Analyzer::SaveParams(Params_t *params) {
   if(params->Type == AGGREG_3S)  
     pDatabase->PrepareSentence("EXECUTE SAVE_3S(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1M)  
@@ -190,10 +190,10 @@ void CaptureInterface::SaveParams(Params_t *params) {
   }
   ResetParams(params);
 }
-float CaptureInterface::PercentChange(float in, float reference) {
+float Analyzer::PercentChange(float in, float reference) {
   return ((in - reference) / reference) * 100;
 }
-void CaptureInterface::EventsDetect() {
+void Analyzer::EventsDetect() {
   if(pWork.Cycles_Len != 20) {
     pWork.Params.Flag = true;
     return;
@@ -278,7 +278,7 @@ void CaptureInterface::EventsDetect() {
     pPrevStationary = Stationary;
   }
 }
-void CaptureInterface::SaveEvent(uint8_t cycle, bool end) {
+void Analyzer::SaveEvent(uint8_t cycle, bool end) {
   float **Samples     = NULL;
   uint32_t SamplesLen = 0;
   if(end == false) {
@@ -291,13 +291,13 @@ void CaptureInterface::SaveEvent(uint8_t cycle, bool end) {
       SamplesLen = EVENT_ENVELOPETIME * 2 * pSampleRate;
       Samples = (float**)malloc(sizeof(float*) * SamplesLen);
       for(uint32_t i = 0; i < SamplesLen; i++) Samples[i] = (float*)malloc(sizeof(float) * ((pTriphase == true) ? 3 : 1));
-      SamplesLen = SamplesCopy(Samples, pWork.Cycles[19].End - pWork.Cycles[cycle].Start + pSampleRate * EVENT_ENVELOPETIME, SamplesLen);
+//      SamplesLen = SamplesCopy(Samples, pWork.Cycles[19].End - pWork.Cycles[cycle].Start + pSampleRate * EVENT_ENVELOPETIME, SamplesLen);
     }
   } else {
     SamplesLen = MIN(EVENT_ENVELOPETIME * 2 * pSampleRate, pRunningEvent.Duration);
     Samples = (float**)malloc(sizeof(float*) * SamplesLen);
     for(uint32_t i = 0; i < SamplesLen; i++) Samples[i] = (float*)malloc(sizeof(float) * ((pTriphase == true) ? 3 : 1));
-    SamplesLen = SamplesCopy(Samples, pWork.Cycles[19].End - pWork.Cycles[cycle].Start - EVENT_ENVELOPETIME * pSampleRate + SamplesLen, SamplesLen);
+//    SamplesLen = SamplesCopy(Samples, pWork.Cycles[19].End - pWork.Cycles[cycle].Start - EVENT_ENVELOPETIME * pSampleRate + SamplesLen, SamplesLen);
   }
   if((end == true) || (pRunningEvent.Duration == 0)) {
     char *Type = (char*)"UNKNOWN";
@@ -327,7 +327,7 @@ void CaptureInterface::SaveEvent(uint8_t cycle, bool end) {
     free(Samples);
   }
 }
-void CaptureInterface::Analyze(float minimunCurrent) {
+void Analyzer::Analyze(float minimunCurrent) {
   FFT_t FFT_Voltage[3];
   FFT_t FFT_Current[4];
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) FFT_Start(&FFT_Voltage[i], pWork.VoltageSamples[i], pWork.VoltageFFT[i]);
@@ -395,7 +395,7 @@ void CaptureInterface::Analyze(float minimunCurrent) {
     }
   }
 }
-void CaptureInterface::AllocParams(Params_t *params, Aggreg_Type type) {
+void Analyzer::AllocParams(Params_t *params, Aggreg_Type type) {
   params->RMS_V = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
   params->RMS_I = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 4 : 1));
   params->Active_Power = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
@@ -423,7 +423,7 @@ void CaptureInterface::AllocParams(Params_t *params, Aggreg_Type type) {
   params->Type = type;
   ResetParams(params);
 }
-CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t id) {
+Analyzer::Analyzer(uint32_t samplerate, bool triphase, uint16_t id) {
   pNodeIndex           = id;
   pPrevTimestamp       = 0;
   pSampleRate          = samplerate;
@@ -477,7 +477,7 @@ CaptureInterface::CaptureInterface(uint32_t samplerate, bool triphase, uint16_t 
   pDatabase->ExecSentence("PREPARE DELETE_1M_EXT AS DELETE FROM aggreg_ext_1m WHERE node_ext = $1 AND sampletime_ext < $2");
   pDatabase->ExecSentence("PREPARE SAVE_EVENT    AS INSERT INTO events (node, starttime, duration, type, voltage, percent, samples) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (starttime, node) DO UPDATE SET duration = $3, type = $4, voltage = $5, percent = $6, samples = events.samples || $7");
 }
-void CaptureInterface::ResetParams(Params_t *params) {
+void Analyzer::ResetParams(Params_t *params) {
   params->Timestamp = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) params->RMS_V[i] = 0;
   for(int i = 0; i < (pTriphase ? 4 : 1); i++) params->RMS_I[i] = 0;
@@ -505,7 +505,7 @@ void CaptureInterface::ResetParams(Params_t *params) {
   }
   params->Samples = 0;
 }
-void CaptureInterface::ResetWork() {
+void Analyzer::ResetWork() {
   pWork.SequenceID++;
   pWork.Samples = 0;
   for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(pWork.VoltageFFT[i], 0, sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
@@ -515,25 +515,25 @@ void CaptureInterface::ResetWork() {
   memset(pWork.Cycles, 0, sizeof(Cycle_t) * 20);
   pWork.Cycles_Len = 0;
 }
-void CaptureInterface::ResetStats() {
+void Analyzer::ResetStats() {
   memset(pStats.Voltage, 0, (sizeof(VoltageRanges) / sizeof(float) - 1) * sizeof(uint16_t));
   memset(pStats.Frequency, 0, (sizeof(FrequencyRanges) / sizeof(float) - 1) * sizeof(uint16_t));
   memset(pStats.THD, 0, (sizeof(THDRanges) / sizeof(float) - 1) * sizeof(uint16_t));
   memset(pStats.Harmonics, 0, 2 * sizeof(uint16_t));
 }
-CaptureInterface::~CaptureInterface() {
+Analyzer::~Analyzer() {
   //Libero todas las estructuras
 }
-uint32_t CaptureInterface::GetMaxSamples() {
+uint32_t Analyzer::GetMaxSamples() {
   return pMaxSamples;
 }
-uint32_t CaptureInterface::SampleRate() {
+uint32_t Analyzer::SampleRate() {
   return pSampleRate;
 }
-bool CaptureInterface::Triphase() {
+bool Analyzer::Triphase() {
   return pTriphase;
 }
-float CaptureInterface::CalcPhi(Complex_t voltage, Complex_t current) {
+float Analyzer::CalcPhi(Complex_t voltage, Complex_t current) {
   float Tmp;
   if((voltage.Real == 0) && (voltage.Imag == 0)) 
     Tmp = 0;
@@ -549,13 +549,13 @@ float CaptureInterface::CalcPhi(Complex_t voltage, Complex_t current) {
   else
     return Tmp - atan(current.Imag / current.Real) + M_PI;
 }
-float CaptureInterface::ApplyFilter(float in, Filter_t* filter) {
+float Analyzer::ApplyFilter(float in, Filter_t* filter) {
   float out = in * filter->A0 + filter->Z1;
   filter->Z1 = in * filter->A1 + filter->Z2 - filter->B1 * out;
   filter->Z2 = in * filter->A2 - filter->B2 * out;
   return out;
 }
-void *CaptureInterface::FFT_Thread(void *args) {
+void *Analyzer::FFT_Thread(void *args) {
   FFT_t *FFT = (FFT_t *)args;
   fftwf_execute_dft_r2c(FFT->Plan, FFT->Input, (fftwf_complex*)FFT->Output);
   for(int i = 0; i < ceil(FFT->Len / 2 + 1); i++) {
@@ -564,14 +564,14 @@ void *CaptureInterface::FFT_Thread(void *args) {
   }
   return NULL;  
 }
-void CaptureInterface::FFT_Wait(FFT_t *fft) {
+void Analyzer::FFT_Wait(FFT_t *fft) {
   if(pthread_join(fft->Thread, NULL) != 0) Tools::LogMsg("ERROR", "%s:%d -> (Unknown)\n", __func__, __LINE__);
   pthread_mutex_lock(&pFFTPlannerMutex);
   fftwf_destroy_plan(fft->Plan);
   pthread_mutex_unlock(&pFFTPlannerMutex);  
   return;
 }
-bool CaptureInterface::FFT_Start(FFT_t *fft, float *in, Complex_t *out) {
+bool Analyzer::FFT_Start(FFT_t *fft, float *in, Complex_t *out) {
   pthread_mutex_lock(&pFFTPlannerMutex);
   fft->Plan = fftwf_plan_dft_r2c_1d(pWork.Samples, in, (fftwf_complex*)out, FFTW_ESTIMATE);
   pthread_mutex_unlock(&pFFTPlannerMutex);  
@@ -585,7 +585,7 @@ bool CaptureInterface::FFT_Start(FFT_t *fft, float *in, Complex_t *out) {
   }
   return true;
 }
-json_object *CaptureInterface::GetJSONCopy(char *series) {
+json_object *Analyzer::GetJSONCopy(char *series) {
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads++;
   pthread_mutex_unlock(&pWaitingThreadsMutex);
@@ -616,9 +616,9 @@ json_object *CaptureInterface::GetJSONCopy(char *series) {
       } else if(strcmp(Serie, "active_power") == 0) {
         Obj = json_object_new_array();
         for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Active_Power[i]));
-//      } else if(strcmp(Serie, "apparent_power") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Apparent_Power[i]));
+      } else if(strcmp(Serie, "apparent_power") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Apparent_Power[i]));
       } else if(strcmp(Serie, "power_factor") == 0) {
         Obj = json_object_new_array();
         for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Power_Factor[i]));
@@ -631,12 +631,12 @@ json_object *CaptureInterface::GetJSONCopy(char *series) {
       } else if(strcmp(Serie, "fundamental_reactive_power") == 0) {
         Obj = json_object_new_array();
         for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Reactive_Power[i]));
-//      } else if(strcmp(Serie, "fundamental_apparent_power") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Apparent_Power[i]));
-//      } else if(strcmp(Serie, "fundamental_power_factor") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Power_Factor[i]));
+      } else if(strcmp(Serie, "fundamental_apparent_power") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Apparent_Power[i]));
+      } else if(strcmp(Serie, "fundamental_power_factor") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Power_Factor[i]));
       } else if(strcmp(Serie, "fundamental_reactive_energy") == 0) {
         Obj = json_object_new_array();
         for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Reactive_Energy[i]));

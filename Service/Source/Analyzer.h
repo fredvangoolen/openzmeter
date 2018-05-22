@@ -17,7 +17,7 @@
 #define EVENT_HYSTERESIS              06.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
 #define EVENT_ENVELOPETIME             0.1        //Tiempo en segundos que se guarda antes y despues de un evento
 //---------------------------------------------------------------------------------------------------------------------
-class CaptureInterface {
+class Analyzer {
   public :
     enum Aggreg_Type { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
     enum Event_Type  { EVT_NONE, EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC, EVT_GLITCH };
@@ -156,13 +156,13 @@ class CaptureInterface {
     static float  ApplyFilter(float in, Filter_t *filter);
     static float  CalcPhi(Complex_t voltage, Complex_t current);
   protected :
-    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
+//    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
   public :
     bool         Triphase();
     uint32_t     SampleRate();
     uint8_t      NominalFreq();
     json_object *GetJSONCopy(char *series);
   public :
-    CaptureInterface(uint32_t samplerate, bool triphase, uint16_t id);
-    virtual ~CaptureInterface();
+    Analyzer(uint32_t samplerate, bool triphase, uint16_t id);
+    ~Analyzer();
 };

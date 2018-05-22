@@ -16,8 +16,8 @@
         <itemPath>Source/CaptureVirtual/CaptureVirtual.cpp</itemPath>
         <itemPath>Source/CaptureVirtual/CaptureVirtual.h</itemPath>
       </logicalFolder>
-      <itemPath>Source/CaptureInterface.cpp</itemPath>
-      <itemPath>Source/CaptureInterface.h</itemPath>
+      <itemPath>Source/Analyzer.cpp</itemPath>
+      <itemPath>Source/Analyzer.h</itemPath>
       <itemPath>Source/Database.cpp</itemPath>
       <itemPath>Source/Database.h</itemPath>
       <itemPath>Source/HTTPServer.cpp</itemPath>
@@ -257,9 +257,9 @@
                             mandatory="false"/>
         </packInfoList>
       </packaging>
-      <item path="Source/CaptureInterface.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Analyzer.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/CaptureInterface.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Analyzer.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/CaptureMono/CaptureMono.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -576,9 +576,9 @@
                             mandatory="false"/>
         </packInfoList>
       </packaging>
-      <item path="Source/CaptureInterface.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Analyzer.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/CaptureInterface.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Analyzer.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/CaptureMono/CaptureMono.cpp" ex="false" tool="1" flavor2="0">
       </item>
