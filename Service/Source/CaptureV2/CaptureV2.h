@@ -6,27 +6,30 @@
 #include <libusb-1.0/libusb.h>
 #include "../CaptureInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define CAPTURE_V2_VID             0x0483        //Product ID
-#define CAPTURE_V2_PID             0x7270        //Device ID
-#define CAPTURE_V2_ENDPOINT_IN       0x81        //Endpoint de lectura de datos
+#define CAPTURE_V2_VID              0x0483        //Product ID
+#define CAPTURE_V2_PID              0x7270        //Device ID
+#define CAPTURE_V2_ENDPOINT_IN        0x81        //Endpoint de lectura de datos
 #define CAPTURE_V2_SAMPLEFREQ     15625.00       //Frequencia de muestreo
-#define CAPTURE_V2_BUFFERSIZE     156250         //Tamaño del buffer (10 segundos)
-#define CAPTURE_V2_TRANSFERS            32       //Numero de transferencias a encolar
+#define CAPTURE_V2_BUFFERSIZE       156250         //Tamaño del buffer (10 segundos)
+#define CAPTURE_V2_TRANSFERS            32        //Numero de transferencias a encolar
 #define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
 #define PROCESSING_CURRENTOFFSET      0.10        //Corriente minima para realizar calculos
 //----------------------------------------------------------------------------------------------------------------------
 class CaptureV2 : public CaptureInterface {
   private :
-    typedef struct {
-      float Voltage[3];                                   //Valor de tension
-      float Current[4];                                   //Valor de corriente
-    } Sample_t;
-    float                        VoltageGain;             //Ganancia de tension
-    float                        CurrentGain;             //Ganancia de corriente
-    float                        VoltageOffset;           //Offset de tension
-    float                        CurrentOffset;           //Offset de corriente
+//    typedef struct {
+//      float Voltage[3];                                   //Valor de tension
+//      float Current[4];                                   //Valor de corriente
+//    } Sample_t;
+    uint8_t                      CurrentChannel;          //Canal actual de lectura
+    uint8_t                      ChannelsCount;           //Numero de canales de lectura
+    float                        Samplerate;              //Frecuencia de muestreo
+    float                        VoltageGain[3];          //Ganancia de tension
+    float                        CurrentGain[4];          //Ganancia de corriente
+    float                        VoltageOffset[3];        //Offset de tension
+    float                        CurrentOffset[4];        //Offset de corriente
     const char                  *Serial;                  //Numero de serie del dispositivo de captura
-    Sample_t                    *Buffer;                  //Donde almaceno muestras leidas (RingBuffer)
+    float                       *Buffer;                  //Donde almaceno muestras leidas (RingBuffer)
     uint32_t                     ReadPos;                 //Posicion de lectura del buffer
     uint32_t                     WritePos;                //Posicion de escritura del buffer
     uint32_t                     Used;                    //Muestras en uso del buffer
@@ -48,7 +51,7 @@ class CaptureV2 : public CaptureInterface {
     float    CalculateFrequency(Work_t* work);
     uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len);
   public :
-    CaptureV2(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint16_t id);
+    CaptureV2(const char *serial, float *voltageGain, int *voltageOffset, float *currentGain, int *currentOffset, uint16_t id);
     ~CaptureV2();
 };
 //----------------------------------------------------------------------------------------------------------------------

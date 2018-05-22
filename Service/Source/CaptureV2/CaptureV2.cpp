@@ -22,7 +22,7 @@ void   CaptureV2::ReadCallback(struct libusb_transfer *transfer) {
   uint     Len = transfer->actual_length / 4;
   CaptureV2 *This = (CaptureV2*)transfer->user_data;
   pthread_mutex_lock(&This->CaptureMutex);
-  while(This->Used > (CAPTUREMONO_BUFFERSIZE - Len - This->SampleRate() * EVENT_ENVELOPETIME)) {
+  while(This->Used > (CAPTURE_V2_BUFFERSIZE - Len - This->SampleRate() * EVENT_ENVELOPETIME)) {
     if(This->pTerminate) return;
     Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
     pthread_cond_wait(&This->WriteWait, &This->CaptureMutex);
@@ -30,9 +30,9 @@ void   CaptureV2::ReadCallback(struct libusb_transfer *transfer) {
   for(uint i = 0; i < Len; i++) {
     int16_t Voltage = Buff16[i * 2 + 0];
     uint16_t Current = Buff16[i * 2 + 1];
-    This->Buffer[This->WritePos].Voltage = (Voltage - This->VoltageOffset) * This->VoltageGain;
-    This->Buffer[This->WritePos].Current = (Current - This->CurrentOffset) * This->CurrentGain;
-    This->WritePos = (This->WritePos + 1) % CAPTUREMONO_BUFFERSIZE;
+//    This->Buffer[This->WritePos].Voltage = (Voltage - This->VoltageOffset) * This->VoltageGain;
+//    This->Buffer[This->WritePos].Current = (Current - This->CurrentOffset) * This->CurrentGain;
+//    This->WritePos = (This->WritePos + 1) % CAPTUREMONO_BUFFERSIZE;
   }
   This->Used += Len;
   pthread_cond_signal(&This->ReadWait);
@@ -66,14 +66,14 @@ void  *CaptureV2::Capture_Thread(void *args) {
   }
   CaptureV2 *This = (CaptureV2*)args;
   pthread_setname_np(This->CaptureThread, "CapMono_Init");
-  uint8_t BufferIN[CAPTUREMONO_TRANSFERS][8192];
-  struct libusb_transfer *TransferIN[CAPTUREMONO_TRANSFERS];
-  for(int i = 0; i < CAPTUREMONO_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
+  uint8_t BufferIN[CAPTURE_V2_TRANSFERS][8192];
+  struct libusb_transfer *TransferIN[CAPTURE_V2_TRANSFERS];
+  for(int i = 0; i < CAPTURE_V2_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
   uint32_t Update = 0;
   while(!This->pTerminate) {
     if((Update % 10) == 0) {
       char ThreadName[16];
-      sprintf(ThreadName, "CapMono_%03d", This->Used * 100 / CAPTUREMONO_BUFFERSIZE);
+      sprintf(ThreadName, "CapV2_%03d", This->Used * 100 / CAPTURE_V2_BUFFERSIZE);
       pthread_setname_np(This->CaptureThread, ThreadName);
     }
     Update++;
@@ -139,8 +139,8 @@ void  *CaptureV2::Capture_Thread(void *args) {
       } else {
         Tools::LogMsg("INFO", "Claimed interface 1 on CaptureMono device with serial %s\n", This->Serial);
       }
-      for(int i = 0; i < CAPTUREMONO_TRANSFERS; i++) {
-        libusb_fill_bulk_transfer(TransferIN[i], This->DeviceHandle, CAPTUREMONO_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, -1);
+      for(int i = 0; i < CAPTURE_V2_TRANSFERS; i++) {
+        libusb_fill_bulk_transfer(TransferIN[i], This->DeviceHandle, CAPTURE_V2_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, -1);
         Result |= libusb_submit_transfer(TransferIN[i]);
       }
       if(Result != LIBUSB_SUCCESS) {
@@ -171,11 +171,11 @@ void  *CaptureV2::Analize_Thread(void* args) {
       pthread_cond_wait(&This->ReadWait, &This->AnalyzeMutex);
     }
     uint64_t Start = Tools::GetTime();
-    This->pWork.Params.Timestamp = Start - ((This->Used * 1000) / CAPTUREMONO_SAMPLEFREQ);
+//    This->pWork.Params.Timestamp = Start - ((This->Used * 1000) / CAPTUREMONO_SAMPLEFREQ);
     float LastSample = +20; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
     for(This->pWork.Samples = 0; This->pWork.Samples < This->GetMaxSamples(); This->pWork.Samples++) {
-      This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
-      This->pWork.CurrentSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Current;
+//      This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
+//      This->pWork.CurrentSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Current;
       float Out = This->pWork.VoltageSamples[0][This->pWork.Samples];
       for(int i = 0; i < 5; i++) Out = ApplyFilter(Out, &This->Filters[i]);
       if(((LastSample >= 0.0) && (Out < 0.0)) || ((LastSample <= 0.0) && (Out > 0.0))) {
@@ -185,7 +185,7 @@ void  *CaptureV2::Analize_Thread(void* args) {
         This->pWork.Cycles[This->pWork.Cycles_Len].Start = This->pWork.Samples;
       }
       LastSample = Out;
-      This->ReadPos = (This->ReadPos + 1) % CAPTUREMONO_BUFFERSIZE;
+//      This->ReadPos = (This->ReadPos + 1) % CAPTUREMONO_BUFFERSIZE;
     }
     This->Used -= This->pWork.Samples;
     pthread_cond_signal(&This->WriteWait);
@@ -204,7 +204,7 @@ void  *CaptureV2::Analize_Thread(void* args) {
   }
   return NULL;
 }
-CaptureV2::CaptureV2(const char *serial, float voltageGain, int voltageOffset, float currentGain, int currentOffset, uint16_t id) : CaptureInterface(CAPTUREMONO_SAMPLEFREQ, false, id) {
+CaptureV2::CaptureV2(const char *serial, float *voltageGain, int *voltageOffset, float *currentGain, int *currentOffset, uint16_t id) : CaptureInterface(CAPTURE_V2_SAMPLEFREQ, false, id) {
   Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
   Buffer           = NULL;
   ReadPos          = 0;
@@ -213,17 +213,17 @@ CaptureV2::CaptureV2(const char *serial, float voltageGain, int voltageOffset, f
   DeviceHandle     = NULL;
   NewDevice        = NULL;
   Serial           = serial;
-  VoltageGain      = voltageGain;
-  CurrentGain      = currentGain;
-  VoltageOffset    = voltageOffset;
-  CurrentOffset    = currentOffset;
+//  VoltageGain      = voltageGain;
+//  CurrentGain      = currentGain;
+//  VoltageOffset    = voltageOffset;
+//  CurrentOffset    = currentOffset;
   pthread_cond_init(&WriteWait, NULL);
   pthread_cond_init(&ReadWait, NULL);
   pthread_mutex_init(&AnalyzeMutex, NULL);
   pthread_mutex_init(&CaptureMutex, NULL);
   for(int i = 0; i < 5; i++) {
     float Q = 1.0;
-    float K = tan(M_PI * ((float)Tools::Electrical.NominalFrequency / CAPTUREMONO_SAMPLEFREQ));
+    float K = tan(M_PI * ((float)Tools::Electrical.NominalFrequency / CAPTURE_V2_SAMPLEFREQ));
     float Norm = 1 / (1 + K / Q + K * K);
     Filters[i].A0 = K / Q * Norm;
     Filters[i].A1 = 0;
@@ -238,7 +238,7 @@ CaptureV2::CaptureV2(const char *serial, float voltageGain, int voltageOffset, f
     Tools::LogMsg("ERROR", "Fallo la apertura de libUSB...\n");
     return;
   }
-  Buffer = (Sample_t*)malloc(CAPTUREMONO_BUFFERSIZE * sizeof(Sample_t));
+  Buffer = (float*)malloc(CAPTURE_V2_BUFFERSIZE * sizeof(float));
   if(Buffer == NULL) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(NULL);
@@ -250,7 +250,7 @@ CaptureV2::CaptureV2(const char *serial, float voltageGain, int voltageOffset, f
     free(Buffer);
     return;
   }
-  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , CAPTUREMONO_VID, CAPTUREMONO_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
+  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , CAPTURE_V2_VID, CAPTURE_V2_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
   if(Error < 0) {
     Tools::LogMsg("ERROR", "Fallo al registrar callback de escucha libUSB...\n");
     pTerminate = true;
@@ -279,8 +279,8 @@ CaptureV2::~CaptureV2() {
 }
 uint32_t CaptureV2::SamplesCopy(float **dest, uint32_t offset, uint32_t len) {
   for(uint i = 0; i < len; i++) {
-    uint32_t Pos = ((ReadPos + CAPTUREMONO_BUFFERSIZE) - offset + i) % CAPTUREMONO_BUFFERSIZE;
-    dest[i][0] = Buffer[Pos].Voltage;
+//    uint32_t Pos = ((ReadPos + CAPTUREMONO_BUFFERSIZE) - offset + i) % CAPTUREMONO_BUFFERSIZE;
+//    dest[i][0] = Buffer[Pos].Voltage;
   }
   return len;
 }

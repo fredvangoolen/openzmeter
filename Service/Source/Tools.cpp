@@ -106,6 +106,11 @@ void Tools::Daemonize() {
   close(STDERR_FILENO);
 }
 bool Tools::ReadConfig(char *file) {
+
+
+
+
+
   Global.Pid      = (char*)"/var/run/openZmeter.pid";
   Global.Log      = (char*)"/var/log/openZmeter.log";
   Global.HTTPPort = 8080;
