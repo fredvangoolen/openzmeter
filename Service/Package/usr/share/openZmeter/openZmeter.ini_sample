@@ -1,9 +1,11 @@
 {
-  "HTTPPort": 80,
-  "HTTPPass": "admin",
-  "LastLogin": 120000000,
   "LogFile": "/var/log/openZmeter.log",
   "PidFile": "/var/run/openZmeter.pid",
+  "HTTPServer": {  
+    "Port": 80,
+    "Password": "admin",
+    "LastLogin": 120000000
+  },
   "PostgreServer": {
     "host": "127.0.0.1",
     "port": 5432,
@@ -16,7 +18,7 @@
     "NominalVoltage": 230,
   },
   "Devices": [
-    { "Driver: "CaptureMono",
+    { "Driver": "CaptureMono",
       "ID": 0,
       "DisplayName": "Real",
       "Serial": "3FFFFFFFFFFFFFFFFFFFFFFF",

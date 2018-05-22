@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <ctype.h>
+#include <sys/mman.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -19,7 +20,9 @@
 //----------------------------------------------------------------------------------------------------------------------
 bool                Tools::Daemonized = false;
 bool                Tools::Debug      = false;
-FILE               *Tools::LogFile    = NULL;
+int                 Tools::LogFile    = -1;
+json_object        *Tools::Config     = NULL;
+char               *Tools::PidFile    = NULL;
 Tools::Global_t     Tools::Global;
 Tools::DB_t         Tools::DB;
 Tools::Electrical_t Tools::Electrical;
@@ -54,28 +57,29 @@ void Tools::LogMsg(const char *level, const char *msg, ...) {
   }
   if(LogFile) {
     va_start(args, msg);
-    flockfile(LogFile);
-    fprintf(LogFile, "%s", DateStr);
-    vfprintf(LogFile, msg, args);
-    fflush(LogFile);
-    funlockfile(LogFile);
+//    flock(LogFile);//
+//    fprintf(LogFile, "%s", DateStr);
+//    vfprintf(LogFile, msg, args);
+//    fflush(LogFile);
+//    flock(LogFile);
   }
   va_end(args);
 }
 bool Tools::CreateLogFile() {
-  LogFile = fopen(Global.Log, "at");
-  if(!LogFile) LogFile = fopen(Global.Log, "wt");
-  if(!LogFile) {
-    Tools::LogMsg("WARN", "Can not create or open log file (%d)\n", errno);
-    return true;
-  }
+//  LogFile = open(Global.Log, "at");
+//  if(!LogFile) LogFile = fopen(Global.Log, "wt");
+//  if(!LogFile) {
+//    Tools::LogMsg("WARN", "Can not create or open log file (%d)\n", errno);
+//    return true;
+//  }
   return true;
 }
-bool Tools::CreatePidFile() {
+bool Tools::CreatePidFile(char *name) {
+  PidFile = strdup(name);
   char PID_Number[64];
   int Len = sprintf(PID_Number, "%d", getpid());
-  remove(Global.Pid);
-  int File = open(Global.Pid, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+  if(PidFile) remove(PidFile);
+  int File = open(PidFile, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
   if(File < 0) {
     LogMsg("WARN", "Can not create PID file (%d)\n", errno);
     return true;
@@ -85,7 +89,8 @@ bool Tools::CreatePidFile() {
   return true;
 }
 bool Tools::RemovePidFile() {
- return remove(Global.Pid);
+  if(PidFile) return remove(PidFile);
+  return true;
 }
 void Tools::Daemonize() {
   pid_t ProcID = fork();
@@ -106,69 +111,110 @@ void Tools::Daemonize() {
   close(STDERR_FILENO);
 }
 bool Tools::ReadConfig(char *file) {
-
-
-
-
-
-  Global.Pid      = (char*)"/var/run/openZmeter.pid";
-  Global.Log      = (char*)"/var/log/openZmeter.log";
-  Global.HTTPPort = 8080;
-  Global.HTTPPath = (char*)"/usr/share/openZmeter/WEB/";
-  Global.HTTPPass = (char*)"admin";
-  DB.Database     = (char*)"openzmeter";
-  DB.Host         = (char*)"127.0.0.1";
-  DB.Port         = 5432;
-  DB.User         = (char*)"openzmeter";
-  DB.Password     = (char*)"";
+  if(file == NULL) return true;
+  LogMsg("INFO", "Loading config file...\n");
+  int File = open(file, O_RDONLY);
+  if(File == -1) {
+    LogMsg("ERROR", "Can not open config file (%d)\n", errno);
+    return false;
+  }
+  struct stat FileStatus;
+  if(fstat(File, &FileStatus) != 0) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    close(File);
+    return false;
+  }
+  char *ConfigText = (char*)malloc(FileStatus.st_size + 1);
+  if(ConfigText == NULL) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    close(File);
+    return false;
+  }
+  FileStatus.st_size = read(File, ConfigText, FileStatus.st_size);
+  ConfigText[FileStatus.st_size] = 0;
+  json_object *Config = json_tokener_parse(ConfigText);
+  close(File);
+  free(ConfigText);
+  if(Config == NULL) {
+    LogMsg("ERROR", "Can not open config file (Invalid JSON format)\n");
+    return false;
+  }
+//  Global.Pid      = (char*)"/var/run/openZmeter.pid";
+//  Global.Log      = (char*)"/var/log/openZmeter.log";
+  bool Error = false;
+  json_object_object_foreach(Config, JSON_Key, JSON_Val) {
+    enum json_type JSON_Type = json_object_get_type(JSON_Val);
+    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "LogFile") == 0)) {
+//      Global.Log = strdup(JSON_Val);
+    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "PidFile") == 0)) {
+      if(PidFile) {
+        Error = true;
+        LogMsg("ERROR", "Duplicate PidFile param in config file\n");
+      } else {
+        if(CreatePidFile((char*)json_object_get_string(JSON_Val)) == false) Error = true;
+      }
+    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "PostgreServer") == 0)) {
+      
+    }
+  }
+  
+  
+  //  Global.HTTPPort = 8080;
+//  Global.HTTPPath = (char*)"/usr/share/openZmeter/WEB/";
+//  Global.HTTPPass = (char*)"admin";
+//  DB.Database     = (char*)"openzmeter";
+//  DB.Host         = (char*)"127.0.0.1";
+//  DB.Port         = 5432;
+//  DB.User         = (char*)"openzmeter";
+//  DB.Password     = (char*)"";
   Devices.Items   = NULL;
   Devices.Len     = 0;
   Electrical.NominalFrequency = 50;
   Electrical.NominalVoltage   = 230.0;
   
-  if(file == NULL) return true;
-  LogMsg("INFO", "Loading config file...\n");
-  FILE *File = fopen(file, "r");
-  if(!File) {
-    LogMsg("WARN", "Can not open config file (%d)\n", errno);
-    return true;
-  }
-  char Line[256];
-  char Section[256] = "";
-  int  LineNumber   = 0;
-  bool Error        = false;
-  while(fgets(Line, sizeof(Line), File) != NULL) {
-    LineNumber++;
-    char *Start = lskip(rstrip(Line));
-    if((Start[0] == ';') || (Start[0] == '#') || (strlen(Start) == 0)) {
-      continue;
-    } else if(Start[0] == '[') {
-      char *End = strchr(&Start[1], ']');
-      if((End == NULL) || (&Start[1] == End)) {
-        LogMsg("ERROR", "Reading config file (unmached ']' at line %d\n", LineNumber);
-        Error = true;
-        break;
-      }
-      End[0] = 0;
-      strcpy(Section, &Start[1]);
-      Config_Handler(Section);
-    } else {
-      char *End = strchr(&Start[1], '=');
-      if(End == NULL) {
-        LogMsg("ERROR", "Expected '=' at line %d\n", LineNumber);
-        Error = true;
-        break;
-      }
-      End[0] = 0;
-      char *Param = rstrip(Start);
-      char *Value = lskip(&End[1]);
-      if(Config_Handler(Section, Param, Value) == false) {
-        Error = true;
-        break;
-      }
-    }
-  }
-  fclose(File);
+  
+//  FILE *File = fopen(file, "r");
+//  File->
+//  if(!File) {
+//    LogMsg("WARN", "Can not open config file (%d)\n", errno);
+//    return true;
+//  }
+//  char Line[256];
+//  char Section[256] = "";
+//  int  LineNumber   = 0;
+//  bool Error        = false;
+//  while(fgets(Line, sizeof(Line), File) != NULL) {
+//    LineNumber++;
+//    char *Start = lskip(rstrip(Line));
+//    if((Start[0] == ';') || (Start[0] == '#') || (strlen(Start) == 0)) {
+//      continue;
+//    } else if(Start[0] == '[') {
+//      char *End = strchr(&Start[1], ']');
+//      if((End == NULL) || (&Start[1] == End)) {
+//        LogMsg("ERROR", "Reading config file (unmached ']' at line %d\n", LineNumber);
+//        Error = true;
+//        break;
+//      }
+//      End[0] = 0;
+//      strcpy(Section, &Start[1]);
+//      Config_Handler(Section);
+//    } else {
+//      char *End = strchr(&Start[1], '=');
+//      if(End == NULL) {
+//        LogMsg("ERROR", "Expected '=' at line %d\n", LineNumber);
+//        Error = true;
+//        break;
+//      }
+//      End[0] = 0;
+//      char *Param = rstrip(Start);
+//      char *Value = lskip(&End[1]);
+//      if(Config_Handler(Section, Param, Value) == false) {
+//        Error = true;
+//        break;
+//      }
+//    }
+//  }
+//  fclose(File);
   return !Error;
 }
 char *Tools::rstrip(char* s) {
@@ -194,105 +240,105 @@ bool Tools::Config_Handler(char* section) {
   }
   return true;
 }
-bool Tools::Config_Handler(char *section, char *param, char *value) {
-  if(strcmp(section, "global") == 0) {
-    if(strcmp(param, "log") == 0) {
-      Global.Log = strdup(value);
-    } else if(strcmp(param, "pid") == 0) {
-      Global.Pid = strdup(value);
-    } else if(strcmp(param, "httpPort") == 0) {
-      Global.HTTPPort = atoi(value);
-    } else if(strcmp(param, "httpPath") == 0) {
-      Global.HTTPPath = strdup(value);
-    } else if(strcmp(param, "httpPass") == 0) {
-      Global.HTTPPass = strdup(value);
-    }
-  } else if(strcmp(section, "database") == 0) {
-    if(strcmp(param, "port") == 0) {
-      DB.Port = atoi(value);
-    } else if(strcmp(param, "database") == 0) {
-      DB.Database = strdup(value);
-    } else if(strcmp(param, "host") == 0) {
-      DB.Host = strdup(value);
-    } else if(strcmp(param, "user") == 0) {
-      DB.User = strdup(value);
-    } else if(strcmp(param, "pass") == 0) {
-      DB.Password = strdup(value);
-    } else {
-      LogMsg("ERROR", "Unknown param '%s' in section '%s'\n", param, section);
-      return false;
-    }
-  } else if(strcmp(section, "electrical") == 0) {
-    if(strcmp(param, "nominal_frequency") == 0) {
-      Electrical.NominalFrequency = atoi(value);
-      if((Electrical.NominalFrequency != 50) && (Electrical.NominalFrequency != 60)) Electrical.NominalFrequency = 50;
-    } else if(strcmp(param, "nominal_voltage") == 0) {
-      Electrical.NominalVoltage = atof(value);
-    } else {
-      LogMsg("ERROR", "Unknown param '%s' in section '%s'\n", param, section);
-      return false;
-    }
-  } else if(strcmp(section, "device") == 0) {  
-    if(strcmp(param, "voltage_gain") == 0) {
-      Devices.Items[Devices.Len - 1].VoltageGain = atof(value);
-    } else if(strcmp(param, "voltage_offset") == 0) {
-      Devices.Items[Devices.Len - 1].VoltageOffset = atoi(value);
-    } else if(strcmp(param, "current_gain") == 0) {
-      Devices.Items[Devices.Len - 1].CurrentGain = atof(value);
-    } else if(strcmp(param, "current_offset") == 0) {
-      Devices.Items[Devices.Len - 1].CurrentOffset = atoi(value);
-    } else if(strcmp(param, "name") == 0) {
-      Devices.Items[Devices.Len - 1].Name = strdup(value);
-    } else if(strcmp(param, "serial") == 0) {
-      Devices.Items[Devices.Len - 1].Serial = strdup(value);
-    } else if(strcmp(param, "type") == 0) {
-      Devices.Items[Devices.Len - 1].Type = strdup(value);      
-    } else {
-      LogMsg("INFO", "Unknown config param '%s/%s\n", section, param);
-    }
-  } else if(strcmp(section, "budget")) {
-    
-    if(strcmp(param, "fixed_price") == 0) {
-    
-    if(strcmp(value, "false") == 0) {
-//      pconfig->budget.fixed_price = -1;
-    } else {
-//      pconfig->budget.fixed_price = atof(value);
-    }
-//  } else if(MATCH("budget", "country")) {
-//    pconfig->budget.country = strdup(value);
-//    pconfig->budget.country_config = NULL;
-    }
-  } else {
-//    if(pconfig->budget.country != NULL && strcmp(pconfig->budget.country, "spain") == 0) {
-//      budget_spain_configuration * countryConfig;
-//      if(pconfig->budget.country_config == NULL) {
-//        pconfig->budget.country_config = malloc(sizeof(budget_spain_configuration));
-//      }
-//      countryConfig = (budget_spain_configuration*) (pconfig->budget.country_config);
-//      if(MATCH("budget-spain", "contracted_power")) {
-//        countryConfig->contracted_power = atoi(value);
-//      } else if(MATCH("budget-spain", "cpc")) {
-//        countryConfig->cpc = atof(value);
-//      } else if(MATCH("budget-spain", "rate_type")) {
-//        countryConfig->rate_type = strdup(value);
-//      } else if(MATCH("budget-spain", "vat")) {
-//        countryConfig->vat = atof(value);
-//      } else if(MATCH("budget-spain", "discount_percentage")) {
-//        countryConfig->discount_percentage = atof(value);
-//      } else if(MATCH("budget-spain", "electricity_tax_percentage")) {
-//        countryConfig->electricity_tax_percentage = atof(value);
-//      } else if(MATCH("budget-spain", "meter_rating")) {
-//        countryConfig->meter_rating = atof(value);
-//      } else {
-//        return 0;
-//      }
-//    } else {
-//      return 0; /* unknown section/name, error */
+//bool Tools::Config_Handler(char *section, char *param, char *value) {
+//  if(strcmp(section, "global") == 0) {
+//    if(strcmp(param, "log") == 0) {
+//      Global.Log = strdup(value);
+//    } else if(strcmp(param, "pid") == 0) {
+//      Global.Pid = strdup(value);
+//    } else if(strcmp(param, "httpPort") == 0) {
+//      Global.HTTPPort = atoi(value);
+//    } else if(strcmp(param, "httpPath") == 0) {
+//      Global.HTTPPath = strdup(value);
+//    } else if(strcmp(param, "httpPass") == 0) {
+//      Global.HTTPPass = strdup(value);
 //    }
-  }
-  return true;
-}
+//  } else if(strcmp(section, "database") == 0) {
+//    if(strcmp(param, "port") == 0) {
+//      DB.Port = atoi(value);
+//    } else if(strcmp(param, "database") == 0) {
+//      DB.Database = strdup(value);
+//    } else if(strcmp(param, "host") == 0) {
+//      DB.Host = strdup(value);
+//    } else if(strcmp(param, "user") == 0) {
+//      DB.User = strdup(value);
+//    } else if(strcmp(param, "pass") == 0) {
+//      DB.Password = strdup(value);
+//    } else {
+//      LogMsg("ERROR", "Unknown param '%s' in section '%s'\n", param, section);
+//      return false;
+//    }
+//  } else if(strcmp(section, "electrical") == 0) {
+//    if(strcmp(param, "nominal_frequency") == 0) {
+//      Electrical.NominalFrequency = atoi(value);
+//      if((Electrical.NominalFrequency != 50) && (Electrical.NominalFrequency != 60)) Electrical.NominalFrequency = 50;
+//    } else if(strcmp(param, "nominal_voltage") == 0) {
+//      Electrical.NominalVoltage = atof(value);
+//    } else {
+//      LogMsg("ERROR", "Unknown param '%s' in section '%s'\n", param, section);
+//      return false;
+//    }
+//  } else if(strcmp(section, "device") == 0) {  
+//    if(strcmp(param, "voltage_gain") == 0) {
+//      Devices.Items[Devices.Len - 1].VoltageGain = atof(value);
+//    } else if(strcmp(param, "voltage_offset") == 0) {
+//      Devices.Items[Devices.Len - 1].VoltageOffset = atoi(value);
+//    } else if(strcmp(param, "current_gain") == 0) {
+//      Devices.Items[Devices.Len - 1].CurrentGain = atof(value);
+//    } else if(strcmp(param, "current_offset") == 0) {
+//      Devices.Items[Devices.Len - 1].CurrentOffset = atoi(value);
+//    } else if(strcmp(param, "name") == 0) {
+//      Devices.Items[Devices.Len - 1].Name = strdup(value);
+//    } else if(strcmp(param, "serial") == 0) {
+//      Devices.Items[Devices.Len - 1].Serial = strdup(value);
+//    } else if(strcmp(param, "type") == 0) {
+//      Devices.Items[Devices.Len - 1].Type = strdup(value);      
+//    } else {
+//      LogMsg("INFO", "Unknown config param '%s/%s\n", section, param);
+//    }
+//  } else if(strcmp(section, "budget")) {
+//    
+//    if(strcmp(param, "fixed_price") == 0) {
+//    
+//    if(strcmp(value, "false") == 0) {
+////      pconfig->budget.fixed_price = -1;
+//    } else {
+////      pconfig->budget.fixed_price = atof(value);
+//    }
+////  } else if(MATCH("budget", "country")) {
+////    pconfig->budget.country = strdup(value);
+////    pconfig->budget.country_config = NULL;
+//    }
+//  } else {
+////    if(pconfig->budget.country != NULL && strcmp(pconfig->budget.country, "spain") == 0) {
+////      budget_spain_configuration * countryConfig;
+////      if(pconfig->budget.country_config == NULL) {
+////        pconfig->budget.country_config = malloc(sizeof(budget_spain_configuration));
+////      }
+////      countryConfig = (budget_spain_configuration*) (pconfig->budget.country_config);
+////      if(MATCH("budget-spain", "contracted_power")) {
+////        countryConfig->contracted_power = atoi(value);
+////      } else if(MATCH("budget-spain", "cpc")) {
+////        countryConfig->cpc = atof(value);
+////      } else if(MATCH("budget-spain", "rate_type")) {
+////        countryConfig->rate_type = strdup(value);
+////      } else if(MATCH("budget-spain", "vat")) {
+////        countryConfig->vat = atof(value);
+////      } else if(MATCH("budget-spain", "discount_percentage")) {
+////        countryConfig->discount_percentage = atof(value);
+////      } else if(MATCH("budget-spain", "electricity_tax_percentage")) {
+////        countryConfig->electricity_tax_percentage = atof(value);
+////      } else if(MATCH("budget-spain", "meter_rating")) {
+////        countryConfig->meter_rating = atof(value);
+////      } else {
+////        return 0;
+////      }
+////    } else {
+////      return 0; /* unknown section/name, error */
+////    }
+//  }
+//  return true;
+//}
 uint64_t Tools::GetTime() {
   struct timeval Time;
   if(gettimeofday(&Time, NULL) != 0) {
