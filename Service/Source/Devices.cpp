@@ -30,6 +30,7 @@ bool Devices::Init(json_object *config) {
       }
     }
   }
+  return true;
 }
 bool Devices::Start() {
   bool Result = true;

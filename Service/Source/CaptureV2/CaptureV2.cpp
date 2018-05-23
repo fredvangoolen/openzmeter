@@ -207,6 +207,7 @@ void  *CaptureV2::Analize_Thread(void* args) {
 CaptureV2 *CaptureV2::Init(json_object* config) {
   CaptureV2 *Device = new CaptureV2();
   bool     ValidDriver      = false;
+  bool     ValidParams      = true;
   bool     Error            = false;
   uint8_t  Oversample       = 4;
   //  ChannelMask      = 0;
@@ -231,9 +232,10 @@ CaptureV2 *CaptureV2::Init(json_object* config) {
       Device->Routes[0].Instance = new Analyzer(30000, false, 4);
     }
   }
-  
-  
-  Device->Start();
+  if(ValidDriver & ValidParams)
+    return Device;
+  else
+    delete Device;
   return NULL;
 }
 CaptureV2::CaptureV2(/*const char *serial, float *voltageGain, int *voltageOffset, float *currentGain, int *currentOffset, uint16_t id*/) {

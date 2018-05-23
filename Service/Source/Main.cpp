@@ -17,6 +17,7 @@
 #include "HTTPServer.h"
 #include "Analyzer.h"
 #include "NetworkManager.h"
+#include "Devices.h"
 
 int main(int argc, char** argv) {
 //  for(int i = 0; i < 20; i++) {
@@ -81,7 +82,9 @@ int main(int argc, char** argv) {
 //  }
 
 //  if(RequestServer_Start(Config.Global.Listen) == false) goto Stop;
+  Devices::Start();
   HTTPServer::Start();
+
 //  Events_Init();
 //  Prices_Start(LastPrice);
   int Iter = 0;

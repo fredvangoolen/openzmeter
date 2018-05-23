@@ -69,6 +69,7 @@ bool Database::Init(json_object *config) {
 }
 bool Database::ExecSentence(const char* sql) {
   if(Result != NULL) PQclear(Result);
+  Connect();
   Result = PQexec(DBConn, sql);
   if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
     char *Save;
