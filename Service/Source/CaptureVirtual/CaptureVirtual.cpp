@@ -51,19 +51,19 @@ void  *CaptureVirtual::Capture_Thread(void *args) {
       float CurrentA = Variation(GeneratedSamples, 1, 5, 30.0 * This->SampleRate());
       float CurrentB = Variation(GeneratedSamples, 1, 5, 40.0 * This->SampleRate());
       float CurrentC = Variation(GeneratedSamples, 1, 5, 50.0 * This->SampleRate());
-      float VoltageA = Variation(GeneratedSamples, Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 300.0 * This->SampleRate());
-      float VoltageB = Variation(GeneratedSamples, Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 310.0 * This->SampleRate());
-      float VoltageC = Variation(GeneratedSamples, Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 320.0 * This->SampleRate());
+//      float VoltageA = Variation(GeneratedSamples, Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 300.0 * This->SampleRate());
+//      float VoltageB = Variation(GeneratedSamples, Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 310.0 * This->SampleRate());
+//      float VoltageC = Variation(GeneratedSamples, Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 320.0 * This->SampleRate());
       if(((GeneratedSamples / This->SampleRate()) >= 10) && ((GeneratedSamples / This->SampleRate()) < 20)) {
-        VoltageB = Tools::Electrical.NominalVoltage * 0.001;
+//        VoltageB = Tools::Electrical.NominalVoltage * 0.001;
       }
-      This->Buffer[This->WritePos].VoltageA = VoltageA * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency);
-      This->Buffer[This->WritePos].CurrentA = CurrentA * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency + CurrentPhaseShift);
+//      This->Buffer[This->WritePos].VoltageA = VoltageA * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency);
+//      This->Buffer[This->WritePos].CurrentA = CurrentA * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency + CurrentPhaseShift);
       if(This->Triphase()) {
-        This->Buffer[This->WritePos].VoltageB = VoltageB * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency - 2.0 * M_PI / 3.0);
-        This->Buffer[This->WritePos].VoltageC = VoltageC * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency - 4.0 * M_PI / 3.0);
-        This->Buffer[This->WritePos].CurrentB = CurrentB * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency - 2.0 * M_PI / 3.0 + CurrentPhaseShift);
-        This->Buffer[This->WritePos].CurrentC = CurrentC * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency - 4.0 * M_PI / 3.0 + CurrentPhaseShift);
+//        This->Buffer[This->WritePos].VoltageB = VoltageB * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency - 2.0 * M_PI / 3.0);
+//        This->Buffer[This->WritePos].VoltageC = VoltageC * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency - 4.0 * M_PI / 3.0);
+//        This->Buffer[This->WritePos].CurrentB = CurrentB * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency - 2.0 * M_PI / 3.0 + CurrentPhaseShift);
+//        This->Buffer[This->WritePos].CurrentC = CurrentC * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency - 4.0 * M_PI / 3.0 + CurrentPhaseShift);
         This->Buffer[This->WritePos].CurrentD = 0.0000000;
       }
       This->WritePos = (This->WritePos + 1) % CAPTUREVIRTUAL_BUFFERSIZE;
@@ -150,14 +150,14 @@ CaptureVirtual::CaptureVirtual(bool triphase, float nominalcurrent, uint16_t id)
   pthread_mutex_init(&CaptureMutex, NULL);
   for(int i = 0; i < 5; i++) {
     float Q = 1.0;
-    float K = tan(M_PI * ((float)Tools::Electrical.NominalFrequency / CAPTUREVIRTUAL_SAMPLEFREQ));
-    float Norm = 1 / (1 + K / Q + K * K);
-    Filters[i].A0 = K / Q * Norm;
-    Filters[i].A1 = 0;
-    Filters[i].A2 = -Filters[i].A0;
-    Filters[i].B1 = 2 * (K * K - 1) * Norm;
-    Filters[i].B2 = (1 - K / Q + K * K) * Norm;
-    Filters[i].Z1 = 0.0;
+//    float K = tan(M_PI * ((float)Tools::Electrical.NominalFrequency / CAPTUREVIRTUAL_SAMPLEFREQ));
+//    float Norm = 1 / (1 + K / Q + K * K);
+//    Filters[i].A0 = K / Q * Norm;
+//    Filters[i].A1 = 0;
+//    Filters[i].A2 = -Filters[i].A0;
+//    Filters[i].B1 = 2 * (K * K - 1) * Norm;
+//    Filters[i].B2 = (1 - K / Q + K * K) * Norm;
+//    Filters[i].Z1 = 0.0;
     Filters[i].Z2 = 0.0;            
   }
   Buffer = (Sample_t*)malloc(CAPTUREVIRTUAL_BUFFERSIZE * sizeof(Sample_t));

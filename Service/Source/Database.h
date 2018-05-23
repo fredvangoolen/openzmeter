@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include <postgresql/libpq-fe.h>
 #include <json-c/json.h>
+//----------------------------------------------------------------------------------------------------------------------
 class Database;
 class Database {
   private :
@@ -23,10 +24,9 @@ class Database {
     const char  *Sentence;
     PGresult    *Result;
   private :
-    Database();
+    bool Connect();
   public :
-    static bool      PrepareDB(json_object *config);
-    static Database *GetInstance();
+    static bool Init(json_object *config);
   public :
     void  PrepareSentence(const char *sentence);
     void  BindSingleUInt32(uint32_t param);
@@ -40,5 +40,6 @@ class Database {
     bool  ExecSentence();
     bool  ExecSentence(const char *sql);
     char *ExecSentenceJSON(const char* sql, size_t *len);
+    Database();
     ~Database();
 };

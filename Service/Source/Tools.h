@@ -11,38 +11,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   private :
-    static bool            Daemonized;
-    static int             LogFile;
-    static json_object    *Config;
-    static char           *PidFile;
+    static bool          Daemonized;
+    static int           LogFile;
+    static json_object  *Config;
+    static char         *PidFile;
   public :
-//    typedef struct {
-//      uint16_t HTTPPort;
-//      char    *HTTPPath;
-//      char    *HTTPPass;
-////      char    *Log;
-////      char    *Pid;
-//    } Global_t;
-    typedef struct {
-      char             *Type;
-      char             *Serial;
-      char             *Name;
-      float             VoltageGain;
-      int               VoltageOffset;
-      float             CurrentGain;
-      int               CurrentOffset;
-      Analyzer *Instance;
-    } Device_t;
-    typedef struct {
-      Device_t *Items;
-      uint32_t  Len;
-    } Devices_t;
-    typedef struct {
-      int       NominalFrequency;
-      float     NominalVoltage;
-    } Electrical_t;
-    static Electrical_t  Electrical;
-    static Devices_t     Devices;
     static bool          Debug;
     static bool          Terminate;
   private :

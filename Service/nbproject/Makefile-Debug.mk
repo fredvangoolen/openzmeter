@@ -36,10 +36,10 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/Source/Analyzer.o \
-	${OBJECTDIR}/Source/CaptureMono/CaptureMono.o \
 	${OBJECTDIR}/Source/CaptureV2/CaptureV2.o \
-	${OBJECTDIR}/Source/CaptureVirtual/CaptureVirtual.o \
 	${OBJECTDIR}/Source/Database.o \
+	${OBJECTDIR}/Source/DeviceInterface.o \
+	${OBJECTDIR}/Source/Devices.o \
 	${OBJECTDIR}/Source/HTTPServer.o \
 	${OBJECTDIR}/Source/Main.o \
 	${OBJECTDIR}/Source/NetworkManager.o \
@@ -76,25 +76,25 @@ ${OBJECTDIR}/Source/Analyzer.o: Source/Analyzer.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Analyzer.o Source/Analyzer.cpp
 
-${OBJECTDIR}/Source/CaptureMono/CaptureMono.o: Source/CaptureMono/CaptureMono.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source/CaptureMono
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/CaptureMono/CaptureMono.o Source/CaptureMono/CaptureMono.cpp
-
 ${OBJECTDIR}/Source/CaptureV2/CaptureV2.o: Source/CaptureV2/CaptureV2.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/CaptureV2
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/CaptureV2/CaptureV2.o Source/CaptureV2/CaptureV2.cpp
 
-${OBJECTDIR}/Source/CaptureVirtual/CaptureVirtual.o: Source/CaptureVirtual/CaptureVirtual.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source/CaptureVirtual
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/CaptureVirtual/CaptureVirtual.o Source/CaptureVirtual/CaptureVirtual.cpp
-
 ${OBJECTDIR}/Source/Database.o: Source/Database.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Database.o Source/Database.cpp
+
+${OBJECTDIR}/Source/DeviceInterface.o: Source/DeviceInterface.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/DeviceInterface.o Source/DeviceInterface.cpp
+
+${OBJECTDIR}/Source/Devices.o: Source/Devices.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Devices.o Source/Devices.cpp
 
 ${OBJECTDIR}/Source/HTTPServer.o: Source/HTTPServer.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source

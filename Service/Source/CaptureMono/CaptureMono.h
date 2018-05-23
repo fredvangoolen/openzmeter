@@ -4,6 +4,7 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <libusb-1.0/libusb.h>
+#include "../DeviceInterface.h"
 #include "../Analyzer.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define CAPTUREMONO_VID             0x0483       //Product ID
@@ -18,7 +19,7 @@
 #define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
 #define PROCESSING_CURRENTOFFSET      0.10        //Corriente minima para realizar calculos
 //----------------------------------------------------------------------------------------------------------------------
-class CaptureMono : public Analyzer {
+class CaptureMono : public DeviceInterface {
   private :
     typedef struct {
       float Voltage;                                      //Valor de tension

@@ -15,14 +15,30 @@
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/NOTES</file>
         </group>
         <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/openZmeter.js</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureMono/CaptureMono.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureInterface.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Main.cpp</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureMono/CaptureMono.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Events_ITIC.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureV2/CaptureV2.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/NetworkManager.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Tools.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.cpp</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureV2/CaptureV2.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Main.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Devices.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzer.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzer.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/openZmeter.ini_sample</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Events_ITIC.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Tools.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureV2/CaptureV2.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Database.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/DeviceInterface.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/DeviceInterface.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureVirtual/CaptureVirtual.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Prices.h</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureVirtual/CaptureVirtual.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Database.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Devices.h</file>
         </group>
     </open-files>
 </project-private>

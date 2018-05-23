@@ -17,12 +17,12 @@
 #include "CaptureMono.h"
 #include "../Tools.h"
 // Funciones ===========================================================================================================
-void   CaptureMono::ReadCallback(struct libusb_transfer *transfer) {
+void CaptureMono::ReadCallback(struct libusb_transfer *transfer) {
   int16_t *Buff16 = (int16_t*)transfer->buffer;
   uint     Len = transfer->actual_length / 4;
   CaptureMono *This = (CaptureMono*)transfer->user_data;
   pthread_mutex_lock(&This->CaptureMutex);
-  while(This->Used > (CAPTUREMONO_BUFFERSIZE - Len - This->SampleRate() * EVENT_ENVELOPETIME)) {
+  while(This->Used > (CAPTUREMONO_BUFFERSIZE - Len - This->Samplerate * EVENT_ENVELOPETIME)) {
     if(This->pTerminate) return;
     Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
     pthread_cond_wait(&This->WriteWait, &This->CaptureMutex);
@@ -223,15 +223,15 @@ CaptureMono::CaptureMono(const char *serial, float voltageGain, int voltageOffse
   pthread_mutex_init(&CaptureMutex, NULL);
   for(int i = 0; i < 5; i++) {
     float Q = 1.0;
-    float K = tan(M_PI * ((float)Tools::Electrical.NominalFrequency / CAPTUREMONO_SAMPLEFREQ));
-    float Norm = 1 / (1 + K / Q + K * K);
-    Filters[i].A0 = K / Q * Norm;
-    Filters[i].A1 = 0;
-    Filters[i].A2 = -Filters[i].A0;
-    Filters[i].B1 = 2 * (K * K - 1) * Norm;
-    Filters[i].B2 = (1 - K / Q + K * K) * Norm;
-    Filters[i].Z1 = 0.0;
-    Filters[i].Z2 = 0.0;            
+//    float K = tan(M_PI * ((float)Tools::Electrical.NominalFrequency / CAPTUREMONO_SAMPLEFREQ));
+//    float Norm = 1 / (1 + K / Q + K * K);
+//    Filters[i].A0 = K / Q * Norm;
+//    Filters[i].A1 = 0;
+//    Filters[i].A2 = -Filters[i].A0;
+//    Filters[i].B1 = 2 * (K * K - 1) * Norm;
+//    Filters[i].B2 = (1 - K / Q + K * K) * Norm;
+//    Filters[i].Z1 = 0.0;
+//    Filters[i].Z2 = 0.0;            
   }
   int Error = libusb_init(NULL);
   if(Error < 0) {

@@ -20,6 +20,10 @@
       <itemPath>Source/Analyzer.h</itemPath>
       <itemPath>Source/Database.cpp</itemPath>
       <itemPath>Source/Database.h</itemPath>
+      <itemPath>Source/DeviceInterface.cpp</itemPath>
+      <itemPath>Source/DeviceInterface.h</itemPath>
+      <itemPath>Source/Devices.cpp</itemPath>
+      <itemPath>Source/Devices.h</itemPath>
       <itemPath>Source/HTTPServer.cpp</itemPath>
       <itemPath>Source/HTTPServer.h</itemPath>
       <itemPath>Source/Main.cpp</itemPath>
@@ -246,6 +250,24 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -282,6 +304,14 @@
       <item path="Source/Database.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Source/Database.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Source/DeviceInterface.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Source/DeviceInterface.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Source/Devices.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Source/Devices.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -565,6 +595,24 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -580,18 +628,9 @@
       </item>
       <item path="Source/Analyzer.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/CaptureMono/CaptureMono.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="Source/CaptureMono/CaptureMono.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="Source/CaptureV2/CaptureV2.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Source/CaptureV2/CaptureV2.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Source/CaptureVirtual/CaptureVirtual.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
       </item>
       <item path="Source/CaptureVirtual/CaptureVirtual.h"
             ex="false"
@@ -601,6 +640,14 @@
       <item path="Source/Database.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Source/Database.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Source/DeviceInterface.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Source/DeviceInterface.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Source/Devices.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Source/Devices.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="0">
       </item>

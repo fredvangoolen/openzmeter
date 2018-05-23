@@ -17,7 +17,7 @@
 #define EVENT_HYSTERESIS              06.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
 #define EVENT_ENVELOPETIME             0.1        //Tiempo en segundos que se guarda antes y despues de un evento
 //---------------------------------------------------------------------------------------------------------------------
-class Analyzer {
+class Analyzer : private Database {
   public :
     enum Aggreg_Type { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
     enum Event_Type  { EVT_NONE, EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC, EVT_GLITCH };
@@ -80,15 +80,7 @@ class Analyzer {
       Complex_t **VoltageFFT;                 //Transformada de los canales de tension      
       Complex_t **CurrentFFT;                 //Transformada de los canales de corriente
     } Work_t;
-    typedef struct {
-      float A0;
-      float A1;
-      float A2;
-      float B1;
-      float B2;
-      float Z1;
-      float Z2;
-    } Filter_t;
+
   private :
     typedef struct {
       float    *RMS;
@@ -105,7 +97,6 @@ class Analyzer {
   private :
     static pthread_mutex_t pFFTPlannerMutex; //Bloquea el acceso simultaneo al plinificador de FFTs
   private :
-    Database       *pDatabase;             //Conexion a la base de datos
     uint32_t        pWaitingThreads;       //Hilos esperando datos
     pthread_mutex_t pWaitingThreadsMutex;  //Mutex para registrar cambios en WaitingThreads
     pthread_cond_t  pWaitingThreadsWait;   //Variable de condicion para bloquear el analizer
@@ -153,7 +144,7 @@ class Analyzer {
     void     FFT_Wait(FFT_t *fft);
   protected :
     static void  *FFT_Thread(void *args);
-    static float  ApplyFilter(float in, Filter_t *filter);
+
     static float  CalcPhi(Complex_t voltage, Complex_t current);
   protected :
 //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;

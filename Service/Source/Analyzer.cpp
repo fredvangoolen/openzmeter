@@ -26,9 +26,9 @@ void Analyzer::SaveWorkParams() {
     Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
     NormalizeParams(&pAggreg3S);
     if(pAggreg3S.Flag == false) {
-      float Variation = PercentChange(pAggreg3S.Frequency, Tools::Electrical.NominalFrequency);
+//      float Variation = PercentChange(pAggreg3S.Frequency, Tools::Electrical.NominalFrequency);
       for(uint Range = 1; Range < (sizeof(FrequencyRanges) / sizeof(float)); Range++) {
-        if((Variation >= FrequencyRanges[Range - 1]) && (Variation < FrequencyRanges[Range])) pStats.Frequency[Range - 1]++;
+//        if((Variation >= FrequencyRanges[Range - 1]) && (Variation < FrequencyRanges[Range])) pStats.Frequency[Range - 1]++;
       }
     }
     SaveParams(&pAggreg3S);
@@ -49,21 +49,21 @@ void Analyzer::SaveWorkParams() {
     NormalizeParams(&pAggreg10M);
     if(pAggreg10M.Flag == false) {
       for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
-        float Variation = PercentChange(pAggreg10M.RMS_V[i], Tools::Electrical.NominalVoltage);
+//        float Variation = PercentChange(pAggreg10M.RMS_V[i], Tools::Electrical.NominalVoltage);
         for(uint Range = 1; Range < (sizeof(VoltageRanges) / sizeof(float)); Range++) {
-          if((Variation >= VoltageRanges[Range - 1]) && (Variation < VoltageRanges[Range])) pStats.Voltage[Range - 1]++;
+//          if((Variation >= VoltageRanges[Range - 1]) && (Variation < VoltageRanges[Range])) pStats.Voltage[Range - 1]++;
         }
-        Variation = pAggreg10M.THD_V[i];
+//        Variation = pAggreg10M.THD_V[i];
         for(uint Range = 1; Range < (sizeof(THDRanges) / sizeof(float)); Range++) {
-          if((Variation >= THDRanges[Range - 1]) && (Variation < THDRanges[Range])) pStats.THD[Range - 1]++;
+//          if((Variation >= THDRanges[Range - 1]) && (Variation < THDRanges[Range])) pStats.THD[Range - 1]++;
         }
         bool HarmonicsInRange = true;
         for(int n = 0; n < 25; n++) {
-          Variation = PercentChange(pAggreg10M.VoltageHarmonics[i][n + 1], Tools::Electrical.NominalVoltage);
-          if(Variation > HarmonicsAllowed[n]) {
-            HarmonicsInRange = false;
-            break;
-          }
+//          Variation = PercentChange(pAggreg10M.VoltageHarmonics[i][n + 1], Tools::Electrical.NominalVoltage);
+//          if(Variation > HarmonicsAllowed[n]) {
+//            HarmonicsInRange = false;
+//            break;
+//          }
         }
         if(HarmonicsInRange == true) {
           pStats.Harmonics[0]++;
@@ -148,45 +148,45 @@ void Analyzer::NormalizeParams(Params_t *params) {
 }
 void Analyzer::SaveParams(Params_t *params) {
   if(params->Type == AGGREG_3S)  
-    pDatabase->PrepareSentence("EXECUTE SAVE_3S(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("EXECUTE SAVE_3S(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1M)  
-    pDatabase->PrepareSentence("EXECUTE SAVE_1M(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("EXECUTE SAVE_1M(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_10M)  
-    pDatabase->PrepareSentence("EXECUTE SAVE_10M(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("EXECUTE SAVE_10M(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1H)  
-    pDatabase->PrepareSentence("EXECUTE SAVE_1H(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-  pDatabase->BindSingleUInt32(pNodeIndex);                                                    //node
-  pDatabase->BindSingleUInt64(params->Timestamp);                                             //sampletime
-  pDatabase->BindArrayFloat(params->RMS_V, (pTriphase == true) ? 3 : 1);                      //rms_v 
-  pDatabase->BindArrayFloat(params->RMS_I, (pTriphase == true) ? 4 : 1);                      //rms_i
-  pDatabase->BindArrayFloat(params->Active_Power, (pTriphase == true) ? 3 : 1);               //active_power
-  pDatabase->BindArrayFloat(params->Active_Energy, (pTriphase == true) ? 3 : 1);              //active_energy
-  pDatabase->BindArrayFloat(params->Fundamental_Reactive_Power, (pTriphase == true) ? 3 : 1); //fundamental_reactive_power
-  pDatabase->BindArrayFloat(params->Fundamental_Reactive_Energy, (pTriphase == true) ? 3 : 1);//fundamental_reactive_energy
-  pDatabase->BindSingleFloat(params->Frequency);                                              //frequency
-  pDatabase->BindSingleBool(params->Flag);                                                    //flaged
+    PrepareSentence("EXECUTE SAVE_1H(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+  BindSingleUInt32(pNodeIndex);                                                    //node
+  BindSingleUInt64(params->Timestamp);                                             //sampletime
+  BindArrayFloat(params->RMS_V, (pTriphase == true) ? 3 : 1);                      //rms_v 
+  BindArrayFloat(params->RMS_I, (pTriphase == true) ? 4 : 1);                      //rms_i
+  BindArrayFloat(params->Active_Power, (pTriphase == true) ? 3 : 1);               //active_power
+  BindArrayFloat(params->Active_Energy, (pTriphase == true) ? 3 : 1);              //active_energy
+  BindArrayFloat(params->Fundamental_Reactive_Power, (pTriphase == true) ? 3 : 1); //fundamental_reactive_power
+  BindArrayFloat(params->Fundamental_Reactive_Energy, (pTriphase == true) ? 3 : 1);//fundamental_reactive_energy
+  BindSingleFloat(params->Frequency);                                              //frequency
+  BindSingleBool(params->Flag);                                                    //flaged
   if(params->Type == AGGREG_1H) {
-    pDatabase->BindArrayUInt16(pStats.Voltage, sizeof(VoltageRanges) / sizeof(float) - 1);     //estadisticas de tension
-    pDatabase->BindArrayUInt16(pStats.Frequency, sizeof(FrequencyRanges) / sizeof(float) - 1); //estadisticas de frequencia
-    pDatabase->BindArrayUInt16(pStats.THD, sizeof(THDRanges) / sizeof(float) - 1);             //estadisticas de distorsion harmonica
-    pDatabase->BindArrayUInt16(pStats.Harmonics, 2);                                           //estadisticas de harmonicos en rango
+    BindArrayUInt16(pStats.Voltage, sizeof(VoltageRanges) / sizeof(float) - 1);     //estadisticas de tension
+    BindArrayUInt16(pStats.Frequency, sizeof(FrequencyRanges) / sizeof(float) - 1); //estadisticas de frequencia
+    BindArrayUInt16(pStats.THD, sizeof(THDRanges) / sizeof(float) - 1);             //estadisticas de distorsion harmonica
+    BindArrayUInt16(pStats.Harmonics, 2);                                           //estadisticas de harmonicos en rango
   }
-  pDatabase->ExecSentence();
+  ExecSentence();
   if(params->Type == AGGREG_1M) {
-    pDatabase->PrepareSentence("EXECUTE SAVE_1M_EXT(?, ?, ?, ?, ?, ?, ?, ?)");
-    pDatabase->BindSingleUInt32(pNodeIndex);                                                    //node
-    pDatabase->BindSingleUInt64(params->Timestamp);                                             //sampletime
-    pDatabase->BindArrayFloat(params->Power_Factor, (pTriphase == true) ? 3 : 1);               //power_factor
-    pDatabase->BindArrayFloat(params->THD_V, (pTriphase == true) ? 3 : 1);                      //thd_v
-    pDatabase->BindArrayFloat(params->THD_I, (pTriphase == true) ? 4 : 1);                      //thd_i
-    pDatabase->BindArrayFloat(params->Phi, (pTriphase == true) ? 3 : 1);                        //phi
-    pDatabase->BindArrayArrayFloat(params->VoltageHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_v
-    pDatabase->BindArrayArrayFloat(params->CurrentHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_i
-    pDatabase->ExecSentence();
-    pDatabase->PrepareSentence("EXECUTE DELETE_1M_EXT(?, ?)");
-    pDatabase->BindSingleUInt32(pNodeIndex);                                                    //node
-    pDatabase->BindSingleUInt64(params->Timestamp - 86400000);                                  //sampletime
-    pDatabase->ExecSentence();
+    PrepareSentence("EXECUTE SAVE_1M_EXT(?, ?, ?, ?, ?, ?, ?, ?)");
+    BindSingleUInt32(pNodeIndex);                                                    //node
+    BindSingleUInt64(params->Timestamp);                                             //sampletime
+    BindArrayFloat(params->Power_Factor, (pTriphase == true) ? 3 : 1);               //power_factor
+    BindArrayFloat(params->THD_V, (pTriphase == true) ? 3 : 1);                      //thd_v
+    BindArrayFloat(params->THD_I, (pTriphase == true) ? 4 : 1);                      //thd_i
+    BindArrayFloat(params->Phi, (pTriphase == true) ? 3 : 1);                        //phi
+    BindArrayArrayFloat(params->VoltageHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_v
+    BindArrayArrayFloat(params->CurrentHarmonics, (pTriphase == true) ? 3 : 1, 50);  //harmonics_i
+    ExecSentence();
+    PrepareSentence("EXECUTE DELETE_1M_EXT(?, ?)");
+    BindSingleUInt32(pNodeIndex);                                                    //node
+    BindSingleUInt64(params->Timestamp - 86400000);                                  //sampletime
+    ExecSentence();
   }
   ResetParams(params);
 }
@@ -237,7 +237,7 @@ void Analyzer::EventsDetect() {
       if(Stationary == false) EventEnd = false;
     } else if((pRunningEvent.Type == EVT_DIP) || (pRunningEvent.Type == EVT_SWELL) || (pRunningEvent.Type == EVT_INTERRUPTION)) {
       for(int n = 0; n < (pTriphase ? 3 : 1); n++) {
-        if(fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) < EVENT_HYSTERESIS) continue;
+//        if(fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) < EVENT_HYSTERESIS) continue;
         EventEnd = false;
         break;
       }
@@ -250,24 +250,24 @@ void Analyzer::EventsDetect() {
         pRunningEvent.Start    = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
       }
       //Un evento DIP o SWELL se produce cuando un ciclo sale de los valores establecidos y si no habia eventos anteriores o era un RVC
-      if(fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) > EVENT_DIP_SWELL) {
-        if(pRunningEvent.Type == EVT_NONE) pRunningEvent.Start = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
-        if((pRunningEvent.Type == EVT_NONE) || (pRunningEvent.Type == EVT_RVC)) pRunningEvent.Type = (Cycle->RMS[n] > Tools::Electrical.NominalVoltage) ? EVT_SWELL : EVT_DIP;
-      }
-      if(fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) > EVENT_INTERRUPTION) {
-        if(pRunningEvent.Type == EVT_NONE) pRunningEvent.Start = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
-        if((pRunningEvent.Type == EVT_NONE) || (pRunningEvent.Type == EVT_RVC) || (pRunningEvent.Type == EVT_DIP) || (pRunningEvent.Type == EVT_SWELL)) pRunningEvent.Type     = EVT_INTERRUPTION;
-      }
+//      if(fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) > EVENT_DIP_SWELL) {
+//        if(pRunningEvent.Type == EVT_NONE) pRunningEvent.Start = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
+//        if((pRunningEvent.Type == EVT_NONE) || (pRunningEvent.Type == EVT_RVC)) pRunningEvent.Type = (Cycle->RMS[n] > Tools::Electrical.NominalVoltage) ? EVT_SWELL : EVT_DIP;
+//      }
+//      if(fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) > EVENT_INTERRUPTION) {
+//        if(pRunningEvent.Type == EVT_NONE) pRunningEvent.Start = pWork.Params.Timestamp + ((pWork.Cycles[i].Start * 1000.0) / pSampleRate);
+//        if((pRunningEvent.Type == EVT_NONE) || (pRunningEvent.Type == EVT_RVC) || (pRunningEvent.Type == EVT_DIP) || (pRunningEvent.Type == EVT_SWELL)) pRunningEvent.Type     = EVT_INTERRUPTION;
+//      }
       if((pRunningEvent.Type == EVT_RVC) && ((pRunningEvent.Duration == 0) || (fabs(pRunningEvent.Voltage) < fabs(Cycle->RMS[n] - pStationaryRMS[n])))) {
         pRunningEvent.Voltage = Cycle->RMS[n] - pStationaryRMS[n];
-        pRunningEvent.Change  = PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage);          
+//        pRunningEvent.Change  = PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage);          
       }
-      if(((pRunningEvent.Type == EVT_DIP) || (pRunningEvent.Type == EVT_SWELL) || (pRunningEvent.Type == EVT_INTERRUPTION))  && ((pRunningEvent.Duration == 0) || (fabs(pRunningEvent.Voltage) < fabs(Cycle->RMS[n] - Tools::Electrical.NominalVoltage)))) {
-        pRunningEvent.Voltage  = Cycle->RMS[n] - Tools::Electrical.NominalVoltage;
-        pRunningEvent.Change   = PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage);
-        if((pRunningEvent.Type == EVT_DIP) && (Cycle->RMS[n] > Tools::Electrical.NominalVoltage)) pRunningEvent.Type = EVT_SWELL;
-        if((pRunningEvent.Type == EVT_SWELL) && (Cycle->RMS[n] < Tools::Electrical.NominalVoltage)) pRunningEvent.Type = EVT_DIP;
-      }
+//      if(((pRunningEvent.Type == EVT_DIP) || (pRunningEvent.Type == EVT_SWELL) || (pRunningEvent.Type == EVT_INTERRUPTION))  && ((pRunningEvent.Duration == 0) || (fabs(pRunningEvent.Voltage) < fabs(Cycle->RMS[n] - Tools::Electrical.NominalVoltage)))) {
+//        pRunningEvent.Voltage  = Cycle->RMS[n] - Tools::Electrical.NominalVoltage;
+//        pRunningEvent.Change   = PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage);
+//        if((pRunningEvent.Type == EVT_DIP) && (Cycle->RMS[n] > Tools::Electrical.NominalVoltage)) pRunningEvent.Type = EVT_SWELL;
+//        if((pRunningEvent.Type == EVT_SWELL) && (Cycle->RMS[n] < Tools::Electrical.NominalVoltage)) pRunningEvent.Type = EVT_DIP;
+//      }
     }
     if(pRunningEvent.Type != EVT_NONE) SaveEvent(i, false);
     if((pPrevStationary == false) && (Stationary == true)) Tools::LogMsg("DEBUG", "Stationary voltage reached in node %d\n", pNodeIndex);
@@ -306,15 +306,15 @@ void Analyzer::SaveEvent(uint8_t cycle, bool end) {
     if(pRunningEvent.Type == EVT_SWELL) Type = (char*)"SWELL";
     if(pRunningEvent.Type == EVT_INTERRUPTION) Type = (char*)"INTERRUPTION";
     if(pRunningEvent.Type == EVT_GLITCH) Type = (char*)"GLITCH";
-    pDatabase->PrepareSentence("EXECUTE SAVE_EVENT(?, ?, ?, ?, ?, ?, ?)");
-    pDatabase->BindSingleUInt32(pNodeIndex);                                                                       //node
-    pDatabase->BindSingleUInt64(pRunningEvent.Start);                                                              //starttime
-    pDatabase->BindSingleFloat(pRunningEvent.Duration);                                                            //duration
-    pDatabase->BindSingleString(Type);                                                                             //type
-    pDatabase->BindSingleFloat(pRunningEvent.Voltage);                                                             //voltage
-    pDatabase->BindSingleFloat(pRunningEvent.Change);                                                              //change
-    pDatabase->BindArrayArrayFloat(Samples, SamplesLen, (pTriphase == true) ? 3 : 1);                              //samples
-    pDatabase->ExecSentence();
+    PrepareSentence("EXECUTE SAVE_EVENT(?, ?, ?, ?, ?, ?, ?)");
+    BindSingleUInt32(pNodeIndex);                                                                       //node
+    BindSingleUInt64(pRunningEvent.Start);                                                              //starttime
+    BindSingleFloat(pRunningEvent.Duration);                                                            //duration
+    BindSingleString(Type);                                                                             //type
+    BindSingleFloat(pRunningEvent.Voltage);                                                             //voltage
+    BindSingleFloat(pRunningEvent.Change);                                                              //change
+    BindArrayArrayFloat(Samples, SamplesLen, (pTriphase == true) ? 3 : 1);                              //samples
+    ExecSentence();
   }
   if(end == true) {
     pRunningEvent.Type = EVT_NONE;
@@ -428,7 +428,7 @@ Analyzer::Analyzer(uint32_t samplerate, bool triphase, uint16_t id) {
   pPrevTimestamp       = 0;
   pSampleRate          = samplerate;
   pTriphase            = triphase;
-  pMaxSamples          = ceil(samplerate * 10.0 / ((Tools::Electrical.NominalFrequency == 50) ? 42.5 : 51.0));
+//  pMaxSamples          = ceil(samplerate * 10.0 / ((Tools::Electrical.NominalFrequency == 50) ? 42.5 : 51.0));
   pWaitingThreads      = 0;
   pDataReady           = false;
   pTerminate           = false;
@@ -469,13 +469,13 @@ Analyzer::Analyzer(uint32_t samplerate, bool triphase, uint16_t id) {
   pPrevStationary = false;  
   pLastCyclesPos    = 0;
   pWork.SequenceID  = 0;
-  pDatabase->ExecSentence("PREPARE SAVE_3S       AS INSERT INTO aggreg_3s (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");    
-  pDatabase->ExecSentence("PREPARE SAVE_1M       AS INSERT INTO aggreg_1m (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
-  pDatabase->ExecSentence("PREPARE SAVE_1M_EXT   AS INSERT INTO aggreg_ext_1m (node_ext, sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8)");  
-  pDatabase->ExecSentence("PREPARE SAVE_10M      AS INSERT INTO aggreg_10m(node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
-  pDatabase->ExecSentence("PREPARE SAVE_1H       AS INSERT INTO aggreg_1h (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)");
-  pDatabase->ExecSentence("PREPARE DELETE_1M_EXT AS DELETE FROM aggreg_ext_1m WHERE node_ext = $1 AND sampletime_ext < $2");
-  pDatabase->ExecSentence("PREPARE SAVE_EVENT    AS INSERT INTO events (node, starttime, duration, type, voltage, percent, samples) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (starttime, node) DO UPDATE SET duration = $3, type = $4, voltage = $5, percent = $6, samples = events.samples || $7");
+  ExecSentence("PREPARE SAVE_3S       AS INSERT INTO aggreg_3s (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");    
+  ExecSentence("PREPARE SAVE_1M       AS INSERT INTO aggreg_1m (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
+  ExecSentence("PREPARE SAVE_1M_EXT   AS INSERT INTO aggreg_ext_1m (node_ext, sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8)");  
+  ExecSentence("PREPARE SAVE_10M      AS INSERT INTO aggreg_10m(node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
+  ExecSentence("PREPARE SAVE_1H       AS INSERT INTO aggreg_1h (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)");
+  ExecSentence("PREPARE DELETE_1M_EXT AS DELETE FROM aggreg_ext_1m WHERE node_ext = $1 AND sampletime_ext < $2");
+  ExecSentence("PREPARE SAVE_EVENT    AS INSERT INTO events (node, starttime, duration, type, voltage, percent, samples) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (starttime, node) DO UPDATE SET duration = $3, type = $4, voltage = $5, percent = $6, samples = events.samples || $7");
 }
 void Analyzer::ResetParams(Params_t *params) {
   params->Timestamp = 0;
@@ -548,12 +548,6 @@ float Analyzer::CalcPhi(Complex_t voltage, Complex_t current) {
     return Tmp - atan(current.Imag / current.Real);
   else
     return Tmp - atan(current.Imag / current.Real) + M_PI;
-}
-float Analyzer::ApplyFilter(float in, Filter_t* filter) {
-  float out = in * filter->A0 + filter->Z1;
-  filter->Z1 = in * filter->A1 + filter->Z2 - filter->B1 * out;
-  filter->Z2 = in * filter->A2 - filter->B2 * out;
-  return out;
 }
 void *Analyzer::FFT_Thread(void *args) {
   FFT_t *FFT = (FFT_t *)args;

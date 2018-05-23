@@ -40,6 +40,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/Source/CaptureV2/CaptureV2.o \
 	${OBJECTDIR}/Source/CaptureVirtual/CaptureVirtual.o \
 	${OBJECTDIR}/Source/Database.o \
+	${OBJECTDIR}/Source/DeviceInterface.o \
+	${OBJECTDIR}/Source/Devices.o \
 	${OBJECTDIR}/Source/HTTPServer.o \
 	${OBJECTDIR}/Source/Main.o \
 	${OBJECTDIR}/Source/NetworkManager.o \
@@ -90,6 +92,14 @@ ${OBJECTDIR}/Source/CaptureVirtual/CaptureVirtual.o: Source/CaptureVirtual/Captu
 ${OBJECTDIR}/Source/Database.o: Source/Database.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/Database.o Source/Database.cpp
+
+${OBJECTDIR}/Source/DeviceInterface.o: Source/DeviceInterface.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/DeviceInterface.o Source/DeviceInterface.cpp
+
+${OBJECTDIR}/Source/Devices.o: Source/Devices.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/Devices.o Source/Devices.cpp
 
 ${OBJECTDIR}/Source/HTTPServer.o: Source/HTTPServer.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source

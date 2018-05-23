@@ -14,40 +14,40 @@
     "UserName": "openzmeter",
     "Password": "openzmeter",
   },
-  "Electrical": {
+  "Capture": {
     "NominalFrequency": 50,
     "NominalVoltage": 230,
-  },
-  "Devices": [
-    { "Driver": "CaptureMono",
-      "ID": 0,
-      "DisplayName": "Real",
-      "Serial": "3FFFFFFFFFFFFFFFFFFFFFFF",
-      "VoltageGain": 0.01160,
-      "VoltageOffset": 348.00,
-      "CurrentGain": -0.00078125,
-      "CurrentOffset": 32768,
-    },
-    { "Driver": "CaptureV2",
-      "SampleRate": 30000,
-      "Oversample": 4,
-      "Serial": "*",
-      "VoltageGain": [0.01160, 0, 0],
-      "VoltageOffset": [348.00, 0, 0],
-      "CurrentGain": [-0.00078125, 0, 0, 0],
-      "CurrentOffset": [32768, 0, 0, 0],
-      "Outputs": [
-        { "DisplayName": "Output1",
-          "Mode": "3Phase+N",
-          "ID": 4
-        }, 
-        { "DisplayName": "Output1",
-          "Mode": "1Phase",
-          "VoltageChannel": "R",
-          "CurrentChannel": "T",
-          "ID": 5
-        }
-      ]
-    }
-  ]
+    "Devices": [
+      { "Driver": "CaptureMono",
+        "ID": 0,
+        "DisplayName": "Real",
+        "Serial": "3FFFFFFFFFFFFFFFFFFFFFFF",
+        "VoltageGain": 0.01160,
+        "VoltageOffset": 348.00,
+        "CurrentGain": -0.00078125,
+        "CurrentOffset": 32768,
+      },
+      { "Driver": "CaptureV2",
+        "Samplerate": 30000,
+        "Oversample": 4,
+        "Serial": "*",
+        "VoltageGain": [0.01160, 0, 0],
+        "VoltageOffset": [348.00, 0, 0],
+        "CurrentGain": [-0.00078125, 0, 0, 0],
+        "CurrentOffset": [32768, 0, 0, 0],
+        "Outputs": [
+          { "DisplayName": "Output1",
+            "Mode": "3Phase+N",
+            "ID": 4
+          }, 
+          { "DisplayName": "Output1",
+            "Mode": "1Phase",
+            "VoltageChannel": "R",
+            "CurrentChannel": "T",
+            "ID": 5
+          }
+        ]
+      }
+    ]
+  }
 }

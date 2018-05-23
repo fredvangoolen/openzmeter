@@ -17,6 +17,8 @@
 #include "Tools.h"
 #include "Analyzer.h"
 #include "NetworkManager.h"
+#include "Devices.h"
+#include "DeviceInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon            *HTTPServer::Daemon       = NULL;
 HTTPServer::Session_t *HTTPServer::Sessions     = NULL;
@@ -24,9 +26,9 @@ pthread_mutex_t        HTTPServer::SessionMutex = PTHREAD_MUTEX_INITIALIZER;
 char                  *HTTPServer::FilePath     = (char*)"/usr/share/openZmeter/WEB/";
 char                  *HTTPServer::Password     = (char*)"admin";
 uint64_t               HTTPServer::LastLogin    = 0;
+uint16_t               HTTPServer::Port         = 8080;
 //----------------------------------------------------------------------------------------------------------------------
-bool HTTPServer::Start(json_object *config) {
-  uint16_t Port = 8080;
+bool HTTPServer::Init(json_object *config) {
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastLogin") == 0)) {
@@ -39,6 +41,9 @@ bool HTTPServer::Start(json_object *config) {
       Password = (char*)json_object_get_string(JSON_Val);
     }
   }
+  return true;
+}
+bool HTTPServer::Start() {
   Daemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, Port, NULL, NULL, 
                             &HandleClient, NULL,
                             MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int) 15,
@@ -261,8 +266,7 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
 int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
   Request_t *Request = (Request_t*)*ptr;
   Request->JSONReader = json_tokener_parse(upload_data);
-  bool Error = false;
-  if((Request->JSONReader == NULL) || (json_object_get_type(Request->JSONReader) != json_type_object)) goto InvalidParams;
+  if((Request->JSONReader == NULL) || (json_object_get_type(Request->JSONReader) != json_type_object)) return SendError(connection, MHD_HTTP_BAD_REQUEST, "No JSON params");
   if(strcmp(url, "/LogIn") == 0) {
     char *Password = NULL;
     json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
@@ -270,9 +274,9 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) 
         Password = (char*)json_object_get_string(JSON_Val);
       else 
-        Error = true;
+        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
-    if((Password == NULL) || (Error == true)) goto InvalidParams;
+    if(Password == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     Request->JSONWriter = json_object_new_object();
     if(strcmp(Password, Password) != 0) {
       json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(false));
@@ -285,30 +289,35 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
   }
   if(Request->Session->Logged == false) {
     struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
-    if(((sockaddr_in*)Addr)->sin_addr.s_addr != 0x0100007F) {
-      Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
-      Request->PostData = (char*)"Unauthorided access to API";
-      Request->PostResponseLen = strlen(Request->PostData);
-      return MHD_YES;
-    }
+    if(((sockaddr_in*)Addr)->sin_addr.s_addr != 0x0100007F) return SendError(connection, MHD_HTTP_UNAUTHORIZED, "Unauthorided access to API");
   }
   if(strcmp(url, "/getNodes") == 0) {
     json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
       (void)JSON_Key; (void)JSON_Val;      
-      Error = true;
+      return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
-    if(Error == true) goto InvalidParams;
     Request->JSONWriter = json_object_new_object();
-    json_object_object_add(Request->JSONWriter, "NominalVoltage", json_object_new_int(Tools::Electrical.NominalVoltage));
-    json_object_object_add(Request->JSONWriter, "NominalFreq", json_object_new_int(Tools::Electrical.NominalFrequency));
+    json_object_object_add(Request->JSONWriter, "NominalVoltage", json_object_new_int(Devices::NominalVoltage));
+    json_object_object_add(Request->JSONWriter, "NominalFreq", json_object_new_int(Devices::NominalFrequency));
     json_object *Devices = json_object_new_array();
-    for(uint32_t i = 0; i < Tools::Devices.Len; i++) {
-      json_object *Obj = json_object_new_object();
-      json_object_object_add(Obj, "Name", json_object_new_string(Tools::Devices.Items[i].Name));
-      json_object_object_add(Obj, "Type", json_object_new_string(Tools::Devices.Items[i].Instance->Triphase() ? "3Phase" : "1Phase"));
-      json_object_object_add(Obj, "SampleFreq", json_object_new_int(Tools::Devices.Items[i].Instance->SampleRate()));
-      json_object_object_add(Obj, "MaxCurrent", json_object_new_int(20));
-      json_object_array_add(Devices, Obj);
+    for(uint32_t i = 0; i < Devices::Len; i++) {
+      DeviceInterface *Device = Devices::Items[i];
+      for(uint32_t n = 0; i < Device->Analyzers.Len; i++) {
+        json_object *Obj = json_object_new_object();
+        json_object_object_add(Obj, "Name", json_object_new_string(Device->Analyzers.Items[i]->Name));
+//        json_object_object_add(Obj, "Type", json_object_new_string(CaptureInterface::Analyzers.Items[i].Instance->Triphase() ? "3Phase" : "1Phase"));
+//        json_object_object_add(Obj, "SampleFreq", json_object_new_int(CaptureInterface::Analyzers.Items[i].Instance->SampleRate()));
+//        json_object_object_add(Obj, "MaxCurrent", json_object_new_int(20));
+//        json_object_array_add(Devices, Obj);
+      
+
+
+//      json_object_object_add(Obj, "Name", json_object_new_string(CaptureInterface::Analyzers.Items[i].Name));
+//      json_object_object_add(Obj, "Type", json_object_new_string(CaptureInterface::Analyzers.Items[i].Instance->Triphase() ? "3Phase" : "1Phase"));
+//      json_object_object_add(Obj, "SampleFreq", json_object_new_int(CaptureInterface::Analyzers.Items[i].Instance->SampleRate()));
+//      json_object_object_add(Obj, "MaxCurrent", json_object_new_int(20));
+        json_object_array_add(Devices, Obj);
+      }
     }
     json_object_object_add(Request->JSONWriter, "Devices", Devices);
     Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
@@ -333,9 +342,9 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
         Node = json_object_get_int(JSON_Val);
       else 
-        Error = true;
+        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
-    if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0)) || (Series == NULL) || (Error == true)) goto InvalidParams;
+    if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0)) || (Series == NULL)) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
     if(To == 0) To = Tools::GetTime();
     From = To - Period;
     char QueryText[8192];
@@ -374,8 +383,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "aggreg_%s", Aggreg);
     }
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, " WHERE sampletime > %" PRIu64 " AND sampletime >= %" PRIu64 " AND sampletime <= %" PRIu64 " AND node = %u) AS Result", LastSample, From, To, Node);    
-    Request->DB = Database::GetInstance();
-    if(Request->DB == NULL) return MHD_NO;
+    Request->DB = new Database;
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
   } else if(strcmp(url, "/getSeriesAggreg") == 0) {
@@ -395,9 +403,9 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
         Node = json_object_get_int(JSON_Val);
       else 
-        Error = true;
+        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
-    if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0)) || (Series == NULL) || (Error == true)) goto InvalidParams;
+    if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0)) || (Series == NULL)) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
     if(To == 0) To = Tools::GetTime();
     From = To - Period;
     char QueryText[8192];
@@ -435,8 +443,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     }
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\") AS Result", To); 
-    Request->DB = Database::GetInstance();
-    if(Request->DB == NULL) return MHD_NO;
+    Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
   } else if(strcmp(url, "/getSeriesNow") == 0) {
@@ -449,18 +456,18 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
         Node = json_object_get_int(JSON_Val);
       else 
-        Error = true;
+        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
-    if((Series == NULL) || (Error == true)) goto InvalidParams;
-    if(Node < Tools::Devices.Len) {
-      Request->JSONWriter = Tools::Devices.Items[Node].Instance->GetJSONCopy(Series);
-      if(Request->JSONWriter == NULL) {
-        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-      } else {
-        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
-      }
-      return MHD_YES;
-    }
+    if(Series == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
+//    if(Node < CaptureInterface::Analyzers.Len) {
+////      Request->JSONWriter = Tools::Devices.Items[Node].Instance->GetJSONCopy(Series);
+//      if(Request->JSONWriter == NULL) {
+//        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+//      } else {
+//        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
+//      }
+//      return MHD_YES;
+//    }
   } else if(strcmp(url, "/getSysInfo") == 0) {
     char *Type = NULL;
     json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
@@ -468,9 +475,9 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Type") == 0)) 
         Type = (char*)json_object_get_string(JSON_Val);
       else
-        Error = true;
+        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
-    if((Type == NULL) || (Error == true)) goto InvalidParams;
+    if(Type == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
     if(strcmp(Type, "Performance") == 0) {
       Request->JSONWriter = Tools::GetJSONSysInfo();
       if(Request->JSONWriter == NULL) {
@@ -497,9 +504,9 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Params") == 0))
         Params = JSON_Val;
       else
-        Error = true;
+        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
-    if((Type == NULL) || (Params == NULL) || (Error == true)) goto InvalidParams;
+    if((Type == NULL) || (Params == NULL)) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
     if(strcmp(Type, "Connectivity") == 0) {
       Request->JSONWriter = json_object_new_object();
       json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(NetworkManager::SetJSONNetworkConfig(Params)));
@@ -520,9 +527,8 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
         Node = json_object_get_int(JSON_Val);
       else 
-        Error = true;
+        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
-    if(Error == true) goto InvalidParams;
     if(To == 0) To = Tools::GetTime();
     From = To - Period;
     char QueryText[8192];
@@ -536,8 +542,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(voltage ORDER BY starttime ASC) AS \"Voltage\", ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(percent ORDER BY starttime ASC) AS \"Percentage\" ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE starttime > %" PRIu64 " AND starttime >= %" PRIu64 " AND starttime <= %" PRIu64 " AND node = %u) AS Result", LastEvent, From, To, Node);
-    Request->DB = Database::GetInstance();
-    if(Request->DB == NULL) return MHD_NO;
+    Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
   } else if(strcmp(url, "/getSamplesRange") == 0) {
@@ -550,17 +555,16 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Aggreg") == 0))
         Aggreg = (char*)json_object_get_string(JSON_Val);
       else
-        Error = true;
+        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
-    if((Error == true) || (Aggreg == NULL)) goto InvalidParams;
+    if(Aggreg == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
     char QueryText[8192];
     int  QueryLen = 0;
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "max(sampletime) AS \"To\", ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "min(sampletime) AS \"From\" ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM aggreg_%s WHERE node = %u) AS Result", Aggreg, Node);
-    Request->DB = Database::GetInstance();
-    if(Request->DB == NULL) return MHD_NO;
+    Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
   } else if(strcmp(url, "/getEventSamples") == 0) {
@@ -573,18 +577,17 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Starttime") == 0))
         Starttime = json_object_get_int64(JSON_Val);
       else
-        Error = true;
+        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
-    if((Error == true) || (Node < 0) || (Node >= Tools::Devices.Len)) goto InvalidParams;
+//    if((Error == true) || (Node < 0) || (Node >= Tools::Devices.Len)) goto InvalidParams;
     char QueryText[8192];
     int  QueryLen = 0;
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%u AS \"Envelope\", ", (uint32_t)(EVENT_ENVELOPETIME * Tools::Devices.Items[Node].Instance->SampleRate()));
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%u AS \"Envelope\", ", (uint32_t)(EVENT_ENVELOPETIME * Tools::Devices.Items[Node].Instance->SampleRate()));
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "duration AS \"Duration\", ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "samples AS \"Samples\" ");
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE node = %u AND Starttime = %" PRIu64 ") AS Result", Node, Starttime);
-    Request->DB = Database::GetInstance();
-    if(Request->DB == NULL) return MHD_NO;
+    Request->DB = new Database();
     Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
     return MHD_YES;
   }
@@ -592,9 +595,9 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
   Request->PostData = (char*)"Invalid command";
   Request->PostResponseLen = strlen(Request->PostData);
   return MHD_YES;
-InvalidParams:
-  Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-  Request->PostData = (char*)"Invalid JSON params";
-  Request->PostResponseLen = strlen(Request->PostData);
-  return MHD_YES;  
+//InvalidParams:
+//  Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+//  Request->PostData = (char*)"Invalid JSON params";
+//  Request->PostResponseLen = strlen(Request->PostData);
+//  return MHD_YES;  
 }

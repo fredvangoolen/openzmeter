@@ -5,6 +5,7 @@
 #include "Tools.h"
 #include "NetworkManager.h"
 #include "HTTPServer.h"
+#include "Devices.h"
 #include <string.h>
 #include <signal.h>
 #include <time.h>
@@ -20,15 +21,12 @@
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 bool                Tools::Terminate  = false;
 bool                Tools::Daemonized = false;
 bool                Tools::Debug      = false;
 int                 Tools::LogFile    = -1;
 json_object        *Tools::Config     = NULL;
 char               *Tools::PidFile    = NULL;
-Tools::Electrical_t Tools::Electrical;
-Tools::Devices_t    Tools::Devices;
 //----------------------------------------------------------------------------------------------------------------------
 void Tools::SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
@@ -148,8 +146,6 @@ bool Tools::ReadConfig(char *file) {
     LogMsg("ERROR", "Can not open config file (Invalid JSON format)\n");
     return false;
   }
-//  Global.Pid      = (char*)"/var/run/openZmeter.pid";
-//  Global.Log      = (char*)"/var/log/openZmeter.log";
   bool Error = false;
   json_object_object_foreach(Config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
@@ -163,15 +159,15 @@ bool Tools::ReadConfig(char *file) {
         if(CreatePidFile((char*)json_object_get_string(JSON_Val)) == false) Error = true;
       }
     } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Database") == 0)) {
-      if(Database::PrepareDB(JSON_Val) == false) Error = true;
+      if(Database::Init(JSON_Val) == false) Error = true;
     } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "HTTPServer") == 0)) {
-      if(HTTPServer::Start(JSON_Val) == false) Error = true;
+      if(HTTPServer::Init(JSON_Val) == false) Error = true;
+    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Devices") == 0)) {
+      if(Devices::Init(JSON_Val) == false) Error = true;
+      
     }
   }
-  Devices.Items   = NULL;
-  Devices.Len     = 0;
-  Electrical.NominalFrequency = 50;
-  Electrical.NominalVoltage   = 230.0;
+
   
   
 //  FILE *File = fopen(file, "r");

@@ -204,70 +204,88 @@ void  *CaptureV2::Analize_Thread(void* args) {
   }
   return NULL;
 }
-bool CaptureV2::CreateInstance(json_object* config) {
-  //Leo configuracion, por si es del tipo que quiero
-  //Si lo es inicio creo una instancia y añado los dispositivos necesarios
-//    json_object_object_foreach(config, JSON_Key, JSON_Val) {
-//    enum json_type JSON_Type = json_object_get_type(JSON_Val);
-//    if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastLogin") == 0)) {
-//      LastLogin = json_object_get_int64(JSON_Val);
-//    } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) {
-//      Port = json_object_get_int(JSON_Val);
-//    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "FilePath") == 0)) {
-//      FilePath = (char*)json_object_get_string(JSON_Val);
-//    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) {
-//      Password = (char*)json_object_get_string(JSON_Val);
-//    }
-//  }
+CaptureV2 *CaptureV2::Init(json_object* config) {
   CaptureV2 *Device = new CaptureV2();
-  Device->Analyzers[0] = new Analyzer(30000, true, 4);
-  return false;
+  bool     ValidDriver      = false;
+  bool     Error            = false;
+  uint8_t  Oversample       = 4;
+  //  ChannelMask      = 0;
+
+  json_object_object_foreach(config, JSON_Key, JSON_Val) {
+    enum json_type JSON_Type = json_object_get_type(JSON_Val);
+    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Driver") == 0)) {
+      if(strcmp("CaptureV2", (char*)json_object_get_string(JSON_Val)) == 0) ValidDriver = true;
+    } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Oversample") == 0)) {
+      Oversample = json_object_get_int(JSON_Val);
+      //Comprobar rango
+    } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Samplerate") == 0)) {
+      Device->Samplerate = json_object_get_int(JSON_Val);
+    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Serial") == 0)) {
+      Device->Serial = (char*)json_object_get_string(JSON_Val);
+    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "Outputs") == 0)) {
+      Device->RoutesCount = json_object_array_length(JSON_Val);
+      Device->Routes = (Route_t*)malloc(sizeof(Route_t) * Device->RoutesCount);
+      //Password = (char*)json_object_get_string(JSON_Val);
+      Device->Routes[0].Current = 3;
+      Device->Routes[0].Voltage = 0;
+      Device->Routes[0].Instance = new Analyzer(30000, false, 4);
+    }
+  }
+  
+  
+  Device->Start();
+  return NULL;
 }
 CaptureV2::CaptureV2(/*const char *serial, float *voltageGain, int *voltageOffset, float *currentGain, int *currentOffset, uint16_t id*/) {
-  Tools::LogMsg("INFO", "Starting CaptureV2 adquisition thread...\n");
+  Routes           = NULL;
+  RoutesCount      = 0;
+  Samplerate       = 20000;
+  Serial           = NULL;
   Buffer           = NULL;
   ReadPos          = 0;
   WritePos         = 0;
   Used             = 0;
   DeviceHandle     = NULL;
   NewDevice        = NULL;
-//  Serial           = serial;
-//  VoltageGain      = voltageGain;
-//  CurrentGain      = currentGain;
-//  VoltageOffset    = voltageOffset;
-//  CurrentOffset    = currentOffset;
   pthread_cond_init(&WriteWait, NULL);
   pthread_cond_init(&ReadWait, NULL);
   pthread_mutex_init(&AnalyzeMutex, NULL);
   pthread_mutex_init(&CaptureMutex, NULL);
+  for(int i = 0; i < 3; i++) VoltageGain[i]   = 1;
+  for(int i = 0; i < 3; i++) VoltageOffset[i] = 0;
+  for(int i = 0; i < 4; i++) CurrentGain[i]   = 1;
+  for(int i = 0; i < 4; i++) CurrentOffset[i] = 0;
+}
+bool CaptureV2::Start() {
+  Tools::LogMsg("INFO", "Starting CaptureV2 adquisition thread...\n");
   for(int i = 0; i < 5; i++) {
-    float Q = 1.0;
-    float K = tan(M_PI * ((float)Tools::Electrical.NominalFrequency / CAPTURE_V2_SAMPLEFREQ));
-    float Norm = 1 / (1 + K / Q + K * K);
-    Filters[i].A0 = K / Q * Norm;
-    Filters[i].A1 = 0;
-    Filters[i].A2 = -Filters[i].A0;
-    Filters[i].B1 = 2 * (K * K - 1) * Norm;
-    Filters[i].B2 = (1 - K / Q + K * K) * Norm;
-    Filters[i].Z1 = 0.0;
-    Filters[i].Z2 = 0.0;            
+//    float Q = 1.0;
+//    float K = tan(M_PI * ((float)Tools::Electrical.NominalFrequency / CAPTURE_V2_SAMPLEFREQ));
+//    float Norm = 1 / (1 + K / Q + K * K);
+//    Filters[i].A0 = K / Q * Norm;
+//    Filters[i].A1 = 0;
+//    Filters[i].A2 = -Filters[i].A0;
+//    Filters[i].B1 = 2 * (K * K - 1) * Norm;
+//    Filters[i].B2 = (1 - K / Q + K * K) * Norm;
+//    Filters[i].Z1 = 0.0;
+//    Filters[i].Z2 = 0.0;
   }
   int Error = libusb_init(NULL);
   if(Error < 0) {
     Tools::LogMsg("ERROR", "Fallo la apertura de libUSB...\n");
-    return;
+    return false;
   }
   Buffer = (float*)malloc(CAPTURE_V2_BUFFERSIZE * sizeof(float));
   if(Buffer == NULL) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(NULL);
-    return; 
+    return false;
   }
   if(pthread_create(&CaptureThread, NULL, Capture_Thread, this) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(NULL);
     free(Buffer);
-    return;
+    return false;
   }
   Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , CAPTURE_V2_VID, CAPTURE_V2_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
   if(Error < 0) {
@@ -275,14 +293,14 @@ CaptureV2::CaptureV2(/*const char *serial, float *voltageGain, int *voltageOffse
 //    pTerminate = true;
     pthread_join(CaptureThread, NULL);
     free(Buffer);
-    return;
+    return false;
   }
   if(pthread_create(&AnalyzeThread, NULL, Analize_Thread, this) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
 //    pTerminate = true;
     pthread_join(CaptureThread, NULL);
     free(Buffer);
-    return;
+    return false;
   }
 }
 CaptureV2::~CaptureV2() {

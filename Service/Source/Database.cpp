@@ -20,26 +20,33 @@ Database::Database() {
   Params    = NULL;
   Result    = NULL;
   ParamsLen = 0;
+  DBConn    = NULL;
 }
-Database *Database::GetInstance() {
-  Database *DB = new Database();
+bool Database::Connect() {
+  if((DBConn != NULL) && (PQstatus(DBConn) == CONNECTION_BAD)) {
+    PQfinish(DBConn);
+    DBConn = NULL;
+  } else if((DBConn != NULL) && (PQstatus(DBConn) == CONNECTION_OK)) {
+    return true;
+  }
   char ConnectionString[512];
   sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", Host, Port, User, Password, DatabaseName);
-  DB->DBConn = PQconnectdb(ConnectionString);
-  if(PQstatus(DB->DBConn) == CONNECTION_BAD) {
+  DBConn = PQconnectdb(ConnectionString);
+  if(PQstatus(DBConn) == CONNECTION_BAD) {
     char *Save;
-    if(Initialized == false) Tools::LogMsg("ERROR", "Cant open database (%s)\n", strtok_r(PQerrorMessage(DB->DBConn), "\r\n", &Save));
-    delete DB;
-    return NULL;
+    PQfinish(DBConn);
+    if(Initialized == false) Tools::LogMsg("ERROR", "Cant open database (%s)\n", strtok_r(PQerrorMessage(DBConn), "\r\n", &Save));
+    DBConn = NULL;
+    return false;
   }
-  DB->ExecSentence("SET synchronous_commit TO OFF");
-  return DB;
+  ExecSentence("SET synchronous_commit TO OFF");
+  return true;
 }
 Database::~Database() {
   if(Result != NULL) PQclear(Result);
   PQfinish(DBConn);
 }
-bool Database::PrepareDB(json_object *config) {
+bool Database::Init(json_object *config) {
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "HostName") == 0)) {
@@ -54,16 +61,10 @@ bool Database::PrepareDB(json_object *config) {
       Password = (char*)json_object_get_string(JSON_Val);
     }
   }
-  Database *DB = GetInstance();
-  if(DB == NULL) return false;
-  
-  
-  
-  
-  
+  Database DB;
+  if(DB.Connect() == false) return false;
   //Empiezo a meter tablas si no estan y procedimientos
   Initialized = true;
-  delete DB;
   return true;
 }
 bool Database::ExecSentence(const char* sql) {
@@ -158,7 +159,6 @@ void Database::BindArrayUInt16(uint16_t *params, int len) {
     ParamsLen++;
   }
 }
-
 void Database::BindArrayFloat(float *params, int len) {
   if(ParamsLen < ParamsAlloc) {
     Params[ParamsLen] = (char*)malloc(4 + sizeof(char) * 18 * len);
