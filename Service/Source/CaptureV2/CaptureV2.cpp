@@ -208,28 +208,128 @@ CaptureV2 *CaptureV2::Init(json_object* config) {
   CaptureV2 *Device = new CaptureV2();
   bool     ValidDriver      = false;
   bool     ValidParams      = true;
-  bool     Error            = false;
-  uint8_t  Oversample       = 4;
-  //  ChannelMask      = 0;
+  uint8_t  ChannelMask      = 0;
 
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Driver") == 0)) {
       if(strcmp("CaptureV2", (char*)json_object_get_string(JSON_Val)) == 0) ValidDriver = true;
+    } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "ID") == 0)) {
+      Device->pID = json_object_get_int(JSON_Val);
+      if((Device->pID % 4) != 0) ValidParams = false;
     } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Oversample") == 0)) {
-      Oversample = json_object_get_int(JSON_Val);
-      //Comprobar rango
+      Device->Oversample = json_object_get_int(JSON_Val);
     } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Samplerate") == 0)) {
-      Device->Samplerate = json_object_get_int(JSON_Val);
+      Device->pSamplerate = json_object_get_int(JSON_Val);
     } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Serial") == 0)) {
       Device->Serial = (char*)json_object_get_string(JSON_Val);
+    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "VoltageGain") == 0)) {
+      if(json_object_array_length(JSON_Val) != 3) {
+        ValidParams = false;
+      } else {
+        for(int i = 0; i < 3; i++) {
+          if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
+            ValidParams = false;
+          } else {
+            Device->pVoltageGain[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
+          }
+        }
+      }
+    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "VoltageOffset") == 0)) {
+      if(json_object_array_length(JSON_Val) != 3) {
+        ValidParams = false;
+      } else {
+        for(int i = 0; i < 3; i++) {
+          if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
+            ValidParams = false;
+          } else {
+            Device->pVoltageOffset[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
+          }
+        }
+      }
+    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "CurrentGain") == 0)) {
+      if(json_object_array_length(JSON_Val) != 4) {
+        ValidParams = false;
+      } else {
+        for(int i = 0; i < 4; i++) {
+          if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
+            ValidParams = false;
+          } else {
+            Device->pCurrentGain[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
+          }
+        }
+      }
+    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "CurrentOffset") == 0)) {
+      if(json_object_array_length(JSON_Val) != 4) {
+        ValidParams = false;
+      } else {
+        for(int i = 0; i < 4; i++) {
+          if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
+            ValidParams = false;
+          } else {
+            Device->pCurrentOffset[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
+          }
+        }
+      }
     } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "Outputs") == 0)) {
-      Device->RoutesCount = json_object_array_length(JSON_Val);
-      Device->Routes = (Route_t*)malloc(sizeof(Route_t) * Device->RoutesCount);
-      //Password = (char*)json_object_get_string(JSON_Val);
-      Device->Routes[0].Current = 3;
-      Device->Routes[0].Voltage = 0;
-      Device->Routes[0].Instance = new Analyzer(30000, false, 4);
+      int Count = json_object_array_length(JSON_Val);
+      Device->pAnalyzers = (Analyzer**)malloc(sizeof(Analyzer*) * Count);
+      for(int i = 0; i < Count; i++) {
+        if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_object) continue;
+        char *DisplayName = (char*)"Default Capture";
+        Analyzer::RouteType Type = Analyzer::FASE_3N;
+        uint32_t ID = 0;
+        uint8_t VoltageChannel = 6;
+        uint8_t CurrentChannel = 5;
+        json_object_object_foreach(json_object_array_get_idx(JSON_Val, i), JSON_KeySub, JSON_ValSub) {
+          enum json_type JSON_TypeSub = json_object_get_type(JSON_ValSub);
+          if((JSON_TypeSub == json_type_string) && (strcmp(JSON_Key, "DisplayName") == 0)) {
+            DisplayName = (char*)json_object_get_string(JSON_ValSub);
+          } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_Key, "Mode") == 0)) {
+            char *ModeText = (char*)json_object_get_string(JSON_ValSub);
+            if(strcmp("3Phase+N", ModeText) == 0) {
+              Type = Analyzer::FASE_3N;
+            } else if(strcmp("3Phase", ModeText) == 0) {
+              Type = Analyzer::FASE_3;
+            } else if(strcmp("1Phase", ModeText) == 0) {
+              Type = Analyzer::FASE_1;
+            } else {
+              ValidParams = false;
+            }
+          } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_Key, "VoltageChannel") == 0)) {
+            char *ChannelText = (char*)json_object_get_string(JSON_ValSub);
+            if(strcmp("R", ChannelText) == 0) {
+              VoltageChannel = 6;
+            } else if(strcmp("S", ChannelText) == 0) {
+              VoltageChannel = 4;
+            } else if(strcmp("T", ChannelText) == 0) {
+              VoltageChannel = 2;
+            } else {
+              ValidParams = false;
+            }
+          } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_Key, "CurrentChannel") == 0)) {
+            char *ChannelText = (char*)json_object_get_string(JSON_ValSub);
+            if(strcmp("R", ChannelText) == 0) {
+              CurrentChannel = 5;
+            } else if(strcmp("S", ChannelText) == 0) {
+              CurrentChannel = 3;
+            } else if(strcmp("T", ChannelText) == 0) {
+              CurrentChannel = 1;
+            } else if(strcmp("N", ChannelText) == 0) {
+              CurrentChannel = 0;
+            } else {
+              ValidParams = false;
+            }
+          }
+        }
+        if((Type == Analyzer::FASE_3N) && (ChannelMask != 0)) ValidParams = false;
+        if((Type == Analyzer::FASE_3) && ((ChannelMask & 0x2A) != 0)) ValidParams = false;
+        if((Type == Analyzer::FASE_1) && ((ChannelMask & (1 << CurrentChannel)) != 0)) ValidParams = false;        
+        if(ValidParams == true) {
+//          Device->pAnalyzers[Device->pAnalyzersCount] = new Analyzer();
+          Device->pAnalyzersCount++;
+        }
+      }
     }
   }
   if(ValidDriver & ValidParams)
@@ -238,10 +338,7 @@ CaptureV2 *CaptureV2::Init(json_object* config) {
     delete Device;
   return NULL;
 }
-CaptureV2::CaptureV2(/*const char *serial, float *voltageGain, int *voltageOffset, float *currentGain, int *currentOffset, uint16_t id*/) {
-  Routes           = NULL;
-  RoutesCount      = 0;
-  Samplerate       = 20000;
+CaptureV2::CaptureV2() {
   Serial           = NULL;
   Buffer           = NULL;
   ReadPos          = 0;
@@ -253,10 +350,10 @@ CaptureV2::CaptureV2(/*const char *serial, float *voltageGain, int *voltageOffse
   pthread_cond_init(&ReadWait, NULL);
   pthread_mutex_init(&AnalyzeMutex, NULL);
   pthread_mutex_init(&CaptureMutex, NULL);
-  for(int i = 0; i < 3; i++) VoltageGain[i]   = 1;
-  for(int i = 0; i < 3; i++) VoltageOffset[i] = 0;
-  for(int i = 0; i < 4; i++) CurrentGain[i]   = 1;
-  for(int i = 0; i < 4; i++) CurrentOffset[i] = 0;
+  for(int i = 0; i < 3; i++) pVoltageGain[i]   = 1;
+  for(int i = 0; i < 3; i++) pVoltageOffset[i] = 0;
+  for(int i = 0; i < 4; i++) pCurrentGain[i]   = 1;
+  for(int i = 0; i < 4; i++) pCurrentOffset[i] = 0;
 }
 bool CaptureV2::Start() {
   Tools::LogMsg("INFO", "Starting CaptureV2 adquisition thread...\n");

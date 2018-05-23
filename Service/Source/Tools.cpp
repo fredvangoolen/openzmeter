@@ -22,11 +22,11 @@
 #include <sys/statvfs.h>
 //----------------------------------------------------------------------------------------------------------------------
 bool                Tools::Terminate  = false;
-bool                Tools::Daemonized = false;
+bool                Tools::pDaemonized = false;
 bool                Tools::Debug      = false;
-int                 Tools::LogFile    = -1;
-json_object        *Tools::Config     = NULL;
-char               *Tools::PidFile    = NULL;
+int                 Tools::pLogFile    = -1;
+json_object        *Tools::pConfig     = NULL;
+char               *Tools::pPidFile    = NULL;
 //----------------------------------------------------------------------------------------------------------------------
 void Tools::SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
@@ -45,7 +45,7 @@ void Tools::LogMsg(const char *level, const char *msg, ...) {
   time(&Now);
   TimeStamp = localtime(&Now);
   strftime(DateStr, 80, "[%d/%m/%Y - %X] ", TimeStamp);
-  if(Daemonized == false) {
+  if(pDaemonized == false) {
     flockfile(stdout);
     if(strcmp(level, "ERROR") == 0) {
       printf("\033[1;31m%s\033[0m", DateStr);
@@ -62,7 +62,7 @@ void Tools::LogMsg(const char *level, const char *msg, ...) {
     fflush(stdout);
     funlockfile(stdout);
   }
-  if(LogFile) {
+  if(pLogFile) {
     va_start(args, msg);
 //    flock(LogFile);//
 //    fprintf(LogFile, "%s", DateStr);
@@ -82,11 +82,11 @@ bool Tools::CreateLogFile() {
   return true;
 }
 bool Tools::CreatePidFile(char *name) {
-  PidFile = name;
+  pPidFile = name;
   char PID_Number[64];
   int Len = sprintf(PID_Number, "%d", getpid());
-  if(PidFile) remove(PidFile);
-  int File = open(PidFile, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+  if(pPidFile) remove(pPidFile);
+  int File = open(pPidFile, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
   if(File < 0) {
     LogMsg("WARN", "Can not create PID file (%d)\n", errno);
     return true;
@@ -96,7 +96,7 @@ bool Tools::CreatePidFile(char *name) {
   return true;
 }
 bool Tools::RemovePidFile() {
-  if(PidFile) return remove(PidFile);
+  if(pPidFile) return remove(pPidFile);
   return true;
 }
 void Tools::Daemonize() {
@@ -112,7 +112,7 @@ void Tools::Daemonize() {
     LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     exit(1);
   }
-  Daemonized = true;
+  pDaemonized = true;
   close(STDIN_FILENO);
   close(STDOUT_FILENO);
   close(STDERR_FILENO);
@@ -152,19 +152,18 @@ bool Tools::ReadConfig(char *file) {
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "LogFile") == 0)) {
 //      Global.Log = strdup(JSON_Val);
     } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "PidFile") == 0)) {
-      if(PidFile) {
+      if(pPidFile) {
         Error = true;
         LogMsg("ERROR", "Duplicate PidFile param in config file\n");
       } else {
         if(CreatePidFile((char*)json_object_get_string(JSON_Val)) == false) Error = true;
       }
     } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Database") == 0)) {
-      if(Database::Init(JSON_Val) == false) Error = true;
+      Database::Init(JSON_Val);
     } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "HTTPServer") == 0)) {
-      if(HTTPServer::Init(JSON_Val) == false) Error = true;
+      HTTPServer::Init(JSON_Val);
     } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Devices") == 0)) {
-      if(Devices::Init(JSON_Val) == false) Error = true;
-      
+      Devices::Init(JSON_Val);      
     }
   }
 

@@ -395,7 +395,7 @@ void Analyzer::Analyze(float minimunCurrent) {
     }
   }
 }
-void Analyzer::AllocParams(Params_t *params, Aggreg_Type type) {
+void Analyzer::AllocParams(Params_t *params, AggregType type) {
   params->RMS_V = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
   params->RMS_I = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 4 : 1));
   params->Active_Power = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));

@@ -10,23 +10,23 @@
 class Database;
 class Database {
   private :
-    static bool  Initialized;
-    static char *DatabaseName;
-    static char *Host;
-    static int   Port;
-    static char *User;
-    static char *Password;
+    static bool  pInitialized;
+    static char *pDatabaseName;
+    static char *pHost;
+    static int   pPort;
+    static char *pUser;
+    static char *pPassword;
   private :
-    PGconn      *DBConn;
-    char       **Params;
-    int          ParamsLen;
-    int          ParamsAlloc;
-    const char  *Sentence;
-    PGresult    *Result;
+    PGconn      *pDBConn;
+    char       **pParams;
+    int          pParamsLen;
+    int          pParamsAlloc;
+    const char  *pSentence;
+    PGresult    *pResult;
   private :
     bool Connect();
   public :
-    static bool Init(json_object *config);
+    static void Init(json_object *config);
   public :
     void  PrepareSentence(const char *sentence);
     void  BindSingleUInt32(uint32_t param);

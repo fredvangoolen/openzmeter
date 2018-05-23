@@ -8,11 +8,10 @@
 //----------------------------------------------------------------------------------------------------------------------
 class Devices {
   public :
-  public :
     static float             NominalVoltage;
     static float             NominalFrequency;
-    static DeviceInterface **Items;
-    static uint32_t          Len;
+    static DeviceInterface **DeviceInterfaces;
+    static uint32_t          DeviceInterfacesCount;
   public :
     static bool Init(json_object *config);
     static bool Start();

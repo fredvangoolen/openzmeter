@@ -8,7 +8,7 @@
 #include <fftw3.h>
 #include <json-c/json.h>
 #include "Database.h"
-//---------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 #define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
 #define EVENT_RVC                      5.0        //Variacion en % para generar RVC
 #define EVENT_RVC_HYSTERESIS           3.0        //Variacion en % para finalizar RVC
@@ -16,11 +16,12 @@
 #define EVENT_INTERRUPTION            90.0        //Bajada en % para generar interrupcion
 #define EVENT_HYSTERESIS              06.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
 #define EVENT_ENVELOPETIME             0.1        //Tiempo en segundos que se guarda antes y despues de un evento
-//---------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 class Analyzer : private Database {
   public :
-    enum Aggreg_Type { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
-    enum Event_Type  { EVT_NONE, EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC, EVT_GLITCH };
+    enum RouteType {FASE_1, FASE_3, FASE_3N};
+    enum AggregType { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
+    enum EventType  { EVT_NONE, EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC, EVT_GLITCH };
     static const float FrequencyRanges[];   //Rangos de frecuencias para estadisticas
     static const float VoltageRanges[];     //Rangos de tensiones para estadisticas
     static const float THDRanges[];         //Rangos de distorsion harmonica para estadisticas
@@ -42,7 +43,7 @@ class Analyzer : private Database {
     } FFT_t;
     typedef struct {
       uint64_t    Timestamp;                  //Timestamp de la muestra inicial
-      Aggreg_Type Type;                       //Tipo de agregacion
+      AggregType Type;                       //Tipo de agregacion
       uint32_t    Samples;                    //Muestras que han formado esta agregacion
       float      *RMS_V;                      //Valor RMS de la tension durante el bloque
       float      *RMS_I;                      //Valor RMS de la intensidad durante el bloque
@@ -88,7 +89,7 @@ class Analyzer : private Database {
       uint32_t  Len;
     } EventCycle_t;
     typedef struct {
-      enum Event_Type Type;                 //Tipo de evento (puede cambiar durante el evento)
+      enum EventType Type;                 //Tipo de evento (puede cambiar durante el evento)
       uint64_t        Start;                //Timestamp de inicio
       uint64_t        Duration;             //Duracion en samples
       float           Voltage;              //Tension maxima o minima durante el evento
@@ -130,7 +131,7 @@ class Analyzer : private Database {
     Work_t      pWork;
     bool        pTerminate;
   protected :
-    void     AllocParams(Params_t *params, Aggreg_Type type);
+    void     AllocParams(Params_t *params, AggregType type);
     void     ResetParams(Params_t *params);
     void     NormalizeParams(Params_t *params);
     void     ResetWork();

@@ -9,193 +9,192 @@
 #include "Database.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-bool Database::Initialized   = false;
-char *Database::DatabaseName = (char*)"openzmeter";
-char *Database::Host         = (char*)"127.0.0.1";;
-int   Database::Port         = 5432;
-char *Database::User         = (char*)"openzmeter";;
-char *Database::Password     = (char*)"";;
+bool Database::pInitialized   = false;
+char *Database::pDatabaseName = (char*)"openzmeter";
+char *Database::pHost         = (char*)"127.0.0.1";;
+int   Database::pPort         = 5432;
+char *Database::pUser         = (char*)"openzmeter";;
+char *Database::pPassword     = (char*)"";;
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database() {
-  Params    = NULL;
-  Result    = NULL;
-  ParamsLen = 0;
-  DBConn    = NULL;
+  pParams    = NULL;
+  pResult    = NULL;
+  pParamsLen = 0;
+  pDBConn    = NULL;
 }
 bool Database::Connect() {
-  if((DBConn != NULL) && (PQstatus(DBConn) == CONNECTION_BAD)) {
-    PQfinish(DBConn);
-    DBConn = NULL;
-  } else if((DBConn != NULL) && (PQstatus(DBConn) == CONNECTION_OK)) {
+  if((pDBConn != NULL) && (PQstatus(pDBConn) == CONNECTION_BAD)) {
+    PQfinish(pDBConn);
+    pDBConn = NULL;
+  } else if((pDBConn != NULL) && (PQstatus(pDBConn) == CONNECTION_OK)) {
     return true;
   }
   char ConnectionString[512];
-  sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", Host, Port, User, Password, DatabaseName);
-  DBConn = PQconnectdb(ConnectionString);
-  if(PQstatus(DBConn) == CONNECTION_BAD) {
+  sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", pHost, pPort, pUser, pPassword, pDatabaseName);
+  pDBConn = PQconnectdb(ConnectionString);
+  if(PQstatus(pDBConn) == CONNECTION_BAD) {
     char *Save;
-    PQfinish(DBConn);
-    if(Initialized == false) Tools::LogMsg("ERROR", "Cant open database (%s)\n", strtok_r(PQerrorMessage(DBConn), "\r\n", &Save));
-    DBConn = NULL;
+    PQfinish(pDBConn);
+    if(pInitialized == false) Tools::LogMsg("ERROR", "Cant open database (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    pDBConn = NULL;
     return false;
   }
   ExecSentence("SET synchronous_commit TO OFF");
   return true;
 }
 Database::~Database() {
-  if(Result != NULL) PQclear(Result);
-  PQfinish(DBConn);
+  if(pResult != NULL) PQclear(pResult);
+  PQfinish(pDBConn);
 }
-bool Database::Init(json_object *config) {
+void Database::Init(json_object *config) {
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "HostName") == 0)) {
-      Host = (char*)json_object_get_string(JSON_Val);
+      pHost = (char*)json_object_get_string(JSON_Val);
     } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) {
-      Port = json_object_get_int(JSON_Val);
+      pPort = json_object_get_int(JSON_Val);
     } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Database") == 0)) {
-      DatabaseName = (char*)json_object_get_string(JSON_Val);
+      pDatabaseName = (char*)json_object_get_string(JSON_Val);
     } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "UserName") == 0)) {
-      User = (char*)json_object_get_string(JSON_Val);
+      pUser = (char*)json_object_get_string(JSON_Val);
     } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) {
-      Password = (char*)json_object_get_string(JSON_Val);
+      pPassword = (char*)json_object_get_string(JSON_Val);
     }
   }
   Database DB;
-  if(DB.Connect() == false) return false;
+  DB.Connect();
   //Empiezo a meter tablas si no estan y procedimientos
-  Initialized = true;
-  return true;
+  pInitialized = true;
 }
 bool Database::ExecSentence(const char* sql) {
-  if(Result != NULL) PQclear(Result);
+  if(pResult != NULL) PQclear(pResult);
   Connect();
-  Result = PQexec(DBConn, sql);
-  if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
+  pResult = PQexec(pDBConn, sql);
+  if(PQresultStatus(pResult) != PGRES_COMMAND_OK) {
     char *Save;
-    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", strtok_r(PQerrorMessage(DBConn), "\r\n", &Save));
-    PQclear(Result);
-    Result = NULL;
+    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    PQclear(pResult);
+    pResult = NULL;
     return false;
   } else {
-    PQclear(Result);
-    Result = NULL;
+    PQclear(pResult);
+    pResult = NULL;
     return true;  
   }
 }
 char* Database::ExecSentenceJSON(const char* sql, size_t *len) {
-  if(Result != NULL) PQclear(Result);
-  Result = PQexec(DBConn, sql);
-  if(PQresultStatus(Result) != PGRES_TUPLES_OK) {
+  if(pResult != NULL) PQclear(pResult);
+  pResult = PQexec(pDBConn, sql);
+  if(PQresultStatus(pResult) != PGRES_TUPLES_OK) {
     char *Save;
-    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", strtok_r(PQerrorMessage(DBConn), "\r\n", &Save));
-    PQclear(Result);
-    Result = NULL;
+    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    PQclear(pResult);
+    pResult = NULL;
     return NULL;
   } else {
-    *len = PQgetlength(Result, 0, 0);
-    return PQgetvalue(Result, 0, 0);
+    *len = PQgetlength(pResult, 0, 0);
+    return PQgetvalue(pResult, 0, 0);
   }
 }
 void Database::PrepareSentence(const char *sentence) {
-  Sentence = sentence;
-  if(ParamsAlloc != 0) {
-    for(int i = 0; i < ParamsLen; i++) free(Params[i]);
-    free(Params);
+  pSentence = sentence;
+  if(pParamsAlloc != 0) {
+    for(int i = 0; i < pParamsLen; i++) free(pParams[i]);
+    free(pParams);
   }
-  ParamsLen = 0;
-  ParamsAlloc = 0;
+  pParamsLen = 0;
+  pParamsAlloc = 0;
   for(size_t i = 0; i < strlen(sentence); i++) {
-    if(sentence[i] == '?') ParamsAlloc++;
+    if(sentence[i] == '?') pParamsAlloc++;
   }
-  if(ParamsAlloc != 0) Params = (char**)malloc(sizeof(char*) * ParamsAlloc);
+  if(pParamsAlloc != 0) pParams = (char**)malloc(sizeof(char*) * pParamsAlloc);
 }
 void Database::BindSingleUInt32(uint32_t param) {
-  if(ParamsLen < ParamsAlloc) {
-    Params[ParamsLen] = (char*)malloc(sizeof(char) * 11);
-    sprintf(Params[ParamsLen], "%u", param);
-    ParamsLen++;
+  if(pParamsLen < pParamsAlloc) {
+    pParams[pParamsLen] = (char*)malloc(sizeof(char) * 11);
+    sprintf(pParams[pParamsLen], "%u", param);
+    pParamsLen++;
   }
 }
 void Database::BindSingleUInt64(uint64_t param) {
-  if(ParamsLen < ParamsAlloc) {
-    Params[ParamsLen] = (char*)malloc(sizeof(char) * 20);
-    sprintf(Params[ParamsLen], "%" PRIu64, param);
-    ParamsLen++;
+  if(pParamsLen < pParamsAlloc) {
+    pParams[pParamsLen] = (char*)malloc(sizeof(char) * 20);
+    sprintf(pParams[pParamsLen], "%" PRIu64, param);
+    pParamsLen++;
   }
 }
 void Database::BindSingleFloat(float param) {
-  if(ParamsLen < ParamsAlloc) {
+  if(pParamsLen < pParamsAlloc) {
     if(isnan(param)) {
-      Params[ParamsLen] = strdup("NULL");
+      pParams[pParamsLen] = strdup("NULL");
     } else {
-      Params[ParamsLen] = (char*)malloc(sizeof(char) * 16);
-      sprintf(Params[ParamsLen], "%g", param);
+      pParams[pParamsLen] = (char*)malloc(sizeof(char) * 16);
+      sprintf(pParams[pParamsLen], "%g", param);
     }
-    ParamsLen++;
+    pParamsLen++;
   }
 }
 void Database::BindArrayArrayFloat(float **params, int lenA, int lenB) {
-  if(ParamsLen < ParamsAlloc) {
-    Params[ParamsLen] = (char*)malloc(4 + (4 * sizeof(char) * 18 * lenB * lenA));
-    int Pos = sprintf(Params[ParamsLen], "'{");
+  if(pParamsLen < pParamsAlloc) {
+    pParams[pParamsLen] = (char*)malloc(4 + (4 * sizeof(char) * 18 * lenB * lenA));
+    int Pos = sprintf(pParams[pParamsLen], "'{");
     for(int i = 0; i < lenA; i++) {
-      Pos += sprintf(&Params[ParamsLen][Pos], "{");
-      for(int n = 0; n < lenB; n++) Pos += sprintf(&Params[ParamsLen][Pos], isnan(params[i][n]) ? "NULL, " : "%g, ", params[i][n]);    
+      Pos += sprintf(&pParams[pParamsLen][Pos], "{");
+      for(int n = 0; n < lenB; n++) Pos += sprintf(&pParams[pParamsLen][Pos], isnan(params[i][n]) ? "NULL, " : "%g, ", params[i][n]);    
       if(lenB > 0) Pos -= 2;
-      Pos += sprintf(&Params[ParamsLen][Pos], "}, ");
+      Pos += sprintf(&pParams[pParamsLen][Pos], "}, ");
     }
     if(lenA > 0) Pos -= 2;
-    sprintf(&Params[ParamsLen][Pos], "}'");
-    ParamsLen++;    
+    sprintf(&pParams[pParamsLen][Pos], "}'");
+    pParamsLen++;    
   }
 }
 void Database::BindArrayUInt16(uint16_t *params, int len) {
-  if(ParamsLen < ParamsAlloc) {
-    Params[ParamsLen] = (char*)malloc(4 + sizeof(char) * 5 * len);
-    int Pos = sprintf(Params[ParamsLen], "'{");
-    for(int i = 0; i < len; i++) Pos += sprintf(&Params[ParamsLen][Pos], "%u, ", params[i]);
+  if(pParamsLen < pParamsAlloc) {
+    pParams[pParamsLen] = (char*)malloc(4 + sizeof(char) * 5 * len);
+    int Pos = sprintf(pParams[pParamsLen], "'{");
+    for(int i = 0; i < len; i++) Pos += sprintf(&pParams[pParamsLen][Pos], "%u, ", params[i]);
     if(len > 0) Pos -= 2;
-    sprintf(&Params[ParamsLen][Pos], "}'");
-    ParamsLen++;
+    sprintf(&pParams[pParamsLen][Pos], "}'");
+    pParamsLen++;
   }
 }
 void Database::BindArrayFloat(float *params, int len) {
-  if(ParamsLen < ParamsAlloc) {
-    Params[ParamsLen] = (char*)malloc(4 + sizeof(char) * 18 * len);
-    int Pos = sprintf(Params[ParamsLen], "'{");
-    for(int i = 0; i < len; i++) Pos += sprintf(&Params[ParamsLen][Pos], isnan(params[i]) ? "NULL, " : "%g, ", params[i]);
+  if(pParamsLen < pParamsAlloc) {
+    pParams[pParamsLen] = (char*)malloc(4 + sizeof(char) * 18 * len);
+    int Pos = sprintf(pParams[pParamsLen], "'{");
+    for(int i = 0; i < len; i++) Pos += sprintf(&pParams[pParamsLen][Pos], isnan(params[i]) ? "NULL, " : "%g, ", params[i]);
     if(len > 0) Pos -= 2;
-    sprintf(&Params[ParamsLen][Pos], "}'");
-    ParamsLen++;
+    sprintf(&pParams[pParamsLen][Pos], "}'");
+    pParamsLen++;
   }
 }
 void Database::BindSingleBool(bool param) {
-  if(ParamsLen < ParamsAlloc) {
-    Params[ParamsLen] = param ? strdup("true") : strdup("false");
-    ParamsLen++;
+  if(pParamsLen < pParamsAlloc) {
+    pParams[pParamsLen] = param ? strdup("true") : strdup("false");
+    pParamsLen++;
   }
 }
 void Database::BindSingleString(const char *string) {
-  if(ParamsLen < ParamsAlloc) {
-    Params[ParamsLen] = (char*)malloc(sizeof(char) * strlen(string) + 3);
-    sprintf(Params[ParamsLen], "'%s'", string);
-    ParamsLen++;
+  if(pParamsLen < pParamsAlloc) {
+    pParams[pParamsLen] = (char*)malloc(sizeof(char) * strlen(string) + 3);
+    sprintf(pParams[pParamsLen], "'%s'", string);
+    pParamsLen++;
   }  
 }
 bool Database::ExecSentence() {
   bool Return = false;
-  if(ParamsAlloc == ParamsLen) {
-    int maxLenght = strlen(Sentence);
-    for(int i = 0; i < ParamsLen; i++) maxLenght = maxLenght + strlen(Params[i]);
+  if(pParamsAlloc == pParamsLen) {
+    int maxLenght = strlen(pSentence);
+    for(int i = 0; i < pParamsLen; i++) maxLenght = maxLenght + strlen(pParams[i]);
     char *Buffer = (char*)malloc(sizeof(char) * maxLenght);
-    char *Read   = (char*)Sentence;
+    char *Read   = (char*)pSentence;
     char *Write  = Buffer;
     int   Param  = 0;
     while(true) {
       if(*Read == '?') {
-        int Len = strlen(Params[Param]);
-        memcpy(Write, Params[Param], Len);
+        int Len = strlen(pParams[Param]);
+        memcpy(Write, pParams[Param], Len);
         Write = Write + Len;
         Param++;
       } else {
@@ -209,10 +208,10 @@ bool Database::ExecSentence() {
   } else {
     Tools::LogMsg("ERROR", "There are more placeholders than params!!\n");
   }
-  if(ParamsAlloc != 0) {
-    for(int i = 0; i < ParamsLen; i++) free(Params[i]);
-    free(Params);
-    ParamsAlloc = 0;
+  if(pParamsAlloc != 0) {
+    for(int i = 0; i < pParamsLen; i++) free(pParams[i]);
+    free(pParams);
+    pParamsAlloc = 0;
   }
   return Return;
 }

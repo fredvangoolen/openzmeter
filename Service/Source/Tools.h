@@ -11,18 +11,14 @@
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   private :
-    static bool          Daemonized;
-    static int           LogFile;
-    static json_object  *Config;
-    static char         *PidFile;
+    static bool          pDaemonized;
+    static int           pLogFile;
+    static json_object  *pConfig;
+    static char         *pPidFile;
   public :
     static bool          Debug;
     static bool          Terminate;
   private :
-//    static char    *rstrip(char* s);
-//    static char    *lskip(const char* s);
-//    static bool     Config_Handler(char *section, char *param, char *value);
-//    static bool     Config_Handler(char *section);
     static uint64_t ParseProcMem(char *name, char *buff);
     static bool     GetMemory(uint64_t *total, uint64_t *available);
     static bool     CreatePidFile(char *name);

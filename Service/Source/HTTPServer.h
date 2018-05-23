@@ -30,11 +30,14 @@ class HTTPServer {
       uint64_t                  ProcTime;
       char                     *Msg;
     } Request_t;
-    static MHD_Daemon *Daemon;
-    static char       *FilePath;
-    static char       *Password;
-    static uint64_t    LastLogin;
-    static uint16_t    Port;
+  private:
+    static MHD_Daemon     *pDaemon;
+    static char           *pFilePath;
+    static char           *pPassword;
+    static uint64_t        pLastLogin;
+    static uint16_t        pPort;
+    static Session_t      *pSessions;
+    static pthread_mutex_t pSessionMutex;
   private :
     static int        HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
     static void       HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe);
@@ -45,10 +48,8 @@ class HTTPServer {
     static int        SendRedirect(struct MHD_Connection *connection, const char *url);
     static int        SendError(struct MHD_Connection *connection, int error, const char *text);
     static Session_t *GetSession(MHD_Connection *connection);
-    static Session_t *Sessions;
-    static pthread_mutex_t SessionMutex;
   public :
-    static bool Init(json_object *config);
+    static void Init(json_object *config);
     static bool Start();
     static bool stop();
     static void RemoveExpiredSessions();

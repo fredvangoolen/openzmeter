@@ -7,21 +7,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceInterface {
   public :
-    enum RouteType {FASE_1, FASE_3, FASE_3N};
-    typedef struct {
-      char             *Type;
-      char             *Serial;
-      char             *Name;
-      float             VoltageGain;
-      int               VoltageOffset;
-      float             CurrentGain;
-      int               CurrentOffset;
-      Analyzer *Instance;
-    } Analyzer_t;
-    typedef struct {
-      Analyzer_t      **Items;
-      uint32_t          Len;
-    } Analyzers_t;
     typedef struct {
       float A0;
       float A1;
@@ -32,15 +17,16 @@ class DeviceInterface {
       float Z2;
     } Filter_t;
   public :
-    Analyzers_t        Analyzers;
-    float              Samplerate;
+    Analyzer       **pAnalyzers;             //Analizadores disponibles
+    uint32_t         pAnalyzersCount;        //Numero de analizadores
+    float            pSamplerate;            //Velocidad de muestreo
+    uint32_t         pID;                    //Identificador del dispositivo (Tiene que ser multiplo de 4)
   private :
     static float  ApplyFilter(float in, Filter_t *filter);
-//    CaptureInterface();
-//    virtual ~CaptureInterface();
-//    virtual bool ReadConfig(json_object *config) = 0;
+  protected :
+    DeviceInterface();
+    virtual ~DeviceInterface();
   public :
-//    static bool Init(json_object *config);
     virtual bool Start() = 0;
 };
 

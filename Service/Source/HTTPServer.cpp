@@ -20,44 +20,43 @@
 #include "Devices.h"
 #include "DeviceInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
-MHD_Daemon            *HTTPServer::Daemon       = NULL;
-HTTPServer::Session_t *HTTPServer::Sessions     = NULL;
-pthread_mutex_t        HTTPServer::SessionMutex = PTHREAD_MUTEX_INITIALIZER;
-char                  *HTTPServer::FilePath     = (char*)"/usr/share/openZmeter/WEB/";
-char                  *HTTPServer::Password     = (char*)"admin";
-uint64_t               HTTPServer::LastLogin    = 0;
-uint16_t               HTTPServer::Port         = 8080;
+MHD_Daemon            *HTTPServer::pDaemon       = NULL;
+HTTPServer::Session_t *HTTPServer::pSessions     = NULL;
+pthread_mutex_t        HTTPServer::pSessionMutex = PTHREAD_MUTEX_INITIALIZER;
+char                  *HTTPServer::pFilePath     = (char*)"/usr/share/openZmeter/WEB/";
+char                  *HTTPServer::pPassword     = (char*)"admin";
+uint64_t               HTTPServer::pLastLogin    = 0;
+uint16_t               HTTPServer::pPort         = 8080;
 //----------------------------------------------------------------------------------------------------------------------
-bool HTTPServer::Init(json_object *config) {
+void HTTPServer::Init(json_object *config) {
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastLogin") == 0)) {
-      LastLogin = json_object_get_int64(JSON_Val);
+      pLastLogin = json_object_get_int64(JSON_Val);
     } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) {
-      Port = json_object_get_int(JSON_Val);
+      pPort = json_object_get_int(JSON_Val);
     } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "FilePath") == 0)) {
-      FilePath = (char*)json_object_get_string(JSON_Val);
+      pFilePath = (char*)json_object_get_string(JSON_Val);
     } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) {
-      Password = (char*)json_object_get_string(JSON_Val);
+      pPassword = (char*)json_object_get_string(JSON_Val);
     }
   }
-  return true;
 }
 bool HTTPServer::Start() {
-  Daemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, Port, NULL, NULL, 
+  pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, pPort, NULL, NULL, 
                             &HandleClient, NULL,
                             MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int) 15,
                             MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
                             MHD_OPTION_END);
-  if(Daemon == NULL) Tools::LogMsg("ERROR", "Failed to start WEB server\n");
-  return (Daemon != NULL);
+  if(pDaemon == NULL) Tools::LogMsg("ERROR", "Failed to start WEB server\n");
+  return (pDaemon != NULL);
 }
 HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection* connection) {
   const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "OZM_SESSION");
   Session_t *Session = NULL;
-  pthread_mutex_lock(&SessionMutex);
+  pthread_mutex_lock(&pSessionMutex);
   if(Cookie != NULL) {
-    Session         = Sessions;
+    Session         = pSessions;
     while(Session != NULL) {
       if(strcmp(Cookie, Session->ID) == 0) break;
       Session = Session->Next;
@@ -72,17 +71,17 @@ HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection* connection) {
     sprintf(Session->ID, "%08X%08X%08X%08X", (uint32_t)random(), (uint32_t)random(), (uint32_t)random(), (uint32_t)random());
     Tools::LogMsg("DEBUG", "New HTTP client with ID %s\n", Session->ID);
     Session->Logged = false;
-    Session->Next = Sessions;
-    Sessions = Session;
+    Session->Next = pSessions;
+    pSessions = Session;
   }
   Session->LastSeen = time(NULL);
   Session->References++;
-  pthread_mutex_unlock(&SessionMutex);
+  pthread_mutex_unlock(&pSessionMutex);
   return Session;
 }
 void HTTPServer::RemoveExpiredSessions() {
-  pthread_mutex_lock(&SessionMutex);
-  Session_t *Session = Sessions;
+  pthread_mutex_lock(&pSessionMutex);
+  Session_t *Session = pSessions;
   Session_t *Prev = NULL;
   uint32_t Time = time(NULL);
   while(Session != NULL) {
@@ -90,7 +89,7 @@ void HTTPServer::RemoveExpiredSessions() {
       Tools::LogMsg("DEBUG", "Remove expired session %s\n", Session->ID);
       Session_t *Tmp = Session;
       if(Prev == NULL) {
-        Sessions = Session->Next;
+        pSessions = Session->Next;
       } else {
         Prev->Next = Session->Next;
       }
@@ -101,7 +100,7 @@ void HTTPServer::RemoveExpiredSessions() {
       Session = Session->Next;
     }
   }
-  pthread_mutex_unlock(&SessionMutex);
+  pthread_mutex_unlock(&pSessionMutex);
 }
 void HTTPServer::SetMimeType(struct MHD_Response *response, const char *url) {
   char *MimeType = NULL;
@@ -148,8 +147,8 @@ int  HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url
 int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, const char *aditionalheadertype, const char *aditionalheadervalue) {
   int File = -1;
   struct stat FileStat;
-  char *Path = (char*)malloc(sizeof(char) * (strlen(path) + strlen(FilePath) + 1));
-  sprintf(Path, "%s%s", FilePath, path);
+  char *Path = (char*)malloc(sizeof(char) * (strlen(path) + strlen(pFilePath) + 1));
+  sprintf(Path, "%s%s", pFilePath, path);
   if((stat(Path, &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) File = open(Path, O_RDONLY);
   if(File == -1) return MHD_NO;
   struct MHD_Response *response = MHD_create_response_from_fd(FileStat.st_size, File);
@@ -300,11 +299,11 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
     json_object_object_add(Request->JSONWriter, "NominalVoltage", json_object_new_int(Devices::NominalVoltage));
     json_object_object_add(Request->JSONWriter, "NominalFreq", json_object_new_int(Devices::NominalFrequency));
     json_object *Devices = json_object_new_array();
-    for(uint32_t i = 0; i < Devices::Len; i++) {
-      DeviceInterface *Device = Devices::Items[i];
-      for(uint32_t n = 0; i < Device->Analyzers.Len; i++) {
+    for(uint32_t i = 0; i < Devices::DeviceInterfacesCount; i++) {
+      DeviceInterface *Device = Devices::DeviceInterfaces[i];
+      for(uint32_t n = 0; i < Device->pAnalyzersCount; i++) {
         json_object *Obj = json_object_new_object();
-        json_object_object_add(Obj, "Name", json_object_new_string(Device->Analyzers.Items[i]->Name));
+//        json_object_object_add(Obj, "Name", json_object_new_string(Device->pAnalyzers[i]->Name));
 //        json_object_object_add(Obj, "Type", json_object_new_string(CaptureInterface::Analyzers.Items[i].Instance->Triphase() ? "3Phase" : "1Phase"));
 //        json_object_object_add(Obj, "SampleFreq", json_object_new_int(CaptureInterface::Analyzers.Items[i].Instance->SampleRate()));
 //        json_object_object_add(Obj, "MaxCurrent", json_object_new_int(20));

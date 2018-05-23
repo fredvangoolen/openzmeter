@@ -11,3 +11,12 @@ float DeviceInterface::ApplyFilter(float in, Filter_t* filter) {
   filter->Z2 = in * filter->A2 - filter->B2 * out;
   return out;
 }
+DeviceInterface::DeviceInterface() {
+  pAnalyzers = NULL;
+  pAnalyzersCount = 0;
+  pSamplerate = 20000;
+}
+DeviceInterface::~DeviceInterface() {
+  for(int i = 0; i < pAnalyzersCount; i++) delete pAnalyzers[i];
+  free(pAnalyzers);
+}

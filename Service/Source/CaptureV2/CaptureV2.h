@@ -18,18 +18,11 @@
 #define PROCESSING_CURRENTOFFSET      0.10        //Corriente minima para realizar calculos
 //----------------------------------------------------------------------------------------------------------------------
 class CaptureV2 : public DeviceInterface {
-  private :
-
-    typedef struct {
-      RouteType Type;
-      uint8_t   Voltage;
-      uint8_t   Current;
-      Analyzer *Instance;
-      
-    } Route_t;
   private :    
-    Route_t *Routes;                                       //Rutas de captura creadas
-    uint8_t RoutesCount;                                  //Numero de rutas de captura
+    float                        pVoltageGain[3];          //Ganancia de tension
+    float                        pCurrentGain[4];          //Ganancia de corriente
+    float                        pVoltageOffset[3];        //Offset de tension
+    float                        pCurrentOffset[4];        //Offset de corriente
     
 
 
@@ -39,11 +32,7 @@ class CaptureV2 : public DeviceInterface {
 //    } Sample_t;
     uint8_t                      CurrentChannel;          //Canal actual de lectura
     uint8_t                      ChannelsCount;           //Numero de canales de lectura
-    float                        Samplerate;              //Frecuencia de muestreo
-    float                        VoltageGain[3];          //Ganancia de tension
-    float                        CurrentGain[4];          //Ganancia de corriente
-    float                        VoltageOffset[3];        //Offset de tension
-    float                        CurrentOffset[4];        //Offset de corriente
+    uint8_t                      Oversample;              //Oversample usado en el micro
     const char                  *Serial;                  //Numero de serie del dispositivo de captura
     float                       *Buffer;                  //Donde almaceno muestras leidas (RingBuffer)
     uint32_t                     ReadPos;                 //Posicion de lectura del buffer
@@ -66,8 +55,8 @@ class CaptureV2 : public DeviceInterface {
   private :
     float    CalculateFrequency(Analyzer::Work_t* work);
     uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len);
-  public :
     CaptureV2();
+  public :
     static CaptureV2 *Init(json_object *config);
     bool Start();
     ~CaptureV2();
