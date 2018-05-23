@@ -10,18 +10,11 @@
 #include "Database.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
-#define EVENT_RVC                      5.0        //Variacion en % para generar RVC
-#define EVENT_RVC_HYSTERESIS           3.0        //Variacion en % para finalizar RVC
-#define EVENT_DIP_SWELL               10.0        //Variacion en % para generar subida o bajada
-#define EVENT_INTERRUPTION            90.0        //Bajada en % para generar interrupcion
-#define EVENT_HYSTERESIS              06.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
-#define EVENT_ENVELOPETIME             0.1        //Tiempo en segundos que se guarda antes y despues de un evento
 //----------------------------------------------------------------------------------------------------------------------
 class Analyzer : private Database {
   public :
     enum RouteType {FASE_1, FASE_3, FASE_3N};
     enum AggregType { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
-    enum EventType  { EVT_NONE, EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC, EVT_GLITCH };
     static const float FrequencyRanges[];   //Rangos de frecuencias para estadisticas
     static const float VoltageRanges[];     //Rangos de tensiones para estadisticas
     static const float THDRanges[];         //Rangos de distorsion harmonica para estadisticas
@@ -83,18 +76,7 @@ class Analyzer : private Database {
     } Work_t;
 
   private :
-    typedef struct {
-      float    *RMS;
-      uint64_t  Timestamp;
-      uint32_t  Len;
-    } EventCycle_t;
-    typedef struct {
-      enum EventType Type;                 //Tipo de evento (puede cambiar durante el evento)
-      uint64_t        Start;                //Timestamp de inicio
-      uint64_t        Duration;             //Duracion en samples
-      float           Voltage;              //Tension maxima o minima durante el evento
-      float           Change;               //Porcentage de desviacion del evento
-    } Event_t;
+
   private :
     static pthread_mutex_t pFFTPlannerMutex; //Bloquea el acceso simultaneo al plinificador de FFTs
   private :
@@ -116,16 +98,11 @@ class Analyzer : private Database {
     Params_t        pAggreg1H;
     uint16_t        pNodeIndex;
     Stats_t         pStats;
-    EventCycle_t    pPrevCycles[100];     //Informacion de ciclos anteriores para calculo de eventos
-    uint8_t         pPrevCyclesLen;       //Tamaño de buffer de ciclos
-    uint8_t         pPrevCyclesWrite;     //Posicion actual del buffer de ciclos
-    float          *pStationaryRMS;       //Valores de tension estacionarios
-    bool            pPrevStationary;      //Almacena el estado del flag de regimen estacionario
-    Event_t         pRunningEvent;        //Evento en curso
+
   private :
     void  SaveParams(Params_t *param);
-    void  SaveEvent(uint8_t cycle, bool end);
-    float PercentChange(float in, float reference);
+    
+
   protected :
     uint64_t    pPrevTimestamp;
     Work_t      pWork;
@@ -139,7 +116,7 @@ class Analyzer : private Database {
     uint32_t GetMaxSamples();
     void     SaveWorkParams();
     void     Analyze(float minimunCurrent);
-    void     EventsDetect();
+
     void     AccumulateAggregation(Params_t *dst, Params_t *src);
     bool     FFT_Start(FFT_t *fft, float *in, Complex_t *out);
     void     FFT_Wait(FFT_t *fft);
