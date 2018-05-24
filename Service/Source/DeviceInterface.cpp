@@ -3,7 +3,9 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #include <string.h>
+#include <math.h>
 #include "DeviceInterface.h"
+#include "Devices.h"
 //----------------------------------------------------------------------------------------------------------------------
 float DeviceInterface::ApplyFilter(float in, Filter_t* filter) {
   float out = in * filter->A0 + filter->Z1;
@@ -19,4 +21,7 @@ DeviceInterface::DeviceInterface() {
 DeviceInterface::~DeviceInterface() {
   for(int i = 0; i < pAnalyzersCount; i++) delete pAnalyzers[i];
   free(pAnalyzers);
+}
+uint32_t DeviceInterface::GetMaxSamples() {
+  return ceil((1.15 * pSamplerate * 10.0) / Devices::NominalFrequency);
 }

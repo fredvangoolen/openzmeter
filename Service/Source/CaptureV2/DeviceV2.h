@@ -19,9 +19,11 @@
 //#define PROCESSING_CURRENTOFFSET      0.10        //Corriente minima para realizar calculos
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV2 : public DeviceInterface {
-  private :    
+  private :
+      enum SyncState {WAIT, NOSYNC, SYNC};
+  private :
     const char                  *pSerial;                  //Numero de serie del dispositivo de captura
-    float                       *pBuffer;                  //Donde almaceno muestras leidas (RingBuffer)
+    uint16_t                    *pBuffer;                  //Donde almaceno muestras leidas (RingBuffer)
     float                        pVoltageGain[3];          //Ganancia de tension
     float                        pCurrentGain[4];          //Ganancia de corriente
     float                        pVoltageOffset[3];        //Offset de tension
@@ -39,9 +41,8 @@ class DeviceV2 : public DeviceInterface {
     pthread_cond_t               pWriteWait;               //Variable de condicion para esperar si buffer esta lleno
     pthread_cond_t               pReadWait;                //Variable de condicion para esperar si buffer esta vacio
     uint8_t                      pOversample;              //Oversample usado en el micro
-    uint8_t                      pCurrentChannel;          //Canal actual de lectura
-
-
+    SyncState                    pSyncState;               //Indica si la lectura del USB esta sincronizada o no
+    
     pthread_t                    CaptureThread;           //Descriptor del hilo de captura
     pthread_t                    AnalyzeThread;           //Descriptor del hilo de analisis
     Filter_t                     Filters[5];              //Filtros paso banda para deteccion de paso por cero

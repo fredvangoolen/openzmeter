@@ -1,5 +1,5 @@
 /* ================================== zMeter ===========================================================================
- * File:     CaptureMono.cpp
+ * File:     DeviceV2.cpp
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #include <termios.h>
@@ -17,26 +17,34 @@
 #include "DeviceV2.h"
 #include "../Tools.h"
 // Funciones ===========================================================================================================
-void   DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
+void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
   uint16_t *Buff16 = (uint16_t*)transfer->buffer;
-  uint     Len = transfer->actual_length / 4;
   DeviceV2 *This = (DeviceV2*)transfer->user_data;
-  pthread_mutex_lock(&This->pCaptureMutex);
-//  while(This->Used > (CAPTURE_V2_BUFFERSIZE - Len - This->SampleRate() * EVENT_ENVELOPETIME)) {
-//    if(This->pTerminate) return;
-//    Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
-//    pthread_cond_wait(&This->WriteWait, &This->CaptureMutex);
-//  }
-  for(uint i = 0; i < Len; i++) {
-    int16_t Voltage = Buff16[i * 2 + 0];
-    uint16_t Current = Buff16[i * 2 + 1];
-//    This->Buffer[This->WritePos].Voltage = (Voltage - This->VoltageOffset) * This->VoltageGain;
-//    This->Buffer[This->WritePos].Current = (Current - This->CurrentOffset) * This->CurrentGain;
-//    This->WritePos = (This->WritePos + 1) % CAPTUREMONO_BUFFERSIZE;
+  for(int Block = 0; Block < (transfer->actual_length / 64); Block++) {
+    uint16_t *BlockPtr = &Buff16[32 * Block];
+    uint8_t   Pos      = 0;
+    pthread_mutex_lock(&This->pCaptureMutex);
+    if(This->pSyncState = WAIT) continue;
+    if(BlockPtr[0] == 0xFFFF) {
+      if(This->pSyncState == SYNC) Tools::LogMsg("WARN", "DeviceV2 lost sync. Try reduce capture speed\n");
+      This->pSyncState = SYNC;
+      This->pUsed = 0;
+      Pos++;
+    }
+    while(This->pUsed > (This->pBuffLen - 32)) {
+      if(Tools::Terminate) return;
+      Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
+      pthread_cond_wait(&This->pWriteWait, &This->pCaptureMutex);
+    }
+    for(uint8_t ReadPos = Pos; ReadPos < 32; ReadPos++) {
+      if(BlockPtr[ReadPos] == 0xFFFF) break;
+      This->pBuffer[This->pWritePos] = BlockPtr[ReadPos];
+      This->pWritePos = (This->pWritePos + 1) % This->pBuffLen;
+      This->pUsed++;
+    }
+    pthread_cond_signal(&This->pReadWait);
+    pthread_mutex_unlock(&This->pCaptureMutex); 
   }
-  This->pUsed += Len;
-  pthread_cond_signal(&This->pReadWait);
-  pthread_mutex_unlock(&This->pCaptureMutex);
   if(Tools::Terminate == false) libusb_submit_transfer(transfer);
 }
 int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
@@ -55,7 +63,7 @@ int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
   }
   return 0;
 }
-void  *DeviceV2::Capture_Thread(void *args) {
+void *DeviceV2::Capture_Thread(void *args) {
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -126,10 +134,10 @@ void  *DeviceV2::Capture_Thread(void *args) {
           This->pNewDevice = NULL;
           continue;
         } else {
-          Tools::LogMsg("INFO", "Kernel driver dettached for CaptureMono device with serial %s\n", This->pSerial);
+          Tools::LogMsg("INFO", "Kernel driver dettached for DeviceV2 with serial %s\n", This->pSerial);
         }
       }
-      Result = libusb_claim_interface(This->pDeviceHandle, 1);
+      Result = libusb_claim_interface(This->pDeviceHandle, 0);
       if(Result != LIBUSB_SUCCESS) {
         Tools::LogMsg("ERROR", "libusb_claim_interface returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
@@ -137,8 +145,9 @@ void  *DeviceV2::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       } else {
-        Tools::LogMsg("INFO", "Claimed interface 1 on CaptureMono device with serial %s\n", This->pSerial);
+        Tools::LogMsg("INFO", "Claimed interface 1 on DeviceV2 with serial %s\n", This->pSerial);
       }
+      This->pSyncState = WAIT;
       for(int i = 0; i < CAPTUREV2_TRANSFERS; i++) {
         libusb_fill_bulk_transfer(TransferIN[i], This->pDeviceHandle, CAPTUREV2_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, -1);
         Result |= libusb_submit_transfer(TransferIN[i]);
@@ -150,33 +159,44 @@ void  *DeviceV2::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       }
-      Tools::LogMsg("INFO", "Capture started on CaptureMono device with serial %s\n", This->pSerial);
+      Tools::LogMsg("INFO", "Capture started on DeviceV2 with serial %s\n", This->pSerial);
       This->pNewDevice = NULL;
-      int Error = libusb_control_transfer(This->pDeviceHandle, 0x21, 0x00, (This->pChannelMask << 8) | 0x86, 0, NULL, 0, 0);
+      int Error = libusb_control_transfer(This->pDeviceHandle, 0x21, 0x00, 0x0000, 0, NULL, 0, 0);
+      if(Error < 0) Tools::LogMsg("ERROR", "Can not stop device with serial %s (%d)\n", This->pSerial, Error);
+      usleep(1000000);
+      Error = libusb_control_transfer(This->pDeviceHandle, 0x21, 0x00, (This->pChannelMask << 8) | 0x19, 0, NULL, 0, 0);
       if(Error < 0) Tools::LogMsg("ERROR", "Can not setup device with serial %s (%d)\n", This->pSerial, Error);
+      This->pSyncState = NOSYNC;
     }
   }
   return NULL;
 }
-void  *DeviceV2::Analize_Thread(void* args) {
+void *DeviceV2::Analize_Thread(void* args) {
   DeviceV2 *This = (DeviceV2*)args;
   if(pthread_setschedprio(0, -10) == -1) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL;
   }
-  pthread_setname_np(This->AnalyzeThread, "AnalysisMono");
-  int Discard = 100;
+  pthread_setname_np(This->AnalyzeThread, "AnalyzeV2");
   while(!Tools::Terminate) {
     pthread_mutex_lock(&This->pAnalyzeMutex);
-//    while(This->Used < (This->GetMaxSamples() + This->SampleRate() * EVENT_ENVELOPETIME)) {
-//      if(This->pTerminate) return NULL;
-//      pthread_cond_wait(&This->ReadWait, &This->AnalyzeMutex);
-//    }
+    while(This->pUsed < (This->GetMaxSamples() * This->pChannelCount)) {
+      if(Tools::Terminate) return NULL;
+      pthread_cond_wait(&This->pReadWait, &This->pAnalyzeMutex);
+    }
     uint64_t Start = Tools::GetTime();
-//    This->pWork.Params.Timestamp = Start - ((This->Used * 1000) / CAPTUREMONO_SAMPLEFREQ);
+//    This->pWork.Params.Timestamp = Start - ((This->pUsed * 1000) / (This->pSamplerate * This->pChannelCount));
     float LastSample = +20; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
-//    for(This->pWork.Samples = 0; This->pWork.Samples < This->GetMaxSamples(); This->pWork.Samples++) {
-//      This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
+//  for(uint i = 0; i < Len; i++) {
+//    int16_t Voltage = Buff16[i * 2 + 0];
+//    uint16_t Current = Buff16[i * 2 + 1];
+//    This->Buffer[This->WritePos].Voltage = (Voltage - This->VoltageOffset) * This->VoltageGain;
+//    This->Buffer[This->WritePos].Current = (Current - This->CurrentOffset) * This->CurrentGain;
+//    This->WritePos = (This->WritePos + 1) % CAPTUREMONO_BUFFERSIZE;
+//  }
+    for(This->pWork.Samples = 0; This->pWork.Samples < This->GetMaxSamples(); This->pWork.Samples++) {
+        for(uint8_t Channel = 0; Channel < This->pChannelCount; Channel++) {
+        //      This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
 //      This->pWork.CurrentSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Current;
 //      float Out = This->pWork.VoltageSamples[0][This->pWork.Samples];
 //      for(int i = 0; i < 5; i++) Out = ApplyFilter(Out, &This->Filters[i]);
@@ -187,22 +207,23 @@ void  *DeviceV2::Analize_Thread(void* args) {
 //        This->pWork.Cycles[This->pWork.Cycles_Len].Start = This->pWork.Samples;
 //      }
 //      LastSample = Out;
-//      This->ReadPos = (This->ReadPos + 1) % CAPTUREMONO_BUFFERSIZE;
-//    }
-//    This->Used -= This->pWork.Samples;
+      This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;
+        }
+    }
+    This->pUsed -= This->pWork.Samples * This->pChannelCount;
     pthread_cond_signal(&This->pWriteWait);
     pthread_mutex_unlock(&This->pAnalyzeMutex);
-    if(Discard > 0) {
-      Discard--;
+//    if(Discard > 0) {
+//      Discard--;
 //      This->ResetWork();
 //      This->ResetParams(&This->pWork.Params);
-    } else {
+//    } else {
 //      This->Analyze(0.1);
       uint64_t AnalyzeEnd = Tools::GetTime();
 //      This->SaveWorkParams();
       uint64_t SaveEnd = Tools::GetTime();
-//      Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %umS (%" PRIu64 "mS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
-    }
+      Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %umS (%" PRIu64 "mS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
+//    }
   }
   return NULL;
 }
@@ -383,8 +404,8 @@ DeviceV2::DeviceV2() {
   pDeviceHandle     = NULL;
   pNewDevice        = NULL;
   pOversample       = 0;
-  pCurrentChannel   = 0;
   pBuffLen          = 0;
+  pSyncState        = WAIT;
   pthread_cond_init(&pWriteWait, NULL);
   pthread_cond_init(&pReadWait, NULL);
   pthread_mutex_init(&pAnalyzeMutex, NULL);
@@ -397,7 +418,7 @@ bool DeviceV2::Start() {
     if(pChannelMask & Mask) pChannelCount++;
   }
   pBuffLen = CAPTUREV2_BUFFERSIZE * pSamplerate * pChannelCount;
-  pBuffer = (float*)malloc(pBuffLen * sizeof(float));
+  pBuffer = (uint16_t*)malloc(pBuffLen * sizeof(uint16_t));
   if(pBuffer == NULL) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(NULL);
@@ -434,12 +455,12 @@ bool DeviceV2::Start() {
     free(pBuffer);
     return false;
   }
-//  if(pthread_create(&AnalyzeThread, NULL, Analize_Thread, this) != 0) {
-//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    pthread_join(CaptureThread, NULL);
-//    free(pBuffer);
-//    return false;
-//  }
+  if(pthread_create(&AnalyzeThread, NULL, Analize_Thread, this) != 0) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    pthread_join(CaptureThread, NULL);
+    free(pBuffer);
+    return false;
+  }
 }
 DeviceV2::~DeviceV2() {
   if(pBuffer) {
