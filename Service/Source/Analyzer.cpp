@@ -286,7 +286,7 @@ void Analyzer::AllocParams(Params_t *params, AggregType type) {
   params->Type = type;
   ResetParams(params);
 }
-Analyzer::Analyzer(uint32_t samplerate, bool triphase, uint16_t id) {
+Analyzer::Analyzer(uint32_t samplerate, bool triphase, uint16_t id) : Database() {
   pNodeIndex           = id;
   pPrevTimestamp       = 0;
   pSampleRate          = samplerate;

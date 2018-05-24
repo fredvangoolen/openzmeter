@@ -37,7 +37,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/Source/Analyzer.o \
 	${OBJECTDIR}/Source/CaptureMono/CaptureMono.o \
-	${OBJECTDIR}/Source/CaptureV2/CaptureV2.o \
+	${OBJECTDIR}/Source/CaptureV2/DeviceV2.o \
 	${OBJECTDIR}/Source/CaptureVirtual/CaptureVirtual.o \
 	${OBJECTDIR}/Source/Database.o \
 	${OBJECTDIR}/Source/DeviceInterface.o \
@@ -83,9 +83,9 @@ ${OBJECTDIR}/Source/CaptureMono/CaptureMono.o: Source/CaptureMono/CaptureMono.cp
 	${MKDIR} -p ${OBJECTDIR}/Source/CaptureMono
 	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/CaptureMono/CaptureMono.o Source/CaptureMono/CaptureMono.cpp
 
-${OBJECTDIR}/Source/CaptureV2/CaptureV2.o: Source/CaptureV2/CaptureV2.cpp
+${OBJECTDIR}/Source/CaptureV2/DeviceV2.o: Source/CaptureV2/DeviceV2.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/CaptureV2
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/CaptureV2/CaptureV2.o Source/CaptureV2/CaptureV2.cpp
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/CaptureV2/DeviceV2.o Source/CaptureV2/DeviceV2.cpp
 
 ${OBJECTDIR}/Source/CaptureVirtual/CaptureVirtual.o: Source/CaptureVirtual/CaptureVirtual.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/CaptureVirtual

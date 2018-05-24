@@ -6,15 +6,15 @@
         <itemPath>Source/CaptureMono/CaptureMono.cpp</itemPath>
         <itemPath>Source/CaptureMono/CaptureMono.h</itemPath>
       </logicalFolder>
-      <logicalFolder name="CaptureV2" displayName="CaptureV2" projectFiles="true">
-        <itemPath>Source/CaptureV2/CaptureV2.cpp</itemPath>
-        <itemPath>Source/CaptureV2/CaptureV2.h</itemPath>
-      </logicalFolder>
       <logicalFolder name="CaptureVirtual"
                      displayName="CaptureVirtual"
                      projectFiles="true">
         <itemPath>Source/CaptureVirtual/CaptureVirtual.cpp</itemPath>
         <itemPath>Source/CaptureVirtual/CaptureVirtual.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="CaptureV2" displayName="DeviceV2" projectFiles="true">
+        <itemPath>Source/CaptureV2/DeviceV2.cpp</itemPath>
+        <itemPath>Source/CaptureV2/DeviceV2.h</itemPath>
       </logicalFolder>
       <itemPath>Source/Analyzer.cpp</itemPath>
       <itemPath>Source/Analyzer.h</itemPath>
@@ -46,8 +46,16 @@
       <itemPath>Makefile</itemPath>
       <itemPath>Package</itemPath>
     </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+      <itemPath>Package</itemPath>
+    </logicalFolder>
   </logicalFolder>
   <sourceRootList>
+    <Elem>Source</Elem>
     <Elem>Source</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
@@ -278,6 +286,18 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -297,9 +317,9 @@
       </item>
       <item path="Source/CaptureMono/CaptureMono.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/CaptureV2/CaptureV2.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/CaptureV2/DeviceV2.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/CaptureV2/CaptureV2.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/CaptureV2/DeviceV2.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/CaptureVirtual/CaptureVirtual.cpp"
             ex="false"
@@ -637,6 +657,18 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -652,9 +684,9 @@
       </item>
       <item path="Source/Analyzer.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/CaptureV2/CaptureV2.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/CaptureV2/DeviceV2.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/CaptureV2/CaptureV2.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/CaptureV2/DeviceV2.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/CaptureVirtual/CaptureVirtual.h"
             ex="false"

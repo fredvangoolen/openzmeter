@@ -5,7 +5,7 @@
 #include <string.h>
 #include "Devices.h"
 #include "DeviceInterface.h"
-#include "CaptureV2/CaptureV2.h"
+#include "CaptureV2/DeviceV2.h"
 //----------------------------------------------------------------------------------------------------------------------
 float              Devices::NominalVoltage   = 230.0;
 float              Devices::NominalFrequency = 50.0;
@@ -24,7 +24,7 @@ bool Devices::Init(json_object *config) {
       DeviceInterfaces = (DeviceInterface**)malloc(sizeof(DeviceInterface*) * Count);
       for(int i = 0; i < Count; i++) {
         if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_object) continue;
-        DeviceInterfaces[DeviceInterfacesCount] = CaptureV2::Init(json_object_array_get_idx(JSON_Val, i));
+        DeviceInterfaces[DeviceInterfacesCount] = DeviceV2::Init(json_object_array_get_idx(JSON_Val, i));
         if(DeviceInterfaces[DeviceInterfacesCount] == NULL) continue;
         DeviceInterfacesCount++;
       }

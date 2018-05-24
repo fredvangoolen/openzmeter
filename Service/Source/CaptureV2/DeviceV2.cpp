@@ -14,14 +14,14 @@
 #include <math.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
-#include "CaptureV2.h"
+#include "DeviceV2.h"
 #include "../Tools.h"
 // Funciones ===========================================================================================================
-void   CaptureV2::ReadCallback(struct libusb_transfer *transfer) {
+void   DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
   uint16_t *Buff16 = (uint16_t*)transfer->buffer;
   uint     Len = transfer->actual_length / 4;
-  CaptureV2 *This = (CaptureV2*)transfer->user_data;
-  pthread_mutex_lock(&This->CaptureMutex);
+  DeviceV2 *This = (DeviceV2*)transfer->user_data;
+  pthread_mutex_lock(&This->pCaptureMutex);
 //  while(This->Used > (CAPTURE_V2_BUFFERSIZE - Len - This->SampleRate() * EVENT_ENVELOPETIME)) {
 //    if(This->pTerminate) return;
 //    Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
@@ -34,28 +34,28 @@ void   CaptureV2::ReadCallback(struct libusb_transfer *transfer) {
 //    This->Buffer[This->WritePos].Current = (Current - This->CurrentOffset) * This->CurrentGain;
 //    This->WritePos = (This->WritePos + 1) % CAPTUREMONO_BUFFERSIZE;
   }
-  This->Used += Len;
-  pthread_cond_signal(&This->ReadWait);
-  pthread_mutex_unlock(&This->CaptureMutex);
+  This->pUsed += Len;
+  pthread_cond_signal(&This->pReadWait);
+  pthread_mutex_unlock(&This->pCaptureMutex);
   if(Tools::Terminate == false) libusb_submit_transfer(transfer);
 }
-int CaptureV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
-  CaptureV2 *This = (CaptureV2*)user_data;
-  if((event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) && (This->DeviceHandle == NULL)) {
-    This->NewDevice = dev;
+int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
+  DeviceV2 *This = (DeviceV2*)user_data;
+  if((event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) && (This->pDeviceHandle == NULL)) {
+    This->pNewDevice = dev;
   } else if(event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-    if(This->DeviceHandle != NULL) {
-      libusb_device *CurrentDev = libusb_get_device(This->DeviceHandle);	
+    if(This->pDeviceHandle != NULL) {
+      libusb_device *CurrentDev = libusb_get_device(This->pDeviceHandle);	
       if(dev == CurrentDev) {
-        Tools::LogMsg("INFO", "Device CaptureMono with serial '%s' disconnected\n", This->Serial);
-        libusb_close(This->DeviceHandle);
-        This->DeviceHandle = NULL;
+        Tools::LogMsg("INFO", "Device DeviceV2 with serial '%s' disconnected\n", This->pSerial);
+        libusb_close(This->pDeviceHandle);
+        This->pDeviceHandle = NULL;
       }
     }
   }
   return 0;
 }
-void  *CaptureV2::Capture_Thread(void *args) {
+void  *DeviceV2::Capture_Thread(void *args) {
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -64,100 +64,102 @@ void  *CaptureV2::Capture_Thread(void *args) {
     Param.sched_priority = Prio - 5;
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   }
-  CaptureV2 *This = (CaptureV2*)args;
-  pthread_setname_np(This->CaptureThread, "CapMono_Init");
-  uint8_t BufferIN[CAPTURE_V2_TRANSFERS][8192];
-  struct libusb_transfer *TransferIN[CAPTURE_V2_TRANSFERS];
-  for(int i = 0; i < CAPTURE_V2_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
+  DeviceV2 *This = (DeviceV2*)args;
+  pthread_setname_np(This->CaptureThread, "DeviceV2_Init");
+  uint8_t BufferIN[CAPTUREV2_TRANSFERS][8192];
+  struct libusb_transfer *TransferIN[CAPTUREV2_TRANSFERS];
+  for(int i = 0; i < CAPTUREV2_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
   uint32_t Update = 0;
   while(!Tools::Terminate) {
     if((Update % 10) == 0) {
-      char ThreadName[16];
-      sprintf(ThreadName, "CapV2_%03d", This->Used * 100 / CAPTURE_V2_BUFFERSIZE);
+      char ThreadName[16] = "DeviceV2_Wait";
+      if(This->pDeviceHandle != NULL) sprintf(ThreadName, "DeviceV2_%03d", This->pUsed * 100 / This->pBuffLen); 
       pthread_setname_np(This->CaptureThread, ThreadName);
     }
     Update++;
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(NULL, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) Tools::LogMsg("ERROR", "libusb_handle_events_timeout_completed returns code %d\n", Result);
-    if(This->NewDevice != NULL) {
+    if(This->pNewDevice != NULL) {
       struct libusb_device_descriptor Descriptor;
-      Result = libusb_get_device_descriptor(This->NewDevice, &Descriptor);
+      Result = libusb_get_device_descriptor(This->pNewDevice, &Descriptor);
       if(Result < LIBUSB_SUCCESS) {
         Tools::LogMsg("ERROR", "libusb_get_device_descriptor return code %d\n", Result);
-        This->NewDevice = NULL;
+        This->pNewDevice = NULL;
         continue;
       }
-      Result = libusb_open(This->NewDevice, &This->DeviceHandle);
+      Result = libusb_open(This->pNewDevice, &This->pDeviceHandle);
       if(Result != LIBUSB_SUCCESS) {
         Tools::LogMsg("ERROR", "libusb_open return %d\n", Result);
-        This->DeviceHandle = NULL;
-        This->NewDevice = NULL;
+        This->pDeviceHandle = NULL;
+        This->pNewDevice = NULL;
         continue;
       }
       char Serial[256];
-      Result = libusb_get_string_descriptor_ascii(This->DeviceHandle, Descriptor.iSerialNumber, (unsigned char*)Serial, sizeof(Serial));
+      Result = libusb_get_string_descriptor_ascii(This->pDeviceHandle, Descriptor.iSerialNumber, (unsigned char*)Serial, sizeof(Serial));
       if(Result < 0) {
         Tools::LogMsg("ERROR", "libusb_get_string_descriptor_ascii returns %d\n", Result);
-        libusb_close(This->DeviceHandle);
-        This->DeviceHandle = NULL; 
-        This->NewDevice = NULL;
+        libusb_close(This->pDeviceHandle);
+        This->pDeviceHandle = NULL; 
+        This->pNewDevice = NULL;
         continue;
       }
-      if(strcmp(This->Serial, Serial) != 0) {
-        libusb_close(This->DeviceHandle);
-        This->DeviceHandle = NULL; 
-        This->NewDevice = NULL;
+      if(strcmp(This->pSerial, Serial) != 0) {
+        libusb_close(This->pDeviceHandle);
+        This->pDeviceHandle = NULL; 
+        This->pNewDevice = NULL;
         continue;
       }        
-      Result = libusb_kernel_driver_active(This->DeviceHandle, 0);
+      Result = libusb_kernel_driver_active(This->pDeviceHandle, 0);
       if(Result < LIBUSB_SUCCESS) {
         Tools::LogMsg("ERROR", "libusb_kernel_driver_active returns %d\n", Result);
-        libusb_close(This->DeviceHandle);
-        This->DeviceHandle = NULL; 
-        This->NewDevice = NULL;
+        libusb_close(This->pDeviceHandle);
+        This->pDeviceHandle = NULL; 
+        This->pNewDevice = NULL;
         continue;
       } else if(Result == 1) { 
-        Result = libusb_detach_kernel_driver(This->DeviceHandle, 0);
+        Result = libusb_detach_kernel_driver(This->pDeviceHandle, 0);
         if(Result < LIBUSB_SUCCESS) {
           Tools::LogMsg("ERROR", "libusb_detach_kernel_driver returns %d\n", Result);
-          libusb_close(This->DeviceHandle);
-          This->DeviceHandle = NULL; 
-          This->NewDevice = NULL;
+          libusb_close(This->pDeviceHandle);
+          This->pDeviceHandle = NULL; 
+          This->pNewDevice = NULL;
           continue;
         } else {
-          Tools::LogMsg("INFO", "Kernel driver dettached for CaptureMono device with serial %s\n", This->Serial);
+          Tools::LogMsg("INFO", "Kernel driver dettached for CaptureMono device with serial %s\n", This->pSerial);
         }
       }
-      Result = libusb_claim_interface(This->DeviceHandle, 1);
+      Result = libusb_claim_interface(This->pDeviceHandle, 1);
       if(Result != LIBUSB_SUCCESS) {
         Tools::LogMsg("ERROR", "libusb_claim_interface returns %d\n", Result);
-        libusb_close(This->DeviceHandle);
-        This->DeviceHandle = NULL; 
-        This->NewDevice = NULL;
+        libusb_close(This->pDeviceHandle);
+        This->pDeviceHandle = NULL; 
+        This->pNewDevice = NULL;
         continue;
       } else {
-        Tools::LogMsg("INFO", "Claimed interface 1 on CaptureMono device with serial %s\n", This->Serial);
+        Tools::LogMsg("INFO", "Claimed interface 1 on CaptureMono device with serial %s\n", This->pSerial);
       }
-      for(int i = 0; i < CAPTURE_V2_TRANSFERS; i++) {
-        libusb_fill_bulk_transfer(TransferIN[i], This->DeviceHandle, CAPTURE_V2_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, -1);
+      for(int i = 0; i < CAPTUREV2_TRANSFERS; i++) {
+        libusb_fill_bulk_transfer(TransferIN[i], This->pDeviceHandle, CAPTUREV2_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, -1);
         Result |= libusb_submit_transfer(TransferIN[i]);
       }
       if(Result != LIBUSB_SUCCESS) {
         Tools::LogMsg("ERROR", "libusb_submit_transfer returns %d\n", Result);
-        libusb_close(This->DeviceHandle);
-        This->DeviceHandle = NULL; 
-        This->NewDevice = NULL;
+        libusb_close(This->pDeviceHandle);
+        This->pDeviceHandle = NULL; 
+        This->pNewDevice = NULL;
         continue;
       }
-      Tools::LogMsg("INFO", "Capture started on CaptureMono device with serial %s\n", This->Serial);
-      This->NewDevice = NULL;
+      Tools::LogMsg("INFO", "Capture started on CaptureMono device with serial %s\n", This->pSerial);
+      This->pNewDevice = NULL;
+      int Error = libusb_control_transfer(This->pDeviceHandle, 0x21, 0x00, (This->pChannelMask << 8) | 0x86, 0, NULL, 0, 0);
+      if(Error < 0) Tools::LogMsg("ERROR", "Can not setup device with serial %s (%d)\n", This->pSerial, Error);
     }
   }
   return NULL;
 }
-void  *CaptureV2::Analize_Thread(void* args) {
-  CaptureV2 *This = (CaptureV2*)args;
+void  *DeviceV2::Analize_Thread(void* args) {
+  DeviceV2 *This = (DeviceV2*)args;
   if(pthread_setschedprio(0, -10) == -1) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL;
@@ -165,7 +167,7 @@ void  *CaptureV2::Analize_Thread(void* args) {
   pthread_setname_np(This->AnalyzeThread, "AnalysisMono");
   int Discard = 100;
   while(!Tools::Terminate) {
-    pthread_mutex_lock(&This->AnalyzeMutex);
+    pthread_mutex_lock(&This->pAnalyzeMutex);
 //    while(This->Used < (This->GetMaxSamples() + This->SampleRate() * EVENT_ENVELOPETIME)) {
 //      if(This->pTerminate) return NULL;
 //      pthread_cond_wait(&This->ReadWait, &This->AnalyzeMutex);
@@ -188,8 +190,8 @@ void  *CaptureV2::Analize_Thread(void* args) {
 //      This->ReadPos = (This->ReadPos + 1) % CAPTUREMONO_BUFFERSIZE;
 //    }
 //    This->Used -= This->pWork.Samples;
-    pthread_cond_signal(&This->WriteWait);
-    pthread_mutex_unlock(&This->AnalyzeMutex);
+    pthread_cond_signal(&This->pWriteWait);
+    pthread_mutex_unlock(&This->pAnalyzeMutex);
     if(Discard > 0) {
       Discard--;
 //      This->ResetWork();
@@ -204,8 +206,8 @@ void  *CaptureV2::Analize_Thread(void* args) {
   }
   return NULL;
 }
-CaptureV2 *CaptureV2::Init(json_object* config) {
-  CaptureV2 *Device = new CaptureV2();
+DeviceV2 *DeviceV2::Init(json_object* config) {
+  DeviceV2 *Device = new DeviceV2();
   bool     ValidDriver      = false;
   bool     ValidParams      = true;
   uint8_t  ChannelMask      = 0;
@@ -216,13 +218,16 @@ CaptureV2 *CaptureV2::Init(json_object* config) {
       if(strcmp("CaptureV2", (char*)json_object_get_string(JSON_Val)) == 0) ValidDriver = true;
     } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "ID") == 0)) {
       Device->pID = json_object_get_int(JSON_Val);
-      if((Device->pID % 4) != 0) ValidParams = false;
+      if((Device->pID % 4) != 0) {
+        ValidParams = false;
+        Tools::LogMsg("ERROR", "Device ID must be multiple of 4\n");
+      }
     } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Oversample") == 0)) {
-      Device->Oversample = json_object_get_int(JSON_Val);
+      Device->pOversample = json_object_get_int(JSON_Val);
     } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Samplerate") == 0)) {
       Device->pSamplerate = json_object_get_int(JSON_Val);
     } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Serial") == 0)) {
-      Device->Serial = (char*)json_object_get_string(JSON_Val);
+      Device->pSerial = (char*)json_object_get_string(JSON_Val);
     } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "VoltageGain") == 0)) {
       if(json_object_array_length(JSON_Val) != 3) {
         ValidParams = false;
@@ -230,6 +235,7 @@ CaptureV2 *CaptureV2::Init(json_object* config) {
         for(int i = 0; i < 3; i++) {
           if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
             ValidParams = false;
+            Tools::LogMsg("ERROR", "CaptureV2: Voltage gain must have 3 double values\n");
           } else {
             Device->pVoltageGain[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
           }
@@ -242,6 +248,7 @@ CaptureV2 *CaptureV2::Init(json_object* config) {
         for(int i = 0; i < 3; i++) {
           if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
             ValidParams = false;
+            Tools::LogMsg("ERROR", "CaptureV2: Voltage offset must have 3 double values\n");
           } else {
             Device->pVoltageOffset[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
           }
@@ -254,6 +261,7 @@ CaptureV2 *CaptureV2::Init(json_object* config) {
         for(int i = 0; i < 4; i++) {
           if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
             ValidParams = false;
+            Tools::LogMsg("ERROR", "CaptureV2: current gain must have 4 double values\n");
           } else {
             Device->pCurrentGain[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
           }
@@ -266,6 +274,7 @@ CaptureV2 *CaptureV2::Init(json_object* config) {
         for(int i = 0; i < 4; i++) {
           if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
             ValidParams = false;
+            Tools::LogMsg("ERROR", "CaptureV2: current offset must have 4 double values\n");
           } else {
             Device->pCurrentOffset[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
           }
@@ -283,9 +292,9 @@ CaptureV2 *CaptureV2::Init(json_object* config) {
         uint8_t CurrentChannel = 5;
         json_object_object_foreach(json_object_array_get_idx(JSON_Val, i), JSON_KeySub, JSON_ValSub) {
           enum json_type JSON_TypeSub = json_object_get_type(JSON_ValSub);
-          if((JSON_TypeSub == json_type_string) && (strcmp(JSON_Key, "DisplayName") == 0)) {
+          if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "DisplayName") == 0)) {
             DisplayName = (char*)json_object_get_string(JSON_ValSub);
-          } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_Key, "Mode") == 0)) {
+          } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "Mode") == 0)) {
             char *ModeText = (char*)json_object_get_string(JSON_ValSub);
             if(strcmp("3Phase+N", ModeText) == 0) {
               Type = Analyzer::FASE_3N;
@@ -295,8 +304,9 @@ CaptureV2 *CaptureV2::Init(json_object* config) {
               Type = Analyzer::FASE_1;
             } else {
               ValidParams = false;
+              Tools::LogMsg("ERROR", "CaptureV2: invalid output mode, try '3Phase+N'. '3Phase' or '1Phase'\n");
             }
-          } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_Key, "VoltageChannel") == 0)) {
+          } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "VoltageChannel") == 0)) {
             char *ChannelText = (char*)json_object_get_string(JSON_ValSub);
             if(strcmp("R", ChannelText) == 0) {
               VoltageChannel = 6;
@@ -306,8 +316,9 @@ CaptureV2 *CaptureV2::Init(json_object* config) {
               VoltageChannel = 2;
             } else {
               ValidParams = false;
+              Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S' or 'T'\n");
             }
-          } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_Key, "CurrentChannel") == 0)) {
+          } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "CurrentChannel") == 0)) {
             char *ChannelText = (char*)json_object_get_string(JSON_ValSub);
             if(strcmp("R", ChannelText) == 0) {
               CurrentChannel = 5;
@@ -319,45 +330,81 @@ CaptureV2 *CaptureV2::Init(json_object* config) {
               CurrentChannel = 0;
             } else {
               ValidParams = false;
+              Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S', 'T' or 'N'\n");
             }
           }
         }
-        if((Type == Analyzer::FASE_3N) && (ChannelMask != 0)) ValidParams = false;
-        if((Type == Analyzer::FASE_3) && ((ChannelMask & 0x2A) != 0)) ValidParams = false;
-        if((Type == Analyzer::FASE_1) && ((ChannelMask & (1 << CurrentChannel)) != 0)) ValidParams = false;        
+        if(Type == Analyzer::FASE_3N) {
+          if(ChannelMask != 0) {
+            ValidParams = false;
+            Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
+          } else {
+            ChannelMask |= 0x7F;
+          }
+        } else if(Type == Analyzer::FASE_3) {
+          if((ChannelMask & 0x2A) != 0) {
+            ValidParams = false;
+            Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
+          } else {
+            ChannelMask |= 0x7E; 
+          }
+        } else if(Type == Analyzer::FASE_1) {
+          if((ChannelMask & (1 << CurrentChannel)) != 0) {
+            ValidParams = false;
+            Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
+          } else {
+            ChannelMask |= (1 << CurrentChannel) | (1 << VoltageChannel);
+          }
+        }
         if(ValidParams == true) {
 //          Device->pAnalyzers[Device->pAnalyzersCount] = new Analyzer();
-          Device->pAnalyzersCount++;
+          //Device->pAnalyzersCount++;
         }
       }
     }
   }
-  if(ValidDriver & ValidParams)
-    return Device;
-  else
-    delete Device;
+  Device->pChannelMask = ChannelMask;
+  if(ValidDriver & ValidParams) return Device;
+  delete Device;
   return NULL;
 }
-CaptureV2::CaptureV2() {
-  Serial           = NULL;
-  Buffer           = NULL;
-  ReadPos          = 0;
-  WritePos         = 0;
-  Used             = 0;
-  DeviceHandle     = NULL;
-  NewDevice        = NULL;
-  pthread_cond_init(&WriteWait, NULL);
-  pthread_cond_init(&ReadWait, NULL);
-  pthread_mutex_init(&AnalyzeMutex, NULL);
-  pthread_mutex_init(&CaptureMutex, NULL);
+DeviceV2::DeviceV2() {
   for(int i = 0; i < 3; i++) pVoltageGain[i]   = 1;
   for(int i = 0; i < 3; i++) pVoltageOffset[i] = 0;
   for(int i = 0; i < 4; i++) pCurrentGain[i]   = 1;
   for(int i = 0; i < 4; i++) pCurrentOffset[i] = 0;
+  pSerial           = NULL;
+  pBuffer           = NULL;
+  pChannelMask      = 0;
+  pChannelCount     = 0;
+  pReadPos          = 0;
+  pWritePos         = 0;
+  pUsed             = 0;
+  pDeviceHandle     = NULL;
+  pNewDevice        = NULL;
+  pOversample       = 0;
+  pCurrentChannel   = 0;
+  pBuffLen          = 0;
+  pthread_cond_init(&pWriteWait, NULL);
+  pthread_cond_init(&pReadWait, NULL);
+  pthread_mutex_init(&pAnalyzeMutex, NULL);
+  pthread_mutex_init(&pCaptureMutex, NULL);
 }
-bool CaptureV2::Start() {
+bool DeviceV2::Start() {
   Tools::LogMsg("INFO", "Starting CaptureV2 adquisition thread...\n");
-  for(int i = 0; i < 5; i++) {
+  pChannelCount = 0;
+  for(uint8_t Mask = 0x40; Mask != 0; Mask >>= 1) {
+    if(pChannelMask & Mask) pChannelCount++;
+  }
+  pBuffLen = CAPTUREV2_BUFFERSIZE * pSamplerate * pChannelCount;
+  pBuffer = (float*)malloc(pBuffLen * sizeof(float));
+  if(pBuffer == NULL) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    libusb_exit(NULL);
+    return false;
+  }
+
+  //  for(int i = 0; i < 5; i++) {
 //    float Q = 1.0;
 //    float K = tan(M_PI * ((float)Tools::Electrical.NominalFrequency / CAPTURE_V2_SAMPLEFREQ));
 //    float Norm = 1 / (1 + K / Q + K * K);
@@ -368,51 +415,43 @@ bool CaptureV2::Start() {
 //    Filters[i].B2 = (1 - K / Q + K * K) * Norm;
 //    Filters[i].Z1 = 0.0;
 //    Filters[i].Z2 = 0.0;
-  }
+//  }
   int Error = libusb_init(NULL);
   if(Error < 0) {
     Tools::LogMsg("ERROR", "Fallo la apertura de libUSB...\n");
     return false;
   }
-  Buffer = (float*)malloc(CAPTURE_V2_BUFFERSIZE * sizeof(float));
-  if(Buffer == NULL) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    libusb_exit(NULL);
-    return false;
-  }
   if(pthread_create(&CaptureThread, NULL, Capture_Thread, this) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(NULL);
-    free(Buffer);
+    free(pBuffer);
     return false;
   }
-  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , CAPTURE_V2_VID, CAPTURE_V2_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
+  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , CAPTUREV2_VID, CAPTUREV2_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
   if(Error < 0) {
     Tools::LogMsg("ERROR", "Fallo al registrar callback de escucha libUSB...\n");
-//    pTerminate = true;
     pthread_join(CaptureThread, NULL);
-    free(Buffer);
+    free(pBuffer);
     return false;
   }
-  if(pthread_create(&AnalyzeThread, NULL, Analize_Thread, this) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    pTerminate = true;
-    pthread_join(CaptureThread, NULL);
-    free(Buffer);
-    return false;
-  }
+//  if(pthread_create(&AnalyzeThread, NULL, Analize_Thread, this) != 0) {
+//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//    pthread_join(CaptureThread, NULL);
+//    free(pBuffer);
+//    return false;
+//  }
 }
-CaptureV2::~CaptureV2() {
-  if(Buffer) {
-    pthread_cond_signal(&WriteWait);
-    pthread_cond_signal(&ReadWait);
+DeviceV2::~DeviceV2() {
+  if(pBuffer) {
+    pthread_cond_signal(&pWriteWait);
+    pthread_cond_signal(&pReadWait);
     Tools::LogMsg("INFO", "Waiting for adquisition thread ends...\n");
     pthread_join(CaptureThread, NULL);
     pthread_join(AnalyzeThread, NULL);
-    free(Buffer);
+    free(pBuffer);
   }
 }
-uint32_t CaptureV2::SamplesCopy(float **dest, uint32_t offset, uint32_t len) {
+uint32_t DeviceV2::SamplesCopy(float **dest, uint32_t offset, uint32_t len) {
   for(uint i = 0; i < len; i++) {
 //    uint32_t Pos = ((ReadPos + CAPTUREMONO_BUFFERSIZE) - offset + i) % CAPTUREMONO_BUFFERSIZE;
 //    dest[i][0] = Buffer[Pos].Voltage;

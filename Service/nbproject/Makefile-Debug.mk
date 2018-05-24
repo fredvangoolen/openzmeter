@@ -36,7 +36,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/Source/Analyzer.o \
-	${OBJECTDIR}/Source/CaptureV2/CaptureV2.o \
+	${OBJECTDIR}/Source/CaptureV2/DeviceV2.o \
 	${OBJECTDIR}/Source/Database.o \
 	${OBJECTDIR}/Source/DeviceInterface.o \
 	${OBJECTDIR}/Source/Devices.o \
@@ -78,10 +78,10 @@ ${OBJECTDIR}/Source/Analyzer.o: Source/Analyzer.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Analyzer.o Source/Analyzer.cpp
 
-${OBJECTDIR}/Source/CaptureV2/CaptureV2.o: Source/CaptureV2/CaptureV2.cpp
+${OBJECTDIR}/Source/CaptureV2/DeviceV2.o: Source/CaptureV2/DeviceV2.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/CaptureV2
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/CaptureV2/CaptureV2.o Source/CaptureV2/CaptureV2.cpp
+	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/CaptureV2/DeviceV2.o Source/CaptureV2/DeviceV2.cpp
 
 ${OBJECTDIR}/Source/Database.o: Source/Database.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
