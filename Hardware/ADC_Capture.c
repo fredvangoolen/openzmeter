@@ -117,7 +117,7 @@ void ADC_Configure() {
   //Configuracion de ADCs
   RCC_ADCCLKConfig(RCC_ADC12PLLCLK_Div1 | RCC_ADC34PLLCLK_Div1);
   ADC_InitADC(ADC4, ADC_InjectedChannel_5,  ADC_InjectedChannel_3,  (uint16_t*)ADC4_Buffer, DMA2_Channel2);
-  ADC_InitADC(ADC3, ADC_InjectedChannel_5,  ADC_InjectedChannel_12, (uint16_t*)ADC3_Buffer, DMA2_Channel5);
+//  ADC_InitADC(ADC3, ADC_InjectedChannel_5,  ADC_InjectedChannel_12, (uint16_t*)ADC3_Buffer, DMA2_Channel5);
 //  ADC_InitADC(ADC2, ADC_InjectedChannel_12, ADC_InjectedChannel_1,  (uint16_t*)ADC2_Buffer, DMA2_Channel1);
   ADC_InitADC(ADC1, ADC_InjectedChannel_4,  ADC_InjectedChannel_1,  (uint16_t*)ADC1_Buffer, DMA1_Channel1);
   //Habilito interrupciones del DMA solo uso un canal, ya que todas las operaciones finalizan mas o menos a la vez
