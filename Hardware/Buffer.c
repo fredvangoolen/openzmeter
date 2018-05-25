@@ -38,7 +38,7 @@ void Buffer_AppendSamples(float *samples) {
   uint8_t Channels = (Status & 0x07);
   if(INBuffUsed >= (INBUFFER_LEN - Channels)) Buffers_Reset();
   for(uint8_t i = 0; i < Channels; i++) {
-    float    Value = samples[i] * 8.0 + 0.5;
+    float Value = samples[i] * 16.0 + 0.5;
     if(Value < 0) 
       INBuff[INWritePos] = 0;
     else if(Value > 65534)
@@ -61,20 +61,24 @@ void Buffer_AppendSamples(float *samples) {
  */
 bool Buffers_ToPMA(uint16_t dst) {
   if(INBuffUsed == 0) return FALSE;
-  uint32_t *Ptr  = (uint32_t *)(dst * 2 + PMAAddr);
-  uint8_t   Pos = 0;
+  uint16_t *Ptr    = (uint16_t *)(dst * 2 + PMAAddr);
+  uint8_t   Remain = 32;
   if(Status & 0x80) {
-    Ptr[Pos++] = 0xFFFF;
+    *Ptr = 0xFFFF;
+    Remain--;
+    Ptr = &Ptr[2];
     Status = Status & 0x7F;
   }
-  while(Pos < 32) {
+  while(Remain) {
     if(INBuffUsed) {
-      Ptr[Pos++] = INBuff[INReadPos];
+      *Ptr = INBuff[INReadPos];
       INReadPos = (INReadPos + 1) % INBUFFER_LEN;
       INBuffUsed--;
     } else {
-      Ptr[Pos++] = 0xFFFF;
+      *Ptr = 0xFFFF;
     }
+    Remain--;
+    Ptr = &Ptr[2];
   }
   return TRUE;
 }

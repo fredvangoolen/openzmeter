@@ -11,12 +11,8 @@
             <make-dep-projects/>
             <sourceRootList>
                 <sourceRootElem>STM32_USB-FS-Device_Driver</sourceRootElem>
-                <sourceRootElem>STM32F10x_StdPeriph_Driver</sourceRootElem>
-                <sourceRootElem>cmsis</sourceRootElem>
-                <sourceRootElem>cmsis_boot</sourceRootElem>
-                <sourceRootElem>CMSIS</sourceRootElem>
-                <sourceRootElem>Libraries</sourceRootElem>
                 <sourceRootElem>STM32F30x_StdPeriph_Driver</sourceRootElem>
+                <sourceRootElem>CMSIS</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

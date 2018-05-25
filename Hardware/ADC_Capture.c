@@ -34,6 +34,7 @@ typedef struct {
 static Filter_t       Filters;         //Almacena los coeficientes y muestras de los filtros de cada canal
 static uint8_t        ChannelMask;     //Mascara de canales en uso
 static uint8_t        SampleCounter;   //La parte alta tiene el tipo de oversample y la baja el contador de muestras procesadas
+static uint8_t        Channels;        //Numero de canales activos
 static ADCSample_ADC1 ADC1_Buffer[32]; //Buffer de captura para Voltage_R y Current_R
 static ADCSample_ADC2 ADC2_Buffer[32]; //Buffer de captura para Voltage_S y Current_S
 static ADCSample_ADC3 ADC3_Buffer[32]; //Buffer de captura para Voltage_T y Current_T
@@ -117,7 +118,7 @@ void ADC_Configure() {
   RCC_ADCCLKConfig(RCC_ADC12PLLCLK_Div1 | RCC_ADC34PLLCLK_Div1);
   ADC_InitADC(ADC4, ADC_InjectedChannel_5,  ADC_InjectedChannel_3,  (uint16_t*)ADC4_Buffer, DMA2_Channel2);
   ADC_InitADC(ADC3, ADC_InjectedChannel_5,  ADC_InjectedChannel_12, (uint16_t*)ADC3_Buffer, DMA2_Channel5);
-  ADC_InitADC(ADC2, ADC_InjectedChannel_12, ADC_InjectedChannel_1,  (uint16_t*)ADC2_Buffer, DMA2_Channel1);
+//  ADC_InitADC(ADC2, ADC_InjectedChannel_12, ADC_InjectedChannel_1,  (uint16_t*)ADC2_Buffer, DMA2_Channel1);
   ADC_InitADC(ADC1, ADC_InjectedChannel_4,  ADC_InjectedChannel_1,  (uint16_t*)ADC1_Buffer, DMA1_Channel1);
   //Habilito interrupciones del DMA solo uso un canal, ya que todas las operaciones finalizan mas o menos a la vez
   DMA_ITConfig(DMA1_Channel1, DMA_IT_TC | DMA_IT_HT, ENABLE);
@@ -140,7 +141,7 @@ const uint16_t ADC_TimerDivs[] = { 150,  180,  200,  225,  250,  300,  260,  375
                                   1500, 1800, 1875, 2250, 2500, 3000, 3125, 3750, 4500, 5000, 5625, 6250, 7500, 9000, 9375, 11250, 12500};
 bool ADC_StartCapture(uint8_t channels, uint8_t mode) {
   //Recuento de canales activos
-  uint8_t Channels = 0;
+  Channels = 0;
   for(uint8_t Mask = 0x40; Mask != 0; Mask >>= 1) {
     if(channels & Mask) Channels++;
   }
@@ -153,7 +154,7 @@ bool ADC_StartCapture(uint8_t channels, uint8_t mode) {
   ADC_StopCapture();
   ChannelMask = channels;
   SampleCounter = mode & 0xC0;
-  for(int i = 0; i < 7; i++) {
+  for(int i = 0; i < Channels; i++) {
     Filters.Z1[i] = 0.0;
     Filters.Z2[i] = 0.0;
   }
@@ -221,19 +222,28 @@ static inline float ADC_Filter(float in, uint8_t channel) {
  */
 void DMA1_Channel1_IRQHandler(void) {
   float   Values[7];
-  uint8_t Start = DMA_GetITStatus(DMA1_IT_TC1) ? 16 : 0;
+  uint8_t Start;
+  if(DMA_GetITStatus(DMA1_IT_TC1) != RESET) {
+    Start = 16;
+    DMA_ClearITPendingBit(DMA1_IT_TC1); 
+  } else {
+    Start = 0;
+    DMA_ClearITPendingBit(DMA1_IT_HT1);
+  }
+  
   DMA_ClearITPendingBit(DMA1_IT_HT1 | DMA1_IT_TC1);
   for(uint8_t Pos = Start; Pos < Start + 16; Pos++) {
     float *Ptr = Values;
-    if(ChannelMask & 0x01) *Ptr++ = ADC1_Buffer[Pos].CurrentN;
-    if(ChannelMask & 0x02) *Ptr++ = ADC4_Buffer[Pos].CurrentT;
-    if(ChannelMask & 0x04) *Ptr++ = ADC4_Buffer[Pos].VoltageT;
-    if(ChannelMask & 0x08) *Ptr++ = ADC3_Buffer[Pos].CurrentS; 
-    if(ChannelMask & 0x10) *Ptr++ = ADC3_Buffer[Pos].VoltageS;
-    if(ChannelMask & 0x20) *Ptr++ = ADC2_Buffer[Pos].CurrentR;
     if(ChannelMask & 0x40) *Ptr++ = ADC2_Buffer[Pos].VoltageR;
+    if(ChannelMask & 0x20) *Ptr++ = ADC2_Buffer[Pos].CurrentR;
+    if(ChannelMask & 0x10) *Ptr++ = ADC3_Buffer[Pos].VoltageS;
+    if(ChannelMask & 0x08) *Ptr++ = ADC3_Buffer[Pos].CurrentS; 
+    if(ChannelMask & 0x04) *Ptr++ = ADC4_Buffer[Pos].VoltageT;
+    if(ChannelMask & 0x02) *Ptr++ = ADC4_Buffer[Pos].CurrentT;
+    if(ChannelMask & 0x01) *Ptr++ = ADC1_Buffer[Pos].CurrentN;
+   
     if(SampleCounter == 0x00) {
-      Buffer_AppendSamples(Values); 
+      Buffer_AppendSamples(Values);
     } else {
       float *Z1 = Filters.Z1;
       float *Z2 = Filters.Z2;

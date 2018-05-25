@@ -25,20 +25,7 @@
             <file>file:/home/edu/Proyectos/zMeter/STM32/inc/USB_CDC.h</file>
             <file>file:/home/edu/Proyectos/zMeter/STM32/USB_CDC.c</file>
         </group>
-        <group>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/ADC_Capture.c</file>
-        </group>
-        <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/SysHandlers.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/USB_Class.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/CMSIS/Source/startup_stm32f303xc.s</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/Main.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/CMSIS/Include/arm_math.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/STM32F30x_StdPeriph_Driver/src/stm32f30x_dma.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/Link.ld</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/Buffer.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/Main.c</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/ADC_Capture.c</file>
-        </group>
+        <group name="ServiceV2"/>
+        <group/>
     </open-files>
 </project-private>

@@ -14,14 +14,14 @@ GREP=grep
 NM=nm
 CCADMIN=CCadmin
 RANLIB=ranlib
-CC=gcc
-CCC=g++
-CXX=g++
+CC=arm-none-eabi-gcc
+CCC=arm-none-eabi-g++
+CXX=arm-none-eabi-g++
 FC=gfortran
-AS=as
+AS=arm-none-eabi-as
 
 # Macros
-CND_PLATFORM=GNU-Linux
+CND_PLATFORM=arm-none-eabi-Linux
 CND_DLIB_EXT=so
 CND_CONF=Release
 CND_DISTDIR=dist
@@ -75,7 +75,7 @@ OBJECTFILES= \
 
 
 # C Compiler Flags
-CFLAGS=
+CFLAGS=-mcpu=cortex-m4 -mthumb -g -mfloat-abi=hard -fsingle-precision-constant -mfpu=fpv4-sp-d16 -Os
 
 # CC Compiler Flags
 CCFLAGS=
@@ -96,17 +96,17 @@ LDLIBSOPTIONS=
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/hardware: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/hardware ${OBJECTFILES} ${LDLIBSOPTIONS}
+	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/hardware ${OBJECTFILES} ${LDLIBSOPTIONS} -TLink.ld -Wl,--gc-sections -specs=nosys.specs -specs=nano.specs
 
 ${OBJECTDIR}/ADC_Capture.o: ADC_Capture.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ADC_Capture.o ADC_Capture.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ADC_Capture.o ADC_Capture.c
 
 ${OBJECTDIR}/Buffer.o: Buffer.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Buffer.o Buffer.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Buffer.o Buffer.c
 
 ${OBJECTDIR}/CMSIS/Source/startup_stm32f303xc.o: CMSIS/Source/startup_stm32f303xc.s
 	${MKDIR} -p ${OBJECTDIR}/CMSIS/Source
@@ -115,172 +115,172 @@ ${OBJECTDIR}/CMSIS/Source/startup_stm32f303xc.o: CMSIS/Source/startup_stm32f303x
 ${OBJECTDIR}/CMSIS/Source/system_stm32f30x.o: CMSIS/Source/system_stm32f30x.c
 	${MKDIR} -p ${OBJECTDIR}/CMSIS/Source
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CMSIS/Source/system_stm32f30x.o CMSIS/Source/system_stm32f30x.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CMSIS/Source/system_stm32f30x.o CMSIS/Source/system_stm32f30x.c
 
 ${OBJECTDIR}/Main.o: Main.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_adc.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_adc.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_adc.o STM32F30x_StdPeriph_Driver/src/stm32f30x_adc.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_adc.o STM32F30x_StdPeriph_Driver/src/stm32f30x_adc.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_can.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_can.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_can.o STM32F30x_StdPeriph_Driver/src/stm32f30x_can.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_can.o STM32F30x_StdPeriph_Driver/src/stm32f30x_can.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_dac.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_dac.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_dac.o STM32F30x_StdPeriph_Driver/src/stm32f30x_dac.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_dac.o STM32F30x_StdPeriph_Driver/src/stm32f30x_dac.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_dbgmcu.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_dbgmcu.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_dbgmcu.o STM32F30x_StdPeriph_Driver/src/stm32f30x_dbgmcu.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_dbgmcu.o STM32F30x_StdPeriph_Driver/src/stm32f30x_dbgmcu.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_dma.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_dma.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_dma.o STM32F30x_StdPeriph_Driver/src/stm32f30x_dma.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_dma.o STM32F30x_StdPeriph_Driver/src/stm32f30x_dma.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_exti.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_exti.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_exti.o STM32F30x_StdPeriph_Driver/src/stm32f30x_exti.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_exti.o STM32F30x_StdPeriph_Driver/src/stm32f30x_exti.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_flash.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_flash.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_flash.o STM32F30x_StdPeriph_Driver/src/stm32f30x_flash.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_flash.o STM32F30x_StdPeriph_Driver/src/stm32f30x_flash.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_fmc.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_fmc.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_fmc.o STM32F30x_StdPeriph_Driver/src/stm32f30x_fmc.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_fmc.o STM32F30x_StdPeriph_Driver/src/stm32f30x_fmc.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_gpio.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_gpio.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_gpio.o STM32F30x_StdPeriph_Driver/src/stm32f30x_gpio.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_gpio.o STM32F30x_StdPeriph_Driver/src/stm32f30x_gpio.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_hrtim.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_hrtim.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_hrtim.o STM32F30x_StdPeriph_Driver/src/stm32f30x_hrtim.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_hrtim.o STM32F30x_StdPeriph_Driver/src/stm32f30x_hrtim.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_i2c.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_i2c.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_i2c.o STM32F30x_StdPeriph_Driver/src/stm32f30x_i2c.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_i2c.o STM32F30x_StdPeriph_Driver/src/stm32f30x_i2c.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_iwdg.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_iwdg.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_iwdg.o STM32F30x_StdPeriph_Driver/src/stm32f30x_iwdg.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_iwdg.o STM32F30x_StdPeriph_Driver/src/stm32f30x_iwdg.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_misc.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_misc.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_misc.o STM32F30x_StdPeriph_Driver/src/stm32f30x_misc.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_misc.o STM32F30x_StdPeriph_Driver/src/stm32f30x_misc.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_opamp.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_opamp.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_opamp.o STM32F30x_StdPeriph_Driver/src/stm32f30x_opamp.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_opamp.o STM32F30x_StdPeriph_Driver/src/stm32f30x_opamp.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_pwr.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_pwr.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_pwr.o STM32F30x_StdPeriph_Driver/src/stm32f30x_pwr.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_pwr.o STM32F30x_StdPeriph_Driver/src/stm32f30x_pwr.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_rcc.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_rcc.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_rcc.o STM32F30x_StdPeriph_Driver/src/stm32f30x_rcc.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_rcc.o STM32F30x_StdPeriph_Driver/src/stm32f30x_rcc.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_rtc.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_rtc.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_rtc.o STM32F30x_StdPeriph_Driver/src/stm32f30x_rtc.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_rtc.o STM32F30x_StdPeriph_Driver/src/stm32f30x_rtc.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_spi.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_spi.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_spi.o STM32F30x_StdPeriph_Driver/src/stm32f30x_spi.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_spi.o STM32F30x_StdPeriph_Driver/src/stm32f30x_spi.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_syscfg.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_syscfg.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_syscfg.o STM32F30x_StdPeriph_Driver/src/stm32f30x_syscfg.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_syscfg.o STM32F30x_StdPeriph_Driver/src/stm32f30x_syscfg.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_tim.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_tim.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_tim.o STM32F30x_StdPeriph_Driver/src/stm32f30x_tim.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_tim.o STM32F30x_StdPeriph_Driver/src/stm32f30x_tim.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_usart.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_usart.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_usart.o STM32F30x_StdPeriph_Driver/src/stm32f30x_usart.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_usart.o STM32F30x_StdPeriph_Driver/src/stm32f30x_usart.c
 
 ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_wwdg.o: STM32F30x_StdPeriph_Driver/src/stm32f30x_wwdg.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_wwdg.o STM32F30x_StdPeriph_Driver/src/stm32f30x_wwdg.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32F30x_StdPeriph_Driver/src/stm32f30x_wwdg.o STM32F30x_StdPeriph_Driver/src/stm32f30x_wwdg.c
 
 ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_core.o: STM32_USB-FS-Device_Driver/src/usb_core.c
 	${MKDIR} -p ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_core.o STM32_USB-FS-Device_Driver/src/usb_core.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_core.o STM32_USB-FS-Device_Driver/src/usb_core.c
 
 ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_init.o: STM32_USB-FS-Device_Driver/src/usb_init.c
 	${MKDIR} -p ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_init.o STM32_USB-FS-Device_Driver/src/usb_init.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_init.o STM32_USB-FS-Device_Driver/src/usb_init.c
 
 ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_int.o: STM32_USB-FS-Device_Driver/src/usb_int.c
 	${MKDIR} -p ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_int.o STM32_USB-FS-Device_Driver/src/usb_int.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_int.o STM32_USB-FS-Device_Driver/src/usb_int.c
 
 ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_mem.o: STM32_USB-FS-Device_Driver/src/usb_mem.c
 	${MKDIR} -p ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_mem.o STM32_USB-FS-Device_Driver/src/usb_mem.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_mem.o STM32_USB-FS-Device_Driver/src/usb_mem.c
 
 ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_regs.o: STM32_USB-FS-Device_Driver/src/usb_regs.c
 	${MKDIR} -p ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_regs.o STM32_USB-FS-Device_Driver/src/usb_regs.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_regs.o STM32_USB-FS-Device_Driver/src/usb_regs.c
 
 ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_sil.o: STM32_USB-FS-Device_Driver/src/usb_sil.c
 	${MKDIR} -p ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_sil.o STM32_USB-FS-Device_Driver/src/usb_sil.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_sil.o STM32_USB-FS-Device_Driver/src/usb_sil.c
 
 ${OBJECTDIR}/SysHandlers.o: SysHandlers.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SysHandlers.o SysHandlers.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SysHandlers.o SysHandlers.c
 
 ${OBJECTDIR}/USB_Class.o: USB_Class.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/USB_Class.o USB_Class.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/USB_Class.o USB_Class.c
 
 ${OBJECTDIR}/usb_istr.o: usb_istr.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/usb_istr.o usb_istr.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/usb_istr.o usb_istr.c
 
 ${OBJECTDIR}/usb_pwr.o: usb_pwr.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/usb_pwr.o usb_pwr.c
+	$(COMPILE.c) -O2 -DARM_MATH_CM4 -DSTM32F303xC -DUSE_STDPERIPH_DRIVER -D__FPU_PRESENT -D__FPU_USED -ICMSIS/Include -ISTM32F30x_StdPeriph_Driver/inc -ISTM32_USB-FS-Device_Driver/inc -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/usb_pwr.o usb_pwr.c
 
 # Subprojects
 .build-subprojects:
