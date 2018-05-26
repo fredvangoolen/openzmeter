@@ -59,7 +59,7 @@ int HotPlug_Callback(struct libusb_context *ctx, struct libusb_device *dev, libu
 }
 void In_Callback(struct libusb_transfer *transfer) {
   static int   Channel;
-  static float Results[3];
+  static float Results[7];
   if(transfer->status == LIBUSB_TRANSFER_COMPLETED) {
     uint8_t *Ptr = transfer->buffer;
     for(int i = 0; i < transfer->actual_length / 64; i++) {
@@ -70,30 +70,33 @@ void In_Callback(struct libusb_transfer *transfer) {
         if(Sync == SYNC) printf("Se perdio la comunicacion. Reiniciando stream\n");
         if(Sync == WAIT) Sync = SYNC;
         Channel = 0;
+        for(int i = 0; i < 7; i++) Results[i] = 0.0;
         Count++;
       }
       while(Count < 32) {
-        Count++;
-        if(Pkg[Count] == 0xFFFF) continue;
-        Results[Channel] += Pkg[Count];
-        Channel++;
-        if(Channel == 3) Channel = 0;
-        Samples++;
+        if(Pkg[Count] != 0xFFFF) {
+          Results[Channel] += Pkg[Count];
+          Channel++;
+          if(Channel == 7) {
+            Channel = 0;
+            Samples++;
+          }
+          if(Samples == 1000) {
+//        uint64_t Now = GetTime();
+//        double Diff = Now - Time;
+            printf("(V_R: %.5f) (I_R: %.5f) (V_S: %.5f) (I_S: %.5f) (V_T: %.5f) (I_T: %.5f) (I_N: %.5f)\n", (Results[0] / Samples), (Results[1] / Samples), (Results[2] / Samples), (Results[3] / Samples), (Results[4] / Samples), (Results[5] / Samples), (Results[6] / Samples));
+            fflush(stdout);
+//        Time = GetTime();
+            Samples = 0;
+//        Packets = 0;
+            for(int i = 0; i < 7; i++) Results[i] = 0.0;
+          }
+        }
+        Count++;        
       }
       Packets++;
 //      for(int n = 0; n < Ptr[1]; n++) AVG += (float)(Ptr[3 + n * 2] << 8 | Ptr[2 + n * 2]);
-      if(Packets == 10000) {
-        uint64_t Now = GetTime();
-        double Diff = Now - Time;
-        printf("Received %u transfers and %u samples in %.1f ms, %.1f kSamples/s (AVG0: %.5f) (AVG1: %.5f) (AVG2: %.5f)\n", Packets, Samples, Diff / 1000.0, (Samples / 1000.0) / (Diff / 1000000.0), (Results[0] / Samples * 3.0), (Results[1] / Samples * 3.0), (Results[2] / Samples * 3.0));
-        fflush(stdout);
-        Time = GetTime();
-        Samples = 0;
-        Packets = 0;
-        Results[0] = 0;
-        Results[1] = 0;
-        Results[2] = 0;
-      }
+
     }
   }
   libusb_submit_transfer(transfer);
@@ -170,7 +173,7 @@ int main(void) {
     int Error = libusb_handle_events_timeout_completed(NULL, &Timeout, NULL);
     if((Device != NULL) && (Sync == RESET)) {
       uint8_t Channels = 0x7F;
-      uint8_t Mode = 0x86;
+      uint8_t Mode = 0x21;
       Sync = WAIT;
       SendSetupCommand(Channels, Mode);
     }

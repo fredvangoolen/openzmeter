@@ -21,19 +21,15 @@
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
 //----------------------------------------------------------------------------------------------------------------------
-bool                Tools::Terminate  = false;
-bool                Tools::pDaemonized = false;
-bool                Tools::Debug      = false;
-int                 Tools::pLogFile    = -1;
-json_object        *Tools::pConfig     = NULL;
-char               *Tools::pPidFile    = NULL;
+bool         Tools::Debug       = false;
+bool         Tools::pDaemonized = false;
+int          Tools::pLogFile    = -1;
+json_object *Tools::pConfig     = NULL;
+char        *Tools::pPidFile    = NULL;
 //----------------------------------------------------------------------------------------------------------------------
-void Tools::SignalHandler(int signal) {
-  if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
-}
-void Tools::RegisterHandlers() {
-  signal(SIGINT, SignalHandler);
-  signal(SIGTERM, SignalHandler);
+void Tools::RegisterHandlers(void (*function)(int)) {
+  signal(SIGINT, function);
+  signal(SIGTERM, function);
 }
 void Tools::LogMsg(const char *level, const char *msg, ...) {
   if((Debug == false) && (strcmp(level, "DEBUG") == 0)) return;

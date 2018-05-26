@@ -4,6 +4,7 @@
  * Modified: Eduardo Viciana (20 de marzo de 2017)
  * ---------------------------------------------------------------------------- */
 #include <stdio.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -18,7 +19,10 @@
 #include "Analyzer.h"
 #include "NetworkManager.h"
 #include "Devices.h"
-
+static bool Terminate = false;
+void SignalHandler(int signal) {
+  if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
+}
 int main(int argc, char** argv) {
 //  for(int i = 0; i < 20; i++) {
 //    printf("Esperando al depurador (%d)\n", i);
@@ -61,7 +65,7 @@ int main(int argc, char** argv) {
     Param.sched_priority = Prio;
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
   }
-  Tools::RegisterHandlers();
+  Tools::RegisterHandlers(SignalHandler);
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
 //  if(Tools::CreateLogFile() == false) return EXIT_FAILURE;
   //CaptureInterface **Interfaces = (CaptureInterface**)calloc(sizeof(CaptureInterface*), Tools::Devices.Len);
@@ -88,7 +92,7 @@ int main(int argc, char** argv) {
 //  Events_Init();
 //  Prices_Start(LastPrice);
   int Iter = 0;
-  while(!Tools::Terminate) {
+  while(!Terminate) {
     usleep(1000000);
     if((Iter % 100) == 0) HTTPServer::RemoveExpiredSessions();
     Iter++;
@@ -112,7 +116,8 @@ int main(int argc, char** argv) {
 //    LogMsg("DEBUG", "Processing block took %.1f mSec\n", (End - Start) / 1000.0);
   }
 //Stop:
-//  Prices_Stop();
+//  HTTPServer::stop();
+  //  Prices_Stop();
 //  Analyzer_Stop();
 //  RequestServer_Stop();
 //  Tools::RemovePidFile();

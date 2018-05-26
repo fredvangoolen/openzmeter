@@ -7,16 +7,17 @@
 #include "DeviceInterface.h"
 #include "Devices.h"
 //----------------------------------------------------------------------------------------------------------------------
-float DeviceInterface::ApplyFilter(float in, Filter_t* filter) {
-  float out = in * filter->A0 + filter->Z1;
-  filter->Z1 = in * filter->A1 + filter->Z2 - filter->B1 * out;
-  filter->Z2 = in * filter->A2 - filter->B2 * out;
-  return out;
-}
+//float DeviceInterface::ApplyFilter(float in, Filter_t* filter) {
+//  float out = in * filter->A0 + filter->Z1;
+//  filter->Z1 = in * filter->A1 + filter->Z2 - filter->B1 * out;
+//  filter->Z2 = in * filter->A2 - filter->B2 * out;
+//  return out;
+//}
 DeviceInterface::DeviceInterface() {
   pAnalyzers = NULL;
   pAnalyzersCount = 0;
   pSamplerate = 20000;
+  pTerminate = false;
 }
 DeviceInterface::~DeviceInterface() {
   for(int i = 0; i < pAnalyzersCount; i++) delete pAnalyzers[i];

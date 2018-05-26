@@ -5,47 +5,56 @@
 #pragma once
 #include "Analyzer.h"
 //----------------------------------------------------------------------------------------------------------------------
+class Analyzer;
 class DeviceInterface {
   public :
     typedef struct {
-      float A0;
-      float A1;
-      float A2;
-      float B1;
-      float B2;
       float Z1;
       float Z2;
+    } FilterStage_t;
+    typedef struct {
+      FilterStage_t *Stages;
+    } FilterChannel_t;
+    typedef struct {
+      float            A0;
+      float            A1;
+      float            A2;
+      float            B1;
+      float            B2;
+      FilterChannel_t *Channels;
     } Filter_t;
-    typedef struct {
-      uint32_t Start;                         //Muestra dentro del bloque que inicia el ciclo
-      uint32_t End;                           //Muestra dentro del bloque que finaliza el ciclo
-    } Cycle_t;
-    typedef struct {
-      uint64_t    SequenceID;                 //Numero de secuencia del bloque
-      uint32_t    Samples;                    //Cantidad de muestras que componen el bloque
-      float     **VoltageSamples;             //Muestras de tension   (El array almacena hasta 236mS)
-      float     **CurrentSamples;             //Muestras de corriente (El array almacena hasta 236mS) 
-      Cycle_t     Cycles[20];                 //Informacion de los ciclos del bloque
-      uint8_t     Cycles_Len;                 //Numero de ciclos en el bloque
-//      Params_t    Params;                     //Parametros calculados del bloque
-//      Complex_t **VoltageFFT;                 //Transformada de los canales de tension      
-//      Complex_t **CurrentFFT;                 //Transformada de los canales de corriente
-    } Work_t;
+//    typedef struct {
+//      uint32_t Start;                         //Muestra dentro del bloque que inicia el ciclo
+//      uint32_t End;                           //Muestra dentro del bloque que finaliza el ciclo
+//    } Cycle_t;
+//    typedef struct {
+//      uint64_t    SequenceID;                 //Numero de secuencia del bloque
+//      uint32_t    Samples;                    //Cantidad de muestras que componen el bloque
+//      float     **VoltageSamples;             //Muestras de tension   (El array almacena hasta 236mS)
+//      float     **CurrentSamples;             //Muestras de corriente (El array almacena hasta 236mS) 
+//      Cycle_t     Cycles[20];                 //Informacion de los ciclos del bloque
+//      uint8_t     Cycles_Len;                 //Numero de ciclos en el bloque
+////      Params_t    Params;                     //Parametros calculados del bloque
+////      Complex_t **VoltageFFT;                 //Transformada de los canales de tension      
+////      Complex_t **CurrentFFT;                 //Transformada de los canales de corriente
+//    } Work_t;
   public :
     Analyzer      **pAnalyzers;             //Analizadores disponibles
     uint32_t        pAnalyzersCount;        //Numero de analizadores
     float           pSamplerate;            //Velocidad de muestreo
     uint32_t        pID;                    //Identificador del dispositivo (Tiene que ser multiplo de 4)
-  private :
-    static float  ApplyFilter(float in, Filter_t *filter);
+    uint64_t        pSequenceID;            //Numero de secuencia del bloque analizado
   protected :
-    Work_t pWork;                           //Bloque te trabajo
+      void ApplyFilter(float *in, float *out);
   protected :
-    uint32_t GetMaxSamples();
+      bool pTerminate;
+//    Work_t pWork;                           //Bloque te trabajo
+  protected :
     DeviceInterface();
     virtual ~DeviceInterface();
   public :
     virtual bool Start() = 0;
+    uint32_t GetMaxSamples();
 };
 
 //----------------------------------------------------------------------------------------------------------------------
