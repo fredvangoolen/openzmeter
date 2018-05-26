@@ -8,7 +8,7 @@
 #include "usb_pwr.h"
 #include <string.h>
 //----------------------------------------------------------------------------------------------------------------------
-
+volatile uint32_t msTicks = 0;
 //----------------------------------------------------------------------------------------------------------------------
 
 /* ARM => PC */
@@ -22,6 +22,7 @@ void Hardware_Config() {
   GPIO_Init(GPIOA, &GPIO_InitStructure);
   
   GPIO_ResetBits(GPIOA, GPIO_Pin_8);
+  SysTick_Config(SystemCoreClock / 1000);
 }
 int main(void) {
   Hardware_Config();
@@ -37,4 +38,20 @@ int main(void) {
 //  while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOS) == RESET) { }
     __NOP();
   }
+}
+
+/*******************************************************************************
+ * Function Name  : SysTick_Handler
+ * Description    : This function handles SysTick Handler.
+ * Input          : None
+ * Output         : None
+ * Return         : None
+ *******************************************************************************/
+
+void SysTick_Handler(void) {
+  msTicks++;
+}
+void Waitms(uint32_t ms) {
+  uint64_t End = msTicks + ms;
+  while(msTicks <= End);
 }

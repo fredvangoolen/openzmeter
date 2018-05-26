@@ -14,6 +14,8 @@
 //Configuracion del firmware -------------------------------------------------------------------------------------------
 #define INBUFFER_LEN   8192
 //Variables exportadas -------------------------------------------------------------------------------------------------
+//Funciones generales ----------------------------------------------------------
+void Waitms(uint32_t ms);
 //Funciones del buffer -------------------------------------------------------------------------------------------------
 void Buffers_Init(uint8_t channels);
 void Buffer_AppendSamples(float *samples);

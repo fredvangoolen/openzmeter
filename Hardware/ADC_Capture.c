@@ -16,88 +16,26 @@ typedef struct {
 } Filter_t;
 typedef struct {
   int16_t CurrentN;  //ADC1_IN4
-  int16_t Battery;   //ADC1_IN1
-} ADCSample_ADC1;
-typedef struct {
   int16_t CurrentR;  //ADC2_IN12
+  int16_t Battery;   //ADC1_IN1
   int16_t VoltageR;  //ADC2_IN1
-} ADCSample_ADC2;
+} ADCSample_ADC12;
 typedef struct {
   int16_t CurrentS;  //ADC3_IN5
-  int16_t VoltageS;  //ADC3_IN12
-} ADCSample_ADC3;
-typedef struct {
   int16_t CurrentT;  //ADC4_IN5
+  int16_t VoltageS;  //ADC3_IN12
   int16_t VoltageT;  //ADC4_IN3
-} ADCSample_ADC4;
+} ADCSample_ADC34;
 //Variables locales ----------------------------------------------------------------------------------------------------
-static Filter_t       Filters;         //Almacena los coeficientes y muestras de los filtros de cada canal
-static uint8_t        ChannelMask;     //Mascara de canales en uso
-static uint8_t        SampleCounter;   //La parte alta tiene el tipo de oversample y la baja el contador de muestras procesadas
-static uint8_t        Channels;        //Numero de canales activos
-static ADCSample_ADC1 ADC1_Buffer[32]; //Buffer de captura para Voltage_R y Current_R
-static ADCSample_ADC2 ADC2_Buffer[32]; //Buffer de captura para Voltage_S y Current_S
-static ADCSample_ADC3 ADC3_Buffer[32]; //Buffer de captura para Voltage_T y Current_T
-static ADCSample_ADC4 ADC4_Buffer[32]; //Buffer de captura para Battery y Current_N
+static Filter_t        Filters;          //Almacena los coeficientes y muestras de los filtros de cada canal
+static uint8_t         ChannelMask;      //Mascara de canales en uso
+static uint8_t         SampleCounter;    //La parte alta tiene el tipo de oversample y la baja el contador de muestras procesadas
+static uint8_t         Channels;         //Numero de canales activos
+static ADCSample_ADC12 ADC12_Buffer[32]; //Buffer de captura para DMA1
+static ADCSample_ADC34 ADC34_Buffer[32]; //Buffer de captura para DMA2
 //Tipos y funciones externas -------------------------------------------------------------------------------------------
 extern void AppendSample(int16_t value);
 //----------------------------------------------------------------------------------------------------------------------
-/**
- * Configura la captura de un ADC para leer dos canales secuencialmente.
- * @param ADCx ADC a configurar ADC1, ADC2, ADC3 o ADC4
- * @param channel1 primer canal de entrada al ADC
- * @param channel2 segundo canal de entrada al ADC
- * @param dst direccion del buffer del DMA usado para guardar las muestras
- * @param dma controador y canal DMA usado para la transferencia
- */
-void ADC_InitADC(ADC_TypeDef* ADCx, uint8_t channel1, uint8_t channel2, uint16_t *dst, DMA_Channel_TypeDef *dma) {
-  //Configuro ADC
-  ADC_InitTypeDef ADC_InitStructure;
-  ADC_CommonInitTypeDef ADC_CommonInitStructure;
-  ADC_VoltageRegulatorCmd(ADCx, ENABLE);
-  for(int i = 0; i < 10000; i++);
-  ADC_CommonInitStructure.ADC_Mode = ADC_Mode_Independent;
-  ADC_CommonInitStructure.ADC_Clock = ADC_Clock_AsynClkMode;
-  ADC_CommonInitStructure.ADC_DMAAccessMode = ADC_DMAAccessMode_1;
-  ADC_CommonInitStructure.ADC_DMAMode = ADC_DMAMode_Circular;
-  ADC_CommonInitStructure.ADC_TwoSamplingDelay = 0;
-  ADC_CommonInit(ADCx, &ADC_CommonInitStructure);
-  ADC_InitStructure.ADC_ContinuousConvMode = ADC_ContinuousConvMode_Disable;
-  ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
-  ADC_InitStructure.ADC_ExternalTrigConvEvent = ADC_ExternalTrigConvEvent_2;
-  ADC_InitStructure.ADC_ExternalTrigEventEdge = ADC_ExternalTrigEventEdge_RisingEdge;
-  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
-  ADC_InitStructure.ADC_OverrunMode = ADC_OverrunMode_Disable;
-  ADC_InitStructure.ADC_AutoInjMode = ADC_AutoInjec_Disable;
-  ADC_InitStructure.ADC_NbrOfRegChannel = 2;
-  ADC_Init(ADCx, &ADC_InitStructure);
-  ADC_SelectCalibrationMode(ADCx, ADC_CalibrationMode_Single);
-  ADC_StartCalibration(ADCx);
-  while(ADC_GetCalibrationStatus(ADCx) != RESET);
-  ADC_Cmd(ADCx, ENABLE);
-  while(!ADC_GetFlagStatus(ADCx, ADC_FLAG_RDY));
-  ADC_DMAConfig(ADCx, ADC_DMAMode_Circular);
-  //Configuro secuencia de captura
-  ADC_RegularChannelConfig(ADCx, channel1,  1, ADC_SampleTime_1Cycles5);
-  ADC_RegularChannelConfig(ADCx, channel2,  2, ADC_SampleTime_1Cycles5);
-  ADC_DMACmd(ADCx, ENABLE);
-  //Configuro DMA
-  DMA_InitTypeDef  DMA_InitStructure;
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADCx->DR;
-  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)dst;
-  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-  DMA_InitStructure.DMA_BufferSize = 64;
-  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
-  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
-  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;  
-  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
-  DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-  DMA_Init(dma, &DMA_InitStructure);
-  DMA_Cmd(dma, ENABLE);
-  ADC_StartConversion(ADCx);
-}
 
 /**
  * Configura todos los ADCs usados, timer necesario para la captura, controlador DMA e interrupciones
@@ -116,11 +54,87 @@ void ADC_Configure() {
   GPIO_Init(GPIOB, &GPIO_InitStructure);
   //Configuracion de ADCs
   RCC_ADCCLKConfig(RCC_ADC12PLLCLK_Div1 | RCC_ADC34PLLCLK_Div1);
-  ADC_InitADC(ADC4, ADC_InjectedChannel_5,  ADC_InjectedChannel_3,  (uint16_t*)ADC4_Buffer, DMA2_Channel2);
-//  ADC_InitADC(ADC3, ADC_InjectedChannel_5,  ADC_InjectedChannel_12, (uint16_t*)ADC3_Buffer, DMA2_Channel5);
-//  ADC_InitADC(ADC2, ADC_InjectedChannel_12, ADC_InjectedChannel_1,  (uint16_t*)ADC2_Buffer, DMA2_Channel1);
-  ADC_InitADC(ADC1, ADC_InjectedChannel_4,  ADC_InjectedChannel_1,  (uint16_t*)ADC1_Buffer, DMA1_Channel1);
-  //Habilito interrupciones del DMA solo uso un canal, ya que todas las operaciones finalizan mas o menos a la vez
+  //Configuro ADC
+  ADC_VoltageRegulatorCmd(ADC1, ENABLE);
+  ADC_VoltageRegulatorCmd(ADC2, ENABLE);
+  ADC_VoltageRegulatorCmd(ADC3, ENABLE);
+  ADC_VoltageRegulatorCmd(ADC4, ENABLE);
+  Waitms(1);
+  ADC_CommonInitTypeDef ADC_CommonInitStructure;
+  ADC_CommonInitStructure.ADC_Mode = ADC_Mode_RegSimul;
+  ADC_CommonInitStructure.ADC_Clock = ADC_Clock_AsynClkMode;
+  ADC_CommonInitStructure.ADC_DMAAccessMode = ADC_DMAAccessMode_1;
+  ADC_CommonInitStructure.ADC_DMAMode = ADC_DMAMode_Circular;
+  ADC_CommonInitStructure.ADC_TwoSamplingDelay = 0;
+  ADC_CommonInit(ADC1, &ADC_CommonInitStructure);
+  ADC_CommonInit(ADC2, &ADC_CommonInitStructure);
+  ADC_CommonInit(ADC3, &ADC_CommonInitStructure);
+  ADC_CommonInit(ADC4, &ADC_CommonInitStructure);
+  ADC_InitTypeDef ADC_InitStructure;
+  ADC_InitStructure.ADC_ContinuousConvMode = ADC_ContinuousConvMode_Disable;
+  ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
+  ADC_InitStructure.ADC_ExternalTrigConvEvent = ADC_ExternalTrigConvEvent_2;
+  ADC_InitStructure.ADC_ExternalTrigEventEdge = ADC_ExternalTrigEventEdge_RisingEdge;
+  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
+  ADC_InitStructure.ADC_OverrunMode = ADC_OverrunMode_Disable;
+  ADC_InitStructure.ADC_AutoInjMode = ADC_AutoInjec_Disable;
+  ADC_InitStructure.ADC_NbrOfRegChannel = 2;
+  ADC_Init(ADC1, &ADC_InitStructure);
+  ADC_Init(ADC2, &ADC_InitStructure);
+  ADC_Init(ADC3, &ADC_InitStructure);
+  ADC_Init(ADC4, &ADC_InitStructure);
+  ADC_SelectCalibrationMode(ADC1, ADC_CalibrationMode_Single);
+  ADC_SelectCalibrationMode(ADC2, ADC_CalibrationMode_Single);
+  ADC_SelectCalibrationMode(ADC3, ADC_CalibrationMode_Single);
+  ADC_SelectCalibrationMode(ADC4, ADC_CalibrationMode_Single);  
+  ADC_StartCalibration(ADC1);
+  ADC_StartCalibration(ADC2);
+  ADC_StartCalibration(ADC3);
+  ADC_StartCalibration(ADC4);
+  while((ADC_GetCalibrationStatus(ADC1) != RESET) || (ADC_GetCalibrationStatus(ADC2) != RESET) || 
+        (ADC_GetCalibrationStatus(ADC3) != RESET) || (ADC_GetCalibrationStatus(ADC4) != RESET));
+  ADC_Cmd(ADC1, ENABLE);
+  ADC_Cmd(ADC2, ENABLE);
+  ADC_Cmd(ADC3, ENABLE);
+  ADC_Cmd(ADC4, ENABLE);
+  while((ADC_GetFlagStatus(ADC1, ADC_FLAG_RDY) == RESET) || (ADC_GetFlagStatus(ADC2, ADC_FLAG_RDY) == RESET) || 
+        (ADC_GetFlagStatus(ADC3, ADC_FLAG_RDY) == RESET) || (ADC_GetFlagStatus(ADC4, ADC_FLAG_RDY) == RESET));
+  ADC_RegularChannelConfig(ADC1, ADC_InjectedChannel_4,  1, ADC_SampleTime_1Cycles5);
+  ADC_RegularChannelConfig(ADC1, ADC_InjectedChannel_1,  2, ADC_SampleTime_1Cycles5);
+  ADC_RegularChannelConfig(ADC2, ADC_InjectedChannel_12, 1, ADC_SampleTime_1Cycles5);
+  ADC_RegularChannelConfig(ADC2, ADC_InjectedChannel_1,  2, ADC_SampleTime_1Cycles5);
+  ADC_RegularChannelConfig(ADC3, ADC_InjectedChannel_5,  1, ADC_SampleTime_1Cycles5);
+  ADC_RegularChannelConfig(ADC3, ADC_InjectedChannel_12, 2, ADC_SampleTime_1Cycles5);
+  ADC_RegularChannelConfig(ADC4, ADC_InjectedChannel_5,  1, ADC_SampleTime_1Cycles5);
+  ADC_RegularChannelConfig(ADC4, ADC_InjectedChannel_3,  2, ADC_SampleTime_1Cycles5);
+  ADC_DMAConfig(ADC1, ADC_DMAMode_Circular);
+  ADC_DMACmd(ADC1, ENABLE);
+  ADC_DMAConfig(ADC3, ADC_DMAMode_Circular);
+  ADC_DMACmd(ADC3, ENABLE);
+  ADC_StartConversion(ADC1);
+  ADC_StartConversion(ADC2);
+  ADC_StartConversion(ADC3);
+  ADC_StartConversion(ADC4);
+  //Inicio DMA
+  DMA_InitTypeDef DMA_InitStructure;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)ADC12_Buffer;
+  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+  DMA_InitStructure.DMA_BufferSize = 64;
+  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Word;
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
+  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;  
+  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+  DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
+  DMA_Init(DMA1_Channel1, &DMA_InitStructure);
+  DMA_Cmd(DMA1_Channel1, ENABLE);
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC3->DR;
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)ADC34_Buffer;
+  DMA_Init(DMA2_Channel5, &DMA_InitStructure);
+  DMA_Cmd(DMA2_Channel5, ENABLE);
+  //Habilito interrupciones del DMA solo uso un canal, ya que todas las operaciones finalizan a la vez
   DMA_ITConfig(DMA1_Channel1, DMA_IT_TC | DMA_IT_HT, ENABLE);
   NVIC_InitTypeDef NVIC_InitStructure;
   NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;
@@ -234,13 +248,13 @@ void DMA1_Channel1_IRQHandler(void) {
   DMA_ClearITPendingBit(DMA1_IT_HT1 | DMA1_IT_TC1);
   for(uint8_t Pos = Start; Pos < Start + 16; Pos++) {
     float *Ptr = Values;
-    if(ChannelMask & 0x40) *Ptr++ = ADC2_Buffer[Pos].VoltageR;
-    if(ChannelMask & 0x20) *Ptr++ = ADC2_Buffer[Pos].CurrentR;
-    if(ChannelMask & 0x10) *Ptr++ = ADC3_Buffer[Pos].VoltageS;
-    if(ChannelMask & 0x08) *Ptr++ = ADC3_Buffer[Pos].CurrentS; 
-    if(ChannelMask & 0x04) *Ptr++ = ADC4_Buffer[Pos].VoltageT;
-    if(ChannelMask & 0x02) *Ptr++ = ADC4_Buffer[Pos].CurrentT;
-    if(ChannelMask & 0x01) *Ptr++ = ADC1_Buffer[Pos].CurrentN;
+    if(ChannelMask & 0x40) *Ptr++ = ADC12_Buffer[Pos].VoltageR;
+    if(ChannelMask & 0x20) *Ptr++ = ADC12_Buffer[Pos].CurrentR;
+    if(ChannelMask & 0x10) *Ptr++ = ADC34_Buffer[Pos].VoltageS;
+    if(ChannelMask & 0x08) *Ptr++ = ADC34_Buffer[Pos].CurrentS; 
+    if(ChannelMask & 0x04) *Ptr++ = ADC34_Buffer[Pos].VoltageT;
+    if(ChannelMask & 0x02) *Ptr++ = ADC34_Buffer[Pos].CurrentT;
+    if(ChannelMask & 0x01) *Ptr++ = ADC12_Buffer[Pos].CurrentN;
    
     if(SampleCounter == 0x00) {
       Buffer_AppendSamples(Values);
