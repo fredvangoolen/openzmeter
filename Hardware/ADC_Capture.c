@@ -117,7 +117,7 @@ void ADC_Configure() {
   ADC_StartConversion(ADC4);
   //Inicio DMA
   DMA_InitTypeDef DMA_InitStructure;
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1_2->CDR;
   DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)ADC12_Buffer;
   DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
   DMA_InitStructure.DMA_BufferSize = 64;
@@ -130,7 +130,7 @@ void ADC_Configure() {
   DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
   DMA_Init(DMA1_Channel1, &DMA_InitStructure);
   DMA_Cmd(DMA1_Channel1, ENABLE);
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC3->DR;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC3_4->CDR;
   DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)ADC34_Buffer;
   DMA_Init(DMA2_Channel5, &DMA_InitStructure);
   DMA_Cmd(DMA2_Channel5, ENABLE);
