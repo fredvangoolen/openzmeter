@@ -24,7 +24,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
     uint16_t *BlockPtr = &Buff16[32 * Block];
     uint8_t   Pos      = 0;
     pthread_mutex_lock(&This->pCaptureMutex);
-    if(This->pSyncState = WAIT) continue;
+    if(This->pSyncState == WAIT) continue;
     if(BlockPtr[0] == 0xFFFF) {
       if(This->pSyncState == SYNC) Tools::LogMsg("WARN", "DeviceV2 lost sync. Try reduce capture speed\n");
       This->pSyncState = SYNC;
@@ -32,7 +32,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
       Pos++;
     }
     while(This->pUsed > (This->pBuffLen - 32)) {
-      if(Tools::Terminate) return;
+      if(This->pTerminate) return;
       Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
       pthread_cond_wait(&This->pWriteWait, &This->pCaptureMutex);
     }
@@ -45,7 +45,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
     pthread_cond_signal(&This->pReadWait);
     pthread_mutex_unlock(&This->pCaptureMutex); 
   }
-  if(Tools::Terminate == false) libusb_submit_transfer(transfer);
+  if(This->pTerminate == false) libusb_submit_transfer(transfer);
 }
 int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
   DeviceV2 *This = (DeviceV2*)user_data;
@@ -78,7 +78,7 @@ void *DeviceV2::Capture_Thread(void *args) {
   struct libusb_transfer *TransferIN[CAPTUREV2_TRANSFERS];
   for(int i = 0; i < CAPTUREV2_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
   uint32_t Update = 0;
-  while(!Tools::Terminate) {
+  while(!This->pTerminate) {
     if((Update % 10) == 0) {
       char ThreadName[16] = "DeviceV2_Wait";
       if(This->pDeviceHandle != NULL) sprintf(ThreadName, "DeviceV2_%03d", This->pUsed * 100 / This->pBuffLen); 
@@ -164,7 +164,7 @@ void *DeviceV2::Capture_Thread(void *args) {
       int Error = libusb_control_transfer(This->pDeviceHandle, 0x21, 0x00, 0x0000, 0, NULL, 0, 0);
       if(Error < 0) Tools::LogMsg("ERROR", "Can not stop device with serial %s (%d)\n", This->pSerial, Error);
       usleep(1000000);
-      Error = libusb_control_transfer(This->pDeviceHandle, 0x21, 0x00, (This->pChannelMask << 8) | 0x19, 0, NULL, 0, 0);
+      Error = libusb_control_transfer(This->pDeviceHandle, 0x21, 0x00, (This->pChannelMask << 8) | 0x21, 0, NULL, 0, 0);
       if(Error < 0) Tools::LogMsg("ERROR", "Can not setup device with serial %s (%d)\n", This->pSerial, Error);
       This->pSyncState = NOSYNC;
     }
@@ -178,10 +178,10 @@ void *DeviceV2::Analize_Thread(void* args) {
     return NULL;
   }
   pthread_setname_np(This->AnalyzeThread, "AnalyzeV2");
-  while(!Tools::Terminate) {
+  while(!This->pTerminate) {
     pthread_mutex_lock(&This->pAnalyzeMutex);
     while(This->pUsed < (This->GetMaxSamples() * This->pChannelCount)) {
-      if(Tools::Terminate) return NULL;
+      if(This->pTerminate) return NULL;
       pthread_cond_wait(&This->pReadWait, &This->pAnalyzeMutex);
     }
     uint64_t Start = Tools::GetTime();
@@ -194,9 +194,28 @@ void *DeviceV2::Analize_Thread(void* args) {
 //    This->Buffer[This->WritePos].Current = (Current - This->CurrentOffset) * This->CurrentGain;
 //    This->WritePos = (This->WritePos + 1) % CAPTUREMONO_BUFFERSIZE;
 //  }
-    for(This->pWork.Samples = 0; This->pWork.Samples < This->GetMaxSamples(); This->pWork.Samples++) {
-        for(uint8_t Channel = 0; Channel < This->pChannelCount; Channel++) {
-        //      This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
+    uint32_t Samples = 0;
+    while(Samples < This->GetMaxSamples()) {
+      for(uint8_t Channel = 0; Channel < This->pChannelCount; Channel++) {
+        //for(uint8_t Analyzer = 0; Analyzer < This->pAnalyzersCount; Analyzer++) {
+//          if(Analyzer != 0) continue;
+          This->pAnalyzers[0]->pWork.CurrentSamples[3][Samples] = This->pBuffer[This->pReadPos]; 
+          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;
+          This->pAnalyzers[0]->pWork.CurrentSamples[2][Samples] = This->pBuffer[This->pReadPos]; 
+          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;          
+          This->pAnalyzers[0]->pWork.VoltageSamples[2][Samples] = This->pBuffer[This->pReadPos]; 
+          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
+          This->pAnalyzers[0]->pWork.CurrentSamples[1][Samples] = This->pBuffer[This->pReadPos]; 
+          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;
+          This->pAnalyzers[0]->pWork.VoltageSamples[1][Samples] = This->pBuffer[This->pReadPos]; 
+          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
+          This->pAnalyzers[0]->pWork.CurrentSamples[0][Samples] = This->pBuffer[This->pReadPos]; 
+          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
+          This->pAnalyzers[0]->pWork.VoltageSamples[0][Samples] = This->pBuffer[This->pReadPos]; 
+          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
+
+          
+          //      This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
 //      This->pWork.CurrentSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Current;
 //      float Out = This->pWork.VoltageSamples[0][This->pWork.Samples];
 //      for(int i = 0; i < 5; i++) Out = ApplyFilter(Out, &This->Filters[i]);
@@ -207,10 +226,17 @@ void *DeviceV2::Analize_Thread(void* args) {
 //        This->pWork.Cycles[This->pWork.Cycles_Len].Start = This->pWork.Samples;
 //      }
 //      LastSample = Out;
-      This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;
-        }
+        //}
+      
+      }
+      Samples++;
     }
-    This->pUsed -= This->pWork.Samples * This->pChannelCount;
+    printf("%f\n", This->pAnalyzers[0]->pWork.CurrentSamples[3][0]);
+      fflush(stdout);
+    
+    
+    This->pUsed -= Samples * This->pChannelCount;
+    This->pAnalyzers[0]->pWork.Samples = Samples;
     pthread_cond_signal(&This->pWriteWait);
     pthread_mutex_unlock(&This->pAnalyzeMutex);
 //    if(Discard > 0) {
@@ -219,10 +245,11 @@ void *DeviceV2::Analize_Thread(void* args) {
 //      This->ResetParams(&This->pWork.Params);
 //    } else {
 //      This->Analyze(0.1);
+    This->pAnalyzers[0]->Analyze(0.1);
       uint64_t AnalyzeEnd = Tools::GetTime();
-//      This->SaveWorkParams();
+      This->pAnalyzers[0]->SaveWorkParams();
       uint64_t SaveEnd = Tools::GetTime();
-      Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %umS (%" PRIu64 "mS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
+      Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %umS (%" PRIu64 "mS mS with store)\n", This->pSequenceID, AnalyzeEnd - Start, SaveEnd - Start);
 //    }
   }
   return NULL;
@@ -378,8 +405,8 @@ DeviceV2 *DeviceV2::Init(json_object* config) {
           }
         }
         if(ValidParams == true) {
-//          Device->pAnalyzers[Device->pAnalyzersCount] = new Analyzer();
-          //Device->pAnalyzersCount++;
+          Device->pAnalyzers[Device->pAnalyzersCount] = new Analyzer(Device, true, Device->pID + Device->pAnalyzersCount);
+          Device->pAnalyzersCount++;
         }
       }
     }
@@ -464,6 +491,7 @@ bool DeviceV2::Start() {
 }
 DeviceV2::~DeviceV2() {
   if(pBuffer) {
+    pTerminate = true;
     pthread_cond_signal(&pWriteWait);
     pthread_cond_signal(&pReadWait);
     Tools::LogMsg("INFO", "Waiting for adquisition thread ends...\n");

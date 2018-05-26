@@ -51,6 +51,6 @@ class HTTPServer {
   public :
     static void Init(json_object *config);
     static bool Start();
-    static bool stop();
+    static void stop();
     static void RemoveExpiredSessions();
 };

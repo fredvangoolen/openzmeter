@@ -8,9 +8,11 @@
 #include <fftw3.h>
 #include <json-c/json.h>
 #include "Database.h"
+#include "DeviceInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
 //----------------------------------------------------------------------------------------------------------------------
+class DeviceInterface;
 class Analyzer : private Database {
   public :
     enum RouteType {FASE_1, FASE_3, FASE_3N};
@@ -76,7 +78,7 @@ class Analyzer : private Database {
     } Work_t;
 
   private :
-
+      DeviceInterface *pDevice;
   private :
     static pthread_mutex_t pFFTPlannerMutex; //Bloquea el acceso simultaneo al plinificador de FFTs
   private :
@@ -89,8 +91,8 @@ class Analyzer : private Database {
     uint32_t        pLastCycles[PROCESSING_FREQCYCLES];
     uint32_t        pLastCyclesPos;
     uint32_t        pLastCyclesLenght;
-    uint32_t        pSampleRate;
-    uint32_t        pMaxSamples;
+//    uint32_t        pSampleRate;
+//    uint32_t        pMaxSamples;
     bool            pTriphase;
     Params_t        pAggreg3S;
     Params_t        pAggreg1M;
@@ -103,17 +105,16 @@ class Analyzer : private Database {
     void  SaveParams(Params_t *param);
     
 
-  protected :
+  public :
     uint64_t    pPrevTimestamp;
     Work_t      pWork;
     bool        pTerminate;
-  protected :
+  public :
     void     AllocParams(Params_t *params, AggregType type);
     void     ResetParams(Params_t *params);
     void     NormalizeParams(Params_t *params);
     void     ResetWork();
     void     ResetStats();
-    uint32_t GetMaxSamples();
     void     SaveWorkParams();
     void     Analyze(float minimunCurrent);
 
@@ -132,6 +133,6 @@ class Analyzer : private Database {
     uint8_t      NominalFreq();
     json_object *GetJSONCopy(char *series);
   public :
-    Analyzer(uint32_t samplerate, bool triphase, uint16_t id);
+    Analyzer(DeviceInterface *device, bool triphase, uint16_t id);
     ~Analyzer();
 };

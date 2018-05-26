@@ -216,7 +216,7 @@ void Analyzer::Analyze(float minimunCurrent) {
       pLastCyclesLenght = pLastCyclesLenght + pLastCycles[pLastCyclesPos];
       pLastCyclesPos = (pLastCyclesPos + 1) % PROCESSING_FREQCYCLES;
     }
-    pWork.Params.Frequency = PROCESSING_FREQCYCLES / (pLastCyclesLenght / (float)pSampleRate) / 2.0;
+    pWork.Params.Frequency = PROCESSING_FREQCYCLES / (pLastCyclesLenght / pDevice->pSamplerate) / 2.0;
   } else {
     pWork.Params.Frequency = NAN;
   }
@@ -252,9 +252,9 @@ void Analyzer::Analyze(float minimunCurrent) {
     }
     pWork.Params.THD_I[j] = sqrt(pWork.Params.THD_I[j]) / pWork.Params.CurrentHarmonics[j][0];
     if(j < 3) {
-      pWork.Params.Active_Energy[j] = (pWork.Params.Active_Power[j] * pWork.Samples) / (pSampleRate * 3600.0);
+      pWork.Params.Active_Energy[j] = (pWork.Params.Active_Power[j] * pWork.Samples) / (pDevice->pSamplerate * 3600.0);
       pWork.Params.Power_Factor[j] = pWork.Params.Active_Power[j] / pWork.Params.Apparent_Power[j];
-      pWork.Params.Fundamental_Reactive_Energy[j] = (pWork.Params.Fundamental_Reactive_Power[j] * pWork.Samples) / (pSampleRate * 3600.0);
+      pWork.Params.Fundamental_Reactive_Energy[j] = (pWork.Params.Fundamental_Reactive_Power[j] * pWork.Samples) / (pDevice->pSamplerate * 3600.0);
     }
   }
 }
@@ -286,12 +286,12 @@ void Analyzer::AllocParams(Params_t *params, AggregType type) {
   params->Type = type;
   ResetParams(params);
 }
-Analyzer::Analyzer(uint32_t samplerate, bool triphase, uint16_t id) : Database() {
+Analyzer::Analyzer(DeviceInterface *device, bool triphase, uint16_t id) : Database() {
   pNodeIndex           = id;
   pPrevTimestamp       = 0;
-  pSampleRate          = samplerate;
+  pDevice              = device;
   pTriphase            = triphase;
-//  pMaxSamples          = ceil(samplerate * 10.0 / ((Tools::Electrical.NominalFrequency == 50) ? 42.5 : 51.0));
+//  pMaxSamples          = device->;
   pWaitingThreads      = 0;
   pDataReady           = false;
   pTerminate           = false;
@@ -301,12 +301,12 @@ Analyzer::Analyzer(uint32_t samplerate, bool triphase, uint16_t id) : Database()
   pthread_cond_init (&pDataReadyWait, NULL);
   pWork.VoltageSamples = (float**)malloc(sizeof(float*) * ((triphase == true) ? 3 : 1));
   pWork.VoltageFFT     = (Complex_t**)malloc(sizeof(Complex_t*) * ((triphase == true) ? 3 : 1));
-  for(int i = 0; i < ((triphase == true) ? 3 : 1); i++) pWork.VoltageSamples[i] = (float*)malloc(sizeof(float) * pMaxSamples);
-  for(int i = 0; i < ((triphase == true) ? 3 : 1); i++) pWork.VoltageFFT[i] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
+  for(int i = 0; i < ((triphase == true) ? 3 : 1); i++) pWork.VoltageSamples[i] = (float*)malloc(sizeof(float) * pDevice->GetMaxSamples());
+  for(int i = 0; i < ((triphase == true) ? 3 : 1); i++) pWork.VoltageFFT[i] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pDevice->GetMaxSamples() / 2) + 1));
   pWork.CurrentSamples = (float**)malloc(sizeof(float*) * ((triphase == true) ? 4 : 1));
   pWork.CurrentFFT     = (Complex_t**)malloc(sizeof(Complex_t*) * ((triphase == true) ? 4 : 1));
-  for(int i = 0; i < ((triphase == true) ? 4 : 1); i++) pWork.CurrentSamples[i] = (float*)malloc(sizeof(float) * pMaxSamples);
-  for(int i = 0; i < ((triphase == true) ? 4 : 1); i++) pWork.CurrentFFT[i] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
+  for(int i = 0; i < ((triphase == true) ? 4 : 1); i++) pWork.CurrentSamples[i] = (float*)malloc(sizeof(float) * pDevice->GetMaxSamples());
+  for(int i = 0; i < ((triphase == true) ? 4 : 1); i++) pWork.CurrentFFT[i] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pDevice->GetMaxSamples() / 2) + 1));
   AllocParams(&pWork.Params, AGGREG_10C);
   ResetWork();
   AllocParams(&pAggreg3S, AGGREG_3S);
@@ -319,7 +319,7 @@ Analyzer::Analyzer(uint32_t samplerate, bool triphase, uint16_t id) : Database()
   ResetStats();
   pLastCyclesLenght = 0;
   for(int i = 0; i < PROCESSING_FREQCYCLES; i++) {
-    uint32_t Samples = (pSampleRate * i / 100);
+    uint32_t Samples = (pDevice->GetMaxSamples() * i / 100);
     pLastCycles[i] = Samples - pLastCyclesLenght;
     pLastCyclesLenght += pLastCycles[i]; 
   }
@@ -364,10 +364,10 @@ void Analyzer::ResetParams(Params_t *params) {
 void Analyzer::ResetWork() {
   pWork.SequenceID++;
   pWork.Samples = 0;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(pWork.VoltageFFT[i], 0, sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
-  for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(pWork.CurrentFFT[i], 0, sizeof(Complex_t) * (ceil(pMaxSamples / 2) + 1));
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(pWork.VoltageSamples[i], 0, sizeof(float) * pMaxSamples);
-  for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(pWork.CurrentSamples[i], 0, sizeof(float) * pMaxSamples);
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(pWork.VoltageFFT[i], 0, sizeof(Complex_t) * (ceil(pDevice->GetMaxSamples() / 2) + 1));
+  for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(pWork.CurrentFFT[i], 0, sizeof(Complex_t) * (ceil(pDevice->GetMaxSamples() / 2) + 1));
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(pWork.VoltageSamples[i], 0, sizeof(float) * pDevice->GetMaxSamples());
+  for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(pWork.CurrentSamples[i], 0, sizeof(float) * pDevice->GetMaxSamples());
   memset(pWork.Cycles, 0, sizeof(Cycle_t) * 20);
   pWork.Cycles_Len = 0;
 }
@@ -380,12 +380,10 @@ void Analyzer::ResetStats() {
 Analyzer::~Analyzer() {
   //Libero todas las estructuras
 }
-uint32_t Analyzer::GetMaxSamples() {
-  return pMaxSamples;
-}
-uint32_t Analyzer::SampleRate() {
-  return pSampleRate;
-}
+
+//uint32_t Analyzer::SampleRate() {
+//  return pSampleRate;
+//}
 bool Analyzer::Triphase() {
   return pTriphase;
 }
@@ -497,7 +495,8 @@ json_object *Analyzer::GetJSONCopy(char *series) {
         Obj = json_object_new_array();
         for(int i = 0; i < (pTriphase ? 4 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.THD_I[i]));
       } else if(strcmp(Serie, "freq") == 0) {
-        Obj = json_object_new_double(pWork.Params.Frequency);
+        if(isnan(pWork.Params.Frequency) == false)
+          Obj = json_object_new_double(pWork.Params.Frequency);
       } else if(strcmp(Serie, "phi") == 0) {
         Obj = json_object_new_array();
         for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Phi[i]));

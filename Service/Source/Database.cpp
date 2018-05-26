@@ -84,6 +84,7 @@ bool Database::ExecSentence(const char* sql) {
 }
 char* Database::ExecSentenceJSON(const char* sql, size_t *len) {
   if(pResult != NULL) PQclear(pResult);
+  Connect();
   pResult = PQexec(pDBConn, sql);
   if(PQresultStatus(pResult) != PGRES_TUPLES_OK) {
     char *Save;

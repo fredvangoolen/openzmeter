@@ -7,10 +7,10 @@
 #include "DeviceInterface.h"
 #include "CaptureV2/DeviceV2.h"
 //----------------------------------------------------------------------------------------------------------------------
-float              Devices::NominalVoltage   = 230.0;
-float              Devices::NominalFrequency = 50.0;
-DeviceInterface  **Devices::DeviceInterfaces            = NULL;
-uint32_t           Devices::DeviceInterfacesCount              = 0;
+float              Devices::NominalVoltage        = 230.0;
+float              Devices::NominalFrequency      = 50.0;
+DeviceInterface  **Devices::DeviceInterfaces      = NULL;
+uint32_t           Devices::DeviceInterfacesCount = 0;
 //----------------------------------------------------------------------------------------------------------------------
 bool Devices::Init(json_object *config) {
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
