@@ -6,13 +6,17 @@
 #include <arm_math.h>
 //Definiciones locales -------------------------------------------------------------------------------------------------
 typedef struct {
-  float A0;
+  float Gain;
+  float Offset;
+  float Sample;
+  float Z1;
+  float Z2;  
+} ChannelConf_t;
+typedef struct {
+  float A0;     //A2=A0 en low pass
   float A1;
-  float A2;
   float B1;
   float B2;
-  float Z1[7];
-  float Z2[7];
 } Filter_t;
 typedef struct {
   int16_t CurrentN;  //ADC1_IN4
@@ -26,15 +30,23 @@ typedef struct {
   int16_t VoltageS;  //ADC3_IN12
   int16_t VoltageT;  //ADC4_IN3
 } ADCSample_ADC34;
+typedef struct {
+  uint8_t         ChannelMask;        //Mascara de canales en uso
+  uint8_t         Oversample;         //Configuracion de oversample
+  uint8_t         SampleCounter;      //contador de muestras procesadas
+  uint8_t         Channels;           //Numero de canales activos
+} CaptureConf_t;
 //Variables locales ----------------------------------------------------------------------------------------------------
-static Filter_t        Filters;          //Almacena los coeficientes y muestras de los filtros de cada canal
-static uint8_t         ChannelMask;      //Mascara de canales en uso
-static uint8_t         SampleCounter;    //La parte alta tiene el tipo de oversample y la baja el contador de muestras procesadas
-static uint8_t         Channels;         //Numero de canales activos
-static ADCSample_ADC12 ADC12_Buffer[32]; //Buffer de captura para DMA1
-static ADCSample_ADC34 ADC34_Buffer[32]; //Buffer de captura para DMA2
-//Tipos y funciones externas -------------------------------------------------------------------------------------------
-extern void AppendSample(int16_t value);
+Filter_t        Filter;               //Almacena coeficientes de los filtros
+ChannelConf_t   ChannelsConf[7];      //Almacena configuracion y valores de los filtros
+CaptureConf_t   CaptureConf;          //Configuracion y estado de la captura
+ADCSample_ADC12 ADC12_Buffer[32];     //Buffer de captura para DMA1
+ADCSample_ADC34 ADC34_Buffer[32];     //Buffer de captura para DMA2
+int16_t         INBuff[INBUFFER_LEN]; //Buffer de muestras
+uint16_t        INReadPos;
+uint16_t        INWritePos;
+uint16_t        INBuffUsed;
+uint8_t         StreamReset;          //Si es != 0 hay un reset del stream
 //----------------------------------------------------------------------------------------------------------------------
 
 /**
@@ -155,36 +167,37 @@ const uint16_t ADC_TimerDivs[] = { 150,  180,  200,  225,  250,  300,  260,  375
                                   1500, 1800, 1875, 2250, 2500, 3000, 3125, 3750, 4500, 5000, 5625, 6250, 7500, 9000, 9375, 11250, 12500};
 bool ADC_StartCapture(uint8_t channels, uint8_t mode) {
   //Recuento de canales activos
-  Channels = 0;
-  for(uint8_t Mask = 0x40; Mask != 0; Mask >>= 1) {
-    if(channels & Mask) Channels++;
-  }
-  if((Channels == 0) || ((mode & 0x3F) > 33)) return FALSE;
+  CaptureConf.Channels = 0;
+  for(uint8_t Mask = channels; Mask != 0; Mask >>= 1) CaptureConf.Channels += (Mask & 0x01);
+
+  if((CaptureConf.Channels == 0) || ((mode & 0x3F) > 33)) return FALSE;
   uint32_t Freq = SystemCoreClock / ADC_TimerDivs[mode & 0x3F];
   if((mode & 0xC0) == 0x40) Freq = Freq / 4;
   if((mode & 0xC0) == 0x80) Freq = Freq / 16;
   if((mode & 0xC0) == 0xC0) Freq = Freq / 64;
-  if(((Freq * Channels) > 360000) || (Freq < 5000)) return FALSE;
+  if(((Freq * CaptureConf.Channels) > 360000) || (Freq < 5000)) return FALSE;
   ADC_StopCapture();
-  ChannelMask = channels;
-  SampleCounter = mode & 0xC0;
-  for(int i = 0; i < Channels; i++) {
-    Filters.Z1[i] = 0.0;
-    Filters.Z2[i] = 0.0;
+  CaptureConf.ChannelMask = channels;
+  CaptureConf.SampleCounter = 0; //mode & 0xC0;
+  CaptureConf.Oversample = 1;
+  for(int i = 0; i < CaptureConf.Channels; i++) {
+    //Copia offset y gain para el canal
+    ChannelsConf[i].Z1 = 0.0;
+    ChannelsConf[i].Z2 = 0.0;
   }
   float Q = 1.0f / sqrt(2.0f);
-  float Fc = 1.0f;
-  if(SampleCounter == 0xC0) Fc = Fc / 4.0;
-  if(SampleCounter == 0xC0) Fc = Fc / 16.0;
-  if(SampleCounter == 0xC0) Fc = Fc / 64.0;
+  float Fc = 1.0f / (CaptureConf.Oversample + 1);
+//  if(SampleCounter == 0xC0) Fc = Fc / 4.0;
+//  if(SampleCounter == 0xC0) Fc = Fc / 16.0;
+//  if(SampleCounter == 0xC0) Fc = Fc / 64.0;
   float K    = tan(PI * Fc);
   float Norm = 1 / (1 + K / Q + K * K);
-  Filters.A0 = K * K * Norm;
-  Filters.A1 = 2 * Filters.A0;
-  Filters.A2 = Filters.A0;
-  Filters.B1 = 2 * (K * K - 1) * Norm;
-  Filters.B2 = (1 - K / Q + K * K) * Norm;
-  Buffers_Init(Channels);
+  Filter.A0 = K * K * Norm;
+  Filter.A1 = 2 * Filter.A0;
+ // Filter.A2 = Filter.A0;
+  Filter.B1 = 2 * (K * K - 1) * Norm;
+  Filter.B2 = (1 - K / Q + K * K) * Norm;
+  Buffers_Reset();
   //Configuro TIMER1 CC3 que es compartido por los 4 ADCs
   TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure; 
   TIM_TimeBaseStructure.TIM_Prescaler = 0;
@@ -214,16 +227,15 @@ void ADC_StopCapture() {
  * Filtra una muestra en de entrada segun los parametros configurados del filtro
  * @param in muestra de entrada a añadir al filtro
  * @param channel canal de la muestra
- * @return filtered value
  */
-static inline float ADC_Filter(float in, uint8_t channel) {
-  if(ChannelMask & 0xC0) {
-    float Out = in * Filters.A0 + Filters.Z1[channel];
-    Filters.Z1[channel] = in * Filters.A1 + Filters.Z2[channel] - Filters.B1 * Out;
-    Filters.Z2[channel] = in * Filters.A2 - Filters.B2 * Out;
-    return Out;
+void ADC_Filter(float in, ChannelConf_t *channel) {
+  in = in * channel->Gain + channel->Offset;
+  if(CaptureConf.Oversample == 0) {
+    channel->Sample = in;
   } else {
-    return in;
+    channel->Sample = in * Filter.A0 + channel->Z1;
+    channel->Z1 = in * Filter.A1 + channel->Z2 - Filter.B1 * channel->Sample;
+    channel->Z2 = in * Filter.A0 - Filter.B2 * channel->Sample;
   }
 }
 
@@ -235,61 +247,112 @@ static inline float ADC_Filter(float in, uint8_t channel) {
  * 
  */
 void DMA1_Channel1_IRQHandler(void) {
-  float   Values[7];
-  uint8_t Start;
+  ADCSample_ADC12 *ADC12;
+  ADCSample_ADC34 *ADC34;
   if(DMA_GetITStatus(DMA1_IT_TC1) != RESET) {
-    Start = 16;
+    ADC12 = &ADC12_Buffer[16];
+    ADC34 = &ADC34_Buffer[16];
     DMA_ClearITPendingBit(DMA1_IT_TC1); 
   } else {
-    Start = 0;
+    ADC12 = &ADC12_Buffer[0];
+    ADC34 = &ADC34_Buffer[0];
     DMA_ClearITPendingBit(DMA1_IT_HT1);
   }
-  
-  DMA_ClearITPendingBit(DMA1_IT_HT1 | DMA1_IT_TC1);
-  for(uint8_t Pos = Start; Pos < Start + 16; Pos++) {
-    float *Ptr = Values;
-    if(ChannelMask & 0x40) *Ptr++ = ADC12_Buffer[Pos].VoltageR;
-    if(ChannelMask & 0x20) *Ptr++ = ADC12_Buffer[Pos].CurrentR;
-    if(ChannelMask & 0x10) *Ptr++ = ADC34_Buffer[Pos].VoltageS;
-    if(ChannelMask & 0x08) *Ptr++ = ADC34_Buffer[Pos].CurrentS; 
-    if(ChannelMask & 0x04) *Ptr++ = ADC34_Buffer[Pos].VoltageT;
-    if(ChannelMask & 0x02) *Ptr++ = ADC34_Buffer[Pos].CurrentT;
-    if(ChannelMask & 0x01) *Ptr++ = ADC12_Buffer[Pos].CurrentN;
-   
-    if(SampleCounter == 0x00) {
-      Buffer_AppendSamples(Values);
+  for(uint8_t PendSamples = 16; PendSamples > 0; PendSamples--) {
+    ChannelConf_t *Ptr = ChannelsConf;
+    if(CaptureConf.ChannelMask & 0x40) ADC_Filter(ADC12->VoltageR, Ptr++);
+    if(CaptureConf.ChannelMask & 0x20) (Ptr++)->Sample = ADC12->CurrentR;
+    if(CaptureConf.ChannelMask & 0x10) (Ptr++)->Sample = ADC34->VoltageS;
+    if(CaptureConf.ChannelMask & 0x08) (Ptr++)->Sample = ADC34->CurrentS; 
+    if(CaptureConf.ChannelMask & 0x04) (Ptr++)->Sample = ADC34->VoltageT;
+    if(CaptureConf.ChannelMask & 0x02) (Ptr++)->Sample = ADC34->CurrentT;
+    if(CaptureConf.ChannelMask & 0x01) (Ptr++)->Sample = ADC12->CurrentN;
+    if(CaptureConf.Oversample == CaptureConf.SampleCounter) {
+    //    if(SampleCounter == 0x00) {
+//      Buffer_AppendSamples(Values);
+//    } else {
+//      float *Z1 = Filters.Z1;
+//      float *Z2 = Filters.Z2;
+//      Ptr = Values;
+//      for(uint8_t Channel = 0; Channel < 7; Channel++) {
+//        float Out = *Ptr * Filters.A0 + *Z1;
+//        *Z1 = *Ptr * Filters.A1 + *Z2 - Filters.B1 * Out;
+//        *Z2 = *Ptr * Filters.A2 - Filters.B2 * Out;
+//        *Ptr = Out;
+//        Ptr++;
+//        Z1++;
+//        Z2++;
+//        if((SampleCounter == 0x43) || (SampleCounter == 0x8F) || (SampleCounter == 0xFF)) {
+          Buffer_AppendSamples();
+//          SampleCounter = SampleCounter & 0xC0;
+//        } else {
+//          SampleCounter++;
+//        }  
+//      }
+      CaptureConf.SampleCounter = 0;
     } else {
-      float *Z1 = Filters.Z1;
-      float *Z2 = Filters.Z2;
-      Ptr = Values;
-      for(uint8_t Channel = 0; Channel < 7; Channel++) {
-        float Out = *Ptr * Filters.A0 + *Z1;
-        *Z1 = *Ptr * Filters.A1 + *Z2 - Filters.B1 * Out;
-        *Z2 = *Ptr * Filters.A2 - Filters.B2 * Out;
-        *Ptr = Out;
-        Ptr++;
-        Z1++;
-        Z2++;
-        if((SampleCounter == 0x43) || (SampleCounter == 0x8F) || (SampleCounter == 0xFF)) {
-          Buffer_AppendSamples(Values);
-          SampleCounter = SampleCounter & 0xC0;
-        } else {
-          SampleCounter++;
-        }  
-      }
+      CaptureConf.SampleCounter++;
     }
   }
-  
-/*
-  for(uint8_t Count = 0; Count < 16; Count++) {
-    float *Ptr = Values;
-    if(ChannelMask & 0x40) *Ptr++ = ADC_Filter(ADC2_Buffer[Start + Count].VoltageR, 6);
-    if(ChannelMask & 0x20) *Ptr++ = ADC_Filter(ADC2_Buffer[Start + Count].CurrentR, 5);
-    if(ChannelMask & 0x10) *Ptr++ = ADC_Filter(ADC3_Buffer[Start + Count].VoltageS, 4);
-    if(ChannelMask & 0x08) *Ptr++ = ADC_Filter(ADC3_Buffer[Start + Count].CurrentS, 3);
-    if(ChannelMask & 0x04) *Ptr++ = ADC_Filter(ADC4_Buffer[Start + Count].VoltageT, 2);
-    if(ChannelMask & 0x02) *Ptr++ = ADC_Filter(ADC4_Buffer[Start + Count].CurrentT, 1);
-    if(ChannelMask & 0x01) *Ptr++ = ADC_Filter(ADC1_Buffer[Start + Count].CurrentN, 0);
+}
+
+/**
+ * Reinicia los contadores del buffer a sus valores por defecto
+ */
+void Buffers_Reset() {
+  INReadPos   = 0;
+  INWritePos  = 0;
+  INBuffUsed  = 0;
+  StreamReset = 1;
+}
+
+/**
+ * Añade muestras al buffer de salida si hay espacio, en caso contrario reinicia el buffer previamente
+ */
+void Buffer_AppendSamples() {
+  ChannelConf_t *Ptr = ChannelsConf;
+  if(INBuffUsed >= (INBUFFER_LEN - CaptureConf.Channels)) Buffers_Reset();
+  for(uint8_t Chan = CaptureConf.Channels; Chan > 0; Chan--) {
+    if(Ptr->Sample < -32767) 
+      INBuff[INWritePos] = -32767;
+    else if(Ptr->Sample > 32767)
+      INBuff[INWritePos] = 32767;
+    else
+       INBuff[INWritePos] = Ptr->Sample;
+    INWritePos = (INWritePos + 1) % INBUFFER_LEN;
   }
-*/
+  INBuffUsed = INBuffUsed + CaptureConf.Channels;
+}
+
+/**
+ * Genera un paquete de datos para ser enviado por USB. El tamaño del paquete
+ * es de 64 bytes donde entra un maximo de 32 muestras.
+ *   Si no hay datos para enviar se devuelve FALSE
+ *   Si el buffer esta en estado de reset la primera muestra es 0xFFFF, y se limpiara el estado de reset
+ *   Si una muestra no se usa (el buffer tiene menos de 32 muestras) se usara el valor 0xFFFF para indicarlo
+ * @param dst posicion de escritura del buffer (debe de tener 64 bytes)
+ * @return TRUE si hay datos para enviar, FALSE en otro caso
+ */
+bool Buffers_ToPMA(uint16_t dst) {
+  if(INBuffUsed == 0) return FALSE;
+  int16_t *Ptr    = (int16_t *)(dst * 2 + PMAAddr);
+  uint8_t   Remain = 32;
+  if(StreamReset) {
+    *Ptr = 0x8000;
+    Remain--;
+    Ptr = &Ptr[2];
+    StreamReset = 0;
+  }
+  while(Remain) {
+    if(INBuffUsed) {
+      *Ptr = INBuff[INReadPos];
+      INReadPos = (INReadPos + 1) % INBUFFER_LEN;
+      INBuffUsed--;
+    } else {
+      *Ptr = 0x8000;
+    }
+    Remain--;
+    Ptr = &Ptr[2];
+  }
+  return TRUE;
 }

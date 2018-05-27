@@ -11,6 +11,27 @@
 #define LEN_IN_BUFFER      8192
 #define TRANSFERS          16
 #define USB_SERIAL         "330053007075435593532302"
+//Configuracion de captura -----------------------------------------------------
+typedef struct {
+  float VoltageR_Gain;
+  float VoltageR_Offset;
+  float VCurrentR_Gain;
+  float CurrentR_Offset;
+  float VoltageS_Gain;
+  float VoltageS_Offset;
+  float CurrentS_Gain;
+  float CurrentS_Offset;
+  float VoltageT_Gain;
+  float VoltageT_Offset;
+  float CurrentT_Gain;
+  float CurrentT_Offset;
+  float CurrentN_Gain;
+  float CurrentN_Offset;  
+} CaptureConfig_t;
+CaptureConfig_t CaptureConfig = { 16.0, -32768.0, 16.0, -32768.0,
+                                  16.0, -32768.0, 16.0, -32768.0,
+                                  16.0, -32768.0, 16.0, -32768.0,
+                                  16.0, -32768.0 };
 //Estructuras de datos del USB -------------------------------------------------
 struct libusb_device        *NewDeviceArrive = NULL;
 struct libusb_device_handle *Device          = NULL;
@@ -26,7 +47,7 @@ uint32_t Samples   = 0;
 //----------------------------------------------------------------------------------------------------------------------
 void SendSetupCommand(uint8_t channels, uint8_t mode) {
   printf("Enviando 'Iniciar captura'\n");
-  int Error = libusb_control_transfer(Device, 0x21, 0x00, (channels << 8) | mode, 0, NULL, 0, 0);
+  int Error = libusb_control_transfer(Device, 0x21, 0x00, (channels << 8) | mode, 0, (unsigned char*)&CaptureConfig, sizeof(CaptureConfig), 0);
   if(Error < 0) {
     printf("Error in libusb_control_transfer (%d)\n", Error);
   }
@@ -63,10 +84,10 @@ void In_Callback(struct libusb_transfer *transfer) {
   if(transfer->status == LIBUSB_TRANSFER_COMPLETED) {
     uint8_t *Ptr = transfer->buffer;
     for(int i = 0; i < transfer->actual_length / 64; i++) {
-      uint16_t *Pkg = (uint16_t*)&Ptr[64 * i];
+      int16_t *Pkg = (int16_t*)&Ptr[64 * i];
       uint8_t   Count = 0;
       if(Sync == RESET) continue;
-      if(Pkg[0] == 0xFFFF) {
+      if(Pkg[0] == 0x8000) {
         if(Sync == SYNC) printf("Se perdio la comunicacion. Reiniciando stream\n");
         if(Sync == WAIT) Sync = SYNC;
         Channel = 0;
@@ -74,7 +95,7 @@ void In_Callback(struct libusb_transfer *transfer) {
         Count++;
       }
       while(Count < 32) {
-        if(Pkg[Count] != 0xFFFF) {
+        if(Pkg[Count] != 0x8000) {
           Results[Channel] += Pkg[Count];
           Channel++;
           if(Channel == 7) {

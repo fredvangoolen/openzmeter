@@ -198,10 +198,6 @@ void USB_Class_Reset(void) {
 }
 RESULT USB_Class_DataSetup(uint8_t RequestNo) {
   if(Type_Recipient != (CLASS_REQUEST | INTERFACE_RECIPIENT)) return USB_SUCCESS;
-  return USB_UNSUPPORT;
-}
-RESULT USB_Class_NoDataSetup(uint8_t RequestNo) {
-  if(Type_Recipient != (CLASS_REQUEST | INTERFACE_RECIPIENT)) return USB_SUCCESS;
   if(RequestNo == FIRM_SETUP_CAPTURE) {
 //  Buffers_Reset();
     if((pInformation->USBwValues.bw.bb1 & 0x7F) == 0x00) {
@@ -215,6 +211,10 @@ RESULT USB_Class_NoDataSetup(uint8_t RequestNo) {
     }
     return USB_SUCCESS;
   }
+  return USB_UNSUPPORT;
+}
+RESULT USB_Class_NoDataSetup(uint8_t RequestNo) {
+  if(Type_Recipient != (CLASS_REQUEST | INTERFACE_RECIPIENT)) return USB_SUCCESS;
   return USB_UNSUPPORT;
 }
 RESULT USB_Class_GetInterfaceSetting(uint8_t Interface, uint8_t AlternateSetting) {

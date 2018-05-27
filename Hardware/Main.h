@@ -11,20 +11,21 @@
 #include "usb_type.h"
 #include "usb_lib.h"
 #include <inttypes.h>
-//Configuracion del firmware -------------------------------------------------------------------------------------------
+//Configuracion del firmware ---------------------------------------------------
 #define INBUFFER_LEN   8192
-//Variables exportadas -------------------------------------------------------------------------------------------------
+//Variables exportadas ---------------------------------------------------------
 //Funciones generales ----------------------------------------------------------
 void Waitms(uint32_t ms);
-//Funciones del buffer -------------------------------------------------------------------------------------------------
-void Buffers_Init(uint8_t channels);
-void Buffer_AppendSamples(float *samples);
+//Funciones del buffer ---------------------------------------------------------
+//void Buffers_Init(uint8_t channels);
+void Buffer_AppendSamples();
 bool Buffers_ToPMA(uint16_t dst);
-//Modulo ADC  ----------------------------------------------------------------------------------------------------------
+void Buffers_Reset();
+//Modulo ADC  ------------------------------------------------------------------
 void ADC_Configure();
 bool ADC_StartCapture(uint8_t channels, uint8_t mode);
 void ADC_StopCapture();
-//Funciones del USB ----------------------------------------------------------------------------------------------------
+//Funciones del USB ------------------------------------------------------------
 void USB_Configure();
 
 
