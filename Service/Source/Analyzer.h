@@ -8,34 +8,21 @@
 #include <fftw3.h>
 #include <json-c/json.h>
 #include "Database.h"
-#include "DeviceInterface.h"
+#include "FFT.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
 //----------------------------------------------------------------------------------------------------------------------
-class DeviceInterface;
 class Analyzer : private Database {
   public :
     enum RouteType {FASE_1, FASE_3, FASE_3N};
     enum AggregType { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
-    static const float FrequencyRanges[];   //Rangos de frecuencias para estadisticas
-    static const float VoltageRanges[];     //Rangos de tensiones para estadisticas
-    static const float THDRanges[];         //Rangos de distorsion harmonica para estadisticas
-    static const float HarmonicsAllowed[];  //Rangos permitidos para cada harmonico
+
     typedef struct {
       uint32_t Start;                       //Muestra dentro del bloque que inicia el ciclo
       uint32_t End;                         //Muestra dentro del bloque que finaliza el ciclo
     } Cycle_t;
-    typedef struct {
-      float Real;                           //Parte real
-      float Imag;                           //Parte imaginaria
-    } Complex_t;
-    typedef struct {
-      float     *Input;                     //Muestras de entrada
-      Complex_t *Output;                    //Datos de salida
-      uint32_t   Len;                       //Longitud de la transformada
-      fftwf_plan Plan;                      //Plan para realizar la transformada
-      pthread_t  Thread;                    //Hilo de ejecucion
-    } FFT_t;
+
+
     typedef struct {
       uint64_t    Timestamp;                  //Timestamp de la muestra inicial
       AggregType Type;                       //Tipo de agregacion
@@ -76,11 +63,8 @@ class Analyzer : private Database {
       Complex_t **VoltageFFT;                 //Transformada de los canales de tension      
       Complex_t **CurrentFFT;                 //Transformada de los canales de corriente
     } Work_t;
+  private :
 
-  private :
-      DeviceInterface *pDevice;
-  private :
-    static pthread_mutex_t pFFTPlannerMutex; //Bloquea el acceso simultaneo al plinificador de FFTs
   private :
     uint32_t        pWaitingThreads;       //Hilos esperando datos
     pthread_mutex_t pWaitingThreadsMutex;  //Mutex para registrar cambios en WaitingThreads
@@ -91,9 +75,8 @@ class Analyzer : private Database {
     uint32_t        pLastCycles[PROCESSING_FREQCYCLES];
     uint32_t        pLastCyclesPos;
     uint32_t        pLastCyclesLenght;
-//    uint32_t        pSampleRate;
-//    uint32_t        pMaxSamples;
-    bool            pTriphase;
+    uint32_t        pMaxSamples;
+
     Params_t        pAggreg3S;
     Params_t        pAggreg1M;
     Params_t        pAggreg10M;
@@ -109,6 +92,9 @@ class Analyzer : private Database {
     uint64_t    pPrevTimestamp;
     Work_t      pWork;
     bool        pTerminate;
+        bool            pTriphase;
+        char *pName;
+            float           pSamplerate;
   public :
     void     AllocParams(Params_t *params, AggregType type);
     void     ResetParams(Params_t *params);
@@ -119,10 +105,9 @@ class Analyzer : private Database {
     void     Analyze(float minimunCurrent);
 
     void     AccumulateAggregation(Params_t *dst, Params_t *src);
-    bool     FFT_Start(FFT_t *fft, float *in, Complex_t *out);
-    void     FFT_Wait(FFT_t *fft);
+
   protected :
-    static void  *FFT_Thread(void *args);
+
 
     static float  CalcPhi(Complex_t voltage, Complex_t current);
   protected :
@@ -130,9 +115,8 @@ class Analyzer : private Database {
   public :
     bool         Triphase();
     uint32_t     SampleRate();
-    uint8_t      NominalFreq();
     json_object *GetJSONCopy(char *series);
   public :
-    Analyzer(DeviceInterface *device, bool triphase, uint16_t id);
+    Analyzer(float samplerate, uint32_t maxSamples, bool triphase, uint16_t id);
     ~Analyzer();
 };

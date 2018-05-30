@@ -20,10 +20,10 @@
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV2 : public DeviceInterface {
   private :
-      enum SyncState {WAIT, NOSYNC, SYNC};
+      enum SyncState {RESET, WAIT, SYNC};
   private :
     const char                  *pSerial;                  //Numero de serie del dispositivo de captura
-    uint16_t                    *pBuffer;                  //Donde almaceno muestras leidas (RingBuffer)
+    int16_t                     *pBuffer;                  //Donde almaceno muestras leidas (RingBuffer)
     float                        pVoltageGain[3];          //Ganancia de tension
     float                        pCurrentGain[4];          //Ganancia de corriente
     float                        pVoltageOffset[3];        //Offset de tension
@@ -46,7 +46,7 @@ class DeviceV2 : public DeviceInterface {
     pthread_t                    CaptureThread;           //Descriptor del hilo de captura
     pthread_t                    AnalyzeThread;           //Descriptor del hilo de analisis
     Filter_t                     Filters[5];              //Filtros paso banda para deteccion de paso por cero
-  private : 
+  private :
     static void  *Capture_Thread(void *args);
     static void  *Analize_Thread(void *args);
     static void   ReadCallback(struct libusb_transfer *transfer);

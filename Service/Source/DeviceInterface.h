@@ -4,8 +4,8 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include "Analyzer.h"
+#include "FFT.h"
 //----------------------------------------------------------------------------------------------------------------------
-class Analyzer;
 class DeviceInterface {
   public :
     typedef struct {
@@ -23,6 +23,8 @@ class DeviceInterface {
       float            B2;
       FilterChannel_t *Channels;
     } Filter_t;
+    //      float     **VoltageSamples;             //Muestras de tension   (El array almacena hasta 236mS)
+//      float     **CurrentSamples;             //Muestras de corriente (El array almacena hasta 236mS)
 //    typedef struct {
 //      uint32_t Start;                         //Muestra dentro del bloque que inicia el ciclo
 //      uint32_t End;                           //Muestra dentro del bloque que finaliza el ciclo
@@ -30,8 +32,7 @@ class DeviceInterface {
 //    typedef struct {
 //      uint64_t    SequenceID;                 //Numero de secuencia del bloque
 //      uint32_t    Samples;                    //Cantidad de muestras que componen el bloque
-//      float     **VoltageSamples;             //Muestras de tension   (El array almacena hasta 236mS)
-//      float     **CurrentSamples;             //Muestras de corriente (El array almacena hasta 236mS) 
+ 
 //      Cycle_t     Cycles[20];                 //Informacion de los ciclos del bloque
 //      uint8_t     Cycles_Len;                 //Numero de ciclos en el bloque
 ////      Params_t    Params;                     //Parametros calculados del bloque

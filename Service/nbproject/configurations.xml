@@ -26,6 +26,8 @@
       <itemPath>Source/Devices.h</itemPath>
       <itemPath>Source/Events.cpp</itemPath>
       <itemPath>Source/Events.h</itemPath>
+      <itemPath>Source/FFT.cpp</itemPath>
+      <itemPath>Source/FFT.h</itemPath>
       <itemPath>Source/HTTPServer.cpp</itemPath>
       <itemPath>Source/HTTPServer.h</itemPath>
       <itemPath>Source/Main.cpp</itemPath>
@@ -310,6 +312,12 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -325,18 +333,11 @@
       </item>
       <item path="Source/Analyzer.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/CaptureMono/CaptureMono.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="Source/CaptureMono/CaptureMono.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/CaptureV2/DeviceV2.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Source/CaptureV2/DeviceV2.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Source/CaptureVirtual/CaptureVirtual.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
       </item>
       <item path="Source/CaptureVirtual/CaptureVirtual.h"
             ex="false"
@@ -358,6 +359,10 @@
       <item path="Source/Events.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Source/Events.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Source/FFT.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Source/FFT.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -693,6 +698,12 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -732,6 +743,10 @@
       <item path="Source/Events.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Source/Events.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Source/FFT.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Source/FFT.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="0">
       </item>

@@ -1,8 +1,8 @@
-/* ================================== zMeter ==================================
+/* ================================== zMeter ===========================================================================
  * File:     HTTPServer.cpp
  * Author:   Pedro Sanchez (3 de marzo de 2015)
  * Modified: Eduardo Viciana (20 de marzo de 2017)
- * ---------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -306,10 +306,10 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       DeviceInterface *Device = Devices::DeviceInterfaces[i];
       for(uint32_t n = 0; i < Device->pAnalyzersCount; i++) {
         json_object *Obj = json_object_new_object();
-//        json_object_object_add(Obj, "Name", json_object_new_string(Device->pAnalyzers[i]->Name));
-//        json_object_object_add(Obj, "Type", json_object_new_string(CaptureInterface::Analyzers.Items[i].Instance->Triphase() ? "3Phase" : "1Phase"));
-//        json_object_object_add(Obj, "SampleFreq", json_object_new_int(CaptureInterface::Analyzers.Items[i].Instance->SampleRate()));
-//        json_object_object_add(Obj, "MaxCurrent", json_object_new_int(20));
+        json_object_object_add(Obj, "Name", json_object_new_string(Device->pAnalyzers[i]->pName));
+        json_object_object_add(Obj, "Type", json_object_new_string(Device->pAnalyzers[i]->pTriphase ? "3Phase" : "1Phase"));
+        json_object_object_add(Obj, "SampleFreq", json_object_new_int(Device->pAnalyzers[i]->pSamplerate));
+        json_object_object_add(Obj, "MaxCurrent", json_object_new_int(20));
 //        json_object_array_add(Devices, Obj);
       
 

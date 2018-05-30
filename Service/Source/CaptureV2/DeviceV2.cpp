@@ -18,29 +18,30 @@
 #include "../Tools.h"
 // Funciones ===========================================================================================================
 void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
-  uint16_t *Buff16 = (uint16_t*)transfer->buffer;
   DeviceV2 *This = (DeviceV2*)transfer->user_data;
   for(int Block = 0; Block < (transfer->actual_length / 64); Block++) {
-    uint16_t *BlockPtr = &Buff16[32 * Block];
-    uint8_t   Pos      = 0;
+    int16_t *Pkg   = (int16_t*)&transfer->buffer[64 * Block];
+    uint8_t  Count = 0;
     pthread_mutex_lock(&This->pCaptureMutex);
-    if(This->pSyncState == WAIT) continue;
-    if(BlockPtr[0] == 0xFFFF) {
+    if(This->pSyncState == RESET) continue;
+    if(Pkg[0] == -32768) {
       if(This->pSyncState == SYNC) Tools::LogMsg("WARN", "DeviceV2 lost sync. Try reduce capture speed\n");
-      This->pSyncState = SYNC;
+      if(This->pSyncState == WAIT) This->pSyncState = SYNC;
       This->pUsed = 0;
-      Pos++;
+      Count++;
     }
     while(This->pUsed > (This->pBuffLen - 32)) {
       if(This->pTerminate) return;
       Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
       pthread_cond_wait(&This->pWriteWait, &This->pCaptureMutex);
     }
-    for(uint8_t ReadPos = Pos; ReadPos < 32; ReadPos++) {
-      if(BlockPtr[ReadPos] == 0xFFFF) break;
-      This->pBuffer[This->pWritePos] = BlockPtr[ReadPos];
-      This->pWritePos = (This->pWritePos + 1) % This->pBuffLen;
-      This->pUsed++;
+    while(Count < 32) {
+      if(Pkg[Count] != -32768) {
+        This->pBuffer[This->pWritePos] = Pkg[Count];
+        This->pWritePos = (This->pWritePos + 1) % This->pBuffLen;
+        This->pUsed++;
+      }
+      Count++;
     }
     pthread_cond_signal(&This->pReadWait);
     pthread_mutex_unlock(&This->pCaptureMutex); 
@@ -161,12 +162,14 @@ void *DeviceV2::Capture_Thread(void *args) {
       }
       Tools::LogMsg("INFO", "Capture started on DeviceV2 with serial %s\n", This->pSerial);
       This->pNewDevice = NULL;
-      int Error = libusb_control_transfer(This->pDeviceHandle, 0x21, 0x00, 0x0000, 0, NULL, 0, 0);
+      int Error = libusb_control_transfer(This->pDeviceHandle, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0x01, 0x0000, 0x0000, NULL, 0, 0);
       if(Error < 0) Tools::LogMsg("ERROR", "Can not stop device with serial %s (%d)\n", This->pSerial, Error);
+      This->pSyncState = RESET;
       usleep(1000000);
-      Error = libusb_control_transfer(This->pDeviceHandle, 0x21, 0x00, (This->pChannelMask << 8) | 0x21, 0, NULL, 0, 0);
+      This->pSyncState = WAIT;
+      float Conf[7] = {This->pVoltageOffset[0], This->pCurrentOffset[0], This->pVoltageOffset[1], This->pCurrentOffset[1], This->pVoltageOffset[2], This->pCurrentOffset[2], This->pCurrentOffset[3]};
+      Error = libusb_control_transfer(This->pDeviceHandle, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0x00, (This->pChannelMask << 8) | 0x0E, 0x0000, (uint8_t*)Conf, sizeof(Conf), 0);
       if(Error < 0) Tools::LogMsg("ERROR", "Can not setup device with serial %s (%d)\n", This->pSerial, Error);
-      This->pSyncState = NOSYNC;
     }
   }
   return NULL;
@@ -196,24 +199,24 @@ void *DeviceV2::Analize_Thread(void* args) {
 //  }
     uint32_t Samples = 0;
     while(Samples < This->GetMaxSamples()) {
-      for(uint8_t Channel = 0; Channel < This->pChannelCount; Channel++) {
+//      for(uint8_t Channel = 0; Channel < This->pChannelCount; Channel++) {
         //for(uint8_t Analyzer = 0; Analyzer < This->pAnalyzersCount; Analyzer++) {
 //          if(Analyzer != 0) continue;
-          This->pAnalyzers[0]->pWork.CurrentSamples[3][Samples] = This->pBuffer[This->pReadPos]; 
+          This->pAnalyzers[0]->pWork.VoltageSamples[0][Samples] = This->pBuffer[This->pReadPos] * This->pVoltageGain[0]; 
+          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
+          This->pAnalyzers[0]->pWork.CurrentSamples[0][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[0]; 
+          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
+          This->pAnalyzers[0]->pWork.VoltageSamples[1][Samples] = This->pBuffer[This->pReadPos] * This->pVoltageGain[1]; 
+          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
+          This->pAnalyzers[0]->pWork.CurrentSamples[1][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[1]; 
           This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;
-          This->pAnalyzers[0]->pWork.CurrentSamples[2][Samples] = This->pBuffer[This->pReadPos]; 
+          This->pAnalyzers[0]->pWork.VoltageSamples[2][Samples] = This->pBuffer[This->pReadPos] * This->pVoltageGain[2]; 
+          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
+          This->pAnalyzers[0]->pWork.CurrentSamples[2][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[2]; 
           This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;          
-          This->pAnalyzers[0]->pWork.VoltageSamples[2][Samples] = This->pBuffer[This->pReadPos]; 
-          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
-          This->pAnalyzers[0]->pWork.CurrentSamples[1][Samples] = This->pBuffer[This->pReadPos]; 
+          This->pAnalyzers[0]->pWork.CurrentSamples[3][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[3]; 
           This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;
-          This->pAnalyzers[0]->pWork.VoltageSamples[1][Samples] = This->pBuffer[This->pReadPos]; 
-          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
-          This->pAnalyzers[0]->pWork.CurrentSamples[0][Samples] = This->pBuffer[This->pReadPos]; 
-          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
-          This->pAnalyzers[0]->pWork.VoltageSamples[0][Samples] = This->pBuffer[This->pReadPos]; 
-          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
-
+        
           
           //      This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
 //      This->pWork.CurrentSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Current;
@@ -228,10 +231,24 @@ void *DeviceV2::Analize_Thread(void* args) {
 //      LastSample = Out;
         //}
       
-      }
+//      }
       Samples++;
     }
-    printf("%f\n", This->pAnalyzers[0]->pWork.CurrentSamples[3][0]);
+    float AVG[7] = {0,0,0,0,0,0,0};
+    for(int i = 0; i < Samples; i++) {
+        AVG[0] += This->pAnalyzers[0]->pWork.VoltageSamples[0][0];
+        AVG[1] += This->pAnalyzers[0]->pWork.CurrentSamples[0][0];
+        AVG[2] += This->pAnalyzers[0]->pWork.VoltageSamples[1][0];
+        AVG[3] += This->pAnalyzers[0]->pWork.CurrentSamples[1][0];
+        AVG[4] += This->pAnalyzers[0]->pWork.VoltageSamples[2][0];
+        AVG[5] += This->pAnalyzers[0]->pWork.CurrentSamples[2][0];
+        AVG[6] += This->pAnalyzers[0]->pWork.CurrentSamples[3][0];
+    }
+    printf("(V_R: %.5f) (I_R: %.5f) (V_S: %.5f) (I_S: %.5f) (V_T: %.5f) (I_T: %.5f) (I_N: %.5f)\n", 
+            AVG[0] / Samples, AVG[1] / Samples,
+            AVG[2] / Samples, AVG[3] / Samples,
+            AVG[4] / Samples, AVG[5] / Samples,
+            AVG[6] / Samples);
       fflush(stdout);
     
     
@@ -405,7 +422,7 @@ DeviceV2 *DeviceV2::Init(json_object* config) {
           }
         }
         if(ValidParams == true) {
-          Device->pAnalyzers[Device->pAnalyzersCount] = new Analyzer(Device, true, Device->pID + Device->pAnalyzersCount);
+          Device->pAnalyzers[Device->pAnalyzersCount] = new Analyzer(Device->pSamplerate, Device->GetMaxSamples(), true, Device->pID + Device->pAnalyzersCount);
           Device->pAnalyzersCount++;
         }
       }
@@ -445,7 +462,7 @@ bool DeviceV2::Start() {
     if(pChannelMask & Mask) pChannelCount++;
   }
   pBuffLen = CAPTUREV2_BUFFERSIZE * pSamplerate * pChannelCount;
-  pBuffer = (uint16_t*)malloc(pBuffLen * sizeof(uint16_t));
+  pBuffer = (int16_t*)malloc(pBuffLen * sizeof(int16_t));
   if(pBuffer == NULL) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(NULL);

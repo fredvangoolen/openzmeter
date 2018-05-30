@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include "Analyzer.h"
 #include "Tools.h"
-pthread_mutex_t Analyzer::pFFTPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
+
 const float Analyzer::FrequencyRanges[]  = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
 const float Analyzer::VoltageRanges[]    = {-INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY};
 const float Analyzer::THDRanges[]        = {0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY};
@@ -216,7 +216,7 @@ void Analyzer::Analyze(float minimunCurrent) {
       pLastCyclesLenght = pLastCyclesLenght + pLastCycles[pLastCyclesPos];
       pLastCyclesPos = (pLastCyclesPos + 1) % PROCESSING_FREQCYCLES;
     }
-    pWork.Params.Frequency = PROCESSING_FREQCYCLES / (pLastCyclesLenght / pDevice->pSamplerate) / 2.0;
+    pWork.Params.Frequency = PROCESSING_FREQCYCLES / (pLastCyclesLenght / pSamplerate) / 2.0;
   } else {
     pWork.Params.Frequency = NAN;
   }
@@ -252,9 +252,9 @@ void Analyzer::Analyze(float minimunCurrent) {
     }
     pWork.Params.THD_I[j] = sqrt(pWork.Params.THD_I[j]) / pWork.Params.CurrentHarmonics[j][0];
     if(j < 3) {
-      pWork.Params.Active_Energy[j] = (pWork.Params.Active_Power[j] * pWork.Samples) / (pDevice->pSamplerate * 3600.0);
+      pWork.Params.Active_Energy[j] = (pWork.Params.Active_Power[j] * pWork.Samples) / (pSamplerate * 3600.0);
       pWork.Params.Power_Factor[j] = pWork.Params.Active_Power[j] / pWork.Params.Apparent_Power[j];
-      pWork.Params.Fundamental_Reactive_Energy[j] = (pWork.Params.Fundamental_Reactive_Power[j] * pWork.Samples) / (pDevice->pSamplerate * 3600.0);
+      pWork.Params.Fundamental_Reactive_Energy[j] = (pWork.Params.Fundamental_Reactive_Power[j] * pWork.Samples) / (pSamplerate * 3600.0);
     }
   }
 }
@@ -286,12 +286,14 @@ void Analyzer::AllocParams(Params_t *params, AggregType type) {
   params->Type = type;
   ResetParams(params);
 }
-Analyzer::Analyzer(DeviceInterface *device, bool triphase, uint16_t id) : Database() {
+Analyzer::Analyzer(float samplerate, uint32_t maxSamples, bool triphase, uint16_t id) : Database() {
+  pName = (char*)"Default";
   pNodeIndex           = id;
   pPrevTimestamp       = 0;
-  pDevice              = device;
+//  pDevice              = device;
   pTriphase            = triphase;
-//  pMaxSamples          = device->;
+  pMaxSamples          = maxSamples;
+  pSamplerate          = samplerate;
   pWaitingThreads      = 0;
   pDataReady           = false;
   pTerminate           = false;
@@ -301,12 +303,12 @@ Analyzer::Analyzer(DeviceInterface *device, bool triphase, uint16_t id) : Databa
   pthread_cond_init (&pDataReadyWait, NULL);
   pWork.VoltageSamples = (float**)malloc(sizeof(float*) * ((triphase == true) ? 3 : 1));
   pWork.VoltageFFT     = (Complex_t**)malloc(sizeof(Complex_t*) * ((triphase == true) ? 3 : 1));
-  for(int i = 0; i < ((triphase == true) ? 3 : 1); i++) pWork.VoltageSamples[i] = (float*)malloc(sizeof(float) * pDevice->GetMaxSamples());
-  for(int i = 0; i < ((triphase == true) ? 3 : 1); i++) pWork.VoltageFFT[i] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pDevice->GetMaxSamples() / 2) + 1));
+  for(int i = 0; i < ((triphase == true) ? 3 : 1); i++) pWork.VoltageSamples[i] = (float*)malloc(sizeof(float) * pMaxSamples);
+  for(int i = 0; i < ((triphase == true) ? 3 : 1); i++) pWork.VoltageFFT[i] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pMaxSamples / 2.0) + 1));
   pWork.CurrentSamples = (float**)malloc(sizeof(float*) * ((triphase == true) ? 4 : 1));
   pWork.CurrentFFT     = (Complex_t**)malloc(sizeof(Complex_t*) * ((triphase == true) ? 4 : 1));
-  for(int i = 0; i < ((triphase == true) ? 4 : 1); i++) pWork.CurrentSamples[i] = (float*)malloc(sizeof(float) * pDevice->GetMaxSamples());
-  for(int i = 0; i < ((triphase == true) ? 4 : 1); i++) pWork.CurrentFFT[i] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pDevice->GetMaxSamples() / 2) + 1));
+  for(int i = 0; i < ((triphase == true) ? 4 : 1); i++) pWork.CurrentSamples[i] = (float*)malloc(sizeof(float) * pMaxSamples);
+  for(int i = 0; i < ((triphase == true) ? 4 : 1); i++) pWork.CurrentFFT[i] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pMaxSamples / 2.0) + 1));
   AllocParams(&pWork.Params, AGGREG_10C);
   ResetWork();
   AllocParams(&pAggreg3S, AGGREG_3S);
@@ -319,7 +321,7 @@ Analyzer::Analyzer(DeviceInterface *device, bool triphase, uint16_t id) : Databa
   ResetStats();
   pLastCyclesLenght = 0;
   for(int i = 0; i < PROCESSING_FREQCYCLES; i++) {
-    uint32_t Samples = (pDevice->GetMaxSamples() * i / 100);
+    uint32_t Samples = (pMaxSamples * i / 100);
     pLastCycles[i] = Samples - pLastCyclesLenght;
     pLastCyclesLenght += pLastCycles[i]; 
   }
@@ -364,10 +366,10 @@ void Analyzer::ResetParams(Params_t *params) {
 void Analyzer::ResetWork() {
   pWork.SequenceID++;
   pWork.Samples = 0;
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(pWork.VoltageFFT[i], 0, sizeof(Complex_t) * (ceil(pDevice->GetMaxSamples() / 2) + 1));
-  for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(pWork.CurrentFFT[i], 0, sizeof(Complex_t) * (ceil(pDevice->GetMaxSamples() / 2) + 1));
-  for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(pWork.VoltageSamples[i], 0, sizeof(float) * pDevice->GetMaxSamples());
-  for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(pWork.CurrentSamples[i], 0, sizeof(float) * pDevice->GetMaxSamples());
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(pWork.VoltageFFT[i], 0, sizeof(Complex_t) * (ceil(pMaxSamples / 2.0) + 1));
+  for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(pWork.CurrentFFT[i], 0, sizeof(Complex_t) * (ceil(pMaxSamples / 2.0) + 1));
+  for(int i = 0; i < (pTriphase ? 3 : 1); i++) memset(pWork.VoltageSamples[i], 0, sizeof(float) * pMaxSamples);
+  for(int i = 0; i < (pTriphase ? 4 : 1); i++) memset(pWork.CurrentSamples[i], 0, sizeof(float) * pMaxSamples);
   memset(pWork.Cycles, 0, sizeof(Cycle_t) * 20);
   pWork.Cycles_Len = 0;
 }
@@ -402,36 +404,6 @@ float Analyzer::CalcPhi(Complex_t voltage, Complex_t current) {
     return Tmp - atan(current.Imag / current.Real);
   else
     return Tmp - atan(current.Imag / current.Real) + M_PI;
-}
-void *Analyzer::FFT_Thread(void *args) {
-  FFT_t *FFT = (FFT_t *)args;
-  fftwf_execute_dft_r2c(FFT->Plan, FFT->Input, (fftwf_complex*)FFT->Output);
-  for(int i = 0; i < ceil(FFT->Len / 2 + 1); i++) {
-    FFT->Output[i].Real = FFT->Output[i].Real / FFT->Len;
-    FFT->Output[i].Imag = FFT->Output[i].Imag / FFT->Len;
-  }
-  return NULL;  
-}
-void Analyzer::FFT_Wait(FFT_t *fft) {
-  if(pthread_join(fft->Thread, NULL) != 0) Tools::LogMsg("ERROR", "%s:%d -> (Unknown)\n", __func__, __LINE__);
-  pthread_mutex_lock(&pFFTPlannerMutex);
-  fftwf_destroy_plan(fft->Plan);
-  pthread_mutex_unlock(&pFFTPlannerMutex);  
-  return;
-}
-bool Analyzer::FFT_Start(FFT_t *fft, float *in, Complex_t *out) {
-  pthread_mutex_lock(&pFFTPlannerMutex);
-  fft->Plan = fftwf_plan_dft_r2c_1d(pWork.Samples, in, (fftwf_complex*)out, FFTW_ESTIMATE);
-  pthread_mutex_unlock(&pFFTPlannerMutex);  
-  fft->Len = pWork.Samples;
-  fft->Input = in;
-  fft->Output = out;
-  if(pthread_create(&fft->Thread, NULL, FFT_Thread, (void*)fft) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    fftwf_destroy_plan(fft->Plan);
-    return false;
-  }
-  return true;
 }
 json_object *Analyzer::GetJSONCopy(char *series) {
   pthread_mutex_lock(&pWaitingThreadsMutex);
