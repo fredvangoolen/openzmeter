@@ -24,18 +24,33 @@ DeviceInterface::DeviceInterface() {
   pSamples         = 0;
   pMaxSamples      = 0;
   pSamplerate      = 20000;
+  pMaxCurrent      = 50;
+  pMinCurrent      = 0.1;
   pTerminate       = false;
-  Analyzers        = NULL;
-  AnalyzersCount   = 0;
-  Active           = false;
+  pAnalyzers       = NULL;
+  pAnalyzersCount  = 0;
+  pActive          = false;
 }
 void DeviceInterface::AddAnalyzer(Analyzer *analyzer) {
-  Analyzers = (Analyzer**)realloc(Analyzers, sizeof(Analyzer**) * (AnalyzersCount) + 1);
-  Analyzers[AnalyzersCount] = analyzer;
-  AnalyzersCount++;
+  pAnalyzers = (Analyzer**)realloc(pAnalyzers, sizeof(Analyzer**) * (pAnalyzersCount) + 1);
+  pAnalyzers[pAnalyzersCount] = analyzer;
+  pAnalyzersCount++;
+}
+float DeviceInterface::GetSamplerate() {
+  return pSamplerate;
+}
+float DeviceInterface::GetMaxCurrent() {
+  return pMaxCurrent;
+}
+uint8_t DeviceInterface::GetAnalyzers() {
+  return pAnalyzersCount;
+}
+Analyzer  *DeviceInterface::GetAnalyzers(uint8_t idx) {
+  if(idx < pAnalyzersCount) return pAnalyzers[idx];
+  return NULL;
 }
 bool DeviceInterface::BuffersAlloc(uint8_t voltageChannels, uint8_t currentChannels) {
-  pMaxSamples = ceil(12.0 * pSamplerate / Devices::NominalFrequency);
+  pMaxSamples = ceil(12.0 * pSamplerate / Devices::GetNominalFrequency());
   pVoltageSamples = (float**)malloc(sizeof(float*) * voltageChannels);
   pCurrentSamples = (float**)malloc(sizeof(float*) * currentChannels);
   pVoltageFFT = (FFT**)malloc(sizeof(FFT*) * voltageChannels);
@@ -52,7 +67,7 @@ bool DeviceInterface::BuffersAlloc(uint8_t voltageChannels, uint8_t currentChann
   pCurrentChannels = currentChannels;
   pSamples = 0;
   float Q = 1.0;
-  float K = tan(M_PI * (Devices::NominalFrequency / pSamplerate));
+  float K = tan(M_PI * (Devices::GetNominalFrequency() / pSamplerate));
   float Norm = 1 / (1 + K / Q + K * K);
   pFilters.A0 = K / Q * Norm;
   pFilters.A1 = 0;

@@ -22,8 +22,8 @@ class DeviceV2 : public DeviceInterface {
   private :
     enum SyncState {RESET, WAIT, SYNC};
     typedef struct {
-      uint8_t VoltageChannel;
-      uint8_t CurrentChannel;
+      uint8_t   VoltageChannel;
+      uint8_t   CurrentChannel;
     } Mapping_t;
   private :
     const char                  *pSerial;                  //Numero de serie del dispositivo de captura
@@ -57,7 +57,7 @@ class DeviceV2 : public DeviceInterface {
     static int    PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
     
   private :
-    float    CalculateFrequency(Analyzer::Work_t* work);
+//    float    CalculateFrequency(Analyzer::Work_t* work);
     uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len);
     int16_t  GetSample();
   public :

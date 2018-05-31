@@ -40,7 +40,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/Source/Database.o \
 	${OBJECTDIR}/Source/DeviceInterface.o \
 	${OBJECTDIR}/Source/Devices.o \
-	${OBJECTDIR}/Source/Events.o \
 	${OBJECTDIR}/Source/FFT.o \
 	${OBJECTDIR}/Source/HTTPServer.o \
 	${OBJECTDIR}/Source/Main.o \
@@ -98,11 +97,6 @@ ${OBJECTDIR}/Source/Devices.o: Source/Devices.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Devices.o Source/Devices.cpp
-
-${OBJECTDIR}/Source/Events.o: Source/Events.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Events.o Source/Events.cpp
 
 ${OBJECTDIR}/Source/FFT.o: Source/FFT.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source

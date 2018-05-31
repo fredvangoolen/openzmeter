@@ -38,6 +38,11 @@ class DeviceInterface {
     float       pSamplerate;                 //Velocidad de muestreo
     bool        pTerminate;                  //Marca que deben detenerse los trabajos pendientes
     Filter_t    pFilters;                    //Filtros aplicados para deteccion de cruce por 0
+    Analyzer  **pAnalyzers;                  //Analizadores disponibles
+    uint8_t     pAnalyzersCount;             //Numero de analizadores
+    bool        pActive;                     //Indicador de actividad de la captura
+    float       pMaxCurrent;                 //Corriente maxima de los sensores
+    float       pMinCurrent;                 //Corriente minima de los sensores
   protected :
     bool   BuffersAlloc(uint8_t voltageChannels, uint8_t currentChannels);
     void   BuffersClear();
@@ -60,10 +65,6 @@ class DeviceInterface {
 ////      Complex_t **VoltageFFT;                 //Transformada de los canales de tension      
 ////      Complex_t **CurrentFFT;                 //Transformada de los canales de corriente
 //    } Work_t;
-  public :
-    Analyzer  **Analyzers;                  //Analizadores disponibles
-    uint8_t     AnalyzersCount;             //Numero de analizadores
-    bool        Active;                     //Indicador de actividad de la captura
     
   protected :
       void ApplyFilter(float *in, float *out);
@@ -75,7 +76,11 @@ class DeviceInterface {
     virtual ~DeviceInterface();
     void AddAnalyzer(Analyzer *analyzer);
   public :
-
+    bool IsActive();
+    float GetSamplerate();
+    float GetMaxCurrent();
+    uint8_t GetAnalyzers();
+    Analyzer  *GetAnalyzers(uint8_t idx);
 //    uint32_t GetMaxSamples();
 };
 

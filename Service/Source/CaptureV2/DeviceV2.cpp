@@ -57,7 +57,7 @@ int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
       libusb_device *CurrentDev = libusb_get_device(This->pDeviceHandle);	
       if(dev == CurrentDev) {
         Tools::LogMsg("INFO", "Device DeviceV2 with serial '%s' disconnected\n", This->pSerial);
-        This->Active = false;
+        This->pActive = false;
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL;
       }
@@ -162,7 +162,7 @@ void *DeviceV2::Capture_Thread(void *args) {
         continue;
       }
       Tools::LogMsg("INFO", "Capture started on DeviceV2 with serial %s\n", This->pSerial);
-      This->Active = true;
+      This->pActive = true;
       This->pNewDevice = NULL;
       int Error = libusb_control_transfer(This->pDeviceHandle, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0x01, 0x0000, 0x0000, NULL, 0, 0);
       if(Error < 0) Tools::LogMsg("ERROR", "Can not stop device with serial %s (%d)\n", This->pSerial, Error);
@@ -211,6 +211,10 @@ void *DeviceV2::Analize_Thread(void* args) {
       if(This->pChannelMask & 0x01) *CurrentPos++ = This->GetSample() * This->pCurrentGain[3];
       float *FilterredValues = This->BuffersAppend(VoltageChannels, CurrentChannels);
 
+      
+      
+      
+      
       ////      for(uint8_t Channel = 0; Channel < This->pChannelCount; Channel++) {
 //        //for(uint8_t Analyzer = 0; Analyzer < This->pAnalyzersCount; Analyzer++) {
 ////          if(Analyzer != 0) continue;
@@ -268,17 +272,19 @@ void *DeviceV2::Analize_Thread(void* args) {
     pthread_cond_signal(&This->pWriteWait);
     pthread_mutex_unlock(&This->pAnalyzeMutex);
     This->CalcFFTs();
-////    if(Discard > 0) {
+    for(uint8_t i = 0; i < This->pAnalyzersCount; i++) This->pAnalyzers[i]->Analyze(This->pVoltageSamples, This->pCurrentSamples, &This->pSamples, 1);
+    
+    ////    if(Discard > 0) {
 ////      Discard--;
 ////      This->ResetWork();
 ////      This->ResetParams(&This->pWork.Params);
 ////    } else {
 ////      This->Analyze(0.1);
 //    This->pAnalyzers[0]->Analyze(0.1);
-//      uint64_t AnalyzeEnd = Tools::GetTime();
+      uint64_t AnalyzeEnd = Tools::GetTime();
 //      This->pAnalyzers[0]->SaveWorkParams();
-//      uint64_t SaveEnd = Tools::GetTime();
-////      Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %umS (%" PRIu64 "mS mS with store)\n", This->pSequenceID, AnalyzeEnd - Start, SaveEnd - Start);
+      uint64_t SaveEnd = Tools::GetTime();
+      Tools::LogMsg("DEBUG", "DeviceV2 takes %umS to analyce block\n", AnalyzeEnd - Start, SaveEnd - Start);
 ////    }
   }
   return NULL;
@@ -382,10 +388,10 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
         return;
       }
       pChannelMask |= 0x7F;
-      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (AnalyzersCount + 1));
-      pMappings[AnalyzersCount].VoltageChannel = 0;
-      pMappings[AnalyzersCount].CurrentChannel = 0;
-      AddAnalyzer(new Analyzer(Name, 10, 10, true, ID));
+      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pAnalyzersCount + 1));
+      pMappings[pAnalyzersCount].VoltageChannel = 0;
+      pMappings[pAnalyzersCount].CurrentChannel = 0;
+      AddAnalyzer(new Analyzer(Name, pSamplerate, Analyzer::PHASE_3N, pMinCurrent, ID));
     } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "3Phase") == 0)) {
       uint32_t  ID = 0;
       char     *Name= (char*)"3Phase";
@@ -402,10 +408,10 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
         return;
       }
       pChannelMask |= 0x7E; 
-      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (AnalyzersCount + 1));
-      pMappings[AnalyzersCount].VoltageChannel = 0;
-      pMappings[AnalyzersCount].CurrentChannel = 0;
-      AddAnalyzer(new Analyzer(Name, 10, 10, true, ID));
+      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pAnalyzersCount + 1));
+      pMappings[pAnalyzersCount].VoltageChannel = 0;
+      pMappings[pAnalyzersCount].CurrentChannel = 0;
+      AddAnalyzer(new Analyzer(Name, pSamplerate, Analyzer::PHASE_3, pMinCurrent, ID));
     } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "1Phase") == 0)) {
       uint32_t  ID = 0;
       char     *Name= (char*)"1Phase";
@@ -450,10 +456,10 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
         }
       }
       pChannelMask |= (1 << CurrentChannel) | (1 << VoltageChannel);
-      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (AnalyzersCount + 1));
-      pMappings[AnalyzersCount].VoltageChannel = VoltageChannel;
-      pMappings[AnalyzersCount].CurrentChannel = CurrentChannel;
-      AddAnalyzer(new Analyzer(Name, pSamplerate, 10, false, ID));
+      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pAnalyzersCount + 1));
+      pMappings[pAnalyzersCount].VoltageChannel = VoltageChannel;
+      pMappings[pAnalyzersCount].CurrentChannel = CurrentChannel;
+      AddAnalyzer(new Analyzer(Name, pSamplerate, Analyzer::PHASE_1, pMinCurrent, ID));
     }
   }
   uint8_t VoltageChannels = 0;

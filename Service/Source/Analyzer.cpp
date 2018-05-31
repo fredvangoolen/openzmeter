@@ -190,26 +190,10 @@ void Analyzer::SaveParams(Params_t *params) {
 //  }
 //  ResetParams(params);
 }
-void Analyzer::Analyze(float minimunCurrent) {
-//  FFT_t FFT_Voltage[3];
-//  FFT_t FFT_Current[4];
-//  for(int i = 0; i < (pTriphase ? 3 : 1); i++) FFT_Start(&FFT_Voltage[i], pWork.VoltageSamples[i], pWork.VoltageFFT[i]);
-//  for(int i = 0; i < (pTriphase ? 4 : 1); i++) FFT_Start(&FFT_Current[i], pWork.CurrentSamples[i], pWork.CurrentFFT[i]);
-//  //Calcula valores basicos (RMS, potencia activa y energia) que son validos aun habiendo eventos
-//  float V[3] = {0.0, 0.0, 0.0};
-//  float I[4] = {0.0, 0.0, 0.0, 0.0};
-//  float P[3] = {0.0, 0.0, 0.0};
-//  for(uint32_t i = 0; i < pWork.Samples; i++) {
-//    for(int j = 0; j < (pTriphase ? 3 : 1); j++) V[j] += pow(pWork.VoltageSamples[j][i], 2.0);
-//    for(int j = 0; j < (pTriphase ? 4 : 1); j++) I[j] += pow(pWork.CurrentSamples[j][i], 2.0);
-//    for(int j = 0; j < (pTriphase ? 3 : 1); j++) P[j] += pWork.VoltageSamples[j][i] * pWork.CurrentSamples[j][i];
-//  }
-//  for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Params.Active_Power[j] = P[j] / pWork.Samples;
-//  for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Params.RMS_V[j] = sqrt(V[j] / pWork.Samples);
-//  for(int j = 0; j < (pTriphase ? 4 : 1); j++) pWork.Params.RMS_I[j] = sqrt(I[j] / pWork.Samples);
-//  for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Params.Apparent_Power[j] = pWork.Params.RMS_V[j] * pWork.Params.RMS_I[j];
-////  EventsDetect();
-//  if(pWork.Cycles_Len == 20) {
+void Analyzer::Analyze(float **voltageSamples, float **currentSamples, uint32_t *cyclesLen, uint8_t cycles) {
+  uint32_t Samples = 0;
+  ResetParams(&pAggreg10C);
+  if(cycles == 20) {
 //    for(int i = 0; i < pWork.Cycles_Len; i++) {
 //      pLastCyclesLenght = pLastCyclesLenght - pLastCycles[pLastCyclesPos];
 //      pLastCycles[pLastCyclesPos] = pWork.Cycles[i].End - pWork.Cycles[i].Start;
@@ -217,9 +201,32 @@ void Analyzer::Analyze(float minimunCurrent) {
 //      pLastCyclesPos = (pLastCyclesPos + 1) % PROCESSING_FREQCYCLES;
 //    }
 //    pWork.Params.Frequency = PROCESSING_FREQCYCLES / (pLastCyclesLenght / pSamplerate) / 2.0;
-//  } else {
-//    pWork.Params.Frequency = NAN;
-//  }
+  } else {
+    for(uint8_t i = 0; i < cycles; i++) Samples = Samples + cyclesLen[i];
+    pAggreg10C.Frequency = NAN;
+  }
+
+  
+  
+  //  FFT_t FFT_Voltage[3];
+//  FFT_t FFT_Current[4];
+//  for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) FFT_Start(&FFT_Voltage[i], pWork.VoltageSamples[i], pWork.VoltageFFT[i]);
+//  for(int i = 0; i < (pTriphase ? 4 : 1); i++) FFT_Start(&FFT_Current[i], pWork.CurrentSamples[i], pWork.CurrentFFT[i]);
+  //Calcula valores basicos (RMS, potencia activa y energia) que son validos aun habiendo eventos
+  
+  //  float V[3] = {0.0, 0.0, 0.0};
+//  float I[4] = {0.0, 0.0, 0.0, 0.0};
+//  float P[3] = {0.0, 0.0, 0.0};
+  for(uint32_t i = 0; i < Samples; i++) {
+    for(int j = 0; j < ((pType == PHASE_1) ? 1 : 3); j++) pAggreg10C.RMS_V[j] += pow(voltageSamples[j][i], 2.0);
+//    for(int j = 0; j < (pTriphase ? 4 : 1); j++) I[j] += pow(pWork.CurrentSamples[j][i], 2.0);
+//    for(int j = 0; j < (pTriphase ? 3 : 1); j++) P[j] += pWork.VoltageSamples[j][i] * pWork.CurrentSamples[j][i];
+  }
+//  for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Params.Active_Power[j] = P[j] / pWork.Samples;
+//  for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Params.RMS_V[j] = sqrt(V[j] / pWork.Samples);
+//  for(int j = 0; j < (pTriphase ? 4 : 1); j++) pWork.Params.RMS_I[j] = sqrt(I[j] / pWork.Samples);
+//  for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Params.Apparent_Power[j] = pWork.Params.RMS_V[j] * pWork.Params.RMS_I[j];
+////  EventsDetect();
 //  for(int j = 0; j < (pTriphase ? 3 : 1); j++) {
 //    FFT_Wait(&FFT_Voltage[j]);
 //    for(int i = 0; i < 50; i++) {
@@ -259,7 +266,7 @@ void Analyzer::Analyze(float minimunCurrent) {
 //  }
 }
 void Analyzer::AllocParams(Params_t *params, AggregType type) {
-//  params->RMS_V = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+  params->RMS_V = (float*)malloc(sizeof(float*) * ((pType == PHASE_1) ? 1 : 3));
 //  params->RMS_I = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 4 : 1));
 //  params->Active_Power = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
 //  params->Fundamental_Reactive_Power = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
@@ -286,22 +293,32 @@ void Analyzer::AllocParams(Params_t *params, AggregType type) {
 //  params->Type = type;
 //  ResetParams(params);
 }
-Analyzer::Analyzer(char *name, float samplerate, uint32_t maxSamples, bool triphase, uint16_t id) : Database() {
-  Name = name;
-  ID           = id;
-//  pPrevTimestamp       = 0;
+Analyzer::Analyzer(char *name, float samplerate, AnalyzerType type, float minCurrent, uint16_t id) : Database() {
+  pName           = name;
+  pID             = id;
+  pSamplerate     = samplerate;
+  pType           = type;
+  pWaitingThreads = 0;
+  pDataReady      = false;
+  pMinCurrent     = minCurrent;
+  pthread_mutex_init(&pWaitingThreadsMutex, NULL);
+  pthread_mutex_init(&pDataReadyMutex, NULL);
+  pthread_cond_init (&pWaitingThreadsWait, NULL);
+  pthread_cond_init (&pDataReadyWait, NULL);
+  AllocParams(&pAggreg10C, AGGREG_10C);
+  AllocParams(&pAggreg3S,  AGGREG_3S);
+  AllocParams(&pAggreg1M,  AGGREG_1M);
+  AllocParams(&pAggreg10M, AGGREG_10M);
+  AllocParams(&pAggreg1H,  AGGREG_1H);
+
+  
+  //  pPrevTimestamp       = 0;
 ////  pDevice              = device;
-  pTriphase            = triphase;
+  
 //  pMaxSamples          = maxSamples;
-//  pSamplerate          = samplerate;
-//  pWaitingThreads      = 0;
-//  pDataReady           = false;
-//  pTerminate           = false;
-//  pthread_mutex_init(&pWaitingThreadsMutex, NULL);
-//  pthread_mutex_init(&pDataReadyMutex, NULL);
-//  pthread_cond_init (&pWaitingThreadsWait, NULL);
-//  pthread_cond_init (&pDataReadyWait, NULL);
-////  pWork.VoltageSamples = (float**)malloc(sizeof(float*) * ((triphase == true) ? 3 : 1));
+
+  
+  ////  pWork.VoltageSamples = (float**)malloc(sizeof(float*) * ((triphase == true) ? 3 : 1));
 ////  pWork.VoltageFFT     = (Complex_t**)malloc(sizeof(Complex_t*) * ((triphase == true) ? 3 : 1));
 ////  for(int i = 0; i < ((triphase == true) ? 3 : 1); i++) pWork.VoltageSamples[i] = (float*)malloc(sizeof(float) * pMaxSamples);
 ////  for(int i = 0; i < ((triphase == true) ? 3 : 1); i++) pWork.VoltageFFT[i] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pMaxSamples / 2.0) + 1));
@@ -309,12 +326,8 @@ Analyzer::Analyzer(char *name, float samplerate, uint32_t maxSamples, bool triph
 ////  pWork.CurrentFFT     = (Complex_t**)malloc(sizeof(Complex_t*) * ((triphase == true) ? 4 : 1));
 ////  for(int i = 0; i < ((triphase == true) ? 4 : 1); i++) pWork.CurrentSamples[i] = (float*)malloc(sizeof(float) * pMaxSamples);
 ////  for(int i = 0; i < ((triphase == true) ? 4 : 1); i++) pWork.CurrentFFT[i] = (Complex_t*)malloc(sizeof(Complex_t) * (ceil(pMaxSamples / 2.0) + 1));
-//  AllocParams(&pWork.Params, AGGREG_10C);
+
 //  ResetWork();
-//  AllocParams(&pAggreg3S, AGGREG_3S);
-//  AllocParams(&pAggreg1M, AGGREG_1M);
-//  AllocParams(&pAggreg10M, AGGREG_10M);
-//  AllocParams(&pAggreg1H, AGGREG_1H);
 //  pStats.Voltage   = (uint16_t*)malloc((sizeof(VoltageRanges) / sizeof(float) - 1) * sizeof(uint16_t));
 //  pStats.Frequency = (uint16_t*)malloc((sizeof(FrequencyRanges) / sizeof(float) - 1) * sizeof(uint16_t));
 //  pStats.THD       = (uint16_t*)malloc((sizeof(THDRanges) / sizeof(float) - 1) * sizeof(uint16_t));
@@ -328,12 +341,12 @@ Analyzer::Analyzer(char *name, float samplerate, uint32_t maxSamples, bool triph
 //
 //  pLastCyclesPos    = 0;
 //  pWork.SequenceID  = 0;
-//  ExecSentence("PREPARE SAVE_3S       AS INSERT INTO aggreg_3s (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");    
-//  ExecSentence("PREPARE SAVE_1M       AS INSERT INTO aggreg_1m (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
-//  ExecSentence("PREPARE SAVE_1M_EXT   AS INSERT INTO aggreg_ext_1m (node_ext, sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8)");  
-//  ExecSentence("PREPARE SAVE_10M      AS INSERT INTO aggreg_10m(node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
-//  ExecSentence("PREPARE SAVE_1H       AS INSERT INTO aggreg_1h (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)");
-//  ExecSentence("PREPARE DELETE_1M_EXT AS DELETE FROM aggreg_ext_1m WHERE node_ext = $1 AND sampletime_ext < $2");
+  ExecSentence("PREPARE SAVE_3S       AS INSERT INTO aggreg_3s (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");    
+  ExecSentence("PREPARE SAVE_1M       AS INSERT INTO aggreg_1m (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
+  ExecSentence("PREPARE SAVE_1M_EXT   AS INSERT INTO aggreg_ext_1m (node_ext, sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8)");  
+  ExecSentence("PREPARE SAVE_10M      AS INSERT INTO aggreg_10m(node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
+  ExecSentence("PREPARE SAVE_1H       AS INSERT INTO aggreg_1h (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)");
+  ExecSentence("PREPARE DELETE_1M_EXT AS DELETE FROM aggreg_ext_1m WHERE node_ext = $1 AND sampletime_ext < $2");
 }
 void Analyzer::ResetParams(Params_t *params) {
 //  params->Timestamp = 0;
@@ -383,148 +396,139 @@ void Analyzer::ResetStats() {
   //Libero todas las estructuras
 //}
 
-//uint32_t Analyzer::SampleRate() {
-//  return pSampleRate;
-//}
-bool Analyzer::Triphase() {
-  return pTriphase;
-}
-//float Analyzer::CalcPhi(Complex_t voltage, Complex_t current) {
-//  float Tmp;
-//  if((voltage.Real == 0) && (voltage.Imag == 0)) 
-//    Tmp = 0;
-//  else if(voltage.Real < 0)
-//    Tmp = atan(voltage.Imag / voltage.Real);
-//  else
-//    Tmp = atan(voltage.Imag / voltage.Real) + M_PI;
-//  
-//  if((current.Real == 0) && (current.Imag == 0)) 
-//    return Tmp;
-//  else if(current.Real < 0)
-//    return Tmp - atan(current.Imag / current.Real);
-//  else
-//    return Tmp - atan(current.Imag / current.Real) + M_PI;
-//}
+
 json_object *Analyzer::GetJSONCopy(char *series) {
-//  pthread_mutex_lock(&pWaitingThreadsMutex);
-//  pWaitingThreads++;
-//  pthread_mutex_unlock(&pWaitingThreadsMutex);
-//  json_object *Result = NULL;
-//  pthread_mutex_lock(&pDataReadyMutex);
-//  int Error = 0;
-//  while((pDataReady == false) && (Error == 0)) {
-//    struct timeval  Current;
-//    struct timespec Timeout;
-//    gettimeofday(&Current, NULL);
-//    Timeout.tv_sec  = Current.tv_sec + 5;
-//    Timeout.tv_nsec = 0;
-//    Error = pthread_cond_timedwait(&pDataReadyWait, &pDataReadyMutex, &Timeout);
-//  }
-//  pthread_mutex_unlock(&pDataReadyMutex);
-//  if(Error == 0) {
-//    Result = json_object_new_object();
-//    char *Save;
-//    char *Serie = strtok_r(series, ", ", &Save);
-//    while(Serie != NULL) {
-//      json_object *Obj = NULL;
-//      if(strcmp(Serie, "rms_v") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.RMS_V[i]));
-//      } else if(strcmp(Serie, "rms_i") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 4 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.RMS_I[i]));
-//      } else if(strcmp(Serie, "active_power") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Active_Power[i]));
-//      } else if(strcmp(Serie, "apparent_power") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Apparent_Power[i]));
-//      } else if(strcmp(Serie, "power_factor") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Power_Factor[i]));
-//      } else if(strcmp(Serie, "active_energy") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Active_Energy[i]));
-//      } else if(strcmp(Serie, "fundamental_active_power") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Active_Power[i]));
-//      } else if(strcmp(Serie, "fundamental_reactive_power") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Reactive_Power[i]));
-//      } else if(strcmp(Serie, "fundamental_apparent_power") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Apparent_Power[i]));
-//      } else if(strcmp(Serie, "fundamental_power_factor") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Power_Factor[i]));
-//      } else if(strcmp(Serie, "fundamental_reactive_energy") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Fundamental_Reactive_Energy[i]));
-//      } else if(strcmp(Serie, "thd_v") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.THD_V[i]));
-//      } else if(strcmp(Serie, "thd_i") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 4 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.THD_I[i]));
-//      } else if(strcmp(Serie, "freq") == 0) {
-//        if(isnan(pWork.Params.Frequency) == false)
-//          Obj = json_object_new_double(pWork.Params.Frequency);
-//      } else if(strcmp(Serie, "phi") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) json_object_array_add(Obj, json_object_new_double(pWork.Params.Phi[i]));
-//      } else if(strcmp(Serie, "flag") == 0) {
-//        Obj = json_object_new_boolean(pWork.Params.Flag);
-//      } else if(strcmp(Serie, "harmonics_v") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
-//          json_object *Obj2 = json_object_new_array();
-//          for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(pWork.Params.VoltageHarmonics[i][j]));
-//          json_object_array_add(Obj, Obj2);
-//        }
-//      } else if(strcmp(Serie, "harmonics_i") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 4 : 1); i++) {
-//          json_object *Obj2 = json_object_new_array();
-//          for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(pWork.Params.CurrentHarmonics[i][j]));
-//          json_object_array_add(Obj, Obj2);
-//        }
-//      } else if(strcmp(Serie, "wave_v") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
-//          json_object *Obj2 = json_object_new_array();
+  uint8_t VoltageChannels = (pType == PHASE_1) ? 1 : 3;
+  uint8_t CurrentChannels = (pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4;
+  pthread_mutex_lock(&pWaitingThreadsMutex);
+  pWaitingThreads++;
+  pthread_mutex_unlock(&pWaitingThreadsMutex);
+  json_object *Result = NULL;
+  pthread_mutex_lock(&pDataReadyMutex);
+  int Error = 0;
+  while((pDataReady == false) && (Error == 0)) {
+    struct timeval  Current;
+    struct timespec Timeout;
+    gettimeofday(&Current, NULL);
+    Timeout.tv_sec  = Current.tv_sec + 5;
+    Timeout.tv_nsec = 0;
+    Error = pthread_cond_timedwait(&pDataReadyWait, &pDataReadyMutex, &Timeout);
+  }
+  pthread_mutex_unlock(&pDataReadyMutex);
+  if(Error == 0) {
+    Result = json_object_new_object();
+    char *Save;
+    char *Serie = strtok_r(series, ", ", &Save);
+    while(Serie != NULL) {
+      json_object *Obj = NULL;
+      if(strcmp(Serie, "rms_v") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.RMS_V[i]));
+      } else if(strcmp(Serie, "rms_i") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.RMS_I[i]));
+      } else if(strcmp(Serie, "active_power") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Active_Power[i]));
+      } else if(strcmp(Serie, "apparent_power") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Apparent_Power[i]));
+      } else if(strcmp(Serie, "power_factor") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Power_Factor[i]));
+      } else if(strcmp(Serie, "active_energy") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Active_Energy[i]));
+      } else if(strcmp(Serie, "fundamental_active_power") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Fundamental_Active_Power[i]));
+      } else if(strcmp(Serie, "fundamental_reactive_power") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Fundamental_Reactive_Power[i]));
+      } else if(strcmp(Serie, "fundamental_apparent_power") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Fundamental_Apparent_Power[i]));
+      } else if(strcmp(Serie, "fundamental_power_factor") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Fundamental_Power_Factor[i]));
+      } else if(strcmp(Serie, "fundamental_reactive_energy") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Fundamental_Reactive_Energy[i]));
+      } else if(strcmp(Serie, "thd_v") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.THD_V[i]));
+      } else if(strcmp(Serie, "thd_i") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.THD_I[i]));
+      } else if(strcmp(Serie, "freq") == 0) {
+        if(isnan(pAggreg10C.Frequency) == false) Obj = json_object_new_double(pAggreg10C.Frequency);
+      } else if(strcmp(Serie, "phi") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Phi[i]));
+      } else if(strcmp(Serie, "flag") == 0) {
+        Obj = json_object_new_boolean(pAggreg10C.Flag);
+      } else if(strcmp(Serie, "harmonics_v") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) {
+          json_object *Obj2 = json_object_new_array();
+          for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(pAggreg10C.VoltageHarmonics[i][j]));
+          json_object_array_add(Obj, Obj2);
+        }
+      } else if(strcmp(Serie, "harmonics_i") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) {
+          json_object *Obj2 = json_object_new_array();
+          for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(pAggreg10C.CurrentHarmonics[i][j]));
+          json_object_array_add(Obj, Obj2);
+        }
+      } else if(strcmp(Serie, "wave_v") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) {
+          json_object *Obj2 = json_object_new_array();
 //          for(uint32_t j = 0; j < pWork.Samples; j++) json_object_array_add(Obj2, json_object_new_double(pWork.VoltageSamples[i][j]));
-//          json_object_array_add(Obj, Obj2);
-//        }
-//      } else if(strcmp(Serie, "wave_i") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 4 : 1); i++) {
-//          json_object *Obj2 = json_object_new_array();
+          json_object_array_add(Obj, Obj2);
+        }
+      } else if(strcmp(Serie, "wave_i") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) {
+          json_object *Obj2 = json_object_new_array();
 //          for(uint32_t j = 0; j < pWork.Samples; j++) json_object_array_add(Obj2, json_object_new_double(pWork.CurrentSamples[i][j]));
-//          json_object_array_add(Obj, Obj2);
-//        }
-//      } else if(strcmp(Serie, "fft_v") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 3 : 1); i++) {
-//          json_object *Obj2 = json_object_new_array();
-////          for(int j = 0; j < ceil(pWork.Samples / 2) + 1; j++) json_object_array_add(Obj2, json_object_new_double(sqrt(pow(pWork.VoltageFFT[i][j].Real, 2.0) + pow(pWork.VoltageFFT[i][j].Imag, 2.0)) / M_SQRT2 * 2.0));
-//          json_object_array_add(Obj, Obj2);
-//        }
-//      } else if(strcmp(Serie, "fft_i") == 0) {
-//        Obj = json_object_new_array();
-//        for(int i = 0; i < (pTriphase ? 4 : 1); i++) {
-//          json_object *Obj2 = json_object_new_array();
-////          for(int j = 0; j < ceil(pWork.Samples / 2) + 1; j++) json_object_array_add(Obj2, json_object_new_double(sqrt(pow(pWork.CurrentFFT[i][j].Real, 2.0) + pow(pWork.CurrentFFT[i][j].Imag, 2.0)) / M_SQRT2 * 2.0));
-//          json_object_array_add(Obj, Obj2);
-//        }
-//      }
-//      if(Obj != NULL) json_object_object_add(Result, Serie, Obj);
-//      Serie = strtok_r(NULL, ", ", &Save);
-//    }
-//    json_object_object_add(Result, "Sampletime", json_object_new_int64(pWork.Params.Timestamp));
-//  }
-//  pthread_mutex_lock(&pWaitingThreadsMutex);
-//  pWaitingThreads--;
-//  pthread_cond_signal(&pWaitingThreadsWait);
-//  pthread_mutex_unlock(&pWaitingThreadsMutex);
-//  return Result;
+          json_object_array_add(Obj, Obj2);
+        }
+      } else if(strcmp(Serie, "fft_v") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) {
+          json_object *Obj2 = json_object_new_array();
+//          for(int j = 0; j < ceil(pWork.Samples / 2) + 1; j++) json_object_array_add(Obj2, json_object_new_double(sqrt(pow(pWork.VoltageFFT[i][j].Real, 2.0) + pow(pWork.VoltageFFT[i][j].Imag, 2.0)) / M_SQRT2 * 2.0));
+          json_object_array_add(Obj, Obj2);
+        }
+      } else if(strcmp(Serie, "fft_i") == 0) {
+        Obj = json_object_new_array();
+        for(int i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) {
+          json_object *Obj2 = json_object_new_array();
+//          for(int j = 0; j < ceil(pWork.Samples / 2) + 1; j++) json_object_array_add(Obj2, json_object_new_double(sqrt(pow(pWork.CurrentFFT[i][j].Real, 2.0) + pow(pWork.CurrentFFT[i][j].Imag, 2.0)) / M_SQRT2 * 2.0));
+          json_object_array_add(Obj, Obj2);
+        }
+      }
+      if(Obj != NULL) json_object_object_add(Result, Serie, Obj);
+      Serie = strtok_r(NULL, ", ", &Save);
+    }
+    json_object_object_add(Result, "Sampletime", json_object_new_int64(pAggreg10C.Timestamp));
+  }
+  pthread_mutex_lock(&pWaitingThreadsMutex);
+  pWaitingThreads--;
+  pthread_cond_signal(&pWaitingThreadsWait);
+  pthread_mutex_unlock(&pWaitingThreadsMutex);
+  return Result;
+}
+char *Analyzer::GetTypeString() {
+  if(pType == PHASE_3N) return (char*)"3Phase+N";
+  if(pType == PHASE_3) return (char*)"3Phase";
+  if(pType == PHASE_1) return (char*)"1Phase";
+}
+uint32_t Analyzer::GetID() {
+  return pID;
+}
+char *Analyzer::GetName() {
+  return pName;
 }

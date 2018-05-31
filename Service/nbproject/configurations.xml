@@ -324,6 +324,12 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -716,6 +722,12 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -751,8 +763,6 @@
       <item path="Source/Devices.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Source/Devices.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Source/Events.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Source/Events.h" ex="false" tool="3" flavor2="0">
       </item>

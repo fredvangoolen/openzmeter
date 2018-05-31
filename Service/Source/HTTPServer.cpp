@@ -435,15 +435,16 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
         return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
     if(Series == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
-//    if(Devices::DeviceInterfaces[0]->pAnalyzers[0]) {
-//      Request->JSONWriter = Devices::DeviceInterfaces[0]->pAnalyzers[0]->GetJSONCopy(Series);
-//      if(Request->JSONWriter == NULL) {
-//        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-//      } else {
-//        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
-//      }
-//      return MHD_YES;
-//    }
+    Analyzer *Tmp = Devices::FindID(1);
+    if(Tmp) {
+      Request->JSONWriter = Tmp->GetJSONCopy(Series);
+      if(Request->JSONWriter == NULL) {
+        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      } else {
+        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
+      }
+      return MHD_YES;
+    }
   } else if(strcmp(url, "/getSysInfo") == 0) {
     char *Type = NULL;
     json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {

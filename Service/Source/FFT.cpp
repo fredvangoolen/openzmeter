@@ -42,3 +42,18 @@ void *FFT::FFT_Thread(void *args) {
 void FFT::Wait() {
   if(pthread_join(pThread, NULL) != 0) Tools::LogMsg("ERROR", "%s:%d -> (Unknown)\n", __func__, __LINE__);
 }
+float FFT::CalcAngle(Complex_t a, Complex_t b) {
+  float Tmp;
+  if((a.Real == 0) && (a.Imag == 0)) 
+    Tmp = 0;
+  else if(a.Real < 0)
+    Tmp = atan(a.Imag / a.Real);
+  else
+    Tmp = atan(a.Imag / a.Real) + M_PI;
+  if((b.Real == 0) && (b.Imag == 0)) 
+    return Tmp;
+  else if(b.Real < 0)
+    return Tmp - atan(b.Imag / b.Real);
+  else
+    return Tmp - atan(b.Imag / b.Real) + M_PI;
+}

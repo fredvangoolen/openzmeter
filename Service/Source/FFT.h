@@ -12,6 +12,8 @@ class FFT {
   public :
     Complex_t *Output;                    //Datos de salida
   public :
+    static float CalcAngle(Complex_t a, Complex_t b);
+  public :
     FFT(uint32_t maxLen);
     bool Start(float *in, uint32_t len);
     void Wait();

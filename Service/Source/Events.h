@@ -41,7 +41,7 @@ class Events : public Database {
     void  SaveEvent(uint8_t cycle, bool end);
     float PercentChange(float in, float reference);
   public :
-    void EventsDetect(Analyzer::Work_t *work);
+//    void EventsDetect(Analyzer::Work_t *work);
     Events();
     ~Events();      
 };

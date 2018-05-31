@@ -14,15 +14,16 @@
 //----------------------------------------------------------------------------------------------------------------------
 class Analyzer : private Database {
   public :
-    enum AnalyzerType {FASE_1, FASE_3, FASE_3N};
+    enum AnalyzerType {PHASE_1, PHASE_3, PHASE_3N};
     enum AggregType { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
+  private :
     typedef struct {
       uint32_t Start;                       //Muestra dentro del bloque que inicia el ciclo
       uint32_t End;                         //Muestra dentro del bloque que finaliza el ciclo
     } Cycle_t;
     typedef struct {
-      uint64_t    Timestamp;                  //Timestamp de la muestra inicial
       AggregType  Type;                       //Tipo de agregacion
+      uint64_t    Timestamp;                  //Timestamp de la muestra inicial
       uint32_t    Samples;                    //Muestras que han formado esta agregacion
       float      *RMS_V;                      //Valor RMS de la tension durante el bloque
       float      *RMS_I;                      //Valor RMS de la intensidad durante el bloque
@@ -43,60 +44,56 @@ class Analyzer : private Database {
       float     **CurrentHarmonics;           //Armonicos del canal de corriente
       float      *Phi;                        //Angulo de Phi
     } Params_t;
-    typedef struct {
-      uint16_t    *Frequency;                 //Distribucion de frecuencias
-      uint16_t    *Voltage;                   //Distribucion de tensiones
-      uint16_t    *THD;                       //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
-      uint16_t    Harmonics[2];               //Numero de muestras que cumplen los limites de harmonicos / no cumplen
-    } Stats_t;
-    typedef struct {
-      uint64_t    SequenceID;                 //Numero de secuencia del bloque
-      uint32_t    Samples;                    //Cantidad de muestras que componen el bloque
-      float     **VoltageSamples;             //Muestras de tension   (El array almacena hasta 236mS)
-      float     **CurrentSamples;             //Muestras de corriente (El array almacena hasta 236mS) 
-      Cycle_t     Cycles[20];                 //Informacion de los ciclos del bloque
-      uint8_t     Cycles_Len;                 //Numero de ciclos en el bloque
-      Params_t    Params;                     //Parametros calculados del bloque
-//      Complex_t **VoltageFFT;                 //Transformada de los canales de tension      
-//      Complex_t **CurrentFFT;                 //Transformada de los canales de corriente
-    } Work_t;
+//    typedef struct {
+//      uint64_t    SequenceID;                 //Numero de secuencia del bloque
+//      uint32_t    Samples;                    //Cantidad de muestras que componen el bloque
+//      float     **VoltageSamples;             //Muestras de tension   (El array almacena hasta 236mS)
+//      float     **CurrentSamples;             //Muestras de corriente (El array almacena hasta 236mS) 
+//      Cycle_t     Cycles[20];                 //Informacion de los ciclos del bloque
+//      uint8_t     Cycles_Len;                 //Numero de ciclos en el bloque
+//      Params_t    Params;                     //Parametros calculados del bloque
+////      Complex_t **VoltageFFT;                 //Transformada de los canales de tension      
+////      Complex_t **CurrentFFT;                 //Transformada de los canales de corriente
+//    } Work_t;
   private :
+    uint32_t        pID;                      //ID donde el analizador guardara los datos
+    char           *pName;                    //Nombre del analizador
+    AnalyzerType    pType;                    //Tipo de analizador
+    float           pSamplerate;              //Velocidad de muestreo
+    float           pMinCurrent;              //Corriente minima
+    Params_t        pAggreg10C;               //Agregacion de 10 ciclos
+    Params_t        pAggreg3S;                //Agregacion de 3 segundos
+    Params_t        pAggreg1M;                //Agregacion de 1 minuto
+    Params_t        pAggreg10M;               //Agregacion de 10 minutos
+    Params_t        pAggreg1H;                //Agregacion de 1 hora
+    uint32_t        pWaitingThreads;          //Hilos esperando datos
+    pthread_mutex_t pWaitingThreadsMutex;     //Mutex para registrar cambios en WaitingThreads
+    pthread_cond_t  pWaitingThreadsWait;      //Variable de condicion para bloquear el analizer
+    bool            pDataReady;               //Datos disponibles
+    pthread_mutex_t pDataReadyMutex;          //Mutex para registrar cambios en DataReady
+    pthread_cond_t  pDataReadyWait;           //Variable de condicion para bloquear los clientes
 
-  private :
-    uint32_t        pWaitingThreads;       //Hilos esperando datos
-    pthread_mutex_t pWaitingThreadsMutex;  //Mutex para registrar cambios en WaitingThreads
-    pthread_cond_t  pWaitingThreadsWait;   //Variable de condicion para bloquear el analizer
-    bool            pDataReady;            //Datos disponibles
-    pthread_mutex_t pDataReadyMutex;       //Mutex para registrar cambios en DataReady
-    pthread_cond_t  pDataReadyWait;        //Variable de condicion para bloquear los clientes
+
+
     uint32_t        pLastCycles[PROCESSING_FREQCYCLES];
     uint32_t        pLastCyclesPos;
     uint32_t        pLastCyclesLenght;
-    uint32_t        pMaxSamples;
+//    uint32_t        pMaxSamples;
+    
 
-    Params_t        pAggreg3S;
-    Params_t        pAggreg1M;
-    Params_t        pAggreg10M;
-    Params_t        pAggreg1H;
-    uint16_t        pNodeIndex;
-    Stats_t         pStats;
+//    Stats_t         pStats;
 
   private :
     void  SaveParams(Params_t *param);
     
 
-  public :
-    uint32_t  ID;
-    char     *Name;
+
     
     
     
     
     uint64_t    pPrevTimestamp;
-    Work_t      pWork;
-    bool        pTerminate;
-        bool            pTriphase;
-            float           pSamplerate;
+//    Work_t      pWork;
   public :
     void     AllocParams(Params_t *params, AggregType type);
     void     ResetParams(Params_t *params);
@@ -104,21 +101,19 @@ class Analyzer : private Database {
     void     ResetWork();
     void     ResetStats();
     void     SaveWorkParams();
-    void     Analyze(float minimunCurrent);
+    
 
     void     AccumulateAggregation(Params_t *dst, Params_t *src);
 
   protected :
-
-
-//    static float  CalcPhi(Complex_t voltage, Complex_t current);
-  protected :
 //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
   public :
-    bool         Triphase();
-    uint32_t     SampleRate();
+    Analyzer(char *name, float samplerate, AnalyzerType mode, float minCurrent, uint16_t id);
+    void         Analyze(float **voltageSamples, float **currentSamples, uint32_t *cyclesLen, uint8_t cycles);
+    char        *GetTypeString();
+    uint32_t     GetID();
+    char        *GetName();
     json_object *GetJSONCopy(char *series);
-  public :
-    Analyzer(char *name, float samplerate, uint32_t maxSamples, bool triphase, uint16_t id);
+
     //~Analyzer();
 };
