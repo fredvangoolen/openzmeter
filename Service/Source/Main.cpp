@@ -86,15 +86,15 @@ int main(int argc, char** argv) {
 //  }
 
 //  if(RequestServer_Start(Config.Global.Listen) == false) goto Stop;
-  Devices::Start();
-  HTTPServer::Start();
+//  Devices::Start();
+//  HTTPServer::Start();
 
 //  Events_Init();
 //  Prices_Start(LastPrice);
   int Iter = 0;
   while(!Terminate) {
     usleep(1000000);
-    if((Iter % 100) == 0) HTTPServer::RemoveExpiredSessions();
+//    if((Iter % 100) == 0) HTTPServer::RemoveExpiredSessions();
     Iter++;
     
 //    Work_t *Work = Adquisition_GetWork();

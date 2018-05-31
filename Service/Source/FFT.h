@@ -2,6 +2,7 @@
  * File:     FFT.h
  * Author:   Eduardo Viciana (30 de mayo de 2018)
  * ------------------------------------------------------------------------------------------------------------------ */
+#pragma once
 class FFT {
   public :
     typedef struct {

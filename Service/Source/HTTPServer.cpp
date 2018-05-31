@@ -26,32 +26,29 @@ pthread_mutex_t        HTTPServer::pSessionMutex = PTHREAD_MUTEX_INITIALIZER;
 char                  *HTTPServer::pFilePath     = (char*)"/usr/share/openZmeter/WEB/";
 char                  *HTTPServer::pPassword     = (char*)"admin";
 uint64_t               HTTPServer::pLastLogin    = 0;
-uint16_t               HTTPServer::pPort         = 8080;
 //----------------------------------------------------------------------------------------------------------------------
-void HTTPServer::Init(json_object *config) {
+void HTTPServer::Config(json_object *config) {
+  uint16_t Port = 8080;
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastLogin") == 0)) {
       pLastLogin = json_object_get_int64(JSON_Val);
     } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) {
-      pPort = json_object_get_int(JSON_Val);
+      Port = json_object_get_int(JSON_Val);
     } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "FilePath") == 0)) {
       pFilePath = (char*)json_object_get_string(JSON_Val);
     } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) {
       pPassword = (char*)json_object_get_string(JSON_Val);
     }
   }
-}
-bool HTTPServer::Start() {
-  pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, pPort, NULL, NULL, 
-                            &HandleClient, NULL,
-                            MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int) 15,
-                            MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
-                            MHD_OPTION_END);
+  pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, Port, NULL, NULL, 
+                             &HandleClient, NULL,
+                             MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int) 15,
+                             MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
+                             MHD_OPTION_END);
   if(pDaemon == NULL) Tools::LogMsg("ERROR", "Failed to start WEB server\n");
-  return (pDaemon != NULL);
 }
-void HTTPServer::stop() {
+void HTTPServer::Stop() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
 }
 HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection* connection) {
@@ -298,30 +295,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       (void)JSON_Key; (void)JSON_Val;      
       return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
-    Request->JSONWriter = json_object_new_object();
-    json_object_object_add(Request->JSONWriter, "NominalVoltage", json_object_new_int(Devices::NominalVoltage));
-    json_object_object_add(Request->JSONWriter, "NominalFreq", json_object_new_int(Devices::NominalFrequency));
-    json_object *Devices = json_object_new_array();
-    for(uint32_t i = 0; i < Devices::DeviceInterfacesCount; i++) {
-      DeviceInterface *Device = Devices::DeviceInterfaces[i];
-      for(uint32_t n = 0; i < Device->pAnalyzersCount; i++) {
-        json_object *Obj = json_object_new_object();
-        json_object_object_add(Obj, "Name", json_object_new_string(Device->pAnalyzers[i]->pName));
-        json_object_object_add(Obj, "Type", json_object_new_string(Device->pAnalyzers[i]->pTriphase ? "3Phase" : "1Phase"));
-        json_object_object_add(Obj, "SampleFreq", json_object_new_int(Device->pAnalyzers[i]->pSamplerate));
-        json_object_object_add(Obj, "MaxCurrent", json_object_new_int(20));
-//        json_object_array_add(Devices, Obj);
-      
-
-
-//      json_object_object_add(Obj, "Name", json_object_new_string(CaptureInterface::Analyzers.Items[i].Name));
-//      json_object_object_add(Obj, "Type", json_object_new_string(CaptureInterface::Analyzers.Items[i].Instance->Triphase() ? "3Phase" : "1Phase"));
-//      json_object_object_add(Obj, "SampleFreq", json_object_new_int(CaptureInterface::Analyzers.Items[i].Instance->SampleRate()));
-//      json_object_object_add(Obj, "MaxCurrent", json_object_new_int(20));
-        json_object_array_add(Devices, Obj);
-      }
-    }
-    json_object_object_add(Request->JSONWriter, "Devices", Devices);
+    Request->JSONWriter = Devices::GetNodes();
     Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
     return MHD_YES;
   }
@@ -461,15 +435,15 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
         return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
     if(Series == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
-    if(Devices::DeviceInterfaces[0]->pAnalyzers[0]) {
-      Request->JSONWriter = Devices::DeviceInterfaces[0]->pAnalyzers[0]->GetJSONCopy(Series);
-      if(Request->JSONWriter == NULL) {
-        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-      } else {
-        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
-      }
-      return MHD_YES;
-    }
+//    if(Devices::DeviceInterfaces[0]->pAnalyzers[0]) {
+//      Request->JSONWriter = Devices::DeviceInterfaces[0]->pAnalyzers[0]->GetJSONCopy(Series);
+//      if(Request->JSONWriter == NULL) {
+//        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+//      } else {
+//        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
+//      }
+//      return MHD_YES;
+//    }
   } else if(strcmp(url, "/getSysInfo") == 0) {
     char *Type = NULL;
     json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {

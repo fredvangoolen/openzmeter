@@ -10,56 +10,58 @@
 //----------------------------------------------------------------------------------------------------------------------
 const uint32_t NetworkManager::NM_DEVICE_TYPE_WIFI = 2;
 //----------------------------------------------------------------------------------------------------------------------
-NetworkManager::NetworkManager() {
+ DBusConnection *NetworkManager::CreateConnection() {
   DBusError Error;
   dbus_error_init(&Error);
-  DBus = dbus_bus_get(DBUS_BUS_SYSTEM, &Error);
+  DBusConnection *DBus = dbus_bus_get(DBUS_BUS_SYSTEM, &Error);
   if(dbus_error_is_set(&Error)) {
     Tools::LogMsg("ERROR", "Can not open DBus connection (%s)\n", Error.message);
     dbus_error_free(&Error);
+    return NULL;
   }
-}
-NetworkManager::~NetworkManager() {
-  dbus_connection_unref(DBus);
+  return DBus;
 }
 bool NetworkManager::SetJSONNetworkConfig(json_object *json) {
-  NetworkManager NM;
-  if(NM.DBus == NULL) return NULL;  
-  if(NM.SendSaveSettings(json)) {
-    NM.SendEnable(0);
+  DBusConnection *DBus = CreateConnection();
+  if(DBus == NULL) return false;  
+  if(SendSaveSettings(DBus, json)) {
+    SendEnable(DBus, 0);
     sleep(1);
-    NM.SendEnable(1);
+    SendEnable(DBus, 1);
     sleep(1);
+    dbus_connection_unref(DBus);
     return true;
   } else {
+    dbus_connection_unref(DBus);
     return false;
   }
 }
 json_object *NetworkManager::GetJSONNetworks() {
-  NetworkManager NM;
-  if(NM.DBus == NULL) return NULL;  
+  DBusConnection *DBus = CreateConnection();
+  if(DBus == NULL) return NULL;  
   json_object *Result = json_object_new_object();
   json_object *AccessPoints = json_object_new_array();
-  NM.SendGetDevices(AccessPoints);
+  SendGetDevices(DBus, AccessPoints);
   json_object_object_add(Result, "AccessPoints", AccessPoints);
   json_object *ActiveConnections = json_object_new_array();
-  NM.SendGetActiveConnections(ActiveConnections);
+  SendGetActiveConnections(DBus, ActiveConnections);
   json_object_object_add(Result, "ActiveConnections", ActiveConnections);
   json_object *Settings = json_object_new_array();
-  NM.SendGetSettingsPaths(Settings);
+  SendGetSettingsPaths(DBus, Settings);
   json_object_object_add(Result, "Settings", Settings);
+  dbus_connection_unref(DBus);
   return Result;
 }
-void NetworkManager::SendEnable(int state) {
+void NetworkManager::SendEnable(DBusConnection *dbus, int state) {
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager", "org.freedesktop.NetworkManager", "Enable");
   DBusMessageIter ArgsIter;
   dbus_message_iter_init_append(Msg, &ArgsIter);
   dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_BOOLEAN, &state);
-  dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
 }
-void NetworkManager::SendGetDevices(json_object *json) {
+void NetworkManager::SendGetDevices(DBusConnection *dbus, json_object *json) {
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager", "org.freedesktop.NetworkManager", "GetDevices");
-  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
   if(Reply) {
     DBusMessageIter Struct;
     if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
@@ -69,7 +71,7 @@ void NetworkManager::SendGetDevices(json_object *json) {
         if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_OBJECT_PATH) {
           char *DevicePath;
           dbus_message_iter_get_basic(&Array, &DevicePath);
-          if(DevicePath) SendGetDeviceType(json, DevicePath);
+          if(DevicePath) SendGetDeviceType(dbus, json, DevicePath);
         }
       } while(dbus_message_iter_next(&Array));
     }
@@ -77,7 +79,7 @@ void NetworkManager::SendGetDevices(json_object *json) {
   }
   dbus_message_unref(Msg);
 }
-void NetworkManager::SendGetDeviceType(json_object *json, char *devicePath) {
+void NetworkManager::SendGetDeviceType(DBusConnection *dbus, json_object *json, char *devicePath) {
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", devicePath, "org.freedesktop.DBus.Properties", "Get");
   const char *ParamInterface = "org.freedesktop.NetworkManager.Device";
   const char *ParamDeviceType = "DeviceType";
@@ -85,7 +87,7 @@ void NetworkManager::SendGetDeviceType(json_object *json, char *devicePath) {
   dbus_message_iter_init_append(Msg, &ArgsIter);
   dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &ParamInterface);
   dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &ParamDeviceType);
-  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
   if(Reply) {
     DBusMessageIter Struct;
     if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_VARIANT)) {
@@ -95,8 +97,8 @@ void NetworkManager::SendGetDeviceType(json_object *json, char *devicePath) {
         uint32_t DeviceType;
         dbus_message_iter_get_basic(&VariantIter, &DeviceType);
         if(DeviceType == NM_DEVICE_TYPE_WIFI) {
-          SendRequestScan(devicePath);
-          SendGetAccessPoints(json, devicePath);
+          SendRequestScan(dbus, devicePath);
+          SendGetAccessPoints(dbus, json, devicePath);
         }
       }
     }
@@ -104,18 +106,18 @@ void NetworkManager::SendGetDeviceType(json_object *json, char *devicePath) {
   }
   dbus_message_unref(Msg);
 }
-void NetworkManager::SendRequestScan(char* devicePath) {
+void NetworkManager::SendRequestScan(DBusConnection *dbus, char* devicePath) {
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", devicePath, "org.freedesktop.NetworkManager.Device.Wireless", "RequestScan");
   DBusMessageIter ArgsIter, Array;
   dbus_message_iter_init_append(Msg, &ArgsIter);
   dbus_message_iter_open_container(&ArgsIter, DBUS_TYPE_ARRAY, "{sv}", &Array);
   dbus_message_iter_close_container(&ArgsIter, &Array);
-  dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
   sleep(5);
 }
-void NetworkManager::SendGetAccessPoints(json_object *json, char* devicePath) {
+void NetworkManager::SendGetAccessPoints(DBusConnection *dbus, json_object *json, char* devicePath) {
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", devicePath, "org.freedesktop.NetworkManager.Device.Wireless", "GetAccessPoints");
-  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
   if(Reply) {
     DBusMessageIter Struct;
     if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
@@ -127,7 +129,7 @@ void NetworkManager::SendGetAccessPoints(json_object *json, char* devicePath) {
           dbus_message_iter_get_basic(&Array, &Path);
           if(Path) {
             json_object *AccessPoint = json_object_new_object();
-            if(SendGetAPProperties(AccessPoint, Path)) {
+            if(SendGetAPProperties(dbus, AccessPoint, Path)) {
               json_object_array_add(json, AccessPoint);
             } else {
               json_object_put(AccessPoint);
@@ -140,14 +142,14 @@ void NetworkManager::SendGetAccessPoints(json_object *json, char* devicePath) {
   }
   dbus_message_unref(Msg);
 }
-bool NetworkManager::SendGetAPProperties(json_object *json, char *path) {
+bool NetworkManager::SendGetAPProperties(DBusConnection *dbus, json_object *json, char *path) {
   bool IsAP = true;
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", path, "org.freedesktop.DBus.Properties", "GetAll");
   const char *Param = "org.freedesktop.NetworkManager.AccessPoint";
   DBusMessageIter ArgsIter;
   dbus_message_iter_init_append(Msg, &ArgsIter);
   dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &Param);
-  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
   if(Reply) {
     DBusMessageIter Struct;
     if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
@@ -220,7 +222,7 @@ bool NetworkManager::SendGetAPProperties(json_object *json, char *path) {
   dbus_message_unref(Msg);
   return IsAP;
 }
-void NetworkManager::SendGetActiveConnections(json_object *json) {
+void NetworkManager::SendGetActiveConnections(DBusConnection *dbus, json_object *json) {
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager", "org.freedesktop.DBus.Properties", "Get");
   const char *ParamInterface = "org.freedesktop.NetworkManager";
   const char *ParamDeviceType = "ActiveConnections";
@@ -228,7 +230,7 @@ void NetworkManager::SendGetActiveConnections(json_object *json) {
   dbus_message_iter_init_append(Msg, &ArgsIter);
   dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &ParamInterface);
   dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &ParamDeviceType);
-  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
   if(Reply) {
     DBusMessageIter Struct, Variant;
     if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_VARIANT)) {
@@ -242,7 +244,7 @@ void NetworkManager::SendGetActiveConnections(json_object *json) {
             dbus_message_iter_get_basic(&Array, &DevicePath);
             if(DevicePath) {
               json_object *Connection = json_object_new_object();  
-              if(SendGetConnectionProperties(Connection, DevicePath)) {
+              if(SendGetConnectionProperties(dbus, Connection, DevicePath)) {
                 json_object_array_add(json, Connection);      
               } else {
                 json_object_put(Connection);
@@ -256,14 +258,14 @@ void NetworkManager::SendGetActiveConnections(json_object *json) {
   }
   dbus_message_unref(Msg);
 }
-bool NetworkManager::SendGetConnectionProperties(json_object *json, char *path) {
+bool NetworkManager::SendGetConnectionProperties(DBusConnection *dbus, json_object *json, char *path) {
   bool IsWifi = true;
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", path, "org.freedesktop.DBus.Properties", "GetAll");
   const char *ParamInterface = "org.freedesktop.NetworkManager.Connection.Active";
   DBusMessageIter ArgsIter;
   dbus_message_iter_init_append(Msg, &ArgsIter);
   dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &ParamInterface);
-  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
   if(Reply) {
     DBusMessageIter Struct;
     if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
@@ -290,13 +292,13 @@ bool NetworkManager::SendGetConnectionProperties(json_object *json, char *path) 
                 if((strcmp(Key, "SpecificObject") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_OBJECT_PATH)) {
                   char *AccessPoint;
                   dbus_message_iter_get_basic(&Variant, &AccessPoint);
-                  if(AccessPoint && (SendGetAPProperties(json, AccessPoint) == false)) IsWifi = false;
+                  if(AccessPoint && (SendGetAPProperties(dbus, json, AccessPoint) == false)) IsWifi = false;
                   break;
                 }
                 if((strcmp(Key, "Ip4Config") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_OBJECT_PATH)) {
                   char *IP4Config;
                   dbus_message_iter_get_basic(&Variant, &IP4Config);
-                  if(IP4Config) SendGetIP4Properties(json, IP4Config);
+                  if(IP4Config) SendGetIP4Properties(dbus, json, IP4Config);
                   break;
                 }
                 if((strcmp(Key, "Dhcp4Config") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_OBJECT_PATH)) {
@@ -320,13 +322,13 @@ bool NetworkManager::SendGetConnectionProperties(json_object *json, char *path) 
   dbus_message_unref(Msg);
   return IsWifi;
 }
-void NetworkManager::SendGetIP4Properties(json_object *json, char *path) {
+void NetworkManager::SendGetIP4Properties(DBusConnection *dbus, json_object *json, char *path) {
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", path, "org.freedesktop.DBus.Properties", "GetAll");
   const char *ParamInterface = "org.freedesktop.NetworkManager.IP4Config";
   DBusMessageIter ArgsIter;
   dbus_message_iter_init_append(Msg, &ArgsIter);
   dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &ParamInterface);
-  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
   if(Reply) {
     DBusMessageIter Struct;
     if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
@@ -395,10 +397,10 @@ void NetworkManager::SendGetIP4Properties(json_object *json, char *path) {
   }
   dbus_message_unref(Msg);
 }
-void NetworkManager::SendGetSettingsPaths(json_object *json) {
+void NetworkManager::SendGetSettingsPaths(DBusConnection *dbus, json_object *json) {
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager/Settings", "org.freedesktop.NetworkManager.Settings", "ListConnections");
   if(Msg) {
-    DBusMessage *Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+    DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
     if(Reply) {
       DBusMessageIter Struct;
       if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
@@ -410,7 +412,7 @@ void NetworkManager::SendGetSettingsPaths(json_object *json) {
             dbus_message_iter_get_basic(&Array, &Path);
             if(Path) {
               json_object *Setting = json_object_new_object();
-              if(SendGetSettings(Setting, Path)) {
+              if(SendGetSettings(dbus, Setting, Path)) {
                 json_object_array_add(json, Setting);
               } else {
                 json_object_put(Setting);
@@ -424,11 +426,11 @@ void NetworkManager::SendGetSettingsPaths(json_object *json) {
     dbus_message_unref(Msg);
   }
 }
-bool NetworkManager::SendGetSettings(json_object *json, char *path) {
+bool NetworkManager::SendGetSettings(DBusConnection *dbus, json_object *json, char *path) {
   bool IsWifi = false, ValidAuth = true, IsAP = true;
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", path, "org.freedesktop.NetworkManager.Settings.Connection", "GetSettings");
   if(Msg) {
-    DBusMessage *Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+    DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
     if(Reply) {
       json_object_object_add(json, "ConfigPath", json_object_new_string(path));
       DBusMessageIter Struct;
@@ -633,7 +635,7 @@ bool NetworkManager::SendGetSettings(json_object *json, char *path) {
   }
   return (IsWifi && ValidAuth && IsAP);
 }
-bool NetworkManager::SendSaveSettings(json_object *json) {
+bool NetworkManager::SendSaveSettings(DBusConnection *dbus, json_object *json) {
   char     *SSID  = NULL;
   char     *BSSID = NULL;
   bool      DHCP = false;
@@ -674,7 +676,7 @@ bool NetworkManager::SendSaveSettings(json_object *json) {
   }
   if((ConfigPath != NULL) && (UUID == NULL)) {
     DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", ConfigPath, "org.freedesktop.NetworkManager.Settings.Connection", "Delete");  
-    DBusMessage *Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+    DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
     return (Reply != NULL);
   } else {
   if((SSID == NULL) || (strlen(SSID) > 32)) return false;
@@ -805,7 +807,7 @@ bool NetworkManager::SendSaveSettings(json_object *json) {
       dbus_message_iter_close_container(&Array, &Dict);
     }
     dbus_message_iter_close_container(&ArgsIter, &Array);
-    DBusMessage *Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+    DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
     return (Reply != NULL);
   }
 }

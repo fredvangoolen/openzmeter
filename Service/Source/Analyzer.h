@@ -14,7 +14,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 class Analyzer : private Database {
   public :
-    enum RouteType {FASE_1, FASE_3, FASE_3N};
+    enum AnalyzerType {FASE_1, FASE_3, FASE_3N};
     enum AggregType { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
 
     typedef struct {
@@ -60,8 +60,8 @@ class Analyzer : private Database {
       Cycle_t     Cycles[20];                 //Informacion de los ciclos del bloque
       uint8_t     Cycles_Len;                 //Numero de ciclos en el bloque
       Params_t    Params;                     //Parametros calculados del bloque
-      Complex_t **VoltageFFT;                 //Transformada de los canales de tension      
-      Complex_t **CurrentFFT;                 //Transformada de los canales de corriente
+//      Complex_t **VoltageFFT;                 //Transformada de los canales de tension      
+//      Complex_t **CurrentFFT;                 //Transformada de los canales de corriente
     } Work_t;
   private :
 
@@ -89,11 +89,16 @@ class Analyzer : private Database {
     
 
   public :
+    uint32_t  ID;
+    char     *Name;
+    
+    
+    
+    
     uint64_t    pPrevTimestamp;
     Work_t      pWork;
     bool        pTerminate;
         bool            pTriphase;
-        char *pName;
             float           pSamplerate;
   public :
     void     AllocParams(Params_t *params, AggregType type);
@@ -109,7 +114,7 @@ class Analyzer : private Database {
   protected :
 
 
-    static float  CalcPhi(Complex_t voltage, Complex_t current);
+//    static float  CalcPhi(Complex_t voltage, Complex_t current);
   protected :
 //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
   public :
@@ -117,6 +122,6 @@ class Analyzer : private Database {
     uint32_t     SampleRate();
     json_object *GetJSONCopy(char *series);
   public :
-    Analyzer(float samplerate, uint32_t maxSamples, bool triphase, uint16_t id);
-    ~Analyzer();
+    Analyzer(char *name, float samplerate, uint32_t maxSamples, bool triphase, uint16_t id);
+    //~Analyzer();
 };

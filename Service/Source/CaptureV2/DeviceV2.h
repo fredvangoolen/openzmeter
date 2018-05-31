@@ -20,7 +20,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV2 : public DeviceInterface {
   private :
-      enum SyncState {RESET, WAIT, SYNC};
+    enum SyncState {RESET, WAIT, SYNC};
+    typedef struct {
+      uint8_t VoltageChannel;
+      uint8_t CurrentChannel;
+    } Mapping_t;
   private :
     const char                  *pSerial;                  //Numero de serie del dispositivo de captura
     int16_t                     *pBuffer;                  //Donde almaceno muestras leidas (RingBuffer)
@@ -40,23 +44,25 @@ class DeviceV2 : public DeviceInterface {
     pthread_mutex_t              pAnalyzeMutex;            //Mutex para bloquear acceso a muestras y resultados
     pthread_cond_t               pWriteWait;               //Variable de condicion para esperar si buffer esta lleno
     pthread_cond_t               pReadWait;                //Variable de condicion para esperar si buffer esta vacio
+    uint32_t                     pADCSamplerate;           //Samplerate del ADC
     uint8_t                      pOversample;              //Oversample usado en el micro
     SyncState                    pSyncState;               //Indica si la lectura del USB esta sincronizada o no
-    
-    pthread_t                    CaptureThread;           //Descriptor del hilo de captura
-    pthread_t                    AnalyzeThread;           //Descriptor del hilo de analisis
-    Filter_t                     Filters[5];              //Filtros paso banda para deteccion de paso por cero
+    pthread_t                    CaptureThread;            //Descriptor del hilo de captura
+    pthread_t                    AnalyzeThread;            //Descriptor del hilo de analisis
+//    Filter_t                     Filters[5];              //Filtros paso banda para deteccion de paso por cero
+    Mapping_t                   *pMappings;                //Listado de mapeado de canales
   private :
     static void  *Capture_Thread(void *args);
     static void  *Analize_Thread(void *args);
     static void   ReadCallback(struct libusb_transfer *transfer);
     static int    PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
+    
   private :
     float    CalculateFrequency(Analyzer::Work_t* work);
     uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len);
-    DeviceV2();
+    
   public :
-    static DeviceV2 *Init(json_object *config);
+    DeviceV2(json_object* config);
     bool Start();
     ~DeviceV2();
 };

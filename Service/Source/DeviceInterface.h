@@ -23,9 +23,26 @@ class DeviceInterface {
       float            B2;
       FilterChannel_t *Channels;
     } Filter_t;
-    //      float     **VoltageSamples;             //Muestras de tension   (El array almacena hasta 236mS)
-//      float     **CurrentSamples;             //Muestras de corriente (El array almacena hasta 236mS)
-//    typedef struct {
+  protected :
+    float     **pVoltageSamples;             //Muestras de tension
+    float     **pCurrentSamples;             //Muestras de corriente
+    FFT       **pVoltageFFT;                 //FFTs de tension
+    FFT       **pCurrentFFT;                 //FFTs de tension
+    uint8_t     pVoltageChannels;            //Canales de tension
+    uint8_t     pCurrentChannels;            //Canales de corriente
+    uint32_t    pSamples;                    //Numero de muestras
+    uint32_t    pMaxSamples;                 //Numero maximo de muestras
+    float       pSamplerate;                 //Velocidad de muestreo
+    bool        pTerminate;                  //Marca que deben detenerse los trabajos pendientes
+  protected :
+    bool   BuffersAlloc(uint8_t voltageChannels, uint8_t currentChannels);
+    void   BuffersClear();
+    float *BuffersAppend(float *voltageSamples, float *CurrentSamples);
+    void   CalcFFTs();
+
+    
+    
+    //    typedef struct {
 //      uint32_t Start;                         //Muestra dentro del bloque que inicia el ciclo
 //      uint32_t End;                           //Muestra dentro del bloque que finaliza el ciclo
 //    } Cycle_t;
@@ -40,22 +57,22 @@ class DeviceInterface {
 ////      Complex_t **CurrentFFT;                 //Transformada de los canales de corriente
 //    } Work_t;
   public :
-    Analyzer      **pAnalyzers;             //Analizadores disponibles
-    uint32_t        pAnalyzersCount;        //Numero de analizadores
-    float           pSamplerate;            //Velocidad de muestreo
-    uint32_t        pID;                    //Identificador del dispositivo (Tiene que ser multiplo de 4)
-    uint64_t        pSequenceID;            //Numero de secuencia del bloque analizado
+    Analyzer  **Analyzers;                  //Analizadores disponibles
+    uint8_t     AnalyzersCount;             //Numero de analizadores
+    bool        Active;                     //Indicador de actividad de la captura
+    
   protected :
       void ApplyFilter(float *in, float *out);
   protected :
-      bool pTerminate;
+      
 //    Work_t pWork;                           //Bloque te trabajo
   protected :
     DeviceInterface();
     virtual ~DeviceInterface();
+    void AddAnalyzer(Analyzer *analyzer);
   public :
     virtual bool Start() = 0;
-    uint32_t GetMaxSamples();
+//    uint32_t GetMaxSamples();
 };
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -26,8 +26,6 @@ class Database {
   private :
     bool Connect();
   public :
-    static void Init(json_object *config);
-  public :
     void  PrepareSentence(const char *sentence);
     void  BindSingleUInt32(uint32_t param);
     void  BindSingleUInt64(uint64_t param);
@@ -42,4 +40,6 @@ class Database {
     char *ExecSentenceJSON(const char* sql, size_t *len);
     Database();
     ~Database();
+  public :
+    static void Config(json_object *config);
 };

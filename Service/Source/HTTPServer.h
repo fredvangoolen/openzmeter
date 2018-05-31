@@ -35,7 +35,6 @@ class HTTPServer {
     static char           *pFilePath;
     static char           *pPassword;
     static uint64_t        pLastLogin;
-    static uint16_t        pPort;
     static Session_t      *pSessions;
     static pthread_mutex_t pSessionMutex;
   private :
@@ -49,8 +48,7 @@ class HTTPServer {
     static int        SendError(struct MHD_Connection *connection, int error, const char *text);
     static Session_t *GetSession(MHD_Connection *connection);
   public :
-    static void Init(json_object *config);
-    static bool Start();
-    static void stop();
+    static void Config(json_object *config);
+    static void Stop();
     static void RemoveExpiredSessions();
 };

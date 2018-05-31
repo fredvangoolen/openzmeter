@@ -3,11 +3,12 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
-#include "Analyzer.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <json-c/json.h>
+#include "HTTPServer.h"
+#include "Devices.h"
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   private :

@@ -175,285 +175,288 @@ void *DeviceV2::Capture_Thread(void *args) {
   return NULL;
 }
 void *DeviceV2::Analize_Thread(void* args) {
-  DeviceV2 *This = (DeviceV2*)args;
-  if(pthread_setschedprio(0, -10) == -1) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return NULL;
-  }
-  pthread_setname_np(This->AnalyzeThread, "AnalyzeV2");
-  while(!This->pTerminate) {
-    pthread_mutex_lock(&This->pAnalyzeMutex);
-    while(This->pUsed < (This->GetMaxSamples() * This->pChannelCount)) {
-      if(This->pTerminate) return NULL;
-      pthread_cond_wait(&This->pReadWait, &This->pAnalyzeMutex);
-    }
-    uint64_t Start = Tools::GetTime();
-//    This->pWork.Params.Timestamp = Start - ((This->pUsed * 1000) / (This->pSamplerate * This->pChannelCount));
-    float LastSample = +20; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
-//  for(uint i = 0; i < Len; i++) {
-//    int16_t Voltage = Buff16[i * 2 + 0];
-//    uint16_t Current = Buff16[i * 2 + 1];
-//    This->Buffer[This->WritePos].Voltage = (Voltage - This->VoltageOffset) * This->VoltageGain;
-//    This->Buffer[This->WritePos].Current = (Current - This->CurrentOffset) * This->CurrentGain;
-//    This->WritePos = (This->WritePos + 1) % CAPTUREMONO_BUFFERSIZE;
+//  DeviceV2 *This = (DeviceV2*)args;
+//  if(pthread_setschedprio(0, -10) == -1) {
+//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//    return NULL;
 //  }
-    uint32_t Samples = 0;
-    while(Samples < This->GetMaxSamples()) {
-//      for(uint8_t Channel = 0; Channel < This->pChannelCount; Channel++) {
-        //for(uint8_t Analyzer = 0; Analyzer < This->pAnalyzersCount; Analyzer++) {
-//          if(Analyzer != 0) continue;
-          This->pAnalyzers[0]->pWork.VoltageSamples[0][Samples] = This->pBuffer[This->pReadPos] * This->pVoltageGain[0]; 
-          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
-          This->pAnalyzers[0]->pWork.CurrentSamples[0][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[0]; 
-          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
-          This->pAnalyzers[0]->pWork.VoltageSamples[1][Samples] = This->pBuffer[This->pReadPos] * This->pVoltageGain[1]; 
-          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
-          This->pAnalyzers[0]->pWork.CurrentSamples[1][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[1]; 
-          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;
-          This->pAnalyzers[0]->pWork.VoltageSamples[2][Samples] = This->pBuffer[This->pReadPos] * This->pVoltageGain[2]; 
-          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
-          This->pAnalyzers[0]->pWork.CurrentSamples[2][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[2]; 
-          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;          
-          This->pAnalyzers[0]->pWork.CurrentSamples[3][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[3]; 
-          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;
-        
-          
-          //      This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
-//      This->pWork.CurrentSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Current;
-//      float Out = This->pWork.VoltageSamples[0][This->pWork.Samples];
-//      for(int i = 0; i < 5; i++) Out = ApplyFilter(Out, &This->Filters[i]);
-//      if(((LastSample >= 0.0) && (Out < 0.0)) || ((LastSample <= 0.0) && (Out > 0.0))) {
-//        This->pWork.Cycles[This->pWork.Cycles_Len].End = This->pWork.Samples;
-//        This->pWork.Cycles_Len++;
-//        if(This->pWork.Cycles_Len == 20) break;
-//        This->pWork.Cycles[This->pWork.Cycles_Len].Start = This->pWork.Samples;
-//      }
-//      LastSample = Out;
-        //}
-      
-//      }
-      Samples++;
-    }
-    float AVG[7] = {0,0,0,0,0,0,0};
-    for(int i = 0; i < Samples; i++) {
-        AVG[0] += This->pAnalyzers[0]->pWork.VoltageSamples[0][0];
-        AVG[1] += This->pAnalyzers[0]->pWork.CurrentSamples[0][0];
-        AVG[2] += This->pAnalyzers[0]->pWork.VoltageSamples[1][0];
-        AVG[3] += This->pAnalyzers[0]->pWork.CurrentSamples[1][0];
-        AVG[4] += This->pAnalyzers[0]->pWork.VoltageSamples[2][0];
-        AVG[5] += This->pAnalyzers[0]->pWork.CurrentSamples[2][0];
-        AVG[6] += This->pAnalyzers[0]->pWork.CurrentSamples[3][0];
-    }
-    printf("(V_R: %.5f) (I_R: %.5f) (V_S: %.5f) (I_S: %.5f) (V_T: %.5f) (I_T: %.5f) (I_N: %.5f)\n", 
-            AVG[0] / Samples, AVG[1] / Samples,
-            AVG[2] / Samples, AVG[3] / Samples,
-            AVG[4] / Samples, AVG[5] / Samples,
-            AVG[6] / Samples);
-      fflush(stdout);
-    
-    
-    This->pUsed -= Samples * This->pChannelCount;
-    This->pAnalyzers[0]->pWork.Samples = Samples;
-    pthread_cond_signal(&This->pWriteWait);
-    pthread_mutex_unlock(&This->pAnalyzeMutex);
-//    if(Discard > 0) {
-//      Discard--;
-//      This->ResetWork();
-//      This->ResetParams(&This->pWork.Params);
-//    } else {
-//      This->Analyze(0.1);
-    This->pAnalyzers[0]->Analyze(0.1);
-      uint64_t AnalyzeEnd = Tools::GetTime();
-      This->pAnalyzers[0]->SaveWorkParams();
-      uint64_t SaveEnd = Tools::GetTime();
-      Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %umS (%" PRIu64 "mS mS with store)\n", This->pSequenceID, AnalyzeEnd - Start, SaveEnd - Start);
+//  pthread_setname_np(This->AnalyzeThread, "AnalyzeV2");
+//  while(!This->pTerminate) {
+//    pthread_mutex_lock(&This->pAnalyzeMutex);
+//    while(This->pUsed < (This->GetMaxSamples() * This->pChannelCount)) {
+//      if(This->pTerminate) return NULL;
+//      pthread_cond_wait(&This->pReadWait, &This->pAnalyzeMutex);
 //    }
-  }
+//    uint64_t Start = Tools::GetTime();
+////    This->pWork.Params.Timestamp = Start - ((This->pUsed * 1000) / (This->pSamplerate * This->pChannelCount));
+//    float LastSample = +20; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
+////  for(uint i = 0; i < Len; i++) {
+////    int16_t Voltage = Buff16[i * 2 + 0];
+////    uint16_t Current = Buff16[i * 2 + 1];
+////    This->Buffer[This->WritePos].Voltage = (Voltage - This->VoltageOffset) * This->VoltageGain;
+////    This->Buffer[This->WritePos].Current = (Current - This->CurrentOffset) * This->CurrentGain;
+////    This->WritePos = (This->WritePos + 1) % CAPTUREMONO_BUFFERSIZE;
+////  }
+//    uint32_t Samples = 0;
+//    while(Samples < This->GetMaxSamples()) {
+////      for(uint8_t Channel = 0; Channel < This->pChannelCount; Channel++) {
+//        //for(uint8_t Analyzer = 0; Analyzer < This->pAnalyzersCount; Analyzer++) {
+////          if(Analyzer != 0) continue;
+//          This->pAnalyzers[0]->pWork.VoltageSamples[0][Samples] = This->pBuffer[This->pReadPos] * This->pVoltageGain[0]; 
+//          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
+//          This->pAnalyzers[0]->pWork.CurrentSamples[0][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[0]; 
+//          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
+//          This->pAnalyzers[0]->pWork.VoltageSamples[1][Samples] = This->pBuffer[This->pReadPos] * This->pVoltageGain[1]; 
+//          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
+//          This->pAnalyzers[0]->pWork.CurrentSamples[1][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[1]; 
+//          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;
+//          This->pAnalyzers[0]->pWork.VoltageSamples[2][Samples] = This->pBuffer[This->pReadPos] * This->pVoltageGain[2]; 
+//          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
+//          This->pAnalyzers[0]->pWork.CurrentSamples[2][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[2]; 
+//          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;          
+//          This->pAnalyzers[0]->pWork.CurrentSamples[3][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[3]; 
+//          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;
+//        
+//          
+//          //      This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
+////      This->pWork.CurrentSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Current;
+////      float Out = This->pWork.VoltageSamples[0][This->pWork.Samples];
+////      for(int i = 0; i < 5; i++) Out = ApplyFilter(Out, &This->Filters[i]);
+////      if(((LastSample >= 0.0) && (Out < 0.0)) || ((LastSample <= 0.0) && (Out > 0.0))) {
+////        This->pWork.Cycles[This->pWork.Cycles_Len].End = This->pWork.Samples;
+////        This->pWork.Cycles_Len++;
+////        if(This->pWork.Cycles_Len == 20) break;
+////        This->pWork.Cycles[This->pWork.Cycles_Len].Start = This->pWork.Samples;
+////      }
+////      LastSample = Out;
+//        //}
+//      
+////      }
+//      Samples++;
+//    }
+//    float AVG[7] = {0,0,0,0,0,0,0};
+//    for(int i = 0; i < Samples; i++) {
+//        AVG[0] += This->pAnalyzers[0]->pWork.VoltageSamples[0][0];
+//        AVG[1] += This->pAnalyzers[0]->pWork.CurrentSamples[0][0];
+//        AVG[2] += This->pAnalyzers[0]->pWork.VoltageSamples[1][0];
+//        AVG[3] += This->pAnalyzers[0]->pWork.CurrentSamples[1][0];
+//        AVG[4] += This->pAnalyzers[0]->pWork.VoltageSamples[2][0];
+//        AVG[5] += This->pAnalyzers[0]->pWork.CurrentSamples[2][0];
+//        AVG[6] += This->pAnalyzers[0]->pWork.CurrentSamples[3][0];
+//    }
+//    printf("(V_R: %.5f) (I_R: %.5f) (V_S: %.5f) (I_S: %.5f) (V_T: %.5f) (I_T: %.5f) (I_N: %.5f)\n", 
+//            AVG[0] / Samples, AVG[1] / Samples,
+//            AVG[2] / Samples, AVG[3] / Samples,
+//            AVG[4] / Samples, AVG[5] / Samples,
+//            AVG[6] / Samples);
+//      fflush(stdout);
+//    
+//    
+//    This->pUsed -= Samples * This->pChannelCount;
+//    This->pAnalyzers[0]->pWork.Samples = Samples;
+//    pthread_cond_signal(&This->pWriteWait);
+//    pthread_mutex_unlock(&This->pAnalyzeMutex);
+////    if(Discard > 0) {
+////      Discard--;
+////      This->ResetWork();
+////      This->ResetParams(&This->pWork.Params);
+////    } else {
+////      This->Analyze(0.1);
+//    This->pAnalyzers[0]->Analyze(0.1);
+//      uint64_t AnalyzeEnd = Tools::GetTime();
+//      This->pAnalyzers[0]->SaveWorkParams();
+//      uint64_t SaveEnd = Tools::GetTime();
+////      Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %umS (%" PRIu64 "mS mS with store)\n", This->pSequenceID, AnalyzeEnd - Start, SaveEnd - Start);
+////    }
+//  }
   return NULL;
 }
-DeviceV2 *DeviceV2::Init(json_object* config) {
-  DeviceV2 *Device = new DeviceV2();
-  bool     ValidDriver      = false;
-  bool     ValidParams      = true;
-  uint8_t  ChannelMask      = 0;
-
-  json_object_object_foreach(config, JSON_Key, JSON_Val) {
-    enum json_type JSON_Type = json_object_get_type(JSON_Val);
-    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Driver") == 0)) {
-      if(strcmp("CaptureV2", (char*)json_object_get_string(JSON_Val)) == 0) ValidDriver = true;
-    } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "ID") == 0)) {
-      Device->pID = json_object_get_int(JSON_Val);
-      if((Device->pID % 4) != 0) {
-        ValidParams = false;
-        Tools::LogMsg("ERROR", "Device ID must be multiple of 4\n");
-      }
-    } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Oversample") == 0)) {
-      Device->pOversample = json_object_get_int(JSON_Val);
-    } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Samplerate") == 0)) {
-      Device->pSamplerate = json_object_get_int(JSON_Val);
-    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Serial") == 0)) {
-      Device->pSerial = (char*)json_object_get_string(JSON_Val);
-    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "VoltageGain") == 0)) {
-      if(json_object_array_length(JSON_Val) != 3) {
-        ValidParams = false;
-      } else {
-        for(int i = 0; i < 3; i++) {
-          if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
-            ValidParams = false;
-            Tools::LogMsg("ERROR", "CaptureV2: Voltage gain must have 3 double values\n");
-          } else {
-            Device->pVoltageGain[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
-          }
-        }
-      }
-    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "VoltageOffset") == 0)) {
-      if(json_object_array_length(JSON_Val) != 3) {
-        ValidParams = false;
-      } else {
-        for(int i = 0; i < 3; i++) {
-          if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
-            ValidParams = false;
-            Tools::LogMsg("ERROR", "CaptureV2: Voltage offset must have 3 double values\n");
-          } else {
-            Device->pVoltageOffset[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
-          }
-        }
-      }
-    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "CurrentGain") == 0)) {
-      if(json_object_array_length(JSON_Val) != 4) {
-        ValidParams = false;
-      } else {
-        for(int i = 0; i < 4; i++) {
-          if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
-            ValidParams = false;
-            Tools::LogMsg("ERROR", "CaptureV2: current gain must have 4 double values\n");
-          } else {
-            Device->pCurrentGain[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
-          }
-        }
-      }
-    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "CurrentOffset") == 0)) {
-      if(json_object_array_length(JSON_Val) != 4) {
-        ValidParams = false;
-      } else {
-        for(int i = 0; i < 4; i++) {
-          if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
-            ValidParams = false;
-            Tools::LogMsg("ERROR", "CaptureV2: current offset must have 4 double values\n");
-          } else {
-            Device->pCurrentOffset[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
-          }
-        }
-      }
-    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "Outputs") == 0)) {
-      int Count = json_object_array_length(JSON_Val);
-      Device->pAnalyzers = (Analyzer**)malloc(sizeof(Analyzer*) * Count);
-      for(int i = 0; i < Count; i++) {
-        if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_object) continue;
-        char *DisplayName = (char*)"Default Capture";
-        Analyzer::RouteType Type = Analyzer::FASE_3N;
-        uint32_t ID = 0;
-        uint8_t VoltageChannel = 6;
-        uint8_t CurrentChannel = 5;
-        json_object_object_foreach(json_object_array_get_idx(JSON_Val, i), JSON_KeySub, JSON_ValSub) {
-          enum json_type JSON_TypeSub = json_object_get_type(JSON_ValSub);
-          if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "DisplayName") == 0)) {
-            DisplayName = (char*)json_object_get_string(JSON_ValSub);
-          } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "Mode") == 0)) {
-            char *ModeText = (char*)json_object_get_string(JSON_ValSub);
-            if(strcmp("3Phase+N", ModeText) == 0) {
-              Type = Analyzer::FASE_3N;
-            } else if(strcmp("3Phase", ModeText) == 0) {
-              Type = Analyzer::FASE_3;
-            } else if(strcmp("1Phase", ModeText) == 0) {
-              Type = Analyzer::FASE_1;
-            } else {
-              ValidParams = false;
-              Tools::LogMsg("ERROR", "CaptureV2: invalid output mode, try '3Phase+N'. '3Phase' or '1Phase'\n");
-            }
-          } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "VoltageChannel") == 0)) {
-            char *ChannelText = (char*)json_object_get_string(JSON_ValSub);
-            if(strcmp("R", ChannelText) == 0) {
-              VoltageChannel = 6;
-            } else if(strcmp("S", ChannelText) == 0) {
-              VoltageChannel = 4;
-            } else if(strcmp("T", ChannelText) == 0) {
-              VoltageChannel = 2;
-            } else {
-              ValidParams = false;
-              Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S' or 'T'\n");
-            }
-          } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "CurrentChannel") == 0)) {
-            char *ChannelText = (char*)json_object_get_string(JSON_ValSub);
-            if(strcmp("R", ChannelText) == 0) {
-              CurrentChannel = 5;
-            } else if(strcmp("S", ChannelText) == 0) {
-              CurrentChannel = 3;
-            } else if(strcmp("T", ChannelText) == 0) {
-              CurrentChannel = 1;
-            } else if(strcmp("N", ChannelText) == 0) {
-              CurrentChannel = 0;
-            } else {
-              ValidParams = false;
-              Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S', 'T' or 'N'\n");
-            }
-          }
-        }
-        if(Type == Analyzer::FASE_3N) {
-          if(ChannelMask != 0) {
-            ValidParams = false;
-            Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
-          } else {
-            ChannelMask |= 0x7F;
-          }
-        } else if(Type == Analyzer::FASE_3) {
-          if((ChannelMask & 0x2A) != 0) {
-            ValidParams = false;
-            Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
-          } else {
-            ChannelMask |= 0x7E; 
-          }
-        } else if(Type == Analyzer::FASE_1) {
-          if((ChannelMask & (1 << CurrentChannel)) != 0) {
-            ValidParams = false;
-            Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
-          } else {
-            ChannelMask |= (1 << CurrentChannel) | (1 << VoltageChannel);
-          }
-        }
-        if(ValidParams == true) {
-          Device->pAnalyzers[Device->pAnalyzersCount] = new Analyzer(Device->pSamplerate, Device->GetMaxSamples(), true, Device->pID + Device->pAnalyzersCount);
-          Device->pAnalyzersCount++;
-        }
-      }
-    }
-  }
-  Device->pChannelMask = ChannelMask;
-  if(ValidDriver & ValidParams) return Device;
-  delete Device;
-  return NULL;
-}
-DeviceV2::DeviceV2() {
+DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
+  pSerial           = NULL;
+  pBuffer           = NULL;
   for(int i = 0; i < 3; i++) pVoltageGain[i]   = 1;
   for(int i = 0; i < 3; i++) pVoltageOffset[i] = 0;
   for(int i = 0; i < 4; i++) pCurrentGain[i]   = 1;
   for(int i = 0; i < 4; i++) pCurrentOffset[i] = 0;
-  pSerial           = NULL;
-  pBuffer           = NULL;
   pChannelMask      = 0;
   pChannelCount     = 0;
   pReadPos          = 0;
   pWritePos         = 0;
   pUsed             = 0;
+  pBuffLen          = 0;
   pDeviceHandle     = NULL;
   pNewDevice        = NULL;
-  pOversample       = 0;
-  pBuffLen          = 0;
-  pSyncState        = WAIT;
   pthread_cond_init(&pWriteWait, NULL);
   pthread_cond_init(&pReadWait, NULL);
   pthread_mutex_init(&pAnalyzeMutex, NULL);
   pthread_mutex_init(&pCaptureMutex, NULL);
+  pOversample       = 0;
+  pADCSamplerate    = 20000;
+  pMappings         = NULL;
+  pSyncState        = WAIT;
+  struct json_object *Find;
+  if((json_object_object_get_ex(config, "Samplerate", &Find) == true) && (json_object_get_type(Find) == json_type_int)) {
+    pADCSamplerate = json_object_get_int(Find);
+  }
+  if((json_object_object_get_ex(config, "Oversample", &Find) == true) && (json_object_get_type(Find) == json_type_int)) {
+    pOversample = json_object_get_int(Find);
+  }
+  json_object_object_foreach(config, JSON_Key, JSON_Val) {
+    enum json_type JSON_Type = json_object_get_type(JSON_Val);
+    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Serial") == 0)) {
+      pSerial = (char*)json_object_get_string(JSON_Val);
+    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "VoltageGain") == 0)) {
+      if(json_object_array_length(JSON_Val) != 3) {
+        Tools::LogMsg("ERROR", "CaptureV2: Voltage gain must have 3 double values\n");
+        return;
+      }
+      for(int i = 0; i < 3; i++) {
+        if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
+            Tools::LogMsg("ERROR", "CaptureV2: Voltage gain must have 3 double values\n");
+            return;
+        }
+        pVoltageGain[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
+      }
+    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "VoltageOffset") == 0)) {
+      if(json_object_array_length(JSON_Val) != 3) {
+        Tools::LogMsg("ERROR", "CaptureV2: Voltage offset must have 3 double values\n");
+        return;
+      }
+      for(int i = 0; i < 3; i++) {
+        if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
+          Tools::LogMsg("ERROR", "CaptureV2: Voltage offset must have 3 double values\n");
+          return;
+        }
+        pVoltageOffset[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
+      }
+    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "CurrentGain") == 0)) {
+      if(json_object_array_length(JSON_Val) != 4) {
+        Tools::LogMsg("ERROR", "CaptureV2: current gain must have 4 double values\n");
+        return;
+      }
+      for(int i = 0; i < 4; i++) {
+        if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
+          Tools::LogMsg("ERROR", "CaptureV2: current gain must have 4 double values\n");
+          return;
+        }
+        pCurrentGain[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
+      }
+    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "CurrentOffset") == 0)) {
+      if(json_object_array_length(JSON_Val) != 4) {
+        Tools::LogMsg("ERROR", "CaptureV2: current offset must have 4 double values\n");
+        return;
+      }
+      for(int i = 0; i < 4; i++) {
+        if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
+          Tools::LogMsg("ERROR", "CaptureV2: current offset must have 4 double values\n");
+          return;
+        }
+        pCurrentOffset[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
+      }
+    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "3Phase+N") == 0)) {
+      uint32_t  ID = 0;
+      char     *Name= (char*)"3Phase+N";
+      json_object_object_foreach(JSON_Val, JSON_KeySub, JSON_ValSub) {
+        enum json_type JSON_TypeSub = json_object_get_type(JSON_ValSub);
+        if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "DisplayName") == 0)) {
+          Name = (char*)json_object_get_string(JSON_ValSub);
+        } else if((JSON_TypeSub == json_type_int) && (strcmp(JSON_KeySub, "ID") == 0)) {
+          ID = json_object_get_int(JSON_ValSub);
+        }
+      }
+      if(pChannelMask != 0) {
+        Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
+        return;
+      }
+      pChannelMask |= 0x7F;
+      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (AnalyzersCount + 1));
+      pMappings[AnalyzersCount].VoltageChannel = 0;
+      pMappings[AnalyzersCount].CurrentChannel = 0;
+      AddAnalyzer(new Analyzer(Name, 10, 10, true, ID));
+    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "3Phase") == 0)) {
+      uint32_t  ID = 0;
+      char     *Name= (char*)"3Phase";
+      json_object_object_foreach(JSON_Val, JSON_KeySub, JSON_ValSub) {
+        enum json_type JSON_TypeSub = json_object_get_type(JSON_ValSub);
+        if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "DisplayName") == 0)) {
+          Name = (char*)json_object_get_string(JSON_ValSub);
+        } else if((JSON_TypeSub == json_type_int) && (strcmp(JSON_KeySub, "ID") == 0)) {
+          ID = json_object_get_int(JSON_ValSub);   
+        }
+      }
+      if((pChannelMask & 0x2A) != 0) {
+        Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
+        return;
+      }
+      pChannelMask |= 0x7E; 
+      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (AnalyzersCount + 1));
+      pMappings[AnalyzersCount].VoltageChannel = 0;
+      pMappings[AnalyzersCount].CurrentChannel = 0;
+      AddAnalyzer(new Analyzer(Name, 10, 10, true, ID));
+    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "1Phase") == 0)) {
+      uint32_t  ID = 0;
+      char     *Name= (char*)"1Phase";
+      uint8_t   VoltageChannel = 6;
+      uint8_t   CurrentChannel = 5;
+      json_object_object_foreach(JSON_Val, JSON_KeySub, JSON_ValSub) {
+        enum json_type JSON_TypeSub = json_object_get_type(JSON_ValSub);
+        if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "DisplayName") == 0)) {
+          Name = (char*)json_object_get_string(JSON_ValSub);
+        } else if((JSON_TypeSub == json_type_int) && (strcmp(JSON_KeySub, "ID") == 0)) {
+          ID = json_object_get_int(JSON_ValSub);   
+        } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "VoltageChannel") == 0)) {
+          char *ChannelText = (char*)json_object_get_string(JSON_ValSub);
+          if(strcmp("R", ChannelText) == 0) {
+            VoltageChannel = 6;
+          } else if(strcmp("S", ChannelText) == 0) {
+            VoltageChannel = 4;
+          } else if(strcmp("T", ChannelText) == 0) {
+            VoltageChannel = 2;
+          } else {
+            Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S' or 'T'\n");
+            return;
+          }
+        } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "CurrentChannel") == 0)) {
+          char *ChannelText = (char*)json_object_get_string(JSON_ValSub);
+          if(strcmp("R", ChannelText) == 0) {
+            CurrentChannel = 5;
+          } else if(strcmp("S", ChannelText) == 0) {
+            CurrentChannel = 3;
+          } else if(strcmp("T", ChannelText) == 0) {
+            CurrentChannel = 1;
+          } else if(strcmp("N", ChannelText) == 0) {
+            CurrentChannel = 0;
+          } else {
+            Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S', 'T' or 'N'\n");
+            return;
+          }
+          if((pChannelMask & (1 << CurrentChannel)) != 0) {
+            Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
+            return;
+          }
+        }
+      }
+      pChannelMask |= (1 << CurrentChannel) | (1 << VoltageChannel);
+      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (AnalyzersCount + 1));
+      pMappings[AnalyzersCount].VoltageChannel = VoltageChannel;
+      pMappings[AnalyzersCount].CurrentChannel = CurrentChannel;
+      pSamplerate = pADCSamplerate / pOversample;
+      AddAnalyzer(new Analyzer(Name, pSamplerate, 10, false, ID));
+    }
+  }
+  uint8_t VoltageChannels = 0;
+  uint8_t CurrentChannels = 0;
+  if(pChannelMask & 0x40) VoltageChannels++;
+  if(pChannelMask & 0x20) CurrentChannels++;
+  if(pChannelMask & 0x10) VoltageChannels++;
+  if(pChannelMask & 0x08) CurrentChannels++;
+  if(pChannelMask & 0x04) VoltageChannels++;
+  if(pChannelMask & 0x02) CurrentChannels++;
+  if(pChannelMask & 0x01) CurrentChannels++;
+  if(BuffersAlloc(VoltageChannels, CurrentChannels) == false) {
+    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memry for capture buffers\n");
+    return;
+  }
 }
 bool DeviceV2::Start() {
   Tools::LogMsg("INFO", "Starting CaptureV2 adquisition thread...\n");

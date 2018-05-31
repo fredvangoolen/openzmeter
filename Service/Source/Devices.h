@@ -11,9 +11,11 @@ class Devices {
     static float             NominalVoltage;
     static float             NominalFrequency;
     static DeviceInterface **DeviceInterfaces;
-    static uint32_t          DeviceInterfacesCount;
+    static uint8_t           DeviceInterfacesCount;
+  private :  
+    static void AddDevice(DeviceInterface *device);
   public :
-    static bool Init(json_object *config);
-    static bool Start();
+    static void         Config(json_object *config);
+    static json_object *GetNodes();
 };
 //----------------------------------------------------------------------------------------------------------------------

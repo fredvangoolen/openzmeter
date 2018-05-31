@@ -155,11 +155,11 @@ bool Tools::ReadConfig(char *file) {
         if(CreatePidFile((char*)json_object_get_string(JSON_Val)) == false) Error = true;
       }
     } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Database") == 0)) {
-      Database::Init(JSON_Val);
+      Database::Config(JSON_Val);
     } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "HTTPServer") == 0)) {
-      HTTPServer::Init(JSON_Val);
-    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Devices") == 0)) {
-      Devices::Init(JSON_Val);      
+      HTTPServer::Config(JSON_Val);
+    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Capture") == 0)) {
+      Devices::Config(JSON_Val);
     }
   }
 

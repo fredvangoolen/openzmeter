@@ -12,7 +12,7 @@
     "Port": 5432,
     "Database": "openzmeter",
     "UserName": "openzmeter",
-    "Password": "openzmeter",
+    "Password": "openzmeter"
   },
   "Capture": {
     "NominalFrequency": 50,
@@ -25,7 +25,7 @@
         "VoltageGain": 0.01160,
         "VoltageOffset": 348.00,
         "CurrentGain": -0.00078125,
-        "CurrentOffset": 32768,
+        "CurrentOffset": 32768
       },
       { "Driver": "CaptureV2",
         "Samplerate": 30000,
