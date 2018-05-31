@@ -190,8 +190,12 @@ void Analyzer::SaveParams(Params_t *params) {
 //  }
 //  ResetParams(params);
 }
-void Analyzer::Analyze(float **voltageSamples, float **currentSamples, uint32_t *cyclesLen, uint8_t cycles) {
-  uint32_t Samples = 0;
+void Analyzer::Analyze(float **voltageSamples, FFT **voltageFFT, float **currentSamples, FFT **currentFFT, uint32_t *cyclesLen, uint8_t cycles) {
+  pSamples = 0;
+  pVoltageSamples = voltageSamples;
+  pVoltageFFT     = voltageFFT;
+  pCurrentSamples = currentSamples;
+  pCurrentFFT     = currentFFT;
   ResetParams(&pAggreg10C);
   if(cycles == 20) {
 //    for(int i = 0; i < pWork.Cycles_Len; i++) {
@@ -219,11 +223,12 @@ void Analyzer::Analyze(float **voltageSamples, float **currentSamples, uint32_t 
 //  float P[3] = {0.0, 0.0, 0.0};
   for(uint32_t i = 0; i < Samples; i++) {
     for(int j = 0; j < ((pType == PHASE_1) ? 1 : 3); j++) pAggreg10C.RMS_V[j] += pow(voltageSamples[j][i], 2.0);
-//    for(int j = 0; j < (pTriphase ? 4 : 1); j++) I[j] += pow(pWork.CurrentSamples[j][i], 2.0);
+    for(int j = 0; j < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); j++) pAggreg10C.RMS_I[j] += pow(currentSamples[j][i], 2.0);
 //    for(int j = 0; j < (pTriphase ? 3 : 1); j++) P[j] += pWork.VoltageSamples[j][i] * pWork.CurrentSamples[j][i];
   }
-//  for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Params.Active_Power[j] = P[j] / pWork.Samples;
-//  for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Params.RMS_V[j] = sqrt(V[j] / pWork.Samples);
+  for(int j = 0; j < ((pType == PHASE_1) ? 1 : 3); j++) pAggreg10C.RMS_V[j] = sqrt(pAggreg10C.RMS_V[j] / pSamples);
+
+//  for(int j = 0; j < ((pType == PHASE_1) ? 1 : 3); j++) pAggreg10C.Active_Power[j] = P[j] / pWork.Samples;
 //  for(int j = 0; j < (pTriphase ? 4 : 1); j++) pWork.Params.RMS_I[j] = sqrt(I[j] / pWork.Samples);
 //  for(int j = 0; j < (pTriphase ? 3 : 1); j++) pWork.Params.Apparent_Power[j] = pWork.Params.RMS_V[j] * pWork.Params.RMS_I[j];
 ////  EventsDetect();
@@ -267,8 +272,8 @@ void Analyzer::Analyze(float **voltageSamples, float **currentSamples, uint32_t 
 }
 void Analyzer::AllocParams(Params_t *params, AggregType type) {
   params->RMS_V = (float*)malloc(sizeof(float*) * ((pType == PHASE_1) ? 1 : 3));
-//  params->RMS_I = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 4 : 1));
-//  params->Active_Power = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
+  params->RMS_I = (float*)malloc(sizeof(float*) * ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4));
+  params->Active_Power = (float*)malloc(sizeof(float*) * ((pType == PHASE_1) ? 1 : 3));
 //  params->Fundamental_Reactive_Power = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
 //  params->Fundamental_Reactive_Energy = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
 //  params->Active_Energy = (float*)malloc(sizeof(float*) * ((pTriphase == true) ? 3 : 1));
@@ -485,14 +490,14 @@ json_object *Analyzer::GetJSONCopy(char *series) {
         Obj = json_object_new_array();
         for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) {
           json_object *Obj2 = json_object_new_array();
-//          for(uint32_t j = 0; j < pWork.Samples; j++) json_object_array_add(Obj2, json_object_new_double(pWork.VoltageSamples[i][j]));
+          for(uint32_t j = 0; j < pSamples; j++) json_object_array_add(Obj2, json_object_new_double(pVoltageSamples[i][j]));
           json_object_array_add(Obj, Obj2);
         }
       } else if(strcmp(Serie, "wave_i") == 0) {
         Obj = json_object_new_array();
         for(int i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) {
           json_object *Obj2 = json_object_new_array();
-//          for(uint32_t j = 0; j < pWork.Samples; j++) json_object_array_add(Obj2, json_object_new_double(pWork.CurrentSamples[i][j]));
+          for(uint32_t j = 0; j < pSamples; j++) json_object_array_add(Obj2, json_object_new_double(pCurrentSamples[i][j]));
           json_object_array_add(Obj, Obj2);
         }
       } else if(strcmp(Serie, "fft_v") == 0) {

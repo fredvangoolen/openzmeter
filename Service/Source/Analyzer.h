@@ -61,6 +61,11 @@ class Analyzer : private Database {
     AnalyzerType    pType;                    //Tipo de analizador
     float           pSamplerate;              //Velocidad de muestreo
     float           pMinCurrent;              //Corriente minima
+    uint32_t        pSamples;                 //Muestras analizadas
+    float         **pVoltageSamples;          //Muestras de tension del bloque
+    FFT           **pVoltageFFT;              //Transformada de los canales de tension
+    float         **pCurrentSamples;          //Muestras de corriente del bloque
+    FFT           **pCurrentFFT;              //Transformada de los canales de corriente
     Params_t        pAggreg10C;               //Agregacion de 10 ciclos
     Params_t        pAggreg3S;                //Agregacion de 3 segundos
     Params_t        pAggreg1M;                //Agregacion de 1 minuto
@@ -109,7 +114,7 @@ class Analyzer : private Database {
 //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
   public :
     Analyzer(char *name, float samplerate, AnalyzerType mode, float minCurrent, uint16_t id);
-    void         Analyze(float **voltageSamples, float **currentSamples, uint32_t *cyclesLen, uint8_t cycles);
+    void         Analyze(float **voltageSamples, FFT **voltageFFT, float **currentSamples, FFT **currentFFT, uint32_t *cyclesLen, uint8_t cycles);
     char        *GetTypeString();
     uint32_t     GetID();
     char        *GetName();
