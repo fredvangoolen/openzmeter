@@ -49,7 +49,6 @@ class DeviceV2 : public DeviceInterface {
     SyncState                    pSyncState;               //Indica si la lectura del USB esta sincronizada o no
     pthread_t                    CaptureThread;            //Descriptor del hilo de captura
     pthread_t                    AnalyzeThread;            //Descriptor del hilo de analisis
-//    Filter_t                     Filters[5];              //Filtros paso banda para deteccion de paso por cero
     Mapping_t                   *pMappings;                //Listado de mapeado de canales
   private :
     static void  *Capture_Thread(void *args);
@@ -60,10 +59,9 @@ class DeviceV2 : public DeviceInterface {
   private :
     float    CalculateFrequency(Analyzer::Work_t* work);
     uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len);
-    
+    int16_t  GetSample();
   public :
     DeviceV2(json_object* config);
-    bool Start();
     ~DeviceV2();
 };
 //----------------------------------------------------------------------------------------------------------------------

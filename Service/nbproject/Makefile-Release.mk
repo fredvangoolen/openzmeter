@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/Source/Analyzer.o \
 	${OBJECTDIR}/Source/CaptureV2/DeviceV2.o \
 	${OBJECTDIR}/Source/Database.o \
 	${OBJECTDIR}/Source/DeviceInterface.o \
@@ -72,6 +73,10 @@ LDLIBSOPTIONS=-L/usr/local/lib
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter ${OBJECTFILES} ${LDLIBSOPTIONS} -lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ldbus-1 -ljson-c -lz -lcurl -s
+
+${OBJECTDIR}/Source/Analyzer.o: Source/Analyzer.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/Analyzer.o Source/Analyzer.cpp
 
 ${OBJECTDIR}/Source/CaptureV2/DeviceV2.o: Source/CaptureV2/DeviceV2.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/CaptureV2

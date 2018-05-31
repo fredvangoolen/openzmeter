@@ -6,6 +6,8 @@
 #include "Analyzer.h"
 #include "FFT.h"
 //----------------------------------------------------------------------------------------------------------------------
+#define DEVICEINTERFACE_FILTERSTAGES  5
+//----------------------------------------------------------------------------------------------------------------------
 class DeviceInterface {
   public :
     typedef struct {
@@ -21,6 +23,7 @@ class DeviceInterface {
       float            A2;
       float            B1;
       float            B2;
+      float           *Results;
       FilterChannel_t *Channels;
     } Filter_t;
   protected :
@@ -34,6 +37,7 @@ class DeviceInterface {
     uint32_t    pMaxSamples;                 //Numero maximo de muestras
     float       pSamplerate;                 //Velocidad de muestreo
     bool        pTerminate;                  //Marca que deben detenerse los trabajos pendientes
+    Filter_t    pFilters;                    //Filtros aplicados para deteccion de cruce por 0
   protected :
     bool   BuffersAlloc(uint8_t voltageChannels, uint8_t currentChannels);
     void   BuffersClear();
@@ -71,7 +75,7 @@ class DeviceInterface {
     virtual ~DeviceInterface();
     void AddAnalyzer(Analyzer *analyzer);
   public :
-    virtual bool Start() = 0;
+
 //    uint32_t GetMaxSamples();
 };
 

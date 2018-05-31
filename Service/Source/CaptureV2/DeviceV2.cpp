@@ -57,6 +57,7 @@ int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
       libusb_device *CurrentDev = libusb_get_device(This->pDeviceHandle);	
       if(dev == CurrentDev) {
         Tools::LogMsg("INFO", "Device DeviceV2 with serial '%s' disconnected\n", This->pSerial);
+        This->Active = false;
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL;
       }
@@ -74,15 +75,15 @@ void *DeviceV2::Capture_Thread(void *args) {
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   }
   DeviceV2 *This = (DeviceV2*)args;
-  pthread_setname_np(This->CaptureThread, "DeviceV2_Init");
+  pthread_setname_np(This->CaptureThread, "DeviceV2C_Init");
   uint8_t BufferIN[CAPTUREV2_TRANSFERS][8192];
   struct libusb_transfer *TransferIN[CAPTUREV2_TRANSFERS];
   for(int i = 0; i < CAPTUREV2_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
   uint32_t Update = 0;
   while(!This->pTerminate) {
     if((Update % 10) == 0) {
-      char ThreadName[16] = "DeviceV2_Wait";
-      if(This->pDeviceHandle != NULL) sprintf(ThreadName, "DeviceV2_%03d", This->pUsed * 100 / This->pBuffLen); 
+      char ThreadName[16] = "DeviceV2C_Wait";
+      if(This->pDeviceHandle != NULL) sprintf(ThreadName, "DeviceV2C_%03d", This->pUsed * 100 / This->pBuffLen); 
       pthread_setname_np(This->CaptureThread, ThreadName);
     }
     Update++;
@@ -161,6 +162,7 @@ void *DeviceV2::Capture_Thread(void *args) {
         continue;
       }
       Tools::LogMsg("INFO", "Capture started on DeviceV2 with serial %s\n", This->pSerial);
+      This->Active = true;
       This->pNewDevice = NULL;
       int Error = libusb_control_transfer(This->pDeviceHandle, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0x01, 0x0000, 0x0000, NULL, 0, 0);
       if(Error < 0) Tools::LogMsg("ERROR", "Can not stop device with serial %s (%d)\n", This->pSerial, Error);
@@ -174,48 +176,44 @@ void *DeviceV2::Capture_Thread(void *args) {
   }
   return NULL;
 }
+inline int16_t DeviceV2::GetSample() {
+  int16_t Result = pBuffer[pReadPos];
+  pReadPos = (pReadPos + 1) % pBuffLen;
+  pUsed    = (pUsed - 1);
+  return Result;
+}
 void *DeviceV2::Analize_Thread(void* args) {
-//  DeviceV2 *This = (DeviceV2*)args;
-//  if(pthread_setschedprio(0, -10) == -1) {
-//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    return NULL;
-//  }
-//  pthread_setname_np(This->AnalyzeThread, "AnalyzeV2");
-//  while(!This->pTerminate) {
-//    pthread_mutex_lock(&This->pAnalyzeMutex);
-//    while(This->pUsed < (This->GetMaxSamples() * This->pChannelCount)) {
-//      if(This->pTerminate) return NULL;
-//      pthread_cond_wait(&This->pReadWait, &This->pAnalyzeMutex);
-//    }
-//    uint64_t Start = Tools::GetTime();
-////    This->pWork.Params.Timestamp = Start - ((This->pUsed * 1000) / (This->pSamplerate * This->pChannelCount));
-//    float LastSample = +20; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
-////  for(uint i = 0; i < Len; i++) {
-////    int16_t Voltage = Buff16[i * 2 + 0];
-////    uint16_t Current = Buff16[i * 2 + 1];
-////    This->Buffer[This->WritePos].Voltage = (Voltage - This->VoltageOffset) * This->VoltageGain;
-////    This->Buffer[This->WritePos].Current = (Current - This->CurrentOffset) * This->CurrentGain;
-////    This->WritePos = (This->WritePos + 1) % CAPTUREMONO_BUFFERSIZE;
-////  }
-//    uint32_t Samples = 0;
-//    while(Samples < This->GetMaxSamples()) {
-////      for(uint8_t Channel = 0; Channel < This->pChannelCount; Channel++) {
+  DeviceV2 *This = (DeviceV2*)args;
+  if(pthread_setschedprio(0, -10) == -1) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    return NULL;
+  }
+  pthread_setname_np(This->AnalyzeThread, "DeviceV2A");
+  float *VoltageChannels = (float*)malloc(sizeof(float) * This->pVoltageChannels);
+  float *CurrentChannels = (float*)malloc(sizeof(float) * This->pCurrentChannels);
+  while(!This->pTerminate) {
+    pthread_mutex_lock(&This->pAnalyzeMutex);
+    while(This->pUsed < (This->pMaxSamples * This->pChannelCount)) {
+      if(This->pTerminate) return NULL;
+      pthread_cond_wait(&This->pReadWait, &This->pAnalyzeMutex);
+    }
+    This->BuffersClear();
+    uint64_t Start = Tools::GetTime();
+    while(This->pSamples < This->pMaxSamples) {
+      float *VoltagePos = VoltageChannels;
+      float *CurrentPos = CurrentChannels;      
+      if(This->pChannelMask & 0x40) *VoltagePos++ = This->GetSample() * This->pVoltageGain[0];
+      if(This->pChannelMask & 0x20) *CurrentPos++ = This->GetSample() * This->pCurrentGain[0];
+      if(This->pChannelMask & 0x10) *VoltagePos++ = This->GetSample() * This->pVoltageGain[1];
+      if(This->pChannelMask & 0x08) *CurrentPos++ = This->GetSample() * This->pCurrentGain[1];
+      if(This->pChannelMask & 0x04) *VoltagePos++ = This->GetSample() * This->pVoltageGain[2];
+      if(This->pChannelMask & 0x02) *CurrentPos++ = This->GetSample() * This->pCurrentGain[2];
+      if(This->pChannelMask & 0x01) *CurrentPos++ = This->GetSample() * This->pCurrentGain[3];
+      float *FilterredValues = This->BuffersAppend(VoltageChannels, CurrentChannels);
+
+      ////      for(uint8_t Channel = 0; Channel < This->pChannelCount; Channel++) {
 //        //for(uint8_t Analyzer = 0; Analyzer < This->pAnalyzersCount; Analyzer++) {
 ////          if(Analyzer != 0) continue;
-//          This->pAnalyzers[0]->pWork.VoltageSamples[0][Samples] = This->pBuffer[This->pReadPos] * This->pVoltageGain[0]; 
-//          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
-//          This->pAnalyzers[0]->pWork.CurrentSamples[0][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[0]; 
-//          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
-//          This->pAnalyzers[0]->pWork.VoltageSamples[1][Samples] = This->pBuffer[This->pReadPos] * This->pVoltageGain[1]; 
-//          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
-//          This->pAnalyzers[0]->pWork.CurrentSamples[1][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[1]; 
-//          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;
-//          This->pAnalyzers[0]->pWork.VoltageSamples[2][Samples] = This->pBuffer[This->pReadPos] * This->pVoltageGain[2]; 
-//          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;        
-//          This->pAnalyzers[0]->pWork.CurrentSamples[2][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[2]; 
-//          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;          
-//          This->pAnalyzers[0]->pWork.CurrentSamples[3][Samples] = This->pBuffer[This->pReadPos] * This->pCurrentGain[3]; 
-//          This->pReadPos = (This->pReadPos + 1) % This->pBuffLen;
 //        
 //          
 //          //      This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
@@ -231,9 +229,22 @@ void *DeviceV2::Analize_Thread(void* args) {
 ////      LastSample = Out;
 //        //}
 //      
+      
+      
+    
+    ////    This->pWork.Params.Timestamp = Start - ((This->pUsed * 1000) / (This->pSamplerate * This->pChannelCount));
+//    float LastSample = +20; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
+////  for(uint i = 0; i < Len; i++) {
+////    int16_t Voltage = Buff16[i * 2 + 0];
+////    uint16_t Current = Buff16[i * 2 + 1];
+////    This->Buffer[This->WritePos].Voltage = (Voltage - This->VoltageOffset) * This->VoltageGain;
+////    This->Buffer[This->WritePos].Current = (Current - This->CurrentOffset) * This->CurrentGain;
+////    This->WritePos = (This->WritePos + 1) % CAPTUREMONO_BUFFERSIZE;
+////  }
+      
 ////      }
 //      Samples++;
-//    }
+    }
 //    float AVG[7] = {0,0,0,0,0,0,0};
 //    for(int i = 0; i < Samples; i++) {
 //        AVG[0] += This->pAnalyzers[0]->pWork.VoltageSamples[0][0];
@@ -252,10 +263,11 @@ void *DeviceV2::Analize_Thread(void* args) {
 //      fflush(stdout);
 //    
 //    
-//    This->pUsed -= Samples * This->pChannelCount;
+//    
 //    This->pAnalyzers[0]->pWork.Samples = Samples;
-//    pthread_cond_signal(&This->pWriteWait);
-//    pthread_mutex_unlock(&This->pAnalyzeMutex);
+    pthread_cond_signal(&This->pWriteWait);
+    pthread_mutex_unlock(&This->pAnalyzeMutex);
+    This->CalcFFTs();
 ////    if(Discard > 0) {
 ////      Discard--;
 ////      This->ResetWork();
@@ -268,7 +280,7 @@ void *DeviceV2::Analize_Thread(void* args) {
 //      uint64_t SaveEnd = Tools::GetTime();
 ////      Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %umS (%" PRIu64 "mS mS with store)\n", This->pSequenceID, AnalyzeEnd - Start, SaveEnd - Start);
 ////    }
-//  }
+  }
   return NULL;
 }
 DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
@@ -301,6 +313,7 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
   if((json_object_object_get_ex(config, "Oversample", &Find) == true) && (json_object_get_type(Find) == json_type_int)) {
     pOversample = json_object_get_int(Find);
   }
+  pSamplerate = pADCSamplerate / pOversample;
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Serial") == 0)) {
@@ -440,7 +453,6 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
       pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (AnalyzersCount + 1));
       pMappings[AnalyzersCount].VoltageChannel = VoltageChannel;
       pMappings[AnalyzersCount].CurrentChannel = CurrentChannel;
-      pSamplerate = pADCSamplerate / pOversample;
       AddAnalyzer(new Analyzer(Name, pSamplerate, 10, false, ID));
     }
   }
@@ -454,11 +466,9 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
   if(pChannelMask & 0x02) CurrentChannels++;
   if(pChannelMask & 0x01) CurrentChannels++;
   if(BuffersAlloc(VoltageChannels, CurrentChannels) == false) {
-    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memry for capture buffers\n");
+    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
     return;
   }
-}
-bool DeviceV2::Start() {
   Tools::LogMsg("INFO", "Starting CaptureV2 adquisition thread...\n");
   pChannelCount = 0;
   for(uint8_t Mask = 0x40; Mask != 0; Mask >>= 1) {
@@ -467,46 +477,34 @@ bool DeviceV2::Start() {
   pBuffLen = CAPTUREV2_BUFFERSIZE * pSamplerate * pChannelCount;
   pBuffer = (int16_t*)malloc(pBuffLen * sizeof(int16_t));
   if(pBuffer == NULL) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    libusb_exit(NULL);
-    return false;
+    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memry for capture buffers\n");
+    return;
   }
-
-  //  for(int i = 0; i < 5; i++) {
-//    float Q = 1.0;
-//    float K = tan(M_PI * ((float)Tools::Electrical.NominalFrequency / CAPTURE_V2_SAMPLEFREQ));
-//    float Norm = 1 / (1 + K / Q + K * K);
-//    Filters[i].A0 = K / Q * Norm;
-//    Filters[i].A1 = 0;
-//    Filters[i].A2 = -Filters[i].A0;
-//    Filters[i].B1 = 2 * (K * K - 1) * Norm;
-//    Filters[i].B2 = (1 - K / Q + K * K) * Norm;
-//    Filters[i].Z1 = 0.0;
-//    Filters[i].Z2 = 0.0;
-//  }
   int Error = libusb_init(NULL);
   if(Error < 0) {
-    Tools::LogMsg("ERROR", "Fallo la apertura de libUSB...\n");
-    return false;
+    Tools::LogMsg("ERROR", "Can not open libUSB...\n");
+    return;
   }
   if(pthread_create(&CaptureThread, NULL, Capture_Thread, this) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(NULL);
     free(pBuffer);
-    return false;
+    return;
   }
   Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , CAPTUREV2_VID, CAPTUREV2_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
   if(Error < 0) {
     Tools::LogMsg("ERROR", "Fallo al registrar callback de escucha libUSB...\n");
     pthread_join(CaptureThread, NULL);
     free(pBuffer);
-    return false;
+    pBuffer = NULL;
+    return;
   }
   if(pthread_create(&AnalyzeThread, NULL, Analize_Thread, this) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pthread_join(CaptureThread, NULL);
     free(pBuffer);
-    return false;
+    pBuffer = NULL;
+    return;
   }
 }
 DeviceV2::~DeviceV2() {
@@ -520,21 +518,4 @@ DeviceV2::~DeviceV2() {
     free(pBuffer);
   }
 }
-uint32_t DeviceV2::SamplesCopy(float **dest, uint32_t offset, uint32_t len) {
-  for(uint i = 0; i < len; i++) {
-//    uint32_t Pos = ((ReadPos + CAPTUREMONO_BUFFERSIZE) - offset + i) % CAPTUREMONO_BUFFERSIZE;
-//    dest[i][0] = Buffer[Pos].Voltage;
-  }
-  return len;
-}
-//void Adquisition_SetLEDs(float voltage, float current) {
-//  uint8_t Val = 0;
-//  int Voltage = round(((voltage / EVENT_VOLTAGE) - 1.0) * 50.0 + 4.0);
-//  if(Voltage < 0) Voltage = 0;
-//  if(Voltage > 8) Voltage = 8;
-//  int Current = round((current / MAX_CURRENT) * 100.0 / 9.0);
-//  if(Current < 0) Current = 0;
-//  if(Current > 8) Current = 8;
-//  Val = (Current << 4) + Voltage;
-//}
 //======================================================================================================================

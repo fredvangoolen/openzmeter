@@ -16,16 +16,13 @@ class Analyzer : private Database {
   public :
     enum AnalyzerType {FASE_1, FASE_3, FASE_3N};
     enum AggregType { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
-
     typedef struct {
       uint32_t Start;                       //Muestra dentro del bloque que inicia el ciclo
       uint32_t End;                         //Muestra dentro del bloque que finaliza el ciclo
     } Cycle_t;
-
-
     typedef struct {
       uint64_t    Timestamp;                  //Timestamp de la muestra inicial
-      AggregType Type;                       //Tipo de agregacion
+      AggregType  Type;                       //Tipo de agregacion
       uint32_t    Samples;                    //Muestras que han formado esta agregacion
       float      *RMS_V;                      //Valor RMS de la tension durante el bloque
       float      *RMS_I;                      //Valor RMS de la intensidad durante el bloque

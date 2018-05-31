@@ -24,11 +24,11 @@ void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
 }
 int main(int argc, char** argv) {
-//  for(int i = 0; i < 20; i++) {
-//    printf("Esperando al depurador (%d)\n", i);
-//    fflush(stdout);
-//    sleep(1);
-//  }
+  for(int i = 20; i < 20; i++) {
+    printf("Esperando al depurador (%d)\n", i);
+    fflush(stdout);
+    sleep(1);
+  }
 //  NetworkManager *Networks = new NetworkManager();
 //  Networks->SendGetDevices();
 //  Tools::GetJSONNetworks();

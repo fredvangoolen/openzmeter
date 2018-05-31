@@ -9,7 +9,9 @@
 //----------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t FFT::pPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
 FFT::FFT(uint32_t maxLen) {
-  Output = (Complex_t*)malloc(sizeof(Complex_t) * ceil(maxLen / 2 + 1));
+  Output = (Complex_t*)malloc(sizeof(Complex_t) * ((maxLen / 2) + 1));
+  printf("%d\n", maxLen);
+  fflush(stdout);
 }
 FFT::~FFT() {
   Wait();
@@ -31,7 +33,7 @@ bool FFT::Start(float *in, uint32_t len) {
 void *FFT::FFT_Thread(void *args) {
   FFT *This = (FFT*)args;
   fftwf_execute_dft_r2c(This->pPlan, This->pInput, (fftwf_complex*)This->Output);
-  for(int i = 0; i < ceil(This->pLen / 2 + 1); i++) {
+  for(int i = 0; i < ((This->pLen / 2) + 1); i++) {
     This->Output[i].Real = This->Output[i].Real / This->pLen;
     This->Output[i].Imag = This->Output[i].Imag / This->pLen;
   }
@@ -39,8 +41,4 @@ void *FFT::FFT_Thread(void *args) {
 }
 void FFT::Wait() {
   if(pthread_join(pThread, NULL) != 0) Tools::LogMsg("ERROR", "%s:%d -> (Unknown)\n", __func__, __LINE__);
-  pthread_mutex_lock(&pPlannerMutex);
-  fftwf_destroy_plan(pPlan);
-  pthread_mutex_unlock(&pPlannerMutex);  
-  return;
 }

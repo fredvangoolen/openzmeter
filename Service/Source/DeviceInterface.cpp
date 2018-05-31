@@ -51,11 +51,36 @@ bool DeviceInterface::BuffersAlloc(uint8_t voltageChannels, uint8_t currentChann
   pVoltageChannels = voltageChannels;
   pCurrentChannels = currentChannels;
   pSamples = 0;
+  float Q = 1.0;
+  float K = tan(M_PI * (Devices::NominalFrequency / pSamplerate));
+  float Norm = 1 / (1 + K / Q + K * K);
+  pFilters.A0 = K / Q * Norm;
+  pFilters.A1 = 0;
+  pFilters.A2 = -pFilters.A0;
+  pFilters.B1 = 2 * (K * K - 1) * Norm;
+  pFilters.B2 = (1 - K / Q + K * K) * Norm;
+  pFilters.Channels = (FilterChannel_t*)malloc(sizeof(FilterChannel_t) * pVoltageChannels);
+  pFilters.Results  = (float*)malloc(sizeof(float) * pVoltageChannels);
+  if((pFilters.Channels == NULL) || (pFilters.Results == NULL)) return false;
+  for(int Chan = 0; Chan < pVoltageChannels; Chan++) pFilters.Channels[Chan].Stages = (FilterStage_t*)calloc(sizeof(FilterStage_t), DEVICEINTERFACE_FILTERSTAGES);
+  return true;
 }
 void DeviceInterface::BuffersClear() {
   pSamples = 0;
 }
-float *DeviceInterface::BuffersAppend(float *voltageSamples, float *CurrentSamples) {
+float *DeviceInterface::BuffersAppend(float *voltageSamples, float *currentSamples) {
+  for(int Chan = 0; Chan < pVoltageChannels; Chan++) {
+    pVoltageSamples[Chan][pSamples] = voltageSamples[Chan];
+    pFilters.Results[Chan] = voltageSamples[Chan];
+    for(int Stage = 0; Stage < DEVICEINTERFACE_FILTERSTAGES; Stage++) {
+      float Out = pFilters.Results[Chan] * pFilters.A0 + pFilters.Channels[Chan].Stages[Stage].Z1;
+      pFilters.Channels[Chan].Stages[Stage].Z1 = pFilters.Results[Chan] * pFilters.A1 + pFilters.Channels[Chan].Stages[Stage].Z2 - pFilters.B1 * Out;
+      pFilters.Channels[Chan].Stages[Stage].Z2 = pFilters.Results[Chan] * pFilters.A2 - pFilters.B2 * Out;
+      pFilters.Results[Chan] = Out;
+    }
+  }
+  for(int Chan = 0; Chan < pCurrentChannels; Chan++) pCurrentSamples[Chan][pSamples] = currentSamples[Chan];
+  pSamples++;
   return NULL;
 }
 void DeviceInterface::CalcFFTs() {
