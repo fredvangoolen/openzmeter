@@ -14,4 +14,7 @@ class Stats {
     static const float VoltageRanges[];     //Rangos de tensiones para estadisticas
     static const float THDRanges[];         //Rangos de distorsion harmonica para estadisticas
     static const float HarmonicsAllowed[];  //Rangos permitidos para cada harmonico
+
+    void     ResetStats();
+
 };

@@ -11,12 +11,14 @@ class FFT {
     } Complex_t;
   public :
     Complex_t *Output;                    //Datos de salida
+    uint32_t   OutputLen;                 //Longitud de salida
   public :
     static float CalcAngle(Complex_t a, Complex_t b);
   public :
     FFT(uint32_t maxLen);
-    bool Start(float *in, uint32_t len);
-    void Wait();
+    bool  Start(float *in, uint32_t len);
+    void  Wait();
+    float BinPower(uint32_t bin);
     ~FFT();
   private :
     float     *pInput;                    //Muestras de entrada

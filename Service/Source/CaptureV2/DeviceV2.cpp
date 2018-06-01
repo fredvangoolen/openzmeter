@@ -22,19 +22,28 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
   for(int Block = 0; Block < (transfer->actual_length / 64); Block++) {
     int16_t *Pkg   = (int16_t*)&transfer->buffer[64 * Block];
     uint8_t  Count = 0;
-    pthread_mutex_lock(&This->pCaptureMutex);
+    //Si no estoy esperando muestras omito bloque
     if(This->pSyncState == RESET) continue;
+    //Si es un bloque de inicio de secuencia reinicio los contadores
     if(Pkg[0] == -32768) {
       if(This->pSyncState == SYNC) Tools::LogMsg("WARN", "DeviceV2 lost sync. Try reduce capture speed\n");
-      if(This->pSyncState == WAIT) This->pSyncState = SYNC;
-      This->pUsed = 0;
+      This->pSyncState = SYNC;
+      //Inicio los contadores (ATOMIC)
+      pthread_mutex_lock(&This->pBufferMutex);
+      This->pUsed     = 0;
+      This->pWritePos = 0;
+      This->pReadPos  = 0;
+      pthread_mutex_unlock(&This->pBufferMutex);
       Count++;
     }
+    //Espero a tener espacio en el buffer (ATOMIC)
     while(This->pUsed > (This->pBuffLen - 32)) {
       if(This->pTerminate) return;
       Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
-      pthread_cond_wait(&This->pWriteWait, &This->pCaptureMutex);
+      pthread_cond_wait(&This->pWriteWait, &This->pBufferMutex);
     }
+    pthread_mutex_unlock(&This->pBufferMutex);
+    //Añado muestras del bloque al buffer (ATOMIC)
     while(Count < 32) {
       if(Pkg[Count] != -32768) {
         This->pBuffer[This->pWritePos] = Pkg[Count];
@@ -43,8 +52,8 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
       }
       Count++;
     }
+    pthread_mutex_unlock(&This->pBufferMutex);
     pthread_cond_signal(&This->pReadWait);
-    pthread_mutex_unlock(&This->pCaptureMutex); 
   }
   if(This->pTerminate == false) libusb_submit_transfer(transfer);
 }
@@ -192,16 +201,22 @@ void *DeviceV2::Analize_Thread(void* args) {
   float *VoltageChannels = (float*)malloc(sizeof(float) * This->pVoltageChannels);
   float *CurrentChannels = (float*)malloc(sizeof(float) * This->pCurrentChannels);
   while(!This->pTerminate) {
-    pthread_mutex_lock(&This->pAnalyzeMutex);
+    This->BuffersClear();
+    //Espero a tener muestras disponibles (ATOMIC)
+    pthread_mutex_lock(&This->pBufferMutex);
     while(This->pUsed < (This->pMaxSamples * This->pChannelCount)) {
       if(This->pTerminate) return NULL;
-      pthread_cond_wait(&This->pReadWait, &This->pAnalyzeMutex);
+      pthread_cond_wait(&This->pReadWait, &This->pBufferMutex);
     }
-    This->BuffersClear();
     uint64_t Start = Tools::GetTime();
+    uint32_t Diff  = (This->pUsed * 1000) / (This->pSamplerate * This->pChannelCount);
+    uint64_t Timestamp = Start - Diff;
+    pthread_mutex_unlock(&This->pBufferMutex);
     while(This->pSamples < This->pMaxSamples) {
+      pthread_mutex_lock(&This->pBufferMutex);
       float *VoltagePos = VoltageChannels;
       float *CurrentPos = CurrentChannels;      
+      if(This->pBuffLen < This->pChannelCount) break;
       if(This->pChannelMask & 0x40) *VoltagePos++ = This->GetSample() * This->pVoltageGain[0];
       if(This->pChannelMask & 0x20) *CurrentPos++ = This->GetSample() * This->pCurrentGain[0];
       if(This->pChannelMask & 0x10) *VoltagePos++ = This->GetSample() * This->pVoltageGain[1];
@@ -209,6 +224,7 @@ void *DeviceV2::Analize_Thread(void* args) {
       if(This->pChannelMask & 0x04) *VoltagePos++ = This->GetSample() * This->pVoltageGain[2];
       if(This->pChannelMask & 0x02) *CurrentPos++ = This->GetSample() * This->pCurrentGain[2];
       if(This->pChannelMask & 0x01) *CurrentPos++ = This->GetSample() * This->pCurrentGain[3];
+      pthread_mutex_unlock(&This->pBufferMutex);
       float *FilterredValues = This->BuffersAppend(VoltageChannels, CurrentChannels);
 
       
@@ -236,7 +252,7 @@ void *DeviceV2::Analize_Thread(void* args) {
       
       
     
-    ////    This->pWork.Params.Timestamp = Start - ((This->pUsed * 1000) / (This->pSamplerate * This->pChannelCount));
+
 //    float LastSample = +20; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
 ////  for(uint i = 0; i < Len; i++) {
 ////    int16_t Voltage = Buff16[i * 2 + 0];
@@ -270,10 +286,12 @@ void *DeviceV2::Analize_Thread(void* args) {
 //    
 //    This->pAnalyzers[0]->pWork.Samples = Samples;
     pthread_cond_signal(&This->pWriteWait);
-    pthread_mutex_unlock(&This->pAnalyzeMutex);
+
     This->CalcFFTs();
-    for(uint8_t i = 0; i < This->pAnalyzersCount; i++) This->pAnalyzers[i]->Analyze(This->pVoltageSamples, This->pCurrentSamples, &This->pSamples, 1);
+    for(uint8_t i = 0; i < This->pAnalyzersCount; i++) {
     
+      This->pAnalyzers[i]->Analyze(This->pVoltageSamples, This->pVoltageFFT, This->pCurrentSamples, This->pCurrentFFT, &This->pSamples, 1, Timestamp);
+    }
     ////    if(Discard > 0) {
 ////      Discard--;
 ////      This->ResetWork();
@@ -284,7 +302,7 @@ void *DeviceV2::Analize_Thread(void* args) {
       uint64_t AnalyzeEnd = Tools::GetTime();
 //      This->pAnalyzers[0]->SaveWorkParams();
       uint64_t SaveEnd = Tools::GetTime();
-      Tools::LogMsg("DEBUG", "DeviceV2 takes %umS to analyce block\n", AnalyzeEnd - Start, SaveEnd - Start);
+      Tools::LogMsg("DEBUG", "DeviceV2 takes %umS to analyze block\n", AnalyzeEnd - Start, SaveEnd - Start);
 ////    }
   }
   return NULL;
@@ -306,8 +324,7 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
   pNewDevice        = NULL;
   pthread_cond_init(&pWriteWait, NULL);
   pthread_cond_init(&pReadWait, NULL);
-  pthread_mutex_init(&pAnalyzeMutex, NULL);
-  pthread_mutex_init(&pCaptureMutex, NULL);
+  pthread_mutex_init(&pBufferMutex, NULL);
   pOversample       = 0;
   pADCSamplerate    = 20000;
   pMappings         = NULL;

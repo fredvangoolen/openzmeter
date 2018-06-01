@@ -11,7 +11,7 @@
 #define CAPTUREV2_VID              0x0483        //Product ID
 #define CAPTUREV2_PID              0x7270        //Device ID
 #define CAPTUREV2_ENDPOINT_IN        0x81        //Endpoint de lectura de datos
-#define CAPTUREV2_BUFFERSIZE           10         //Tamaño del buffer (10 segundos)
+#define CAPTUREV2_BUFFERSIZE           10        //Tamaño del buffer (10 segundos)
 #define CAPTUREV2_TRANSFERS            32        //Numero de transferencias a encolar
 
 
@@ -40,8 +40,7 @@ class DeviceV2 : public DeviceInterface {
     uint32_t                     pBuffLen;                 //Tamaño del buffer
     struct libusb_device_handle *pDeviceHandle;            //Dispositivo de captura
     struct libusb_device        *pNewDevice;               //Dispositivo que se conecta
-    pthread_mutex_t              pCaptureMutex;            //Mutex para bloquear acceso al buffer
-    pthread_mutex_t              pAnalyzeMutex;            //Mutex para bloquear acceso a muestras y resultados
+    pthread_mutex_t              pBufferMutex;             //Control de acceso al buffer
     pthread_cond_t               pWriteWait;               //Variable de condicion para esperar si buffer esta lleno
     pthread_cond_t               pReadWait;                //Variable de condicion para esperar si buffer esta vacio
     uint32_t                     pADCSamplerate;           //Samplerate del ADC

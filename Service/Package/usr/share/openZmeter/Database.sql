@@ -80,13 +80,20 @@ CREATE TABLE IF NOT EXISTS aggreg_1h (
   freq real,
   flag boolean,
   fundamental_reactive_energy real[],
+  CONSTRAINT aggreg_1h_pkey PRIMARY KEY (sampletime, node)
+) WITH (OIDS=FALSE);
+ALTER TABLE aggreg_1h OWNER TO openzmeter;
+
+CREATE TABLE IF NOT EXISTS aggreg_stat_1h (
+  node_ext smallint NOT NULL,
+  sampletime_ext bigint NOT NULL,
   stat_voltage smallint[],
   stat_frequency smallint[],
   stat_thd smallint[],
   stat_harmonics smallint[],
-  CONSTRAINT aggreg_1h_pkey PRIMARY KEY (sampletime, node)
+  CONSTRAINT aggreg_stat_1h_pkey PRIMARY KEY (sampletime_ext, node_ext)
 ) WITH (OIDS=FALSE);
-ALTER TABLE aggreg_1h OWNER TO openzmeter;
+ALTER TABLE aggreg_stat_1h OWNER TO openzmeter;
 
 CREATE TABLE IF NOT EXISTS events (
   node smallint NOT NULL,  

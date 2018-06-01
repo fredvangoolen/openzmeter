@@ -10,8 +10,6 @@
 pthread_mutex_t FFT::pPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
 FFT::FFT(uint32_t maxLen) {
   Output = (Complex_t*)malloc(sizeof(Complex_t) * ((maxLen / 2) + 1));
-  printf("%d\n", maxLen);
-  fflush(stdout);
 }
 FFT::~FFT() {
   Wait();
@@ -33,7 +31,8 @@ bool FFT::Start(float *in, uint32_t len) {
 void *FFT::FFT_Thread(void *args) {
   FFT *This = (FFT*)args;
   fftwf_execute_dft_r2c(This->pPlan, This->pInput, (fftwf_complex*)This->Output);
-  for(int i = 0; i < ((This->pLen / 2) + 1); i++) {
+  This->OutputLen = (This->pLen / 2) + 1;
+  for(int i = 0; i < This->OutputLen; i++) {
     This->Output[i].Real = This->Output[i].Real / This->pLen;
     This->Output[i].Imag = This->Output[i].Imag / This->pLen;
   }
@@ -56,4 +55,7 @@ float FFT::CalcAngle(Complex_t a, Complex_t b) {
     return Tmp - atan(b.Imag / b.Real);
   else
     return Tmp - atan(b.Imag / b.Real) + M_PI;
+}
+float FFT::BinPower(uint32_t bin) {
+  return sqrt(pow(Output[bin].Real, 2.0) + pow(Output[bin].Imag, 2.0)) / M_SQRT2 * 2.0;
 }
