@@ -1,4 +1,4 @@
-#Fri Jun 01 14:36:52 CEST 2018
+#Fri Jun 01 16:47:20 CEST 2018
 /home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-Debug.mk=c1527835468000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/font-awesome/css/font-awesome.css=c1520327825000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/datatables/images/sort_desc_disabled.png=c1507189006000
@@ -141,7 +141,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-variables.mk=c1523517727000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/zeroC_interharmonic.png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.cpp=c1527835468000
-/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureV2/DeviceV2.h=c1527856077000
+/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureV2/DeviceV2.h=c1527863604000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/visjs/img/network/zoomExtends.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/4cuadrantes.png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.h=c1527751828000
@@ -164,7 +164,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/Captura\ de\ pantalla\ 2017-12-10\ a\ las\ 18.18.02.png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/visjs/vis.js=c1520507433000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/fundamental_active_power.png=c1513952649000
-/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureV2/DeviceV2.cpp=c1527856583000
+/home/edu/Proyectos/zMeter/V2/Service/Source/CaptureV2/DeviceV2.cpp=c1527864412000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/font-awesome/fonts/FontAwesome.otf=c1512396200000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/active_power.png.png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/metisMenu/metisMenu.js=c1507189006000

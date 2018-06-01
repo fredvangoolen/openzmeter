@@ -20,7 +20,8 @@
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV2 : public DeviceInterface {
   private :
-    enum SyncState {RESET, WAIT, SYNC};
+    enum USBState {USB_RESET, USB_WAIT, USB_SYNC};
+    enum AnalyzersState {ANALYZER_WAIT, ANALYZER_FFT, ANALYZER_PROCESSING, ANALYZER_RESET};
     typedef struct {
       uint8_t   VoltageChannel;
       uint8_t   CurrentChannel;
@@ -33,22 +34,23 @@ class DeviceV2 : public DeviceInterface {
     float                        pVoltageOffset[3];        //Offset de tension
     float                        pCurrentOffset[4];        //Offset de corriente
     uint8_t                      pChannelMask;             //Mascara de canales a capturar
-    uint8_t                      pChannelCount;             //Numero de canales de lectura
+    uint8_t                      pChannelCount;            //Numero de canales de lectura
+    uint32_t                     pADCSamplerate;           //Samplerate del ADC
+    uint8_t                      pOversample;              //Oversample usado en el micro
+    pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
+    struct libusb_device_handle *pDeviceHandle;            //Dispositivo de captura
+    struct libusb_device        *pNewDevice;               //Dispositivo que se conecta
+    Mapping_t                   *pMappings;                //Listado de mapeado de canales
+    USBState                     pUSBState;                //Indica si la lectura del USB esta sincronizada o no
+    AnalyzersState               pAnalyzerState;           //Estado de los analizadores
+    
     uint32_t                     pReadPos;                 //Posicion de lectura del buffer
     uint32_t                     pWritePos;                //Posicion de escritura del buffer
     uint32_t                     pUsed;                    //Muestras en uso del buffer
     uint32_t                     pBuffLen;                 //Tamaño del buffer
-    struct libusb_device_handle *pDeviceHandle;            //Dispositivo de captura
-    struct libusb_device        *pNewDevice;               //Dispositivo que se conecta
-    pthread_mutex_t              pBufferMutex;             //Control de acceso al buffer
-    pthread_cond_t               pWriteWait;               //Variable de condicion para esperar si buffer esta lleno
-    pthread_cond_t               pReadWait;                //Variable de condicion para esperar si buffer esta vacio
-    uint32_t                     pADCSamplerate;           //Samplerate del ADC
-    uint8_t                      pOversample;              //Oversample usado en el micro
-    SyncState                    pSyncState;               //Indica si la lectura del USB esta sincronizada o no
-    pthread_t                    CaptureThread;            //Descriptor del hilo de captura
-    pthread_t                    AnalyzeThread;            //Descriptor del hilo de analisis
-    Mapping_t                   *pMappings;                //Listado de mapeado de canales
+    uint8_t                      pCyclesCount;             //Numero de ciclos actuales
+    uint32_t                     pCyclesLen[20];           //Longitud de los ciclos detectados
+    uint64_t                     pSampletime;              //Marca de tiempo del inico del bloque
   private :
     static void  *Capture_Thread(void *args);
     static void  *Analize_Thread(void *args);
@@ -59,6 +61,9 @@ class DeviceV2 : public DeviceInterface {
 //    float    CalculateFrequency(Analyzer::Work_t* work);
     uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len);
     int16_t  GetSample();
+    
+    void AppendSamples();
+    
   public :
     DeviceV2(json_object* config);
     ~DeviceV2();
