@@ -8,38 +8,80 @@
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t FFT::pPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
-FFT::FFT(uint32_t maxLen) {
+FFT::FFT(uint32_t maxLen, char *name) {
+  pTerminate = false;
   Output = (Complex_t*)malloc(sizeof(Complex_t) * ((maxLen / 2) + 1));
+  pInput = NULL;
+  pthread_cond_init(&pThreadCond, NULL);
+  pthread_mutex_init(&pThreadMutex, NULL);
+  if(pthread_create(&pThread, NULL, FFT_Thread, (void*)this) != 0) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    return;
+  }
+  pthread_setname_np(pThread, name);
 }
+//bool FFT::IsFinished() {
+//  bool Result;
+//  pthread_mutex_lock(&pThreadMutex);
+//  Result = (pInput == NULL);
+//  pthread_mutex_unlock(&pThreadMutex);
+//  return Result;
+//}
 FFT::~FFT() {
-  Wait();
+  pTerminate = true;
+  pthread_cond_signal(&pThreadCond);
+  if(pthread_join(pThread, NULL) != 0) Tools::LogMsg("ERROR", "%s:%d -> (Unknown)\n", __func__, __LINE__);
   free(Output);
 }
 bool FFT::Start(float *in, uint32_t len) {
-  pthread_mutex_lock(&pPlannerMutex);
-  pPlan = fftwf_plan_dft_r2c_1d(len, in, (fftwf_complex*)Output, FFTW_ESTIMATE);
-  pthread_mutex_unlock(&pPlannerMutex);
-  pLen = len;
-  pInput = in;
-  if(pthread_create(&pThread, NULL, FFT_Thread, (void*)this) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    fftwf_destroy_plan(pPlan);
+  pthread_mutex_lock(&pThreadMutex);
+  if(pInput != NULL) {
+    pthread_mutex_unlock(&pThreadMutex);
     return false;
   }
+  pLen = len;
+  pInput = in;
+  pthread_mutex_unlock(&pThreadMutex);
+  pthread_cond_signal(&pThreadCond);
   return true;
 }
 void *FFT::FFT_Thread(void *args) {
-  FFT *This = (FFT*)args;
-  fftwf_execute_dft_r2c(This->pPlan, This->pInput, (fftwf_complex*)This->Output);
-  This->OutputLen = (This->pLen / 2) + 1;
-  for(int i = 0; i < This->OutputLen; i++) {
-    This->Output[i].Real = This->Output[i].Real / This->pLen;
-    This->Output[i].Imag = This->Output[i].Imag / This->pLen;
+  ((FFT*)args)->Process();
+  return NULL;
+}
+void FFT::Process() {
+  while(true) {
+    pthread_mutex_lock(&pThreadMutex);
+    while(pInput == NULL) {
+      if(pTerminate == true) return;
+      pthread_cond_wait(&pThreadCond, &pThreadMutex);
+    }
+    pthread_mutex_unlock(&pThreadMutex);
+    pthread_mutex_lock(&pPlannerMutex);
+    fftwf_plan Plan = fftwf_plan_dft_r2c_1d(pLen, pInput, (fftwf_complex*)Output, FFTW_ESTIMATE);
+    pthread_mutex_unlock(&pPlannerMutex);
+    fftwf_execute_dft_r2c(Plan, pInput, (fftwf_complex*)Output);
+    OutputLen = (pLen / 2) + 1;
+    for(int i = 0; i < OutputLen; i++) {
+      Output[i].Real = Output[i].Real / pLen;
+      Output[i].Imag = Output[i].Imag / pLen;
+    }
+    pthread_mutex_lock(&pPlannerMutex);
+    fftwf_destroy_plan(Plan);
+    pthread_mutex_unlock(&pPlannerMutex);
+    pthread_mutex_lock(&pThreadMutex);
+    pInput = NULL;
+    pthread_mutex_unlock(&pThreadMutex);
+    pthread_cond_signal(&pThreadCond);
   }
-  return NULL;  
 }
 void FFT::Wait() {
-  if(pthread_join(pThread, NULL) != 0) Tools::LogMsg("ERROR", "%s:%d -> (Unknown)\n", __func__, __LINE__);
+  pthread_mutex_lock(&pThreadMutex);
+  while(pInput != NULL) {
+    if(pTerminate == true) return;
+    pthread_cond_wait(&pThreadCond, &pThreadMutex);
+  } 
+  pthread_mutex_unlock(&pThreadMutex);
 }
 float FFT::CalcAngle(Complex_t a, Complex_t b) {
   float Tmp;

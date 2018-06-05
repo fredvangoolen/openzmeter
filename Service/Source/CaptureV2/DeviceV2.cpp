@@ -28,69 +28,34 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
     if(Pkg[0] == -32768) {
       if(This->pUSBState == USB_SYNC) Tools::LogMsg("WARN", "DeviceV2 lost sync. Try reduce capture speed\n");
       This->pUSBState = USB_SYNC;
-      This->pUsed     = 0;
-      This->pWritePos = 0;
-      This->pReadPos  = 0;
+      This->BuffersReset();
+      This->pChannel = 0;
       Count++;
     }
     //Si estoy esperando sincronizacion y no la tengo continuo
     if(This->pUSBState == USB_WAIT) continue;
-
-    //Espero a tener espacio en el buffer (ATOMIC)
-//    while(This->pUsed > (This->pBuffLen - 32)) {
-//      if(This->pTerminate) return;
-//      Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
-//      pthread_cond_wait(&This->pWriteWait, &This->pBufferMutex);
-//    }
-//    pthread_mutex_unlock(&This->pBufferMutex);
-
     //Añado muestras del bloque al buffer
-    while(Count < 32) {
-      if(Pkg[Count] != -32768) {
-        This->pBuffer[This->pWritePos] = Pkg[Count];
-        This->pWritePos = (This->pWritePos + 1) % This->pBuffLen;
-        This->pUsed++;
+    for(; Count < 32; Count++) {
+      if(Pkg[Count] == -32768) continue;
+      This->pReadSamples[This->pChannel++] = Pkg[Count];
+      if(This->pChannel != This->pChannelCount) continue;
+      float VoltageChannels[3];
+      float CurrentChannels[4];
+      float *VoltagePos = VoltageChannels;
+      float *CurrentPos = CurrentChannels;
+      float *ReadPos    = This->pReadSamples;
+      if(This->pChannelMask & 0x40) *VoltagePos++ = *ReadPos++ * This->pVoltageGain[0];
+      if(This->pChannelMask & 0x20) *CurrentPos++ = *ReadPos++ * This->pCurrentGain[0];
+      if(This->pChannelMask & 0x10) *VoltagePos++ = *ReadPos++ * This->pVoltageGain[1];
+      if(This->pChannelMask & 0x08) *CurrentPos++ = *ReadPos++ * This->pCurrentGain[1];
+      if(This->pChannelMask & 0x04) *VoltagePos++ = *ReadPos++ * This->pVoltageGain[2];
+      if(This->pChannelMask & 0x02) *CurrentPos++ = *ReadPos++ * This->pCurrentGain[2];
+      if(This->pChannelMask & 0x01) *CurrentPos++ = *ReadPos++ * This->pCurrentGain[3];
+      if(This->BuffersAppend(VoltageChannels, CurrentChannels) == false) {
+        //NO HAY SITIO!!! que hago?
+        Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
       }
-      Count++;
-    }
-        //Para todos los hilos, si alguno no esta listo continuo
-
-  //WAIT (necesito meter muestras para poder analizar), al llenar el buffer inicio hilos y paso a PROCESING
-  //PROCESING (Estoy esperando que los hilos terminen), al terminar los hilos paso a RESET
-  //RESET, al poner a 0 el buffer paso a WAIT
-    if(This->pUsed > (This->pChannelCount * 10)) {
-      if(This->pAnalyzerState == ANALYZER_PROCESSING) {
-        //Si todos los analizadores han terminado paso a estado ANALYZER_RESET
-        This->pAnalyzerState = ANALYZER_RESET;
-      }
-      if(This->pAnalyzerState == ANALYZER_RESET) {
-        This->pSamples = 0;
-        This->pCyclesCount = 0;
-        This->pCyclesLen[0] = 0;
-        This->pSampletime = Tools::GetTime() - (uint64_t)((This->pUsed * 1000) / (This->pSamplerate * This->pChannelCount));
-        This->pAnalyzerState = ANALYZER_WAIT;
-      }
-      if(This->pAnalyzerState == ANALYZER_WAIT) {
-        for(int i = 0; i < 10; i++) {
-          float VoltageChannels[3];
-          float CurrentChannels[4];
-          float *VoltagePos = VoltageChannels;
-          float *CurrentPos = CurrentChannels;
-          if(This->pChannelMask & 0x40) *VoltagePos++ = This->GetSample() * This->pVoltageGain[0];
-          if(This->pChannelMask & 0x20) *CurrentPos++ = This->GetSample() * This->pCurrentGain[0];
-          if(This->pChannelMask & 0x10) *VoltagePos++ = This->GetSample() * This->pVoltageGain[1];
-          if(This->pChannelMask & 0x08) *CurrentPos++ = This->GetSample() * This->pCurrentGain[1];
-          if(This->pChannelMask & 0x04) *VoltagePos++ = This->GetSample() * This->pVoltageGain[2];
-          if(This->pChannelMask & 0x02) *CurrentPos++ = This->GetSample() * This->pCurrentGain[2];
-          if(This->pChannelMask & 0x01) *CurrentPos++ = This->GetSample() * This->pCurrentGain[3];
-          float *FilterredValues = This->BuffersAppend(VoltageChannels, CurrentChannels);
-          //Si tengo los 20 pasos por 0 o he superado la longitud maxima lanzo los analyzadores y paso a estado ANALYZER_PROCESSING
-          if(This->pSamples == This->pMaxSamples) {
-            This->pAnalyzerState = ANALYZER_PROCESSING;
-            break;
-          }
-        }
-      }
+      This->pChannel = 0;
     }
   }
   if(This->pTerminate == false) libusb_submit_transfer(transfer);
@@ -122,18 +87,17 @@ void *DeviceV2::Capture_Thread(void *args) {
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   }
   DeviceV2 *This = (DeviceV2*)args;
-  pthread_setname_np(This->pCaptureThread, "DeviceV2C_Init");
   uint8_t BufferIN[CAPTUREV2_TRANSFERS][8192];
   struct libusb_transfer *TransferIN[CAPTUREV2_TRANSFERS];
   for(int i = 0; i < CAPTUREV2_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
-  uint32_t Update = 0;
+//  uint32_t Update = 0;
   while(!This->pTerminate) {
-    if((Update % 10) == 0) {
-      char ThreadName[16] = "DeviceV2C_Wait";
-      if(This->pDeviceHandle != NULL) sprintf(ThreadName, "DeviceV2C_%03d", This->pUsed * 100 / This->pBuffLen); 
-      pthread_setname_np(This->pCaptureThread, ThreadName);
-    }
-    Update++;
+//    if((Update % 10) == 0) {
+//      char ThreadName[16] = "DeviceV2C_Wait";
+//      if(This->pDeviceHandle != NULL) sprintf(ThreadName, "DeviceV2C_%03d", This->pUsed * 100 / This->pBuffLen); 
+//      pthread_setname_np(This->pCaptureThread, ThreadName);
+//    }
+//    Update++;
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(NULL, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) Tools::LogMsg("ERROR", "libusb_handle_events_timeout_completed returns code %d\n", Result);
@@ -223,12 +187,12 @@ void *DeviceV2::Capture_Thread(void *args) {
   }
   return NULL;
 }
-inline int16_t DeviceV2::GetSample() {
-  int16_t Result = pBuffer[pReadPos];
-  pReadPos = (pReadPos + 1) % pBuffLen;
-  pUsed    = (pUsed - 1);
-  return Result;
-}
+//inline int16_t DeviceV2::GetSample() {
+//  int16_t Result = pBuffer[pReadPos];
+//  pReadPos = (pReadPos + 1) % pBuffLen;
+//  pUsed    = (pUsed - 1);
+//  return Result;
+//}
 //void DeviceV2::AppendSamples() {
 //  DeviceV2 *This = (DeviceV2*)args;
 //  if(pthread_setschedprio(0, -10) == -1) {
@@ -327,29 +291,20 @@ inline int16_t DeviceV2::GetSample() {
 //  }
 //  return NULL;
 //}
-DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
+DeviceV2::DeviceV2(json_object* config) : DeviceInterface((char*)"DeviceV2") {
   pSerial           = NULL;
-  pBuffer           = NULL;
   for(int i = 0; i < 3; i++) pVoltageGain[i]   = 1;
   for(int i = 0; i < 3; i++) pVoltageOffset[i] = 0;
   for(int i = 0; i < 4; i++) pCurrentGain[i]   = 1;
   for(int i = 0; i < 4; i++) pCurrentOffset[i] = 0;
   pChannelMask      = 0;
   pChannelCount     = 0;
-  pReadPos          = 0;
-  pWritePos         = 0;
-  pUsed             = 0;
-  pBuffLen          = 0;
   pDeviceHandle     = NULL;
   pNewDevice        = NULL;
-//  pthread_cond_init(&pWriteWait, NULL);
-//  pthread_cond_init(&pReadWait, NULL);
-//  pthread_mutex_init(&pBufferMutex, NULL);
   pOversample       = 0;
   pADCSamplerate    = 20000;
-  pMappings         = NULL;
+//  pMappings         = NULL;
   pUSBState         = USB_WAIT;
-  pAnalyzerState    = ANALYZER_RESET;
   struct json_object *Find;
   if((json_object_object_get_ex(config, "Samplerate", &Find) == true) && (json_object_get_type(Find) == json_type_int)) {
     pADCSamplerate = json_object_get_int(Find);
@@ -357,7 +312,7 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
   if((json_object_object_get_ex(config, "Oversample", &Find) == true) && (json_object_get_type(Find) == json_type_int)) {
     pOversample = json_object_get_int(Find);
   }
-  pSamplerate = pADCSamplerate / pOversample;
+  float Samplerate = pADCSamplerate / pOversample;
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Serial") == 0)) {
@@ -426,10 +381,10 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
         return;
       }
       pChannelMask |= 0x7F;
-      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pAnalyzersCount + 1));
-      pMappings[pAnalyzersCount].VoltageChannel = 0;
-      pMappings[pAnalyzersCount].CurrentChannel = 0;
-      AddAnalyzer(new Analyzer(Name, pSamplerate, Analyzer::PHASE_3N, pMinCurrent, ID));
+//      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pAnalyzersCount + 1));
+//      pMappings[pAnalyzersCount].VoltageChannel = 0;
+//      pMappings[pAnalyzersCount].CurrentChannel = 0;
+      AddAnalyzer(new Analyzer(Name, true, ID, Samplerate, 0.1));
     } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "3Phase") == 0)) {
       uint32_t  ID = 0;
       char     *Name= (char*)"3Phase";
@@ -446,10 +401,10 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
         return;
       }
       pChannelMask |= 0x7E; 
-      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pAnalyzersCount + 1));
-      pMappings[pAnalyzersCount].VoltageChannel = 0;
-      pMappings[pAnalyzersCount].CurrentChannel = 0;
-      AddAnalyzer(new Analyzer(Name, pSamplerate, Analyzer::PHASE_3, pMinCurrent, ID));
+//      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pAnalyzersCount + 1));
+//      pMappings[pAnalyzersCount].VoltageChannel = 0;
+//      pMappings[pAnalyzersCount].CurrentChannel = 0;
+      AddAnalyzer(new Analyzer(Name, false, ID, Samplerate, 0.1));
     } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "1Phase") == 0)) {
       uint32_t  ID = 0;
       char     *Name= (char*)"1Phase";
@@ -494,10 +449,10 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
         }
       }
       pChannelMask |= (1 << CurrentChannel) | (1 << VoltageChannel);
-      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pAnalyzersCount + 1));
-      pMappings[pAnalyzersCount].VoltageChannel = VoltageChannel;
-      pMappings[pAnalyzersCount].CurrentChannel = CurrentChannel;
-      AddAnalyzer(new Analyzer(Name, pSamplerate, Analyzer::PHASE_1, pMinCurrent, ID));
+//      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pAnalyzersCount + 1));
+//      pMappings[pAnalyzersCount].VoltageChannel = VoltageChannel;
+//      pMappings[pAnalyzersCount].CurrentChannel = CurrentChannel;
+      AddAnalyzer(new Analyzer(Name, VoltageChannel, CurrentChannel, ID, Samplerate, 0.1));
     }
   }
   uint8_t VoltageChannels = 0;
@@ -509,7 +464,7 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
   if(pChannelMask & 0x04) VoltageChannels++;
   if(pChannelMask & 0x02) CurrentChannels++;
   if(pChannelMask & 0x01) CurrentChannels++;
-  if(BuffersAlloc(VoltageChannels, CurrentChannels) == false) {
+  if(BuffersAlloc(VoltageChannels, CurrentChannels, Samplerate) == false) {
     Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
     return;
   }
@@ -517,12 +472,6 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
   pChannelCount = 0;
   for(uint8_t Mask = 0x40; Mask != 0; Mask >>= 1) {
     if(pChannelMask & Mask) pChannelCount++;
-  }
-  pBuffLen = CAPTUREV2_BUFFERSIZE * pSamplerate * pChannelCount;
-  pBuffer = (int16_t*)malloc(pBuffLen * sizeof(int16_t));
-  if(pBuffer == NULL) {
-    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memry for capture buffers\n");
-    return;
   }
   int Error = libusb_init(NULL);
   if(Error < 0) {
@@ -532,34 +481,24 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(NULL);
-    free(pBuffer);
     return;
   }
   Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , CAPTUREV2_VID, CAPTUREV2_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
   if(Error < 0) {
     Tools::LogMsg("ERROR", "Fallo al registrar callback de escucha libUSB...\n");
     pthread_join(pCaptureThread, NULL);
-    free(pBuffer);
-    pBuffer = NULL;
     return;
   }
-//  if(pthread_create(&AnalyzeThread, NULL, Analize_Thread, this) != 0) {
-//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    pthread_join(pCaptureThread, NULL);
-//    free(pBuffer);
-//    pBuffer = NULL;
-//    return;
-//  }
 }
 DeviceV2::~DeviceV2() {
-  if(pBuffer) {
-    pTerminate = true;
+//  if(pBuffer) {
+//    pTerminate = true;
 //    pthread_cond_signal(&pWriteWait);
 //    pthread_cond_signal(&pReadWait);
-    Tools::LogMsg("INFO", "Waiting for adquisition thread ends...\n");
-    pthread_join(pCaptureThread, NULL);
+//    Tools::LogMsg("INFO", "Waiting for adquisition thread ends...\n");
+//    pthread_join(pCaptureThread, NULL);
 //    pthread_join(AnalyzeThread, NULL);
-    free(pBuffer);
-  }
+//    free(pBuffer);
+//  }
 }
 //======================================================================================================================

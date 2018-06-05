@@ -6,82 +6,42 @@
 #include "Analyzer.h"
 #include "FFT.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define DEVICEINTERFACE_FILTERSTAGES  5
+#define DEVICEINTERFACE_BUFFERSECONDS     10        //Tamaño del buffer (10 segundos)
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceInterface {
+  private :
+    char            *pDriverName;              //Nombre del driver (para mostrar en el thread)
+    uint8_t          pVoltageChannels;         //Canales de tension
+    uint8_t          pCurrentChannels;         //Canales de corriente
+    float           *pVoltageSamples;          //Muestras de tension
+    float           *pCurrentSamples;          //Muestras de corriente
+    uint32_t         pReadPos;                 //Posicion de lectura del buffer
+    uint32_t         pWritePos;                //Posicion de escritura del buffer
+    uint32_t         pUsed;                    //Muestras en uso del buffer
+    uint32_t         pBuffLen;                 //Tamaño del buffer
+    float            pSamplerate;              //Velocidad de muestreo
+    Analyzer       **pAnalyzers;               //Analizadores disponibles
+    uint8_t          pAnalyzersCount;          //Numero de analizadores
+    float            pMaxCurrent;              //Corriente maxima de los sensores
+    float            pMinCurrent;              //Corriente minima de los sensores
+    uint64_t         pLastUpdate;              //Timestamp de la ultima vez que se actualizo el nombre del thread
+  protected :
+    pthread_t        pCaptureThread;           //Descriptor del hilo de captura
+    bool             pActive;                  //Indicador de actividad de la captura
+    bool             pTerminate;               //Marca que deben detenerse los trabajos pendientes  
+  protected :
+    bool   BuffersAlloc(uint8_t voltageChannels, uint8_t currentChannels, float samplerate);
+    void   BuffersReset();
+    bool   BuffersAppend(float *voltageSamples, float *CurrentSamples);
+    void   AddAnalyzer(Analyzer *analyzer);
+    DeviceInterface(char *driver);
   public :
-    typedef struct {
-      float Z1;
-      float Z2;
-    } FilterStage_t;
-    typedef struct {
-      FilterStage_t *Stages;
-    } FilterChannel_t;
-    typedef struct {
-      float            A0;
-      float            A1;
-      float            A2;
-      float            B1;
-      float            B2;
-      float           *Results;
-      FilterChannel_t *Channels;
-    } Filter_t;
-  protected :
-    float     **pVoltageSamples;             //Muestras de tension
-    float     **pCurrentSamples;             //Muestras de corriente
-    FFT       **pVoltageFFT;                 //FFTs de tension
-    FFT       **pCurrentFFT;                 //FFTs de tension
-    uint8_t     pVoltageChannels;            //Canales de tension
-    uint8_t     pCurrentChannels;            //Canales de corriente
-    uint32_t    pSamples;                    //Numero de muestras
-    uint32_t    pMaxSamples;                 //Numero maximo de muestras
-    float       pSamplerate;                 //Velocidad de muestreo
-    bool        pTerminate;                  //Marca que deben detenerse los trabajos pendientes
-    Filter_t    pFilters;                    //Filtros aplicados para deteccion de cruce por 0
-    Analyzer  **pAnalyzers;                  //Analizadores disponibles
-    uint8_t     pAnalyzersCount;             //Numero de analizadores
-    bool        pActive;                     //Indicador de actividad de la captura
-    float       pMaxCurrent;                 //Corriente maxima de los sensores
-    float       pMinCurrent;                 //Corriente minima de los sensores
-  protected :
-    bool   BuffersAlloc(uint8_t voltageChannels, uint8_t currentChannels);
-    void   BuffersClear();
-    float *BuffersAppend(float *voltageSamples, float *CurrentSamples);
-    void   CalcFFTs();
-
-    
-    
-    //    typedef struct {
-//      uint32_t Start;                         //Muestra dentro del bloque que inicia el ciclo
-//      uint32_t End;                           //Muestra dentro del bloque que finaliza el ciclo
-//    } Cycle_t;
-//    typedef struct {
-//      uint64_t    SequenceID;                 //Numero de secuencia del bloque
-//      uint32_t    Samples;                    //Cantidad de muestras que componen el bloque
- 
-//      Cycle_t     Cycles[20];                 //Informacion de los ciclos del bloque
-//      uint8_t     Cycles_Len;                 //Numero de ciclos en el bloque
-////      Params_t    Params;                     //Parametros calculados del bloque
-////      Complex_t **VoltageFFT;                 //Transformada de los canales de tension      
-////      Complex_t **CurrentFFT;                 //Transformada de los canales de corriente
-//    } Work_t;
-    
-  protected :
-      void ApplyFilter(float *in, float *out);
-  protected :
-      
-//    Work_t pWork;                           //Bloque te trabajo
-  protected :
-    DeviceInterface();
-    virtual ~DeviceInterface();
-    void AddAnalyzer(Analyzer *analyzer);
-  public :
-    bool IsActive();
-    float GetSamplerate();
-    float GetMaxCurrent();
-    uint8_t GetAnalyzers();
-    Analyzer  *GetAnalyzers(uint8_t idx);
-//    uint32_t GetMaxSamples();
+    virtual  ~DeviceInterface();
+    bool      IsActive();
+    float     GetSamplerate();
+    float     GetMaxCurrent();
+    uint8_t   GetAnalyzers();
+    Analyzer *GetAnalyzers(uint8_t idx);
 };
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -136,13 +136,13 @@ void Database::BindSingleFloat(float param) {
     pParamsLen++;
   }
 }
-void Database::BindArrayArrayFloat(float **params, int lenA, int lenB) {
+void Database::BindArrayArrayFloat(float *params, int lenA, int lenB) {
   if(pParamsLen < pParamsAlloc) {
     pParams[pParamsLen] = (char*)malloc(4 + (4 * sizeof(char) * 18 * lenB * lenA));
     int Pos = sprintf(pParams[pParamsLen], "'{");
     for(int i = 0; i < lenA; i++) {
       Pos += sprintf(&pParams[pParamsLen][Pos], "{");
-      for(int n = 0; n < lenB; n++) Pos += sprintf(&pParams[pParamsLen][Pos], isnan(params[i][n]) ? "NULL, " : "%g, ", params[i][n]);    
+      for(int n = 0; n < lenB; n++) Pos += sprintf(&pParams[pParamsLen][Pos], isnan(params[i * lenB *n]) ? "NULL, " : "%g, ", params[i * lenB + n]);    
       if(lenB > 0) Pos -= 2;
       Pos += sprintf(&pParams[pParamsLen][Pos], "}, ");
     }

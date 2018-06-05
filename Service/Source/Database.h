@@ -30,7 +30,7 @@ class Database {
     void  BindSingleUInt32(uint32_t param);
     void  BindSingleUInt64(uint64_t param);
     void  BindSingleFloat(float param);
-    void  BindArrayArrayFloat(float **params, int lenA, int lenB);
+    void  BindArrayArrayFloat(float *params, int lenA, int lenB);
     void  BindArrayFloat(float *params, int len);
     void  BindArrayUInt16(uint16_t *params, int len);
     void  BindSingleBool(bool param);

@@ -1,0 +1,37 @@
+/* ================================== zMeter ===========================================================================
+ * File:     CaptureInterface.h
+ * Author:   Eduardo Viciana (12 de abril de 2017)
+ * -------------------------------------------------------------------------------------------------------------------*/
+#pragma once
+#include <pthread.h>
+#include <inttypes.h>
+#include <fftw3.h>
+#include <json-c/json.h>
+#include "Database.h"
+#include "FFT.h"
+//----------------------------------------------------------------------------------------------------------------------
+#define ZEROCROSSING_FILTERSTAGES          5
+#define ZEROCROSSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
+//----------------------------------------------------------------------------------------------------------------------
+class ZeroCrossing {
+  private :
+    typedef struct {
+      float Z1;
+      float Z2;
+    } FilterStage_t;
+    typedef struct {
+      float         A0;
+      float         A1;
+      float         A2;
+      float         B1;
+      float         B2;
+      float         Results[3];
+      FilterStage_t Channels[3][ZEROCROSSING_FILTERSTAGES];
+    } Filter_t;
+  private :
+    float pSamplerate;
+  public :
+    ZeroCrossing(bool phase3, float samplerate);
+    bool  ProcessSample(float *samples);
+    float Frequency();
+};

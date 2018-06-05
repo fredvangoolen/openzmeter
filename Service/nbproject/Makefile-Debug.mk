@@ -46,7 +46,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/Source/NetworkManager.o \
 	${OBJECTDIR}/Source/Prices.o \
 	${OBJECTDIR}/Source/Stats.o \
-	${OBJECTDIR}/Source/Tools.o
+	${OBJECTDIR}/Source/Tools.o \
+	${OBJECTDIR}/Source/ZeroCrossing.o
 
 
 # C Compiler Flags
@@ -132,6 +133,11 @@ ${OBJECTDIR}/Source/Tools.o: Source/Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Tools.o Source/Tools.cpp
+
+${OBJECTDIR}/Source/ZeroCrossing.o: Source/ZeroCrossing.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/ZeroCrossing.o Source/ZeroCrossing.cpp
 
 # Subprojects
 .build-subprojects:
