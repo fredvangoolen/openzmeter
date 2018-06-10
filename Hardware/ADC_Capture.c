@@ -5,8 +5,8 @@
 #include "Main.h"
 #include <arm_math.h>
 //Definiciones locales -------------------------------------------------------------------------------------------------
+float Offsets[7];
 typedef struct {
-  float Gain;
   float Offset;
   float Sample;
   float Z1;
@@ -19,16 +19,16 @@ typedef struct {
   float B2;
 } Filter_t;
 typedef struct {
-  int16_t CurrentN;  //ADC1_IN4
-  int16_t CurrentR;  //ADC2_IN12
-  int16_t Battery;   //ADC1_IN1
-  int16_t VoltageR;  //ADC2_IN1
+  uint16_t CurrentN;  //ADC1_IN4
+  uint16_t CurrentR;  //ADC2_IN12
+  uint16_t Battery;   //ADC1_IN1
+  uint16_t VoltageR;  //ADC2_IN1
 } ADCSample_ADC12;
 typedef struct {
-  int16_t CurrentS;  //ADC3_IN5
-  int16_t CurrentT;  //ADC4_IN5
-  int16_t VoltageS;  //ADC3_IN12
-  int16_t VoltageT;  //ADC4_IN3
+  uint16_t CurrentS;  //ADC3_IN5
+  uint16_t CurrentT;  //ADC4_IN5
+  uint16_t VoltageS;  //ADC3_IN12
+  uint16_t VoltageT;  //ADC4_IN3
 } ADCSample_ADC34;
 typedef struct {
   uint8_t         ChannelMask;        //Mascara de canales en uso
@@ -87,7 +87,7 @@ void ADC_Configure() {
   ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
   ADC_InitStructure.ADC_ExternalTrigConvEvent = ADC_ExternalTrigConvEvent_2;
   ADC_InitStructure.ADC_ExternalTrigEventEdge = ADC_ExternalTrigEventEdge_RisingEdge;
-  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
+  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Left;
   ADC_InitStructure.ADC_OverrunMode = ADC_OverrunMode_Disable;
   ADC_InitStructure.ADC_AutoInjMode = ADC_AutoInjec_Disable;
   ADC_InitStructure.ADC_NbrOfRegChannel = 2;
@@ -165,26 +165,33 @@ void ADC_Configure() {
  */
 const uint16_t ADC_TimerDivs[] = { 150,  180,  200,  225,  250,  300,  260,  375,  450,  500,  600,  625,  750,  900, 1000,  1125,  1250, 
                                   1500, 1800, 1875, 2250, 2500, 3000, 3125, 3750, 4500, 5000, 5625, 6250, 7500, 9000, 9375, 11250, 12500};
-bool ADC_StartCapture(uint8_t channels, uint8_t mode) {
-  //Recuento de canales activos
-  CaptureConf.Channels = 0;
-  for(uint8_t Mask = channels; Mask != 0; Mask >>= 1) CaptureConf.Channels += (Mask & 0x01);
-
-  if((CaptureConf.Channels == 0) || ((mode & 0x3F) > 33)) return FALSE;
-  uint32_t Freq = SystemCoreClock / ADC_TimerDivs[mode & 0x3F];
-  if((mode & 0xC0) == 0x40) Freq = Freq / 4;
-  if((mode & 0xC0) == 0x80) Freq = Freq / 16;
-  if((mode & 0xC0) == 0xC0) Freq = Freq / 64;
-  if(((Freq * CaptureConf.Channels) > 360000) || (Freq < 5000)) return FALSE;
+bool ADC_StartCapture(uint8_t channels, uint8_t decimation, uint16_t speed) {
   ADC_StopCapture();
-  CaptureConf.ChannelMask = channels;
-  CaptureConf.SampleCounter = 0; //mode & 0xC0;
-  CaptureConf.Oversample = 1;
-  for(int i = 0; i < CaptureConf.Channels; i++) {
-    //Copia offset y gain para el canal
-    ChannelsConf[i].Z1 = 0.0;
-    ChannelsConf[i].Z2 = 0.0;
+  //Recuento de canales activos, copio parametros de ajuste y inicio estado
+  CaptureConf.Channels = 0;
+  for(uint8_t Mask = 0x40, In = 0; Mask != 0; Mask >>= 1, In++) {
+    if(Mask & channels) {
+      ChannelsConf[CaptureConf.Channels].Z1 = 0.0;
+      ChannelsConf[CaptureConf.Channels].Z2 = 0.0;
+      ChannelsConf[CaptureConf.Channels].Offset = -32768.0 + Offsets[In];
+      CaptureConf.Channels++;
+    }  
   }
+  if((CaptureConf.Channels == 0) || (decimation > 63)) return FALSE;
+  CaptureConf.ChannelMask = channels;
+  CaptureConf.SampleCounter = 0;
+  CaptureConf.Oversample = decimation;
+  
+//  uint32_t Freq = SystemCoreClock / ADC_TimerDivs[25 & 0x3F];
+//  if((mode & 0xC0) == 0x40) Freq = Freq / 4;
+//  if((mode & 0xC0) == 0x80) Freq = Freq / 16;
+//  if((mode & 0xC0) == 0xC0) Freq = Freq / 64;
+//  if(((Freq * CaptureConf.Channels) > 360000) || (Freq < 5000)) return FALSE;
+
+
+  
+  
+
   float Q = 1.0f / sqrt(2.0f);
   float Fc = 1.0f / (CaptureConf.Oversample + 1);
 //  if(SampleCounter == 0xC0) Fc = Fc / 4.0;
@@ -204,7 +211,7 @@ bool ADC_StartCapture(uint8_t channels, uint8_t mode) {
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
   TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
   TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
-  TIM_TimeBaseStructure.TIM_Period = ADC_TimerDivs[mode & 0x3F] - 1;
+  TIM_TimeBaseStructure.TIM_Period = 480 - 1;
   TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
   TIM_OCInitTypeDef TIM_OCInitStructure;
   TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
@@ -221,6 +228,7 @@ bool ADC_StartCapture(uint8_t channels, uint8_t mode) {
  */
 void ADC_StopCapture() {
   TIM_Cmd(TIM1, DISABLE);
+  Buffers_Reset();
 }
 
 /**
@@ -229,7 +237,7 @@ void ADC_StopCapture() {
  * @param channel canal de la muestra
  */
 void ADC_Filter(float in, ChannelConf_t *channel) {
-  in = in * channel->Gain + channel->Offset;
+  in = (in + channel->Offset);
   if(CaptureConf.Oversample == 0) {
     channel->Sample = in;
   } else {
@@ -261,34 +269,14 @@ void DMA1_Channel1_IRQHandler(void) {
   for(uint8_t PendSamples = 16; PendSamples > 0; PendSamples--) {
     ChannelConf_t *Ptr = ChannelsConf;
     if(CaptureConf.ChannelMask & 0x40) ADC_Filter(ADC12->VoltageR, Ptr++);
-    if(CaptureConf.ChannelMask & 0x20) (Ptr++)->Sample = ADC12->CurrentR;
-    if(CaptureConf.ChannelMask & 0x10) (Ptr++)->Sample = ADC34->VoltageS;
-    if(CaptureConf.ChannelMask & 0x08) (Ptr++)->Sample = ADC34->CurrentS; 
-    if(CaptureConf.ChannelMask & 0x04) (Ptr++)->Sample = ADC34->VoltageT;
-    if(CaptureConf.ChannelMask & 0x02) (Ptr++)->Sample = ADC34->CurrentT;
-    if(CaptureConf.ChannelMask & 0x01) (Ptr++)->Sample = ADC12->CurrentN;
+    if(CaptureConf.ChannelMask & 0x20) ADC_Filter(ADC12->CurrentR, Ptr++);
+    if(CaptureConf.ChannelMask & 0x10) ADC_Filter(ADC34->VoltageS, Ptr++);
+    if(CaptureConf.ChannelMask & 0x08) ADC_Filter(ADC34->CurrentS, Ptr++);
+    if(CaptureConf.ChannelMask & 0x04) ADC_Filter(ADC34->VoltageT, Ptr++);
+    if(CaptureConf.ChannelMask & 0x02) ADC_Filter(ADC34->CurrentT, Ptr++);
+    if(CaptureConf.ChannelMask & 0x01) ADC_Filter(ADC12->CurrentN, Ptr++);
     if(CaptureConf.Oversample == CaptureConf.SampleCounter) {
-    //    if(SampleCounter == 0x00) {
-//      Buffer_AppendSamples(Values);
-//    } else {
-//      float *Z1 = Filters.Z1;
-//      float *Z2 = Filters.Z2;
-//      Ptr = Values;
-//      for(uint8_t Channel = 0; Channel < 7; Channel++) {
-//        float Out = *Ptr * Filters.A0 + *Z1;
-//        *Z1 = *Ptr * Filters.A1 + *Z2 - Filters.B1 * Out;
-//        *Z2 = *Ptr * Filters.A2 - Filters.B2 * Out;
-//        *Ptr = Out;
-//        Ptr++;
-//        Z1++;
-//        Z2++;
-//        if((SampleCounter == 0x43) || (SampleCounter == 0x8F) || (SampleCounter == 0xFF)) {
-          Buffer_AppendSamples();
-//          SampleCounter = SampleCounter & 0xC0;
-//        } else {
-//          SampleCounter++;
-//        }  
-//      }
+      Buffer_AppendSamples();
       CaptureConf.SampleCounter = 0;
     } else {
       CaptureConf.SampleCounter++;
@@ -312,7 +300,7 @@ void Buffers_Reset() {
 void Buffer_AppendSamples() {
   ChannelConf_t *Ptr = ChannelsConf;
   if(INBuffUsed >= (INBUFFER_LEN - CaptureConf.Channels)) Buffers_Reset();
-  for(uint8_t Chan = CaptureConf.Channels; Chan > 0; Chan--) {
+  for(uint8_t Chan = CaptureConf.Channels; Chan > 0; Chan--, Ptr++) {
     if(Ptr->Sample < -32767) 
       INBuff[INWritePos] = -32767;
     else if(Ptr->Sample > 32767)
@@ -338,7 +326,7 @@ bool Buffers_ToPMA(uint16_t dst) {
   int16_t *Ptr    = (int16_t *)(dst * 2 + PMAAddr);
   uint8_t   Remain = 32;
   if(StreamReset) {
-    *Ptr = 0x8000;
+    *Ptr = -32768;
     Remain--;
     Ptr = &Ptr[2];
     StreamReset = 0;
@@ -349,7 +337,7 @@ bool Buffers_ToPMA(uint16_t dst) {
       INReadPos = (INReadPos + 1) % INBUFFER_LEN;
       INBuffUsed--;
     } else {
-      *Ptr = 0x8000;
+      *Ptr = -32768;
     }
     Remain--;
     Ptr = &Ptr[2];

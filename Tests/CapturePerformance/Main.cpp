@@ -28,10 +28,10 @@ typedef struct {
   float CurrentN_Gain;
   float CurrentN_Offset;  
 } CaptureConfig_t;
-CaptureConfig_t CaptureConfig = { 16.0, -32768.0, 16.0, -32768.0,
-                                  16.0, -32768.0, 16.0, -32768.0,
-                                  16.0, -32768.0, 16.0, -32768.0,
-                                  16.0, -32768.0 };
+CaptureConfig_t CaptureConfig = { 1.0,  48.000, 1.0, 264.000,
+                                  1.0, 146.000, 1.0,   0.000,
+                                  1.0, 126.000, 1.0,   0.000,
+                                  1.0, 247.200 };
 //Estructuras de datos del USB -------------------------------------------------
 struct libusb_device        *NewDeviceArrive = NULL;
 struct libusb_device_handle *Device          = NULL;
@@ -47,7 +47,12 @@ uint32_t Samples   = 0;
 //----------------------------------------------------------------------------------------------------------------------
 void SendSetupCommand(uint8_t channels, uint8_t mode) {
   printf("Enviando 'Iniciar captura'\n");
-  int Error = libusb_control_transfer(Device, 0x21, 0x00, (channels << 8) | mode, 0, (unsigned char*)&CaptureConfig, sizeof(CaptureConfig), 0);
+  
+  float Conf[7] = {CaptureConfig.VoltageR_Offset, CaptureConfig.CurrentR_Offset, CaptureConfig.VoltageS_Offset, CaptureConfig.CurrentS_Offset, CaptureConfig.VoltageT_Offset, CaptureConfig.CurrentT_Offset, CaptureConfig.CurrentN_Offset};
+  int Error = libusb_control_transfer(Device, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0x00, (channels << 8) | mode, 0x0000, (uint8_t*)Conf, sizeof(Conf), 0);
+
+  
+  //int Error = libusb_control_transfer(Device, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0x00, (channels << 8) | mode, 0, (unsigned char*)&CaptureConfig, sizeof(CaptureConfig), 0);
   if(Error < 0) {
     printf("Error in libusb_control_transfer (%d)\n", Error);
   }
@@ -87,7 +92,7 @@ void In_Callback(struct libusb_transfer *transfer) {
       int16_t *Pkg = (int16_t*)&Ptr[64 * i];
       uint8_t   Count = 0;
       if(Sync == RESET) continue;
-      if(Pkg[0] == 0x8000) {
+      if(Pkg[0] == -32768) {
         if(Sync == SYNC) printf("Se perdio la comunicacion. Reiniciando stream\n");
         if(Sync == WAIT) Sync = SYNC;
         Channel = 0;
@@ -95,14 +100,14 @@ void In_Callback(struct libusb_transfer *transfer) {
         Count++;
       }
       while(Count < 32) {
-        if(Pkg[Count] != 0x8000) {
+        if(Pkg[Count] != -32768) {
           Results[Channel] += Pkg[Count];
           Channel++;
           if(Channel == 7) {
             Channel = 0;
             Samples++;
           }
-          if(Samples == 1000) {
+          if(Samples == 10000) {
 //        uint64_t Now = GetTime();
 //        double Diff = Now - Time;
             printf("(V_R: %.5f) (I_R: %.5f) (V_S: %.5f) (I_S: %.5f) (V_T: %.5f) (I_T: %.5f) (I_N: %.5f)\n", (Results[0] / Samples), (Results[1] / Samples), (Results[2] / Samples), (Results[3] / Samples), (Results[4] / Samples), (Results[5] / Samples), (Results[6] / Samples));
@@ -194,7 +199,7 @@ int main(void) {
     int Error = libusb_handle_events_timeout_completed(NULL, &Timeout, NULL);
     if((Device != NULL) && (Sync == RESET)) {
       uint8_t Channels = 0x7F;
-      uint8_t Mode = 0x21;
+      uint8_t Mode = 0x0E;
       Sync = WAIT;
       SendSetupCommand(Channels, Mode);
     }

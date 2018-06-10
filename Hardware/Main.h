@@ -22,8 +22,9 @@ void Buffer_AppendSamples();
 bool Buffers_ToPMA(uint16_t dst);
 void Buffers_Reset();
 //Modulo ADC  ------------------------------------------------------------------
+extern float Offsets[7];
 void ADC_Configure();
-bool ADC_StartCapture(uint8_t channels, uint8_t mode);
+bool ADC_StartCapture(uint8_t channels, uint8_t decimation, uint16_t speed);
 void ADC_StopCapture();
 //Funciones del USB ------------------------------------------------------------
 void USB_Configure();

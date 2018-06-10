@@ -120,8 +120,6 @@ void SOF_Callback(void) {
 void (*pEpInt_IN[7])(void) = { EP1_IN_Callback, NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process };
 void (*pEpInt_OUT[7])(void) ={ NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process, NOP_Process };
 
-
-
 //Funciones auxiliares -------------------------------------------------------------------------------------------------
 void IntToUnicode(uint32_t value, uint8_t *pbuf) {
   for(uint8_t i = 0; i < 8; i++) {
@@ -152,6 +150,14 @@ RESULT PowerOn(void) {
 #endif /* STM32F10X_CL */
 
   return USB_SUCCESS;
+}
+//Copy callbacks for control stages ------------------------------------------------------------------------------------
+uint8_t *USB_StartCaptureData(uint16_t Length) {
+  if(Length == 0) {
+    pInformation->Ctrl_Info.Usb_wLength = sizeof(Offsets);
+    return NULL;
+  }
+  return (uint8_t*)Offsets;
 }
 //DEVICE_PROP ----------------------------------------------------------------------------------------------------------
 void USB_Class_Init(void) {
@@ -197,24 +203,32 @@ void USB_Class_Reset(void) {
   bDeviceState = ATTACHED;
 }
 RESULT USB_Class_DataSetup(uint8_t RequestNo) {
-  if(Type_Recipient != (CLASS_REQUEST | INTERFACE_RECIPIENT)) return USB_SUCCESS;
-  if(RequestNo == FIRM_SETUP_CAPTURE) {
-//  Buffers_Reset();
-    if((pInformation->USBwValues.bw.bb1 & 0x7F) == 0x00) {
-      ADC_StopCapture();
-      SetEPTxStatus(ENDP1, EP_TX_DIS);
-//      SetEPRxStatus(ENDP1, EP_RX_DIS);
-    } else {
-      ADC_StartCapture(pInformation->USBwValues.bw.bb1 & 0x7F, pInformation->USBwValues.bw.bb0);
-      USB_Tx_State = 0;
-      SetEPTxStatus(ENDP1, EP_TX_NAK);
-    }
-    return USB_SUCCESS;
+  uint8_t * (*CopyRoutine)(uint16_t);
+  CopyRoutine = NULL;
+  if(Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT)) {
+    if(RequestNo == FIRM_START_CAPTURE) CopyRoutine = USB_StartCaptureData;
   }
-  return USB_UNSUPPORT;
+  if(CopyRoutine == NULL) return USB_UNSUPPORT;
+  pInformation->Ctrl_Info.CopyData = CopyRoutine;
+  pInformation->Ctrl_Info.Usb_wOffset = 0;
+  (*CopyRoutine)(0);
+  return USB_SUCCESS;
+}
+void USB_Class_StatusIN() {
+  if(pInformation->USBbRequest == FIRM_START_CAPTURE) {
+    ADC_StartCapture(pInformation->USBwValues.bw.bb1, pInformation->USBwValues.bw.bb0, pInformation->USBwIndexs.w);
+    USB_Tx_State = 0;
+    SetEPTxStatus(ENDP1, EP_TX_NAK);
+  }
+  
 }
 RESULT USB_Class_NoDataSetup(uint8_t RequestNo) {
   if(Type_Recipient != (CLASS_REQUEST | INTERFACE_RECIPIENT)) return USB_SUCCESS;
+  if(RequestNo == FIRM_STOP_CAPTURE) {
+    ADC_StopCapture();
+    SetEPTxStatus(ENDP1, EP_TX_DIS);
+    return USB_SUCCESS;
+  }
   return USB_UNSUPPORT;
 }
 RESULT USB_Class_GetInterfaceSetting(uint8_t Interface, uint8_t AlternateSetting) {
@@ -235,7 +249,7 @@ uint8_t *USB_Class_GetStringDescriptor(uint16_t Length) {
 DEVICE_PROP Device_Property = { 
   USB_Class_Init, 
   USB_Class_Reset, 
-  NOP_Process, 
+  USB_Class_StatusIN, 
   NOP_Process, 
   USB_Class_DataSetup, 
   USB_Class_NoDataSetup, 

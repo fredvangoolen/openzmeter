@@ -24,7 +24,8 @@
 #define ENDP1_BUF0ADDR                         0x0C0    /* EP1 - IN (Buff1) */
 #define ENDP1_BUF1ADDR                         0x100    /* EP1 - IN (Buff2) */
 //Class command defines ------------------------------------------------------------------------------------------------
-#define FIRM_SETUP_CAPTURE                      0x00
+#define FIRM_START_CAPTURE                     0x00
+#define FIRM_STOP_CAPTURE                      0x01
 //USB and CDC enums ----------------------------------------------------------------------------------------------------
 typedef enum _RESUME_STATE { RESUME_EXTERNAL, RESUME_INTERNAL, RESUME_LATER, RESUME_WAIT, RESUME_START, RESUME_ON, RESUME_OFF, RESUME_ESOF } RESUME_STATE;
 typedef enum _DEVICE_STATE { UNCONNECTED, ATTACHED, POWERED, SUSPENDED, ADDRESSED, CONFIGURED } DEVICE_STATE;
