@@ -20,12 +20,14 @@
 #include "Capture.h"
 #include "DeviceInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
-MHD_Daemon            *HTTPServer::pDaemon       = NULL;
-HTTPServer::Session_t *HTTPServer::pSessions     = NULL;
-pthread_mutex_t        HTTPServer::pSessionMutex = PTHREAD_MUTEX_INITIALIZER;
-char                  *HTTPServer::pFilePath     = (char*)"/usr/share/openZmeter/WEB/";
-char                  *HTTPServer::pPassword     = (char*)"admin";
-uint64_t               HTTPServer::pLastLogin    = 0;
+MHD_Daemon             *HTTPServer::pDaemon         = NULL;
+HTTPServer::Session_t  *HTTPServer::pSessions       = NULL;
+HTTPServer::Callback_t *HTTPServer::pCallbacks      = NULL;
+uint32_t                HTTPServer::pCallbacksCount = 0;
+pthread_mutex_t         HTTPServer::pSessionMutex   = PTHREAD_MUTEX_INITIALIZER;
+char                   *HTTPServer::pFilePath       = (char*)"/usr/share/openZmeter/WEB/";
+char                   *HTTPServer::pPassword       = (char*)"admin";
+uint64_t                HTTPServer::pLastLogin      = 0;
 //----------------------------------------------------------------------------------------------------------------------
 void HTTPServer::Config(json_object *config) {
   uint16_t Port = 8080;
@@ -51,8 +53,15 @@ void HTTPServer::Config(json_object *config) {
 void HTTPServer::Stop() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
 }
+
+void HTTPServer::RegisterCallback(char* handleName, HTTPServer::Func_t function) {
+  pCallbacks = (Callback_t*)realloc(pCallbacks, sizeof(Callback_t) * pCallbacksCount);
+  pCallbacks[pCallbacksCount].HandlName = handleName;
+  pCallbacks[pCallbacksCount].Function  = function;
+  pCallbacksCount++;
+}
 HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection* connection) {
-  const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "OZM_SESSION");
+  const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");
   Session_t *Session = NULL;
   pthread_mutex_lock(&pSessionMutex);
   if(Cookie != NULL) {
@@ -141,7 +150,7 @@ int  HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url
   struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
   MHD_add_response_header(response, "Location", url);
   int Return = MHD_queue_response(connection, MHD_HTTP_SEE_OTHER, response);
-  MHD_destroy_response (response);
+  MHD_destroy_response(response);
   return Return;
 }
 int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, const char *aditionalheadertype, const char *aditionalheadervalue) {
@@ -167,10 +176,10 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
   if(Request->JSONReader) json_object_put(Request->JSONReader);
   if(Request->JSONWriter) json_object_put(Request->JSONWriter);
   if(Request->Deflate) free(Request->PostData);
-  if(Request->Msg) {
+  if(Request->URL) {
     uint64_t EndTime = Tools::GetTime();
-    Tools::LogMsg("DEBUG", "POST request '%s' takes %" PRIu64 "mS (%.2fkB send in %" PRIu64 "mS)\n", Request->Msg, Request->ProcTime - Request->StartTime, Request->PostResponseLen / 1024.0, EndTime - Request->StartTime);
-    free(Request->Msg);
+    Tools::LogMsg("DEBUG", "POST request '%s' takes %" PRIu64 "mS (%.2fkB send in %" PRIu64 "mS)\n", Request->URL, Request->ProcTime - Request->StartTime, Request->PostDataLen / 1024.0, EndTime - Request->StartTime);
+    free(Request->URL);
   }
   Request->Session->References++;
   free(Request);
@@ -189,7 +198,7 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
     *ptr = (Request_t*)calloc(1, sizeof(Request_t));
     Request = (Request_t*)*ptr;
     if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
-      Request->Msg = strdup(url);
+      Request->URL = strdup(url);
       Request->StartTime = Tools::GetTime();
     }
     Request->Session = GetSession(connection);
@@ -203,24 +212,24 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
   	  return MHD_YES;
 	  } else {
       char *AcceptEncoding = (char*)MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT_ENCODING);
-      Request->Deflate = ((AcceptEncoding != NULL) && (strstr(AcceptEncoding, "deflate") != NULL) && (Request->PostResponseLen > 256));
+      Request->Deflate = ((AcceptEncoding != NULL) && (strstr(AcceptEncoding, "deflate") != NULL) && (Request->PostDataLen > 256));
       if(Request->Deflate) {
-        char *Tmp = (char*)malloc(Request->PostResponseLen);
+        char *Tmp = (char*)malloc(Request->PostDataLen);
         z_stream Deflate;
         Deflate.zalloc = Z_NULL;
         Deflate.zfree = Z_NULL;
         Deflate.opaque = Z_NULL;
-        Deflate.avail_in = Request->PostResponseLen;
+        Deflate.avail_in = Request->PostDataLen;
         Deflate.next_in = (uint8_t*)Request->PostData;
-        Deflate.avail_out = Request->PostResponseLen;
+        Deflate.avail_out = Request->PostDataLen;
         Deflate.next_out = (uint8_t*)Tmp;
         deflateInit(&Deflate, Z_BEST_SPEED);
         deflate(&Deflate, Z_FINISH);
         deflateEnd(&Deflate);
-        Request->PostResponseLen = Deflate.total_out;
+        Request->PostDataLen = Deflate.total_out;
         Request->PostData = Tmp;      
       }
-      struct MHD_Response *response = MHD_create_response_from_buffer(Request->PostResponseLen, Request->PostData, MHD_RESPMEM_PERSISTENT);
+      struct MHD_Response *response = MHD_create_response_from_buffer(Request->PostDataLen, Request->PostData, MHD_RESPMEM_PERSISTENT);
       MHD_add_response_header(response, "Content-Type", "application/json");
       if(Request->Deflate) MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_ENCODING, "deflate");
       int Return = MHD_queue_response(connection, Request->ResultCode, response);
@@ -232,7 +241,7 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
     if(strcmp(url, "/Login") == 0) {
       if(Request->Session->Logged == true) return SendRedirect(connection, "/Dashboard");
       char Cookie[256];
-      sprintf(Cookie, "OZM_SESSION=%s; httponly; Path=/", Request->Session->ID);
+      sprintf(Cookie, "SESSION=%s; httponly; Path=/", Request->Session->ID);
       return SendFile(connection, (char*)"Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
     }
     if(strncmp(url, "/MiniViews/", 11) == 0) {
@@ -242,8 +251,7 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
       free(FilePath);
       if(Return == MHD_YES) return MHD_YES;
     }
-    if(Request->Session->Logged == false) 
-      return SendRedirect(connection, "/Login");
+    if(Request->Session->Logged == false) return SendRedirect(connection, "/Login");
     if((strcmp(url, "/Dashboard") == 0) || (strcmp(url, "/") == 0)) return SendFile(connection,  "Dashboard.html");
     if(strcmp(url, "/Analysis/Frequency") == 0) return SendFile(connection, "Analysis_Frequency.html");
     if(strcmp(url, "/Analysis/Voltage") == 0) return SendFile(connection, "Analysis_Voltage.html");
@@ -262,319 +270,271 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
   }
   return SendError(connection, MHD_HTTP_NOT_FOUND, "Page not found");
 }
-int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
+void HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
   Request_t *Request = (Request_t*)*ptr;
   Request->JSONReader = json_tokener_parse(upload_data);
-  if((Request->JSONReader == NULL) || (json_object_get_type(Request->JSONReader) != json_type_object)) return SendError(connection, MHD_HTTP_BAD_REQUEST, "No JSON params");
+  if((Request->JSONReader == NULL) || (json_object_get_type(Request->JSONReader) != json_type_object)) {
+    Request->PostData  = (char*)"No valid JSON request";
+    Request->PostDataLen = strlen(Request->PostData);
+    Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+    return;
+  }
   if(strcmp(url, "/LogIn") == 0) {
     char *Password = NULL;
     json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
       enum json_type JSON_Type = json_object_get_type(JSON_Val);
       if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) 
         Password = (char*)json_object_get_string(JSON_Val);
-      else 
-        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
-    if(Password == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
+    if(Password == NULL) {
+      Request->PostData  = (char*)"'Password' param requiered";
+      Request->PostDataLen = strlen(Request->PostData);
+      Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      return;
+    }
     Request->JSONWriter = json_object_new_object();
-    if(strcmp(Password, Password) != 0) {
+    if(strcmp(Password, pPassword) != 0) {
       json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(false));
     } else {
       Request->Session->Logged = true;
       json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(true));    
     }
-    Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
-    return MHD_YES;
+    Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostDataLen);
+    return;
   }
   if(Request->Session->Logged == false) {
     struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
-    if(((sockaddr_in*)Addr)->sin_addr.s_addr != 0x0100007F) return SendError(connection, MHD_HTTP_UNAUTHORIZED, "Unauthorided access to API");
+    if(((sockaddr_in*)Addr)->sin_addr.s_addr != 0x0100007F) {
+      Request->PostData  = (char*)"Unauthorided access to API";
+      Request->PostDataLen = strlen(Request->PostData);
+      Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
+      return;
+    }
   }
-  if(strcmp(url, "/getNodes") == 0) {
-    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
-      (void)JSON_Key; (void)JSON_Val;      
-      return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
+  for(uint32_t i = 0; i < pCallbacksCount; i++) {
+    if(strcmp(pCallbacks[i].HandlName, url) == 0) {
+      if(pCallbacks[i].Function(&Request->DB, Request->JSONReader, &Request->JSONWriter, &Request->PostData, &Request->PostDataLen) == false) Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      return;
     }
-    Request->JSONWriter = Capture::GetNodes();
-    Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
-    return MHD_YES;
   }
-  if(strcmp(url, "/getSeries") == 0) {
-    uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
-    uint32_t Node = 0;
-    char    *Aggreg = NULL, *Series = NULL;
-    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
-      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
-        Series = (char*)json_object_get_string(JSON_Val);
-      else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Aggreg") == 0))
-        Aggreg = (char*)json_object_get_string(JSON_Val);
-      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Period") == 0))      
-        Period = json_object_get_int64(JSON_Val);
-      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "To") == 0))
-        To = json_object_get_int64(JSON_Val);
-      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastSample") == 0))
-        LastSample = json_object_get_int64(JSON_Val);
-      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
-        Node = json_object_get_int(JSON_Val);
-      else 
-        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
-    }
-    if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0)) || (Series == NULL)) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
-    if(To == 0) To = Tools::GetTime();
-    From = To - Period;
-    char QueryText[8192];
-    int  QueryLen = 0;
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\", ", To); 
-    uint32_t MaxPoints = 100000, PeriodSeconds = 3000;
-    if(strcmp(Aggreg, "1m")  == 0) PeriodSeconds = 60000;
-    if(strcmp(Aggreg, "10m") == 0) PeriodSeconds = 600000;
-    if(strcmp(Aggreg, "1h")  == 0) PeriodSeconds = 3600000;
-    if((strcmp(Aggreg, "3s") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
-      Aggreg = (char*)"1m";
-      PeriodSeconds = 60000;
-    } 
-    if((strcmp(Aggreg, "1m") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
-      Aggreg = (char*)"10m";
-      PeriodSeconds = 600000;
-    } 
-    if((strcmp(Aggreg, "10m") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
-      Aggreg = (char*)"1h";
-      PeriodSeconds = 3600000;
-    } 
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"MaxSamples\", ", (To - From) / PeriodSeconds);
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'%s' AS \"Aggregation_Source\", ", Aggreg);
-    char *Save;
-    char *Serie = strtok_r(Series, ", ", &Save);
-    while(Serie != NULL) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(%s ORDER BY sampletime ASC) AS %s, ", Serie, Serie);
-      Serie = strtok_r(NULL, ", ", &Save);
-    }
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(sampletime ORDER BY sampletime ASC) AS \"Sampletime\" FROM ");
-    if(strcmp(Aggreg, "1m") == 0) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1m LEFT JOIN aggreg_ext_1m ON aggreg_1m.node = aggreg_ext_1m.node_ext AND aggreg_1m.sampletime = aggreg_ext_1m.sampletime_ext) AS Tmp");
-    } else {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "aggreg_%s", Aggreg);
-    }
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, " WHERE sampletime > %" PRIu64 " AND sampletime >= %" PRIu64 " AND sampletime <= %" PRIu64 " AND node = %u) AS Result", LastSample, From, To, Node);    
-    Request->DB = new Database;
-    Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
-    return MHD_YES;
-  } else if(strcmp(url, "/getSeriesAggreg") == 0) {
-    uint64_t Period = 0, From = 0, To = 0;
-    uint32_t Node = 0;
-    char    *Aggreg = NULL, *Series = NULL;
-    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
-      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
-        Series = (char*)json_object_get_string(JSON_Val);
-      else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Aggreg") == 0))
-        Aggreg = (char*)json_object_get_string(JSON_Val);
-      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Period") == 0))      
-        Period = json_object_get_int64(JSON_Val);
-      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "To") == 0))
-        To = json_object_get_int64(JSON_Val);
-      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
-        Node = json_object_get_int(JSON_Val);
-      else 
-        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
-    }
-    if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0)) || (Series == NULL)) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
-    if(To == 0) To = Tools::GetTime();
-    From = To - Period;
-    char QueryText[8192];
-    int  QueryLen = 0;
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT COUNT(*) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u) AS \"Samples\", ", Aggreg, From, To, Node);
-    char *Save;
-    char *Serie = strtok_r(Series, ", ", &Save);
-    while(Serie != NULL) {
-      char *Oper = NULL, *Tmp1 = strchr(Serie, '('), *Tmp2 = strrchr(Serie, ')');
-      if((Tmp1 != NULL) && (Tmp2 != NULL)) {
-        Oper = Serie;
-        Tmp1[0] = 0;
-        Serie = &Tmp1[1];
-        Tmp2[0] = 0;
-      }
-      if((strcmp(Serie, "rms_v") == 0) || (strcmp(Serie, "rms_i") == 0) || (strcmp(Serie, "active_power") == 0) || (strcmp(Serie, "apparent_power") == 0) || (strcmp(Serie, "power_factor") == 0) || (strcmp(Serie, "active_energy") == 0) || (strcmp(Serie, "fundamenta_active_power") == 0) || (strcmp(Serie, "fundamental_reactive_power") == 0) || (strcmp(Serie, "fundamental_reactive_energy") == 0) || (strcmp(Serie, "fundamental_apparent_power") == 0) || (strcmp(Serie, "fundamental_power_factor") == 0) || (strcmp(Serie, "thd_v") == 0) || (strcmp(Serie, "thd_i") == 0) || (strcmp(Serie, "phi") == 0) || (strcmp(Serie, "harmonics_i") == 0) || (strcmp(Serie, "harmonics_v") == 0)) {
-        if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT %s(elem) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u GROUP BY rn ORDER BY rn) as %s_%s,", Oper, Aggreg, Serie, From, To, Node, Oper, Serie);
-        } else if(strcmp(Oper, "rms") == 0) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT SQRT(SUM(POW(elem, 2.0)) / COUNT(*)) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u GROUP BY rn ORDER BY rn) as %s_%s,", Aggreg, Serie, From, To, Node, Oper, Serie);
-        }
-      } else if(strcmp(Serie, "freq") == 0) {
-        if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT %s(%s) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u) AS %s_%s, ", Oper, Serie, Aggreg, From, To, Node, Oper, Serie);
-        } else if(strcmp(Oper, "rms") == 0) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT SQRT(SUM(POW(%s, 2.0)) / COUNT(*)) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u) AS %s_%s, ", Serie, Aggreg, From, To, Node, Oper, Serie);
-        }
-      } else if(strcmp(Serie, "flag") == 0) {
-        if((strcmp(Oper, "and") == 0) || (strcmp(Oper, "or") == 0)) {
-          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT bool_%s(%s) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u) AS %s_%s, ", Oper, Serie, Aggreg, From, To, Node, Oper, Serie);
-        }
-      }
-      Serie = strtok_r(NULL, ", ", &Save);
-    }
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\") AS Result", To); 
-    Request->DB = new Database();
-    Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
-    return MHD_YES;
-  } else if(strcmp(url, "/getSeriesNow") == 0) {
-    uint32_t Node = 0;
-    char    *Series = NULL;
-    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
-      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
-        Series = (char*)json_object_get_string(JSON_Val);
-      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
-        Node = json_object_get_int(JSON_Val);
-      else 
-        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
-    }
-    if(Series == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
-    Analyzer *Tmp = Capture::FindID(1);
-    if(Tmp) {
-      Request->JSONWriter = Tmp->GetJSONCopy(Series);
-      if(Request->JSONWriter == NULL) {
-        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-      } else {
-        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
-      }
-      return MHD_YES;
-    }
-  } else if(strcmp(url, "/getSysInfo") == 0) {
-    char *Type = NULL;
-    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
-      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Type") == 0)) 
-        Type = (char*)json_object_get_string(JSON_Val);
-      else
-        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
-    }
-    if(Type == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
-    if(strcmp(Type, "Performance") == 0) {
-      Request->JSONWriter = Tools::GetJSONSysInfo();
-      if(Request->JSONWriter == NULL) {
-        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-      } else {
-        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
-      }
-    } else if(strcmp(Type, "Connectivity") == 0) {
-      Request->JSONWriter = NetworkManager::GetJSONNetworks();
-      if(Request->JSONWriter == NULL) {
-        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-      } else {
-        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
-      }
-    }
-    return MHD_YES;
-  } else if(strcmp(url, "/setSysInfo") == 0) {
-    char        *Type   = NULL;
-    json_object *Params = NULL;
-    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
-      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Type") == 0)) 
-        Type = (char*)json_object_get_string(JSON_Val);
-      else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Params") == 0))
-        Params = JSON_Val;
-      else
-        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
-    }
-    if((Type == NULL) || (Params == NULL)) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
-    if(strcmp(Type, "Connectivity") == 0) {
-      Request->JSONWriter = json_object_new_object();
-      json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(NetworkManager::SetJSONNetworkConfig(Params)));
-      Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
-    }
-    return MHD_YES;
-  } else if(strcmp(url, "/getEvents") == 0) {
-    uint32_t Node = 0;
-    uint64_t LastEvent = 0, From = 0, To = 0, Period = 0;
-    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
-      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastEvent") == 0))
-        LastEvent = json_object_get_int64(JSON_Val);
-      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Period") == 0))      
-        Period = json_object_get_int64(JSON_Val);
-      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "To") == 0))
-        To = json_object_get_int64(JSON_Val);
-      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
-        Node = json_object_get_int(JSON_Val);
-      else 
-        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
-    }
-    if(To == 0) To = Tools::GetTime();
-    From = To - Period;
-    char QueryText[8192];
-    int  QueryLen = 0;
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\", ", To); 
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(starttime ORDER BY starttime ASC) AS \"Starttime\", ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(duration ORDER BY starttime ASC) AS \"Duration\", ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(type ORDER BY starttime ASC) AS \"Type\", ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(voltage ORDER BY starttime ASC) AS \"Voltage\", ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(percent ORDER BY starttime ASC) AS \"Percentage\" ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE starttime > %" PRIu64 " AND starttime >= %" PRIu64 " AND starttime <= %" PRIu64 " AND node = %u) AS Result", LastEvent, From, To, Node);
-    Request->DB = new Database();
-    Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
-    return MHD_YES;
-  } else if(strcmp(url, "/getSamplesRange") == 0) {
-    uint32_t Node = 0;
-    char *Aggreg = NULL;
-    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
-      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
-        Node = json_object_get_int(JSON_Val);
-      else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Aggreg") == 0))
-        Aggreg = (char*)json_object_get_string(JSON_Val);
-      else
-        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
-    }
-    if(Aggreg == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
-    char QueryText[8192];
-    int  QueryLen = 0;
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "max(sampletime) AS \"To\", ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "min(sampletime) AS \"From\" ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM aggreg_%s WHERE node = %u) AS Result", Aggreg, Node);
-    Request->DB = new Database();
-    Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
-    return MHD_YES;
-  } else if(strcmp(url, "/getEventSamples") == 0) {
-    uint32_t Node = 0;
-    uint64_t Starttime = 0;
-    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
-      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
-        Node = json_object_get_int(JSON_Val);
-      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Starttime") == 0))
-        Starttime = json_object_get_int64(JSON_Val);
-      else
-        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
-    }
-//    if((Error == true) || (Node < 0) || (Node >= Tools::Devices.Len)) goto InvalidParams;
-    char QueryText[8192];
-    int  QueryLen = 0;
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%u AS \"Envelope\", ", (uint32_t)(EVENT_ENVELOPETIME * Tools::Devices.Items[Node].Instance->SampleRate()));
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "duration AS \"Duration\", ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "samples AS \"Samples\" ");
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE node = %u AND Starttime = %" PRIu64 ") AS Result", Node, Starttime);
-    Request->DB = new Database();
-    Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostResponseLen);
-    return MHD_YES;
-  }
-  Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-  Request->PostData = (char*)"Invalid command";
-  Request->PostResponseLen = strlen(Request->PostData);
-  return MHD_YES;
-//InvalidParams:
+  Request->ResultCode = MHD_HTTP_METHOD_NOT_ALLOWED;
+//  return ;  
+
+//  if(strcmp(url, "/getSeries") == 0) {
+//
+//  } else if(strcmp(url, "/getSeriesAggreg") == 0) {
+//    uint64_t Period = 0, From = 0, To = 0;
+//    uint32_t Node = 0;
+//    char    *Aggreg = NULL, *Series = NULL;
+//    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+//      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+//      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
+//        Series = (char*)json_object_get_string(JSON_Val);
+//      else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Aggreg") == 0))
+//        Aggreg = (char*)json_object_get_string(JSON_Val);
+//      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Period") == 0))      
+//        Period = json_object_get_int64(JSON_Val);
+//      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "To") == 0))
+//        To = json_object_get_int64(JSON_Val);
+//      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
+//        Node = json_object_get_int(JSON_Val);
+//      else 
+//        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
+//    }
+//    if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0)) || (Series == NULL)) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
+//    if(To == 0) To = Tools::GetTime();
+//    From = To - Period;
+//    char QueryText[8192];
+//    int  QueryLen = 0;
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT COUNT(*) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u) AS \"Samples\", ", Aggreg, From, To, Node);
+//    char *Save;
+//    char *Serie = strtok_r(Series, ", ", &Save);
+//    while(Serie != NULL) {
+//      char *Oper = NULL, *Tmp1 = strchr(Serie, '('), *Tmp2 = strrchr(Serie, ')');
+//      if((Tmp1 != NULL) && (Tmp2 != NULL)) {
+//        Oper = Serie;
+//        Tmp1[0] = 0;
+//        Serie = &Tmp1[1];
+//        Tmp2[0] = 0;
+//      }
+//      if((strcmp(Serie, "rms_v") == 0) || (strcmp(Serie, "rms_i") == 0) || (strcmp(Serie, "active_power") == 0) || (strcmp(Serie, "apparent_power") == 0) || (strcmp(Serie, "power_factor") == 0) || (strcmp(Serie, "active_energy") == 0) || (strcmp(Serie, "fundamenta_active_power") == 0) || (strcmp(Serie, "fundamental_reactive_power") == 0) || (strcmp(Serie, "fundamental_reactive_energy") == 0) || (strcmp(Serie, "fundamental_apparent_power") == 0) || (strcmp(Serie, "fundamental_power_factor") == 0) || (strcmp(Serie, "thd_v") == 0) || (strcmp(Serie, "thd_i") == 0) || (strcmp(Serie, "phi") == 0) || (strcmp(Serie, "harmonics_i") == 0) || (strcmp(Serie, "harmonics_v") == 0)) {
+//        if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
+//          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT %s(elem) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u GROUP BY rn ORDER BY rn) as %s_%s,", Oper, Aggreg, Serie, From, To, Node, Oper, Serie);
+//        } else if(strcmp(Oper, "rms") == 0) {
+//          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT SQRT(SUM(POW(elem, 2.0)) / COUNT(*)) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u GROUP BY rn ORDER BY rn) as %s_%s,", Aggreg, Serie, From, To, Node, Oper, Serie);
+//        }
+//      } else if(strcmp(Serie, "freq") == 0) {
+//        if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
+//          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT %s(%s) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u) AS %s_%s, ", Oper, Serie, Aggreg, From, To, Node, Oper, Serie);
+//        } else if(strcmp(Oper, "rms") == 0) {
+//          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT SQRT(SUM(POW(%s, 2.0)) / COUNT(*)) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u) AS %s_%s, ", Serie, Aggreg, From, To, Node, Oper, Serie);
+//        }
+//      } else if(strcmp(Serie, "flag") == 0) {
+//        if((strcmp(Oper, "and") == 0) || (strcmp(Oper, "or") == 0)) {
+//          QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT bool_%s(%s) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " AND node = %u) AS %s_%s, ", Oper, Serie, Aggreg, From, To, Node, Oper, Serie);
+//        }
+//      }
+//      Serie = strtok_r(NULL, ", ", &Save);
+//    }
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\") AS Result", To); 
+//    Request->DB = new Database();
+//    Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostDataLen);
+//    return MHD_YES;
+//  } else if(strcmp(url, "/getSeriesNow") == 0) {
+//    uint32_t Node = 0;
+//    char    *Series = NULL;
+//    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+//      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+//      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
+//        Series = (char*)json_object_get_string(JSON_Val);
+//      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
+//        Node = json_object_get_int(JSON_Val);
+//      else 
+//        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
+//    }
+//    if(Series == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
+//    Analyzer *Tmp = Capture::FindID(1);
+//    if(Tmp) {
+//      Request->JSONWriter = Tmp->GetJSONCopy(Series);
+//      if(Request->JSONWriter == NULL) {
+//        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+//      } else {
+//        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostDataLen);
+//      }
+//      return MHD_YES;
+//    }
+//  } else if(strcmp(url, "/getSysInfo") == 0) {
+//    char *Type = NULL;
+//    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+//      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+//      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Type") == 0)) 
+//        Type = (char*)json_object_get_string(JSON_Val);
+//      else
+//        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
+//    }
+//    if(Type == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
+//    if(strcmp(Type, "Performance") == 0) {
+//      Request->JSONWriter = Tools::GetJSONSysInfo();
+//      if(Request->JSONWriter == NULL) {
+//        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+//      } else {
+//        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostDataLen);
+//      }
+//    } else if(strcmp(Type, "Connectivity") == 0) {
+//      Request->JSONWriter = NetworkManager::GetJSONNetworks();
+//      if(Request->JSONWriter == NULL) {
+//        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+//      } else {
+//        Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostDataLen);
+//      }
+//    }
+//    return MHD_YES;
+//  } else if(strcmp(url, "/setSysInfo") == 0) {
+//    char        *Type   = NULL;
+//    json_object *Params = NULL;
+//    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+//      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+//      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Type") == 0)) 
+//        Type = (char*)json_object_get_string(JSON_Val);
+//      else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Params") == 0))
+//        Params = JSON_Val;
+//      else
+//        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
+//    }
+//    if((Type == NULL) || (Params == NULL)) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
+//    if(strcmp(Type, "Connectivity") == 0) {
+//      Request->JSONWriter = json_object_new_object();
+//      json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(NetworkManager::SetJSONNetworkConfig(Params)));
+//      Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostDataLen);
+//    }
+//    return MHD_YES;
+//  } else if(strcmp(url, "/getEvents") == 0) {
+//    uint32_t Node = 0;
+//    uint64_t LastEvent = 0, From = 0, To = 0, Period = 0;
+//    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+//      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+//      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastEvent") == 0))
+//        LastEvent = json_object_get_int64(JSON_Val);
+//      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Period") == 0))      
+//        Period = json_object_get_int64(JSON_Val);
+//      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "To") == 0))
+//        To = json_object_get_int64(JSON_Val);
+//      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
+//        Node = json_object_get_int(JSON_Val);
+//      else 
+//        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
+//    }
+//    if(To == 0) To = Tools::GetTime();
+//    From = To - Period;
+//    char QueryText[8192];
+//    int  QueryLen = 0;
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\", ", To); 
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(starttime ORDER BY starttime ASC) AS \"Starttime\", ");
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(duration ORDER BY starttime ASC) AS \"Duration\", ");
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(type ORDER BY starttime ASC) AS \"Type\", ");
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(voltage ORDER BY starttime ASC) AS \"Voltage\", ");
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(percent ORDER BY starttime ASC) AS \"Percentage\" ");
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE starttime > %" PRIu64 " AND starttime >= %" PRIu64 " AND starttime <= %" PRIu64 " AND node = %u) AS Result", LastEvent, From, To, Node);
+//    Request->DB = new Database();
+//    Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostDataLen);
+//    return MHD_YES;
+//  } else if(strcmp(url, "/getSamplesRange") == 0) {
+//    uint32_t Node = 0;
+//    char *Aggreg = NULL;
+//    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+//      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+//      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
+//        Node = json_object_get_int(JSON_Val);
+//      else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Aggreg") == 0))
+//        Aggreg = (char*)json_object_get_string(JSON_Val);
+//      else
+//        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
+//    }
+//    if(Aggreg == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
+//    char QueryText[8192];
+//    int  QueryLen = 0;
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "max(sampletime) AS \"To\", ");
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "min(sampletime) AS \"From\" ");
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM aggreg_%s WHERE node = %u) AS Result", Aggreg, Node);
+//    Request->DB = new Database();
+//    Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostDataLen);
+//    return MHD_YES;
+//  } else if(strcmp(url, "/getEventSamples") == 0) {
+//    uint32_t Node = 0;
+//    uint64_t Starttime = 0;
+//    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
+//      enum json_type JSON_Type = json_object_get_type(JSON_Val);
+//      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
+//        Node = json_object_get_int(JSON_Val);
+//      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Starttime") == 0))
+//        Starttime = json_object_get_int64(JSON_Val);
+//      else
+//        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
+//    }
+////    if((Error == true) || (Node < 0) || (Node >= Tools::Devices.Len)) goto InvalidParams;
+//    char QueryText[8192];
+//    int  QueryLen = 0;
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
+////    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%u AS \"Envelope\", ", (uint32_t)(EVENT_ENVELOPETIME * Tools::Devices.Items[Node].Instance->SampleRate()));
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "duration AS \"Duration\", ");
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "samples AS \"Samples\" ");
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE node = %u AND Starttime = %" PRIu64 ") AS Result", Node, Starttime);
+//    Request->DB = new Database();
+//    Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostDataLen);
+//    return MHD_YES;
+//  }
 //  Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-//  Request->PostData = (char*)"Invalid JSON params";
-//  Request->PostResponseLen = strlen(Request->PostData);
-//  return MHD_YES;  
+//  Request->PostData = (char*)"Invalid command";
+//  Request->PostDataLen = strlen(Request->PostData);
+//  return MHD_YES;
+////InvalidParams:
+////  Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+////  Request->PostData = (char*)"Invalid JSON params";
+////  Request->PostResponseLen = strlen(Request->PostData);
+////  return MHD_YES;  
 }

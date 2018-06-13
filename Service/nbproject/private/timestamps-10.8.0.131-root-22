@@ -1,4 +1,4 @@
-#Wed Jun 13 12:03:24 CEST 2018
+#Wed Jun 13 15:08:43 CEST 2018
 /home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-Debug.mk=c1528801963000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/font-awesome/css/font-awesome.css=c1520327825000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/datatables/images/sort_desc_disabled.png=c1507189006000
@@ -6,7 +6,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/NOTES=c1523522195000
 /home/edu/Proyectos/zMeter/V2/Service/Source/FFT.h=c1528113620000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Analysis_Frequency.js=c1520620978000
-/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Analysis_Voltage.js=c1526983135000
+/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Analysis_Voltage.js=c1528895273000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/Firmware_SETUP_CAPTURE.png=c1519034874000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Events_Disturbances.html=c1520328976000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/marked/marked.min.js=c1513975952000
@@ -55,7 +55,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/rms_v.png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/Source/CaptureMono/CaptureMono.cpp=c1527077244000
 /home/edu/Proyectos/zMeter/V2/Service/nbproject/Package-Debug.bash=c1528715139000
-/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzer.h=c1528884165000
+/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzer.h=c1528890363000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff=c1512396200000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Events_ITIC.html=c1520329191000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/MiniViews/Active_Energy.html=c1520328976000
@@ -96,7 +96,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Stats.js=c1520526562000
 /home/edu/Proyectos/zMeter/V2/Service/Source/Events.cpp=c1527148197000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff2=c1512397060000
-/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzer.cpp=c1528884145000
+/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzer.cpp=c1528891686000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Analysis_Frequency.html=c1520328976000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/Hardware_Sensors.jpg=c1524567579000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Route_1Phase_1.svg=c1516284630000
@@ -105,7 +105,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/Variables\ medidas.md=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.js=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/Source/NetworkManager.cpp=c1527751828000
-/home/edu/Proyectos/zMeter/V2/Service/Source/Capture.h=c1528801566000
+/home/edu/Proyectos/zMeter/V2/Service/Source/Capture.h=c1528890412000
 /home/edu/Proyectos/zMeter/V2/Service/nbproject/private/Makefile-variables.mk=c1527493663000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.js=c1520325476000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/MiniViews/Frequency.html=c1520328976000
@@ -133,7 +133,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Settings.html=c1523449064000
 /home/edu/Proyectos/zMeter/V2/Service/Source/Stats.h=c1527838843000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/datatables/images/sort_both.png=c1507189006000
-/home/edu/Proyectos/zMeter/V2/Service/Source/Main.cpp=c1528801573000
+/home/edu/Proyectos/zMeter/V2/Service/Source/Main.cpp=c1528891973000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Events_EN50160.html=c1520328976000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/active_power.png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.css=c1520325503000
@@ -143,12 +143,12 @@
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/datatables/images/sort_desc.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/Source/Tools.h=c1528801573000
 /home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-variables.mk=c1523517727000
-/home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.cpp=c1528801573000
+/home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.cpp=c1528894485000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/zeroC_interharmonic.png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/Source/CaptureV2/DeviceV2.h=c1528072023000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/visjs/img/network/zoomExtends.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/4cuadrantes.png=c1513952649000
-/home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.h=c1527751828000
+/home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.h=c1528894149000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/datatables/images/sort_asc.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-impl.mk=c1520408641000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/momentjs/moment.js=c1520293055000
@@ -156,14 +156,14 @@
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.ttf=c1469450582000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/CodeCogsEqn\ (1).png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.eot=c1469450582000
-/home/edu/Proyectos/zMeter/V2/Service/Source/DeviceV2/DeviceV2.cpp=c1528881280000
+/home/edu/Proyectos/zMeter/V2/Service/Source/DeviceV2/DeviceV2.cpp=c1528890120000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/Hardware_BlockDiagram.png=c1523619892000
 /home/edu/Proyectos/zMeter/V2/Service/Source/Tools.cpp=c1528881314000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/qtip2/jquery.qtip.js=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/Hardware.md=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/Electrical\ measurements.html=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/dygraph/crosshair.js=c1507189006000
-/home/edu/Proyectos/zMeter/V2/Service/Source/Capture.cpp=c1528884194000
+/home/edu/Proyectos/zMeter/V2/Service/Source/Capture.cpp=c1528891946000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff2=c1469450582000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/thd_v.png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Help.html=c1520605625000

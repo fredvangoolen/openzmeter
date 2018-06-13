@@ -5,6 +5,7 @@
 #pragma once
 #include "Analyzer.h"
 #include "DeviceInterface.h"
+#include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
 class Capture {
   public :
@@ -17,10 +18,12 @@ class Capture {
   public :
     static float            GetNominalVoltage();
     static float            GetNominalFrequency();
-    static uint8_t          GetDevices();
-    static DeviceInterface *GetDevices(uint8_t index);
+//    static uint8_t          GetDevices();
+//    static DeviceInterface *GetDevices(uint8_t index);
     static void             Config(json_object *config);
-    static json_object     *GetNodes();
-    static Analyzer        *FindID(uint32_t id);
+//    static Analyzer        *FindID(uint32_t id);
+    static bool             GetSeriesCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
+    static bool             GetNodesCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
+    
 };
 //----------------------------------------------------------------------------------------------------------------------

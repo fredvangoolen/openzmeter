@@ -18,7 +18,7 @@ Analyzer::Analyzer(char *name, uint8_t voltageChannel, uint8_t currentChannel, c
 //  Init(name, id, samplerate, minCurrent);
 }
 Analyzer::Analyzer(char *name, bool useNeutral, char *id, float samplerate, float minCurrent) : Database(id) {
-  pType = (useNeutral) ? PHASE_3N : PHASE_3;
+  pType = ((useNeutral) ? PHASE_3N : PHASE_3);
   Init(name, id, samplerate, minCurrent);
 }
 void Analyzer::Init(char *name, char *id, float samplerate, float minCurrent) {
@@ -59,12 +59,12 @@ void Analyzer::Init(char *name, char *id, float samplerate, float minCurrent) {
   ResetAggreg(&pAggreg1M);
   ResetAggreg(&pAggreg10M);
   ResetAggreg(&pAggreg1H);
-  ExecSentence("PREPARE SAVE_3S       AS INSERT INTO aggreg_3s (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");    
-  ExecSentence("PREPARE SAVE_1M       AS INSERT INTO aggreg_1m (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
-  ExecSentence("PREPARE SAVE_1M_EXT   AS INSERT INTO aggreg_ext_1m (node_ext, sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7, $8)");  
-  ExecSentence("PREPARE SAVE_10M      AS INSERT INTO aggreg_10m(node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");  
-  ExecSentence("PREPARE SAVE_1H       AS INSERT INTO aggreg_1h (node, sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)");
-  ExecSentence("PREPARE DELETE_1M_EXT AS DELETE FROM aggreg_ext_1m WHERE node_ext = $1 AND sampletime_ext < $2");
+  ExecSentence("PREPARE SAVE_3S       AS INSERT INTO aggreg_3s (sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)");    
+  ExecSentence("PREPARE SAVE_1M       AS INSERT INTO aggreg_1m (sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)");  
+  ExecSentence("PREPARE SAVE_1M_EXT   AS INSERT INTO aggreg_ext_1m (sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7)");  
+  ExecSentence("PREPARE SAVE_10M      AS INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)");  
+  ExecSentence("PREPARE SAVE_1H       AS INSERT INTO aggreg_1h (sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)");
+  ExecSentence("PREPARE DELETE_1M_EXT AS DELETE FROM aggreg_ext_1m WHERE sampletime_ext < $1");
   pthread_mutex_init(&pThreadMutex, NULL);
   pthread_cond_init (&pThreadCond, NULL);
   pthread_mutex_init(&pWaitingThreadsMutex, NULL);
@@ -511,7 +511,7 @@ bool Analyzer::IsFinished() {
   return Result;
 }
 char *Analyzer::GetTypeString() {
-  if(pType == PHASE_3N) return (char*)"3Phase";
+  if(pType == PHASE_3N) return (char*)"3PhaseN";
   if(pType == PHASE_3)  return (char*)"3Phase";
   if(pType == PHASE_1)  return (char*)"1Phase";
 }

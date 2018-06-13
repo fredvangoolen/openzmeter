@@ -67,6 +67,9 @@ int main(int argc, char** argv) {
   }
   Tools::RegisterHandlers(SignalHandler);
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
+  HTTPServer::RegisterCallback((char*)"/getNodes", Capture::GetNodesCallback);
+  HTTPServer::RegisterCallback((char*)"/getSeries", Capture::GetSeriesCallback);
+  
 //  if(Tools::CreateLogFile() == false) return EXIT_FAILURE;
   //CaptureInterface **Interfaces = (CaptureInterface**)calloc(sizeof(CaptureInterface*), Tools::Devices.Len);
 //  for(uint i = 0; i < Tools::Devices.Len; i++) {
