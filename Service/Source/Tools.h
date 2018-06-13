@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <json-c/json.h>
 #include "HTTPServer.h"
-#include "Devices.h"
+#include "Capture.h"
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   private :
@@ -31,6 +31,5 @@ class Tools {
     static uint64_t     GetTime();
     static json_object *GetJSONSysInfo();
     static void         RegisterHandlers(void (*function)(int));
-    static void         AddDevice();
 };
 //----------------------------------------------------------------------------------------------------------------------

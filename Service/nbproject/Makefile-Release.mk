@@ -36,10 +36,10 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/Source/Analyzer.o \
-	${OBJECTDIR}/Source/CaptureV2/DeviceV2.o \
+	${OBJECTDIR}/Source/Capture.o \
 	${OBJECTDIR}/Source/Database.o \
 	${OBJECTDIR}/Source/DeviceInterface.o \
-	${OBJECTDIR}/Source/Devices.o \
+	${OBJECTDIR}/Source/DeviceV2/DeviceV2.o \
 	${OBJECTDIR}/Source/FFT.o \
 	${OBJECTDIR}/Source/HTTPServer.o \
 	${OBJECTDIR}/Source/Main.o \
@@ -78,9 +78,9 @@ ${OBJECTDIR}/Source/Analyzer.o: Source/Analyzer.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/Analyzer.o Source/Analyzer.cpp
 
-${OBJECTDIR}/Source/CaptureV2/DeviceV2.o: Source/CaptureV2/DeviceV2.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source/CaptureV2
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/CaptureV2/DeviceV2.o Source/CaptureV2/DeviceV2.cpp
+${OBJECTDIR}/Source/Capture.o: Source/Capture.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/Capture.o Source/Capture.cpp
 
 ${OBJECTDIR}/Source/Database.o: Source/Database.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
@@ -90,9 +90,9 @@ ${OBJECTDIR}/Source/DeviceInterface.o: Source/DeviceInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/DeviceInterface.o Source/DeviceInterface.cpp
 
-${OBJECTDIR}/Source/Devices.o: Source/Devices.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/Devices.o Source/Devices.cpp
+${OBJECTDIR}/Source/DeviceV2/DeviceV2.o: Source/DeviceV2/DeviceV2.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source/DeviceV2
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/DeviceV2/DeviceV2.o Source/DeviceV2/DeviceV2.cpp
 
 ${OBJECTDIR}/Source/FFT.o: Source/FFT.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source

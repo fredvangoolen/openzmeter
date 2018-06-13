@@ -18,7 +18,7 @@
 #include "HTTPServer.h"
 #include "Analyzer.h"
 #include "NetworkManager.h"
-#include "Devices.h"
+#include "Capture.h"
 static bool Terminate = false;
 void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;

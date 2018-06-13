@@ -19,6 +19,7 @@ class Database {
   private :
     PGconn      *pDBConn;
     char       **pParams;
+    char        *pSchema;
     int          pParamsLen;
     int          pParamsAlloc;
     const char  *pSentence;
@@ -38,7 +39,7 @@ class Database {
     bool  ExecSentence();
     bool  ExecSentence(const char *sql);
     char *ExecSentenceJSON(const char* sql, size_t *len);
-    Database();
+    Database(char *schema);
     ~Database();
   public :
     static void Config(json_object *config);

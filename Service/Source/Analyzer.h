@@ -44,7 +44,7 @@ class Analyzer : private Database {
       float      Phi[3];                        //Angulo de Phi
     } Params_t;
   private :
-    uint32_t        pID;                      //ID donde el analizador guardara los datos
+    char           *pID;                      //ID donde el analizador guardara los datos
     char           *pName;                    //Nombre del analizador
     AnalyzerType    pType;                    //Tipo de analizador
     float           pSamplerate;              //Velocidad de muestreo
@@ -104,7 +104,7 @@ class Analyzer : private Database {
     static void *Analyzer_Thread(void *args);
     
   private :
-    void  Init(char *name, uint32_t id, float samplerate, float minCurrent);
+    void  Init(char *name, char *id, float samplerate, float minCurrent);
     void  AccumulateAggreg(Params_t *dst, Params_t *src);
     void  SaveAggreg(Params_t *param);
     void  ResetAggreg(Params_t *params);
@@ -113,8 +113,8 @@ class Analyzer : private Database {
   protected :
 //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
   public :
-    Analyzer(char *name, bool useNeutral, uint32_t id, float samplerate, float minCurrent);
-    Analyzer(char *name, uint8_t voltageChannel, uint8_t currentChannel, uint32_t id, float samplerate, float minCurrent);
+    Analyzer(char *name, bool useNeutral, char *id, float samplerate, float minCurrent);
+    Analyzer(char *name, uint8_t voltageChannel, uint8_t currentChannel, char *id, float samplerate, float minCurrent);
     bool SampleAppend(float *voltageSamples, float *CurrentSamples, uint64_t sampletime);
 
     
@@ -123,7 +123,7 @@ class Analyzer : private Database {
     void         Wait();
     bool         IsFinished();
     char        *GetTypeString();
-    uint32_t     GetID();
+    char        *GetID();
     char        *GetName();
     json_object *GetJSONCopy(char *series);
 

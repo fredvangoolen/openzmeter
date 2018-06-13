@@ -17,7 +17,7 @@
 #include "Tools.h"
 #include "Analyzer.h"
 #include "NetworkManager.h"
-#include "Devices.h"
+#include "Capture.h"
 #include "DeviceInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon            *HTTPServer::pDaemon       = NULL;
@@ -295,7 +295,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
       (void)JSON_Key; (void)JSON_Val;      
       return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
-    Request->JSONWriter = Devices::GetNodes();
+    Request->JSONWriter = Capture::GetNodes();
     Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostResponseLen);
     return MHD_YES;
   }
@@ -435,7 +435,7 @@ int HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char 
         return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
     }
     if(Series == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
-    Analyzer *Tmp = Devices::FindID(1);
+    Analyzer *Tmp = Capture::FindID(1);
     if(Tmp) {
       Request->JSONWriter = Tmp->GetJSONCopy(Series);
       if(Request->JSONWriter == NULL) {

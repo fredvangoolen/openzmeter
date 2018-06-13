@@ -1,5 +1,5 @@
 
-#include "Devices.h"
+#include "Capture.h"
 
 //  pPrevCyclesLenght = 0;
 //  for(int i = 0; i < ANALYZER_FREQCYCLES; i++) {
@@ -15,5 +15,5 @@ bool  ZeroCrossing::ProcessSample(float *samples) {
   return false;
 }
 float ZeroCrossing::Frequency() {
-  Devices::GetNominalFrequency();
+  Capture::GetNominalFrequency();
 }

@@ -12,18 +12,18 @@
         <itemPath>Source/CaptureVirtual/CaptureVirtual.cpp</itemPath>
         <itemPath>Source/CaptureVirtual/CaptureVirtual.h</itemPath>
       </logicalFolder>
-      <logicalFolder name="CaptureV2" displayName="DeviceV2" projectFiles="true">
-        <itemPath>Source/CaptureV2/DeviceV2.cpp</itemPath>
-        <itemPath>Source/CaptureV2/DeviceV2.h</itemPath>
+      <logicalFolder name="DeviceV2" displayName="DeviceV2" projectFiles="true">
+        <itemPath>Source/DeviceV2/DeviceV2.cpp</itemPath>
+        <itemPath>Source/DeviceV2/DeviceV2.h</itemPath>
       </logicalFolder>
       <itemPath>Source/Analyzer.cpp</itemPath>
       <itemPath>Source/Analyzer.h</itemPath>
+      <itemPath>Source/Capture.cpp</itemPath>
+      <itemPath>Source/Capture.h</itemPath>
       <itemPath>Source/Database.cpp</itemPath>
       <itemPath>Source/Database.h</itemPath>
       <itemPath>Source/DeviceInterface.cpp</itemPath>
       <itemPath>Source/DeviceInterface.h</itemPath>
-      <itemPath>Source/Devices.cpp</itemPath>
-      <itemPath>Source/Devices.h</itemPath>
       <itemPath>Source/Events.cpp</itemPath>
       <itemPath>Source/Events.h</itemPath>
       <itemPath>Source/FFT.cpp</itemPath>
@@ -344,6 +344,12 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -359,11 +365,11 @@
       </item>
       <item path="Source/Analyzer.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="Source/Capture.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Source/Capture.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="Source/CaptureMono/CaptureMono.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Source/CaptureV2/DeviceV2.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="Source/CaptureV2/DeviceV2.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/CaptureVirtual/CaptureVirtual.h"
             ex="false"
@@ -378,9 +384,9 @@
       </item>
       <item path="Source/DeviceInterface.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/Devices.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/DeviceV2/DeviceV2.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/Devices.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/DeviceV2/DeviceV2.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/Events.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -756,6 +762,12 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -771,9 +783,9 @@
       </item>
       <item path="Source/Analyzer.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/CaptureV2/DeviceV2.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Capture.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/CaptureV2/DeviceV2.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Capture.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/CaptureVirtual/CaptureVirtual.h"
             ex="false"
@@ -788,9 +800,9 @@
       </item>
       <item path="Source/DeviceInterface.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/Devices.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/DeviceV2/DeviceV2.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/Devices.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/DeviceV2/DeviceV2.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/Events.h" ex="false" tool="3" flavor2="0">
       </item>

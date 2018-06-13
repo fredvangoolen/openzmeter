@@ -291,8 +291,83 @@ void *DeviceV2::Capture_Thread(void *args) {
 //  }
 //  return NULL;
 //}
+bool DeviceV2::ReadJSONFloatArray(json_object *object, float *dst, uint8_t len) {
+  if(json_object_array_length(object) != len) return false;
+  for(int i = 0; i < len; i++) {
+    if(json_object_get_type(json_object_array_get_idx(object, i)) != json_type_double) return false;
+    dst[i] = json_object_get_double(json_object_array_get_idx(object, i));
+  }
+  return true;
+}
+bool DeviceV2::ReadOutput(json_object *object) {
+  json_object *Find;
+  char *ReadMode = (char*)"3Phase";
+  char *Name     = (char*)"Undefined";
+  if((json_object_object_get_ex(object, "DisplayName", &Find) == true) && (json_object_get_type(Find) == json_type_string)) {
+    Name = (char*)json_object_get_string(Find);
+  }
+  if((json_object_object_get_ex(object, "Mode", &Find) == true) && (json_object_get_type(Find) == json_type_string)) {
+    ReadMode = (char*)json_object_get_string(Find);
+  }
+  if(strcmp("3Phase", ReadMode) == 0) { 
+    bool UseNeutral = true;
+    if((json_object_object_get_ex(object, "NeutralCurrent", &Find) == true) && (json_object_get_type(Find) == json_type_boolean)) {
+      UseNeutral = json_object_get_boolean(Find);
+    }
+    if(((UseNeutral == true) && (pChannelMask != 0)) || ((UseNeutral == false) && ((pChannelMask & 0x2A) != 0))) {
+        Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
+        return false;  
+    }
+    pChannelMask = pChannelMask | ((UseNeutral == true) ? 0x7F : 0x7E);
+    AddAnalyzer(new Analyzer(Name, UseNeutral, pSerial, pADCSamplerate / pOversample, 0.1));
+  } else if(strcmp("1Phase", ReadMode) == 0) { 
+    char     *VoltageChannelText = (char*)"R";
+    char     *CurrentChannelText = (char*)"R";
+    uint8_t   VoltageChannel = 6;
+    uint8_t   CurrentChannel = 5;
+    json_object_object_foreach(object, JSON_KeySub, JSON_ValSub) {
+      enum json_type JSON_TypeSub = json_object_get_type(JSON_ValSub);
+      if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "VoltageChannel") == 0)) {
+        VoltageChannelText = (char*)json_object_get_string(JSON_ValSub);
+        if(strcmp("R", VoltageChannelText) == 0) {
+          VoltageChannel = 6;
+        } else if(strcmp("S", VoltageChannelText) == 0) {
+          VoltageChannel = 4;
+        } else if(strcmp("T", VoltageChannelText) == 0) {
+          VoltageChannel = 2;
+        } else {
+          Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S' or 'T'\n");
+          return false;
+        }
+      } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "CurrentChannel") == 0)) {
+        CurrentChannelText = (char*)json_object_get_string(JSON_ValSub);
+        if(strcmp("R", CurrentChannelText) == 0) {
+          CurrentChannel = 5;
+        } else if(strcmp("S", CurrentChannelText) == 0) {
+          CurrentChannel = 3;
+        } else if(strcmp("T", CurrentChannelText) == 0) {
+          CurrentChannel = 1;
+        } else if(strcmp("N", CurrentChannelText) == 0) {
+          CurrentChannel = 0;
+        } else {
+          Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S', 'T' or 'N'\n");
+          return false;
+        }
+        if((pChannelMask & (1 << CurrentChannel)) != 0) {
+          Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
+          return false;
+        }
+      }
+    }
+    pChannelMask |= (1 << CurrentChannel) | (1 << VoltageChannel);
+//      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pAnalyzersCount + 1));
+//      pMappings[pAnalyzersCount].VoltageChannel = VoltageChannel;
+//      pMappings[pAnalyzersCount].CurrentChannel = CurrentChannel;
+//      AddAnalyzer(new Analyzer(Name, VoltageChannel, CurrentChannel, ID, Samplerate, 0.1));
+  }
+  return true;
+}
 DeviceV2::DeviceV2(json_object* config) : DeviceInterface((char*)"DeviceV2") {
-  pSerial           = NULL;
   for(int i = 0; i < 3; i++) pVoltageGain[i]   = 1;
   for(int i = 0; i < 3; i++) pVoltageOffset[i] = 0;
   for(int i = 0; i < 4; i++) pCurrentGain[i]   = 1;
@@ -305,6 +380,7 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface((char*)"DeviceV2") {
   pADCSamplerate    = 20000;
 //  pMappings         = NULL;
   pUSBState         = USB_WAIT;
+  pSerial           = (char*)"000000000000000000000000";
   struct json_object *Find;
   if((json_object_object_get_ex(config, "Samplerate", &Find) == true) && (json_object_get_type(Find) == json_type_int)) {
     pADCSamplerate = json_object_get_int(Find);
@@ -312,147 +388,35 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface((char*)"DeviceV2") {
   if((json_object_object_get_ex(config, "Oversample", &Find) == true) && (json_object_get_type(Find) == json_type_int)) {
     pOversample = json_object_get_int(Find);
   }
-  float Samplerate = pADCSamplerate / pOversample;
+  if((json_object_object_get_ex(config, "Serial", &Find) == true) && (json_object_get_type(Find) == json_type_string)) {
+    pSerial = (char*)json_object_get_string(Find);
+  }
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
-    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Serial") == 0)) {
-      pSerial = (char*)json_object_get_string(JSON_Val);
-    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "VoltageGain") == 0)) {
-      if(json_object_array_length(JSON_Val) != 3) {
+    if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "VoltageGain") == 0)) {
+      if(ReadJSONFloatArray(JSON_Val, pVoltageGain, 3) == false) {
         Tools::LogMsg("ERROR", "CaptureV2: Voltage gain must have 3 double values\n");
         return;
       }
-      for(int i = 0; i < 3; i++) {
-        if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
-            Tools::LogMsg("ERROR", "CaptureV2: Voltage gain must have 3 double values\n");
-            return;
-        }
-        pVoltageGain[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
-      }
     } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "VoltageOffset") == 0)) {
-      if(json_object_array_length(JSON_Val) != 3) {
+      if(ReadJSONFloatArray(JSON_Val, pVoltageOffset, 3) == false) {
         Tools::LogMsg("ERROR", "CaptureV2: Voltage offset must have 3 double values\n");
         return;
       }
-      for(int i = 0; i < 3; i++) {
-        if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
-          Tools::LogMsg("ERROR", "CaptureV2: Voltage offset must have 3 double values\n");
-          return;
-        }
-        pVoltageOffset[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
-      }
     } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "CurrentGain") == 0)) {
-      if(json_object_array_length(JSON_Val) != 4) {
+      if(ReadJSONFloatArray(JSON_Val, pCurrentGain, 4) == false) {
         Tools::LogMsg("ERROR", "CaptureV2: current gain must have 4 double values\n");
         return;
       }
-      for(int i = 0; i < 4; i++) {
-        if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
-          Tools::LogMsg("ERROR", "CaptureV2: current gain must have 4 double values\n");
-          return;
-        }
-        pCurrentGain[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
-      }
     } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "CurrentOffset") == 0)) {
-      if(json_object_array_length(JSON_Val) != 4) {
+      if(ReadJSONFloatArray(JSON_Val, pCurrentOffset, 4) == false) {
         Tools::LogMsg("ERROR", "CaptureV2: current offset must have 4 double values\n");
         return;
       }
-      for(int i = 0; i < 4; i++) {
-        if(json_object_get_type(json_object_array_get_idx(JSON_Val, i)) != json_type_double) {
-          Tools::LogMsg("ERROR", "CaptureV2: current offset must have 4 double values\n");
-          return;
-        }
-        pCurrentOffset[i] = json_object_get_double(json_object_array_get_idx(JSON_Val, i));
+    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "Outputs") == 0)) {
+      for(int i = 0; i < json_object_array_length(JSON_Val); i++) {
+        if(ReadOutput(json_object_array_get_idx(JSON_Val, i)) == false) return;
       }
-    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "3Phase+N") == 0)) {
-      uint32_t  ID = 0;
-      char     *Name= (char*)"3Phase+N";
-      json_object_object_foreach(JSON_Val, JSON_KeySub, JSON_ValSub) {
-        enum json_type JSON_TypeSub = json_object_get_type(JSON_ValSub);
-        if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "DisplayName") == 0)) {
-          Name = (char*)json_object_get_string(JSON_ValSub);
-        } else if((JSON_TypeSub == json_type_int) && (strcmp(JSON_KeySub, "ID") == 0)) {
-          ID = json_object_get_int(JSON_ValSub);
-        }
-      }
-      if(pChannelMask != 0) {
-        Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
-        return;
-      }
-      pChannelMask |= 0x7F;
-//      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pAnalyzersCount + 1));
-//      pMappings[pAnalyzersCount].VoltageChannel = 0;
-//      pMappings[pAnalyzersCount].CurrentChannel = 0;
-      AddAnalyzer(new Analyzer(Name, true, ID, Samplerate, 0.1));
-    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "3Phase") == 0)) {
-      uint32_t  ID = 0;
-      char     *Name= (char*)"3Phase";
-      json_object_object_foreach(JSON_Val, JSON_KeySub, JSON_ValSub) {
-        enum json_type JSON_TypeSub = json_object_get_type(JSON_ValSub);
-        if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "DisplayName") == 0)) {
-          Name = (char*)json_object_get_string(JSON_ValSub);
-        } else if((JSON_TypeSub == json_type_int) && (strcmp(JSON_KeySub, "ID") == 0)) {
-          ID = json_object_get_int(JSON_ValSub);   
-        }
-      }
-      if((pChannelMask & 0x2A) != 0) {
-        Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
-        return;
-      }
-      pChannelMask |= 0x7E; 
-//      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pAnalyzersCount + 1));
-//      pMappings[pAnalyzersCount].VoltageChannel = 0;
-//      pMappings[pAnalyzersCount].CurrentChannel = 0;
-      AddAnalyzer(new Analyzer(Name, false, ID, Samplerate, 0.1));
-    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "1Phase") == 0)) {
-      uint32_t  ID = 0;
-      char     *Name= (char*)"1Phase";
-      uint8_t   VoltageChannel = 6;
-      uint8_t   CurrentChannel = 5;
-      json_object_object_foreach(JSON_Val, JSON_KeySub, JSON_ValSub) {
-        enum json_type JSON_TypeSub = json_object_get_type(JSON_ValSub);
-        if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "DisplayName") == 0)) {
-          Name = (char*)json_object_get_string(JSON_ValSub);
-        } else if((JSON_TypeSub == json_type_int) && (strcmp(JSON_KeySub, "ID") == 0)) {
-          ID = json_object_get_int(JSON_ValSub);   
-        } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "VoltageChannel") == 0)) {
-          char *ChannelText = (char*)json_object_get_string(JSON_ValSub);
-          if(strcmp("R", ChannelText) == 0) {
-            VoltageChannel = 6;
-          } else if(strcmp("S", ChannelText) == 0) {
-            VoltageChannel = 4;
-          } else if(strcmp("T", ChannelText) == 0) {
-            VoltageChannel = 2;
-          } else {
-            Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S' or 'T'\n");
-            return;
-          }
-        } else if((JSON_TypeSub == json_type_string) && (strcmp(JSON_KeySub, "CurrentChannel") == 0)) {
-          char *ChannelText = (char*)json_object_get_string(JSON_ValSub);
-          if(strcmp("R", ChannelText) == 0) {
-            CurrentChannel = 5;
-          } else if(strcmp("S", ChannelText) == 0) {
-            CurrentChannel = 3;
-          } else if(strcmp("T", ChannelText) == 0) {
-            CurrentChannel = 1;
-          } else if(strcmp("N", ChannelText) == 0) {
-            CurrentChannel = 0;
-          } else {
-            Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S', 'T' or 'N'\n");
-            return;
-          }
-          if((pChannelMask & (1 << CurrentChannel)) != 0) {
-            Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
-            return;
-          }
-        }
-      }
-      pChannelMask |= (1 << CurrentChannel) | (1 << VoltageChannel);
-//      pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pAnalyzersCount + 1));
-//      pMappings[pAnalyzersCount].VoltageChannel = VoltageChannel;
-//      pMappings[pAnalyzersCount].CurrentChannel = CurrentChannel;
-      AddAnalyzer(new Analyzer(Name, VoltageChannel, CurrentChannel, ID, Samplerate, 0.1));
     }
   }
   uint8_t VoltageChannels = 0;
@@ -464,7 +428,7 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface((char*)"DeviceV2") {
   if(pChannelMask & 0x04) VoltageChannels++;
   if(pChannelMask & 0x02) CurrentChannels++;
   if(pChannelMask & 0x01) CurrentChannels++;
-  if(BuffersAlloc(VoltageChannels, CurrentChannels, Samplerate) == false) {
+  if(BuffersAlloc(VoltageChannels, CurrentChannels, pADCSamplerate / pOversample) == false) {
     Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
     return;
   }

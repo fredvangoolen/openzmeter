@@ -6,7 +6,7 @@
 #include "Analyzer.h"
 #include "DeviceInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
-class Devices {
+class Capture {
   public :
     static float             pNominalVoltage;
     static float             pNominalFrequency;

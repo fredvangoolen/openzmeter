@@ -5,7 +5,7 @@
 #include "Tools.h"
 #include "NetworkManager.h"
 #include "HTTPServer.h"
-#include "Devices.h"
+#include "Capture.h"
 #include <string.h>
 #include <signal.h>
 #include <time.h>
@@ -71,10 +71,10 @@ void Tools::LogMsg(const char *level, const char *msg, ...) {
 bool Tools::CreateLogFile() {
 //  LogFile = open(Global.Log, "at");
 //  if(!LogFile) LogFile = fopen(Global.Log, "wt");
-//  if(!LogFile) {
-//    Tools::LogMsg("WARN", "Can not create or open log file (%d)\n", errno);
-//    return true;
-//  }
+  if(pLogFile < 0) {
+    Tools::LogMsg("WARN", "Can not create or open log file (%d)\n", errno);
+    return true;
+  }
   return true;
 }
 bool Tools::CreatePidFile(char *name) {
@@ -159,7 +159,7 @@ bool Tools::ReadConfig(char *file) {
     } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "HTTPServer") == 0)) {
       HTTPServer::Config(JSON_Val);
     } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Capture") == 0)) {
-      Devices::Config(JSON_Val);
+      Capture::Config(JSON_Val);
     }
   }
 

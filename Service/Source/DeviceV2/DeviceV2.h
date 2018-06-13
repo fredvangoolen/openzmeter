@@ -23,9 +23,10 @@ class DeviceV2 : public DeviceInterface {
     typedef struct {
       uint8_t   VoltageChannel;
       uint8_t   CurrentChannel;
+      char     *Schema;
     } Mapping_t;
   private :
-    const char                  *pSerial;                  //Numero de serie del dispositivo de captura
+    char                        *pSerial;                  //Numero de serie del dispositivo de captura
     float                        pReadSamples[7];          //Muestras leidas, previas a clasificacion
     uint8_t                      pChannel;                 //Canal actual de lectura
     float                        pVoltageGain[3];          //Ganancia de tension
@@ -45,7 +46,9 @@ class DeviceV2 : public DeviceInterface {
     static void   ReadCallback(struct libusb_transfer *transfer);
     static int    PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
-//    int16_t  GetSample();
+    bool ReadJSONFloatArray(json_object *object, float *dst, uint8_t len);
+    bool ReadOutput(json_object *object);
+    //    int16_t  GetSample();
     //    uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len);
 
     

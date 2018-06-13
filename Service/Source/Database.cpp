@@ -16,7 +16,8 @@ int   Database::pPort         = 5432;
 char *Database::pUser         = (char*)"openzmeter";;
 char *Database::pPassword     = (char*)"";;
 //----------------------------------------------------------------------------------------------------------------------
-Database::Database() {
+Database::Database(char *schema) {
+  pSchema    = (schema == NULL) ? (char*)"public" : schema;
   pParams    = NULL;
   pResult    = NULL;
   pParamsLen = 0;
@@ -40,6 +41,9 @@ bool Database::Connect() {
     return false;
   }
   ExecSentence("SET synchronous_commit TO OFF");
+  PrepareSentence("SET search_path TO ?");
+  BindSingleString(pSchema);
+  ExecSentence();
   return true;
 }
 Database::~Database() {
@@ -61,7 +65,7 @@ void Database::Config(json_object *config) {
       pPassword = (char*)json_object_get_string(JSON_Val);
     }
   }
-  Database DB;
+  Database DB(NULL);
   if(DB.Connect() == true) {
     //Empiezo a meter tablas si no estan y procedimientos
     pInitialized = true;

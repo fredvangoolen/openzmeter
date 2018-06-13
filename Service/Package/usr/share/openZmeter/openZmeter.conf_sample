@@ -14,6 +14,12 @@
     "UserName": "openzmeter",
     "Password": "openzmeter"
   },
+  "Upstream": {
+    "Hostname": "150.214.150.25",
+    "Port": 2001,
+    "Token": "51983A7ACFE8D2F657F60CE660396B6CAF2D7F8EFB562364A7D23700FDDB5193",
+    "Password": "openzmeter"
+  },
   "Capture": {
     "NominalFrequency": 50,
     "NominalVoltage": 230,

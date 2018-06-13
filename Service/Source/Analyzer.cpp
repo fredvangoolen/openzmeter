@@ -11,17 +11,17 @@
 #include <unistd.h>
 #include "Analyzer.h"
 #include "Tools.h"
-Analyzer::Analyzer(char *name, uint8_t voltageChannel, uint8_t currentChannel, uint32_t id, float samplerate, float minCurrent) : Database() {
+Analyzer::Analyzer(char *name, uint8_t voltageChannel, uint8_t currentChannel, char *id, float samplerate, float minCurrent) : Database(id) {
   pType = PHASE_1;
 //  pVoltageChannel = voltageChannel;
 //  pCurrentChannel = currentChannel;
-  Init(name, id, samplerate, minCurrent);
+//  Init(name, id, samplerate, minCurrent);
 }
-Analyzer::Analyzer(char *name, bool useNeutral, uint32_t id, float samplerate, float minCurrent) : Database() {
+Analyzer::Analyzer(char *name, bool useNeutral, char *id, float samplerate, float minCurrent) : Database(id) {
   pType = (useNeutral) ? PHASE_3N : PHASE_3;
   Init(name, id, samplerate, minCurrent);
 }
-void Analyzer::Init(char *name, uint32_t id, float samplerate, float minCurrent) {
+void Analyzer::Init(char *name, char *id, float samplerate, float minCurrent) {
   pZC             = new ZeroCrossing((pType == PHASE_1) ? false : true, samplerate);
   pName           = name;
   pID             = id;
@@ -33,7 +33,7 @@ void Analyzer::Init(char *name, uint32_t id, float samplerate, float minCurrent)
   pTerminate      = false;
   pSamplerate     = samplerate;
   pMinCurrent     = minCurrent;
-  pMaxSamples     = ceil(12.0 * samplerate / Devices::GetNominalFrequency());
+  pMaxSamples     = ceil(12.0 * samplerate / Capture::GetNominalFrequency());
   pWaitingThreads = 0;
   pDataReady      = false;
   pPrevTimestamp  = 0;
@@ -97,14 +97,13 @@ bool Analyzer::SampleAppend(float *voltageSamples, float *currentSamples, uint64
 }
 void Analyzer::SaveAggreg(Params_t *params) {
   if(params->Type == AGGREG_3S)
-    PrepareSentence("EXECUTE SAVE_3S(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("EXECUTE SAVE_3S(?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1M)  
-    PrepareSentence("EXECUTE SAVE_1M(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("EXECUTE SAVE_1M(?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_10M)  
-    PrepareSentence("EXECUTE SAVE_10M(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("EXECUTE SAVE_10M(?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1H)  
-    PrepareSentence("EXECUTE SAVE_1H(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-  BindSingleUInt32(pID);                                                                                     //node
+    PrepareSentence("EXECUTE SAVE_1H(?, ?, ?, ?, ?, ?, ?, ?, ?)");
   BindSingleUInt64(params->Timestamp);                                                                       //sampletime
   BindArrayFloat(params->RMS_V, (pType == PHASE_1) ? 1 : 3);                                                 //rms_v 
   BindArrayFloat(params->RMS_I, (pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4);                        //rms_i
@@ -116,8 +115,7 @@ void Analyzer::SaveAggreg(Params_t *params) {
   BindSingleBool(params->Flag);                                                                              //flaged
   ExecSentence();
   if(params->Type == AGGREG_1M) {
-    PrepareSentence("EXECUTE SAVE_1M_EXT(?, ?, ?, ?, ?, ?, ?, ?)");
-    BindSingleUInt32(pID);                                                                                   //node
+    PrepareSentence("EXECUTE SAVE_1M_EXT(?, ?, ?, ?, ?, ?, ?)");
     BindSingleUInt64(params->Timestamp);                                                                     //sampletime
     BindArrayFloat(params->Power_Factor, (pType == PHASE_1) ? 1 : 3);                                        //power_factor
     BindArrayFloat(params->THD_V, (pType == PHASE_1) ? 1 : 3);                                               //thd_v
@@ -126,8 +124,7 @@ void Analyzer::SaveAggreg(Params_t *params) {
     BindArrayArrayFloat((float*)params->VoltageHarmonics, (pType == PHASE_1) ? 1 : 3, 50);                           //harmonics_v
     BindArrayArrayFloat((float*)params->CurrentHarmonics, (pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4, 50);  //harmonics_i
     ExecSentence();
-    PrepareSentence("EXECUTE DELETE_1M_EXT(?, ?)");
-    BindSingleUInt32(pID);                                                                                   //node
+    PrepareSentence("EXECUTE DELETE_1M_EXT(?)");
     BindSingleUInt64(params->Timestamp - 86400000);                                                          //sampletime
     ExecSentence();
   }
@@ -518,7 +515,7 @@ char *Analyzer::GetTypeString() {
   if(pType == PHASE_3)  return (char*)"3Phase";
   if(pType == PHASE_1)  return (char*)"1Phase";
 }
-uint32_t Analyzer::GetID() {
+char *Analyzer::GetID() {
   return pID;
 }
 char *Analyzer::GetName() {

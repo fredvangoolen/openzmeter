@@ -5,7 +5,7 @@
 #include <string.h>
 #include <math.h>
 #include "DeviceInterface.h"
-#include "Devices.h"
+#include "Capture.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 DeviceInterface::DeviceInterface(char *driver) {
