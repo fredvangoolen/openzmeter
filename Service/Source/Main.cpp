@@ -66,9 +66,12 @@ int main(int argc, char** argv) {
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
   }
   Tools::RegisterHandlers(SignalHandler);
-  if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
+  HTTPServer::RegisterCallback((char*)"/getSysInfo", Tools::GetSysInfo);
   HTTPServer::RegisterCallback((char*)"/getNodes", Capture::GetNodesCallback);
   HTTPServer::RegisterCallback((char*)"/getSeries", Capture::GetSeriesCallback);
+  HTTPServer::RegisterCallback((char*)"/getSeriesAggreg", Capture::GetSeriesAggregCallback);
+  HTTPServer::RegisterCallback((char*)"/getSeriesNow", Capture::GetSeriesNowCallback);
+  if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
   
 //  if(Tools::CreateLogFile() == false) return EXIT_FAILURE;
   //CaptureInterface **Interfaces = (CaptureInterface**)calloc(sizeof(CaptureInterface*), Tools::Devices.Len);

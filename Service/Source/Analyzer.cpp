@@ -15,7 +15,7 @@ Analyzer::Analyzer(char *name, uint8_t voltageChannel, uint8_t currentChannel, c
   pType = PHASE_1;
 //  pVoltageChannel = voltageChannel;
 //  pCurrentChannel = currentChannel;
-//  Init(name, id, samplerate, minCurrent);
+  Init(name, id, samplerate, minCurrent);
 }
 Analyzer::Analyzer(char *name, bool useNeutral, char *id, float samplerate, float minCurrent) : Database(id) {
   pType = ((useNeutral) ? PHASE_3N : PHASE_3);
@@ -27,16 +27,16 @@ void Analyzer::Init(char *name, char *id, float samplerate, float minCurrent) {
   pID             = id;
   pSamples        = 0; 
   pSequence       = 0;
-  pCyclesLen[0]   = 0;
   pCycles         = 0;
   pWorking        = false;
   pTerminate      = false;
   pSamplerate     = samplerate;
   pMinCurrent     = minCurrent;
-  pMaxSamples     = ceil(12.0 * samplerate / Capture::GetNominalFrequency());
+  pMaxSamples     = ceil(15.0 * samplerate / Capture::GetNominalFrequency());
   pWaitingThreads = 0;
   pDataReady      = false;
   pPrevTimestamp  = 0;
+  for(uint8_t i = 0; i < 20; i++) pCyclesLen[i] = 0;
   for(uint8_t i = 0; i < 3; i++) pVoltageSamples[i] = (float*)malloc(sizeof(float) * pMaxSamples);
   for(uint8_t i = 0; i < 4; i++) pCurrentSamples[i] = (float*)malloc(sizeof(float) * pMaxSamples);
   for(uint8_t i = 0; i < 3; i++) {
@@ -81,18 +81,49 @@ Analyzer::~Analyzer() {
   //Libero todas las estructuras
 }
 bool Analyzer::SampleAppend(float *voltageSamples, float *currentSamples, uint64_t sampletime) {
-
+  if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
   for(uint8_t i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) pVoltageSamples[i][pSamples] = voltageSamples[i];
   for(uint8_t i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) pCurrentSamples[i][pSamples] = currentSamples[i];
-  if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
+
   pSamples++;
-  if(pSamples == pMaxSamples) {
+  pCyclesLen[pCycles]++;
+  if(pZC->ProcessSample(voltageSamples) == true) pCycles++;
+  if((pCycles == 20) || (pSamples == pMaxSamples)) {
+    printf("Cycles: %u\n", pCycles);
+    fflush(stdout);
     pthread_mutex_lock(&pThreadMutex);
     pWorking = true;
     pthread_mutex_unlock(&pThreadMutex);
     pthread_cond_signal(&pThreadCond);
     return true;
   }
+      
+    
+    
+
+    
+//// ceil(12.0 * pSamplerate / Devices::GetNominalFrequency());
+//  pSamples = 0;
+//  pVoltageSamples = voltageSamples;
+//  pVoltageFFT     = voltageFFT;
+//  pCurrentSamples = currentSamples;
+//  pCurrentFFT     = currentFFT;
+//  if(cycles == 20) {
+//    for(int i = 0; i < cycles; i++) {
+//      pPrevCyclesLenght = pPrevCyclesLenght - pPrevCycles[pPrevCyclesPos];
+//      pPrevCycles[pPrevCyclesPos] = cyclesLen[i];
+//      pPrevCyclesLenght = pPrevCyclesLenght + pPrevCycles[pPrevCyclesPos];
+//      pPrevCyclesPos = (pPrevCyclesPos + 1) % ANALYZER_FREQCYCLES;
+//    }
+//    pAggreg10C.Frequency = ANALYZER_FREQCYCLES / (pPrevCyclesLenght / pSamplerate) / 2.0;
+//  } else {
+//    for(uint8_t i = 0; i < cycles; i++) pSamples = pSamples + cyclesLen[i];
+//    pAggreg10C.Frequency = NAN;
+//  }
+
+////  pAggreg10C.Flag      = EventsDetect();
+//  
+
   return false;
 }
 void Analyzer::SaveAggreg(Params_t *params) {
@@ -144,14 +175,14 @@ void Analyzer::AccumulateAggreg(Params_t *dst, Params_t *src) {
     for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) dst->Power_Factor[i] += src->Power_Factor[i];
     for(int i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) dst->THD_I[i] += pow(src->THD_I[i], 2.0);
     for(int i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) {
-//      for(int j = 0; j < 50; j++) dst->CurrentHarmonics[j * 50 + i] += pow(src->CurrentHarmonics[j * 50 + i], 2.0);
+      for(int j = 0; j < 50; j++) dst->CurrentHarmonics[i][j] += pow(src->CurrentHarmonics[i][j], 2.0);
     }
     for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) dst->Phi[i] += src->Phi[i];
   }
   if((dst->Type == AGGREG_1M) || (dst->Type == AGGREG_10M)) {
     for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) dst->THD_V[i] += pow(src->THD_V[i], 2.0);
     for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) {
-//      for(int j = 0; j < 50; j++) dst->VoltageHarmonics[i][j] += pow(src->VoltageHarmonics[i][j], 2.0);
+      for(int j = 0; j < 50; j++) dst->VoltageHarmonics[i][j] += pow(src->VoltageHarmonics[i][j], 2.0);
     }
   }
   dst->Samples++;
@@ -168,13 +199,13 @@ void Analyzer::NormalizeAggreg(Params_t *params) {
       for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) params->THD_I[i] = sqrt(params->THD_I[i] / params->Samples);
       for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) params->Phi[i] = params->Phi[i] / params->Samples;
       for(int i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) {
-//        for(int j = 0; j < 50; j++) params->CurrentHarmonics[i][j] = sqrt(params->CurrentHarmonics[i][j] / params->Samples);
+        for(int j = 0; j < 50; j++) params->CurrentHarmonics[i][j] = sqrt(params->CurrentHarmonics[i][j] / params->Samples);
       }
     }
     if((params->Type == AGGREG_1M) || (params->Type == AGGREG_1M)) {
       for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) params->THD_V[i] = sqrt(params->THD_V[i] / params->Samples);
       for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) {
-//        for(int j = 0; j < 50; j++) params->VoltageHarmonics[i][j] = sqrt(params->VoltageHarmonics[i][j] / params->Samples);
+        for(int j = 0; j < 50; j++) params->VoltageHarmonics[i][j] = sqrt(params->VoltageHarmonics[i][j] / params->Samples);
       }    
     }
   }
@@ -220,33 +251,11 @@ void Analyzer::Analize() {
     }
     uint64_t Start = Tools::GetTime();
     pthread_mutex_unlock(&pThreadMutex);
-    
-    
-    
 
     
-//// ceil(12.0 * pSamplerate / Devices::GetNominalFrequency());
-//  pSamples = 0;
-//  pVoltageSamples = voltageSamples;
-//  pVoltageFFT     = voltageFFT;
-//  pCurrentSamples = currentSamples;
-//  pCurrentFFT     = currentFFT;
-//  if(cycles == 20) {
-//    for(int i = 0; i < cycles; i++) {
-//      pPrevCyclesLenght = pPrevCyclesLenght - pPrevCycles[pPrevCyclesPos];
-//      pPrevCycles[pPrevCyclesPos] = cyclesLen[i];
-//      pPrevCyclesLenght = pPrevCyclesLenght + pPrevCycles[pPrevCyclesPos];
-//      pPrevCyclesPos = (pPrevCyclesPos + 1) % ANALYZER_FREQCYCLES;
-//    }
-//    pAggreg10C.Frequency = ANALYZER_FREQCYCLES / (pPrevCyclesLenght / pSamplerate) / 2.0;
-//  } else {
-//    for(uint8_t i = 0; i < cycles; i++) pSamples = pSamples + cyclesLen[i];
-//    pAggreg10C.Frequency = NAN;
-//  }
-
-////  pAggreg10C.Flag      = EventsDetect();
-//  
     
+    
+    pAggreg10C.Frequency = pZC->Frequency();
     for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) pVoltageFFT[i]->Start(pVoltageSamples[i], pSamples);
     for(int i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) pCurrentFFT[i]->Start(pCurrentSamples[i], pSamples);
     //Calcula valores basicos (RMS, potencia activa y energia) que son validos aun habiendo eventos
@@ -377,6 +386,8 @@ void Analyzer::Analize() {
     Tools::LogMsg("DEBUG", "Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", pName, Tools::GetTime() - Start, pSequence);
     pWorking = false;
     pSamples = 0;
+    pCycles = 0;
+    for(uint8_t i = 0; i < 20; i++) pCyclesLen[i] = 0;
     pSequence++;
     pthread_mutex_unlock(&pThreadMutex);
   }

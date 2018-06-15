@@ -46,7 +46,7 @@ function AjaxGetCurrent() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastCurrentSample, Series: 'rms_i', Node: Node}),
+           data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastCurrentSample, Series: 'rms_i', Node: Nodes['Devices'][Node].ID}),
            success: AjaxCurrent,
            complete: function (x) {
              $('#btnCurrentNow').removeClass('disabled');
@@ -370,7 +370,7 @@ function AjaxGetCurrentCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(rms_i), max(rms_i), min(rms_i)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Node }),
+           data: JSON.stringify({ Series: "avg(rms_i), max(rms_i), min(rms_i)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Nodes['Devices'][Node].ID }),
            success: CurrentUpdateCountersCurrent
   });
   $.ajax({ url: "getSeriesAggreg",
@@ -378,7 +378,7 @@ function AjaxGetCurrentCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(rms_i), max(rms_i), min(rms_i)", Aggreg: Aggreg, Period: Period, To: Current, Node: Node }),
+           data: JSON.stringify({ Series: "avg(rms_i), max(rms_i), min(rms_i)", Aggreg: Aggreg, Period: Period, To: Current, Node: Nodes['Devices'][Node].ID }),
            success: CurrentUpdateCountersPrevs
   });
 }
@@ -469,7 +469,7 @@ function AjaxGetDetails() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_i, phi', Node: Node}),
+           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_i, phi', Node: Nodes['Devices'][Node].ID}),
            success: function(result) {
              if(WaveformChart === null) StopSpinner(DetailSpinner, 'DetailSpinner');
              DetailTimestamp = result['Sampletime'];
@@ -1062,7 +1062,7 @@ function AjaxGetEvolution() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: '1m', LastSample: LastEvolutionSample, Series: 'power_factor, thd_i, phi, harmonics_i', Node: Node}),
+           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: '1m', LastSample: LastEvolutionSample, Series: 'power_factor, thd_i, phi, harmonics_i', Node: Nodes['Devices'][Node].ID}),
            success: AjaxEvolutions,
            complete: function() { 
              setTimeout(AjaxGetEvolution, 60000);

@@ -175,9 +175,9 @@ void *DeviceV2::Capture_Thread(void *args) {
       Tools::LogMsg("INFO", "Capture started on DeviceV2 with serial %s\n", This->pSerial);
       This->pActive = true;
       This->pNewDevice = NULL;
+      This->pUSBState = USB_RESET;
       int Error = libusb_control_transfer(This->pDeviceHandle, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0x01, 0x0000, 0x0000, NULL, 0, 0);
       if(Error < 0) Tools::LogMsg("ERROR", "Can not stop device with serial %s (%d)\n", This->pSerial, Error);
-      This->pUSBState = USB_RESET;
       usleep(1000000);
       This->pUSBState = USB_WAIT;
       float Conf[7] = {This->pVoltageOffset[0], This->pCurrentOffset[0], This->pVoltageOffset[1], This->pCurrentOffset[1], This->pVoltageOffset[2], This->pCurrentOffset[2], This->pCurrentOffset[3]};

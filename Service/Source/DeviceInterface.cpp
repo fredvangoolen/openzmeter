@@ -101,18 +101,6 @@ bool DeviceInterface::BuffersAppend(float *voltageSamples, float *currentSamples
 //    pCurrentFFT[i] = new FFT(pMaxSamples, Name);
 //  }
   //  pSamples = 0;
-//  float Q = 1.0;
-//  float K = tan(M_PI * (Devices::GetNominalFrequency() / pSamplerate));
-//  float Norm = 1 / (1 + K / Q + K * K);
-//  pFilters.A0 = K / Q * Norm;
-//  pFilters.A1 = 0;
-//  pFilters.A2 = -pFilters.A0;
-//  pFilters.B1 = 2 * (K * K - 1) * Norm;
-//  pFilters.B2 = (1 - K / Q + K * K) * Norm;
-//  pFilters.Channels = (FilterChannel_t*)malloc(sizeof(FilterChannel_t) * pVoltageChannels);
-//  pFilters.Results  = (float*)malloc(sizeof(float) * pVoltageChannels);
-//  if((pFilters.Channels == NULL) || (pFilters.Results == NULL)) return false;
-//  for(int Chan = 0; Chan < pVoltageChannels; Chan++) pFilters.Channels[Chan].Stages = (FilterStage_t*)calloc(sizeof(FilterStage_t), DEVICEINTERFACE_FILTERSTAGES);
 //  return true;
   
   //  if(pAnalyzerState == ANALYZER_PROCESSING) {
@@ -200,14 +188,3 @@ DeviceInterface::~DeviceInterface() {
 //uint32_t DeviceInterface::GetMaxSamples() {
 //  return ceil((1.15 * pSamplerate * 10.0) / Devices::NominalFrequency);
 //}
-
-//float DeviceInterface::ApplyFilter(float in, Filter_t* filter) {
-//  float out = in * filter->A0 + filter->Z1;
-//  filter->Z1 = in * filter->A1 + filter->Z2 - filter->B1 * out;
-//  filter->Z2 = in * filter->A2 - filter->B2 * out;
-//  return out;
-//}
-//  pVoltageFFT      = NULL;
-//  pCurrentFFT      = NULL;
-
-  //  pMaxSamples      = 0;

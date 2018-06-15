@@ -99,7 +99,7 @@ class Analyzer : private Database {
 
 
     
-//    Filter_t    pFilters;                    //Filtros aplicados para deteccion de cruce por 0
+
   private :
     static void *Analyzer_Thread(void *args);
     

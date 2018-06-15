@@ -28,7 +28,7 @@ function AjaxGetVoltage() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastVoltageSample, Series: 'rms_v, flag', Node: Node }),
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastVoltageSample, Series: 'rms_v, flag', Node: Nodes['Devices'][Node].ID }),
            success: AjaxVoltage,
            complete: function() { setTimeout(AjaxGetVoltage, 5000); }
         });
@@ -190,7 +190,7 @@ function AjaxGetCurrent() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastCurrentSample, Series: 'rms_i', Node: Node }),
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastCurrentSample, Series: 'rms_i', Node: Nodes['Devices'][Node].ID }),
            success: AjaxCurrent,
            complete: function() { setTimeout(AjaxGetCurrent, 5000); }
         });
@@ -357,7 +357,7 @@ function AjaxGetPower() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastPowerSample, Series: 'active_power', Node: Node }),
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastPowerSample, Series: 'active_power', Node: Nodes['Devices'][Node].ID }),
            success: AjaxPower,
            complete: function() { setTimeout(AjaxGetPower, 5000); }
         });
@@ -525,7 +525,7 @@ function AjaxGetFrequency() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastFrequencySample, Series: 'freq', Node: Node }),
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastFrequencySample, Series: 'freq', Node: Nodes['Devices'][Node].ID }),
            success: AjaxFrequency,
            complete: function() { setTimeout(AjaxGetFrequency, 5000); }
         });
@@ -637,7 +637,7 @@ function AjaxGetEnergy() {
     type: "POST",
     dataType: "json",
     contentType: 'application/json',
-    data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastEnergySample, Series: 'active_energy', Node: Node }),
+    data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastEnergySample, Series: 'active_energy', Node: Nodes['Devices'][Node].ID }),
     success: AjaxEnergy,
     complete: function() { 
       $('#btnEnergyNow').removeClass('disabled');
@@ -955,7 +955,7 @@ function AjaxGetEnergyCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Node }),
+           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Nodes['Devices'][Node].ID }),
            success: EnergyUpdateCountersCurrent
   });
   $.ajax({ url: "getSeriesAggreg",
@@ -963,7 +963,7 @@ function AjaxGetEnergyCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current, Node: Node }),
+           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current, Node: Nodes['Devices'][Node].ID }),
            success: EnergyUpdateCountersPrevs
   });
   $.ajax({ url: "getBudget",
@@ -971,7 +971,7 @@ function AjaxGetEnergyCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: Period, To: Current, Node: Node }),
+           data: JSON.stringify({ Period: Period, To: Current, Node: Nodes['Devices'][Node].ID }),
            success: EnergyUpdateCountersBudget
   });
 }
@@ -1067,7 +1067,7 @@ function AjaxGetMainParameters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: "1m", LastSample: LastEvolutionSample, Series: 'active_power, fundamental_reactive_power, rms_v, rms_i, power_factor, phi', Node: Node }),
+           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: "1m", LastSample: LastEvolutionSample, Series: 'active_power, fundamental_reactive_power, rms_v, rms_i, power_factor, phi', Node: Nodes['Devices'][Node].ID }),
            success: AjaxMainParameters,
            complete: function() {
              setTimeout(AjaxGetMainParameters, 60000);

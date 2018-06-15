@@ -16,14 +16,13 @@ class Capture {
   private :  
     static void AddDevice(DeviceInterface *device);
   public :
-    static float            GetNominalVoltage();
-    static float            GetNominalFrequency();
-//    static uint8_t          GetDevices();
-//    static DeviceInterface *GetDevices(uint8_t index);
-    static void             Config(json_object *config);
-//    static Analyzer        *FindID(uint32_t id);
-    static bool             GetSeriesCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
-    static bool             GetNodesCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
+    static float GetNominalVoltage();
+    static float GetNominalFrequency();
+    static void  Config(json_object *config);
+    static bool  GetSeriesCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
+    static bool  GetSeriesAggregCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
+    static bool  GetNodesCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
+    static bool  GetSeriesNowCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
     
 };
 //----------------------------------------------------------------------------------------------------------------------

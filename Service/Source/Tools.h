@@ -9,6 +9,7 @@
 #include <json-c/json.h>
 #include "HTTPServer.h"
 #include "Capture.h"
+#include "Database.h"
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   private :
@@ -29,7 +30,7 @@ class Tools {
     static void         Daemonize();
     static bool         CreateLogFile();
     static uint64_t     GetTime();
-    static json_object *GetJSONSysInfo();
+    static bool         GetSysInfo(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
     static void         RegisterHandlers(void (*function)(int));
 };
 //----------------------------------------------------------------------------------------------------------------------

@@ -10,8 +10,8 @@
 #include "Database.h"
 #include "FFT.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define ZEROCROSSING_FILTERSTAGES          5
-#define ZEROCROSSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
+#define ZEROCROSSING_FILTERSTAGES          3
+#define ZEROCROSSING_SECONDS              10        //Numero de segundos usados para calcular frequencia
 //----------------------------------------------------------------------------------------------------------------------
 class ZeroCrossing {
   private :
@@ -25,11 +25,13 @@ class ZeroCrossing {
       float         A2;
       float         B1;
       float         B2;
-      float         Results[3];
       FilterStage_t Channels[3][ZEROCROSSING_FILTERSTAGES];
     } Filter_t;
   private :
-    float pSamplerate;
+    float    pLastSamples[3];
+    float    pSamplerate;
+    bool     p3Phase;
+    Filter_t pFilters;
   public :
     ZeroCrossing(bool phase3, float samplerate);
     bool  ProcessSample(float *samples);

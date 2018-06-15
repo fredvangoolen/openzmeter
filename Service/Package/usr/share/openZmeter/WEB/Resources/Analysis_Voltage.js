@@ -47,7 +47,7 @@ function AjaxGetVoltage() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastVoltageSample, Series: 'rms_v', Node: Node}),
+           data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastVoltageSample, Series: 'rms_v', Node: Nodes['Devices'][Node].ID}),
            success: AjaxVoltage,
            complete: function() { 
              AjaxGetEvents(Period, GraphEnd, Node);
@@ -453,7 +453,7 @@ function AjaxGetDetails() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_v, phi, rms_v, rms_i', Node: Node}),
+           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_v, phi, rms_v, rms_i', Node: Nodes['Devices'][Node].ID}),
            success: function(result) {
              if(WaveformChart === null) StopSpinner(DetailSpinner, 'DetailSpinner');
              DetailTimestamp = result['Sampletime'];
@@ -1159,7 +1159,7 @@ function AjaxGetEvolution() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: '1m', LastSample: LastEvolutionSample, Series: 'power_factor, thd_v, phi, harmonics_v', Node: Node}),
+           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: '1m', LastSample: LastEvolutionSample, Series: 'power_factor, thd_v, phi, harmonics_v', Node: Nodes['Devices'][Node].ID}),
            success: AjaxEvolutions,
            complete: function() { 
              setTimeout(AjaxGetEvolution, 60000);
@@ -1462,7 +1462,7 @@ function AjaxGetEvents(period, to, node) {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: period, To: to, LastEvent: LastEventStartTime, Node: Node}),
+           data: JSON.stringify({ Period: period, To: to, LastEvent: LastEventStartTime, Node: Nodes['Devices'][Node].ID}),
            success: AjaxEvents,
            complete: function() { 
              $('#btnVoltageNow').removeClass('disabled');
@@ -1514,7 +1514,7 @@ $("table#EventsTable").on('click', 'button.get_samples', function () {
     type: "POST",
     dataType: "json",
     contentType: 'application/json',
-    data: JSON.stringify({ Node: Node, Starttime: EventsDatasheet[Row.index()] }),
+    data: JSON.stringify({ Node: Nodes['Devices'][Node].ID, Starttime: EventsDatasheet[Row.index()] }),
     success: AjaxSamples
   });
 });

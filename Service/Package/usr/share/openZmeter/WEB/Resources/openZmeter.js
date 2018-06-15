@@ -160,7 +160,7 @@ function AjaxGetIndicators() {
     type: "POST",
     dataType: "json",
     contentType: 'application/json',
-    data: JSON.stringify({ Series: 'rms_v, rms_i, active_power, freq', Node: Node}),
+    data: JSON.stringify({ Series: 'rms_v, rms_i, active_power, freq', Node: Nodes['Devices'][Node].ID}),
     success: function(result) {
       var Time = new Date(result['Sampletime']);
       $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
@@ -198,7 +198,7 @@ function AjaxGetIndicatorsB() {
     type: "POST",
     dataType: "json",
     contentType: 'application/json',
-    data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: '1m', Period: 86400000, To: From + 86400000, Node: Node }),
+    data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: '1m', Period: 86400000, To: From + 86400000, Node: Nodes['Devices'][Node].ID }),
     success: function(result) {
       var Units = 'Wh';
       for(i = 0; i < result['sum_active_energy'].length; i++) {
@@ -290,6 +290,7 @@ function GetNodesCompletes(result) {
     Node = 0;
   }
   for(i = 0; i < result['Devices'].length; i++) {
+    Nodes['Devices'][i].Type = "3Phase";
     if(i === Node) {
       $('#SourceSel').text(result['Devices'][i]['Name'] + ' (' + result['Devices'][i]['Type'] + ')');
     } else {
