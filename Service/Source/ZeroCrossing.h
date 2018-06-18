@@ -28,10 +28,14 @@ class ZeroCrossing {
       FilterStage_t Channels[3][ZEROCROSSING_FILTERSTAGES];
     } Filter_t;
   private :
-    float    pLastSamples[3];
-    float    pSamplerate;
-    bool     p3Phase;
-    Filter_t pFilters;
+    float     pLastSamples[3];
+    float     pSamplerate;
+    float     pFrequency;
+    bool      p3Phase;
+    Filter_t  pFilters;
+    uint32_t *pCyclesLen;
+    uint32_t  pCyclesPos;
+    uint32_t  pCyclesCount;
   public :
     ZeroCrossing(bool phase3, float samplerate);
     bool  ProcessSample(float *samples);

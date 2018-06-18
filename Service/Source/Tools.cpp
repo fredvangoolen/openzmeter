@@ -216,6 +216,12 @@ bool Tools::GetSysInfo(Database **db, json_object *reader, json_object **writer,
   json_object_object_add(*writer, "Disk_Total", json_object_new_int64((uint64_t)Disk.f_blocks * Disk.f_frsize));
   json_object_object_add(*writer, "Disk_Free", json_object_new_int64((uint64_t)Disk.f_bfree * Disk.f_frsize));
   json_object_object_add(*writer, "Battery_Percent", json_object_new_int(100));
- *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
+  int TempFile = open("/sys/class/thermal/thermal_zone0/temp", O_RDONLY);
+  if(TempFile > 0) {
+    char Temp[16];
+    if(read(TempFile, Temp, sizeof(Temp)) > 0) json_object_object_add(*writer, "Temperature", json_object_new_int(atoi(Temp)));
+    close(TempFile);
+  }
+  *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
   return true;
 }

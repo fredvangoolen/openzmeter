@@ -102,24 +102,7 @@ bool Analyzer::SampleAppend(float *voltageSamples, float *currentSamples, uint64
     
 
     
-//// ceil(12.0 * pSamplerate / Devices::GetNominalFrequency());
-//  pSamples = 0;
-//  pVoltageSamples = voltageSamples;
-//  pVoltageFFT     = voltageFFT;
-//  pCurrentSamples = currentSamples;
-//  pCurrentFFT     = currentFFT;
-//  if(cycles == 20) {
-//    for(int i = 0; i < cycles; i++) {
-//      pPrevCyclesLenght = pPrevCyclesLenght - pPrevCycles[pPrevCyclesPos];
-//      pPrevCycles[pPrevCyclesPos] = cyclesLen[i];
-//      pPrevCyclesLenght = pPrevCyclesLenght + pPrevCycles[pPrevCyclesPos];
-//      pPrevCyclesPos = (pPrevCyclesPos + 1) % ANALYZER_FREQCYCLES;
-//    }
-//    pAggreg10C.Frequency = ANALYZER_FREQCYCLES / (pPrevCyclesLenght / pSamplerate) / 2.0;
-//  } else {
-//    for(uint8_t i = 0; i < cycles; i++) pSamples = pSamples + cyclesLen[i];
-//    pAggreg10C.Frequency = NAN;
-//  }
+
 
 ////  pAggreg10C.Flag      = EventsDetect();
 //  
