@@ -10,16 +10,13 @@
 #include "Database.h"
 #include "FFT.h"
 #include "ZeroCrossing.h"
+#include "Stats.h"
 //----------------------------------------------------------------------------------------------------------------------
 class Analyzer : private Database {
   public :
     enum AnalyzerType {PHASE_1, PHASE_3, PHASE_3N};
   private :
     enum AggregType { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
-//    typedef struct {
-//      uint32_t Start;                       //Muestra dentro del bloque que inicia el ciclo
-//      uint32_t End;                         //Muestra dentro del bloque que finaliza el ciclo
-//    } Cycle_t;
     typedef struct {
       AggregType Type;                          //Tipo de agregacion
       uint64_t   Timestamp;                     //Timestamp de la muestra inicial
@@ -57,6 +54,7 @@ class Analyzer : private Database {
     Params_t        pAggreg10M;               //Agregacion de 10 minutos
     Params_t        pAggreg1H;                //Agregacion de 1 hora
     ZeroCrossing   *pZC;                      //Generador de paso por cero y calculo de frecuencia
+    Stats          *pStats;                   //Registro de estadisticas
     uint32_t        pMaxSamples;              //Numero maximo de muestras
     float          *pVoltageSamples[3];       //Muestras de tension del bloque
     float          *pCurrentSamples[4];       //Muestras de corriente del bloque
@@ -64,68 +62,37 @@ class Analyzer : private Database {
     FFT            *pCurrentFFT[4];           //Muestras de FFT corriente del bloque
     uint32_t        pCyclesLen[20];           //Longitud de los ciclos detectados
     uint8_t         pCycles;                  //Numero de ciclos detectados
-    
     bool            pWorking;                 //Flag para indicar que el hilo esta trabajando
     pthread_t       pThread;               //Hilo de ejecucion
     pthread_mutex_t pThreadMutex;          //Mutex para la variable de condicion
     pthread_cond_t  pThreadCond;           //Variable de condicion para esperar
     bool            pTerminate;            //Marca para finalizar proceso
-    
-
-//
-//
-
     uint64_t        pPrevTimestamp;           //Timestamp del ultimo bloque procesado
-//    float         **pVoltageSamples;          //Muestras de tension del bloque
-//    FFT           **pVoltageFFT;              //Transformada de los canales de tension
-//    float         **pCurrentSamples;          //Muestras de corriente del bloque
-//    FFT           **pCurrentFFT;              //Transformada de los canales de corriente
     uint32_t        pWaitingThreads;          //Hilos esperando datos
     pthread_mutex_t pWaitingThreadsMutex;     //Mutex para registrar cambios en WaitingThreads
     pthread_cond_t  pWaitingThreadsCond;      //Variable de condicion para bloquear el analizer
     bool            pDataReady;               //Datos disponibles
     pthread_mutex_t pDataReadyMutex;          //Mutex para registrar cambios en DataReady
     pthread_cond_t  pDataReadyCond;           //Variable de condicion para bloquear los clientes
-//    uint32_t        pPrevCycles[ANALYZER_FREQCYCLES];
-//    uint32_t        pPrevCyclesPos;           //Posicion de escritura de las estadisticas de ciclos
-//    uint32_t        pPrevCyclesLenght;        //Longitud del periodo medido
-
-    
-      //    uint8_t                      pCyclesCount;             //Numero de ciclos actuales
-//    uint32_t                     pCyclesLen[20];           //Longitud de los ciclos detectados
-
-    
-    
-
-
-    
-
   private :
     static void *Analyzer_Thread(void *args);
-    
   private :
     void  Init(char *name, char *id, float samplerate, float minCurrent);
     void  AccumulateAggreg(Params_t *dst, Params_t *src);
     void  SaveAggreg(Params_t *param);
     void  ResetAggreg(Params_t *params);
     void  NormalizeAggreg(Params_t *params);
-    void  Analize();
+    void  Analyze();
   protected :
 //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
   public :
     Analyzer(char *name, bool useNeutral, char *id, float samplerate, float minCurrent);
-    Analyzer(char *name, uint8_t voltageChannel, uint8_t currentChannel, char *id, float samplerate, float minCurrent);
-    bool SampleAppend(float *voltageSamples, float *CurrentSamples, uint64_t sampletime);
-
-    
+    Analyzer(char *name, char *id, float samplerate, float minCurrent);
     ~Analyzer();
-    
-    void         Wait();
+    bool         SampleAppend(float *voltageSamples, float *CurrentSamples, uint64_t sampletime);
     bool         IsFinished();
     char        *GetTypeString();
     char        *GetID();
     char        *GetName();
     json_object *GetJSONCopy(char *series);
-
-    //~Analyzer();
 };

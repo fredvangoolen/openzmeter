@@ -20,11 +20,6 @@
 class DeviceV2 : public DeviceInterface {
   private :
     enum USBState {USB_RESET, USB_WAIT, USB_SYNC};
-    typedef struct {
-      uint8_t   VoltageChannel;
-      uint8_t   CurrentChannel;
-      char     *Schema;
-    } Mapping_t;
   private :
     char                        *pSerial;                  //Numero de serie del dispositivo de captura
     float                        pReadSamples[7];          //Muestras leidas, previas a clasificacion
@@ -39,7 +34,6 @@ class DeviceV2 : public DeviceInterface {
     uint8_t                      pOversample;              //Oversample usado en el micro
     struct libusb_device_handle *pDeviceHandle;            //Dispositivo de captura
     struct libusb_device        *pNewDevice;               //Dispositivo que se conecta
-//    Mapping_t                   *pMappings;                //Listado de mapeado de canales
     USBState                     pUSBState;                //Indica si la lectura del USB esta sincronizada o no
   private :
     static void  *Capture_Thread(void *args);
@@ -47,13 +41,7 @@ class DeviceV2 : public DeviceInterface {
     static int    PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
     bool ReadJSONFloatArray(json_object *object, float *dst, uint8_t len);
-    bool ReadOutput(json_object *object);
-    //    int16_t  GetSample();
-    //    uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len);
-
-    
-//    void AppendSamples();
-    
+    bool ReadOutput(json_object *object, bool parseOnly);
   public :
     DeviceV2(json_object* config);
     ~DeviceV2();

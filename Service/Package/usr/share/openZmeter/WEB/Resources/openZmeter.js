@@ -134,7 +134,7 @@ function Round2(value) {
     Fraction = Math.abs(value % 100);
     Fraction = Fraction.toString();
     while(Fraction.length < 2) Fraction = '0' + Fraction;
-    return Integer.toString() + "<span style='font-size:80%'>." + Fraction + '</span>';
+    return ((value < 0) ? '-' : '') + Math.abs(Integer.toString()) + "<span style='font-size:80%'>." + Fraction + '</span>';
   }
 }
 

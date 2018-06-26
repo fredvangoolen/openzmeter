@@ -14,19 +14,11 @@
     "UserName": "openzmeter",
     "Password": "openzmeter"
   },
-  "Upstream": {
-    "Hostname": "150.214.150.25",
-    "Port": 2001,
-    "Token": "51983A7ACFE8D2F657F60CE660396B6CAF2D7F8EFB562364A7D23700FDDB5193",
-    "Password": "openzmeter"
-  },
   "Capture": {
-    "NominalFrequency": 50,
-    "NominalVoltage": 230,
     "Devices": [
       { "Driver": "CaptureMono",
-        "ID": 0,
-        "DisplayName": "Real",
+        "NominalFrequency": 50,
+        "NominalVoltage": 230,
         "Serial": "3FFFFFFFFFFFFFFFFFFFFFFF",
         "VoltageGain": 0.01160,
         "VoltageOffset": 348.00,
@@ -42,12 +34,18 @@
         "CurrentGain": [-0.00078125, 0, 0, 0],
         "CurrentOffset": [32768, 0, 0, 0],
         "Outputs": [
-          { "DisplayName": "Output1",
+          { "NominalFrequency": 50,
+            "NominalVoltage": 230,
             "Mode": "3Phase+N",
-            "ID": 4
+            "Prices": {
+            },
+            "Upload": {
+              "Server": "150.214.150.25:2000",
+              "Username": "edu",
+              "Password": "0000"
+            }
           }, 
-          { "DisplayName": "Output1",
-            "Mode": "1Phase",
+          { "Mode": "1Phase",
             "VoltageChannel": "R",
             "CurrentChannel": "T",
             "ID": 5

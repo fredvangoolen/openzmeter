@@ -5,7 +5,7 @@
 #include <string.h>
 #include "Capture.h"
 #include "DeviceInterface.h"
-#include "CaptureV2/DeviceV2.h"
+#include "DeviceV2/DeviceV2.h"
 //----------------------------------------------------------------------------------------------------------------------
 float             Capture::pNominalVoltage        = 230.0;
 float             Capture::pNominalFrequency      = 50.0;

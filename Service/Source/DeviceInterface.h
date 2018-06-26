@@ -10,6 +10,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceInterface {
   private :
+    typedef struct {
+      uint8_t OffsetV;
+      uint8_t OffsetC;
+    } ChannelMap_t;
+  private :
     char            *pDriverName;              //Nombre del driver (para mostrar en el thread)
     uint8_t          pVoltageChannels;         //Canales de tension
     uint8_t          pCurrentChannels;         //Canales de corriente
@@ -21,6 +26,7 @@ class DeviceInterface {
     uint32_t         pBuffLen;                 //Tamaño del buffer
     float            pSamplerate;              //Velocidad de muestreo
     Analyzer       **pAnalyzers;               //Analizadores disponibles
+    ChannelMap_t    *pChannelMappings;         //Desplazamiento de los canales de tension y corriente
     uint8_t          pAnalyzersCount;          //Numero de analizadores
     float            pMaxCurrent;              //Corriente maxima de los sensores
     float            pMinCurrent;              //Corriente minima de los sensores
@@ -28,12 +34,13 @@ class DeviceInterface {
   protected :
     pthread_t        pCaptureThread;           //Descriptor del hilo de captura
     bool             pActive;                  //Indicador de actividad de la captura
-    bool             pTerminate;               //Marca que deben detenerse los trabajos pendientes  
+    bool             pTerminate;               //Marca que deben detenerse los trabajos pendientes
   protected :
     bool   BuffersAlloc(uint8_t voltageChannels, uint8_t currentChannels, float samplerate);
     void   BuffersReset();
     bool   BuffersAppend(float *voltageSamples, float *CurrentSamples);
     void   AddAnalyzer(Analyzer *analyzer);
+    void   AddAnalyzer(Analyzer *analyzer, uint8_t offsetV, uint8_t offsetC);
     DeviceInterface(char *driver);
   public :
     virtual  ~DeviceInterface();
@@ -43,5 +50,4 @@ class DeviceInterface {
     uint8_t   GetAnalyzers();
     Analyzer *GetAnalyzers(uint8_t idx);
 };
-
 //----------------------------------------------------------------------------------------------------------------------

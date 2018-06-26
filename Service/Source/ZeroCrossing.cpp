@@ -68,7 +68,6 @@ bool ZeroCrossing::ProcessSample(float *samples) {
     uint32_t MaxCycle = pSamplerate / (Capture::GetNominalFrequency() * 0.85 * 2.0);
     for(int i = 0; i < pCyclesCount; i++) {
       if((pCyclesLen[i] < MinCycle) || (pCyclesLen[i] > MaxCycle)) {
-        Tools::LogMsg("ERROR", "Longitud de ciclo fuera de rango %d < %d < %d\n", MinCycle, pCyclesLen[i], MaxCycle);
         pFrequency = NAN;
         Samples = 0;
         break;

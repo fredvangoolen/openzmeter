@@ -19,6 +19,7 @@ DeviceInterface::DeviceInterface(char *driver) {
   pMinCurrent      = 0.1;
   pTerminate       = false;
   pAnalyzers       = NULL;
+  pChannelMappings = NULL;
   pAnalyzersCount  = 0;
   pActive          = false;
   pReadPos         = 0;
@@ -28,8 +29,14 @@ DeviceInterface::DeviceInterface(char *driver) {
   pLastUpdate      = 0;
 }
 void DeviceInterface::AddAnalyzer(Analyzer *analyzer) {
+  AddAnalyzer(analyzer, 0, 0);
+}
+void DeviceInterface::AddAnalyzer(Analyzer *analyzer, uint8_t offsetV, uint8_t offsetC) {
   pAnalyzers = (Analyzer**)realloc(pAnalyzers, sizeof(Analyzer*) * (pAnalyzersCount) + 1);
+  pChannelMappings = (ChannelMap_t*)realloc(pChannelMappings, sizeof(ChannelMap_t*) * (pAnalyzersCount) + 1);
   pAnalyzers[pAnalyzersCount] = analyzer;
+  pChannelMappings[pAnalyzersCount].OffsetV = offsetV;
+  pChannelMappings[pAnalyzersCount].OffsetC = offsetC;
   pAnalyzersCount++;
 }
 float DeviceInterface::GetSamplerate() {
@@ -78,113 +85,17 @@ bool DeviceInterface::BuffersAppend(float *voltageSamples, float *currentSamples
   bool Started = false;
   for(uint8_t Sample = 0; (Sample < 5) && (pUsed > 0) && (Started == false); Sample++) {
     for(uint8_t Analyzer = 0; Analyzer < pAnalyzersCount; Analyzer++) {
-      if(pAnalyzers[Analyzer]->SampleAppend(&pVoltageSamples[pReadPos * pVoltageChannels], &pCurrentSamples[pReadPos * pCurrentChannels], Sampletime) == true) Started = true;
+      if(pAnalyzers[Analyzer]->SampleAppend(&pVoltageSamples[pReadPos * pVoltageChannels + pChannelMappings[Analyzer].OffsetV], &pCurrentSamples[pReadPos * pCurrentChannels + pChannelMappings[Analyzer].OffsetC], Sampletime) == true) Started = true;
     }
     pReadPos = (pReadPos + 1) % pBuffLen;
     pUsed--;
   }
   return true;
 }
-  
-  //  pVoltageFFT = (FFT**)malloc(sizeof(FFT*) * voltageChannels);
-//  pCurrentFFT = (FFT**)malloc(sizeof(FFT*) * currentChannels);
-//  for(int i = 0; i < voltageChannels; i++) {
-//    char Name[16];
-//    pVoltageSamples[i] = (float*)malloc(sizeof(float) * pBuffLen *);
-//    sprintf(Name, "DeviceV2_FFT_V%d", i);
-//    pVoltageFFT[i] = new FFT(pMaxSamples, Name);
-//  }
-//  for(int i = 0; i < currentChannels; i++) {
-//    char Name[16];
-//    pCurrentSamples[i] = (float*)malloc(sizeof(float) * pBuffLen);
-//    sprintf(Name, "DeviceV2_FFT_C%d", i);
-//    pCurrentFFT[i] = new FFT(pMaxSamples, Name);
-//  }
-  //  pSamples = 0;
-//  return true;
-  
-  //  if(pAnalyzerState == ANALYZER_PROCESSING) {
-//    //Si algun analizador no ha finalizado
-//    return  true;
-//    This->pSamples = 0;
-//      This->pCyclesCount = 0;
-//      This->pCyclesLen[0] = 0;
-//      This->pSampletime = Tools::GetTime() - (uint64_t)((This->pUsed * 1000) / (This->pSamplerate * This->pChannelCount));
-//      This->pAnalyzerState = ANALYZER_WAIT;
-//    }
-//    if((This->pAnalyzerState == ANALYZER_WAIT) && (This->pUsed >= (This->pChannelCount * 10))) {
-//      for(int i = 0; i < 10; i++) {
-//        float VoltageChannels[3];
-//        float CurrentChannels[4];
-//        float *VoltagePos = VoltageChannels;
-//        float *CurrentPos = CurrentChannels;
-//        if(This->pChannelMask & 0x40) *VoltagePos++ = This->GetSample() * This->pVoltageGain[0];
-//        if(This->pChannelMask & 0x20) *CurrentPos++ = This->GetSample() * This->pCurrentGain[0];
-//        if(This->pChannelMask & 0x10) *VoltagePos++ = This->GetSample() * This->pVoltageGain[1];
-//        if(This->pChannelMask & 0x08) *CurrentPos++ = This->GetSample() * This->pCurrentGain[1];
-//        if(This->pChannelMask & 0x04) *VoltagePos++ = This->GetSample() * This->pVoltageGain[2];
-//        if(This->pChannelMask & 0x02) *CurrentPos++ = This->GetSample() * This->pCurrentGain[2];
-//        if(This->pChannelMask & 0x01) *CurrentPos++ = This->GetSample() * This->pCurrentGain[3];
-//        float *FilterredValues = This->BuffersAppend(VoltageChannels, CurrentChannels);
-//        //Si tengo los 20 pasos por 0 o he superado la longitud maxima lanzo los analyzadores y paso a estado ANALYZER_PROCESSING
-//        if(This->pSamples == This->pMaxSamples) break;
-//      }
-//      if((This->pCyclesCount == 20) || (This->pSamples == This->pMaxSamples)) {
-//        This->StartFFTs();
-//        This->pAnalyzerState = ANALYZER_FFT;
-//      }
-//    }
-//    if((This->pAnalyzerState == ANALYZER_FFT) && (This->IsFinishedFFTs() == true)) {
-//      This->StartAnalyzers();
-//      This->pAnalyzerState = ANALYZER_PROCESSING;
-//    }
-//  
-//  
-//  
-//  
-//  
-//  
-//  
-//  for(int Chan = 0; Chan < pVoltageChannels; Chan++) {
-//    pVoltageSamples[Chan][pSamples] = voltageSamples[Chan];
-//    pFilters.Results[Chan] = voltageSamples[Chan];
-//    for(int Stage = 0; Stage < DEVICEINTERFACE_FILTERSTAGES; Stage++) {
-//      float Out = pFilters.Results[Chan] * pFilters.A0 + pFilters.Channels[Chan].Stages[Stage].Z1;
-//      pFilters.Channels[Chan].Stages[Stage].Z1 = pFilters.Results[Chan] * pFilters.A1 + pFilters.Channels[Chan].Stages[Stage].Z2 - pFilters.B1 * Out;
-//      pFilters.Channels[Chan].Stages[Stage].Z2 = pFilters.Results[Chan] * pFilters.A2 - pFilters.B2 * Out;
-//      pFilters.Results[Chan] = Out;
-//    }
-//  }
-//  for(int Chan = 0; Chan < pCurrentChannels; Chan++) pCurrentSamples[Chan][pSamples] = currentSamples[Chan];
-//  pSamples++;
-
-//void DeviceInterface::StartFFTs() {
-//  for(int i = 0; i < pVoltageChannels; i++) pVoltageFFT[i]->Start(pVoltageSamples[i], pSamples);
-//  for(int i = 0; i < pCurrentChannels; i++) pCurrentFFT[i]->Start(pCurrentSamples[i], pSamples);
-//} 
-//void DeviceInterface::StartAnalyzers() {
-//  for(int i = 0; i < pAnalyzersCount; i++) pAnalyzers[i].Process->Start(&pAnalyzers[i].Data);
-//}
-//bool DeviceInterface::IsFinishedFFTs() {
-//  for(int i = 0; i < pVoltageChannels; i++) {
-//    if(pVoltageFFT[i]->IsFinished() == false) return false;
-//  }
-//  for(int i = 0; i < pCurrentChannels; i++) {
-//    if(pCurrentFFT[i]->IsFinished() == false) return false;
-//  }
-//  return true;
-//}
-//bool DeviceInterface::IsFinishedAnalyzers() {
-//  for(int i = 0; i < pAnalyzersCount; i++) {
-//    if(pAnalyzers[i].Process->IsFinished() == false) return false;
-//  }
-//}
 DeviceInterface::~DeviceInterface() {
   for(int i = 0; i < pAnalyzersCount; i++) delete pAnalyzers[i];
   free(pAnalyzers);
+  free(pChannelMappings);
   if(pVoltageSamples) free(pVoltageSamples);
   if(pCurrentSamples) free(pCurrentSamples);
 }
-//uint32_t DeviceInterface::GetMaxSamples() {
-//  return ceil((1.15 * pSamplerate * 10.0) / Devices::NominalFrequency);
-//}
