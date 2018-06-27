@@ -39,6 +39,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/Source/Capture.o \
 	${OBJECTDIR}/Source/Database.o \
 	${OBJECTDIR}/Source/DeviceInterface.o \
+	${OBJECTDIR}/Source/DeviceV1/DeviceV1.o \
 	${OBJECTDIR}/Source/DeviceV2/DeviceV2.o \
 	${OBJECTDIR}/Source/FFT.o \
 	${OBJECTDIR}/Source/HTTPServer.o \
@@ -89,6 +90,10 @@ ${OBJECTDIR}/Source/Database.o: Source/Database.cpp
 ${OBJECTDIR}/Source/DeviceInterface.o: Source/DeviceInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/DeviceInterface.o Source/DeviceInterface.cpp
+
+${OBJECTDIR}/Source/DeviceV1/DeviceV1.o: Source/DeviceV1/DeviceV1.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source/DeviceV1
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -o ${OBJECTDIR}/Source/DeviceV1/DeviceV1.o Source/DeviceV1/DeviceV1.cpp
 
 ${OBJECTDIR}/Source/DeviceV2/DeviceV2.o: Source/DeviceV2/DeviceV2.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/DeviceV2

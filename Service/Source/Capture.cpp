@@ -6,6 +6,7 @@
 #include "Capture.h"
 #include "DeviceInterface.h"
 #include "DeviceV2/DeviceV2.h"
+#include "DeviceV1/DeviceV1.h"
 //----------------------------------------------------------------------------------------------------------------------
 float             Capture::pNominalVoltage        = 230.0;
 float             Capture::pNominalFrequency      = 50.0;
@@ -26,7 +27,7 @@ void Capture::Config(json_object *config) {
       struct json_object *Driver;
       if((json_object_object_get_ex(Device, "Driver", &Driver) == true) && (json_object_get_type(Driver) == json_type_string)) {
         if(strcmp(json_object_get_string(Driver), "DeviceV1") == 0) {
-          //AddDevice(new DeviceV1(JSON_Val));
+          AddDevice(new DeviceV1(Device));
         } else if(strcmp(json_object_get_string(Driver), "DeviceV2") == 0) {
           AddDevice(new DeviceV2(Device));
         }
