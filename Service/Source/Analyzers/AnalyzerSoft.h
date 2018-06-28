@@ -5,14 +5,13 @@
 #pragma once
 #include <pthread.h>
 #include <inttypes.h>
-#include <fftw3.h>
 #include <json-c/json.h>
-#include "../Database.h"
-#include "../FFT.h"
-#include "../ZeroCrossing.h"
+#include "AnalyzerInterface.h"
+#include "FFT.h"
+#include "ZeroCrossing.h"
 #include "Stats.h"
 //----------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoft : private Database {
+class AnalyzerSoft : private AnalyzerInterface {
   public :
     enum AnalyzerType {PHASE_1, PHASE_3, PHASE_3N};
   private :

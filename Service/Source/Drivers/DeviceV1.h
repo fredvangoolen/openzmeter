@@ -4,8 +4,8 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <libusb-1.0/libusb.h>
-#include "../DeviceInterface.h"
-#include "../Analyzer.h"
+#include "DeviceInterface.h"
+#include "AnalyzerInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define CAPTUREMONO_VID             0x0483       //Product ID
 #define CAPTUREMONO_PID             0x7270       //Device ID

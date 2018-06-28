@@ -11,17 +11,17 @@
 #include <unistd.h>
 #include "AnalyzerSoft.h"
 #include "Tools.h"
-AnalyzerSoft::AnalyzerSoft(char *name, char *id, float samplerate, float minCurrent) : Database(id) {
+AnalyzerSoft::AnalyzerSoft(char *name, char *id, float samplerate, float minCurrent) : AnalyzerInterface(230, 50, id) {
   pType = PHASE_1;
   Init(name, id, samplerate, minCurrent);
 }
-AnalyzerSoft::AnalyzerSoft(char *name, bool useNeutral, char *id, float samplerate, float minCurrent) : Database(id) {
+AnalyzerSoft::AnalyzerSoft(char *name, bool useNeutral, char *id, float samplerate, float minCurrent) : AnalyzerInterface(230, 50, id) {
   pType = ((useNeutral) ? PHASE_3N : PHASE_3);
   Init(name, id, samplerate, minCurrent);
 }
 void AnalyzerSoft::Init(char *name, char *id, float samplerate, float minCurrent) {
-  pZC             = new ZeroCrossing((pType == PHASE_1) ? false : true, samplerate);
-  pStats          = new Stats(pType != PHASE_1, this);
+  pZC             = new ZeroCrossing((pType == PHASE_1) ? 1 : 3, samplerate, pNominalFrequency);
+  pStats          = new Stats((pType != PHASE_1) ? 1 : 3, this, pNominalVoltage, pNominalFrequency);
   pName           = name;
   pID             = id;
   pSamples        = 0; 
@@ -31,7 +31,7 @@ void AnalyzerSoft::Init(char *name, char *id, float samplerate, float minCurrent
   pTerminate      = false;
   pSamplerate     = samplerate;
   pMinCurrent     = minCurrent;
-  pMaxSamples     = ceil(15.0 * samplerate / Capture::GetNominalFrequency());
+  pMaxSamples     = ceil(15.0 * samplerate / pNominalFrequency);
   pWaitingThreads = 0;
   pDataReady      = false;
   pPrevTimestamp  = 0;

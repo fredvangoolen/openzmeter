@@ -4,7 +4,7 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include "Database.h"
-#include "Analyzer.h"
+//#include "Analyzer.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define EVENT_RVC                      5.0        //Variacion en % para generar RVC
 #define EVENT_RVC_HYSTERESIS           3.0        //Variacion en % para finalizar RVC

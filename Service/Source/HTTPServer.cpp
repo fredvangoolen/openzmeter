@@ -15,10 +15,7 @@
 #include <zlib.h>
 #include "HTTPServer.h"
 #include "Tools.h"
-#include "Analyzer.h"
 #include "NetworkManager.h"
-#include "Capture.h"
-#include "DeviceInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon             *HTTPServer::pDaemon         = NULL;
 HTTPServer::Session_t  *HTTPServer::pSessions       = NULL;

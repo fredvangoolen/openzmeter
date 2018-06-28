@@ -38,12 +38,12 @@ OBJECTFILES= \
 	${OBJECTDIR}/Source/AnalyzerInterface.o \
 	${OBJECTDIR}/Source/Analyzers/AnalyzerRemote.o \
 	${OBJECTDIR}/Source/Analyzers/AnalyzerSoft.o \
-	${OBJECTDIR}/Source/Capture.o \
 	${OBJECTDIR}/Source/Database.o \
 	${OBJECTDIR}/Source/DeviceInterface.o \
-	${OBJECTDIR}/Source/Drivers/CaptureVirtual.o \
+	${OBJECTDIR}/Source/Drivers/DeviceRemote.o \
 	${OBJECTDIR}/Source/Drivers/DeviceV1.o \
 	${OBJECTDIR}/Source/Drivers/DeviceV2.o \
+	${OBJECTDIR}/Source/Drivers/DeviceVirtual.o \
 	${OBJECTDIR}/Source/FFT.o \
 	${OBJECTDIR}/Source/HTTPServer.o \
 	${OBJECTDIR}/Source/Main.o \
@@ -94,11 +94,6 @@ ${OBJECTDIR}/Source/Analyzers/AnalyzerSoft.o: Source/Analyzers/AnalyzerSoft.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Analyzers/AnalyzerSoft.o Source/Analyzers/AnalyzerSoft.cpp
 
-${OBJECTDIR}/Source/Capture.o: Source/Capture.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Capture.o Source/Capture.cpp
-
 ${OBJECTDIR}/Source/Database.o: Source/Database.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	${RM} "$@.d"
@@ -109,10 +104,10 @@ ${OBJECTDIR}/Source/DeviceInterface.o: Source/DeviceInterface.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/DeviceInterface.o Source/DeviceInterface.cpp
 
-${OBJECTDIR}/Source/Drivers/CaptureVirtual.o: Source/Drivers/CaptureVirtual.cpp
+${OBJECTDIR}/Source/Drivers/DeviceRemote.o: Source/Drivers/DeviceRemote.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Drivers
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Drivers/CaptureVirtual.o Source/Drivers/CaptureVirtual.cpp
+	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Drivers/DeviceRemote.o Source/Drivers/DeviceRemote.cpp
 
 ${OBJECTDIR}/Source/Drivers/DeviceV1.o: Source/Drivers/DeviceV1.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Drivers
@@ -123,6 +118,11 @@ ${OBJECTDIR}/Source/Drivers/DeviceV2.o: Source/Drivers/DeviceV2.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Drivers
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Drivers/DeviceV2.o Source/Drivers/DeviceV2.cpp
+
+${OBJECTDIR}/Source/Drivers/DeviceVirtual.o: Source/Drivers/DeviceVirtual.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source/Drivers
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Drivers/DeviceVirtual.o Source/Drivers/DeviceVirtual.cpp
 
 ${OBJECTDIR}/Source/FFT.o: Source/FFT.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source

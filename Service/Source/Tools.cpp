@@ -162,8 +162,8 @@ bool Tools::ReadConfig(char *file) {
       Database::Config(JSON_Val);
     } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "HTTPServer") == 0)) {
       HTTPServer::Config(JSON_Val);
-    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Capture") == 0)) {
-      Capture::Config(JSON_Val);
+    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Device") == 0)) {
+      DeviceInterface::Config(JSON_Val);
     }
   }
   return !Error;

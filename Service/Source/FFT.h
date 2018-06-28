@@ -3,6 +3,8 @@
  * Author:   Eduardo Viciana (30 de mayo de 2018)
  * ------------------------------------------------------------------------------------------------------------------ */
 #pragma once
+#include <stdint.h>
+#include <pthread.h>
 class FFT {
   public :
     typedef struct {

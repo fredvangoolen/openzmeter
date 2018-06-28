@@ -5,6 +5,8 @@
 #include <errno.h>
 #include <string.h>
 #include <math.h>
+#include <fftw3.h>
+#include "FFT.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t FFT::pPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -20,13 +22,6 @@ FFT::FFT(uint32_t maxLen, char *name) {
   }
   pthread_setname_np(pThread, name);
 }
-//bool FFT::IsFinished() {
-//  bool Result;
-//  pthread_mutex_lock(&pThreadMutex);
-//  Result = (pInput == NULL);
-//  pthread_mutex_unlock(&pThreadMutex);
-//  return Result;
-//}
 FFT::~FFT() {
   pTerminate = true;
   pthread_cond_signal(&pThreadCond);

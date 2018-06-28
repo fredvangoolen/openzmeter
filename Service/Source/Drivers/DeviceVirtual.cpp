@@ -14,7 +14,7 @@
 #include <math.h>
 #include <sys/ioctl.h>
 #include <libusb-1.0/libusb.h>
-#include "CaptureVirtual.h"
+#include "DeviceVirtual.h"
 #include "../Tools.h"
 // Funciones ===========================================================================================================
 float Variation(uint64_t step, float from, float to, uint64_t repeat) {
