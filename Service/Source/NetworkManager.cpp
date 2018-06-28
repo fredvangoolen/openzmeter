@@ -8,7 +8,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 //----------------------------------------------------------------------------------------------------------------------
-const uint32_t NetworkManager::NM_DEVICE_TYPE_WIFI = 2;
+pthread_mutex_t NetworkManager::pMutex = PTHREAD_MUTEX_INITIALIZER;
+const uint32_t  NetworkManager::NM_DEVICE_TYPE_WIFI = 2;
 //----------------------------------------------------------------------------------------------------------------------
  DBusConnection *NetworkManager::CreateConnection() {
   DBusError Error;
@@ -25,16 +26,24 @@ bool NetworkManager::SetJSONNetworkConfig(json_object *json) {
   DBusConnection *DBus = CreateConnection();
   if(DBus == NULL) return false;  
   if(SendSaveSettings(DBus, json)) {
-    SendEnable(DBus, 0);
-    sleep(1);
-    SendEnable(DBus, 1);
-    sleep(1);
+    Reset();
     dbus_connection_unref(DBus);
     return true;
   } else {
     dbus_connection_unref(DBus);
     return false;
   }
+}
+void NetworkManager::Reset() {
+  DBusConnection *DBus = CreateConnection();
+  if(DBus == NULL) return; 
+  pthread_mutex_lock(&pMutex);
+  SendEnable(DBus, 0);
+  sleep(1);
+  SendEnable(DBus, 1);
+  sleep(1);
+  pthread_mutex_unlock(&pMutex);
+  dbus_connection_unref(DBus);
 }
 json_object *NetworkManager::GetJSONNetworks() {
   DBusConnection *DBus = CreateConnection();

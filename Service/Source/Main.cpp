@@ -100,8 +100,8 @@ int main(int argc, char** argv) {
   int Iter = 0;
   while(!Terminate) {
     usleep(1000000);
-    if((Iter % 20) == 0) {
-      //Si estoy sin conexion, reconecto
+    if((Iter % 10) == 0) {
+      if(NetworkManager::GetConnectivityStatus() < 2) NetworkManager::Reset();
     }
     if((Iter % 100) == 0) {
       HTTPServer::RemoveExpiredSessions();

@@ -4,10 +4,12 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <dbus/dbus.h>
+#include <pthread.h>
 #include <json-c/json.h>
 class NetworkManager {
   private :
     static const uint32_t NM_DEVICE_TYPE_WIFI;
+    static pthread_mutex_t pMutex;
   private :
     static DBusConnection *CreateConnection();
     static void    SendGetDevices(DBusConnection *dbus, json_object *json);
@@ -25,6 +27,7 @@ class NetworkManager {
     static void    SendEnable(DBusConnection *dbus, int state);
     static uint8_t SendConnectivityState(DBusConnection *dbus);
   public :
+    static void         Reset();
     static uint8_t      GetConnectivityStatus();
     static bool         SetJSONNetworkConfig(json_object *json);
     static json_object *GetJSONNetworks();
