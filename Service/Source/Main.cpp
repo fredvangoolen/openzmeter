@@ -100,7 +100,13 @@ int main(int argc, char** argv) {
   int Iter = 0;
   while(!Terminate) {
     usleep(1000000);
-//    if((Iter % 100) == 0) HTTPServer::RemoveExpiredSessions();
+    if((Iter % 20) == 0) {
+      //Si estoy sin conexion, reconecto
+    }
+    if((Iter % 100) == 0) {
+      HTTPServer::RemoveExpiredSessions();
+    
+    }
     Iter++;
     
 //    Work_t *Work = Adquisition_GetWork();

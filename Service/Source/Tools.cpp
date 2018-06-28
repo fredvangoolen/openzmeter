@@ -6,6 +6,7 @@
 #include "NetworkManager.h"
 #include "HTTPServer.h"
 #include "Capture.h"
+#include "HTTPServer.h"
 #include <string.h>
 #include <signal.h>
 #include <time.h>
@@ -21,11 +22,12 @@
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
 //----------------------------------------------------------------------------------------------------------------------
-bool         Tools::Debug       = false;
-bool         Tools::pDaemonized = false;
-int          Tools::pLogFile    = -1;
-json_object *Tools::pConfig     = NULL;
-char        *Tools::pPidFile    = NULL;
+bool         Tools::Debug        = false;
+bool         Tools::pDaemonized  = false;
+FILE        *Tools::pLogFile     = NULL;
+json_object *Tools::pConfig      = NULL;
+char        *Tools::pPidFile     = NULL;
+pthread_mutex_t Tools::pLogMutex = PTHREAD_MUTEX_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 void Tools::RegisterHandlers(void (*function)(int)) {
   signal(SIGINT, function);
@@ -38,11 +40,11 @@ void Tools::LogMsg(const char *level, const char *msg, ...) {
   time_t Now;
   struct tm *TimeStamp;
   char DateStr[80];
+  pthread_mutex_lock(&pLogMutex);
   time(&Now);
   TimeStamp = localtime(&Now);
   strftime(DateStr, 80, "[%d/%m/%Y - %X] ", TimeStamp);
   if(pDaemonized == false) {
-    flockfile(stdout);
     if(strcmp(level, "ERROR") == 0) {
       printf("\033[1;31m%s\033[0m", DateStr);
     } else if(strcmp(level, "WARN") == 0) {
@@ -56,21 +58,18 @@ void Tools::LogMsg(const char *level, const char *msg, ...) {
     }
     vprintf(msg, args);
     fflush(stdout);
-    funlockfile(stdout);
   }
   if(pLogFile) {
     va_start(args, msg);
-//    flock(LogFile);//
-//    fprintf(LogFile, "%s", DateStr);
-//    vfprintf(LogFile, msg, args);
-//    fflush(LogFile);
-//    flock(LogFile);
+    fprintf(pLogFile, "%s", DateStr);
+    vfprintf(pLogFile, msg, args);
   }
+  pthread_mutex_unlock(&pLogMutex);
   va_end(args);
 }
-bool Tools::CreateLogFile() {
-//  LogFile = open(Global.Log, "at");
-//  if(!LogFile) LogFile = fopen(Global.Log, "wt");
+bool Tools::CreateLogFile(char *name) {
+  pLogFile = fopen(name, "at");
+  if(!pLogFile) pLogFile = fopen(name, "wt");
   if(pLogFile < 0) {
     Tools::LogMsg("WARN", "Can not create or open log file (%d)\n", errno);
     return true;
@@ -146,7 +145,12 @@ bool Tools::ReadConfig(char *file) {
   json_object_object_foreach(Config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "LogFile") == 0)) {
-//      Global.Log = strdup(JSON_Val);
+      if(!pLogFile) {
+        Error = true;
+        LogMsg("ERROR", "Duplicate LogFile param in config file\n");
+      } else {
+        if(CreateLogFile((char*)json_object_get_string(JSON_Val)) == false) Error = true;
+      }
     } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "PidFile") == 0)) {
       if(pPidFile) {
         Error = true;

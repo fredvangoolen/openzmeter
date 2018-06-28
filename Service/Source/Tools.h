@@ -6,17 +6,17 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <pthread.h>
 #include <json-c/json.h>
-#include "HTTPServer.h"
-#include "Capture.h"
 #include "Database.h"
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   private :
-    static bool          pDaemonized;
-    static int           pLogFile;
-    static json_object  *pConfig;
-    static char         *pPidFile;
+    static bool            pDaemonized;
+    static FILE           *pLogFile;
+    static pthread_mutex_t pLogMutex;
+    static json_object    *pConfig;
+    static char           *pPidFile;
   public :
     static bool          Debug;
   private :
@@ -28,7 +28,7 @@ class Tools {
     static bool         ReadConfig(char *file);
     static void         LogMsg(const char *level, const char *msg, ...);
     static void         Daemonize();
-    static bool         CreateLogFile();
+    static bool         CreateLogFile(char *name);
     static uint64_t     GetTime();
     static bool         GetSysInfo(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
     static void         RegisterHandlers(void (*function)(int));
