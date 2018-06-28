@@ -28,11 +28,11 @@ DeviceInterface::DeviceInterface(char *driver) {
   pBuffLen         = 0;
   pLastUpdate      = 0;
 }
-void DeviceInterface::AddAnalyzer(Analyzer *analyzer) {
+void DeviceInterface::AddAnalyzer(AnalyzerSoft *analyzer) {
   AddAnalyzer(analyzer, 0, 0);
 }
-void DeviceInterface::AddAnalyzer(Analyzer *analyzer, uint8_t offsetV, uint8_t offsetC) {
-  pAnalyzers = (Analyzer**)realloc(pAnalyzers, sizeof(Analyzer*) * (pAnalyzersCount) + 1);
+void DeviceInterface::AddAnalyzer(AnalyzerSoft *analyzer, uint8_t offsetV, uint8_t offsetC) {
+  pAnalyzers = (AnalyzerSoft**)realloc(pAnalyzers, sizeof(AnalyzerSoft*) * (pAnalyzersCount) + 1);
   pChannelMappings = (ChannelMap_t*)realloc(pChannelMappings, sizeof(ChannelMap_t*) * (pAnalyzersCount) + 1);
   pAnalyzers[pAnalyzersCount] = analyzer;
   pChannelMappings[pAnalyzersCount].OffsetV = offsetV;
@@ -48,7 +48,7 @@ float DeviceInterface::GetMaxCurrent() {
 uint8_t DeviceInterface::GetAnalyzers() {
   return pAnalyzersCount;
 }
-Analyzer *DeviceInterface::GetAnalyzers(uint8_t idx) {
+AnalyzerSoft *DeviceInterface::GetAnalyzers(uint8_t idx) {
   if(idx < pAnalyzersCount) return pAnalyzers[idx];
   return NULL;
 }

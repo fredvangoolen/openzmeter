@@ -9,17 +9,17 @@
 #include <sys/time.h>
 #include <sys/param.h>
 #include <unistd.h>
-#include "Analyzer.h"
+#include "AnalyzerSoft.h"
 #include "Tools.h"
-Analyzer::Analyzer(char *name, char *id, float samplerate, float minCurrent) : Database(id) {
+AnalyzerSoft::AnalyzerSoft(char *name, char *id, float samplerate, float minCurrent) : Database(id) {
   pType = PHASE_1;
   Init(name, id, samplerate, minCurrent);
 }
-Analyzer::Analyzer(char *name, bool useNeutral, char *id, float samplerate, float minCurrent) : Database(id) {
+AnalyzerSoft::AnalyzerSoft(char *name, bool useNeutral, char *id, float samplerate, float minCurrent) : Database(id) {
   pType = ((useNeutral) ? PHASE_3N : PHASE_3);
   Init(name, id, samplerate, minCurrent);
 }
-void Analyzer::Init(char *name, char *id, float samplerate, float minCurrent) {
+void AnalyzerSoft::Init(char *name, char *id, float samplerate, float minCurrent) {
   pZC             = new ZeroCrossing((pType == PHASE_1) ? false : true, samplerate);
   pStats          = new Stats(pType != PHASE_1, this);
   pName           = name;
@@ -76,12 +76,12 @@ void Analyzer::Init(char *name, char *id, float samplerate, float minCurrent) {
   }
   pthread_setname_np(pThread, (pType == PHASE_1) ? "Analyzer_1P" : (pType == PHASE_3) ? "Analyzer_3P" : "Analyzer_3P+N");
 }
-Analyzer::~Analyzer() {
+AnalyzerSoft::~AnalyzerSoft() {
   delete pZC;
   for(uint8_t i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) delete pVoltageFFT[i];
   for(uint8_t i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) delete pCurrentFFT[i];
 }
-bool Analyzer::SampleAppend(float *voltageSamples, float *currentSamples, uint64_t sampletime) {
+bool AnalyzerSoft::SampleAppend(float *voltageSamples, float *currentSamples, uint64_t sampletime) {
   if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
   for(uint8_t i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) pVoltageSamples[i][pSamples] = voltageSamples[i];
   for(uint8_t i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) pCurrentSamples[i][pSamples] = currentSamples[i];
@@ -107,7 +107,7 @@ bool Analyzer::SampleAppend(float *voltageSamples, float *currentSamples, uint64
 
   return false;
 }
-void Analyzer::SaveAggreg(Params_t *params) {
+void AnalyzerSoft::SaveAggreg(Params_t *params) {
   if(params->Type == AGGREG_3S)
     PrepareSentence("EXECUTE SAVE_3S(?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1M)  
@@ -142,7 +142,7 @@ void Analyzer::SaveAggreg(Params_t *params) {
   }
   ResetAggreg(params);
 }
-void Analyzer::AccumulateAggreg(Params_t *dst, Params_t *src) {
+void AnalyzerSoft::AccumulateAggreg(Params_t *dst, Params_t *src) {
   dst->Timestamp = src->Timestamp;
   for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) dst->RMS_V[i] += pow(src->RMS_V[i], 2.0);
   for(int i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) dst->RMS_I[i] += pow(src->RMS_I[i], 2.0);
@@ -168,7 +168,7 @@ void Analyzer::AccumulateAggreg(Params_t *dst, Params_t *src) {
   }
   dst->Samples++;
 }
-void Analyzer::NormalizeAggreg(Params_t *params) {
+void AnalyzerSoft::NormalizeAggreg(Params_t *params) {
   if(params->Samples > 1) {
     for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) params->RMS_V[i] = sqrt(params->RMS_V[i] / params->Samples);
     for(int i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) params->RMS_I[i] = sqrt(params->RMS_I[i] / params->Samples);
@@ -191,7 +191,7 @@ void Analyzer::NormalizeAggreg(Params_t *params) {
     }
   }
 }
-void Analyzer::ResetAggreg(Params_t *params) {
+void AnalyzerSoft::ResetAggreg(Params_t *params) {
   params->Timestamp = 0;
   for(int i = 0; i < ((pType == PHASE_1) ? 1 : 3); i++) params->RMS_V[i] = 0;
   for(int i = 0; i < ((pType == PHASE_1) ? 1 : (pType == PHASE_3) ? 3 : 4); i++) params->RMS_I[i] = 0;
@@ -219,11 +219,11 @@ void Analyzer::ResetAggreg(Params_t *params) {
   }
   params->Samples = 0;
 }
-void *Analyzer::Analyzer_Thread(void *args) {
-  ((Analyzer*)args)->Analyze();
+void *AnalyzerSoft::Analyzer_Thread(void *args) {
+  ((AnalyzerSoft*)args)->Analyze();
   return NULL;
 }
-void Analyzer::Analyze() {
+void AnalyzerSoft::Analyze() {
   while(true) {
     pthread_mutex_lock(&pThreadMutex);
     while(pWorking == false) {
@@ -343,7 +343,7 @@ void Analyzer::Analyze() {
     pthread_mutex_unlock(&pThreadMutex);
   }
 }
-json_object *Analyzer::GetJSONCopy(char *series) {
+json_object *AnalyzerSoft::GetJSONCopy(char *series) {
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads++;
   pthread_mutex_unlock(&pWaitingThreadsMutex);
@@ -465,21 +465,21 @@ json_object *Analyzer::GetJSONCopy(char *series) {
   pthread_mutex_unlock(&pWaitingThreadsMutex);
   return Result;
 }
-bool Analyzer::IsFinished() {
+bool AnalyzerSoft::IsFinished() {
   bool Result;
   pthread_mutex_lock(&pThreadMutex);
   Result = (pWorking == false);
   pthread_mutex_unlock(&pThreadMutex);
   return Result;
 }
-char *Analyzer::GetTypeString() {
+char *AnalyzerSoft::GetTypeString() {
   if(pType == PHASE_3N) return (char*)"3PhaseN";
   if(pType == PHASE_3)  return (char*)"3Phase";
   if(pType == PHASE_1)  return (char*)"1Phase";
 }
-char *Analyzer::GetID() {
+char *AnalyzerSoft::GetID() {
   return pID;
 }
-char *Analyzer::GetName() {
+char *AnalyzerSoft::GetName() {
   return pName;
 }

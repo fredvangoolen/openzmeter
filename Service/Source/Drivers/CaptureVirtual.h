@@ -11,7 +11,7 @@
 #define PROCESSING_FREQCYCLES           500           //Numero de ciclos usados para calcular frequencia
 #define PROCESSING_CURRENTOFFSET          0.10        //Corriente minima para realizar calculos
 //----------------------------------------------------------------------------------------------------------------------
-class CaptureVirtual : public Analyzer {
+class CaptureVirtual : public AnalyzerSoft {
   private :
     typedef struct {
       float VoltageA;                                    //Valor de tension

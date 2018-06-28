@@ -25,7 +25,7 @@ class DeviceInterface {
     uint32_t         pUsed;                    //Muestras en uso del buffer
     uint32_t         pBuffLen;                 //Tamaño del buffer
     float            pSamplerate;              //Velocidad de muestreo
-    Analyzer       **pAnalyzers;               //Analizadores disponibles
+    AnalyzerSoft       **pAnalyzers;               //Analizadores disponibles
     ChannelMap_t    *pChannelMappings;         //Desplazamiento de los canales de tension y corriente
     uint8_t          pAnalyzersCount;          //Numero de analizadores
     float            pMaxCurrent;              //Corriente maxima de los sensores
@@ -39,8 +39,8 @@ class DeviceInterface {
     bool   BuffersAlloc(uint8_t voltageChannels, uint8_t currentChannels, float samplerate);
     void   BuffersReset();
     bool   BuffersAppend(float *voltageSamples, float *CurrentSamples);
-    void   AddAnalyzer(Analyzer *analyzer);
-    void   AddAnalyzer(Analyzer *analyzer, uint8_t offsetV, uint8_t offsetC);
+    void   AddAnalyzer(AnalyzerSoft *analyzer);
+    void   AddAnalyzer(AnalyzerSoft *analyzer, uint8_t offsetV, uint8_t offsetC);
     DeviceInterface(char *driver);
   public :
     virtual  ~DeviceInterface();
@@ -48,6 +48,6 @@ class DeviceInterface {
     float     GetSamplerate();
     float     GetMaxCurrent();
     uint8_t   GetAnalyzers();
-    Analyzer *GetAnalyzers(uint8_t idx);
+    AnalyzerSoft *GetAnalyzers(uint8_t idx);
 };
 //----------------------------------------------------------------------------------------------------------------------

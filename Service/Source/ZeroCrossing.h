@@ -16,28 +16,30 @@
 class ZeroCrossing {
   private :
     typedef struct {
-      float Z1;
-      float Z2;
+      float Z1[ZEROCROSSING_FILTERSTAGES];
+      float Z2[ZEROCROSSING_FILTERSTAGES];
     } FilterStage_t;
     typedef struct {
-      float         A0;
-      float         A1;
-      float         A2;
-      float         B1;
-      float         B2;
-      FilterStage_t Channels[3][ZEROCROSSING_FILTERSTAGES];
+      float          A0;
+      float          A1;
+      float          A2;
+      float          B1;
+      float          B2;
+      FilterStage_t *Channels;
     } Filter_t;
   private :
-    float     pLastSamples[3];
+    float    *pLastSamples;
     float     pSamplerate;
     float     pFrequency;
-    bool      p3Phase;
+    float     pNominalFrequency;
+    uint8_t   pChannels;
     Filter_t  pFilters;
     uint32_t *pCyclesLen;
     uint32_t  pCyclesPos;
     uint32_t  pCyclesCount;
   public :
-    ZeroCrossing(bool phase3, float samplerate);
+    ZeroCrossing(uint8_t channels, float samplerate, float freq);
+    ~ZeroCrossing();
     bool  ProcessSample(float *samples);
     float Frequency();
 };

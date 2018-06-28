@@ -61,7 +61,7 @@ bool Capture::GetNodesCallback(Database **db, json_object *reader, json_object *
   for(uint32_t i = 0; i < pDeviceInterfacesCount; i++) {
     DeviceInterface *Device = pDeviceInterfaces[i];  
     for(uint32_t n = 0; n < Device->GetAnalyzers(); n++) {
-      Analyzer *Analyzer = Device->GetAnalyzers(n);
+      AnalyzerSoft *Analyzer = Device->GetAnalyzers(n);
       json_object *Obj = json_object_new_object();
       json_object_object_add(Obj, "ID", json_object_new_string(Analyzer->GetID()));
       json_object_object_add(Obj, "Name", json_object_new_string(Analyzer->GetName()));
@@ -245,9 +245,9 @@ bool Capture::GetSeriesNowCallback(Database **db, json_object *reader, json_obje
   for(uint32_t i = 0; i < pDeviceInterfacesCount; i++) {
     DeviceInterface *Device = pDeviceInterfaces[i];
     for(uint32_t n = 0; n < Device->GetAnalyzers(); n++) {
-      Analyzer *Analyzer = Device->GetAnalyzers(n);
-      if(strcmp(Analyzer->GetID(), Node) == 0) {
-        *writer = Analyzer->GetJSONCopy(Series);
+      AnalyzerSoft *AnalyzerSoft = Device->GetAnalyzers(n);
+      if(strcmp(AnalyzerSoft->GetID(), Node) == 0) {
+        *writer = AnalyzerSoft->GetJSONCopy(Series);
         *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
         return true;      
       }

@@ -210,7 +210,7 @@ bool DeviceV2::ReadOutput(json_object *object, bool parseOnly) {
       }
       pChannelMask = pChannelMask | ((UseNeutral == true) ? 0x7F : 0x7E);
     } else {
-      AddAnalyzer(new Analyzer(Name, UseNeutral, strdup(pSerial), pADCSamplerate / pOversample, 0.1));
+      AddAnalyzer(new AnalyzerSoft(Name, UseNeutral, strdup(pSerial), pADCSamplerate / pOversample, 0.1));
     }
   } else if(strcmp("1Phase", ReadMode) == 0) {
     char    *CurrentChannelText = (char*)"R";
@@ -278,7 +278,7 @@ bool DeviceV2::ReadOutput(json_object *object, bool parseOnly) {
         if((pChannelMask && 0x08) == 0) CurrentChannel--;
         if((pChannelMask && 0x02) == 0) CurrentChannel--;
       }
-      AddAnalyzer(new Analyzer(Name, ID, pADCSamplerate / pOversample, 0.1), VoltageChannel, CurrentChannel);
+      AddAnalyzer(new AnalyzerSoft(Name, ID, pADCSamplerate / pOversample, 0.1), VoltageChannel, CurrentChannel);
     }
   }
   return true;

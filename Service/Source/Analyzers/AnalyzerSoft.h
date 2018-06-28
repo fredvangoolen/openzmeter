@@ -7,12 +7,12 @@
 #include <inttypes.h>
 #include <fftw3.h>
 #include <json-c/json.h>
-#include "Database.h"
-#include "FFT.h"
-#include "ZeroCrossing.h"
+#include "../Database.h"
+#include "../FFT.h"
+#include "../ZeroCrossing.h"
 #include "Stats.h"
 //----------------------------------------------------------------------------------------------------------------------
-class Analyzer : private Database {
+class AnalyzerSoft : private Database {
   public :
     enum AnalyzerType {PHASE_1, PHASE_3, PHASE_3N};
   private :
@@ -86,9 +86,9 @@ class Analyzer : private Database {
   protected :
 //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
   public :
-    Analyzer(char *name, bool useNeutral, char *id, float samplerate, float minCurrent);
-    Analyzer(char *name, char *id, float samplerate, float minCurrent);
-    ~Analyzer();
+    AnalyzerSoft(char *name, bool useNeutral, char *id, float samplerate, float minCurrent);
+    AnalyzerSoft(char *name, char *id, float samplerate, float minCurrent);
+    ~AnalyzerSoft();
     bool         SampleAppend(float *voltageSamples, float *CurrentSamples, uint64_t sampletime);
     bool         IsFinished();
     char        *GetTypeString();
