@@ -146,7 +146,7 @@ void Database::BindArrayArrayFloat(float *params, int lenA, int lenB) {
     int Pos = sprintf(pParams[pParamsLen], "'{");
     for(int i = 0; i < lenA; i++) {
       Pos += sprintf(&pParams[pParamsLen][Pos], "{");
-      for(int n = 0; n < lenB; n++) Pos += sprintf(&pParams[pParamsLen][Pos], isnan(params[i * lenB *n]) ? "NULL, " : "%g, ", params[i * lenB + n]);    
+      for(int n = 0; n < lenB; n++) Pos += sprintf(&pParams[pParamsLen][Pos], isnan(params[i * lenB + n]) ? "NULL, " : "%g, ", params[i * lenB + n]);    
       if(lenB > 0) Pos -= 2;
       Pos += sprintf(&pParams[pParamsLen][Pos], "}, ");
     }
