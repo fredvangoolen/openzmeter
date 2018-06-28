@@ -18,26 +18,27 @@
 #include "NetworkManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon             *HTTPServer::pDaemon         = NULL;
-HTTPServer::Session_t  *HTTPServer::pSessions       = NULL;
+//HTTPServer::Session_t  *HTTPServer::pSessions       = NULL;
 HTTPServer::Callback_t *HTTPServer::pCallbacks      = NULL;
 uint32_t                HTTPServer::pCallbacksCount = 0;
-pthread_mutex_t         HTTPServer::pSessionMutex   = PTHREAD_MUTEX_INITIALIZER;
+//pthread_mutex_t         HTTPServer::pSessionMutex   = PTHREAD_MUTEX_INITIALIZER;
 char                   *HTTPServer::pFilePath       = (char*)"/usr/share/openZmeter/WEB/";
-char                   *HTTPServer::pPassword       = (char*)"admin";
-uint64_t                HTTPServer::pLastLogin      = 0;
+//char                   *HTTPServer::pPassword       = (char*)"admin";
+//uint64_t                HTTPServer::pLastLogin      = 0;
 //----------------------------------------------------------------------------------------------------------------------
 void HTTPServer::Config(json_object *config) {
   uint16_t Port = 8080;
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
-    if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastLogin") == 0)) {
-      pLastLogin = json_object_get_int64(JSON_Val);
-    } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) {
+//    if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastLogin") == 0)) {
+//      pLastLogin = json_object_get_int64(JSON_Val);
+//    } else 
+    if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) {
       Port = json_object_get_int(JSON_Val);
     } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "FilePath") == 0)) {
       pFilePath = (char*)json_object_get_string(JSON_Val);
-    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) {
-      pPassword = (char*)json_object_get_string(JSON_Val);
+//    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) {
+//      pPassword = (char*)json_object_get_string(JSON_Val);
     }
   }
   pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, Port, NULL, NULL, 
@@ -50,63 +51,62 @@ void HTTPServer::Config(json_object *config) {
 void HTTPServer::Stop() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
 }
-
-void HTTPServer::RegisterCallback(char* handleName, HTTPServer::Func_t function) {
+void HTTPServer::RegisterCallback(char *handleName, HTTPServer::Func_t function) {
   pCallbacks = (Callback_t*)realloc(pCallbacks, sizeof(Callback_t) * (pCallbacksCount + 1));
-  pCallbacks[pCallbacksCount].HandlName = handleName;
+  pCallbacks[pCallbacksCount].HandleName = handleName;
   pCallbacks[pCallbacksCount].Function  = function;
   pCallbacksCount++;
 }
-HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection* connection) {
-  const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");
-  Session_t *Session = NULL;
-  pthread_mutex_lock(&pSessionMutex);
-  if(Cookie != NULL) {
-    Session         = pSessions;
-    while(Session != NULL) {
-      if(strcmp(Cookie, Session->ID) == 0) break;
-      Session = Session->Next;
-    }
-  } 
-  if(Session == NULL) {
-    Session = (Session_t*)calloc(1, sizeof(Session_t));
-    if(Session == NULL) {
-      Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-      return NULL; 
-    }
-    sprintf(Session->ID, "%08X%08X%08X%08X", (uint32_t)random(), (uint32_t)random(), (uint32_t)random(), (uint32_t)random());
-    Tools::LogMsg("DEBUG", "New HTTP client with ID %s\n", Session->ID);
-    Session->Logged = false;
-    Session->Next = pSessions;
-    pSessions = Session;
-  }
-  Session->LastSeen = time(NULL);
-  Session->References++;
-  pthread_mutex_unlock(&pSessionMutex);
-  return Session;
-}
+//HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection* connection) {
+//  const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");
+//  Session_t *Session = NULL;
+//  pthread_mutex_lock(&pSessionMutex);
+//  if(Cookie != NULL) {
+//    Session         = pSessions;
+//    while(Session != NULL) {
+//      if(strcmp(Cookie, Session->ID) == 0) break;
+//      Session = Session->Next;
+//    }
+//  } 
+//  if(Session == NULL) {
+//    Session = (Session_t*)calloc(1, sizeof(Session_t));
+//    if(Session == NULL) {
+//      Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//      return NULL; 
+//    }
+//    sprintf(Session->ID, "%08X%08X%08X%08X", (uint32_t)random(), (uint32_t)random(), (uint32_t)random(), (uint32_t)random());
+//    Tools::LogMsg("DEBUG", "New HTTP client with ID %s\n", Session->ID);
+//    Session->UserName = NULL;
+//    Session->Next = pSessions;
+//    pSessions = Session;
+//  }
+//  Session->LastSeen = time(NULL);
+//  Session->References++;
+//  pthread_mutex_unlock(&pSessionMutex);
+//  return Session;
+//}
 void HTTPServer::RemoveExpiredSessions() {
-  pthread_mutex_lock(&pSessionMutex);
-  Session_t *Session = pSessions;
-  Session_t *Prev = NULL;
-  uint32_t Time = time(NULL);
-  while(Session != NULL) {
-    if((Session->LastSeen < (Time - 86400)) && (Session->References != 0)) {
-      Tools::LogMsg("DEBUG", "Remove expired session %s\n", Session->ID);
-      Session_t *Tmp = Session;
-      if(Prev == NULL) {
-        pSessions = Session->Next;
-      } else {
-        Prev->Next = Session->Next;
-      }
-      Session = Session->Next;
-      free(Tmp);
-    } else {
-      Prev = Session;
-      Session = Session->Next;
-    }
-  }
-  pthread_mutex_unlock(&pSessionMutex);
+//  pthread_mutex_lock(&pSessionMutex);
+//  Session_t *Session = pSessions;
+//  Session_t *Prev = NULL;
+//  uint32_t Time = time(NULL);
+//  while(Session != NULL) {
+//    if((Session->LastSeen < (Time - 86400)) && (Session->References != 0)) {
+//      Tools::LogMsg("DEBUG", "Remove expired session %s\n", Session->ID);
+//      Session_t *Tmp = Session;
+//      if(Prev == NULL) {
+//        pSessions = Session->Next;
+//      } else {
+//        Prev->Next = Session->Next;
+//      }
+//      Session = Session->Next;
+//      free(Tmp);
+//    } else {
+//      Prev = Session;
+//      Session = Session->Next;
+//    }
+//  }
+//  pthread_mutex_unlock(&pSessionMutex);
 }
 void HTTPServer::SetMimeType(struct MHD_Response *response, const char *url) {
   char *MimeType = NULL;
@@ -142,7 +142,7 @@ int  HTTPServer::SendError(struct MHD_Connection *connection, int error, const c
   MHD_destroy_response(response);
   return Return;
 }
-int  HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url) {
+int HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url) {
   Tools::LogMsg("DEBUG", "Redirecting client to '%s'\n", url);
   struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
   MHD_add_response_header(response, "Location", url);
@@ -150,7 +150,7 @@ int  HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url
   MHD_destroy_response(response);
   return Return;
 }
-int  HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, const char *aditionalheadertype, const char *aditionalheadervalue) {
+int HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, const char *aditionalheadertype, const char *aditionalheadervalue) {
   int File = -1;
   struct stat FileStat;
   char *Path = (char*)malloc(sizeof(char) * (strlen(path) + strlen(pFilePath) + 1));
@@ -173,34 +173,59 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
   if(Request->JSONReader) json_object_put(Request->JSONReader);
   if(Request->JSONWriter) json_object_put(Request->JSONWriter);
   if(Request->Deflate) free(Request->PostData);
-  if(Request->URL) {
-    uint64_t EndTime = Tools::GetTime();
-    Tools::LogMsg("DEBUG", "POST request '%s' takes %" PRIu64 "mS (%.2fkB send in %" PRIu64 "mS)\n", Request->URL, Request->ProcTime - Request->StartTime, Request->PostDataLen / 1024.0, EndTime - Request->StartTime);
-    free(Request->URL);
-  }
-  Request->Session->References++;
+//  if(Request->URL) {
+//    uint64_t EndTime = Tools::GetTime();
+//    Tools::LogMsg("DEBUG", "POST request '%s' takes %" PRIu64 "mS (%.2fkB send in %" PRIu64 "mS)\n", Request->URL, Request->ProcTime - Request->StartTime, Request->PostDataLen / 1024.0, EndTime - Request->StartTime);
+//    free(Request->URL);
+//  }
+//  pthread_mutex_lock(&pSessionMutex);
+//  Request->Session->References--;
+//  pthread_mutex_unlock(&pSessionMutex);
   free(Request);
 }
-int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
+int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
+  if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
+    char *FilePath = (char*)malloc(strlen(url) + 10);
+    sprintf(FilePath, "Resources%s", url);
+    int Return = SendFile(connection, FilePath);
+    free(FilePath);
+    if(Return == MHD_YES) {
+      Tools::LogMsg("DEBUG", "Client GET request '%s'\n", url);
+      return MHD_YES;
+    }
+  }
   Request_t *Request = (Request_t*)*ptr;
   if(Request == NULL) {
-    Tools::LogMsg("DEBUG", "Client %s request '%s'\n", method, url);
-    if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
-      char *FilePath = (char*)malloc(strlen(url) + 10);
-      sprintf(FilePath, "Resources%s", url);
-      int Return = SendFile(connection, FilePath);
-      free(FilePath);
-      if(Return == MHD_YES) return MHD_YES;
-    }
     *ptr = (Request_t*)calloc(1, sizeof(Request_t));
     Request = (Request_t*)*ptr;
-    if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
-      Request->URL = strdup(url);
-      Request->StartTime = Tools::GetTime();
-    }
     Request->Session = GetSession(connection);
     Request->ResultCode = MHD_HTTP_OK;
-    if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) return MHD_YES;
+    if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
+      return MHD_YES;
+    } else if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
+      Request->DB = new DB(NULL);
+      //Busco si la sesion existe      
+      if((strcmp(url, "/Login") == 0) && (Logged == true)) {
+        return SendRedirect(connection, "/Dashboard"); //Redirijo a pMain
+      } else if((strcmp(url, "/Login") == 0) && (Logged == false))
+        //Inserto una sesion y devuelvo el ID
+        char Cookie[256];
+        sprintf(Cookie, "SESSION=%s; httponly; Path=/", Request->Session->ID);
+        return SendFile(connection, (char*)"Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
+      } else if(Logged == false) {
+        return SendRedirect(connection, "/Login");
+      } else {
+        if(strcmp(url, "/Logout") == 0) {
+          //Borro la sesion de la base de datos
+          Request->Session->Logged = false;
+          return SendRedirect(connection, "/Login");
+        }
+        for(uint32_t i = 0; i < pMappingssCount; i++) {
+          if(strcmp(url, pMappings[i].URL) == 0) return SendFile(connection, pMappings[i].File);
+        }
+        return SendFile(connection, "Error404.html");
+      }
+    }
   }
   if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
     if(*upload_data_size != 0) {
@@ -234,38 +259,8 @@ int  HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, cons
       Request->ProcTime = Tools::GetTime();
       return Return;
     }
-  } else if(strcmp (method, MHD_HTTP_METHOD_GET) == 0) {
-    if(strcmp(url, "/Login") == 0) {
-      if(Request->Session->Logged == true) return SendRedirect(connection, "/Dashboard");
-      char Cookie[256];
-      sprintf(Cookie, "SESSION=%s; httponly; Path=/", Request->Session->ID);
-      return SendFile(connection, (char*)"Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
-    }
-    if(strncmp(url, "/MiniViews/", 11) == 0) {
-      char *FilePath = (char*)malloc(strlen(url) + 6);
-      sprintf(FilePath, "%s.html", &url[1]);
-      int Return = SendFile(connection, FilePath);
-      free(FilePath);
-      if(Return == MHD_YES) return MHD_YES;
-    }
-    if(Request->Session->Logged == false) return SendRedirect(connection, "/Login");
-    if((strcmp(url, "/Dashboard") == 0) || (strcmp(url, "/") == 0)) return SendFile(connection,  "Dashboard.html");
-    if(strcmp(url, "/Analysis/Frequency") == 0) return SendFile(connection, "Analysis_Frequency.html");
-    if(strcmp(url, "/Analysis/Voltage") == 0) return SendFile(connection, "Analysis_Voltage.html");
-    if(strcmp(url, "/Analysis/Current") == 0) return SendFile(connection, "Analysis_Current.html");
-    if(strcmp(url, "/Analysis/EnergyPower") == 0) return SendFile(connection, "Analysis_EnergyPower.html");
-    if(strcmp(url, "/Events/ITIC") == 0) return SendFile(connection, "Events_ITIC.html");
-    if(strcmp(url, "/Events/Disturbances") == 0) return SendFile(connection, "Events_Disturbances.html");
-    if(strcmp(url, "/Events/EN50160") == 0) return SendFile(connection, "Events_EN50160.html");
-    if(strcmp(url, "/Stats") == 0) return SendFile(connection, "Stats.html");
-    if(strcmp(url, "/Settings") == 0) return SendFile(connection, "Settings.html");
-    if(strcmp(url, "/Help") == 0) return SendFile(connection, "Help.html");
-    if(strcmp(url, "/Logout") == 0) {
-      Request->Session->Logged = false;
-      return SendRedirect(connection, "/Login");
-    }
   }
-  return SendError(connection, MHD_HTTP_NOT_FOUND, "Page not found");
+//  return SendError(connection, MHD_HTTP_NOT_FOUND, "Page not found");
 }
 void HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
   Request_t *Request = (Request_t*)*ptr;
@@ -309,7 +304,7 @@ void HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char
     }
   }
   for(uint32_t i = 0; i < pCallbacksCount; i++) {
-    if(strcmp(pCallbacks[i].HandlName, url) == 0) {
+    if(strcmp(pCallbacks[i].HandleName, url) == 0) {
       if(pCallbacks[i].Function(&Request->DB, Request->JSONReader, &Request->JSONWriter, &Request->PostData, &Request->PostDataLen) == false) Request->ResultCode = MHD_HTTP_BAD_REQUEST;
       return;
     }

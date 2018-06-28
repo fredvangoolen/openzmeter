@@ -71,6 +71,24 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterCallback((char*)"/getSeries", Capture::GetSeriesCallback);
   HTTPServer::RegisterCallback((char*)"/getSeriesAggreg", Capture::GetSeriesAggregCallback);
   HTTPServer::RegisterCallback((char*)"/getSeriesNow", Capture::GetSeriesNowCallback);
+
+
+
+
+        if((strcmp(url, "/Dashboard") == 0) || (strcmp(url, "/") == 0)) return SendFile(connection,  "Dashboard.html");
+        if(strcmp(url, "/Analysis/Frequency") == 0) return SendFile(connection, "Analysis_Frequency.html");
+        if(strcmp(url, "/Analysis/Voltage") == 0) return SendFile(connection, "Analysis_Voltage.html");
+        if(strcmp(url, "/Analysis/Current") == 0) return SendFile(connection, "Analysis_Current.html");
+        if(strcmp(url, "/Analysis/EnergyPower") == 0) return SendFile(connection, "Analysis_EnergyPower.html");
+        if(strcmp(url, "/Events/ITIC") == 0) return SendFile(connection, "Events_ITIC.html");
+        if(strcmp(url, "/Events/Disturbances") == 0) return SendFile(connection, "Events_Disturbances.html");
+        if(strcmp(url, "/Events/EN50160") == 0) return SendFile(connection, "Events_EN50160.html");
+        if(strcmp(url, "/Stats") == 0) return SendFile(connection, "Stats.html");
+        if(strcmp(url, "/Settings") == 0) return SendFile(connection, "Settings.html");
+        if(strcmp(url, "/Help") == 0) return SendFile(connection, "Help.html");
+
+
+
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
   
 //  if(Tools::CreateLogFile() == false) return EXIT_FAILURE;
