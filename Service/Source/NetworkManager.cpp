@@ -52,12 +52,35 @@ json_object *NetworkManager::GetJSONNetworks() {
   dbus_connection_unref(DBus);
   return Result;
 }
+uint8_t NetworkManager::GetConnectivityStatus() {
+  DBusConnection *DBus = CreateConnection();
+  if(DBus == NULL) return 0;
+  uint8_t Result = SendConnectivityState(DBus);
+  dbus_connection_unref(DBus);
+  return Result;
+}
 void NetworkManager::SendEnable(DBusConnection *dbus, int state) {
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager", "org.freedesktop.NetworkManager", "Enable");
   DBusMessageIter ArgsIter;
   dbus_message_iter_init_append(Msg, &ArgsIter);
   dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_BOOLEAN, &state);
   dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+}
+uint8_t NetworkManager::SendConnectivityState(DBusConnection *dbus) {
+  DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager", "org.freedesktop.NetworkManager", "CheckConnectivity");
+  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  uint32_t Result = 0;
+  if(Reply) {
+    DBusMessageIter Struct;
+    if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_UINT32)) {
+      DBusMessageIter Value;
+      dbus_message_iter_recurse(&Struct, &Value);
+      dbus_message_iter_get_basic(&Value, &Result);
+    }
+    dbus_message_unref(Reply);
+  }
+  dbus_message_unref(Msg);
+  return Result;
 }
 void NetworkManager::SendGetDevices(DBusConnection *dbus, json_object *json) {
   DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager", "org.freedesktop.NetworkManager", "GetDevices");
