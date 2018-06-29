@@ -27,18 +27,20 @@ class Database {
   private :
     bool Connect();
   public :
-    void  PrepareSentence(const char *sentence);
-    void  BindSingleUInt32(uint32_t param);
-    void  BindSingleUInt64(uint64_t param);
-    void  BindSingleFloat(float param);
-    void  BindArrayArrayFloat(float *params, int lenA, int lenB);
-    void  BindArrayFloat(float *params, int len);
-    void  BindArrayUInt16(uint16_t *params, int len);
-    void  BindSingleBool(bool param);
-    void  BindSingleString(const char *string);
-    bool  ExecSentence();
-    bool  ExecSentence(const char *sql);
-    char *ExecSentenceJSON(const char* sql, size_t *len);
+    void      PrepareSentence(const char *sentence);
+    void      BindSingleUInt32(uint32_t param);
+    void      BindSingleUInt64(uint64_t param);
+    void      BindSingleFloat(float param);
+    void      BindArrayArrayFloat(float *params, int lenA, int lenB);
+    void      BindArrayFloat(float *params, int len);
+    void      BindArrayUInt16(uint16_t *params, int len);
+    void      BindSingleBool(bool param);
+    void      BindSingleString(const char *string);
+    bool      ExecSentence();
+    uint32_t  ResultRows();
+    char     *ResultValue(uint32_t row, char *name);
+    bool      ExecSentence(const char *sql);
+    char     *ExecSentenceJSON(const char* sql, size_t *len);
     Database(char *schema);
     ~Database();
   public :

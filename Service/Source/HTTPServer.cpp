@@ -57,9 +57,23 @@ void HTTPServer::RegisterCallback(char *handleName, HTTPServer::Func_t function)
   pCallbacks[pCallbacksCount].Function  = function;
   pCallbacksCount++;
 }
-//HTTPServer::Session_t *HTTPServer::GetSession(MHD_Connection* connection) {
-//  const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");
-//  Session_t *Session = NULL;
+char *HTTPServer::OpenSession(MHD_Connection* connection, Request_t* request) {
+  if(request->DB == NULL) request->DB = new Database(NULL);
+  const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");
+  if(Cookie != NULL) {
+    request->DB->PrepareSentence("SELECT id, name FROM sessions WHERE id = ?");
+    request->DB->BindSingleString(Cookie);
+    if(request->DB->ResultRows() == 1) {
+      request->UserName = request->DB->ResultValue(0, (char*)"name");
+      if(request->UserName) request->UserName = strdup(request->UserName);
+      return request->DB->ResultValue(0, (char*)"id");
+    }
+  }
+  request->DB->PrepareSentence("INSERT INTO sessions(name, timestamp) VALUES (NULL, ?) RETURNING id");
+  request->DB->BindSingleUInt64(Tools::GetTime());
+  if(request->DB->ResultRows() == 1) return request->DB->ResultValue(0, (char*)"id");
+  return NULL;
+  //  Session_t *Session = NULL;
 //  pthread_mutex_lock(&pSessionMutex);
 //  if(Cookie != NULL) {
 //    Session         = pSessions;
@@ -84,7 +98,15 @@ void HTTPServer::RegisterCallback(char *handleName, HTTPServer::Func_t function)
 //  Session->References++;
 //  pthread_mutex_unlock(&pSessionMutex);
 //  return Session;
-//}
+}
+void HTTPServer::CloseSession(MHD_Connection* connection, Request_t* request) {
+  if(request->DB == NULL) request->DB = new Database(NULL);
+  const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");  
+  if(Cookie == NULL) return;
+  request->DB->PrepareSentence("DELETE FROM sessions WHERE id = ?");
+  request->DB->BindSingleString(Cookie);
+  request->DB->ExecSentence();
+}
 void HTTPServer::RemoveExpiredSessions() {
 //  pthread_mutex_lock(&pSessionMutex);
 //  Session_t *Session = pSessions;
@@ -173,7 +195,8 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
   if(Request->JSONReader) json_object_put(Request->JSONReader);
   if(Request->JSONWriter) json_object_put(Request->JSONWriter);
   if(Request->Deflate) free(Request->PostData);
-//  if(Request->URL) {
+  if(Request->UserName) free(Request->UserName);
+  //  if(Request->URL) {
 //    uint64_t EndTime = Tools::GetTime();
 //    Tools::LogMsg("DEBUG", "POST request '%s' takes %" PRIu64 "mS (%.2fkB send in %" PRIu64 "mS)\n", Request->URL, Request->ProcTime - Request->StartTime, Request->PostDataLen / 1024.0, EndTime - Request->StartTime);
 //    free(Request->URL);
@@ -198,26 +221,23 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
   if(Request == NULL) {
     *ptr = (Request_t*)calloc(1, sizeof(Request_t));
     Request = (Request_t*)*ptr;
-    Request->Session = GetSession(connection);
+    char *SessionID = OpenSession(connection, Request);
+    if(SessionID == NULL) return MHD_NO;
     Request->ResultCode = MHD_HTTP_OK;
     if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
       return MHD_YES;
     } else if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
-      Request->DB = new DB(NULL);
-      //Busco si la sesion existe      
-      if((strcmp(url, "/Login") == 0) && (Logged == true)) {
-        return SendRedirect(connection, "/Dashboard"); //Redirijo a pMain
-      } else if((strcmp(url, "/Login") == 0) && (Logged == false))
-        //Inserto una sesion y devuelvo el ID
+      if((strcmp(url, "/Login") == 0) && (Request->UserName != NULL)) {
+        return SendRedirect(connection, "/");
+      } else if((strcmp(url, "/Login") == 0) && (Request->UserName == NULL)) {
         char Cookie[256];
-        sprintf(Cookie, "SESSION=%s; httponly; Path=/", Request->Session->ID);
+        sprintf(Cookie, "SESSION=%s; httponly; Path=/", SessionID);
         return SendFile(connection, (char*)"Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
-      } else if(Logged == false) {
+      } else if(Request->UserName == NULL) {
         return SendRedirect(connection, "/Login");
       } else {
         if(strcmp(url, "/Logout") == 0) {
-          //Borro la sesion de la base de datos
-          Request->Session->Logged = false;
+          CloseSession(connection, Request);
           return SendRedirect(connection, "/Login");
         }
         for(uint32_t i = 0; i < pMappingssCount; i++) {
@@ -256,7 +276,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
       if(Request->Deflate) MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_ENCODING, "deflate");
       int Return = MHD_queue_response(connection, Request->ResultCode, response);
       MHD_destroy_response(response);
-      Request->ProcTime = Tools::GetTime();
+//      Request->ProcTime = Tools::GetTime();
       return Return;
     }
   }
@@ -284,6 +304,10 @@ void HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char
       Request->ResultCode = MHD_HTTP_BAD_REQUEST;
       return;
     }
+    if(Request->DB == NULL) Request->DB = new Database(NULL);
+    char Query[1024];
+    sprintf("")
+
     Request->JSONWriter = json_object_new_object();
     if(strcmp(Password, pPassword) != 0) {
       json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(false));

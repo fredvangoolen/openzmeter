@@ -75,15 +75,15 @@ bool Database::ExecSentence(const char* sql) {
   if(pResult != NULL) PQclear(pResult);
   if(Connect() == false) return false;
   pResult = PQexec(pDBConn, sql);
-  if(PQresultStatus(pResult) != PGRES_COMMAND_OK) {
+  if((PQresultStatus(pResult) != PGRES_COMMAND_OK) && (PQresultStatus(pResult) != PGRES_TUPLES_OK)) {
     char *Save;
     Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
-    PQclear(pResult);
-    pResult = NULL;
+//    PQclear(pResult);
+//    pResult = NULL;
     return false;
   } else {
-    PQclear(pResult);
-    pResult = NULL;
+//    PQclear(pResult);
+//    pResult = NULL;
     return true;  
   }
 }
@@ -94,8 +94,8 @@ char *Database::ExecSentenceJSON(const char* sql, size_t *len) {
   if(PQresultStatus(pResult) != PGRES_TUPLES_OK) {
     char *Save;
     Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
-    PQclear(pResult);
-    pResult = NULL;
+//    PQclear(pResult);
+//    pResult = NULL;
     return NULL;
   } else {
     *len = PQgetlength(pResult, 0, 0);
@@ -187,6 +187,17 @@ void Database::BindSingleString(const char *string) {
     sprintf(pParams[pParamsLen], "'%s'", string);
     pParamsLen++;
   }  
+}
+uint32_t Database::ResultRows() {
+  if(pResult == NULL) return 0;
+  return PQntuples(pResult);
+}
+char *Database::ResultValue(uint32_t row, char *name) {
+  if(pResult == NULL) return NULL;
+  uint32_t Col = PQfnumber(pResult, name);
+  if(Col == -1) return NULL;
+  if(PQgetisnull(pResult, row, Col) == 1) return NULL;
+  return PQgetvalue(pResult, row, Col);
 }
 bool Database::ExecSentence() {
   bool Return = false;

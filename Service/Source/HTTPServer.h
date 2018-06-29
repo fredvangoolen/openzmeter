@@ -20,7 +20,7 @@ class HTTPServer {
 //      uint32_t        References;
 //    } Session_t;
     typedef struct {
-//      char           *UserName;
+      char           *UserName;
 //      Session_t                *Session;
 //      char                     *URL;
       char                     *PostData;
@@ -53,15 +53,16 @@ class HTTPServer {
         static Mapping_t *pMappings;
     static uint32_t        pMappingssCount;
   private :
-    static int        HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
-    static void       HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe);
-    static void       ExpireSessions();
-    static void       SetMimeType(struct MHD_Response *response, const char *url);
-    static int        SendFile(struct MHD_Connection *connection, const char *path, const char *aditionalheadertype = NULL, const char *aditionalheadervalue = NULL);
-    static void       HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr);
-    static int        SendRedirect(struct MHD_Connection *connection, const char *url);
-    static int        SendError(struct MHD_Connection *connection, int error, const char *text);
-//    static Session_t *GetSession(MHD_Connection *connection);
+    static int   HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
+    static void  HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe);
+    static void  ExpireSessions();
+    static void  SetMimeType(struct MHD_Response *response, const char *url);
+    static int   SendFile(struct MHD_Connection *connection, const char *path, const char *aditionalheadertype = NULL, const char *aditionalheadervalue = NULL);
+    static void  HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr);
+    static int   SendRedirect(struct MHD_Connection *connection, const char *url);
+    static int   SendError(struct MHD_Connection *connection, int error, const char *text);
+    static char *OpenSession(MHD_Connection *connection, Request_t *request);
+    static void  CloseSession(MHD_Connection *connection, Request_t *request);
   public :
     static void Config(json_object *config);
     static void RegisterCallback(char *handleName, Func_t function);
