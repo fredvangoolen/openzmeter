@@ -3,14 +3,13 @@
  * Author:   Eduardo Viciana (20 de marzo de 2017)
  * ---------------------------------------------------------------------------- */
 #pragma once 
-#include <microhttpd.h>
 #include <json-c/json.h>
-#include <stdlib.h>
+#include <microhttpd.h>
 #include "Database.h"
 //----------------------------------------------------------------------------------------------------------------------
 class HTTPServer {
   public :
-  typedef bool (*Func_t)(const char *user, const json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+  typedef bool (*Func_t)(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
   private :
 //    typedef struct Session {
 //      struct Session *Next;

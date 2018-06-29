@@ -24,10 +24,10 @@ void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
     for(uint8_t Count = 0; Count < 16; Count++) {
       float Voltage = (Pkg[Count * 2 + 0] - This->pVoltageOffset) * This->pVoltageGain;
       float Current = (Pkg[Count * 2 + 1] - This->pCurrentOffset) * This->pCurrentGain;
-      if(This->BuffersAppend(&Voltage, &Current) == false) {
-        //NO HAY SITIO!!! que hago?
-        Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
-      }
+//      if(This->BuffersAppend(&Voltage, &Current) == false) {
+//        //NO HAY SITIO!!! que hago?
+//        Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
+//      }
     }
   }
 //  int16_t *Buff16 = (int16_t*)transfer->buffer;
@@ -215,7 +215,7 @@ void  *DeviceV1::Capture_Thread(void *args) {
 //  }
 //  return NULL;
 //}
-DeviceV1::DeviceV1(json_object* config) : DeviceInterface((char*)"DeviceV1") {
+DeviceV1::DeviceV1(json_object* config) : DeviceInterface() {
   Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
 //  Buffer           = NULL;
 //  ReadPos          = 0;

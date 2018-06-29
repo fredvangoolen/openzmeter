@@ -40,7 +40,7 @@ class DeviceInterface {
 //    bool   BuffersAlloc(uint8_t voltageChannels, uint8_t currentChannels, float samplerate);
 //    void   BuffersReset();
 //    bool   BuffersAppend(float *voltageSamples, float *CurrentSamples);
-    void   AddAnalyzer(AnalyzerInterface *analyzer);
+//    void   AddAnalyzer(AnalyzerInterface *analyzer);
 //    void   AddAnalyzer(AnalyzerInterface *analyzer, uint8_t offsetV, uint8_t offsetC);
     DeviceInterface();
   public :
@@ -48,8 +48,8 @@ class DeviceInterface {
 //    bool      IsActive();
 //    float     GetSamplerate();
 //    float     GetMaxCurrent();
-    uint32_t   GetAnalyzers();
-    AnalyzerInterface *GetAnalyzers(uint32_t idx);
+//    uint32_t   GetAnalyzers();
+//    AnalyzerInterface *GetAnalyzers(uint32_t idx);
 
 
   
@@ -60,9 +60,9 @@ class DeviceInterface {
     static void AddDeviceInterface(DeviceInterface *device);
   public :
     static void Config(json_object *config);
-    static bool GetSeriesCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetSeriesAggregCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetAnalyzersCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetSeriesNowCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetSeriesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetSeriesAggregCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetSeriesNowCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
 };
 //----------------------------------------------------------------------------------------------------------------------

@@ -41,7 +41,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/Source/Database.o \
 	${OBJECTDIR}/Source/DeviceInterface.o \
 	${OBJECTDIR}/Source/Drivers/DeviceRemote.o \
-	${OBJECTDIR}/Source/Drivers/DeviceV1.o \
 	${OBJECTDIR}/Source/Drivers/DeviceV2.o \
 	${OBJECTDIR}/Source/Drivers/DeviceVirtual.o \
 	${OBJECTDIR}/Source/FFT.o \
@@ -102,10 +101,6 @@ ${OBJECTDIR}/Source/DeviceInterface.o: Source/DeviceInterface.cpp
 ${OBJECTDIR}/Source/Drivers/DeviceRemote.o: Source/Drivers/DeviceRemote.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Drivers
 	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Drivers/DeviceRemote.o Source/Drivers/DeviceRemote.cpp
-
-${OBJECTDIR}/Source/Drivers/DeviceV1.o: Source/Drivers/DeviceV1.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source/Drivers
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Drivers/DeviceV1.o Source/Drivers/DeviceV1.cpp
 
 ${OBJECTDIR}/Source/Drivers/DeviceV2.o: Source/Drivers/DeviceV2.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Drivers

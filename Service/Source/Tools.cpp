@@ -2,11 +2,6 @@
  * File:     Tools.cpp
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
-#include "Tools.h"
-#include "NetworkManager.h"
-#include "HTTPServer.h"
-#include "Capture.h"
-#include "HTTPServer.h"
 #include <string.h>
 #include <signal.h>
 #include <time.h>
@@ -21,6 +16,10 @@
 #include <sys/stat.h>
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
+#include "Tools.h"
+#include "NetworkManager.h"
+#include "HTTPServer.h"
+#include "DeviceInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
 bool         Tools::Debug        = false;
 bool         Tools::pDaemonized  = false;
@@ -196,7 +195,7 @@ bool Tools::GetMemory(uint64_t *total, uint64_t *available) {
   *available = ParseProcMem((char*)"MemFree:", Buffer) + ParseProcMem((char*)"Cached:", Buffer) + ParseProcMem((char*)"Buffers:", Buffer);
   return ((*total != 0) && (*available != 0));
 }
-bool Tools::GetSysInfo(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen) {
+bool Tools::GetSysInfo(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   struct sysinfo Info;
   struct statvfs Disk;
   if(sysinfo(&Info) != 0) {

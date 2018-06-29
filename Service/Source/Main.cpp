@@ -1,24 +1,16 @@
 /* ================================== zMeter ==================================
- * File:     main.cpp
+ * File:     Main.cpp
  * Author:   Pedro Sanchez (3 de marzo de 2015)
  * Modified: Eduardo Viciana (20 de marzo de 2017)
  * ---------------------------------------------------------------------------- */
-#include <stdio.h>
 #include <signal.h>
-#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include "Main.h"
 #include "Tools.h"
 #include "HTTPServer.h"
-#include "Analyzer.h"
+#include "DeviceInterface.h"
 #include "NetworkManager.h"
-#include "Capture.h"
+//#include "Capture.h"
 static bool Terminate = false;
 void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
@@ -66,26 +58,24 @@ int main(int argc, char** argv) {
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
   }
   Tools::RegisterHandlers(SignalHandler);
-  HTTPServer::RegisterCallback((char*)"/getSysInfo", Tools::GetSysInfo);
-  HTTPServer::RegisterCallback((char*)"/getNodes", Capture::GetNodesCallback);
-  HTTPServer::RegisterCallback((char*)"/getSeries", Capture::GetSeriesCallback);
-  HTTPServer::RegisterCallback((char*)"/getSeriesAggreg", Capture::GetSeriesAggregCallback);
-  HTTPServer::RegisterCallback((char*)"/getSeriesNow", Capture::GetSeriesNowCallback);
-
-
-
-
-        if((strcmp(url, "/Dashboard") == 0) || (strcmp(url, "/") == 0)) return SendFile(connection,  "Dashboard.html");
-        if(strcmp(url, "/Analysis/Frequency") == 0) return SendFile(connection, "Analysis_Frequency.html");
-        if(strcmp(url, "/Analysis/Voltage") == 0) return SendFile(connection, "Analysis_Voltage.html");
-        if(strcmp(url, "/Analysis/Current") == 0) return SendFile(connection, "Analysis_Current.html");
-        if(strcmp(url, "/Analysis/EnergyPower") == 0) return SendFile(connection, "Analysis_EnergyPower.html");
-        if(strcmp(url, "/Events/ITIC") == 0) return SendFile(connection, "Events_ITIC.html");
-        if(strcmp(url, "/Events/Disturbances") == 0) return SendFile(connection, "Events_Disturbances.html");
-        if(strcmp(url, "/Events/EN50160") == 0) return SendFile(connection, "Events_EN50160.html");
-        if(strcmp(url, "/Stats") == 0) return SendFile(connection, "Stats.html");
-        if(strcmp(url, "/Settings") == 0) return SendFile(connection, "Settings.html");
-        if(strcmp(url, "/Help") == 0) return SendFile(connection, "Help.html");
+  HTTPServer::RegisterCallback((char*)"/getSysInfo",      Tools::GetSysInfo);
+  HTTPServer::RegisterCallback((char*)"/getNodes",        DeviceInterface::GetAnalyzersCallback);
+//  HTTPServer::RegisterCallback((char*)"/getSeries",       DeviceInterface::GetSeriesCallback);
+//  HTTPServer::RegisterCallback((char*)"/getSeriesAggreg", DeviceInterface::GetSeriesAggregCallback);
+//  HTTPServer::RegisterCallback((char*)"/getSeriesNow",    DeviceInterface::GetSeriesNowCallback);
+ 
+  HTTPServer::RegisterMapping((char*)"/",                     (char*)"Dashboard.html");
+  HTTPServer::RegisterMapping((char*)"/Dashboard",            (char*)"Dashboard.html");
+  HTTPServer::RegisterMapping((char*)"/Analysis/Frequency",   (char*)"Analysis_Frequency.html");
+  HTTPServer::RegisterMapping((char*)"/Analysis/Voltage",     (char*)"Analysis_Voltage.html");
+  HTTPServer::RegisterMapping((char*)"/Analysis/Current",     (char*)"Analysis_Current.html");
+  HTTPServer::RegisterMapping((char*)"/Analysis/EnergyPower", (char*)"Analysis_EnergyPower.html");
+  HTTPServer::RegisterMapping((char*)"/Events/ITIC",          (char*)"Events_ITIC.html");
+  HTTPServer::RegisterMapping((char*)"/Events/Disturbances",  (char*)"Events_Disturbances.html");
+  HTTPServer::RegisterMapping((char*)"/Events/EN50160",       (char*)"Events_EN50160.html");
+  HTTPServer::RegisterMapping((char*)"/Stats",                (char*)"Stats.html");
+  HTTPServer::RegisterMapping((char*)"/Settings",             (char*)"Settings.html");
+  HTTPServer::RegisterMapping((char*)"/Help",                 (char*)"Help.html");
 
 
 

@@ -139,7 +139,7 @@ DeviceInterface::~DeviceInterface() {
 //  if(pVoltageSamples) free(pVoltageSamples);
 //  if(pCurrentSamples) free(pCurrentSamples);
 }
-bool DeviceInterface::GetAnalyzersCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen) {
+bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_object();
   json_object *Devices = json_object_new_array();
   for(uint8_t i = 0; i < pDeviceInterfacesCount; i++) {
@@ -309,7 +309,7 @@ bool DeviceInterface::GetSeriesAggregCallback(Database **db, json_object *reader
   *postdata = (*db)->ExecSentenceJSON(QueryText, resultLen);
   return true;
 }
-bool Capture::GetSeriesNowCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen) {
+bool DeviceInterface::GetSeriesNowCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen) {
   char *Node = NULL, *Series = NULL;
   json_object_object_foreach(reader, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
@@ -331,12 +331,12 @@ bool Capture::GetSeriesNowCallback(Database **db, json_object *reader, json_obje
   for(uint32_t i = 0; i < pDeviceInterfacesCount; i++) {
     DeviceInterface *Device = pDeviceInterfaces[i];
     for(uint32_t n = 0; n < Device->GetAnalyzers(); n++) {
-      AnalyzerSoft *AnalyzerSoft = Device->GetAnalyzers(n);
-      if(strcmp(AnalyzerSoft->GetID(), Node) == 0) {
-        *writer = AnalyzerSoft->GetJSONCopy(Series);
-        *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
-        return true;      
-      }
+      AnalyzerInterface *Analyzer = Device->GetAnalyzers(n);
+//      if(strcmp(Analyzer->GetID(), Node) == 0) {
+//        *writer = Analyzer->GetJSONCopy(Series);
+//        *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
+//        return true;      
+//      }
     }
   }
   return false;

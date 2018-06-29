@@ -3,10 +3,6 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <pthread.h>
 #include <json-c/json.h>
 #include "Database.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -30,7 +26,7 @@ class Tools {
     static void         Daemonize();
     static bool         CreateLogFile(char *name);
     static uint64_t     GetTime();
-    static bool         GetSysInfo(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen);
+    static bool         GetSysInfo(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
     static void         RegisterHandlers(void (*function)(int));
 };
 //----------------------------------------------------------------------------------------------------------------------
