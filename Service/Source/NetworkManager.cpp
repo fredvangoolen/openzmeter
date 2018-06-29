@@ -83,8 +83,8 @@ uint8_t NetworkManager::SendConnectivityState(DBusConnection *dbus) {
     DBusMessageIter Struct;
     if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_UINT32)) {
       DBusMessageIter Value;
-      dbus_message_iter_recurse(&Struct, &Value);
-      dbus_message_iter_get_basic(&Value, &Result);
+//      dbus_message_iter_recurse(&Struct, &Value);
+      dbus_message_iter_get_basic(&Struct, &Result);
     }
     dbus_message_unref(Reply);
   }

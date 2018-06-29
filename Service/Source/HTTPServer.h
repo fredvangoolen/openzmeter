@@ -65,7 +65,7 @@ class HTTPServer {
   public :
     static void Config(json_object *config);
     static void RegisterCallback(char *handleName, Func_t function);
-    static void RegisterMapping(char *URL, char *File);
+    static void RegisterMapping(char *url, char *file);
     static void Stop();
     static void RemoveExpiredSessions();
 };

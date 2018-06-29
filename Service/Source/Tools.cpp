@@ -144,7 +144,7 @@ bool Tools::ReadConfig(char *file) {
   json_object_object_foreach(Config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "LogFile") == 0)) {
-      if(!pLogFile) {
+      if(pLogFile) {
         Error = true;
         LogMsg("ERROR", "Duplicate LogFile param in config file\n");
       } else {

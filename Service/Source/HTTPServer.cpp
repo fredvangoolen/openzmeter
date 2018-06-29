@@ -18,27 +18,20 @@
 #include "NetworkManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon             *HTTPServer::pDaemon         = NULL;
-//HTTPServer::Session_t  *HTTPServer::pSessions       = NULL;
 HTTPServer::Callback_t *HTTPServer::pCallbacks      = NULL;
 uint32_t                HTTPServer::pCallbacksCount = 0;
-//pthread_mutex_t         HTTPServer::pSessionMutex   = PTHREAD_MUTEX_INITIALIZER;
+HTTPServer::Mapping_t  *HTTPServer::pMappings       = NULL;
+uint32_t                HTTPServer::pMappingssCount = 0;
 char                   *HTTPServer::pFilePath       = (char*)"/usr/share/openZmeter/WEB/";
-//char                   *HTTPServer::pPassword       = (char*)"admin";
-//uint64_t                HTTPServer::pLastLogin      = 0;
 //----------------------------------------------------------------------------------------------------------------------
 void HTTPServer::Config(json_object *config) {
   uint16_t Port = 8080;
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
-//    if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastLogin") == 0)) {
-//      pLastLogin = json_object_get_int64(JSON_Val);
-//    } else 
     if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) {
       Port = json_object_get_int(JSON_Val);
     } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "FilePath") == 0)) {
       pFilePath = (char*)json_object_get_string(JSON_Val);
-//    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) {
-//      pPassword = (char*)json_object_get_string(JSON_Val);
     }
   }
   pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, Port, NULL, NULL, 
@@ -57,12 +50,19 @@ void HTTPServer::RegisterCallback(char *handleName, HTTPServer::Func_t function)
   pCallbacks[pCallbacksCount].Function  = function;
   pCallbacksCount++;
 }
+void HTTPServer::RegisterMapping(char *url, char *file) {
+  pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pMappingssCount + 1));
+  pMappings[pMappingssCount].URL  = url;
+  pMappings[pMappingssCount].File = file;
+  pMappingssCount++;
+}
 char *HTTPServer::OpenSession(MHD_Connection* connection, Request_t* request) {
   if(request->DB == NULL) request->DB = new Database(NULL);
   const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");
   if(Cookie != NULL) {
     request->DB->PrepareSentence("SELECT id, name FROM sessions WHERE id = ?");
     request->DB->BindSingleString(Cookie);
+    request->DB->ExecSentence();
     if(request->DB->ResultRows() == 1) {
       request->UserName = request->DB->ResultValue(0, (char*)"name");
       if(request->UserName) request->UserName = strdup(request->UserName);
@@ -71,33 +71,9 @@ char *HTTPServer::OpenSession(MHD_Connection* connection, Request_t* request) {
   }
   request->DB->PrepareSentence("INSERT INTO sessions(name, timestamp) VALUES (NULL, ?) RETURNING id");
   request->DB->BindSingleUInt64(Tools::GetTime());
+  request->DB->ExecSentence();
   if(request->DB->ResultRows() == 1) return request->DB->ResultValue(0, (char*)"id");
   return NULL;
-  //  Session_t *Session = NULL;
-//  pthread_mutex_lock(&pSessionMutex);
-//  if(Cookie != NULL) {
-//    Session         = pSessions;
-//    while(Session != NULL) {
-//      if(strcmp(Cookie, Session->ID) == 0) break;
-//      Session = Session->Next;
-//    }
-//  } 
-//  if(Session == NULL) {
-//    Session = (Session_t*)calloc(1, sizeof(Session_t));
-//    if(Session == NULL) {
-//      Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//      return NULL; 
-//    }
-//    sprintf(Session->ID, "%08X%08X%08X%08X", (uint32_t)random(), (uint32_t)random(), (uint32_t)random(), (uint32_t)random());
-//    Tools::LogMsg("DEBUG", "New HTTP client with ID %s\n", Session->ID);
-//    Session->UserName = NULL;
-//    Session->Next = pSessions;
-//    pSessions = Session;
-//  }
-//  Session->LastSeen = time(NULL);
-//  Session->References++;
-//  pthread_mutex_unlock(&pSessionMutex);
-//  return Session;
 }
 void HTTPServer::CloseSession(MHD_Connection* connection, Request_t* request) {
   if(request->DB == NULL) request->DB = new Database(NULL);
@@ -318,9 +294,15 @@ void HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char
       if(LastLogin) json_object_object_add(Request->JSONWriter, "LastLogin", json_object_new_int64(atol(LastLogin)));
       char *Admin = Request->DB->ResultValue(0, (char*)"admin");
       if(Admin) json_object_object_add(Request->JSONWriter, "Admin", json_object_new_boolean((Admin[0] == 't') ? true : false));
-      Request->DB->PrepareSentence("UPDATE lastlogin FROM users WHERE name = ?");
-      Request->DB->BindSingleString(Name);
+      Request->DB->PrepareSentence("UPDATE users SET lastlogin = ? WHERE name = ?");
       Request->DB->BindSingleUInt64(Tools::GetTime());
+      Request->DB->BindSingleString(Name);
+      Request->DB->ExecSentence();
+      const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");  
+      if(Cookie == NULL) return;
+      Request->DB->PrepareSentence("UPDATE sessions SET name = ? WHERE id = ?");
+      Request->DB->BindSingleString(Name);
+      Request->DB->BindSingleString(Cookie);
       Request->DB->ExecSentence();
     }
     Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostDataLen);
@@ -334,6 +316,7 @@ void HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char
       Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
       return;
     }
+    Request->UserName = strdup("API");
   }
   for(uint32_t i = 0; i < pCallbacksCount; i++) {
     if(strcmp(pCallbacks[i].HandleName, url) == 0) {
