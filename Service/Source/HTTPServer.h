@@ -10,7 +10,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 class HTTPServer {
   public :
-  typedef bool (*Func_t)(const char *user, const json_object *reader, Database **db, json_object **writer, char **postdata, size_t *resultLen);
+  typedef bool (*Func_t)(const char *user, const json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
   private :
 //    typedef struct Session {
 //      struct Session *Next;

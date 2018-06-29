@@ -292,33 +292,41 @@ void HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char
     return;
   }
   if(strcmp(url, "/LogIn") == 0) {
-    char *Password = NULL;
+    char *Password = NULL, *Name = NULL;
     json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
       enum json_type JSON_Type = json_object_get_type(JSON_Val);
-      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) 
-        Password = (char*)json_object_get_string(JSON_Val);
+      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) Password = (char*)json_object_get_string(JSON_Val);
+      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Username") == 0)) Name = (char*)json_object_get_string(JSON_Val);
     }
-    if(Password == NULL) {
-      Request->PostData  = (char*)"'Password' param requiered";
+    if((Password == NULL) || (Name == NULL)) {
+      Request->PostData  = (char*)"'Password' and 'Username' params requiered";
       Request->PostDataLen = strlen(Request->PostData);
       Request->ResultCode = MHD_HTTP_BAD_REQUEST;
       return;
     }
     if(Request->DB == NULL) Request->DB = new Database(NULL);
-    char Query[1024];
-    sprintf("")
-
+    Request->DB->PrepareSentence("SELECT admin, lastlogin FROM users WHERE name = ? AND password = MD5(?)");
+    Request->DB->BindSingleString(Name);
+    Request->DB->BindSingleString(Password);
+    Request->DB->ExecSentence();
     Request->JSONWriter = json_object_new_object();
-    if(strcmp(Password, pPassword) != 0) {
-      json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(false));
+    if(Request->DB->ResultRows() != 1) {
+      json_object_object_add(Request->JSONWriter, "Result", json_object_new_boolean(false));
     } else {
-      Request->Session->Logged = true;
-      json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(true));    
+      json_object_object_add(Request->JSONWriter, "Result", json_object_new_boolean(true));
+      char *LastLogin = Request->DB->ResultValue(0, (char*)"lastlogin");
+      if(LastLogin) json_object_object_add(Request->JSONWriter, "LastLogin", json_object_new_int64(atol(LastLogin)));
+      char *Admin = Request->DB->ResultValue(0, (char*)"admin");
+      if(Admin) json_object_object_add(Request->JSONWriter, "Admin", json_object_new_boolean((Admin[0] == 't') ? true : false));
+      Request->DB->PrepareSentence("UPDATE lastlogin FROM users WHERE name = ?");
+      Request->DB->BindSingleString(Name);
+      Request->DB->BindSingleUInt64(Tools::GetTime());
+      Request->DB->ExecSentence();
     }
     Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostDataLen);
     return;
   }
-  if(Request->Session->Logged == false) {
+  if(Request->UserName == NULL) {
     struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
     if(((sockaddr_in*)Addr)->sin_addr.s_addr != 0x0100007F) {
       Request->PostData  = (char*)"Unauthorided access to API";
@@ -329,7 +337,7 @@ void HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char
   }
   for(uint32_t i = 0; i < pCallbacksCount; i++) {
     if(strcmp(pCallbacks[i].HandleName, url) == 0) {
-      if(pCallbacks[i].Function(&Request->DB, Request->JSONReader, &Request->JSONWriter, &Request->PostData, &Request->PostDataLen) == false) Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      if(pCallbacks[i].Function(Request->UserName, Request->JSONReader, Request->DB, &Request->JSONWriter, &Request->PostData, &Request->PostDataLen) == false) Request->ResultCode = MHD_HTTP_BAD_REQUEST;
       return;
     }
   }

@@ -147,13 +147,13 @@ bool DeviceInterface::GetAnalyzersCallback(Database **db, json_object *reader, j
     for(uint32_t n = 0; n < Device->GetAnalyzers(); n++) {
       AnalyzerInterface *Analyzer = Device->GetAnalyzers(n);
       json_object *Obj = json_object_new_object();
-      json_object_object_add(Obj, "NominalVoltage", json_object_new_int(Analyzer->GetNominalVoltage()));
-      json_object_object_add(Obj, "NominalFreq"   , json_object_new_int(Analyzer->GetNominalFrequency()));
-      json_object_object_add(Obj, "ID"            , json_object_new_string(Analyzer->GetID()));
-      json_object_object_add(Obj, "Name"          , json_object_new_string(Analyzer->GetName()));
-      json_object_object_add(Obj, "Type"          , json_object_new_string(Analyzer->GetTypeString()));
-      json_object_object_add(Obj, "SampleFreq"    , json_object_new_double(Analyzer->GetSamplerate()));
-      json_object_object_add(Obj, "MaxCurrent"    , json_object_new_double(Analyzer->GetMaxCurrent()));
+//      json_object_object_add(Obj, "NominalVoltage", json_object_new_int(Analyzer->GetNominalVoltage()));
+//      json_object_object_add(Obj, "NominalFreq"   , json_object_new_int(Analyzer->GetNominalFrequency()));
+//      json_object_object_add(Obj, "ID"            , json_object_new_string(Analyzer->GetID()));
+//      json_object_object_add(Obj, "Name"          , json_object_new_string(Analyzer->GetName()));
+//      json_object_object_add(Obj, "Type"          , json_object_new_string(Analyzer->GetTypeString()));
+//      json_object_object_add(Obj, "SampleFreq"    , json_object_new_double(Analyzer->GetSamplerate()));
+//      json_object_object_add(Obj, "MaxCurrent"    , json_object_new_double(Analyzer->GetMaxCurrent()));
       json_object_array_add(Devices, Obj);
     }
   }
