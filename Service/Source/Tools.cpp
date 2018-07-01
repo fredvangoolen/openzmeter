@@ -140,32 +140,19 @@ bool Tools::ReadConfig(char *file) {
     LogMsg("ERROR", "Can not open config file (Invalid JSON format)\n");
     return false;
   }
-  bool Error = false;
-  json_object_object_foreach(Config, JSON_Key, JSON_Val) {
-    enum json_type JSON_Type = json_object_get_type(JSON_Val);
-    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "LogFile") == 0)) {
-      if(pLogFile) {
-        Error = true;
-        LogMsg("ERROR", "Duplicate LogFile param in config file\n");
-      } else {
-        if(CreateLogFile((char*)json_object_get_string(JSON_Val)) == false) Error = true;
-      }
-    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "PidFile") == 0)) {
-      if(pPidFile) {
-        Error = true;
-        LogMsg("ERROR", "Duplicate PidFile param in config file\n");
-      } else {
-        if(CreatePidFile((char*)json_object_get_string(JSON_Val)) == false) Error = true;
-      }
-    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Database") == 0)) {
-      Database::Config(JSON_Val);
-    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "HTTPServer") == 0)) {
-      HTTPServer::Config(JSON_Val);
-    } else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Device") == 0)) {
-      DeviceInterface::Config(JSON_Val);
-    }
+  json_object *Find;  
+  if((json_object_object_get_ex(Config, "LogFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreateLogFile((char*)json_object_get_string(Find));
+  if((json_object_object_get_ex(Config, "PidFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreatePidFile((char*)json_object_get_string(Find));
+  if((json_object_object_get_ex(Config, "Database", &Find) == true) && (json_object_get_type(Find) == json_type_object)) {
+    if(Database::Config(Find) == false) return false;
   }
-  return !Error;
+  if((json_object_object_get_ex(Config, "HTTPServer", &Find) == true) && (json_object_get_type(Find) == json_type_object)) {
+    if(HTTPServer::Config(Find) == false) return false;
+  }
+  if((json_object_object_get_ex(Config, "Devices", &Find) == true) && (json_object_get_type(Find) == json_type_object)) {
+    if(DeviceInterface::Config(Find) == false) return false;
+  }
+  return true;
 }
 uint64_t Tools::GetTime() {
   struct timeval Time;

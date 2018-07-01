@@ -24,7 +24,25 @@ HTTPServer::Mapping_t  *HTTPServer::pMappings       = NULL;
 uint32_t                HTTPServer::pMappingssCount = 0;
 char                   *HTTPServer::pFilePath       = (char*)"/usr/share/openZmeter/WEB/";
 //----------------------------------------------------------------------------------------------------------------------
-void HTTPServer::Config(json_object *config) {
+bool HTTPServer::Config(json_object *config) {
+  Database DB(NULL);
+  Tools::LogMsg("DEBUG", "Creating WEB service tables\n");
+  DB.ExecSentence("CREATE TABLE IF NOT EXISTS users("
+                  "  name      character varying NOT NULL,"
+                  "  password  character varying NOT NULL,"
+                  "  lastlogin bigint            NOT NULL,"
+                  "  admin     boolean           NOT NULL,"
+                  "CONSTRAINT users_pkey PRIMARY KEY (name)"
+                  ") WITH (OIDS=FALSE)");
+  DB.ExecSentence("CREATE TABLE IF NOT EXISTS sessions ("
+                  "  id   serial NOT NULL,"
+                  "  name character varying,"
+                  "  timestamp bigint NOT NULL,"
+                  "CONSTRAINT sessions_pkey PRIMARY KEY (id),"
+                  "CONSTRAINT sessions_name_fkey FOREIGN KEY (name) REFERENCES users (name) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE"
+                  ") WITH (OIDS=FALSE)");
+  DB.ExecSentence("CREATE INDEX IF NOT EXISTS sessions_timestamp_idx ON sessions USING btree (timestamp)");
+  DB.ExecSentence("INSERT INTO users(name, password, lastlogin, admin) VALUES('admin', MD5('admin'), 0, true) ON CONFLICT (name) DO NOTHING");
   uint16_t Port = 8080;
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
@@ -84,27 +102,10 @@ void HTTPServer::CloseSession(MHD_Connection* connection, Request_t* request) {
   request->DB->ExecSentence();
 }
 void HTTPServer::RemoveExpiredSessions() {
-//  pthread_mutex_lock(&pSessionMutex);
-//  Session_t *Session = pSessions;
-//  Session_t *Prev = NULL;
-//  uint32_t Time = time(NULL);
-//  while(Session != NULL) {
-//    if((Session->LastSeen < (Time - 86400)) && (Session->References != 0)) {
-//      Tools::LogMsg("DEBUG", "Remove expired session %s\n", Session->ID);
-//      Session_t *Tmp = Session;
-//      if(Prev == NULL) {
-//        pSessions = Session->Next;
-//      } else {
-//        Prev->Next = Session->Next;
-//      }
-//      Session = Session->Next;
-//      free(Tmp);
-//    } else {
-//      Prev = Session;
-//      Session = Session->Next;
-//    }
-//  }
-//  pthread_mutex_unlock(&pSessionMutex);
+  Database DB(NULL);
+  DB.PrepareSentence("DELETE FROM sessions WHERE timestamp < ?");
+  DB.BindSingleUInt64(Tools::GetTime() - 1296000000); //15 days
+  DB.ExecSentence();
 }
 void HTTPServer::SetMimeType(struct MHD_Response *response, const char *url) {
   char *MimeType = NULL;
@@ -172,14 +173,6 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
   if(Request->JSONWriter) json_object_put(Request->JSONWriter);
   if(Request->Deflate) free(Request->PostData);
   if(Request->UserName) free(Request->UserName);
-  //  if(Request->URL) {
-//    uint64_t EndTime = Tools::GetTime();
-//    Tools::LogMsg("DEBUG", "POST request '%s' takes %" PRIu64 "mS (%.2fkB send in %" PRIu64 "mS)\n", Request->URL, Request->ProcTime - Request->StartTime, Request->PostDataLen / 1024.0, EndTime - Request->StartTime);
-//    free(Request->URL);
-//  }
-//  pthread_mutex_lock(&pSessionMutex);
-//  Request->Session->References--;
-//  pthread_mutex_unlock(&pSessionMutex);
   free(Request);
 }
 int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
@@ -252,11 +245,9 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
       if(Request->Deflate) MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_ENCODING, "deflate");
       int Return = MHD_queue_response(connection, Request->ResultCode, response);
       MHD_destroy_response(response);
-//      Request->ProcTime = Tools::GetTime();
       return Return;
     }
   }
-//  return SendError(connection, MHD_HTTP_NOT_FOUND, "Page not found");
 }
 void HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
   Request_t *Request = (Request_t*)*ptr;

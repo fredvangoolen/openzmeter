@@ -10,7 +10,6 @@
 class Database;
 class Database {
   private :
-    static bool  pInitialized;
     static char *pDatabaseName;
     static char *pHost;
     static int   pPort;
@@ -44,5 +43,5 @@ class Database {
     Database(char *schema);
     ~Database();
   public :
-    static void Config(json_object *config);
+    static bool Config(json_object *config);
 };

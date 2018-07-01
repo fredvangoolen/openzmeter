@@ -63,7 +63,7 @@ class HTTPServer {
     static char *OpenSession(MHD_Connection *connection, Request_t *request);
     static void  CloseSession(MHD_Connection *connection, Request_t *request);
   public :
-    static void Config(json_object *config);
+    static bool Config(json_object *config);
     static void RegisterCallback(char *handleName, Func_t function);
     static void RegisterMapping(char *url, char *file);
     static void Stop();

@@ -9,7 +9,6 @@
 #include "Database.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-bool Database::pInitialized   = false;
 char *Database::pDatabaseName = (char*)"openzmeter";
 char *Database::pHost         = (char*)"127.0.0.1";;
 int   Database::pPort         = 5432;
@@ -35,12 +34,13 @@ bool Database::Connect() {
   pDBConn = PQconnectdb(ConnectionString);
   if(PQstatus(pDBConn) == CONNECTION_BAD) {
     char *Save;
+    Tools::LogMsg("ERROR", "Cant open database (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     PQfinish(pDBConn);
-    if(pInitialized == false) Tools::LogMsg("ERROR", "Cant open database (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     pDBConn = NULL;
     return false;
   }
   ExecSentence("SET synchronous_commit TO OFF");
+  ExecSentence("SET client_min_messages = error");
   PrepareSentence("SET search_path TO ?");
   BindSingleString(pSchema);
   ExecSentence();
@@ -50,7 +50,7 @@ Database::~Database() {
   if(pResult != NULL) PQclear(pResult);
   PQfinish(pDBConn);
 }
-void Database::Config(json_object *config) {
+bool Database::Config(json_object *config) {
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "HostName") == 0)) {
@@ -66,10 +66,7 @@ void Database::Config(json_object *config) {
     }
   }
   Database DB(NULL);
-  if(DB.Connect() == true) {
-    //Empiezo a meter tablas si no estan y procedimientos
-    pInitialized = true;
-  }
+  return DB.Connect(); 
 }
 bool Database::ExecSentence(const char* sql) {
   if(pResult != NULL) PQclear(pResult);

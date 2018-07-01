@@ -12,8 +12,33 @@
 DeviceInterface **DeviceInterface::pDeviceInterfaces      = NULL;
 uint8_t           DeviceInterface::pDeviceInterfacesCount = 0;
 //----------------------------------------------------------------------------------------------------------------------
-void DeviceInterface::Config(json_object *config) {
-//  struct json_object *Find;
+bool DeviceInterface::Config(json_object *config) {
+  Database DB(NULL);
+  Tools::LogMsg("DEBUG", "Creating device tables\n");
+  DB.ExecSentence("CREATE TABLE IF NOT EXISTS devices("
+                  "  serial            character varying NOT NULL,"
+                  "  nominal_voltage   real              NOT NULL,"
+                  "  nominal_frequency real              NOT NULL,"
+                  "  name              character varying NOT NULL,"
+                  "  max_current       real              NOT NULL,"
+                  "  min_current       real              NOT NULL,"
+                  "  phases            smallint          NOT NULL,"
+                  "  CONSTRAINT devices_pkey PRIMARY KEY (serial)"
+                  ") WITH (OIDS=FALSE)");
+  DB.ExecSentence("CREATE TABLE IF NOT EXISTS permisions("
+                  "  name   character varying NOT NULL,"
+                  "  serial character varying NOT NULL,"
+                  "  read   boolean           NOT NULL,"
+                  "  write  boolean           NOT NULL,"
+                  "CONSTRAINT permisions_pkey PRIMARY KEY (name),"
+                  "CONSTRAINT permisions_device_pkey FOREIGN KEY (serial) REFERENCES devices (serial) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,"
+                  "CONSTRAINT permisions_name_pkey FOREIGN KEY (name) REFERENCES users (name) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE"
+                  ") WITH (OIDS=FALSE)");
+
+  
+  
+  
+  //  struct json_object *Find;
 //  if((json_object_object_get_ex(config, "NominalVoltage", &Find) == true) && (json_object_get_type(Find) == json_type_double)) {
 //    pNominalVoltage = json_object_get_double(Find);
 //  }

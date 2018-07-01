@@ -14,44 +14,43 @@
     "UserName": "openzmeter",
     "Password": "openzmeter"
   },
-  "Capture": {
-    "Devices": [
-      { "Driver": "CaptureMono",
-        "NominalFrequency": 50,
-        "NominalVoltage": 230,
-        "Serial": "3FFFFFFFFFFFFFFFFFFFFFFF",
-        "VoltageGain": 0.01160,
-        "VoltageOffset": 348.00,
-        "CurrentGain": -0.00078125,
-        "CurrentOffset": 32768
-      },
-      { "Driver": "CaptureV2",
-        "Samplerate": 30000,
-        "Oversample": 4,
-        "Serial": "*",
-        "VoltageGain": [0.01160, 0, 0],
-        "VoltageOffset": [348.00, 0, 0],
-        "CurrentGain": [-0.00078125, 0, 0, 0],
-        "CurrentOffset": [32768, 0, 0, 0],
-        "Outputs": [
-          { "NominalFrequency": 50,
-            "NominalVoltage": 230,
-            "Mode": "3Phase+N",
-            "Prices": {
-            },
-            "Upload": {
-              "Server": "150.214.150.25:2000",
-              "Username": "edu",
-              "Password": "0000"
-            }
-          }, 
-          { "Mode": "1Phase",
-            "VoltageChannel": "R",
-            "CurrentChannel": "T",
-            "ID": 5
+  "Capture": [
+    { "Driver": "CaptureMono",
+      "NominalFrequency": 50,
+      "NominalVoltage": 230
+      "Serial": "3FFFFFFFFFFFFFFFFFFFFFFF",
+      "VoltageGain": 0.01160,
+      "VoltageOffset": 348.00,
+      "CurrentGain": -0.00078125,
+      "CurrentOffset": 32768
+    },
+    { "Driver": "CaptureV2",
+      "Samplerate": 30000,
+      "Oversample": 4,
+      "Serial": "*",
+      "VoltageGain": [0.01160, 0, 0],
+      "VoltageOffset": [348.00, 0, 0],
+      "CurrentGain": [-0.00078125, 0, 0, 0],
+      "CurrentOffset": [32768, 0, 0, 0],
+      "Outputs": [
+        { "NominalFrequency": 50,
+          "NominalVoltage": 230,
+          "Mode": "3Phase+N",
+          "Prices": {
+          },
+          "Upload": {
+            "Server": "150.214.150.25:2000",
+            "Username": "edu",
+            "Password": "0000"
           }
-        ]
-      }
-    ]
-  }
+        }, 
+        { "NominalFrequency": 50,
+          "NominalVoltage": 230,
+          "Mode": "1Phase",
+          "VoltageChannel": "R",
+          "CurrentChannel": "T",
+        }
+      ]
+    }
+  ]
 }

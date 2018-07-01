@@ -59,7 +59,7 @@ class DeviceInterface {
   private :
     static void AddDeviceInterface(DeviceInterface *device);
   public :
-    static void Config(json_object *config);
+    static bool Config(json_object *config);
     static bool GetSeriesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
     static bool GetSeriesAggregCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
     static bool GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);

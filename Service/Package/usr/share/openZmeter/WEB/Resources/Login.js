@@ -10,7 +10,7 @@ $('form').submit(function (e) {
     data: JSON.stringify({ Username: $('#username').val(), Password: $('#password').val() }),
     success: function (response) {
       $('.alert-danger').slideUp(500, function () {
-        if (response == null || response['result'] == false) {
+        if (response == null || response['Result'] == false) {
           $('.alert-danger').slideDown(500);
           $('form button').removeAttr('disabled');
         } else {
