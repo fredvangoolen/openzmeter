@@ -11,38 +11,8 @@
 #include "ZeroCrossing.h"
 #include "Stats.h"
 //----------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoft : private AnalyzerInterface {
-  public :
-    enum AnalyzerType {PHASE_1, PHASE_3, PHASE_3N};
+class AnalyzerSoft : public AnalyzerInterface {
   private :
-    enum AggregType { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
-    typedef struct {
-      AggregType Type;                          //Tipo de agregacion
-      uint64_t   Timestamp;                     //Timestamp de la muestra inicial
-      uint32_t   Samples;                       //Muestras que han formado esta agregacion
-      float      RMS_V[3];                      //Valor RMS de la tension durante el bloque
-      float      RMS_I[4];                      //Valor RMS de la intensidad durante el bloque
-      float      Active_Power[3];               //Potencia activa (P)
-      float      Apparent_Power[3];             //Potencia aparente (S)
-      float      Power_Factor[3];               //Factor de potencia (cos(PHI))
-      float      Fundamental_Active_Power[3];   //Potencia activa del primer armonico (P_1)
-      float      Fundamental_Apparent_Power[3]; //Potencia aparente fundamental (S_1)
-      float      Fundamental_Reactive_Power[3]; //Potencia reactiva fundamental (Q_1)
-      float      Fundamental_Reactive_Energy[3];//Energia reactiva
-      float      Fundamental_Power_Factor[3];   //Factor de potencia fundamental
-      float      Active_Energy[3];              //Energia consumida
-      float      Frequency;                     //Frecuencia
-      bool       Flag;                          //Periodo marcado
-      float      THD_V[3];                      //Distorsion harmonica de la tension
-      float      THD_I[4];                      //Distorsion harmonica de la corriente
-      float      VoltageHarmonics[3][50];       //Armonicos del canal de tension
-      float      CurrentHarmonics[4][50];       //Armonicos del canal de corriente
-      float      Phi[3];                        //Angulo de Phi
-    } Params_t;
-  private :
-    char           *pID;                      //ID donde el analizador guardara los datos
-    char           *pName;                    //Nombre del analizador
-    AnalyzerType    pType;                    //Tipo de analizador
     float           pSamplerate;              //Velocidad de muestreo
     float           pMinCurrent;              //Corriente minima
     uint32_t        pSamples;                 //Muestras analizadas
@@ -85,8 +55,7 @@ class AnalyzerSoft : private AnalyzerInterface {
   protected :
 //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
   public :
-    AnalyzerSoft(char *name, bool useNeutral, char *id, float samplerate, float minCurrent);
-    AnalyzerSoft(char *name, char *id, float samplerate, float minCurrent);
+    AnalyzerSoft(float samplerate, char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerInterface::AnalyzerMode mode);
     ~AnalyzerSoft();
     bool         SampleAppend(float *voltageSamples, float *CurrentSamples, uint64_t sampletime);
     bool         IsFinished();

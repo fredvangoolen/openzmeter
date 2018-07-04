@@ -37,9 +37,11 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/Source/AnalyzerInterface.o \
 	${OBJECTDIR}/Source/Analyzers/AnalyzerRemote.o \
+	${OBJECTDIR}/Source/Analyzers/AnalyzerSoft.o \
 	${OBJECTDIR}/Source/Database.o \
 	${OBJECTDIR}/Source/DeviceInterface.o \
 	${OBJECTDIR}/Source/Drivers/DeviceRemote.o \
+	${OBJECTDIR}/Source/Drivers/DeviceV1.o \
 	${OBJECTDIR}/Source/FFT.o \
 	${OBJECTDIR}/Source/HTTPServer.o \
 	${OBJECTDIR}/Source/Main.o \
@@ -85,6 +87,11 @@ ${OBJECTDIR}/Source/Analyzers/AnalyzerRemote.o: Source/Analyzers/AnalyzerRemote.
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Analyzers/AnalyzerRemote.o Source/Analyzers/AnalyzerRemote.cpp
 
+${OBJECTDIR}/Source/Analyzers/AnalyzerSoft.o: Source/Analyzers/AnalyzerSoft.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source/Analyzers
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Analyzers/AnalyzerSoft.o Source/Analyzers/AnalyzerSoft.cpp
+
 ${OBJECTDIR}/Source/Database.o: Source/Database.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	${RM} "$@.d"
@@ -99,6 +106,11 @@ ${OBJECTDIR}/Source/Drivers/DeviceRemote.o: Source/Drivers/DeviceRemote.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Drivers
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Drivers/DeviceRemote.o Source/Drivers/DeviceRemote.cpp
+
+${OBJECTDIR}/Source/Drivers/DeviceV1.o: Source/Drivers/DeviceV1.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source/Drivers
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Drivers/DeviceV1.o Source/Drivers/DeviceV1.cpp
 
 ${OBJECTDIR}/Source/FFT.o: Source/FFT.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source

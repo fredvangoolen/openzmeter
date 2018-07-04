@@ -149,8 +149,10 @@ bool Tools::ReadConfig(char *file) {
   if((json_object_object_get_ex(Config, "HTTPServer", &Find) == true) && (json_object_get_type(Find) == json_type_object)) {
     if(HTTPServer::Config(Find) == false) return false;
   }
-  if((json_object_object_get_ex(Config, "Devices", &Find) == true) && (json_object_get_type(Find) == json_type_object)) {
+  if((json_object_object_get_ex(Config, "Devices", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
     if(DeviceInterface::Config(Find) == false) return false;
+  } else {
+    if(DeviceInterface::Config(NULL)  == false) return false;
   }
   return true;
 }

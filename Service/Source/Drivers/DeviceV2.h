@@ -18,6 +18,11 @@
 //#define PROCESSING_CURRENTOFFSET      0.10        //Corriente minima para realizar calculos
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV2 : public DeviceInterface {
+private :
+//    typedef struct {
+//      uint8_t OffsetV;
+//      uint8_t OffsetC;
+//    } ChannelMap_t;
   private :
     enum USBState {USB_RESET, USB_WAIT, USB_SYNC};
   private :

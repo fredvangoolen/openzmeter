@@ -57,7 +57,11 @@ bool HTTPServer::Config(json_object *config) {
                              MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int) 15,
                              MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
                              MHD_OPTION_END);
-  if(pDaemon == NULL) Tools::LogMsg("ERROR", "Failed to start WEB server\n");
+  if(pDaemon == NULL) {
+    Tools::LogMsg("ERROR", "Failed to start WEB server\n");
+    return false;
+  }
+  return true;
 }
 void HTTPServer::Stop() {
   if(pDaemon) MHD_stop_daemon(pDaemon);

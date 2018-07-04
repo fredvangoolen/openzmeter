@@ -10,10 +10,10 @@
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 char *Database::pDatabaseName = (char*)"openzmeter";
-char *Database::pHost         = (char*)"127.0.0.1";;
+char *Database::pHost         = (char*)"127.0.0.1";
 int   Database::pPort         = 5432;
-char *Database::pUser         = (char*)"openzmeter";;
-char *Database::pPassword     = (char*)"";;
+char *Database::pUser         = (char*)"openzmeter";
+char *Database::pPassword     = (char*)"";
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(char *schema) {
   pSchema    = (schema == NULL) ? (char*)"public" : schema;
@@ -74,7 +74,7 @@ bool Database::ExecSentence(const char* sql) {
   pResult = PQexec(pDBConn, sql);
   if((PQresultStatus(pResult) != PGRES_COMMAND_OK) && (PQresultStatus(pResult) != PGRES_TUPLES_OK)) {
     char *Save;
-    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    Tools::LogMsg("ERROR", "Error in SQL query \"%s\" (%s)\n", sql, strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
 //    PQclear(pResult);
 //    pResult = NULL;
     return false;
@@ -90,7 +90,7 @@ char *Database::ExecSentenceJSON(const char* sql, size_t *len) {
   pResult = PQexec(pDBConn, sql);
   if(PQresultStatus(pResult) != PGRES_TUPLES_OK) {
     char *Save;
-    Tools::LogMsg("ERROR", "Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    Tools::LogMsg("ERROR", "Error in SQL query \"%s\" (%s)\n", sql, strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
 //    PQclear(pResult);
 //    pResult = NULL;
     return NULL;
@@ -178,10 +178,13 @@ void Database::BindSingleBool(bool param) {
     pParamsLen++;
   }
 }
-void Database::BindSingleString(const char *string) {
+void Database::BindSingleString(const char *string, bool identifier) {
   if(pParamsLen < pParamsAlloc) {
     pParams[pParamsLen] = (char*)malloc(sizeof(char) * strlen(string) + 3);
-    sprintf(pParams[pParamsLen], "'%s'", string);
+    if(identifier == false)
+      sprintf(pParams[pParamsLen], "'%s'", string);
+    else
+      sprintf(pParams[pParamsLen], "\"%s\"", string);
     pParamsLen++;
   }  
 }

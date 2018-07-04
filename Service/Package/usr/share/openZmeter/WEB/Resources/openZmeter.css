@@ -40,59 +40,50 @@
 }
 
 * {
-    font-family: 'Titillium Web', sans-serif;
+  font-family: 'Titillium Web', sans-serif;
 }
-
 body {
   background-color: #F1F1F1;
 }
 
-.top-bar {
-  background-color: #474544;
-  height: 48px;
-  padding-right: 13px;
-}
-.side-bar {
-  width: 200px;
-  position: absolute;
-  top: 0px;
-  background: linear-gradient(to right,#3a3633 93%,#2a2725 100%);
-  min-height: 100%;
-  color: #c0bbb7;
-}
-
-.side-bar .logo {
-  width: 190px;
-  padding: 4px;
-  display: inline-block; 
-}
-.node-info {
-  display: block;
-  font-size: 12px;
-  height: 39px;
-  border-bottom: 1px solid #525151;
-  position: relative;
-}
-.node-info > div {
-  height: 38px;
-  display: block;
-  padding: 0 5px;
-  border-bottom: 1px solid #1A1817;
-  position: absolute;
-  width: 100%;
-}
-.node-info > div > div {
-  overflow: hidden;
-  height: 16px;
+/* Ajustes de la barra duperior de indicadores y logo */
+.navbar-brand {
+  text-align: left;
+  padding-top: 3px;
+  width: 260px;
 }
 .indicator-bar {
-  margin-left: 200px;
-  height: 36px;
-  text-align: right;
-  font-size: 18px;
+  background-image: linear-gradient(to bottom,#f3f3f3,#e2e2e2);
+  text-align: center;
+  font-size: 14px;
   color: #FFF;
   font-weight: 700;
   padding: 2px;
+  border-bottom: 1px solid #c9c9c9;
+}
+.navbar-time {
+  margin-top: 4px;
+}
+@media(min-width:768px) {
+  .indicator-bar {
+    background-image: none;
+    position: absolute;
+    right: 0px;
+    text-align: right;
+    border: none;
+  }
+  .navbar-header {
+    height: 56px;
+  }
+  .navbar-brand {
+    width: 300px;
+  }
+  .indicator-bar > div > div > div:first-child {
+    font-size: 12px;
+  }
+  .indicator-bar {
+    font-size: 18x;
+  }
 }
 .indicator-bar > div {
   border-radius: 4px;
@@ -113,7 +104,7 @@ body {
   background-color: #fff;
   color: #333;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: normal;
   line-height: 10px;
   padding: 2px;
@@ -126,8 +117,8 @@ body {
   background-color: #d9534f;
 }
 .indicator-blue {
-  border: 1px solid #337ab7;
-  background-color: #337ab7;
+  border: 1px solid #318ce7;
+  background-color: #318ce7;
 }
 .indicator-yellow {
   border: 1px solid #f0ad4e;
@@ -138,100 +129,14 @@ body {
   background-color: #5cb85c;
 }
 .indicator-purple {
-  border: 1px solid #8c3ad5;
-  background-color: #8c3ad5;
+  border: 1px solid #9966cc;
+  background-color: #9966cc;
 }
-
-
-
-header {
-  display: block;
-  height: 50px;
-  margin: 0;
-  padding: 0 13px 0 0;
-  background-color: #333;
-  position: relative;
-  z-index: 905;
-}
-header .logo, aside {
-
-}
-
-.header-row {
-  width: 100%;
-  display: table;
-  height: 30px;
-}
-.header-row-left {
-  display: table-cell;
-  width: 200px;
-  background-color: #333;
-  border-bottom: 1px solid #525151;
-}
-header .left-item > span {
-border-bottom: 1px solid #1A1817;
-}
-header .right-item {
-  display: table-cell;
-  text-align: center;
-}
-
-nav {
-  background-color: #333;
-  position: absolute;
-  width: 180px;
-}
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 
 
 
-.btn-header a > span {
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 30px;
-  height: 30px;
-  display: inline-block
-}
-.btn-header>:first-child>a {
-    -moz-border-radius: 2px;
-    -webkit-border-radius: 2px;
-    border-radius: 2px;
-    cursor: default!important;
-    display: inline-block;
-    font-weight: 700;
-    height: 30px;
-    line-height: 24px;
-    min-width: 30px;
-    padding: 2px;
-    text-align: center;
-    text-decoration: none!important;
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    background-color: #f8f8f8;
-    background-image: -webkit-gradient(linear,left top,left bottom,from(#f8f8f8),to(#f1f1f1));
-    background-image: -webkit-linear-gradient(top,#f8f8f8,#f1f1f1);
-    background-image: -moz-linear-gradient(top,#f8f8f8,#f1f1f1);
-    background-image: -ms-linear-gradient(top,#f8f8f8,#f1f1f1);
-    background-image: -o-linear-gradient(top,#f8f8f8,#f1f1f1);
-    background-image: linear-gradient(top,#f8f8f8,#f1f1f1);
-    border: 1px solid #bfbfbf;
-    color: #6D6A69;
-    font-size: 17px;
-    margin: 10px 0 0
-}
-
-
-
-
-
-
-#left-panel {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 904;
-    padding-top: 49px;
-}
 
 
 .datatable-toolbar {
@@ -256,8 +161,9 @@ nav {
 }
 
 
-.navbar {
-    background-color: #6da1c9;
+.navbar-header {
+    background-color: #474544;
+    width: 100%;
 }
 
 .navbar-fixed-top {
@@ -267,9 +173,9 @@ nav {
 .navbar-default {
     border-color: transparent;
 }
-.navbar-brand {
-  text-align: left;
-  padding-top: 3px;
+
+.navbar-brand > embed {
+  width: 100%;
 }
 .navbar-brand > a, .navbar-brand > a:link, .navbar-brand > a:visited .navbar-brand > a:hover {
   text-decoration: none;

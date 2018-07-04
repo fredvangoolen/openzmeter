@@ -5,7 +5,6 @@
 #pragma once
 #include <libusb-1.0/libusb.h>
 #include "DeviceInterface.h"
-#include "AnalyzerInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define CAPTUREMONO_VID             0x0483       //Product ID
 #define CAPTUREMONO_PID             0x7270       //Device ID
@@ -25,11 +24,12 @@ class DeviceV1 : public DeviceInterface {
 //      float Voltage;                                      //Valor de tension
 //      float Current;                                      //Valor de corriente
 //    } Sample_t;
-    const char                  *pSerial;                 //Numero de serie del dispositivo de captura
+    char                        *pSerial;                 //Numero de serie del dispositivo de captura
     float                        pVoltageGain;            //Ganancia de tension
     float                        pCurrentGain;            //Ganancia de corriente
     float                        pVoltageOffset;          //Offset de tension
     float                        pCurrentOffset;          //Offset de corriente
+//    AnalyzerSoft                *pAnalyzer;               //Analizador de datos
 //    Sample_t                    *Buffer;                  //Donde almaceno muestras leidas (RingBuffer)
 //    uint32_t                     ReadPos;                 //Posicion de lectura del buffer
 //    uint32_t                     WritePos;                //Posicion de escritura del buffer

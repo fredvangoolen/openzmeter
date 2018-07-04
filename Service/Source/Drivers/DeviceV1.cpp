@@ -15,7 +15,8 @@
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include "DeviceV1.h"
-#include "../Tools.h"
+#include "Tools.h"
+#include "Analyzers/AnalyzerSoft.h"
 // Funciones ===========================================================================================================
 void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV1 *This = (DeviceV1*)transfer->user_data;
@@ -221,20 +222,21 @@ DeviceV1::DeviceV1(json_object* config) : DeviceInterface() {
 //  ReadPos          = 0;
 //  WritePos         = 0;
 //  Used             = 0;
-  pDeviceHandle     = NULL;
-  pNewDevice        = NULL;
-  pSerial           = (char*)"000000000000000000000000";
-  pVoltageGain      = 1;
-  pCurrentGain      = 1;
-  pVoltageOffset    = 0;
-  pCurrentOffset    = 0;
-  json_object *Find;  
-  if((json_object_object_get_ex(config, "Serial", &Find) == true) && (json_object_get_type(Find) == json_type_string)) {
-    pSerial = (char*)json_object_get_string(Find);
-  }
+  pDeviceHandle          = NULL;
+  pNewDevice             = NULL;
+  pSerial                = (char*)"000000000000000000000000";
+  pVoltageGain           = 1;
+  pCurrentGain           = 1;
+  pVoltageOffset         = 0;
+  pCurrentOffset         = 0;
+  float NominalVoltage   = 230.0;
+  float NominalFrequency = 50.0;
+  char *Name             = (char*)"Unnamed input";
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
-    if((JSON_Type == json_type_double) && (strcmp(JSON_Key, "VoltageGain") == 0)) {
+    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Serial") == 0)) {
+      pSerial = (char*)json_object_get_string(JSON_Val);
+    } else if((JSON_Type == json_type_double) && (strcmp(JSON_Key, "VoltageGain") == 0)) {
       pVoltageGain = json_object_get_double(JSON_Val);
     } else if((JSON_Type == json_type_double) && (strcmp(JSON_Key, "VoltageOffset") == 0)) {
       pVoltageOffset = json_object_get_double(JSON_Val);
@@ -242,9 +244,17 @@ DeviceV1::DeviceV1(json_object* config) : DeviceInterface() {
       pCurrentGain = json_object_get_double(JSON_Val);
     } else if((JSON_Type == json_type_double) && (strcmp(JSON_Key, "CurrentOffset") == 0)) {
       pCurrentOffset = json_object_get_double(JSON_Val);
+    } else if((JSON_Type == json_type_double) && (strcmp(JSON_Key, "NominalVoltage") == 0)) {
+      NominalVoltage = json_object_get_double(JSON_Val);
+    } else if((JSON_Type == json_type_double) && (strcmp(JSON_Key, "NominalFrequency") == 0)) {
+      NominalFrequency = json_object_get_double(JSON_Val);
+    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "DisplayName") == 0)) {
+      Name = (char*)json_object_get_string(JSON_Val);
     }
   }
-  
+  AnalyzerSoft *Analyzer = new AnalyzerSoft(15625.0, pSerial, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
+  AddAnalyzer(Analyzer);
+  //  InitAnalyzerDB();
 //  pthread_cond_init(&WriteWait, NULL);
 //  pthread_cond_init(&ReadWait, NULL);
 //  pthread_mutex_init(&AnalyzeMutex, NULL);

@@ -34,7 +34,7 @@ class Database {
     void      BindArrayFloat(float *params, int len);
     void      BindArrayUInt16(uint16_t *params, int len);
     void      BindSingleBool(bool param);
-    void      BindSingleString(const char *string);
+    void      BindSingleString(const char *string, bool identifier = false);
     bool      ExecSentence();
     uint32_t  ResultRows();
     char     *ResultValue(uint32_t row, char *name);
