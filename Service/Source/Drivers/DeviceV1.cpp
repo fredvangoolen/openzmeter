@@ -25,10 +25,10 @@ void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
     for(uint8_t Count = 0; Count < 16; Count++) {
       float Voltage = (Pkg[Count * 2 + 0] - This->pVoltageOffset) * This->pVoltageGain;
       float Current = (Pkg[Count * 2 + 1] - This->pCurrentOffset) * This->pCurrentGain;
-//      if(This->BuffersAppend(&Voltage, &Current) == false) {
-//        //NO HAY SITIO!!! que hago?
-//        Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
-//      }
+      if(((AnalyzerSoft*)This->pAnalyzers[0])->BuffersAppend(&Voltage, &Current) == false) {
+        //NO HAY SITIO!!! que hago?
+        Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
+      }
     }
   }
 //  int16_t *Buff16 = (int16_t*)transfer->buffer;
@@ -218,10 +218,17 @@ void  *DeviceV1::Capture_Thread(void *args) {
 //}
 DeviceV1::DeviceV1(json_object* config) : DeviceInterface() {
   Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
-//  Buffer           = NULL;
-//  ReadPos          = 0;
-//  WritePos         = 0;
-//  Used             = 0;
+  pUsed                  = 0;
+  pBuffLen               = DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ;
+  pInVoltageSamples      = (float*)malloc(sizeof(float) * pBuffLen);
+  pInCurrentSamples      = (float*)malloc(sizeof(float) * pBuffLen);
+  pReadPos               = 0;
+  pWritePos              = 0;
+  pLastUpdate            = 0;
+
+  
+  
+  
   pDeviceHandle          = NULL;
   pNewDevice             = NULL;
   pSerial                = (char*)"000000000000000000000000";
@@ -252,10 +259,10 @@ DeviceV1::DeviceV1(json_object* config) : DeviceInterface() {
       Name = (char*)json_object_get_string(JSON_Val);
     }
   }
-  AnalyzerSoft *Analyzer = new AnalyzerSoft(15625.0, pSerial, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
-  AddAnalyzer(Analyzer);
-  //  InitAnalyzerDB();
-//  pthread_cond_init(&WriteWait, NULL);
+  AddAnalyzer(new AnalyzerSoft(DEVICEV1_SAMPLEFREQ, pSerial, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1));
+
+  
+  //  pthread_cond_init(&WriteWait, NULL);
 //  pthread_cond_init(&ReadWait, NULL);
 //  pthread_mutex_init(&AnalyzeMutex, NULL);
 //  pthread_mutex_init(&CaptureMutex, NULL);
@@ -288,6 +295,7 @@ DeviceV1::DeviceV1(json_object* config) : DeviceInterface() {
 //    free(Buffer);
     return;
   }
+  pthread_setname_np(pCaptureThread, "DeviceV1");
   Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , CAPTUREMONO_VID, CAPTUREMONO_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
   if(Error < 0) {
     Tools::LogMsg("ERROR", "Fallo al registrar callback de escucha libUSB...\n");

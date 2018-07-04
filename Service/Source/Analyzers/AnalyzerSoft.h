@@ -13,8 +13,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoft : public AnalyzerInterface {
   private :
+    uint8_t             pVoltageChannels;         //Canales de tension
+    uint8_t             pCurrentChannels;         //Canales de corriente
+
+
     float           pSamplerate;              //Velocidad de muestreo
-    float           pMinCurrent;              //Corriente minima
     uint32_t        pSamples;                 //Muestras analizadas
     uint64_t        pSequence;                //Numero de bloques analizados
     Params_t        pAggreg10C;               //Agregacion de 10 ciclos
@@ -32,6 +35,7 @@ class AnalyzerSoft : public AnalyzerInterface {
     uint32_t        pCyclesLen[20];           //Longitud de los ciclos detectados
     uint8_t         pCycles;                  //Numero de ciclos detectados
     bool            pWorking;                 //Flag para indicar que el hilo esta trabajando
+        
     pthread_t       pThread;               //Hilo de ejecucion
     pthread_mutex_t pThreadMutex;          //Mutex para la variable de condicion
     pthread_cond_t  pThreadCond;           //Variable de condicion para esperar
@@ -57,10 +61,12 @@ class AnalyzerSoft : public AnalyzerInterface {
   public :
     AnalyzerSoft(float samplerate, char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerInterface::AnalyzerMode mode);
     ~AnalyzerSoft();
-    bool         SampleAppend(float *voltageSamples, float *CurrentSamples, uint64_t sampletime);
-    bool         IsFinished();
-    char        *GetTypeString();
-    char        *GetID();
-    char        *GetName();
+    bool BuffersAppend(float *voltageSamples, float *currentSamples);
+    
+//    bool         SampleAppend(float *voltageSamples, float *CurrentSamples, uint64_t sampletime);
+//    bool         IsFinished();
+//    char        *GetTypeString();
+//    char        *GetID();
+//    char        *GetName();
     json_object *GetJSONCopy(char *series);
 };

@@ -6,10 +6,14 @@
 #include <libusb-1.0/libusb.h>
 #include "DeviceInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define CAPTUREMONO_VID             0x0483       //Product ID
-#define CAPTUREMONO_PID             0x7270       //Device ID
-#define CAPTUREMONO_ENDPOINT_IN       0x81       //Endpoint de lectura de datos
-//#define CAPTUREMONO_SAMPLEFREQ    15625.00       //Frequencia de muestreo
+#define DEVICEV1_VID             0x0483       //Product ID
+#define DEVICEV1_PID             0x7270       //Device ID
+#define DEVICEV1_ENDPOINT_IN       0x81       //Endpoint de lectura de datos
+#define DEVICEV1_SAMPLEFREQ    15625.00       //Frequencia de muestreo
+#define DEVICEV1_BUFFERSECONDS       10       //Tamaño del buffer (10 segundos)
+//----------------------------------------------------------------------------------------------------------------------
+
+
 //#define CAPTUREMONO_BUFFERSIZE    156250         //Tamaño del buffer (10 segundos)
 #define CAPTUREMONO_TRANSFERS          32       //Numero de transferencias a encolar
 
@@ -20,6 +24,17 @@
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV1 : public DeviceInterface {
   private :
+    uint32_t            pUsed;                    //Muestras en uso del buffer
+    uint32_t            pBuffLen;                 //Tamaño del buffer
+    float              *pInVoltageSamples;        //Muestras de tension
+    float              *pInCurrentSamples;        //Muestras de corriente
+    uint32_t            pReadPos;                 //Posicion de lectura del buffer
+    uint32_t            pWritePos;                //Posicion de escritura del buffer
+    uint64_t            pLastUpdate;              //Timestamp de la ultima vez que se actualizo el nombre del thread
+
+    
+    
+    
 //    typedef struct {
 //      float Voltage;                                      //Valor de tension
 //      float Current;                                      //Valor de corriente

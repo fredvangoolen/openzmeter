@@ -41,9 +41,14 @@ bool Database::Connect() {
   }
   ExecSentence("SET synchronous_commit TO OFF");
   ExecSentence("SET client_min_messages = error");
-  PrepareSentence("SET search_path TO ?");
-  BindSingleString(pSchema);
-  ExecSentence();
+  if(pSchema != NULL) {
+    PrepareSentence("CREATE SCHEMA IF NOT EXISTS ?");
+    BindSingleString(pSchema, true);
+    ExecSentence();
+    PrepareSentence("SET search_path TO ?");
+    BindSingleString(pSchema);
+    ExecSentence();
+  }
   return true;
 }
 Database::~Database() {

@@ -4,16 +4,12 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include "AnalyzerInterface.h"
-//#include "FFT.h"
-//----------------------------------------------------------------------------------------------------------------------
-//#define DEVICEINTERFACE_BUFFERSECONDS     10        //Tamaño del buffer (10 segundos)
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceInterface {
-  private :
+  protected : 
     AnalyzerInterface **pAnalyzers;               //Analizadores disponibles
     uint8_t             pAnalyzersCount;          //Numero de analizadores
-  protected : 
-    pthread_t           pCaptureThread;             //Descriptor del hilo de captura 
+    pthread_t           pCaptureThread;           //Descriptor del hilo de captura 
     bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes
   protected :
     void   AddAnalyzer(AnalyzerInterface *analyzer);
@@ -34,20 +30,12 @@ class DeviceInterface {
 };
 //----------------------------------------------------------------------------------------------------------------------
     
-    //    uint8_t             pVoltageChannels;         //Canales de tension
-//    uint8_t             pCurrentChannels;         //Canales de corriente
-//    float              *pVoltageSamples;          //Muestras de tension
-//    float              *pCurrentSamples;          //Muestras de corriente
-//    uint32_t            pReadPos;                 //Posicion de lectura del buffer
-//    uint32_t            pWritePos;                //Posicion de escritura del buffer
-//    uint32_t            pUsed;                    //Muestras en uso del buffer
-//    uint32_t            pBuffLen;                 //Tamaño del buffer
 //    float               pSamplerate;              //Velocidad de muestreo
 
 //    ChannelMap_t       *pChannelMappings;         //Desplazamiento de los canales de tension y corriente
 //    float               pMaxCurrent;              //Corriente maxima de los sensores
 //    float               pMinCurrent;              //Corriente minima de los sensores
-//    uint64_t            pLastUpdate;              //Timestamp de la ultima vez que se actualizo el nombre del thread
+
 //    bool   BuffersAlloc(uint8_t voltageChannels, uint8_t currentChannels, float samplerate);
 //    void   BuffersReset();
 //    bool   BuffersAppend(float *voltageSamples, float *CurrentSamples);
