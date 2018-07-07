@@ -25,7 +25,7 @@ void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
     for(uint8_t Count = 0; Count < 16; Count++) {
       float Voltage = (Pkg[Count * 2 + 0] - This->pVoltageOffset) * This->pVoltageGain;
       float Current = (Pkg[Count * 2 + 1] - This->pCurrentOffset) * This->pCurrentGain;
-      if(((AnalyzerSoft*)This->pAnalyzers[0])->BuffersAppend(&Voltage, &Current) == false) {
+      if(This->BuffersAppend(Voltage, Current) == false) {
         //NO HAY SITIO!!! que hago?
         Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
       }
@@ -67,6 +67,28 @@ int DeviceV1::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
   }
   return 0;
 }
+bool DeviceV1::BuffersAppend(float voltageSample, float currentSample) {
+  if(pUsed == pBuffLen) return false;
+  pVoltageSamples[pWritePos] = voltageSample;
+  pCurrentSamples[pWritePos] = currentSample;
+  pWritePos = (pWritePos + 1) % pBuffLen;
+  pUsed++;
+  uint64_t Sampletime = Tools::GetTime();
+  if(pLastUpdate < (Sampletime - 500)) {
+    char ThreadName[16];
+    sprintf(ThreadName, "DeviceV1_%02d", pUsed * 100 / pBuffLen);
+    pthread_setname_np(pCaptureThread, ThreadName);
+    pLastUpdate = Sampletime;
+  }
+  if(((AnalyzerSoft*)pAnalyzers[0])->IsFinished() == false) return true;
+  bool Started = false;
+  for(uint8_t Sample = 0; (Sample < 5) && (pUsed > 0) && (Started == false); Sample++) {
+    if(((AnalyzerSoft*)pAnalyzers[0])->BufferAppend(&pVoltageSamples[pReadPos], &pCurrentSamples[pReadPos], Sampletime) == true) Started = true;
+    pReadPos = (pReadPos + 1) % pBuffLen;
+    pUsed--;
+  }
+  return true;
+}
 void  *DeviceV1::Capture_Thread(void *args) {
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {
@@ -77,18 +99,10 @@ void  *DeviceV1::Capture_Thread(void *args) {
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   }
   DeviceV1 *This = (DeviceV1*)args;
-//  pthread_setname_np(This->CaptureThread, "CapMono_Init");
-  uint8_t BufferIN[CAPTUREMONO_TRANSFERS][8192];
-  struct libusb_transfer *TransferIN[CAPTUREMONO_TRANSFERS];
-  for(int i = 0; i < CAPTUREMONO_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
-//  uint32_t Update = 0;
+  uint8_t BufferIN[DEVICEV1_TRANSFERS][8192];
+  struct libusb_transfer *TransferIN[DEVICEV1_TRANSFERS];
+  for(int i = 0; i < DEVICEV1_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
   while(!This->pTerminate) {
-//    if((Update % 10) == 0) {
-//      char ThreadName[16];
-//      sprintf(ThreadName, "CapMono_%03d", This->Used * 100 / CAPTUREMONO_BUFFERSIZE);
-//      pthread_setname_np(This->CaptureThread, ThreadName);
-//    }
-//    Update++;
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(NULL, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) Tools::LogMsg("ERROR", "libusb_handle_events_timeout_completed returns code %d\n", Result);
@@ -138,7 +152,7 @@ void  *DeviceV1::Capture_Thread(void *args) {
           This->pNewDevice = NULL;
           continue;
         } else {
-          Tools::LogMsg("INFO", "Kernel driver dettached for CaptureMono device with serial %s\n", This->pSerial);
+          Tools::LogMsg("INFO", "Kernel driver dettached for DeviceV1 device with serial %s\n", This->pSerial);
         }
       }
       Result = libusb_claim_interface(This->pDeviceHandle, 1);
@@ -151,8 +165,8 @@ void  *DeviceV1::Capture_Thread(void *args) {
       } else {
         Tools::LogMsg("INFO", "Claimed interface 1 on CaptureMono device with serial %s\n", This->pSerial);
       }
-      for(int i = 0; i < CAPTUREMONO_TRANSFERS; i++) {
-        libusb_fill_bulk_transfer(TransferIN[i], This->pDeviceHandle, CAPTUREMONO_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, -1);
+      for(int i = 0; i < DEVICEV1_TRANSFERS; i++) {
+        libusb_fill_bulk_transfer(TransferIN[i], This->pDeviceHandle, DEVICEV1_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, -1);
         Result |= libusb_submit_transfer(TransferIN[i]);
       }
       if(Result != LIBUSB_SUCCESS) {
@@ -220,8 +234,8 @@ DeviceV1::DeviceV1(json_object* config) : DeviceInterface() {
   Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
   pUsed                  = 0;
   pBuffLen               = DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ;
-  pInVoltageSamples      = (float*)malloc(sizeof(float) * pBuffLen);
-  pInCurrentSamples      = (float*)malloc(sizeof(float) * pBuffLen);
+  pVoltageSamples      = (float*)malloc(sizeof(float) * pBuffLen);
+  pCurrentSamples      = (float*)malloc(sizeof(float) * pBuffLen);
   pReadPos               = 0;
   pWritePos              = 0;
   pLastUpdate            = 0;
@@ -260,6 +274,11 @@ DeviceV1::DeviceV1(json_object* config) : DeviceInterface() {
     }
   }
   AddAnalyzer(new AnalyzerSoft(DEVICEV1_SAMPLEFREQ, pSerial, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1));
+  int Error = libusb_init(NULL);
+  if(Error < 0) {
+    Tools::LogMsg("ERROR", "Fallo la apertura de libUSB...\n");
+    return;
+  }
 
   
   //  pthread_cond_init(&WriteWait, NULL);
@@ -278,11 +297,6 @@ DeviceV1::DeviceV1(json_object* config) : DeviceInterface() {
 //    Filters[i].Z1 = 0.0;
 //    Filters[i].Z2 = 0.0;            
 //  }
-  int Error = libusb_init(NULL);
-  if(Error < 0) {
-    Tools::LogMsg("ERROR", "Fallo la apertura de libUSB...\n");
-    return;
-  }
 //  Buffer = (Sample_t*)malloc(CAPTUREMONO_BUFFERSIZE * sizeof(Sample_t));
 //  if(Buffer == NULL) {
 //    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -296,7 +310,7 @@ DeviceV1::DeviceV1(json_object* config) : DeviceInterface() {
     return;
   }
   pthread_setname_np(pCaptureThread, "DeviceV1");
-  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , CAPTUREMONO_VID, CAPTUREMONO_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
+  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV1_VID, DEVICEV1_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
   if(Error < 0) {
     Tools::LogMsg("ERROR", "Fallo al registrar callback de escucha libUSB...\n");
     pTerminate = true;

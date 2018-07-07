@@ -15,7 +15,7 @@
     "Password": "openzmeter"
   },
   "Capture": [
-    { "Driver": "CaptureMono",
+    { "Driver": "DeviceV1",
       "NominalFrequency": 50,
       "NominalVoltage": 230
       "Serial": "3FFFFFFFFFFFFFFFFFFFFFFF",

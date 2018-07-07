@@ -40,6 +40,11 @@ class AnalyzerInterface : protected Database {
     float         pMaxCurrent;
     float         pMinCurrent;
     AnalyzerMode  pMode;
+  protected :
+    void SaveAggreg(Params_t *params);
+    void AccumulateAggreg(Params_t *dst, Params_t *src);
+    void NormalizeAggreg(Params_t *params);
+    void ResetAggreg(Params_t *params);
   public :
     AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode);
     char *GetID();

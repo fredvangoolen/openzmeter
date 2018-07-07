@@ -2,6 +2,8 @@
  * File:     AnalyzerInterface.cpp
  * Author:   Eduardo Viciana (2018)
  * -------------------------------------------------------------------------------------------------------------------*/ 
+#include <math.h>
+#include <string.h>
 #include "AnalyzerInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode) : Database(id) {

@@ -315,6 +315,8 @@ function GetNodesCompletes(result) {
 
 /* Selecciona el apartado en el menu segun la pagina cargada */
 function MenuSelect() {
+
+  $('[data-sidenav]').sidenav();
   $.ajax({ url: "getNodes",
     timeout: 20000,
     type: "POST",
@@ -323,7 +325,7 @@ function MenuSelect() {
     data: JSON.stringify({ }),
     success: GetNodesCompletes
   });
-  $('#side-menu').metisMenu();
+//  $('#side-menu').metisMenu();
   var url = window.location;
   var element = $('ul.nav a').filter(function () {
     return this.href === url || url.href.indexOf(this.href) === 0;
@@ -492,9 +494,10 @@ function Div1000(input) {
 
 
 
+
 var energyUnit = 'kWh'
 var today = new Date();
-$('#side-menu').metisMenu();
+//$('#side-menu').metisMenu();
 //Loads the correct sidebar on window load,
 //collapses the sidebar on window resize.
 // Sets the min-height of #page-wrapper to window size

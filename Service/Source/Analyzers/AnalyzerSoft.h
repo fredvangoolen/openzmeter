@@ -50,21 +50,19 @@ class AnalyzerSoft : public AnalyzerInterface {
   private :
     static void *Analyzer_Thread(void *args);
   private :
-    void  Init(char *name, char *id, float samplerate, float minCurrent);
-    void  AccumulateAggreg(Params_t *dst, Params_t *src);
-    void  SaveAggreg(Params_t *param);
-    void  ResetAggreg(Params_t *params);
-    void  NormalizeAggreg(Params_t *params);
+//    void  Init(char *name, char *id, float samplerate, float minCurrent);
+//    void  AccumulateAggreg(Params_t *dst, Params_t *src);
+//    void  SaveAggreg(Params_t *param);
+//    void  ResetAggreg(Params_t *params);
+//    void  NormalizeAggreg(Params_t *params);
     void  Analyze();
   protected :
 //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
   public :
     AnalyzerSoft(float samplerate, char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerInterface::AnalyzerMode mode);
     ~AnalyzerSoft();
-    bool BuffersAppend(float *voltageSamples, float *currentSamples);
-    
-//    bool         SampleAppend(float *voltageSamples, float *CurrentSamples, uint64_t sampletime);
-//    bool         IsFinished();
+    bool         BufferAppend(float *voltageSamples, float *CurrentSamples, uint64_t sampletime);
+    bool         IsFinished();
 //    char        *GetTypeString();
 //    char        *GetID();
 //    char        *GetName();

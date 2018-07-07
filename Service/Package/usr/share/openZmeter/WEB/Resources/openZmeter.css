@@ -52,6 +52,40 @@ body {
   padding-top: 3px;
   width: 260px;
 }
+.navbar-toggle, .navbar-btn {
+  color: #FFF;
+  border: 1px solid #333;
+  background-color: transparent;
+}
+.navbar-btn {
+  margin-top: 1px !important;
+  margin-bottom: 1px !important;
+}
+.sidenav-header {
+  padding: 5px 10px;
+  color: #DDD;
+}
+.sidenav-header > div {
+  display: inline-block;
+  float: right;
+}
+.sidenav-header > table {
+  width: 100%;
+  font-size: 11px;
+  line-height: normal;
+}
+.sidenav-header > table tr td:nth-child(2) {
+  width: 100%;
+  padding: 0px 0px 0px 10px;
+  text-align: center;
+}
+.sidenav-header .progress {
+  margin-bottom: 0px;
+  height: 12px;
+  background-color: #474544;
+  border-radius: 2px;
+}
+
 .indicator-bar {
   background-image: linear-gradient(to bottom,#f3f3f3,#e2e2e2);
   text-align: center;
@@ -64,7 +98,32 @@ body {
 .navbar-time {
   margin-top: 4px;
 }
+#wrapper {
+  width: 100%;
+  background-color: #dcdddf;
+  clear: both;
+  padding: 10px;
+  position: relative;
+}
 @media(min-width:768px) {
+  #wrapper {
+    padding-left: 266px;
+  }
+  .menu-extents {
+    width: 256px;
+    min-height: 100%;
+    background-color: #212121;
+    position: absolute;
+    box-shadow: 2px 2px 6px rgba(0,0,0,.3);
+    bottom: 0px;
+    left: 0px;
+  }
+  .sidenav {
+    transform: none;
+    top: 55px;
+    position: absolute;
+    box-shadow: none;
+  }
   .indicator-bar {
     background-image: none;
     position: absolute;
@@ -200,24 +259,7 @@ ul.nav.navbar-top-links.navbar-right > li > a {
   background-color: transparent;
 }
 
-#wrapper {
-    width: 100%;
-    background-color: #dcdddf;
-}
 
-#page-wrapper {
-    padding: 0 15px;
-    min-height: 568px;
-    background-color: #fff;
-    margin: 120px 0 0 0px;
-}
-
-@media(min-width:768px) {
-    #page-wrapper {
-        position: inherit;
-        margin: 65px 0 0 164px;
-    }
-}
 
 .navbar-top-links {
     margin-right: 0;
@@ -268,7 +310,7 @@ ul.nav.navbar-top-links.navbar-right > li > a {
     margin-left: -59px;
 }
 
-.navbar-default .navbar-toggle{
+.navbar-default .navbar-toggle {
     background-color: #ddd;
 }
 

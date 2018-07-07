@@ -74,63 +74,23 @@ AnalyzerSoft::~AnalyzerSoft() {
   for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) delete pVoltageFFT[i];
   for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) delete pCurrentFFT[i];
 }
-bool AnalyzerSoft::BuffersAppend(float *voltageSamples, float *currentSamples) {
-  if(pUsed == pBuffLen) return false;
-  for(int8_t Channel = 0; Channel < pVoltageChannels; Channel++) pInVoltageSamples[pWritePos * pVoltageChannels + Channel] = voltageSamples[Channel];
-  for(int8_t Channel = 0; Channel < pCurrentChannels; Channel++) pInCurrentSamples[pWritePos * pCurrentChannels + Channel] = currentSamples[Channel];
-  pWritePos = (pWritePos + 1) % pBuffLen;
-  pUsed++;
-  uint64_t Sampletime = Tools::GetTime();
-  if(pLastUpdate < (Sampletime - 500)) {
-    char ThreadName[16];
-    sprintf(ThreadName, "AnalyzerSoft_%02d", pUsed * 100 / pBuffLen);
-    pthread_setname_np(pThread, ThreadName);
-    pLastUpdate = Sampletime;
+bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, uint64_t sampletime) {
+  if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
+  for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) pVoltageSamples[i][pSamples] = voltageSamples[i];
+  for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) pCurrentSamples[i][pSamples] = currentSamples[i];
+  pSamples++;
+  pCyclesLen[pCycles]++;
+  if(pZC->ProcessSample(voltageSamples) == true) pCycles++;
+  if((pCycles == 20) || (pSamples == pMaxSamples)) {
+    pthread_mutex_lock(&pThreadMutex);
+    pWorking = true;
+    pthread_mutex_unlock(&pThreadMutex);
+    pthread_cond_signal(&pThreadCond);
+    return true;
   }
-//  for(uint8_t Analyzer = 0; Analyzer < pAnalyzersCount; Analyzer++) {
-//    if(pAnalyzers[Analyzer]->IsFinished() == false) return true;
-//  }
-  bool Started = false;
-//  for(uint8_t Sample = 0; (Sample < 5) && (pUsed > 0) && (Started == false); Sample++) {
-//    for(uint8_t Analyzer = 0; Analyzer < pAnalyzersCount; Analyzer++) {
-//      if(pAnalyzers[Analyzer]->SampleAppend(&pVoltageSamples[pReadPos * pVoltageChannels + pChannelMappings[Analyzer].OffsetV], &pCurrentSamples[pReadPos * pCurrentChannels + pChannelMappings[Analyzer].OffsetC], Sampletime) == true) Started = true;
-//    }
-//    pReadPos = (pReadPos + 1) % pBuffLen;
-//    pUsed--;
-//  }
-  return true;
-}
-//bool AnalyzerSoft::SampleAppend(float *voltageSamples, float *currentSamples, uint64_t sampletime) {
-//  if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
-//  for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) pVoltageSamples[i][pSamples] = voltageSamples[i];
-//  for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) pCurrentSamples[i][pSamples] = currentSamples[i];
-//  pSamples++;
-//  pCyclesLen[pCycles]++;
-//  if(pZC->ProcessSample(voltageSamples) == true) pCycles++;
-//  if((pCycles == 20) || (pSamples == pMaxSamples)) {
-//    pthread_mutex_lock(&pThreadMutex);
-//    pWorking = true;
-//    pthread_mutex_unlock(&pThreadMutex);
-//    pthread_cond_signal(&pThreadCond);
-//    return true;
-//  }
-//      
-//    
-//    
-//
-//    
-//
-//
 //////  pAggreg10C.Flag      = EventsDetect();
-////  
-//
-//  return false;
-//}
-
-
-
-
-
+  return false;
+}
 void *AnalyzerSoft::Analyzer_Thread(void *args) {
   ((AnalyzerSoft*)args)->Analyze();
   return NULL;
@@ -377,13 +337,13 @@ json_object *AnalyzerSoft::GetJSONCopy(char *series) {
   pthread_mutex_unlock(&pWaitingThreadsMutex);
   return Result;
 }
-//bool AnalyzerSoft::IsFinished() {
-//  bool Result;
-//  pthread_mutex_lock(&pThreadMutex);
-//  Result = (pWorking == false);
-//  pthread_mutex_unlock(&pThreadMutex);
-//  return Result;
-//}
+bool AnalyzerSoft::IsFinished() {
+  bool Result;
+  pthread_mutex_lock(&pThreadMutex);
+  Result = (pWorking == false);
+  pthread_mutex_unlock(&pThreadMutex);
+  return Result;
+}
 //char *AnalyzerSoft::GetTypeString() {
 //  if(pMode == PHASE3N) return (char*)"3PhaseN";
 //  if(pMode == PHASE3)  return (char*)"3Phase";
