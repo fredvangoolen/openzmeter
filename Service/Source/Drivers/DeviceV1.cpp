@@ -96,7 +96,7 @@ void  *DeviceV1::Capture_Thread(void *args) {
   } else {
     struct sched_param Param;
     Param.sched_priority = Prio - 5;
-    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise thread priority -> %s\n", __func__, __LINE__, strerror(errno));
   }
   DeviceV1 *This = (DeviceV1*)args;
   uint8_t BufferIN[DEVICEV1_TRANSFERS][8192];

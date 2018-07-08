@@ -16,7 +16,7 @@ Stats::Stats(uint8_t channels, Database *db, float volt, float freq) {
   pVoltage   = (uint16_t*)malloc((sizeof(VoltageRanges) / sizeof(float) - 1) * sizeof(uint16_t));
   pFrequency = (uint16_t*)malloc((sizeof(FrequencyRanges) / sizeof(float) - 1) * sizeof(uint16_t));
   pTHD       = (uint16_t*)malloc((sizeof(THDRanges) / sizeof(float) - 1) * sizeof(uint16_t));
-  pDB->ExecSentence("PREPARE SAVE_STATS AS INSERT INTO aggreg_stat_1h (sampletime_ext, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES($1, $2, $3, $4, $5)");
+//  pDB->ExecSentence("PREPARE SAVE_STATS AS INSERT INTO aggreg_stat_1h (sampletime_ext, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES($1, $2, $3, $4, $5)");
   ResetStats();
 }
 void Stats::ResetStats() {

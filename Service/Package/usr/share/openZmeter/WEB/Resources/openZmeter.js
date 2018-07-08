@@ -56,7 +56,6 @@ function AddEvents(result, serieName, graph) {
   }
   graph.setAnnotations(Events);
 }
-
 /* Convierte un array de floats a cadena con dos decimales, separados por el caracter dado y usando los colores que se pongan (añadiendo cadena1 si es negativo y cadena2 si positivo)*/
 function Array_Round2(values, separator, colors, cadena1, cadena2) {
   for(i = 0; i < values.length; i++) {
@@ -283,8 +282,22 @@ function exportToCsv(filename, rows) {
 /* Actualiza el desplegable de nodos disponibles y selecciona el que este activo para la sesion */
 var Nodes = [];
 var Node = parseInt(localStorage.getItem("SelNode"));
+var TableDevices = null;
 function GetNodesCompletes(result) {
+  if(result.length > 0) $('#btnSearchDevice').removeClass('disabled');
   Nodes = result;
+  TableDevices = $('#tblDevices').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', 
+                                              dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', 
+                                              language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices", zeroRecords: " "},
+                                              columnDefs: [ { targets: 0, width: "auto" }, { targets: 1, width: "50px" }, { targets: 2, width: "100px" }, { targets: 3, width: "60px", orderable: false, searchable: false } ], order: [0, 'desc']
+  });
+  for(i = 0; i < result.length; i++) {
+    var RowText = $('<tr>').append('<td class="active">' + result[i].Name + '</td><td>' + result[i].Mode + '</td><td style="font-family: monospace; font-size : 11px">' + result[i].ID + '</td><td><button class="btn btn-xs btn-primary" style="width: 100%">Select</button>');
+    TableDevices.row.add(RowText).draw();
+  }
+  $( "#dlgSearchDevice").on("shown.bs.modal",function() { TableDevices.columns.adjust(); } );
+  $('#btnSearchDevice').on("click", function() { $('#dlgSearchDevice').modal('show'); });
+  
   if(!Node) {
     localStorage.setItem("SelNode", 0);
     Node = 0;
@@ -315,7 +328,6 @@ function GetNodesCompletes(result) {
 
 /* Selecciona el apartado en el menu segun la pagina cargada */
 function MenuSelect() {
-
   $('[data-sidenav]').sidenav();
   $.ajax({ url: "getNodes",
     timeout: 20000,

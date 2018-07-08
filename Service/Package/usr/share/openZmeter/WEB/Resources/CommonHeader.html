@@ -174,13 +174,13 @@
         <div class="sidenav-header">
           <i class="fa fa-plug" aria-hidden="true"></i> Casa de Paco
           <div class="btn-group">
-            <button type="button" class="btn btn-default btn-sm navbar-btn">
+            <button type="button" class="btn btn-default btn-sm navbar-btn disabled">
               <i class="fa fa-cog"></i>
             </button>
-            <button type="button" class="btn btn-default btn-sm navbar-btn">
+            <button type="button" class="btn btn-default btn-sm navbar-btn disabled" id="btnSearchDevice">
               <i class="fa fa-search"></i>
             </button>
-            <button type="button" class="btn btn-default btn-sm navbar-btn">
+            <button type="button" class="btn btn-default btn-sm navbar-btn disabled">
               <i class="fa fa-exclamation-triangle"></i>
             </button>
           </div>
@@ -276,3 +276,26 @@
           </li>
         </ul>
       </nav>
+      <div id="DisableDiv" class="overlay"></div>
+      <div class="modal" id="dlgSearchDevice" tabindex="1" role="dialog" data-backdrop='static'>
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <div class="pull-left">
+                <h3 class="modal-title" id="GraphDialogTitle"><i class="fa fa-search"></i> Search input device</h3>
+              </div>
+            </div>
+            <div class="modal-body">
+              <table id="tblDevices" class="table small table-striped table-responsive">
+                <thead>
+                  <tr>
+                    <th>Name</th><th>Type</th><th>Serial</th><th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>

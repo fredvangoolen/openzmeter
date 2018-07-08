@@ -44,6 +44,8 @@
 }
 body {
   background-color: #F1F1F1;
+  overflow-x: hidden;
+  background-image: url(Background.png);
 }
 
 /* Ajustes de la barra duperior de indicadores y logo */
@@ -85,7 +87,6 @@ body {
   background-color: #474544;
   border-radius: 2px;
 }
-
 .indicator-bar {
   background-image: linear-gradient(to bottom,#f3f3f3,#e2e2e2);
   text-align: center;
@@ -94,16 +95,24 @@ body {
   font-weight: 700;
   padding: 2px;
   border-bottom: 1px solid #c9c9c9;
+  position: relative;
+  z-index: 95;
 }
 .navbar-time {
   margin-top: 4px;
 }
 #wrapper {
   width: 100%;
-  background-color: #dcdddf;
   clear: both;
   padding: 10px;
   position: relative;
+  z-index: 0;
+}
+.navbar-header {
+  position: relative;
+  background-color: #474544;
+  width: 100%;
+  z-index: 90;
 }
 @media(min-width:768px) {
   #wrapper {
@@ -191,6 +200,17 @@ body {
   border: 1px solid #9966cc;
   background-color: #9966cc;
 }
+.overlay {
+  display: none;
+  opacity: 0.5;
+  background-color: #FFF;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  z-index: 10;
+}
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 
@@ -220,10 +240,6 @@ body {
 }
 
 
-.navbar-header {
-    background-color: #474544;
-    width: 100%;
-}
 
 .navbar-fixed-top {
     border-width: 0 0 0px;
@@ -973,17 +989,7 @@ text.area_text {
     fill: rgb(170, 170, 170);
 }
 
-.overlay {
-  display: none;
-  opacity: 0.5;
-  background-color: #000;
-  position:fixed;
-  width:100%;
-  height:100%;
-  top:0px;
-  left:0px;
-  z-index:1100;
-}
+
 
 .spinnerdiv {
   position: absolute; 
