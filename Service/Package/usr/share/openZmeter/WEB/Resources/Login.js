@@ -13,8 +13,10 @@ $('form').submit(function (e) {
         if (response == null || response['Result'] == false) {
           $('.alert-danger').slideDown(500);
           $('form button').removeAttr('disabled');
+          localStorage.removeItem('UserName');
         } else {
-          $('.alert-success').slideDown(500, function () {
+          $('.alert-success').slideDown(1000, function () {
+            localStorage.setItem('UserName', $('#username').val());
             location.reload(true);
           });
         }

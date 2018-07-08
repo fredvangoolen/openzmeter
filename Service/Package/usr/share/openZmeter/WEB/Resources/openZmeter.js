@@ -14,22 +14,16 @@ var HarmonicsNames      = [ '1st',  '2nd',  '3rd',  '4th',  '5th',  '6th',  '7th
                           
 /* Configuracion del plugin de desconexion */
 Offline.options = {requests: false};
-function DisableUI() {
-  $('#DisableDiv').css('display', 'inherit');
-}
-function EnableUI() {
-  $('#DisableDiv').css('display', 'none');
-}
+function DisableUI() { $('#DisableDiv').css('display', 'inherit'); }
+function EnableUI() {  $('#DisableDiv').css('display', 'none'); }
 Offline.on('confirmed-down', DisableUI);
 Offline.on('confirmed-up',   EnableUI);
-$(document).ajaxError(function (event, jqxhr, settings, exception) {
-  if(jqxhr.status === 401) window.location.href = 'Login';
-});
 
-/* Previene que los botones se queden pulsados */
-$(':button').mousedown(function(e) {
-  e.preventDefault();
-});
+/* Intercepto errores de ajax y redirijo a login */
+$(document).ajaxError(function (event, jqxhr, settings, exception) { if(jqxhr.status === 401) window.location.href = 'Login'; });
+
+/* Evito que los botones se queden pulsados */
+$(document).on("mousedown", ":button", function(e) { e.preventDefault(); } );
 
 /* Muesto/oculto spinner en un div */
 function ShowSpinner(spinner, container) {
@@ -302,65 +296,49 @@ function GetNodesCompletes(result) {
     localStorage.setItem("SelNode", 0);
     Node = 0;
   }
-  for(i = 0; i < result['Devices'].length; i++) {
-    Nodes['Devices'][i].Type = "3Phase";
-    if(i === Node) {
-      $('#SourceSel').text(result['Devices'][i]['Name'] + ' (' + result['Devices'][i]['Type'] + ')');
-    } else {
-      $('#SourceList').append(' <li><a href="#" id="Node_' + i + '">' + result['Devices'][i]['Name'] + ' (' + result['Devices'][i]['Type'] + ')</a></li>');      
-    }
-  }
-  if(result['Devices'].length <= 1) {
-    $('#SourcesMenu').addClass('hidden');
-  }
-  $('#SourceList li a').click(function(event) {
-    event.preventDefault();
-    localStorage.setItem('SelNode', this.id.replace('Node_', ''));
-    location.reload(false);
-  });
-  if(result['Devices'].length != 0) {
-    AjaxGetIndicators();
-    AjaxGetIndicatorsB();
-  }
+//  for(i = 0; i < result['Devices'].length; i++) {
+//    Nodes['Devices'][i].Type = "3Phase";
+//    if(i === Node) {
+//      $('#SourceSel').text(result['Devices'][i]['Name'] + ' (' + result['Devices'][i]['Type'] + ')');
+//    } else {
+//      $('#SourceList').append(' <li><a href="#" id="Node_' + i + '">' + result['Devices'][i]['Name'] + ' (' + result['Devices'][i]['Type'] + ')</a></li>');      
+//    }
+//  }
+//  if(result['Devices'].length <= 1) {
+//    $('#SourcesMenu').addClass('hidden');
+//  }
+//  $('#SourceList li a').click(function(event) {
+//    event.preventDefault();
+//    localStorage.setItem('SelNode', this.id.replace('Node_', ''));
+//    location.reload(false);
+//  });
+//  if(result['Devices'].length != 0) {
+//    AjaxGetIndicators();
+//    AjaxGetIndicatorsB();
+//  }
   AjaxGetSysStats();
   UpdatePage();
 }
 
-/* Selecciona el apartado en el menu segun la pagina cargada */
-function MenuSelect() {
-  $('[data-sidenav]').sidenav();
-  $.ajax({ url: "getNodes",
-    timeout: 20000,
-    type: "POST",
-    dataType: "json",
-    contentType: 'application/json',
-    data: JSON.stringify({ }),
-    success: GetNodesCompletes
-  });
-//  $('#side-menu').metisMenu();
-  var url = window.location;
-  var element = $('ul.nav a').filter(function () {
-    return this.href === url || url.href.indexOf(this.href) === 0;
-  }).addClass('active').parent().parent().addClass('in').parent();
-  if(element.is('div')) {
-    element.addClass('active');
-  } else {
-    $('#side-menu li > a').first().addClass('active');
-  }
-}
-
 /* Genera la secuencia de pasos una vez cargado todo el javascript para mostrar la pagina */
 function StartPageLoad() {
-  $('#Header').load("CommonHeader.html", null, MenuSelect);
-  $(window).bind("load resize", function () {
-    width = (this.window.innerWidth > 0) ? this.window.innerWidth : this.screen.width;
-    if(width < 768) {
-      $('div.navbar-collapse').addClass('collapse');
+  $('#Header').load("CommonHeader.html", null, function() {
+    $('[data-sidenav]').sidenav();
+    $('#labelUserName').text(localStorage.getItem('UserName'));
+    $.ajax({ url: "getNodes", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: GetNodesCompletes });
+
+    
+    
+    var url = window.location;
+    var element = $('ul.nav a').filter(function () {
+      return this.href === url || url.href.indexOf(this.href) === 0;
+    }).addClass('active').parent().parent().addClass('in').parent();
+    if(element.is('div')) {
+      element.addClass('active');
     } else {
-      $('div.navbar-collapse').removeClass('collapse');
+      $('#side-menu li > a').first().addClass('active');
     }
-    $("#page-wrapper").css("margin-top", ($("#Header").height() + 15) + "px");
-  });  
+  });
 }
 
 /* Devuelve el texto completo a partir del texto abreviado de agregacion */

@@ -85,7 +85,7 @@ body {
   margin-bottom: 0px;
   height: 12px;
   background-color: #474544;
-  border-radius: 2px;
+  border-radius: 6px;
 }
 .indicator-bar {
   background-image: linear-gradient(to bottom,#f3f3f3,#e2e2e2);
