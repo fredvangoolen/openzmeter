@@ -219,23 +219,43 @@ function AjaxGetSysStats() {
     contentType: 'application/json',
     data: JSON.stringify({ Type: 'Performance' }),
     success: function(result) {
-      $('#CPUPercent').css('width', result['CPU_Usage'] / result['CPU_Count'] * 100 + '%');
-      $('#CPUText').html(Round2(result['CPU_Usage'] / result['CPU_Count'] * 100) + '%');
-      var Units = GetBestUnits(result['RAM_Total']);
-      $('#RAMPercent').css('width', (result['RAM_Total'] - result['RAM_Free']) / result['RAM_Total'] * 100 + '%');
-      $('#RAMText').html(Round2((result['RAM_Total'] - result['RAM_Free']) / Units[0]) + '/' + Round2(result['RAM_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
-      Units = GetBestUnits(result['Swap_Total']);
-      $('#SwapPercent').css('width', (result['Swap_Total'] - result['Swap_Free']) / result['Swap_Total'] * 100 + '%');
-      $('#SwapText').html(Round2((result['Swap_Total'] - result['Swap_Free']) / Units[0]) + '/' + Round2(result['Swap_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
-      Units = GetBestUnits(result['Disk_Total']);
+      var Status = [];
+      if(result['CPU_Usage'] != undefined) {
+        if(result['CPU_Count'] != undefined) {
+          Status.push(Math.round(result['CPU_Usage'] / result['CPU_Count'] * 100) + '%(CPU)');
+        } else {
+          Status.push(result['CPU_Usage'] + '%(CPU)');
+        }
+      }
+      if((result['RAM_Total'] != undefined) && (result['RAM_Total'] != undefined)) {
+        Status.push(Math.round((result['RAM_Total'] - result['RAM_Free']) / result['RAM_Total'] * 100) + '%(RAM)');
+      }
+      if((result['Swap_Total'] != undefined) && (result['Swap_Free'] != undefined)) {      
+        Status.push(Math.round((result['Swap_Total'] - result['Swap_Free']) / result['Swap_Total'] * 100) + '%(Swap)');
+      }
+      if(Status.length == 0) {
+        $('#StatusRow').css('display', 'none');
+      } else {
+        $('#StatusRow').css('display', 'inherited');
+        $('#UsageText').text(Status.join(' - '));
+      }
+//      $('#CPUPercent').css('width', );
+//      $('#CPUText').html(Round2(result['CPU_Usage'] / result['CPU_Count'] * 100) + '%');
+//      var Units = GetBestUnits(result['RAM_Total']);
+//      $('#RAMPercent').css('width', (result['RAM_Total'] - result['RAM_Free']) / result['RAM_Total'] * 100 + '%');
+//      $('#RAMText').html(Round2((result['RAM_Total'] - result['RAM_Free']) / Units[0]) + '/' + Round2(result['RAM_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
+//      Units = GetBestUnits(result['Swap_Total']);
+//      $('#SwapPercent').css('width', (result['Swap_Total'] - result['Swap_Free']) / result['Swap_Total'] * 100 + '%');
+//      $('#SwapText').html(Round2((result['Swap_Total'] - result['Swap_Free']) / Units[0]) + '/' + Round2(result['Swap_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
+//      Units = GetBestUnits(result['Disk_Total']);
       $('#DiskPercent').css('width', (result['Disk_Total'] - result['Disk_Free']) / result['Disk_Total'] * 100 + '%');
-      $('#DiskText').html(Round2((result['Disk_Total'] - result['Disk_Free']) / Units[0]) + '/' + Round2(result['Disk_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
+//      $('#DiskText').html(Round2((result['Disk_Total'] - result['Disk_Free']) / Units[0]) + '/' + Round2(result['Disk_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
       $('#UptimeText').html(moment.duration(result['UpTime'], "seconds").format("d [days] h [hours] m [minutes]"));
       $('#BatteryPercent').css('width', result['Battery_Percent'] + '%');
-      $('#BatteryText').html(Round2(result['Battery_Percent']) + '%');
+//      $('#BatteryText').html(Round2(result['Battery_Percent']) + '%');
     },
     complete: function() {
-      setTimeout(AjaxGetSysStats, 3000);
+      setTimeout(AjaxGetSysStats, 5000);
     }
   });  
 }
