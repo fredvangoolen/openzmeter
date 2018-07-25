@@ -141,7 +141,10 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
   if((strcmp(Aggreg, "10m") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
     Aggreg = (char*)"1h";
     PeriodSeconds = 3600000;
-  } 
+  }
+  db->PrepareSentence("SET search_path TO ?");
+  db->BindSingleString(Node);
+  db->ExecSentence();
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"MaxSamples\", ", (To - From) / PeriodSeconds);
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'%s' AS \"Aggregation_Source\", ", Aggreg);
   char *Save;

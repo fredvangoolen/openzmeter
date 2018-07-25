@@ -21,18 +21,7 @@ var VoltageChart        = null;
 var LastVoltageSample   = 0;
 var VoltageData         = [];
 var VoltageSpinner      = new Spinner(SpinnerOpts);
-function AjaxGetVoltage() {
-  if(LastVoltageSample === 0) ShowSpinner(VoltageSpinner, 'VoltageSpinner');
-  $.ajax({ url: "getSeries",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastVoltageSample, Series: 'rms_v, flag', Node: Nodes['Devices'][Node].ID }),
-           success: AjaxVoltage,
-           complete: function() { setTimeout(AjaxGetVoltage, 5000); }
-        });
-}
+
 function AjaxVoltage(result) {
   if(result['Sampletime'] === null) return;
   if(LastVoltageSample === 0) StopSpinner(VoltageSpinner, 'VoltageSpinner');
@@ -190,7 +179,7 @@ function AjaxGetCurrent() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastCurrentSample, Series: 'rms_i', Node: Nodes['Devices'][Node].ID }),
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastCurrentSample, Series: 'rms_i', Node: Nodes[Node].ID }),
            success: AjaxCurrent,
            complete: function() { setTimeout(AjaxGetCurrent, 5000); }
         });
@@ -357,7 +346,7 @@ function AjaxGetPower() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastPowerSample, Series: 'active_power', Node: Nodes['Devices'][Node].ID }),
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastPowerSample, Series: 'active_power', Node: Nodes[Node].ID }),
            success: AjaxPower,
            complete: function() { setTimeout(AjaxGetPower, 5000); }
         });
@@ -525,7 +514,7 @@ function AjaxGetFrequency() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastFrequencySample, Series: 'freq', Node: Nodes['Devices'][Node].ID }),
+           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastFrequencySample, Series: 'freq', Node: Nodes[Node].ID }),
            success: AjaxFrequency,
            complete: function() { setTimeout(AjaxGetFrequency, 5000); }
         });
@@ -637,7 +626,7 @@ function AjaxGetEnergy() {
     type: "POST",
     dataType: "json",
     contentType: 'application/json',
-    data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastEnergySample, Series: 'active_energy', Node: Nodes['Devices'][Node].ID }),
+    data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastEnergySample, Series: 'active_energy', Node: Nodes[Node].ID }),
     success: AjaxEnergy,
     complete: function() { 
       $('#btnEnergyNow').removeClass('disabled');
@@ -955,7 +944,7 @@ function AjaxGetEnergyCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Nodes['Devices'][Node].ID }),
+           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Nodes[Node].ID }),
            success: EnergyUpdateCountersCurrent
   });
   $.ajax({ url: "getSeriesAggreg",
@@ -963,7 +952,7 @@ function AjaxGetEnergyCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current, Node: Nodes['Devices'][Node].ID }),
+           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current, Node: Nodes[Node].ID }),
            success: EnergyUpdateCountersPrevs
   });
   $.ajax({ url: "getBudget",
@@ -971,7 +960,7 @@ function AjaxGetEnergyCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: Period, To: Current, Node: Nodes['Devices'][Node].ID }),
+           data: JSON.stringify({ Period: Period, To: Current, Node: Nodes[Node].ID }),
            success: EnergyUpdateCountersBudget
   });
 }
@@ -1067,7 +1056,7 @@ function AjaxGetMainParameters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: "1m", LastSample: LastEvolutionSample, Series: 'active_power, fundamental_reactive_power, rms_v, rms_i, power_factor, phi', Node: Nodes['Devices'][Node].ID }),
+           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: "1m", LastSample: LastEvolutionSample, Series: 'active_power, fundamental_reactive_power, rms_v, rms_i, power_factor, phi', Node: Nodes[Node].ID }),
            success: AjaxMainParameters,
            complete: function() {
              setTimeout(AjaxGetMainParameters, 60000);
@@ -1296,7 +1285,7 @@ $('#GraphDialogClose').click(function() {
 
 
 function UpdatePage() {
-  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+  if(Nodes[Node]['Mode'] === '3PHASE') {
     $('#btnShowEnergyRPhase').removeClass('disabled');
     $('#btnShowEnergySPhase').removeClass('disabled');
     $('#btnShowEnergyTPhase').removeClass('disabled');
@@ -1343,7 +1332,12 @@ function UpdatePage() {
   }
   AjaxGetEnergy();
   AjaxGetEnergyCounters();
-  AjaxGetVoltage();
+  var VoltageQuery = function() { GetSeries(7200000, 0, "3s", LastVoltageSample, 'rms_v, flag', AjaxVoltage, function() { setTimeout(VoltageQuery, 5000); }); }
+  VoltageQuery();
+//  AjaxGetVoltage();
+  
+  
+  
   AjaxGetCurrent();
   AjaxGetPower();
   AjaxGetFrequency();

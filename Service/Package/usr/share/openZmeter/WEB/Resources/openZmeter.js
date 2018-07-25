@@ -34,6 +34,21 @@ function StopSpinner(spinner, container) {
   $('#' + container).css('display', 'none');
   spinner.stop();  
 }
+/* Pido al server la info de getSeries */
+function GetSeries(period, to, aggreg, lastsample, series, onSuccess, onCompletion) {
+  $.ajax({ url: "getSeries",
+           timeout: 20000,
+           type: "POST",
+           dataType: "json",
+           contentType: 'application/json',
+           data: JSON.stringify({ Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Node: Nodes[Node].ID }),
+           success: onSuccess,
+           complete: onCompletion
+        });
+}
+
+
+
 
 /* Añade los flag de eventos a una grafica */
 function AddEvents(result, serieName, graph) {
