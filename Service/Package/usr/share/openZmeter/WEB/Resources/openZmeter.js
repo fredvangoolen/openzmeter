@@ -1,31 +1,36 @@
-/* Opciones por defecto del spinner */
+/* default options for spinner */
 var SpinnerOpts         = { lines: 10,  // The number of lines to draw
                             length: 10, // The length of each line
                             width: 5,   // The line thickness
                             radius: 10  // The radius of the inner circle
                           };
                           
-/* Nombre de los armonicos */
+/* harmonics names */
 var HarmonicsNames      = [ '1st',  '2nd',  '3rd',  '4th',  '5th',  '6th',  '7th',  '8th',  '9th', '10th',
                             '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th',
                             '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th',
                             '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th',
                             '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
-                          
-/* Configuracion del plugin de desconexion */
+/* Voltage series names and colors */
+var VoltageNames;
+var VoltageGraphColors = ["#d9534f", "#534fd9", "#4fd953"];
+/* Current series names and colors */
+var CurrentNames;
+
+/* offline.js configuration and tools */
 Offline.options = {requests: false};
 function DisableUI() { $('#DisableDiv').css('display', 'inherit'); }
 function EnableUI() {  $('#DisableDiv').css('display', 'none'); }
 Offline.on('confirmed-down', DisableUI);
 Offline.on('confirmed-up',   EnableUI);
 
-/* Intercepto errores de ajax y redirijo a login */
+/* redirect ajax error to login page */
 $(document).ajaxError(function (event, jqxhr, settings, exception) { if(jqxhr.status === 401) window.location.href = 'Login'; });
 
-/* Evito que los botones se queden pulsados */
+/* handle buttons events to avoid 'selected' effect */
 $(document).on("mousedown", ":button", function(e) { e.preventDefault(); } );
 
-/* Muesto/oculto spinner en un div */
+/* show/hide spinner inside a div */
 function ShowSpinner(spinner, container) {
   $('#' + container).css('display', 'inherit');
   spinner.spin(document.getElementById(container));  
@@ -34,19 +39,60 @@ function StopSpinner(spinner, container) {
   $('#' + container).css('display', 'none');
   spinner.stop();  
 }
-/* Pido al server la info de getSeries */
+
+/* getSeries function */
 function GetSeries(period, to, aggreg, lastsample, series, onSuccess, onCompletion) {
-  $.ajax({ url: "getSeries",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Node: Nodes[Node].ID }),
-           success: onSuccess,
-           complete: onCompletion
-        });
+  $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion,
+           data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Node: Nodes[Node].ID } )
+           
+  });
 }
 
+/* remove old items from array*/
+function ShiftArray(array, len) {
+  while(array.length > len) array.shift();
+}
+/* return last timestamp from results obtained with GetSeries and others */
+function LastSampletime(result) {
+  return result['Sampletime'][result['Sampletime'].length - 1];
+}
+
+/* if called from a button update variable contents to reflect new selections. In all cases update graph visible series */
+function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, sender) {
+  var State = localStorage.getItem(variable);
+  var NumElements = buttongroup.children().length;
+  if(sender !== undefined) {
+    var Index = $(sender).index();
+    if(State == Math.pow(2, Index)) { //only one iten selected
+      //do nothing!, i cant deselect if only one item is selected
+    } else if(State & Math.pow(2, Index)) {
+      State = State & ~(Math.pow(2, Index));
+    } else {
+      State = State | Math.pow(2, Index);
+    }
+    if(unique == true) State = State & (Math.pow(2, Index));  
+    localStorage.setItem(variable, State);
+  }
+  if(Nodes[Node].Mode !== '1PHASE') {
+    buttongroup.removeClass('hidden');
+    var VisibleSeries = [];
+    var Visibles = [];
+    for(i = 0; i < NumElements; i++) {
+      if(State & Math.pow(2, i)) {
+        $(buttongroup.children()[i]).addClass('active');
+        VisibleSeries.push(true);
+        Visibles.push(i + 1);
+      } else {
+        $(buttongroup.children()[i]).removeClass('active');
+        VisibleSeries.push(false);
+      }
+    }
+    VoltageChart.updateOptions({ visibility: VisibleSeries, valueRange: rangechecker(Visibles) });
+  } else {
+    buttongroup.hide();
+    VoltageChart.updateOptions({ valueRange: rangechecker([1]) });
+  }
+}
 
 
 
@@ -324,8 +370,8 @@ function GetNodesCompletes(result) {
     var RowText = $('<tr>').append('<td class="active">' + result[i].Name + '</td><td>' + result[i].Mode + '</td><td style="font-family: monospace; font-size : 11px">' + result[i].ID + '</td><td><button class="btn btn-xs btn-primary" style="width: 100%">Select</button>');
     TableDevices.row.add(RowText).draw();
   }
-  $( "#dlgSearchDevice").on("shown.bs.modal",function() { TableDevices.columns.adjust(); } );
-  $('#btnSearchDevice').on("click", function() { $('#dlgSearchDevice').modal('show'); });
+  $('#dlgSearchDevice').on('shown.bs.modal',function() { TableDevices.columns.adjust(); } );
+  $('#btnSearchDevice').on('click', function() { $('#dlgSearchDevice').modal('show'); });
   
   if(!Node) {
     localStorage.setItem("SelNode", 0);
@@ -351,6 +397,8 @@ function GetNodesCompletes(result) {
 //    AjaxGetIndicators();
 //    AjaxGetIndicatorsB();
 //  }
+  VoltageNames = (Nodes[Node]['Mode'] == '1PHASE') ? ['Voltage'] : ['Voltage (R)', 'Voltage (S)', 'Voltage (T)'];
+  CurrentNames;
   AjaxGetSysStats();
   UpdatePage();
 }

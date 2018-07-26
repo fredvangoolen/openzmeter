@@ -18,41 +18,28 @@
 
 /* Grafica de tension */
 var VoltageChart        = null;
+var VoltageSpinner      = new Spinner(SpinnerOpts);
 var LastVoltageSample   = 0;
 var VoltageData         = [];
-var VoltageSpinner      = new Spinner(SpinnerOpts);
-
+function AjaxGetVoltage() {
+  GetSeries(7200000, 0, "3s", LastVoltageSample, 'rms_v, flag', AjaxVoltage, function() { setTimeout(AjaxGetVoltage, 5000); });
+}
 function AjaxVoltage(result) {
   if(result['Sampletime'] === null) return;
   if(LastVoltageSample === 0) StopSpinner(VoltageSpinner, 'VoltageSpinner');
   if(result['Sampletime'][0] <= LastVoltageSample) return;
   for(i = 0; i < result['Sampletime'].length; i++) VoltageData.push([new Date(result['Sampletime'][i])].concat(result['rms_v'][i]));
-  while(VoltageData.length > result['MaxSamples']) VoltageData.shift();
-  LastVoltageSample = result['Sampletime'][result['Sampletime'].length - 1];
+  ShiftArray(VoltageData, result['MaxSamples']);
+  LastVoltageSample = LastSampletime(result);
   $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
   $('#labelVoltageAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
+  
   if(VoltageChart === null) {
-    VoltageChart = new Dygraph(document.getElementById("VoltageChart"),
-      VoltageData,
-      { strokeWidth: 0.5, 
+    VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
+      { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: false, rollPeriod: 0,
+        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
         labelsDiv: "VoltageLegend",
-        labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)'] :['Time', 'Voltage'],
-        stepPlot: true,
-        drawGapEdgePoints: true,
-        connectSeparatedPoints: false,
-        fillGraph: false,
-        colors: ["#d9534f", "#534fd9", "#4fd953"],
-        gridLineColor: "#999",
-        gridLinePattern: [4, 4],
-        animatedZooms: true,
-        rollPeriod: 0,
-        plugins: [
-          new Dygraph.Plugins.Crosshair({
-            direction: "vertical"
-          })
-        ],
-        dateWindow: [result['From'], result['To']],
-        interactionModel: {},
+        labels: ['Time'].concat(VoltageNames), colors: VoltageGraphColors, dateWindow: [result['From'], result['To']],
         underlayCallback: function(canvas, area, g) {
           var NominalVoltage = Nodes['NominalVoltage'];
           var YellowLowA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.1);
@@ -71,22 +58,12 @@ function AjaxVoltage(result) {
           canvas.fillRect(0, RedLowB, 10000, RedHeightB);
         },
         axes: {
-          y: { pixelsPerLabel: 15,
-               axisLabelWidth: 34,
-               valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">V</em>';
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-               }
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
+               valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">V</em>'; },
+               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>'; }
              },
-          x: { valueFormatter: function (x) {
-                 var date = new Date(x);
-                 return date.toLocaleTimeString();
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -4px">' + x.toLocaleTimeString() + '</div>';
-               }
+          x: { valueFormatter: function (x) { return new Date(x).toLocaleTimeString(); },
+               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -4px">' + x.toLocaleTimeString() + '</div>'; }
              }
         }
       }
@@ -94,60 +71,19 @@ function AjaxVoltage(result) {
   } else {
     VoltageChart.updateOptions({ file: VoltageData, dateWindow: [result['From'], result['To']]});
   }
-  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    AddEvents(result, "Voltage (R)", VoltageChart);
-    AddEvents(result, "Voltage (S)", VoltageChart);
-    AddEvents(result, "Voltage (T)", VoltageChart);
-  } else {
-    AddEvents(result, "Voltage", VoltageChart);
+  for(n = 0; n < VoltageNames.length; n++) {
+    AddEvents(result, VoltageNames[n], VoltageChart);
   }
-  SetVoltageVisibleSeries();
+  VoltageSeries();
 }
-function SetVoltageVisibleSeries() {
-  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    var ShowR = (localStorage.getItem('ShowDashboardVoltageR') === 'true');
-    var ShowS = (localStorage.getItem('ShowDashboardVoltageS') === 'true');
-    var ShowT = (localStorage.getItem('ShowDashboardVoltageT') === 'true');
-    var VisibleSeries = [ShowR, ShowS, ShowT];
-    var Visibles = [];
-    if(ShowR) Visibles.push(1);
-    if(ShowS) Visibles.push(2);
-    if(ShowT) Visibles.push(3);
-    VoltageChart.updateOptions({ visibility: VisibleSeries, valueRange: CalcRanges(VoltageData, Visibles, false) });
-    if(ShowR === true)
-      $('#btnShowVoltageRPhase').addClass('active');
-    else    
-      $('#btnShowVoltageRPhase').removeClass('active');
-    if(ShowS === true)
-      $('#btnShowVoltageSPhase').addClass('active');
-    else    
-      $('#btnShowVoltageSPhase').removeClass('active');
-    if(ShowT === true)
-      $('#btnShowVoltageTPhase').addClass('active');
-    else    
-      $('#btnShowVoltageTPhase').removeClass('active');
-  } else {
-    VoltageChart.updateOptions({ valueRange: CalcRanges(VoltageData, [1], false) });
-  }
+function VoltageSeries(event) {
+  GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'VisibleDashboardVoltagePhases', false, function(series) { return CalcRanges(VoltageData, series, false); }, (event !== undefined) ? event.target : undefined); 
 }
-function ChooseVoltageChannels() {
-  var ShowR = (localStorage.getItem('ShowDashboardVoltageR') === 'true');
-  var ShowS = (localStorage.getItem('ShowDashboardVoltageS') === 'true');
-  var ShowT = (localStorage.getItem('ShowDashboardVoltageT') === 'true');
-  if(this.innerText === 'R') ShowR = !ShowR;
-  if(this.innerText === 'S') ShowS = !ShowS;
-  if(this.innerText === 'T') ShowT = !ShowT;
-  if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
-  if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowS = true;
-  if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowT = true;
-  localStorage.setItem('ShowDashboardVoltageR', ShowR);
-  localStorage.setItem('ShowDashboardVoltageS', ShowS);
-  localStorage.setItem('ShowDashboardVoltageT', ShowT);
-  SetVoltageVisibleSeries();
-}
-$('#btnShowVoltageRPhase').click(ChooseVoltageChannels);
-$('#btnShowVoltageSPhase').click(ChooseVoltageChannels);
-$('#btnShowVoltageTPhase').click(ChooseVoltageChannels);
+$('#groupVoltagePhases').on('click', 'button', VoltageSeries);
+
+
+//$('#btnShowVoltageSPhase').click(ChooseVoltageChannels);
+//$('#btnShowVoltageTPhase').click(ChooseVoltageChannels);
 $('#btnMaximizeVoltage').click(function() {
   $('#GraphDialogTitle').text('Voltage');
   $('#GraphDialog').modal('show');
@@ -198,7 +134,7 @@ function AjaxCurrent(result) {
       CurrentData,
       { strokeWidth: 0.5,
         labelsDiv: "CurrentLegend",
-        labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'] :['Time', 'Current'],
+        labels: (Nodes[Node]['Type'] == '3Phase') ? ['Time', 'Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'] :['Time', 'Current'],
         stepPlot: true,
         drawGapEdgePoints: true,
         connectSeparatedPoints: false,
@@ -216,7 +152,7 @@ function AjaxCurrent(result) {
         dateWindow: [result['From'], result['To']],
         interactionModel: {},
         underlayCallback: function(canvas, area, g) {
-          var MaxCurrent = Nodes['Devices'][Node]['MaxCurrent'];
+          var MaxCurrent = Nodes[Node]['MaxCurrent'];
           var YellowLowA = g.toDomYCoord(MaxCurrent);
           var YellowHeightA = g.toDomYCoord(MaxCurrent - MaxCurrent * 0.10) - YellowLowA;
           var YellowLowB = g.toDomYCoord(-MaxCurrent + MaxCurrent * 0.10);
@@ -259,7 +195,7 @@ function AjaxCurrent(result) {
   SetCurrentVisibleSeries();
 }
 function SetCurrentVisibleSeries() {
-  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
+  if(Nodes[Node]['Type'] == '3Phase') {
     var ShowR = (localStorage.getItem('ShowDashboardCurrentR') === 'true');
     var ShowS = (localStorage.getItem('ShowDashboardCurrentS') === 'true');
     var ShowT = (localStorage.getItem('ShowDashboardCurrentT') === 'true');
@@ -650,7 +586,7 @@ function AjaxEnergy(result) {
       EnergyData,
       { strokeWidth: 0.5,
         labelsDiv: "EnergyLegend",
-        labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Energy (R)', 'Energy (S)', 'Energy (T)'] : ['Time', 'Energy'],
+        labels: (Nodes[Node]['Type'] == '3Phase') ? ['Time', 'Energy (R)', 'Energy (S)', 'Energy (T)'] : ['Time', 'Energy'],
         plotter: barChartNoSpacedPlotter,
         stackedGraph: true,
         stepPlot: true,
@@ -769,7 +705,7 @@ function EnergyResizeEvent() {
   if(EnergyChart != null) EnergyChart.resize($('#EnergyCol').width(), Height - 12);
 }
 function SetEnergyVisibleSeries() {
-  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
+  if(Nodes[Node]['Type'] == '3Phase') {
     var ShowR = (localStorage.getItem('ShowR') === 'true');
     var ShowS = (localStorage.getItem('ShowS') === 'true');
     var ShowT = (localStorage.getItem('ShowT') === 'true');
@@ -795,7 +731,7 @@ function SetEnergyVisibleSeries() {
     EnergyChart.updateOptions({ valueRange: CalcRanges(EnergyData, [1], true, false, true) });
   }
   var Serie = 'Energy';
-  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
+  if(Nodes[Node]['Type'] == '3Phase') {
     if(ShowT) Serie = 'Energy (T)';
     if(ShowS) Serie = 'Energy (S)';
     if(ShowR) Serie = 'Energy (R)';
@@ -1332,10 +1268,9 @@ function UpdatePage() {
   }
   AjaxGetEnergy();
   AjaxGetEnergyCounters();
-  var VoltageQuery = function() { GetSeries(7200000, 0, "3s", LastVoltageSample, 'rms_v, flag', AjaxVoltage, function() { setTimeout(VoltageQuery, 5000); }); }
-  VoltageQuery();
-//  AjaxGetVoltage();
-  
+//  UpdateVoltage();
+
+  AjaxGetVoltage();
   
   
   AjaxGetCurrent();

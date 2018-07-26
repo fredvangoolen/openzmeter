@@ -230,8 +230,8 @@ void  *DeviceV1::Capture_Thread(void *args) {
 //  }
 //  return NULL;
 //}
-DeviceV1::DeviceV1(json_object* config) : DeviceInterface() {
-  Tools::LogMsg("INFO", "Starting BasicCapture adquisition thread...\n");
+DeviceV1::DeviceV1(json_object *config) : DeviceInterface() {
+  Tools::LogMsg("INFO", "Starting DeviceV1 driver...\n");
   pUsed                  = 0;
   pBuffLen               = DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ;
   pVoltageSamples      = (float*)malloc(sizeof(float) * pBuffLen);

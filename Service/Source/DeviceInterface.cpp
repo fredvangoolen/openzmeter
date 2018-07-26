@@ -7,6 +7,7 @@
 #include "DeviceInterface.h"
 #include "Drivers/DeviceV1.h"
 #include "Drivers/DeviceV2.h"
+#include "Drivers/DeviceVirtual.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 DeviceInterface **DeviceInterface::pDevices      = NULL;
@@ -32,7 +33,7 @@ bool DeviceInterface::Config(json_object *config) {
       } else if(strcmp(json_object_get_string(Driver), "DeviceV2") == 0) {
 //        AddDeviceInterface(new DeviceV2(Device));
       } else if(strcmp(json_object_get_string(Driver), "Virtual") == 0) {
-        //AddDeviceInterface(new DeviceV2(Device));
+        AddDeviceInterface(new DeviceVirtual(Device));
       } else if(strcmp(json_object_get_string(Driver), "Remote") == 0) {
         //AddDeviceInterface(new DeviceV2(Device));
       }

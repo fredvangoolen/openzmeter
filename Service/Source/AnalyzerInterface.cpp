@@ -25,6 +25,9 @@ AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nomi
 char *AnalyzerInterface::GetID() {
   return pID;
 }
+float AnalyzerInterface::GetNominalVoltage() {
+  return pNominalVoltage;
+}
 json_object *AnalyzerInterface::GetJSONDescriptor() {
   json_object *Device = json_object_new_object();
   json_object_object_add(Device, "ID", json_object_new_string(pID));
@@ -45,7 +48,7 @@ void AnalyzerInterface::SaveAggreg(Params_t *params) {
 //  ExecSentence("PREPARE DELETE_1M_EXT AS DELETE FROM aggreg_ext_1m WHERE sampletime_ext < $1");
 
   if(params->Type == AGGREG_3S)
-    PrepareSentence("EXECUTE SAVE_3S(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("INSERT INTO aggreg_3s (sampletime, rms_v, rms_i, active_power, active_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1M)  
     PrepareSentence("EXECUTE SAVE_1M(?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_10M)  
@@ -57,8 +60,8 @@ void AnalyzerInterface::SaveAggreg(Params_t *params) {
   BindArrayFloat(params->RMS_I, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);                        //rms_i
   BindArrayFloat(params->Active_Power, (pMode == PHASE1) ? 1 : 3);                                          //active_power
   BindArrayFloat(params->Active_Energy, (pMode == PHASE1) ? 1 : 3);                                         //active_energy
-  BindArrayFloat(params->Fundamental_Reactive_Power, (pMode == PHASE1) ? 1 : 3);                            //fundamental_reactive_power
-  BindArrayFloat(params->Fundamental_Reactive_Energy, (pMode == PHASE1) ? 1 : 3);                           //fundamental_reactive_energy
+//  BindArrayFloat(params->Fundamental_Reactive_Power, (pMode == PHASE1) ? 1 : 3);                            //fundamental_reactive_power
+//  BindArrayFloat(params->Fundamental_Reactive_Energy, (pMode == PHASE1) ? 1 : 3);                           //fundamental_reactive_energy
   BindSingleFloat(params->Frequency);                                                                        //frequency
   BindSingleBool(params->Flag);                                                                              //flaged
   ExecSentence();
