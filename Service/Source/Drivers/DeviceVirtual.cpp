@@ -40,8 +40,10 @@ void  *DeviceVirtual::Capture_Thread(void *args) {
     //      float CurrentA = Variation(GeneratedSamples, 1, 5, 30.0 * This->SampleRate());
 //      float CurrentB = Variation(GeneratedSamples, 1, 5, 40.0 * This->SampleRate());
 //      float CurrentC = Variation(GeneratedSamples, 1, 5, 50.0 * This->SampleRate());
-    Voltage[0] = Analyzer->GetNominalVoltage();
-//            Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 300.0 * This->SampleRate());
+    Voltage[0] = Analyzer->GetNominalVoltage() * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * Analyzer->GetNominalFrequency());
+    Voltage[1] = Analyzer->GetNominalVoltage() * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * Analyzer->GetNominalFrequency() - 2.0 * M_PI / 3.0);
+    Voltage[2] = Analyzer->GetNominalVoltage() * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * Analyzer->GetNominalFrequency() - 4.0 * M_PI / 3.0);
+    //            Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 300.0 * This->SampleRate());
 //      float VoltageB = Variation(GeneratedSamples, Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 310.0 * This->SampleRate());
 //      float VoltageC = Variation(GeneratedSamples, Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 320.0 * This->SampleRate());
 //      if(((GeneratedSamples / This->SampleRate()) >= 10) && ((GeneratedSamples / This->SampleRate()) < 20)) {

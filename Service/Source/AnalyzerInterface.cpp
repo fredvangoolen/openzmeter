@@ -28,6 +28,9 @@ char *AnalyzerInterface::GetID() {
 float AnalyzerInterface::GetNominalVoltage() {
   return pNominalVoltage;
 }
+float AnalyzerInterface::GetNominalFrequency() {
+  return pNominalFrequency;
+}
 json_object *AnalyzerInterface::GetJSONDescriptor() {
   json_object *Device = json_object_new_object();
   json_object_object_add(Device, "ID", json_object_new_string(pID));

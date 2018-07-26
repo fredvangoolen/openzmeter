@@ -33,29 +33,14 @@ function AjaxVoltage(result) {
   LastVoltageSample = LastSampletime(result);
   $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
   $('#labelVoltageAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
-  
   if(VoltageChart === null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
       { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: false, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
-        labelsDiv: "VoltageLegend",
-        labels: ['Time'].concat(VoltageNames), colors: VoltageGraphColors, dateWindow: [result['From'], result['To']],
+        labelsDiv: "VoltageLegend", labels: ['Time'].concat(VoltageNames), colors: VoltageGraphColors, dateWindow: [result['From'], result['To']],
         underlayCallback: function(canvas, area, g) {
-          var NominalVoltage = Nodes['NominalVoltage'];
-          var YellowLowA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.1);
-          var YellowHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.07) - YellowLowA;
-          var YellowLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.1);
-          var YellowHeightB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.07) - YellowLowB;
-          var RedLowA = g.toDomYCoord(1000);
-          var RedHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - RedLowA;
-          var RedLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.10);
-          var RedHeightB = g.toDomYCoord(0) - RedLowB;
-          canvas.fillStyle = "rgba(255, 255, 0, 0.15)";
-          canvas.fillRect(0, YellowLowA, 10000, YellowHeightA);
-          canvas.fillRect(0, YellowLowB, 10000, YellowHeightB);
-          canvas.fillStyle = "rgba(180, 0, 0, 0.15)";
-          canvas.fillRect(0, RedLowA, 10000, RedHeightA);
-          canvas.fillRect(0, RedLowB, 10000, RedHeightB);
+          var NV = Nodes[Node]['NominalVoltage'], Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
+          GraphHBackgroundRanges([[NV * 1.1, NV * 1.07, Yellow], [NV * 0.93, NV * 0.9, Yellow], [Infinity, NV * 1.1, Red], [NV * 0.9, -Infinity, Red]], g, canvas);
         },
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
@@ -80,10 +65,10 @@ function VoltageSeries(event) {
   GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'VisibleDashboardVoltagePhases', false, function(series) { return CalcRanges(VoltageData, series, false); }, (event !== undefined) ? event.target : undefined); 
 }
 $('#groupVoltagePhases').on('click', 'button', VoltageSeries);
+$('#btnExportVoltage').click(function() {
+  exportToCsv("Voltage_" + Node + '_' + LastVoltageSample + '.csv', [['Time'].concat(VoltageNames)].concat(VoltageData));
+});
 
-
-//$('#btnShowVoltageSPhase').click(ChooseVoltageChannels);
-//$('#btnShowVoltageTPhase').click(ChooseVoltageChannels);
 $('#btnMaximizeVoltage').click(function() {
   $('#GraphDialogTitle').text('Voltage');
   $('#GraphDialog').modal('show');
@@ -99,92 +84,41 @@ $('#btnMaximizeVoltage').click(function() {
   $(window).bind('resize', DialogResizeHandler);
   window.dispatchEvent(new Event('resize'));  
 });
-$('#btnExportVoltage').click(function() {
-  exportToCsv("Voltage_" + Node + '_' + LastVoltageSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Voltage R', 'Voltage S', 'Voltage T']] : [['DateTime', 'Voltage']]).concat(VoltageData));
-});
+
 
 /* Grafica de corriente */
 var CurrentChart        = null;
+var CurrentSpinner      = new Spinner(SpinnerOpts);
 var LastCurrentSample   = 0;
 var CurrentData         = [];
-var CurrentSpinner      = new Spinner(SpinnerOpts);
 function AjaxGetCurrent() {
-  if(LastCurrentSample === 0) ShowSpinner(CurrentSpinner, 'CurrentSpinner');
-  $.ajax({ url: "getSeries",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastCurrentSample, Series: 'rms_i', Node: Nodes[Node].ID }),
-           success: AjaxCurrent,
-           complete: function() { setTimeout(AjaxGetCurrent, 5000); }
-        });
+  GetSeries(7200000, 0, "3s", LastCurrentSample, 'rms_i', AjaxCurrent, function() { setTimeout(AjaxGetCurrent, 5000); });
 }
 function AjaxCurrent(result) {
   if(result['Sampletime'] === null) return;
   if(LastCurrentSample === 0) StopSpinner(CurrentSpinner, 'CurrentSpinner');
   if(result['Sampletime'][0] <= LastCurrentSample) return;
   for(i = 0; i < result['Sampletime'].length; i++) CurrentData.push([new Date(result['Sampletime'][i])].concat(result['rms_i'][i]));
-  while(CurrentData.length > result['MaxSamples']) CurrentData.shift();
-  LastCurrentSample = result['Sampletime'][result['Sampletime'].length - 1];
+  ShiftArray(CurrentData, result['MaxSamples']);
+  LastCurrentSample = LastSampletime(result);
   $('#labelCurrent').html(Array_Round2(result['rms_i'][result['rms_i'].length - 1], '&nbsp;&nbsp;', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
   $('#CurrentAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(CurrentChart == null) {
-    CurrentChart = new Dygraph(document.getElementById("CurrentChart"),
-      CurrentData,
-      { strokeWidth: 0.5,
-        labelsDiv: "CurrentLegend",
-        labels: (Nodes[Node]['Type'] == '3Phase') ? ['Time', 'Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'] :['Time', 'Current'],
-        stepPlot: true,
-        drawGapEdgePoints: true,
-        connectSeparatedPoints: false,
-        fillGraph: false,
-        colors: ["#428bca", "#42ca81", "#ca428b", "#ca8142"],
-        gridLineColor: "#999",
-        gridLinePattern: [4, 4],
-        animatedZooms: true,
-        rollPeriod: 0,
-        plugins: [
-          new Dygraph.Plugins.Crosshair({
-            direction: "vertical"
-          })
-        ],
-        dateWindow: [result['From'], result['To']],
-        interactionModel: {},
+    CurrentChart = new Dygraph(document.getElementById("CurrentChart"), CurrentData,
+      { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
+        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {}, 
+        labelsDiv: "CurrentLegend", labels: ['Time'].concat(VoltageNames), colors: CurrentGraphColors, dateWindow: [result['From'], result['To']],
         underlayCallback: function(canvas, area, g) {
-          var MaxCurrent = Nodes[Node]['MaxCurrent'];
-          var YellowLowA = g.toDomYCoord(MaxCurrent);
-          var YellowHeightA = g.toDomYCoord(MaxCurrent - MaxCurrent * 0.10) - YellowLowA;
-          var YellowLowB = g.toDomYCoord(-MaxCurrent + MaxCurrent * 0.10);
-          var YellowHeightB = g.toDomYCoord(-MaxCurrent) - YellowLowB;
-          var RedLowA = g.toDomYCoord(10000);
-          var RedHeightA = g.toDomYCoord(MaxCurrent) - RedLowA;
-          var RedLowB = g.toDomYCoord(-MaxCurrent);
-          var RedHeightB = g.toDomYCoord(-10000) - RedLowB;
-          canvas.fillStyle = "rgba(255, 255, 0, 0.15)";
-          canvas.fillRect(0, YellowLowA, 10000, YellowHeightA);
-          canvas.fillRect(0, YellowLowB, 10000, YellowHeightB);
-          canvas.fillStyle = "rgba(180, 0, 0, 0.15)";
-          canvas.fillRect(0, RedLowA, 10000, RedHeightA);
-          canvas.fillRect(0, RedLowB, 10000, RedHeightB);
+          var MC = Nodes[Node]['MaxCurrent'], Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
+          GraphHBackgroundRanges([[MC * 0.7, MC * 0.6, Yellow], [Infinity, MC * 0.7, Red]], g, canvas);
         },
         axes: {
-          y: { pixelsPerLabel: 15,
-               axisLabelWidth: 34,
-               valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">A</em>';
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-               }
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
+               valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">A</em>'; },
+               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>'; }
              },
-          x: { valueFormatter: function (x) {
-                 var date = new Date(x);
-                 return date.toLocaleTimeString();
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -4px">' + x.toLocaleTimeString() + '</div>';
-               }
+          x: { valueFormatter: function (x) { return new Date(x).toLocaleTimeString(); },
+               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -4px">' + x.toLocaleTimeString() + '</div>'; }
              }
         }
       }
@@ -192,64 +126,16 @@ function AjaxCurrent(result) {
   } else {
     CurrentChart.updateOptions({'file': CurrentData, dateWindow: [result['From'], result['To']]});
   }
-  SetCurrentVisibleSeries();
+  CurrentSeries();
 }
-function SetCurrentVisibleSeries() {
-  if(Nodes[Node]['Type'] == '3Phase') {
-    var ShowR = (localStorage.getItem('ShowDashboardCurrentR') === 'true');
-    var ShowS = (localStorage.getItem('ShowDashboardCurrentS') === 'true');
-    var ShowT = (localStorage.getItem('ShowDashboardCurrentT') === 'true');
-    var ShowN = (localStorage.getItem('ShowDashboardCurrentN') === 'true');
-    var VisibleSeries = [ShowR, ShowS, ShowT, ShowN];
-    var Visibles = [];
-    if(ShowR) Visibles.push(1);
-    if(ShowS) Visibles.push(2);
-    if(ShowT) Visibles.push(3);
-    if(ShowN) Visibles.push(4);
-    CurrentChart.updateOptions({ visibility: VisibleSeries, valueRange: CalcRanges(CurrentData, Visibles, false) });
-    if(ShowR === true)
-      $('#btnShowCurrentRPhase').addClass('active');
-    else    
-      $('#btnShowCurrentRPhase').removeClass('active');
-    if(ShowS === true)
-      $('#btnShowCurrentSPhase').addClass('active');
-    else    
-      $('#btnShowCurrentSPhase').removeClass('active');
-    if(ShowT === true)
-      $('#btnShowCurrentTPhase').addClass('active');
-    else    
-      $('#btnShowCurrentTPhase').removeClass('active');
-    if(ShowN === true)
-      $('#btnShowCurrentNPhase').addClass('active');
-    else    
-      $('#btnShowCurrentNPhase').removeClass('active');
-  } else {
-    CurrentChart.updateOptions({ valueRange: CalcRanges(CurrentData, [1], false) });
-  }
+function CurrentSeries(event) {
+  GraphPhaseButtons(CurrentChart, $('#groupCurrentPhases'), 'VisibleDashboardCurrentPhases', false, function(series) { return CalcRanges(CurrentData, series, false); }, (event !== undefined) ? event.target : undefined); 
 }
-function ChooseCurrentChannels() {
-  var ShowR = (localStorage.getItem('ShowDashboardCurrentR') === 'true');
-  var ShowS = (localStorage.getItem('ShowDashboardCurrentS') === 'true');
-  var ShowT = (localStorage.getItem('ShowDashboardCurrentT') === 'true');
-  var ShowN = (localStorage.getItem('ShowDashboardCurrentN') === 'true');
-  if(this.innerText === 'R') ShowR = !ShowR;
-  if(this.innerText === 'S') ShowS = !ShowS;
-  if(this.innerText === 'T') ShowT = !ShowT;
-  if(this.innerText === 'N') ShowN = !ShowN;
-  if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowR = true;
-  if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowS = true;
-  if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowT = true;
-  if((this.innerText === 'N') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowN = true;
-  localStorage.setItem('ShowDashboardCurrentR', ShowR);
-  localStorage.setItem('ShowDashboardCurrentS', ShowS);
-  localStorage.setItem('ShowDashboardCurrentT', ShowT);
-  localStorage.setItem('ShowDashboardCurrentN', ShowN);
-  SetCurrentVisibleSeries();
-}
-$('#btnShowCurrentRPhase').click(ChooseCurrentChannels);
-$('#btnShowCurrentSPhase').click(ChooseCurrentChannels);
-$('#btnShowCurrentTPhase').click(ChooseCurrentChannels);
-$('#btnShowCurrentNPhase').click(ChooseCurrentChannels);
+$('#groupCurrentPhases').on('click', 'button', CurrentSeries);
+$('#btnExportCurrent').click(function() {
+  exportToCsv("Current_" + Node + '_' + LastCurrentSample + '.csv', [['Time'].concat(CurrentNames)].concat(CurrentData));
+});
+
 $('#btnMaximizeCurrent').click(function() {
   $('#GraphDialogTitle').text('Current');
   $('#GraphDialog').modal('show');
@@ -265,85 +151,40 @@ $('#btnMaximizeCurrent').click(function() {
   $(window).bind('resize', DialogResizeHandler);
   window.dispatchEvent(new Event('resize'));  
 });
-$('#btnExportCurrent').click(function() {
-  exportToCsv("Current_" + Node + '_' + LastCurrentSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Current R', 'Current S', 'Current T', 'Current (N)']] : [['DateTime', 'Current']]).concat(CurrentData));
-});
 
 /* Grafica de potencia */
 var PowerChart          = null;
 var LastPowerSample     = 0;
 var PowerData           = [];
-var PowerChartUnits     = 'W';
+var PowerChartUnits     = '';
 var PowerSpinner        = new Spinner(SpinnerOpts);
 function AjaxGetPower() {
-  if(LastPowerSample === 0) ShowSpinner(PowerSpinner, 'PowerSpinner');
-  $.ajax({ url: "getSeries",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastPowerSample, Series: 'active_power', Node: Nodes[Node].ID }),
-           success: AjaxPower,
-           complete: function() { setTimeout(AjaxGetPower, 5000); }
-        });
+  GetSeries(7200000, 0, "3s", LastPowerSample, 'active_power', AjaxPower, function() { setTimeout(AjaxGetPower, 5000); });
 }
 function AjaxPower(result) {
   if((result === null) || (result['Sampletime'] === null)) return;
   if(LastPowerSample === 0) StopSpinner(PowerSpinner, 'PowerSpinner');
   if(result['Sampletime'][0] <= LastPowerSample) return;
   for(i = 0; i < result['Sampletime'].length; i++) PowerData.push([new Date(result['Sampletime'][i])].concat(result['active_power'][i]));
-  while(PowerData.length > result['MaxSamples']) PowerData.shift();
-  LastPowerSample = result['Sampletime'][result['Sampletime'].length - 1];
-  
-  var Power = result['active_power'][result['active_power'].length - 1];
-  if(ArrayMax(Power) > 1000) {
-    for(i = 0; i < Power.length; i++) Power[i] = Power[i] / 1000;
-    $('#labelPowerUnits').text('kW');
-  } else {
-    $('#labelPowerUnits').text('W');
-  }
-  $('#labelPower').html(Array_Round2(Power, '&nbsp;&nbsp;', ["#f0ad4e", "#ad4ef0", "#4ef0ad"]));
+  ShiftArray(PowerData, result['MaxSamples']);
+  LastPowerSample = LastSampletime(result);
+  PowerChartUnits = GetBestUnits(ArrayGraphMax(PowerData));
+  $('#labelPowerUnits').text(PowerChartUnits + 'W');
+  $('#labelPower').html(Array_Round2(ScaleArrayToUnits(result['active_power'][result['active_power'].length - 1], PowerChartUnits), '&nbsp;&nbsp;', ["#f0ad4e", "#ad4ef0", "#4ef0ad"]));
   $('#PowerAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(PowerChart == null) {
-    PowerChart = new Dygraph(document.getElementById("PowerChart"),
-      PowerData,
-      { strokeWidth: 0.5,
-        labelsDiv: "PowerLegend",
-        labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Power (R)', 'Power (S)', 'Power (T)'] :['Time', 'Power'],
-        stepPlot: true,
-        stackedGraph: true,
-        drawGapEdgePoints: true,
-        connectSeparatedPoints: false,
-        fillGraph: true,
-        colors: ["#f0ad4e", "#ad4ef0", "#4ef0ad"],
-        gridLineColor: "#999",
-        gridLinePattern: [4, 4],
-        animatedZooms: true,
-        rollPeriod: 0,
-        plugins: [
-          new Dygraph.Plugins.Crosshair({
-            direction: "vertical"
-          })
-        ],
-        dateWindow: [result['From'], result['To']],
-        interactionModel: {},
+    PowerChart = new Dygraph(document.getElementById("PowerChart"), PowerData, 
+      { strokeWidth: 0.5, stepPlot: true, stackedGraph: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
+        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
+        labelsDiv: "PowerLegend", labels: ['Time'].concat(PowerNames), colors: PowerGraphColors, dateWindow: [result['From'], result['To']],
         axes: {
           y: { pixelsPerLabel: 15,
                axisLabelWidth: 34,
-               valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">' + PowerChartUnits + '</em>';
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-               }
+               valueFormatter: function (x) { return Round2(ScaleArrayToUnits(x, PowerChartUnits)) + ' <em class="x-small">' + PowerChartUnits + 'W</em>'; },
+               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -2px">' + Round2(ScaleArrayToUnits(x, PowerChartUnits)) + '</div>'; }
              },
-          x: { valueFormatter: function (x) {
-                 var date = new Date(x);
-                 return date.toLocaleTimeString();
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -4px">' + x.toLocaleTimeString() + '</div>';
-               }
+          x: { valueFormatter: function (x) { return new Date(x).toLocaleTimeString(); },
+               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -4px">' + x.toLocaleTimeString() + '</div>'; }
              }
         }
       }
@@ -351,8 +192,12 @@ function AjaxPower(result) {
   } else {
     PowerChart.updateOptions({file: PowerData, dateWindow: [result['From'], result['To']]});
   }
-  SetPowerVisibleSeries();
+  PowerSeries();
 }
+function PowerSeries(event) {
+  GraphPhaseButtons(PowerChart, $('#groupPowerPhases'), 'VisibleDashboardPowerPhases', false, function(series) { return CalcRanges(CurrentData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
+}
+$('#groupPowerPhases').on('click', 'button', PowerSeries);
 function SetPowerVisibleSeries() {
   if(Nodes['Devices'][Node]['Type'] == '3Phase') {
     var ShowR = (localStorage.getItem('ShowDashboardPowerR') === 'true');
@@ -416,9 +261,7 @@ function ChoosePowerChannels() {
   localStorage.setItem('ShowDashboardPowerT', ShowT);
   SetPowerVisibleSeries();
 }
-$('#btnShowPowerRPhase').click(ChoosePowerChannels);
-$('#btnShowPowerSPhase').click(ChoosePowerChannels);
-$('#btnShowPowerTPhase').click(ChoosePowerChannels);
+
 $('#btnMaximizePower').click(function() {
   $('#GraphDialogTitle').text('Power');
   $('#GraphDialog').modal('show');
@@ -444,66 +287,29 @@ var LastFrequencySample = 0;
 var FrequencyData       = [];
 var FrequencySpinner    = new Spinner(SpinnerOpts);
 function AjaxGetFrequency() {
-  if(LastFrequencySample === 0) ShowSpinner(FrequencySpinner, 'FrequencySpinner');
-  $.ajax({ url: "getSeries",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: 7200000, To: 0, Aggreg: "3s", LastSample: LastFrequencySample, Series: 'freq', Node: Nodes[Node].ID }),
-           success: AjaxFrequency,
-           complete: function() { setTimeout(AjaxGetFrequency, 5000); }
-        });
+  GetSeries(7200000, 0, "3s", LastFrequencySample, 'freq', AjaxFrequency, function() { setTimeout(AjaxGetFrequency, 5000); });
 }
 function AjaxFrequency(result) {
   if((result === null) || (result['Sampletime'] === null)) return;
   if(LastFrequencySample === 0) StopSpinner(FrequencySpinner, 'FrequencySpinner');
   if(result['Sampletime'][0] <= LastFrequencySample) return;
   for(i = 0; i < result['Sampletime'].length; i++) FrequencyData.push([new Date(result['Sampletime'][i]), result['freq'][i]]);
-  while(FrequencyData.length > result['MaxSamples']) FrequencyData.shift();
-  LastFrequencySample = result['Sampletime'][result['Sampletime'].length - 1];
+  ShiftArray(FrequencyData, result['MaxSamples']);
+  LastFrequencySample = LastSampletime(result);
   $('#labelFrequency').html(Round2(result['freq'][result['freq'].length - 1]));
   $('#FrequencyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(FrequencyChart == null) {
-    FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"),
-      FrequencyData,
-      { strokeWidth: 0.5,
-        labelsDiv: "FrequencyLegend",
-        labels: ["Time", "Frequency"],
-        stepPlot: true,
-        drawGapEdgePoints: true,
-        connectSeparatedPoints: false,
-        fillGraph: false,
-        colors: ["#5cb85c"],
-        gridLineColor: "#999",
-        gridLinePattern: [4, 4],
-        animatedZooms: true,
-        rollPeriod: 0,
-        plugins: [
-          new Dygraph.Plugins.Crosshair({
-            direction: "vertical"
-          })
-        ],
-        valueRange: CalcRanges(FrequencyData, [1]),
-        dateWindow: [result['From'], result['To']],
-        interactionModel: {},
+    FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"), FrequencyData,
+      { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#999", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
+        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
+        labelsDiv: "FrequencyLegend", labels: ["Time", "Frequency"], colors: ["#5cb85c"], valueRange: CalcRanges(FrequencyData, [1]), dateWindow: [result['From'], result['To']],
         axes: {
-          y: { pixelsPerLabel: 15,
-               axisLabelWidth: 34,
-               valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">Hz</em>';
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-               }
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
+               valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">Hz</em>'; },
+               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>'; }
              },
-          x: { valueFormatter: function (x) {
-                 var date = new Date(x);
-                 return date.toLocaleTimeString();
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -4px">' + x.toLocaleTimeString() + '</div>';
-               }
+          x: { valueFormatter: function (x) { return new Date(x).toLocaleTimeString(); },
+               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -4px">' + x.toLocaleTimeString() + '</div>'; }
              }
         }
       }
@@ -1221,60 +1027,13 @@ $('#GraphDialogClose').click(function() {
 
 
 function UpdatePage() {
-  if(Nodes[Node]['Mode'] === '3PHASE') {
-    $('#btnShowEnergyRPhase').removeClass('disabled');
-    $('#btnShowEnergySPhase').removeClass('disabled');
-    $('#btnShowEnergyTPhase').removeClass('disabled');
-    var ShowR = (localStorage.getItem('ShowR') === 'true');
-    var ShowS = (localStorage.getItem('ShowS') === 'true');
-    var ShowT = (localStorage.getItem('ShowT') === 'true');
-    if((ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
-    localStorage.setItem('ShowR', (ShowR === true)); 
-    localStorage.setItem('ShowS', (ShowS === true));
-    localStorage.setItem('ShowT', (ShowT === true));
-    $('#btnShowVoltageRPhase').removeClass('disabled');
-    $('#btnShowVoltageSPhase').removeClass('disabled');
-    $('#btnShowVoltageTPhase').removeClass('disabled');
-    var ShowDashboardVoltageR = (localStorage.getItem('ShowDashboardVoltageR') === 'true');
-    var ShowDashboardVoltageS = (localStorage.getItem('ShowDashboardVoltageS') === 'true');
-    var ShowDashboardVoltageT = (localStorage.getItem('ShowDashboardVoltageT') === 'true');
-    if((ShowDashboardVoltageR !== true) && (ShowDashboardVoltageS !== true) && (ShowDashboardVoltageT !== true)) ShowDashboardVoltageR = true;
-    localStorage.setItem('ShowDashboardVoltageR', (ShowDashboardVoltageR === true)); 
-    localStorage.setItem('ShowDashboardVoltageS', (ShowDashboardVoltageS === true));
-    localStorage.setItem('ShowDashboardVoltageT', (ShowDashboardVoltageT === true));
-    $('#btnShowCurrentRPhase').removeClass('disabled');
-    $('#btnShowCurrentSPhase').removeClass('disabled');
-    $('#btnShowCurrentTPhase').removeClass('disabled');
-    $('#btnShowCurrentNPhase').removeClass('disabled');
-    var ShowDashboardCurrentR = (localStorage.getItem('ShowDashboardCurrentR') === 'true');
-    var ShowDashboardCurrentS = (localStorage.getItem('ShowDashboardCurrentS') === 'true');
-    var ShowDashboardCurrentT = (localStorage.getItem('ShowDashboardCurrentT') === 'true');
-    var ShowDashboardCurrentN = (localStorage.getItem('ShowDashboardCurrentN') === 'true');
-    if((ShowDashboardCurrentR !== true) && (ShowDashboardCurrentS !== true) && (ShowDashboardCurrentT !== true) && (ShowDashboardCurrentN !== true)) ShowDashboardCurrentR = true;
-    localStorage.setItem('ShowDashboardCurrentR', (ShowDashboardCurrentR === true)); 
-    localStorage.setItem('ShowDashboardCurrentS', (ShowDashboardCurrentS === true));
-    localStorage.setItem('ShowDashboardCurrentT', (ShowDashboardCurrentT === true));
-    localStorage.setItem('ShowDashboardCurrentN', (ShowDashboardCurrentN === true));
-    $('#btnShowPowerRPhase').removeClass('disabled');
-    $('#btnShowPowerSPhase').removeClass('disabled');
-    $('#btnShowPowerTPhase').removeClass('disabled');
-    var ShowDashboardPowerR = (localStorage.getItem('ShowDashboardPowerR') === 'true');
-    var ShowDashboardPowerS = (localStorage.getItem('ShowDashboardPowerS') === 'true');
-    var ShowDashboardPowerT = (localStorage.getItem('ShowDashboardPowerT') === 'true');
-    if((ShowDashboardPowerR !== true) && (ShowDashboardPowerS !== true) && (ShowDashboardPowerT !== true)) ShowDashboardPowerR = true;
-    localStorage.setItem('ShowDashboardPowerR', (ShowDashboardPowerR === true)); 
-    localStorage.setItem('ShowDashboardPowerS', (ShowDashboardPowerS === true));
-    localStorage.setItem('ShowDashboardPowerT', (ShowDashboardPowerT === true));
-  }
   AjaxGetEnergy();
   AjaxGetEnergyCounters();
-//  UpdateVoltage();
+
 
   AjaxGetVoltage();
-  
-  
   AjaxGetCurrent();
   AjaxGetPower();
   AjaxGetFrequency();
   AjaxGetMainParameters();
-}
+}//1267

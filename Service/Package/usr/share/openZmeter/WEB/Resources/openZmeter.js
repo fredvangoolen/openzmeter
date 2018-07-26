@@ -16,6 +16,11 @@ var VoltageNames;
 var VoltageGraphColors = ["#d9534f", "#534fd9", "#4fd953"];
 /* Current series names and colors */
 var CurrentNames;
+var CurrentGraphColors = ["#428bca", "#42ca81", "#ca428b", "#ca8142"];
+/* Power series names and colors */
+var PowerNames;
+var PowerGraphColors = ["#f0ad4e", "#ad4ef0", "#4ef0ad"];
+
 
 /* offline.js configuration and tools */
 Offline.options = {requests: false};
@@ -52,9 +57,19 @@ function GetSeries(period, to, aggreg, lastsample, series, onSuccess, onCompleti
 function ShiftArray(array, len) {
   while(array.length > len) array.shift();
 }
+
 /* return last timestamp from results obtained with GetSeries and others */
 function LastSampletime(result) {
   return result['Sampletime'][result['Sampletime'].length - 1];
+}
+
+function GraphHBackgroundRanges(ranges, graph, canvas) {
+  ranges.forEach(function(range) {
+    var Top = (range[0] === Infinity) ? 0 : (range[0] === -Infinity) ? canvas.canvas.height : graph.toDomYCoord(range[0]);
+    var Height = ((range[1] === Infinity) ? 0 : (range[1] === -Infinity) ? canvas.canvas.height : graph.toDomYCoord(range[1])) - Top;
+    canvas.fillStyle = range[2];
+    canvas.fillRect(0, Top, canvas.canvas.width, Height);
+  });
 }
 
 /* if called from a button update variable contents to reflect new selections. In all cases update graph visible series */
@@ -78,21 +93,79 @@ function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, s
     var VisibleSeries = [];
     var Visibles = [];
     for(i = 0; i < NumElements; i++) {
-      if(State & Math.pow(2, i)) {
+      if(i >= graph.attributes_.labels_.length) {
+        $(buttongroup.children()[i]).addClass('disabled');
+      } else if(State & Math.pow(2, i)) {
         $(buttongroup.children()[i]).addClass('active');
+        $(buttongroup.children()[i]).removeClass('disabled');
         VisibleSeries.push(true);
         Visibles.push(i + 1);
       } else {
         $(buttongroup.children()[i]).removeClass('active');
+        $(buttongroup.children()[i]).removeClass('disabled');
         VisibleSeries.push(false);
       }
     }
-    VoltageChart.updateOptions({ visibility: VisibleSeries, valueRange: rangechecker(Visibles) });
+    graph.updateOptions({ visibility: VisibleSeries, valueRange: rangechecker(Visibles) });
   } else {
     buttongroup.hide();
-    VoltageChart.updateOptions({ valueRange: rangechecker([1]) });
+    graph.updateOptions({ valueRange: rangechecker([1]) });
   }
 }
+
+/* find max value of array */
+function ArrayMax(array) {
+  var Max = 0;
+  for(i = 0; i < array.length; i++) {
+    Max = Math.max(Max, array[i]);
+  }
+  return Max;
+}
+
+/* Find the max value of graph series data (array of arrays where first column is time) */
+function ArrayGraphMax(array) {
+  var Max = 0;
+  for(i = 0; i < array.length; i++) {
+    for(n = 1; n < array[i].length; n++) {      
+      Max = Math.max(Max, array[i][n]);
+    }
+  }
+  return Max;
+}
+
+/* Scale all values of an array to units ('', 'k', 'M') */
+function ScaleArrayToUnits(array, units) {
+  if(units === '') return array;
+  for(i = 0; i < array.length; i++) {
+    array[i] = ScaleToUnits(array[i], units);
+  }
+  return array;
+}
+
+/* Scale value to units ('', 'k', 'M') */
+function ScaleToUnits(val, units) {
+  if(units === '') return val;
+  if(units === 'k') {
+    return val / 1000;  
+  } else if(units === 'M') {
+    return val / 1000000;  
+  }      
+}
+
+/* Find units for high values of energy*/
+function GetBestUnits(value) {
+  if(value > 1000000) {
+   return 'M';
+  } else if(value > 1000) {
+    return 'k';
+  } else {
+    return '';
+  }
+}
+
+
+
+
 
 
 
@@ -130,7 +203,7 @@ function Array_Round2(values, separator, colors, cadena1, cadena2) {
 }
 
 /* Busca el mejor divisor y unidades para un valor de entrada, ya sea B, kB, MB o GB */
-function GetBestUnits(value) {
+function GetBestUnits2(value) {
   if(value > 1024 * 1024 * 1024) {
     return [1024 * 1024 * 1024, 'GB'];
   } else if(value > 1024 * 1024) {
@@ -142,16 +215,7 @@ function GetBestUnits(value) {
   }
 }
 
-/* Busca el mejor divisor y unidades para un valor de entrada, ya sea en blanco, k, M */
-function GetBestUnitsEnergy(value) {
-  if(value > 1000000) {
-   return [1000000, 'M'];
-  } else if(value > 1000) {
-    return [1000, 'k'];
-  } else {
-    return [1, ''];
-  }
-}
+
 
 /* Formato rapido en multiplos de mil si es necesario */
 function FormatKMG(value, unit, unitK, unitsM, unitsG) {
@@ -398,7 +462,8 @@ function GetNodesCompletes(result) {
 //    AjaxGetIndicatorsB();
 //  }
   VoltageNames = (Nodes[Node]['Mode'] == '1PHASE') ? ['Voltage'] : ['Voltage (R)', 'Voltage (S)', 'Voltage (T)'];
-  CurrentNames;
+  CurrentNames = (Nodes[Node]['Mode'] == '1PHASE') ? ['Current'] : (Nodes[Node]['Mode'] == '3PHASE') ? ['Current (R)', 'Current (S)', 'Current (T)'] : ['Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'];
+  PowerNames   = (Nodes[Node]['Mode'] == '1PHASE') ? ['Power']   : ['Power (R)', 'Power (S)', 'Power (T)'];
   AjaxGetSysStats();
   UpdatePage();
 }
@@ -537,15 +602,6 @@ function CalcRanges(input, cols, fromzero, onlypositive, sum) {
     LowerRange = 0;
   }
   return [LowerRange, UpperRange];  
-}
-
-/* Valor maximo de un array */
-function ArrayMax(array) {
-  var Max = 0;
-  for(i = 0; i < array.length; i++) {
-    if(Math.abs(array[i]) > Max) Max = Math.abs(array[i]);
-  }
-  return Max;
 }
 
 /* Divide por 1000 los valores de entrada de un array */

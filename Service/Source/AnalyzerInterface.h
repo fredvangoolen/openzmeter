@@ -48,6 +48,7 @@ class AnalyzerInterface : protected Database {
   public :
     AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode);
     float        GetNominalVoltage();
+    float        GetNominalFrequency();
     char        *GetID();
     json_object *GetJSONDescriptor();
 };
