@@ -63,6 +63,9 @@ body {
   margin-top: 1px !important;
   margin-bottom: 1px !important;
 }
+.sidenav {
+  height: auto;
+}
 .sidenav-header {
   padding: 5px 10px;
   color: #DDD;

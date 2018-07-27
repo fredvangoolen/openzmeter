@@ -12,10 +12,10 @@ class DeviceInterface {
     pthread_t           pCaptureThread;           //Descriptor del hilo de captura 
     bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes
   protected :
-    void   AddAnalyzer(AnalyzerInterface *analyzer);
+    void AddAnalyzer(AnalyzerInterface *analyzer);
     DeviceInterface();
   public :
-    virtual  ~DeviceInterface();
+    virtual ~DeviceInterface();
   private :
     static DeviceInterface **pDevices;
     static uint8_t           pDevicesCount;
@@ -28,24 +28,3 @@ class DeviceInterface {
     static bool GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
     static bool GetSeriesNowCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
 };
-//----------------------------------------------------------------------------------------------------------------------
-    
-//    float               pSamplerate;              //Velocidad de muestreo
-
-//    ChannelMap_t       *pChannelMappings;         //Desplazamiento de los canales de tension y corriente
-//    float               pMaxCurrent;              //Corriente maxima de los sensores
-//    float               pMinCurrent;              //Corriente minima de los sensores
-
-//    bool   BuffersAlloc(uint8_t voltageChannels, uint8_t currentChannels, float samplerate);
-//    void   BuffersReset();
-//    bool   BuffersAppend(float *voltageSamples, float *CurrentSamples);
-//    void   AddAnalyzer(AnalyzerInterface *analyzer, uint8_t offsetV, uint8_t offsetC);
-
-//    bool      IsActive();
-//    float     GetSamplerate();
-//    float     GetMaxCurrent();
-//    uint32_t   GetAnalyzers();
-//    AnalyzerInterface *GetAnalyzers(uint32_t idx);
-
-//    virtual bool HasAnalyzer(char *id) = 0;
-    

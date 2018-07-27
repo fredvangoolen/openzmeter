@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterCallback((char*)"/getNodes",        DeviceInterface::GetAnalyzersCallback);
   HTTPServer::RegisterCallback((char*)"/getSeries",       DeviceInterface::GetSeriesCallback);
   HTTPServer::RegisterCallback((char*)"/getSeriesAggreg", DeviceInterface::GetSeriesAggregCallback);
-//  HTTPServer::RegisterCallback((char*)"/getSeriesNow",    DeviceInterface::GetSeriesNowCallback);
+  HTTPServer::RegisterCallback((char*)"/getSeriesNow",    DeviceInterface::GetSeriesNowCallback);
  
   HTTPServer::RegisterMapping((char*)"/",                     (char*)"Dashboard.html");
   HTTPServer::RegisterMapping((char*)"/Dashboard",            (char*)"Dashboard.html");

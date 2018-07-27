@@ -2,7 +2,8 @@
  * File:     HTTPServer.h
  * Author:   Eduardo Viciana (20 de marzo de 2017)
  * ---------------------------------------------------------------------------- */
-#pragma once 
+#pragma once
+#include <stdlib.h>
 #include <json-c/json.h>
 #include <microhttpd.h>
 #include "Database.h"
@@ -11,23 +12,12 @@ class HTTPServer {
   public :
   typedef bool (*Func_t)(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
   private :
-//    typedef struct Session {
-//      struct Session *Next;
-//      char            ID[33];
-//      uint32_t        LastSeen;
-//      char           *UserName;
-//      uint32_t        References;
-//    } Session_t;
     typedef struct {
       char           *UserName;
-//      Session_t                *Session;
-//      char                     *URL;
       char                     *PostData;
       size_t                    PostDataLen;
       int                       ResultCode;
       bool                      Deflate;
-//      uint64_t                  StartTime;
-//      uint64_t                  ProcTime;
       Database                 *DB;
       json_object              *JSONReader;
       json_object              *JSONWriter;
@@ -43,10 +33,6 @@ class HTTPServer {
   private:
     static MHD_Daemon     *pDaemon;
     static char           *pFilePath;
-//    static char           *pPassword;
-//    static uint64_t        pLastLogin;
-//    static Session_t      *pSessions;
-//    static pthread_mutex_t pSessionMutex;
     static Callback_t     *pCallbacks;
     static uint32_t        pCallbacksCount;
         static Mapping_t *pMappings;

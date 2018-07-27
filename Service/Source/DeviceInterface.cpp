@@ -235,35 +235,35 @@ bool DeviceInterface::GetSeriesAggregCallback(char *user, json_object *reader, D
   *postdata = db->ExecSentenceJSON(QueryText, resultLen);
   return true;
 }
-//bool DeviceInterface::GetSeriesNowCallback(Database **db, json_object *reader, json_object **writer, char **postdata, size_t *resultLen) {
-//  char *Node = NULL, *Series = NULL;
-//  json_object_object_foreach(reader, JSON_Key, JSON_Val) {
-//    enum json_type JSON_Type = json_object_get_type(JSON_Val);
-//    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
-//      Series = (char*)json_object_get_string(JSON_Val);
-//    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Node") == 0))
-//      Node = (char*)json_object_get_string(JSON_Val);
-//  }
-//  if(Node == NULL) {
-//    *postdata  = (char*)"'Node' param is requiered";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  if(Series == NULL) {
-//    *postdata  = (char*)"'Series' param is requiered";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  for(uint32_t i = 0; i < pDeviceInterfacesCount; i++) {
-//    DeviceInterface *Device = pDeviceInterfaces[i];
-//    for(uint32_t n = 0; n < Device->GetAnalyzers(); n++) {
-//      AnalyzerInterface *Analyzer = Device->GetAnalyzers(n);
-////      if(strcmp(Analyzer->GetID(), Node) == 0) {
-////        *writer = Analyzer->GetJSONCopy(Series);
-////        *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
-////        return true;      
-////      }
-//    }
-//  }
-//  return false;
-//}
+bool DeviceInterface::GetSeriesNowCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+  char *Node = NULL, *Series = NULL;
+  json_object_object_foreach(reader, JSON_Key, JSON_Val) {
+    enum json_type JSON_Type = json_object_get_type(JSON_Val);
+    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
+      Series = (char*)json_object_get_string(JSON_Val);
+    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Node") == 0))
+      Node = (char*)json_object_get_string(JSON_Val);
+  }
+  if(Node == NULL) {
+    *postdata  = (char*)"'Node' param is requiered";
+    *resultLen = strlen(*postdata);
+    return false;
+  }
+  if(Series == NULL) {
+    *postdata  = (char*)"'Series' param is requiered";
+    *resultLen = strlen(*postdata);
+    return false;
+  }
+  for(uint32_t i = 0; i < pDevicesCount; i++) {
+    DeviceInterface *Device = pDevices[i];
+    for(uint32_t n = 0; n < Device->pAnalyzersCount; n++) {
+      AnalyzerInterface *Analyzer = Device->pAnalyzers[n];
+      if(strcmp(Analyzer->GetID(), Node) == 0) {
+        *writer = Analyzer->GetJSONParams(Series);
+        *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
+        return true;      
+      }
+    }
+  }
+  return false;
+}

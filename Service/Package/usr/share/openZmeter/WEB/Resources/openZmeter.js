@@ -46,13 +46,17 @@ function StopSpinner(spinner, container) {
 }
 
 /* getSeries function */
-function GetSeries(period, to, aggreg, lastsample, series, onSuccess, onCompletion) {
+function GetSeries(period, to, aggreg, lastsample, series, onSuccess, onCompletion, onError) {
   $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion,
            data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Node: Nodes[Node].ID } )
            
   });
 }
-
+function GetSeriesNow(series, onSuccess, onCompletion, onError) {
+  $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json',
+           data: JSON.stringify( { Series: series, Node: Nodes[Node].ID} ),
+  });
+}
 /* remove old items from array*/
 function ShiftArray(array, len) {
   while(array.length > len) array.shift();
@@ -271,17 +275,16 @@ function Round2Plain(value) {
 }
 
 
-/* Actualiza el texto de la cabecera y lanza una nueva llamada de forma periodica */
-function AjaxGetIndicators() {
-  $.ajax({ url: "getSeriesNow",
-    timeout: 20000,
-    type: "POST",
-    dataType: "json",
-    contentType: 'application/json',
-    data: JSON.stringify({ Series: 'rms_v, rms_i, active_power, freq', Node: Nodes['Devices'][Node].ID}),
-    success: function(result) {
+/* Update header info periodicaly */
+function GetIndicators() {
+  GetSeriesNow('rms_v, flag', 
+    function(result) {
       var Time = new Date(result['Sampletime']);
       $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
+      $('#IndicatorVoltageValues').html("");
+      for(i = 0; i < result['rms_v'].length; i++) {
+        $('#IndicatorVoltageValues').append('<span class="value">' + Round2(result['rms_v'][i]) + '</span>');
+      }
       $('#VoltageIndicator').html(Array_Round2(result['rms_v'], ' | '));
       $('#CurrentIndicator').html(Array_Round2(result['rms_i'], ' | '));
       var Units = 'W';
@@ -297,18 +300,22 @@ function AjaxGetIndicators() {
       $('#PowerIndicator').html(Array_Round2(result['active_power'], ' | ', ''));
       $('#FrequencyIndicator').html(Round2(result['freq']) + ' Hz');
     },
-    error: function() {
+    function() { 
+      setTimeout(GetIndicators, 5000); 
+    }, 
+    function() {
       $('#VoltageIndicator').text('Offline');
       $('#CurrentIndicator').text('Offline');
       $('#PowerIndicator').text('Offline');
       $('#FrequencyIndicator').text('Offline');
-      $('NodeTime').text('Offline');
-    },
-    complete: function() {
-      setTimeout(AjaxGetIndicators, 3000);
+      $('NodeTime').text('Offline');   
     }
- });
+  );
 }
+
+
+
+
 function AjaxGetIndicatorsB() {
   var From = GetDayTimestamp();
  $.ajax({ url: "getSeriesAggreg",
@@ -316,7 +323,7 @@ function AjaxGetIndicatorsB() {
     type: "POST",
     dataType: "json",
     contentType: 'application/json',
-    data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: '1m', Period: 86400000, To: From + 86400000, Node: Nodes['Devices'][Node].ID }),
+    data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: '1m', Period: 86400000, To: From + 86400000, Node: Nodes[Node].ID }),
     success: function(result) {
       var Units = 'Wh';
       for(i = 0; i < result['sum_active_energy'].length; i++) {
@@ -457,10 +464,10 @@ function GetNodesCompletes(result) {
 //    localStorage.setItem('SelNode', this.id.replace('Node_', ''));
 //    location.reload(false);
 //  });
-//  if(result['Devices'].length != 0) {
-//    AjaxGetIndicators();
-//    AjaxGetIndicatorsB();
-//  }
+  if(Nodes.length !== 0) {
+    GetIndicators();
+    AjaxGetIndicatorsB();
+  }
   VoltageNames = (Nodes[Node]['Mode'] == '1PHASE') ? ['Voltage'] : ['Voltage (R)', 'Voltage (S)', 'Voltage (T)'];
   CurrentNames = (Nodes[Node]['Mode'] == '1PHASE') ? ['Current'] : (Nodes[Node]['Mode'] == '3PHASE') ? ['Current (R)', 'Current (S)', 'Current (T)'] : ['Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'];
   PowerNames   = (Nodes[Node]['Mode'] == '1PHASE') ? ['Power']   : ['Power (R)', 'Power (S)', 'Power (T)'];

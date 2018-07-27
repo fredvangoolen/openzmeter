@@ -246,21 +246,6 @@ function SetPowerVisibleSeries() {
     });
   PowerChart.setAnnotations(Annotations);
 }
-function ChoosePowerChannels() {
-  var ShowR = (localStorage.getItem('ShowDashboardPowerR') === 'true');
-  var ShowS = (localStorage.getItem('ShowDashboardPowerS') === 'true');
-  var ShowT = (localStorage.getItem('ShowDashboardPowerT') === 'true');
-  if(this.innerText === 'R') ShowR = !ShowR;
-  if(this.innerText === 'S') ShowS = !ShowS;
-  if(this.innerText === 'T') ShowT = !ShowT;
-  if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
-  if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowS = true;
-  if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowT = true;
-  localStorage.setItem('ShowDashboardPowerR', ShowR);
-  localStorage.setItem('ShowDashboardPowerS', ShowS);
-  localStorage.setItem('ShowDashboardPowerT', ShowT);
-  SetPowerVisibleSeries();
-}
 
 $('#btnMaximizePower').click(function() {
   $('#GraphDialogTitle').text('Power');
@@ -927,12 +912,6 @@ function AjaxMainParameters(result) {
   }
 }
 
-
-
-
-
-
-
 var DialogElement           = null;
 var PrevDialogContainer     = null;
 var DialogResizeHandler     = null;
@@ -946,76 +925,11 @@ var DialogPrevResizeHandler = null;
 
 var MainParamSpinner    = new Spinner(SpinnerOpts);
 
-function AjaxSuccess5S(result) {
-  if(result != null && Object.keys(result).length > 0) {
-    if(result['sampletime'][0] <= LastTimestamp) return;
-    for(i = 0; i < result['sampletime'].length; i++) {
-//      VoltageData.push([new Date(result['sampletime'][i] * 1000), result['rms_v'][i][0]]);
-//      CurrentData.push([new Date(result['sampletime'][i] * 1000), result['rms_i'][i][0]]);
-//      PowerData.push([new Date(result['sampletime'][i] * 1000), result['active_power'][i][0]]);
-//      FrequencyData.push([new Date(result['sampletime'][i] * 1000), result['freq'][i]]);
-//      while(VoltageData.length > result['max_samples'])   VoltageData.shift();
-//      while(CurrentData.length > result['max_samples'])   CurrentData.shift();
-//      while(PowerData.length > result['max_samples'])     PowerData.shift();
-//      while(FrequencyData.length > result['max_samples']) FrequencyData.shift();
-//      LastTimestamp = result['sampletime'][i];
-    }
-//    UpdateVoltageChart(result);
-//    UpdateCurrentChart(result);
-//    UpdatePowerChart(result);
-//    UpdateFrequencyChart(result);
-    result.lastVoltage = VoltageData[VoltageData.length - 1][1];
-    result.lastCurrent = CurrentData[CurrentData.length - 1][1];
-    result.lastPower = PowerData[PowerData.length - 1][1];
-    result.lastFrequency = FrequencyData[FrequencyData.length - 1][1];
-  }
-  UpdateHeader(result);
-}
 
-
-
-
-
-function AjaxSuccess60S(result) {
-
-  UpdateHeader(result);
-}
 $('#aggreg_modal_close').click(function() {
   $('#aggreg_modal').modal('hide');
 });
 
-
-
-$('#maximizePower').click(function() {
-  $('#GraphDialogTitle').text('Active power');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#PowerCol');
-  DialogElement = $('#PowerMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(PowerChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    PowerChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-$('#maximizeFrequency').click(function() {
-  $('#GraphDialogTitle').text('Frequency');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#FrequencyCol');
-  DialogElement = $('#FrequencyMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(FrequencyChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    FrequencyChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
 $('#GraphDialogClose').click(function() {
   $(window).unbind('resize', DialogResizeHandler);
   $(window).bind('resize', DialogPrevResizeHandler);
@@ -1029,8 +943,6 @@ $('#GraphDialogClose').click(function() {
 function UpdatePage() {
   AjaxGetEnergy();
   AjaxGetEnergyCounters();
-
-
   AjaxGetVoltage();
   AjaxGetCurrent();
   AjaxGetPower();

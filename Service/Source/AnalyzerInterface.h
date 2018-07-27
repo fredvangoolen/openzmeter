@@ -18,11 +18,6 @@ class AnalyzerInterface : protected Database {
       float      Active_Power[3];               //Potencia activa (P)
       float      Apparent_Power[3];             //Potencia aparente (S)
       float      Power_Factor[3];               //Factor de potencia (cos(PHI))
-      float      Fundamental_Active_Power[3];   //Potencia activa del primer armonico (P_1)
-      float      Fundamental_Apparent_Power[3]; //Potencia aparente fundamental (S_1)
-      float      Fundamental_Reactive_Power[3]; //Potencia reactiva fundamental (Q_1)
-      float      Fundamental_Reactive_Energy[3];//Energia reactiva
-      float      Fundamental_Power_Factor[3];   //Factor de potencia fundamental
       float      Active_Energy[3];              //Energia consumida
       float      Frequency;                     //Frecuencia
       bool       Flag;                          //Periodo marcado
@@ -32,6 +27,12 @@ class AnalyzerInterface : protected Database {
       float      CurrentHarmonics[4][50];       //Armonicos del canal de corriente
       float      Phi[3];                        //Angulo de Phi
     } Params_t;
+    typedef struct {
+      float     *Voltage[3];
+      float     *Current[4];
+      float     *FFT_V[3];
+      float     *FFT_i[4];
+    } ExtParams_t;
   protected :
     char         *pID;
     float         pNominalVoltage;
@@ -45,10 +46,13 @@ class AnalyzerInterface : protected Database {
     void AccumulateAggreg(Params_t *dst, Params_t *src);
     void NormalizeAggreg(Params_t *params);
     void ResetAggreg(Params_t *params);
+  protected :
+    virtual void GetParams(Params_t **params, ExtParams_t **extParams) = 0;
   public :
     AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode);
     float        GetNominalVoltage();
     float        GetNominalFrequency();
     char        *GetID();
     json_object *GetJSONDescriptor();
+    json_object *GetJSONParams(char *series);
 };

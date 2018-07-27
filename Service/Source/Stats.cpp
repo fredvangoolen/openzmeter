@@ -16,7 +16,6 @@ Stats::Stats(uint8_t channels, Database *db, float volt, float freq) {
   pVoltage   = (uint16_t*)malloc((sizeof(VoltageRanges) / sizeof(float) - 1) * sizeof(uint16_t));
   pFrequency = (uint16_t*)malloc((sizeof(FrequencyRanges) / sizeof(float) - 1) * sizeof(uint16_t));
   pTHD       = (uint16_t*)malloc((sizeof(THDRanges) / sizeof(float) - 1) * sizeof(uint16_t));
-//  pDB->ExecSentence("PREPARE SAVE_STATS AS INSERT INTO aggreg_stat_1h (sampletime_ext, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES($1, $2, $3, $4, $5)");
   ResetStats();
 }
 void Stats::ResetStats() {
@@ -26,7 +25,7 @@ void Stats::ResetStats() {
   memset(pHarmonics, 0, 2 * sizeof(uint16_t));
 }
 void Stats::SaveStats(uint64_t timestamp) {
-  pDB->PrepareSentence("SAVE_STATS(?, ?, ?, ?, ?)");
+  pDB->PrepareSentence("INSERT INTO aggreg_stat_1h(sampletime_ext, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(?, ?, ?, ?, ?)");
   pDB->BindSingleUInt64(timestamp);
   pDB->BindArrayUInt16(pVoltage, sizeof(VoltageRanges) / sizeof(float) - 1);     //estadisticas de tension
   pDB->BindArrayUInt16(pFrequency, sizeof(FrequencyRanges) / sizeof(float) - 1); //estadisticas de frequencia

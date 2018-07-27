@@ -47,7 +47,7 @@ function AjaxGetVoltage() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastVoltageSample, Series: 'rms_v', Node: Nodes['Devices'][Node].ID}),
+           data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastVoltageSample, Series: 'rms_v', Node: Nodes[Node].ID}),
            success: AjaxVoltage,
            complete: function() { 
              AjaxGetEvents(Period, GraphEnd, Node);
@@ -70,7 +70,7 @@ function AjaxVoltage(result) {
       VoltageData,
       { strokeWidth: 1,
         labelsDiv: "VoltageLegend",
-        labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)'] :['Time', 'Voltage'],
+        labels: (Nodes[Node]['Type'] == '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)'] :['Time', 'Voltage'],
         stepPlot: true,
         fillGraph: false,
         colors: ["#d9534f", "#534fd9", "#4fd953"],
@@ -200,7 +200,7 @@ function VoltageResizeEvent() {
   VoltageChart.resize($('#VoltageCol').width(), Height - 4);
 }
 function SetVoltageVisibleSeries() {
-  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
+  if(Nodes[Node]['Type'] == '3Phase') {
     var ShowR = (localStorage.getItem('ShowR') === 'true');
     var ShowS = (localStorage.getItem('ShowS') === 'true');
     var ShowT = (localStorage.getItem('ShowT') === 'true');
@@ -320,7 +320,7 @@ $('#btnMaximizeVoltage').click(function() {
   window.dispatchEvent(new Event('resize'));  
 });
 $('#btnExportVoltage').click(function() {
-  exportToCsv("Voltage_" + Node + '_' + LastVoltageSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Voltage R', 'Voltage S', 'Voltage T']] : [['DateTime', 'Voltage']]).concat(VoltageData));
+  exportToCsv("Voltage_" + Node + '_' + LastVoltageSample + '.csv', ((Nodes[Node]['Type'] == '3Phase') ? [['DateTime', 'Voltage R', 'Voltage S', 'Voltage T']] : [['DateTime', 'Voltage']]).concat(VoltageData));
 });
 
 /* Contadores de voltage */
@@ -354,7 +354,7 @@ function AjaxGetVoltageCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(rms_v), max(rms_v), min(rms_v)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Nodes['Devices'][Node].ID }),
+           data: JSON.stringify({ Series: "avg(rms_v), max(rms_v), min(rms_v)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Nodes[Node].ID }),
            success: VoltageUpdateCountersCurrent
   });
   $.ajax({ url: "getSeriesAggreg",
@@ -362,7 +362,7 @@ function AjaxGetVoltageCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(rms_v), max(rms_v), min(rms_v)", Aggreg: Aggreg, Period: Period, To: Current, Node: Nodes['Devices'][Node].ID }),
+           data: JSON.stringify({ Series: "avg(rms_v), max(rms_v), min(rms_v)", Aggreg: Aggreg, Period: Period, To: Current, Node: Nodes[Node].ID }),
            success: VoltageUpdateCountersPrevs
   });
 }
@@ -453,7 +453,7 @@ function AjaxGetDetails() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_v, phi, rms_v, rms_i', Node: Nodes['Devices'][Node].ID}),
+           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_v, phi, rms_v, rms_i', Node: Nodes[Node].ID}),
            success: function(result) {
              if(WaveformChart === null) StopSpinner(DetailSpinner, 'DetailSpinner');
              DetailTimestamp = result['Sampletime'];
@@ -566,7 +566,7 @@ function DetailsButtonClick(event) {
       break;
   }
   
-  if((Nodes['Devices'][Node]['Type'] !== '3Phase') || (localStorage.getItem('VoltageDetailView') === 'Events')) {
+  if((Nodes[Node]['Type'] !== '3Phase') || (localStorage.getItem('VoltageDetailView') === 'Events')) {
     $('#btnShowDetailRPhase').addClass('disabled');
     $('#btnShowDetailSPhase').addClass('disabled');
     $('#btnShowDetailTPhase').addClass('disabled');
@@ -579,7 +579,7 @@ function DetailsButtonClick(event) {
   $('#btnShowDetailRPhase').removeClass('active');
   $('#btnShowDetailSPhase').removeClass('active');
   $('#btnShowDetailTPhase').removeClass('active');
-  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+  if(Nodes[Node]['Type'] === '3Phase') {
     switch(localStorage.getItem('VoltageDetailView')) {
       case 'Waveform' :
       case 'Harmonics' :
@@ -719,7 +719,7 @@ function UpdateWaveformChart(result) {
     $('#WaveformTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
     WaveformDataset = [];
     for(i = 0; i < result['wave_v'][0].length; i++) {
-      if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+      if(Nodes[Node]['Type'] === '3Phase') {
         WaveformDataset.push([i, result['wave_v'][0][i], result['wave_v'][1][i], result['wave_v'][2][i], result['wave_i'][0][i], result['wave_i'][1][i], result['wave_i'][2][i]]);
       } else {
         WaveformDataset.push([i, result['wave_v'][0][i], result['wave_i'][0][i]]);      
@@ -733,7 +733,7 @@ function UpdateWaveformChart(result) {
   var VoltageSeries = [];
   var CurrentSeries = [];
   var Visibility    = [];
-  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+  if(Nodes[Node]['Type'] === '3Phase') {
     if(ShowR) VoltageSeries.push(1);
     if(ShowS) VoltageSeries.push(2);
     if(ShowT) VoltageSeries.push(3);
@@ -751,8 +751,8 @@ function UpdateWaveformChart(result) {
   var Options = { 
     strokeWidth: 1,
     labelsDiv: "WaveformLegend",  
-    labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)', 'Current (R)', 'Current (S)', 'Current (T)'] : ['Time', 'Voltage', 'Current'],
-    colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#534fd9', '#4fd953', '#428bca', '#42ca81', '#ca428b'] : ['#d9534f', '#428bca'],
+    labels: (Nodes[Node]['Type'] === '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)', 'Current (R)', 'Current (S)', 'Current (T)'] : ['Time', 'Voltage', 'Current'],
+    colors: (Nodes[Node]['Type'] === '3Phase') ? ['#d9534f', '#534fd9', '#4fd953', '#428bca', '#42ca81', '#ca428b'] : ['#d9534f', '#428bca'],
     visibility: Visibility,
     gridLineColor: "#999",
     gridLinePattern: [4, 4],
@@ -762,7 +762,7 @@ function UpdateWaveformChart(result) {
     rangeSelectorPlotStrokeColor: "#d9534f",
     xAxisHeight: 10,
     interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
-    series: (Nodes['Devices'][Node]['Type'] === '3Phase') ? { 'Voltage (R)': { showInRangeSelector: true }, 'Current (R)': { axis: 'y2' }, 'Current (S)': { axis: 'y2' }, 'Current (T)': { axis: 'y2'  } } : { 'Voltage': { showInRangeSelector: true }, 'Current': { axis: 'y2' } },
+    series: (Nodes[Node]['Type'] === '3Phase') ? { 'Voltage (R)': { showInRangeSelector: true }, 'Current (R)': { axis: 'y2' }, 'Current (S)': { axis: 'y2' }, 'Current (T)': { axis: 'y2'  } } : { 'Voltage': { showInRangeSelector: true }, 'Current': { axis: 'y2' } },
     plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
     axes: {
       y: { pixelsPerLabel: 15,
@@ -791,13 +791,13 @@ function UpdateWaveformChart(result) {
           },
       x: { ticker: function(min, max, pixels, opts, dygraph, vals) {
              var ticks = [];
-             for(var i = 1; i <= Math.floor(max / Nodes['Devices'][Node]['SampleFreq'] * Nodes['NominalFreq']); i++) {
-               ticks.push({ v: i * Nodes['Devices'][Node]['SampleFreq'] / Nodes['NominalFreq'], label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + Round2(i / Nodes['NominalFreq'] * 1000) + '</div>' });
+             for(var i = 1; i <= Math.floor(max / Nodes[Node]['SampleFreq'] * Nodes['NominalFreq']); i++) {
+               ticks.push({ v: i * Nodes[Node]['SampleFreq'] / Nodes['NominalFreq'], label: '<div style="font-size: 10px; margin-top: -2px; text-align: center">' + Round2(i / Nodes['NominalFreq'] * 1000) + '</div>' });
              }
              return ticks;
            },
            valueFormatter: function (x) {
-             return Round2((x * 1000) / Nodes['Devices'][Node]['SampleFreq']) + ' <em class="x-small">ms</em>';
+             return Round2((x * 1000) / Nodes[Node]['SampleFreq']) + ' <em class="x-small">ms</em>';
            }
          }
     }
@@ -821,7 +821,7 @@ function UpdateHarmonicsChart(result) {
     $('#HarmonicsTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
     HarmonicsDataset = [];
     for(i = 0; i < result['harmonics_v'][0].length; i++) {
-      if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+      if(Nodes[Node]['Type'] === '3Phase') {
         HarmonicsDataset.push([result['harmonics_v'][0][i], result['harmonics_v'][1][i], result['harmonics_v'][2][i], result['harmonics_i'][0][i], result['harmonics_i'][1][i], result['harmonics_i'][2][i]]);
       } else {
         HarmonicsDataset.push([result['harmonics_v'][0][i], result['harmonics_i'][0][i]]);      
@@ -835,7 +835,7 @@ function UpdateHarmonicsChart(result) {
   var VoltageSeries = [];
   var CurrentSeries = [];
   var Visibility    = [];
-  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+  if(Nodes[Node]['Type'] === '3Phase') {
     if(ShowR) VoltageSeries.push(0);
     if(ShowS) VoltageSeries.push(1);
     if(ShowT) VoltageSeries.push(2);
@@ -859,7 +859,7 @@ function UpdateHarmonicsChart(result) {
   HarmonicsVOffset = (VoltageRange[0] < 0.0) ? -VoltageRange[0] : 0.0;
   HarmonicsCOffset = (CurrentRange[0] < 0.0) ? -CurrentRange[0] : 0.0;
   for(i = 0; i < ToShow.length; i++) {
-    if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+    if(Nodes[Node]['Type'] === '3Phase') {
       ToShow[i] = [i, ToShow[i][0] + HarmonicsVOffset, ToShow[i][1] + HarmonicsVOffset, ToShow[i][2] + HarmonicsVOffset, ToShow[i][3] + HarmonicsCOffset, ToShow[i][4] + HarmonicsCOffset, ToShow[i][5] + HarmonicsCOffset];
     } else {
       ToShow[i] = [i, ToShow[i][0] + HarmonicsVOffset, ToShow[i][1] + HarmonicsCOffset];
@@ -868,15 +868,15 @@ function UpdateHarmonicsChart(result) {
   var Options = { 
     strokeWidth: 1,
     labelsDiv: "HarmonicsLegend",  
-    labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)', 'Current (R)', 'Current (S)', 'Current (T)'] : ['Time', 'Voltage', 'Current'],
-    colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#534fd9', '#4fd953', '#428bca', '#42ca81', '#ca428b'] : ['#d9534f', '#428bca'],
+    labels: (Nodes[Node]['Type'] === '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)', 'Current (R)', 'Current (S)', 'Current (T)'] : ['Time', 'Voltage', 'Current'],
+    colors: (Nodes[Node]['Type'] === '3Phase') ? ['#d9534f', '#534fd9', '#4fd953', '#428bca', '#42ca81', '#ca428b'] : ['#d9534f', '#428bca'],
     visibility: Visibility,  
     plotter: multiColumnBarPlotter,
     dateWindow: [-0.5, (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 49.5 : 48.5],
     gridLineColor: "#999",
     gridLinePattern: [4, 4],
     interactionModel: { },
-    series: (Nodes['Devices'][Node]['Type'] === '3Phase') ? { 'Current (R)': { axis: 'y2' }, 'Current (S)': { axis: 'y2' }, 'Current (T)': { axis: 'y2'  } } : { 'Current': { axis: 'y2' } },
+    series: (Nodes[Node]['Type'] === '3Phase') ? { 'Current (R)': { axis: 'y2' }, 'Current (S)': { axis: 'y2' }, 'Current (T)': { axis: 'y2'  } } : { 'Current': { axis: 'y2' } },
     axes: { 
       y: { pixelsPerLabel: 15,
            axisLabelWidth: 20,
@@ -940,7 +940,7 @@ function UpdateFFTChart(result) {
     $('#FFTTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
     FFTDataset = [];
     for(i = 0; i < result['fft_v'][0].length; i++) {
-      if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+      if(Nodes[Node]['Type'] === '3Phase') {
         FFTDataset.push([result['fft_v'][0][i], result['fft_v'][1][i], result['fft_v'][2][i], result['fft_i'][0][i], result['fft_i'][1][i], result['fft_i'][2][i]]);
       } else {
         FFTDataset.push([result['fft_v'][0][i], result['fft_i'][0][i]]);
@@ -954,7 +954,7 @@ function UpdateFFTChart(result) {
   var VoltageSeries = [];
   var CurrentSeries = [];
   var Visibility    = [];
-  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+  if(Nodes[Node]['Type'] === '3Phase') {
     if(ShowR) VoltageSeries.push(0);
     if(ShowS) VoltageSeries.push(1);
     if(ShowT) VoltageSeries.push(2);
@@ -977,7 +977,7 @@ function UpdateFFTChart(result) {
   FFTVOffset = (VoltageRange[0] < 0.0) ? -VoltageRange[0] : 0.0;
   FFTCOffset = (CurrentRange[0] < 0.0) ? -CurrentRange[0] : 0.0;
   for(i = 0; i < ToShow.length; i++) {
-    if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+    if(Nodes[Node]['Type'] === '3Phase') {
       ToShow[i] = [i, ToShow[i][0] + FFTVOffset, ToShow[i][1] + FFTVOffset, ToShow[i][2] + FFTVOffset, ToShow[i][3] + FFTCOffset, ToShow[i][4] + FFTCOffset, ToShow[i][5] + FFTCOffset];
     } else {
       ToShow[i] = [i, ToShow[i][0] + FFTVOffset, ToShow[i][1] + FFTCOffset];
@@ -986,8 +986,8 @@ function UpdateFFTChart(result) {
   var Options = { 
     strokeWidth: 1,
     labelsDiv: "FFTLegend",  
-    labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)', 'Current (R)', 'Current (S)', 'Current (T)'] : ['Time', 'Voltage', 'Current'],
-    colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#534fd9', '#4fd953', '#428bca', '#42ca81', '#ca428b'] : ['#d9534f', '#428bca'],
+    labels: (Nodes[Node]['Type'] === '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)', 'Current (R)', 'Current (S)', 'Current (T)'] : ['Time', 'Voltage', 'Current'],
+    colors: (Nodes[Node]['Type'] === '3Phase') ? ['#d9534f', '#534fd9', '#4fd953', '#428bca', '#42ca81', '#ca428b'] : ['#d9534f', '#428bca'],
     visibility: Visibility,
     fillGraph: true,
     gridLineColor: "#999",
@@ -997,7 +997,7 @@ function UpdateFFTChart(result) {
     rangeSelectorPlotFillColor: "#FFFFFF",
     rangeSelectorPlotStrokeColor: "#d9534f",
     interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
-    series: (Nodes['Devices'][Node]['Type'] === '3Phase') ? { 'Voltage (R)': { showInRangeSelector: true }, 'Current (R)': { axis: 'y2' }, 'Current (S)': { axis: 'y2' }, 'Current (T)': { axis: 'y2'  } } : { 'Current': { axis: 'y2' } },
+    series: (Nodes[Node]['Type'] === '3Phase') ? { 'Voltage (R)': { showInRangeSelector: true }, 'Current (R)': { axis: 'y2' }, 'Current (S)': { axis: 'y2' }, 'Current (T)': { axis: 'y2'  } } : { 'Current': { axis: 'y2' } },
     plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
     axes: { 
       y: { pixelsPerLabel: 15,
@@ -1133,7 +1133,7 @@ function UpdatePhasorChart(result) {
   PhasorTable.clear();
   for(i = 0; i < result['rms_v'].length; i++) {
     var PhaseName = "L";
-    if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+    if(Nodes[Node]['Type'] === '3Phase') {
       if(i === 0) PhaseName = "R";
       if(i === 1) PhaseName = "S";
       if(i === 2) PhaseName = "T";
@@ -1159,7 +1159,7 @@ function AjaxGetEvolution() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: '1m', LastSample: LastEvolutionSample, Series: 'power_factor, thd_v, phi, harmonics_v', Node: Nodes['Devices'][Node].ID}),
+           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: '1m', LastSample: LastEvolutionSample, Series: 'power_factor, thd_v, phi, harmonics_v', Node: Nodes[Node].ID}),
            success: AjaxEvolutions,
            complete: function() { 
              setTimeout(AjaxGetEvolution, 60000);
@@ -1462,7 +1462,7 @@ function AjaxGetEvents(period, to, node) {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: period, To: to, LastEvent: LastEventStartTime, Node: Nodes['Devices'][Node].ID}),
+           data: JSON.stringify({ Period: period, To: to, LastEvent: LastEventStartTime, Node: Nodes[Node].ID}),
            success: AjaxEvents,
            complete: function() { 
              $('#btnVoltageNow').removeClass('disabled');
@@ -1484,18 +1484,18 @@ function AjaxEvents(result) {
   if(result['Starttime'] !== null) {
     for(i = 0; i < result['Starttime'].length; i++) {
       var Time = new Date(result['Starttime'][i]);
-      var RowText = $('<tr>').append('<td data-search="' + result['Starttime'][i] + '">' + Time.toLocaleString() + '.' + Time.getMilliseconds() + '</td><td>' + result['Type'][i] + '</td><td>' + Round2(result['Duration'][i] / Nodes['Devices'][Node]['SampleFreq']) + '</td><td>' + Round2(result['Voltage'][i]) + '</td><td>' + Round2(result['Percentage'][i]) + '</td><td><button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button></td>');
+      var RowText = $('<tr>').append('<td data-search="' + result['Starttime'][i] + '">' + Time.toLocaleString() + '.' + Time.getMilliseconds() + '</td><td>' + result['Type'][i] + '</td><td>' + Round2(result['Duration'][i] / Nodes[Node]['SampleFreq']) + '</td><td>' + Round2(result['Voltage'][i]) + '</td><td>' + Round2(result['Percentage'][i]) + '</td><td><button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button></td>');
       EventsTable.row.add(RowText).draw();
       LastEventStartTime = result['Starttime'][i];
       EventsDatasheet.push(result['Starttime'][i]);
     }
   }
   if(EventChart === null) {
-    EventChart = new Dygraph(document.getElementById("EventChart"), (Nodes['Devices'][Node]['Type'] == '3Phase') ? [[0, 0, 0, 0]] : [[0, 0]], {
+    EventChart = new Dygraph(document.getElementById("EventChart"), (Nodes[Node]['Type'] == '3Phase') ? [[0, 0, 0, 0]] : [[0, 0]], {
       strokeWidth: 0.5,
       gridLineColor: "#999",
       gridLinePattern: [4, 4],
-      labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)'] :['Time', 'Voltage'],
+      labels: (Nodes[Node]['Type'] == '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)'] :['Time', 'Voltage'],
       colors: ["#d9534f", "#534fd9", "#4fd953"],
       interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
       labelsDiv: "EventChartLegend"
@@ -1514,7 +1514,7 @@ $("table#EventsTable").on('click', 'button.get_samples', function () {
     type: "POST",
     dataType: "json",
     contentType: 'application/json',
-    data: JSON.stringify({ Node: Nodes['Devices'][Node].ID, Starttime: EventsDatasheet[Row.index()] }),
+    data: JSON.stringify({ Node: Nodes[Node].ID, Starttime: EventsDatasheet[Row.index()] }),
     success: AjaxSamples
   });
 });
@@ -1528,14 +1528,14 @@ function AjaxSamples(result) {
       ToShow.push([i].concat(result['Samples'][i]));
     }
     if((result['Duration'] > result['Envelope'] * 4) && (i === result['Envelope'] * 2)) {
-      for(n = 0; n < 100; n++) ToShow.push([i + n + 1].concat(Nodes['Devices'][Node]['Type'] == '3Phase') ? ['NaN', 'NaN', 'NaN'] : ['NaN']);
+      for(n = 0; n < 100; n++) ToShow.push([i + n + 1].concat(Nodes[Node]['Type'] == '3Phase') ? ['NaN', 'NaN', 'NaN'] : ['NaN']);
     }
   }
   var Options = {
     panEdgeFraction: 0.000000001,
     file: ToShow,
     dateWindow: [0, result['Samples'].length + ((result['Duration'] > result['Envelope'] * 4) ? 100 : 0)],
-    valueRange: CalcRanges(ToShow, (Nodes['Devices'][Node]['Type'] == '3Phase') ? [1, 2, 3] : [1]),
+    valueRange: CalcRanges(ToShow, (Nodes[Node]['Type'] == '3Phase') ? [1, 2, 3] : [1]),
     underlayCallback: function(canvas, area, g) {
       canvas.fillStyle = "#EEE";
       canvas.fillRect(g.toDomXCoord(0), 0, g.toDomXCoord(result['Envelope']) - g.toDomXCoord(0), g.height_);
@@ -1567,7 +1567,7 @@ function AjaxSamples(result) {
         canvas.textBaseline = 'middle';
         canvas.font = "12px sans-serif";
         canvas.fillStyle = "#555";
-        canvas.fillText(Round2Plain((result['Duration'] - result['Envelope'] * 2) / Nodes['Devices'][Node]['SampleFreq']) + " seconds gap", 0 , 0, g.height_);
+        canvas.fillText(Round2Plain((result['Duration'] - result['Envelope'] * 2) / Nodes[Node]['SampleFreq']) + " seconds gap", 0 , 0, g.height_);
         canvas.restore();
       }
       canvas.beginPath();
@@ -1592,30 +1592,30 @@ function AjaxSamples(result) {
         valueFormatter: function (y) {
           var Label = '';
           if((result['Duration'] > result['Envelope'] * 4) && (y <= result['Envelope'] * 2)) {
-            Label = Round2((y - result['Envelope']) / Nodes['Devices'][Node]['SampleFreq'] * 1000);
+            Label = Round2((y - result['Envelope']) / Nodes[Node]['SampleFreq'] * 1000);
           } else if((result['Duration'] > result['Envelope'] * 4) && (y > result['Envelope'] * 3 + 100)) {
-            Label = 'd+' + Round2((y - result['Envelope'] * 3  - 100) / Nodes['Devices'][Node]['SampleFreq'] * 1000);
+            Label = 'd+' + Round2((y - result['Envelope'] * 3  - 100) / Nodes[Node]['SampleFreq'] * 1000);
           } else if((result['Duration'] > result['Envelope'] * 4) && (y > result['Envelope'] * 2 + 100)) {
-            Label = 'd-' + Round2((y - result['Envelope'] * 3  - 100) / Nodes['Devices'][Node]['SampleFreq'] * -1000);
+            Label = 'd-' + Round2((y - result['Envelope'] * 3  - 100) / Nodes[Node]['SampleFreq'] * -1000);
           } else if(result['Duration'] > result['Envelope'] * 4) {
             Label = "";
           } else {
-            Label = Round2((y - result['Envelope']) / Nodes['Devices'][Node]['SampleFreq'] * 1000);
+            Label = Round2((y - result['Envelope']) / Nodes[Node]['SampleFreq'] * 1000);
           }
           return Label + ' ms';
         },
         axisLabelFormatter: function (y) {
           var Label = '';
           if((result['Duration'] > result['Envelope'] * 4) && (y <= result['Envelope'] * 2)) {
-            Label = Round2((y - result['Envelope']) / Nodes['Devices'][Node]['SampleFreq'] * 1000);
+            Label = Round2((y - result['Envelope']) / Nodes[Node]['SampleFreq'] * 1000);
           } else if((result['Duration'] > result['Envelope'] * 4) && (y > result['Envelope'] * 3 + 100)) {
-            Label = 'd+' + Round2((y - result['Envelope'] * 3  - 100) / Nodes['Devices'][Node]['SampleFreq'] * 1000);
+            Label = 'd+' + Round2((y - result['Envelope'] * 3  - 100) / Nodes[Node]['SampleFreq'] * 1000);
           } else if((result['Duration'] > result['Envelope'] * 4) && (y > result['Envelope'] * 2 + 100)) {
-            Label = 'd-' + Round2((y - result['Envelope'] * 3  - 100) / Nodes['Devices'][Node]['SampleFreq'] * -1000);
+            Label = 'd-' + Round2((y - result['Envelope'] * 3  - 100) / Nodes[Node]['SampleFreq'] * -1000);
           } else if(result['Duration'] > result['Envelope'] * 4) {
             Label = "";
           } else {
-            Label = Round2((y - result['Envelope']) / Nodes['Devices'][Node]['SampleFreq'] * 1000);
+            Label = Round2((y - result['Envelope']) / Nodes[Node]['SampleFreq'] * 1000);
           }
           return '<div style="font-size: 10px; margin-top: -4px">' + Label + ' <em class="small">ms</em></div>';
         }
@@ -1631,11 +1631,11 @@ $('#btnExportDetail').click(function () {
   var Data = [];
   var Filename;
   if($('#WaveformPanel').hasClass('hidden') === false) {
-    exportToCsv("Voltage_Waveform_" + Node + '_' + DetailTimestamp + '.csv', ((Nodes['Devices'][Node]['Type'] === '3Phase') ? [['DateTime', 'Voltage R', 'Voltage S', 'Voltage T', 'Current R', 'Current S', 'Current T']] : [['DateTime', 'Voltage', 'Current']]).concat(WaveformDataset));
+    exportToCsv("Voltage_Waveform_" + Node + '_' + DetailTimestamp + '.csv', ((Nodes[Node]['Type'] === '3Phase') ? [['DateTime', 'Voltage R', 'Voltage S', 'Voltage T', 'Current R', 'Current S', 'Current T']] : [['DateTime', 'Voltage', 'Current']]).concat(WaveformDataset));
   } else if($('#FFTPanel').hasClass('hidden') === false) {
-    Data = [['Index'].concat(((Nodes['Devices'][Node]['Type'] === '3Phase') ? ['dB (R)', 'V_rms (R)', 'dB (S)', 'V_rms (S)', 'dB (T)', 'V_rms (T)', 'dB (R)', 'I_rms (R)', 'dB (S)', 'I_rms (S)', 'dB (T)', 'I_rms (T)'] : ['dB', 'V_rms', 'dB', 'I_rms'])).concat('Note: This is the result of our FFT algorithm. The index colum should be multiplied by 5 in order to get the frequencies.')];
+    Data = [['Index'].concat(((Nodes[Node]['Type'] === '3Phase') ? ['dB (R)', 'V_rms (R)', 'dB (S)', 'V_rms (S)', 'dB (T)', 'V_rms (T)', 'dB (R)', 'I_rms (R)', 'dB (S)', 'I_rms (S)', 'dB (T)', 'I_rms (T)'] : ['dB', 'V_rms', 'dB', 'I_rms'])).concat('Note: This is the result of our FFT algorithm. The index colum should be multiplied by 5 in order to get the frequencies.')];
     for(i = 0; i < FFTDataset.length; i++) {
-      if(Nodes['Devices'][Node]['Type'] === '3Phase') {    
+      if(Nodes[Node]['Type'] === '3Phase') {    
         Data.push([i, 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][0])), FFTDataset[i][0], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][1])), FFTDataset[i][1],
                       20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][2])), FFTDataset[i][2], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][3])), FFTDataset[i][3],
                       20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][4])), FFTDataset[i][4], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][5])), FFTDataset[i][5]]);
@@ -1645,9 +1645,9 @@ $('#btnExportDetail').click(function () {
     }
     exportToCsv("Voltage_FFT_" + Node + '_' + DetailTimestamp + '.csv', Data);
   } else if($('#HarmonicsPanel').hasClass('hidden') == false) {
-    Data = [['Harmonic'].concat(((Nodes['Devices'][Node]['Type'] === '3Phase') ? ['dB (R)', 'V_rms (R)', 'dB (S)', 'V_rms (S)', 'dB (T)', 'V_rms (T)', 'dB (R)', 'I_rms (R)', 'dB (S)', 'I_rms (S)', 'dB (T)', 'I_rms (T)'] : ['dB', 'V_rms', 'dB', 'I_rms'])).concat('Note: This is the result of our FFT algorithm.')];
+    Data = [['Harmonic'].concat(((Nodes[Node]['Type'] === '3Phase') ? ['dB (R)', 'V_rms (R)', 'dB (S)', 'V_rms (S)', 'dB (T)', 'V_rms (T)', 'dB (R)', 'I_rms (R)', 'dB (S)', 'I_rms (S)', 'dB (T)', 'I_rms (T)'] : ['dB', 'V_rms', 'dB', 'I_rms'])).concat('Note: This is the result of our FFT algorithm.')];
     for(i = 0; i < HarmonicsDataset.length; i++) {
-      if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+      if(Nodes[Node]['Type'] === '3Phase') {
         Data.push([HarmonicsNames[i], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][0])), HarmonicsDataset[i][0], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][1])), HarmonicsDataset[i][1],
                                       20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][2])), HarmonicsDataset[i][2], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][3])), HarmonicsDataset[i][3],
                                       20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][4])), HarmonicsDataset[i][4], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][5])), HarmonicsDataset[i][5]]);
@@ -1667,7 +1667,7 @@ $('#btnExportDetail').click(function () {
       }
       Data.push(Row);
     }
-    exportToCsv("Voltage_Harmonics_Evolution" + ((Nodes['Devices'][Node]['Type'] === '3Phase') ? '(' + localStorage.getItem('VoltageDetailEvolutionPhase') + ')_' : '_') + Node + '_' + DetailTimestamp + '.csv', Data);  
+    exportToCsv("Voltage_Harmonics_Evolution" + ((Nodes[Node]['Type'] === '3Phase') ? '(' + localStorage.getItem('VoltageDetailEvolutionPhase') + ')_' : '_') + Node + '_' + DetailTimestamp + '.csv', Data);  
   }
 });
 $('#btnMaximizeDetail').click(function() {
@@ -1732,7 +1732,7 @@ $('#GraphDialogClose').click(function() {
 
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
-  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+  if(Nodes[Node]['Type'] === '3Phase') {
     $('#btnShowVoltageRPhase').removeClass('disabled');
     $('#btnShowVoltageSPhase').removeClass('disabled');
     $('#btnShowVoltageTPhase').removeClass('disabled');

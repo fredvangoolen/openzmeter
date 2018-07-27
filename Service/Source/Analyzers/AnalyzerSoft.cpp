@@ -138,10 +138,10 @@ void AnalyzerSoft::Analyze() {
         float PHI = FFT::CalcAngle(pVoltageFFT[j]->Output[i], pCurrentFFT[j]->Output[i]);
         pAggreg10C.CurrentHarmonics[j][Harmonic] = CurrentHarmonic;
         if(Harmonic == 0) {
-          pAggreg10C.Fundamental_Active_Power[j]   = VoltageHarmonic * CurrentHarmonic * cos(PHI);
-          pAggreg10C.Fundamental_Reactive_Power[j] = VoltageHarmonic * CurrentHarmonic * sin(PHI);
-          pAggreg10C.Fundamental_Apparent_Power[j] = VoltageHarmonic * CurrentHarmonic;
-          pAggreg10C.Fundamental_Power_Factor[j]   = pAggreg10C.Fundamental_Active_Power[j] / pAggreg10C.Fundamental_Apparent_Power[j];
+//          pAggreg10C.Fundamental_Active_Power[j]   = VoltageHarmonic * CurrentHarmonic * cos(PHI);
+//          pAggreg10C.Fundamental_Reactive_Power[j] = VoltageHarmonic * CurrentHarmonic * sin(PHI);
+//          pAggreg10C.Fundamental_Apparent_Power[j] = VoltageHarmonic * CurrentHarmonic;
+//          pAggreg10C.Fundamental_Power_Factor[j]   = pAggreg10C.Fundamental_Active_Power[j] / pAggreg10C.Fundamental_Apparent_Power[j];
           PHI = fmod(PHI, 2.0 * M_PI);
           if(PHI > M_PI) PHI = PHI -  2.0 * M_PI;
           pAggreg10C.Phi[j] = PHI * 180.0 / M_PI;
@@ -150,7 +150,7 @@ void AnalyzerSoft::Analyze() {
       pAggreg10C.THD_I[j] = sqrt(pAggreg10C.THD_I[j]) / pAggreg10C.CurrentHarmonics[j][0];
       pAggreg10C.Active_Energy[j] = (pAggreg10C.Active_Power[j] * pSamples) / (pSamplerate * 3600.0);
       pAggreg10C.Power_Factor[j] = pAggreg10C.Active_Power[j] / pAggreg10C.Apparent_Power[j];
-      pAggreg10C.Fundamental_Reactive_Energy[j] = (pAggreg10C.Fundamental_Reactive_Power[j] * pSamples) / (pSamplerate * 3600.0);
+//      pAggreg10C.Fundamental_Reactive_Energy[j] = (pAggreg10C.Fundamental_Reactive_Power[j] * pSamples) / (pSamplerate * 3600.0);
     }
     if(pMode == PHASE3N) {
       pCurrentFFT[3]->Wait();
@@ -215,6 +215,9 @@ void AnalyzerSoft::Analyze() {
     pthread_mutex_unlock(&pThreadMutex);
   }
 }
+void AnalyzerSoft::GetParams(Params_t **params, ExtParams_t **extParams) {
+}
+
 json_object *AnalyzerSoft::GetJSONCopy(char *series) {
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads++;
@@ -232,104 +235,7 @@ json_object *AnalyzerSoft::GetJSONCopy(char *series) {
   }
   pthread_mutex_unlock(&pDataReadyMutex);
   if(Error == 0) {
-    Result = json_object_new_object();
-    char *Save;
-    char *Serie = strtok_r(series, ", ", &Save);
-    while(Serie != NULL) {
-      json_object *Obj = NULL;
-      if(strcmp(Serie, "rms_v") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.RMS_V[i]));
-      } else if(strcmp(Serie, "rms_i") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.RMS_I[i]));
-      } else if(strcmp(Serie, "active_power") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Active_Power[i]));
-      } else if(strcmp(Serie, "apparent_power") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Apparent_Power[i]));
-      } else if(strcmp(Serie, "power_factor") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Power_Factor[i]));
-      } else if(strcmp(Serie, "active_energy") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Active_Energy[i]));
-      } else if(strcmp(Serie, "fundamental_active_power") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Fundamental_Active_Power[i]));
-      } else if(strcmp(Serie, "fundamental_reactive_power") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Fundamental_Reactive_Power[i]));
-      } else if(strcmp(Serie, "fundamental_apparent_power") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Fundamental_Apparent_Power[i]));
-      } else if(strcmp(Serie, "fundamental_power_factor") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Fundamental_Power_Factor[i]));
-      } else if(strcmp(Serie, "fundamental_reactive_energy") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Fundamental_Reactive_Energy[i]));
-      } else if(strcmp(Serie, "thd_v") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.THD_V[i]));
-      } else if(strcmp(Serie, "thd_i") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.THD_I[i]));
-      } else if(strcmp(Serie, "freq") == 0) {
-        if(isnan(pAggreg10C.Frequency) == false) Obj = json_object_new_double(pAggreg10C.Frequency);
-      } else if(strcmp(Serie, "phi") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(pAggreg10C.Phi[i]));
-      } else if(strcmp(Serie, "flag") == 0) {
-        Obj = json_object_new_boolean(pAggreg10C.Flag);
-      } else if(strcmp(Serie, "harmonics_v") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) {
-          json_object *Obj2 = json_object_new_array();
-          for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(pAggreg10C.VoltageHarmonics[i][j]));
-          json_object_array_add(Obj, Obj2);
-        }
-      } else if(strcmp(Serie, "harmonics_i") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) {
-          json_object *Obj2 = json_object_new_array();
-          for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(pAggreg10C.CurrentHarmonics[i][j]));
-          json_object_array_add(Obj, Obj2);
-        }
-      } else if(strcmp(Serie, "wave_v") == 0) {
-       Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) {
-          json_object *Obj2 = json_object_new_array();
-          for(uint32_t j = 0; j < pSamples; j++) json_object_array_add(Obj2, json_object_new_double(pVoltageSamples[i][j]));
-          json_object_array_add(Obj, Obj2);
-        }
-      } else if(strcmp(Serie, "wave_i") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) {
-          json_object *Obj2 = json_object_new_array();
-          for(uint32_t j = 0; j < pSamples; j++) json_object_array_add(Obj2, json_object_new_double(pCurrentSamples[i][j]));
-          json_object_array_add(Obj, Obj2);
-        }
-      } else if(strcmp(Serie, "fft_v") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) {
-          json_object *Obj2 = json_object_new_array();
-          for(int j = 0; j < pVoltageFFT[i]->OutputLen; j++) json_object_array_add(Obj2, json_object_new_double(pVoltageFFT[i]->BinPower(j)));
-          json_object_array_add(Obj, Obj2);
-        }
-      } else if(strcmp(Serie, "fft_i") == 0) {
-        Obj = json_object_new_array();
-        for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) {
-          json_object *Obj2 = json_object_new_array();
-          for(int j = 0; j < pCurrentFFT[i]->OutputLen; j++) json_object_array_add(Obj2, json_object_new_double(pCurrentFFT[i]->BinPower(j)));
-          json_object_array_add(Obj, Obj2);
-        }
-      }
-      if(Obj != NULL) json_object_object_add(Result, Serie, Obj);
-      Serie = strtok_r(NULL, ", ", &Save);
-    }
-    json_object_object_add(Result, "Sampletime", json_object_new_int64(pAggreg10C.Timestamp));
+    //---
   }
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads--;
