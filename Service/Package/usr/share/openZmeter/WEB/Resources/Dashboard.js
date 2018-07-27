@@ -28,9 +28,8 @@ function AjaxVoltage(result) {
   if(result['Sampletime'] === null) return;
   if(LastVoltageSample === 0) StopSpinner(VoltageSpinner, 'VoltageSpinner');
   if(result['Sampletime'][0] <= LastVoltageSample) return;
-  for(i = 0; i < result['Sampletime'].length; i++) VoltageData.push([new Date(result['Sampletime'][i])].concat(result['rms_v'][i]));
-  ShiftArray(VoltageData, result['MaxSamples']);
-  LastVoltageSample = LastSampletime(result);
+  VoltageData = GraphDataAppend(result, 'rms_v', VoltageData);
+  LastVoltageSample = LastSampletime(result, LastVoltageSample);
   $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)));
   $('#labelVoltageAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(VoltageChart === null) {
@@ -85,7 +84,6 @@ $('#btnMaximizeVoltage').click(function() {
   window.dispatchEvent(new Event('resize'));  
 });
 
-
 /* Grafica de corriente */
 var CurrentChart        = null;
 var CurrentSpinner      = new Spinner(SpinnerOpts);
@@ -98,8 +96,7 @@ function AjaxCurrent(result) {
   if(result['Sampletime'] === null) return;
   if(LastCurrentSample === 0) StopSpinner(CurrentSpinner, 'CurrentSpinner');
   if(result['Sampletime'][0] <= LastCurrentSample) return;
-  for(i = 0; i < result['Sampletime'].length; i++) CurrentData.push([new Date(result['Sampletime'][i])].concat(result['rms_i'][i]));
-  ShiftArray(CurrentData, result['MaxSamples']);
+  CurrentData = GraphDataAppend(result, 'rms_i', CurrentData);
   LastCurrentSample = LastSampletime(result);
   $('#labelCurrent').html(Array_Round2(result['rms_i'][result['rms_i'].length - 1], '&nbsp;&nbsp;', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
   $('#CurrentAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
@@ -176,7 +173,7 @@ function AjaxPower(result) {
     PowerChart = new Dygraph(document.getElementById("PowerChart"), PowerData, 
       { strokeWidth: 0.5, stepPlot: true, stackedGraph: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
-        labelsDiv: "PowerLegend", labels: ['Time'].concat(PowerNames), colors: ActivePowerGraphColors, dateWindow: [result['From'], result['To']],
+        labelsDiv: "PowerLegend", labels: ['Time'].concat(ActivePowerNames), colors: ActivePowerGraphColors, dateWindow: [result['From'], result['To']],
         axes: {
           y: { pixelsPerLabel: 15,
                axisLabelWidth: 34,
@@ -324,124 +321,37 @@ $('#btnExportFrequency').click(function() {
 });
 
 /* Grafico de energia */
-var LastEnergySample    = 0;
-var EnergyData          = [];
-var EnergyChart         = null;
-var EnergySpinner       = new Spinner(SpinnerOpts);
-var EnergyTimer         = null;
-function AjaxGetEnergy() {
-  if(EnergyTimer !== null) clearInterval(EnergyTimer);
-  $('#btnEnergyNow').addClass('disabled');
-  if(LastEnergySample === 0) ShowSpinner(EnergySpinner, 'EnergySpinner');
-  var Period = parseInt(localStorage.getItem('GraphPeriod'));
-  if(!Period) {
-    Period = 86400000;
-    localStorage.setItem('GraphPeriod', Period);
-  }
-  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
-  if(!GraphEnd) {
-    GraphEnd = 0;
-    localStorage.setItem('GraphEnd', 0);
-  } 
-  var GraphAggregation = localStorage.getItem('GraphAggregation');
-  if(!GraphAggregation || (GetAggregText(GraphAggregation) === false)) {
-    GraphAggregation = '10m';
-    localStorage.setItem('GraphAggregation', GraphAggregation);
-  }
-  $.ajax({ url: "getSeries",
-    timeout: 20000,
-    type: "POST",
-    dataType: "json",
-    contentType: 'application/json',
-    data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastEnergySample, Series: 'active_energy', Node: Nodes[Node].ID }),
-    success: AjaxEnergy,
-    complete: function() { 
-      $('#btnEnergyNow').removeClass('disabled');
-      if(parseInt(localStorage.getItem('GraphEnd')) === 0) EnergyTimer = setTimeout(AjaxGetEnergy, 3000);
-    }
- });
+var EnergyData       = [];
+var EnergyChart      = null;
+var EnergySpinner    = new Spinner(SpinnerOpts);
+var ScrollableSeries = "active_energy";
+function Scrollable_ShowSpinner() {
+  ShowSpinner(EnergySpinner, 'EnergySpinner');
 }
-function AjaxEnergy(result) {
-  if(LastEnergySample === 0) {
-    StopSpinner(EnergySpinner, 'EnergySpinner');
-    EnergyData = [];
-  }
-  if(result['Sampletime'] !== null) {
-    for(i = 0; i < result['Sampletime'].length; i++) EnergyData.push([new Date(result['Sampletime'][i])].concat(result['active_energy'][i]));
-    while(EnergyData.length > result['MaxSamples']) EnergyData.shift();
-    LastEnergySample = result['Sampletime'][result['Sampletime'].length - 1];
-  }
+function Scrollable_StopSpinner() {
+  StopSpinner(EnergySpinner, 'EnergySpinner');
+}
+function Scrollable_OnSuccess(result) {
+  if(ScrollableLastSample === 0) EnergyData = [];
+  EnergyData = GraphDataAppend(result, 'active_energy', EnergyData);
   $('#EnergyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');  
   if(EnergyChart == null) {
-    EnergyChart = new Dygraph(document.getElementById("EnergyChart"),
-      EnergyData,
-      { strokeWidth: 0.5,
-        labelsDiv: "EnergyLegend",
-        labels: (Nodes[Node]['Type'] == '3Phase') ? ['Time', 'Energy (R)', 'Energy (S)', 'Energy (T)'] : ['Time', 'Energy'],
-        plotter: barChartNoSpacedPlotter,
-        stackedGraph: true,
-        stepPlot: true,
-        fillGraph: true,
+    EnergyChart = new Dygraph(document.getElementById("EnergyChart"), EnergyData,
+      { strokeWidth: 0.5, stackedGraph: true, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], plotter: barChartNoSpacedPlotter,
+        labelsDiv: "EnergyLegend", labels: ['Time'].concat(ActiveEnergyNames), dateWindow: [result['From'], result['To']],
+        zoomCallback: Scrollable_Zoom, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: Scrollable_MouseUp, dblclick: Scrollable_DoubleClick },
+        underlayCallback: function(context, area, dygraph) { HightlightWeekends("#EEE", context, area, dygraph); },
+        
         colors: ["#31708f", "#708f31", "#8f3170"],
-        gridLineColor: "#999",
-        gridLinePattern: [4, 4],
-        dateWindow: [result['From'], result['To']],
-        zoomCallback: function(minDate, maxDate, yRanges) {
-          clearInterval(EnergyTimer);
-          $('#btnEnergyNow').removeClass('active');
-          localStorage.setItem('GraphEnd', maxDate);
-          localStorage.setItem('GraphPeriod', maxDate - minDate);
-          LastEnergySample = 0;
-          AjaxGetEnergy();
-        },
-        underlayCallback: function(context, area, dygraph) {
-          HightlightWeekends("#EEE", context, area, dygraph);
-        },
-        interactionModel: {
-          mousedown: mouseDownOZM,
-          mousemove: mouseMoveOZM,
-          mouseup: function(event, g, contex) {
-            mouseUpOZM(event, g, contex);
-            if((contex.isPanning) && (contex.regionWidth > 0)) {
-              clearInterval(EnergyTimer);
-              $('#btnEnergyNow').removeClass('active');
-              localStorage.setItem('GraphEnd', g.dateWindow_[1]);
-              localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
-              LastEnergySample = 0;
-              AjaxGetEnergy();
-            }            
-          },
-          dblclick: function(event, g, context) {
-            dblClickOZM(event, g, context);
-            clearInterval(EnergyTimer);
-            $('#btnEnergyNow').removeClass('active');
-            localStorage.setItem('GraphEnd', g.dateWindow_[1]);
-            localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
-            LastEnergySample = 0;
-            AjaxGetEnergy();
-          }
-        },
         axes: {
-          y: { pixelsPerLabel: 15,
-               axisLabelWidth: 34,
-               valueFormatter: function (x) {
-                 if(x > 1000) {
-                   return Round2(x / 1000) + ' <em class="x-small">kWh</em>';
-                 } else {
-                   return Round2(x) + ' <em class="x-small">Wh</em>';
-                 }
-               },
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
+               valueFormatter: function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + ' <em class="x-small">' + Units + 'Wh</em>'; },
                axisLabelFormatter: function (x) {
                  return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
                }
              },
-          x: { valueFormatter: function (x) {
-                 var date = new Date(x);
-                 return date.toLocaleDateString() + ' - ' + date.toLocaleTimeString();
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + x.toLocaleTimeString() + '<br/>' + x.toLocaleDateString() + '</div>';
-               }
+          x: { valueFormatter: function (x) { return new Date(x).toLocaleDateString() + ' - ' + date.toLocaleTimeString(); },
+               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + x.toLocaleTimeString() + '<br/>' + x.toLocaleDateString() + '</div>'; }
              }
           }
         }
@@ -449,47 +359,9 @@ function AjaxEnergy(result) {
     $(window).bind('resize', EnergyResizeEvent);
     window.dispatchEvent(new Event('resize'));
   } else {
-    EnergyChart.updateOptions({file: EnergyData, dateWindow: [result['From'], result['To']]});
+    EnergyChart.updateOptions( { file: EnergyData, dateWindow: [result['From'], result['To']] } );
   }
   SetEnergyVisibleSeries();
-  $('#btnShowEnergyYear').removeClass('active');
-  $('#btnShowEnergyMonth').removeClass('active');
-  $('#btnShowEnergyWeek').removeClass('active');
-  $('#btnShowEnergyDay').removeClass('active');
-  if((result['To'] - result['From']) === 86400000) {
-    $('#btnShowEnergyDay').addClass('active');
-  } else if((result['To'] - result['From']) === 604800000) {
-    $('#btnShowEnergyWeek').addClass('active');
-  } else if((result['To'] - result['From']) === 2592000000) {
-    $('#btnShowEnergyMonth').addClass('active');
-  } else if((result['To'] - result['From']) === 31536000000) {
-    $('#btnShowEnergyYear').addClass('active');
-  }
-  var GraphAggregation = localStorage.getItem('GraphAggregation');
-  if(GraphAggregation !== result['Aggregation_Source']) {
-    $('#aggreg_modal').modal('show');
-    GraphAggregation = result['Aggregation_Source'];
-  }
-  $('#btnEnergy3S').removeClass('active');
-  $('#btnEnergy1M').removeClass('active');
-  $('#btnEnergy10M').removeClass('active');
-  $('#btnEnergy1H').removeClass('active');
-  if(GraphAggregation == '3s') {
-    $('#btnEnergy3S').addClass('active');
-  } else if(GraphAggregation == '1m') {
-    $('#btnEnergy1M').addClass('active');
-  } else if(GraphAggregation == '10m') {
-    $('#btnEnergy10M').addClass('active');
-  } else if(GraphAggregation == '1h') {
-    $('#btnEnergy1H').addClass('active');
-  }
-  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
-  if(GraphEnd === 0) {
-    $('#btnEnergyNow').addClass('active');
-  } else {
-    $('#btnEnergyNow').removeClass('active');
-  }
-  localStorage.setItem('GraphAggregation', GraphAggregation);
 }
 function EnergyResizeEvent() {
   var Height = $('#EnergyBox').height() + $('#BudgetBox').height();
@@ -941,7 +813,8 @@ $('#GraphDialogClose').click(function() {
 
 
 function UpdatePage() {
-  AjaxGetEnergy();
+  GetSeriesScrollable();
+//  AjaxGetEnergy();
   AjaxGetEnergyCounters();
   AjaxGetVoltage();
   AjaxGetCurrent();

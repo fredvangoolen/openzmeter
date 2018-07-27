@@ -55,28 +55,124 @@ function GetSeries(period, to, aggreg, lastsample, series, onSuccess, onCompleti
   });
 }
 
-/* getSeries function than take params from controls */
-var MainGraphLastSample = 0;
-var MainGraphTimer = null;
+/* getSeries function than take params from controls to manage scrollable graphs */
+var ScrollableLastSample = 0;
+var ScrollableTimer = null;
 function GetSeriesScrollable() {
-  
-  
+  if(ScrollableTimer !== null) clearInterval(ScrollableTimer);
+  $('#btnScrollableNow').addClass('disabled');
+  if(ScrollableLastSample === 0) Scrollable_ShowSpinner();
+  var Period = parseInt(localStorage.getItem('GraphPeriod'));
+  if(!Period) {
+    Period = 86400000;
+    localStorage.setItem('GraphPeriod', Period);
+  }
+  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
+  if(!GraphEnd) {
+    GraphEnd = 0;
+    localStorage.setItem('GraphEnd', 0);
+  }
+  var GraphAggregation = localStorage.getItem('GraphAggregation');
+  if(!GraphAggregation || (GetAggregText(GraphAggregation) === false)) {
+    GraphAggregation = '10m';
+    localStorage.setItem('GraphAggregation', GraphAggregation);
+  }
+  GetSeries(Period, GraphEnd, GraphAggregation, ScrollableLastSample, ScrollableSeries, 
+  function(result) {
+    Scrollable_StopSpinner();
+    ScrollableLastSample = LastSampletime(result, ScrollableLastSample);
+    Scrollable_OnSuccess(result);
+    $('#btnScrollableYear').removeClass('active');
+
+    
+    $('#btnScrollableMonth').removeClass('active');
+    $('#btnShowEnergyWeek').removeClass('active');
+  $('#btnShowEnergyDay').removeClass('active');
+  if((result['To'] - result['From']) === 86400000) {
+    $('#btnShowEnergyDay').addClass('active');
+  } else if((result['To'] - result['From']) === 604800000) {
+    $('#btnShowEnergyWeek').addClass('active');
+  } else if((result['To'] - result['From']) === 2592000000) {
+    $('#btnShowEnergyMonth').addClass('active');
+  } else if((result['To'] - result['From']) === 31536000000) {
+    $('#btnShowEnergyYear').addClass('active');
+  }
+  var GraphAggregation = localStorage.getItem('GraphAggregation');
+  if(GraphAggregation !== result['Aggregation_Source']) {
+    $('#aggreg_modal').modal('show');
+    GraphAggregation = result['Aggregation_Source'];
+  }
+  $('#btnEnergy3S').removeClass('active');
+  $('#btnEnergy1M').removeClass('active');
+  $('#btnEnergy10M').removeClass('active');
+  $('#btnEnergy1H').removeClass('active');
+  if(GraphAggregation == '3s') {
+    $('#btnEnergy3S').addClass('active');
+  } else if(GraphAggregation == '1m') {
+    $('#btnEnergy1M').addClass('active');
+  } else if(GraphAggregation == '10m') {
+    $('#btnEnergy10M').addClass('active');
+  } else if(GraphAggregation == '1h') {
+    $('#btnEnergy1H').addClass('active');
+  }
+  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
+  if(GraphEnd === 0) {
+    $('#btnEnergyNow').addClass('active');
+  } else {
+    $('#btnEnergyNow').removeClass('active');
+  }
+  localStorage.setItem('GraphAggregation', GraphAggregation);
+
+    
+    
+    
+  }, 
+  function() { 
+    $('#btnScrollableNow').removeClass('disabled');
+    if(parseInt(localStorage.getItem('GraphEnd')) === 0) ScrollableTimer = setTimeout(GetSeriesScrollable, 3000);
+  });  
+}
+function Scrollable_Zoom(minDate, maxDate, yRanges) {
+  clearInterval(ScrollableTimer);
+  $('#btnScrollableNow').removeClass('active');
+  localStorage.setItem('GraphEnd', maxDate);
+  localStorage.setItem('GraphPeriod', maxDate - minDate);
+  ScrollableLastSample = 0;
+  GetSeriesScrollable();
+}
+function Scrollable_MouseUp(event, g, contex) {
+  mouseUpOZM(event, g, contex);
+  if((contex.isPanning) && (contex.regionWidth > 0)) Scrollable_Zoom(g.dateWindow_[1] - g.dateWindow_[0], g.dateWindow_[1]);
+}
+function Scrollable_DoubleClick(event, g, context) {
+  dblClickOZM(event, g, context);
+  Scrollable_Zoom(g.dateWindow_[1] - g.dateWindow_[0], g.dateWindow_[1]);
 }
 
-
+/* getSeriesNow encapsulation */
 function GetSeriesNow(series, onSuccess, onCompletion, onError) {
   $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json',
            data: JSON.stringify( { Series: series, Node: Nodes[Node].ID} ),
   });
 }
+
+/* append samples of given series to array of graph data, and shift if needed */
+function GraphDataAppend(result, serie, data) {
+  if(result['Sampletime'] === null) return data;
+  for(i = 0; i < result['Sampletime'].length; i++) data.push([new Date(result['Sampletime'][i])].concat(result[serie][i]));
+  ShiftArray(data, result['MaxSamples']);
+  return data;
+}
+
 /* remove old items from array*/
 function ShiftArray(array, len) {
   while(array.length > len) array.shift();
 }
 
 /* return last timestamp from results obtained with GetSeries and others */
-function LastSampletime(result) {
-  return result['Sampletime'][result['Sampletime'].length - 1];
+function LastSampletime(result, prev) {
+  if(result['Sampletime'] === null) return prev;
+  return Math.max(prev, result['Sampletime'][result['Sampletime'].length - 1]);
 }
 
 function GraphHBackgroundRanges(ranges, graph, canvas) {
@@ -487,9 +583,10 @@ function GetNodesCompletes(result) {
     GetIndicators();
     AjaxGetIndicatorsB();
   }
-  VoltageNames = (Nodes[Node]['Mode'] == '1PHASE') ? ['Voltage'] : ['Voltage (R)', 'Voltage (S)', 'Voltage (T)'];
-  CurrentNames = (Nodes[Node]['Mode'] == '1PHASE') ? ['Current'] : (Nodes[Node]['Mode'] == '3PHASE') ? ['Current (R)', 'Current (S)', 'Current (T)'] : ['Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'];
-  PowerNames   = (Nodes[Node]['Mode'] == '1PHASE') ? ['Power']   : ['Power (R)', 'Power (S)', 'Power (T)'];
+  VoltageNames      = (Nodes[Node]['Mode'] == '1PHASE') ? ['Voltage'] : ['Voltage (R)', 'Voltage (S)', 'Voltage (T)'];
+  CurrentNames      = (Nodes[Node]['Mode'] == '1PHASE') ? ['Current'] : (Nodes[Node]['Mode'] == '3PHASE') ? ['Current (R)', 'Current (S)', 'Current (T)'] : ['Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'];
+  ActivePowerNames  = (Nodes[Node]['Mode'] == '1PHASE') ? ['Power']   : ['Power (R)', 'Power (S)', 'Power (T)'];
+  ActiveEnergyNames = (Nodes[Node]['Mode'] == '1Phase') ? ['Energy']  : ['Energy (R)', 'Energy (S)', 'Energy (T)'];
   AjaxGetSysStats();
   UpdatePage();
 }
