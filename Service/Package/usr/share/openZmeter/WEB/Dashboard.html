@@ -63,7 +63,7 @@
                 <div class="pull-right">
                   <span class="small"></span><br>
                   <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs" id="btnEnergyNow"      data-toggle="tooltip" title="Move to most recent samples and update in real time"><i class="fa fa-play"></i></button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnScrollableNow"  data-toggle="tooltip" title="Move to most recent samples and update in real time"><i class="fa fa-play"></i></button>
                     <button type="button" class="btn btn-default btn-xs" id="btnExportEnergy"   data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
                     <button type="button" class="btn btn-default btn-xs" id="btnMaximizeEnergy" data-toggle="tooltip" title="Maximize graph"><i class="fa fa-expand"></i></button>
                   </div>
@@ -80,8 +80,8 @@
                 <div class="pull-right">&nbsp;</div>
                 <div class="pull-right">
                   <span class="small">Time scale:</span><br>
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowEnergyYear"  data-toggle="tooltip" title="Zoom the graph to one year, keeping current aggregation level while possible">Year</button>
+                  <div class="btn-group" id="groupScrollableTimeScale">
+                    <button type="button" class="btn btn-default btn-xs" id="btnScrollableYear"  data-toggle="tooltip" title="Zoom the graph to one year, keeping current aggregation level while possible">Year</button>
                     <button type="button" class="btn btn-default btn-xs" id="btnShowEnergyMonth" data-toggle="tooltip" title="Zoom the graph to one month, keeping current aggregation level while possible">Month</button>
                     <button type="button" class="btn btn-default btn-xs" id="btnShowEnergyWeek"  data-toggle="tooltip" title="Zoom the graph to one week, keeping current aggregation level while possible">Week</button>
                     <button type="button" class="btn btn-default btn-xs" id="btnShowEnergyDay"   data-toggle="tooltip" title="Zoom the graph to one day, keeping current aggregation level while possible">Day</button>

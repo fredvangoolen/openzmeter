@@ -332,7 +332,7 @@ function Scrollable_StopSpinner() {
   StopSpinner(EnergySpinner, 'EnergySpinner');
 }
 function Scrollable_OnSuccess(result) {
-  if(ScrollableLastSample === 0) EnergyData = [];
+  if(ScrollableLastSample === 0) EnergyData = [Array(ActiveEnergyNames.length + 1).fill(0)];
   EnergyData = GraphDataAppend(result, 'active_energy', EnergyData);
   $('#EnergyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');  
   if(EnergyChart == null) {

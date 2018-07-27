@@ -82,7 +82,7 @@ function GetSeriesScrollable() {
     Scrollable_StopSpinner();
     ScrollableLastSample = LastSampletime(result, ScrollableLastSample);
     Scrollable_OnSuccess(result);
-    $('#btnScrollableYear').removeClass('active');
+    $('#groupScrollableTimeScale').children().addClass('active');
 
     
     $('#btnScrollableMonth').removeClass('active');
@@ -171,7 +171,7 @@ function ShiftArray(array, len) {
 
 /* return last timestamp from results obtained with GetSeries and others */
 function LastSampletime(result, prev) {
-  if(result['Sampletime'] === null) return prev;
+  if(result['Sampletime'].length === 0) return prev;
   return Math.max(prev, result['Sampletime'][result['Sampletime'].length - 1]);
 }
 
