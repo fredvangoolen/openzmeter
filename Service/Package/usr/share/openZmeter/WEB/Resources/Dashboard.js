@@ -31,13 +31,13 @@ function AjaxVoltage(result) {
   for(i = 0; i < result['Sampletime'].length; i++) VoltageData.push([new Date(result['Sampletime'][i])].concat(result['rms_v'][i]));
   ShiftArray(VoltageData, result['MaxSamples']);
   LastVoltageSample = LastSampletime(result);
-  $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
+  $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)));
   $('#labelVoltageAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(VoltageChart === null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
       { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: false, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
-        labelsDiv: "VoltageLegend", labels: ['Time'].concat(VoltageNames), colors: VoltageGraphColors, dateWindow: [result['From'], result['To']],
+        labelsDiv: "VoltageLegend", labels: ['Time'].concat(VoltageNames), colors: ColorArray($('#VoltagePanel').css('border-color'), 3), dateWindow: [result['From'], result['To']],
         underlayCallback: function(canvas, area, g) {
           var NV = Nodes[Node]['NominalVoltage'], Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
           GraphHBackgroundRanges([[NV * 1.1, NV * 1.07, Yellow], [NV * 0.93, NV * 0.9, Yellow], [Infinity, NV * 1.1, Red], [NV * 0.9, -Infinity, Red]], g, canvas);
@@ -176,7 +176,7 @@ function AjaxPower(result) {
     PowerChart = new Dygraph(document.getElementById("PowerChart"), PowerData, 
       { strokeWidth: 0.5, stepPlot: true, stackedGraph: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
-        labelsDiv: "PowerLegend", labels: ['Time'].concat(PowerNames), colors: PowerGraphColors, dateWindow: [result['From'], result['To']],
+        labelsDiv: "PowerLegend", labels: ['Time'].concat(PowerNames), colors: ActivePowerGraphColors, dateWindow: [result['From'], result['To']],
         axes: {
           y: { pixelsPerLabel: 15,
                axisLabelWidth: 34,

@@ -13,14 +13,16 @@ var HarmonicsNames      = [ '1st',  '2nd',  '3rd',  '4th',  '5th',  '6th',  '7th
                             '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
 /* Voltage series names and colors */
 var VoltageNames;
-var VoltageGraphColors = ["#d9534f", "#534fd9", "#4fd953"];
+//var VoltageGraphColors = ["#d9534f", "#534fd9", "#4fd953"];
 /* Current series names and colors */
 var CurrentNames;
 var CurrentGraphColors = ["#428bca", "#42ca81", "#ca428b", "#ca8142"];
-/* Power series names and colors */
-var PowerNames;
-var PowerGraphColors = ["#f0ad4e", "#ad4ef0", "#4ef0ad"];
-
+/* ActivePower series names and colors */
+var ActivePowerNames;
+var ActivePowerGraphColors = ["#f0ad4e", "#ad4ef0", "#4ef0ad"];
+/* ActivePower series names and colors */
+var ActiveEnergyNames;
+var ActiveEnergyGraphColors;
 
 /* offline.js configuration and tools */
 Offline.options = {requests: false};
@@ -52,6 +54,16 @@ function GetSeries(period, to, aggreg, lastsample, series, onSuccess, onCompleti
            
   });
 }
+
+/* getSeries function than take params from controls */
+var MainGraphLastSample = 0;
+var MainGraphTimer = null;
+function GetSeriesScrollable() {
+  
+  
+}
+
+
 function GetSeriesNow(series, onSuccess, onCompletion, onError) {
   $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json',
            data: JSON.stringify( { Series: series, Node: Nodes[Node].ID} ),
@@ -167,8 +179,15 @@ function GetBestUnits(value) {
   }
 }
 
-
-
+/* Generate an array of colors from a base */
+function ColorArray(base, items) {
+  var Array = [];
+  for(i = 0; i < items; i++) {
+   Array.push(base); 
+   base = chroma(base).darken();
+  }
+  return Array;
+}
 
 
 
