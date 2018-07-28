@@ -50,11 +50,17 @@ function StopSpinner(spinner, container) {
 /* getSeries function */
 function GetSeries(period, to, aggreg, lastsample, series, onSuccess, onCompletion, onError) {
   $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion,
-           data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Node: Nodes[Node].ID } )
+           data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Analyzers[Analyzer].ID } )
            
   });
 }
 
+/*getSeriesRange function */
+function GetSeriesRange(aggreg, onSuccess, onCompletion, onError) {
+  $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion,
+           data: JSON.stringify({ Aggreg: '1h', Analyzer: Analyzers[Analyzer].ID})
+  });
+}
 /* getSeries function than take params from controls to manage scrollable graphs */
 var ScrollableLastSample = 0;
 var ScrollableTimer = null;
@@ -152,7 +158,7 @@ function Scrollable_DoubleClick(event, g, context) {
 /* getSeriesNow encapsulation */
 function GetSeriesNow(series, onSuccess, onCompletion, onError) {
   $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json',
-           data: JSON.stringify( { Series: series, Node: Nodes[Node].ID} ),
+           data: JSON.stringify( { Series: series, Analyzer: Analyzers[Analyzer].ID} ),
   });
 }
 
@@ -188,6 +194,7 @@ function GraphHBackgroundRanges(ranges, graph, canvas) {
 function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, sender) {
   var State = localStorage.getItem(variable);
   var NumElements = buttongroup.children().length;
+  if(State <= 0 || State >= Math.pow(2, NumElements)) State = 1;
   if(sender !== undefined) {
     var Index = $(sender).index();
     if(State == Math.pow(2, Index)) { //only one iten selected
@@ -438,7 +445,7 @@ function AjaxGetIndicatorsB() {
     type: "POST",
     dataType: "json",
     contentType: 'application/json',
-    data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: '1m', Period: 86400000, To: From + 86400000, Node: Nodes[Node].ID }),
+    data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: '1m', Period: 86400000, To: From + 86400000, Analyzer: Analyzers[Analyzer].ID }),
     success: function(result) {
       var Units = 'Wh';
       for(i = 0; i < result['sum_active_energy'].length; i++) {
@@ -541,27 +548,27 @@ function exportToCsv(filename, rows) {
 }
 
 /* Actualiza el desplegable de nodos disponibles y selecciona el que este activo para la sesion */
-var Nodes = [];
-var Node = parseInt(localStorage.getItem("SelNode"));
-var TableDevices = null;
-function GetNodesCompletes(result) {
-  if(result.length > 0) $('#btnSearchDevice').removeClass('disabled');
-  Nodes = result;
-  TableDevices = $('#tblDevices').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', 
-                                              dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', 
-                                              language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices", zeroRecords: " "},
-                                              columnDefs: [ { targets: 0, width: "auto" }, { targets: 1, width: "50px" }, { targets: 2, width: "100px" }, { targets: 3, width: "60px", orderable: false, searchable: false } ], order: [0, 'desc']
+var Analyzers = [];
+var Analyzer = parseInt(localStorage.getItem("SelAnalyzer"));
+var TableAnalyzers = null;
+function GetAnalyzersCompletes(result) {
+  if(result.length > 0) $('#btnSearchAnalyzer').removeClass('disabled');
+  Analyzers = result;
+  TableAnalyzers = $('#tblAnalyzer').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', 
+                                                 dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', 
+                                                 language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices", zeroRecords: " "},
+                                                 columnDefs: [ { targets: 0, width: "auto" }, { targets: 1, width: "50px" }, { targets: 2, width: "100px" }, { targets: 3, width: "60px", orderable: false, searchable: false } ], order: [0, 'desc']
   });
   for(i = 0; i < result.length; i++) {
     var RowText = $('<tr>').append('<td class="active">' + result[i].Name + '</td><td>' + result[i].Mode + '</td><td style="font-family: monospace; font-size : 11px">' + result[i].ID + '</td><td><button class="btn btn-xs btn-primary" style="width: 100%">Select</button>');
-    TableDevices.row.add(RowText).draw();
+    TableAnalyzers.row.add(RowText).draw();
   }
-  $('#dlgSearchDevice').on('shown.bs.modal',function() { TableDevices.columns.adjust(); } );
-  $('#btnSearchDevice').on('click', function() { $('#dlgSearchDevice').modal('show'); });
+  $('#dlgSearchAnalyzer').on('shown.bs.modal',function() { TableDevices.columns.adjust(); } );
+  $('#btnSearchAnalyzer').on('click', function() { $('#dlgSearchDevice').modal('show'); });
   
-  if(!Node) {
-    localStorage.setItem("SelNode", 0);
-    Node = 0;
+  if(Analyzers[Analyzer] === undefined) {
+    localStorage.setItem("SelAnalyzer", 0);
+    Analyzer = 0;
   }
 //  for(i = 0; i < result['Devices'].length; i++) {
 //    Nodes['Devices'][i].Type = "3Phase";
@@ -579,24 +586,26 @@ function GetNodesCompletes(result) {
 //    localStorage.setItem('SelNode', this.id.replace('Node_', ''));
 //    location.reload(false);
 //  });
-  if(Nodes.length !== 0) {
+  if(Analyzers.length !== 0) {
     GetIndicators();
     AjaxGetIndicatorsB();
   }
-  VoltageNames      = (Nodes[Node]['Mode'] == '1PHASE') ? ['Voltage'] : ['Voltage (R)', 'Voltage (S)', 'Voltage (T)'];
-  CurrentNames      = (Nodes[Node]['Mode'] == '1PHASE') ? ['Current'] : (Nodes[Node]['Mode'] == '3PHASE') ? ['Current (R)', 'Current (S)', 'Current (T)'] : ['Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'];
-  ActivePowerNames  = (Nodes[Node]['Mode'] == '1PHASE') ? ['Power']   : ['Power (R)', 'Power (S)', 'Power (T)'];
-  ActiveEnergyNames = (Nodes[Node]['Mode'] == '1Phase') ? ['Energy']  : ['Energy (R)', 'Energy (S)', 'Energy (T)'];
+  VoltageNames      = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Voltage'] : ['Voltage (R)', 'Voltage (S)', 'Voltage (T)'];
+  CurrentNames      = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Current'] : (Analyzers[Analyzer]['Mode'] == '3PHASE') ? ['Current (R)', 'Current (S)', 'Current (T)'] : ['Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'];
+  ActivePowerNames  = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Power']   : ['Power (R)', 'Power (S)', 'Power (T)'];
+  ActiveEnergyNames = (Analyzers[Analyzer]['Mode'] == '1Phase') ? ['Energy']  : ['Energy (R)', 'Energy (S)', 'Energy (T)'];
   AjaxGetSysStats();
   UpdatePage();
 }
 
 /* Genera la secuencia de pasos una vez cargado todo el javascript para mostrar la pagina */
-function StartPageLoad() {
-  $('#Header').load("CommonHeader.html", null, function() {
-    $('[data-sidenav]').sidenav();
+var LoadedPending;
+function LoadComplete() {
+  LoadedPending--;
+  if(LoadedPending === 0) {
+          $('[data-sidenav]').sidenav();
     $('#labelUserName').text(localStorage.getItem('UserName'));
-    $.ajax({ url: "getNodes", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: GetNodesCompletes });
+    $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: GetAnalyzersCompletes });
 
     
     
@@ -609,7 +618,11 @@ function StartPageLoad() {
     } else {
       $('#side-menu li > a').first().addClass('active');
     }
-  });
+  }
+}
+function StartPageLoad() {
+  LoadedPending = $('*[data-load-block]').length;
+  $('*[data-load-block]').each(function(index) { $(this).load('Common.html #' + $(this).data('loadBlock') + ' > *', null, LoadComplete); });
 }
 
 /* Devuelve el texto completo a partir del texto abreviado de agregacion */

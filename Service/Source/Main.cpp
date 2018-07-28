@@ -59,11 +59,12 @@ int main(int argc, char** argv) {
   }
   Tools::RegisterHandlers(SignalHandler);
   HTTPServer::RegisterCallback((char*)"/getSysInfo",      Tools::GetSysInfo);
-  HTTPServer::RegisterCallback((char*)"/getNodes",        DeviceInterface::GetAnalyzersCallback);
+  HTTPServer::RegisterCallback((char*)"/getAnalyzers",    DeviceInterface::GetAnalyzersCallback);
   HTTPServer::RegisterCallback((char*)"/getSeries",       DeviceInterface::GetSeriesCallback);
   HTTPServer::RegisterCallback((char*)"/getSeriesAggreg", DeviceInterface::GetSeriesAggregCallback);
   HTTPServer::RegisterCallback((char*)"/getSeriesNow",    DeviceInterface::GetSeriesNowCallback);
- 
+  HTTPServer::RegisterCallback((char*)"/getSeriesRange",  DeviceInterface::GetSeriesRangeCallback);
+  
   HTTPServer::RegisterMapping((char*)"/",                     (char*)"Dashboard.html");
   HTTPServer::RegisterMapping((char*)"/Dashboard",            (char*)"Dashboard.html");
   HTTPServer::RegisterMapping((char*)"/Analysis/Frequency",   (char*)"Analysis_Frequency.html");

@@ -37,17 +37,12 @@ var SelectedYear;
 var SelectedPhase = [];
 function GetDataRanges() {
   ShowSpinner(Spinner, 'StatsSpinner');
-  $.ajax({ url: "getSamplesRange",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Aggreg: '1h', Node: Node}),
-           success: function(result) {
-             for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) $('#YearSelector').append('<button type="button" class="btn btn-default btn-xs" id="btnSelYear' + year + '" onclick="AjaxGetEnergy(' + year + ')">' + year + '</button>');
-             AjaxGetEnergy(new Date(result['To']).getFullYear());
-           }
-  }); 
+  GetSeriesRange('1h', 
+    function(result) {
+      for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) $('#YearSelector').append('<button type="button" class="btn btn-default btn-xs" id="btnSelYear' + year + '" onclick="AjaxGetEnergy(' + year + ')">' + year + '</button>');
+      AjaxGetEnergy(new Date(result['To']).getFullYear());
+    }
+  );
 }
 function AjaxGetEnergy(selected_year) {
   $('#YearSelector button').removeClass('active');
@@ -56,19 +51,14 @@ function AjaxGetEnergy(selected_year) {
   ShowSpinner(Spinner, 'StatsSpinner');
   var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
   var From = new Date(selected_year, 0, 1, 0, 0, 0, 0).getTime();
-  $.ajax({ url: "getSeries",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: To - From, To: To, Aggreg: '10m', LastSample: 0, Series: 'active_energy', Node: Node}),
-           success: function(result) {
-             EnergyData = [];
-             for(i = 0; i < result['Sampletime'].length; i++) EnergyData.push([result['Sampletime'][i], result['active_energy'][i]]);
-             ButtonClick();
-             StopSpinner(Spinner, 'StatsSpinner');
-           }
-  });
+  GetSeries(To - From, To, '10m', 0, 'active_energy', 
+    function(result) {
+      EnergyData = [];
+      for(i = 0; i < result['Sampletime'].length; i++) EnergyData.push([result['Sampletime'][i], result['active_energy'][i]]);
+      ButtonClick();
+      StopSpinner(Spinner, 'StatsSpinner');
+    }
+  );
 }
 function ShowColorScale(scale, outerdiv) {
   scale.out('hex');

@@ -399,28 +399,6 @@ void HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char
 //    Request->DB = new Database();
 //    Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostDataLen);
 //    return MHD_YES;
-//  } else if(strcmp(url, "/getSamplesRange") == 0) {
-//    uint32_t Node = 0;
-//    char *Aggreg = NULL;
-//    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
-//      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-//      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
-//        Node = json_object_get_int(JSON_Val);
-//      else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Aggreg") == 0))
-//        Aggreg = (char*)json_object_get_string(JSON_Val);
-//      else
-//        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
-//    }
-//    if(Aggreg == NULL) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
-//    char QueryText[8192];
-//    int  QueryLen = 0;
-//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "max(sampletime) AS \"To\", ");
-//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "min(sampletime) AS \"From\" ");
-//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM aggreg_%s WHERE node = %u) AS Result", Aggreg, Node);
-//    Request->DB = new Database();
-//    Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostDataLen);
-//    return MHD_YES;
 //  } else if(strcmp(url, "/getEventSamples") == 0) {
 //    uint32_t Node = 0;
 //    uint64_t Starttime = 0;

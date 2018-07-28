@@ -17,11 +17,8 @@
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.cpp</file>
         </group>
         <group>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/openZmeter.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Analysis_Voltage.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Analysis_Voltage.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/CommonHeader.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/openZmeter.css</file>
+            <file>file:/home/maria/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Dashboard.html</file>
+            <file>file:/home/maria/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Dashboard.js</file>
         </group>
     </open-files>
 </project-private>

@@ -89,7 +89,7 @@ bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Data
 }
 bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
-  char    *Node = NULL, *Aggreg = NULL, *Series = NULL;
+  char    *Analyzer = NULL, *Aggreg = NULL, *Series = NULL;
   json_object_object_foreach(reader, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
@@ -102,11 +102,11 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
       To = json_object_get_int64(JSON_Val);
     else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastSample") == 0))
       LastSample = json_object_get_int64(JSON_Val);
-    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Node") == 0))
-      Node = (char*)json_object_get_string(JSON_Val);
+    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Analyzer") == 0))
+      Analyzer = (char*)json_object_get_string(JSON_Val);
   }
-  if(Node == NULL) {
-    *postdata  = (char*)"'Node' param is requiered";
+  if(Analyzer == NULL) {
+    *postdata  = (char*)"'Analyzer' param is requiered";
     *resultLen = strlen(*postdata);
     return false;
   }
@@ -144,7 +144,7 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
     PeriodSeconds = 3600000;
   }
   db->PrepareSentence("SET search_path TO ?");
-  db->BindSingleString(Node);
+  db->BindSingleString(Analyzer);
   db->ExecSentence();
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"MaxSamples\", ", (To - From) / PeriodSeconds);
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'%s' AS \"Aggregation_Source\", ", Aggreg);
@@ -166,7 +166,7 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
 }
 bool DeviceInterface::GetSeriesAggregCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   uint64_t Period = 0, From = 0, To = 0;
-  char    *Node = NULL, *Aggreg = NULL, *Series = NULL;
+  char    *Analyzer = NULL, *Aggreg = NULL, *Series = NULL;
   json_object_object_foreach(reader, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
@@ -177,11 +177,11 @@ bool DeviceInterface::GetSeriesAggregCallback(char *user, json_object *reader, D
       Period = json_object_get_int64(JSON_Val);
     else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "To") == 0))
       To = json_object_get_int64(JSON_Val);
-    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Node") == 0))
-      Node = (char*)json_object_get_string(JSON_Val);
+    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Analyzer") == 0))
+      Analyzer = (char*)json_object_get_string(JSON_Val);
   }
-  if(Node == NULL) {
-    *postdata  = (char*)"'Node' param is requiered";
+  if(Analyzer == NULL) {
+    *postdata  = (char*)"'Analyzer' param is requiered";
     *resultLen = strlen(*postdata);
     return false;
   }
@@ -197,6 +197,9 @@ bool DeviceInterface::GetSeriesAggregCallback(char *user, json_object *reader, D
   }
   if(To == 0) To = Tools::GetTime();
   From = To - Period;
+  db->PrepareSentence("SET search_path TO ?");
+  db->BindSingleString(Analyzer);
+  db->ExecSentence();
   char QueryText[8192];
   int  QueryLen = 0;
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
@@ -211,7 +214,7 @@ bool DeviceInterface::GetSeriesAggregCallback(char *user, json_object *reader, D
       Serie = &Tmp1[1];
       Tmp2[0] = 0;
     }
-    if((strcmp(Serie, "rms_v") == 0) || (strcmp(Serie, "rms_i") == 0) || (strcmp(Serie, "active_power") == 0) || (strcmp(Serie, "apparent_power") == 0) || (strcmp(Serie, "power_factor") == 0) || (strcmp(Serie, "active_energy") == 0) || (strcmp(Serie, "fundamenta_active_power") == 0) || (strcmp(Serie, "fundamental_reactive_power") == 0) || (strcmp(Serie, "fundamental_reactive_energy") == 0) || (strcmp(Serie, "fundamental_apparent_power") == 0) || (strcmp(Serie, "fundamental_power_factor") == 0) || (strcmp(Serie, "thd_v") == 0) || (strcmp(Serie, "thd_i") == 0) || (strcmp(Serie, "phi") == 0) || (strcmp(Serie, "harmonics_i") == 0) || (strcmp(Serie, "harmonics_v") == 0)) {
+    if((strcmp(Serie, "rms_v") == 0) || (strcmp(Serie, "rms_i") == 0) || (strcmp(Serie, "active_power") == 0) || (strcmp(Serie, "apparent_power") == 0) || (strcmp(Serie, "power_factor") == 0) || (strcmp(Serie, "active_energy") == 0) || (strcmp(Serie, "thd_v") == 0) || (strcmp(Serie, "thd_i") == 0) || (strcmp(Serie, "phi") == 0) || (strcmp(Serie, "harmonics_i") == 0) || (strcmp(Serie, "harmonics_v") == 0)) {
       if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
         QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT %s(elem) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " GROUP BY rn ORDER BY rn) as %s_%s,", Oper, Aggreg, Serie, From, To, Oper, Serie);
       } else if(strcmp(Oper, "rms") == 0) {
@@ -236,16 +239,16 @@ bool DeviceInterface::GetSeriesAggregCallback(char *user, json_object *reader, D
   return true;
 }
 bool DeviceInterface::GetSeriesNowCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
-  char *Node = NULL, *Series = NULL;
+  char *Analyzer = NULL, *Series = NULL;
   json_object_object_foreach(reader, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
       Series = (char*)json_object_get_string(JSON_Val);
-    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Node") == 0))
-      Node = (char*)json_object_get_string(JSON_Val);
+    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Analyzer") == 0))
+      Analyzer = (char*)json_object_get_string(JSON_Val);
   }
-  if(Node == NULL) {
-    *postdata  = (char*)"'Node' param is requiered";
+  if(Analyzer == NULL) {
+    *postdata  = (char*)"'Analyzer' param is requiered";
     *resultLen = strlen(*postdata);
     return false;
   }
@@ -257,13 +260,40 @@ bool DeviceInterface::GetSeriesNowCallback(char *user, json_object *reader, Data
   for(uint32_t i = 0; i < pDevicesCount; i++) {
     DeviceInterface *Device = pDevices[i];
     for(uint32_t n = 0; n < Device->pAnalyzersCount; n++) {
-      AnalyzerInterface *Analyzer = Device->pAnalyzers[n];
-      if(strcmp(Analyzer->GetID(), Node) == 0) {
-        *writer = Analyzer->GetJSONParams(Series);
+      AnalyzerInterface *Tmp = Device->pAnalyzers[n];
+      if(strcmp(Tmp->GetID(), Analyzer) == 0) {
+        *writer = Tmp->GetJSONParams(Series);
         *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
         return true;      
       }
     }
   }
   return false;
+}
+bool DeviceInterface::GetSeriesRangeCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+  char *Analyzer = NULL, *Aggreg = NULL;
+  json_object_object_foreach(reader, JSON_Key, JSON_Val) {
+    enum json_type JSON_Type = json_object_get_type(JSON_Val);
+    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Analyzer") == 0))
+      Analyzer = (char*)json_object_get_string(JSON_Val);
+    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Aggreg") == 0))
+      Aggreg = (char*)json_object_get_string(JSON_Val);
+  }
+  if(Analyzer == NULL) {
+    *postdata  = (char*)"'Analyzer' param is requiered";
+    *resultLen = strlen(*postdata);
+    return false;
+  }
+  if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0))) {
+    *postdata  = (char*)"'Aggreg' need to be '3s', '1m', '10m' or '1h'";
+    *resultLen = strlen(*postdata);
+    return false;
+  }
+  db->PrepareSentence("SET search_path TO ?");
+  db->BindSingleString(Analyzer);
+  db->ExecSentence();
+  char QueryText[8192];
+  snprintf(QueryText, sizeof(QueryText), "SELECT row_to_json(Result) AS result FROM ( SELECT max(sampletime) AS \"To\", min(sampletime) AS \"From\" FROM aggreg_%s) AS Result", Aggreg);
+  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
+  return true;
 }

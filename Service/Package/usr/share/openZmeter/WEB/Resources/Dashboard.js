@@ -192,7 +192,7 @@ function AjaxPower(result) {
   PowerSeries();
 }
 function PowerSeries(event) {
-  GraphPhaseButtons(PowerChart, $('#groupPowerPhases'), 'VisibleDashboardPowerPhases', false, function(series) { return CalcRanges(CurrentData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
+  GraphPhaseButtons(PowerChart, $('#groupPowerPhases'), 'VisibleDashboardPowerPhases', false, function(series) { return CalcRanges(PowerData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
 }
 $('#groupPowerPhases').on('click', 'button', PowerSeries);
 function SetPowerVisibleSeries() {
@@ -340,18 +340,14 @@ function Scrollable_OnSuccess(result) {
       { strokeWidth: 0.5, stackedGraph: true, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], plotter: barChartNoSpacedPlotter,
         labelsDiv: "EnergyLegend", labels: ['Time'].concat(ActiveEnergyNames), dateWindow: [result['From'], result['To']],
         zoomCallback: Scrollable_Zoom, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: Scrollable_MouseUp, dblclick: Scrollable_DoubleClick },
-        underlayCallback: function(context, area, dygraph) { HightlightWeekends("#EEE", context, area, dygraph); },
-        
-        colors: ["#31708f", "#708f31", "#8f3170"],
+        underlayCallback: function(context, area, dygraph) { HightlightWeekends("#EEE", context, area, dygraph); }, colors: ColorArray($('#EnergyPanel').css('border-color'), 3),
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + ' <em class="x-small">' + Units + 'Wh</em>'; },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-               }
+               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>'; }
              },
           x: { valueFormatter: function (x) { return new Date(x).toLocaleDateString() + ' - ' + date.toLocaleTimeString(); },
-               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + x.toLocaleTimeString() + '<br/>' + x.toLocaleDateString() + '</div>'; }
+               axisLabelFormatter: function (x) { '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + new Date(x).toLocaleTimeString() + '<br/>' + new Date(x).toLocaleDateString() + '</div>'; }
              }
           }
         }
@@ -361,60 +357,16 @@ function Scrollable_OnSuccess(result) {
   } else {
     EnergyChart.updateOptions( { file: EnergyData, dateWindow: [result['From'], result['To']] } );
   }
-  SetEnergyVisibleSeries();
+  EnergySeries();
 }
 function EnergyResizeEvent() {
   var Height = $('#EnergyBox').height() + $('#BudgetBox').height();
   if(EnergyChart != null) EnergyChart.resize($('#EnergyCol').width(), Height - 12);
 }
-function SetEnergyVisibleSeries() {
-  if(Nodes[Node]['Type'] == '3Phase') {
-    var ShowR = (localStorage.getItem('ShowR') === 'true');
-    var ShowS = (localStorage.getItem('ShowS') === 'true');
-    var ShowT = (localStorage.getItem('ShowT') === 'true');
-    var VisibleSeries = [ShowR, ShowS, ShowT];
-    var Visibles = [];
-    if(ShowR) Visibles.push(1);
-    if(ShowS) Visibles.push(2);
-    if(ShowT) Visibles.push(3);
-    EnergyChart.updateOptions({ visibility: VisibleSeries, valueRange: CalcRanges(EnergyData, Visibles, true, false, true) });
-    if(ShowR === true)
-      $('#btnShowEnergyRPhase').addClass('active');
-    else    
-      $('#btnShowEnergyRPhase').removeClass('active');
-    if(ShowS === true)
-      $('#btnShowEnergySPhase').addClass('active');
-    else    
-      $('#btnShowEnergySPhase').removeClass('active');
-    if(ShowT === true)
-      $('#btnShowEnergyTPhase').addClass('active');
-    else    
-      $('#btnShowEnergyTPhase').removeClass('active');
-  } else {
-    EnergyChart.updateOptions({ valueRange: CalcRanges(EnergyData, [1], true, false, true) });
-  }
-  var Serie = 'Energy';
-  if(Nodes[Node]['Type'] == '3Phase') {
-    if(ShowT) Serie = 'Energy (T)';
-    if(ShowS) Serie = 'Energy (S)';
-    if(ShowR) Serie = 'Energy (R)';
-  }
-  var Annotations = [];
-  var MaxFound = [0, -Infinity];
-  for(i = 0; i < EnergyData.length; i++) {
-    var Max = (Nodes['Devices'][Node]['Type'] == '3Phase') ? ((ShowR ? EnergyData[i][1] : 0) + (ShowS ? EnergyData[i][2] : 0) + (ShowT ? EnergyData[i][3] : 0)) : EnergyData[i][1];
-    if(MaxFound[1] <= Max) MaxFound = [EnergyData[i][0], Max];
-  }
-  Annotations.push({
-      series: Serie,
-      xval: MaxFound[0].getTime(),
-      shortText: 'MAX',
-      text: 'Energy peak',
-      width: 28,
-      cssClass: 'annotation'
-    });
-  EnergyChart.setAnnotations(Annotations);
+function EnergySeries(event) {
+  GraphPhaseButtons(PowerChart, $('#groupEnergyPhases'), 'VisibleDashboardEnergyPhases', false, function(series) { return CalcRanges(EnergyData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
 }
+
 function ChooseEnergyChannels() {
   var ShowR = (localStorage.getItem('ShowR') === 'true');
   var ShowS = (localStorage.getItem('ShowS') === 'true');
