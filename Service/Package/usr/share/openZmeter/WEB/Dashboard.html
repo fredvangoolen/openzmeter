@@ -39,7 +39,7 @@
         <div class="modal-content" style="height: 100%" id="GraphDialogContents">
           <div class="modal-header">
             <div class="pull-left">
-            <h3 class="modal-title" id="GraphDialogTitle">Dialog</h3>
+              <h3 class="modal-title" id="GraphDialogTitle">Dialog</h3>
             </div>
             <div class="pull-right">
               <button type="button" class="btn btn-default btn-sm" id="GraphDialogClose">
@@ -55,10 +55,10 @@
     <div id="wrapper">
       <div class="row">
         <div class="col-lg-12">
-          <div class="panel panel-info" id="EnergyPanel">
+          <div class="panel panel-active-energy" id="EnergyPanel">
             <div id="EnergySpinner" class="spinnerdiv"></div>
             <div class="panel-heading">
-              <span class="huge-small">Energy consumption</span>
+              <span class="huge">Energy consumption</span>
               <div class="pull-right">
                 <div class="btn-group" data-load-block="ScrollableAggreg_Block"></div>
                 <div class="btn-group" data-load-block="ScrollableTime_Block"></div>
@@ -68,209 +68,179 @@
               <span class="clearfix"></span>
             </div>
 
-            
+
             <div class="row">
-                <div class="col-md-6 col-lg-3">
-                  <div class="row">
-                    <div class="col-xs-6 col-md-12">
-                      <div class="panel panel-lightblue-info" id="EnergyBox">
-                        <h4 id="labelEnergyPeriod">Today</h4>
-                        <span id="labelEnergy" class="huge">?</span>&nbsp;<em class="huge-small-unit" id="labelEnergyUnits">Wh</em>
-                        <span id="labelEnergyPhases"></span>
-                        <p><span id="labelPrevEnergyPeriod">Yesterday</span>&nbsp;<span id="labelPrevEnergy">?</span></p>
-                      </div>
-                    </div>
-                    <div class="col-xs-6 col-md-12">
-                      <div class="panel panel-lightblue-info" id="BudgetBox">
-                        <h4><span id="labelBudgetPeriod">Today</span> budget</h4>
-                        <span id="labelBudgetInteger" class="huge">?</span>
-                        <span id="labelBudgetDecimal" class="huge-small"></span>&nbsp;<em class="huge-small-unit" id="labelBudgetUnits">€</em>
-                        <p>Up to <span id="labelBudgetLastCalc">?</span></p>
-                      </div>
+              <div class="col-md-6 col-lg-3">
+                <div class="row">
+                  <div class="col-xs-6 col-md-12">
+                    <div class="panel panel-lightblue-info" id="EnergyBox">
+                      <h4 id="labelEnergyPeriod">Today</h4>
+                      <span id="labelEnergy" class="huge">?</span>&nbsp;<em class="huge-small-unit" id="labelEnergyUnits">Wh</em>
+                      <span id="labelEnergyPhases"></span>
+                      <p><span id="labelPrevEnergyPeriod">Yesterday</span>&nbsp;<span id="labelPrevEnergy">?</span></p>
                     </div>
                   </div>
-                </div>
-                <div class="col-md-6 col-lg-9" id="EnergyCol">
-                  <div id="EnergyMaximizeDiv">
-                    <div style="padding:5px">
-                      <div style="display:inline-block" id="EnergyAggregation">Loading data...</div>
-                      <div id="EnergyLegend" style="float: right"></div>
+                  <div class="col-xs-6 col-md-12">
+                    <div class="panel panel-lightblue-info" id="BudgetBox">
+                      <h4><span id="labelBudgetPeriod">Today</span> budget</h4>
+                      <span id="labelBudgetInteger" class="huge">?</span>
+                      <span id="labelBudgetDecimal" class="huge-small"></span>&nbsp;<em class="huge-small-unit" id="labelBudgetUnits">€</em>
+                      <p>Up to <span id="labelBudgetLastCalc">?</span></p>
                     </div>
-                    <div id="EnergyChart" class="chart big_chart"></div>
                   </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-9" id="EnergyCol">
+                <div id="EnergyMaximizeDiv">
+                  <div style="padding:5px">
+                    <div style="display:inline-block" id="EnergyAggregation">Loading data...</div>
+                    <div id="EnergyLegend" style="float: right"></div>
+                  </div>
+                  <div id="EnergyChart" class="chart big_chart"></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="panel panel-red" id="VoltagePanel">
-              <div id="VoltageSpinner" class="spinnerdiv"></div>
-              <div class="panel-heading big-heading">
-                <span class="huge-small">Voltage</span>
-                <div style="float: right"><span id="labelVoltage" class="huge-small">?</span><em class="huge-small-unit">V</em></div>
-              </div>
-              <div class="panel-body no-padding" id="VoltageCol">
-                <div id="VoltageMaximizeDiv">
-                  <div style="padding:5px">
-                    <div style="display:inline-block" id="labelVoltageAggregation">Loading data...</div>
-                    <div id="VoltageLegend" style="float: right"></div>
-                  </div>
-                  <div id="VoltageChart" class="chart"></div>
-                </div>
-              </div>
-              <div class="panel-footer">
-                <a href="Analysis/Voltage">
-                  <span class="pull-left">View Details <i class="fa fa-arrow-circle-right"></i></span>
-                </a>
-                <div class="btn-group pull-right">
-                  <button type="button" class="btn btn-default btn-xs" id="btnExportVoltage" data-toggle="tooltip" title="Export data to CSV file">
-                    <i class="fa fa-table fa-fw"></i>
-                  </button>
-                  <button type="button" class="btn btn-default btn-xs" id="btnMaximizeVoltage" data-toggle="tooltip" title="Maximize graph">
-                    <i class="fa fa-expand"></i>
-                  </button>
-                </div>
-                <div class="pull-right">&nbsp;</div>
-                <div class="btn-group pull-right hidden" id="groupVoltagePhases" data-load-block="PhaseV_Block"></div>
-                <div class="clearfix"></div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="panel panel-voltage" id="VoltagePanel">
+            <div id="VoltageSpinner" class="spinnerdiv"></div>
+            <div class="panel-heading">
+              <span class="huge">Voltage</span>
+              <div style="float: right; text-align: right;">
+                <div><span id="labelVoltage" class="huge-small">?</span><em class="huge-small-unit">V</em></div>
+                <div id="labelVoltageAggregation">Loading data...</div>
               </div>
             </div>
-          </div>
-          <div class="col-md-6">
-            <div class="panel panel-primary">
-              <div id="CurrentSpinner" class="spinnerdiv"></div>
-              <div class="panel-heading big-heading">
-                <div class="row">
-                  <div class="col-xs-6 col-md-2 col-lg-4">
-                    <span class="huge-small">Current</span>
-                  </div>
-                  <div class="col-xs-6  col-md-10 col-lg-8 text-right">
-                    <span id="labelCurrent" class="huge-small">?</span>
-                    <em class="huge-small-unit">A</em>
-                  </div>
-                </div>
+            <div class="panel-body" id="VoltageCol">
+              <div id="VoltageMaximizeDiv">
+                <div id="VoltageChart" class="chart"></div>
               </div>
-              <div class="panel-body no-padding" id="CurrentCol">
-                <div id="CurrentMaximizeDiv">
-                  <div style="padding:5px">
-                    <div style="display:inline-block" id="CurrentAggregation">Loading data...</div>
-                    <div id="CurrentLegend" style="float: right"></div>
-                  </div>
-                  <div id="CurrentChart" class="chart"></div>
-                </div>
+            </div>
+            <div class="panel-footer">
+              <a href="Analysis/Voltage">
+                <span class="pull-left">View Details <i class="fa fa-arrow-circle-right"></i></span>
+              </a>
+              <div class="btn-group pull-right">
+                <button type="button" class="btn btn-default btn-xs" id="btnExportVoltage" data-toggle="tooltip" title="Export data to CSV file">
+                  <i class="fa fa-table fa-fw"></i>
+                </button>
+                <button type="button" class="btn btn-default btn-xs" id="btnMaximizeVoltage" data-toggle="tooltip" title="Maximize graph">
+                  <i class="fa fa-expand"></i>
+                </button>
               </div>
-              <div class="panel-footer">
-                <a href="Analysis/Current">
-                  <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
-                </a>
-                <div class="btn-group pull-right">
-                  <button type="button" class="btn btn-default btn-xs" id="btnExportCurrent" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
-                  <button type="button" class="btn btn-default btn-xs pull-right" id="btnMaximizeCurrent"><i class="fa fa-expand"></i></button>
-                </div>                
-                <div class="pull-right">&nbsp;</div>
-                <div class="btn-group pull-right" id="groupCurrentPhases">
-                  <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase R">R</button>
-                  <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase S">S</button>
-                  <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase T">T</button>
-                  <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase N">N</button>
-                </div>
-                <div class="clearfix"></div>
-              </div>
+              <div class="pull-right">&nbsp;</div>
+              <div class="btn-group pull-right hidden" id="groupVoltagePhases" data-load-block="PhaseV_Block"></div>
+              <div class="clearfix"></div>
             </div>
           </div>
         </div>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="panel panel-yellow">
-              <div id="PowerSpinner" class="spinnerdiv"></div>
-              <div class="panel-heading big-heading">
-                <div class="row">
-                  <div class="col-xs-6 col-md-2 col-lg-6">
-                   <span class="huge-small">Active&nbsp;power</span>
-                  </div>
-                  <div class="col-xs-6  col-md-10 col-lg-6 text-right">
-                    <span id="labelPower" class="huge-small"></span>
-                    <em class="huge-small-unit" id="labelPowerUnits">W</em>
-                  </div>
-                </div>
-              </div>
-              <div class="panel-body no-padding" id="PowerCol">
-                <div id="PowerMaximizeDiv">
-                  <div style="padding:5px">
-                    <div style="display:inline-block" id="PowerAggregation">Loading data...</div>
-                    <div id="PowerLegend" style="float: right"></div>
-                  </div>
-                  <div id="PowerChart" class="chart"></div>
-                </div>
-              </div>
-              <div class="panel-footer">
-                <a href="Analysis/EnergyPower">
-                  <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
-                </a>
-                <div class="btn-group pull-right">
-                  <button type="button" class="btn btn-default btn-xs" id="btnExportPower" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
-                  <button type="button" class="btn btn-default btn-xs pull-right" id="btnMaximizePower"><i class="fa fa-expand"></i></button>
-                </div>
-                <div class="pull-right">&nbsp;</div>
-                <div class="btn-group pull-right" id="groupPowerPhases">
-                  <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase R">R</button>
-                  <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase S">S</button>
-                  <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase T">T</button>
-                </div>
-                <div class="clearfix"></div>
+        <div class="col-md-6">
+          <div class="panel panel-current" id="CurrentPanel">
+            <div id="CurrentSpinner" class="spinnerdiv"></div>
+            <div class="panel-heading">
+              <span class="huge">Current</span>
+              <div style="float: right; text-align: right;">
+                <div><span id="labelCurrent" class="huge-small">?</span><em class="huge-small-unit">A</em></div>
+                <div id="CurrentAggregation">Loading data...</div>
               </div>
             </div>
-          </div>
-          <div class="col-md-6">
-            <div class="panel panel-green">
-              <div id="FrequencySpinner" class="spinnerdiv"></div>
-              <div class="panel-heading big-heading">
-                <div class="row">
-                  <div class="col-xs-6 col-md-2 col-lg-4">
-                    <span class="huge-small">Frequency</span>
-                  </div>
-                  <div class="col-xs-6  col-md-10 col-lg-8 text-right">
-                    <span id="labelFrequency" class="huge-small"></span>
-                    <em class="huge-small-unit">Hz</em>
-                  </div>
-                </div>
+            <div class="panel-body" id="CurrentCol">
+              <div id="CurrentMaximizeDiv">
+                <div id="CurrentChart" class="chart"></div>
               </div>
-              <div class="panel-body no-padding" id="FrequencyCol">
-                <div id="FrequencyMaximizeDiv">
-                  <div style="padding:5px">
-                    <div style="display:inline-block" id="FrequencyAggregation">Loading data...</div>
-                    <div id="FrequencyLegend" style="float: right"></div>
-                  </div>
-                  <div id="FrequencyChart" class="chart"></div>
-                </div>
+            </div>
+            <div class="panel-footer">
+              <a href="Analysis/Current">
+                <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
+              </a>
+              <div class="btn-group pull-right">
+                <button type="button" class="btn btn-default btn-xs" id="btnExportCurrent" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
+                <button type="button" class="btn btn-default btn-xs pull-right" id="btnMaximizeCurrent"><i class="fa fa-expand"></i></button>
+              </div>                
+              <div class="pull-right">&nbsp;</div>
+              <div class="btn-group pull-right" id="groupCurrentPhases">
+                <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase R">R</button>
+                <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase S">S</button>
+                <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase T">T</button>
+                <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase N">N</button>
               </div>
-              <div class="panel-footer">
-                <a href="Analysis/Frequency">
-                  <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
-                </a>
-                <div class="btn-group pull-right">
-                  <button type="button" class="btn btn-default btn-xs" id="btnExportFrequency" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
-                  <button type="button" class="btn btn-default btn-xs pull-right" id="btnMaximizeFrequency"><i class="fa fa-expand"></i></button>
-                </div>
-                <div class="clearfix"></div>
-              </div>
+              <div class="clearfix"></div>
             </div>
           </div>
         </div>
-        <div class="row">
-          <div class="col-lg-12">
-            <div class="panel panel-default">
-              <div id="MainParametersSpinner" class="spinnerdiv"></div>
-              <div class="panel-heading">
-                <i class="fa fa-area-chart fa-fw"></i> Main parameters
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="panel panel-active-power" id="PowerPanel">
+            <div id="PowerSpinner" class="spinnerdiv"></div>
+            <div class="panel-heading">
+              <span class="huge">Active&nbsp;power</span>
+              <div style="float: right; text-align: right;">
+                <div><span id="labelPower" class="huge-small">?</span><em class="huge-small-unit" id="labelPowerUnits">W</em></div>
+                <div id="PowerAggregation">Loading data...</div>
               </div>
-              <div id="EvolutionPanel" style="padding: 5px; min-height: 340px"></div>
+            </div>
+            <div class="panel-body" id="PowerCol">
+              <div id="PowerMaximizeDiv">
+                <div id="PowerChart" class="chart"></div>
+              </div>
+            </div>
+            <div class="panel-footer">
+              <a href="Analysis/EnergyPower">
+                <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
+              </a>
+              <div class="btn-group pull-right">
+                <button type="button" class="btn btn-default btn-xs" id="btnExportPower" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
+                <button type="button" class="btn btn-default btn-xs pull-right" id="btnMaximizePower"><i class="fa fa-expand"></i></button>
+              </div>
+              <div class="pull-right">&nbsp;</div>
+              <div class="btn-group pull-right" id="groupPowerPhases" data-load-block="PhaseV_Block"></div>
+              <div class="clearfix"></div>
             </div>
           </div>
         </div>
-      
+        <div class="col-md-6">
+          <div class="panel panel-frequency" id="FrequencyPanel">
+            <div id="FrequencySpinner" class="spinnerdiv"></div>
+            <div class="panel-heading">
+              <span class="huge">Frequency</span>
+              <div style="float: right; text-align: right;">
+                <div><span id="labelFrequency" class="huge-small"></span><em class="huge-small-unit">Hz</em></div>
+                <div id="FrequencyAggregation">Loading data...</div>
+              </div>
+            </div>
+            <div class="panel-body" id="FrequencyCol">
+              <div id="FrequencyMaximizeDiv">
+                <div id="FrequencyChart" class="chart"></div>
+              </div>
+            </div>
+            <div class="panel-footer">
+              <a href="Analysis/Frequency">
+                <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
+              </a>
+              <div class="btn-group pull-right">
+                <button type="button" class="btn btn-default btn-xs" id="btnExportFrequency" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
+                <button type="button" class="btn btn-default btn-xs pull-right" id="btnMaximizeFrequency"><i class="fa fa-expand"></i></button>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="panel panel-default">
+            <div id="MainParametersSpinner" class="spinnerdiv"></div>
+            <div class="panel-heading">
+              <span class="huge">Parameters</span>
+            </div>
+            <div id="EvolutionPanel" style="padding: 5px; min-height: 340px"></div>
+          </div>
+        </div>
+      </div>
     </div>
     <script src="lib/jquery/jquery.js"></script>
     <script src="lib/bootstrap/js/bootstrap.js"></script>

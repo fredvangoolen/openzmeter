@@ -27,27 +27,26 @@ function AjaxGetVoltage() {
 function AjaxVoltage(result) {
   if(result['Sampletime'] === null) return;
   if(LastVoltageSample === 0) StopSpinner(VoltageSpinner, 'VoltageSpinner');
-  if(result['Sampletime'][0] <= LastVoltageSample) return;
   VoltageData = GraphDataAppend(result, 'rms_v', VoltageData);
   LastVoltageSample = LastSampletime(result, LastVoltageSample);
-  $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)));
+  $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)));
   $('#labelVoltageAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(VoltageChart === null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
       { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: false, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
-        labelsDiv: "VoltageLegend", labels: ['Time'].concat(VoltageNames), colors: ColorArray($('#VoltagePanel').css('border-color'), 3), dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(VoltageNames), colors: ColorArray($('#VoltagePanel').css('border-color'), 3), dateWindow: [result['From'], result['To']],
         underlayCallback: function(canvas, area, g) {
-          var NV = Nodes[Node]['NominalVoltage'], Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
+          var NV = Analyzers[Analyzer].NominalVoltage, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
           GraphHBackgroundRanges([[NV * 1.1, NV * 1.07, Yellow], [NV * 0.93, NV * 0.9, Yellow], [Infinity, NV * 1.1, Red], [NV * 0.9, -Infinity, Red]], g, canvas);
         },
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">V</em>'; },
-               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>'; }
+               axisLabelFormatter: function (x) { return Round2(x); }
              },
           x: { valueFormatter: function (x) { return new Date(x).toLocaleTimeString(); },
-               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -4px">' + x.toLocaleTimeString() + '</div>'; }
+               axisLabelFormatter: function (x) { return x.toLocaleTimeString(); }
              }
         }
       }
@@ -95,27 +94,26 @@ function AjaxGetCurrent() {
 function AjaxCurrent(result) {
   if(result['Sampletime'] === null) return;
   if(LastCurrentSample === 0) StopSpinner(CurrentSpinner, 'CurrentSpinner');
-  if(result['Sampletime'][0] <= LastCurrentSample) return;
   CurrentData = GraphDataAppend(result, 'rms_i', CurrentData);
-  LastCurrentSample = LastSampletime(result);
-  $('#labelCurrent').html(Array_Round2(result['rms_i'][result['rms_i'].length - 1], '&nbsp;&nbsp;', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
+  LastCurrentSample = LastSampletime(result, LastCurrentSample);
+  $('#labelCurrent').html(Array_Round2(result['rms_i'][result['rms_i'].length - 1], '&nbsp;', ColorArray($('#CurrentPanel').css('border-color'), 4)));
   $('#CurrentAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(CurrentChart == null) {
     CurrentChart = new Dygraph(document.getElementById("CurrentChart"), CurrentData,
       { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {}, 
-        labelsDiv: "CurrentLegend", labels: ['Time'].concat(VoltageNames), colors: CurrentGraphColors, dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(VoltageNames), colors: ColorArray($('#CurrentPanel').css('border-color'), 4), dateWindow: [result['From'], result['To']],
         underlayCallback: function(canvas, area, g) {
-          var MC = Nodes[Node]['MaxCurrent'], Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
+          var MC = Analyzers[Analyzer]['MaxCurrent'], Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
           GraphHBackgroundRanges([[MC * 0.7, MC * 0.6, Yellow], [Infinity, MC * 0.7, Red]], g, canvas);
         },
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">A</em>'; },
-               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>'; }
+               axisLabelFormatter: function (x) { return Round2(x); }
              },
           x: { valueFormatter: function (x) { return new Date(x).toLocaleTimeString(); },
-               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -4px">' + x.toLocaleTimeString() + '</div>'; }
+               axisLabelFormatter: function (x) { return x.toLocaleTimeString(); }
              }
         }
       }
@@ -161,27 +159,25 @@ function AjaxGetPower() {
 function AjaxPower(result) {
   if((result === null) || (result['Sampletime'] === null)) return;
   if(LastPowerSample === 0) StopSpinner(PowerSpinner, 'PowerSpinner');
-  if(result['Sampletime'][0] <= LastPowerSample) return;
-  for(i = 0; i < result['Sampletime'].length; i++) PowerData.push([new Date(result['Sampletime'][i])].concat(result['active_power'][i]));
-  ShiftArray(PowerData, result['MaxSamples']);
-  LastPowerSample = LastSampletime(result);
+  PowerData = GraphDataAppend(result, 'active_power', PowerData);
+  LastPowerSample = LastSampletime(result, LastPowerSample);
   PowerChartUnits = GetBestUnits(ArrayGraphMax(PowerData));
   $('#labelPowerUnits').text(PowerChartUnits + 'W');
-  $('#labelPower').html(Array_Round2(ScaleArrayToUnits(result['active_power'][result['active_power'].length - 1], PowerChartUnits), '&nbsp;&nbsp;', ["#f0ad4e", "#ad4ef0", "#4ef0ad"]));
+  $('#labelPower').html(Array_Round2(ScaleArrayToUnits(result['active_power'][result['active_power'].length - 1], PowerChartUnits), '&nbsp;&nbsp;', ColorArray($('#PowerPanel').css('border-color'), 3)));
   $('#PowerAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(PowerChart == null) {
     PowerChart = new Dygraph(document.getElementById("PowerChart"), PowerData, 
       { strokeWidth: 0.5, stepPlot: true, stackedGraph: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
-        labelsDiv: "PowerLegend", labels: ['Time'].concat(ActivePowerNames), colors: ActivePowerGraphColors, dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(ActivePowerNames), colors: ColorArray($('#PowerPanel').css('border-color'), 3), dateWindow: [result['From'], result['To']],
         axes: {
           y: { pixelsPerLabel: 15,
                axisLabelWidth: 34,
-               valueFormatter: function (x) { return Round2(ScaleArrayToUnits(x, PowerChartUnits)) + ' <em class="x-small">' + PowerChartUnits + 'W</em>'; },
-               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -2px">' + Round2(ScaleArrayToUnits(x, PowerChartUnits)) + '</div>'; }
+               valueFormatter: function (x) { return Round2(ScaleToUnits(x, PowerChartUnits)) + ' <em class="x-small">' + PowerChartUnits + 'W</em>'; },
+               axisLabelFormatter: function (x) { return Round2(ScaleToUnits(x, PowerChartUnits)); }
              },
           x: { valueFormatter: function (x) { return new Date(x).toLocaleTimeString(); },
-               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -4px">' + x.toLocaleTimeString() + '</div>'; }
+               axisLabelFormatter: function (x) { return x.toLocaleTimeString(); }
              }
         }
       }
@@ -193,56 +189,13 @@ function AjaxPower(result) {
 }
 function PowerSeries(event) {
   GraphPhaseButtons(PowerChart, $('#groupPowerPhases'), 'VisibleDashboardPowerPhases', false, function(series) { return CalcRanges(PowerData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
-}
-$('#groupPowerPhases').on('click', 'button', PowerSeries);
-function SetPowerVisibleSeries() {
-  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    var ShowR = (localStorage.getItem('ShowDashboardPowerR') === 'true');
-    var ShowS = (localStorage.getItem('ShowDashboardPowerS') === 'true');
-    var ShowT = (localStorage.getItem('ShowDashboardPowerT') === 'true');
-    var VisibleSeries = [ShowR, ShowS, ShowT];
-    var Visibles = [];
-    if(ShowR) Visibles.push(1);
-    if(ShowS) Visibles.push(2);
-    if(ShowT) Visibles.push(3);
-    PowerChart.updateOptions({ visibility: VisibleSeries, valueRange: CalcRanges(PowerData, Visibles, true, false, true) });
-    if(ShowR === true)
-      $('#btnShowPowerRPhase').addClass('active');
-    else    
-      $('#btnShowPowerRPhase').removeClass('active');
-    if(ShowS === true)
-      $('#btnShowPowerSPhase').addClass('active');
-    else    
-      $('#btnShowPowerSPhase').removeClass('active');
-    if(ShowT === true)
-      $('#btnShowPowerTPhase').addClass('active');
-    else    
-      $('#btnShowPowerTPhase').removeClass('active');
-  } else {
-    PowerChart.updateOptions({ valueRange: CalcRanges(PowerData, [1], false) });
-  }
-  var Serie = 'Power';
-  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    if(ShowT) Serie = 'Power (T)';
-    if(ShowS) Serie = 'Power (S)';
-    if(ShowR) Serie = 'Power (R)';
-  }
   var Annotations = [];
-  var MaxFound = [0, -Infinity];
-  for(i = 0; i < PowerData.length; i++) {
-    var Max = (Nodes['Devices'][Node]['Type'] == '3Phase') ? ((ShowR ? PowerData[i][1] : 0) + (ShowS ? PowerData[i][2] : 0) + (ShowT ? PowerData[i][3] : 0)) : PowerData[i][1];
-    if(MaxFound[1] <= Max) MaxFound = [PowerData[i][0], Max];
-  }
-  Annotations.push({
-      series: Serie,
-      xval: MaxFound[0].getTime(),
-      shortText: 'MAX',
-      text: 'Active power peak',
-      width: 28,
-      cssClass: 'annotation'
-    });
+  var Result = ArrayGraphMinMax(PowerChart, true);
+  Annotations.push( { series: Result.VisibleNames[0], xval: Result.MaxTime, shortText: 'MAX', text: 'Active power peak', width: 28, cssClass: 'annotation' });
+  Annotations.push( { series: Result.VisibleNames[0], xval: Result.MinTime, shortText: 'MIN', text: 'Active power peak', width: 28, cssClass: 'annotation' });
   PowerChart.setAnnotations(Annotations);
 }
+$('#groupPowerPhases').on('click', 'button', PowerSeries);
 
 $('#btnMaximizePower').click(function() {
   $('#GraphDialogTitle').text('Power');
@@ -282,16 +235,16 @@ function AjaxFrequency(result) {
   $('#FrequencyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(FrequencyChart == null) {
     FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"), FrequencyData,
-      { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#999", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
+      { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
-        labelsDiv: "FrequencyLegend", labels: ["Time", "Frequency"], colors: ["#5cb85c"], valueRange: CalcRanges(FrequencyData, [1]), dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ["Time", "Frequency"], colors: $('#FrequencyPanel').css('border-color'), valueRange: CalcRanges(FrequencyData, [1]), dateWindow: [result['From'], result['To']],
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">Hz</em>'; },
-               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>'; }
+               axisLabelFormatter: function (x) { return Round2(x); }
              },
           x: { valueFormatter: function (x) { return new Date(x).toLocaleTimeString(); },
-               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -4px">' + x.toLocaleTimeString() + '</div>'; }
+               axisLabelFormatter: function (x) { return x.toLocaleTimeString(); }
              }
         }
       }
@@ -364,24 +317,10 @@ function EnergyResizeEvent() {
   if(EnergyChart != null) EnergyChart.resize($('#EnergyCol').width(), Height - 12);
 }
 function EnergySeries(event) {
-  GraphPhaseButtons(PowerChart, $('#groupEnergyPhases'), 'VisibleDashboardEnergyPhases', false, function(series) { return CalcRanges(EnergyData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
+  GraphPhaseButtons(EnergyChart, $('#groupEnergyPhases'), 'VisibleDashboardEnergyPhases', false, function(series) { return CalcRanges(EnergyData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
 }
+$('#groupEnergyPhases').on('click', 'button', EnergySeries);
 
-function ChooseEnergyChannels() {
-  var ShowR = (localStorage.getItem('ShowR') === 'true');
-  var ShowS = (localStorage.getItem('ShowS') === 'true');
-  var ShowT = (localStorage.getItem('ShowT') === 'true');
-  if(this.innerText === 'R') ShowR = !ShowR;
-  if(this.innerText === 'S') ShowS = !ShowS;
-  if(this.innerText === 'T') ShowT = !ShowT;
-  if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
-  if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowS = true;
-  if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowT = true;
-  localStorage.setItem('ShowR', ShowR);
-  localStorage.setItem('ShowS', ShowS);
-  localStorage.setItem('ShowT', ShowT);
-  SetEnergyVisibleSeries();
-}
 $('#btnShowEnergyRPhase').click(ChooseEnergyChannels);
 $('#btnShowEnergySPhase').click(ChooseEnergyChannels);
 $('#btnShowEnergyTPhase').click(ChooseEnergyChannels);
@@ -495,7 +434,7 @@ function AjaxGetEnergyCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Nodes[Node].ID }),
+           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current + Period, Analyzer: Analyzers[Analyzer].ID }),
            success: EnergyUpdateCountersCurrent
   });
   $.ajax({ url: "getSeriesAggreg",
@@ -503,7 +442,7 @@ function AjaxGetEnergyCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current, Node: Nodes[Node].ID }),
+           data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: Aggreg, Period: Period, To: Current, Analyzer: Analyzers[Analyzer].ID }),
            success: EnergyUpdateCountersPrevs
   });
   $.ajax({ url: "getBudget",
@@ -511,7 +450,7 @@ function AjaxGetEnergyCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: Period, To: Current, Node: Nodes[Node].ID }),
+           data: JSON.stringify({ Period: Period, To: Current, Analyzer: Analyzers[Analyzer].ID }),
            success: EnergyUpdateCountersBudget
   });
 }
@@ -607,7 +546,7 @@ function AjaxGetMainParameters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: "1m", LastSample: LastEvolutionSample, Series: 'active_power, fundamental_reactive_power, rms_v, rms_i, power_factor, phi', Node: Nodes[Node].ID }),
+           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: "1m", LastSample: LastEvolutionSample, Series: 'active_power, reactive_power, rms_v, rms_i, power_factor, phi', Analyzer: Analyzers[Analyzer].ID }),
            success: AjaxMainParameters,
            complete: function() {
              setTimeout(AjaxGetMainParameters, 60000);

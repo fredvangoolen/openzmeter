@@ -47,7 +47,7 @@ function AjaxGetVoltage() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastVoltageSample, Series: 'rms_v', Node: Nodes[Node].ID}),
+           data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastVoltageSample, Series: 'rms_v', Analyzer: Analyzers[Analyzer].ID}),
            success: AjaxVoltage,
            complete: function() { 
              AjaxGetEvents(Period, GraphEnd, Node);
@@ -70,7 +70,7 @@ function AjaxVoltage(result) {
       VoltageData,
       { strokeWidth: 1,
         labelsDiv: "VoltageLegend",
-        labels: (Nodes[Node]['Type'] == '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)'] :['Time', 'Voltage'],
+        labels: ['Time'].concat(VoltageNames),
         stepPlot: true,
         fillGraph: false,
         colors: ["#d9534f", "#534fd9", "#4fd953"],
@@ -83,7 +83,7 @@ function AjaxVoltage(result) {
           })
         ],
         underlayCallback: function(canvas, area, g) {
-          var NominalVoltage = Nodes['NominalVoltage'];
+          var NominalVoltage = Analyzers[Analyzer].NominalVoltage;
           var YellowLowA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.07);
           var YellowHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - YellowLowA;
           var YellowLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.07);
@@ -200,7 +200,7 @@ function VoltageResizeEvent() {
   VoltageChart.resize($('#VoltageCol').width(), Height - 4);
 }
 function SetVoltageVisibleSeries() {
-  if(Nodes[Node]['Type'] == '3Phase') {
+  if(Analyzers[Analyzer]['Mode'] == '3Phase') {
     var ShowR = (localStorage.getItem('ShowR') === 'true');
     var ShowS = (localStorage.getItem('ShowS') === 'true');
     var ShowT = (localStorage.getItem('ShowT') === 'true');
@@ -320,7 +320,7 @@ $('#btnMaximizeVoltage').click(function() {
   window.dispatchEvent(new Event('resize'));  
 });
 $('#btnExportVoltage').click(function() {
-  exportToCsv("Voltage_" + Node + '_' + LastVoltageSample + '.csv', ((Nodes[Node]['Type'] == '3Phase') ? [['DateTime', 'Voltage R', 'Voltage S', 'Voltage T']] : [['DateTime', 'Voltage']]).concat(VoltageData));
+  exportToCsv("Voltage_" + Node + '_' + LastVoltageSample + '.csv', ((Analyzers[Analyzer]['Mode'] == '3Phase') ? [['DateTime', 'Voltage R', 'Voltage S', 'Voltage T']] : [['DateTime', 'Voltage']]).concat(VoltageData));
 });
 
 /* Contadores de voltage */
@@ -354,7 +354,7 @@ function AjaxGetVoltageCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(rms_v), max(rms_v), min(rms_v)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Nodes[Node].ID }),
+           data: JSON.stringify({ Series: "avg(rms_v), max(rms_v), min(rms_v)", Aggreg: Aggreg, Period: Period, To: Current + Period, Analyzer: Analyzers[Analyzer].ID }),
            success: VoltageUpdateCountersCurrent
   });
   $.ajax({ url: "getSeriesAggreg",
@@ -362,7 +362,7 @@ function AjaxGetVoltageCounters() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(rms_v), max(rms_v), min(rms_v)", Aggreg: Aggreg, Period: Period, To: Current, Node: Nodes[Node].ID }),
+           data: JSON.stringify({ Series: "avg(rms_v), max(rms_v), min(rms_v)", Aggreg: Aggreg, Period: Period, To: Current, Analyzer: Analyzers[Analyzer].ID }),
            success: VoltageUpdateCountersPrevs
   });
 }
@@ -453,7 +453,7 @@ function AjaxGetDetails() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_v, phi, rms_v, rms_i', Node: Nodes[Node].ID}),
+           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_v, phi, rms_v, rms_i', Analyzer: Analyzers[Analyzer].ID}),
            success: function(result) {
              if(WaveformChart === null) StopSpinner(DetailSpinner, 'DetailSpinner');
              DetailTimestamp = result['Sampletime'];
@@ -566,7 +566,7 @@ function DetailsButtonClick(event) {
       break;
   }
   
-  if((Nodes[Node]['Type'] !== '3Phase') || (localStorage.getItem('VoltageDetailView') === 'Events')) {
+  if((Analyzers[Analyzer]['Mode'] !== '3Phase') || (localStorage.getItem('VoltageDetailView') === 'Events')) {
     $('#btnShowDetailRPhase').addClass('disabled');
     $('#btnShowDetailSPhase').addClass('disabled');
     $('#btnShowDetailTPhase').addClass('disabled');
@@ -579,7 +579,7 @@ function DetailsButtonClick(event) {
   $('#btnShowDetailRPhase').removeClass('active');
   $('#btnShowDetailSPhase').removeClass('active');
   $('#btnShowDetailTPhase').removeClass('active');
-  if(Nodes[Node]['Type'] === '3Phase') {
+  if(Analyzers[Analyzer]['Type'] === '3Phase') {
     switch(localStorage.getItem('VoltageDetailView')) {
       case 'Waveform' :
       case 'Harmonics' :
@@ -714,12 +714,13 @@ $('#btnPauseDetail').click(DetailsButtonClick);
 var WaveformChart       = null;
 var WaveformDataset     = [];
 function UpdateWaveformChart(result) {
+  return;
   if(result !== null) {
     var date = new Date(result['Sampletime']);
     $('#WaveformTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
     WaveformDataset = [];
     for(i = 0; i < result['wave_v'][0].length; i++) {
-      if(Nodes[Node]['Type'] === '3Phase') {
+      if(Analyzers[Analyzer]['Type'] === '3Phase') {
         WaveformDataset.push([i, result['wave_v'][0][i], result['wave_v'][1][i], result['wave_v'][2][i], result['wave_i'][0][i], result['wave_i'][1][i], result['wave_i'][2][i]]);
       } else {
         WaveformDataset.push([i, result['wave_v'][0][i], result['wave_i'][0][i]]);      
@@ -733,7 +734,7 @@ function UpdateWaveformChart(result) {
   var VoltageSeries = [];
   var CurrentSeries = [];
   var Visibility    = [];
-  if(Nodes[Node]['Type'] === '3Phase') {
+  if(Analyzers[Analyzer]['Type'] === '3Phase') {
     if(ShowR) VoltageSeries.push(1);
     if(ShowS) VoltageSeries.push(2);
     if(ShowT) VoltageSeries.push(3);
@@ -751,8 +752,8 @@ function UpdateWaveformChart(result) {
   var Options = { 
     strokeWidth: 1,
     labelsDiv: "WaveformLegend",  
-    labels: (Nodes[Node]['Type'] === '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)', 'Current (R)', 'Current (S)', 'Current (T)'] : ['Time', 'Voltage', 'Current'],
-    colors: (Nodes[Node]['Type'] === '3Phase') ? ['#d9534f', '#534fd9', '#4fd953', '#428bca', '#42ca81', '#ca428b'] : ['#d9534f', '#428bca'],
+    labels: (Analyzers[Analyzer]['Type'] === '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)', 'Current (R)', 'Current (S)', 'Current (T)'] : ['Time', 'Voltage', 'Current'],
+    colors: (Analyzers[Analyzer]['Type'] === '3Phase') ? ['#d9534f', '#534fd9', '#4fd953', '#428bca', '#42ca81', '#ca428b'] : ['#d9534f', '#428bca'],
     visibility: Visibility,
     gridLineColor: "#999",
     gridLinePattern: [4, 4],
@@ -1159,7 +1160,7 @@ function AjaxGetEvolution() {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: '1m', LastSample: LastEvolutionSample, Series: 'power_factor, thd_v, phi, harmonics_v', Node: Nodes[Node].ID}),
+           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: '1m', LastSample: LastEvolutionSample, Series: 'power_factor, thd_v, phi, harmonics_v', Analyzer: Analyzers[Analyzer].ID}),
            success: AjaxEvolutions,
            complete: function() { 
              setTimeout(AjaxGetEvolution, 60000);
@@ -1181,13 +1182,13 @@ function UpdatePowerFactorChart(result) {
     for(i = 0; i < result['power_factor'].length; i++) PowerFactorDataset.push([new Date(result['Sampletime'][i])].concat(result['power_factor'][i]));
     while(PowerFactorDataset.length > result['MaxSamples']) PowerFactorDataset.shift();
   }
-  var Visibility = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
+  var Visibility = (Analyzers[Analyzer]['Mode'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
   if(PowerFactorChart === null) {
     PowerFactorChart = new Dygraph(document.getElementById("PowerFactorChart"),
       PowerFactorDataset,
       { strokeWidth: 0.5,
-        labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'Power Factor (R)', 'Power Factor (S)', 'Power Factor (T)'] : ['Time', 'Power Factor'],
-        colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
+        labels: (Analyzers[Analyzer]['Mode'] === '3Phase') ? ['Time', 'Power Factor (R)', 'Power Factor (S)', 'Power Factor (T)'] : ['Time', 'Power Factor'],
+        colors: (Analyzers[Analyzer]['Mode'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
         visibility: Visibility,
         gridLineColor: "#999",
         gridLinePattern: [4, 4],
@@ -1247,13 +1248,13 @@ function UpdateTHDChart(result) {
     }
     while(THDDataset.length > result['MaxSamples']) THDDataset.shift();
   }
-  var Visibility = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
+  var Visibility = (Analyzers[Analyzer]['Mode'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
   if(THDChart === null) {
     THDChart = new Dygraph(document.getElementById("THDChart"),
       THDDataset,
       { strokeWidth: 0.5,
-        labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'THD (R)', 'THD (S)', 'THD (T)'] : ['Time', 'THD'],
-        colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
+        labels: (Analyzers[Analyzer]['Mode'] === '3Phase') ? ['Time', 'THD (R)', 'THD (S)', 'THD (T)'] : ['Time', 'THD'],
+        colors: (Analyzers[Analyzer]['Mode'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
         visibility: Visibility,
         gridLineColor: "#999",
         gridLinePattern: [4, 4],
@@ -1311,13 +1312,13 @@ function UpdatePHIChart(result) {
     for(i = 0; i < result['phi'].length; i++) PHIDataset.push([new Date(result['Sampletime'][i])].concat(result['phi'][i]));
     while(PHIDataset.length > result['MaxSamples']) PHIDataset.shift();
   }
-  var Visibility = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
+  var Visibility = (Analyzers[Analyzer]['Mode'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
   if(PHIChart === null) {
     PHIChart = new Dygraph(document.getElementById("PHIChart"),
       PHIDataset,
       { strokeWidth: 0.5,
-        labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', 'PHI (R)', 'PHI (S)', 'PHI (T)'] : ['Time', 'PHI'],
-        colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
+        labels: (Analyzers[Analyzer]['Mode'] === '3Phase') ? ['Time', 'PHI (R)', 'PHI (S)', 'PHI (T)'] : ['Time', 'PHI'],
+        colors: (Analyzers[Analyzer]['Mode'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
         visibility: Visibility,
         gridLineColor: "#999",
         gridLinePattern: [4, 4],
@@ -1384,14 +1385,14 @@ function UpdateHarmonicsCharts(result) {
       while(HarmonicsDatasets[k].length > result['MaxSamples']) HarmonicsDatasets[k].shift();
     }
   }
-  var Visibility = (Nodes['Devices'][Node]['Type'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
+  var Visibility = (Analyzers[Analyzer]['Mode'] === '3Phase') ? [localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseR', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseS', localStorage.getItem('VoltageDetailEvolutionPhase') === 'PhaseT'] : [true];
   if(HarmonicsCharts.length == 0) {
     for(i = 0; i < 50; i++) {
       HarmonicsCharts[i] = new Dygraph(document.getElementById("HarmonicsEvolutionChart_" + i),
         HarmonicsDatasets[i],
         { strokeWidth: 0.5,
-          labels: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['Time', HarmonicsNames[i] + ' (R)', HarmonicsNames[i] + ' (S)', HarmonicsNames[i] + ' (T)'] : ['Time', HarmonicsNames[i]],
-          colors: (Nodes['Devices'][Node]['Type'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
+          labels: (Analyzers[Analyzer]['Mode'] === '3Phase') ? ['Time', HarmonicsNames[i] + ' (R)', HarmonicsNames[i] + ' (S)', HarmonicsNames[i] + ' (T)'] : ['Time', HarmonicsNames[i]],
+          colors: (Analyzers[Analyzer]['Mode'] === '3Phase') ? ['#d9534f', '#d9534f', '#d9534f'] : ['#d9534f'],
           visibility: Visibility,
           gridLineColor: "#999",
           gridLinePattern: [4, 4],
@@ -1462,7 +1463,7 @@ function AjaxGetEvents(period, to, node) {
            type: "POST",
            dataType: "json",
            contentType: 'application/json',
-           data: JSON.stringify({ Period: period, To: to, LastEvent: LastEventStartTime, Node: Nodes[Node].ID}),
+           data: JSON.stringify({ Period: period, To: to, LastEvent: LastEventStartTime, Analyzer: Analyzers[Analyzer].ID}),
            success: AjaxEvents,
            complete: function() { 
              $('#btnVoltageNow').removeClass('disabled');
@@ -1732,7 +1733,7 @@ $('#GraphDialogClose').click(function() {
 
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
-  if(Nodes[Node]['Type'] === '3Phase') {
+  /*if(Nodes[Node]['Type'] === '3Phase') {
     $('#btnShowVoltageRPhase').removeClass('disabled');
     $('#btnShowVoltageSPhase').removeClass('disabled');
     $('#btnShowVoltageTPhase').removeClass('disabled');
@@ -1743,7 +1744,7 @@ function UpdatePage() {
     localStorage.setItem('ShowR', (ShowR === true)); 
     localStorage.setItem('ShowS', (ShowS === true));
     localStorage.setItem('ShowT', (ShowT === true));
-  }
+  }*/
   DetailsButtonClick();
   AjaxGetVoltage();
   AjaxGetVoltageCounters();

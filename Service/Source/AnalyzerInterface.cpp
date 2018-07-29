@@ -161,18 +161,15 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
 
 void AnalyzerInterface::SaveAggreg(Params_t *params) {
 //  ExecSentence("PREPARE SAVE_1M_EXT   AS INSERT INTO aggreg_ext_1m (sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7)");  
-//  ExecSentence("PREPARE SAVE_10M      AS INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)");  
-//  ExecSentence("PREPARE SAVE_1H       AS INSERT INTO aggreg_1h (sampletime, rms_v, rms_i, active_power, active_energy, fundamental_reactive_power, fundamental_reactive_energy, freq, flag) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)");
-//  ExecSentence("PREPARE DELETE_1M_EXT AS DELETE FROM aggreg_ext_1m WHERE sampletime_ext < $1");
 
   if(params->Type == AGGREG_3S)
     PrepareSentence("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, active_power, active_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1M)  
     PrepareSentence("INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, active_power, active_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_10M)
-    PrepareSentence("EXECUTE SAVE_10M(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, active_power, active_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1H)
-    PrepareSentence("EXECUTE SAVE_1H(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, active_power, active_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?)");
   BindSingleUInt64(params->Timestamp);                                                                       //sampletime
   BindArrayFloat(params->RMS_V, (pMode == PHASE1) ? 1 : 3);                                                  //rms_v 
   BindArrayFloat(params->RMS_I, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);                          //rms_i

@@ -37,29 +37,21 @@ void  *DeviceVirtual::Capture_Thread(void *args) {
     float Current[4];
     uint64_t Sampletime = Tools::GetTime();
     if((Analyzer->IsFinished() == true) && (((Sampletime - StartTime) * This->pSampleRate / 1000) > GeneratedSamples)) {
-    //      float CurrentA = Variation(GeneratedSamples, 1, 5, 30.0 * This->SampleRate());
-//      float CurrentB = Variation(GeneratedSamples, 1, 5, 40.0 * This->SampleRate());
-//      float CurrentC = Variation(GeneratedSamples, 1, 5, 50.0 * This->SampleRate());
-    Voltage[0] = Analyzer->GetNominalVoltage() * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * Analyzer->GetNominalFrequency());
-    Voltage[1] = Analyzer->GetNominalVoltage() * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * Analyzer->GetNominalFrequency() - 2.0 * M_PI / 3.0);
-    Voltage[2] = Analyzer->GetNominalVoltage() * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * Analyzer->GetNominalFrequency() - 4.0 * M_PI / 3.0);
-    //            Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 300.0 * This->SampleRate());
-//      float VoltageB = Variation(GeneratedSamples, Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 310.0 * This->SampleRate());
-//      float VoltageC = Variation(GeneratedSamples, Tools::Electrical.NominalVoltage - 10, Tools::Electrical.NominalVoltage + 10, 320.0 * This->SampleRate());
-//      if(((GeneratedSamples / This->SampleRate()) >= 10) && ((GeneratedSamples / This->SampleRate()) < 20)) {
-//        VoltageB = Tools::Electrical.NominalVoltage * 0.001;
-//      }
-//      This->Buffer[This->WritePos].VoltageA = VoltageA * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency);
-//      This->Buffer[This->WritePos].CurrentA = CurrentA * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency + CurrentPhaseShift);
-//      if(This->Triphase()) {
-//        This->Buffer[This->WritePos].VoltageB = VoltageB * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency - 2.0 * M_PI / 3.0);
-//        This->Buffer[This->WritePos].VoltageC = VoltageC * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency - 4.0 * M_PI / 3.0);
-//        This->Buffer[This->WritePos].CurrentB = CurrentB * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency - 2.0 * M_PI / 3.0 + CurrentPhaseShift);
-//        This->Buffer[This->WritePos].CurrentC = CurrentC * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->SampleRate() * Tools::Electrical.NominalFrequency - 4.0 * M_PI / 3.0 + CurrentPhaseShift);
-//        This->Buffer[This->WritePos].CurrentD = 0.0000000;
-//      }
-    GeneratedSamples++;
-    
+      Voltage[0] = Analyzer->GetNominalVoltage() * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * Analyzer->GetNominalFrequency());
+      Voltage[0] = Voltage[0] + Voltage[0] * 0.05 * sin((2.0 * M_PI * GeneratedSamples) / (This->pSampleRate * 300.0));
+      Voltage[1] = Analyzer->GetNominalVoltage() * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * Analyzer->GetNominalFrequency() - 2.0 * M_PI / 3.0);
+      Voltage[1] = Voltage[1] + Voltage[1] * 0.05 * sin((2.0 * M_PI * (GeneratedSamples - This->pSampleRate * 100.0)) / (This->pSampleRate * 100.0));
+      Voltage[2] = Analyzer->GetNominalVoltage() * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * Analyzer->GetNominalFrequency() - 4.0 * M_PI / 3.0);
+      Voltage[2] = Voltage[2] + Voltage[2] * 0.05 * sin((2.0 * M_PI * (GeneratedSamples - This->pSampleRate * 100.0)) / (This->pSampleRate * 100.0));
+      Current[0] = 5.0 * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * Analyzer->GetNominalFrequency());
+      Current[0] = Current[0] + Current[0] * 0.1 * sin((2.0 * M_PI * GeneratedSamples) / (This->pSampleRate * 360.0));
+      Current[1] = 5.0 * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * Analyzer->GetNominalFrequency() - 2.0 * M_PI / 3.0);
+      Current[1] = Current[1] + Current[1] * 0.1 * sin((2.0 * M_PI * (GeneratedSamples - This->pSampleRate * 120.0)) / (This->pSampleRate * 100.0));
+      Current[2] = 5.0 * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * Analyzer->GetNominalFrequency() - 4.0 * M_PI / 3.0);
+      Current[2] = Current[2] + Current[2] * 0.1 * sin((2.0 * M_PI * (GeneratedSamples - This->pSampleRate * 240.0)) / (This->pSampleRate * 100.0));
+      Current[3] =  Current[0] + Current[1] + Current[2];
+      GeneratedSamples++;
+
 
       Analyzer->BufferAppend(Voltage, Current, Sampletime);
     } else {

@@ -11,25 +11,16 @@ var HarmonicsNames      = [ '1st',  '2nd',  '3rd',  '4th',  '5th',  '6th',  '7th
                             '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th',
                             '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th',
                             '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
-/* Voltage series names and colors */
+/* Series phase names */
 var VoltageNames;
-//var VoltageGraphColors = ["#d9534f", "#534fd9", "#4fd953"];
-/* Current series names and colors */
 var CurrentNames;
-var CurrentGraphColors = ["#428bca", "#42ca81", "#ca428b", "#ca8142"];
-/* ActivePower series names and colors */
 var ActivePowerNames;
-var ActivePowerGraphColors = ["#f0ad4e", "#ad4ef0", "#4ef0ad"];
-/* ActivePower series names and colors */
 var ActiveEnergyNames;
-var ActiveEnergyGraphColors;
 
 /* offline.js configuration and tools */
 Offline.options = {requests: false};
-function DisableUI() { $('#DisableDiv').css('display', 'inherit'); }
-function EnableUI() {  $('#DisableDiv').css('display', 'none'); }
-Offline.on('confirmed-down', DisableUI);
-Offline.on('confirmed-up',   EnableUI);
+Offline.on('confirmed-down', function() { $('#OfflineDiv').css('display', 'inherit'); });
+Offline.on('confirmed-up',   function() {  $('#OfflineDiv').css('display', 'none'); });
 
 /* redirect ajax error to login page */
 $(document).ajaxError(function (event, jqxhr, settings, exception) { if(jqxhr.status === 401) window.location.href = 'Login'; });
@@ -164,9 +155,14 @@ function GetSeriesNow(series, onSuccess, onCompletion, onError) {
 
 /* append samples of given series to array of graph data, and shift if needed */
 function GraphDataAppend(result, serie, data) {
-  if(result['Sampletime'] === null) return data;
-  for(i = 0; i < result['Sampletime'].length; i++) data.push([new Date(result['Sampletime'][i])].concat(result[serie][i]));
-  ShiftArray(data, result['MaxSamples']);
+  if(result['Sampletime'] !== null && result['Sampletime'].length > 0) {
+    if(data.length === 0 || data[data.length - 1][0] < result['Sampletime'][0]) {
+      for(i = 0; i < result['Sampletime'].length; i++) {
+        data.push([new Date(result['Sampletime'][i])].concat(result[serie][i]));
+      }
+      ShiftArray(data, result['MaxSamples']);
+    }
+  }
   return data;
 }
 
@@ -194,7 +190,7 @@ function GraphHBackgroundRanges(ranges, graph, canvas) {
 function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, sender) {
   var State = localStorage.getItem(variable);
   var NumElements = buttongroup.children().length;
-  if(State <= 0 || State >= Math.pow(2, NumElements)) State = 1;
+  if(State <= 0 || State >= Math.pow(2, graph.attributes_.labels_.length)) State = 1;
   if(sender !== undefined) {
     var Index = $(sender).index();
     if(State == Math.pow(2, Index)) { //only one iten selected
@@ -207,7 +203,7 @@ function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, s
     if(unique == true) State = State & (Math.pow(2, Index));  
     localStorage.setItem(variable, State);
   }
-  if(Nodes[Node].Mode !== '1PHASE') {
+  if(Analyzers[Analyzer].Mode !== '1PHASE') {
     buttongroup.removeClass('hidden');
     var VisibleSeries = [];
     var Visibles = [];
@@ -252,6 +248,46 @@ function ArrayGraphMax(array) {
   return Max;
 }
 
+/* Find the max,min value of graph visible series data (array of arrays where first column is time) */
+function ArrayGraphMinMax(graph, accum) {
+  var Result = {VisibleNames: [], Min: Infinity, Max: -Infinity, MinTime: 0, MaxTime: 0};
+  for(i = 0; i < graph.attrs_.visibility.length; i++) {
+    if(graph.attrs_.visibility[i] === true) Result.VisibleNames.push(graph.attributes_.labels_[i]);
+  }
+  for(i = 0; i < graph.rawData_.length; i++) {
+    if(accum === true) {
+      var Value = 0;
+      for(n = 1; n < graph.rawData_[i].length; n++) {      
+        if(graph.attrs_.visibility[n - 1] === true) Value = Value + graph.rawData_[i][n];
+      }
+      if(Value < Result.Min) {
+        Result.Min = Value;  
+        Result.MinTime = graph.rawData_[i][0];
+      }
+      if(Value > Result.Max) {
+        Result.Max = Value;  
+        Result.MaxTime = graph.rawData_[i][0];
+      }
+    } else {
+      for(n = 1; n < graph.rawData_[i].length; n++) {      
+        if(graph.attrs_.visibility[n - 1] === true) {
+          var Value = Value + graph.rawData_[i][n];
+          if(Value < Result.Min) {
+            Result.Min = Value;  
+            Result.MinTime = graph.rawData_[i][0];
+          }
+          if(Value > Result.Max) {
+            Result.Max = Value;  
+            Result.MaxTime = graph.rawData_[i][0];
+          }
+        }
+      }
+    }
+  }
+  return Result;
+}
+
+
 /* Scale all values of an array to units ('', 'k', 'M') */
 function ScaleArrayToUnits(array, units) {
   if(units === '') return array;
@@ -292,6 +328,16 @@ function ColorArray(base, items) {
   return Array;
 }
 
+function LegendFormatter_Follow(data) {
+  if(data.x === undefined || data.x === null) return "";
+  var Result = '<span class="dygraph-legend-title">' + new Date(data.x).toLocaleDateString() + ' - ' + new Date(data.x).toLocaleDateString() + '</span><br>';
+  for(i = 0; i < data.series.length; i++)  {
+    if(data.series[i].isVisible) {
+      Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
+    }
+  }
+  return Result;
+}
 
 
 
@@ -590,7 +636,7 @@ function GetAnalyzersCompletes(result) {
     GetIndicators();
     AjaxGetIndicatorsB();
   }
-  VoltageNames      = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Voltage'] : ['Voltage (R)', 'Voltage (S)', 'Voltage (T)'];
+  VoltageNames      = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Voltage'] : ['V(R)', 'V(S)', 'V(T)'];
   CurrentNames      = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Current'] : (Analyzers[Analyzer]['Mode'] == '3PHASE') ? ['Current (R)', 'Current (S)', 'Current (T)'] : ['Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'];
   ActivePowerNames  = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Power']   : ['Power (R)', 'Power (S)', 'Power (T)'];
   ActiveEnergyNames = (Analyzers[Analyzer]['Mode'] == '1Phase') ? ['Energy']  : ['Energy (R)', 'Energy (S)', 'Energy (T)'];

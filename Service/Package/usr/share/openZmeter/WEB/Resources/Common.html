@@ -1,7 +1,7 @@
 <html>
   <body>
     <div id="ScrollableAggreg_Block">
-      <span class="small">Aggregation:</span><br>
+      <span>Aggregation:</span><br>
       <div class="dropdown">
         <button class="btn btn-default dropdown-toggle btn-xs" type="button" id="ScrollableAggreg" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">3 Seconds<span class="caret"></span></button>
         <ul class="dropdown-menu">
@@ -13,7 +13,7 @@
       </div>
     </div>
     <div id="ScrollableTime_Block">
-      <span class="small">Time:</span><br>
+      <span>Time:</span><br>
       <div class="dropdown">
         <button class="btn btn-default dropdown-toggle btn-xs" type="button" id="ScrollableAggreg" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">Custom<span class="caret"></span></button>
         <ul class="dropdown-menu">
@@ -42,6 +42,7 @@
       <button type="button" class="btn btn-default btn-xs" id="btnScrollableNow"  data-toggle="tooltip" title="Move to most recent samples and update in real time"><i class="fa fa-play"></i></button>
     </div>
     <div id="Header_Block">
+      <div id="DisableDiv" class="overlay"></div>
       <div class="navbar-header">
         <div class="navbar-brand">
         <embed src="Logo2.svg" type="image/svg+xml" /><br/>
@@ -54,7 +55,7 @@
         </button>
       </div>
       <div class="indicator-bar">
-        <div class="indicator-red">
+        <div class="indicator-voltage">
           <div>
             <div id="IndicatorVoltageValues">
               <span class="value">220.00</span>
@@ -64,7 +65,7 @@
             <div>V</div>
           </div>
         </div>
-        <div class="indicator-blue">
+        <div class="indicator-current">
           <div>
             <div>
               <span class="value">220.00</span>
@@ -74,7 +75,7 @@
             <div>A</div>
           </div>
         </div>
-        <div class="indicator-yellow">
+        <div class="indicator-active-power">
           <div>
             <div>
               <span class="value">220.00</span>
@@ -84,7 +85,7 @@
             <div>kW</div>
           </div>
         </div>
-        <div class="indicator-green">
+        <div class="indicator-frequency">
           <div>
             <div>
               <span class="value">50.00</span>
@@ -92,7 +93,7 @@
             <div>Hz</div>
           </div>
         </div>
-        <div class="indicator-purple">
+        <div class="indicator-active-energy">
           <div>
             <div>
               <span class="value">220.00</span>

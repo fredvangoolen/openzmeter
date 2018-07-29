@@ -9,7 +9,8 @@
     <base href="/">
     <link rel="shortcut icon" href="favicon.ico"/>
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css"/>
-    <link rel="stylesheet" href="lib/metisMenu/metisMenu.css"/>
+    <link rel="stylesheet" href="lib/datatables/css/dataTables.bootstrap.css" />
+    <link rel="stylesheet" href="lib/sidenav/sidenav.min.css"/>
     <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.css"/>
     <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
     <link rel="stylesheet" href="lib/offline/offline.css" type="text/css"/>
@@ -17,8 +18,7 @@
     <title>openZmeter - Analysis - Energy & Power</title>
   </head>
   <body>
-    <div id="DisableDiv" class="overlay"></div>
-    <nav class="navbar navbar-default navbar-fixed-top" id="Header"></nav>
+    <span data-load-block="Header_Block"></span>
     <div class="modal fade" id="aggreg_modal" tabindex="-1" role="dialog" data-backdrop='static'>
       <div class="modal-dialog">
         <div class="modal-content">
@@ -53,7 +53,7 @@
       </div>
     </div>
     <div id="wrapper">
-      <div id="page-wrapper">
+
         <div class="row">
           <div class="col-lg-12">
             <div class="panel panel-info">
@@ -213,12 +213,11 @@
               </div>
             </div> 
           </div>
-        </div>
       </div>
     </div>
     <script src="lib/jquery/jquery.js"></script>
     <script src="lib/bootstrap/js/bootstrap.js"></script>
-    <script src="lib/metisMenu/metisMenu.js"></script>
+    <script src="lib/sidenav/sidenav.min.js"></script>
     <script src="lib/spin.js/spin.js"></script>
     <script src="lib/dygraph/dygraph.js"></script>
     <script src="lib/dygraph/crosshair.js"></script>
@@ -228,6 +227,8 @@
     <script src="lib/offline/offline.js"></script>
     <script src="lib/momentjs/moment.js"></script>
     <script src="lib/momentjs/moment-duration-format.js"></script>
+    <script src="lib/datatables/js/jquery.dataTables.js"></script>
+    <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
     <script src="openZmeter.js"></script>
     <script src="Analysis_EnergyPower.js"></script>
     <script>
