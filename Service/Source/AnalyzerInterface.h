@@ -19,6 +19,8 @@ class AnalyzerInterface : protected Database {
       float      Apparent_Power[3];             //Potencia aparente (S)
       float      Power_Factor[3];               //Factor de potencia (cos(PHI))
       float      Active_Energy[3];              //Energia consumida
+      float      Reactive_Power[3];             //Reactive power
+      float      Reactive_Energy[3];            //Reactive energy
       float      Frequency;                     //Frecuencia
       bool       Flag;                          //Periodo marcado
       float      THD_V[3];                      //Distorsion harmonica de la tension

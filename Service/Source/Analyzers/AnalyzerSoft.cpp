@@ -139,7 +139,7 @@ void AnalyzerSoft::Analyze() {
         pAggreg10C.CurrentHarmonics[j][Harmonic] = CurrentHarmonic;
         if(Harmonic == 0) {
 //          pAggreg10C.Fundamental_Active_Power[j]   = VoltageHarmonic * CurrentHarmonic * cos(PHI);
-//          pAggreg10C.Fundamental_Reactive_Power[j] = VoltageHarmonic * CurrentHarmonic * sin(PHI);
+          pAggreg10C.Reactive_Power[j] = VoltageHarmonic * CurrentHarmonic * sin(PHI);
 //          pAggreg10C.Fundamental_Apparent_Power[j] = VoltageHarmonic * CurrentHarmonic;
 //          pAggreg10C.Fundamental_Power_Factor[j]   = pAggreg10C.Fundamental_Active_Power[j] / pAggreg10C.Fundamental_Apparent_Power[j];
           PHI = fmod(PHI, 2.0 * M_PI);
@@ -150,7 +150,7 @@ void AnalyzerSoft::Analyze() {
       pAggreg10C.THD_I[j] = sqrt(pAggreg10C.THD_I[j]) / pAggreg10C.CurrentHarmonics[j][0];
       pAggreg10C.Active_Energy[j] = (pAggreg10C.Active_Power[j] * pSamples) / (pSamplerate * 3600.0);
       pAggreg10C.Power_Factor[j] = pAggreg10C.Active_Power[j] / pAggreg10C.Apparent_Power[j];
-//      pAggreg10C.Fundamental_Reactive_Energy[j] = (pAggreg10C.Fundamental_Reactive_Power[j] * pSamples) / (pSamplerate * 3600.0);
+      pAggreg10C.Reactive_Energy[j] = (pAggreg10C.Reactive_Power[j] * pSamples) / (pSamplerate * 3600.0);
     }
     if(pMode == PHASE3N) {
       pCurrentFFT[3]->Wait();
@@ -217,7 +217,6 @@ void AnalyzerSoft::Analyze() {
 }
 void AnalyzerSoft::GetParams(Params_t **params, ExtParams_t **extParams) {
 }
-
 json_object *AnalyzerSoft::GetJSONCopy(char *series) {
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads++;

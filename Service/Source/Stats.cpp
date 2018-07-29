@@ -16,6 +16,7 @@ Stats::Stats(uint8_t channels, Database *db, float volt, float freq) {
   pVoltage   = (uint16_t*)malloc((sizeof(VoltageRanges) / sizeof(float) - 1) * sizeof(uint16_t));
   pFrequency = (uint16_t*)malloc((sizeof(FrequencyRanges) / sizeof(float) - 1) * sizeof(uint16_t));
   pTHD       = (uint16_t*)malloc((sizeof(THDRanges) / sizeof(float) - 1) * sizeof(uint16_t));
+  db->ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_stat_1h (sampletime_ext bigint NOT NULL PRIMARY KEY, stat_voltage int[] NOT NULL, stat_frequency int[] NOT NULL, stat_thd int[] NOT NULL, stat_harmonics int[] NOT NULL) WITH (OIDS=FALSE)");
   ResetStats();
 }
 void Stats::ResetStats() {

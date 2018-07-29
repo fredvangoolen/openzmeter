@@ -14,13 +14,12 @@ AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nomi
   pMaxCurrent = max_current;
   pMinCurrent = min_current;
   pMode = mode;
-  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_3s (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[], rms_i real[], active_power real[], active_energy real[], reactive_power real[], reactive_energy real[], freq real, flag boolean) WITH (OIDS=FALSE)");
-  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_1m (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[], rms_i real[], active_power real[], active_energy real[], reactive_power real[], reactive_energy real[], freq real, flag boolean) WITH (OIDS=FALSE)");
-  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_10m (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[], rms_i real[], active_power real[], active_energy real[], reactive_power real[], reactive_energy real[], freq real, flag boolean) WITH (OIDS=FALSE)");
-  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_1h (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[], rms_i real[], active_power real[], active_energy real[], reactive_power real[], reactive_energy real[], freq real, flag boolean) WITH (OIDS=FALSE)");
-  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_ext_1m (sampletime_ext bigint NOT NULL PRIMARY KEY, power_factor real[], thd_v real[], thd_i real[], phi real[], harmonics_v real[], harmonics_i real[]) WITH (OIDS=FALSE)");
-  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_stat_1h (sampletime_ext bigint NOT NULL PRIMARY KEY, power_factor real[], thd_v real[], thd_i real[], phi real[], harmonics_v real[], harmonics_i real[]) WITH (OIDS=FALSE)");
-  ExecSentence("CREATE TABLE IF NOT EXISTS events (starttime bigint NOT NULL PRIMARY KEY, duration  bigint, samplerate real, type character varying(16), voltage real, percent real, samples real[]) WITH (OIDS=FALSE)");
+  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_3s  (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[] NOT NULL, rms_i real[] NOT NULL, active_power real[] NOT NULL, active_energy real[] NOT NULL, reactive_power real[] NOT NULL, reactive_energy real[] NOT NULL, freq real, flag boolean NOT NULL) WITH (OIDS=FALSE)");
+  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_1m  (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[] NOT NULL, rms_i real[] NOT NULL, active_power real[] NOT NULL, active_energy real[] NOT NULL, reactive_power real[] NOT NULL, reactive_energy real[] NOT NULL, freq real, flag boolean NOT NULL) WITH (OIDS=FALSE)");
+  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_10m (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[] NOT NULL, rms_i real[] NOT NULL, active_power real[] NOT NULL, active_energy real[] NOT NULL, reactive_power real[] NOT NULL, reactive_energy real[] NOT NULL, freq real, flag boolean NOT NULL) WITH (OIDS=FALSE)");
+  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_1h  (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[] NOT NULL, rms_i real[] NOT NULL, active_power real[] NOT NULL, active_energy real[] NOT NULL, reactive_power real[] NOT NULL, reactive_energy real[] NOT NULL, freq real, flag boolean NOT NULL) WITH (OIDS=FALSE)");
+  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_ext_1m  (sampletime_ext bigint NOT NULL PRIMARY KEY, power_factor real[] NOT NULL, thd_v real[] NOT NULL, thd_i real[] NOT NULL, phi real[] NOT NULL, harmonics_v real[] NOT NULL, harmonics_i real[] NOT NULL) WITH (OIDS=FALSE)");
+  ExecSentence("CREATE TABLE IF NOT EXISTS events (starttime bigint NOT NULL PRIMARY KEY, duration  bigint NOT NULL, samplerate real, type character varying(16), voltage real, percent real, samples real[]) WITH (OIDS=FALSE)");
 }
 char *AnalyzerInterface::GetID() {
   return pID;
@@ -160,21 +159,21 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
 }
 
 void AnalyzerInterface::SaveAggreg(Params_t *params) {
-//  ExecSentence("PREPARE SAVE_1M_EXT   AS INSERT INTO aggreg_ext_1m (sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES($1, $2, $3, $4, $5, $6, $7)");  
-
   if(params->Type == AGGREG_3S)
-    PrepareSentence("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, active_power, active_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1M)  
-    PrepareSentence("INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, active_power, active_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_10M)
-    PrepareSentence("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, active_power, active_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1H)
-    PrepareSentence("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, active_power, active_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
   BindSingleUInt64(params->Timestamp);                                                                       //sampletime
   BindArrayFloat(params->RMS_V, (pMode == PHASE1) ? 1 : 3);                                                  //rms_v 
   BindArrayFloat(params->RMS_I, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);                          //rms_i
   BindArrayFloat(params->Active_Power, (pMode == PHASE1) ? 1 : 3);                                           //active_power
   BindArrayFloat(params->Active_Energy, (pMode == PHASE1) ? 1 : 3);                                          //active_energy
+  BindArrayFloat(params->Reactive_Power, (pMode == PHASE1) ? 1 : 3);                                         //reactive_power
+  BindArrayFloat(params->Reactive_Energy, (pMode == PHASE1) ? 1 : 3);                                        //reactive_energy
   BindSingleFloat(params->Frequency);                                                                        //frequency
   BindSingleBool(params->Flag);                                                                              //flaged
   ExecSentence();
@@ -200,8 +199,8 @@ void AnalyzerInterface::AccumulateAggreg(Params_t *dst, Params_t *src) {
   for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) dst->RMS_I[i] += pow(src->RMS_I[i], 2.0);
   for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Active_Power[i] += src->Active_Power[i];
   for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Active_Energy[i] += src->Active_Energy[i];
-//  for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Fundamental_Reactive_Power[i] += src->Fundamental_Reactive_Power[i];
-//  for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Fundamental_Reactive_Energy[i] += src->Fundamental_Reactive_Energy[i];
+  for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Reactive_Power[i] += src->Reactive_Power[i];
+  for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Reactive_Energy[i] += src->Reactive_Energy[i];
   dst->Flag |= src->Flag;
   dst->Frequency += src->Frequency;
   if(dst->Type == AGGREG_1M) {
@@ -225,7 +224,7 @@ void AnalyzerInterface::NormalizeAggreg(Params_t *params) {
     for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->RMS_V[i] = sqrt(params->RMS_V[i] / params->Samples);
     for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) params->RMS_I[i] = sqrt(params->RMS_I[i] / params->Samples);
     for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Active_Power[i] = params->Active_Power[i] / params->Samples;
-//    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Fundamental_Reactive_Power[i] = params->Fundamental_Reactive_Power[i] / params->Samples;
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Reactive_Power[i] = params->Reactive_Power[i] / params->Samples;
     params->Frequency = params->Frequency / params->Samples;
     if(params->Type == AGGREG_1M) {
       for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Power_Factor[i] = params->Power_Factor[i] / params->Samples;
@@ -248,8 +247,8 @@ void AnalyzerInterface::ResetAggreg(Params_t *params) {
   for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->RMS_V[i] = 0;
   for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) params->RMS_I[i] = 0;
   for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Active_Power[i] = 0;
-//  for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Fundamental_Reactive_Power[i] = 0;
-//  for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Fundamental_Reactive_Energy[i] = 0;
+  for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Reactive_Power[i] = 0;
+  for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Reactive_Energy[i] = 0;
   for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Active_Energy[i] = 0;
   params->Frequency = 0;
   params->Flag = false;
