@@ -18,7 +18,6 @@
 
 /* Grafica de tension */
 var VoltageChart        = null;
-var VoltageSpinner      = new Spinner(SpinnerOpts);
 var LastVoltageSample   = 0;
 var VoltageData         = [];
 function AjaxGetVoltage() {
@@ -26,7 +25,7 @@ function AjaxGetVoltage() {
 }
 function AjaxVoltage(result) {
   if(result['Sampletime'] === null) return;
-  if(LastVoltageSample === 0) StopSpinner(VoltageSpinner, 'VoltageSpinner');
+  if(LastVoltageSample === 0) $('#VoltageSpinner').hide();
   VoltageData = GraphDataAppend(result, 'rms_v', VoltageData);
   LastVoltageSample = LastSampletime(result, LastVoltageSample);
   $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)));
@@ -85,7 +84,6 @@ $('#btnMaximizeVoltage').click(function() {
 
 /* Grafica de corriente */
 var CurrentChart        = null;
-var CurrentSpinner      = new Spinner(SpinnerOpts);
 var LastCurrentSample   = 0;
 var CurrentData         = [];
 function AjaxGetCurrent() {
@@ -93,7 +91,7 @@ function AjaxGetCurrent() {
 }
 function AjaxCurrent(result) {
   if(result['Sampletime'] === null) return;
-  if(LastCurrentSample === 0) StopSpinner(CurrentSpinner, 'CurrentSpinner');
+  if(LastCurrentSample === 0) $('#CurrentSpinner').hide();
   CurrentData = GraphDataAppend(result, 'rms_i', CurrentData);
   LastCurrentSample = LastSampletime(result, LastCurrentSample);
   $('#labelCurrent').html(Array_Round2(result['rms_i'][result['rms_i'].length - 1], '&nbsp;', ColorArray($('#CurrentPanel').css('border-color'), 4)));
@@ -152,13 +150,12 @@ var PowerChart          = null;
 var LastPowerSample     = 0;
 var PowerData           = [];
 var PowerChartUnits     = '';
-var PowerSpinner        = new Spinner(SpinnerOpts);
 function AjaxGetPower() {
   GetSeries(7200000, 0, "3s", LastPowerSample, 'active_power', AjaxPower, function() { setTimeout(AjaxGetPower, 5000); });
 }
 function AjaxPower(result) {
   if((result === null) || (result['Sampletime'] === null)) return;
-  if(LastPowerSample === 0) StopSpinner(PowerSpinner, 'PowerSpinner');
+  if(LastPowerSample === 0) $('#PowerSpinner').hide();
   PowerData = GraphDataAppend(result, 'active_power', PowerData);
   LastPowerSample = LastSampletime(result, LastPowerSample);
   PowerChartUnits = GetBestUnits(ArrayGraphMax(PowerData));
@@ -220,24 +217,21 @@ $('#btnExportPower').click(function() {
 var FrequencyChart      = null;
 var LastFrequencySample = 0;
 var FrequencyData       = [];
-var FrequencySpinner    = new Spinner(SpinnerOpts);
 function AjaxGetFrequency() {
   GetSeries(7200000, 0, "3s", LastFrequencySample, 'freq', AjaxFrequency, function() { setTimeout(AjaxGetFrequency, 5000); });
 }
 function AjaxFrequency(result) {
   if((result === null) || (result['Sampletime'] === null)) return;
-  if(LastFrequencySample === 0) StopSpinner(FrequencySpinner, 'FrequencySpinner');
-  if(result['Sampletime'][0] <= LastFrequencySample) return;
-  for(i = 0; i < result['Sampletime'].length; i++) FrequencyData.push([new Date(result['Sampletime'][i]), result['freq'][i]]);
-  ShiftArray(FrequencyData, result['MaxSamples']);
-  LastFrequencySample = LastSampletime(result);
+  if(LastFrequencySample === 0) $('#FrequencySpinner').hide();
+  FrequencyData = GraphDataAppend(result, 'freq', FrequencyData);
+  LastFrequencySample = LastSampletime(result, LastFrequencySample);
   $('#labelFrequency').html(Round2(result['freq'][result['freq'].length - 1]));
   $('#FrequencyAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
   if(FrequencyChart == null) {
     FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"), FrequencyData,
       { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ["Time", "Frequency"], colors: $('#FrequencyPanel').css('border-color'), valueRange: CalcRanges(FrequencyData, [1]), dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ["Time", "Frequency"], colors: [$('#FrequencyPanel').css('border-color')], valueRange: CalcRanges(FrequencyData, [1]), dateWindow: [result['From'], result['To']],
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">Hz</em>'; },
@@ -279,10 +273,10 @@ var EnergyChart      = null;
 var EnergySpinner    = new Spinner(SpinnerOpts);
 var ScrollableSeries = "active_energy";
 function Scrollable_ShowSpinner() {
-  ShowSpinner(EnergySpinner, 'EnergySpinner');
+  $('#EnergySpinner').show();
 }
 function Scrollable_StopSpinner() {
-  StopSpinner(EnergySpinner, 'EnergySpinner');
+  $('#EnergySpinner').hide();
 }
 function Scrollable_OnSuccess(result) {
   if(ScrollableLastSample === 0) EnergyData = [Array(ActiveEnergyNames.length + 1).fill(0)];
@@ -321,9 +315,7 @@ function EnergySeries(event) {
 }
 $('#groupEnergyPhases').on('click', 'button', EnergySeries);
 
-$('#btnShowEnergyRPhase').click(ChooseEnergyChannels);
-$('#btnShowEnergySPhase').click(ChooseEnergyChannels);
-$('#btnShowEnergyTPhase').click(ChooseEnergyChannels);
+
 $('#btnEnergy3S').click(function() {
   localStorage.setItem('GraphAggregation', '3s');
   LastEnergySample = 0;
@@ -474,7 +466,7 @@ function EnergyUpdateCountersCurrent(result) {
   if(Units == 'kWh') {
     for(i = 0; i < result['sum_active_energy'].length; i++) result['sum_active_energy'][i] = result['sum_active_energy'][i] / 1000;
   }
-  if(Nodes['Devices'][Node]['Type'] === '1Phase') {  
+  if(Analyzers[Analyzer]['Mode'] === '1Phase') {  
     $('#labelEnergy').html(Round2(result['sum_active_energy'][0]));
   } else {
     $('#labelEnergy').html(Round2(result['sum_active_energy'][0] + result['sum_active_energy'][1] + result['sum_active_energy'][2]));
@@ -530,144 +522,38 @@ function EnergyUpdateCountersBudget(result) {
     $('#PrevEnergyUnits').text('kWh');
   }
 }
-/* Cuadro Main parameters */
-var EvolutionDatasets   = [[],[],[],[],[],[]];
-var EvolutionCharts     = [];
+
+/* Parameters */
+var ReactiveChart       = null;
+var ReactiveData        = [];
+var PowerFactorChart    = null;
+var PowerFactorData     = [];
+var PhiChart            = null;
+var PhiData             = [];
+var THDVChart           = null;
+var THDVData            = [];
+var THDIChart           = null;
+var THDIData            = [];
 var LastEvolutionSample = 0;
 function AjaxGetMainParameters() {
-  if(LastEvolutionSample == 0) {
-    $('#MainParamPanel').find("*").prop("disabled", true);
-    $('#MainParamPanel').css('opacity', '0.6');
-    $('#MainParamPanel').append('<div id="SpinnerDivMain" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2;"></div>');
-    MainParamSpinner.spin(document.getElementById('SpinnerDivMain'));
-  }
-  $.ajax({ url: "getSeries",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: 86400000, To: 0, Aggreg: "1m", LastSample: LastEvolutionSample, Series: 'active_power, reactive_power, rms_v, rms_i, power_factor, phi', Analyzer: Analyzers[Analyzer].ID }),
-           success: AjaxMainParameters,
-           complete: function() {
-             setTimeout(AjaxGetMainParameters, 60000);
-           }
-      });
+  GetSeries(86400000, 0, "1m", LastEvolutionSample, 'reactive_power, power_factor, phi, thd_v, thd_i', AjaxMainParameters, function() { setTimeout(AjaxGetMainParameters, 60000); });
 }
 function AjaxMainParameters(result) {
-  if(LastEvolutionSample === 0) {
-    MainParamSpinner.stop();
-    $('#SpinnerDivMain').remove();
-    $('#MainParamPanel').css('opacity', '1.0');
-    $('#MainParamPanel').find("*").prop("disabled", false);
-  }
-  for(j = 0; j < result['Sampletime'].length; j++) {
-    EvolutionDatasets[0].push([new Date(result['Sampletime'][j]), result.active_power[j][0]]);
-    EvolutionDatasets[1].push([new Date(result['Sampletime'][j]), result.fundamental_reactive_power[j][0]]);
-    EvolutionDatasets[2].push([new Date(result['Sampletime'][j]), result.rms_v[j][0]]);
-    EvolutionDatasets[3].push([new Date(result['Sampletime'][j]), result.rms_i[j][0]]);
-    EvolutionDatasets[4].push([new Date(result['Sampletime'][j]), result.power_factor[j][0]]);
-    EvolutionDatasets[5].push([new Date(result['Sampletime'][j]), result.phi[j][0]]);
-    LastEvolutionSample = result['Sampletime'][j];
-  }
-  for(i = 0; i < 6; i++) {
-    while(EvolutionDatasets[i].length > result['Max_Samples']) EvolutionDatasets[i].shift();
-  }
-  var SerieNames = ['Active power', 'Reactive power', 'Voltage', 'Current', 'Power factor', 'Phi'];
-  if(EvolutionCharts.length == 0) {
-    for(i = 0; i < 6; i++) {
-      var Str = '<div style="position: relative">' +
-                '  <div id="EvolutionChart' + i + '" class="chart" style="height: 50px' + ((i == 0) ? '; margin-top: 16px; border-top: 1px solid #999"' : '"') + '></div>' +       
-                '  <div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="EvolutionChartLegend' + i + '"></div>' +                    
-                '</div>';
-      $("#EvolutionPanel").append(Str);
-      EvolutionCharts[i] = new Dygraph(document.getElementById("EvolutionChart" + i),
-        EvolutionDatasets[i],
-        { strokeWidth: 0.5,
-          labels: ["Time", SerieNames[i]],
-          colors: ["#d9534f"],
-          gridLineColor: "#999",
-          gridLinePattern: [4, 4],
-          highlightCircleSize: 0,
-          interactionModel: { },
-          labelsDiv: 'EvolutionChartLegend' + i,
-          legend: 'always',
-          legendFormatter: function(data) {
-            if(data.x == null) {
-              return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
-            } else {
-              return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' +
-                      data.xHTML + data.series[0].yHTML;
-            }
-          },
-          xAxisHeight: 0.1,
-          xLabelHeight: 1,
-          plotter: barChartPlotterCubism,
-          dateWindow: [result['From'], result['To']],
-          plugins: [
-            new Dygraph.Plugins.Crosshair({
-              direction: "vertical"
-            })
-          ],
-          axes: {
-            y: { drawAxis: false,
-                 drawGrid:false,
-                 valueFormatter: function (x) {
-                   var Units;
-                   if(this.attributes_.labels_[0] == SerieNames[0]) {
-                     if(x > 1000) {
-                       Units = 'kW';
-                       x = x / 1000;
-                     } else {
-                       Units = 'W';
-                     }
-                   } else if(this.attributes_.labels_[0] == SerieNames[1]) {
-                     if(x > 1000) {
-                       Units = 'kVAr';
-                       x = x / 1000;
-                     } else {
-                       Units = 'VAr';
-                     }
-                   } else if(this.attributes_.labels_[0] == SerieNames[2]) {
-                     Units = 'V';
-                   } else if(this.attributes_.labels_[0] == SerieNames[3]) {
-                     Units = 'A';  
-                   } else if(this.attributes_.labels_[0] == SerieNames[4]) {
-                     Units = '';
-                   } else if(this.attributes_.labels_[0] == SerieNames[5]) {
-                     if(x < 0) {
-                       Units = 'º CAP';
-                       x = -x;
-                     } else if(x > 0) {
-                       Units = 'º IND';
-                     } else {
-                       Units = 'º';
-                     }
-                   }
-                   return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '<em>' + Units + '</em></div>';
-                 }
-               },
-            x: { valueFormatter: function (x) {
-                   var date = new Date(x);
-                   return '<div style="font-size: 10px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';
-                 },
-                 axisLabelFormatter: function(x, i) {
-                   if(this.attributes_.labels_[0] == SerieNames[0]) {
-                     var date = new Date(x);
-                     if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
-                       return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px; font-weight: bold">' + date.toLocaleDateString() + '</div>';
-                     } else {
-                       return '<div style="font-size: 10px; margin-top: -63px; line-height: 10px">' + date.toLocaleTimeString() + '</div>';                       
-                     }
-                   } else {
-                     return null;
-                   }
-                 }
-            }
-          }
-        }
-      );
-    }
-    Dygraph.synchronize(EvolutionCharts, { range: false, zoom: false });
+  if((result === null) || (result['Sampletime'] === null)) return;
+  if(LastEvolutionSample === 0) $('#MainParametersSpinner').hide();
+  ReactiveData = GraphDataAppend(result, 'reactive_power', ReactiveData);
+  PowerFactorData = GraphDataAppend(result, 'power_factor', PowerFactorData);
+  PhiData = GraphDataAppend(result, 'phi', PhiData);
+  THDVData = GraphDataAppend(result, 'thd_v', THDVData);
+  THDIData = GraphDataAppend(result, 'thd_i', THDIData);
+  LastEvolutionSample = LastSampletime(result, LastEvolutionSample);
+  if(ReactiveChart === null) {
+    ReactiveChart    = AppendCubismGraph($('#EvolutionPanel'), ReactiveData,    "Reactive Power", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'VAr</em></div>'; });
+    PowerFactorChart = AppendCubismGraph($('#EvolutionPanel'), PowerFactorData, "Power Factor",   [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '</div>'; });
+    PhiChart         = AppendCubismGraph($('#EvolutionPanel'), PhiData,         "Phi",            [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em></div>'; });
+    THDVChart        = AppendCubismGraph($('#EvolutionPanel'), THDVData,        "Voltage THD",    [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '<em>%</em></div>'; });
+    THDIChart        = AppendCubismGraph($('#EvolutionPanel'), THDIData,        "Current THD",    [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '<em>%</em></div>'; });
+    Dygraph.synchronize([ReactiveChart, PowerFactorChart, PhiChart, THDVChart, THDIChart], { range: false, zoom: false });
   } else {
     for(i = 0; i < 6; i++) {
       EvolutionCharts[i].updateOptions({ file: EvolutionDatasets[i],dateWindow: [result['From'], result['To']] });
@@ -682,11 +568,6 @@ var DialogPrevResizeHandler = null;
 
 
 
-
-
-
-
-var MainParamSpinner    = new Spinner(SpinnerOpts);
 
 
 $('#aggreg_modal_close').click(function() {

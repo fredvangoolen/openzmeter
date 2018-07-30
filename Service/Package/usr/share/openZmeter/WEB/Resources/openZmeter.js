@@ -28,16 +28,6 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) { if(jqxhr.st
 /* handle buttons events to avoid 'selected' effect */
 $(document).on("mousedown", ":button", function(e) { e.preventDefault(); } );
 
-/* show/hide spinner inside a div */
-function ShowSpinner(spinner, container) {
-  $('#' + container).css('display', 'inherit');
-  spinner.spin(document.getElementById(container));  
-}
-function StopSpinner(spinner, container) {
-  $('#' + container).css('display', 'none');
-  spinner.stop();  
-}
-
 /* getSeries function */
 function GetSeries(period, to, aggreg, lastsample, series, onSuccess, onCompletion, onError) {
   $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion,
@@ -287,6 +277,46 @@ function ArrayGraphMinMax(graph, accum) {
   return Result;
 }
 
+/* Add a cubism like graph to a div */
+function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter ) {
+  var Index = div.children().length;
+  var Container = $('<div class="cubism-serie"></div>');
+  var GraphContainer = $('<div class="graph" id="' + div[0].id + '_' + Index + '_Graph"></div>');
+  var GraphLegend = $('<div class="legend" id="' + div[0].id + '_' + Index + '_Legend"></div>');
+  Container.append(GraphContainer); 
+  Container.append(GraphLegend);
+  $(div).append(Container);
+  var Graph = new Dygraph(GraphContainer[0], initialData, 
+    { strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], highlightCircleSize: 0, legend: 'always', xAxisHeight: 0.1, xLabelHeight: 1, plotter: barChartPlotterCubism, interactionModel: { },
+      labels: ["Time"].concat(Array(initialData[0].length - 1).fill(label)), colors: Array(initialData[0].length - 1).fill("#d9534f"), labelsDiv: div[0].id + '_' + Index + '_Legend', dateWindow: datewindow,
+      plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
+      legendFormatter: function(data) {
+        if(data.x == null) {
+          return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
+        } else {
+          for(i = 0; i < data.series.length; i++)  {
+            if(data.series[i].yHTML !== undefined) return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' + data.xHTML + data.series[i].yHTML;
+          }      
+        }
+      },
+      axes: {
+        y: { drawAxis: false, drawGrid:false, valueFormatter: yvalueformatter },
+        x: { valueFormatter: function (x) { return '<div style="font-size: 10px; line-height: 10px">' + new Date(x).toLocaleTimeString() + '</div>'; },
+             axisLabelFormatter: (Index !== 0) ? function() { return null; } : 
+             function(x, i) {
+                var date = new Date(x);
+                if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
+                  return '<div class="timeline-day">' + date.toLocaleDateString() + '</div>';
+                } else {
+                  return '<div class="timeline">' + date.toLocaleTimeString() + '</div>';                       
+                }
+              }
+            }
+      }
+    }
+  );
+  return Graph;
+}
 
 /* Scale all values of an array to units ('', 'k', 'M') */
 function ScaleArrayToUnits(array, units) {
@@ -667,6 +697,7 @@ function LoadComplete() {
   }
 }
 function StartPageLoad() {
+  $('.spinnerdiv').each(function(index, element) { new Spinner(SpinnerOpts).spin(element); });
   LoadedPending = $('*[data-load-block]').length;
   $('*[data-load-block]').each(function(index) { $(this).load('Common.html #' + $(this).data('loadBlock') + ' > *', null, LoadComplete); });
 }

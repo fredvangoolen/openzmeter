@@ -241,6 +241,33 @@ body {
   z-index: 100;
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
+.cubism-serie {
+  position: relative;  
+}
+.cubism-serie > .graph {
+  height: 50px;
+
+}
+.cubism-serie:first-child > .graph {
+  margin-top: 16px;
+  border-top: 1px solid #BBB;
+}
+.cubism-serie > .legend {
+  pointer-events: none;
+  position: absolute;
+  top: -2px; 
+  text-align: left; 
+  left: 2px;
+}
+.cubism-serie .timeline {
+  margin-top: -63px;
+}
+.cubism-serie .timeline-day {
+  margin-top: -63px;
+  font-weight: bold;
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
 .dygraph-axis-label {
   font-size: 10px;
   color: black;
