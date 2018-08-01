@@ -78,23 +78,32 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
     for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->RMS_V[i]));
     json_object_object_add(Result, Serie, Obj);
   }
-    
-//    if(strcmp(Serie, "rms_i") == 0) {
-//      Obj = json_object_new_array();
-//      for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) json_object_array_add(Obj, json_object_new_double(Params->RMS_I[i]));
-//    } else if(strcmp(Serie, "active_power") == 0) {
-//      Obj = json_object_new_array();
-//      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(Params->Active_Power[i]));
-//    } else if(strcmp(Serie, "apparent_power") == 0) {
-//      Obj = json_object_new_array();
-//      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(Params->Apparent_Power[i]));
-//    } else if(strcmp(Serie, "power_factor") == 0) {
-//      Obj = json_object_new_array();
-//      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(Params->Power_Factor[i]));
-//    } else if(strcmp(Serie, "active_energy") == 0) {
-//      Obj = json_object_new_array();
-//      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(Params->Active_Energy[i]));
-//    } else if(strcmp(Serie, "thd_v") == 0) {
+  if(RMS_I && Params) {
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < CurrentChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->RMS_I[i]));
+    json_object_object_add(Result, Serie, Obj);
+  }
+  if(Active_Power && Params) {
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->Active_Power[i]));
+    json_object_object_add(Result, Serie, Obj);
+  }
+  if(Apparent_Power && Params) {
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->Apparent_Power[i]));
+    json_object_object_add(Result, Serie, Obj);
+  }
+  if(Power_Factor && Params)) {
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->Power_Factor[i]));
+    json_object_object_add(Result, Serie, Obj);
+  }
+  if(Active_Energy && Params) {
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(Params->Active_Energy[i]));
+    json_object_object_add(Result, Serie, Obj);
+  }
+    //    } else if(strcmp(Serie, "thd_v") == 0) {
 //      Obj = json_object_new_array();
 //      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(Params->THD_V[i]));
 //    } else if(strcmp(Serie, "thd_i") == 0) {
