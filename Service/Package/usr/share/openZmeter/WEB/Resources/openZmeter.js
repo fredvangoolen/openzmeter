@@ -360,7 +360,7 @@ function ColorArray(base, items) {
 
 function LegendFormatter_Follow(data) {
   if(data.x === undefined || data.x === null) return "";
-  var Result = '<span class="dygraph-legend-title">' + new Date(data.x).toLocaleDateString() + ' - ' + new Date(data.x).toLocaleDateString() + '</span><br>';
+  var Result = '<span class="dygraph-legend-title">' + new Date(data.x).toLocaleDateString() + ' - ' + new Date(data.x).toLocaleTimeString() + '</span><br>';
   for(i = 0; i < data.series.length; i++)  {
     if(data.series[i].isVisible) {
       Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
