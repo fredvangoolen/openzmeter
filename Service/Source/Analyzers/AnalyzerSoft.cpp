@@ -216,8 +216,6 @@ void AnalyzerSoft::Analyze() {
   }
 }
 void AnalyzerSoft::GetParams(Params_t **params, ExtParams_t **extParams) {
-}
-json_object *AnalyzerSoft::GetJSONCopy(char *series) {
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads++;
   pthread_mutex_unlock(&pWaitingThreadsMutex);
@@ -234,13 +232,14 @@ json_object *AnalyzerSoft::GetJSONCopy(char *series) {
   }
   pthread_mutex_unlock(&pDataReadyMutex);
   if(Error == 0) {
-    //---
+    if(params) *params = &pAggreg10C;
   }
+}
+void AnalyzerSoft::ReleaseParams() {
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads--;
   pthread_cond_signal(&pWaitingThreadsCond);
   pthread_mutex_unlock(&pWaitingThreadsMutex);
-  return Result;
 }
 bool AnalyzerSoft::IsFinished() {
   bool Result;

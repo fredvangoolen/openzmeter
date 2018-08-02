@@ -1,9 +1,26 @@
 <html>
   <body>
+    <div id="AggregWarningDialog">
+      <div class="modal fade" id="dlgAggregWarning" tabindex="-1" role="dialog" data-backdrop='static'>
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3 class="modal-title"><i class="fa fa-exclamation-triangle"></i> Aggregation change...</h3>
+            </div>
+            <div class="modal-body">
+              <p>Requested aggregation returns to much points.<br/>Zoom in and try again.</p><p>Aggregation period has been changed to the lowest allowed.</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-success" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span>  Continue</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="ScrollableAggreg_Block">
       <span>Aggregation:</span><br>
       <div class="dropdown">
-        <button class="btn btn-default dropdown-toggle btn-xs" type="button" id="ScrollableAggreg" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">3 Seconds<span class="caret"></span></button>
+        <button class="btn btn-default dropdown-toggle btn-xs" type="button" id="btnScrollableAggreg" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><div style="display: inline-block; width: 80px; text-align: left;">None</div><span class="caret"></span></button>
         <ul class="dropdown-menu">
           <li><a href="#">3 seconds</a></li>
           <li><a href="#">1 minute</a></li>
@@ -15,7 +32,7 @@
     <div id="ScrollableTime_Block">
       <span>Time:</span><br>
       <div class="dropdown">
-        <button class="btn btn-default dropdown-toggle btn-xs" type="button" id="ScrollableAggreg" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">Custom<span class="caret"></span></button>
+        <button class="btn btn-default dropdown-toggle btn-xs" type="button" id="btnScrollablePeriod" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><div style="display: inline-block; width: 80px; text-align: left;">Custom</div><span class="caret"></span></button>
         <ul class="dropdown-menu">
           <li><a href="#">Day</a></li>
           <li><a href="#">Week</a></li>

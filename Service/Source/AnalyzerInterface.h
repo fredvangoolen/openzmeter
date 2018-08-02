@@ -50,6 +50,7 @@ class AnalyzerInterface : protected Database {
     void ResetAggreg(Params_t *params);
   protected :
     virtual void GetParams(Params_t **params, ExtParams_t **extParams) = 0;
+    virtual void ReleaseParams() = 0;
   public :
     AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode);
     float        GetNominalVoltage();

@@ -19,14 +19,14 @@
     <link rel="stylesheet" href="openZmeter.css"/>
     <title>openZmeter - Stats</title>
   </head>
-  <body>
+  <body onload="StartPageLoad()">
     <span data-load-block="Header_Block"></span>
     <div id="wrapper">
       
       <div class="row">
         <div class="col-lg-12">
           <div class="panel panel-yellow">
-            <div id="StatsSpinner" class="spinnerdiv"></div>
+            <!--div id="StatsSpinner" class="spinnerdiv"></div-->
             <div class="panel-heading">
               <span class="huge">Anual stats</span>
               <div class="pull-right">
@@ -162,8 +162,5 @@
     <script src="lib/chroma/chroma.js"></script>
     <script src="openZmeter.js"></script>
     <script src="Stats.js"></script>
-    <script>
-      StartPageLoad();
-    </script>
   </body>
 </html>

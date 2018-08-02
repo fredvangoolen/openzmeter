@@ -76,12 +76,12 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
   if(RMS_V && Params) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->RMS_V[i]));
-    json_object_object_add(Result, Serie, Obj);
+    json_object_object_add(Result, "rms_v", Obj);
   }
   if(RMS_I && Params) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < CurrentChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->RMS_I[i]));
-    json_object_object_add(Result, Serie, Obj);
+    json_object_object_add(Result, "rms_i", Obj);
   }
   if(Active_Power && Params) {
     json_object *Obj = json_object_new_array();
@@ -93,7 +93,7 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
     for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->Apparent_Power[i]));
     json_object_object_add(Result, Serie, Obj);
   }
-  if(Power_Factor && Params)) {
+  if(Power_Factor && Params) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->Power_Factor[i]));
     json_object_object_add(Result, Serie, Obj);
@@ -103,41 +103,52 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
     for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(Params->Active_Energy[i]));
     json_object_object_add(Result, Serie, Obj);
   }
-    //    } else if(strcmp(Serie, "thd_v") == 0) {
-//      Obj = json_object_new_array();
-//      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(Params->THD_V[i]));
-//    } else if(strcmp(Serie, "thd_i") == 0) {
-//      Obj = json_object_new_array();
-//      for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) json_object_array_add(Obj, json_object_new_double(Params->THD_I[i]));
-//    } else if(strcmp(Serie, "freq") == 0) {
-//      if(isnan(Params->Frequency) == false) Obj = json_object_new_double(Params->Frequency);
-//    } else if(strcmp(Serie, "phi") == 0) {
-//      Obj = json_object_new_array();
-//      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(Params->Phi[i]));
-//    } else if(strcmp(Serie, "flag") == 0) {
-//      Obj = json_object_new_boolean(Params->Flag);
-//    } else if(strcmp(Serie, "harmonics_v") == 0) {
+  if(THD_V && Params) {
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->THD_V[i]));
+    json_object_object_add(Result, Serie, Obj);
+  }
+  if(THD_I && Params) {
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < CurrentChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->THD_I[i]));
+    json_object_object_add(Result, Serie, Obj);
+  }
+  if(Frequency && Params) {
+    if(isnan(Params->Frequency) == false) json_object_object_add(Result, Serie, json_object_new_double(Params->Frequency));
+  }
+  if(Phi && Params) {
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->Phi[i]));
+    json_object_object_add(Result, Serie, Obj);
+  }
+  if(Flag && Params) {
+    json_object_object_add(Result, "flag", json_object_new_boolean(Params->Flag));
+  }
+  if(VoltageHarmonics && Params) {
 //      Obj = json_object_new_array();
 //      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) {
 //        json_object *Obj2 = json_object_new_array();
 //        for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(Params->VoltageHarmonics[i][j]));
 //        json_object_array_add(Obj, Obj2);
 //      }
-//    } else if(strcmp(Serie, "harmonics_i") == 0) {
+  }
+  if(CurrentHarmonics && Params) {
 //      Obj = json_object_new_array();
 //      for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) {
 //        json_object *Obj2 = json_object_new_array();
 //        for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(Params->CurrentHarmonics[i][j]));
 //        json_object_array_add(Obj, Obj2);
 //      }
-//    } else if(strcmp(Serie, "wave_v") == 0) {
+  }
+  //if(strcmp(Serie, "wave_v") == 0) {
 ////      Obj = json_object_new_array();
 ////      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) {
 ////        json_object *Obj2 = json_object_new_array();
 ////        for(uint32_t j = 0; j < pSamples; j++) json_object_array_add(Obj2, json_object_new_double(pVoltageSamples[i][j]));
 ////        json_object_array_add(Obj, Obj2);
 ////      }
-//    } else if(strcmp(Serie, "wave_i") == 0) {
+  //}
+    //    } else if(strcmp(Serie, "wave_i") == 0) {
 ////      Obj = json_object_new_array();
 ////      for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) {
 ////        json_object *Obj2 = json_object_new_array();
@@ -163,10 +174,10 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
 //    Serie = strtok_r(NULL, ", ", &Save);
 //  }
   if(Params) json_object_object_add(Result, "Sampletime", json_object_new_int64(Params->Timestamp));
-  //Libero lo que haya pedido
+  
+  ReleaseParams();
   return Result;
 }
-
 void AnalyzerInterface::SaveAggreg(Params_t *params) {
   if(params->Type == AGGREG_3S)
     PrepareSentence("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -272,41 +283,7 @@ void AnalyzerInterface::ResetAggreg(Params_t *params) {
     memset(params->VoltageHarmonics, 0, sizeof(params->VoltageHarmonics));
   }
   if(params->Type == AGGREG_10C) {
-//    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Fundamental_Active_Power[i] = 0;
-//    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Fundamental_Apparent_Power[i] = 0;
     for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Apparent_Power[i] = 0;
-//    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Fundamental_Power_Factor[i] = 0;
   }
   params->Samples = 0;
 }
-
-
-
-
-
-
-//  pDriverName      = driver;
-//  pSamplerate      = 20000;
-//  pMaxCurrent      = 50;
-//  pMinCurrent      = 0.1;
-//  pChannelMappings = NULL;
-//  pActive          = false;
-
-//  pBuffLen         = 0;
-//  pLastUpdate      = 0;
-//}
-//bool DeviceInterface::BuffersAlloc(uint8_t voltageChannels, uint8_t currentChannels, float samplerate) {
-//  pSamplerate      = samplerate;
-//  return (pVoltageSamples != 0) && (pCurrentSamples != 0);
-//}
-//void DeviceInterface::BuffersReset() {
-//  pUsed     = 0;
-//  pWritePos = 0;
-//  pReadPos  = 0;
-//}
-
-
-
-//  free(pChannelMappings);
-//  if(pVoltageSamples) free(pVoltageSamples);
-//  if(pCurrentSamples) free(pCurrentSamples);

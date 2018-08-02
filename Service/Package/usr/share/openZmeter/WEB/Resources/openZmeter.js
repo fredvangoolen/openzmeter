@@ -24,10 +24,8 @@ Offline.on('confirmed-up',   function() {  $('#OfflineDiv').css('display', 'none
 
 /* redirect ajax error to login page */
 $(document).ajaxError(function (event, jqxhr, settings, exception) { if(jqxhr.status === 401) window.location.href = 'Login'; });
-
 /* handle buttons events to avoid 'selected' effect */
 $(document).on("mousedown", ":button", function(e) { e.preventDefault(); } );
-
 /* getSeries function */
 function GetSeries(period, to, aggreg, lastsample, series, onSuccess, onCompletion, onError) {
   $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion,
@@ -35,13 +33,128 @@ function GetSeries(period, to, aggreg, lastsample, series, onSuccess, onCompleti
            
   });
 }
-
 /*getSeriesRange function */
 function GetSeriesRange(aggreg, onSuccess, onCompletion, onError) {
   $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion,
            data: JSON.stringify({ Aggreg: '1h', Analyzer: Analyzers[Analyzer].ID})
   });
 }
+/* getSeriesNow encapsulation */
+function GetSeriesNow(series, onSuccess, onCompletion, onError) {
+  $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion,
+           data: JSON.stringify( { Series: series, Analyzer: Analyzers[Analyzer].ID} )
+  });
+}
+/* getSeriesNow encapsulation */
+function GetSeriesAggreg(period, to, aggreg, series, onSuccess, onCompletion, onError) {
+  $.ajax({ url: "getSeriesAggreg", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion,
+           data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, Series: series, Analyzer: Analyzers[Analyzer].ID } )
+  });
+}
+/* Return full text from aggregation short name */
+function GetAggregLongName(shortText) {
+  return (shortText === '1h') ? '1 hour' : (shortText === '10m') ? '10 minutes' : (shortText === '1m') ? '1 minute' : (shortText === '3s') ? '3 seconds' : false;
+}
+/* Return short name from full aggregation text*/
+function GetAggregShortName(longText) {
+  return (longText === '1 hour') ? '1h' : (longText === '10 minutes') ? '10m' : (longText === '1 minute') ? '1m' : (longText === '3 seconds') ? '3s' : false;
+}
+/* Return period name from MS time */
+function GetPeriodNameFromMS(elapsed) {
+  return (elapsed === 86400000) ? 'Day' : (elapsed === 604800000) ? 'Week' : (elapsed === 2592000000) ? 'Month' : (elapsed === 31536000000) ? 'Year' : 'Custom';
+}
+/* Return MS time from period name */
+function GetMSFromPeriodName(elapsed) {
+  return (PeriodName === 'Day') ? 86400000 : (PeriodName === 'Week') ? 604800000 : (PeriodName === 'Month') ? 2592000000 : 31536000000;
+}
+/* return end end time and duration of current counters */
+function GetCountersTimeDuration() {
+  var Period = localStorage.getItem('CountersPeriod');
+  var Result = (Period === 'Year') ? GetYearTimeDuration() : (Period === 'Month') ? GetMonthTimeDuration() : (Period === 'Week') ? GetWeekTimeDuration() : GetDayTimeDuration();
+  return Result;
+}
+/* return end time and duration of custom period selection (include other useful values) */
+function GetCustomTimeDuration() {
+  var Result = {};
+  
+}
+/* return end time and duration of current and previous month (include other useful values) */
+function GetYearTimeDuration() {
+  var Result = {};
+  Result.CurrentDuration = 86400000;
+  Result.CurrentEnd = GetDayTimestamp() - 86400000 * new Date().getDay();
+  Result.PrevDuration = Result.CurrentDuration;
+  Result.PrevEnd = Result.CurrentEnd - Result.CurrentDuration;
+  Result.PreferedAggreg = '1h';
+  Result.CurrentText = 'This year';
+  Result.PrevText = 'Previous year';
+  return Result;
+}
+/* return end time and duration of current and previous month (include other useful values) */
+function GetMonthTimeDuration() {
+  var Result = {};
+  Result.CurrentDuration = 86400000;
+  Result.CurrentEnd = GetDayTimestamp() - 86400000 * new Date().getDay();
+  Result.PrevDuration = Result.CurrentDuration;
+  Result.PrevEnd = Result.CurrentEnd - Result.CurrentDuration;
+  Result.PreferedAggreg = '10m';
+  Result.CurrentText = 'This month';
+  Result.PrevText = 'Previous month';
+  return Result;
+}
+/* return end time and duration of current and previous week (include other useful values) */
+function GetWeekTimeDuration() {
+  var Result = {};
+  Result.CurrentDuration = 86400000 * 7;
+  Result.CurrentEnd = GetDayTimestamp() - 86400000 * new Date().getDay();
+  Result.PrevDuration = Result.CurrentDuration;
+  Result.PrevEnd = Result.CurrentEnd - Result.CurrentDuration;
+  Result.PreferedAggreg = '1m';
+  Result.CurrentText = 'This week';
+  Result.PrevText = 'Previous week';
+  return Result;
+}
+/* return end time and duration of current and previous day (include other useful values) */
+function GetDayTimeDuration() {
+  var Result = {};
+  Result.CurrentDuration = 86400000;
+  Result.CurrentEnd = GetDayTimestamp() - 86400000 * new Date().getDay();
+  Result.PrevDuration = Result.CurrentDuration;
+  Result.PrevEnd = Result.CurrentEnd - Result.CurrentDuration;
+  Result.PreferedAggreg = '3s';
+  Result.CurrentText = 'Today';
+  Result.PrevText = 'Yesterday';
+  return Result;
+}
+
+
+
+
+var CountersPeriod = localStorage.getItem('CountersPeriod');
+
+  var Current, Period;
+  if(CountersPeriod === 'Week') {
+    Period = 86400000 * 7;
+    Current = GetWeekTimestamp();
+    Aggreg = '10m';
+  } else if(CountersPeriod === 'Month') {
+    Period = 86400000 * 30;
+    Current = GetMonthTimestamp();
+    Aggreg = '1h';
+  } else if(CountersPeriod === 'Year') {
+    Period = 86400000 * 365;
+    Current = GetYearTimestamp();
+    Aggreg = '1h';
+  } else {
+    CountersPeriod = 'Day';
+    localStorage.setItem('CountersPeriod', CountersPeriod);
+    Period = 86400000;
+    Current = GetDayTimestamp();
+    Aggreg = '1m';
+  }
+  
+
+
 /* getSeries function than take params from controls to manage scrollable graphs */
 var ScrollableLastSample = 0;
 var ScrollableTimer = null;
@@ -60,64 +173,41 @@ function GetSeriesScrollable() {
     localStorage.setItem('GraphEnd', 0);
   }
   var GraphAggregation = localStorage.getItem('GraphAggregation');
-  if(!GraphAggregation || (GetAggregText(GraphAggregation) === false)) {
+  if(!GraphAggregation || (GetAggregLongName(GraphAggregation) === false)) {
     GraphAggregation = '10m';
     localStorage.setItem('GraphAggregation', GraphAggregation);
   }
   GetSeries(Period, GraphEnd, GraphAggregation, ScrollableLastSample, ScrollableSeries, 
-  function(result) {
-    Scrollable_StopSpinner();
-    ScrollableLastSample = LastSampletime(result, ScrollableLastSample);
-    Scrollable_OnSuccess(result);
-    $('#groupScrollableTimeScale').children().addClass('active');
-
-    
-    $('#btnScrollableMonth').removeClass('active');
-    $('#btnShowEnergyWeek').removeClass('active');
-  $('#btnShowEnergyDay').removeClass('active');
-  if((result['To'] - result['From']) === 86400000) {
-    $('#btnShowEnergyDay').addClass('active');
-  } else if((result['To'] - result['From']) === 604800000) {
-    $('#btnShowEnergyWeek').addClass('active');
-  } else if((result['To'] - result['From']) === 2592000000) {
-    $('#btnShowEnergyMonth').addClass('active');
-  } else if((result['To'] - result['From']) === 31536000000) {
-    $('#btnShowEnergyYear').addClass('active');
-  }
-  var GraphAggregation = localStorage.getItem('GraphAggregation');
-  if(GraphAggregation !== result['Aggregation_Source']) {
-    $('#aggreg_modal').modal('show');
-    GraphAggregation = result['Aggregation_Source'];
-  }
-  $('#btnEnergy3S').removeClass('active');
-  $('#btnEnergy1M').removeClass('active');
-  $('#btnEnergy10M').removeClass('active');
-  $('#btnEnergy1H').removeClass('active');
-  if(GraphAggregation == '3s') {
-    $('#btnEnergy3S').addClass('active');
-  } else if(GraphAggregation == '1m') {
-    $('#btnEnergy1M').addClass('active');
-  } else if(GraphAggregation == '10m') {
-    $('#btnEnergy10M').addClass('active');
-  } else if(GraphAggregation == '1h') {
-    $('#btnEnergy1H').addClass('active');
-  }
-  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
-  if(GraphEnd === 0) {
-    $('#btnEnergyNow').addClass('active');
-  } else {
-    $('#btnEnergyNow').removeClass('active');
-  }
-  localStorage.setItem('GraphAggregation', GraphAggregation);
-
-    
-    
-    
-  }, 
-  function() { 
-    $('#btnScrollableNow').removeClass('disabled');
-    if(parseInt(localStorage.getItem('GraphEnd')) === 0) ScrollableTimer = setTimeout(GetSeriesScrollable, 3000);
-  });  
+    function(result) {
+      Scrollable_StopSpinner();
+      Scrollable_OnSuccess(result);
+      ScrollableLastSample = LastSampletime(result, ScrollableLastSample);
+      $('#btnScrollableAggreg div:first').text(GetAggregLongName(result['Aggregation_Source']));
+      $('#btnScrollableAggreg').next().children().removeClass('active');
+      $('#btnScrollableAggreg').next().children(':contains(' + GetAggregLongName(result['Aggregation_Source']) + ')').addClass('active');
+      var Period = result['To'] - result['From'];
+      var PeriodName = GetPeriodNameFromMS(Period);
+      $('#btnScrollablePeriod div:first').text(PeriodName);
+      $('#btnScrollablePeriod').next().children().removeClass('active');
+      $('#btnScrollablePeriod').next().children(':contains(' + PeriodName + ')').addClass('active');
+      var GraphAggregation = localStorage.getItem('GraphAggregation');
+      if(GraphAggregation !== result['Aggregation_Source']) {
+        $('#dlgAggregWarning').modal('show');
+        GraphAggregation = result['Aggregation_Source'];
+      }
+      var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
+      if(GraphEnd === 0) {
+        $('#btnScrollableNow').addClass('active');
+      } else {
+        $('#btnScrollableNow').removeClass('active');
+      }
+      localStorage.setItem('GraphAggregation', GraphAggregation);    
+    }, 
+    function() { 
+      $('#btnScrollableNow').removeClass('disabled');
+      if(parseInt(localStorage.getItem('GraphEnd')) === 0) ScrollableTimer = setTimeout(GetSeriesScrollable, 3000);
+    }
+  );  
 }
 function Scrollable_Zoom(minDate, maxDate, yRanges) {
   clearInterval(ScrollableTimer);
@@ -129,19 +219,41 @@ function Scrollable_Zoom(minDate, maxDate, yRanges) {
 }
 function Scrollable_MouseUp(event, g, contex) {
   mouseUpOZM(event, g, contex);
-  if((contex.isPanning) && (contex.regionWidth > 0)) Scrollable_Zoom(g.dateWindow_[1] - g.dateWindow_[0], g.dateWindow_[1]);
+  if((contex.isPanning) && (contex.regionWidth > 0)) Scrollable_Zoom(g.dateWindow_[0], g.dateWindow_[1]);
 }
 function Scrollable_DoubleClick(event, g, context) {
   dblClickOZM(event, g, context);
-  Scrollable_Zoom(g.dateWindow_[1] - g.dateWindow_[0], g.dateWindow_[1]);
+  Scrollable_Zoom(g.dateWindow_[0], g.dateWindow_[1]);
 }
+$(document).on("click", "#btnScrollableNow", function() {
+  var End = parseInt(localStorage.getItem('GraphEnd'));
+  clearInterval(ScrollableTimer);
+  if(End === 0) {
+    $('#ScrollableTimer').removeClass('active');
+    localStorage.setItem('GraphEnd', EnergyChart.getOption('dateWindow')[1]);
+  } else {
+    $('#btnScrollableNow').addClass('active');
+    localStorage.setItem('GraphEnd', 0);
+    ScrollableLastSample = 0;
+    GetSeriesScrollable();
+  }
+});
+$(document).on("click", "#btnScrollablePeriod + ul li a", function() {
+  var PeriodName = $(this).text();
+  var Period = GetMSFromPeriodName(PeriodName);
+  localStorage.setItem('GraphPeriod', Period);
+  ScrollableLastSample = 0;
+  GetSeriesScrollable();
+  localStorage.setItem('CountersPeriod', PeriodName);
+  Scrollable_UpdateCounters();
+});
+$(document).on("click", "#btnScrollableAggreg + ul li a", function() {
+  localStorage.setItem('GraphAggregation', GetAggregShortName($(this).text()));
+  ScrollableLastSample = 0;
+  GetSeriesScrollable();
+});
 
-/* getSeriesNow encapsulation */
-function GetSeriesNow(series, onSuccess, onCompletion, onError) {
-  $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json',
-           data: JSON.stringify( { Series: series, Analyzer: Analyzers[Analyzer].ID} ),
-  });
-}
+
 
 /* append samples of given series to array of graph data, and shift if needed */
 function GraphDataAppend(result, serie, data) {
@@ -702,20 +814,9 @@ function StartPageLoad() {
   $('*[data-load-block]').each(function(index) { $(this).load('Common.html #' + $(this).data('loadBlock') + ' > *', null, LoadComplete); });
 }
 
-/* Devuelve el texto completo a partir del texto abreviado de agregacion */
-function GetAggregText(shortText) {
-  if(shortText === '1h') {
-    return '1 hour';
-  } else if(shortText === '10m') {
-    return '10 minutes';
-  } else if(shortText === '1m') {
-    return '1 minute';
-  } else if(shortText === '3s') {
-    return '3 seconds';
-  } else {
-    return false;
-  }  
-}
+
+
+
 
 /* Obtiene fecha del inicio de una semana dando el numero y año */
 function GetDateOfISOWeek(w, y) {
@@ -752,13 +853,6 @@ function GetWeekOfYear(timestamp) {
 function GetDayTimestamp() {
   var now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).getTime();
-}
-
-/* Obtiene el timestamp del inicio de la semana actual */
-function GetWeekTimestamp() {
-  var WeekDay = new Date().getDay();
-  var Today = GetDayTimestamp();
-  return Today - 86400000 * WeekDay;
 }
 
 /* Obtiene el timestamp del inicio del mes actual */

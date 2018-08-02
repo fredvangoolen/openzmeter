@@ -59,6 +59,7 @@ class AnalyzerSoft : public AnalyzerInterface {
   protected :
 //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
     void GetParams(Params_t **params, ExtParams_t **extParams);
+    void ReleaseParams();
   public :
     AnalyzerSoft(float samplerate, char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerInterface::AnalyzerMode mode);
     ~AnalyzerSoft();
@@ -67,5 +68,5 @@ class AnalyzerSoft : public AnalyzerInterface {
 //    char        *GetTypeString();
 //    char        *GetID();
 //    char        *GetName();
-    json_object *GetJSONCopy(char *series);
+
 };

@@ -184,6 +184,15 @@ body {
 .indicator-bar > div > div > div > span {
   display: block;
 }
+.panel-other {
+  border: 1px solid #474544;
+}
+.panel-other > .panel-heading {
+  border: 1px solid #474544;
+  background-color: #474544;
+  color: #FFF;
+}
+
 .panel-voltage {
   border: 1px solid #d9534f;
 }
