@@ -192,7 +192,6 @@ body {
   background-color: #474544;
   color: #FFF;
 }
-
 .panel-voltage {
   border: 1px solid #d9534f;
 }
@@ -226,12 +225,19 @@ body {
   color: #FFFF;
 }
 .panel-active-energy {
-  border: 1px solid #9966cc;
+  border: 1px solid #724C99;
 }
 .panel-active-energy > .panel-heading, .indicator-active-energy {
-  border: 1px solid #9966cc;
-  background-color: #9966cc;
+  border: 1px solid #724C99;
+  background-color: #724C99;
   color: #FFF;
+}
+.panel-active-energy .subpanel {
+  border: 1px solid #B9A6CC;
+  background-color: #EDE8F2;
+  color: #474544;
+  padding: 0px 5px;
+  margin: 5px;
 }
 .panel-body {
   padding: 5px;

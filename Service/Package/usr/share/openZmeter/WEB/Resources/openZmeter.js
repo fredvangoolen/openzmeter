@@ -68,9 +68,9 @@ function GetMSFromPeriodName(elapsed) {
   return (PeriodName === 'Day') ? 86400000 : (PeriodName === 'Week') ? 604800000 : (PeriodName === 'Month') ? 2592000000 : 31536000000;
 }
 /* return end end time and duration of current counters */
-function GetCountersTimeDuration() {
+function GetCountersTimePeriod() {
   var Period = localStorage.getItem('CountersPeriod');
-  var Result = (Period === 'Year') ? GetYearTimeDuration() : (Period === 'Month') ? GetMonthTimeDuration() : (Period === 'Week') ? GetWeekTimeDuration() : GetDayTimeDuration();
+  var Result = (Period === 'Year') ? GetYearTimePeriod() : (Period === 'Month') ? GetMonthTimePeriod() : (Period === 'Week') ? GetWeekTimePeriod() : GetDayTimePeriod();
   return Result;
 }
 /* return end time and duration of custom period selection (include other useful values) */
@@ -79,19 +79,19 @@ function GetCustomTimeDuration() {
   
 }
 /* return end time and duration of current and previous month (include other useful values) */
-function GetYearTimeDuration() {
+function GetYearTimePeriod() {
   var Result = {};
-  Result.CurrentDuration = 86400000;
-  Result.CurrentEnd = GetDayTimestamp() - 86400000 * new Date().getDay();
-  Result.PrevDuration = Result.CurrentDuration;
-  Result.PrevEnd = Result.CurrentEnd - Result.CurrentDuration;
+  Result.PrimaryPeriod = 86400000;
+  Result.PrimaryTo = GetDayTimestamp() - 86400000 * new Date().getDay();
+  Result.SecondaryPeriod = Result.CurrentDuration;
+  Result.SecondaryTo = Result.CurrentEnd - Result.CurrentDuration;
   Result.PreferedAggreg = '1h';
-  Result.CurrentText = 'This year';
-  Result.PrevText = 'Previous year';
+  Result.PrimaryText = 'This year';
+  Result.SecondaryText = 'Previous year';
   return Result;
 }
 /* return end time and duration of current and previous month (include other useful values) */
-function GetMonthTimeDuration() {
+function GetMonthTimePeriod() {
   var Result = {};
   Result.CurrentDuration = 86400000;
   Result.CurrentEnd = GetDayTimestamp() - 86400000 * new Date().getDay();
@@ -103,7 +103,7 @@ function GetMonthTimeDuration() {
   return Result;
 }
 /* return end time and duration of current and previous week (include other useful values) */
-function GetWeekTimeDuration() {
+function GetWeekTimePeriod() {
   var Result = {};
   Result.CurrentDuration = 86400000 * 7;
   Result.CurrentEnd = GetDayTimestamp() - 86400000 * new Date().getDay();
@@ -115,15 +115,16 @@ function GetWeekTimeDuration() {
   return Result;
 }
 /* return end time and duration of current and previous day (include other useful values) */
-function GetDayTimeDuration() {
+function GetDayTimePeriod() {
   var Result = {};
-  Result.CurrentDuration = 86400000;
-  Result.CurrentEnd = GetDayTimestamp() - 86400000 * new Date().getDay();
-  Result.PrevDuration = Result.CurrentDuration;
-  Result.PrevEnd = Result.CurrentEnd - Result.CurrentDuration;
-  Result.PreferedAggreg = '3s';
-  Result.CurrentText = 'Today';
-  Result.PrevText = 'Yesterday';
+  var now = new Date();
+  Result.PrimaryPeriod = 86400000;
+  Result.PrimaryTo = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+  Result.SecundaryPeriod = Result.CurrentDuration;
+  Result.SecondaryTo = Result.CurrentEnd - Result.CurrentDuration;
+  Result.PreferedAggreg = '1m';
+  Result.PrimaryText = 'Today';
+  Result.SecondaryText = 'Yesterday';
   return Result;
 }
 
@@ -245,7 +246,7 @@ $(document).on("click", "#btnScrollablePeriod + ul li a", function() {
   ScrollableLastSample = 0;
   GetSeriesScrollable();
   localStorage.setItem('CountersPeriod', PeriodName);
-  Scrollable_UpdateCounters();
+  Scrollable_UpdateCounters(true);
 });
 $(document).on("click", "#btnScrollableAggreg + ul li a", function() {
   localStorage.setItem('GraphAggregation', GetAggregShortName($(this).text()));
@@ -337,6 +338,14 @@ function ArrayMax(array) {
     Max = Math.max(Max, array[i]);
   }
   return Max;
+}
+/* sum array */
+function ArraySum(array) {
+  var Sum = 0;
+  for(i = 0; i < array.length; i++) {
+    Sum += array[i];
+  }
+  return Sum;
 }
 
 /* Find the max value of graph series data (array of arrays where first column is time) */
@@ -449,7 +458,7 @@ function ScaleToUnits(val, units) {
   }      
 }
 
-/* Find units for high values of energy*/
+/* Find units for high values of energy */
 function GetBestUnits(value) {
   if(value > 1000000) {
    return 'M';
@@ -789,8 +798,6 @@ function GetAnalyzersCompletes(result) {
 /* Genera la secuencia de pasos una vez cargado todo el javascript para mostrar la pagina */
 var LoadedPending;
 function LoadComplete() {
-  LoadedPending--;
-  if(LoadedPending === 0) {
           $('[data-sidenav]').sidenav();
     $('#labelUserName').text(localStorage.getItem('UserName'));
     $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: GetAnalyzersCompletes });
@@ -806,12 +813,25 @@ function LoadComplete() {
     } else {
       $('#side-menu li > a').first().addClass('active');
     }
-  }
 }
 function StartPageLoad() {
   $('.spinnerdiv').each(function(index, element) { new Spinner(SpinnerOpts).spin(element); });
   LoadedPending = $('*[data-load-block]').length;
-  $('*[data-load-block]').each(function(index) { $(this).load('Common.html #' + $(this).data('loadBlock') + ' > *', null, LoadComplete); });
+  if(LoadedPending > 0) {
+    $.ajax( { url: 'Common.html', success: 
+      function(result) {
+        var Template = $('<div></div>');
+        Template.append(result.trim());
+        $('*[data-load-block]').each(
+          function(index) { 
+            $(this).html(Template.children('#' + $(this).data('loadBlock')).html());
+            LoadedPending--;
+            if(LoadedPending === 0) LoadComplete();
+          }
+        );        
+      } 
+    });
+  }
 }
 
 

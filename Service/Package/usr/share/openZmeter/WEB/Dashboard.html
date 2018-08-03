@@ -54,21 +54,19 @@
               </div>
               <span class="clearfix"></span>
             </div>
-
-
             <div class="row">
               <div class="col-md-6 col-lg-3">
                 <div class="row">
                   <div class="col-xs-6 col-md-12">
-                    <div class="panel panel-lightblue-info" id="EnergyBox">
-                      <h4 id="labelEnergyPeriod">Today</h4>
-                      <span id="labelEnergy" class="huge">?</span>&nbsp;<em class="huge-small-unit" id="labelEnergyUnits">Wh</em>
-                      <span id="labelEnergyPhases"></span>
-                      <p><span id="labelPrevEnergyPeriod">Yesterday</span>&nbsp;<span id="labelPrevEnergy">?</span></p>
+                    <div class="panel panel-activeEnergy subpanel" id="EnergyBox">
+                      <div class="huge-small" id="labelEnergyPrimary">Loading data...</div>
+                      <div><span id="labelEnergyPrimaryValue" class="huge">?</span>&nbsp;<em class="huge-small-unit" id="labelEnergyPrimaryUnits"></em></div>
+                      <div id="labelEnergyPrimaryPhases"></div>
+                      <div><span id="labelEnergySecondary">Loading data...</span>&nbsp;<span id="labelEnergySecondaryValue"></span></div>
                     </div>
                   </div>
                   <div class="col-xs-6 col-md-12">
-                    <div class="panel panel-lightblue-info" id="BudgetBox">
+                    <div class="panel panel-activeEnergy subpanel" id="BudgetBox">
                       <h4><span id="labelBudgetPeriod">Today</span> budget</h4>
                       <span id="labelBudgetInteger" class="huge">?</span>
                       <span id="labelBudgetDecimal" class="huge-small"></span>&nbsp;<em class="huge-small-unit" id="labelBudgetUnits">€</em>

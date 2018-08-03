@@ -294,7 +294,7 @@ function Scrollable_OnSuccess(result) {
                axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>'; }
              },
           x: { valueFormatter: function (x) { return new Date(x).toLocaleDateString() + ' - ' + new Date(x).toLocaleTimeString(); },
-               axisLabelFormatter: function (x) { '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + new Date(x).toLocaleTimeString() + '<br/>' + new Date(x).toLocaleDateString() + '</div>'; }
+               axisLabelFormatter: function (x) { return new Date(x).toLocaleTimeString() + '<br/>' + new Date(x).toLocaleDateString(); }
              }
           }
         }
@@ -335,14 +335,43 @@ $('#btnMaximizeEnergy').click(function() {
 
 /* Contadores de consumo */
 var EnergyCountersTimer  = null;
-function Scrollable_UpdateCounters() {
+function Scrollable_UpdateCounters(change) {
   if(EnergyCountersTimer !== null) clearInterval(EnergyCountersTimer);
   EnergyCountersTimer = setTimeout(Scrollable_UpdateCounters, 60000);
-  var Times = GetCountersTimeDuration();
-  $('#labelEnergyPeriod').text(Times.CurrentText);
-  $('#labelPrevEnergyPeriod').text(Times.PrevText);
-  GetSeriesAggreg(Times.CurrentPeriod, Times.CurrentEnd, Times.PreferedAggreg, 'sum(active_energy)', EnergyUpdateCountersCurrent);
-  GetSeriesAggreg(Times.PrevPeriod, Times.PrevEnd, Times.PreferedAggreg, 'sum(active_energy)', EnergyUpdateCountersPrevs);
+  var Times = GetCountersTimePeriod();
+  if(change === true) {
+    $('#labelEnergyPrimary').text(Times.PrimaryText);
+    $('#labelEnergyPrimaryValue').text('Calculating...');
+    $('#labelEnergyPrimaryUnits').text('');
+    $('#labelEnergyPrimaryPhases').text('');
+    $('#labelEnergySecondary').text(Times.SecondaryText);
+  }
+  GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, 'sum(active_energy)', 
+    function(result) {
+      var Sum = ArraySum(result['sum_active_energy']);
+      var Units = GetBestUnits(Sum);
+      $('#labelEnergyPrimaryValue').html(Round2(ScaleToUnits(Sum, Units)))
+      $('#labelEnergyPrimaryUnits').text(Units + 'Wh');
+      if(result['sum_active_energy'].length > 1) $('#labelEnergyPrimaryPhases').html('By phases:&nbsp;&nbsp;' + Array_Round2(ScaleArrayToUnits(result['sum_active_energy'], Units), '&nbsp;&nbsp;') + '&nbsp;&nbsp;' + Units + 'Wh');
+      window.dispatchEvent(new Event('resize'));
+    }
+  );
+  if(Times.SecondaryTo !== undefined) {
+    $('#labelEnergySecondaryValue').text('Calculating...');
+    GetSeriesAggreg(Times.SecondaryPeriod, Times.SecondaryTo, Times.PreferedAggreg, 'sum(active_energy)', 
+      function(result) {
+        var Sum = ArraySum(result['sum_active_energy']);
+        var Units = GetBestUnits(Sum);
+        var Text = Round2(ScaleToUnits(Sum, Units)) + '&nbsp;' + Units + 'Wh';
+        if(result['sum_active_energy'].length > 1) Text += '(' + Array_Round2(ScaleArrayToUnits(result['sum_active_energy'], Units), '&nbsp;&nbsp;') + ')';
+        $('#labelEnergySecondaryValue').html(Text);
+        window.dispatchEvent(new Event('resize'));
+      }
+    );
+  } else {
+    $('#labelEnergySecondaryValue').text('');
+  }
+//  GetSeriesAggreg(Times.PrevPeriod, Times.PrevEnd, Times.PreferedAggreg, 'sum(active_energy)', EnergyUpdateCountersPrevs);
 //  $.ajax({ url: "getBudget",
 //           timeout: 20000,
 //           type: "POST",
@@ -352,62 +381,7 @@ function Scrollable_UpdateCounters() {
 //           success: EnergyUpdateCountersBudget
 //  });
 }
-function EnergyUpdateCountersCurrent(result) {
-  EnergyCountersTimer = setTimeout(AjaxGetEnergyCounters, 60000);
-  var CountersPeriod = localStorage.getItem('CountersPeriod');
-  if(CountersPeriod === 'Week') {
-//    $('#labelEnergyPeriod').text('This week');
-  } else if(CountersPeriod === 'Month') {
-    $('#labelEnergyPeriod').text('This month');
-  } else if(CountersPeriod === 'Year') {
-    $('#labelEnergyPeriod').text('This year');
-  } else if(CountersPeriod === 'Day') {
-//    $('#labelEnergyPeriod').text('Today');
-  }
-  var Units = 'Wh';
-  for(i = 0; i < result['sum_active_energy'].length; i++) {
-    if(result['sum_active_energy'][i] > 1000) Units = 'kWh';
-  }
-  $('#labelEnergyUnits').text(Units);
-  if(Units == 'kWh') {
-    for(i = 0; i < result['sum_active_energy'].length; i++) result['sum_active_energy'][i] = result['sum_active_energy'][i] / 1000;
-  }
-  if(Analyzers[Analyzer]['Mode'] === '1Phase') {  
-    $('#labelEnergy').html(Round2(result['sum_active_energy'][0]));
-  } else {
-    $('#labelEnergy').html(Round2(result['sum_active_energy'][0] + result['sum_active_energy'][1] + result['sum_active_energy'][2]));
-    $('#labelEnergyPhases').html('<br/>By phase&nbsp;&nbsp;<span style="font-size:150%">' + Array_Round2(result['sum_active_energy'], '&nbsp;&nbsp;') + '</span>&nbsp;&nbsp;' + Units);
-  }
-  window.dispatchEvent(new Event('resize'));
-}
-function EnergyUpdateCountersPrevs(result) {
-  var CountersPeriod = localStorage.getItem('CountersPeriod');
-  if(CountersPeriod === 'Week') {
-//    $('#labelPrevEnergyPeriod').text('Previous week');
-  } else if(CountersPeriod === 'Month') {
-    $('#labelPrevEnergyPeriod').text('Previous month');
-  } else if(CountersPeriod === 'Year') {
-    $('#labelPrevEnergyPeriod').text('Previous year');
-  } else if(CountersPeriod === 'Day') {
-//    $('#labelPrevEnergyPeriod').text('Yesterday');
-  }
-  var Units = 'Wh';
-  for(i = 0; i < result['sum_active_energy'].length; i++) {
-    if(result['sum_active_energy'][i] > 1000) Units = 'kWh';
-  }
-  if(Units == 'kWh') {
-    for(i = 0; i < result['sum_active_energy'].length; i++) result['sum_active_energy'][i] = result['sum_active_energy'][i] / 1000;
-  }
-  if(result['sum_active_energy'].length === 1) {
-    $('#labelPrevEnergy').html(Round2(result['sum_active_energy'][0]) + '&nbsp;' + Units);
-  } else if(result['sum_active_energy'].length === 3) {
-    $('#labelPrevEnergy').html(Round2(result['sum_active_energy'][0] + result['sum_active_energy'][1] + result['sum_active_energy'][2]) + '&nbsp;' + Units + 
-      '&nbsp;(' + Array_Round2(result['sum_active_energy'], '&nbsp;&nbsp;') + '</span>&nbsp;&nbsp;By phase)');
-  } else {
-    $('#labelPrevEnergy').html('No data yet!');
-  }
-  window.dispatchEvent(new Event('resize'));
-}
+
 function EnergyUpdateCountersBudget(result) {
   var date = new Date(result['budget_lastcalc'] * 1000);
   $('#budget_lastcalc').text(date.toLocaleDateString() + ' - ' + date.toLocaleTimeString());
@@ -496,7 +470,7 @@ $('#GraphDialogClose').click(function() {
 
 function UpdatePage() {
   GetSeriesScrollable();
-  Scrollable_UpdateCounters();
+  Scrollable_UpdateCounters(true);
   AjaxGetVoltage();
   AjaxGetCurrent();
   AjaxGetPower();
