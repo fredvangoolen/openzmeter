@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-var Spinner        = new Spinner(SpinnerOpts);
 var WeekStats      = [];
 var FrequencyChart = null;
 var VoltageChart   = null;
@@ -357,23 +356,9 @@ function GetStatsData(selected_year) {
                $('#WeekList').append('<button type="button" class="btn btn-default btn-xs" id="btnWeek_' + Week + '" onclick="LoadWeek(' + Week + ')" data-toggle="tooltip" title="From ' + WeekStats[Week].Start.toLocaleDateString() + " to " + WeekStats[Week].End.toLocaleDateString() + '">' + ((Week == 0) ? 'Totals' : Week) + (InRange ? '' : ' <i class="fa fa-warning"></i>') + '</button>');
              }
              LoadWeek(0);
-             StopSpinner(Spinner, 'EN50160Spinner');
+//             StopSpinner(Spinner, 'EN50160Spinner');
            }
          });
-}
-function GetDataRanges() {
-  ShowSpinner(Spinner, 'EN50160Spinner');
-  $.ajax({ url: "getSamplesRange",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Aggreg: '1h', Node: Node}),
-           success: function(result) {
-             for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) $('#YearSelector').append('<button type="button" class="btn btn-default btn-xs" id="btnSelYear' + year + '" onclick="AjaxGetEvents(' + year + ')">' + year + '</button>');
-             AjaxGetEvents(new Date(result['To']).getFullYear());
-           }
-  }); 
 }
 function LoadWeek(week) {
   $('#WeekList button').removeClass('active');
@@ -385,7 +370,12 @@ function LoadWeek(week) {
   $('#btnWeek_' + week).addClass('active');  
 }
 function UpdatePage() {
-  $('#GridNominalFreq').text(Nodes['NominalFreq']);
-  $('#GridNominalVoltage').text(Nodes['NominalVoltage']);
-  GetDataRanges(); 
+  $('#GridNominalFreq').text(Analyzers[Analyzer].NominalFreq);
+  $('#GridNominalVoltage').text(Analyzers[Analyzer].NominalVoltage);
+  GetSeriesRange('1h', 
+    function(result) {
+      for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) $('#YearSelector').append('<button type="button" class="btn btn-default btn-xs" id="btnSelYear' + year + '" onclick="AjaxGetEvents(' + year + ')">' + year + '</button>');
+      AjaxGetEvents(new Date(result['To']).getFullYear());
+    }
+  );
 }

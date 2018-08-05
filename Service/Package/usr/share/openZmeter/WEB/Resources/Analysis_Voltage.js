@@ -204,11 +204,10 @@ $('#GraphDialogClose').click(function() {
 });
 
 /* Vista de detalles */
-var DetailSpinner = new Spinner(SpinnerOpts);
 var DetailTimer   = null;
 var DetailTimestamp = 0;
 function AjaxGetDetails() {
-  if(WaveformChart === null) ShowSpinner(DetailSpinner, 'DetailSpinner');
+//  if(WaveformChart === null) ShowSpinner(DetailSpinner, 'DetailSpinner');
   $('#btnPauseDetail').addClass('disabled');
   $.ajax({ url: "getSeriesNow",
            timeout: 60000,
@@ -217,7 +216,7 @@ function AjaxGetDetails() {
            contentType: 'application/json',
            data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_v, phi, rms_v, rms_i', Analyzer: Analyzers[Analyzer].ID}),
            success: function(result) {
-             if(WaveformChart === null) StopSpinner(DetailSpinner, 'DetailSpinner');
+             if(WaveformChart === null) $('#DetailSpinner').hide();
              DetailTimestamp = result['Sampletime'];
              UpdateWaveformChart(result);
              UpdateHarmonicsChart(result);
@@ -584,7 +583,7 @@ function UpdateHarmonicsChart(result) {
     $('#HarmonicsTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
     HarmonicsDataset = [];
     for(i = 0; i < result['harmonics_v'][0].length; i++) {
-      if(Nodes[Node]['Type'] === '3Phase') {
+      if(Analyzers[Analyzer]['Mode'] === '3Phase') {
         HarmonicsDataset.push([result['harmonics_v'][0][i], result['harmonics_v'][1][i], result['harmonics_v'][2][i], result['harmonics_i'][0][i], result['harmonics_i'][1][i], result['harmonics_i'][2][i]]);
       } else {
         HarmonicsDataset.push([result['harmonics_v'][0][i], result['harmonics_i'][0][i]]);      
@@ -598,7 +597,7 @@ function UpdateHarmonicsChart(result) {
   var VoltageSeries = [];
   var CurrentSeries = [];
   var Visibility    = [];
-  if(Nodes[Node]['Type'] === '3Phase') {
+  if(Analyzers[Analyzer]['Mode'] === '3Phase') {
     if(ShowR) VoltageSeries.push(0);
     if(ShowS) VoltageSeries.push(1);
     if(ShowT) VoltageSeries.push(2);
@@ -622,7 +621,7 @@ function UpdateHarmonicsChart(result) {
   HarmonicsVOffset = (VoltageRange[0] < 0.0) ? -VoltageRange[0] : 0.0;
   HarmonicsCOffset = (CurrentRange[0] < 0.0) ? -CurrentRange[0] : 0.0;
   for(i = 0; i < ToShow.length; i++) {
-    if(Nodes[Node]['Type'] === '3Phase') {
+    if(Analyzers[Analyzer]['Mode'] === '3Phase') {
       ToShow[i] = [i, ToShow[i][0] + HarmonicsVOffset, ToShow[i][1] + HarmonicsVOffset, ToShow[i][2] + HarmonicsVOffset, ToShow[i][3] + HarmonicsCOffset, ToShow[i][4] + HarmonicsCOffset, ToShow[i][5] + HarmonicsCOffset];
     } else {
       ToShow[i] = [i, ToShow[i][0] + HarmonicsVOffset, ToShow[i][1] + HarmonicsCOffset];
@@ -631,15 +630,15 @@ function UpdateHarmonicsChart(result) {
   var Options = { 
     strokeWidth: 1,
     labelsDiv: "HarmonicsLegend",  
-    labels: (Nodes[Node]['Type'] === '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)', 'Current (R)', 'Current (S)', 'Current (T)'] : ['Time', 'Voltage', 'Current'],
-    colors: (Nodes[Node]['Type'] === '3Phase') ? ['#d9534f', '#534fd9', '#4fd953', '#428bca', '#42ca81', '#ca428b'] : ['#d9534f', '#428bca'],
+    labels: (Analyzers[Analyzer]['Mode'] === '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)', 'Current (R)', 'Current (S)', 'Current (T)'] : ['Time', 'Voltage', 'Current'],
+    colors: (Analyzers[Analyzer]['Mode'] === '3Phase') ? ['#d9534f', '#534fd9', '#4fd953', '#428bca', '#42ca81', '#ca428b'] : ['#d9534f', '#428bca'],
     visibility: Visibility,  
     plotter: multiColumnBarPlotter,
     dateWindow: [-0.5, (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 49.5 : 48.5],
     gridLineColor: "#999",
     gridLinePattern: [4, 4],
     interactionModel: { },
-    series: (Nodes[Node]['Type'] === '3Phase') ? { 'Current (R)': { axis: 'y2' }, 'Current (S)': { axis: 'y2' }, 'Current (T)': { axis: 'y2'  } } : { 'Current': { axis: 'y2' } },
+    series: (Analyzers[Analyzer]['Mode'] === '3Phase') ? { 'Current (R)': { axis: 'y2' }, 'Current (S)': { axis: 'y2' }, 'Current (T)': { axis: 'y2'  } } : { 'Current': { axis: 'y2' } },
     axes: { 
       y: { pixelsPerLabel: 15,
            axisLabelWidth: 20,
@@ -698,6 +697,7 @@ var FFTDataset          = [];
 var FFTVOffset          = 0;
 var FFTCOffset          = 0;
 function UpdateFFTChart(result) {
+  return;
   if(result !== null) {
     var date = new Date(result['Sampletime']);
     $('#FFTTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
@@ -896,7 +896,7 @@ function UpdatePhasorChart(result) {
   PhasorTable.clear();
   for(i = 0; i < result['rms_v'].length; i++) {
     var PhaseName = "L";
-    if(Nodes[Node]['Type'] === '3Phase') {
+    if(Analyzers[Analyzer]['Mode'] === '3Phase') {
       if(i === 0) PhaseName = "R";
       if(i === 1) PhaseName = "S";
       if(i === 2) PhaseName = "T";

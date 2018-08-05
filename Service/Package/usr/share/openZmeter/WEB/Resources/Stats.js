@@ -31,12 +31,11 @@ var Calendar     = null;
 var WeekTable    = null;
 var MonthTable   = null;
 var WeekDayTable = null;
-var Spinner      = new Spinner(SpinnerOpts);
 var EnergyData   = [];
 var SelectedYear;
 var SelectedPhase = [];
 function GetDataRanges() {
-  ShowSpinner(Spinner, 'StatsSpinner');
+//  ShowSpinner(Spinner, 'StatsSpinner');
   GetSeriesRange('1h', 
     function(result) {
       for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) $('#YearSelector').append('<button type="button" class="btn btn-default btn-xs" id="btnSelYear' + year + '" onclick="AjaxGetEnergy(' + year + ')">' + year + '</button>');
@@ -48,7 +47,7 @@ function AjaxGetEnergy(selected_year) {
   $('#YearSelector button').removeClass('active');
   $('#btnSelYear' + selected_year).addClass('active');
   SelectedYear = selected_year; 
-  ShowSpinner(Spinner, 'StatsSpinner');
+//  ShowSpinner(Spinner, 'StatsSpinner');
   var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
   var From = new Date(selected_year, 0, 1, 0, 0, 0, 0).getTime();
   GetSeries(To - From, To, '10m', 0, 'active_energy', 
@@ -344,13 +343,12 @@ function ButtonClick(event) {
       $('#btnHeatmap10Min').removeClass('disabled');
       break;
   } 
-  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+  if(Analyzers[Analyzer]['Mode'] === '3Phase') {
     $('#btnStatsALLPhase').removeClass('disabled');
     $('#btnStatsRPhase').removeClass('disabled');
     $('#btnStatsSPhase').removeClass('disabled');
     $('#btnStatsTPhase').removeClass('disabled');
-  }
-  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
+
     switch(localStorage.getItem('StatPhase')) {
       case 'R' :
         $('#btnStatsRPhase').addClass('active');

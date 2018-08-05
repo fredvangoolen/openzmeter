@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="openZmeter.css"/>
     <title>openZmeter - Dashboard</title>
   </head>
-  <body>
+  <body onload="StartPageLoad()">
     <span data-load-block="Header_Block"></span>
     <span data-load-block="AggregWarningDialog"></span>
     
@@ -248,8 +248,5 @@
     <script src="lib/chroma/chroma.js"></script>
     <script src="openZmeter.js"></script>
     <script src="Dashboard.js"></script>
-    <script>
-      StartPageLoad();
-    </script>
   </body>
 </html>

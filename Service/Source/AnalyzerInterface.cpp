@@ -86,59 +86,61 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
   if(Active_Power && Params) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->Active_Power[i]));
-    json_object_object_add(Result, Serie, Obj);
+    json_object_object_add(Result, "active_power", Obj);
   }
   if(Apparent_Power && Params) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->Apparent_Power[i]));
-    json_object_object_add(Result, Serie, Obj);
+    json_object_object_add(Result, "apparent_power", Obj);
   }
   if(Power_Factor && Params) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->Power_Factor[i]));
-    json_object_object_add(Result, Serie, Obj);
+    json_object_object_add(Result, "apparent_power", Obj);
   }
   if(Active_Energy && Params) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(Params->Active_Energy[i]));
-    json_object_object_add(Result, Serie, Obj);
+    json_object_object_add(Result, "active_energy", Obj);
   }
   if(THD_V && Params) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->THD_V[i]));
-    json_object_object_add(Result, Serie, Obj);
+    json_object_object_add(Result, "thd_v", Obj);
   }
   if(THD_I && Params) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < CurrentChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->THD_I[i]));
-    json_object_object_add(Result, Serie, Obj);
+    json_object_object_add(Result, "thd_i", Obj);
   }
   if(Frequency && Params) {
-    if(isnan(Params->Frequency) == false) json_object_object_add(Result, Serie, json_object_new_double(Params->Frequency));
+    if(isnan(Params->Frequency) == false) json_object_object_add(Result, "freq", json_object_new_double(Params->Frequency));
   }
   if(Phi && Params) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->Phi[i]));
-    json_object_object_add(Result, Serie, Obj);
+    json_object_object_add(Result, "phi", Obj);
   }
   if(Flag && Params) {
     json_object_object_add(Result, "flag", json_object_new_boolean(Params->Flag));
   }
   if(VoltageHarmonics && Params) {
-//      Obj = json_object_new_array();
-//      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) {
-//        json_object *Obj2 = json_object_new_array();
-//        for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(Params->VoltageHarmonics[i][j]));
-//        json_object_array_add(Obj, Obj2);
-//      }
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < VoltageChannels; i++) {
+      json_object *Obj2 = json_object_new_array();
+      for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(Params->VoltageHarmonics[i][j]));
+      json_object_array_add(Obj, Obj2);
+    }
+    json_object_object_add(Result, "harmonics_v", Obj);
   }
   if(CurrentHarmonics && Params) {
-//      Obj = json_object_new_array();
-//      for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) {
-//        json_object *Obj2 = json_object_new_array();
-//        for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(Params->CurrentHarmonics[i][j]));
-//        json_object_array_add(Obj, Obj2);
-//      }
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < CurrentChannels; i++) {
+      json_object *Obj2 = json_object_new_array();
+      for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(Params->CurrentHarmonics[i][j]));
+      json_object_array_add(Obj, Obj2);
+    }
+    json_object_object_add(Result, "harmonics_i", Obj);
   }
   //if(strcmp(Serie, "wave_v") == 0) {
 ////      Obj = json_object_new_array();

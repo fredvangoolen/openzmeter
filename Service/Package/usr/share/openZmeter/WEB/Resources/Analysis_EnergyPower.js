@@ -17,7 +17,6 @@
  */
 
 /* Graficas de energia y potencia*/
-var LastEnergyPowerSample    = 0;
 var ActiveEnergyData         = [];
 var ReactiveEnergyData       = [];
 var ActivePowerData          = [];
@@ -26,45 +25,14 @@ var ActiveEnergyChart        = null;
 var ReactiveEnergyChart      = null;
 var ActivePowerChart         = null;
 var ReactivePowerChart       = null;
-var ActivePowerChartUnits    = 'W';
-var ReactivePowerChartUnits  = 'Wh';
-var ActiveEnergyChartUnits   = 'W';
-var ReactiveEnergyChartUnits = 'Wh';
-var EnergyPowerSpinner       = new Spinner(SpinnerOpts);
-var EnergyPowerTimer         = null;
-function AjaxGetEnergyPower() {
-  if(EnergyPowerTimer !== null) clearInterval(EnergyPowerTimer);
-  $('#btnEnergyPowerNow').addClass('disabled');
-  if(LastEnergyPowerSample === 0) ShowSpinner(EnergyPowerSpinner, 'EnergyPowerSpinner');
-  var Period = parseInt(localStorage.getItem('GraphPeriod'));
-  if(!Period) {
-    Period = 86400000;
-    localStorage.setItem('GraphPeriod', Period);
-  }
-  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
-  if(!GraphEnd) {
-    GraphEnd = 0;
-    localStorage.setItem('GraphEnd', 0);
-  } 
-  var GraphAggregation = localStorage.getItem('GraphAggregation');
-  if(!GraphAggregation || (GetAggregText(GraphAggregation) === false)) {
-    GraphAggregation = '10m';
-    localStorage.setItem('GraphAggregation', GraphAggregation);
-  }
-  $.ajax({ url: "getSeries",
-    timeout: 20000,
-    type: "POST",
-    dataType: "json",
-    contentType: 'application/json',
-    data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastEnergyPowerSample, Series: 'active_energy, active_power, fundamental_reactive_energy, fundamental_reactive_power', Node: Node }),
-    success: AjaxEnergyPower,
-    complete: function() {
-      $('#btnEnergyPowerNow').removeClass('disabled');
-      if(parseInt(localStorage.getItem('GraphEnd')) === 0) setTimeout(AjaxGetEnergyPower, 3000);
-    }
- });
+var ScrollableSeries = 'active_energy, active_power, reactive_energy, reactive_power';
+function Scrollable_ShowSpinner() {
+  $('#EnergySpinner').show();
 }
-function AjaxEnergyPower(result) {
+function Scrollable_StopSpinner() {
+  $('#EnergySpinner').hide();
+}
+function Scrollable_OnSuccess(result) {
   if(LastEnergyPowerSample === 0) {
     StopSpinner(EnergyPowerSpinner, 'EnergyPowerSpinner');
     ActiveEnergyData   = [];
@@ -670,7 +638,7 @@ $('#GraphDialogClose').click(function() {
 
 /* Contadores de energia */
 var EnergyCountersTimer  = null;
-function AjaxGetEnergyCounters() {
+function Scrollable_UpdateCounters(change) {
   if(EnergyCountersTimer != null) clearInterval(EnergyCountersTimer);
   EnergyCountersTimer = setTimeout(EnergyCountersTimer, 60000);
   var CountersPeriod = localStorage.getItem('CountersPeriod');
@@ -768,14 +736,14 @@ function EnergyUpdateCountersPrevs(result) {
 
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
-  AjaxGetEnergyPower();
+  GetSeriesScrollable();
   var View = localStorage.getItem('EnergyPowerTab');
   if(View === 'Power') {
     $('#btnShowPower').trigger('click');
   } else {
     $('#btnShowEnergy').trigger('click');
   }
-  AjaxGetEnergyCounters();
+  Scrollable_UpdateCounters(true);
 }
 
 /* Exportar datos */
@@ -790,4 +758,4 @@ $('#btnExportActiveEnergy').click(function() {
 });
 $('#btnExportReactiveEnergy').click(function() {
   exportToCsv("ReactiveEnergy_" + Node + '_' + LastEnergyPowerSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Reactive Energy R', 'Reactive Energy S', 'Reactive Energy T']] : [['DateTime', 'Reactive Energy']]).concat(ReactiveEnergyData));
-});
+});//792
