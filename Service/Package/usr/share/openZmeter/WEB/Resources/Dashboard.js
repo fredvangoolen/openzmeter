@@ -281,17 +281,16 @@ function Scrollable_StopSpinner() {
 function Scrollable_OnSuccess(result) {
   if(ScrollableLastSample === 0) EnergyData = [Array(ActiveEnergyNames.length + 1).fill(0)];
   EnergyData = GraphDataAppend(result, 'active_energy', EnergyData);
-  $('#EnergyAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');  
   if(EnergyChart == null) {
     EnergyChart = new Dygraph(document.getElementById("EnergyChart"), EnergyData,
       { strokeWidth: 0.5, stackedGraph: true, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], plotter: barChartNoSpacedPlotter,
-        labelsDiv: "EnergyLegend", labels: ['Time'].concat(ActiveEnergyNames), dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(ActiveEnergyNames), dateWindow: [result['From'], result['To']],
         zoomCallback: Scrollable_Zoom, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: Scrollable_MouseUp, dblclick: Scrollable_DoubleClick },
         underlayCallback: function(context, area, dygraph) { HightlightWeekends("#EEE", context, area, dygraph); }, colors: ColorArray($('#EnergyPanel').css('border-color'), 3),
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + ' <em class="x-small">' + Units + 'Wh</em>'; },
-               axisLabelFormatter: function (x) { return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>'; }
+               axisLabelFormatter: function (x) { return Round2(x); }
              },
           x: { valueFormatter: function (x) { return new Date(x).toLocaleDateString() + ' - ' + new Date(x).toLocaleTimeString(); },
                axisLabelFormatter: function (x) { return new Date(x).toLocaleTimeString() + '<br/>' + new Date(x).toLocaleDateString(); }
@@ -308,7 +307,7 @@ function Scrollable_OnSuccess(result) {
 }
 function EnergyResizeEvent() {
   var Height = $('#EnergyBox').height() + $('#BudgetBox').height();
-  if(EnergyChart != null) EnergyChart.resize($('#EnergyCol').width(), Height - 12);
+  if(EnergyChart != null) EnergyChart.resize($('#EnergyCol').width(), Height + 12);
 }
 function EnergySeries(event) {
   GraphPhaseButtons(EnergyChart, $('#groupEnergyPhases'), 'VisibleDashboardEnergyPhases', false, function(series) { return CalcRanges(EnergyData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 

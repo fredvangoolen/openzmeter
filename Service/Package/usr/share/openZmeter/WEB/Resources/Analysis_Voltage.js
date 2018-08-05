@@ -17,135 +17,36 @@
  */
 
 /* Grafica de voltage */
-var LastVoltageSample   = 0;
-var VoltageChart        = null;
-var VoltageData         = [];
-var VoltageSpinner      = new Spinner(SpinnerOpts);
-var VoltageTimer        = null;
-function AjaxGetVoltage() {
-  if(VoltageTimer !== null) clearInterval(VoltageTimer);
-  $('#btnVoltageNow').addClass('disabled');
-  if(LastVoltageSample === 0) ShowSpinner(VoltageSpinner, 'VoltageSpinner');
-  var Period = parseInt(localStorage.getItem('GraphPeriod'));
-  if(!Period) {
-    Period = 86400000;
-    localStorage.setItem('GraphPeriod', Period);
-  }
-  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
-  if(!GraphEnd) {
-    GraphEnd = 0;
-    localStorage.setItem('GraphEnd', 0);
-  } 
-  var GraphAggregation = localStorage.getItem('GraphAggregation');
-  if(!GraphAggregation || (GetAggregText(GraphAggregation) === false)) {
-    GraphAggregation = '10m';
-    localStorage.setItem('GraphAggregation', GraphAggregation);
-  }
-  if(LastVoltageSample === 0) LastEventStartTime = 0;
-  $.ajax({ url: "getSeries",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastVoltageSample, Series: 'rms_v', Analyzer: Analyzers[Analyzer].ID}),
-           success: AjaxVoltage,
-           complete: function() { 
-             AjaxGetEvents(Period, GraphEnd, Node);
-           }
-  });
+var VoltageChart     = null;
+var VoltageData      = [];
+var ScrollableSeries = "rms_v";
+function Scrollable_ShowSpinner() {
+  $('#VoltageSpinner').show();
 }
-function AjaxVoltage(result) {
-  if(LastVoltageSample === 0) {
-    StopSpinner(VoltageSpinner, 'VoltageSpinner');
-    VoltageData = [];
-  }
-  if(result['Sampletime'] !== null) {
-    for(i = 0; i < result['Sampletime'].length; i++) VoltageData.push([new Date(result['Sampletime'][i])].concat(result['rms_v'][i]));
-    while(VoltageData.length > result['MaxSamples']) VoltageData.shift();
-    LastVoltageSample = result['Sampletime'][result['Sampletime'].length - 1];
-  }
-  $('#VoltageAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
+function Scrollable_StopSpinner() {
+  $('#VoltageSpinner').hide();
+}
+function Scrollable_OnSuccess(result) {
+  if(ScrollableLastSample === 0) VoltageData = [Array(VoltageNames.length + 1).fill(0)];
+  VoltageData = GraphDataAppend(result, 'rms_v', VoltageData);
   if(VoltageChart == null) {
-    VoltageChart = new Dygraph(document.getElementById("VoltageChart"),
-      VoltageData,
-      { strokeWidth: 1,
-        labelsDiv: "VoltageLegend",
-        labels: ['Time'].concat(VoltageNames),
-        stepPlot: true,
-        fillGraph: false,
-        colors: ["#d9534f", "#534fd9", "#4fd953"],
-        gridLineColor: "#999",
-        gridLinePattern: [4, 4],
-        dateWindow: [result['From'], result['To']],
-        plugins: [
-          new Dygraph.Plugins.Crosshair({
-            direction: "vertical"
-          })
-        ],
+    VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
+      { strokeWidth: 0.5, stepPlot: true, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(VoltageNames), dateWindow: [result['From'], result['To']],
+        zoomCallback: Scrollable_Zoom, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: Scrollable_MouseUp, dblclick: Scrollable_DoubleClick },  
+        colors: ColorArray($('#VoltagePanel').css('border-color'), 3),
+        plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
         underlayCallback: function(canvas, area, g) {
-          var NominalVoltage = Analyzers[Analyzer].NominalVoltage;
-          var YellowLowA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.07);
-          var YellowHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - YellowLowA;
-          var YellowLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.07);
-          var YellowHeightB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.10) - YellowLowB;
-          var RedLowA = g.toDomYCoord(1000);
-          var RedHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - RedLowA;
-          var RedLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.10);
-          var RedHeightB = g.toDomYCoord(0) - RedLowB;
-          canvas.fillStyle = "rgba(255, 255, 0, 0.15)";
-          canvas.fillRect(0, YellowLowA, 10000, YellowHeightA);
-          canvas.fillRect(0, YellowLowB, 10000, YellowHeightB);
-          canvas.fillStyle = "rgba(180, 0, 0, 0.15)";
-          canvas.fillRect(0, RedLowA, 10000, RedHeightA);
-          canvas.fillRect(0, RedLowB, 10000, RedHeightB);
-        },
-        zoomCallback: function(minDate, maxDate, yRanges) {
-          clearInterval(VoltageTimer);
-          $('#btnVoltageNow').removeClass('active');
-          localStorage.setItem('GraphEnd', maxDate);
-          localStorage.setItem('GraphPeriod', maxDate - minDate);
-          LastVoltageSample = 0;
-          AjaxGetVoltage();
-        },
-        interactionModel: {
-          mousedown: mouseDownOZM,
-          mousemove: mouseMoveOZM,
-          mouseup: function(event, g, contex) {
-            mouseUpOZM(event, g, contex);
-            if((contex.isPanning) && (contex.regionWidth > 0)) {
-              $('#btnVoltageNow').removeClass('active');
-              localStorage.setItem('GraphEnd', g.dateWindow_[1]);
-              localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
-              LastVoltageSample = 0;
-              AjaxGetVoltage();
-            }            
-          },
-          dblclick: function(event, g, context) {
-            dblClickOZM(event, g, context);
-            $('#btnVoltageNow').removeClass('active');
-            localStorage.setItem('GraphEnd', g.dateWindow_[1]);
-            localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
-            LastVoltageSample = 0;
-            AjaxGetVoltage();
-          }
+          var NV = Analyzers[Analyzer].NominalVoltage, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
+          GraphHBackgroundRanges([[NV * 1.1, NV * 1.07, Yellow], [NV * 0.93, NV * 0.9, Yellow], [Infinity, NV * 1.1, Red], [NV * 0.9, -Infinity, Red]], g, canvas);
         },
         axes: {
-          y: { pixelsPerLabel: 15,
-               axisLabelWidth: 34,
-               valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">V</em>';
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-               }
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
+               valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">V</em>'; },
+               axisLabelFormatter: function (x) { return Round2(x); }
              },
-          x: { valueFormatter: function (x) {
-                 var date = new Date(x);
-                 return date.toLocaleDateString() + ' - ' + date.toLocaleTimeString();
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + x.toLocaleTimeString() + '<br>' + x.toLocaleDateString() + '</div>';
-               }
+          x: { valueFormatter: function (x) { return new Date(x).toLocaleDateString() + ' - ' + new Date(x).toLocaleTimeString(); },
+               axisLabelFormatter: function (x) { return new Date(x).toLocaleTimeString() + '<br/>' + new Date(x).toLocaleDateString(); }
              }
           }
         }  
@@ -155,156 +56,20 @@ function AjaxVoltage(result) {
   } else {
     VoltageChart.updateOptions({file: VoltageData, dateWindow: [result['From'], result['To']]});
   }
-  SetVoltageVisibleSeries();
-  $('#btnShowVoltageYear').removeClass('active');
-  $('#btnShowVoltageMonth').removeClass('active');
-  $('#btnShowVoltageWeek').removeClass('active');
-  $('#btnShowVoltageDay').removeClass('active');
-  if((result['To'] - result['From']) === 86400000) {
-    $('#btnShowVoltageDay').addClass('active');
-  } else if((result['To'] - result['From']) === 604800000) {
-    $('#btnShowVoltageWeek').addClass('active');
-  } else if((result['To'] - result['From']) === 2592000000) {
-    $('#btnShowVoltageMonth').addClass('active');
-  } else if((result['To'] - result['From']) === 31536000000) {
-    $('#btnShowVoltageYear').addClass('active');
-  }
-  var GraphAggregation = localStorage.getItem('GraphAggregation');
-  if(GraphAggregation !== result['Aggregation_Source']) {
-    $('#aggreg_modal').modal('show');
-    GraphAggregation = result['Aggregation_Source'];
-  }
-  $('#btnVoltage3S').removeClass('active');
-  $('#btnVoltage1M').removeClass('active');
-  $('#btnVoltage10M').removeClass('active');
-  $('#btnVoltage1H').removeClass('active');
-  if(GraphAggregation == '3s') {
-    $('#btnVoltage3S').addClass('active');
-  } else if(GraphAggregation == '1m') {
-    $('#btnVoltage1M').addClass('active');
-  } else if(GraphAggregation == '10m') {
-    $('#btnVoltage10M').addClass('active');
-  } else if(GraphAggregation == '1h') {
-    $('#btnVoltage1H').addClass('active');
-  }
-  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
-  if(GraphEnd === 0) {
-    $('#btnVoltageNow').addClass('active');
-  } else {
-    $('#btnVoltageNow').removeClass('active');
-  }
-  localStorage.setItem('GraphAggregation', GraphAggregation);
+  VoltageSeries();
 }
 function VoltageResizeEvent() {
   var Height = $('#VoltageAvgPanel').height() + $('#VoltageMaxPanel').height() + $('#VoltageMinPanel').height();
   VoltageChart.resize($('#VoltageCol').width(), Height - 4);
 }
-function SetVoltageVisibleSeries() {
-  if(Analyzers[Analyzer]['Mode'] == '3Phase') {
-    var ShowR = (localStorage.getItem('ShowR') === 'true');
-    var ShowS = (localStorage.getItem('ShowS') === 'true');
-    var ShowT = (localStorage.getItem('ShowT') === 'true');
-    var VisibleSeries = [ShowR, ShowS, ShowT];
-    var Visibles = [];
-    if(ShowR) Visibles.push(1);
-    if(ShowS) Visibles.push(2);
-    if(ShowT) Visibles.push(3);
-    VoltageChart.updateOptions({ visibility: VisibleSeries, valueRange: CalcRanges(VoltageData, Visibles, false) });
-    if(ShowR === true)
-      $('#btnShowVoltageRPhase').addClass('active');
-    else    
-      $('#btnShowVoltageRPhase').removeClass('active');
-    if(ShowS === true)
-      $('#btnShowVoltageSPhase').addClass('active');
-    else    
-      $('#btnShowVoltageSPhase').removeClass('active');
-    if(ShowT === true)
-      $('#btnShowVoltageTPhase').addClass('active');
-    else    
-      $('#btnShowVoltageTPhase').removeClass('active');
-  } else {
-    VoltageChart.updateOptions({ valueRange: CalcRanges(VoltageData, [1], false) });
-  }
+function VoltageSeries(event) {
+  GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'VisibleVoltageMainPhases', false, function(series) { return CalcRanges(VoltageData, series, false); }, (event !== undefined) ? event.target : undefined); 
 }
-function ChooseVoltageChannels() {
-  var ShowR = (localStorage.getItem('ShowR') === 'true');
-  var ShowS = (localStorage.getItem('ShowS') === 'true');
-  var ShowT = (localStorage.getItem('ShowT') === 'true');
-  if(this.innerText === 'R') ShowR = !ShowR;
-  if(this.innerText === 'S') ShowS = !ShowS;
-  if(this.innerText === 'T') ShowT = !ShowT;
-  if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
-  if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowS = true;
-  if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowT = true;
-  localStorage.setItem('ShowR', ShowR);
-  localStorage.setItem('ShowS', ShowS);
-  localStorage.setItem('ShowT', ShowT);
-  SetVoltageVisibleSeries();
-}
-$('#btnShowVoltageRPhase').click(ChooseVoltageChannels);
-$('#btnShowVoltageSPhase').click(ChooseVoltageChannels);
-$('#btnShowVoltageTPhase').click(ChooseVoltageChannels);
-$('#btnVoltage3S').click(function() {
-  localStorage.setItem('GraphAggregation', '3s');
-  LastVoltageSample = 0;
-  AjaxGetVoltage();
+$('#groupVoltagePhases').on('click', 'button', VoltageSeries);
+$('#btnExportVoltage').click(function() {
+  exportToCsv("Voltage_" + Node + '_' + LastVoltageSample + '.csv', [['Time'].concat(VoltageNames)].concat(VoltageData));
 });
-$('#btnVoltage1M').click(function() {
-  localStorage.setItem('GraphAggregation', '1m');
-  LastVoltageSample = 0;
-  AjaxGetVoltage();
-});
-$('#btnVoltage10M').click(function() {
-  localStorage.setItem('GraphAggregation', '10m');
-  LastVoltageSample = 0;
-  AjaxGetVoltage();
-});
-$('#btnVoltage1H').click(function() {
-  localStorage.setItem('GraphAggregation', '1h');
-  LastVoltageSample = 0;
-  AjaxGetVoltage();
-});
-$('#btnShowVoltageYear').click(function() {
-  localStorage.setItem('GraphPeriod', 31536000000);
-  LastVoltageSample = 0;
-  AjaxGetVoltage();
-  localStorage.setItem('CountersPeriod', 'Year');
-  AjaxGetVoltageCounters();
-});
-$('#btnShowVoltageMonth').click(function() {
-  localStorage.setItem('GraphPeriod', 2592000000);
-  LastVoltageSample = 0;
-  AjaxGetVoltage();
-  localStorage.setItem('CountersPeriod', 'Month');
-  AjaxGetVoltageCounters();
-});
-$('#btnShowVoltageWeek').click(function() {
-  localStorage.setItem('GraphPeriod', 604800000);
-  LastVoltageSample = 0;
-  AjaxGetVoltage();
-  localStorage.setItem('CountersPeriod', 'Week');
-  AjaxGetVoltageCounters();
-});
-$('#btnShowVoltageDay').click(function() {
-  localStorage.setItem('GraphPeriod', 86400000);
-  LastVoltageSample = 0;
-  AjaxGetVoltage();
-  localStorage.setItem('CountersPeriod', 'Day');
-  AjaxGetVoltageCounters();
-});
-$('#btnVoltageNow').click(function() {
-  var End = parseInt(localStorage.getItem('GraphEnd'));
-  if(End === 0) {
-    $('#btnVoltageNow').removeClass('active');
-    localStorage.setItem('GraphEnd', VoltageChart.getOption('dateWindow')[1]);
-    if(VoltageTimer !== null) clearInterval(VoltageTimer);
-  } else {
-    $('#btnVoltageNow').addClass('active');
-    localStorage.setItem('GraphEnd', 0);
-    LastVoltageSample = 0;
-    AjaxGetVoltage();
-  }
-});
+
 $('#btnMaximizeVoltage').click(function() {
   $('#GraphDialogTitle').text('Voltage');
   $('#GraphDialog').modal('show');
@@ -318,9 +83,6 @@ $('#btnMaximizeVoltage').click(function() {
   $('#GraphDialogBody').append(DialogElement);
   $(window).bind('resize', DialogResizeHandler);
   window.dispatchEvent(new Event('resize'));  
-});
-$('#btnExportVoltage').click(function() {
-  exportToCsv("Voltage_" + Node + '_' + LastVoltageSample + '.csv', ((Analyzers[Analyzer]['Mode'] == '3Phase') ? [['DateTime', 'Voltage R', 'Voltage S', 'Voltage T']] : [['DateTime', 'Voltage']]).concat(VoltageData));
 });
 
 /* Contadores de voltage */
@@ -1733,21 +1495,10 @@ $('#GraphDialogClose').click(function() {
 
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
-  /*if(Nodes[Node]['Type'] === '3Phase') {
-    $('#btnShowVoltageRPhase').removeClass('disabled');
-    $('#btnShowVoltageSPhase').removeClass('disabled');
-    $('#btnShowVoltageTPhase').removeClass('disabled');
-    var ShowR = (localStorage.getItem('ShowR') === 'true');
-    var ShowS = (localStorage.getItem('ShowS') === 'true');
-    var ShowT = (localStorage.getItem('ShowT') === 'true');
-    if((ShowR !== true) && (ShowS !== true) && (ShowT !== true)) ShowR = true;
-    localStorage.setItem('ShowR', (ShowR === true)); 
-    localStorage.setItem('ShowS', (ShowS === true));
-    localStorage.setItem('ShowT', (ShowT === true));
-  }*/
   DetailsButtonClick();
-  AjaxGetVoltage();
+  GetSeriesScrollable();
   AjaxGetVoltageCounters();
   AjaxGetDetails();
   AjaxGetEvolution();
 }
+//1752

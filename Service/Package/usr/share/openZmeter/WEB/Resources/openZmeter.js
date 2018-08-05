@@ -65,7 +65,7 @@ function GetPeriodNameFromMS(elapsed) {
 }
 /* Return MS time from period name */
 function GetMSFromPeriodName(elapsed) {
-  return (PeriodName === 'Day') ? 86400000 : (PeriodName === 'Week') ? 604800000 : (PeriodName === 'Month') ? 2592000000 : 31536000000;
+  return (elapsed === 'Day') ? 86400000 : (elapsed === 'Week') ? 604800000 : (elapsed === 'Month') ? 2592000000 : 31536000000;
 }
 /* return end end time and duration of current counters */
 function GetCountersTimePeriod() {
@@ -78,13 +78,14 @@ function GetCustomTimeDuration() {
   var Result = {};
   
 }
-/* return end time and duration of current and previous month (include other useful values) */
+/* return end time and duration of current and previous year (include other useful values) */
 function GetYearTimePeriod() {
   var Result = {};
-  Result.PrimaryPeriod = 86400000;
-  Result.PrimaryTo = GetDayTimestamp() - 86400000 * new Date().getDay();
-  Result.SecondaryPeriod = Result.CurrentDuration;
-  Result.SecondaryTo = Result.CurrentEnd - Result.CurrentDuration;
+  var now = new Date();
+  Result.PrimaryTo = new Date(now.getFullYear() + 1, 1, 0, 23, 59, 59, 999).getTime();
+  Result.PrimaryPeriod = Result.PrimaryTo - new Date(now.getFullYear(), 1, 1, 0, 0, 0, 0).getTime();
+  Result.SecondaryTo = new Date(now.getFullYear(), 1, 0, 23, 59, 59, 999).getTime();;
+  Result.SecundaryPeriod = Result.SecondaryTo - new Date(now.getFullYear() - 1, 1, 1, 0, 0, 0, 0).getTime();
   Result.PreferedAggreg = '1h';
   Result.PrimaryText = 'This year';
   Result.SecondaryText = 'Previous year';
@@ -93,25 +94,27 @@ function GetYearTimePeriod() {
 /* return end time and duration of current and previous month (include other useful values) */
 function GetMonthTimePeriod() {
   var Result = {};
-  Result.CurrentDuration = 86400000;
-  Result.CurrentEnd = GetDayTimestamp() - 86400000 * new Date().getDay();
-  Result.PrevDuration = Result.CurrentDuration;
-  Result.PrevEnd = Result.CurrentEnd - Result.CurrentDuration;
+  var now = new Date();
+  Result.PrimaryTo = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
+  Result.PrimaryPeriod = Result.PrimaryTo - new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0).getTime();
+  Result.SecondaryTo = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999).getTime();;
+  Result.SecundaryPeriod = Result.SecondaryTo - new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0).getTime();
   Result.PreferedAggreg = '10m';
-  Result.CurrentText = 'This month';
-  Result.PrevText = 'Previous month';
+  Result.PrimaryText = 'This month';
+  Result.SecondaryText = 'Previous month';
   return Result;
 }
 /* return end time and duration of current and previous week (include other useful values) */
 function GetWeekTimePeriod() {
   var Result = {};
-  Result.CurrentDuration = 86400000 * 7;
-  Result.CurrentEnd = GetDayTimestamp() - 86400000 * new Date().getDay();
-  Result.PrevDuration = Result.CurrentDuration;
-  Result.PrevEnd = Result.CurrentEnd - Result.CurrentDuration;
+  var now = new Date();
+  Result.PrimaryPeriod = 86400000 * 7;
+  Result.PrimaryTo = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7 - now.getDay(), 23, 59, 59, 999).getTime();
+  Result.SecundaryPeriod = Result.CurrentDuration;
+  Result.SecondaryTo = Result.CurrentEnd - Result.CurrentDuration;
   Result.PreferedAggreg = '1m';
-  Result.CurrentText = 'This week';
-  Result.PrevText = 'Previous week';
+  Result.PrimaryText = 'This week';
+  Result.SecondaryText = 'Previous week';
   return Result;
 }
 /* return end time and duration of current and previous day (include other useful values) */
@@ -127,35 +130,6 @@ function GetDayTimePeriod() {
   Result.SecondaryText = 'Yesterday';
   return Result;
 }
-
-
-
-
-var CountersPeriod = localStorage.getItem('CountersPeriod');
-
-  var Current, Period;
-  if(CountersPeriod === 'Week') {
-    Period = 86400000 * 7;
-    Current = GetWeekTimestamp();
-    Aggreg = '10m';
-  } else if(CountersPeriod === 'Month') {
-    Period = 86400000 * 30;
-    Current = GetMonthTimestamp();
-    Aggreg = '1h';
-  } else if(CountersPeriod === 'Year') {
-    Period = 86400000 * 365;
-    Current = GetYearTimestamp();
-    Aggreg = '1h';
-  } else {
-    CountersPeriod = 'Day';
-    localStorage.setItem('CountersPeriod', CountersPeriod);
-    Period = 86400000;
-    Current = GetDayTimestamp();
-    Aggreg = '1m';
-  }
-  
-
-
 /* getSeries function than take params from controls to manage scrollable graphs */
 var ScrollableLastSample = 0;
 var ScrollableTimer = null;
