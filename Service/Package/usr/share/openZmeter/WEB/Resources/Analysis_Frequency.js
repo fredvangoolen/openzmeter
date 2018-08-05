@@ -36,27 +36,9 @@ function Scrollable_OnSuccess(result) {
         colors: $('#FreqeuncyPanel').css('border-color'), plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
         zoomCallback: Scrollable_Zoom, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: Scrollable_MouseUp, dblclick: Scrollable_DoubleClick },
         underlayCallback: function(canvas, area, g) {
-//          var NominalFreq = Nodes['NominalFreq'][Node];
-//          var Top    = g.toDomYCoord(NominalFreq + NominalFreq * 0.1);
-//          var Bottom = g.toDomYCoord(NominalFreq + NominalFreq * 0.01);          
-//          canvas.fillStyle = "rgba(255, 255, 0, 0.15)";
-//          canvas.fillRect(0, Top, area.w, Top - Bottom);
-
-//          var YellowLowA = ;
-//          var YellowHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.1) - YellowLowA;
-//          var YellowLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.01);
-//          var YellowHeightB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.10) - YellowLowB;
-
-          
-//          var RedLowA = g.toDomYCoord(1000);
-//          var RedHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - RedLowA;
-//          var RedLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.10);
-//          var RedHeightB = g.toDomYCoord(0) - RedLowB;
-//          canvas.fillRect(0, YellowLowB, 10000, YellowHeightB);
-//          canvas.fillStyle = "rgba(180, 0, 0, 0.15)";
-//          canvas.fillRect(0, RedLowA, 10000, RedHeightA);
-//          canvas.fillRect(0, RedLowB, 10000, RedHeightB);
-        },
+          var NF = Analyzers[Analyzer].NominalFreq, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
+          GraphHBackgroundRanges([[NF * 1.01, NF * 1.005, Yellow], [NF * 0.995, NF * 0.99, Yellow], [Infinity, NF * 1.01, Red], [NF * 0.99, -Infinity, Red]], g, canvas);
+        },  
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">Hz</em>'; },
@@ -73,14 +55,11 @@ function Scrollable_OnSuccess(result) {
   } else {
     FrequencyChart.updateOptions( {'file': FrequencyData, valueRange: CalcRanges(FrequencyData, [1], false), dateWindow: [result['From'], result['To']]});
   }
-  FreqeuncySeries();
+  FrequencyChart.updateOptions({ valueRange: CalcRanges(FrequencyData, [1]) });
 }
 function FrequencyResizeEvent() {
   var Height = $('#FreqAvgPanel').height() + $('#FreqMaxPanel').height() + $('#FreqMinPanel').height();
   FrequencyChart.resize($('#FrequencyCol').width(), Height - 4);
-}
-function FreqeuncySeries(event) {
-//  GraphPhaseButtons(FrequencyChart, $('#groupEnergyPhases'), 'VisibleDashboardEnergyPhases', false, function(series) { return CalcRanges(EnergyData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
 }
 $('#btnMaximizeFrequency').click(function() {
   $('#GraphDialogTitle').text('Frequency');
@@ -102,119 +81,51 @@ $('#btnExportFrequency').click(function() {
   Data.push([['Index', 'Frequency']]);
   Data = Data.concat(FrequencyData);
   exportToCsv(Filename, Data);
-  $(this).blur();
 });
 
 /* Contadores de frequencia */
 var FrequencyCountersTimer  = null;
 function Scrollable_UpdateCounters(change) {
   if(FrequencyCountersTimer != null) clearInterval(FrequencyCountersTimer);
-  FrequencyCountersTimer = setTimeout(AjaxGetFrequencyCounters, 60000);
-  var CountersPeriod = localStorage.getItem('CountersPeriod');
-  var Current, Period;
-  if(CountersPeriod === 'Week') {
-    Period = 86400000 * 7;
-    Current = GetWeekTimestamp();
-    Aggreg = '10m';
-  } else if(CountersPeriod === 'Month') {
-    Period = 86400000 * 30;
-    Current = GetMonthTimestamp();
-    Aggreg = '1h';
-  } else if(CountersPeriod === 'Year') {
-    Period = 86400000 * 365;
-    Current = GetYearTimestamp();
-    Aggreg = '1h';
-  } else {
-    CountersPeriod = 'Day';
-    localStorage.setItem('CountersPeriod', CountersPeriod);
-    Period = 86400000;
-    Current = GetDayTimestamp();
-    Aggreg = '1m';
+  FrequencyCountersTimer = setTimeout(Scrollable_UpdateCounters, 60000);
+  var Times = GetCountersTimePeriod();
+  if(change === true) {
+    $('#labelFrequencyPeriodAVG').text(Times.PrimaryText + ' average');
+    $('#labelFrequencyPeriodMAX').text(Times.PrimaryText + ' maximum');
+    $('#labelFrequencyPeriodMIN').text(Times.PrimaryText + ' minimum');
+    $('#labelFrequencyPrevPeriodAVG').text(Times.PrimaryText + ' average');
+    $('#labelFrequencyPrevPeriodMAX').text(Times.PrimaryText + ' maximum');
+    $('#labelFrequencyPrevPeriodMIN').text(Times.PrimaryText + ' minimum');
+    $('#labelFrequencyCurrentAVG').text('Calculating...');
+    $('#labelFrequencyCurrentMAX').text('Calculating...');
+    $('#labelFrequencyCurrentMIN').text('Calculating...');
   }
-  $.ajax({ url: "getSeriesAggreg",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(freq), max(freq), min(freq)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Node }),
-           success: FrequencyUpdateCountersCurrent
-  });
-  $.ajax({ url: "getSeriesAggreg",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(freq), max(freq), min(freq)", Aggreg: Aggreg, Period: Period, To: Current, Node: Node }),
-           success: FrequencyUpdateCountersPrevs
-  });
-}
-function FrequencyUpdateCountersCurrent(result) {
-  var CountersPeriod = localStorage.getItem('CountersPeriod');
-  if(CountersPeriod === 'Week') {
-    $('#labelFrequencyPeriodAVG').text('This week average');
-    $('#labelFrequencyPeriodMAX').text('This week maximum');
-    $('#labelFrequencyPeriodMIN').text('This week minimum');
-  } else if(CountersPeriod === 'Month') {
-    $('#labelFrequencyPeriodAVG').text('This month average');
-    $('#labelFrequencyPeriodMAX').text('This month maximum');
-    $('#labelFrequencyPeriodMIN').text('This month minimum');
-  } else if(CountersPeriod === 'Year') {
-    $('#labelFrequencyPeriodAVG').text('This year average');
-    $('#labelFrequencyPeriodMAX').text('This year maximum');
-    $('#labelFrequencyPeriodMIN').text('This year minimum');
-  } else if(CountersPeriod === 'Day') {
-    $('#labelFrequencyPeriodAVG').text('Today average');
-    $('#labelFrequencyPeriodMAX').text('Today maximum');
-    $('#labelFrequencyPeriodMIN').text('Today minimum');
-  }
-  if(result['avg_freq'] === null) {
-    $('#labelFrequencyCurrentAVG').text('?');
-    $('#labelFrequencyCurrentMAX').text('?');
-    $('#labelFrequencyCurrentMIN').text('?');
-  } else {
-    $('#labelFrequencyCurrentAVG').html(Round2(result['avg_freq']));
-    $('#labelFrequencyCurrentMAX').html(Round2(result['max_freq']));
-    $('#labelFrequencyCurrentMIN').html(Round2(result['min_freq']));
+  GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, 'avg(freq), max(freq), min(freq)', 
+    function FrequencyUpdateCountersCurrent(result) {
+      $('#labelFrequencyCurrentAVG').html(Round2(result['avg_freq']));
+      $('#labelFrequencyCurrentMAX').html(Round2(result['max_freq']));
+      $('#labelFrequencyCurrentMIN').html(Round2(result['min_freq']));
+    }
+  );
+  if(Times.SecondaryTo !== undefined) {
+    $('#labelFrequencyPrevAVG').text('Calculating...');
+    $('#labelFrequencyPrevMAX').text('Calculating...');
+    $('#labelFrequencyPrevMIN').text('Calculating...');  
+    GetSeriesAggreg(Times.SecondaryPeriod, Times.SecondaryTo, Times.PreferedAggreg, 'avg(freq), max(freq), min(freq)', 
+      function FrequencyUpdateCountersCurrent(result) {
+        $('#labelFrequencyPrevAVG').html(Round2(result['avg_freq']));
+        $('#labelFrequencyPrevMAX').html(Round2(result['max_freq']));
+        $('#labelFrequencyPrevMIN').html(Round2(result['min_freq']));
+      }
+    );      
   }
 }
-function FrequencyUpdateCountersPrevs(result) {
-  var CountersPeriod = localStorage.getItem('CountersPeriod');
-  if(CountersPeriod === 'Week') {
-    $('#labelFrequencyPrevPeriodAVG').text('Previous week average');
-    $('#labelFrequencyPrevPeriodMAX').text('Previous week maximum');
-    $('#labelFrequencyPrevPeriodMIN').text('Previous week minimum');
-  } else if(CountersPeriod === 'Month') {
-    $('#labelFrequencyPrevPeriodAVG').text('Previous month average');
-    $('#labelFrequencyPrevPeriodMAX').text('Previous month maximum');
-    $('#labelFrequencyPrevPeriodMIN').text('Previous month minimum');
-  } else if(CountersPeriod === 'Year') {
-    $('#labelFrequencyPrevPeriodAVG').text('Previous year average');
-    $('#labelFrequencyPrevPeriodMAX').text('Previous year maximum');
-    $('#labelFrequencyPrevPeriodMIN').text('Previous year minimum');
-  } else if(CountersPeriod === 'Day') {
-    $('#labelFrequencyPrevPeriodAVG').text('Previous day average');
-    $('#labelFrequencyPrevPeriodMAX').text('Previous day maximum');
-    $('#labelFrequencyPrevPeriodMIN').text('Previous day minimum');
-  }
-  if(result['avg_freq'] === null) {
-    $('#labelFrequencyPrevAVG').text('?');
-    $('#labelFrequencyPrevMAX').text('?');
-    $('#labelFrequencyPrevMIN').text('?');
-  } else {
-    $('#labelFrequencyPrevAVG').html(Round2(result['avg_freq']));
-    $('#labelFrequencyPrevMAX').html(Round2(result['max_freq']));
-    $('#labelFrequencyPrevMIN').html(Round2(result['min_freq']));
-  }
-}
-
 /* Ventana de maximizar y de error de agregaciones */
 var DialogElement           = null;
 var PrevDialogContainer     = null;
 var DialogResizeHandler     = null;
 var DialogPrevResizeHandler = null;
-$('#aggreg_modal_close').click(function() {
-  $('#aggreg_modal').modal('hide');
-});
+
 $('#GraphDialogClose').click(function() {
   $(window).unbind('resize', DialogResizeHandler);
   $(window).bind('resize', DialogPrevResizeHandler);

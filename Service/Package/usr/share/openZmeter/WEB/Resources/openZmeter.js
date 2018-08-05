@@ -23,7 +23,7 @@ Offline.on('confirmed-down', function() { $('#OfflineDiv').css('display', 'inher
 Offline.on('confirmed-up',   function() {  $('#OfflineDiv').css('display', 'none'); });
 
 /* redirect ajax error to login page */
-$(document).ajaxError(function (event, jqxhr, settings, exception) { if(jqxhr.status === 401) window.location.href = 'Login'; });
+//$(document).ajaxError(function (event, jqxhr, settings, exception) { if(jqxhr.status === 401) window.location.href = 'Login'; });
 /* handle buttons events to avoid 'selected' effect */
 $(document).on("mousedown", ":button", function(e) { e.preventDefault(); } );
 /* getSeries function */
