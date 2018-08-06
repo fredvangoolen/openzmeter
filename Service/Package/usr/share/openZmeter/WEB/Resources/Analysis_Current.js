@@ -906,8 +906,20 @@ function UpdateHarmonicsChart(result) {
              return '<div style="font-size: 10px; margin-top: -2px">' + HarmonicsNames[x + 1] + '</div>';
            },
            valueFormatter: function (y) {
-             return HarmonicsNames[y] + ' Harmonic (' + (50 * (y + 1)) + '<em class="small"> Hz</em>)';
-           }
+             if(localStorage.getItem('CurrentDetailFirstHarmonic') === 'true') return HarmonicsNames[y] + ' Harmonic (' + (50 * (y + 1)) + '<em class="small"> Hz</em>)';
+             return HarmonicsNames[y+1] + ' Harmonic (' + (50 * (y + 1)) + '<em class="small"> Hz</em>)';
+           },
+           ticker: function(min, max, pixels, opts, dygraph, vals) {
+              var ticks = [];
+              for(var i = 0; i < HarmonicsNames.length; i++) {
+                if(localStorage.getItem('CurrentDetailFirstHarmonic') === 'true') {
+                  if((i % 2) == 0) ticks.push({ v: i, label: '<div style="font-size: 10px; margin-top: -2px;">' + HarmonicsNames[i] + '</div>' });
+                } else {
+                  if((i % 2) == 1) ticks.push({ v: i, label: '<div style="font-size: 10px; margin-top: -2px;">' + HarmonicsNames[i + 1] + '</div>' });
+                }
+              }
+              return ticks;
+            }
          }
     }
   };

@@ -16,6 +16,9 @@ var VoltageNames;
 var CurrentNames;
 var ActivePowerNames;
 var ActiveEnergyNames;
+var ReactiveEnergyNames;
+var ActivePowerNames;
+var ReactivePowerNames;
 
 /* offline.js configuration and tools */
 Offline.options = {requests: false};
@@ -761,10 +764,13 @@ function GetAnalyzersCompletes(result) {
     GetIndicators();
     AjaxGetIndicatorsB();
   }
-  VoltageNames      = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Voltage'] : ['V(R)', 'V(S)', 'V(T)'];
-  CurrentNames      = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Current'] : (Analyzers[Analyzer]['Mode'] == '3PHASE') ? ['Current (R)', 'Current (S)', 'Current (T)'] : ['Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'];
-  ActivePowerNames  = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Power']   : ['Power (R)', 'Power (S)', 'Power (T)'];
-  ActiveEnergyNames = (Analyzers[Analyzer]['Mode'] == '1Phase') ? ['Energy']  : ['Energy (R)', 'Energy (S)', 'Energy (T)'];
+  VoltageNames        = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Voltage'] : ['V(R)', 'V(S)', 'V(T)'];
+  CurrentNames        = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Current'] : (Analyzers[Analyzer]['Mode'] == '3PHASE') ? ['Current (R)', 'Current (S)', 'Current (T)'] : ['Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'];
+  ActivePowerNames    = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Power']   : ['Power (R)', 'Power (S)', 'Power (T)'];
+  ActiveEnergyNames   = (Analyzers[Analyzer]['Mode'] == '1Phase') ? ['Active Energy']  : ['Active Energy (R)', 'Active Energy (S)', 'Active Energy (T)'];
+  ReactiveEnergyNames = (Analyzers[Analyzer]['Mode'] == '1Phase') ? ['Reactive Energy']  : ['Reactive Energy (R)', 'Reactive Energy (S)', 'Reactive Energy (T)'];
+  ActivePowerNames    = (Analyzers[Analyzer]['Mode'] == '1Phase') ? ['Active Power']  : ['Active Power (R)', 'Active Power (S)', 'Active Power (T)'];
+  ReactivePowerNames  = (Analyzers[Analyzer]['Mode'] == '1Phase') ? ['Reactive Power']  : ['Reactive Power (R)', 'Reactive Power (S)', 'Reactive Power (T)'];
   AjaxGetSysStats();
   UpdatePage();
 }
