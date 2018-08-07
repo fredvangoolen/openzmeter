@@ -69,6 +69,10 @@ body {
 .sidenav-menu a {
   padding: 10px 32px;
 }
+.sidenav-menu a.active,.sidenav-menu a.active .sidenav-dropdown-icon,.sidenav-menu a.active .sidenav-link-icon {
+  color: #FAFAFA;
+  background: #474544;
+}
 .sidenav-dropdown-icon, .sidenav-link-icon {
   top: 10px;
 }

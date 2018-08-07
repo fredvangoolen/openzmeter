@@ -286,7 +286,7 @@ function Scrollable_OnSuccess(result) {
       { strokeWidth: 0.5, stackedGraph: true, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], plotter: barChartNoSpacedPlotter,
         legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(ActiveEnergyNames), dateWindow: [result['From'], result['To']],
         zoomCallback: Scrollable_Zoom, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: Scrollable_MouseUp, dblclick: Scrollable_DoubleClick },
-        underlayCallback: function(context, area, dygraph) { HightlightWeekends("#EEE", context, area, dygraph); }, colors: ColorArray($('#EnergyPanel').css('border-color'), 3),
+        underlayCallback: function(context, area, dygraph) { GraphHightlightWeekends("#EEE", context, area, dygraph); }, colors: ColorArray($('#EnergyPanel').css('border-color'), 3),
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + ' <em class="x-small">' + Units + 'Wh</em>'; },
@@ -314,7 +314,7 @@ function EnergySeries(event) {
 }
 $('#groupEnergyPhases').on('click', 'button', EnergySeries);
 $('#btnExportEnergy').click(function() {
-  exportToCsv("ActiveEnergy_" + Node + '_' + LastEnergySample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Energy R', 'Energy S', 'Energy T']] : [['DateTime', 'Energy']]).concat(EnergyData));
+  exportToCsv("ActiveEnergy_" + Node + '_' + LastEnergySample + '.csv', [['Time'].concat(ActiveEnergyNames)].concat(EnergyData));
 });
 
 $('#btnMaximizeEnergy').click(function() {

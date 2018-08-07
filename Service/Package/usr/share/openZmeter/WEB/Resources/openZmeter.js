@@ -245,18 +245,16 @@ function GraphDataAppend(result, serie, data) {
   }
   return data;
 }
-
 /* remove old items from array*/
 function ShiftArray(array, len) {
   while(array.length > len) array.shift();
 }
-
 /* return last timestamp from results obtained with GetSeries and others */
 function LastSampletime(result, prev) {
   if(result['Sampletime'].length === 0) return prev;
   return Math.max(prev, result['Sampletime'][result['Sampletime'].length - 1]);
 }
-
+/* higlight horizontal ranges in graph */
 function GraphHBackgroundRanges(ranges, graph, canvas) {
   ranges.forEach(function(range) {
     var Top = (range[0] === Infinity) ? 0 : (range[0] === -Infinity) ? canvas.canvas.height : graph.toDomYCoord(range[0]);
@@ -265,7 +263,21 @@ function GraphHBackgroundRanges(ranges, graph, canvas) {
     canvas.fillRect(0, Top, canvas.canvas.width, Height);
   });
 }
-
+/* highlight weekens in graph */
+function GraphHightlightWeekends(color, canvas, area, g) {
+  canvas.fillStyle = color;
+  var fromTimestamp = g.dateWindow_[0];
+  var toTimestamp = g.dateWindow_[1];
+  while(fromTimestamp < toTimestamp) {
+    var FromDate = new Date(fromTimestamp);
+    var Tmp = Math.min(new Date(FromDate.getFullYear(), FromDate.getMonth(), FromDate.getDate() + 1, 0, 0, 0, 0).getTime(), toTimestamp);
+    if((FromDate.getDay() === 6) || (FromDate.getDay() === 0)) {
+      var canvas_left_x = g.toDomXCoord(fromTimestamp), canvas_right_x = g.toDomXCoord(Tmp);
+      canvas.fillRect(canvas_left_x, area.y, canvas_right_x - canvas_left_x, area.h);
+    }
+    fromTimestamp = Tmp;
+  }
+}
 /* if called from a button update variable contents to reflect new selections. In all cases update graph visible series */
 function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, sender) {
   var State = localStorage.getItem(variable);
@@ -307,7 +319,6 @@ function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, s
     graph.updateOptions({ valueRange: rangechecker([1]) });
   }
 }
-
 /* find max value of array */
 function ArrayMax(array) {
   var Max = 0;
@@ -324,7 +335,6 @@ function ArraySum(array) {
   }
   return Sum;
 }
-
 /* Find the max value of graph series data (array of arrays where first column is time) */
 function ArrayGraphMax(array) {
   var Max = 0;
@@ -335,7 +345,34 @@ function ArrayGraphMax(array) {
   }
   return Max;
 }
+/* Scale all values of an array to units ('', 'k', 'M') */
+function ScaleArrayToUnits(array, units) {
+  if(units === '') return array;
+  for(i = 0; i < array.length; i++) {
+    array[i] = ScaleToUnits(array[i], units);
+  }
+  return array;
+}
 
+/* Scale value to units ('', 'k', 'M') */
+function ScaleToUnits(val, units) {
+  if(units === '') return val;
+  if(units === 'k') {
+    return val / 1000;  
+  } else if(units === 'M') {
+    return val / 1000000;  
+  }      
+}
+/* Find units for high values of energy */
+function GetBestUnits(value) {
+  if(value > 1000000) {
+   return 'M';
+  } else if(value > 1000) {
+    return 'k';
+  } else {
+    return '';
+  }
+}
 /* Find the max,min value of graph visible series data (array of arrays where first column is time) */
 function ArrayGraphMinMax(graph, accum) {
   var Result = {VisibleNames: [], Min: Infinity, Max: -Infinity, MinTime: 0, MaxTime: 0};
@@ -374,7 +411,6 @@ function ArrayGraphMinMax(graph, accum) {
   }
   return Result;
 }
-
 /* Add a cubism like graph to a div */
 function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter ) {
   var Index = div.children().length;
@@ -416,35 +452,7 @@ function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter 
   return Graph;
 }
 
-/* Scale all values of an array to units ('', 'k', 'M') */
-function ScaleArrayToUnits(array, units) {
-  if(units === '') return array;
-  for(i = 0; i < array.length; i++) {
-    array[i] = ScaleToUnits(array[i], units);
-  }
-  return array;
-}
 
-/* Scale value to units ('', 'k', 'M') */
-function ScaleToUnits(val, units) {
-  if(units === '') return val;
-  if(units === 'k') {
-    return val / 1000;  
-  } else if(units === 'M') {
-    return val / 1000000;  
-  }      
-}
-
-/* Find units for high values of energy */
-function GetBestUnits(value) {
-  if(value > 1000000) {
-   return 'M';
-  } else if(value > 1000) {
-    return 'k';
-  } else {
-    return '';
-  }
-}
 
 /* Generate an array of colors from a base */
 function ColorArray(base, items) {
@@ -573,7 +581,7 @@ function Round2Plain(value) {
 
 /* Update header info periodicaly */
 function GetIndicators() {
-  GetSeriesNow('rms_v, flag', 
+  GetSeriesNow('rms_v, rms_i, active_power, freq', 
     function(result) {
       var Time = new Date(result['Sampletime']);
       $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
@@ -581,40 +589,35 @@ function GetIndicators() {
       for(i = 0; i < result['rms_v'].length; i++) {
         $('#IndicatorVoltageValues').append('<span class="value">' + Round2(result['rms_v'][i]) + '</span>');
       }
-      $('#VoltageIndicator').html(Array_Round2(result['rms_v'], ' | '));
-      $('#CurrentIndicator').html(Array_Round2(result['rms_i'], ' | '));
-      var Units = 'W';
-      for (i = 0; i < result['active_power'].length; i++) {
-        if (result['active_power'][i] > 1000)
-          Units = 'kW';
+      $('#IndicatorCurrentValues').html("");
+      for(i = 0; i < result['rms_v'].length; i++) {
+        $('#IndicatorCurrentValues').append('<span class="value">' + Round2(result['rms_i'][i]) + '</span>');
       }
-      $('#PowerIndicatorUnits').text(Units);
-      if (Units == 'kW') {
-        for (i = 0; i < result['active_power'].length; i++)
-          result['active_power'][i] = result['active_power'][i] / 1000;
+      $('#IndicatorActivePowerValues').html("");
+      var Units = GetBestUnits(ArrayMax(result['active_power']));
+      $('#IndicatorActivePowerUnits').text(Units + "W");
+      result['active_power'] = ScaleArrayToUnits(result['active_power'], Units);
+      for(i = 0; i < result['active_power'].length; i++) {
+        $('#IndicatorActivePowerValues').append('<span class="value">' + Round2(result['active_power'][i]) + '</span>');
       }
-      $('#PowerIndicator').html(Array_Round2(result['active_power'], ' | ', ''));
-      $('#FrequencyIndicator').html(Round2(result['freq']) + ' Hz');
+      $('#IndicatorFrequencyValues').html('<span class="value">' + Round2(result['freq']) + '</span>');
     },
     function() { 
       setTimeout(GetIndicators, 5000); 
     }, 
     function() {
-      $('#VoltageIndicator').text('Offline');
-      $('#CurrentIndicator').text('Offline');
-      $('#PowerIndicator').text('Offline');
-      $('#FrequencyIndicator').text('Offline');
+      $('#IndicatorVoltageValues').html('<span class="value">Offline</span>');
+      $('#IndicatorCurrentValues').html('<span class="value">Offline</span>');
+      $('#IndicatorActivePowerValues').html('<span class="value">Offline</span>');
+      $('#IndicatorFrequencyValues').html('<span class="value">Offline</span>');
       $('NodeTime').text('Offline');   
     }
   );
 }
-
-
-
-
 function AjaxGetIndicatorsB() {
   var From = GetDayTimestamp();
- $.ajax({ url: "getSeriesAggreg",
+
+  $.ajax({ url: "getSeriesAggreg",
     timeout: 20000,
     type: "POST",
     dataType: "json",
@@ -778,21 +781,10 @@ function GetAnalyzersCompletes(result) {
 /* Genera la secuencia de pasos una vez cargado todo el javascript para mostrar la pagina */
 var LoadedPending;
 function LoadComplete() {
-          $('[data-sidenav]').sidenav();
-    $('#labelUserName').text(localStorage.getItem('UserName'));
-    $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: GetAnalyzersCompletes });
-
-    
-    
-    var url = window.location;
-    var element = $('ul.nav a').filter(function () {
-      return this.href === url || url.href.indexOf(this.href) === 0;
-    }).addClass('active').parent().parent().addClass('in').parent();
-    if(element.is('div')) {
-      element.addClass('active');
-    } else {
-      $('#side-menu li > a').first().addClass('active');
-    }
+  $('[data-sidenav]').sidenav();
+  $('#labelUserName').text(localStorage.getItem('UserName'));
+  $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: GetAnalyzersCompletes });
+  $('ul.sidenav-menu li a').filter( function() { return this.href === window.location.href; }).addClass('active').parent().parent().show().parent().children('a').addClass('active');
 }
 function StartPageLoad() {
   $('.spinnerdiv').each(function(index, element) { new Spinner(SpinnerOpts).spin(element); });

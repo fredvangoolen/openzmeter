@@ -17,15 +17,19 @@
  */
 
 /* Graficas de energia y potencia*/
-var ActiveEnergyData         = [];
-var ReactiveEnergyData       = [];
-var ActivePowerData          = [];
-var ReactivePowerData        = [];
-var ActiveEnergyChart        = null;
-var ReactiveEnergyChart      = null;
-var ActivePowerChart         = null;
-var ReactivePowerChart       = null;
-var ScrollableSeries = 'active_energy, active_power, reactive_energy, reactive_power';
+var ActiveEnergyData     = [];
+var ReactiveEnergyData   = [];
+var ActivePowerData      = [];
+var ReactivePowerData    = [];
+var ActiveEnergyChart    = null;
+var ReactiveEnergyChart  = null;
+var ActivePowerChart     = null;
+var ReactivePowerChart   = null;
+var ActiveEnergyUnits    = '';
+var ReactiveEnergyUnits  = '';
+var ActivePowerUnits     = '';
+var ReactivePowerUnits   = '';
+var ScrollableSeries     = 'active_energy, active_power, reactive_energy, reactive_power';
 function Scrollable_ShowSpinner() {
   $('#EnergyPowerSpinner').show();
 }
@@ -98,7 +102,7 @@ function Scrollable_OnSuccess(result) {
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">' + ActiveEnergyChartUnits + '</em>';
+                 return Round2(x) + ' <em class="x-small">' + ActiveEnergyUnits + '</em>';
                },
                axisLabelFormatter: function (x) {
                  return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';

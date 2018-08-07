@@ -63,7 +63,7 @@
         <div class="navbar-brand">
         <embed src="Logo2.svg" type="image/svg+xml" /><br/>
           <div style="font-size: 12px; color: #FFF; margin-top: -5px">
-            <div class="navbar-time">Node time</div><div id="NodeTime">?</div>
+            <span class="navbar-time">Node time:&nbsp;</span><span id="NodeTime">?</span>
           </div>
         </div>
         <button type="button" class="navbar-toggle" id="sidenav-toggle">
@@ -74,47 +74,39 @@
         <div class="indicator-voltage">
           <div>
             <div id="IndicatorVoltageValues">
-              <span class="value">220.00</span>
-              <span class="value">221.05</span>
-              <span class="value">222.03</span>
+              <span class="value">Offline</span>
             </div>
             <div>V</div>
           </div>
         </div>
         <div class="indicator-current">
           <div>
-            <div>
-              <span class="value">220.00</span>
-              <span class="value">221.05</span>
-              <span class="value">222.03</span>
+            <div id="IndicatorCurrentValues">
+              <span class="value">Offline</span>
             </div>
             <div>A</div>
           </div>
         </div>
         <div class="indicator-active-power">
           <div>
-            <div>
-              <span class="value">220.00</span>
-              <span class="value">221.05</span>
-              <span class="value">222.03</span>
+            <div id="IndicatorActivePowerValues">
+              <span class="value">Offline</span>
             </div>
-            <div>kW</div>
+            <div id="IndicatorActivePowerUnits">W</div>
           </div>
         </div>
         <div class="indicator-frequency">
           <div>
-            <div>
-              <span class="value">50.00</span>
+            <div id="IndicatorFrequencyValues">
+              <span class="value">Offline</span>
             </div>
             <div>Hz</div>
           </div>
         </div>
         <div class="indicator-active-energy">
           <div>
-            <div>
-              <span class="value">220.00</span>
-              <span class="value">221.05</span>
-              <span class="value">222.03</span>
+            <div id="IndicatorTodayEnergyValues">
+              <span class="value">Offline</span>
             </div>
             <div>kWh</div>
           </div>
@@ -189,7 +181,8 @@
             <ul class="sidenav-dropdown" data-sidenav-dropdown>
               <li><a href="Analysis/Voltage">Voltage</a></li>
               <li><a href="Analysis/Current">Current</a></li>
-              <li><a href="Analysis/EnergyPower">Power</a></li>
+              <li><a href="Analysis/Power">Power</a></li>
+              <li><a href="Analysis/Energy">Energy</a></li>
               <li><a href="Analysis/Frequency">Frequency</a></li>
             </ul>
           </li>

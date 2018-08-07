@@ -70,7 +70,8 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterMapping((char*)"/Analysis/Frequency",   (char*)"Analysis_Frequency.html");
   HTTPServer::RegisterMapping((char*)"/Analysis/Voltage",     (char*)"Analysis_Voltage.html");
   HTTPServer::RegisterMapping((char*)"/Analysis/Current",     (char*)"Analysis_Current.html");
-  HTTPServer::RegisterMapping((char*)"/Analysis/EnergyPower", (char*)"Analysis_EnergyPower.html");
+  HTTPServer::RegisterMapping((char*)"/Analysis/Power",       (char*)"Analysis_Power.html");
+  HTTPServer::RegisterMapping((char*)"/Analysis/Energy",      (char*)"Analysis_Energy.html");
   HTTPServer::RegisterMapping((char*)"/Events/ITIC",          (char*)"Events_ITIC.html");
   HTTPServer::RegisterMapping((char*)"/Events/Disturbances",  (char*)"Events_Disturbances.html");
   HTTPServer::RegisterMapping((char*)"/Events/EN50160",       (char*)"Events_EN50160.html");

@@ -224,21 +224,3 @@ function barChartPlotterCubism(e) {
     }
   }
 }
-
-/* Llamar en underlayCallback para resaltar los fines de semana */
-function HightlightWeekends(color, canvas, area, g) {
-  canvas.fillStyle = color;
-  var fromTimestamp = g.dateWindow_[0];
-  var toTimestamp = g.dateWindow_[1];
-  while(fromTimestamp < toTimestamp) {
-    var FromDate = new Date(fromTimestamp);
-    var Tmp = Math.min(new Date(FromDate.getFullYear(), FromDate.getMonth(), FromDate.getDate() + 1, 0, 0, 0, 0).getTime(), toTimestamp);
-    if((FromDate.getDay() === 6) || (FromDate.getDay() === 0)) {
-      var canvas_left_x = g.toDomXCoord(fromTimestamp);
-      var canvas_right_x = g.toDomXCoord(Tmp);
-      var canvas_width = canvas_right_x - canvas_left_x;
-      canvas.fillRect(canvas_left_x, area.y, canvas_width, area.h);
-    }
-    fromTimestamp = Tmp;
-  }
-}
