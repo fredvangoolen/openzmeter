@@ -13,14 +13,14 @@
     <link rel="stylesheet" href="lib/sidenav/sidenav.min.css"/>
     <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.css"/>
     <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
-    <link rel="stylesheet" href="lib/offline/offline.css" type="text/css"/>
+    <link rel="stylesheet" href="lib/offline.min.css" type="text/css"/>
     <link rel="stylesheet" href="openZmeter.css"/>
     <title>openZmeter - Dashboard</title>
   </head>
   <body onload="StartPageLoad()">
     <span data-load-block="Header_Block"></span>
     <span data-load-block="AggregWarningDialog"></span>
-    
+
     <div class="modal" id="GraphDialog" tabindex="1" role="dialog" data-backdrop='static'>
       <div class="modal-dialog" style="width: 100%; height: 100%; padding: 10px; margin: 0px">
         <div class="modal-content" style="height: 100%" id="GraphDialogContents">
@@ -54,36 +54,30 @@
               </div>
               <span class="clearfix"></span>
             </div>
-            <div class="panel-body container-fluid no-padding">
-            <div class="row">
-              <div class="col-md-12 col-lg-3">
-                <div class="row">
-                  <div class="col-sm-12">
-                    <div class="panel-activeEnergy subpanel" id="EnergyBox">
-                      <div class="huge-small" id="labelEnergyPrimary">Loading data...</div>
-                      <div><span id="labelEnergyPrimaryValue" class="huge">?</span>&nbsp;<em class="huge-small-unit" id="labelEnergyPrimaryUnits"></em></div>
-                      <div id="labelEnergyPrimaryPhases"></div>
-                      <div><span id="labelEnergySecondary">Loading data...</span>&nbsp;<span id="labelEnergySecondaryValue"></span></div>
-                    </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-md-12 col-lg-3">
+                  <div class="subpanel" id="EnergyBox">
+                    <div class="huge-small" id="labelEnergyPrimary">Loading data...</div>
+                    <div><span id="labelEnergyPrimaryValue" class="huge">?</span>&nbsp;<em class="huge-small-unit" id="labelEnergyPrimaryUnits"></em></div>
+                    <div id="labelEnergyPrimaryPhases"></div>
+                    <div><span id="labelEnergySecondary">Loading data...</span>&nbsp;<span id="labelEnergySecondaryValue"></span></div>
                   </div>
-                  <div class="col-sm-12">
-                    <div class="panel-activeEnergy subpanel" id="BudgetBox">
-                      <h4><span id="labelBudgetPeriod">Today</span> budget</h4>
-                      <span id="labelBudgetInteger" class="huge">?</span>
-                      <span id="labelBudgetDecimal" class="huge-small"></span>&nbsp;<em class="huge-small-unit" id="labelBudgetUnits">€</em>
-                      <p>Up to <span id="labelBudgetLastCalc">?</span></p>
-                    </div>
+                  <div class="subpanel" id="BudgetBox">
+                    <h4><span id="labelBudgetPeriod">Today</span> budget</h4>
+                    <span id="labelBudgetInteger" class="huge">?</span>
+                    <span id="labelBudgetDecimal" class="huge-small"></span>&nbsp;<em class="huge-small-unit" id="labelBudgetUnits">€</em>
+                    <p>Up to <span id="labelBudgetLastCalc">?</span></p>
                   </div>
                 </div>
-              </div>
-              <div class="col-md-12 col-lg-9" id="EnergyCol">
-                <div id="EnergyMaximizeDiv">
-                  <div id="EnergyChart" class="chart big_chart"></div>
+                <div class="col-md-12 col-lg-9" id="EnergyCol">
+                  <div id="EnergyMaximizeDiv" class="panel-body">
+                    <div id="EnergyChart" class="chart big_chart"></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-         </div>
         </div>
       </div>
       <div class="row">
@@ -233,7 +227,7 @@
     <script src="lib/jquery/jquery.js"></script>
     <script src="lib/bootstrap/js/bootstrap.js"></script>
     <script src="lib/sidenav/sidenav.min.js"></script>
-    <script src="lib/spin.js/spin.js"></script>
+    <script src="lib/spin.min.js"></script>
     <script src="lib/dygraph/dygraph.js"></script>
     <script src="lib/dygraph/crosshair.js"></script>
     <script src="lib/dygraph/dygraph-interaction.js"></script>
@@ -242,7 +236,7 @@
     <script src="lib/datatables/js/jquery.dataTables.js"></script>
     <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
     <script src="lib/jquery.lineProgressbar/jquery.lineProgressbar.js"></script>
-    <script src="lib/offline/offline.js"></script>
+    <script src="lib/offline.min.js"></script>
     <script src="lib/momentjs/moment.js"></script>
     <script src="lib/momentjs/moment-duration-format.js"></script>
     <script src="lib/chroma/chroma.js"></script>

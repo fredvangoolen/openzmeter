@@ -13,7 +13,8 @@
     <link rel="stylesheet" href="lib/sidenav/sidenav.min.css"/>
     <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.css"/>
     <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
-    <link rel="stylesheet" href="lib/offline/offline.css" type="text/css"/>
+    <link rel="stylesheet" href="lib/offline.css" type="text/css"/>
+    <link rel="stylesheet" href="lib/jquery.scrolling-tabs.min.css" type="text/css"/>
     <link rel="stylesheet" href="openZmeter.css"/>
     <title>openZmeter - Analysys - Frequency</title>
   </head>
@@ -53,38 +54,27 @@
               </div>
               <span class="clearfix"> </span>
             </div>
+            <div class="panel-body">
               <div class="row">
                 <div class="col-md-6 col-lg-3">
-                  <div class="row">
-                    <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightred-info" id="VoltageAvgPanel">
-                        <h4 id="labelVoltagePeriodAVG">Loading...</h4>
-                        <span class="huge-small" id="labelVoltageCurrentAVG">?</span>
-                        <p><span id="labelVoltagePrevPeriodAVG"></span> <span id="labelVoltagePrevAVG">Loading...</span></p>
-                      </div>
-                    </div>
-                    <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightred-info" id="VoltageMaxPanel">
-                        <h4 id="labelVoltagePeriodMAX">Loading...</h4>
-                        <span class="huge-small" id="labelVoltageCurrentMAX">?</span>
-                        <p><span id="labelVoltagePrevPeriodMAX"></span> <span id="labelVoltagePrevMAX">Loading...</span></p>
-                      </div>
-                    </div>
-                    <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightred-info" id="VoltageMinPanel">
-                        <h4 id="labelVoltagePeriodMIN">Loading...</h4>  
-                        <span class="huge-small" id="labelVoltageCurrentMIN">?</span>
-                        <p><span id="labelVoltagePrevPeriodMIN"></span> <span id="labelVoltagePrevMIN">Loading...</span></p>
-                      </div>
-                    </div>
+                  <div class="subpanel" id="VoltageAvgPanel">
+                    <div class="huge-small" id="labelVoltageAvgPrimary">Loading data...</div>
+                    <div><span id="labelVoltageAvgPrimaryValue" class="huge-small">?</span></div>
+                    <div><span id="labelVoltageAvgSecondary">Loading data...</span>&nbsp;<span id="labelVoltageAvgSecondaryValue"></span></div>
+                  </div>
+                  <div class="subpanel" id="VoltageMaxPanel">
+                    <div class="huge-small" id="labelVoltageMaxPrimary">Loading data...</div>
+                    <div><span id="labelVoltageMaxPrimaryValue" class="huge-small">?</span></div>
+                    <div><span id="labelVoltageMaxSecondary">Loading data...</span>&nbsp;<span id="labelVoltageMaxSecondaryValue"></span></div>
+                  </div>
+                  <div class="subpanel" id="VoltageMinPanel">
+                    <div class="huge-small" id="labelVoltageMinPrimary">Loading data...</div>
+                    <div><span id="labelVoltageMinPrimaryValue" class="huge-small">?</span></div>
+                    <div><span id="labelVoltageMinSecondary">Loading data...</span>&nbsp;<span id="labelVoltageMinSecondaryValue"></span></div> 
                   </div>
                 </div>
                 <div class="col-md-6 col-lg-9" id="VoltageCol">
                   <div id="VoltageMaximizeDiv">
-                    <div style="padding:5px">
-                      <div style="display:inline-block" id="VoltageAggregation">Loading data...</div>
-                      <div id="VoltageLegend" style="float: right"></div>
-                    </div>
                     <div id="VoltageChart" class="chart big_chart"></div>
                   </div>
                 </div>
@@ -92,12 +82,21 @@
             </div>
           </div>
         </div>
-        <div class="row">
-          <div class="col-lg-12">
-            <div class="panel panel-default">
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <ul class="nav nav-tabs">
+            <li class="active"><a data-toggle="tab" href="#">Waveform</a></li>
+            <li><a data-toggle="tab" href="#menu1">Harmonics</a></li>
+            <li><a data-toggle="tab" href="#menu2">Evolution</a></li>
+            <li><a data-toggle="tab" href="#menu2">Advanced</a></li>
+            <li><a data-toggle="tab" href="#menu2">Phasors</a></li>
+            <li><a data-toggle="tab" href="#menu2">Parameters</a></li>
+            <li><a data-toggle="tab" href="#menu2">Events</a></li>
+          </ul>
+          <div class="panel panel-other">
               <div id="DetailSpinner" class="spinnerdiv"></div>
               <div class="panel-heading">
-                <i class="fa fa-area-chart fa-fw"></i>Details
                 <div class="pull-right">
                   <div class="btn-group">
                     <button type="button" class="btn btn-default btn-xs" id="btnMaximizeDetail" data-toggle="tooltip" title="Maximize current view"><i class="fa fa-expand"></i></button>
@@ -113,18 +112,6 @@
                     <button type="button" class="btn btn-default btn-xs disabled" id="btnShowDetailTPhase" data-toggle="tooltip" title="Show phase T">T</button>
                     <button type="button" class="btn btn-default btn-xs" id="btnShowDetail1Harmonic" data-toggle="tooltip" title="Show/hide 1st harmonic">1st harmonic</button>
                     <button type="button" class="btn btn-default btn-xs" id="btnShowDetailVoltageAndCurrent" data-toggle="tooltip" title="Show/hide current">Current</button>
-                  </div>
-                </div>
-                <div class="pull-right">&nbsp;</div>
-                <div class="pull-right">
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs active" id="btnShowDetailWaveform" data-toggle="tooltip" title="Show live waveform">Waveform</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailHarmonics" data-toggle="tooltip" title="Show live harmonics">Harmonics</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailEvolution" data-toggle="tooltip" title="Show harmonic evolution">Evolution</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailAdvanced" data-toggle="tooltip" title="Show live FFT">Advanced</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailPhasors" data-toggle="tooltip" title="Show voltage and current as phasors">Phasors</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailParameters" data-toggle="tooltip" title="Show voltage related parameters">Parameters</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailEvents" data-toggle="tooltip" title="Show events in voltage channels">Events</button>
                   </div>
                 </div>
                 <span class="clearfix"> </span>
@@ -311,18 +298,19 @@
     <script src="lib/jquery/jquery.js"></script>
     <script src="lib/bootstrap/js/bootstrap.js"></script>
     <script src="lib/sidenav/sidenav.min.js"></script>
-    <script src="lib/spin.js/spin.js"></script>
+    <script src="lib/spin.min.js"></script>
     <script src="lib/dygraph/dygraph.js"></script>
     <script src="lib/dygraph/crosshair.js"></script>
     <script src="lib/dygraph/dygraph-interaction.js"></script>
     <script src="lib/dygraph/synchronize.js"></script>
     <script src="lib/dygraph/chart-plotter.js"></script>
-    <script src="lib/offline/offline.js"></script>
+    <script src="lib/offline.min.js"></script>
     <script src="lib/datatables/js/jquery.dataTables.js"></script>
     <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
     <script src="lib/momentjs/moment.js"></script>
     <script src="lib/momentjs/moment-duration-format.js"></script>
     <script src="lib/chroma/chroma.js"></script>
+    <script src="lib/jquery.scrolling-tabs.min.js"></script>
     <script src="openZmeter.js"></script>
     <script src="Analysis_Voltage.js"></script>
     <script>

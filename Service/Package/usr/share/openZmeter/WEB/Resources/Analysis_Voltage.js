@@ -87,103 +87,45 @@ $('#btnMaximizeVoltage').click(function() {
 
 /* Contadores de voltage */
 var VoltageCountersTimer  = null;
-function AjaxGetVoltageCounters() {
+function Scrollable_UpdateCounters(change) {
   if(VoltageCountersTimer !== null) clearInterval(VoltageCountersTimer);
-  VoltageCountersTimer = setTimeout(AjaxGetVoltageCounters, 60000);
-  var CountersPeriod = localStorage.getItem('CountersPeriod');
-  var Current, Period;
-  if(CountersPeriod === 'Week') {
-    Period = 86400000 * 7;
-    Current = GetWeekTimestamp();
-    Aggreg = '10m';
-  } else if(CountersPeriod === 'Month') {
-    Period = 86400000 * 30;
-    Current = GetMonthTimestamp();
-    Aggreg = '1h';
-  } else if(CountersPeriod === 'Year') {
-    Period = 86400000 * 365;
-    Current = GetYearTimestamp();
-    Aggreg = '1h';
+  VoltageCountersTimer = setTimeout(Scrollable_UpdateCounters, 60000);
+  var Times = GetCountersTimePeriod();
+  if(change === true) {
+    $('#labelVoltageAvgPrimary').text(Times.PrimaryText + ' average');
+    $('#labelVoltageAvgPrimaryValue').text('Calculating...');
+    $('#labelVoltageAvgSecondary').text(Times.SecondaryText);
+    $('#labelVoltageMaxPrimary').text(Times.PrimaryText + ' maximun');
+    $('#labelVoltageMaxPrimaryValue').text('Calculating...');
+    $('#labelVoltageMaxSecondary').text(Times.SecondaryText);
+    $('#labelVoltageMinPrimary').text(Times.PrimaryText + ' minimun');
+    $('#labelVoltageMinPrimaryValue').text('Calculating...');
+    $('#labelVoltageMinSecondary').text(Times.SecondaryText);
+  }
+  GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)', 
+    function(result) {
+      $('#labelVoltageAvgPrimaryValue').html(Array_Round2(result['avg_rms_v'], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
+      $('#labelVoltageMinPrimaryValue').html(Array_Round2(result['min_rms_v'], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
+      $('#labelVoltageMaxPrimaryValue').html(Array_Round2(result['max_rms_v'], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
+      window.dispatchEvent(new Event('resize'));
+    }
+  );
+  if(Times.SecondaryTo !== undefined) {
+    $('#labelVoltageAvgSecondaryValue').text('Calculating...');
+    $('#labelVoltageMaxSecondaryValue').text('Calculating...');
+    $('#labelVoltageMinSecondaryValue').text('Calculating...');
+    GetSeriesAggreg(Times.SecondaryPeriod, Times.SecondaryTo, Times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)',
+      function(result) {
+        $('#labelVoltageAvgSecondaryValue').html(Array_Round2(result['avg_rms_v'], '&nbsp;') + '&nbsp;<em>V</em>');
+        $('#labelVoltageMinSecondaryValue').html(Array_Round2(result['min_rms_v'], '&nbsp;') + '&nbsp;<em>V</em>');
+        $('#labelVoltageMaxSecondaryValue').html(Array_Round2(result['max_rms_v'], '&nbsp;') + '&nbsp;<em>V</em>');
+        window.dispatchEvent(new Event('resize'));
+      }
+    );
   } else {
-    CountersPeriod = 'Day';
-    localStorage.setItem('CountersPeriod', CountersPeriod);
-    Period = 86400000;
-    Current = GetDayTimestamp();
-    Aggreg = '1m';
-  }
-  $.ajax({ url: "getSeriesAggreg",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(rms_v), max(rms_v), min(rms_v)", Aggreg: Aggreg, Period: Period, To: Current + Period, Analyzer: Analyzers[Analyzer].ID }),
-           success: VoltageUpdateCountersCurrent
-  });
-  $.ajax({ url: "getSeriesAggreg",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(rms_v), max(rms_v), min(rms_v)", Aggreg: Aggreg, Period: Period, To: Current, Analyzer: Analyzers[Analyzer].ID }),
-           success: VoltageUpdateCountersPrevs
-  });
-}
-function VoltageUpdateCountersCurrent(result) {
-  var CountersPeriod = localStorage.getItem('CountersPeriod');
-  if(CountersPeriod === 'Week') {
-    $('#labelVoltagePeriodAVG').text('This week average');
-    $('#labelVoltagePeriodMAX').text('This week maximum');
-    $('#labelVoltagePeriodMIN').text('This week minimum');
-  } else if(CountersPeriod === 'Month') {
-    $('#labelVoltagePeriodAVG').text('This month average');
-    $('#labelVoltagePeriodMAX').text('This month maximum');
-    $('#labelVoltagePeriodMIN').text('This month minimum');
-  } else if(CountersPeriod === 'Year') {
-    $('#labelVoltagePeriodAVG').text('This year average');
-    $('#labelVoltagePeriodMAX').text('This year maximum');
-    $('#labelVoltagePeriodMIN').text('This year minimum');
-  } else if(CountersPeriod === 'Day') {
-    $('#labelVoltagePeriodAVG').text('Today average');
-    $('#labelVoltagePeriodMAX').text('Today maximum');
-    $('#labelVoltagePeriodMIN').text('Today minimum');
-  }
-  if(result['avg_rms_v'] === null) {
-    $('#labelVoltageCurrentAVG').text('?');
-    $('#labelVoltageCurrentMAX').text('?');
-    $('#labelVoltageCurrentMIN').text('?');
-  } else {
-    $('#labelVoltageCurrentAVG').html(Array_Round2(result['avg_rms_v'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
-    $('#labelVoltageCurrentMAX').html(Array_Round2(result['max_rms_v'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
-    $('#labelVoltageCurrentMIN').html(Array_Round2(result['min_rms_v'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
-  }
-}
-function VoltageUpdateCountersPrevs(result) {
-  var CountersPeriod = localStorage.getItem('CountersPeriod');
-  if(CountersPeriod === 'Week') {
-    $('#labelVoltagePrevPeriodAVG').text('Previous week average');
-    $('#labelVoltagePrevPeriodMAX').text('Previous week maximum');
-    $('#labelVoltagePrevPeriodMIN').text('Previous week minimum');
-  } else if(CountersPeriod === 'Month') {
-    $('#labelVoltagePrevPeriodAVG').text('Previous month average');
-    $('#labelVoltagePrevPeriodMAX').text('Previous month maximum');
-    $('#labelVoltagePrevPeriodMIN').text('Previous month minimum');
-  } else if(CountersPeriod === 'Year') {
-    $('#labelVoltagePrevPeriodAVG').text('Previous year average');
-    $('#labelVoltagePrevPeriodMAX').text('Previous year maximum');
-    $('#labelVoltagePrevPeriodMIN').text('Previous year minimum');
-  } else if(CountersPeriod === 'Day') {
-    $('#labelVoltagePrevPeriodAVG').text('Yesterday average');
-    $('#labelVoltagePrevPeriodMAX').text('Yesterday maximum');
-    $('#labelVoltagePrevPeriodMIN').text('Yesterday minimum');
-  }
-  if(result['rms_rms_v'] === null) {
-    $('#labelVoltagePrevAVG').text('?');
-    $('#labelVoltagePrevMAX').text('?');
-    $('#labelVoltagePrevMIN').text('?');
-  } else {
-    $('#labelVoltagePrevAVG').html(Array_Round2(result['avg_rms_v'], '&nbsp;&nbsp;', '', ["#d9534f", "#534fd9", "#4fd953"]));
-    $('#labelVoltagePrevMAX').html(Array_Round2(result['max_rms_v'], '&nbsp;&nbsp;', '', ["#d9534f", "#534fd9", "#4fd953"]));
-    $('#labelVoltagePrevMIN').html(Array_Round2(result['min_rms_v'], '&nbsp;&nbsp;', '', ["#d9534f", "#534fd9", "#4fd953"]));
+    $('#labelVoltageAvgSecondaryValue').text('');
+    $('#labelVoltageMaxSecondaryValue').text('');
+    $('#labelVoltageMinSecondaryValue').text('');
   }
 }
 
@@ -192,9 +134,6 @@ var DialogElement           = null;
 var PrevDialogContainer     = null;
 var DialogResizeHandler     = null;
 var DialogPrevResizeHandler = null;
-$('#aggreg_modal_close').click(function() {
-  $('#aggreg_modal').modal('hide');
-});
 $('#GraphDialogClose').click(function() {
   $(window).unbind('resize', DialogResizeHandler);
   $(window).bind('resize', DialogPrevResizeHandler);
@@ -929,6 +868,7 @@ var THDDataset          = [];
 var PHIChart            = null;
 var PHIDataset          = [];
 function AjaxGetEvolution() {
+  return;
   $.ajax({ url: "getSeries",
            timeout: 20000,
            type: "POST",
@@ -1507,9 +1447,10 @@ $('#GraphDialogClose').click(function() {
 
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
+  $('.nav-tabs').scrollingTabs();
   DetailsButtonClick();
   GetSeriesScrollable();
-  AjaxGetVoltageCounters();
+  Scrollable_UpdateCounters(true);
   AjaxGetDetails();
   AjaxGetEvolution();
 }

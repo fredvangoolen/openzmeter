@@ -19,7 +19,7 @@
     <div id="ScrollableAggreg_Block">
       <span>Aggregation:</span><br>
       <div class="dropdown">
-        <button class="btn btn-default dropdown-toggle btn-xs" type="button" id="btnScrollableAggreg" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><div style="display: inline-block; width: 80px; text-align: left;">None</div><span class="caret"></span></button>
+        <button class="btn btn-default dropdown-toggle btn-xs" type="button" id="btnScrollableAggreg" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><div style="display: inline-block; width: 58px; text-align: left;">None</div><span class="caret"></span></button>
         <ul class="dropdown-menu">
           <li><a href="#">3 seconds</a></li>
           <li><a href="#">1 minute</a></li>
@@ -31,7 +31,7 @@
     <div id="ScrollableTime_Block">
       <span>Time:</span><br>
       <div class="dropdown">
-        <button class="btn btn-default dropdown-toggle btn-xs" type="button" id="btnScrollablePeriod" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><div style="display: inline-block; width: 80px; text-align: left;">Custom</div><span class="caret"></span></button>
+        <button class="btn btn-default dropdown-toggle btn-xs" type="button" id="btnScrollablePeriod" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><div style="display: inline-block; width: 30px; text-align: left;">Custom</div><span class="caret"></span></button>
         <ul class="dropdown-menu">
           <li><a href="#">Day</a></li>
           <li><a href="#">Week</a></li>
@@ -40,6 +40,32 @@
         </ul>
       </div>
     </div>
+    <div id="Years_Block">
+      <span>Year:</span><br>
+      <div class="dropdown">
+        <button class="btn btn-default dropdown-toggle btn-xs" type="button" id="btnScrollablePeriod" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><div style="display: inline-block; width: 50px; text-align: left;"></div><span class="caret"></span></button>
+        <ul class="dropdown-menu">
+        </ul>
+      </div>
+    </div>
+    <div id="BlockSize_Block">
+      <span>Blocks:</span><br>
+      <div class="dropdown">
+        <button class="btn btn-default dropdown-toggle btn-xs" type="button" id="btnScrollablePeriod" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><div style="display: inline-block; width: 80px; text-align: left;"></div><span class="caret"></span></button>
+        <ul class="dropdown-menu">
+          <li><a href="#">1 hour</a></li>
+          <li><a href="#">30 minutes</a></li>
+          <li><a href="#">20 minutes</a></li>
+          <li><a href="#">10 minutes</a></li>
+        </ul>
+      </div>
+    </div>
+    <div id="PhaseALL_Block">
+      <button type="button" class="btn btn-default btn-xs disabled" data-toggle="tooltip" title="Show phase R">R</button>
+      <button type="button" class="btn btn-default btn-xs disabled" data-toggle="tooltip" title="Show phase S">S</button>
+      <button type="button" class="btn btn-default btn-xs disabled" data-toggle="tooltip" title="Show phase T">T</button>
+      <button type="button" class="btn btn-default btn-xs disabled" data-toggle="tooltip" title="Show all phases">SUM</button>
+    </div>  
     <div id="PhaseV_Block">
       <button type="button" class="btn btn-default btn-xs disabled" data-toggle="tooltip" title="Show phase R">R</button>
       <button type="button" class="btn btn-default btn-xs disabled" data-toggle="tooltip" title="Show phase S">S</button>
@@ -200,10 +226,16 @@
             </ul>
           </li>
           <li>
-            <a href="Stats">
+            <a href="javascript:;" data-sidenav-dropdown-toggle>
               <span class="sidenav-link-icon"><i class="fa fa-bar-chart-o fa-fw"></i></span>
               <span class="sidenav-link-title">Energy Stats</span>
+              <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><i class="fa fa-caret-down"></i></span>
+              <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><i class="fa fa-caret-up"></i></span>
             </a>
+            <ul class="sidenav-dropdown" data-sidenav-dropdown>
+              <li><a href="Stats/Heatmap">Heatmap</a></li>
+              <li><a href="Stats/Distribution">Distribution</a></li>
+            </ul>
           </li>
           <li>
             <a href="Settings">

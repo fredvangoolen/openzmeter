@@ -216,7 +216,8 @@ $(document).on("click", "#btnScrollableNow", function() {
     GetSeriesScrollable();
   }
 });
-$(document).on("click", "#btnScrollablePeriod + ul li a", function() {
+$(document).on("click", "#btnScrollablePeriod + ul li a", function(event) {
+  event.preventDefault();
   var PeriodName = $(this).text();
   var Period = GetMSFromPeriodName(PeriodName);
   localStorage.setItem('GraphPeriod', Period);
@@ -225,7 +226,8 @@ $(document).on("click", "#btnScrollablePeriod + ul li a", function() {
   localStorage.setItem('CountersPeriod', PeriodName);
   Scrollable_UpdateCounters(true);
 });
-$(document).on("click", "#btnScrollableAggreg + ul li a", function() {
+$(document).on("click", "#btnScrollableAggreg + ul li a", function(event) {
+  event.preventDefault();
   localStorage.setItem('GraphAggregation', GetAggregShortName($(this).text()));
   ScrollableLastSample = 0;
   GetSeriesScrollable();
@@ -319,13 +321,21 @@ function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, s
     graph.updateOptions({ valueRange: rangechecker([1]) });
   }
 }
-/* find max value of array */
+/* find max value of array (maybe array of arrays) */
 function ArrayMax(array) {
-  var Max = 0;
-  for(i = 0; i < array.length; i++) {
-    Max = Math.max(Max, array[i]);
+  var Max = -Infinity;
+  for(i in array) {
+    Max = Math.max(Max, Array.isArray(array[i]) ? ArrayMax(array[i]) : array[i]);
   }
   return Max;
+}
+/* find min value of array (maybe array of arrays) */
+function ArrayMin(array) {
+  var Min = +Infinity;
+  for(i in array) {
+    Min = Math.min(Min, Array.isArray(array[i]) ? ArrayMin(array[i]) : array[i]);
+  }
+  return Min;
 }
 /* sum array */
 function ArraySum(array) {

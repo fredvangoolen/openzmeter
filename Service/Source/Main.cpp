@@ -75,7 +75,8 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterMapping((char*)"/Events/ITIC",          (char*)"Events_ITIC.html");
   HTTPServer::RegisterMapping((char*)"/Events/Disturbances",  (char*)"Events_Disturbances.html");
   HTTPServer::RegisterMapping((char*)"/Events/EN50160",       (char*)"Events_EN50160.html");
-  HTTPServer::RegisterMapping((char*)"/Stats",                (char*)"Stats.html");
+  HTTPServer::RegisterMapping((char*)"/Stats/Heatmap",        (char*)"Stats_Heatmap.html");
+  HTTPServer::RegisterMapping((char*)"/Stats/Distribution",   (char*)"Stats_Distribution.html");
   HTTPServer::RegisterMapping((char*)"/Settings",             (char*)"Settings.html");
   HTTPServer::RegisterMapping((char*)"/Help",                 (char*)"Help.html");
 

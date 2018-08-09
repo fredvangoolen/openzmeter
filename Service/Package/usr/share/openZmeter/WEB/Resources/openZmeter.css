@@ -204,6 +204,13 @@ body {
   background-color: #d9534f;
   color: #FFF;
 }
+.panel-voltage .subpanel {
+  border: 1px solid #efbab8;
+  background-color: #fbf0f0;
+  color: #474544;
+  padding: 0px 5px;
+  margin: 5px;
+}
 .panel-current {
   border: 1px solid #318ce7;
 }
@@ -331,12 +338,29 @@ body {
   height: 1px;
   border-bottom-width: 2px;
   border-bottom-style: solid;
-  /* border-bottom-color is set based on the series color */
-  /* margin-right is set based on the stroke pattern */
-  /* padding-left is set based on the stroke pattern */
+}
+/*--------------------------------------------------------------------------------------------------------------------*/
+.nav-tabs>li>a {
+  border: 1px solid #CCC;
+  border-bottom: 1px solid transparent;
+  color: #474544;
+  background-color: #FFF;
+  border-radius: 0px;
+}
+.nav-tabs>li>a:hover {
+  border: 1px solid #CCC;
+  border-bottom: 1px solid transparent;
+  background-color: #CCC;
+}
+.nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover {
+  color: #FFF;
+  background-color: #474544;
+}
+.scrtabs-tab-scroll-arrow {
+  border: none;
+  color: #474544;
 }
 
-/*--------------------------------------------------------------------------------------------------------------------*/
 .btn-group,.btn-group-vertical {
   vertical-align: text-bottom;
 }
@@ -511,10 +535,7 @@ ul.nav.navbar-top-links.navbar-right > li > a {
     padding-left: 52px;
 }
 
-.nav .open>a, .nav .open>a:hover, .nav .open>a:focus, .nav>li>a:hover, .nav>li>a:focus {
-    background-color: white !important;
-    color: #428bca !important;
-}
+
 
 ul.nav.navbar-top-links.navbar-right{
     /*text-align:right;*/
@@ -764,7 +785,7 @@ label.btn:active, label.btn.active {
 }
 
 .huge {
-    font-size: 34px;
+    font-size: 30px;
     line-height: 43px;
 }
 

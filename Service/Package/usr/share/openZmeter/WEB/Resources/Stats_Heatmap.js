@@ -26,7 +26,7 @@
 		weekShort: 'W',
 		weekStart: 1
 	};
-}(jQuery));
+} (jQuery));
 var Calendar     = null;
 var WeekTable    = null;
 var MonthTable   = null;
@@ -34,28 +34,20 @@ var WeekDayTable = null;
 var EnergyData   = [];
 var SelectedYear;
 var SelectedPhase = [];
-function GetDataRanges() {
-//  ShowSpinner(Spinner, 'StatsSpinner');
-  GetSeriesRange('1h', 
-    function(result) {
-      for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) $('#YearSelector').append('<button type="button" class="btn btn-default btn-xs" id="btnSelYear' + year + '" onclick="AjaxGetEnergy(' + year + ')">' + year + '</button>');
-      AjaxGetEnergy(new Date(result['To']).getFullYear());
-    }
-  );
-}
 function AjaxGetEnergy(selected_year) {
+  $('#StatsSpinner').show();
   $('#YearSelector button').removeClass('active');
   $('#btnSelYear' + selected_year).addClass('active');
-  SelectedYear = selected_year; 
-//  ShowSpinner(Spinner, 'StatsSpinner');
+  SelectedYear = selected_year;
+  $('#StatsSpinner').show();
   var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
   var From = new Date(selected_year, 0, 1, 0, 0, 0, 0).getTime();
-  GetSeries(To - From, To, '10m', 0, 'active_energy', 
+  GetSeries(To - From, To, '10m', 0, 'active_energy',
     function(result) {
-      EnergyData = [];
-      for(i = 0; i < result['Sampletime'].length; i++) EnergyData.push([result['Sampletime'][i], result['active_energy'][i]]);
-      ButtonClick();
-      StopSpinner(Spinner, 'StatsSpinner');
+      EnergyData = GraphDataAppend(result, 'active_energy', []);
+      $('#StatsSpinner').hide();
+      UpdateView();
+      
     }
   );
 }
@@ -283,7 +275,7 @@ function UpdateHeatMap() {
     Min = Math.min(Min, Cells[i]);
   }
   Min = 0;
-  var Units = GetBestUnitsEnergy(Math.max(Math.abs(Min), Math.abs(Max)));
+ // var Units = GetBestUnitsEnergy(Math.max(Math.abs(Min), Math.abs(Max)));
   var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]);
   for(; FirstDay <= DayNum; FirstDay++) {
     var Day = new Date(SelectedYear, 0, FirstDay);
@@ -296,7 +288,7 @@ function UpdateHeatMap() {
     Body.append('<tr>' + Row + '</tr>');
   }
 }
-function ButtonClick(event) {
+function UpdateView(event) {
   if(this.id === 'btnShowAsTable')   localStorage.setItem('StatView', 'Table');
   if(this.id === 'btnShowAsHeatmap') localStorage.setItem('StatView', 'Heatmap');
   if(this.id === 'btnHeatmap1Hour') localStorage.setItem('StatBlocks', '1h');
@@ -405,5 +397,12 @@ $('#btnHeatmap30Min').click(ButtonClick);
 $('#btnHeatmap20Min').click(ButtonClick);
 $('#btnHeatmap10Min').click(ButtonClick);
 function UpdatePage() {
-  GetDataRanges();  
+  GetSeriesRange('1h', 
+    function(result) {
+      for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) {
+        $('#YearSelector').append('<button type="button" class="btn btn-default btn-xs" id="btnSelYear' + year + '" onclick="AjaxGetEnergy(' + year + ')">' + year + '</button>');
+      }
+      AjaxGetEnergy(new Date(result['To']).getFullYear());
+    }
+  );
 }
