@@ -17,7 +17,7 @@ var SeriesNames = {
                '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th',
                '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'],
   Voltage: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Voltage'] : ['V(R)', 'V(S)', 'V(T)']; },
-  Current: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Current'] : (Analyzers[Analyzer]['Mode'] === '3PHASE') ? ['Current (R)', 'Current (S)', 'Current (T)'] : ['Current (R)', 'Current (S)', 'Current (T)', 'Current (N)']; },
+  Current: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Current'] : (Analyzers[Analyzer]['Mode'] === '3PHASE') ? ['I (R)', 'I (S)', 'I (T)'] : ['I (R)', 'I (S)', 'I (T)', 'I (N)']; },
   ActiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1Phase') ? ['Active Energy']  : ['Active Energy (R)', 'Active Energy (S)', 'Active Energy (T)']; },
   ReactiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1Phase') ? ['Reactive Energy']  : ['Reactive Energy (R)', 'Reactive Energy (S)', 'Reactive Energy (T)']; },
   ActivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1Phase') ? ['Active Power']  : ['Active Power (R)', 'Active Power (S)', 'Active Power (T)']; },
@@ -118,7 +118,7 @@ function GetDayTimePeriod() {
   return Result;
 }
 
-/* getSeries function than take params from controls to manage scrollable graphs */
+/* Scrollable help class */
 function Scrollable(opt) {
   this.LastSample = 0;
   this.Timer = null;
@@ -183,6 +183,7 @@ function Scrollable(opt) {
         $(Self.Opt.AggregBtn + ' div:first').text(GetAggregLongName(result['Aggregation_Source']));
         $(Self.Opt.AggregBtn).next().children().removeClass('active');
         $(Self.Opt.AggregBtn).next().children(':contains(' + GetAggregLongName(result['Aggregation_Source']) + ')').addClass('active');
+        Self.Range = [result['From'], result['To']];
         var Period = result['To'] - result['From'];
         var PeriodName = GetPeriodNameFromMS(Period);
         $(Self.Opt.PeriodBtn + ' div:first').text(PeriodName);
@@ -225,6 +226,28 @@ function Scrollable(opt) {
     dblClickOZM(event, g, context);
     Self.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
   };
+}
+
+/* Live view help class */
+function Live(opt) {
+  this.LastSample = 0;
+  this.Timer = null;
+  this.Opt = Object.assign({PauseBtn: '#btnPause', Spinners: [], Series: ''}, opt);
+  this.Range = [0, 0];
+  var Self = this;
+  $(Self.Opt.NowBtn).click(function() {
+    var End = parseInt(localStorage.getItem('GraphEnd'));
+    clearInterval(Self.Timer);
+    if(End === 0) {
+      $(Self.Opt.NowBtn).removeClass('active');
+      localStorage.setItem('GraphEnd', Self.Range[1]);
+    } else {
+      $(Self.Opt.NowBtn).addClass('active');
+      localStorage.setItem('GraphEnd', 0);
+      Self.LastSample = 0;
+      Self.GetSeries();
+    }
+  });
 }
 
 /* append samples of given series to array of graph data, and shift if needed */

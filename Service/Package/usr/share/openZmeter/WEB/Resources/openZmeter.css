@@ -131,6 +131,10 @@ body {
   width: 100%;
   z-index: 90;
 }
+.header-buttons {
+  text-align: center;
+  border-top: 1px solid rgba(255,255,255,0.3);
+}
 @media(min-width:768px) {
   #wrapper {
     left: 256px;
@@ -159,6 +163,11 @@ body {
   }
   .indicator-bar {
     font-size: 18x;
+  }
+  .header-buttons {
+    float: right;
+    border: none;
+    text-align: right;
   }
 }
 .indicator-bar > div {

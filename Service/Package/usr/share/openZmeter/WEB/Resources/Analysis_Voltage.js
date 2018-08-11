@@ -19,21 +19,14 @@
 /* Grafica de voltage */
 var VoltageChart     = null;
 var VoltageData      = [];
-var ScrollableSeries = "rms_v";
-function Scrollable_ShowSpinner() {
-  $('#VoltageSpinner').show();
-}
-function Scrollable_StopSpinner() {
-  $('#VoltageSpinner').hide();
-}
-function Scrollable_OnSuccess(result) {
-  if(ScrollableLastSample === 0) VoltageData = [Array(VoltageNames.length + 1).fill(0)];
+function Scrollable_OnSuccess(result, clear) {
+  if(clear) VoltageData = [Array(SeriesNames.Voltage().length + 1).fill(0)];
   VoltageData = GraphDataAppend(result, 'rms_v', VoltageData);
   if(VoltageChart == null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
       { strokeWidth: 0.5, stepPlot: true, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4],
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(VoltageNames), dateWindow: [result['From'], result['To']],
-        zoomCallback: Scrollable_Zoom, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: Scrollable_MouseUp, dblclick: Scrollable_DoubleClick },  
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.Voltage()), dateWindow: [result['From'], result['To']],
+        zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
         colors: ColorArray($('#VoltagePanel').css('border-color'), 3),
         plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
         underlayCallback: function(canvas, area, g) {
@@ -60,7 +53,7 @@ function Scrollable_OnSuccess(result) {
 }
 function VoltageResizeEvent() {
   var Height = $('#VoltageAvgPanel').height() + $('#VoltageMaxPanel').height() + $('#VoltageMinPanel').height();
-  VoltageChart.resize($('#VoltageCol').width(), Height - 4);
+  VoltageChart.resize($('#VoltageCol').width(), Height + 24);
 }
 function VoltageSeries(event) {
   GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'VisibleVoltageMainPhases', false, function(series) { return CalcRanges(VoltageData, series, false); }, (event !== undefined) ? event.target : undefined); 
@@ -102,7 +95,7 @@ function Scrollable_UpdateCounters(change) {
     $('#labelVoltageMinPrimaryValue').text('Calculating...');
     $('#labelVoltageMinSecondary').text(Times.SecondaryText);
   }
-  GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)', 
+  Ajax.GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)', 
     function(result) {
       $('#labelVoltageAvgPrimaryValue').html(Array_Round2(result['avg_rms_v'], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
       $('#labelVoltageMinPrimaryValue').html(Array_Round2(result['min_rms_v'], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
@@ -114,7 +107,7 @@ function Scrollable_UpdateCounters(change) {
     $('#labelVoltageAvgSecondaryValue').text('Calculating...');
     $('#labelVoltageMaxSecondaryValue').text('Calculating...');
     $('#labelVoltageMinSecondaryValue').text('Calculating...');
-    GetSeriesAggreg(Times.SecondaryPeriod, Times.SecondaryTo, Times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)',
+    Ajax.GetSeriesAggreg(Times.SecondaryPeriod, Times.SecondaryTo, Times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)',
       function(result) {
         $('#labelVoltageAvgSecondaryValue').html(Array_Round2(result['avg_rms_v'], '&nbsp;') + '&nbsp;<em>V</em>');
         $('#labelVoltageMinSecondaryValue').html(Array_Round2(result['min_rms_v'], '&nbsp;') + '&nbsp;<em>V</em>');
@@ -1445,10 +1438,11 @@ $('#GraphDialogClose').click(function() {
 });
 
 /* Secuencia de inicio para cargar la pagina */
+var MainScrollable = null;
 function UpdatePage() {
   $('.nav-tabs').scrollingTabs();
   DetailsButtonClick();
-  GetSeriesScrollable();
+  MainScrollable = new Scrollable( {Spinners: ['#VoltageSpinner'], Series: 'rms_v', OnSuccess: Scrollable_OnSuccess} );
   Scrollable_UpdateCounters(true);
   AjaxGetDetails();
   AjaxGetEvolution();
