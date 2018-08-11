@@ -21,7 +21,7 @@ var VoltageChart        = null;
 var LastVoltageSample   = 0;
 var VoltageData         = [];
 function AjaxGetVoltage() {
-  GetSeries(7200000, 0, "3s", LastVoltageSample, 'rms_v, flag', AjaxVoltage, function() { setTimeout(AjaxGetVoltage, 5000); });
+  Ajax.GetSeries(7200000, 0, "3s", LastVoltageSample, 'rms_v, flag', AjaxVoltage, function() { setTimeout(AjaxGetVoltage, 5000); });
 }
 function AjaxVoltage(result) {
   if(result['Sampletime'] === null) return;
@@ -34,7 +34,7 @@ function AjaxVoltage(result) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
       { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: false, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(VoltageNames), colors: ColorArray($('#VoltagePanel').css('border-color'), 3), dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.Voltage()), colors: ColorArray($('#VoltagePanel').css('border-color'), 3), dateWindow: [result['From'], result['To']],
         underlayCallback: function(canvas, area, g) {
           var NV = Analyzers[Analyzer].NominalVoltage, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
           GraphHBackgroundRanges([[NV * 1.1, NV * 1.07, Yellow], [NV * 0.93, NV * 0.9, Yellow], [Infinity, NV * 1.1, Red], [NV * 0.9, -Infinity, Red]], g, canvas);
@@ -53,8 +53,8 @@ function AjaxVoltage(result) {
   } else {
     VoltageChart.updateOptions({ file: VoltageData, dateWindow: [result['From'], result['To']]});
   }
-  for(n = 0; n < VoltageNames.length; n++) {
-    AddEvents(result, VoltageNames[n], VoltageChart);
+  for(n = 0; n < SeriesNames.Voltage().length; n++) {
+    AddEvents(result, SeriesNames.Voltage()[n], VoltageChart);
   }
   VoltageSeries();
 }
@@ -87,7 +87,7 @@ var CurrentChart        = null;
 var LastCurrentSample   = 0;
 var CurrentData         = [];
 function AjaxGetCurrent() {
-  GetSeries(7200000, 0, "3s", LastCurrentSample, 'rms_i', AjaxCurrent, function() { setTimeout(AjaxGetCurrent, 5000); });
+  Ajax.GetSeries(7200000, 0, "3s", LastCurrentSample, 'rms_i', AjaxCurrent, function() { setTimeout(AjaxGetCurrent, 5000); });
 }
 function AjaxCurrent(result) {
   if(result['Sampletime'] === null) return;
@@ -100,7 +100,7 @@ function AjaxCurrent(result) {
     CurrentChart = new Dygraph(document.getElementById("CurrentChart"), CurrentData,
       { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {}, 
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(VoltageNames), colors: ColorArray($('#CurrentPanel').css('border-color'), 4), dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.Current()), colors: ColorArray($('#CurrentPanel').css('border-color'), 4), dateWindow: [result['From'], result['To']],
         underlayCallback: function(canvas, area, g) {
           var MC = Analyzers[Analyzer]['MaxCurrent'], Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
           GraphHBackgroundRanges([[MC * 0.7, MC * 0.6, Yellow], [Infinity, MC * 0.7, Red]], g, canvas);
@@ -151,7 +151,7 @@ var LastPowerSample     = 0;
 var PowerData           = [];
 var PowerChartUnits     = '';
 function AjaxGetPower() {
-  GetSeries(7200000, 0, "3s", LastPowerSample, 'active_power', AjaxPower, function() { setTimeout(AjaxGetPower, 5000); });
+  Ajax.GetSeries(7200000, 0, "3s", LastPowerSample, 'active_power', AjaxPower, function() { setTimeout(AjaxGetPower, 5000); });
 }
 function AjaxPower(result) {
   if((result === null) || (result['Sampletime'] === null)) return;
@@ -166,7 +166,7 @@ function AjaxPower(result) {
     PowerChart = new Dygraph(document.getElementById("PowerChart"), PowerData, 
       { strokeWidth: 0.5, stepPlot: true, stackedGraph: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(ActivePowerNames), colors: ColorArray($('#PowerPanel').css('border-color'), 3), dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.ActivePower()), colors: ColorArray($('#PowerPanel').css('border-color'), 3), dateWindow: [result['From'], result['To']],
         axes: {
           y: { pixelsPerLabel: 15,
                axisLabelWidth: 34,
@@ -218,7 +218,7 @@ var FrequencyChart      = null;
 var LastFrequencySample = 0;
 var FrequencyData       = [];
 function AjaxGetFrequency() {
-  GetSeries(7200000, 0, "3s", LastFrequencySample, 'freq', AjaxFrequency, function() { setTimeout(AjaxGetFrequency, 5000); });
+  Ajax.GetSeries(7200000, 0, "3s", LastFrequencySample, 'freq', AjaxFrequency, function() { setTimeout(AjaxGetFrequency, 5000); });
 }
 function AjaxFrequency(result) {
   if((result === null) || (result['Sampletime'] === null)) return;
@@ -271,21 +271,14 @@ $('#btnMaximizeFrequency').click(function() {
 /* Grafico de energia */
 var EnergyData       = [];
 var EnergyChart      = null;
-var ScrollableSeries = "active_energy";
-function Scrollable_ShowSpinner() {
-  $('#EnergySpinner').show();
-}
-function Scrollable_StopSpinner() {
-  $('#EnergySpinner').hide();
-}
-function Scrollable_OnSuccess(result) {
-  if(ScrollableLastSample === 0) EnergyData = [Array(ActiveEnergyNames.length + 1).fill(0)];
+function Scrollable_OnSuccess(result, clear) {
+  if(clear) EnergyData = [Array(SeriesNames.ActiveEnergy().length + 1).fill(0)];
   EnergyData = GraphDataAppend(result, 'active_energy', EnergyData);
   if(EnergyChart == null) {
     EnergyChart = new Dygraph(document.getElementById("EnergyChart"), EnergyData,
       { strokeWidth: 0.5, stackedGraph: true, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], plotter: barChartNoSpacedPlotter,
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(ActiveEnergyNames), dateWindow: [result['From'], result['To']],
-        zoomCallback: Scrollable_Zoom, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: Scrollable_MouseUp, dblclick: Scrollable_DoubleClick },
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.ActiveEnergy()), dateWindow: [result['From'], result['To']],
+        zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },
         underlayCallback: function(context, area, dygraph) { GraphHightlightWeekends("#EEE", context, area, dygraph); }, colors: ColorArray($('#EnergyPanel').css('border-color'), 3),
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
@@ -345,7 +338,7 @@ function Scrollable_UpdateCounters(change) {
     $('#labelEnergyPrimaryPhases').text('');
     $('#labelEnergySecondary').text(Times.SecondaryText);
   }
-  GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, 'sum(active_energy)', 
+  Ajax.GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, 'sum(active_energy)', 
     function(result) {
       var Sum = ArraySum(result['sum_active_energy']);
       var Units = GetBestUnits(Sum);
@@ -357,7 +350,7 @@ function Scrollable_UpdateCounters(change) {
   );
   if(Times.SecondaryTo !== undefined) {
     $('#labelEnergySecondaryValue').text('Calculating...');
-    GetSeriesAggreg(Times.SecondaryPeriod, Times.SecondaryTo, Times.PreferedAggreg, 'sum(active_energy)', 
+    Ajax.GetSeriesAggreg(Times.SecondaryPeriod, Times.SecondaryTo, Times.PreferedAggreg, 'sum(active_energy)', 
       function(result) {
         var Sum = ArraySum(result['sum_active_energy']);
         var Units = GetBestUnits(Sum);
@@ -415,7 +408,7 @@ var THDIChart           = null;
 var THDIData            = [];
 var LastEvolutionSample = 0;
 function AjaxGetMainParameters() {
-  GetSeries(86400000, 0, "1m", LastEvolutionSample, 'reactive_power, power_factor, phi, thd_v, thd_i', AjaxMainParameters, function() { setTimeout(AjaxGetMainParameters, 60000); });
+  Ajax.GetSeries(86400000, 0, "1m", LastEvolutionSample, 'reactive_power, power_factor, phi, thd_v, thd_i', AjaxMainParameters, function() { setTimeout(AjaxGetMainParameters, 60000); });
 }
 function AjaxMainParameters(result) {
   if((result === null) || (result['Sampletime'] === null)) return;
@@ -466,9 +459,9 @@ $('#GraphDialogClose').click(function() {
   $('#GraphDialog').modal('hide');
   window.dispatchEvent(new Event('resize'));
 });
-
+var MainScrollable = null;
 function UpdatePage() {
-  GetSeriesScrollable();
+  MainScrollable = new Scrollable( {Spinners: ['#EnergySpinner'], Series: 'active_energy', OnSuccess: Scrollable_OnSuccess} );
   Scrollable_UpdateCounters(true);
   AjaxGetVoltage();
   AjaxGetCurrent();

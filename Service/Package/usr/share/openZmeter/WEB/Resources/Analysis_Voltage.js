@@ -146,7 +146,6 @@ $('#GraphDialogClose').click(function() {
 var DetailTimer   = null;
 var DetailTimestamp = 0;
 function AjaxGetDetails() {
-//  if(WaveformChart === null) ShowSpinner(DetailSpinner, 'DetailSpinner');
   $('#btnPauseDetail').addClass('disabled');
   $.ajax({ url: "getSeriesNow",
            timeout: 60000,

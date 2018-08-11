@@ -4,56 +4,40 @@ var SpinnerOpts         = { lines: 10,  // The number of lines to draw
                             width: 5,   // The line thickness
                             radius: 10  // The radius of the inner circle
                           };
-                          
-/* harmonics names */
-var HarmonicsNames      = [ '1st',  '2nd',  '3rd',  '4th',  '5th',  '6th',  '7th',  '8th',  '9th', '10th',
-                            '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th',
-                            '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th',
-                            '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th',
-                            '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
-/* Series phase names */
-var VoltageNames;
-var CurrentNames;
-var ActivePowerNames;
-var ActiveEnergyNames;
-var ReactiveEnergyNames;
-var ActivePowerNames;
-var ReactivePowerNames;
-
 /* offline.js configuration and tools */
 Offline.options = {requests: false};
 Offline.on('confirmed-down', function() { $('#OfflineDiv').css('display', 'inherit'); });
 Offline.on('confirmed-up',   function() {  $('#OfflineDiv').css('display', 'none'); });
-
+                          
+/* Series names */
+var SeriesNames = {
+  Harmonics: [ '1st',  '2nd',  '3rd',  '4th',  '5th',  '6th',  '7th',  '8th',  '9th', '10th',
+               '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th',
+               '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th',
+               '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th',
+               '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'],
+  Voltage: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Voltage'] : ['V(R)', 'V(S)', 'V(T)']; },
+  Current: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Current'] : (Analyzers[Analyzer]['Mode'] === '3PHASE') ? ['Current (R)', 'Current (S)', 'Current (T)'] : ['Current (R)', 'Current (S)', 'Current (T)', 'Current (N)']; },
+  ActiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1Phase') ? ['Active Energy']  : ['Active Energy (R)', 'Active Energy (S)', 'Active Energy (T)']; },
+  ReactiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1Phase') ? ['Reactive Energy']  : ['Reactive Energy (R)', 'Reactive Energy (S)', 'Reactive Energy (T)']; },
+  ActivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1Phase') ? ['Active Power']  : ['Active Power (R)', 'Active Power (S)', 'Active Power (T)']; },
+  ReactivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1Phase') ? ['Reactive Power']  : ['Reactive Power (R)', 'Reactive Power (S)', 'Reactive Power (T)']; }
+};
+  
 /* redirect ajax error to login page */
-//$(document).ajaxError(function (event, jqxhr, settings, exception) { if(jqxhr.status === 401) window.location.href = 'Login'; });
+$(document).ajaxError(function (event, jqxhr, settings, exception) { if(jqxhr.status === 401) window.location.href = 'Login'; });
 /* handle buttons events to avoid 'selected' effect */
-$(document).on("mousedown", ":button", function(e) { e.preventDefault(); } );
-/* getSeries function */
-function GetSeries(period, to, aggreg, lastsample, series, onSuccess, onCompletion, onError) {
-  $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion,
-           data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Analyzers[Analyzer].ID } )
-           
-  });
-}
-/*getSeriesRange function */
-function GetSeriesRange(aggreg, onSuccess, onCompletion, onError) {
-  $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion,
-           data: JSON.stringify({ Aggreg: '1h', Analyzer: Analyzers[Analyzer].ID})
-  });
-}
-/* getSeriesNow encapsulation */
-function GetSeriesNow(series, onSuccess, onCompletion, onError) {
-  $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion,
-           data: JSON.stringify( { Series: series, Analyzer: Analyzers[Analyzer].ID} )
-  });
-}
-/* getSeriesNow encapsulation */
-function GetSeriesAggreg(period, to, aggreg, series, onSuccess, onCompletion, onError) {
-  $.ajax({ url: "getSeriesAggreg", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion,
-           data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, Series: series, Analyzer: Analyzers[Analyzer].ID } )
-  });
-}
+$(document).on("mousedown", ":button", function(e) { e.preventDefault(); this.blur(); } );
+
+/* Ajax functions */
+var Ajax = {
+  GetSeries: function(period, to, aggreg, lastsample, series, onSuccess, onCompletion, onError) { $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Analyzers[Analyzer].ID } ) }); },
+  GetSeriesRange: function(aggreg, onSuccess, onCompletion, onError) { $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify({ Aggreg: '1h', Analyzer: Analyzers[Analyzer].ID}) }); },
+  GetSeriesNow: function(series, onSuccess, onCompletion, onError) { $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Series: series, Analyzer: Analyzers[Analyzer].ID} ) }); },
+  GetSeriesAggreg: function(period, to, aggreg, series, onSuccess, onCompletion, onError) { $.ajax({ url: "getSeriesAggreg", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, Series: series, Analyzer: Analyzers[Analyzer].ID } ) }); }  
+};
+
+
 /* Return full text from aggregation short name */
 function GetAggregLongName(shortText) {
   return (shortText === '1h') ? '1 hour' : (shortText === '10m') ? '10 minutes' : (shortText === '1m') ? '1 minute' : (shortText === '3s') ? '3 seconds' : false;
@@ -126,114 +110,122 @@ function GetDayTimePeriod() {
   var now = new Date();
   Result.PrimaryPeriod = 86400000;
   Result.PrimaryTo = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
-  Result.SecundaryPeriod = Result.CurrentDuration;
-  Result.SecondaryTo = Result.CurrentEnd - Result.CurrentDuration;
+  Result.SecondaryPeriod = Result.PrimaryPeriod;
+  Result.SecondaryTo = Result.PrimaryTo - Result.PrimaryPeriod;
   Result.PreferedAggreg = '1m';
   Result.PrimaryText = 'Today';
   Result.SecondaryText = 'Yesterday';
   return Result;
 }
+
 /* getSeries function than take params from controls to manage scrollable graphs */
-var ScrollableLastSample = 0;
-var ScrollableTimer = null;
-function GetSeriesScrollable() {
-  if(ScrollableTimer !== null) clearInterval(ScrollableTimer);
-  $('#btnScrollableNow').addClass('disabled');
-  if(ScrollableLastSample === 0) Scrollable_ShowSpinner();
-  var Period = parseInt(localStorage.getItem('GraphPeriod'));
-  if(!Period) {
-    Period = 86400000;
-    localStorage.setItem('GraphPeriod', Period);
-  }
-  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
-  if(!GraphEnd) {
-    GraphEnd = 0;
-    localStorage.setItem('GraphEnd', 0);
-  }
-  var GraphAggregation = localStorage.getItem('GraphAggregation');
-  if(!GraphAggregation || (GetAggregLongName(GraphAggregation) === false)) {
-    GraphAggregation = '10m';
-    localStorage.setItem('GraphAggregation', GraphAggregation);
-  }
-  GetSeries(Period, GraphEnd, GraphAggregation, ScrollableLastSample, ScrollableSeries, 
-    function(result) {
-      Scrollable_StopSpinner();
-      Scrollable_OnSuccess(result);
-      ScrollableLastSample = LastSampletime(result, ScrollableLastSample);
-      $('#btnScrollableAggreg div:first').text(GetAggregLongName(result['Aggregation_Source']));
-      $('#btnScrollableAggreg').next().children().removeClass('active');
-      $('#btnScrollableAggreg').next().children(':contains(' + GetAggregLongName(result['Aggregation_Source']) + ')').addClass('active');
-      var Period = result['To'] - result['From'];
-      var PeriodName = GetPeriodNameFromMS(Period);
-      $('#btnScrollablePeriod div:first').text(PeriodName);
-      $('#btnScrollablePeriod').next().children().removeClass('active');
-      $('#btnScrollablePeriod').next().children(':contains(' + PeriodName + ')').addClass('active');
-      var GraphAggregation = localStorage.getItem('GraphAggregation');
-      if(GraphAggregation !== result['Aggregation_Source']) {
-        $('#dlgAggregWarning').modal('show');
-        GraphAggregation = result['Aggregation_Source'];
-      }
-      var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
-      if(GraphEnd === 0) {
-        $('#btnScrollableNow').addClass('active');
-      } else {
-        $('#btnScrollableNow').removeClass('active');
-      }
-      localStorage.setItem('GraphAggregation', GraphAggregation);    
-    }, 
-    function() { 
-      $('#btnScrollableNow').removeClass('disabled');
-      if(parseInt(localStorage.getItem('GraphEnd')) === 0) ScrollableTimer = setTimeout(GetSeriesScrollable, 3000);
+function Scrollable(opt) {
+  this.LastSample = 0;
+  this.Timer = null;
+  this.Opt = Object.assign({NowBtn: '#btnScrollableNow', AggregBtn: '#btnScrollableAggreg', PeriodBtn: '#btnScrollablePeriod', Spinners: [], Series: ''}, opt);
+  this.Range = [0, 0];
+  var Self = this;
+  $(Self.Opt.NowBtn).click(function() {
+    var End = parseInt(localStorage.getItem('GraphEnd'));
+    clearInterval(Self.Timer);
+    if(End === 0) {
+      $(Self.Opt.NowBtn).removeClass('active');
+      localStorage.setItem('GraphEnd', Self.Range[1]);
+    } else {
+      $(Self.Opt.NowBtn).addClass('active');
+      localStorage.setItem('GraphEnd', 0);
+      Self.LastSample = 0;
+      Self.GetSeries();
     }
-  );  
+  });
+  $(Self.Opt.PeriodBtn + ' + ul li a').click(function(event) {
+    event.preventDefault();
+    var PeriodName = $(this).text();
+    var Period = GetMSFromPeriodName(PeriodName);
+    localStorage.setItem('GraphPeriod', Period);
+    Self.LastSample = 0;
+    Self.GetSeries();
+    localStorage.setItem('CountersPeriod', PeriodName);
+    Scrollable_UpdateCounters(true);
+  });
+  $(Self.Opt.AggregBtn + ' + ul li a').click(function(event) {
+    event.preventDefault();
+    localStorage.setItem('GraphAggregation', GetAggregShortName($(this).text()));
+    Self.LastSample = 0;
+    Self.GetSeries();
+  });
+  Self.GetSeries = function() {
+    if(Self.Timer !== null) clearInterval(Self.Timer);
+    $(Self.Opt.NowBtn).addClass('disabled');
+    if(Self.LastSample === 0) {
+      for(i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).show();
+    }
+    var Period = parseInt(localStorage.getItem('GraphPeriod'));
+    if(!Period) {
+      Period = 86400000;
+      localStorage.setItem('GraphPeriod', Period);
+    }
+    var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
+    if(!GraphEnd) {
+      GraphEnd = 0;
+      localStorage.setItem('GraphEnd', 0);
+    }
+    var GraphAggregation = localStorage.getItem('GraphAggregation');
+    if(!GraphAggregation || (GetAggregLongName(GraphAggregation) === false)) {
+      GraphAggregation = '10m';
+      localStorage.setItem('GraphAggregation', GraphAggregation);
+    }
+    Ajax.GetSeries(Period, GraphEnd, GraphAggregation, this.LastSample, this.Opt.Series, 
+      function(result) {
+        for(i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
+        Self.Opt.OnSuccess(result, Self.LastSample === 0);
+        Self.LastSample = LastSampletime(result, Self.LastSample);
+        $(Self.Opt.AggregBtn + ' div:first').text(GetAggregLongName(result['Aggregation_Source']));
+        $(Self.Opt.AggregBtn).next().children().removeClass('active');
+        $(Self.Opt.AggregBtn).next().children(':contains(' + GetAggregLongName(result['Aggregation_Source']) + ')').addClass('active');
+        var Period = result['To'] - result['From'];
+        var PeriodName = GetPeriodNameFromMS(Period);
+        $(Self.Opt.PeriodBtn + ' div:first').text(PeriodName);
+        $(Self.Opt.PeriodBtn).next().children().removeClass('active');
+        $(Self.Opt.PeriodBtn).next().children(':contains(' + PeriodName + ')').addClass('active');
+        var GraphAggregation = localStorage.getItem('GraphAggregation');
+        if(GraphAggregation !== result['Aggregation_Source']) {
+          $('#dlgAggregWarning').modal('show');
+          GraphAggregation = result['Aggregation_Source'];
+        }
+        var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
+        if(GraphEnd === 0) {
+          $(Self.Opt.NowBtn).addClass('active');
+        } else {
+          $(Self.Opt.NowBtn).removeClass('active');
+        }
+        localStorage.setItem('GraphAggregation', GraphAggregation);    
+      }, 
+      function() { 
+        $(Self.Opt.NowBtn).removeClass('disabled');
+        if(parseInt(localStorage.getItem('GraphEnd')) === 0) this.Timer = setTimeout(this.GetSeries, 3000);
+      }
+    );  
+  };
+  this.GetSeries();
+  this.ZoomEvt = function(minDate, maxDate, yRanges) {
+    clearInterval(Self.Timer);
+    $(Self.Opt.NowBtn).removeClass('active');
+    localStorage.setItem('GraphEnd', maxDate);
+    localStorage.setItem('GraphPeriod', maxDate - minDate);
+    Self.Range = [minDate, maxDate];
+    Self.LastSample = 0;
+    Self.GetSeries();
+  };
+  this.MouseUpEvt = function(event, g, contex) {
+    mouseUpOZM(event, g, contex);
+    if((contex.isPanning) && (contex.regionWidth > 0)) Self.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
+  };
+  this.DoubleClickEvt = function(event, g, context) {
+    dblClickOZM(event, g, context);
+    Self.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
+  };
 }
-function Scrollable_Zoom(minDate, maxDate, yRanges) {
-  clearInterval(ScrollableTimer);
-  $('#btnScrollableNow').removeClass('active');
-  localStorage.setItem('GraphEnd', maxDate);
-  localStorage.setItem('GraphPeriod', maxDate - minDate);
-  ScrollableLastSample = 0;
-  GetSeriesScrollable();
-}
-function Scrollable_MouseUp(event, g, contex) {
-  mouseUpOZM(event, g, contex);
-  if((contex.isPanning) && (contex.regionWidth > 0)) Scrollable_Zoom(g.dateWindow_[0], g.dateWindow_[1]);
-}
-function Scrollable_DoubleClick(event, g, context) {
-  dblClickOZM(event, g, context);
-  Scrollable_Zoom(g.dateWindow_[0], g.dateWindow_[1]);
-}
-$(document).on("click", "#btnScrollableNow", function() {
-  var End = parseInt(localStorage.getItem('GraphEnd'));
-  clearInterval(ScrollableTimer);
-  if(End === 0) {
-    $('#ScrollableTimer').removeClass('active');
-    localStorage.setItem('GraphEnd', EnergyChart.getOption('dateWindow')[1]);
-  } else {
-    $('#btnScrollableNow').addClass('active');
-    localStorage.setItem('GraphEnd', 0);
-    ScrollableLastSample = 0;
-    GetSeriesScrollable();
-  }
-});
-$(document).on("click", "#btnScrollablePeriod + ul li a", function(event) {
-  event.preventDefault();
-  var PeriodName = $(this).text();
-  var Period = GetMSFromPeriodName(PeriodName);
-  localStorage.setItem('GraphPeriod', Period);
-  ScrollableLastSample = 0;
-  GetSeriesScrollable();
-  localStorage.setItem('CountersPeriod', PeriodName);
-  Scrollable_UpdateCounters(true);
-});
-$(document).on("click", "#btnScrollableAggreg + ul li a", function(event) {
-  event.preventDefault();
-  localStorage.setItem('GraphAggregation', GetAggregShortName($(this).text()));
-  ScrollableLastSample = 0;
-  GetSeriesScrollable();
-});
-
-
 
 /* append samples of given series to array of graph data, and shift if needed */
 function GraphDataAppend(result, serie, data) {
@@ -591,7 +583,7 @@ function Round2Plain(value) {
 
 /* Update header info periodicaly */
 function GetIndicators() {
-  GetSeriesNow('rms_v, rms_i, active_power, freq', 
+  Ajax.GetSeriesNow('rms_v, rms_i, active_power, freq', 
     function(result) {
       var Time = new Date(result['Sampletime']);
       $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
@@ -777,13 +769,6 @@ function GetAnalyzersCompletes(result) {
     GetIndicators();
     AjaxGetIndicatorsB();
   }
-  VoltageNames        = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Voltage'] : ['V(R)', 'V(S)', 'V(T)'];
-  CurrentNames        = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Current'] : (Analyzers[Analyzer]['Mode'] == '3PHASE') ? ['Current (R)', 'Current (S)', 'Current (T)'] : ['Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'];
-  ActivePowerNames    = (Analyzers[Analyzer]['Mode'] == '1PHASE') ? ['Power']   : ['Power (R)', 'Power (S)', 'Power (T)'];
-  ActiveEnergyNames   = (Analyzers[Analyzer]['Mode'] == '1Phase') ? ['Active Energy']  : ['Active Energy (R)', 'Active Energy (S)', 'Active Energy (T)'];
-  ReactiveEnergyNames = (Analyzers[Analyzer]['Mode'] == '1Phase') ? ['Reactive Energy']  : ['Reactive Energy (R)', 'Reactive Energy (S)', 'Reactive Energy (T)'];
-  ActivePowerNames    = (Analyzers[Analyzer]['Mode'] == '1Phase') ? ['Active Power']  : ['Active Power (R)', 'Active Power (S)', 'Active Power (T)'];
-  ReactivePowerNames  = (Analyzers[Analyzer]['Mode'] == '1Phase') ? ['Reactive Power']  : ['Reactive Power (R)', 'Reactive Power (S)', 'Reactive Power (T)'];
   AjaxGetSysStats();
   UpdatePage();
 }
