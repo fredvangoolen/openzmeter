@@ -135,10 +135,17 @@ $('#GraphDialogClose').click(function() {
   window.dispatchEvent(new Event('resize'));
 });
 
-var HarmonicsDataset    = [];
+var WaveformDataset = [], HarmonicsDataset = [];
 function Live_OnSuccess(result) {
   $('#DetailTime').text('Last update at ' + new Date(result['Sampletime']).toLocaleTimeString() + '.' + new Date(result['Sampletime']).getMilliseconds());
-//  UpdateWaveformChart(result);
+  WaveformDataset = [];
+  for(i = 0; i < result['wave_v'][0].length; i++) {
+    var Row = [];
+    for(n = 0; n < result['wave_v'].length; n++) Row.push(result['wave_v'][n][i]);
+    for(n = 0; n < result['wave_i'].length; n++) Row.push(result['wave_i'][n][i]);
+    WaveformDataset.push(Row);
+  }
+  UpdateWaveformChart();
   HarmonicsDataset = [];
   for(i = 0; i < 50; i++) {
     var Row = [];
@@ -168,7 +175,7 @@ function Live_OnSuccess(result) {
 //        });
 }
 function DetailTabChange(index) {
-  if((index === 0) || (index === 1)) {
+  if((index === 0) || (index === 1) || (index === 3)) {
     $('#groupDetailPhasesMulti').show();
     $('#btnShowDetail1Harmonic').show();
     $('#btnShowDetailVoltageAndCurrent').show();
@@ -182,15 +189,12 @@ function DetailTabChange(index) {
   if(WaveformChart !== null) {
     if(index === 0) $(WaveformChart.graphDiv).parent().removeAttr('style');
     UpdateWaveformChart();
-  }   
-  if((index === 1) && (HarmonicsChart !== null)) $(HarmonicsChart.graphDiv).parent().removeAttr('style');
+  }
+  if(HarmonicsChart !== null) {
+    if(index === 1) $(HarmonicsChart.graphDiv).parent().removeAttr('style');
+    UpdateHarmonicsChart();
+  }
 //  switch(localStorage.getItem('VoltageDetailView')) {
-//    case 'Waveform' :
-//      if(WaveformChart !== null) 
-//      break;
-//    case 'Harmonics' :
-//      if(HarmonicsChart !== null) UpdateHarmonicsChart(null);
-//      break;
 //    case 'Phasors' :
 //      if(PhasorChart !== null) $(PhasorChart.graphDiv).parent().attr('style', 'width: 404px; height: 394px');
 //      break;
@@ -208,107 +212,19 @@ function DetailTabChange(index) {
 //      break;
 //  }
 }
-function DetailsButtonClick(event) {
-  if(this.id === 'btnShowDetailVoltageAndCurrent') {
-    localStorage.setItem('VoltageDetailShowCurrent', (localStorage.getItem('VoltageDetailShowCurrent') === 'true') ? 'false' : 'true');
-    WaveformChart.updateOptions({ showRangeSelector: false});
-    WaveformChart.updateOptions({ showRangeSelector: true});
-    HarmonicsChart.updateOptions({ showRangeSelector: true});
-    HarmonicsChart.updateOptions({ showRangeSelector: false});
-    FFTChart.updateOptions({ showRangeSelector: false});
-    FFTChart.updateOptions({ showRangeSelector: true});
-  }
-  
-  if(this.id === 'btnShowDetailRPhase') {
-     if((localStorage.getItem('VoltageDetailView') === 'Evolution') || (localStorage.getItem('VoltageDetailView') === 'Parameters')) {
-       localStorage.setItem('VoltageDetailEvolutionPhase', 'PhaseR');
-     } else {
-       localStorage.setItem('VoltageDetailPhaseR', (localStorage.getItem('VoltageDetailPhaseR') === 'true') ? 'false' : 'true');
-     }
-  }
-  if(this.id === 'btnShowDetailSPhase') {
-    if((localStorage.getItem('VoltageDetailView') === 'Evolution') || (localStorage.getItem('VoltageDetailView') === 'Parameters')) {
-       localStorage.setItem('VoltageDetailEvolutionPhase', 'PhaseS');
-     } else {
-       localStorage.setItem('VoltageDetailPhaseS', (localStorage.getItem('VoltageDetailPhaseS') === 'true') ? 'false' : 'true');
-     }
-  }
-  if(this.id === 'btnShowDetailTPhase') {
-    if((localStorage.getItem('VoltageDetailView') === 'Evolution') || (localStorage.getItem('VoltageDetailView') === 'Parameters')) {
-       localStorage.setItem('VoltageDetailEvolutionPhase', 'PhaseT');
-     } else {
-       localStorage.setItem('VoltageDetailPhaseT', (localStorage.getItem('VoltageDetailPhaseT') === 'true') ? 'false' : 'true');
-     }
-  }
-
-
-  
-  if((Analyzers[Analyzer]['Mode'] !== '3Phase') || (localStorage.getItem('VoltageDetailView') === 'Events')) {
-    $('#btnShowDetailRPhase').addClass('disabled');
-    $('#btnShowDetailSPhase').addClass('disabled');
-    $('#btnShowDetailTPhase').addClass('disabled');
+function DetailsButtonUpdate(event) {
+  GroupButtons($('#groupDetailPhasesMulti'), 'VisibleVoltageDetailPhases', Math.max(SeriesNames.Current().length, SeriesNames.Voltage().length), false, undefined, undefined);
+  if(localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') {
+    $('#btnShowDetail1Harmonic').addClass('active');
   } else {
-    $('#btnShowDetailRPhase').removeClass('disabled');
-    $('#btnShowDetailSPhase').removeClass('disabled');
-    $('#btnShowDetailTPhase').removeClass('disabled');   
+    $('#btnShowDetail1Harmonic').removeClass('active');
   }
-  
-  $('#btnShowDetailRPhase').removeClass('active');
-  $('#btnShowDetailSPhase').removeClass('active');
-  $('#btnShowDetailTPhase').removeClass('active');
-  
-  if(Analyzers[Analyzer]['Type'] === '3Phase') {
-    switch(localStorage.getItem('VoltageDetailView')) {
-      case 'Waveform' :
-      case 'Harmonics' :
-      case 'Phasors' :
-      case 'Advanced' :
-        var ShowR = (localStorage.getItem('VoltageDetailPhaseR') === 'true');
-        var ShowS = (localStorage.getItem('VoltageDetailPhaseS') === 'true');
-        var ShowT = (localStorage.getItem('VoltageDetailPhaseT') === 'true');
-        if((ShowR === false) && (ShowS === false) && (ShowT === false)) {
-          ShowR = true;
-          localStorage.setItem('VoltageDetailPhaseR', 'true');
-        }
-        if(ShowR === true) $('#btnShowDetailRPhase').addClass('active');
-        if(ShowS === true) $('#btnShowDetailSPhase').addClass('active');
-        if(ShowT === true) $('#btnShowDetailTPhase').addClass('active');
-        break;
-      case 'Parameters' :
-      case 'Evolution' :
-        switch(localStorage.getItem('VoltageDetailEvolutionPhase')) {
-          case 'PhaseR' :
-            $('#btnShowDetailRPhase').addClass('active');
-            break;
-          case 'PhaseS' :
-            $('#btnShowDetailSPhase').addClass('active');
-            break;
-          case 'PhaseT':
-            $('#btnShowDetailTPhase').addClass('active');
-            break;
-          default:
-            localStorage.setItem('VoltageDetailEvolutionPhase', 'PhaseR');
-            $('#btnShowDetailRPhase').addClass('active');
-            break;
-        }
-    }
+  if(localStorage.getItem('VoltageDetailShowCurrent') === 'true') {
+    $('#btnShowDetailVoltageAndCurrent').addClass('active');
+  } else {
+    $('#btnShowDetailVoltageAndCurrent').removeClass('active');
   }
-  
-
-  $('#btnShowDetailVoltageAndCurrent').addClass('disabled');
-  $('#btnShowDetailVoltageAndCurrent').removeClass('active');
-  switch(localStorage.getItem('VoltageDetailView')) {
-    case 'Waveform' :UpdateWaveformChart();
-    case 'Harmonics' :
-    case 'Advanced' :
-      $('#btnShowDetailVoltageAndCurrent').removeClass('disabled');
-      if(localStorage.getItem('VoltageDetailShowCurrent') === 'true') {
-        $('#btnShowDetailVoltageAndCurrent').addClass('active');
-      } else {
-        $('#btnShowDetailVoltageAndCurrent').removeClass('active');
-      }
-      break;
-  }
+  return;
   $('#btnMaximizeDetail').addClass('disabled');
   switch(localStorage.getItem('VoltageDetailView')) {
     case 'Waveform' :
@@ -321,48 +237,45 @@ function DetailsButtonClick(event) {
       break;
   }
   $('#btnExportDetail').addClass('disabled');
-    switch(localStorage.getItem('VoltageDetailView')) {
+  switch(localStorage.getItem('VoltageDetailView')) {
     case 'Waveform' :
     case 'Harmonics' :
     case 'Advanced' :
       $('#btnExportDetail').removeClass('disabled');
       break;
   }
-
-  
 }
-$('#btnShowDetailRPhase').click(DetailsButtonClick);
-$('#btnShowDetailSPhase').click(DetailsButtonClick);
-$('#btnShowDetailTPhase').click(DetailsButtonClick);
-$('#btnShowDetailVoltageAndCurrent').click(DetailsButtonClick);
-$('#btnShowDetail1Harmonic').click(function() {
-  //$('#btnShowDetail1Harmonic').removeClass('active');
-  if(localStorage.getItem('VoltageDetailView') === 'Harmonics') {
-    if(localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') {
-      $('#btnShowDetail1Harmonic').addClass('active');
-    } else {
-      $('#btnShowDetail1Harmonic').removeClass('active');
-    }
-  }   
+$('#groupDetailPhasesMulti').on('click', 'button', function(evt) {
+  GroupButtons($('#groupDetailPhasesMulti'), 'VisibleVoltageDetailPhases', Math.max(SeriesNames.Current().length, SeriesNames.Voltage().length), false,
+    function() { UpdateWaveformChart(); UpdateHarmonicsChart(); }, evt.target);
 });
-$('btnShowDetailLog').click(DetailsButtonClick); 
+$('#btnShowDetailVoltageAndCurrent').click(function() {
+  localStorage.setItem('VoltageDetailShowCurrent', (localStorage.getItem('VoltageDetailShowCurrent') === 'true') ? 'false' : 'true');
+  DetailsButtonUpdate();
+  UpdateWaveformChart();
+  UpdateHarmonicsChart();   
+  if(WaveformChart !== null) { WaveformChart.updateOptions({ showRangeSelector: false}); WaveformChart.updateOptions({ showRangeSelector: true}); }
+  if(HarmonicsChart !== null) { HarmonicsChart.updateOptions({ showRangeSelector: true}); HarmonicsChart.updateOptions({ showRangeSelector: false}); }
+  if(FFTChart !== null) { FFTChart.updateOptions({ showRangeSelector: false}); FFTChart.updateOptions({ showRangeSelector: true}); }
+});
+$('#btnShowDetail1Harmonic').click(function() {
+  localStorage.setItem('VoltageDetailFirstHarmonic', (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 'false' : 'true');
+  DetailsButtonUpdate();
+  UpdateWaveformChart();
+  UpdateHarmonicsChart();
+});
+$('#btnShowDetailLog').click(function() {
+  localStorage.setItem('VoltageDetailLog', (localStorage.getItem('VoltageDetailLog') === 'true') ? 'false' : 'true');
+  DetailsButtonUpdate();
+  UpdateWaveformChart();
+  UpdateHarmonicsChart();
+});
 
 /* Waveform view */
 var WaveformChart       = null;
-var WaveformDataset     = [];
-function UpdateWaveformChart(result) {
-  if(result !== null) {
-    
-    
-    WaveformDataset = [];
-    for(i = 0; i < result['wave_v'][0].length; i++) {
-      if(Analyzers[Analyzer]['Type'] === '3Phase') {
-        WaveformDataset.push([i, result['wave_v'][0][i], result['wave_v'][1][i], result['wave_v'][2][i], result['wave_i'][0][i], result['wave_i'][1][i], result['wave_i'][2][i]]);
-      } else {
-        WaveformDataset.push([i, result['wave_v'][0][i], result['wave_i'][0][i]]);      
-      }
-    }
-  }
+function UpdateWaveformChart() {
+
+
   var ShowR = (localStorage.getItem("VoltageDetailPhaseR") === 'true');
   var ShowS = (localStorage.getItem("VoltageDetailPhaseS") === 'true');
   var ShowT = (localStorage.getItem("VoltageDetailPhaseT") === 'true');
@@ -455,9 +368,10 @@ function UpdateHarmonicsChart() {
   var ToShow      = [];
   var ShowCurrent = (localStorage.getItem("VoltageDetailShowCurrent") === 'true');
   var ShowFirst   = (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true');
+  var Log         = (localStorage.getItem('VoltageDetailLog') === 'true');
   for(i = ShowFirst ? 0 : 1; i < HarmonicsDataset.length; i++) {
     var Row = [i];
-    for(n = 0; n < HarmonicsDataset[i].length; n++) Row.push(20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][n])));
+    for(n = 0; n < HarmonicsDataset[i].length; n++) Row.push(Log ? 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][n])) : HarmonicsDataset[i][n]);
     ToShow.push(Row);
   }
   var VoltageVisibility = [], CurrentVisibility = [], Y1Range = [], Y2Range = [], Series = {};
@@ -466,8 +380,8 @@ function UpdateHarmonicsChart() {
       VoltageVisibility = VisibleSeries.slice(0, SeriesNames.Voltage().length);
       CurrentVisibility = VisibleSeries.slice(0, SeriesNames.Current().length);
       if(ShowCurrent === false) CurrentVisibility.fill(false);
-      Y1Range = CalcRanges(ToShow, Visibles);
-      Y2Range = CalcRanges(ToShow, Visibles.map(function(val) { return val + SeriesNames.Voltage().length }));
+      Y1Range = CalcRanges(ToShow, Visibles, !Log);
+      Y2Range = CalcRanges(ToShow, Visibles.map(function(val) { return val + SeriesNames.Voltage().length }), !Log);
       HarmonicsVOffset = (Y1Range[0] < 0.0) ? -Y1Range[0] : 0.0;
       HarmonicsCOffset = (Y2Range[0] < 0.0) ? -Y2Range[0] : 0.0;
       for(i = 0; i < ToShow.length; i++) {
@@ -476,32 +390,32 @@ function UpdateHarmonicsChart() {
         for(n = 0; n < SeriesNames.Current().length; n++) Row.push(ToShow[i][n + 1 + SeriesNames.Voltage().length] + HarmonicsCOffset);
         ToShow[i] = Row;
       }
+      SeriesNames.Current().map(function(val) {Series[val] = { axis: 'y2' }; });
+      var Options = { 
+        strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], interactionModel: { }, plotter: multiColumnBarPlotter, dateWindow: [ToShow[0][0] - 0.5, ToShow[ToShow.length - 1][0] + 0.5],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Harmonic'].concat(SeriesNames.Voltage()).concat(SeriesNames.Current()), series: Series,
+        colors: ColorArray($('#VoltagePanel').css('border-color'), 3).concat(ColorArray('#428bca', 3)), visibility: VoltageVisibility.concat(CurrentVisibility),
+        axes: { 
+          y: { pixelsPerLabel: 15, axisLabelWidth: 20, valueRange: [Y1Range[0] + HarmonicsVOffset, Y1Range[1] + HarmonicsVOffset],
+               ticker: function(min, max) { return GraphDBTicks(min, max, HarmonicsVOffset); },
+               valueFormatter: function(x) { return Round2(x - HarmonicsVOffset) + '<em class="x-small">' + (Log ? 'dB' : 'V') + '</em>'; }
+             },
+          y2: { pixelsPerLabel: 15, axisLabelWidth: ShowCurrent ? 15 : 0, valueRange: [Y2Range[0] + HarmonicsCOffset, Y2Range[1] + HarmonicsCOffset],
+                valueFormatter: function(x) { return Round2(x - HarmonicsCOffset) + ' <em class="x-small">' + (Log ? 'dB' : 'A') + '</em>'; },
+                ticker: function(min, max) { return (ShowCurrent === true) ? GraphDBTicks(min, max, HarmonicsCOffset) : []; },
+              },
+          x: { drawGrid: false, ticker: GraphOddHarmonics, axisLabelFormatter: function (x) { return SeriesNames.Harmonics[x]; },
+               valueFormatter: function(y) { return SeriesNames.Harmonics[y] + ' Harmonic (' + (Analyzers[Analyzer].NominalFreq * (y + 1)) + '<em class="small"> Hz</em>)'; }           
+             }
+        }
+      };
+      if(HarmonicsChart === null) {
+        HarmonicsChart = new Dygraph(document.getElementById("HarmonicsChart"), ToShow, Options);
+      } else {
+        HarmonicsChart.updateOptions(Options, true);
+        HarmonicsChart.updateOptions({ file: ToShow });
+      }
   }, undefined);
-  SeriesNames.Current().map(function(val) {Series[val] = { axis: 'y2' }; });
-  var Options = { 
-    strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], interactionModel: { }, plotter: multiColumnBarPlotter, dateWindow: [ToShow[0][0] - 0.5, ToShow[ToShow.length - 1][0] + 0.5],
-    legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Harmonic'].concat(SeriesNames.Voltage()).concat(SeriesNames.Current()), series: Series,
-    colors: ColorArray($('#VoltagePanel').css('border-color'), 3).concat(ColorArray('#428bca', 3)), visibility: VoltageVisibility.concat(CurrentVisibility),
-    axes: { 
-      y: { pixelsPerLabel: 15, axisLabelWidth: 20, valueRange: [Y1Range[0] + HarmonicsVOffset, Y1Range[1] + HarmonicsVOffset],
-           ticker: function(min, max) { return GraphDBTicks(min, max, HarmonicsVOffset); },
-           valueFormatter: function(x) { return Round2(x - HarmonicsVOffset) + '<em class="x-small">dB</em>'; }
-         },
-      y2: { pixelsPerLabel: 15, axisLabelWidth: ShowCurrent ? 15 : 0, valueRange: [Y2Range[0] + HarmonicsCOffset, Y2Range[1] + HarmonicsCOffset],
-            valueFormatter: function(x) { return Round2(x - HarmonicsCOffset) + ' <em class="x-small">dB</em>'; },
-            ticker: function(min, max) { return (ShowCurrent === true) ? GraphDBTicks(min, max, HarmonicsCOffset) : []; },
-          },
-      x: { drawGrid: false, ticker: GraphOddHarmonics, axisLabelFormatter: function (x) { return SeriesNames.Harmonics[x]; },
-           valueFormatter: function(y) { return SeriesNames.Harmonics[y] + ' Harmonic (' + (Analyzers[Analyzer].NominalFreq * (y + 1)) + '<em class="small"> Hz</em>)'; }           
-         }
-    }
-  };
-  if(HarmonicsChart === null) {
-    HarmonicsChart = new Dygraph(document.getElementById("HarmonicsChart"), ToShow, Options);
-  } else {
-    HarmonicsChart.updateOptions(Options, true);
-    HarmonicsChart.updateOptions({ file: ToShow });
-  }
 }
 
 /* Grafica de FFT */
@@ -1312,7 +1226,8 @@ var MainScrollable = null;
 var LiveDetails = null;
 function UpdatePage() {
   TabSelector('VoltageDetailView', '#DetailTabs', '#DetailDivs', DetailTabChange);
-  DetailsButtonClick();
+  DetailsButtonUpdate();
+//  DetailsButtonClick();
   MainScrollable = new Scrollable( {Spinners: ['#VoltageSpinner'], Series: 'rms_v', OnSuccess: Scrollable_OnSuccess} );
   LiveDetails = new Live( {RefreshInterval: 5000, Spinners: ['#DetailSpinner'], Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_v, phi, rms_v, rms_i', OnSuccess: Live_OnSuccess});
   Scrollable_UpdateCounters(true);

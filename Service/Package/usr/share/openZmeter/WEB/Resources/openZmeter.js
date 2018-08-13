@@ -377,7 +377,7 @@ function GroupButtons(buttongroup, variable, maxItems, unique, callback, sender)
     Visibles.psuh(1);
     VisibleSeries.push(true);
   }
-  callback(VisibleSeries, Visibles);  
+  if(callback !== undefined) callback(VisibleSeries, Visibles);  
 }
 /* if called from a button update variable contents to reflect new selections. In all cases update graph visible series */
 function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, sender) {
