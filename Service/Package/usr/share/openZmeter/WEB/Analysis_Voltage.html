@@ -45,7 +45,7 @@
           <div class="panel panel-voltage" id="VoltagePanel">
             <div id="VoltageSpinner" class="spinnerdiv"></div>
             <div class="panel-heading">
-              <span class="huge">Voltage</span>
+              <div class="huge header-text">Voltage</div>
               <div class="header-buttons">
                 <div class="btn-group" data-load-block="ScrollableAggreg_Block"></div>
                 <div class="btn-group" data-load-block="ScrollableTime_Block"></div>
@@ -56,7 +56,7 @@
             </div>
             <div class="panel-body">
               <div class="row">
-                <div class="col-md-6 col-lg-3">
+                <div class="col-md-6 col-lg-4 col-xl-3">
                   <div class="subpanel" id="VoltageAvgPanel">
                     <div class="huge-small" id="labelVoltageAvgPrimary">Loading data...</div>
                     <div><span id="labelVoltageAvgPrimaryValue" class="huge-small">?</span></div>
@@ -73,7 +73,7 @@
                     <div><span id="labelVoltageMinSecondary">Loading data...</span>&nbsp;<span id="labelVoltageMinSecondaryValue"></span></div> 
                   </div>
                 </div>
-                <div class="col-md-6 col-lg-9" id="VoltageCol">
+                <div class="col-md-6 col-lg-8 col-xl-9" id="VoltageCol">
                   <div id="VoltageMaximizeDiv">
                     <div id="VoltageChart" class="chart big_chart"></div>
                   </div>
@@ -85,53 +85,42 @@
       </div>
       <div class="row">
         <div class="col-lg-12">
-          <ul class="nav nav-tabs">
-            <li class="active"><a data-toggle="tab" href="#">Waveform</a></li>
-            <li><a data-toggle="tab" href="#menu1">Harmonics</a></li>
-            <li><a data-toggle="tab" href="#menu2">Evolution</a></li>
-            <li><a data-toggle="tab" href="#menu2">Advanced</a></li>
-            <li><a data-toggle="tab" href="#menu2">Phasors</a></li>
-            <li><a data-toggle="tab" href="#menu2">Parameters</a></li>
-            <li><a data-toggle="tab" href="#menu2">Events</a></li>
+          <ul class="nav nav-tabs" id="DetailTabs">
+            <li><a data-toggle="tab" href="#">Waveform</a></li>
+            <li><a data-toggle="tab" href="#">Harmonics</a></li>
+            <li><a data-toggle="tab" href="#">Evolution</a></li>
+            <li><a data-toggle="tab" href="#">Advanced</a></li>
+            <li><a data-toggle="tab" href="#">Phasors</a></li>
+            <li><a data-toggle="tab" href="#">Parameters</a></li>
+            <li><a data-toggle="tab" href="#">Events</a></li>
           </ul>
           <div class="panel panel-other">
               <div id="DetailSpinner" class="spinnerdiv"></div>
               <div class="panel-heading">
-                <div class="pull-right">
+                <div class="header-text" id="DetailTime"></div>
+                <div class="header-buttons">
+                   <div class="btn-group" id="groupDetailPhasesMulti" data-load-block="PhaseI_Block"></div>
+                   <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetail1Harmonic" data-toggle="tooltip" title="Show/hide 1st harmonic">1st harmonic</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailVoltageAndCurrent" data-toggle="tooltip" title="Show/hide current">Current</button>
+                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailLog" data-toggle="tooltip" title="Use logarithm scale">Log</button>
+                  </div>               
                   <div class="btn-group">
                     <button type="button" class="btn btn-default btn-xs" id="btnMaximizeDetail" data-toggle="tooltip" title="Maximize current view"><i class="fa fa-expand"></i></button>
                     <button type="button" class="btn btn-default btn-xs" id="btnExportDetail"   data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
                     <button type="button" class="btn btn-default btn-xs" id="btnPauseDetail"    data-toggle="tooltip" title="Stop fetching new data"><span class="glyphicon glyphicon-pause"></span></button>
-                  </div>
-                </div>
-                <div class="pull-right">&nbsp;</div>
-                <div class="pull-right">
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowDetailRPhase" data-toggle="tooltip" title="Show phase R">R</button>
-                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowDetailSPhase" data-toggle="tooltip" title="Show phase S">S</button>
-                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowDetailTPhase" data-toggle="tooltip" title="Show phase T">T</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetail1Harmonic" data-toggle="tooltip" title="Show/hide 1st harmonic">1st harmonic</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailVoltageAndCurrent" data-toggle="tooltip" title="Show/hide current">Current</button>
-                  </div>
+                  </div>                
                 </div>
                 <span class="clearfix"> </span>
               </div>
-              <div class="panel-body" id="Tabs" style="padding:5px">
-                <div class="no-padding" id="WaveformPanel">
+              <div class="panel-body" id="DetailDivs">
+                <div id="WaveformPanel">
                   <div id="WaveformMaximize">
-                    <div style="padding:5px">
-                      <div style="display:inline-block" id="WaveformTime">Loading data...</div>
-                      <div id="WaveformLegend" style="float: right"></div>
-                    </div>
                     <div id="WaveformChart" class="chart big_chart"></div>
                   </div>
                 </div>
-                <div class="hidden" id="HarmonicsPanel">
-                  <div id="HarmonicsMaximize">
-                    <div style="padding:5px">
-                      <div style="display:inline-block" id="HarmonicsTime">Loading data...</div>
-                      <div id="HarmonicsLegend" style="float: right"></div>
-                    </div>                  
+                <div id="HarmonicsPanel">
+                  <div id="HarmonicsMaximize">              
                     <div id="HarmonicsChart" class="chart big_chart"></div>
                 </div>
                 </div>

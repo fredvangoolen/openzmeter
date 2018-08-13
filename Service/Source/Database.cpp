@@ -199,6 +199,7 @@ uint32_t Database::ResultRows() {
 }
 char *Database::ResultValue(uint32_t row, char *name) {
   if(pResult == NULL) return NULL;
+  if(PQntuples(pResult) < 1) return NULL;
   uint32_t Col = PQfnumber(pResult, name);
   if(Col == -1) return NULL;
   if(PQgetisnull(pResult, row, Col) == 1) return NULL;

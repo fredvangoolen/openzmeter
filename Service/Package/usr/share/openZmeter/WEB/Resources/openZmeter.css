@@ -131,9 +131,28 @@ body {
   width: 100%;
   z-index: 90;
 }
+.header-text {
+    display: inline-block;
+}
 .header-buttons {
-  text-align: center;
-  border-top: 1px solid rgba(255,255,255,0.3);
+  float: right;
+  text-align: right;
+}
+@media(max-width:1024px) {
+  .panel-heading {
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  .header-text {
+    text-align: center;
+    display: block;
+  }
+  .header-buttons {
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.3);
+    float: none;
+    padding-top: 2px;
+  }
 }
 @media(min-width:768px) {
   #wrapper {
@@ -163,11 +182,6 @@ body {
   }
   .indicator-bar {
     font-size: 18x;
-  }
-  .header-buttons {
-    float: right;
-    border: none;
-    text-align: right;
   }
 }
 .indicator-bar > div {

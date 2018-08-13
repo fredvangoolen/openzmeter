@@ -31,10 +31,10 @@ $(document).on("mousedown", ":button", function(e) { e.preventDefault(); this.bl
 
 /* Ajax functions */
 var Ajax = {
-  GetSeries: function(period, to, aggreg, lastsample, series, onSuccess, onCompletion, onError) { $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Analyzers[Analyzer].ID } ) }); },
-  GetSeriesRange: function(aggreg, onSuccess, onCompletion, onError) { $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify({ Aggreg: '1h', Analyzer: Analyzers[Analyzer].ID}) }); },
-  GetSeriesNow: function(series, onSuccess, onCompletion, onError) { $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Series: series, Analyzer: Analyzers[Analyzer].ID} ) }); },
-  GetSeriesAggreg: function(period, to, aggreg, series, onSuccess, onCompletion, onError) { $.ajax({ url: "getSeriesAggreg", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, Series: series, Analyzer: Analyzers[Analyzer].ID } ) }); }  
+  GetSeries: function(period, to, aggreg, lastsample, series, onSuccess, onCompletion) { $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Analyzers[Analyzer].ID } ) }); },
+  GetSeriesRange: function(aggreg, onSuccess, onCompletion) { $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify({ Aggreg: '1h', Analyzer: Analyzers[Analyzer].ID}) }); },
+  GetSeriesNow: function(series, onSuccess, onCompletion) { $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Series: series, Analyzer: Analyzers[Analyzer].ID} ) }); },
+  GetSeriesAggreg: function(period, to, aggreg, series, onSuccess, onCompletion) { $.ajax({ url: "getSeriesAggreg", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, Series: series, Analyzer: Analyzers[Analyzer].ID } ) }); }  
 };
 
 
@@ -175,7 +175,7 @@ function Scrollable(opt) {
       GraphAggregation = '10m';
       localStorage.setItem('GraphAggregation', GraphAggregation);
     }
-    Ajax.GetSeries(Period, GraphEnd, GraphAggregation, this.LastSample, this.Opt.Series, 
+    Ajax.GetSeries(Period, GraphEnd, GraphAggregation, Self.LastSample, Self.Opt.Series, 
       function(result) {
         for(i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
         Self.Opt.OnSuccess(result, Self.LastSample === 0);
@@ -204,12 +204,12 @@ function Scrollable(opt) {
       }, 
       function() { 
         $(Self.Opt.NowBtn).removeClass('disabled');
-        if(parseInt(localStorage.getItem('GraphEnd')) === 0) this.Timer = setTimeout(this.GetSeries, 3000);
+        if(parseInt(localStorage.getItem('GraphEnd')) === 0) Self.Timer = setTimeout(Self.GetSeries, 3000);
       }
     );  
   };
-  this.GetSeries();
-  this.ZoomEvt = function(minDate, maxDate, yRanges) {
+  Self.GetSeries();
+  Self.ZoomEvt = function(minDate, maxDate, yRanges) {
     clearInterval(Self.Timer);
     $(Self.Opt.NowBtn).removeClass('active');
     localStorage.setItem('GraphEnd', maxDate);
@@ -218,11 +218,11 @@ function Scrollable(opt) {
     Self.LastSample = 0;
     Self.GetSeries();
   };
-  this.MouseUpEvt = function(event, g, contex) {
+  Self.MouseUpEvt = function(event, g, contex) {
     mouseUpOZM(event, g, contex);
     if((contex.isPanning) && (contex.regionWidth > 0)) Self.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
   };
-  this.DoubleClickEvt = function(event, g, context) {
+  Self.DoubleClickEvt = function(event, g, context) {
     dblClickOZM(event, g, context);
     Self.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
   };
@@ -230,24 +230,66 @@ function Scrollable(opt) {
 
 /* Live view help class */
 function Live(opt) {
+  this.DetailPaused = false;
   this.LastSample = 0;
   this.Timer = null;
   this.Opt = Object.assign({PauseBtn: '#btnPause', Spinners: [], Series: ''}, opt);
-  this.Range = [0, 0];
   var Self = this;
-  $(Self.Opt.NowBtn).click(function() {
-    var End = parseInt(localStorage.getItem('GraphEnd'));
-    clearInterval(Self.Timer);
-    if(End === 0) {
-      $(Self.Opt.NowBtn).removeClass('active');
-      localStorage.setItem('GraphEnd', Self.Range[1]);
+  $(Self.Opt.PauseBtn).click(function() {
+    Self.DetailPaused = !Self.DetailPaused;
+    if(Self.DetailPaused) {
+      $(Self.Opt.PauseBtn).addClass('active');
+      if(Self.Timer !== null) clearInterval(Self.Timer);
     } else {
-      $(Self.Opt.NowBtn).addClass('active');
-      localStorage.setItem('GraphEnd', 0);
-      Self.LastSample = 0;
-      Self.GetSeries();
+      $(Self.Opt.PauseBtn).removeClass('active');
+      Selft.GetSeries();
     }
   });
+  Self.GetSeries = function() {
+    $(Self.Opt.PauseBtn).addClass('disabled');
+    Ajax.GetSeriesNow(Self.Opt.Series, 
+      function(result) {
+        for(i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
+        Self.Opt.OnSuccess(result);
+        Self.LastSample = result['Sampletime'];
+      },
+      function() {
+        $(Self.Opt.PauseBtn).removeClass('disabled');
+        Self.Timer = setTimeout(Self.GetSeries, 3000);
+      }
+    );
+  };
+  Self.GetSeries();
+}
+
+/* Tab selector */
+function TabSelector(variable, tab, divs, changeTabEvt) {
+  this.Variable = variable;
+  this.Tab = tab;
+  this.Divs = divs;
+  this.ChangeEvent = changeTabEvt;
+  var Self = this;
+  var Items = $(tab).children().length;
+  $(tab).scrollingTabs();
+  $(tab + ' > li > a').click(function(evt) {
+    $(divs + ' > div').hide();
+    localStorage.setItem(Self.Variable, $(evt.target).parent().index());
+    $(divs + ' > div:nth-child(' + (Self.GetSaved() + 1) + ')').show();
+    Self.ChangeEvent(Self.GetSaved());
+    window.dispatchEvent(new Event('resize'));
+  });
+    Self.GetSaved = function() {
+    var Data = parseInt(localStorage.getItem(Self.Variable));
+    if((isNaN(Data) === true) || (Data >= Items) || (Data < 0)) {
+      localStorage.setItem(Self.Variable, 0);
+      Data = 0;
+    } 
+    return Data;    
+  }
+  $(divs + ' > div').hide();
+  $(tab + ' > li:nth-child(' + (Self.GetSaved() + 1) + ')').addClass('active');
+  $(divs + ' > div:nth-child(' + (Self.GetSaved() + 1) + ')').show();
+  Self.ChangeEvent(Self.GetSaved());
 }
 
 /* append samples of given series to array of graph data, and shift if needed */
@@ -295,11 +337,11 @@ function GraphHightlightWeekends(color, canvas, area, g) {
     fromTimestamp = Tmp;
   }
 }
-/* if called from a button update variable contents to reflect new selections. In all cases update graph visible series */
-function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, sender) {
+/* Hanle grouo button action (phases) */
+function GroupButtons(buttongroup, variable, maxItems, unique, callback, sender) {
   var State = localStorage.getItem(variable);
   var NumElements = buttongroup.children().length;
-  if(State <= 0 || State >= Math.pow(2, graph.attributes_.labels_.length)) State = 1;
+  if(State <= 0 || State >= Math.pow(2, maxItems)) State = 1;
   if(sender !== undefined) {
     var Index = $(sender).index();
     if(State == Math.pow(2, Index)) { //only one iten selected
@@ -312,12 +354,12 @@ function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, s
     if(unique == true) State = State & (Math.pow(2, Index));  
     localStorage.setItem(variable, State);
   }
+  var VisibleSeries = [];
+  var Visibles = [];
   if(Analyzers[Analyzer].Mode !== '1PHASE') {
     buttongroup.removeClass('hidden');
-    var VisibleSeries = [];
-    var Visibles = [];
     for(i = 0; i < NumElements; i++) {
-      if(i >= graph.attributes_.labels_.length) {
+      if(i >= maxItems) {
         $(buttongroup.children()[i]).addClass('disabled');
       } else if(State & Math.pow(2, i)) {
         $(buttongroup.children()[i]).addClass('active');
@@ -330,11 +372,30 @@ function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, s
         VisibleSeries.push(false);
       }
     }
-    graph.updateOptions({ visibility: VisibleSeries, valueRange: rangechecker(Visibles) });
   } else {
     buttongroup.hide();
-    graph.updateOptions({ valueRange: rangechecker([1]) });
+    Visibles.psuh(1);
+    VisibleSeries.push(true);
   }
+  callback(VisibleSeries, Visibles);  
+}
+/* if called from a button update variable contents to reflect new selections. In all cases update graph visible series */
+function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, sender) {
+  GroupButtons(buttongroup, variable, graph.attributes_.labels_.length, unique, function(VisibleSeries, Visibles) { graph.updateOptions({ visibility: VisibleSeries, valueRange: rangechecker(Visibles) }); }, sender);
+}
+/* Generate db ticks (integers) */ 
+function GraphDBTicks(min, max, offset) {
+  var ticks = [];
+  for(var i = Math.floor(min - offset); i < Math.ceil(max - offset); i++) {
+    if((i % 10) == 0) ticks.push({ v: i + offset, label: i });
+  }
+  return ticks;
+}
+/* Generate odd harmonic ticks */
+function GraphOddHarmonics() {
+  var Ticks = [];
+  for(i = 0; i < SeriesNames.Harmonics.length; i = i + 2) Ticks.push({ v: i, label: SeriesNames.Harmonics[i] });
+  return Ticks;
 }
 /* find max value of array (maybe array of arrays) */
 function ArrayMax(array) {
@@ -491,7 +552,7 @@ function ColorArray(base, items) {
 
 function LegendFormatter_Follow(data) {
   if(data.x === undefined || data.x === null) return "";
-  var Result = '<span class="dygraph-legend-title">' + new Date(data.x).toLocaleDateString() + ' - ' + new Date(data.x).toLocaleTimeString() + '</span><br>';
+  var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';
   for(i = 0; i < data.series.length; i++)  {
     if(data.series[i].isVisible) {
       Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
@@ -521,7 +582,7 @@ function AddEvents(result, serieName, graph) {
 function Array_Round2(values, separator, colors, cadena1, cadena2) {
   for(i = 0; i < values.length; i++) {
     if((colors !== undefined) && (colors[i] !== undefined)) {
-     var Text = '<div style="padding: 0px 5px; border-radius: 5px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]);
+     var Text = '<div style="padding: 0px 2px; margin: 0px 5px; border-radius: 5px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]);
      if((values[i] > 0) && (cadena2 !== undefined)) Text += cadena2;
      if((values[i] < 0) && (cadena1 !== undefined)) Text += cadena1;
      values[i] = Text + '</div>';

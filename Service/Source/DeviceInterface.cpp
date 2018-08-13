@@ -65,7 +65,8 @@ bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Data
   db->PrepareSentence("SELECT admin FROM users WHERE name = ?");
   db->BindSingleString(user);
   db->ExecSentence();
-  if(strcmp("t", db->ResultValue(0, (char*)"admin")) == 0) {
+  char *Value = db->ResultValue(0, (char*)"admin");
+  if((Value != NULL) && (strcmp("t", Value)) == 0) {
     for(uint8_t j = 0; j < pDevicesCount; j++) {
       for(uint32_t k = 0; k < pDevices[j]->pAnalyzersCount; k++) {
         json_object_array_add(*writer, pDevices[j]->pAnalyzers[k]->GetJSONDescriptor());
