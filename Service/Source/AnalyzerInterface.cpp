@@ -39,11 +39,12 @@ json_object *AnalyzerInterface::GetJSONDescriptor() {
   json_object_object_add(Device, "MaxCurrent", json_object_new_double(pMaxCurrent));
   json_object_object_add(Device, "MinCurrent", json_object_new_double(pMinCurrent));
   json_object_object_add(Device, "Mode", json_object_new_string((pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N"));
+  json_object_object_add(Device, "SampleFreq", json_object_new_double(pSamplerate));
   return Device;
 }
 json_object *AnalyzerInterface::GetJSONParams(char *series) {
-  Params_t    *Params    = NULL;
-  ExtParams_t *ExtParams = NULL;
+  Params_t    Params;
+  ExtParams_t ExtParams;
   bool RMS_V = false, RMS_I = false, Active_Power = false, Apparent_Power = false, Power_Factor = false, Active_Energy = false,
        Frequency = false, Flag = false, THD_V = false, THD_I = false, VoltageHarmonics = false, CurrentHarmonics = false, Phi = false,
        Voltage = false, Current = false, FFT_V = false, FFT_I = false, QueryParams = false, QueryParamsExt = false;
@@ -73,111 +74,118 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
   json_object *Result = json_object_new_object();
   uint8_t VoltageChannels = ((pMode == PHASE1) ? 1 : 3);
   uint8_t CurrentChannels = ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);
-  if(RMS_V && Params) {
+  if(RMS_V) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->RMS_V[i]));
+    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params.RMS_V[i]));
     json_object_object_add(Result, "rms_v", Obj);
   }
-  if(RMS_I && Params) {
+  if(RMS_I) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < CurrentChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->RMS_I[i]));
+    for(int i = 0; i < CurrentChannels; i++) json_object_array_add(Obj, json_object_new_double(Params.RMS_I[i]));
     json_object_object_add(Result, "rms_i", Obj);
   }
-  if(Active_Power && Params) {
+  if(Active_Power) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->Active_Power[i]));
+    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params.Active_Power[i]));
     json_object_object_add(Result, "active_power", Obj);
   }
-  if(Apparent_Power && Params) {
+  if(Apparent_Power) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->Apparent_Power[i]));
+    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params.Apparent_Power[i]));
     json_object_object_add(Result, "apparent_power", Obj);
   }
-  if(Power_Factor && Params) {
+  if(Power_Factor) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->Power_Factor[i]));
+    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params.Power_Factor[i]));
     json_object_object_add(Result, "apparent_power", Obj);
   }
-  if(Active_Energy && Params) {
+  if(Active_Energy) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(Params->Active_Energy[i]));
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, json_object_new_double(Params.Active_Energy[i]));
     json_object_object_add(Result, "active_energy", Obj);
   }
-  if(THD_V && Params) {
+  if(THD_V) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->THD_V[i]));
+    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params.THD_V[i]));
     json_object_object_add(Result, "thd_v", Obj);
   }
-  if(THD_I && Params) {
+  if(THD_I) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < CurrentChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->THD_I[i]));
+    for(int i = 0; i < CurrentChannels; i++) json_object_array_add(Obj, json_object_new_double(Params.THD_I[i]));
     json_object_object_add(Result, "thd_i", Obj);
   }
-  if(Frequency && Params) {
-    if(isnan(Params->Frequency) == false) json_object_object_add(Result, "freq", json_object_new_double(Params->Frequency));
+  if(Frequency) {
+    if(isnan(Params.Frequency) == false) json_object_object_add(Result, "freq", json_object_new_double(Params.Frequency));
   }
-  if(Phi && Params) {
+  if(Phi) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params->Phi[i]));
+    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params.Phi[i]));
     json_object_object_add(Result, "phi", Obj);
   }
-  if(Flag && Params) {
-    json_object_object_add(Result, "flag", json_object_new_boolean(Params->Flag));
+  if(Flag) {
+    json_object_object_add(Result, "flag", json_object_new_boolean(Params.Flag));
   }
-  if(VoltageHarmonics && Params) {
+  if(VoltageHarmonics) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < VoltageChannels; i++) {
       json_object *Obj2 = json_object_new_array();
-      for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(Params->VoltageHarmonics[i][j]));
+      for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(Params.VoltageHarmonics[i][j]));
       json_object_array_add(Obj, Obj2);
     }
     json_object_object_add(Result, "harmonics_v", Obj);
   }
-  if(CurrentHarmonics && Params) {
+  if(CurrentHarmonics) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < CurrentChannels; i++) {
       json_object *Obj2 = json_object_new_array();
-      for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(Params->CurrentHarmonics[i][j]));
+      for(int j = 0; j < 50; j++) json_object_array_add(Obj2, json_object_new_double(Params.CurrentHarmonics[i][j]));
       json_object_array_add(Obj, Obj2);
     }
     json_object_object_add(Result, "harmonics_i", Obj);
   }
-  //if(strcmp(Serie, "wave_v") == 0) {
-////      Obj = json_object_new_array();
-////      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) {
-////        json_object *Obj2 = json_object_new_array();
-////        for(uint32_t j = 0; j < pSamples; j++) json_object_array_add(Obj2, json_object_new_double(pVoltageSamples[i][j]));
-////        json_object_array_add(Obj, Obj2);
-////      }
-  //}
-    //    } else if(strcmp(Serie, "wave_i") == 0) {
-////      Obj = json_object_new_array();
-////      for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) {
-////        json_object *Obj2 = json_object_new_array();
-////        for(uint32_t j = 0; j < pSamples; j++) json_object_array_add(Obj2, json_object_new_double(pCurrentSamples[i][j]));
-////        json_object_array_add(Obj, Obj2);
-////      }
-//    } else if(strcmp(Serie, "fft_v") == 0) {
-////      Obj = json_object_new_array();
-////      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) {
-////        json_object *Obj2 = json_object_new_array();
-////        for(int j = 0; j < pVoltageFFT[i]->OutputLen; j++) json_object_array_add(Obj2, json_object_new_double(pVoltageFFT[i]->BinPower(j)));
-////        json_object_array_add(Obj, Obj2);
-////      }
-//    } else if(strcmp(Serie, "fft_i") == 0) {
-////      Obj = json_object_new_array();
-////      for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) {
-////        json_object *Obj2 = json_object_new_array();
-////        for(int j = 0; j < pCurrentFFT[i]->OutputLen; j++) json_object_array_add(Obj2, json_object_new_double(pCurrentFFT[i]->BinPower(j)));
-////        json_object_array_add(Obj, Obj2);
-////      }
-//    }
-//    if(Obj != NULL) json_object_object_add(Result, Serie, Obj);
-//    Serie = strtok_r(NULL, ", ", &Save);
-//  }
-  if(Params) json_object_object_add(Result, "Sampletime", json_object_new_int64(Params->Timestamp));
-  
-  ReleaseParams();
+  if(Voltage) {
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < VoltageChannels; i++) {
+      json_object *Obj2 = json_object_new_array();
+      for(uint32_t j = 0; j < Params.Samples; j++) json_object_array_add(Obj2, json_object_new_double(ExtParams.Voltage[i][j]));
+      json_object_array_add(Obj, Obj2);
+    }
+    json_object_object_add(Result, "wave_v", Obj);
+  }
+  if(Current) {
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < CurrentChannels; i++) {
+      json_object *Obj2 = json_object_new_array();
+      for(uint32_t j = 0; j < Params.Samples; j++) json_object_array_add(Obj2, json_object_new_double(ExtParams.Current[i][j]));
+      json_object_array_add(Obj, Obj2);
+    }
+    json_object_object_add(Result, "wave_i", Obj);
+  }
+  if(FFT_V) {
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < VoltageChannels; i++) {
+      json_object *Obj2 = json_object_new_array();
+      for(int j = 0; j < ((Params.Samples / 2) + 1); j++) json_object_array_add(Obj2, json_object_new_double(ExtParams.FFT_V[i][j]));
+      json_object_array_add(Obj, Obj2);
+    }
+    json_object_object_add(Result, "fft_v", Obj);
+  }
+  if(FFT_I) {
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < CurrentChannels; i++) {
+      json_object *Obj2 = json_object_new_array();
+      for(int j = 0; j < ((Params.Samples / 2) + 1); j++) json_object_array_add(Obj2, json_object_new_double(ExtParams.FFT_I[i][j]));
+      json_object_array_add(Obj, Obj2);
+    }
+    json_object_object_add(Result, "fft_i", Obj);
+  }
+  if(QueryParams) json_object_object_add(Result, "Sampletime", json_object_new_int64(Params.Timestamp));
+  if(QueryParamsExt) {
+    for(int i = 0; i < VoltageChannels; i++) free(ExtParams.Voltage[i]);
+    for(int i = 0; i < CurrentChannels; i++) free(ExtParams.Current[i]);
+    for(int i = 0; i < VoltageChannels; i++) free(ExtParams.FFT_V[i]);
+    for(int i = 0; i < CurrentChannels; i++) free(ExtParams.FFT_I[i]);    
+  }  
   return Result;
 }
 void AnalyzerInterface::SaveAggreg(Params_t *params) {

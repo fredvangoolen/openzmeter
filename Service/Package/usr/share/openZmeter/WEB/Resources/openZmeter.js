@@ -397,6 +397,13 @@ function GraphOddHarmonics() {
   for(i = 0; i < SeriesNames.Harmonics.length; i = i + 2) Ticks.push({ v: i, label: SeriesNames.Harmonics[i] });
   return Ticks;
 }
+function GraphWaveTimeTicks(max) {
+  var ticks = [];
+  for(var i = 0; i <= Math.floor(max / Analyzers[Analyzer].SampleFreq * Analyzers[Analyzer].NominalFreq); i++) {
+    ticks.push({ v: i * Analyzers[Analyzer].SampleFreq / Analyzers[Analyzer].NominalFreq, label: Round2(i / Analyzers[Analyzer].NominalFreq * 1000) });
+  }
+  return ticks;
+}
 /* find max value of array (maybe array of arrays) */
 function ArrayMax(array) {
   var Max = -Infinity;

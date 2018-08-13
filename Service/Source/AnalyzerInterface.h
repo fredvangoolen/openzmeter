@@ -33,7 +33,7 @@ class AnalyzerInterface : protected Database {
       float     *Voltage[3];
       float     *Current[4];
       float     *FFT_V[3];
-      float     *FFT_i[4];
+      float     *FFT_I[4];
     } ExtParams_t;
   protected :
     char         *pID;
@@ -42,6 +42,7 @@ class AnalyzerInterface : protected Database {
     char         *pName;
     float         pMaxCurrent;
     float         pMinCurrent;
+    float         pSamplerate;              //Velocidad de muestreo (NaN if unsuported)
     AnalyzerMode  pMode;
   protected :
     void SaveAggreg(Params_t *params);
@@ -49,8 +50,7 @@ class AnalyzerInterface : protected Database {
     void NormalizeAggreg(Params_t *params);
     void ResetAggreg(Params_t *params);
   protected :
-    virtual void GetParams(Params_t **params, ExtParams_t **extParams) = 0;
-    virtual void ReleaseParams() = 0;
+    virtual void GetParams(Params_t *params, ExtParams_t *extParams) = 0;
   public :
     AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode);
     float        GetNominalVoltage();

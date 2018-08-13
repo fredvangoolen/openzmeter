@@ -12,28 +12,20 @@
 #include "AnalyzerSoft.h"
 #include "Tools.h"
 AnalyzerSoft::AnalyzerSoft(float samplerate, char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerInterface::AnalyzerMode mode) : AnalyzerInterface(id, nominal_voltage, nominal_frequency, name, max_current, min_current, mode) {
-  pVoltageChannels   = (mode == PHASE1) ? 1 : 3;
-  pCurrentChannels   = (mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4;
-  
-  
-  
-  
-  pMaxSamples        = ceil(15.0 * samplerate / pNominalFrequency);
-
-
-  
-  pZC             = new ZeroCrossing((pMode == PHASE1) ? 1 : 3, samplerate, pNominalFrequency);
-  pStats          = new Stats((pMode != PHASE1) ? 1 : 3, this, pNominalVoltage, pNominalFrequency);
-  pSamples        = 0; 
-  pSequence       = 0;
-  pCycles         = 0;
-  pWorking        = false;
-  pTerminate      = false;
-  pSamplerate     = samplerate;
-  
-  pWaitingThreads = 0;
-  pDataReady      = false;
-  pPrevTimestamp  = 0;
+  pVoltageChannels = (mode == PHASE1) ? 1 : 3;
+  pCurrentChannels = (mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4;
+  pMaxSamples      = ceil(15.0 * samplerate / pNominalFrequency);
+  pZC              = new ZeroCrossing((pMode == PHASE1) ? 1 : 3, samplerate, pNominalFrequency);
+  pStats           = new Stats((pMode != PHASE1) ? 1 : 3, this, pNominalVoltage, pNominalFrequency);
+//  pSamples         = 0; 
+  pSequence        = 0;
+  pCycles          = 0;
+  pWorking         = false;
+  pTerminate       = false;
+  pSamplerate      = samplerate;
+  pWaitingThreads  = 0;
+  pDataReady       = false;
+  pPrevTimestamp   = 0;
   for(uint8_t i = 0; i < 20; i++) pCyclesLen[i] = 0;
   for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) {
     char Name[16];
@@ -76,12 +68,12 @@ AnalyzerSoft::~AnalyzerSoft() {
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, uint64_t sampletime) {
   if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
-  for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) pVoltageSamples[i][pSamples] = voltageSamples[i];
-  for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) pCurrentSamples[i][pSamples] = currentSamples[i];
-  pSamples++;
+  for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) pVoltageSamples[i][pAggreg10C.Samples] = voltageSamples[i];
+  for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) pCurrentSamples[i][pAggreg10C.Samples] = currentSamples[i];
+  pAggreg10C.Samples++;
   pCyclesLen[pCycles]++;
   if(pZC->ProcessSample(voltageSamples) == true) pCycles++;
-  if((pCycles == 20) || (pSamples == pMaxSamples)) {
+  if((pCycles == 20) || (pAggreg10C.Samples == pMaxSamples)) {
     pthread_mutex_lock(&pThreadMutex);
     pWorking = true;
     pthread_mutex_unlock(&pThreadMutex);
@@ -106,17 +98,17 @@ void AnalyzerSoft::Analyze() {
     pthread_mutex_unlock(&pThreadMutex);
     pAggreg10C.Frequency = pZC->Frequency();
     //Inicia FFTs
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) pVoltageFFT[i]->Start(pVoltageSamples[i], pSamples);
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) pCurrentFFT[i]->Start(pCurrentSamples[i], pSamples);
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) pVoltageFFT[i]->Start(pVoltageSamples[i], pAggreg10C.Samples);
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) pCurrentFFT[i]->Start(pCurrentSamples[i], pAggreg10C.Samples);
     //Calcula valores basicos (RMS, potencia activa y energia) que son validos aun habiendo eventos
-    for(uint32_t i = 0; i < pSamples; i++) {
+    for(uint32_t i = 0; i < pAggreg10C.Samples; i++) {
       for(int j = 0; j < ((pMode == PHASE1) ? 1 : 3); j++) pAggreg10C.RMS_V[j] += pow(pVoltageSamples[j][i], 2.0);
       for(int j = 0; j < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); j++) pAggreg10C.RMS_I[j] += pow(pCurrentSamples[j][i], 2.0);
       for(int j = 0; j < ((pMode == PHASE1) ? 1 : 3); j++) pAggreg10C.Active_Power[j] += pVoltageSamples[j][i] * pCurrentSamples[j][i];
     }
-    for(int j = 0; j < ((pMode == PHASE1) ? 1 : 3); j++) pAggreg10C.RMS_V[j] = sqrt(pAggreg10C.RMS_V[j] / pSamples);
-    for(int j = 0; j < ((pMode == PHASE1) ? 1 : 3); j++) pAggreg10C.Active_Power[j] = pAggreg10C.Active_Power[j] / pSamples;
-    for(int j = 0; j < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); j++) pAggreg10C.RMS_I[j] = sqrt(pAggreg10C.RMS_I[j] / pSamples);
+    for(int j = 0; j < ((pMode == PHASE1) ? 1 : 3); j++) pAggreg10C.RMS_V[j] = sqrt(pAggreg10C.RMS_V[j] / pAggreg10C.Samples);
+    for(int j = 0; j < ((pMode == PHASE1) ? 1 : 3); j++) pAggreg10C.Active_Power[j] = pAggreg10C.Active_Power[j] / pAggreg10C.Samples;
+    for(int j = 0; j < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); j++) pAggreg10C.RMS_I[j] = sqrt(pAggreg10C.RMS_I[j] / pAggreg10C.Samples);
     for(int j = 0; j < ((pMode == PHASE1) ? 1 : 3); j++) pAggreg10C.Apparent_Power[j] = pAggreg10C.RMS_V[j] * pAggreg10C.RMS_I[j];
     //Calculo harmonicos de tension
     for(int j = 0; j < ((pMode == PHASE1) ? 1 : 3); j++) {
@@ -148,9 +140,9 @@ void AnalyzerSoft::Analyze() {
         }
       }
       pAggreg10C.THD_I[j] = sqrt(pAggreg10C.THD_I[j]) / pAggreg10C.CurrentHarmonics[j][0];
-      pAggreg10C.Active_Energy[j] = (pAggreg10C.Active_Power[j] * pSamples) / (pSamplerate * 3600.0);
+      pAggreg10C.Active_Energy[j] = (pAggreg10C.Active_Power[j] * pAggreg10C.Samples) / (pSamplerate * 3600.0);
       pAggreg10C.Power_Factor[j] = pAggreg10C.Active_Power[j] / pAggreg10C.Apparent_Power[j];
-      pAggreg10C.Reactive_Energy[j] = (pAggreg10C.Reactive_Power[j] * pSamples) / (pSamplerate * 3600.0);
+      pAggreg10C.Reactive_Energy[j] = (pAggreg10C.Reactive_Power[j] * pAggreg10C.Samples) / (pSamplerate * 3600.0);
     }
     if(pMode == PHASE3N) {
       pCurrentFFT[3]->Wait();
@@ -208,14 +200,14 @@ void AnalyzerSoft::Analyze() {
     pthread_mutex_lock(&pThreadMutex);
     Tools::LogMsg("DEBUG", "Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", pName, Tools::GetTime() - Start, pSequence);
     pWorking = false;
-    pSamples = 0;
+//    pSamples = 0;
     pCycles = 0;
     for(uint8_t i = 0; i < 20; i++) pCyclesLen[i] = 0;
     pSequence++;
     pthread_mutex_unlock(&pThreadMutex);
   }
 }
-void AnalyzerSoft::GetParams(Params_t **params, ExtParams_t **extParams) {
+void AnalyzerSoft::GetParams(Params_t *params, ExtParams_t *extParams) {
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads++;
   pthread_mutex_unlock(&pWaitingThreadsMutex);
@@ -232,14 +224,28 @@ void AnalyzerSoft::GetParams(Params_t **params, ExtParams_t **extParams) {
   }
   pthread_mutex_unlock(&pDataReadyMutex);
   if(Error == 0) {
-    if(params) *params = &pAggreg10C;
+    memcpy(params, &pAggreg10C, sizeof(Params_t));
+    if(extParams) {
+      memset(extParams, 0, sizeof(ExtParams_t));
+      for(int j = 0; j < ((pMode == PHASE1) ? 1 : 3); j++) {
+        extParams->Voltage[j] = (float*)malloc(sizeof(float) * params->Samples);
+        for(uint32_t i = 0; i < params->Samples; i++) extParams->Voltage[j][i] = pVoltageSamples[j][i];
+        extParams->FFT_V[j] = (float*)malloc(sizeof(float) * pVoltageFFT[j]->OutputLen);
+        for(uint32_t i = 0; i < pVoltageFFT[j]->OutputLen; i++) extParams->FFT_V[j][i] = pVoltageFFT[j]->BinPower(i);
+      }
+      for(int j = 0; j < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); j++) {
+        extParams->Current[j] = (float*)malloc(sizeof(float) * params->Samples);
+        memcpy(extParams->Current[j], pCurrentSamples[j], sizeof(float) * params->Samples);
+        
+        extParams->FFT_I[j] = (float*)malloc(sizeof(float) * pCurrentFFT[j]->OutputLen);
+        for(uint32_t i = 0; i < pCurrentFFT[j]->OutputLen; i++) extParams->FFT_I[j][i] = pCurrentFFT[j]->BinPower(i);
+      }
+    }
   }
-}
-void AnalyzerSoft::ReleaseParams() {
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads--;
   pthread_cond_signal(&pWaitingThreadsCond);
-  pthread_mutex_unlock(&pWaitingThreadsMutex);
+  pthread_mutex_unlock(&pWaitingThreadsMutex);  
 }
 bool AnalyzerSoft::IsFinished() {
   bool Result;

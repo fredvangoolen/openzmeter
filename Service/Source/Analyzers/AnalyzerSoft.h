@@ -17,8 +17,7 @@ class AnalyzerSoft : public AnalyzerInterface {
     uint8_t             pCurrentChannels;         //Canales de corriente
 
 
-    float           pSamplerate;              //Velocidad de muestreo
-    uint32_t        pSamples;                 //Muestras analizadas
+    
     uint64_t        pSequence;                //Numero de bloques analizados
     Params_t        pAggreg10C;               //Agregacion de 10 ciclos
     Params_t        pAggreg3S;                //Agregacion de 3 segundos
@@ -58,7 +57,7 @@ class AnalyzerSoft : public AnalyzerInterface {
     void  Analyze();
   protected :
 //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
-    void GetParams(Params_t **params, ExtParams_t **extParams);
+    void GetParams(Params_t *params, ExtParams_t *extParams);
     void ReleaseParams();
   public :
     AnalyzerSoft(float samplerate, char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerInterface::AnalyzerMode mode);
