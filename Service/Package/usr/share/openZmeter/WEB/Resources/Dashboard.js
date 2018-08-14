@@ -16,18 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* Grafica de tension */
-var VoltageChart        = null;
-var LastVoltageSample   = 0;
-var VoltageData         = [];
-function AjaxGetVoltage() {
-  Ajax.GetSeries(7200000, 0, "3s", LastVoltageSample, 'rms_v, flag', AjaxVoltage, function() { setTimeout(AjaxGetVoltage, 5000); });
-}
-function AjaxVoltage(result) {
-  if(result['Sampletime'] === null) return;
-  if(LastVoltageSample === 0) $('#VoltageSpinner').hide();
+var VoltageChart = null, VoltageData = [], CurrentChart = null, CurrentData = [], PowerChart = null, PowerData = [], PowerChartUnits = '', FrequencyChart = null, FrequencyData = [];
+function PeriodView_OnSuccess(result) {
   VoltageData = GraphDataAppend(result, 'rms_v', VoltageData);
-  LastVoltageSample = LastSampletime(result, LastVoltageSample);
   $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)));
   $('#labelVoltageAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
   if(VoltageChart === null) {
@@ -57,43 +48,7 @@ function AjaxVoltage(result) {
     AddEvents(result, SeriesNames.Voltage()[n], VoltageChart);
   }
   VoltageSeries();
-}
-function VoltageSeries(event) {
-  GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'VisibleDashboardVoltagePhases', false, function(series) { return CalcRanges(VoltageData, series, false); }, (event !== undefined) ? event.target : undefined); 
-}
-$('#groupVoltagePhases').on('click', 'button', VoltageSeries);
-$('#btnExportVoltage').click(function() {
-  exportToCsv("Voltage_" + Node + '_' + LastVoltageSample + '.csv', [['Time'].concat(VoltageNames)].concat(VoltageData));
-});
-
-$('#btnMaximizeVoltage').click(function() {
-  $('#GraphDialogTitle').text('Voltage');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#VoltageCol');
-  DialogElement = $('#VoltageMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(VoltageChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    VoltageChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-
-/* Grafica de corriente */
-var CurrentChart        = null;
-var LastCurrentSample   = 0;
-var CurrentData         = [];
-function AjaxGetCurrent() {
-  Ajax.GetSeries(7200000, 0, "3s", LastCurrentSample, 'rms_i', AjaxCurrent, function() { setTimeout(AjaxGetCurrent, 5000); });
-}
-function AjaxCurrent(result) {
-  if(result['Sampletime'] === null) return;
-  if(LastCurrentSample === 0) $('#CurrentSpinner').hide();
   CurrentData = GraphDataAppend(result, 'rms_i', CurrentData);
-  LastCurrentSample = LastSampletime(result, LastCurrentSample);
   $('#labelCurrent').html(Array_Round2(result['rms_i'][result['rms_i'].length - 1], '&nbsp;', ColorArray($('#CurrentPanel').css('border-color'), 4)));
   $('#CurrentAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
   if(CurrentChart == null) {
@@ -120,44 +75,7 @@ function AjaxCurrent(result) {
     CurrentChart.updateOptions({'file': CurrentData, dateWindow: [result['From'], result['To']]});
   }
   CurrentSeries();
-}
-function CurrentSeries(event) {
-  GraphPhaseButtons(CurrentChart, $('#groupCurrentPhases'), 'VisibleDashboardCurrentPhases', false, function(series) { return CalcRanges(CurrentData, series, false); }, (event !== undefined) ? event.target : undefined); 
-}
-$('#groupCurrentPhases').on('click', 'button', CurrentSeries);
-$('#btnExportCurrent').click(function() {
-  exportToCsv("Current_" + Node + '_' + LastCurrentSample + '.csv', [['Time'].concat(CurrentNames)].concat(CurrentData));
-});
-
-$('#btnMaximizeCurrent').click(function() {
-  $('#GraphDialogTitle').text('Current');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#CurrentCol');
-  DialogElement = $('#CurrentMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(CurrentChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    CurrentChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-
-/* Grafica de potencia */
-var PowerChart          = null;
-var LastPowerSample     = 0;
-var PowerData           = [];
-var PowerChartUnits     = '';
-function AjaxGetPower() {
-  Ajax.GetSeries(7200000, 0, "3s", LastPowerSample, 'active_power', AjaxPower, function() { setTimeout(AjaxGetPower, 5000); });
-}
-function AjaxPower(result) {
-  if((result === null) || (result['Sampletime'] === null)) return;
-  if(LastPowerSample === 0) $('#PowerSpinner').hide();
   PowerData = GraphDataAppend(result, 'active_power', PowerData);
-  LastPowerSample = LastSampletime(result, LastPowerSample);
   PowerChartUnits = GetBestUnits(ArrayGraphMax(PowerData));
   $('#labelPowerUnits').text(PowerChartUnits + 'W');
   $('#labelPower').html(Array_Round2(ScaleArrayToUnits(result['active_power'][result['active_power'].length - 1], PowerChartUnits), '&nbsp;&nbsp;', ColorArray($('#PowerPanel').css('border-color'), 3)));
@@ -183,7 +101,78 @@ function AjaxPower(result) {
     PowerChart.updateOptions({file: PowerData, dateWindow: [result['From'], result['To']]});
   }
   PowerSeries();
+  FrequencyData = GraphDataAppend(result, 'freq', FrequencyData);
+  $('#labelFrequency').html(Round2(result['freq'][result['freq'].length - 1]));
+  $('#FrequencyAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
+  if(FrequencyChart == null) {
+    FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"), FrequencyData,
+      { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
+        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ["Time", "Frequency"], colors: [$('#FrequencyPanel').css('border-color')], valueRange: CalcRanges(FrequencyData, [1]), dateWindow: [result['From'], result['To']],
+        axes: {
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34, 
+               valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">Hz</em>'; },
+               axisLabelFormatter: function (x) { return Round2(x); }
+             },
+          x: { valueFormatter: function (x) { return new Date(x).toLocaleTimeString(); },
+               axisLabelFormatter: function (x) { return x.toLocaleTimeString(); }
+             }
+        }
+      }
+    );
+    Dygraph.synchronize([VoltageChart, CurrentChart, PowerChart, FrequencyChart], { range: false, zoom: false } );
+  } else {
+    FrequencyChart.updateOptions({'file': FrequencyData, valueRange: CalcRanges(FrequencyData, [1]), dateWindow: [result['From'], result['To']]});
+  }
 }
+function VoltageSeries(event) {
+  GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'VisibleDashboardVoltagePhases', false, function(series) { return CalcRanges(VoltageData, series, false); }, (event !== undefined) ? event.target : undefined); 
+}
+$('#groupVoltagePhases').on('click', 'button', VoltageSeries);
+$('#btnExportVoltage').click(function() {
+  exportToCsv("Voltage_" + Node + '_' + LastVoltageSample + '.csv', [['Time'].concat(VoltageNames)].concat(VoltageData));
+});
+
+$('#btnMaximizeVoltage').click(function() {
+  $('#GraphDialogTitle').text('Voltage');
+  $('#GraphDialog').modal('show');
+  PrevDialogContainer = $('#VoltageCol');
+  DialogElement = $('#VoltageMaximizeDiv').detach();
+  DialogPrevResizeHandler = function() {
+    $(VoltageChart.graphDiv).parent().removeAttr('style');
+  };
+  DialogResizeHandler = function() {
+    VoltageChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
+  };
+  $('#GraphDialogBody').append(DialogElement);
+  $(window).bind('resize', DialogResizeHandler);
+  window.dispatchEvent(new Event('resize'));  
+});
+
+function CurrentSeries(event) {
+  GraphPhaseButtons(CurrentChart, $('#groupCurrentPhases'), 'VisibleDashboardCurrentPhases', false, function(series) { return CalcRanges(CurrentData, series, false); }, (event !== undefined) ? event.target : undefined); 
+}
+$('#groupCurrentPhases').on('click', 'button', CurrentSeries);
+$('#btnExportCurrent').click(function() {
+  exportToCsv("Current_" + Node + '_' + LastCurrentSample + '.csv', [['Time'].concat(CurrentNames)].concat(CurrentData));
+});
+
+$('#btnMaximizeCurrent').click(function() {
+  $('#GraphDialogTitle').text('Current');
+  $('#GraphDialog').modal('show');
+  PrevDialogContainer = $('#CurrentCol');
+  DialogElement = $('#CurrentMaximizeDiv').detach();
+  DialogPrevResizeHandler = function() {
+    $(CurrentChart.graphDiv).parent().removeAttr('style');
+  };
+  DialogResizeHandler = function() {
+    CurrentChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
+  };
+  $('#GraphDialogBody').append(DialogElement);
+  $(window).bind('resize', DialogResizeHandler);
+  window.dispatchEvent(new Event('resize'));  
+});
+
 function PowerSeries(event) {
   GraphPhaseButtons(PowerChart, $('#groupPowerPhases'), 'VisibleDashboardPowerPhases', false, function(series) { return CalcRanges(PowerData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
   var Annotations = [];
@@ -213,41 +202,6 @@ $('#btnMaximizePower').click(function() {
   window.dispatchEvent(new Event('resize'));  
 });
 
-/* Grafica de frequencia */
-var FrequencyChart      = null;
-var LastFrequencySample = 0;
-var FrequencyData       = [];
-function AjaxGetFrequency() {
-  Ajax.GetSeries(7200000, 0, "3s", LastFrequencySample, 'freq', AjaxFrequency, function() { setTimeout(AjaxGetFrequency, 5000); });
-}
-function AjaxFrequency(result) {
-  if((result === null) || (result['Sampletime'] === null)) return;
-  if(LastFrequencySample === 0) $('#FrequencySpinner').hide();
-  FrequencyData = GraphDataAppend(result, 'freq', FrequencyData);
-  LastFrequencySample = LastSampletime(result, LastFrequencySample);
-  $('#labelFrequency').html(Round2(result['freq'][result['freq'].length - 1]));
-  $('#FrequencyAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
-  if(FrequencyChart == null) {
-    FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"), FrequencyData,
-      { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
-        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ["Time", "Frequency"], colors: [$('#FrequencyPanel').css('border-color')], valueRange: CalcRanges(FrequencyData, [1]), dateWindow: [result['From'], result['To']],
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">Hz</em>'; },
-               axisLabelFormatter: function (x) { return Round2(x); }
-             },
-          x: { valueFormatter: function (x) { return new Date(x).toLocaleTimeString(); },
-               axisLabelFormatter: function (x) { return x.toLocaleTimeString(); }
-             }
-        }
-      }
-    );
-  } else {
-    FrequencyChart.updateOptions({'file': FrequencyData, valueRange: CalcRanges(FrequencyData, [1]), dateWindow: [result['From'], result['To']]});
-  }
-  if((VoltageChart != null) && (CurrentChart != null) && (PowerChart != null) && (FrequencyChart != null)) Dygraph.synchronize([VoltageChart, CurrentChart, PowerChart, FrequencyChart], { range: false, zoom: false } );
-}
 $('#btnExportFrequency').click(function() {
   exportToCsv("Frequency_" + Node + '_' + LastFrequencySample + '.csv', ([['DateTime', 'Frequency']]).concat(FrequencyData));
 });
@@ -269,8 +223,7 @@ $('#btnMaximizeFrequency').click(function() {
 });
 
 /* Grafico de energia */
-var EnergyData       = [];
-var EnergyChart      = null;
+var EnergyData = [], EnergyChart = null;
 function Scrollable_OnSuccess(result, clear) {
   if(clear) EnergyData = [Array(SeriesNames.ActiveEnergy().length + 1).fill(0)];
   EnergyData = GraphDataAppend(result, 'active_energy', EnergyData);
@@ -396,32 +349,14 @@ function EnergyUpdateCountersBudget(result) {
 }
 
 /* Parameters */
-var ReactiveChart       = null;
-var ReactiveData        = [];
-var PowerFactorChart    = null;
-var PowerFactorData     = [];
-var PhiChart            = null;
-var PhiData             = [];
-var THDVChart           = null;
-var THDVData            = [];
-var THDIChart           = null;
-var THDIData            = [];
-var LastEvolutionSample = 0;
-function AjaxGetMainParameters() {
-  Ajax.GetSeries(86400000, 0, "1m", LastEvolutionSample, 'reactive_power, power_factor, phi, thd_v, thd_i', AjaxMainParameters, function() { setTimeout(AjaxGetMainParameters, 60000); });
-}
-function AjaxMainParameters(result) {
-  if((result === null) || (result['Sampletime'] === null)) return;
-  if(LastEvolutionSample === 0) {
-    $('#MainParametersSpinner').hide();
-    $('#labelParametersAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
-  }
+var ReactiveChart = null, ReactiveData = [], PowerFactorChart = null, PowerFactorData = [], PhiChart = null, PhiData = [], THDVChart = null, THDVData = [], THDIChart = null, THDIData = [];
+function PeriodViewParams_OnSuccess(result) {
+  $('#labelParametersAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
   ReactiveData = GraphDataAppend(result, 'reactive_power', ReactiveData);
   PowerFactorData = GraphDataAppend(result, 'power_factor', PowerFactorData);
   PhiData  = GraphDataAppend(result, 'phi', PhiData);
   THDVData = GraphDataAppend(result, 'thd_v', THDVData);
   THDIData = GraphDataAppend(result, 'thd_i', THDIData);
-  LastEvolutionSample = LastSampletime(result, LastEvolutionSample);
   if(ReactiveChart === null) {
     ReactiveChart    = AppendCubismGraph($('#EvolutionPanel'), ReactiveData,    "Reactive Power", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'VAr</em></div>'; });
     PowerFactorChart = AppendCubismGraph($('#EvolutionPanel'), PowerFactorData, "Power Factor",   [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '</div>'; });
@@ -463,9 +398,6 @@ var MainScrollable = null;
 function UpdatePage() {
   MainScrollable = new Scrollable( {Spinners: ['#EnergySpinner'], Series: 'active_energy', OnSuccess: Scrollable_OnSuccess} );
   Scrollable_UpdateCounters(true);
-  AjaxGetVoltage();
-  AjaxGetCurrent();
-  AjaxGetPower();
-  AjaxGetFrequency();
-  AjaxGetMainParameters();
-}//1267
+  new PeriodView( {Spinners: ['#VoltageSpinner', '#CurrentSpinner', '#PowerSpinner', '#FrequencySpinner'], Series: 'rms_v, flag, rms_i, active_power, freq', Period: 7200000, Aggreg: '3s', OnSuccess: PeriodView_OnSuccess} );
+  new PeriodView( {Spinners: ['#MainParametersSpinner'], Series: 'reactive_power, power_factor, phi, thd_v, thd_i', Period: 86400000, Aggreg: '1m', OnSuccess: PeriodViewParams_OnSuccess} );
+}

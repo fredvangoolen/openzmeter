@@ -124,7 +124,7 @@
                     <div id="HarmonicsChart" class="chart big_chart"></div>
                   </div>
                 </div>
-                <div class="hidden" id="EvolutionPanel">
+                <div id="EvolutionPanel">
                   <div style="position: relative"><div id="HarmonicsEvolutionChart_0" class="chart" style="height: 50px; margin-top: 16px; border-top: 1px solid #999"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_0"></div></div>
                   <div style="position: relative"><div id="HarmonicsEvolutionChart_1" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_1"></div></div>
                   <div style="position: relative"><div id="HarmonicsEvolutionChart_2" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_2"></div></div>
@@ -181,23 +181,23 @@
                     <div id="FFTChart" class="chart big_chart"></div>
                   </div>
                 </div>
-
-                <div class="hidden" id="PhasorPanel">
-                  <div style="padding:5px; float: left; width: 440px">
-                    <div style="display:inline-block" id="PhasorTime">Loading data...</div>
-                    <div id="PhasorChart" class="chart big_chart" style="width: 404px; height: 394px"></div>
-                  </div>
-                  <div style="display: flow-root; vertical-align: top; min-width: 300px">
-                    <h4>Voltage and current phase angle</h4>
-                    <table id="PhasorsTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
-                      <thead>
-                        <tr>
-                          <th>Phase</th><th>Channel</th><th>Angle</th><th>Value</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                      </tbody>
-                    </table>
+                <div id="PhasorPanel">
+                  <div class="row">
+                    <div class="col-md-4 col-lg-3 col-xl-2">
+                      <div id="PhasorChart" class="chart big_chart"></div>
+                    </div>
+                    <div class="col-md-8 col-lg-9 col-xl-10">
+                      <h4>Voltage and current phase angle</h4>
+                      <table id="PhasorsTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
+                        <thead>
+                          <tr>
+                            <th>Phase</th><th>Channel</th><th>Angle</th><th>Value</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
                 <div class="hidden" id="ParametersPanel">

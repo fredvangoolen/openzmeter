@@ -261,6 +261,32 @@ function Live(opt) {
   };
   Self.GetSeries();
 }
+/* Update periodically a fixed period graph(s) */
+function PeriodView(opt) {
+  this.LastSample = 0;
+  this.Timer = null;
+  this.Opt = Object.assign({Spinners: [], Series: '', Period: 86400000, Aggreg: '1m'}, opt);
+  var Self = this;
+  Self.GetSeries = function() {
+    Ajax.GetSeries(Self.Opt.Period, 0, Self.Opt.Aggreg, Self.LastSample, Self.Opt.Series, 
+      function(result) {
+        if(result['Sampletime'] === null) return;
+        if(result['Sampletime'].length === 0) return;
+        for(i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
+        Self.Opt.OnSuccess(result);
+        Self.LastSample = LastSampletime(result, Self.LastSample);
+      },
+      function() {
+        if(Self.Opt.Aggreg === '3s') {
+          Self.Timer = setTimeout(Self.GetSeries, 3000);
+        } else {
+          Self.Timer = setTimeout(Self.GetSeries, 60000);
+        }
+      }
+    );
+  };
+  Self.GetSeries();
+}
 
 /* Tab selector */
 function TabSelector(variable, tab, divs, changeTabEvt) {

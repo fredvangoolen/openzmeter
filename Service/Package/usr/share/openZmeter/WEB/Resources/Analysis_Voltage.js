@@ -161,8 +161,9 @@ function Live_OnSuccess(result) {
     for(n = 0; n < result['harmonics_i'].length; n++) Row.push(result['fft_i'][n][i]);
     FFTDataset.push(Row);
   }
-  UpdateFFTChart(result);
+  UpdateFFTChart();
   UpdatePhasorChart(result);
+  return;
   $('#PowerFactorNow').html(Array_Round2(result['power_factor'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
   for(i = 0; i < result['thd_v'].length; i++) result['thd_v'][i] = result['thd_v'][i] * 100;
   $('#THDNow').html(Array_Round2(result['thd_v'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
@@ -210,6 +211,10 @@ function DetailTabChange(index) {
     if(index === 3) $(FFTChart.graphDiv).parent().removeAttr('style');
     UpdateFFTChart();
   }
+  if(PhasorChart !== null) {
+    if(index === 4) PhasorResizeEvent();
+  }
+  
 //  switch(localStorage.getItem('VoltageDetailView')) {
 //    case 'Phasors' :
 //      if(PhasorChart !== null) $(PhasorChart.graphDiv).parent().attr('style', 'width: 404px; height: 394px');
@@ -225,6 +230,13 @@ function DetailTabChange(index) {
 //      break;
 //  }
 }
+$(window).bind('resize', PhasorResizeEvent);
+function PhasorResizeEvent() {
+  var Width = $('#PhasorChart').parent().width();
+  if(PhasorChart !== null) PhasorChart.resize(Width, Width);
+}
+
+
 function DetailsButtonUpdate(event) {
   GroupButtons($('#groupDetailPhasesMulti'), 'VisibleVoltageDetailPhases', Math.max(SeriesNames.Current().length, SeriesNames.Voltage().length), false, undefined, undefined);
   if(localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') {
@@ -467,8 +479,6 @@ function UpdateFFTChart(result) {
 var PhasorChart = null;
 var PhasorTable = null;
 function UpdatePhasorChart(result) {
-  var date = new Date(result['Sampletime']);
-  $('#PhasorTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
   var Vectors = [];
   var MaxCurrent = 0;
   var MaxVoltage = 0;
@@ -483,25 +493,10 @@ function UpdatePhasorChart(result) {
     Vectors[i + 1][2] = Vectors[i + 1][2] / MaxCurrent;
   }
   var Options = { 
-    strokeWidth: 0.5,
-    labels: ['Index', 'Phase', 'Magnitude'],
-    colors: ['#d9534f', '#428bca'],
-    gridLineColor: "#999",
-    gridLinePattern: [4, 4],
-    highlightCircleSize: 0,
-    interactionModel: { },
-    legend: 'never',
-    valueRange: [-115, 115],
-    dateWindow: [-115, 115],
-    plugins: [ new Dygraph.Plugins.PolarCrosshair( { } ) ],
-    plotter: polarLinePlotter,
-    xAxisHeight: 0.1,
-    xLabelHeight: 0.1,
+    strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], highlightCircleSize: 0,  interactionModel: { }, legend: 'never', valueRange: [-115, 115], dateWindow: [-115, 115], plotter: polarLinePlotter,
+    labels: ['Index', 'Phase', 'Magnitude'], colors: ['#d9534f', '#428bca'], xAxisHeight: 0.1, xLabelHeight: 0.1, plugins: [ new Dygraph.Plugins.PolarCrosshair( { } ) ],
     axes: {
-      y: { drawAxis: true,
-           drawGrid:false,
-           axisLabelWidth: 0,
-           axisLineColor: "#FFF",
+      y: { drawAxis: true, drawGrid: false, axisLabelWidth: 0.0, axisLineColor: "#FFF",
            ticker: function(min, max, pixels, opts, dygraph, vals) {
              var ticks = [];
              var Width = document.getElementById("PhasorChart").clientWidth / 2 - 1;
@@ -511,10 +506,7 @@ function UpdatePhasorChart(result) {
              return ticks;
            },            
          },
-      x: { drawAxis: true,
-           drawGrid:false,
-           axisLabelWidth: 0,
-           axisLineColor: "#FFF",
+      x: { drawAxis: true, drawGrid: false, axisLabelWidth: 0, axisLineColor: "#FFF",
            ticker: function(min, max, pixels, opts, dygraph, vals) {
              var ticks = [];
              var Height = document.getElementById("PhasorChart").clientHeight / 2 + 2;
@@ -540,7 +532,7 @@ function UpdatePhasorChart(result) {
   PhasorTable.clear();
   for(i = 0; i < result['rms_v'].length; i++) {
     var PhaseName = "L";
-    if(Analyzers[Analyzer]['Mode'] === '3Phase') {
+    if(result['rms_v'].length > 1) {
       if(i === 0) PhaseName = "R";
       if(i === 1) PhaseName = "S";
       if(i === 2) PhaseName = "T";
@@ -548,6 +540,7 @@ function UpdatePhasorChart(result) {
     PhasorTable.row.add( [PhaseName, "Voltage", Round2(i * 120) + 'º', Round2(result['rms_v'][i]) + '<em> V</em>'] ).draw(false);
     PhasorTable.row.add( [PhaseName, "Current", Round2(i * 120 + -result['phi'][i]) + 'º', Round2(result['rms_i'][i]) + '<em> A</em>'] ).draw();
   }
+  PhasorResizeEvent();
 }
 
 /* Evolucion de parametros*/
