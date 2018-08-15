@@ -225,7 +225,7 @@ $('#btnMaximizeFrequency').click(function() {
 /* Grafico de energia */
 var EnergyData = [], EnergyChart = null;
 function Scrollable_OnSuccess(result, clear) {
-  if(clear) EnergyData = [Array(SeriesNames.ActiveEnergy().length + 1).fill(0)];
+  if(clear) EnergyData = [new Array(SeriesNames.ActiveEnergy().length + 1).fill(0)];
   EnergyData = GraphDataAppend(result, 'active_energy', EnergyData);
   if(EnergyChart == null) {
     EnergyChart = new Dygraph(document.getElementById("EnergyChart"), EnergyData,
@@ -331,7 +331,7 @@ function EnergyUpdateCountersBudget(result) {
   var date = new Date(result['budget_lastcalc'] * 1000);
   $('#budget_lastcalc').text(date.toLocaleDateString() + ' - ' + date.toLocaleTimeString());
   
-  Round2Labels(result['current_budget'], $('#budget_integer'), $('#budget_decimal'));
+  Round2Labels(result['current_budget'], $('#budget_integer'), $('#budget_decimal'));Ar
   if(Math.abs(result['current_energy']) < 1000.0) {
     Round2Labels(result['current_energy'], $('#energy_integer'), $('#energy_decimal'));
     $('#EnergyUnits').text('Wh');
@@ -358,11 +358,11 @@ function PeriodViewParams_OnSuccess(result) {
   THDVData = GraphDataAppend(result, 'thd_v', THDVData);
   THDIData = GraphDataAppend(result, 'thd_i', THDIData);
   if(ReactiveChart === null) {
-    ReactiveChart    = AppendCubismGraph($('#EvolutionPanel'), ReactiveData,    "Reactive Power", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'VAr</em></div>'; });
-    PowerFactorChart = AppendCubismGraph($('#EvolutionPanel'), PowerFactorData, "Power Factor",   [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '</div>'; });
-    PhiChart         = AppendCubismGraph($('#EvolutionPanel'), PhiData,         "Phi",            [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em></div>'; });
-    THDVChart        = AppendCubismGraph($('#EvolutionPanel'), THDVData,        "Voltage THD",    [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '<em>%</em></div>'; });
-    THDIChart        = AppendCubismGraph($('#EvolutionPanel'), THDIData,        "Current THD",    [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + Round2(x) + '<em>%</em></div>'; });
+    ReactiveChart    = AppendCubismGraph($('#EvolutionPanel'), ReactiveData,    "Reactive Power", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'VAr</em>'; });
+    PowerFactorChart = AppendCubismGraph($('#EvolutionPanel'), PowerFactorData, "Power Factor",   [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(x); });
+    PhiChart         = AppendCubismGraph($('#EvolutionPanel'), PhiData,         "Phi",            [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'; });
+    THDVChart        = AppendCubismGraph($('#EvolutionPanel'), THDVData,        "Voltage THD",    [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(x) + '<em>%</em>'; });
+    THDIChart        = AppendCubismGraph($('#EvolutionPanel'), THDIData,        "Current THD",    [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(x) + '<em>%</em>'; });
     Dygraph.synchronize([ReactiveChart, PowerFactorChart, PhiChart, THDVChart, THDIChart], { range: false, zoom: false });
   } else {
     ReactiveChart.updateOptions({ file: ReactiveData, dateWindow: [result['From'], result['To']] });

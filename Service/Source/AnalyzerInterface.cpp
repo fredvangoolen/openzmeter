@@ -97,7 +97,7 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
   if(Power_Factor) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params.Power_Factor[i]));
-    json_object_object_add(Result, "apparent_power", Obj);
+    json_object_object_add(Result, "power_factor", Obj);
   }
   if(Active_Energy) {
     json_object *Obj = json_object_new_array();

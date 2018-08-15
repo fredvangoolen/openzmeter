@@ -211,6 +211,9 @@ body {
 .indicator-bar > div > div > div > span {
   display: block;
 }
+.panel-noborder {
+  border: none !important;
+}
 .panel-other {
   border: 1px solid #474544;
 }

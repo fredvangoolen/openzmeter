@@ -553,7 +553,9 @@ function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter 
         }
       },
       axes: {
-        y: { drawAxis: false, drawGrid:false, valueFormatter: yvalueformatter },
+        y: { drawAxis: false, drawGrid:false, 
+             valueFormatter: function(val) { return '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + yvalueformatter(val) + '</div>'}
+           },
         x: { valueFormatter: function (x) { return '<div style="font-size: 10px; line-height: 10px">' + new Date(x).toLocaleTimeString() + '</div>'; },
              axisLabelFormatter: (Index !== 0) ? function() { return null; } : 
              function(x, i) {
