@@ -183,6 +183,9 @@ body {
   .indicator-bar {
     font-size: 18x;
   }
+  .panel-voltage .subpanel {
+    text-align: center;
+  }
 }
 .indicator-bar > div {
   border-radius: 4px;

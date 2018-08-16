@@ -199,7 +199,18 @@ function DetailTabChange(index) {
   if(PhasorChart !== null) {
     if(index === 4) PhasorResizeEvent();
   }
-
+  if(HarmonicsCharts.length !== 0) {
+    if(index === 2) {
+      for(i = 0; i < 50; i++) $(HarmonicsCharts[i].graphDiv).parent().removeAttr('style');
+    }
+  }
+  if(HarmonicsCharts !== null) {
+    if(index === 5) {
+      $(PowerFactorChart.graphDiv).parent().removeAttr('style');
+      $(THDChart.graphDiv).parent().removeAttr('style');
+      $(PHIChart.graphDiv).parent().removeAttr('style');
+    }
+  }
 //  switch(localStorage.getItem('VoltageDetailView')) {
 //    case 'Parameters' :
 //      if(PowerFactorChart !== null) UpdatePowerFactorChart(null);
@@ -547,14 +558,14 @@ function PeriodView_OnSuccess(result) {
     Dygraph.synchronize(HarmonicsCharts, { range: false, zoom: false });
     PowerFactorChart = AppendCubismGraph($('#PowerFactorChart'), PowerFactorDataset, "Power Factor", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(x); });
     THDChart         = AppendCubismGraph($('#THDChart'), THDDataset, "Voltage THD", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(x) + '<em>%</em>'; });
-    PhiChart         = AppendCubismGraph($('#PHIChart'), PHIDataset, "Phi", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'; });
+    PHIChart         = AppendCubismGraph($('#PHIChart'), PHIDataset, "Phi", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'; });
   } else {
     for(i = 0; i < 50; i++) {
       HarmonicsCharts[i].updateOptions({ file: ReactiveData, dateWindow: [result['From'], result['To']] });
     }
     PowerFactorChart.updateOptions({ file: PowerFactorDataset, dateWindow: [result['From'], result['To']] });
     THDChart.updateOptions({ file: THDDataset, dateWindow: [result['From'], result['To']] });
-    PhiChart.updateOptions({ file: PHIDataset, dateWindow: [result['From'], result['To']] });
+    PHIChart.updateOptions({ file: PHIDataset, dateWindow: [result['From'], result['To']] });
   }
   ParametersSeries();
 }
