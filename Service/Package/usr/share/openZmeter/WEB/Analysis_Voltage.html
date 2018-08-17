@@ -16,9 +16,9 @@
     <link rel="stylesheet" href="lib/offline.min.css" type="text/css"/>
     <link rel="stylesheet" href="lib/jquery.scrolling-tabs.min.css" type="text/css"/>
     <link rel="stylesheet" href="openZmeter.css"/>
-    <title>openZmeter - Analysys - Frequency</title>
+    <title>openZmeter - Analysys - Voltage</title>
   </head>
-  <body>
+  <body onload="StartPageLoad()">
     <span data-load-block="Header_Block"></span>
     <span data-load-block="AggregWarningDialog"></span>
     <div class="modal" id="GraphDialog" tabindex="1" role="dialog" data-backdrop='static'>
@@ -26,7 +26,7 @@
         <div class="modal-content" style="height: 100%" id="GraphDialogContents">
           <div class="modal-header">
             <div class="pull-left">
-            <h3 class="modal-title" id="GraphDialogTitle"></h3>
+              <h3 class="modal-title" id="GraphDialogTitle"></h3>
             </div>
             <div class="pull-right">
               <button type="button" class="btn btn-default btn-sm" id="GraphDialogClose">
@@ -59,17 +59,17 @@
                 <div class="col-md-6 col-lg-4 col-xl-3">
                   <div class="subpanel" id="VoltageAvgPanel">
                     <div class="huge-small" id="labelVoltageAvgPrimary">Loading data...</div>
-                    <div id="labelVoltageAvgPrimaryValue" class="huge-small">?</div>
+                    <div class="huge-small" id="labelVoltageAvgPrimaryValue">?</div>
                     <div><span id="labelVoltageAvgSecondary">Loading data...</span>&nbsp;<span id="labelVoltageAvgSecondaryValue"></span></div>
                   </div>
                   <div class="subpanel" id="VoltageMaxPanel">
                     <div class="huge-small" id="labelVoltageMaxPrimary">Loading data...</div>
-                    <div id="labelVoltageMaxPrimaryValue" class="huge-small">?</div>
+                    <div class="huge-small" id="labelVoltageMaxPrimaryValue">?</div>
                     <div><span id="labelVoltageMaxSecondary">Loading data...</span>&nbsp;<span id="labelVoltageMaxSecondaryValue"></span></div>
                   </div>
                   <div class="subpanel" id="VoltageMinPanel">
                     <div class="huge-small" id="labelVoltageMinPrimary">Loading data...</div>
-                    <div id="labelVoltageMinPrimaryValue" class="huge-small">?</div>
+                    <div class="huge-small" id="labelVoltageMinPrimaryValue">?</div>
                     <div><span id="labelVoltageMinSecondary">Loading data...</span>&nbsp;<span id="labelVoltageMinSecondaryValue"></span></div> 
                   </div>
                 </div>
@@ -95,118 +95,117 @@
             <li><a data-toggle="tab" href="#">Events</a></li>
           </ul>
           <div class="panel panel-other">
-              <div id="DetailSpinner" class="spinnerdiv"></div>
-              <div class="panel-heading">
-                <div class="header-text" id="DetailTime"></div>
-                <div class="header-buttons">
-                   <div class="btn-group" id="groupDetailPhasesMulti" data-load-block="PhaseI_Block"></div>
-                   <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetail1Harmonic" data-toggle="tooltip" title="Show/hide 1st harmonic">1st harmonic</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailVoltageAndCurrent" data-toggle="tooltip" title="Show/hide current">Current</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailLog" data-toggle="tooltip" title="Use logarithm scale">Log</button>
-                  </div>               
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs" id="btnMaximizeDetail" data-toggle="tooltip" title="Maximize current view"><i class="fa fa-expand"></i></button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnExportDetail"   data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnPauseDetail"    data-toggle="tooltip" title="Stop fetching new data"><span class="glyphicon glyphicon-pause"></span></button>
-                  </div>                
-                </div>
-                <span class="clearfix"> </span>
+            <div id="DetailSpinner" class="spinnerdiv"></div>
+            <div class="panel-heading">
+              <div class="header-text" id="DetailTime"></div>
+              <div class="header-buttons">
+                <div class="btn-group" id="groupDetailPhasesMulti" data-load-block="PhaseI_Block"></div>
+                <div class="btn-group">
+                  <button type="button" class="btn btn-default btn-xs" id="btnShowDetail1Harmonic" data-toggle="tooltip" title="Show/hide 1st harmonic">1st harmonic</button>
+                  <button type="button" class="btn btn-default btn-xs" id="btnShowDetailVoltageAndCurrent" data-toggle="tooltip" title="Show/hide current">Current</button>
+                  <button type="button" class="btn btn-default btn-xs" id="btnShowDetailLog" data-toggle="tooltip" title="Use logarithm scale">Log</button>
+                </div>               
+                <div class="btn-group">
+                  <button type="button" class="btn btn-default btn-xs" id="btnMaximizeDetail" data-toggle="tooltip" title="Maximize current view"><i class="fa fa-expand"></i></button>
+                  <button type="button" class="btn btn-default btn-xs" id="btnExportDetail"   data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
+                  <button type="button" class="btn btn-default btn-xs" id="btnPauseDetail"    data-toggle="tooltip" title="Stop fetching new data"><span class="glyphicon glyphicon-pause"></span></button>
+                </div>                
               </div>
-              <div class="panel-body" id="DetailDivs">
-                <div id="WaveformPanel">
-                  <div id="WaveformMaximize">
-                    <div id="WaveformChart" class="chart big_chart"></div>
-                  </div>
+              <span class="clearfix"> </span>
+            </div>
+            <div class="panel-body" id="DetailDivs">
+              <div id="WaveformPanel">
+                <div id="WaveformMaximize">
+                  <div id="WaveformChart" class="chart big_chart"></div>
                 </div>
-                <div id="HarmonicsPanel">
-                  <div id="HarmonicsMaximize">              
-                    <div id="HarmonicsChart" class="chart big_chart"></div>
-                  </div>
+              </div>
+              <div id="HarmonicsPanel">
+                <div id="HarmonicsMaximize">              
+                  <div id="HarmonicsChart" class="chart big_chart"></div>
                 </div>
-                <div id="EvolutionPanel">
+              </div>
+              <div id="EvolutionPanel">
+              </div>
+              <div id="FFTPanel">
+                <div id="FFTMaximize">
+                  <div id="FFTChart" class="chart big_chart"></div>
                 </div>
-                <div id="FFTPanel">
-                  <div id="FFTMaximize">
-                    <div id="FFTChart" class="chart big_chart"></div>
+              </div>
+              <div id="PhasorPanel">
+                <div class="row">
+                  <div class="col-md-4 col-lg-3 col-xl-2">
+                    <div id="PhasorChart" class="chart big_chart"></div>
                   </div>
-                </div>
-                <div id="PhasorPanel">
-                  <div class="row">
-                    <div class="col-md-4 col-lg-3 col-xl-2">
-                      <div id="PhasorChart" class="chart big_chart"></div>
-                    </div>
-                    <div class="col-md-8 col-lg-9 col-xl-10">
-                      <h4>Voltage and current phase angle</h4>
-                      <table id="PhasorsTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
-                        <thead>
-                          <tr>
-                            <th>Phase</th><th>Channel</th><th>Angle</th><th>Value</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-                <div id="ParametersPanel">
-                  <div class="row">
-                    <div class="col-lg-3 panel-voltage panel-noborder">
-                      <div class="subpanel" style="padding-bottom: 5px">
-                        <div class="huge-small">Power Factor</div>
-                        <div class="huge-small" id="PowerFactorNow">?</div>
-                      </div>
-                    </div>
-                    <div class="col-lg-9">
-                      <div id="PowerFactorChart"></div>       
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-lg-3 panel-voltage panel-noborder">
-                      <div class="subpanel" style="padding-bottom: 5px">
-                        <div class="huge-small">THDv (%)</div>
-                        <div class="huge-small" id="THDNow"></div>
-                      </div>
-                    </div>
-                    <div class="col-lg-9">
-                      <div id="THDChart"></div>       
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-lg-3 panel-voltage panel-noborder">
-                      <div class="subpanel" style="padding-bottom: 5px">
-                        <div class="huge-small">PHI (º)</div>
-                        <div class="huge-small" id="PHINow">?</div>
-                      </div>
-                    </div>
-                    <div class="col-lg-9">
-                      <div id="PHIChart"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="hidden" id="EventsPanel">
-                  <div class="col col-lg-12">
-                    <table id="EventsTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
+                  <div class="col-md-8 col-lg-9 col-xl-10">
+                    <h4>Voltage and current phase angle</h4>
+                    <table id="PhasorsTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
                       <thead>
                         <tr>
-                          <th style="width: 130px">Date</th><th>Type</th><th>Duration <em>(s)</em></th><th>ΔU <em>(V)</em></th><th>ΔU <em>(%)</em></th><th style="width: 60px"></th>
+                          <th>Phase</th><th>Channel</th><th>Angle</th><th>Value</th>
                         </tr>
                       </thead>
                       <tbody>
                       </tbody>
                     </table>
                   </div>
-                  <div class="col col-lg-12">
-                    <div id="EventSpinner" class="spinnerdiv"></div>
-                    <div id="EventWaveformPanel">
-                      <div id="EventWaveformMaximize">
-                        <div style="padding:5px">
-                          <div style="display:inline-block">&nbsp;</div>
-                          <div id="EventChartLegend" style="float: right"></div>
-                        </div>
-                        <div id="EventChart" class="chart big_chart"></div>
+                </div>
+              </div>
+              <div id="ParametersPanel">
+                <div class="row">
+                  <div class="col-lg-3 panel-voltage panel-noborder">
+                    <div class="subpanel" style="padding-bottom: 5px">
+                      <div class="huge-small">Power Factor</div>
+                      <div class="huge-small" id="PowerFactorNow">?</div>
+                    </div>
+                  </div>
+                  <div class="col-lg-9">
+                    <div id="PowerFactorChart"></div>       
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-3 panel-voltage panel-noborder">
+                    <div class="subpanel" style="padding-bottom: 5px">
+                      <div class="huge-small">THDv (%)</div>
+                      <div class="huge-small" id="THDNow"></div>
+                    </div>
+                  </div>
+                  <div class="col-lg-9">
+                    <div id="THDChart"></div>       
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-3 panel-voltage panel-noborder">
+                    <div class="subpanel" style="padding-bottom: 5px">
+                      <div class="huge-small">PHI (º)</div>
+                      <div class="huge-small" id="PHINow">?</div>
+                    </div>
+                  </div>
+                  <div class="col-lg-9">
+                    <div id="PHIChart"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="hidden" id="EventsPanel">
+                <div class="col col-lg-12">
+                  <table id="EventsTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
+                    <thead>
+                      <tr>
+                        <th style="width: 130px">Date</th><th>Type</th><th>Duration <em>(s)</em></th><th>ΔU <em>(V)</em></th><th>ΔU <em>(%)</em></th><th style="width: 60px"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col col-lg-12">
+                  <div id="EventSpinner" class="spinnerdiv"></div>
+                  <div id="EventWaveformPanel">
+                    <div id="EventWaveformMaximize">
+                      <div style="padding:5px">
+                        <div style="display:inline-block">&nbsp;</div>
+                        <div id="EventChartLegend" style="float: right"></div>
                       </div>
+                      <div id="EventChart" class="chart big_chart"></div>
                     </div>
                   </div>
                 </div>
@@ -215,7 +214,7 @@
           </div>
         </div>
       </div>
-
+    </div>
     <script src="lib/jquery/jquery.js"></script>
     <script src="lib/bootstrap/js/bootstrap.js"></script>
     <script src="lib/sidenav/sidenav.min.js"></script>
@@ -234,8 +233,6 @@
     <script src="lib/jquery.scrolling-tabs.min.js"></script>
     <script src="openZmeter.js"></script>
     <script src="Analysis_Voltage.js"></script>
-    <script>
-      StartPageLoad();
-    </script>
+
   </body>
 </html>

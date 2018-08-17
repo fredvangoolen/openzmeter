@@ -13,14 +13,13 @@
     <link rel="stylesheet" href="lib/sidenav/sidenav.min.css"/>
     <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.css"/>
     <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
-    <link rel="stylesheet" href="lib/offline/offline.css" type="text/css"/>
+    <link rel="stylesheet" href="lib/offline.min.css" type="text/css"/>
     <link rel="stylesheet" href="openZmeter.css"/>
     <title>openZmeter - Analysys - Frequency</title>
   </head>
-  <body>
+  <body onload="StartPageLoad()">
     <span data-load-block="Header_Block"></span>
     <span data-load-block="AggregWarningDialog"></span>
-    
     <div class="modal" id="GraphDialog" tabindex="1" role="dialog" data-backdrop='static'>
       <div class="modal-dialog" style="width: 100%; height: 100%; padding: 10px; margin: 0px">
         <div class="modal-content" style="height: 100%" id="GraphDialogContents">
@@ -53,59 +52,48 @@
               </div>
               <span class="clearfix"></span>
             </div>
+            <div class="panel-body">
               <div class="row">
-                <div class="col-md-6 col-lg-3">
-                  <div class="row">
-                    <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightgreen-info" id="FreqAvgPanel">
-                        <h4 id="labelFrequencyPeriodAVG">Loading...</h4>
-                        <span class="huge-small-unit" id="labelFrequencyCurrentAVG">?</span><em class="huge-small-unit">&nbsp;Hz</em>
-                        <p><span id="labelFrequencyPrevPeriodAVG"></span> <span id="labelFrequencyPrevAVG">?</span><em class="small">&nbsp;Hz</em></p>
-                      </div>
-                    </div>
-                    <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightgreen-info" id="FreqMaxPanel">
-                        <h4 id="labelFrequencyPeriodMAX">Loading...</h4>
-                        <span class="huge-small-unit" id="labelFrequencyCurrentMAX">?</span><em class="huge-small-unit">&nbsp;Hz</em><br/>
-                        <p><span id="labelFrequencyPrevPeriodMAX"></span> <span id="labelFrequencyPrevMAX">?</span><em class="small">&nbsp;Hz</em></p>
-                      </div>
-                    </div>
-                    <div class="col-xs-4 col-md-12">
-                      <div class="panel panel-lightgreen-info" id="FreqMinPanel">
-                        <h4 id="labelFrequencyPeriodMIN">Loading...</h4>  
-                        <span class="huge-small-unit" id="labelFrequencyCurrentMIN">?</span><em class="huge-small-unit">&nbsp;Hz</em><br/>
-                        <p><span id="labelFrequencyPrevPeriodMIN"></span> <span id="labelFrequencyPrevMIN">?</span><em class="small">&nbsp;Hz</em></p>
-                      </div>
-                    </div>
+                <div class="col-md-6 col-lg-4 col-xl-3">
+                  <div class="subpanel" id="FreqAvgPanel">
+                    <div class="huge-small" id="labelFrequencyAvgPrimary">Loading data...</div>
+                    <div class="huge-small" id="labelFrequencyAvgPrimaryValue">?</div>
+                    <div><span id="labelFrequencyAvgSecondary">Loading data...</span>&nbsp;<span id="labelFrequencyAvgSecondaryValue"></span></div>
+                  </div>
+                  <div class="subpanel" id="FreqMaxPanel">
+                    <div class="huge-small" id="labelFrequencyMaxPrimary">Loading data...</div>
+                    <div class="huge-small" id="labelFrequencyMaxPrimaryValue">?</div>
+                    <div><span id="labelFrequencyMaxSecondary">Loading data...</span>&nbsp;<span id="labelFrequencyMaxSecondaryValue"></span></div>
+                  </div>
+                  <div class="subpanel" id="FreqMinPanel">
+                    <div class="huge-small" id="labelFrequencyMinPrimary">Loading data...</div>
+                    <div class="huge-small" id="labelFrequencyMinPrimaryValue">?</div>
+                    <div><span id="labelFrequencyMinSecondary">Loading data...</span>&nbsp;<span id="labelFrequencyMinSecondaryValue"></span></div>
                   </div>
                 </div>
-                <div class="col col-md-6 col-lg-9" id="FrequencyCol">
+                <div class="col-md-6 col-lg-8 col-xl-9" id="FrequencyCol">
                   <div id="FrequencyMaximizeDiv">
                     <div id="FrequencyChart" class="chart big_chart"></div>
                   </div>
                 </div>
               </div>
             </div>
-
         </div>
       </div>
     </div>
     <script src="lib/jquery/jquery.js"></script>
     <script src="lib/bootstrap/js/bootstrap.js"></script>
     <script src="lib/sidenav/sidenav.min.js"></script>
-    <script src="lib/spin.js/spin.js"></script>
+    <script src="lib/spin.min.js"></script>
     <script src="lib/dygraph/dygraph.js"></script>
     <script src="lib/dygraph/crosshair.js"></script>
     <script src="lib/dygraph/dygraph-interaction.js"></script>
-    <script src="lib/offline/offline.js"></script>
+    <script src="lib/offline.min.js"></script>
     <script src="lib/momentjs/moment.js"></script>
     <script src="lib/momentjs/moment-duration-format.js"></script>
     <script src="lib/datatables/js/jquery.dataTables.js"></script>
     <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
     <script src="openZmeter.js"></script>
     <script src="Analysis_Frequency.js"></script>
-    <script>
-      StartPageLoad();
-    </script>
   </body>
 </html>

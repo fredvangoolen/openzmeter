@@ -264,6 +264,13 @@ body {
   background-color: #5cb85c;
   color: #FFFF;
 }
+.panel-frequency .subpanel {
+  border: 1px solid #b3e0b3;
+  background-color: #e9f6e9;
+  color: #474544;
+  padding: 0px 5px;
+  margin: 5px;
+}
 .panel-active-energy {
   border: 1px solid #724C99;
 }

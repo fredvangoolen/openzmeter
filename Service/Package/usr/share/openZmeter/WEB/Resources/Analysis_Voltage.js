@@ -861,7 +861,6 @@ $('#GraphDialogClose').click(function() {
   window.dispatchEvent(new Event('resize'));
 });
 
-/* Secuencia de inicio para cargar la pagina */
 var MainScrollable = null;
 function UpdatePage() {
   new TabSelector('VoltageDetailView', '#DetailTabs', '#DetailDivs', DetailTabChange);

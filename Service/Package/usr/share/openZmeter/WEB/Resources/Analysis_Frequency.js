@@ -16,25 +16,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* Grafica de frecuencia */
+/* Frequency graph */
 var FrequencyChart   = null;
 var FrequencyData    = [];
-var ScrollableSeries = "freq";
-function Scrollable_ShowSpinner() {
-  $('#FrequencySpinner').show();
-}
-function Scrollable_StopSpinner() {
-  $('#FrequencySpinner').hide();
-}
-function Scrollable_OnSuccess(result) {
-  if(ScrollableLastSample === 0) FrequencyData = [[0, 0]];
+function Scrollable_OnSuccess(result, clear) {
+  if(clear) FrequencyData = [[0, 0]];
   FrequencyData = GraphDataAppend(result, 'freq', FrequencyData);
   if(FrequencyChart == null) {
     FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"), FrequencyData,
       { strokeWidth: 0.5, stepPlot: true, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4],
         legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ["Time", "Frequency"], dateWindow: [result['From'], result['To']],
         colors: $('#FreqeuncyPanel').css('border-color'), plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
-        zoomCallback: Scrollable_Zoom, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: Scrollable_MouseUp, dblclick: Scrollable_DoubleClick },
+        zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },
         underlayCallback: function(canvas, area, g) {
           var NF = Analyzers[Analyzer].NominalFreq, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
           GraphHBackgroundRanges([[NF * 1.01, NF * 1.005, Yellow], [NF * 0.995, NF * 0.99, Yellow], [Infinity, NF * 1.01, Red], [NF * 0.99, -Infinity, Red]], g, canvas);
@@ -90,32 +83,32 @@ function Scrollable_UpdateCounters(change) {
   FrequencyCountersTimer = setTimeout(Scrollable_UpdateCounters, 60000);
   var Times = GetCountersTimePeriod();
   if(change === true) {
-    $('#labelFrequencyPeriodAVG').text(Times.PrimaryText + ' average');
-    $('#labelFrequencyPeriodMAX').text(Times.PrimaryText + ' maximum');
-    $('#labelFrequencyPeriodMIN').text(Times.PrimaryText + ' minimum');
-    $('#labelFrequencyPrevPeriodAVG').text(Times.PrimaryText + ' average');
-    $('#labelFrequencyPrevPeriodMAX').text(Times.PrimaryText + ' maximum');
-    $('#labelFrequencyPrevPeriodMIN').text(Times.PrimaryText + ' minimum');
-    $('#labelFrequencyCurrentAVG').text('Calculating...');
-    $('#labelFrequencyCurrentMAX').text('Calculating...');
-    $('#labelFrequencyCurrentMIN').text('Calculating...');
+    $('#labelFrequencyAvgPrimary').text(Times.PrimaryText + ' average');
+    $('#labelFrequencyMaxPrimary').text(Times.PrimaryText + ' maximum');
+    $('#labelFrequencyMinPrimary').text(Times.PrimaryText + ' minimum');
+    $('#labelFrequencyAvgSecondary').text(Times.SecondaryText + ' average');
+    $('#labelFrequencyMaxSecondary').text(Times.SecondaryText + ' maximum');
+    $('#labelFrequencyMinSecondary').text(Times.SecondaryText + ' minimum');
+    $('#labelFrequencyAvgPrimaryValue').text('Calculating...');
+    $('#labelFrequencyMaxPrimaryValue').text('Calculating...');
+    $('#labelFrequencyMinPrimaryValue').text('Calculating...');
   }
-  GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, 'avg(freq), max(freq), min(freq)', 
+  Ajax.GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, 'avg(freq), max(freq), min(freq)', 
     function FrequencyUpdateCountersCurrent(result) {
-      $('#labelFrequencyCurrentAVG').html(Round2(result['avg_freq']));
-      $('#labelFrequencyCurrentMAX').html(Round2(result['max_freq']));
-      $('#labelFrequencyCurrentMIN').html(Round2(result['min_freq']));
+      $('#labelFrequencyAvgPrimaryValue').html(Round2(result['avg_freq']) + '&nbsp;<em class="huge-small-unit">Hz</em>');
+      $('#labelFrequencyMaxPrimaryValue').html(Round2(result['max_freq']) + '&nbsp;<em class="huge-small-unit">Hz</em>');
+      $('#labelFrequencyMinPrimaryValue').html(Round2(result['min_freq']) + '&nbsp;<em class="huge-small-unit">Hz</em>');
     }
   );
   if(Times.SecondaryTo !== undefined) {
-    $('#labelFrequencyPrevAVG').text('Calculating...');
-    $('#labelFrequencyPrevMAX').text('Calculating...');
-    $('#labelFrequencyPrevMIN').text('Calculating...');  
-    GetSeriesAggreg(Times.SecondaryPeriod, Times.SecondaryTo, Times.PreferedAggreg, 'avg(freq), max(freq), min(freq)', 
+    $('#labelFrequencyAvgSecondaryValue').text('Calculating...');
+    $('#labelFrequencyMaxSecondaryValue').text('Calculating...');
+    $('#labelFrequencyMinSecondaryValue').text('Calculating...');  
+    Ajax.GetSeriesAggreg(Times.SecondaryPeriod, Times.SecondaryTo, Times.PreferedAggreg, 'avg(freq), max(freq), min(freq)', 
       function FrequencyUpdateCountersCurrent(result) {
-        $('#labelFrequencyPrevAVG').html(Round2(result['avg_freq']));
-        $('#labelFrequencyPrevMAX').html(Round2(result['max_freq']));
-        $('#labelFrequencyPrevMIN').html(Round2(result['min_freq']));
+        $('#labelFrequencyAvgSecondaryValue').html(Round2(result['avg_freq']) + '&nbsp;<em class="huge-small-unit">Hz</em>');
+        $('#labelFrequencyMaxSecondaryValue').html(Round2(result['max_freq']) + '&nbsp;<em class="huge-small-unit">Hz</em>');
+        $('#labelFrequencyMinSecondaryValue').html(Round2(result['min_freq']) + '&nbsp;<em class="huge-small-unit">Hz</em>');
       }
     );      
   }
@@ -134,8 +127,8 @@ $('#GraphDialogClose').click(function() {
   window.dispatchEvent(new Event('resize'));
 });
 
-/* Secuencia de inicio para cargar la pagina */
+var MainScrollable = null;
 function UpdatePage() {
-  GetSeriesScrollable();
+  MainScrollable = new Scrollable( {Spinners: ['#FrequencySpinner'], Series: 'freq', OnSuccess: Scrollable_OnSuccess} );
   Scrollable_UpdateCounters(true);
 }//426
