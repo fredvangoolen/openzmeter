@@ -35,9 +35,7 @@ function PeriodView_OnSuccess(result) {
                valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">V</em>'; },
                axisLabelFormatter: function (x) { return Round2(x); }
              },
-          x: { valueFormatter: function (x) { return new Date(x).toLocaleTimeString(); },
-               axisLabelFormatter: function (x) { return x.toLocaleTimeString(); }
-             }
+          x: MainScrollable.XAxis
         }
       }
     );

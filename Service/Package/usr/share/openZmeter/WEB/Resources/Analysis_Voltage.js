@@ -38,9 +38,7 @@ function Scrollable_OnSuccess(result, clear) {
                valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">V</em>'; },
                axisLabelFormatter: function (x) { return Round2(x); }
              },
-          x: { valueFormatter: function (x) { return new Date(x).toLocaleDateString() + ' - ' + new Date(x).toLocaleTimeString(); },
-               axisLabelFormatter: function (x) { return new Date(x).toLocaleTimeString() + '<br/>' + new Date(x).toLocaleDateString(); }
-             }
+          x: MainScrollable.XAxis
           }
         }  
     );
