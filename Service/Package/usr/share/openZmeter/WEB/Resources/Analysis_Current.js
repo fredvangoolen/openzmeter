@@ -1482,4 +1482,4 @@ function UpdatePage() {
   AjaxGetCurrentCounters();
   AjaxGetDetails();
   AjaxGetEvolution();
-}
+}//1485

@@ -204,7 +204,7 @@ function DetailTabChange(index) {
       for(i = 0; i < 50; i++) $(HarmonicsCharts[i].graphDiv).parent().removeAttr('style');
     }
   }
-  if(HarmonicsCharts !== null) {
+  if(PowerFactorChart !== null) {
     if(index === 5) {
       $(PowerFactorChart.graphDiv).parent().removeAttr('style');
       $(THDChart.graphDiv).parent().removeAttr('style');

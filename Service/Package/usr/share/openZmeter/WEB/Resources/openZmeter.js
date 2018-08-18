@@ -125,6 +125,9 @@ function Scrollable(opt) {
   this.Opt = Object.assign({NowBtn: '#btnScrollableNow', AggregBtn: '#btnScrollableAggreg', PeriodBtn: '#btnScrollablePeriod', Spinners: [], Series: ''}, opt);
   this.Range = [0, 0];
   var Self = this;
+  Self.XAxis = { valueFormatter: function (x) { return new Date(x).toLocaleDateString() + ' - ' + new Date(x).toLocaleTimeString(); },
+                 axisLabelFormatter: function (x) { return new Date(x).toLocaleTimeString() + '<br/>' + new Date(x).toLocaleDateString(); }
+               };
   $(Self.Opt.NowBtn).click(function() {
     var End = parseInt(localStorage.getItem('GraphEnd'));
     clearInterval(Self.Timer);
