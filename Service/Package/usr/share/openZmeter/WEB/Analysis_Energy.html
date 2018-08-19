@@ -41,14 +41,14 @@
     <div id="wrapper">
       <div class="row">
         <div class="col-lg-12">
-          <div class="panel panel-active-energy">
+          <div class="panel panel-active-energy" id="ActiveEnergyPanel">
             <div id="EnergySpinner" class="spinnerdiv"></div>
             <div class="panel-heading">
               <div class="huge header-text">Energy</div>
               <div class="header-buttons">
                 <div class="btn-group" data-load-block="ScrollableAggreg_Block"></div>
                 <div class="btn-group" data-load-block="ScrollableTime_Block"></div>
-                <div class="btn-group" id="groupVoltagePhases" data-load-block="PhaseV_Block"></div>
+                <div class="btn-group" id="groupEnergyPhases" data-load-block="PhaseV_Block"></div>
                 <div class="btn-group" data-load-block="GraphPlay_Block"></div>
               </div>
               <span class="clearfix"> </span> 
@@ -90,7 +90,7 @@
               </div>
             </div>
             <div class="panel-reactive-energy panel-noborder">
-              <div class="panel-heading">
+              <div class="panel-heading" id="ReactiveEnergyPanel">
                 <div class="header-text"><i class="fa fa-area-chart fa-fw"></i> Reactive</div>
                 <div class="pull-right btn-group">
                   <button type="button" class="btn btn-default btn-xs" id="btnExportReactiveEnergy" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
@@ -121,6 +121,7 @@
     <script src="lib/dygraph/chart-plotter.js"></script>
     <script src="lib/offline.min.js"></script>
     <script src="lib/momentjs/moment.js"></script>
+    <script src="lib/chroma/chroma.js"></script>
     <script src="lib/momentjs/moment-duration-format.js"></script>
     <script src="lib/datatables/js/jquery.dataTables.js"></script>
     <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
