@@ -185,8 +185,8 @@ void AnalyzerSoft::Analyze() {
       Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
       pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
       NormalizeAggreg(&pAggreg1H);
-      SaveAggreg(&pAggreg1H);
       pStats->SaveStats(pAggreg1H.Timestamp);
+      SaveAggreg(&pAggreg1H);
     }
     AccumulateAggreg(&pAggreg1H, &pAggreg10C);
     pPrevTimestamp = pAggreg10C.Timestamp;

@@ -17,218 +17,56 @@
  */
 
 /* Graficas de energia y potencia*/
-var ActiveEnergyData     = [];
-var ReactiveEnergyData   = [];
 var ActivePowerData      = [];
 var ReactivePowerData    = [];
-var ActiveEnergyChart    = null;
-var ReactiveEnergyChart  = null;
 var ActivePowerChart     = null;
 var ReactivePowerChart   = null;
-var ActiveEnergyUnits    = '';
-var ReactiveEnergyUnits  = '';
-var ActivePowerUnits     = '';
-var ReactivePowerUnits   = '';
-var ScrollableSeries     = 'active_energy, active_power, reactive_energy, reactive_power';
-function Scrollable_ShowSpinner() {
-  $('#EnergyPowerSpinner').show();
-}
-function Scrollable_StopSpinner() {
-  $('#EnergyPowerSpinner').hide();
-}
-function Scrollable_OnSuccess(result) {
-  if(ScrollableLastSample === 0)  {
-    ActiveEnergyData   = [Array(ActiveEnergyNames.length + 1).fill(0)];
-    ReactiveEnergyData = [];
-    ActivePowerData    = [];
-    ReactivePowerData  = [];
+function Scrollable_OnSuccess(result, clear) {
+  if(clear)  {
+    ActivePowerData    = [Array(SeriesNames.ActivePower().length + 1).fill(0)];
+    ReactivePowerData  = [Array(SeriesNames.ActivePower().length + 1).fill(0)];
   }
-  ActiveEnergyData   = GraphDataAppend(result, 'active_energy', ActiveEnergyData);
-  ReactiveEnergyData = GraphDataAppend(result, 'reactive_energy', ReactiveEnergyData);
   ActivePowerData    = GraphDataAppend(result, 'active_power', ActivePowerData);
   ReactivePowerData  = GraphDataAppend(result, 'reactive_power', ReactivePowerData);
-
-//  var Range = CalcRanges(ActiveEnergyData, [1], true); 
-//  var toShow = [];
+  if(ActivePowerChart == null) {
+    ActivePowerChart = new Dygraph(document.getElementById("ActivePowerChart"), ActivePowerData,
+      { strokeWidth: 0.5, stackedGraph: true, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], xAxisHeight: 26, dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.ActivePower()),
+        zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
+        colors: ColorArray($('#ActivePowerPanel').css('border-color'), 3), plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
+        underlayCallback: function(context, area, dygraph) { GraphHightlightWeekends("#EEE", context, area, dygraph); },
+        axes: {
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
+               valueFormatter: function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + ' <em class="x-small">' + Units + 'W</em>'; },
+               axisLabelFormatter: function (x) { return  Round2(x) + '</div>'; }
+             },
+          x: MainScrollable.XAxis
+          }
+        }
+    );
+  } else {
+    ActivePowerChart.updateOptions({'file': ActivePowerData,dateWindow: [result['From'], result['To']]});
+  }
+//
+//  Range = CalcRanges(ReactivePowerData, [1], true);
+//  var toSHow = [];
 //  if((Math.abs(Range[0]) > 1000) || (Math.abs(Range[1]) > 1000)) {
-//    ActiveEnergyChartUnits = 'kWh';
+//    ReactivePowerChartUnits = 'kvar';
 //    Range[0] = Range[0] / 1000;
 //    Range[1] = Range[1] / 1000;
-//    toShow = Div1000(ActiveEnergyData);
+//    toShow = Div1000(ReactivePowerData);
 //  } else {
-//    ActiveEnergyChartUnits = 'Wh';
-//    toShow = ActiveEnergyData;
+//    ReactivePowerChartUnits = 'var';
+//    toShow = ReactivePowerData;
 //  }
-//  var Units = 'Wh';
-//  var Sum = [0, 0, 0];
-//  for(i = 0; i < ActiveEnergyData.length; i++) {
-//    for(n = 1; n < ActiveEnergyData[i].length; n++) Sum[n - 1] += ActiveEnergyData[i][n];
-//  }  
-//  for(i = 0; i < Sum.length; i++) {
-//    if(Sum[i] > 1000) Units = 'kWh';
-//  }
-//  $('#labelSelectedActiveEnergyUnits').text(Units);
-//  if(Units == 'kWh') {
-//    for(i = 0; i < Sum.length; i++) Sum[i] = Sum[i] / 1000;
-//  }
-//  if(Nodes['Devices'][Node]['Type'] === '1Phase') {  
-//    $('#labelSelectedActiveEnergy').html(Round2(Sum[0]));
-//  } else {
-//    $('#labelSelectedActiveEnergy').html(Round2(Sum[0] + Sum[1] + Sum[2]));
-//    $('#labelSelectedActiveEnergyPhases').html('<br/>By phase&nbsp;&nbsp;<span style="font-size:150%">' + Array_Round2(Sum, '&nbsp;&nbsp;') + '</span>&nbsp;&nbsp;' + Units);
-//  }
-//  
-//  var StartDate = new Date(result['From']);  
-//  var EndDate = new Date(result['To']);  
-//  $('#labelSelectedPeriodRange').html('From ' + StartDate.toLocaleDateString() + '-' + StartDate.toLocaleTimeString() + ' to ' + EndDate.toLocaleDateString() + '-' + EndDate.toLocaleTimeString());
-//  ActiveEnergyResizeEvent();
-// 
-  if(ActiveEnergyChart == null) {
-    ActiveEnergyChart = new Dygraph(document.getElementById("ActiveEnergyChart"), ActiveEnergyData,
-      { strokeWidth: 0.5, stackedGraph: true, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], xAxisHeight: 26, dateWindow: [result['From'], result['To']], plotter: barChartNoSpacedPlotter,
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(ActiveEnergyNames),
-        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
-        zoomCallback: Scrollable_Zoom, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: Scrollable_MouseUp, dblclick: Scrollable_DoubleClick },
-        colors: ["#31708f", "#708f31", "#8f3170"],
-       
-        valueRange: Range,
-        
-        
-        
-        underlayCallback: function(context, area, dygraph) {
-          HightlightWeekends("#EEE", context, area, dygraph);
-        },
-        
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">' + ActiveEnergyUnits + '</em>';
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-               }
-             },
-          x: { valueFormatter: function (x) {
-                 var date = new Date(x);
-                 return date.toLocaleDateString() + ' - ' + date.toLocaleTimeString();
-               },
-               axisLabelFormatter: function (x) {
-                 return x.toLocaleTimeString() + '<br>' + x.toLocaleDateString();
-               }
-             }
-          }
-        }
-    );
-  } else {
-    ActiveEnergyChart.updateOptions({'file': toShow, valueRange: Range, dateWindow: [result['From'], result['To']] });
-  }
-  Range = CalcRanges(ReactiveEnergyData, [1], true);
-  var toShow = [];
-  if((Math.abs(Range[0]) > 1000) || (Math.abs(Range[1]) > 1000)) {
-    ReactiveEnergyChartUnits = 'kvarh';
-    Range[0] = Range[0] / 1000;
-    Range[1] = Range[1] / 1000;
-    toShow = Div1000(ReactiveEnergyData);
-  } else {
-    ReactiveEnergyChartUnits = 'varh';
-    toShow = ReactiveEnergyData;
-  }
-  if(ReactiveEnergyChart == null) {
-    ReactiveEnergyChart = new Dygraph(document.getElementById("ReactiveEnergyChart"),
-      toShow,
-      { strokeWidth: 0.5, stackedGraph: true, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], xAxisHeight: 26, dateWindow: [result['From'], result['To']], plotter: barChartNoSpacedPlotter,
-        labelsDiv: "ReactiveEnergyLegend",
-        labels: ["Time"].concat(ReactiveEnergyNames),
-
-plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
-        zoomCallback: Scrollable_Zoom, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: Scrollable_MouseUp, dblclick: Scrollable_DoubleClick },
-
-      colors: ["#314190"],
-        valueRange: Range,
-        
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">' + ReactiveEnergyChartUnits + '</em>';
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-               }
-             },
-          x: { valueFormatter: function (x) { return new Date(x).toLocaleDateString() + ' - ' + new Date(x).toLocaleTimeString(); },
-               axisLabelFormatter: function (x) { return new Date(x).toLocaleTimeString() + '<br>' + new Date(x).toLocaleDateString(); }
-             }
-          }
-        }
-    );
-  } else {
-    ReactiveEnergyChart.updateOptions({'file': toShow, valueRange: Range, dateWindow: [result['From'], result['To']]});
-  }
-
-  Range = CalcRanges(ActivePowerData, [1], true);
-  var toShow = [];
-  if((Math.abs(Range[0]) > 1000) || (Math.abs(Range[1]) > 1000)) {
-    ActivePowerChartUnits = 'kW';
-    Range[0] = Range[0] / 1000;
-    Range[1] = Range[1] / 1000;
-    toShow = Div1000(ActivePowerData);
-  } else {
-    ActivePowerChartUnits = 'W';
-    toShow = ActivePowerData;
-  }
-  if(ActivePowerChart == null) {
-    ActivePowerChart = new Dygraph(document.getElementById("ActivePowerChart"),
-      toShow,
-      { strokeWidth: 0.5, stackedGraph: true, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], xAxisHeight: 26, dateWindow: [result['From'], result['To']],
-        labelsDiv: "ActivePowerLegend",
-        labels: ["Time"].concat(ActivePowerNames),
-        colors: ["#f0ad4e"],
-        valueRange: Range,
-        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
-        zoomCallback: Scrollable_Zoom, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: Scrollable_MouseUp, dblclick: Scrollable_DoubleClick },
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">' + ActivePowerChartUnits + '</em>';
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-               }
-             },
-          x: { valueFormatter: function (x) { return new Date(x).toLocaleDateString() + ' - ' + new Date(x).toLocaleTimeString(); },
-               axisLabelFormatter: function (x) { return new Date(x).toLocaleTimeString() + '<br>' + new Date(x).toLocaleDateString(); }
-             }
-          }
-        }
-    );
-  } else {
-    ActivePowerChart.updateOptions({'file': toShow, valueRange: Range, dateWindow: [result['From'], result['To']]});
-  }
-
-  Range = CalcRanges(ReactivePowerData, [1], true);
-  var toSHow = [];
-  if((Math.abs(Range[0]) > 1000) || (Math.abs(Range[1]) > 1000)) {
-    ReactivePowerChartUnits = 'kvar';
-    Range[0] = Range[0] / 1000;
-    Range[1] = Range[1] / 1000;
-    toShow = Div1000(ReactivePowerData);
-  } else {
-    ReactivePowerChartUnits = 'var';
-    toShow = ReactivePowerData;
-  }
   if(ReactivePowerChart == null) {
-    ReactivePowerChart = new Dygraph(document.getElementById("ReactivePowerChart"),
-      toShow,
+    ReactivePowerChart = new Dygraph(document.getElementById("ReactivePowerChart"), ReactivePowerData,
       { strokeWidth: 0.5, stackedGraph: true, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], xAxisHeight: 26, dateWindow: [result['From'], result['To']], 
-        labelsDiv: "ReactivePowerLegend",
-        labels: ["Time"].concat(ReactivePowerNames),
-        colors: ["#314190"],
-        valueRange: Range,
-        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
-        zoomCallback: Scrollable_Zoom, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: Scrollable_MouseUp, dblclick: Scrollable_DoubleClick },
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.ReactivePower()),
+        zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
+        colors: ColorArray($('#ReactivePowerPanel').css('border-color'), 3), plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
         axes: {
-          y: { pixelsPerLabel: 15,
-               axisLabelWidth: 34,
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) {
                  return Round2(x) + ' <em class="x-small">' + ReactivePowerChartUnits + '</em>';
                },
@@ -236,14 +74,7 @@ plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
                  return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
                }
              },
-          x: { valueFormatter: function (x) {
-                 var date = new Date(x);
-                 return date.toLocaleDateString() + ' - ' + date.toLocaleTimeString();
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + x.toLocaleTimeString() + '<br>' + x.toLocaleDateString() + '</div>';
-               }
-             }
+          x: MainScrollable.XAxis
           }
         }
     );
@@ -555,14 +386,9 @@ function EnergyUpdateCountersPrevs(result) {
 }
 
 /* Secuencia de inicio para cargar la pagina */
+var MainScrollable = null;
 function UpdatePage() {
-  GetSeriesScrollable();
-  var View = localStorage.getItem('EnergyPowerTab');
-  if(View === 'Power') {
-    $('#btnShowPower').trigger('click');
-  } else {
-    $('#btnShowEnergy').trigger('click');
-  }
+  MainScrollable = new Scrollable( {Spinners: ['#PowerSpinner'], Series: 'active_power, reactive_power', OnSuccess: Scrollable_OnSuccess} );
   Scrollable_UpdateCounters(true);
 }
 

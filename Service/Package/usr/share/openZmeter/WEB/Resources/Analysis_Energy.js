@@ -21,10 +21,6 @@ var ActiveEnergyData     = [];
 var ReactiveEnergyData   = [];
 var ActiveEnergyChart    = null;
 var ReactiveEnergyChart  = null;
-var ActiveEnergyUnits    = '';
-var ReactiveEnergyUnits  = '';
-var ActivePowerUnits     = '';
-var ReactivePowerUnits   = '';
 function Scrollable_OnSuccess(result, clear) {
   if(clear)  {
     ActiveEnergyData   = [Array(SeriesNames.ActiveEnergy().length + 1).fill(0)];
@@ -48,6 +44,8 @@ function Scrollable_OnSuccess(result, clear) {
           }
         }
     );
+    $(window).bind('resize', function() { ActiveEnergyChart.resize($('#ActiveEnergyCol').width(), $('#panelCounters').height() - 4); });
+    window.dispatchEvent(new Event('resize'));
   } else {
     ActiveEnergyChart.updateOptions({file: ActiveEnergyData, dateWindow: [result['From'], result['To']] });
   }

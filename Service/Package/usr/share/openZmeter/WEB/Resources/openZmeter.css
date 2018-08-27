@@ -81,8 +81,7 @@ body {
   color: #DDD;
 }
 .sidenav-header > div {
-  display: inline-block;
-  float: right;
+  line-height: 22px;
 }
 .sidenav-header > table {
   width: 100%;

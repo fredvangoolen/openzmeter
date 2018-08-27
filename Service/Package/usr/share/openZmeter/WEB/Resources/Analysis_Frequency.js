@@ -43,16 +43,12 @@ function Scrollable_OnSuccess(result, clear) {
           }
         }  
     );
-    $(window).bind('resize', FrequencyResizeEvent);
+    $(window).bind('resize', function() { FrequencyChart.resize($('#FrequencyCol').width(), $('#panelCounters').height() - 4); });
     window.dispatchEvent(new Event('resize'));
   } else {
     FrequencyChart.updateOptions( {'file': FrequencyData, valueRange: CalcRanges(FrequencyData, [1], false), dateWindow: [result['From'], result['To']]});
   }
   FrequencyChart.updateOptions({ valueRange: CalcRanges(FrequencyData, [1]) });
-}
-function FrequencyResizeEvent() {
-  var Height = $('#FreqAvgPanel').height() + $('#FreqMaxPanel').height() + $('#FreqMinPanel').height();
-  FrequencyChart.resize($('#FrequencyCol').width(), Height - 4);
 }
 $('#btnMaximizeFrequency').click(function() {
   $('#GraphDialogTitle').text('Frequency');

@@ -153,26 +153,23 @@
       </div>
       <nav class="sidenav" data-sidenav data-sidenav-toggle="#sidenav-toggle">
         <div class="sidenav-header">
-          <i class="fa fa-user-circle-o" aria-hidden="true"></i> <span id="labelUserName"></span>
-          <div class="btn-group">
-            <button type="button" class="btn btn-default btn-sm navbar-btn">
-              <i class="fa fa-key"></i>
-            </button>
-            <button type="button" class="btn btn-default btn-sm navbar-btn" onclick="window.location.href='Logout'">
-              <i class="fa fa-sign-out fa-fw"></i>
-            </button>
+          <div class="small pull-left"><i class="fa fa-user-circle-o"></i> <span id="labelUserName"></span></div>
+          <div class="btn-group pull-right">
+            <button type="button" class="btn btn-default btn-xs navbar-btn"><i class="fa fa-key"></i></button>
+            <button type="button" class="btn btn-default btn-xs navbar-btn" onclick="window.location.href='Logout'"><i class="fa fa-sign-out fa-fw"></i></button>
           </div>
+          <span class="clearfix"></span>
        </div>
         <div class="sidenav-header">
-          <i class="fa fa-plug" aria-hidden="true"></i> Casa de Paco
-          <div class="btn-group">
-            <button type="button" class="btn btn-default btn-sm navbar-btn disabled">
+          <div class="small pull-left"><i class="fa fa-plug" aria-hidden="true"></i> <span id="labelAnalyzerName"></span></div>
+          <div class="btn-group pull-right">
+            <button type="button" class="btn btn-default btn-xs navbar-btn disabled">
               <i class="fa fa-cog"></i>
             </button>
-            <button type="button" class="btn btn-default btn-sm navbar-btn disabled" id="btnSearchDevice">
+            <button type="button" class="btn btn-default btn-xs navbar-btn disabled" id="btnSearchAnalyzer">
               <i class="fa fa-search"></i>
             </button>
-            <button type="button" class="btn btn-default btn-sm navbar-btn disabled">
+            <button type="button" class="btn btn-default btn-xs navbar-btn disabled">
               <i class="fa fa-exclamation-triangle"></i>
             </button>
           </div>
@@ -265,16 +262,15 @@
         </ul>
       </nav>
       <div id="OfflineDiv" class="overlay"></div>
-      <div class="modal" id="dlgSearchDevice" tabindex="1" role="dialog" data-backdrop='static'>
+      <div class="modal" id="dlgSearchAnalyzer" tabindex="1" role="dialog" data-backdrop='static'>
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <div class="pull-left">
-                <h3 class="modal-title" id="GraphDialogTitle"><i class="fa fa-search"></i> Search input device</h3>
-              </div>
+              <div class="pull-left"><h3 class="modal-title"><i class="fa fa-search"></i> Search input device</h3></div>
+              <div class="pull-right"><button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-times" aria-hidden="true"></i></button></div>
             </div>
             <div class="modal-body">
-              <table id="tblDevices" class="table small table-striped table-responsive">
+              <table id="tblAnalyzers" class="table small table-striped table-responsive">
                 <thead>
                   <tr>
                     <th>Name</th><th>Type</th><th>Serial</th><th></th>

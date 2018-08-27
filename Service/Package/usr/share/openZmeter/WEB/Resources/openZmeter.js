@@ -403,7 +403,7 @@ function GroupButtons(buttongroup, variable, maxItems, unique, callback, sender)
     }
   } else {
     buttongroup.hide();
-    Visibles.psuh(1);
+    Visibles.push(1);
     VisibleSeries.push(true);
   }
   if(callback !== undefined) callback(VisibleSeries, Visibles);  
@@ -576,8 +576,6 @@ function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter 
   return Graph;
 }
 
-
-
 /* Generate an array of colors from a base */
 function ColorArray(base, items) {
   var Array = [];
@@ -598,6 +596,10 @@ function LegendFormatter_Follow(data) {
   }
   return Result;
 }
+
+
+
+
 
 
 
@@ -853,41 +855,31 @@ var Analyzers = [];
 var Analyzer = parseInt(localStorage.getItem("SelAnalyzer"));
 var TableAnalyzers = null;
 function GetAnalyzersCompletes(result) {
+  $("#tblAnalyzers").on('click', 'button', function () {
+    var Row = TableAnalyzers.row($(this).parents('tr'));
+    TableAnalyzers.rows().nodes().to$().removeClass('info');
+    $(Row.node()).addClass('info');
+    localStorage.setItem('SelAnalyzer', Row.node()._DT_RowIndex);
+    location.reload();
+  });
   if(result.length > 0) $('#btnSearchAnalyzer').removeClass('disabled');
   Analyzers = result;
-  TableAnalyzers = $('#tblAnalyzer').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', 
-                                                 dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', 
-                                                 language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices", zeroRecords: " "},
-                                                 columnDefs: [ { targets: 0, width: "auto" }, { targets: 1, width: "50px" }, { targets: 2, width: "100px" }, { targets: 3, width: "60px", orderable: false, searchable: false } ], order: [0, 'desc']
+  TableAnalyzers = $('#tblAnalyzers').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', 
+                                                  dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', 
+                                                  language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices", zeroRecords: " "},
+                                                  columnDefs: [ { targets: 0, width: "auto" }, { targets: 1, width: "50px" }, { targets: 2, width: "100px" }, { targets: 3, width: "60px", orderable: false, searchable: false } ], order: [0, 'desc']
   });
   for(i = 0; i < result.length; i++) {
-    var RowText = $('<tr>').append('<td class="active">' + result[i].Name + '</td><td>' + result[i].Mode + '</td><td style="font-family: monospace; font-size : 11px">' + result[i].ID + '</td><td><button class="btn btn-xs btn-primary" style="width: 100%">Select</button>');
+    var RowText = $('<tr ' + ((i === Analyzer) ? 'class="info"' : '') + '>').append('<td>' + result[i].Name + '</td><td>' + result[i].Mode + '</td><td style="font-family: monospace; font-size : 11px">' + result[i].ID + '</td><td>' + ((i === Analyzer) ? '<div class="text-success text-center">Selected</div></td>' : '<button class="btn btn-xs btn-primary" style="width: 100%">Select</button></td>'));
     TableAnalyzers.row.add(RowText).draw();
   }
-  $('#dlgSearchAnalyzer').on('shown.bs.modal',function() { TableDevices.columns.adjust(); } );
-  $('#btnSearchAnalyzer').on('click', function() { $('#dlgSearchDevice').modal('show'); });
-  
+  $('#dlgSearchAnalyzer').on('shown.bs.modal',function() { TableAnalyzers.columns.adjust(); } );
+  $('#btnSearchAnalyzer').on('click', function() { $('#dlgSearchAnalyzer').modal('show'); });
   if(Analyzers[Analyzer] === undefined) {
-    localStorage.setItem("SelAnalyzer", 0);
-    Analyzer = 0;
-  }
-//  for(i = 0; i < result['Devices'].length; i++) {
-//    Nodes['Devices'][i].Type = "3Phase";
-//    if(i === Node) {
-//      $('#SourceSel').text(result['Devices'][i]['Name'] + ' (' + result['Devices'][i]['Type'] + ')');
-//    } else {
-//      $('#SourceList').append(' <li><a href="#" id="Node_' + i + '">' + result['Devices'][i]['Name'] + ' (' + result['Devices'][i]['Type'] + ')</a></li>');      
-//    }
-//  }
-//  if(result['Devices'].length <= 1) {
-//    $('#SourcesMenu').addClass('hidden');
-//  }
-//  $('#SourceList li a').click(function(event) {
-//    event.preventDefault();
-//    localStorage.setItem('SelNode', this.id.replace('Node_', ''));
-//    location.reload(false);
-//  });
-  if(Analyzers.length !== 0) {
+    $('#dlgSearchAnalyzer').modal('show');
+    return;
+  } else {
+    $('#labelAnalyzerName').text(Analyzers[Analyzer].Name);
     GetIndicators();
     AjaxGetIndicatorsB();
   }
@@ -897,12 +889,6 @@ function GetAnalyzersCompletes(result) {
 
 /* Genera la secuencia de pasos una vez cargado todo el javascript para mostrar la pagina */
 var LoadedPending;
-function LoadComplete() {
-  $('[data-sidenav]').sidenav();
-  $('#labelUserName').text(localStorage.getItem('UserName'));
-  $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: GetAnalyzersCompletes });
-  $('ul.sidenav-menu li a').filter( function() { return this.href === window.location.href; }).addClass('active').parent().parent().show().parent().children('a').addClass('active');
-}
 function StartPageLoad() {
   $('.spinnerdiv').each(function(index, element) { new Spinner(SpinnerOpts).spin(element); });
   LoadedPending = $('*[data-load-block]').length;
@@ -915,7 +901,12 @@ function StartPageLoad() {
           function(index) { 
             $(this).html(Template.children('#' + $(this).data('loadBlock')).html());
             LoadedPending--;
-            if(LoadedPending === 0) LoadComplete();
+            if(LoadedPending === 0) {
+              $('[data-sidenav]').sidenav();
+              $('#labelUserName').text(localStorage.getItem('UserName'));
+              $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: GetAnalyzersCompletes });
+              $('ul.sidenav-menu li a').filter( function() { return this.href === window.location.href; }).addClass('active').parent().parent().show().parent().children('a').addClass('active');
+            }
           }
         );        
       } 

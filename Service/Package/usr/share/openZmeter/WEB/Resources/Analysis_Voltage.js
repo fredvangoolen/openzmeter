@@ -41,16 +41,12 @@ function Scrollable_OnSuccess(result, clear) {
           }
         }  
     );
-    $(window).bind('resize', VoltageResizeEvent);
+    $(window).bind('resize', function() { VoltageChart.resize($('#VoltageCol').width(), $('#panelCounters').height() - 4); });
     window.dispatchEvent(new Event('resize'));
   } else {
     VoltageChart.updateOptions({file: VoltageData, dateWindow: [result['From'], result['To']]});
   }
   VoltageSeries();
-}
-function VoltageResizeEvent() {
-  var Height = $('#VoltageAvgPanel').height() + $('#VoltageMaxPanel').height() + $('#VoltageMinPanel').height();
-  VoltageChart.resize($('#VoltageCol').width(), Height + 24);
 }
 function VoltageSeries(event) {
   GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'VisibleVoltageMainPhases', false, function(series) { return CalcRanges(VoltageData, series, false); }, (event !== undefined) ? event.target : undefined); 
