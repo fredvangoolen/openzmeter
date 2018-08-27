@@ -56,19 +56,19 @@
             </div>
             <div class="panel-body">
               <div class="row">
-                <div class="col-md-6 col-lg-4 col-xl-3">
-                  <div class="subpanel" id="CurrentAvgPanel">
+                <div class="col-md-6 col-lg-4 col-xl-3" id="panelCounters">
+                  <div class="subpanel">
                     <div class="huge-small" id="labelCurrentAvgPrimary">Loading data...</div>
                     <div class="huge-small" id="labelCurrentAvgPrimaryValue">?</div>
-                    <div><span id="labelCurrentAvgSecondary">Loading data...</span>&nbsp;<span id="labelCurrentAvgSecondaryValue">Loading...</span></div>
+                    <div><span id="labelCurrentAvgSecondary">Loading data...</span>&nbsp;<span id="labelCurrentAvgSecondaryValue"></span></div>
                   </div>
-                  <div class="subpanel" id="CurrentMaxPanel">
+                  <div class="subpanel">
                     <div class="huge-small" id="labelCurrentMaxPrimary">Loading data...</div>
-                    <div class="huge-small" id="labelCurrentMaxValue>?</div>
-                    <div><span id="labelCurrentMaxSecondary">Loading data...</span>&nbsp;<span id="labelCurrentMaxSecondary">Loading data...</span></div>
+                    <div class="huge-small" id="labelCurrentMaxValue">?</div>
+                    <div><span id="labelCurrentMaxSecondary">Loading data...</span>&nbsp;<span id="labelCurrentMaxSecondary"></span></div>
                   </div>
-                  <div class="subpanel" id="CurrentMinPanel">
-                    <div class="huge-small" id="labelCurrentMinPrimary">Loading data...</div>  
+                  <div class="subpanel">
+                    <div class="huge-small" id="labelCurrentMinPrimary">Loading data...</div>
                     <div class="huge-small" id="labelCurrentMinPrimaryValue">?</div>
                     <div><span id="labelCurrentMinSecondary">Loading data...</span>&nbsp;<span id="labelCurrentMinSecondaryValue"></span></div>
                   </div>
@@ -90,13 +90,13 @@
             <li><a data-toggle="tab" href="#">Harmonics</a></li>
             <li><a data-toggle="tab" href="#">Evolution</a></li>
             <li><a data-toggle="tab" href="#">Advanced</a></li>
-            <li><a data-toggle="tab" href="#">Phasors</a></li>
             <li><a data-toggle="tab" href="#">Parameters</a></li>
           </ul>
           <div class="panel panel-other">
             <div id="DetailSpinner" class="spinnerdiv"></div>
             <div class="panel-heading">
               <div class="header-text" id="DetailTime"></div>
+              <div id="LowWarning" class="title-warning hidden"><i class="fa fa-exclamation-triangle"></i> No current or current too low</div>
               <div class="header-buttons">
                 <div class="btn-group" id="groupDetailPhasesMulti" data-load-block="PhaseI_Block"></div>
                 <div class="btn-group">
@@ -111,176 +111,64 @@
                 </div>                
               </div>
               <span class="clearfix"> </span>
-                
-                
-                
-                
-                <i class="fa fa-area-chart fa-fw"></i>Details
-                <div id="LowWarning" class="title-warning hidden"><i class="fa fa-exclamation-triangle"></i> No current or current too low</div>
-                <div class="pull-right">
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs" id="btnMaximizeDetail" data-toggle="tooltip" title="Maximize current view"><i class="fa fa-expand"></i></button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnExportDetail"   data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnPauseDetail"    data-toggle="tooltip" title="Stop fetching new data"><span class="glyphicon glyphicon-pause"></span></button>
-                  </div>
+            </div>
+            <div class="panel-body" id="DetailDivs">
+              <div id="WaveformPanel">
+                <div id="WaveformMaximize">
+                  <div id="WaveformChart" class="chart big_chart"></div>
                 </div>
-                <div class="pull-right">&nbsp;</div>
-                <div class="pull-right">
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowDetailRPhase" data-toggle="tooltip" title="Show phase R">R</button>
-                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowDetailSPhase" data-toggle="tooltip" title="Show phase S">S</button>
-                    <button type="button" class="btn btn-default btn-xs disabled" id="btnShowDetailTPhase" data-toggle="tooltip" title="Show phase T">T</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetail1Harmonic" data-toggle="tooltip" title="Show/hide 1st harmonic">1st harmonic</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailVoltageAndCurrent" data-toggle="tooltip" title="Show/hide voltage">Voltage</button>
-                  </div>
-                </div>
-                <div class="pull-right">&nbsp;</div>
-                <div class="pull-right">
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs active" id="btnShowDetailWaveform" data-toggle="tooltip" title="Show live waveform">Waveform</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailHarmonics" data-toggle="tooltip" title="Show live harmonics">Harmonics</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailEvolution" data-toggle="tooltip" title="Show harmonic evolution">Evolution</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailAdvanced" data-toggle="tooltip" title="Show live FFT">Advanced</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowDetailParameters" data-toggle="tooltip" title="Show current related parameters">Parameters</button>
-                  </div>
-                </div>
-                <span class="clearfix"> </span>
               </div>
-              <div class="panel-body" id="Tabs" style="padding:5px">
-                <div class="no-padding" id="WaveformPanel">
-                  <div id="WaveformMaximize">
-                    <div style="padding:5px">
-                      <div style="display:inline-block" id="WaveformTime">Loading data...</div>
-                      <div id="WaveformLegend" style="float: right"></div>
+              <div id="HarmonicsPanel">
+                <div id="HarmonicsMaximize">
+                  <div id="HarmonicsChart" class="chart big_chart"></div>
+                </div>
+              </div>
+              <div id="EvolutionPanel">
+              </div>
+              <div id="FFTPanel">
+                <div id="FFTMaximize">
+                  <div id="FFTChart" class="chart big_chart"></div>
+                </div>
+              </div>
+              <div id="ParametersPanel">
+                <div class="row">
+                  <div class="col-md-6 col-lg-5 col-xl-4 panel-voltage panel-noborder">
+                    <div class="subpanel"  style="padding-bottom: 5px">
+                      <div>Power Factor</div>
+                      <div class="huge-small" id="PowerFactorNow">?</div>
                     </div>
-                    <div id="WaveformChart" class="chart big_chart"></div>
+                  </div>
+                  <div class="col-md-6 col-lg-7 col-xl-8">
+                    <div id="PowerFactorChart"></div>       
                   </div>
                 </div>
-                <div class="hidden" id="FFTPanel">
-                  <div id="FFTMaximize">
-                    <div style="padding:5px">
-                      <div style="display:inline-block" id="FFTTime">Loading data...</div>
-                      <div id="FFTLegend" style="float: right"></div>
+                <div class="row">
+                  <div class="col-md-6 col-lg-5 col-xl-4 panel-voltage panel-noborder">
+                    <div class="subpanel" style="padding-bottom: 5px">
+                      <div>THDi (%)</div>
+                      <div class="huge-small" id="THDNow"></div>
                     </div>
-                    <div id="FFTChart" class="chart big_chart"></div>
+                  </div>
+                  <div class="col-md-6 col-lg-7 col-xl-8">
+                    <div id="THDChart"></div>       
                   </div>
                 </div>
-                <div class="hidden" id="HarmonicsPanel">
-                  <div id="HarmonicsMaximize">
-                    <div style="padding:5px">
-                      <div style="display:inline-block" id="HarmonicsTime">Loading data...</div>
-                      <div id="HarmonicsLegend" style="float: right"></div>
-                    </div> 
-                    <div id="HarmonicsChart" class="chart big_chart"></div>
-                  </div>
-                </div>
-                <div class="hidden" id="EvolutionPanel">
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_0" class="chart" style="height: 50px; margin-top: 16px; border-top: 1px solid #999"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_0"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_1" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_1"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_2" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_2"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_3" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_3"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_4" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_4"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_5" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_5"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_6" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_6"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_7" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_7"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_8" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_8"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_9" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_9"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_10" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_10"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_11" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_11"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_12" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_12"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_13" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_13"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_14" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_14"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_15" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_15"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_16" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_16"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_17" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_17"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_18" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_18"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_19" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_19"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_20" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_20"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_21" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_21"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_22" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_22"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_23" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_23"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_24" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_24"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_25" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_25"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_26" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_26"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_27" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_27"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_28" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_28"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_29" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_29"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_30" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_30"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_31" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_31"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_32" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_32"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_33" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_33"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_34" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_34"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_35" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_35"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_36" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_36"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_37" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_37"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_38" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_38"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_39" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_39"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_40" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_40"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_41" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_41"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_42" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_42"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_43" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_43"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_44" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_44"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_45" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_45"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_46" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_46"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_47" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_47"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_48" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_48"></div></div>
-                  <div style="position: relative"><div id="HarmonicsEvolutionChart_49" class="chart" style="height: 50px"></div><div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="HarmonicsEvolutionChartLegend_49"></div></div>
-                </div>
-                <div class="hidden" id="ParametersPanel">
-                  <div class="row">
-                    <div class="col-lg-3">
-                      <div class="panel panel-lightblue2-info" style="text-align: center">
-                        <h4>Power Factor</h4>
-                        <span class="huge-small-unit indicators" id="PowerFactorNow">?</span>
-                      </div>
-                    </div>
-                    <div class="col-lg-9">
-                      <div style="padding: 5px; min-height: 80px">
-                        <div style="position: relative">
-                          <div id="PowerFactorChart" class="chart" style="height: 60px; margin-top: 16px; border-top: 1px solid #999"></div>       
-                         <div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="PowerFactorChartLegend"></div>
-                        </div>
-                      </div>
+                <div class="row">
+                  <div class="col-md-6 col-lg-5 col-xl-4 panel-voltage panel-noborder">
+                    <div class="subpanel" style="padding-bottom: 5px">
+                      <div class="huge-small">PHI (º)</div>
+                      <div class="huge-small" id="PHINow">?</div>
                     </div>
                   </div>
-                  <div class="row">
-                    <div class="col-lg-3">
-                      <div class="panel panel-lightblue2-info" style="text-align: center">
-                        <h4>THDi (%)</h4>
-                        <span class="huge-small-unit indicators" id="THDNow"></span>
-                      </div>
-                    </div>
-                    <div class="col-lg-9">
-                      <div style="padding: 5px; min-height: 80px">
-                        <div style="position: relative">
-                          <div id="THDChart" class="chart" style="height: 60px; margin-top: 16px; border-top: 1px solid #999"></div>       
-                          <div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="THDChartLegend"></div>                 
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-lg-3">
-                      <div class="panel panel-lightblue2-info" style="text-align: center">
-                        <h4>PHI (º)</h4>
-                        <span class="huge-small-unit indicators" id="PHINow">?</span>
-                      </div>
-                    </div>
-                    <div class="col-lg-9">
-                      <div style="padding: 5px; min-height: 80px">
-                        <div style="position: relative">
-                          <div id="PHIChart" class="chart" style="height: 60px; margin-top: 16px; border-top: 1px solid #999"></div>
-                          <div style="pointer-events: none; position: absolute; top: -2px; text-align: left; left: 2px" id="PHIChartLegend"></div>
-                        </div>
-                      </div>
-                    </div>
+                  <div class="col-md-6 col-lg-7 col-xl-8">
+                    <div id="PHIChart"></div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
+      </div>
     </div>
     <script src="lib/jquery/jquery.js"></script>
     <script src="lib/bootstrap/js/bootstrap.js"></script>
@@ -292,10 +180,12 @@
     <script src="lib/dygraph/synchronize.js"></script>
     <script src="lib/dygraph/chart-plotter.js"></script>
     <script src="lib/offline.min.js"></script>
-    <script src="lib/momentjs/moment.js"></script>
-    <script src="lib/momentjs/moment-duration-format.js"></script>
     <script src="lib/datatables/js/jquery.dataTables.js"></script>
     <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
+    <script src="lib/momentjs/moment.js"></script>
+    <script src="lib/momentjs/moment-duration-format.js"></script>
+    <script src="lib/chroma/chroma.js"></script>
+    <script src="lib/jquery.scrolling-tabs.min.js"></script>
     <script src="openZmeter.js"></script>
     <script src="Analysis_Current.js"></script>
 

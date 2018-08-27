@@ -16,306 +16,46 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* Grafica de corriente */
-var LastCurrentSample   = 0;
-var CurrentChart        = null;
-var CurrentData         = [];
-var CurrentSpinner      = new Spinner(SpinnerOpts);
-var CurrentTimer        = null;
-function AjaxGetCurrent() {
-  if(CurrentTimer !== null) clearInterval(CurrentTimer);
-  $('#btnCurrentNow').addClass('disabled');
-  if(LastCurrentSample === 0) ShowSpinner(CurrentSpinner, 'CurrentSpinner');
-  var Period = parseInt(localStorage.getItem('GraphPeriod'));
-  if(!Period) {
-    Period = 86400000;
-    localStorage.setItem('GraphPeriod', Period);
-  }
-  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
-  if(!GraphEnd) {
-    GraphEnd = 0;
-    localStorage.setItem('GraphEnd', 0);
-  } 
-  var GraphAggregation = localStorage.getItem('GraphAggregation');
-  if(!GraphAggregation || (GetAggregText(GraphAggregation) === false)) {
-    GraphAggregation = '10m';
-    localStorage.setItem('GraphAggregation', GraphAggregation);
-  }
-  $.ajax({ url: "getSeries",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: Period, To: GraphEnd, Aggreg: GraphAggregation, LastSample: LastCurrentSample, Series: 'rms_i', Node: Nodes['Devices'][Node].ID}),
-           success: AjaxCurrent,
-           complete: function (x) {
-             $('#btnCurrentNow').removeClass('disabled');
-             if(parseInt(localStorage.getItem('GraphEnd')) === 0) CurrentTimer = setTimeout(AjaxGetCurrent, 3000);
-           }
-  });
-}
-function AjaxCurrent(result) {
-  if(LastCurrentSample === 0) {
-    StopSpinner(CurrentSpinner, 'CurrentSpinner');
-    CurrentData = [];
-  }
-  if(result['Sampletime'] !== null) {
-    for(i = 0; i < result['Sampletime'].length; i++) CurrentData.push([new Date(result['Sampletime'][i])].concat(result['rms_i'][i]));
-    while(CurrentData.length > result['MaxSamples']) CurrentData.shift();
-    LastCurrentSample = result['Sampletime'][result['Sampletime'].length - 1];
-  }
-  $('#CurrentAggregation').text('From ' + GetAggregText(result['Aggregation_Source']) + ' aggregation');
+/* Current graph */
+var CurrentChart     = null;
+var CurrentData      = [];
+function Scrollable_OnSuccess(result, clear) {
+  if(clear) CurrentData = [Array(SeriesNames.Current().length + 1).fill(0)];
+  CurrentData = GraphDataAppend(result, 'rms_i', CurrentData);
   if(CurrentChart == null) {
-    CurrentChart = new Dygraph(document.getElementById("CurrentChart"),
-      CurrentData,
-      { strokeWidth: 1,
-        labelsDiv: "CurrentLegend",
-        labels: (Nodes['Devices'][Node]['Type'] == '3Phase') ? ['Time', 'Current (R)', 'Current (S)', 'Current (T)', 'Current (N)'] :['Time', 'Current'],
-        stepPlot: true,
-        fillGraph: false,
-        colors: ["#428bca", "#42ca81", "#ca428b", "#ca8142"],
-        gridLineColor: "#999",
-        gridLinePattern: [4, 4],
-        dateWindow: [result['From'], result['To']],
-        plugins: [
-          new Dygraph.Plugins.Crosshair({
-            direction: "vertical"
-          })
-        ],
+    CurrentChart = new Dygraph(document.getElementById("CurrentChart"), CurrentData,
+      { strokeWidth: 0.5, stepPlot: true, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.Current()), dateWindow: [result['From'], result['To']],
+        zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
+        colors: ColorArray($('#CurrentPanel').css('border-color'), 4), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
         underlayCallback: function(canvas, area, g) {
-          //Maxcurrent
-//          var YellowLowA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.07);
-//          var YellowHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - YellowLowA;
-//          var YellowLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.07);
-//          var YellowHeightB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.10) - YellowLowB;
-//          var RedLowA = g.toDomYCoord(1000);
-//          var RedHeightA = g.toDomYCoord(NominalVoltage + NominalVoltage * 0.10) - RedLowA;
-//          var RedLowB = g.toDomYCoord(NominalVoltage - NominalVoltage * 0.10);
-//          var RedHeightB = g.toDomYCoord(0) - RedLowB;
-//          canvas.fillStyle = "rgba(255, 255, 0, 0.15)";
-//          canvas.fillRect(0, YellowLowA, 10000, YellowHeightA);
-//          canvas.fillRect(0, YellowLowB, 10000, YellowHeightB);
-//          canvas.fillStyle = "rgba(180, 0, 0, 0.15)";
-//          canvas.fillRect(0, RedLowA, 10000, RedHeightA);
-//          canvas.fillRect(0, RedLowB, 10000, RedHeightB);
-        },
-        zoomCallback: function(minDate, maxDate, yRanges) {
-          clearInterval(CurrentTimer);
-          $('#btnCurrentNow').removeClass('active');
-          localStorage.setItem('GraphEnd', maxDate);
-          localStorage.setItem('GraphPeriod', maxDate - minDate);
-          LastCurrentSample = 0;
-          AjaxGetCurrent();
-        },
-        interactionModel: {
-          mousedown: mouseDownOZM,
-          mousemove: mouseMoveOZM,
-          mouseup: function(event, g, contex) {
-            mouseUpOZM(event, g, contex);
-            if((contex.isPanning) && (contex.regionWidth > 0)) {
-              $('#btnCurrentNow').removeClass('active');
-              localStorage.setItem('GraphEnd', g.dateWindow_[1]);
-              localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
-              LastCurrentSample = 0;
-              AjaxGetCurrent();
-            }            
-          },
-          dblclick: function(event, g, context) {
-            dblClickOZM(event, g, context);
-            $('#btnCurrentNow').removeClass('active');
-            localStorage.setItem('GraphEnd', g.dateWindow_[1]);
-            localStorage.setItem('GraphPeriod', g.dateWindow_[1] - g.dateWindow_[0]);
-            LastCurrentSample = 0;
-            AjaxGetCurrent();
-          }
+          var MC = Analyzers[Analyzer].MaxCurrent, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
+          GraphHBackgroundRanges([[MC * 0.7, MC * 1, Yellow], [Infinity, MC, Red]], g, canvas);
         },
         axes: {
-          y: { pixelsPerLabel: 15,
-               axisLabelWidth: 34,
-               valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">A</em>';
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-               }
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
+               valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">A</em>'; },
+               axisLabelFormatter: function (x) { return Round2(x); }
              },
-          x: { valueFormatter: function (x) {
-                 var date = new Date(x);
-                 return date.toLocaleDateString() + ' - ' + date.toLocaleTimeString();
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px; line-height: 10px">' + x.toLocaleTimeString() + '<br>' + x.toLocaleDateString() + '</div>';
-               }
-             }
-          }
+          x: MainScrollable.XAxis
         }
+      }
     );
-    $(window).bind('resize', CurrentResizeEvent);
+    $(window).bind('resize', function() { CurrentChart.resize($('#CurrentCol').width(), $('#panelCounters').height() - 4); });
     window.dispatchEvent(new Event('resize'));
   } else {
     CurrentChart.updateOptions({'file': CurrentData, dateWindow: [result['From'], result['To']]});
   }
-  SetCurrentVisibleSeries();
-  $('#btnShowCurrentYear').removeClass('active');
-  $('#btnShowCurrentMonth').removeClass('active');
-  $('#btnShowCurrentWeek').removeClass('active');
-  $('#btnShowCurrentDay').removeClass('active');
-  if((result['To'] - result['From']) === 86400000) {
-    $('#btnShowCurrentDay').addClass('active');
-  } else if((result['To'] - result['From']) === 604800000) {
-    $('#btnShowCurrentWeek').addClass('active');
-  } else if((result['To'] - result['From']) === 2592000000) {
-    $('#btnShowCurrentMonth').addClass('active');
-  } else if((result['To'] - result['From']) === 31536000000) {
-    $('#btnShowCurrentYear').addClass('active');
-  }
-  var GraphAggregation = localStorage.getItem('GraphAggregation');
-  if(GraphAggregation !== result['Aggregation_Source']) {
-    $('#aggreg_modal').modal('show');
-    GraphAggregation = result['Aggregation_Source'];
-  }
-  $('#btnCurrent3S').removeClass('active');
-  $('#btnCurrent1M').removeClass('active');
-  $('#btnCurrent10M').removeClass('active');
-  $('#btnCurrent1H').removeClass('active');
-  if(GraphAggregation == '3s') {
-    $('#btnCurrent3S').addClass('active');
-  } else if(GraphAggregation == '1m') {
-    $('#btnCurrent1M').addClass('active');
-  } else if(GraphAggregation == '10m') {
-    $('#btnCurrent10M').addClass('active');
-  } else if(GraphAggregation == '1h') {
-    $('#btnCurrent1H').addClass('active');
-  }
-  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
-  if(GraphEnd === 0) {
-    $('#btnCurrentNow').addClass('active');
-  } else {
-    $('#btnCurrentNow').removeClass('active');
-  }
-  localStorage.setItem('GraphAggregation', GraphAggregation);
+  SetCurrentSeries();
 }
-function CurrentResizeEvent() {
-  var Height = $('#CurrentAvgPanel').height() + $('#CurrentMaxPanel').height() + $('#CurrentMinPanel').height();
-  CurrentChart.resize($('#CurrentCol').width(), Height - 4);
+function CurrentSeries(event) {
+  GraphPhaseButtons(CurrentChart, $('#groupCurrentPhases'), 'VisibleCurrentMainPhases', false, function(series) { return CalcRanges(CurrentData, series, false); }, (event !== undefined) ? event.target : undefined); 
 }
-function SetCurrentVisibleSeries() {
-  if(Nodes['Devices'][Node]['Type'] == '3Phase') {
-    var ShowR = (localStorage.getItem('ShowR') === 'true');
-    var ShowS = (localStorage.getItem('ShowS') === 'true');
-    var ShowT = (localStorage.getItem('ShowT') === 'true');
-    var ShowN = (localStorage.getItem('ShowN') === 'true');
-    var VisibleSeries = [ShowR, ShowS, ShowT, ShowN];
-    var Visibles = [];
-    if(ShowR) Visibles.push(1);
-    if(ShowS) Visibles.push(2);
-    if(ShowT) Visibles.push(3);
-    if(ShowN) Visibles.push(4);
-    CurrentChart.updateOptions({ visibility: VisibleSeries, valueRange: CalcRanges(CurrentData, Visibles, false) });
-    if(ShowR === true)
-      $('#btnShowCurrentRPhase').addClass('active');
-    else    
-      $('#btnShowCurrentRPhase').removeClass('active');
-    if(ShowS === true)
-      $('#btnShowCurrentSPhase').addClass('active');
-    else    
-      $('#btnShowCurrentSPhase').removeClass('active');
-    if(ShowT === true)
-      $('#btnShowCurrentTPhase').addClass('active');
-    else    
-      $('#btnShowCurrentTPhase').removeClass('active');
-    if(ShowN === true)
-      $('#btnShowCurrentNPhase').addClass('active');
-    else    
-      $('#btnShowCurrentNPhase').removeClass('active');
-  } else {
-    CurrentChart.updateOptions({ valueRange: CalcRanges(CurrentData, [1], false) });
-  }
-}
-function ChooseCurrentChannels() {
-  var ShowR = (localStorage.getItem('ShowR') === 'true');
-  var ShowS = (localStorage.getItem('ShowS') === 'true');
-  var ShowT = (localStorage.getItem('ShowT') === 'true');
-  var ShowN = (localStorage.getItem('ShowN') === 'true');
-  if(this.innerText === 'R') ShowR = !ShowR;
-  if(this.innerText === 'S') ShowS = !ShowS;
-  if(this.innerText === 'T') ShowT = !ShowT;
-  if(this.innerText === 'N') ShowN = !ShowN;
-  if((this.innerText === 'R') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowR = true;
-  if((this.innerText === 'S') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowS = true;
-  if((this.innerText === 'T') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowT = true;
-  if((this.innerText === 'N') && (ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowN = true;
-  localStorage.setItem('ShowR', ShowR);
-  localStorage.setItem('ShowS', ShowS);
-  localStorage.setItem('ShowT', ShowT);
-  localStorage.setItem('ShowN', ShowN);
-  SetCurrentVisibleSeries();
-}
-$('#btnShowCurrentRPhase').click(ChooseCurrentChannels);
-$('#btnShowCurrentSPhase').click(ChooseCurrentChannels);
-$('#btnShowCurrentTPhase').click(ChooseCurrentChannels);
-$('#btnShowCurrentNPhase').click(ChooseCurrentChannels);
-$('#btnCurrent3S').click(function() {
-  localStorage.setItem('GraphAggregation', '3s');
-  LastCurrentSample = 0;
-  AjaxGetCurrent();
+$('#groupCurrentPhases').on('click', 'button', CurrentSeries);
+$('#btnExportCurrent').click(function() {
+  exportToCsv("Current_" + Node + '.csv', [['Time'].concat(CurerntNames)].concat(CurrentData));
 });
-$('#btnCurrent1M').click(function() {
-  localStorage.setItem('GraphAggregation', '1m');
-  LastCurrentSample = 0;
-  AjaxGetCurrent();
-});
-$('#btnCurrent10M').click(function() {
-  localStorage.setItem('GraphAggregation', '10m');
-  LastCurrentSample = 0;
-  AjaxGetCurrent();
-});
-$('#btnCurrent1H').click(function() {
-  localStorage.setItem('GraphAggregation', '1h');
-  LastCurrentSample = 0;
-  AjaxGetCurrent();
-});
-$('#btnShowCurrentYear').click(function() {
-  localStorage.setItem('GraphPeriod', 31536000000);
-  LastCurrentSample = 0;
-  AjaxGetCurrent();
-  localStorage.setItem('CountersPeriod', 'Year');
-  AjaxGetCurrentCounters();
-});
-$('#btnShowCurrentMonth').click(function() {
-  localStorage.setItem('GraphPeriod', 2592000000);
-  LastCurrentSample = 0;
-  AjaxGetCurrent();
-  localStorage.setItem('CountersPeriod', 'Month');
-  AjaxGetCurrentCounters();
-});
-$('#btnShowCurrentWeek').click(function() {
-  localStorage.setItem('GraphPeriod', 604800000);
-  LastCurrentSample = 0;
-  AjaxGetCurrent();
-  localStorage.setItem('CountersPeriod', 'Week');
-  AjaxGetCurrentCounters();
-});
-$('#btnShowCurrentDay').click(function() {
-  localStorage.setItem('GraphPeriod', 86400000);
-  LastCurrentSample = 0;
-  AjaxGetCurrent();
-  localStorage.setItem('CountersPeriod', 'Day');
-  AjaxGetCurrentCounters();
-});
-$('#btnCurrentNow').click(function() {
-  var End = parseInt(localStorage.getItem('GraphEnd'));
-  if(End === 0) {
-    $('#btnCurrentNow').removeClass('active');
-    localStorage.setItem('GraphEnd', CurrentChart.getOption('dateWindow')[1]);
-    if(CurrentTimer !== null) clearInterval(CurrentTimer);
-  } else {
-    $('#btnCurrentNow').addClass('active');
-    localStorage.setItem('GraphEnd', 0);
-    LastCurrentSample = 0;
-    AjaxGetCurrent();
-  }
-});
+
 $('#btnMaximizeCurrent').click(function() {
   $('#GraphDialogTitle').text('Current');
   $('#GraphDialog').modal('show');
@@ -330,114 +70,48 @@ $('#btnMaximizeCurrent').click(function() {
   $(window).bind('resize', DialogResizeHandler);
   window.dispatchEvent(new Event('resize'));  
 });
-$('#btnExportCurrent').click(function() {
-  var Data = [];
-  var Filename = "Current_" + LastCurrentSample + '.csv';
-  Data.push([['Index', 'Current']]);
-  Data = Data.concat(CurrentData);
-  exportToCsv(Filename, Data);
-  $(this).blur();
-});
 
-/* Contadores de corriente */
+/* Current counters */
 var CurrentCountersTimer  = null;
-function AjaxGetCurrentCounters() {
+function Scrollable_UpdateCounters(change) {
   if(CurrentCountersTimer !== null) clearInterval(CurrentCountersTimer);
-  CurrentCountersTimer = setTimeout(AjaxGetCurrentCounters, 60000);
-  var CountersPeriod = localStorage.getItem('CountersPeriod');
-  var Current, Period;
-  if(CountersPeriod === 'Week') {
-    Period = 86400000 * 7;
-    Current = GetWeekTimestamp();
-    Aggreg = '10m';
-  } else if(CountersPeriod === 'Month') {
-    Period = 86400000 * 30;
-    Current = GetMonthTimestamp();
-    Aggreg = '1h';
-  } else if(CountersPeriod === 'Year') {
-    Period = 86400000 * 365;
-    Current = GetYearTimestamp();
-    Aggreg = '1h';
+  CurrentCountersTimer = setTimeout(Scrollable_UpdateCounters, 60000);
+  var Times = GetCountersTimePeriod();
+  if(change === true) {
+    $('#labelCurrentAvgPrimary').text(Times.PrimaryText + ' average');
+    $('#labelCurrentAvgPrimaryValue').text('Calculating...');
+    $('#labelCurrentAvgSecondary').text(Times.SecondaryText);
+    $('#labelCurrentMaxPrimary').text(Times.PrimaryText + ' maximun');
+    $('#labelCurrentMaxPrimaryValue').text('Calculating...');
+    $('#labelCurrentMaxSecondary').text(Times.SecondaryText);
+    $('#labelCurrentMinPrimary').text(Times.PrimaryText + ' minimun');
+    $('#labelCurrentMinPrimaryValue').text('Calculating...');
+    $('#labelCurrentMinSecondary').text(Times.SecondaryText);
+  }
+    Ajax.GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, 'avg(rms_i), max(rms_i), min(rms_i)', 
+    function(result) {
+      $('#labelCurrentAvgPrimaryValue').html(Array_Round2(result['avg_rms_i'], '&nbsp;', ColorArray($('#CurrentPanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">A</em>');
+      $('#labelCurrentMinPrimaryValue').html(Array_Round2(result['min_rms_i'], '&nbsp;', ColorArray($('#CurrentPanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">A</em>');
+      $('#labelCurrentMaxPrimaryValue').html(Array_Round2(result['max_rms_i'], '&nbsp;', ColorArray($('#CurrentPanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">A</em>');
+      window.dispatchEvent(new Event('resize'));
+    }
+  );
+  if(Times.SecondaryTo !== undefined) {
+    $('#labelCurrentAvgSecondaryValue').text('Calculating...');
+    $('#labelCurrentMaxSecondaryValue').text('Calculating...');
+    $('#labelCurrentMinSecondaryValue').text('Calculating...');
+    Ajax.GetSeriesAggreg(Times.SecondaryPeriod, Times.SecondaryTo, Times.PreferedAggreg, 'avg(rms_i), max(rms_i), min(rms_i)',
+      function(result) {
+        $('#labelCurrentAvgSecondaryValue').html(Array_Round2(result['avg_rms_i'], '&nbsp;') + '&nbsp;<em>A</em>');
+        $('#labelCurrentMinSecondaryValue').html(Array_Round2(result['min_rms_i'], '&nbsp;') + '&nbsp;<em>A</em>');
+        $('#labelCurrentMaxSecondaryValue').html(Array_Round2(result['max_rms_i'], '&nbsp;') + '&nbsp;<em>A</em>');
+        window.dispatchEvent(new Event('resize'));
+      }
+    );
   } else {
-    CountersPeriod = 'Day';
-    localStorage.setItem('CountersPeriod', CountersPeriod);
-    Period = 86400000;
-    Current = GetDayTimestamp();
-    Aggreg = '1m';
-  }
-  $.ajax({ url: "getSeriesAggreg",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(rms_i), max(rms_i), min(rms_i)", Aggreg: Aggreg, Period: Period, To: Current + Period, Node: Nodes['Devices'][Node].ID }),
-           success: CurrentUpdateCountersCurrent
-  });
-  $.ajax({ url: "getSeriesAggreg",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Series: "avg(rms_i), max(rms_i), min(rms_i)", Aggreg: Aggreg, Period: Period, To: Current, Node: Nodes['Devices'][Node].ID }),
-           success: CurrentUpdateCountersPrevs
-  });
-}
-function CurrentUpdateCountersCurrent(result) {
-  var CountersPeriod = localStorage.getItem('CountersPeriod');
-  if(CountersPeriod === 'Week') {
-    $('#labelCurrentPeriodAVG').text('This week average');
-    $('#labelCurrentPeriodMAX').text('This week maximum');
-    $('#labelCurrentPeriodMIN').text('This week minimum');
-  } else if(CountersPeriod === 'Month') {
-    $('#labelCurrentPeriodAVG').text('This month average');
-    $('#labelCurrentPeriodMAX').text('This month maximum');
-    $('#labelCurrentPeriodMIN').text('This month minimum');
-  } else if(CountersPeriod === 'Year') {
-    $('#labelCurrentPeriodAVG').text('This year average');
-    $('#labelCurrentPeriodMAX').text('This year maximum');
-    $('#labelCurrentPeriodMIN').text('This year minimum');
-  } else if(CountersPeriod === 'Day') {
-    $('#labelCurrentPeriodAVG').text('Today average');
-    $('#labelCurrentPeriodMAX').text('Today maximum');
-    $('#labelCurrentPeriodMIN').text('Today minimum');
-  }
-  if(result['avg_rms_v'] === null) {
-    $('#labelCurrentCurrentAVG').text('?');
-    $('#labelCurrentCurrentMAX').text('?');
-    $('#labelCurrentCurrentMIN').text('?');
-  } else {
-    $('#labelCurrentCurrentAVG').html(Array_Round2(result['avg_rms_i'], '&nbsp;&nbsp;', '', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
-    $('#labelCurrentCurrentMAX').html(Array_Round2(result['max_rms_i'], '&nbsp;&nbsp;', '', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
-    $('#labelCurrentCurrentMIN').html(Array_Round2(result['min_rms_i'], '&nbsp;&nbsp;', '', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
-  }
-}
-function CurrentUpdateCountersPrevs(result) {
-  var CountersPeriod = localStorage.getItem('CountersPeriod');
-  if(CountersPeriod === 'Week') {
-    $('#labelCurrentPrevPeriodAVG').text('Previous week average');
-    $('#labelCurrentPrevPeriodMAX').text('Previous week maximum');
-    $('#labelCurrentPrevPeriodMIN').text('Previous week minimum');
-  } else if(CountersPeriod === 'Month') {
-    $('#labelCurrentPrevPeriodAVG').text('Previous month average');
-    $('#labelCurrentPrevPeriodMAX').text('Previous month maximum');
-    $('#labelCurrentPrevPeriodMIN').text('Previous month minimum');
-  } else if(CountersPeriod === 'Year') {
-    $('#labelCurrentPrevPeriodAVG').text('Previous year average');
-    $('#labelCurrentPrevPeriodMAX').text('Previous year maximum');
-    $('#labelCurrentPrevPeriodMIN').text('Previous year minimum');
-  } else if(CountersPeriod === 'Day') {
-    $('#labelCurrentPrevPeriodAVG').text('Yesterday average');
-    $('#labelCurrentPrevPeriodMAX').text('Yesterday maximum');
-    $('#labelCurrentPrevPeriodMIN').text('Yesterday minimum');
-  }
-  if(result['rms_rms_v'] === null) {
-    $('#labelCurrentPrevAVG').text('?');
-    $('#labelCurrentPrevMAX').text('?');
-    $('#labelCurrentPrevMIN').text('?');
-  } else {
-    $('#labelCurrentPrevAVG').html(Array_Round2(result['avg_rms_i'], '&nbsp;&nbsp;', '', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
-    $('#labelCurrentPrevMAX').html(Array_Round2(result['max_rms_i'], '&nbsp;&nbsp;', '', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
-    $('#labelCurrentPrevMIN').html(Array_Round2(result['min_rms_i'], '&nbsp;&nbsp;', '', ["#428bca", "#42ca81", "#ca428b", "#ca8142"]));
+    $('#labelCurrentAvgSecondaryValue').text('');
+    $('#labelCurrentMaxSecondaryValue').text('');
+    $('#labelCurrentMinSecondaryValue').text('');
   }
 }
 
@@ -446,9 +120,6 @@ var DialogElement           = null;
 var PrevDialogContainer     = null;
 var DialogResizeHandler     = null;
 var DialogPrevResizeHandler = null;
-$('#aggreg_modal_close').click(function() {
-  $('#aggreg_modal').modal('hide');
-});
 $('#GraphDialogClose').click(function() {
   $(window).unbind('resize', DialogResizeHandler);
   $(window).bind('resize', DialogPrevResizeHandler);
@@ -457,237 +128,96 @@ $('#GraphDialogClose').click(function() {
   window.dispatchEvent(new Event('resize'));
 });
 
-/* Vista de detalles */
-var DetailSpinner = new Spinner(SpinnerOpts);
-var DetailTimer   = null;
-var DetailTimestamp = 0;
-function AjaxGetDetails() {
-  if(WaveformChart === null) ShowSpinner(DetailSpinner, 'DetailSpinner');
-  $('#btnPauseDetail').addClass('disabled');
-  $.ajax({ url: "getSeriesNow",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_i, phi', Node: Nodes['Devices'][Node].ID}),
-           success: function(result) {
-             if(WaveformChart === null) StopSpinner(DetailSpinner, 'DetailSpinner');
-             DetailTimestamp = result['Sampletime'];
-             UpdateWaveformChart(result);
-             UpdateHarmonicsChart(result);
-             UpdateFFTChart(result);
-             $('#PowerFactorNow').html(Array_Round2(result['power_factor'], '&nbsp;&nbsp;', ['#428bca', '#42ca81', '#ca428b']));
-             for(i = 0; i < result['thd_i'].length; i++) result['thd_i'][i] = result['thd_i'][i] * 100;
-             $('#THDNow').html(Array_Round2(result['thd_i'], '&nbsp;&nbsp;', ['#428bca', '#42ca81', '#ca428b']));
-             $('#PHINow').html(Array_Round2(result['phi'], '&nbsp;&nbsp;', ['#428bca', '#42ca81', '#ca428b'], " (CAP)", " (IND)"));
-           },
-           error: function() {
-             $('#WaveformTime').text('No stored data');
-             $('#HarmonicsTime').text('No stored data');
-             $('#FFTTime').text('No stored data');
-           },
-           complete: function (x) {
-             $('#btnPauseDetail').removeClass('disabled');
-             DetailTimer = setTimeout(AjaxGetDetails, 1000);
-           }
-  });
+var WaveformDataset = [], HarmonicsDataset = [], FFTDataset = [];
+function Live_OnSuccess(result) {
+  $('#DetailTime').text('Last update at ' + new Date(result['Sampletime']).toLocaleTimeString() + '.' + new Date(result['Sampletime']).getMilliseconds());
+  WaveformDataset = [];
+  HarmonicsDataset = [];
+  FFTDataset = [];
+  for(i = 0; i < result['wave_i'][0].length; i++) {
+    var Row = [i];
+    for(n = 0; n < result['wave_i'].length; n++) Row.push(result['wave_i'][n][i]);
+    for(n = 0; n < result['wave_v'].length; n++) Row.push(result['wave_v'][n][i]);
+    WaveformDataset.push(Row);
+  }
+  for(i = 0; i < 50; i++) {
+    var Row = [];
+    for(n = 0; n < result['harmonics_i'].length; n++) Row.push(result['harmonics_i'][n][i]);
+    for(n = 0; n < result['harmonics_v'].length; n++) Row.push(result['harmonics_v'][n][i]);
+    HarmonicsDataset.push(Row);
+  }  
+  for(i = 0; i < result['fft_i'][0].length; i++) {
+    var Row = [];
+    for(n = 0; n < result['harmonics_i'].length; n++) Row.push(result['fft_i'][n][i]);
+    for(n = 0; n < result['harmonics_v'].length; n++) Row.push(result['fft_v'][n][i]);
+    FFTDataset.push(Row);
+  }
+  UpdateWaveformChart();
+  UpdateHarmonicsChart();
+  UpdateFFTChart();
+  $('#PowerFactorNow').html(Array_Round2(result['power_factor'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
+  $('#THDNow').html(Array_Round2(result['thd_v'].map(function(val) {return val * 100.0; }), '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
+  $('#PHINow').html(Array_Round2(result['phi'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"], " (CAP)", " (IND)"));
 }
-var DetailPaused = false;
-function DetailsButtonClick(event) {
-  if(this.id === 'btnShowDetailWaveform') localStorage.setItem('CurrentDetailView', 'Waveform');
-  if(this.id === 'btnShowDetailHarmonics') localStorage.setItem('CurrentDetailView', 'Harmonics');
-  if(this.id === 'btnShowDetailEvolution') localStorage.setItem('CurrentDetailView', 'Evolution');
-  if(this.id === 'btnShowDetailAdvanced') localStorage.setItem('CurrentDetailView', 'Advanced');
-  if(this.id === 'btnShowDetailParameters') localStorage.setItem('CurrentDetailView', 'Parameters');
-  if(this.id === 'btnShowDetail1Harmonic') localStorage.setItem('CurrentDetailFirstHarmonic', (localStorage.getItem('CurrentDetailFirstHarmonic') === 'true') ? 'false' : 'true');
-  if(this.id === 'btnPauseDetail') {
-    DetailPaused = !DetailPaused;
-    if(DetailPaused) {
-      $('#btnPauseDetail').addClass('active');
-      if(DetailTimer !== null) clearInterval(DetailTimer);
-    } else {
-      $('#btnPauseDetail').removeClass('active');
-      AjaxGetDetails();
-    }
-  }
-  if(this.id === 'btnShowDetailRPhase') {
-     if((localStorage.getItem('CurrentDetailView') === 'Evolution') || (localStorage.getItem('CurrentDetailView') === 'Parameters')) {
-       localStorage.setItem('CurrentDetailEvolutionPhase', 'PhaseR');
-     } else {
-       localStorage.setItem('CurrentDetailPhaseR', (localStorage.getItem('CurrentDetailPhaseR') === 'true') ? 'false' : 'true');
-     }
-  }
-  if(this.id === 'btnShowDetailSPhase') {
-     if((localStorage.getItem('CurrentDetailView') === 'Evolution')  || (localStorage.getItem('CurrentDetailView') === 'Parameters')) {
-       localStorage.setItem('CurrentDetailEvolutionPhase', 'PhaseS');
-     } else {
-       localStorage.setItem('CurrentDetailPhaseS', (localStorage.getItem('CurrentDetailPhaseS') === 'true') ? 'false' : 'true');
-     }
-  }
-  if(this.id === 'btnShowDetailTPhase') {
-     if((localStorage.getItem('CurrentDetailView') === 'Evolution')  || (localStorage.getItem('CurrentDetailView') === 'Parameters')) {
-       localStorage.setItem('CurrentDetailEvolutionPhase', 'PhaseT');
-     } else {
-       localStorage.setItem('CurrentDetailPhaseT', (localStorage.getItem('CurrentDetailPhaseT') === 'true') ? 'false' : 'true');
-     }
-  }
-  if(this.id === 'btnShowDetailVoltageAndCurrent') {
-    localStorage.setItem('CurrentDetailShowVoltage', (localStorage.getItem('CurrentDetailShowVoltage') === 'true') ? 'false' : 'true');
-    WaveformChart.updateOptions({ showRangeSelector: false});
-    WaveformChart.updateOptions({ showRangeSelector: true});
-    HarmonicsChart.updateOptions({ showRangeSelector: true});
-    HarmonicsChart.updateOptions({ showRangeSelector: false});
-    FFTChart.updateOptions({ showRangeSelector: false});
-    FFTChart.updateOptions({ showRangeSelector: true});
-  }
-  $('#btnShowDetailWaveform').removeClass('active');
-  $('#btnShowDetailHarmonics').removeClass('active');
-  $('#btnShowDetailEvolution').removeClass('active');
-  $('#btnShowDetailAdvanced').removeClass('active');
-  $('#btnShowDetailParameters').removeClass('active');
-  $('#btnShowDetailEvents').removeClass('active');
-  switch(localStorage.getItem('CurrentDetailView')) {
-    case 'Harmonics' :
-      $('#btnShowDetailHarmonics').addClass('active');
-      break;
-    case 'Evolution' :
-      $('#btnShowDetailEvolution').addClass('active');
-      break;
-    case 'Advanced' :
-      $('#btnShowDetailAdvanced').addClass('active');
-      break;
-    case 'Waveform' :
-      $('#btnShowDetailWaveform').addClass('active');
-      break;
-    case 'Parameters' :
-      $('#btnShowDetailParameters').addClass('active');
-      break;
-    default :
-      $('#btnShowDetailWaveform').addClass('active');
-      localStorage.setItem('CurrentDetailView', 'Waveform');
-      break;
-  }
-  
-  if((Nodes['Devices'][Node]['Type'] !== '3Phase') || (localStorage.getItem('CurrentDetailView') === 'Events')) {
-    $('#btnShowDetailRPhase').addClass('disabled');
-    $('#btnShowDetailSPhase').addClass('disabled');
-    $('#btnShowDetailTPhase').addClass('disabled');
+function DetailTabChange(index) {
+  if((index === 0) || (index === 1) || (index === 3)) {
+    $('#groupDetailPhasesMulti').show();
+    $('#btnShowDetailVoltageAndCurrent').show();
   } else {
-    $('#btnShowDetailRPhase').removeClass('disabled');
-    $('#btnShowDetailSPhase').removeClass('disabled');
-    $('#btnShowDetailTPhase').removeClass('disabled');   
+    $('#groupDetailPhasesMulti').hide();
+    $('#btnShowDetailVoltageAndCurrent').hide();
   }
-  
-  $('#btnShowDetailRPhase').removeClass('active');
-  $('#btnShowDetailSPhase').removeClass('active');
-  $('#btnShowDetailTPhase').removeClass('active');
-  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
-    switch(localStorage.getItem('CurrentDetailView')) {
-      case 'Waveform' :
-      case 'Harmonics' :
-      case 'Advanced' :
-        var ShowR = (localStorage.getItem('CurrentDetailPhaseR') === 'true');
-        var ShowS = (localStorage.getItem('CurrentDetailPhaseS') === 'true');
-        var ShowT = (localStorage.getItem('CurrentDetailPhaseT') === 'true');
-        if((ShowR === false) && (ShowS === false) && (ShowT === false)) {
-          ShowR = true;
-          localStorage.setItem('CurrentDetailPhaseR', 'true');
-        }
-        if(ShowR === true) $('#btnShowDetailRPhase').addClass('active');
-        if(ShowS === true) $('#btnShowDetailSPhase').addClass('active');
-        if(ShowT === true) $('#btnShowDetailTPhase').addClass('active');
-        break;
-      case 'Parameters' :
-      case 'Evolution' :
-        switch(localStorage.getItem('CurrentDetailEvolutionPhase')) {
-          case 'PhaseR' :
-            $('#btnShowDetailRPhase').addClass('active');
-            break;
-          case 'PhaseS' :
-            $('#btnShowDetailSPhase').addClass('active');
-            break;
-          case 'PhaseT':
-            $('#btnShowDetailTPhase').addClass('active');
-            break;
-          default:
-            localStorage.setItem('CurrentDetailEvolutionPhase', 'PhaseR');
-            $('#btnShowDetailRPhase').addClass('active');
-            break;
-        }
+  if((index === 1) || (index === 3)) {
+    $('#btnShowDetailLog').show();
+  } else {
+    $('#btnShowDetailLog').hide();
+  }
+  if(index === 1) {
+    $('#btnShowDetail1Harmonic').show();
+  } else {
+    $('#btnShowDetail1Harmonic').hide();
+  }
+  if(WaveformChart !== null) {
+    if(index === 0) $(WaveformChart.graphDiv).parent().removeAttr('style');
+    UpdateWaveformChart();
+  }
+  if(HarmonicsChart !== null) {
+    if(index === 1) $(HarmonicsChart.graphDiv).parent().removeAttr('style');
+    UpdateHarmonicsChart();
+  }
+  if(FFTChart !== null) {
+    if(index === 3) $(FFTChart.graphDiv).parent().removeAttr('style');
+    UpdateFFTChart();
+  }
+
+  if(HarmonicsCharts.length !== 0) {
+    if(index === 2) {
+      for(i = 0; i < 50; i++) $(HarmonicsCharts[i].graphDiv).parent().removeAttr('style');
     }
   }
-  $('#btnShowDetail1Harmonic').addClass('disabled');
-  $('#btnShowDetail1Harmonic').removeClass('active');
-  if(localStorage.getItem('CurrentDetailView') === 'Harmonics') {
-    $('#btnShowDetail1Harmonic').removeClass('disabled');
-    if(localStorage.getItem('CurrentDetailFirstHarmonic') === 'true') {
-      $('#btnShowDetail1Harmonic').addClass('active');
-    } else {
-      $('#btnShowDetail1Harmonic').removeClass('active');
+  if(PowerFactorChart !== null) {
+    if(index === 5) {
+      $(PowerFactorChart.graphDiv).parent().removeAttr('style');
+      $(THDChart.graphDiv).parent().removeAttr('style');
+      $(PHIChart.graphDiv).parent().removeAttr('style');
     }
   }
-  $('#btnShowDetailVoltageAndCurrent').addClass('disabled');
-  $('#btnShowDetailVoltageAndCurrent').removeClass('active');
-  switch(localStorage.getItem('CurrentDetailView')) {
-    case 'Waveform' :
-    case 'Harmonics' :
-    case 'Advanced' :
-      $('#btnShowDetailVoltageAndCurrent').removeClass('disabled');
-      if(localStorage.getItem('CurrentDetailShowVoltage') === 'true') {
-        $('#btnShowDetailVoltageAndCurrent').addClass('active');
-      } else {
-        $('#btnShowDetailVoltageAndCurrent').removeClass('active');
-      }
-      break;
-  }
-    $('#btnMaximizeDetail').addClass('disabled');
-  switch(localStorage.getItem('CurrentDetailView')) {
-    case 'Waveform' :
-    case 'Harmonics' :
-    case 'Advanced' :
-      $('#btnMaximizeDetail').removeClass('disabled');
-      break;
-    case 'Events' :
-      if(EventLoaded) $('#btnMaximizeDetail').removeClass('disabled');
-      break;
-  }
-  $('#btnExportDetail').addClass('disabled');
-    switch(localStorage.getItem('CurrentDetailView')) {
-    case 'Waveform' :
-    case 'Harmonics' :
-    case 'Advanced' :
-      $('#btnExportDetail').removeClass('disabled');
-      break;
-  }
-  $('#Tabs > div').addClass('hidden');
-  switch(localStorage.getItem('CurrentDetailView')) {
-    case 'Waveform' :
-      $('#WaveformPanel').removeClass('hidden');
-      if(WaveformChart !== null) $(WaveformChart.graphDiv).parent().removeAttr('style');
-      if(WaveformChart !== null) UpdateWaveformChart(null);
-      break;
-    case 'Harmonics' :
-      $('#HarmonicsPanel').removeClass('hidden');
-      if(HarmonicsChart !== null) $(HarmonicsChart.graphDiv).parent().removeAttr('style');
-      if(HarmonicsChart !== null) UpdateHarmonicsChart(null);
-      break;
-    case 'Evolution' :
-      $('#EvolutionPanel').removeClass('hidden');
-      break;
-    case 'Advanced' :
-      $('#FFTPanel').removeClass('hidden');
-      if(FFTChart !== null) $(FFTChart.graphDiv).parent().removeAttr('style');
-      if(FFTChart !== null) UpdateFFTChart(null);
-      break;
-    case 'Parameters' :
-      $('#ParametersPanel').removeClass('hidden');
-      if(PowerFactorChart !== null) UpdatePowerFactorChart(null);
-      if(THDChart !== null) UpdateTHDChart(null);
-      if(PHIChart !== null) UpdatePHIChart(null);
-      break;
-  }
-  window.dispatchEvent(new Event('resize'));
+//  switch(localStorage.getItem('VoltageDetailView')) {
+//    case 'Parameters' :
+//      if(PowerFactorChart !== null) UpdatePowerFactorChart(null);
+//      if(THDChart !== null) UpdateTHDChart(null);
+//      if(PHIChart !== null) UpdatePHIChart(null);
+//      break;
+
+//    case 'Events' :
+//      if(EventChart !== null) $(EventChart.graphDiv).parent().removeAttr('style');
+//      break;
+//  }
 }
+function DetailsButtonUpdate(event) {
+  
+}
+
 $('#btnShowDetailWaveform').click(DetailsButtonClick);
 $('#btnShowDetailHarmonics').click(DetailsButtonClick);
 $('#btnShowDetailEvolution').click(DetailsButtonClick);
@@ -701,9 +231,11 @@ $('#btnShowDetail1Harmonic').click(DetailsButtonClick);
 $('#btnPauseDetail').click(DetailsButtonClick);
 
 /* Grafica de forma de onda */
-var WaveformChart       = null;
-var WaveformDataset     = [];
-function UpdateWaveformChart(result) {
+var WaveformChart = null;
+function UpdateWaveformChart() {
+  var VoltageVisibility = [], CurrentVisibility = [], Y1Range = [], Y2Range = [], Series = {};
+  var ShowVoltage = (localStorage.getItem("DetailShowVoltageCurrent") === 'true');
+  return;
   if(result !== null) {
     var date = new Date(result['Sampletime']);
     $('#WaveformTime').text('Last update at ' + date.toLocaleTimeString() + '.' + date.getMilliseconds());
@@ -1456,30 +988,12 @@ $('#GraphDialogClose').click(function() {
   window.dispatchEvent(new Event('resize'));
 });
 
-/* Secuencia de inicio para cargar la pagina */
+var MainScrollable = null;
 function UpdatePage() {
-  if(Nodes['Devices'][Node]['Type'] === '3Phase') {
-    $('#btnShowCurrentRPhase').removeClass('disabled');
-    $('#btnShowCurrentSPhase').removeClass('disabled');
-    $('#btnShowCurrentTPhase').removeClass('disabled');
-    $('#btnShowCurrentNPhase').removeClass('disabled');
-    $('#btnShowDetailRPhase').removeClass('disabled');
-    $('#btnShowDetailSPhase').removeClass('disabled');
-    $('#btnShowDetailTPhase').removeClass('disabled');
-    $('#btnShowDetailNPhase').removeClass('disabled');
-    var ShowR = (localStorage.getItem('ShowR') === 'true');
-    var ShowS = (localStorage.getItem('ShowS') === 'true');
-    var ShowT = (localStorage.getItem('ShowT') === 'true');
-    var ShowN = (localStorage.getItem('ShowT') === 'true');
-    if((ShowR !== true) && (ShowS !== true) && (ShowT !== true) && (ShowN !== true)) ShowR = true;
-    localStorage.setItem('ShowR', (ShowR === true)); 
-    localStorage.setItem('ShowS', (ShowS === true));
-    localStorage.setItem('ShowT', (ShowT === true));
-    localStorage.setItem('ShowN', (ShowN === true));
-  }
-  DetailsButtonClick();
-  AjaxGetCurrent();
-  AjaxGetCurrentCounters();
-  AjaxGetDetails();
-  AjaxGetEvolution();
+  new TabSelector('CurrentDetailView', '#DetailTabs', '#DetailDivs', DetailTabChange);
+  DetailsButtonUpdate();
+  MainScrollable = new Scrollable( {Spinners: ['#CurrentSpinner'], Series: 'rms_i', OnSuccess: Scrollable_OnSuccess} );
+  new Live( {RefreshInterval: 5000, Spinners: ['#DetailSpinner'], Series: 'wave_i, wave_v, harmonics_i, harmonics_v, fft_i, fft_v, power_factor, thd_i, phi, rms_i, rms_v', OnSuccess: Live_OnSuccess});
+  new PeriodView( {Spinners: [], Series: 'power_factor, thd_i, phi, harmonics_i', Period: 86400000, Aggreg: '1m', OnSuccess: PeriodView_OnSuccess} );
+  Scrollable_UpdateCounters(true);
 }//1485

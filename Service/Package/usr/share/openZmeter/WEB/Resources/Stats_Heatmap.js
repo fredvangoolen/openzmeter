@@ -42,7 +42,7 @@ function AjaxGetEnergy(selected_year) {
   $('#StatsSpinner').show();
   var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
   var From = new Date(selected_year, 0, 1, 0, 0, 0, 0).getTime();
-  GetSeries(To - From, To, '10m', 0, 'active_energy',
+  Ajax.GetSeries(To - From, To, '10m', 0, 'active_energy',
     function(result) {
       EnergyData = GraphDataAppend(result, 'active_energy', []);
       $('#StatsSpinner').hide();
@@ -397,7 +397,7 @@ $('#btnHeatmap30Min').click(ButtonClick);
 $('#btnHeatmap20Min').click(ButtonClick);
 $('#btnHeatmap10Min').click(ButtonClick);
 function UpdatePage() {
-  GetSeriesRange('1h', 
+  Ajax.GetSeriesRange('1h', 
     function(result) {
       for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) {
         $('#YearSelector').append('<button type="button" class="btn btn-default btn-xs" id="btnSelYear' + year + '" onclick="AjaxGetEnergy(' + year + ')">' + year + '</button>');

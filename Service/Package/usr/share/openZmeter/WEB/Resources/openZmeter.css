@@ -83,6 +83,12 @@ body {
 .sidenav-header > div {
   line-height: 22px;
 }
+.sidenav-header > div:first-child {
+  width: 168px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .sidenav-header > table {
   width: 100%;
   font-size: 11px;
