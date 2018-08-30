@@ -42,6 +42,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/Source/DeviceInterface.o \
 	${OBJECTDIR}/Source/Drivers/DeviceRemote.o \
 	${OBJECTDIR}/Source/Drivers/DeviceV1.o \
+	${OBJECTDIR}/Source/Drivers/DeviceV2.o \
 	${OBJECTDIR}/Source/Drivers/DeviceVirtual.o \
 	${OBJECTDIR}/Source/FFT.o \
 	${OBJECTDIR}/Source/HTTPServer.o \
@@ -112,6 +113,11 @@ ${OBJECTDIR}/Source/Drivers/DeviceV1.o: Source/Drivers/DeviceV1.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Drivers
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Drivers/DeviceV1.o Source/Drivers/DeviceV1.cpp
+
+${OBJECTDIR}/Source/Drivers/DeviceV2.o: Source/Drivers/DeviceV2.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source/Drivers
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Drivers/DeviceV2.o Source/Drivers/DeviceV2.cpp
 
 ${OBJECTDIR}/Source/Drivers/DeviceVirtual.o: Source/Drivers/DeviceVirtual.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Drivers

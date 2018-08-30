@@ -5,6 +5,7 @@
 #include <math.h>
 #include <string.h>
 #include "AnalyzerInterface.h"
+#include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode) : Database(id) {
   pID = id;
@@ -14,6 +15,7 @@ AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nomi
   pMaxCurrent = max_current;
   pMinCurrent = min_current;
   pMode = mode;
+  pLastSave = 0;
   ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_3s  (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[] NOT NULL, rms_i real[] NOT NULL, active_power real[] NOT NULL, active_energy real[] NOT NULL, reactive_power real[] NOT NULL, reactive_energy real[] NOT NULL, freq real, flag boolean NOT NULL) WITH (OIDS=FALSE)");
   ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_1m  (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[] NOT NULL, rms_i real[] NOT NULL, active_power real[] NOT NULL, active_energy real[] NOT NULL, reactive_power real[] NOT NULL, reactive_energy real[] NOT NULL, freq real, flag boolean NOT NULL) WITH (OIDS=FALSE)");
   ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_10m (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[] NOT NULL, rms_i real[] NOT NULL, active_power real[] NOT NULL, active_energy real[] NOT NULL, reactive_power real[] NOT NULL, reactive_energy real[] NOT NULL, freq real, flag boolean NOT NULL) WITH (OIDS=FALSE)");
@@ -40,6 +42,7 @@ json_object *AnalyzerInterface::GetJSONDescriptor() {
   json_object_object_add(Device, "MinCurrent", json_object_new_double(pMinCurrent));
   json_object_object_add(Device, "Mode", json_object_new_string((pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N"));
   json_object_object_add(Device, "SampleFreq", json_object_new_double(pSamplerate));
+  json_object_object_add(Device, "Online", json_object_new_boolean((Tools::GetTime() - pLastSave) < 20000));
   return Device;
 }
 json_object *AnalyzerInterface::GetJSONParams(char *series) {
@@ -161,7 +164,7 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
     }
     json_object_object_add(Result, "wave_i", Obj);
   }
-  if(FFT_V) {
+  if(FFT_V && (Params.Samples > 0)) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < VoltageChannels; i++) {
       json_object *Obj2 = json_object_new_array();
@@ -170,7 +173,7 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
     }
     json_object_object_add(Result, "fft_v", Obj);
   }
-  if(FFT_I) {
+  if(FFT_I && (Params.Samples > 0)) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < CurrentChannels; i++) {
       json_object *Obj2 = json_object_new_array();
@@ -222,6 +225,7 @@ void AnalyzerInterface::SaveAggreg(Params_t *params) {
     ExecSentence();
   }
   ResetAggreg(params);
+  pLastSave = Tools::GetTime();
 }
 void AnalyzerInterface::AccumulateAggreg(Params_t *dst, Params_t *src) {
   dst->Timestamp = src->Timestamp;

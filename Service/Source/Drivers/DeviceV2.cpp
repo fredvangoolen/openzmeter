@@ -15,7 +15,7 @@
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include "DeviceV2.h"
-#include "../Tools.h"
+#include "Tools.h"
 // Funciones ===========================================================================================================
 void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV2 *This = (DeviceV2*)transfer->user_data;
@@ -28,7 +28,6 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
     if(Pkg[0] == -32768) {
       if(This->pUSBState == USB_SYNC) Tools::LogMsg("WARN", "DeviceV2 lost sync. Try reduce capture speed\n");
       This->pUSBState = USB_SYNC;
-      This->BuffersReset();
       This->pChannel = 0;
       Count++;
     }
@@ -39,19 +38,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
       if(Pkg[Count] == -32768) continue;
       This->pReadSamples[This->pChannel++] = Pkg[Count];
       if(This->pChannel != This->pChannelCount) continue;
-      float VoltageChannels[3];
-      float CurrentChannels[4];
-      float *VoltagePos = VoltageChannels;
-      float *CurrentPos = CurrentChannels;
-      float *ReadPos    = This->pReadSamples;
-      if(This->pChannelMask & 0x40) *VoltagePos++ = *ReadPos++ * This->pVoltageGain[0];
-      if(This->pChannelMask & 0x20) *CurrentPos++ = *ReadPos++ * This->pCurrentGain[0];
-      if(This->pChannelMask & 0x10) *VoltagePos++ = *ReadPos++ * This->pVoltageGain[1];
-      if(This->pChannelMask & 0x08) *CurrentPos++ = *ReadPos++ * This->pCurrentGain[1];
-      if(This->pChannelMask & 0x04) *VoltagePos++ = *ReadPos++ * This->pVoltageGain[2];
-      if(This->pChannelMask & 0x02) *CurrentPos++ = *ReadPos++ * This->pCurrentGain[2];
-      if(This->pChannelMask & 0x01) *CurrentPos++ = *ReadPos++ * This->pCurrentGain[3];
-      if(This->BuffersAppend(VoltageChannels, CurrentChannels) == false) {
+      if(This->BuffersAppend() == false) {
         //NO HAY SITIO!!! que hago?
         Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
       }
@@ -69,13 +56,46 @@ int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
       libusb_device *CurrentDev = libusb_get_device(This->pDeviceHandle);	
       if(dev == CurrentDev) {
         Tools::LogMsg("INFO", "Device DeviceV2 with serial '%s' disconnected\n", This->pSerial);
-        This->pActive = false;
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL;
       }
     }
   }
   return 0;
+}
+bool DeviceV2::BuffersAppend() {
+  if(pUsed == pBuffLen) return false;
+  float *VoltagePos = &pVoltageSamples[pVoltageChannelCount * pWritePos];
+  float *CurrentPos = &pCurrentSamples[pCurrentChannelCount * pWritePos];
+  float *ReadPos    = pReadSamples;
+  if(pChannelMask & 0x40) *VoltagePos++ = *ReadPos++ * pVoltageGain[0];
+  if(pChannelMask & 0x20) *CurrentPos++ = *ReadPos++ * pCurrentGain[0];
+  if(pChannelMask & 0x10) *VoltagePos++ = *ReadPos++ * pVoltageGain[1];
+  if(pChannelMask & 0x08) *CurrentPos++ = *ReadPos++ * pCurrentGain[1];
+  if(pChannelMask & 0x04) *VoltagePos++ = *ReadPos++ * pVoltageGain[2];
+  if(pChannelMask & 0x02) *CurrentPos++ = *ReadPos++ * pCurrentGain[2];
+  if(pChannelMask & 0x01) *CurrentPos++ = *ReadPos++ * pCurrentGain[3];
+  pWritePos = (pWritePos + 1) % pBuffLen;
+  pUsed++;
+  uint64_t Sampletime = Tools::GetTime();
+  if(pLastUpdate < (Sampletime - 500)) {
+    char ThreadName[16];
+    sprintf(ThreadName, "DeviceV2_%02d", pUsed * 100 / pBuffLen);
+    pthread_setname_np(pCaptureThread, ThreadName);
+    pLastUpdate = Sampletime;
+  }
+  for(uint8_t i = 0; i < pAnalyzersCount; i++) {
+    if(pAnalyzers[i].Analyzer->IsFinished() == false) return true;
+  }
+  bool Started = false;
+  for(uint8_t Sample = 0; (Sample < 5) && (pUsed > 0) && (Started == false); Sample++) {
+    for(uint8_t i = 0; i < pAnalyzersCount; i++) {
+      if(pAnalyzers[0].Analyzer->BufferAppend(&pVoltageSamples[pReadPos * pVoltageChannelCount + pAnalyzers[0].OffsetV], &pCurrentSamples[pReadPos * pCurrentChannelCount + pAnalyzers[0].OffsetC], Sampletime) == true) Started = true;
+    }
+    pReadPos = (pReadPos + 1) % pBuffLen;
+    pUsed--;
+  }
+  return true;
 }
 void *DeviceV2::Capture_Thread(void *args) {
   int Prio = sched_get_priority_max(SCHED_RR);
@@ -87,9 +107,9 @@ void *DeviceV2::Capture_Thread(void *args) {
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   }
   DeviceV2 *This = (DeviceV2*)args;
-  uint8_t BufferIN[CAPTUREV2_TRANSFERS][8192];
-  struct libusb_transfer *TransferIN[CAPTUREV2_TRANSFERS];
-  for(int i = 0; i < CAPTUREV2_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
+  uint8_t BufferIN[DEVICEV2_TRANSFERS][8192];
+  struct libusb_transfer *TransferIN[DEVICEV2_TRANSFERS];
+  for(int i = 0; i < DEVICEV2_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
   while(!This->pTerminate) {
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(NULL, &tv, NULL);
@@ -154,8 +174,8 @@ void *DeviceV2::Capture_Thread(void *args) {
         Tools::LogMsg("INFO", "Claimed interface 1 on DeviceV2 with serial %s\n", This->pSerial);
       }
       This->pUSBState = USB_WAIT;
-      for(int i = 0; i < CAPTUREV2_TRANSFERS; i++) {
-        libusb_fill_bulk_transfer(TransferIN[i], This->pDeviceHandle, CAPTUREV2_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, -1);
+      for(int i = 0; i < DEVICEV2_TRANSFERS; i++) {
+        libusb_fill_bulk_transfer(TransferIN[i], This->pDeviceHandle, DEVICEV2_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, -1);
         Result |= libusb_submit_transfer(TransferIN[i]);
       }
       if(Result != LIBUSB_SUCCESS) {
@@ -166,7 +186,6 @@ void *DeviceV2::Capture_Thread(void *args) {
         continue;
       }
       Tools::LogMsg("INFO", "Capture started on DeviceV2 with serial %s\n", This->pSerial);
-      This->pActive = true;
       This->pNewDevice = NULL;
       This->pUSBState = USB_RESET;
       int Error = libusb_control_transfer(This->pDeviceHandle, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0x01, 0x0000, 0x0000, NULL, 0, 0);
@@ -188,172 +207,162 @@ bool DeviceV2::ReadJSONFloatArray(json_object *object, float *dst, uint8_t len) 
   }
   return true;
 }
-bool DeviceV2::ReadOutput(json_object *object, bool parseOnly) {
-  json_object *Find;
-  char *ReadMode = (char*)"3Phase";
-  char *Name     = (char*)"Undefined";
-  if((parseOnly == false) && (json_object_object_get_ex(object, "DisplayName", &Find) == true) && (json_object_get_type(Find) == json_type_string)) {
-    Name = (char*)json_object_get_string(Find);
+AnalyzerInterface *DeviceV2::FindAnalyzer(char *serial) {
+  for(uint8_t i = 0; i < pAnalyzersCount; i++) {
+    if(strcmp(serial, pAnalyzers[i].Analyzer->GetID()) == 0) return pAnalyzers[i].Analyzer;
   }
-  if((json_object_object_get_ex(object, "Mode", &Find) == true) && (json_object_get_type(Find) == json_type_string)) {
-    ReadMode = (char*)json_object_get_string(Find);
-  }
-  if(strcmp("3Phase", ReadMode) == 0) {
-    bool UseNeutral = true;
-    if((json_object_object_get_ex(object, "NeutralCurrent", &Find) == true) && (json_object_get_type(Find) == json_type_boolean)) {
-      UseNeutral = json_object_get_boolean(Find);
-    }
-    if(parseOnly) {
-      if(((UseNeutral == true) && (pChannelMask != 0)) || ((UseNeutral == false) && ((pChannelMask & 0x2A) != 0))) {
-        Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
-        return false;  
-      }
-      pChannelMask = pChannelMask | ((UseNeutral == true) ? 0x7F : 0x7E);
-    } else {
-      AddAnalyzer(new AnalyzerSoft(Name, UseNeutral, strdup(pSerial), pADCSamplerate / pOversample, 0.1));
-    }
-  } else if(strcmp("1Phase", ReadMode) == 0) {
-    char    *CurrentChannelText = (char*)"R";
-    uint8_t  VoltageChannel = 0;
-    uint8_t  CurrentChannel = 0;
-    if((json_object_object_get_ex(object, "VoltageChannel", &Find) == true) && (json_object_get_type(Find) == json_type_string)) {
-      char *VoltageChannelText = (char*)json_object_get_string(Find);
-      if(strcmp("R", VoltageChannelText) == 0) {
-        VoltageChannel = 6;
-      } else if(strcmp("S", VoltageChannelText) == 0) {
-        VoltageChannel = 4;
-      } else if(strcmp("T", VoltageChannelText) == 0) {
-        VoltageChannel = 2;
-      } else {
-        Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S' or 'T'\n");
-        return false;
-      }
-    }
-    if((json_object_object_get_ex(object, "CurrentChannel", &Find) == true) && (json_object_get_type(Find) == json_type_string)) {
-      CurrentChannelText = (char*)json_object_get_string(Find);
-      if(strcmp("R", CurrentChannelText) == 0) {
-        CurrentChannel = 5;
-      } else if(strcmp("S", CurrentChannelText) == 0) {
-        CurrentChannel = 3;
-      } else if(strcmp("T", CurrentChannelText) == 0) {
-        CurrentChannel = 1;
-      } else if(strcmp("N", CurrentChannelText) == 0) {
-        CurrentChannel = 0;
-      } else {
-        Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S', 'T' or 'N'\n");
-        return false;
-      }
-    }
-    if(parseOnly == true) {
-      if((pChannelMask & (1 << CurrentChannel)) != 0) {
-        Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
-        return false;
-      }
-      pChannelMask |= (1 << CurrentChannel) | (1 << VoltageChannel);
-    } else {
-      char *ID = (char*)malloc(strlen(pSerial) + 2);
-      sprintf(ID, "%s%s", pSerial, CurrentChannelText);
-      if(VoltageChannel == 6) {
-        VoltageChannel = 0;
-      } else if(VoltageChannel == 4) {
-        VoltageChannel = 1;
-        if((pChannelMask && 0x40) == 0) VoltageChannel--;
-      } else if(VoltageChannel == 2) {
-        VoltageChannel = 2;
-        if((pChannelMask && 0x40) == 0) VoltageChannel--;
-        if((pChannelMask && 0x10) == 0) VoltageChannel--;
-      }
-      if(CurrentChannel == 5) {
-        CurrentChannel = 0;
-      } else if(CurrentChannel == 3) {
-        CurrentChannel = 1;
-        if((pChannelMask && 0x20) == 0) CurrentChannel--;
-      } else if(CurrentChannel == 1) {
-        CurrentChannel = 2;
-        if((pChannelMask && 0x20) == 0) CurrentChannel--;
-        if((pChannelMask && 0x08) == 0) CurrentChannel--;
-      } else if(CurrentChannel == 0) {
-        CurrentChannel = 3;
-        if((pChannelMask && 0x20) == 0) CurrentChannel--;
-        if((pChannelMask && 0x08) == 0) CurrentChannel--;
-        if((pChannelMask && 0x02) == 0) CurrentChannel--;
-      }
-      AddAnalyzer(new AnalyzerSoft(Name, ID, pADCSamplerate / pOversample, 0.1), VoltageChannel, CurrentChannel);
-    }
-  }
-  return true;
+  return NULL;
 }
-DeviceV2::DeviceV2(json_object* config) : DeviceInterface((char*)"DeviceV2") {
+DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
+  Tools::LogMsg("INFO", "Starting DeviceV2 driver...\n");
   for(int i = 0; i < 3; i++) pVoltageGain[i]   = 1;
   for(int i = 0; i < 3; i++) pVoltageOffset[i] = 0;
   for(int i = 0; i < 4; i++) pCurrentGain[i]   = 1;
   for(int i = 0; i < 4; i++) pCurrentOffset[i] = 0;
-  pChannelMask      = 0;
-  pChannelCount     = 0;
-  pDeviceHandle     = NULL;
-  pNewDevice        = NULL;
-  pOversample       = 0;
-  pADCSamplerate    = 20000;
-  pUSBState         = USB_WAIT;
-  pSerial           = (char*)"000000000000000000000000";
-  struct json_object *Find;
-  if((json_object_object_get_ex(config, "Samplerate", &Find) == true) && (json_object_get_type(Find) == json_type_int)) {
-    pADCSamplerate = json_object_get_int(Find);
+  pUsed                  = 0;
+  pVoltageChannelCount   = 0;
+  pCurrentChannelCount   = 0;
+  pChannelMask           = 0;
+  pChannelCount          = 0;
+  pReadPos               = 0;
+  pWritePos              = 0;
+  pLastUpdate            = 0;
+  pDeviceHandle          = NULL;
+  pNewDevice             = NULL;
+  pOversample            = 0;
+  pADCSamplerate         = 20000;
+  pUSBState              = USB_WAIT;
+  pSerial                = (char*)"000000000000000000000000";
+  pAnalyzersCount        = 0;
+  float NominalVoltage   = 230.0;
+  float NominalFrequency = 50.0;
+  struct json_object *Find, *Find2;
+  if((json_object_object_get_ex(config, "Samplerate", &Find) == true) && (json_object_get_type(Find) == json_type_int)) pADCSamplerate = json_object_get_int(Find);
+  if((json_object_object_get_ex(config, "Oversample", &Find) == true) && (json_object_get_type(Find) == json_type_int)) pOversample = json_object_get_int(Find);
+  if((json_object_object_get_ex(config, "Serial", &Find) == true) && (json_object_get_type(Find) == json_type_string)) pSerial = (char*)json_object_get_string(Find);
+  if((json_object_object_get_ex(config, "NominalVoltage", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalVoltage = json_object_get_double(Find);
+  if((json_object_object_get_ex(config, "NominalFrequency", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalFrequency = json_object_get_double(Find);
+  if((json_object_object_get_ex(config, "VoltageGain", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
+    if(ReadJSONFloatArray(Find, pVoltageGain, 3) == false) {
+      Tools::LogMsg("ERROR", "CaptureV2: Voltage gain must have 3 double values\n");
+      return;
+    }
   }
-  if((json_object_object_get_ex(config, "Oversample", &Find) == true) && (json_object_get_type(Find) == json_type_int)) {
-    pOversample = json_object_get_int(Find);
+  if((json_object_object_get_ex(config, "VoltageOffset", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
+    if(ReadJSONFloatArray(Find, pVoltageOffset, 3) == false) {
+      Tools::LogMsg("ERROR", "CaptureV2: Voltage offset must have 3 double values\n");
+      return;
+    }
   }
-  if((json_object_object_get_ex(config, "Serial", &Find) == true) && (json_object_get_type(Find) == json_type_string)) {
-    pSerial = (char*)json_object_get_string(Find);
+  if((json_object_object_get_ex(config, "CurrentGain", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
+    if(ReadJSONFloatArray(Find, pCurrentGain, 4) == false) {
+      Tools::LogMsg("ERROR", "CaptureV2: current gain must have 4 double values\n");
+      return;
+    }   
   }
-  json_object_object_foreach(config, JSON_Key, JSON_Val) {
-    enum json_type JSON_Type = json_object_get_type(JSON_Val);
-    if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "VoltageGain") == 0)) {
-      if(ReadJSONFloatArray(JSON_Val, pVoltageGain, 3) == false) {
-        Tools::LogMsg("ERROR", "CaptureV2: Voltage gain must have 3 double values\n");
+  if((json_object_object_get_ex(config, "CurrentOffset", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
+    if(ReadJSONFloatArray(Find, pCurrentOffset, 4) == false) {
+      Tools::LogMsg("ERROR", "CaptureV2: current offset must have 4 double values\n");
+      return;
+    }   
+  }
+  pBuffLen = DEVICEV2_BUFFERSECONDS * pADCSamplerate / pOversample;
+  pVoltageSamples = (float*)malloc(sizeof(float) * pBuffLen);
+  pCurrentSamples = (float*)malloc(sizeof(float) * pBuffLen);
+  if((pVoltageSamples == NULL) || (pCurrentSamples == NULL)) {
+    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
+    return;
+  }  
+  if((json_object_object_get_ex(config, "Outputs", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
+    pAnalyzers = (Analyzer_t*)realloc(pAnalyzers, sizeof(Analyzer_t*) * json_object_array_length(Find));
+    for(int i = 0; i < json_object_array_length(Find); i++) {
+      json_object *Output = json_object_array_get_idx(Find, i);
+      char *ReadMode = (char*)"3Phase";
+      char *Name     = (char*)"Unnamed input";
+      if((json_object_object_get_ex(Output, "DisplayName", &Find2) == true) && (json_object_get_type(Find2) == json_type_string)) Name = (char*)json_object_get_string(Find2);
+      if((json_object_object_get_ex(Output, "Mode", &Find2) == true) && (json_object_get_type(Find2) == json_type_string)) ReadMode = (char*)json_object_get_string(Find2);
+      if(strcmp("3Phase", ReadMode) == 0) {
+        bool UseNeutral = true;
+        if((json_object_object_get_ex(Output, "NeutralCurrent", &Find2) == true) && (json_object_get_type(Find2) == json_type_boolean)) UseNeutral = json_object_get_boolean(Find2);
+        if(((UseNeutral == true) && (pChannelMask != 0)) || ((UseNeutral == false) && ((pChannelMask & 0x2A) != 0))) {
+          Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
+          return;  
+        }
+        pChannelMask = pChannelMask | ((UseNeutral == true) ? 0x7F : 0x7E);
+        pAnalyzers[pAnalyzersCount].Analyzer = new AnalyzerSoft(pADCSamplerate / pOversample, strdup(pSerial), NominalVoltage, NominalFrequency, Name, 50.0, 0.1, UseNeutral ? AnalyzerInterface::PHASE3N : AnalyzerInterface::PHASE3);
+        pAnalyzers[pAnalyzersCount].OffsetV = 0;
+        pAnalyzers[pAnalyzersCount].OffsetC = 0;
+        pAnalyzersCount++;
+      } else if(strcmp("1Phase", ReadMode) == 0) {
+        char    *CurrentChannelText = (char*)"R";
+        uint8_t  VoltageMask = 0;
+        uint8_t  CurrentMask = 0;
+        if((json_object_object_get_ex(Output, "VoltageChannel", &Find2) == true) && (json_object_get_type(Find2) == json_type_string)) {
+          char *VoltageChannelText = (char*)json_object_get_string(Find2);
+          if(strcmp("R", VoltageChannelText) == 0) {
+            VoltageMask = 0x40;
+            pAnalyzers[pAnalyzersCount].OffsetV = 0;
+          } else if(strcmp("S", VoltageChannelText) == 0) {
+            VoltageMask = 0x10;
+            pAnalyzers[pAnalyzersCount].OffsetV = 1;
+          } else if(strcmp("T", VoltageChannelText) == 0) {
+            VoltageMask = 0x04;
+            pAnalyzers[pAnalyzersCount].OffsetV = 2;
+          } else {
+            Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S' or 'T'\n");
+            return;
+          }
+        }
+        if((json_object_object_get_ex(Output, "CurrentChannel", &Find2) == true) && (json_object_get_type(Find2) == json_type_string)) {
+          CurrentChannelText = (char*)json_object_get_string(Find2);
+          if(strcmp("R", CurrentChannelText) == 0) {
+            CurrentMask = 0x20;
+            pAnalyzers[pAnalyzersCount].OffsetC = 0;
+          } else if(strcmp("S", CurrentChannelText) == 0) {
+            CurrentMask = 0x08;
+            pAnalyzers[pAnalyzersCount].OffsetC = 1;
+          } else if(strcmp("T", CurrentChannelText) == 0) {
+            CurrentMask = 0x02;
+            pAnalyzers[pAnalyzersCount].OffsetC = 2;
+          } else if(strcmp("N", CurrentChannelText) == 0) {
+            CurrentMask = 0x01;
+            pAnalyzers[pAnalyzersCount].OffsetC = 3;
+          } else {
+            Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S', 'T' or 'N'\n");
+            return;
+          }
+        }
+        if((pChannelMask & CurrentMask) != 0) {
+          Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, same current channel can not be used twice\n");
+          return;
+        }
+        pChannelMask = pChannelMask | CurrentMask | VoltageMask;
+        char *ID = (char*)malloc(strlen(pSerial) + 2);
+        sprintf(ID, "%s%s", pSerial, CurrentChannelText);
+        pAnalyzers[pAnalyzersCount].Analyzer = new AnalyzerSoft(pADCSamplerate / pOversample, ID, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
+        pAnalyzersCount++;
+      } else {
+        Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, Mode must be one '1Phase' or '3Phase'\n");
         return;
-      }
-    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "VoltageOffset") == 0)) {
-      if(ReadJSONFloatArray(JSON_Val, pVoltageOffset, 3) == false) {
-        Tools::LogMsg("ERROR", "CaptureV2: Voltage offset must have 3 double values\n");
-        return;
-      }
-    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "CurrentGain") == 0)) {
-      if(ReadJSONFloatArray(JSON_Val, pCurrentGain, 4) == false) {
-        Tools::LogMsg("ERROR", "CaptureV2: current gain must have 4 double values\n");
-        return;
-      }
-    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "CurrentOffset") == 0)) {
-      if(ReadJSONFloatArray(JSON_Val, pCurrentOffset, 4) == false) {
-        Tools::LogMsg("ERROR", "CaptureV2: current offset must have 4 double values\n");
-        return;
-      }
-    } else if((JSON_Type == json_type_array) && (strcmp(JSON_Key, "Outputs") == 0)) {
-      for(int i = 0; i < json_object_array_length(JSON_Val); i++) {
-        if(ReadOutput(json_object_array_get_idx(JSON_Val, i), true) == false) return;
-      }
-      for(int i = 0; i < json_object_array_length(JSON_Val); i++) {
-        if(ReadOutput(json_object_array_get_idx(JSON_Val, i), false) == false) return;
       }
     }
   }
-  uint8_t VoltageChannels = 0;
-  uint8_t CurrentChannels = 0;
-  if(pChannelMask & 0x40) VoltageChannels++;
-  if(pChannelMask & 0x20) CurrentChannels++;
-  if(pChannelMask & 0x10) VoltageChannels++;
-  if(pChannelMask & 0x08) CurrentChannels++;
-  if(pChannelMask & 0x04) VoltageChannels++;
-  if(pChannelMask & 0x02) CurrentChannels++;
-  if(pChannelMask & 0x01) CurrentChannels++;
-  if(BuffersAlloc(VoltageChannels, CurrentChannels, pADCSamplerate / pOversample) == false) {
-    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
-    return;
-  }
-  Tools::LogMsg("INFO", "Starting CaptureV2 adquisition thread...\n");
-  pChannelCount = 0;
-  for(uint8_t Mask = 0x40; Mask != 0; Mask >>= 1) {
-    if(pChannelMask & Mask) pChannelCount++;
+  //count voltage, current and totals channels
+  if(pChannelMask & 0x40) pVoltageChannelCount++;
+  if(pChannelMask & 0x20) pCurrentChannelCount++;
+  if(pChannelMask & 0x10) pVoltageChannelCount++;
+  if(pChannelMask & 0x08) pCurrentChannelCount++;
+  if(pChannelMask & 0x04) pVoltageChannelCount++;
+  if(pChannelMask & 0x02) pCurrentChannelCount++;
+  if(pChannelMask & 0x01) pCurrentChannelCount++;
+  pChannelCount = pVoltageChannelCount + pCurrentChannelCount;
+  //Adjust sample offset on 1phase devices
+  for(uint8_t i = 0; i < pAnalyzersCount; i++) {
+    if((pAnalyzers[i].OffsetV > 1) && ((pChannelMask && 0x10) == 0)) pAnalyzers[i].OffsetV--;
+    if((pAnalyzers[i].OffsetV > 0) && ((pChannelMask && 0x40) == 0)) pAnalyzers[i].OffsetV--;
+    if((pAnalyzers[i].OffsetC > 2) && ((pChannelMask && 0x02) == 0)) pAnalyzers[i].OffsetC--;
+    if((pAnalyzers[i].OffsetC > 1) && ((pChannelMask && 0x08) == 0)) pAnalyzers[i].OffsetC--;
+    if((pAnalyzers[i].OffsetC > 0) && ((pChannelMask && 0x20) == 0)) pAnalyzers[i].OffsetC--;
   }
   int Error = libusb_init(NULL);
   if(Error < 0) {
@@ -365,14 +374,24 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface((char*)"DeviceV2") {
     libusb_exit(NULL);
     return;
   }
-  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , CAPTUREV2_VID, CAPTUREV2_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
+  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV2_VID, DEVICEV2_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
   if(Error < 0) {
-    Tools::LogMsg("ERROR", "Fallo al registrar callback de escucha libUSB...\n");
+    Tools::LogMsg("ERROR", "Failed to register libUSB callback\n");
+    pTerminate = true;
     pthread_join(pCaptureThread, NULL);
     return;
   }
 }
 DeviceV2::~DeviceV2() {
-  for(int i = 0; i < GetAnalyzers(); i++) free(GetAnalyzers(i)->GetID());
+  pTerminate = true;
+  Tools::LogMsg("INFO", "Waiting for adquisition thread ends...\n");
+  pthread_join(pCaptureThread, NULL);
+  if(pVoltageSamples) free(pVoltageSamples);
+  if(pCurrentSamples) free(pCurrentSamples);
+  for(int i = 0; i < pAnalyzersCount; i++) {
+    free(pAnalyzers[i].Analyzer->GetID());
+    delete pAnalyzers[i].Analyzer;
+  }
+  free(pAnalyzers);
 }
 //======================================================================================================================
