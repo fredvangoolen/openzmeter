@@ -1,4 +1,4 @@
-#Fri Aug 31 09:42:39 CEST 2018
+#Fri Aug 31 12:25:21 CEST 2018
 /home/edu/Proyectos/zMeter/V2/Service/Source/Drivers/DeviceV2.h=c1535630082000
 /home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-Debug.mk=c1535529991000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/font-awesome/css/font-awesome.css=c1520327825000
@@ -8,7 +8,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/Source/FFT.h=c1530184915000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Analysis_Frequency.js=c1535114422000
 /home/edu/Proyectos/zMeter/V2/Service/Source/Drivers/DeviceVirtual.h=c1535629907000
-/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Analysis_Voltage.js=c1535371551000
+/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Analysis_Voltage.js=c1535708436000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/Firmware_SETUP_CAPTURE.png=c1519034874000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Events_Disturbances.html=c1535368307000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/marked/marked.min.js=c1513975952000
@@ -208,7 +208,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/datatables/js/jquery.dataTables.js=c1520326961000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Common.html=c1535631166000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/fundamental_reactive_power.png=c1513952649000
-/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/openZmeter.js=c1535631933000
+/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/openZmeter.js=c1535703590000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/openZmeter.conf_sample=c1530953095000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/dygraph/chart-plotter.js=c1534409091000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/MiniViews/Voltage.html=c1520328976000
