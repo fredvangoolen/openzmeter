@@ -52,7 +52,7 @@ void  *DeviceVirtual::Capture_Thread(void *args) {
       GeneratedSamples++;
       This->pAnalyzer->BufferAppend(Voltage, Current, Sampletime);
     } else {
-      usleep(10);
+      usleep(1000);
     }
   }
   return NULL;

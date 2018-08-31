@@ -16,12 +16,12 @@ var SeriesNames = {
                '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th',
                '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th',
                '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'],
-  Voltage: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['L'] : ['R', 'S', 'T']; },
-  Current: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['L'] : (Analyzers[Analyzer]['Mode'] === '3PHASE') ? ['(R)', '(S)', '(T)'] : ['(R)', '(S)', '(T)', '(N)']; },
-  ActiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1Phase') ? ['L']  : ['P (R)', 'P (S)', 'P (T)']; },
-  ReactiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1Phase') ? ['L']  : ['Reactive Energy (R)', 'Reactive Energy (S)', 'Reactive Energy (T)']; },
-  ActivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1Phase') ? ['L']  : ['R', 'Active Power (S)', 'Active Power (T)']; },
-  ReactivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1Phase') ? ['L']  : ['R', 'Reactive Power (S)', 'Reactive Power (T)']; }
+  Voltage: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['V'] : ['V(R)', 'V(S)', 'V(T)']; },
+  Current: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['I'] : (Analyzers[Analyzer]['Mode'] === '3PHASE') ? ['I(R)', 'I(S)', 'I(T)'] : ['I(R)', 'I(S)', 'I(T)', 'I(N)']; },
+  ActiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['L']  : ['P (R)', 'P (S)', 'P (T)']; },
+  ReactiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['L']  : ['Reactive Energy (R)', 'Reactive Energy (S)', 'Reactive Energy (T)']; },
+  ActivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['L']  : ['R', 'Active Power (S)', 'Active Power (T)']; },
+  ReactivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['L']  : ['R', 'Reactive Power (S)', 'Reactive Power (T)']; }
 };
   
 /* redirect ajax error to login page */

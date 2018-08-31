@@ -49,11 +49,8 @@ void DeviceInterface::AddDeviceInterface(DeviceInterface* device) {
 }
 DeviceInterface::DeviceInterface() {
   pTerminate       = false;
-//  pAnalyzers       = NULL;
-//  pAnalyzersCount  = 0;
 }
 DeviceInterface::~DeviceInterface() {
-
 }
 bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_array();

@@ -476,6 +476,8 @@
       </item>
       <item path="Source/Analyzers/AnalyzerRemote.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="Source/Analyzers/AnalyzerSoft.cpp" ex="false" tool="1" flavor2="0">
+      </item>
       <item path="Source/Analyzers/AnalyzerSoft.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/Database.cpp" ex="false" tool="1" flavor2="0">
@@ -490,9 +492,15 @@
       </item>
       <item path="Source/Drivers/DeviceRemote.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="Source/Drivers/DeviceV1.cpp" ex="false" tool="1" flavor2="0">
+      </item>
       <item path="Source/Drivers/DeviceV1.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="Source/Drivers/DeviceV2.cpp" ex="false" tool="1" flavor2="0">
+      </item>
       <item path="Source/Drivers/DeviceV2.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Source/Drivers/DeviceVirtual.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Source/Drivers/DeviceVirtual.h" ex="false" tool="3" flavor2="0">
       </item>

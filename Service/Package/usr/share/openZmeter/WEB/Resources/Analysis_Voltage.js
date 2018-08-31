@@ -554,7 +554,7 @@ function PeriodView_OnSuccess(result) {
     PHIChart         = AppendCubismGraph($('#PHIChart'), PHIDataset, "Phi", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'; });
   } else {
     for(i = 0; i < 50; i++) {
-      HarmonicsCharts[i].updateOptions({ file: ReactiveData, dateWindow: [result['From'], result['To']] });
+      HarmonicsCharts[i].updateOptions({ file: HarmonicsDatasets[i], dateWindow: [result['From'], result['To']] });
     }
     PowerFactorChart.updateOptions({ file: PowerFactorDataset, dateWindow: [result['From'], result['To']] });
     THDChart.updateOptions({ file: THDDataset, dateWindow: [result['From'], result['To']] });
