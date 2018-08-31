@@ -250,8 +250,6 @@ void Init_USB_HW() {
 	USB_Init();
 }
 int main(void) {
-
-  
   //Init_SPI();
   Init_SDADC();
   Init_SPI();
