@@ -1,0 +1,1315 @@
+Archive member included to satisfy reference by file (symbol)
+
+/home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-exit.o)
+                              /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/crt0.o (exit)
+/home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-impure.o)
+                              /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-exit.o) (_global_impure_ptr)
+/home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-init.o)
+                              /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/crt0.o (__libc_init_array)
+/home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-memset.o)
+                              /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/crt0.o (memset)
+/home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__call_atexit.o)
+                              /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-exit.o) (__call_exitprocs)
+/home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-atexit.o)
+                              /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__call_atexit.o) (atexit)
+/home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-fini.o)
+                              /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__call_atexit.o) (__libc_fini_array)
+/home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__atexit.o)
+                              /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-atexit.o) (__register_exitproc)
+/home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libnosys.a(_exit.o)
+                              /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-exit.o) (_exit)
+
+Allocating common symbols
+Common symbol       size              file
+
+SaveRState          0x2               build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+SaveState           0x2               build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+wIstr               0x2               build/Debug/arm-none-eabi-Linux/usb_istr.o
+pProperty           0x4               build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+EPindex             0x1               build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+SaveTState          0x2               build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+Device_Info         0x1c              build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+pUser_Standard_Requests
+                    0x4               build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+StatusInfo          0x2               build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_core.o
+pInformation        0x4               build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+ResumeS             0x2               build/Debug/arm-none-eabi-Linux/usb_pwr.o
+Buffer              0x3200            build/Debug/arm-none-eabi-Linux/Main.o
+wInterrupt_Mask     0x2               build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+
+Discarded input sections
+
+ .text          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crti.o
+ .data          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crti.o
+ .bss           0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crti.o
+ .data          0x00000000        0x4 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtbegin.o
+ .text          0x00000000       0x74 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/crt0.o
+ .data          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/crt0.o
+ .bss           0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/crt0.o
+ .ARM.extab     0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/crt0.o
+ .ARM.exidx     0x00000000        0x8 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/crt0.o
+ .ARM.attributes
+                0x00000000       0x1c /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/crt0.o
+ .text          0x00000000       0x14 build/Debug/arm-none-eabi-Linux/CMSIS/startup_stm32f37x.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/CMSIS/startup_stm32f37x.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/CMSIS/startup_stm32f37x.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/CMSIS/system_stm32f37x.o
+ .text          0x00000000      0x178 build/Debug/arm-none-eabi-Linux/Interface.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/Interface.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/Interface.o
+ .debug_info    0x00000000      0x858 build/Debug/arm-none-eabi-Linux/Interface.o
+ .debug_abbrev  0x00000000      0x1aa build/Debug/arm-none-eabi-Linux/Interface.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/Interface.o
+ .debug_line    0x00000000      0x18d build/Debug/arm-none-eabi-Linux/Interface.o
+ .debug_str     0x00000000      0x846 build/Debug/arm-none-eabi-Linux/Interface.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/Interface.o
+ .debug_frame   0x00000000       0x80 build/Debug/arm-none-eabi-Linux/Interface.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/Interface.o
+ .text          0x00000000      0x9d8 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o
+ .debug_info    0x00000000      0xb7f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o
+ .debug_abbrev  0x00000000      0x182 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o
+ .debug_line    0x00000000      0x2c1 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o
+ .debug_str     0x00000000      0x71b build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o
+ .debug_frame   0x00000000      0x5ac build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o
+ .text          0x00000000      0xf80 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o
+ .debug_info    0x00000000      0xba8 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o
+ .debug_abbrev  0x00000000      0x1f7 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o
+ .debug_line    0x00000000      0x396 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o
+ .debug_str     0x00000000      0x75f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o
+ .debug_frame   0x00000000      0x3f0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o
+ .text          0x00000000      0x2ac build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o
+ .debug_info    0x00000000      0x462 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o
+ .debug_abbrev  0x00000000      0x1b2 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o
+ .debug_line    0x00000000      0x1d4 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o
+ .debug_str     0x00000000      0x3fe build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o
+ .debug_frame   0x00000000      0x264 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o
+ .text          0x00000000      0x1cc build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o
+ .debug_info    0x00000000      0x2a4 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o
+ .debug_abbrev  0x00000000      0x159 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o
+ .debug_line    0x00000000      0x1a8 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o
+ .debug_str     0x00000000      0x2d5 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o
+ .debug_frame   0x00000000      0x148 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o
+ .text          0x00000000      0x22c build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o
+ .debug_info    0x00000000      0x396 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o
+ .debug_abbrev  0x00000000      0x182 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o
+ .debug_line    0x00000000      0x18d build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o
+ .debug_str     0x00000000      0x389 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o
+ .debug_frame   0x00000000      0x220 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o
+ .text          0x00000000      0x43c build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o
+ .debug_info    0x00000000      0x742 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o
+ .debug_abbrev  0x00000000      0x182 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o
+ .debug_line    0x00000000      0x1fe build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o
+ .debug_str     0x00000000      0x479 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o
+ .debug_frame   0x00000000      0x2b4 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o
+ .text          0x00000000       0xe4 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o
+ .debug_info    0x00000000      0x1e4 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o
+ .debug_abbrev  0x00000000       0xe2 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o
+ .debug_line    0x00000000      0x151 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o
+ .debug_str     0x00000000      0x261 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o
+ .debug_frame   0x00000000       0xc8 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o
+ .text          0x00000000      0x3fc build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o
+ .debug_info    0x00000000      0x47f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o
+ .debug_abbrev  0x00000000      0x159 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o
+ .debug_line    0x00000000      0x228 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o
+ .debug_str     0x00000000      0x3e8 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o
+ .debug_frame   0x00000000      0x1c8 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o
+ .text          0x00000000      0x21c build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o
+ .debug_info    0x00000000      0x35d build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o
+ .debug_abbrev  0x00000000      0x1ab build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o
+ .debug_line    0x00000000      0x1ba build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o
+ .debug_str     0x00000000      0x37a build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o
+ .debug_frame   0x00000000      0x148 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o
+ .text          0x00000000      0x9f8 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o
+ .debug_info    0x00000000      0x832 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o
+ .debug_abbrev  0x00000000      0x1b8 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o
+ .debug_line    0x00000000      0x2c8 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o
+ .debug_str     0x00000000      0x5f3 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o
+ .debug_frame   0x00000000      0x44c build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o
+ .text          0x00000000      0x9bc build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o
+ .debug_info    0x00000000      0xbea build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o
+ .debug_abbrev  0x00000000      0x182 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o
+ .debug_line    0x00000000      0x2d1 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o
+ .debug_str     0x00000000      0x678 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o
+ .debug_frame   0x00000000      0x69c build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o
+ .text          0x00000000       0xe4 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o
+ .debug_info    0x00000000      0x246 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o
+ .debug_abbrev  0x00000000      0x123 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o
+ .debug_line    0x00000000      0x156 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o
+ .debug_str     0x00000000      0x2b2 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o
+ .debug_frame   0x00000000      0x118 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o
+ .text          0x00000000     0x13f8 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o
+ .debug_info    0x00000000     0x10be build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o
+ .debug_abbrev  0x00000000      0x1b2 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o
+ .debug_line    0x00000000      0x492 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o
+ .debug_str     0x00000000      0xb39 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o
+ .debug_frame   0x00000000      0x818 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o
+ .text          0x00000000      0x26c build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o
+ .debug_info    0x00000000      0x33f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o
+ .debug_abbrev  0x00000000      0x15e build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o
+ .debug_line    0x00000000      0x182 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o
+ .debug_str     0x00000000      0x38c build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o
+ .debug_frame   0x00000000      0x198 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o
+ .text          0x00000000      0xbf4 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o
+ .debug_info    0x00000000      0xea4 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o
+ .debug_abbrev  0x00000000      0x159 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o
+ .debug_line    0x00000000      0x328 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o
+ .debug_str     0x00000000      0x9ef build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o
+ .debug_frame   0x00000000      0x7b0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o
+ .text          0x00000000      0x12c build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o
+ .debug_info    0x00000000      0x250 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o
+ .debug_abbrev  0x00000000      0x144 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o
+ .debug_line    0x00000000      0x160 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o
+ .debug_str     0x00000000      0x298 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o
+ .debug_frame   0x00000000      0x134 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_core.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_mem.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_mem.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_regs.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_regs.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_sil.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_sil.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/SysHandlers.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/SysHandlers.o
+ .text          0x00000000      0x1a4 build/Debug/arm-none-eabi-Linux/usb_pwr.o
+ .data          0x00000000        0x0 build/Debug/arm-none-eabi-Linux/usb_pwr.o
+ .bss           0x00000000        0x0 build/Debug/arm-none-eabi-Linux/usb_pwr.o
+ .debug_info    0x00000000      0x286 build/Debug/arm-none-eabi-Linux/usb_pwr.o
+ .debug_abbrev  0x00000000      0x122 build/Debug/arm-none-eabi-Linux/usb_pwr.o
+ .debug_aranges
+                0x00000000       0x20 build/Debug/arm-none-eabi-Linux/usb_pwr.o
+ .debug_line    0x00000000      0x191 build/Debug/arm-none-eabi-Linux/usb_pwr.o
+ .debug_str     0x00000000      0x320 build/Debug/arm-none-eabi-Linux/usb_pwr.o
+ .comment       0x00000000       0x6f build/Debug/arm-none-eabi-Linux/usb_pwr.o
+ .debug_frame   0x00000000       0x9c build/Debug/arm-none-eabi-Linux/usb_pwr.o
+ .ARM.attributes
+                0x00000000       0x33 build/Debug/arm-none-eabi-Linux/usb_pwr.o
+ COMMON         0x00000000        0x2 build/Debug/arm-none-eabi-Linux/usb_pwr.o
+ .text          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-exit.o)
+ .data          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-exit.o)
+ .bss           0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-exit.o)
+ .text.exit     0x00000000       0x20 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-exit.o)
+ .debug_frame   0x00000000       0x28 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-exit.o)
+ .ARM.attributes
+                0x00000000       0x2e /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-exit.o)
+ .text          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-impure.o)
+ .data          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-impure.o)
+ .bss           0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-impure.o)
+ .data._impure_ptr
+                0x00000000        0x4 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-impure.o)
+ .text          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-init.o)
+ .data          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-init.o)
+ .bss           0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-init.o)
+ .text.__libc_init_array
+                0x00000000       0x50 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-init.o)
+ .debug_frame   0x00000000       0x2c /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-init.o)
+ .ARM.attributes
+                0x00000000       0x2e /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-init.o)
+ .text          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-memset.o)
+ .data          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-memset.o)
+ .bss           0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-memset.o)
+ .text.memset   0x00000000       0x9c /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-memset.o)
+ .debug_frame   0x00000000       0x34 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-memset.o)
+ .ARM.attributes
+                0x00000000       0x2e /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-memset.o)
+ .text          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__call_atexit.o)
+ .data          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__call_atexit.o)
+ .bss           0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__call_atexit.o)
+ .text.__call_exitprocs
+                0x00000000       0xd8 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__call_atexit.o)
+ .text          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-atexit.o)
+ .data          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-atexit.o)
+ .bss           0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-atexit.o)
+ .text          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-fini.o)
+ .data          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-fini.o)
+ .bss           0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-fini.o)
+ .text          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__atexit.o)
+ .data          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__atexit.o)
+ .bss           0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__atexit.o)
+ .text          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libnosys.a(_exit.o)
+ .data          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libnosys.a(_exit.o)
+ .bss           0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libnosys.a(_exit.o)
+ .text._exit    0x00000000        0x4 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libnosys.a(_exit.o)
+ .debug_frame   0x00000000       0x20 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libnosys.a(_exit.o)
+ .ARM.attributes
+                0x00000000       0x2e /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libnosys.a(_exit.o)
+ .text          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtend.o
+ .data          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtend.o
+ .bss           0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtend.o
+ .eh_frame      0x00000000        0x4 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtend.o
+ .jcr           0x00000000        0x4 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtend.o
+ .ARM.attributes
+                0x00000000       0x2e /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtend.o
+ .text          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtn.o
+ .data          0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtn.o
+ .bss           0x00000000        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtn.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x00010000         xr
+RAM              0x20000000         0x00004000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crti.o
+LOAD /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtbegin.o
+LOAD /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/crt0.o
+LOAD build/Debug/arm-none-eabi-Linux/CMSIS/startup_stm32f37x.o
+LOAD build/Debug/arm-none-eabi-Linux/CMSIS/system_stm32f37x.o
+LOAD build/Debug/arm-none-eabi-Linux/Interface.o
+LOAD build/Debug/arm-none-eabi-Linux/Main.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_core.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_mem.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_regs.o
+LOAD build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_sil.o
+LOAD build/Debug/arm-none-eabi-Linux/SysHandlers.o
+LOAD build/Debug/arm-none-eabi-Linux/USB_CDC.o
+LOAD build/Debug/arm-none-eabi-Linux/usb_istr.o
+LOAD build/Debug/arm-none-eabi-Linux/usb_pwr.o
+START GROUP
+LOAD /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/libgcc.a
+LOAD /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a
+LOAD /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libc.a
+END GROUP
+START GROUP
+LOAD /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/libgcc.a
+LOAD /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libc.a
+LOAD /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libnosys.a
+END GROUP
+LOAD /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtend.o
+LOAD /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtn.o
+                0x00000000                _Min_Heap_Size = 0x0
+                0x00000000                _Min_Stack_Size = 0x0
+                0x20004000                _estack = 0x20004000
+
+.isr_vector     0x08000000      0x184
+                0x08000000                . = ALIGN (0x4)
+ *(.isr_vector)
+ .isr_vector    0x08000000      0x184 build/Debug/arm-none-eabi-Linux/CMSIS/startup_stm32f37x.o
+                0x08000000                g_pfnVectors
+                0x08000184                . = ALIGN (0x4)
+
+.text           0x08000184     0x73d8
+                0x08000184                . = ALIGN (0x4)
+ *(.text)
+ .text          0x08000184       0x5c /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtbegin.o
+ .text          0x080001e0      0x234 build/Debug/arm-none-eabi-Linux/CMSIS/system_stm32f37x.o
+                0x080001e0                SystemInit
+                0x08000260                SystemCoreClockUpdate
+ .text          0x08000414      0x6c4 build/Debug/arm-none-eabi-Linux/Main.o
+                0x08000414                SetLeds
+                0x08000570                ClearLeds
+                0x080005e4                EP3_OUT_Callback
+                0x08000604                EP1_IN_Callback
+                0x08000678                SOF_Callback
+                0x08000684                TIM2_IRQHandler
+                0x08000780                UserSignals
+                0x080007dc                Init_SPI
+                0x080008a0                Init_SDADC
+                0x080009d8                Init_Timer
+                0x08000a40                Init_USB_HW
+                0x08000ac0                main
+ .text          0x08000ad8      0x42c build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o
+                0x08000ad8                GPIO_DeInit
+                0x08000bb0                GPIO_Init
+                0x08000cd8                GPIO_StructInit
+                0x08000d0c                GPIO_PinLockConfig
+                0x08000d50                GPIO_ReadInputDataBit
+                0x08000d88                GPIO_ReadInputData
+                0x08000da0                GPIO_ReadOutputDataBit
+                0x08000dd8                GPIO_ReadOutputData
+                0x08000df0                GPIO_SetBits
+                0x08000e0c                GPIO_ResetBits
+                0x08000e28                GPIO_WriteBit
+                0x08000e58                GPIO_Write
+                0x08000e74                GPIO_PinAFConfig
+ .text          0x08000f04      0x18c build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o
+                0x08000f04                NVIC_PriorityGroupConfig
+                0x08000f28                NVIC_Init
+                0x08000fec                NVIC_SetVectorTable
+                0x08001018                NVIC_SystemLPConfig
+                0x08001058                SysTick_CLKSourceConfig
+ .text          0x08001090      0x234 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o
+                0x08001090                PWR_DeInit
+                0x080010ac                PWR_BackupAccessCmd
+                0x080010cc                PWR_PVDLevelConfig
+                0x08001104                PWR_PVDCmd
+                0x08001124                PWR_WakeUpPinCmd
+                0x08001160                PWR_SDADCAnalogCmd
+                0x0800119c                PWR_EnterSleepMode
+                0x080011cc                PWR_EnterSTOPMode
+                0x08001230                PWR_EnterSTANDBYMode
+                0x0800126c                PWR_GetFlagStatus
+                0x080012a0                PWR_ClearFlag
+ .text          0x080012c4      0xae8 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o
+                0x080012c4                RCC_DeInit
+                0x08001338                RCC_HSEConfig
+                0x0800135c                RCC_WaitForHSEStartUp
+                0x080013ac                RCC_AdjustHSICalibrationValue
+                0x080013e8                RCC_HSICmd
+                0x08001408                RCC_LSEConfig
+                0x08001444                RCC_LSEDriveConfig
+                0x08001474                RCC_LSICmd
+                0x08001494                RCC_PLLConfig
+                0x080014c8                RCC_PLLCmd
+                0x080014e8                RCC_PREDIV1Config
+                0x08001520                RCC_ClockSecuritySystemCmd
+                0x08001540                RCC_MCOConfig
+                0x08001560                RCC_SYSCLKConfig
+                0x08001598                RCC_GetSYSCLKSource
+                0x080015b4                RCC_HCLKConfig
+                0x080015ec                RCC_PCLK1Config
+                0x08001624                RCC_PCLK2Config
+                0x0800165c                RCC_ADCCLKConfig
+                0x0800168c                RCC_SDADCCLKConfig
+                0x080016bc                RCC_CECCLKConfig
+                0x080016ec                RCC_I2CCLKConfig
+                0x08001738                RCC_USARTCLKConfig
+                0x080017a0                RCC_USBCLKConfig
+                0x080017bc                RCC_GetClocksFreq
+                0x08001ab0                RCC_RTCCLKConfig
+                0x08001ad4                RCC_RTCCLKCmd
+                0x08001af4                RCC_BackupResetCmd
+                0x08001b14                RCC_AHBPeriphClockCmd
+                0x08001b50                RCC_APB2PeriphClockCmd
+                0x08001b8c                RCC_APB1PeriphClockCmd
+                0x08001bc8                RCC_AHBPeriphResetCmd
+                0x08001c04                RCC_APB2PeriphResetCmd
+                0x08001c40                RCC_APB1PeriphResetCmd
+                0x08001c7c                RCC_ITConfig
+                0x08001cc8                RCC_GetFlagStatus
+                0x08001d3c                RCC_ClearFlag
+                0x08001d58                RCC_GetITStatus
+                0x08001d8c                RCC_ClearITPendingBit
+ .text          0x08001dac      0x780 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o
+                0x08001dac                SDADC_DeInit
+                0x08001e14                SDADC_Init
+                0x08001e64                SDADC_StructInit
+                0x08001e88                SDADC_AINInit
+                0x08001ecc                SDADC_AINStructInit
+                0x08001ef8                SDADC_ChannelConfig
+                0x08001f40                SDADC_Cmd
+                0x08001f78                SDADC_InitModeCmd
+                0x08001fb0                SDADC_FastConversionCmd
+                0x08001fe8                SDADC_VREFSelect
+                0x0800201c                SDADC_CalibrationSequenceConfig
+                0x0800204c                SDADC_StartCalibration
+                0x0800206c                SDADC_ChannelSelect
+                0x080020a0                SDADC_ContinuousModeCmd
+                0x080020d8                SDADC_SoftwareStartConv
+                0x080020f8                SDADC_GetConversionValue
+                0x08002110                SDADC_RegularSynchroSDADC1
+                0x08002148                SDADC_GetConversionSDADC12Value
+                0x0800215c                SDADC_GetConversionSDADC13Value
+                0x08002170                SDADC_SoftwareStartInjectedConv
+                0x08002190                SDADC_InjectedChannelSelect
+                0x080021ac                SDADC_DelayStartInjectedConvCmd
+                0x080021e4                SDADC_InjectedContinuousModeCmd
+                0x0800221c                SDADC_ExternalTrigInjectedConvConfig
+                0x08002250                SDADC_ExternalTrigInjectedConvEdgeConfig
+                0x08002284                SDADC_GetInjectedChannel
+                0x080022b4                SDADC_GetInjectedConversionValue
+                0x080022f0                SDADC_InjectedSynchroSDADC1
+                0x08002328                SDADC_GetInjectedConversionSDADC12Value
+                0x0800233c                SDADC_GetInjectedConversionSDADC13Value
+                0x08002350                SDADC_PowerDownCmd
+                0x08002388                SDADC_StandbyCmd
+                0x080023c0                SDADC_SlowClockCmd
+                0x080023f8                SDADC_DMAConfig
+                0x08002434                SDADC_ITConfig
+                0x08002470                SDADC_GetFlagStatus
+                0x080024a0                SDADC_ClearFlag
+                0x080024c0                SDADC_GetITStatus
+                0x0800250c                SDADC_ClearITPendingBit
+ .text          0x0800252c      0x8b4 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o
+                0x0800252c                SPI_I2S_DeInit
+                0x080025a0                SPI_StructInit
+                0x080025ec                SPI_Init
+                0x080026a0                I2S_StructInit
+                0x080026d8                I2S_Init
+                0x08002854                SPI_Cmd
+                0x08002894                SPI_TIModeCmd
+                0x080028d4                I2S_Cmd
+                0x08002914                SPI_DataSizeConfig
+                0x0800294c                SPI_RxFIFOThresholdConfig
+                0x08002984                SPI_BiDirectionalLineConfig
+                0x080029c4                SPI_NSSInternalSoftwareConfig
+                0x08002a08                SPI_SSOutputCmd
+                0x08002a48                SPI_NSSPulseModeCmd
+                0x08002a88                SPI_SendData8
+                0x08002ab4                SPI_I2S_SendData16
+                0x08002ad0                SPI_ReceiveData8
+                0x08002af8                SPI_I2S_ReceiveData16
+                0x08002b10                SPI_CRCLengthConfig
+                0x08002b48                SPI_CalculateCRC
+                0x08002b88                SPI_TransmitCRC
+                0x08002bac                SPI_GetCRC
+                0x08002bdc                SPI_GetCRCPolynomial
+                0x08002bf4                SPI_I2S_DMACmd
+                0x08002c3c                SPI_LastDMATransferCmd
+                0x08002c74                SPI_I2S_ITConfig
+                0x08002cd4                SPI_GetTransmissionFIFOStatus
+                0x08002cf4                SPI_GetReceptionFIFOStatus
+                0x08002d14                SPI_I2S_GetFlagStatus
+                0x08002d4c                SPI_I2S_ClearFlag
+                0x08002d6c                SPI_I2S_GetITStatus
+ .text          0x08002de0     0x1adc build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o
+                0x08002de0                TIM_DeInit
+                0x08002fa8                TIM_TimeBaseInit
+                0x08003090                TIM_TimeBaseStructInit
+                0x080030c4                TIM_PrescalerConfig
+                0x080030ec                TIM_CounterModeConfig
+                0x08003124                TIM_SetCounter
+                0x08003140                TIM_SetAutoreload
+                0x0800315c                TIM_GetCounter
+                0x08003174                TIM_GetPrescaler
+                0x0800318c                TIM_UpdateDisableConfig
+                0x080031cc                TIM_UpdateRequestConfig
+                0x0800320c                TIM_ARRPreloadConfig
+                0x0800324c                TIM_SelectOnePulseMode
+                0x08003284                TIM_SetClockDivision
+                0x080032bc                TIM_Cmd
+                0x080032fc                TIM_BDTRConfig
+                0x08003358                TIM_BDTRStructInit
+                0x08003394                TIM_CtrlPWMOutputs
+                0x080033e0                TIM_OC1Init
+                0x080034e0                TIM_OC2Init
+                0x08003580                TIM_OC3Init
+                0x0800361c                TIM_OC4Init
+                0x080036bc                TIM_OCStructInit
+                0x08003700                TIM_SelectOCxM
+                0x080037ac                TIM_SetCompare1
+                0x080037c8                TIM_SetCompare2
+                0x080037e4                TIM_SetCompare3
+                0x08003800                TIM_SetCompare4
+                0x0800381c                TIM_ForcedOC1Config
+                0x08003854                TIM_ForcedOC2Config
+                0x08003890                TIM_ForcedOC3Config
+                0x080038c8                TIM_ForcedOC4Config
+                0x08003904                TIM_CCPreloadControl
+                0x08003944                TIM_OC1PreloadConfig
+                0x0800397c                TIM_OC2PreloadConfig
+                0x080039b8                TIM_OC3PreloadConfig
+                0x080039f0                TIM_OC4PreloadConfig
+                0x08003a2c                TIM_OC1FastConfig
+                0x08003a64                TIM_OC2FastConfig
+                0x08003aa0                TIM_OC3FastConfig
+                0x08003ad8                TIM_OC4FastConfig
+                0x08003b14                TIM_ClearOC1Ref
+                0x08003b4c                TIM_ClearOC2Ref
+                0x08003b88                TIM_ClearOC3Ref
+                0x08003bc0                TIM_ClearOC4Ref
+                0x08003bfc                TIM_OC1PolarityConfig
+                0x08003c34                TIM_OC1NPolarityConfig
+                0x08003c6c                TIM_OC2PolarityConfig
+                0x08003ca8                TIM_OC3PolarityConfig
+                0x08003ce4                TIM_OC4PolarityConfig
+                0x08003d20                TIM_SelectOCREFClear
+                0x08003d58                TIM_CCxCmd
+                0x08003dac                TIM_CCxNCmd
+                0x08003e00                TIM_SelectCOM
+                0x08003e40                TIM_ICInit
+                0x08003ee8                TIM_ICStructInit
+                0x08003f18                TIM_PWMIConfig
+                0x08003fd0                TIM_GetCapture1
+                0x08003fe8                TIM_GetCapture2
+                0x08004000                TIM_GetCapture3
+                0x08004018                TIM_GetCapture4
+                0x08004030                TIM_SetIC1Prescaler
+                0x08004068                TIM_SetIC2Prescaler
+                0x080040a4                TIM_SetIC3Prescaler
+                0x080040dc                TIM_SetIC4Prescaler
+                0x08004118                TIM_ITConfig
+                0x08004160                TIM_GenerateEvent
+                0x0800417c                TIM_GetFlagStatus
+                0x080041b4                TIM_ClearFlag
+                0x080041d4                TIM_GetITStatus
+                0x08004228                TIM_ClearITPendingBit
+                0x08004248                TIM_DMAConfig
+                0x08004270                TIM_DMACmd
+                0x080042b8                TIM_SelectCCDMA
+                0x080042f8                TIM_InternalClockConfig
+                0x0800431c                TIM_ITRxExternalClockConfig
+                0x0800434c                TIM_TIxExternalClockConfig
+                0x080043a8                TIM_ETRClockMode1Config
+                0x08004408                TIM_ETRClockMode2Config
+                0x08004448                TIM_SelectInputTrigger
+                0x08004480                TIM_SelectOutputTrigger
+                0x080044b8                TIM_SelectSlaveMode
+                0x080044f0                TIM_SelectMasterSlaveMode
+                0x08004528                TIM_ETRConfig
+                0x0800457c                TIM_EncoderInterfaceConfig
+                0x08004614                TIM_SelectHallSensor
+                0x08004654                TIM_RemapConfig
+ .text          0x080048bc      0xf6c build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_core.o
+                0x080048bc                Standard_GetConfiguration
+                0x080048f8                Standard_SetConfiguration
+                0x08004948                Standard_GetInterface
+                0x08004984                Standard_SetInterface
+                0x08004a0c                Standard_GetStatus
+                0x08004b44                Standard_ClearFeature
+                0x08004d1c                Standard_SetEndPointFeature
+                0x08004e30                Standard_SetDeviceFeature
+                0x08004e5c                Standard_GetDescriptorData
+                0x08005574                Setup0_Process
+                0x0800564c                In0_Process
+                0x080056dc                Out0_Process
+                0x08005750                Post0_Process
+                0x080057a0                SetDeviceAddress
+                0x0800581c                NOP_Process
+ .text          0x08005828       0x44 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+                0x08005828                USB_Init
+ .text          0x0800586c      0x3f0 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+                0x0800586c                CTR_LP
+                0x08005b6c                CTR_HP
+ .text          0x08005c5c       0xd0 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_mem.o
+                0x08005c5c                UserToPMABufferCopy
+                0x08005cd0                PMAToUserBufferCopy
+ .text          0x08005d2c     0x10a8 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_regs.o
+                0x08005d2c                SetCNTR
+                0x08005d4c                GetCNTR
+                0x08005d64                SetISTR
+                0x08005d84                GetISTR
+                0x08005d9c                GetFNR
+                0x08005db4                SetDADDR
+                0x08005dd4                GetDADDR
+                0x08005dec                SetBTABLE
+                0x08005e10                GetBTABLE
+                0x08005e28                SetENDPOINT
+                0x08005e54                GetENDPOINT
+                0x08005e78                SetEPType
+                0x08005ec4                GetEPType
+                0x08005ef0                SetEPTxStatus
+                0x08005f60                SetEPRxStatus
+                0x08005fd0                SetDouBleBuffEPStall
+                0x0800602c                GetEPTxStatus
+                0x08006058                GetEPRxStatus
+                0x08006084                SetEPTxValid
+                0x080060d8                SetEPRxValid
+                0x0800612c                SetEP_KIND
+                0x0800617c                ClearEP_KIND
+                0x080061c4                Clear_Status_Out
+                0x0800620c                Set_Status_Out
+                0x0800625c                SetEPDoubleBuff
+                0x080062ac                ClearEPDoubleBuff
+                0x080062f4                GetTxStallStatus
+                0x08006328                GetRxStallStatus
+                0x08006360                ClearEP_CTR_RX
+                0x0800639c                ClearEP_CTR_TX
+                0x080063d8                ToggleDTOG_RX
+                0x0800641c                ToggleDTOG_TX
+                0x08006460                ClearDTOG_RX
+                0x080064bc                ClearDTOG_TX
+                0x08006518                SetEPAddress
+                0x08006564                GetEPAddress
+                0x08006590                SetEPTxAddr
+                0x080065d4                SetEPRxAddr
+                0x08006618                GetEPTxAddr
+                0x0800664c                GetEPRxAddr
+                0x08006680                SetEPTxCount
+                0x080066bc                SetEPCountRxReg
+                0x08006720                SetEPRxCount
+                0x080067a4                GetEPTxCount
+                0x080067e0                GetEPRxCount
+                0x0800681c                SetEPDblBuffAddr
+                0x08006884                SetEPDblBuf0Addr
+                0x080068c8                SetEPDblBuf1Addr
+                0x0800690c                GetEPDblBuf0Addr
+                0x08006940                GetEPDblBuf1Addr
+                0x08006974                SetEPDblBuffCount
+                0x08006ab0                SetEPDblBuf0Count
+                0x08006b60                SetEPDblBuf1Count
+                0x08006c10                GetEPDblBuf0Count
+                0x08006c4c                GetEPDblBuf1Count
+                0x08006c88                GetEPDblBufDir
+                0x08006cf4                FreeUserBuffer
+                0x08006d78                ToWord
+                0x08006da4                ByteSwap
+ .text          0x08006dd4       0xc8 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_sil.o
+                0x08006dd4                USB_SIL_Init
+                0x08006e04                USB_SIL_Write
+                0x08006e50                USB_SIL_Read
+ .text          0x08006e9c       0x5c build/Debug/arm-none-eabi-Linux/SysHandlers.o
+                0x08006e9c                NMI_Handler
+                0x08006ea8                HardFault_Handler
+                0x08006eb0                MemManage_Handler
+                0x08006eb8                BusFault_Handler
+                0x08006ec0                UsageFault_Handler
+                0x08006ec8                SVC_Handler
+                0x08006ed4                DebugMon_Handler
+                0x08006ee0                PendSV_Handler
+                0x08006eec                SysTick_Handler
+ .text          0x08006ef8      0x488 build/Debug/arm-none-eabi-Linux/USB_CDC.o
+                0x08006ef8                CDC_Init
+                0x08006f5c                CDC_Reset
+                0x08007048                CDC_SetConfiguration
+                0x08007074                CDC_SetDeviceAddress
+                0x0800708c                CDC_StatusIN
+                0x080070ac                CDC_StatusOUT
+                0x080070b8                CDC_DataSetup
+                0x08007138                CDC_NoDataSetup
+                0x08007174                CDC_GetDeviceDescriptor
+                0x08007198                CDC_GetConfigDescriptor
+                0x080071bc                CDC_GetStringDescriptor
+                0x080071fc                CDC_GetInterfaceSetting
+                0x0800722c                CDC_GetLineCoding
+                0x0800725c                CDC_SetLineCoding
+                0x0800728c                Leave_LowPowerMode
+                0x080072c0                USB_Cable_Config
+                0x080072d4                PowerOn
+                0x08007324                IntToUnicode
+ .text          0x08007380       0x90 build/Debug/arm-none-eabi-Linux/usb_istr.o
+                0x08007380                USB_LP_IRQHandler
+ *(.text*)
+ .text.Reset_Handler
+                0x08007410       0x44 build/Debug/arm-none-eabi-Linux/CMSIS/startup_stm32f37x.o
+                0x08007410                Reset_Handler
+ .text.Default_Handler
+                0x08007454        0x2 build/Debug/arm-none-eabi-Linux/CMSIS/startup_stm32f37x.o
+                0x08007454                RTC_Alarm_IRQHandler
+                0x08007454                USB_HP_IRQHandler
+                0x08007454                PVD_IRQHandler
+                0x08007454                EXTI3_IRQHandler
+                0x08007454                EXTI0_IRQHandler
+                0x08007454                I2C2_EV_IRQHandler
+                0x08007454                CAN1_RX0_IRQHandler
+                0x08007454                FPU_IRQHandler
+                0x08007454                EXTI2_TS_IRQHandler
+                0x08007454                SPI1_IRQHandler
+                0x08007454                DMA2_Channel2_IRQHandler
+                0x08007454                DMA1_Channel4_IRQHandler
+                0x08007454                ADC1_IRQHandler
+                0x08007454                TIM17_IRQHandler
+                0x08007454                USART3_IRQHandler
+                0x08007454                DMA1_Channel7_IRQHandler
+                0x08007454                CAN1_RX1_IRQHandler
+                0x08007454                TIM4_IRQHandler
+                0x08007454                DMA2_Channel1_IRQHandler
+                0x08007454                I2C1_EV_IRQHandler
+                0x08007454                DMA1_Channel6_IRQHandler
+                0x08007454                TIM16_IRQHandler
+                0x08007454                DMA2_Channel4_IRQHandler
+                0x08007454                TIM3_IRQHandler
+                0x08007454                RCC_IRQHandler
+                0x08007454                DMA1_Channel1_IRQHandler
+                0x08007454                Default_Handler
+                0x08007454                CEC_IRQHandler
+                0x08007454                EXTI15_10_IRQHandler
+                0x08007454                TIM14_IRQHandler
+                0x08007454                TIM13_IRQHandler
+                0x08007454                TIM12_IRQHandler
+                0x08007454                TIM7_IRQHandler
+                0x08007454                TIM5_IRQHandler
+                0x08007454                SDADC2_IRQHandler
+                0x08007454                TIM15_IRQHandler
+                0x08007454                TIM6_DAC1_IRQHandler
+                0x08007454                EXTI9_5_IRQHandler
+                0x08007454                TAMPER_STAMP_IRQHandler
+                0x08007454                RTC_WKUP_IRQHandler
+                0x08007454                SPI2_IRQHandler
+                0x08007454                CAN1_TX_IRQHandler
+                0x08007454                DMA2_Channel5_IRQHandler
+                0x08007454                DMA1_Channel5_IRQHandler
+                0x08007454                EXTI4_IRQHandler
+                0x08007454                TIM18_DAC2_IRQHandler
+                0x08007454                DMA1_Channel3_IRQHandler
+                0x08007454                COMP_IRQHandler
+                0x08007454                WWDG_IRQHandler
+                0x08007454                SDADC1_IRQHandler
+                0x08007454                EXTI1_IRQHandler
+                0x08007454                SDADC3_IRQHandler
+                0x08007454                USART2_IRQHandler
+                0x08007454                TIM19_IRQHandler
+                0x08007454                I2C2_ER_IRQHandler
+                0x08007454                DMA1_Channel2_IRQHandler
+                0x08007454                CAN1_SCE_IRQHandler
+                0x08007454                FLASH_IRQHandler
+                0x08007454                USART1_IRQHandler
+                0x08007454                SPI3_IRQHandler
+                0x08007454                I2C1_ER_IRQHandler
+                0x08007454                USBWakeUp_IRQHandler
+                0x08007454                DMA2_Channel3_IRQHandler
+ *fill*         0x08007456        0x2 
+ .text.startup.register_fini
+                0x08007458       0x14 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__call_atexit.o)
+ .text.atexit   0x0800746c        0xc /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-atexit.o)
+                0x0800746c                atexit
+ .text.__libc_fini_array
+                0x08007478       0x28 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-fini.o)
+                0x08007478                __libc_fini_array
+ .text.__register_exitproc
+                0x080074a0       0xa4 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__atexit.o)
+                0x080074a0                __register_exitproc
+ *(.glue_7)
+ .glue_7        0x08007544        0x0 linker stubs
+ *(.glue_7t)
+ .glue_7t       0x08007544        0x0 linker stubs
+ *(.eh_frame)
+ .eh_frame      0x08007544        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtbegin.o
+ *(.init)
+ .init          0x08007544        0x4 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crti.o
+                0x08007544                _init
+ .init          0x08007548        0x8 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtn.o
+ *(.fini)
+ .fini          0x08007550        0x4 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crti.o
+                0x08007550                _fini
+ .fini          0x08007554        0x8 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtn.o
+                0x0800755c                . = ALIGN (0x4)
+                0x0800755c                _etext = .
+
+.vfp11_veneer   0x0800755c        0x0
+ .vfp11_veneer  0x0800755c        0x0 linker stubs
+
+.v4_bx          0x0800755c        0x0
+ .v4_bx         0x0800755c        0x0 linker stubs
+
+.iplt           0x0800755c        0x0
+ .iplt          0x0800755c        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtbegin.o
+
+.rodata         0x0800755c       0xc0
+                0x0800755c                . = ALIGN (0x4)
+ *(.rodata)
+ .rodata        0x0800755c       0xba build/Debug/arm-none-eabi-Linux/USB_CDC.o
+                0x0800755c                CDC_DeviceDescriptor
+                0x08007570                CDC_ConfigDescriptor
+                0x080075b4                CDC_StringLangID
+                0x080075b8                CDC_StringVendor
+                0x080075c4                CDC_StringProduct
+ *(.rodata*)
+ *fill*         0x08007616        0x2 
+ .rodata._global_impure_ptr
+                0x08007618        0x4 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-impure.o)
+                0x08007618                _global_impure_ptr
+                0x0800761c                . = ALIGN (0x4)
+
+.rel.dyn        0x0800761c        0x0
+ .rel.iplt      0x0800761c        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtbegin.o
+
+.ARM.extab
+ *(.ARM.extab* .gnu.linkonce.armextab.*)
+
+.ARM            0x0800761c        0x0
+                0x0800761c                __exidx_start = .
+ *(.ARM.exidx*)
+                0x0800761c                __exidx_end = .
+
+.preinit_array  0x0800761c        0x0
+                0x0800761c                PROVIDE (__preinit_array_start, .)
+ *(.preinit_array*)
+                0x0800761c                PROVIDE (__preinit_array_end, .)
+
+.init_array     0x0800761c        0x8
+                0x0800761c                PROVIDE (__init_array_start, .)
+ *(SORT(.init_array.*))
+ .init_array.00000
+                0x0800761c        0x4 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__call_atexit.o)
+ *(.init_array*)
+ .init_array    0x08007620        0x4 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtbegin.o
+                0x08007624                PROVIDE (__init_array_end, .)
+
+.fini_array     0x08007624        0x4
+                0x08007624                PROVIDE (__fini_array_start, .)
+ *(SORT(.fini_array.*))
+ *(.fini_array*)
+ .fini_array    0x08007624        0x4 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtbegin.o
+                0x08007628                PROVIDE (__fini_array_end, .)
+                0x08007628                _sidata = LOADADDR (.data)
+
+.data           0x20000000      0x560 load address 0x08007628
+                0x20000000                . = ALIGN (0x4)
+                0x20000000                _sdata = .
+ *(.data)
+ .data          0x20000000       0x14 build/Debug/arm-none-eabi-Linux/CMSIS/system_stm32f37x.o
+                0x20000000                SystemCoreClock
+                0x20000004                AHBPrescTable
+ .data          0x20000014        0x1 build/Debug/arm-none-eabi-Linux/Main.o
+                0x20000014                LedStatus
+ *fill*         0x20000015        0x3 
+ .data          0x20000018       0x24 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o
+ .data          0x2000003c       0xc4 build/Debug/arm-none-eabi-Linux/USB_CDC.o
+                0x2000003c                CDC_StringSerial
+                0x20000070                linecoding
+                0x20000078                Device_Table
+                0x2000007c                Device_Property
+                0x200000ac                User_Standard_Requests
+                0x200000d0                Device_Descriptor
+                0x200000d8                Config_Descriptor
+                0x200000e0                String_Descriptor
+ .data          0x20000100       0x38 build/Debug/arm-none-eabi-Linux/usb_istr.o
+                0x20000100                pEpInt_IN
+                0x2000011c                pEpInt_OUT
+ *(.data*)
+ .data.impure_data
+                0x20000138      0x428 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-impure.o)
+                0x20000560                . = ALIGN (0x4)
+                0x20000560                _edata = .
+
+.jcr            0x20000560        0x0 load address 0x08007b88
+ .jcr           0x20000560        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtbegin.o
+
+.igot.plt       0x20000560        0x0 load address 0x08007b88
+ .igot.plt      0x20000560        0x0 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtbegin.o
+                0x20000560                . = ALIGN (0x4)
+
+.bss            0x20000560     0x326c load address 0x08007b88
+                0x20000560                _sbss = .
+                0x20000560                __bss_start__ = _sbss
+ *(.bss)
+ .bss           0x20000560       0x1c /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtbegin.o
+ .bss           0x2000057c        0x6 build/Debug/arm-none-eabi-Linux/Main.o
+                0x2000057c                ReadPos
+                0x2000057e                WritePos
+                0x20000580                Used
+ .bss           0x20000582        0x1 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_core.o
+                0x20000582                Data_Mul_MaxPacketSize
+ *fill*         0x20000583        0x1 
+ .bss           0x20000584        0x9 build/Debug/arm-none-eabi-Linux/USB_CDC.o
+                0x20000584                Request
+                0x20000588                bDeviceState
+                0x2000058c                fSuspendEnabled
+ .bss           0x2000058d        0x1 build/Debug/arm-none-eabi-Linux/usb_istr.o
+                0x2000058d                bIntPackSOF
+ *(.bss*)
+ *(COMMON)
+ *fill*         0x2000058e        0x2 
+ COMMON         0x20000590     0x3200 build/Debug/arm-none-eabi-Linux/Main.o
+                0x20000590                Buffer
+ COMMON         0x20003790        0x2 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_core.o
+                0x20003790                StatusInfo
+ *fill*         0x20003792        0x2 
+ COMMON         0x20003794       0x32 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+                0x20003794                SaveState
+                0x20003798                pProperty
+                0x2000379c                EPindex
+                0x200037a0                Device_Info
+                0x200037bc                pUser_Standard_Requests
+                0x200037c0                pInformation
+                0x200037c4                wInterrupt_Mask
+ COMMON         0x200037c6        0x4 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+                0x200037c6                SaveRState
+                0x200037c8                SaveTState
+ COMMON         0x200037ca        0x2 build/Debug/arm-none-eabi-Linux/usb_istr.o
+                0x200037ca                wIstr
+                0x200037cc                . = ALIGN (0x4)
+                0x200037cc                _ebss = .
+                0x200037cc                __bss_end__ = _ebss
+
+._user_heap_stack
+                0x200037cc        0x0 load address 0x08007b88
+                0x200037cc                . = ALIGN (0x4)
+                [!provide]                PROVIDE (end, .)
+                [!provide]                PROVIDE (_end, .)
+                0x200037cc                . = (. + _Min_Heap_Size)
+                0x200037cc                . = (. + _Min_Stack_Size)
+                0x200037cc                . = ALIGN (0x4)
+
+/DISCARD/
+ libc.a(*)
+ libm.a(*)
+ libgcc.a(*)
+
+.ARM.attributes
+                0x00000000       0x2a
+ *(.ARM.attributes)
+ .ARM.attributes
+                0x00000000       0x1e /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crti.o
+ .ARM.attributes
+                0x0000001e       0x2e /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtbegin.o
+ .ARM.attributes
+                0x0000004c       0x21 build/Debug/arm-none-eabi-Linux/CMSIS/startup_stm32f37x.o
+ .ARM.attributes
+                0x0000006d       0x33 build/Debug/arm-none-eabi-Linux/CMSIS/system_stm32f37x.o
+ .ARM.attributes
+                0x000000a0       0x33 build/Debug/arm-none-eabi-Linux/Main.o
+ .ARM.attributes
+                0x000000d3       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o
+ .ARM.attributes
+                0x00000106       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o
+ .ARM.attributes
+                0x00000139       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o
+ .ARM.attributes
+                0x0000016c       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o
+ .ARM.attributes
+                0x0000019f       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o
+ .ARM.attributes
+                0x000001d2       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o
+ .ARM.attributes
+                0x00000205       0x33 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o
+ .ARM.attributes
+                0x00000238       0x33 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_core.o
+ .ARM.attributes
+                0x0000026b       0x33 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+ .ARM.attributes
+                0x0000029e       0x33 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+ .ARM.attributes
+                0x000002d1       0x33 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_mem.o
+ .ARM.attributes
+                0x00000304       0x33 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_regs.o
+ .ARM.attributes
+                0x00000337       0x33 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_sil.o
+ .ARM.attributes
+                0x0000036a       0x33 build/Debug/arm-none-eabi-Linux/SysHandlers.o
+ .ARM.attributes
+                0x0000039d       0x33 build/Debug/arm-none-eabi-Linux/USB_CDC.o
+ .ARM.attributes
+                0x000003d0       0x33 build/Debug/arm-none-eabi-Linux/usb_istr.o
+ .ARM.attributes
+                0x00000403       0x2e /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-impure.o)
+ .ARM.attributes
+                0x00000431       0x2e /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__call_atexit.o)
+ .ARM.attributes
+                0x0000045f       0x2e /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-atexit.o)
+ .ARM.attributes
+                0x0000048d       0x2e /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-fini.o)
+ .ARM.attributes
+                0x000004bb       0x2e /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__atexit.o)
+ .ARM.attributes
+                0x000004e9       0x1e /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/crtn.o
+OUTPUT(dist/Debug/arm-none-eabi-Linux/1phase_b elf32-littlearm)
+
+.debug_line     0x00000000     0x2aa7
+ .debug_line    0x00000000       0x75 build/Debug/arm-none-eabi-Linux/CMSIS/startup_stm32f37x.o
+ .debug_line    0x00000075      0x171 build/Debug/arm-none-eabi-Linux/CMSIS/system_stm32f37x.o
+ .debug_line    0x000001e6      0x2f5 build/Debug/arm-none-eabi-Linux/Main.o
+ .debug_line    0x000004db      0x20a build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o
+ .debug_line    0x000006e5      0x192 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o
+ .debug_line    0x00000877      0x1c1 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o
+ .debug_line    0x00000a38      0x2f2 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o
+ .debug_line    0x00000d2a      0x2a5 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o
+ .debug_line    0x00000fcf      0x2ab build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o
+ .debug_line    0x0000127a      0x568 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o
+ .debug_line    0x000017e2      0x3aa build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_core.o
+ .debug_line    0x00001b8c      0x150 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+ .debug_line    0x00001cdc      0x225 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+ .debug_line    0x00001f01      0x16a build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_mem.o
+ .debug_line    0x0000206b      0x40f build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_regs.o
+ .debug_line    0x0000247a      0x15c build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_sil.o
+ .debug_line    0x000025d6      0x131 build/Debug/arm-none-eabi-Linux/SysHandlers.o
+ .debug_line    0x00002707      0x25a build/Debug/arm-none-eabi-Linux/USB_CDC.o
+ .debug_line    0x00002961      0x146 build/Debug/arm-none-eabi-Linux/usb_istr.o
+
+.debug_info     0x00000000     0x8ee2
+ .debug_info    0x00000000       0x6e build/Debug/arm-none-eabi-Linux/CMSIS/startup_stm32f37x.o
+ .debug_info    0x0000006e      0x4bf build/Debug/arm-none-eabi-Linux/CMSIS/system_stm32f37x.o
+ .debug_info    0x0000052d      0xd51 build/Debug/arm-none-eabi-Linux/Main.o
+ .debug_info    0x0000127e      0x616 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o
+ .debug_info    0x00001894      0x55a build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o
+ .debug_info    0x00001dee      0x534 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o
+ .debug_info    0x00002322      0xa72 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o
+ .debug_info    0x00002d94      0xb4f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o
+ .debug_info    0x000038e3      0xb03 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o
+ .debug_info    0x000043e6     0x1c1a build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o
+ .debug_info    0x00006000      0xb82 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_core.o
+ .debug_info    0x00006b82      0x458 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+ .debug_info    0x00006fda      0x1f7 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+ .debug_info    0x000071d1      0x1d6 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_mem.o
+ .debug_info    0x000073a7      0xc8b build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_regs.o
+ .debug_info    0x00008032      0x18a build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_sil.o
+ .debug_info    0x000081bc      0x133 build/Debug/arm-none-eabi-Linux/SysHandlers.o
+ .debug_info    0x000082ef      0x979 build/Debug/arm-none-eabi-Linux/USB_CDC.o
+ .debug_info    0x00008c68      0x27a build/Debug/arm-none-eabi-Linux/usb_istr.o
+
+.debug_abbrev   0x00000000     0x1925
+ .debug_abbrev  0x00000000       0x12 build/Debug/arm-none-eabi-Linux/CMSIS/startup_stm32f37x.o
+ .debug_abbrev  0x00000012      0x149 build/Debug/arm-none-eabi-Linux/CMSIS/system_stm32f37x.o
+ .debug_abbrev  0x0000015b      0x1dd build/Debug/arm-none-eabi-Linux/Main.o
+ .debug_abbrev  0x00000338      0x19a build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o
+ .debug_abbrev  0x000004d2      0x149 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o
+ .debug_abbrev  0x0000061b      0x183 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o
+ .debug_abbrev  0x0000079e      0x1e7 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o
+ .debug_abbrev  0x00000985      0x1bd build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o
+ .debug_abbrev  0x00000b42      0x19c build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o
+ .debug_abbrev  0x00000cde      0x18b build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o
+ .debug_abbrev  0x00000e69      0x28f build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_core.o
+ .debug_abbrev  0x000010f8      0x122 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+ .debug_abbrev  0x0000121a       0xd0 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+ .debug_abbrev  0x000012ea       0x9f build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_mem.o
+ .debug_abbrev  0x00001389      0x178 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_regs.o
+ .debug_abbrev  0x00001501       0xbd build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_sil.o
+ .debug_abbrev  0x000015be       0x67 build/Debug/arm-none-eabi-Linux/SysHandlers.o
+ .debug_abbrev  0x00001625      0x204 build/Debug/arm-none-eabi-Linux/USB_CDC.o
+ .debug_abbrev  0x00001829       0xfc build/Debug/arm-none-eabi-Linux/usb_istr.o
+
+.debug_aranges  0x00000000      0x268
+ .debug_aranges
+                0x00000000       0x28 build/Debug/arm-none-eabi-Linux/CMSIS/startup_stm32f37x.o
+ .debug_aranges
+                0x00000028       0x20 build/Debug/arm-none-eabi-Linux/CMSIS/system_stm32f37x.o
+ .debug_aranges
+                0x00000048       0x20 build/Debug/arm-none-eabi-Linux/Main.o
+ .debug_aranges
+                0x00000068       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o
+ .debug_aranges
+                0x00000088       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o
+ .debug_aranges
+                0x000000a8       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o
+ .debug_aranges
+                0x000000c8       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o
+ .debug_aranges
+                0x000000e8       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o
+ .debug_aranges
+                0x00000108       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o
+ .debug_aranges
+                0x00000128       0x20 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o
+ .debug_aranges
+                0x00000148       0x20 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_core.o
+ .debug_aranges
+                0x00000168       0x20 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+ .debug_aranges
+                0x00000188       0x20 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+ .debug_aranges
+                0x000001a8       0x20 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_mem.o
+ .debug_aranges
+                0x000001c8       0x20 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_regs.o
+ .debug_aranges
+                0x000001e8       0x20 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_sil.o
+ .debug_aranges
+                0x00000208       0x20 build/Debug/arm-none-eabi-Linux/SysHandlers.o
+ .debug_aranges
+                0x00000228       0x20 build/Debug/arm-none-eabi-Linux/USB_CDC.o
+ .debug_aranges
+                0x00000248       0x20 build/Debug/arm-none-eabi-Linux/usb_istr.o
+
+.debug_ranges   0x00000000       0xf8
+ .debug_ranges  0x00000000       0x20 build/Debug/arm-none-eabi-Linux/CMSIS/startup_stm32f37x.o
+ .debug_ranges  0x00000020       0xd8 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_regs.o
+
+.debug_str      0x00000000     0x3956
+ .debug_str     0x00000000      0x2a6 build/Debug/arm-none-eabi-Linux/CMSIS/system_stm32f37x.o
+                                0x31a (size before relaxing)
+ .debug_str     0x000002a6      0xa19 build/Debug/arm-none-eabi-Linux/Main.o
+                                0xbee (size before relaxing)
+ .debug_str     0x00000cbf      0x183 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o
+                                0x4ca (size before relaxing)
+ .debug_str     0x00000e42      0x146 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o
+                                0x3f9 (size before relaxing)
+ .debug_str     0x00000f88      0x168 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o
+                                0x3a6 (size before relaxing)
+ .debug_str     0x000010f0      0x513 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o
+                                0x7d7 (size before relaxing)
+ .debug_str     0x00001603      0x4a7 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o
+                                0x7f4 (size before relaxing)
+ .debug_str     0x00001aaa      0x39b build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o
+                                0x79a (size before relaxing)
+ .debug_str     0x00001e45      0xa5a build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o
+                                0xded (size before relaxing)
+ .debug_str     0x0000289f      0x7a7 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_core.o
+                                0xa8a (size before relaxing)
+ .debug_str     0x00003046       0x61 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+                                0x55e (size before relaxing)
+ .debug_str     0x000030a7       0x59 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+                                0x21d (size before relaxing)
+ .debug_str     0x00003100       0x81 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_mem.o
+                                0x21e (size before relaxing)
+ .debug_str     0x00003181      0x3ed build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_regs.o
+                                0x5a6 (size before relaxing)
+ .debug_str     0x0000356e       0x7f build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_sil.o
+                                0x22c (size before relaxing)
+ .debug_str     0x000035ed       0x9e build/Debug/arm-none-eabi-Linux/SysHandlers.o
+                                0x201 (size before relaxing)
+ .debug_str     0x0000368b      0x2a2 build/Debug/arm-none-eabi-Linux/USB_CDC.o
+                                0x8ec (size before relaxing)
+ .debug_str     0x0000392d       0x29 build/Debug/arm-none-eabi-Linux/usb_istr.o
+                                0x30d (size before relaxing)
+
+.comment        0x00000000       0x6e
+ .comment       0x00000000       0x6e build/Debug/arm-none-eabi-Linux/CMSIS/system_stm32f37x.o
+                                 0x6f (size before relaxing)
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/Main.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_core.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_mem.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_regs.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_sil.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/SysHandlers.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/USB_CDC.o
+ .comment       0x0000006e       0x6f build/Debug/arm-none-eabi-Linux/usb_istr.o
+
+.debug_frame    0x00000000     0x37b4
+ .debug_frame   0x00000000       0x7c build/Debug/arm-none-eabi-Linux/CMSIS/system_stm32f37x.o
+ .debug_frame   0x0000007c      0x198 build/Debug/arm-none-eabi-Linux/Main.o
+ .debug_frame   0x00000214      0x214 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o
+ .debug_frame   0x00000428       0xd8 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o
+ .debug_frame   0x00000500      0x1b4 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o
+ .debug_frame   0x000006b4      0x60c build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o
+ .debug_frame   0x00000cc0      0x604 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o
+ .debug_frame   0x000012c4      0x4e0 build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o
+ .debug_frame   0x000017a4      0xe2c build/Debug/arm-none-eabi-Linux/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o
+ .debug_frame   0x000025d0      0x2b8 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_core.o
+ .debug_frame   0x00002888       0x2c build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_init.o
+ .debug_frame   0x000028b4       0x5c build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_int.o
+ .debug_frame   0x00002910       0x60 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_mem.o
+ .debug_frame   0x00002970      0x91c build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_regs.o
+ .debug_frame   0x0000328c       0x78 build/Debug/arm-none-eabi-Linux/STM32_USB-FS-Device_Driver/src/usb_sil.o
+ .debug_frame   0x00003304      0x110 build/Debug/arm-none-eabi-Linux/SysHandlers.o
+ .debug_frame   0x00003414      0x29c build/Debug/arm-none-eabi-Linux/USB_CDC.o
+ .debug_frame   0x000036b0       0x2c build/Debug/arm-none-eabi-Linux/usb_istr.o
+ .debug_frame   0x000036dc       0x50 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__call_atexit.o)
+ .debug_frame   0x0000372c       0x20 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-atexit.o)
+ .debug_frame   0x0000374c       0x34 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-fini.o)
+ .debug_frame   0x00003780       0x34 /home/edu/bin/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/libg.a(lib_a-__atexit.o)

@@ -67,7 +67,7 @@ typedef struct
 }SDADC_InitTypeDef;
 
 /** 
-  * @brief  SDADC Analog Inputs Configuration structure definition  
+  * @brief  SDADC Analog Inputs Configuration structure definition
   */
 
 typedef struct
