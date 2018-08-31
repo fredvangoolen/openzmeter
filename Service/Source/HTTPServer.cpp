@@ -23,6 +23,7 @@ uint32_t                HTTPServer::pCallbacksCount = 0;
 HTTPServer::Mapping_t  *HTTPServer::pMappings       = NULL;
 uint32_t                HTTPServer::pMappingssCount = 0;
 char                   *HTTPServer::pFilePath       = (char*)"/usr/share/openZmeter/WEB/";
+char                   *HTTPServer::pDefaultPage    = (char*)"";
 //----------------------------------------------------------------------------------------------------------------------
 bool HTTPServer::Config(json_object *config) {
   Database DB(NULL);
@@ -65,6 +66,9 @@ bool HTTPServer::Config(json_object *config) {
 }
 void HTTPServer::Stop() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
+}
+void HTTPServer::RegisterDefault(char *def) {
+  pDefaultPage = def;
 }
 void HTTPServer::RegisterCallback(char *handleName, HTTPServer::Func_t function) {
   pCallbacks = (Callback_t*)realloc(pCallbacks, sizeof(Callback_t) * (pCallbacksCount + 1));
@@ -200,8 +204,8 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
       return MHD_YES;
     } else if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
-      if((strcmp(url, "/Login") == 0) && (Request->UserName != NULL)) {
-        return SendRedirect(connection, "/");
+      if(((strcmp(url, "/Login") == 0) || (strcmp(url, "/") == 0)) && (Request->UserName != NULL)) {
+        return SendRedirect(connection, pDefaultPage);
       } else if((strcmp(url, "/Login") == 0) && (Request->UserName == NULL)) {
         char Cookie[256];
         sprintf(Cookie, "SESSION=%s; httponly; Path=/", SessionID);

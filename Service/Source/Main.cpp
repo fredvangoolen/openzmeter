@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterCallback((char*)"/getSeriesNow",    DeviceInterface::GetSeriesNowCallback);
   HTTPServer::RegisterCallback((char*)"/getSeriesRange",  DeviceInterface::GetSeriesRangeCallback);
   
-  HTTPServer::RegisterMapping((char*)"/",                     (char*)"Dashboard.html");
+  HTTPServer::RegisterDefault((char*)"/Dashboard");
   HTTPServer::RegisterMapping((char*)"/Dashboard",            (char*)"Dashboard.html");
   HTTPServer::RegisterMapping((char*)"/Analysis/Frequency",   (char*)"Analysis_Frequency.html");
   HTTPServer::RegisterMapping((char*)"/Analysis/Voltage",     (char*)"Analysis_Voltage.html");

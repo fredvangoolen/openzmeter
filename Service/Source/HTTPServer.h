@@ -14,13 +14,13 @@ class HTTPServer {
   private :
     typedef struct {
       char           *UserName;
-      char                     *PostData;
-      size_t                    PostDataLen;
-      int                       ResultCode;
-      bool                      Deflate;
-      Database                 *DB;
-      json_object              *JSONReader;
-      json_object              *JSONWriter;
+      char           *PostData;
+      size_t          PostDataLen;
+      int             ResultCode;
+      bool            Deflate;
+      Database       *DB;
+      json_object    *JSONReader;
+      json_object    *JSONWriter;
     } Request_t;
     typedef struct {
       char   *HandleName;
@@ -35,7 +35,8 @@ class HTTPServer {
     static char           *pFilePath;
     static Callback_t     *pCallbacks;
     static uint32_t        pCallbacksCount;
-        static Mapping_t *pMappings;
+    static Mapping_t      *pMappings;
+    static char           *pDefaultPage;
     static uint32_t        pMappingssCount;
   private :
     static int   HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
@@ -50,6 +51,7 @@ class HTTPServer {
     static void  CloseSession(MHD_Connection *connection, Request_t *request);
   public :
     static bool Config(json_object *config);
+    static void RegisterDefault(char *def);
     static void RegisterCallback(char *handleName, Func_t function);
     static void RegisterMapping(char *url, char *file);
     static void Stop();
