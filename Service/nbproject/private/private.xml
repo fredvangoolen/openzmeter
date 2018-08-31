@@ -13,5 +13,8 @@
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Analysis_Energy.js</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Analysis_Power.js</file>
         </group>
+        <group>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Stats_Distribution.js</file>
+        </group>
     </open-files>
 </project-private>
