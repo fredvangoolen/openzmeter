@@ -1,0 +1,22 @@
+G04 DipTrace 3.0.0.1*
+G04 BottomSilk.gbr*
+%MOMM*%
+G04 #@! TF.FileFunction,Legend,Bot*
+G04 #@! TF.Part,Single*
+%ADD16C,1.0*%
+%FSLAX35Y35*%
+G04*
+G71*
+G90*
+G75*
+G01*
+G04 BotSilk*
+%LPD*%
+X1587333Y5111213D2*
+D16*
+Y4047700D1*
+X3904840D1*
+Y3317527D1*
+Y1619080D1*
+X7571580D1*
+M02*

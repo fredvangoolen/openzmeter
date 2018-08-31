@@ -7,12 +7,12 @@
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceInterface {
   protected : 
-    AnalyzerInterface **pAnalyzers;               //Analizadores disponibles
-    uint8_t             pAnalyzersCount;          //Numero de analizadores
+//    AnalyzerInterface **pAnalyzers;               //Analizadores disponibles
+//    uint8_t             pAnalyzersCount;          //Numero de analizadores
     pthread_t           pCaptureThread;           //Descriptor del hilo de captura 
     bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes
   protected :
-    void AddAnalyzer(AnalyzerInterface *analyzer);
+    virtual AnalyzerInterface *FindAnalyzer(char *serial) = 0;
     DeviceInterface();
   public :
     virtual ~DeviceInterface();

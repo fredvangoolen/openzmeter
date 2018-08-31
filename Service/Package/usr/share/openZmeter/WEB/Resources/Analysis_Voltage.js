@@ -305,7 +305,7 @@ function UpdateWaveformChart() {
       var Options = { 
         strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
         legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Sample'].concat(SeriesNames.Voltage()).concat(SeriesNames.Current()), series: Series, visibility: VoltageVisibility.concat(CurrentVisibility),
-        colors: ColorArray($('#VoltagePanel').css('border-color'), 3).concat(ColorArray('#428bca', 3)), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
+        colors: ColorArray($('#VoltagePanel').css('border-color'), SeriesNames.Voltage().length).concat(ColorArray('#428bca', SeriesNames.Current().length)), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: Y1Range, 
                valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">V</em>'; },
@@ -363,7 +363,7 @@ function UpdateHarmonicsChart() {
       var Options = { 
         strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], interactionModel: { }, plotter: multiColumnBarPlotter, dateWindow: [ToShow[0][0] - 0.5, ToShow[ToShow.length - 1][0] + 0.5],
         legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Harmonic'].concat(SeriesNames.Voltage()).concat(SeriesNames.Current()), series: Series,
-        colors: ColorArray($('#VoltagePanel').css('border-color'), 3).concat(ColorArray('#428bca', 3)), visibility: VoltageVisibility.concat(CurrentVisibility),
+        colors: ColorArray($('#VoltagePanel').css('border-color'), SeriesNames.Voltage().length).concat(ColorArray('#428bca', SeriesNames.Current().length)), visibility: VoltageVisibility.concat(CurrentVisibility),
         axes: { 
           y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: [Y1Range[0] + HarmonicsVOffset, Y1Range[1] + HarmonicsVOffset],
                ticker: Log ? function(min, max) { return GraphDBTicks(min, max, HarmonicsVOffset); } : Dygraph.numericTicks,
@@ -422,7 +422,7 @@ function UpdateFFTChart(result) {
       var Options = { 
         strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], fillGraph: true, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
         legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Bin'].concat(SeriesNames.Voltage()).concat(SeriesNames.Current()), series: Series, plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
-        colors: ColorArray($('#VoltagePanel').css('border-color'), 3).concat(ColorArray('#428bca', 3)), visibility: VoltageVisibility.concat(CurrentVisibility),
+        colors: ColorArray($('#VoltagePanel').css('border-color'), SeriesNames.Voltage().length).concat(ColorArray('#428bca', SeriesNames.Current().length)), visibility: VoltageVisibility.concat(CurrentVisibility),
         axes: { 
           y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: [Y1Range[0] + FFTVOffset, Y1Range[1] + FFTVOffset], 
                ticker: Log ? function(min, max) { return GraphDBTicks(min, max, FFTVOffset); } : Dygraph.numericTicks,
@@ -554,7 +554,7 @@ function PeriodView_OnSuccess(result) {
     PHIChart         = AppendCubismGraph($('#PHIChart'), PHIDataset, "Phi", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'; });
   } else {
     for(i = 0; i < 50; i++) {
-      HarmonicsCharts[i].updateOptions({ file: ReactiveData, dateWindow: [result['From'], result['To']] });
+      HarmonicsCharts[i].updateOptions({ file: HarmonicsDatasets[i], dateWindow: [result['From'], result['To']] });
     }
     PowerFactorChart.updateOptions({ file: PowerFactorDataset, dateWindow: [result['From'], result['To']] });
     THDChart.updateOptions({ file: THDDataset, dateWindow: [result['From'], result['To']] });

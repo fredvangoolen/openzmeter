@@ -16,7 +16,6 @@
 #include <sys/time.h>
 #include "DeviceV1.h"
 #include "Tools.h"
-#include "Analyzers/AnalyzerSoft.h"
 // Funciones ===========================================================================================================
 void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV1 *This = (DeviceV1*)transfer->user_data;
@@ -59,7 +58,7 @@ int DeviceV1::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
     if(This->pDeviceHandle != NULL) {
       libusb_device *CurrentDev = libusb_get_device(This->pDeviceHandle);	
       if(dev == CurrentDev) {
-        Tools::LogMsg("INFO", "Device CaptureMono with serial '%s' disconnected\n", This->pSerial);
+        Tools::LogMsg("INFO", "DeviceV1 with serial '%s' disconnected\n", This->pSerial);
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL;
       }
@@ -80,10 +79,10 @@ bool DeviceV1::BuffersAppend(float voltageSample, float currentSample) {
     pthread_setname_np(pCaptureThread, ThreadName);
     pLastUpdate = Sampletime;
   }
-  if(((AnalyzerSoft*)pAnalyzers[0])->IsFinished() == false) return true;
+  if(pAnalyzer->IsFinished() == false) return true;
   bool Started = false;
   for(uint8_t Sample = 0; (Sample < 5) && (pUsed > 0) && (Started == false); Sample++) {
-    if(((AnalyzerSoft*)pAnalyzers[0])->BufferAppend(&pVoltageSamples[pReadPos], &pCurrentSamples[pReadPos], Sampletime) == true) Started = true;
+    if(pAnalyzer->BufferAppend(&pVoltageSamples[pReadPos], &pCurrentSamples[pReadPos], Sampletime) == true) Started = true;
     pReadPos = (pReadPos + 1) % pBuffLen;
     pUsed--;
   }
@@ -182,54 +181,9 @@ void  *DeviceV1::Capture_Thread(void *args) {
   }
   return NULL;
 }
-//void  *DeviceV1::Analize_Thread(void* args) {
-//  DeviceV1 *This = (DeviceV1*)args;
-//  if(pthread_setschedprio(0, -10) == -1) {
-//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    return NULL;
-//  }
-//  pthread_setname_np(This->AnalyzeThread, "AnalysisMono");
-//  int Discard = 100;
-//  while(!This->pTerminate) {
-//    pthread_mutex_lock(&This->AnalyzeMutex);
-//    while(This->Used < (This->GetMaxSamples() + This->SampleRate() * EVENT_ENVELOPETIME)) {
-//      if(This->pTerminate) return NULL;
-//      pthread_cond_wait(&This->ReadWait, &This->AnalyzeMutex);
-//    }
-//    uint64_t Start = Tools::GetTime();
-//    This->pWork.Params.Timestamp = Start - ((This->Used * 1000) / CAPTUREMONO_SAMPLEFREQ);
-//    float LastSample = +20; //Siempre comienzo con cierto offset para que el primer flanco sea el positivo
-//    for(This->pWork.Samples = 0; This->pWork.Samples < This->GetMaxSamples(); This->pWork.Samples++) {
-//      This->pWork.VoltageSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Voltage;
-//      This->pWork.CurrentSamples[0][This->pWork.Samples] = This->Buffer[This->ReadPos].Current;
-//      float Out = This->pWork.VoltageSamples[0][This->pWork.Samples];
-//      for(int i = 0; i < 5; i++) Out = ApplyFilter(Out, &This->Filters[i]);
-//      if(((LastSample >= 0.0) && (Out < 0.0)) || ((LastSample <= 0.0) && (Out > 0.0))) {
-//        This->pWork.Cycles[This->pWork.Cycles_Len].End = This->pWork.Samples;
-//        This->pWork.Cycles_Len++;
-//        if(This->pWork.Cycles_Len == 20) break;
-//        This->pWork.Cycles[This->pWork.Cycles_Len].Start = This->pWork.Samples;
-//      }
-//      LastSample = Out;
-//      This->ReadPos = (This->ReadPos + 1) % CAPTUREMONO_BUFFERSIZE;
-//    }
-//    This->Used -= This->pWork.Samples;
-//    pthread_cond_signal(&This->WriteWait);
-//    pthread_mutex_unlock(&This->AnalyzeMutex);
-//    if(Discard > 0) {
-//      Discard--;
-//      This->ResetWork();
-//      This->ResetParams(&This->pWork.Params);
-//    } else {
-//      This->Analyze(0.1);
-//      uint64_t AnalyzeEnd = Tools::GetTime();
-//      This->SaveWorkParams();
-//      uint64_t SaveEnd = Tools::GetTime();
-//      Tools::LogMsg("DEBUG", "Process of block %" PRIu64 " takes %umS (%" PRIu64 "mS mS with store)\n", This->pWork.SequenceID, AnalyzeEnd - Start, SaveEnd - Start);
-//    }
-//  }
-//  return NULL;
-//}
+AnalyzerInterface *DeviceV1::FindAnalyzer(char *serial) {
+  return (strcmp(serial, pAnalyzer->GetID()) == 0) ? pAnalyzer : NULL;
+}
 DeviceV1::DeviceV1(json_object *config) : DeviceInterface() {
   Tools::LogMsg("INFO", "Starting DeviceV1 driver...\n");
   pUsed                  = 0;
@@ -239,10 +193,6 @@ DeviceV1::DeviceV1(json_object *config) : DeviceInterface() {
   pReadPos               = 0;
   pWritePos              = 0;
   pLastUpdate            = 0;
-
-  
-  
-  
   pDeviceHandle          = NULL;
   pNewDevice             = NULL;
   pSerial                = (char*)"000000000000000000000000";
@@ -250,9 +200,14 @@ DeviceV1::DeviceV1(json_object *config) : DeviceInterface() {
   pCurrentGain           = 1;
   pVoltageOffset         = 0;
   pCurrentOffset         = 0;
+  pAnalyzer              = NULL;
   float NominalVoltage   = 230.0;
   float NominalFrequency = 50.0;
   char *Name             = (char*)"Unnamed input";
+  if((pVoltageSamples == NULL) || (pCurrentSamples == NULL)) {
+    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
+    return;
+  }
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Serial") == 0)) {
@@ -273,61 +228,30 @@ DeviceV1::DeviceV1(json_object *config) : DeviceInterface() {
       Name = (char*)json_object_get_string(JSON_Val);
     }
   }
-  AddAnalyzer(new AnalyzerSoft(DEVICEV1_SAMPLEFREQ, pSerial, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1));
+  pAnalyzer = new AnalyzerSoft(DEVICEV1_SAMPLEFREQ, pSerial, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
   int Error = libusb_init(NULL);
   if(Error < 0) {
-    Tools::LogMsg("ERROR", "Fallo la apertura de libUSB...\n");
+    Tools::LogMsg("ERROR", "Can not open libUSB...\n");
     return;
   }
-
-  
-  //  pthread_cond_init(&WriteWait, NULL);
-//  pthread_cond_init(&ReadWait, NULL);
-//  pthread_mutex_init(&AnalyzeMutex, NULL);
-//  pthread_mutex_init(&CaptureMutex, NULL);
-//  for(int i = 0; i < 5; i++) {
- //   float Q = 1.0;
-//    float K = tan(M_PI * ((float)Tools::Electrical.NominalFrequency / CAPTUREMONO_SAMPLEFREQ));
-//    float Norm = 1 / (1 + K / Q + K * K);
-//    Filters[i].A0 = K / Q * Norm;
-//    Filters[i].A1 = 0;
-//    Filters[i].A2 = -Filters[i].A0;
-//    Filters[i].B1 = 2 * (K * K - 1) * Norm;
-//    Filters[i].B2 = (1 - K / Q + K * K) * Norm;
-//    Filters[i].Z1 = 0.0;
-//    Filters[i].Z2 = 0.0;            
-//  }
-//  Buffer = (Sample_t*)malloc(CAPTUREMONO_BUFFERSIZE * sizeof(Sample_t));
-//  if(Buffer == NULL) {
-//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    libusb_exit(NULL);
-//    return; 
-//  }
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(NULL);
-//    free(Buffer);
     return;
   }
-  pthread_setname_np(pCaptureThread, "DeviceV1");
   Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV1_VID, DEVICEV1_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
   if(Error < 0) {
     Tools::LogMsg("ERROR", "Fallo al registrar callback de escucha libUSB...\n");
     pTerminate = true;
     pthread_join(pCaptureThread, NULL);
-//    free(Buffer);
     return;
   }
-//  if(pthread_create(&AnalyzeThread, NULL, Analize_Thread, this) != 0) {
-//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    pTerminate = true;
-//    pthread_join(CaptureThread, NULL);
-//    free(Buffer);
-//    return;
-//  }
 }
 DeviceV1::~DeviceV1() {
-//  if(Buffer) {
+  if(pVoltageSamples) free(pVoltageSamples);
+  if(pCurrentSamples) free(pCurrentSamples);
+  if(pAnalyzer) delete pAnalyzer;
+  //  if(Buffer) {
 //    pthread_cond_signal(&WriteWait);
 //    pthread_cond_signal(&ReadWait);
 //    pTerminate = true;

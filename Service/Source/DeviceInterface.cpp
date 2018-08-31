@@ -32,11 +32,11 @@ bool DeviceInterface::Config(json_object *config) {
       if(strcmp(json_object_get_string(Driver), "DeviceV1") == 0) {
         AddDeviceInterface(new DeviceV1(Device));
       } else if(strcmp(json_object_get_string(Driver), "DeviceV2") == 0) {
-//        AddDeviceInterface(new DeviceV2(Device));
+        AddDeviceInterface(new DeviceV2(Device));
       } else if(strcmp(json_object_get_string(Driver), "Virtual") == 0) {
         AddDeviceInterface(new DeviceVirtual(Device));
       } else if(strcmp(json_object_get_string(Driver), "Remote") == 0) {
-        AddDeviceInterface(new DeviceRemote(Device));
+//        AddDeviceInterface(new DeviceRemote(Device));
       }
     }
   }
@@ -47,43 +47,24 @@ void DeviceInterface::AddDeviceInterface(DeviceInterface* device) {
   pDevices[pDevicesCount] = device;
   pDevicesCount++;
 }
-void DeviceInterface::AddAnalyzer(AnalyzerInterface* analyzer) {
-  pAnalyzers = (AnalyzerInterface**)realloc(pAnalyzers, sizeof(DeviceInterface*) * (pAnalyzersCount) + 1);
-  pAnalyzers[pAnalyzersCount] = analyzer;
-  pAnalyzersCount++;
-}
 DeviceInterface::DeviceInterface() {
   pTerminate       = false;
-  pAnalyzers       = NULL;
-  pAnalyzersCount  = 0;
 }
 DeviceInterface::~DeviceInterface() {
-  for(int i = 0; i < pAnalyzersCount; i++) delete pAnalyzers[i];
-  free(pAnalyzers);
 }
 bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_array();
-  db->PrepareSentence("SELECT admin FROM users WHERE name = ?");
+  db->PrepareSentence("SELECT serial FROM permisions WHERE name = ? AND read = TRUE UNION SELECT nspname FROM users, pg_catalog.pg_namespace WHERE nspname !~ '^pg_' AND nspname <> 'information_schema' AND nspname <> 'public' AND admin = true AND name = ?");
+  db->BindSingleString(user);
   db->BindSingleString(user);
   db->ExecSentence();
-  char *Value = db->ResultValue(0, (char*)"admin");
-  if((Value != NULL) && (strcmp("t", Value)) == 0) {
+  for(uint32_t i = 0; i < db->ResultRows(); i++) {
+    char *Serial = db->ResultValue(i, (char*)"serial");
     for(uint8_t j = 0; j < pDevicesCount; j++) {
-      for(uint32_t k = 0; k < pDevices[j]->pAnalyzersCount; k++) {
-        json_object_array_add(*writer, pDevices[j]->pAnalyzers[k]->GetJSONDescriptor());
-      }
-    }
-  } else {
-    db->PrepareSentence("SELECT serial FROM permisions WHERE name = ? AND read = TRUE");
-    db->BindSingleString(user);
-    db->ExecSentence();
-    for(uint32_t i = 0; i < db->ResultRows(); i++) {
-      char *Serial = db->ResultValue(i, (char*)"serial");
-      for(uint8_t j = 0; j < pDevicesCount; j++) {
-        for(uint32_t k = 0; k < pDevices[j]->pAnalyzersCount; k++) {
-          if(strcmp(pDevices[j]->pAnalyzers[k]->GetID(), Serial) == 0) json_object_array_add(*writer, pDevices[j]->pAnalyzers[k]->GetJSONDescriptor());
-        }
-      }
+      AnalyzerInterface *Analyzer = pDevices[j]->FindAnalyzer(Serial);
+      if(Analyzer == NULL) continue;
+      json_object_array_add(*writer, Analyzer->GetJSONDescriptor());
+      break;
     }
   }
   *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
@@ -241,15 +222,15 @@ bool DeviceInterface::GetSeriesAggregCallback(char *user, json_object *reader, D
   return true;
 }
 bool DeviceInterface::GetSeriesNowCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
-  char *Analyzer = NULL, *Series = NULL;
+  char *Serial = NULL, *Series = NULL;
   json_object_object_foreach(reader, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
       Series = (char*)json_object_get_string(JSON_Val);
     else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Analyzer") == 0))
-      Analyzer = (char*)json_object_get_string(JSON_Val);
+      Serial = (char*)json_object_get_string(JSON_Val);
   }
-  if(Analyzer == NULL) {
+  if(Serial == NULL) {
     *postdata  = (char*)"'Analyzer' param is requiered";
     *resultLen = strlen(*postdata);
     return false;
@@ -260,15 +241,11 @@ bool DeviceInterface::GetSeriesNowCallback(char *user, json_object *reader, Data
     return false;
   }
   for(uint32_t i = 0; i < pDevicesCount; i++) {
-    DeviceInterface *Device = pDevices[i];
-    for(uint32_t n = 0; n < Device->pAnalyzersCount; n++) {
-      AnalyzerInterface *Tmp = Device->pAnalyzers[n];
-      if(strcmp(Tmp->GetID(), Analyzer) == 0) {
-        *writer = Tmp->GetJSONParams(Series);
-        *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
-        return true;      
-      }
-    }
+    AnalyzerInterface *Analyzer = pDevices[i]->FindAnalyzer(Serial);
+    if(Analyzer == NULL) continue;
+    *writer = Analyzer->GetJSONParams(Series);
+    *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
+    return true;      
   }
   return false;
 }

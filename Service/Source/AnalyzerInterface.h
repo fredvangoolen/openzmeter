@@ -35,6 +35,8 @@ class AnalyzerInterface : protected Database {
       float     *FFT_V[3];
       float     *FFT_I[4];
     } ExtParams_t;
+  private :
+    uint64_t      pLastSave;
   protected :
     char         *pID;
     float         pNominalVoltage;
@@ -53,6 +55,7 @@ class AnalyzerInterface : protected Database {
     virtual void GetParams(Params_t *params, ExtParams_t *extParams) = 0;
   public :
     AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode);
+    void        *GetParams();
     float        GetNominalVoltage();
     float        GetNominalFrequency();
     char        *GetID();
