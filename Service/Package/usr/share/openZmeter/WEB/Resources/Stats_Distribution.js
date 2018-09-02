@@ -27,13 +27,8 @@
 		weekStart: 1
 	};
 } (jQuery));
-var Calendar     = null;
-var WeekTable    = null;
-var MonthTable   = null;
-var WeekDayTable = null;
-var EnergyData   = [];
+var Calendar = null, WeekTable = null, MonthTable = null, WeekDayTable = null, HourTable = null, EnergyData   = [];
 var SelectedYear;
-var SelectedPhase = [];
 function AjaxGetEnergy(selected_year) {
   $('#StatsSpinner').show();
   $('#YearSelector button').removeClass('active');
@@ -46,7 +41,7 @@ function AjaxGetEnergy(selected_year) {
     function(result) {
       EnergyData = GraphDataAppend(result, 'active_energy', []);
       $('#StatsSpinner').hide();
-      UpdateView();      
+      EnergySeries();      
     }
   );
 }
@@ -55,15 +50,19 @@ function ShowColorScale(scale, outerdiv) {
   var width = outerdiv.width() - 1;
   for(i = 0; i <= width; i++) outerdiv.append('<div style="width:1px; height:8px; display:inline; background:' + scale(i / width) + '"></div>');
 }
-function UpdateCalendar(phasemask) {
+function SumPhases(array, visibleSeries) {
+  var Energy = 0.0;
+  for(phase = 0; phase < visibleSeries.length; phase++) {
+    if(visibleSeries[phase] === true) Energy = Energy + EnergyData[i][phase + 1];
+  }
+  return Energy;
+}
+function UpdateCalendar(visibleSeries) {
   var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]), DayArray = [];
   for(i = 0; i < EnergyData.length; i++) {
     var Day = GetDayOfYear(EnergyData[i][0]);
     if(DayArray[Day] === undefined) DayArray[Day] = 0.0;
-    for(phase = 0; Math.pow(2, phase) <= phasemask; phase++) {
-      if(Math.pow(2, phase) & phasemask === 0) continue;
-      DayArray[Day] = DayArray[Day] + EnergyData[i][phase + 1];
-    }
+    DayArray[Day] = DayArray[Day] + SumPhases(EnergyData[i], visibleSeries);
   }
   var Max = ArrayMax(DayArray), Min = ArrayMin(DayArray), Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
   if(Calendar === null) {
@@ -88,8 +87,8 @@ function UpdateCalendar(phasemask) {
   });
   Calendar.setDisabledDays(Disabled);
 }
-function UpdateWeeks(phasemask) {
-  var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]), DayArray = [];
+function UpdateWeeks(visibleSeries) {
+  var WeekDay = [], WeekEnd = [];
   if(WeekTable !== null) {
     WeekTable.clear();
     WeekTable.destroy();
@@ -97,33 +96,36 @@ function UpdateWeeks(phasemask) {
   for(i = 0; i < EnergyData.length; i++) {
     var Week      = GetWeekOfYear(EnergyData[i][0]);
     var DayOfWeek = new Date(EnergyData[i][0]).getDay();
-    if(DayArray[Week] === undefined) DayArray[Week] = [];
-    if(DayArray[Week][DayOfWeek] === undefined) DayArray[Week][DayOfWeek] = 0.0;
-    for(phase = 0; Math.pow(2, phase) <= phasemask; phase++) {
-      if(Math.pow(2, phase) & phasemask === 0) continue;
-      DayArray[Week][DayOfWeek] = DayArray[Week][DayOfWeek] + EnergyData[i][phase + 1];
+    if(WeekDay[Week] === undefined) WeekDay[Week] = 0.0;
+    if(WeekEnd[Week] === undefined) WeekEnd[Week] = 0.0;
+    if((DayOfWeek === 0) || (DayOfWeek === 6)) {
+      WeekEnd[Week] = WeekEnd[Week] + SumPhases(EnergyData[i], visibleSeries);
+    } else {
+      WeekDay[Week] = WeekDay[Week] + SumPhases(EnergyData[i], visibleSeries);
     }
   }
-  var Max = ArrayMax(DayArray), Min = ArrayMin(DayArray), Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
-
-
-  $('#WeekUnits').html('<em>' + Units[1] + 'Wh</em>');
+  var Max = -Infinity, Min =  Infinity;
+  for(i in WeekDay) {
+    Max = Math.max(Max, WeekDay[i] + WeekEnd[i]);
+    Min = Math.min(Min, WeekDay[i] + WeekEnd[i]);
+  }
+  var Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
+  $('#WeekUnits').html('<em>' + Units + 'Wh</em>');
   var Contents = $('#WeekTable tbody');
   for(i = 1; ;i++) {
     var startDate = GetDateOfISOWeek(i, SelectedYear);
     var endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 6);
     if(endDate.getFullYear() !== SelectedYear) break;
-    var WeekDay = (WeekDayArray[i] !== undefined) ? WeekDayArray[i] : 0;
-    var WeekEnd = (WeekEndArray[i] !== undefined) ? WeekEndArray[i] : 0;
+    var E0 = (WeekDay[i] !== undefined) ? WeekDay[i] : 0, E1 = (WeekEnd[i] !== undefined) ? WeekEnd[i] : 0, E2 = E0 + E1;
     Contents.append('<tr>' +
       '<td data-toogle="tooltip" title="From ' + startDate.toLocaleDateString() + ' to ' + endDate.toLocaleDateString() + '">' + i + '</td>' + 
-      '<td><div class="progress" style="margin-bottom:0px; position:relative">' +
-      '<div class="progress-bar" role="progressbar" style="width:' + (100 * WeekDay / Max) + '%"></div>' +
-      '<div class="progress-bar" role="progressbar" style="background-color: #7eb0db; width:' + (100 * WeekEnd / Max) + '%"></div>' +
+      '<td><div class="progress" style="margin-bottom:0px; position:relative; height: 16px">' +
+      '<div class="progress-bar" role="progressbar" style="width:' + (100 * E0 / Max) + '%"></div>' +
+      '<div class="progress-bar" role="progressbar" style="background-color: #7eb0db; width:' + (100 * E1 / Max) + '%"></div>' +
       '</div></td>' +
-      '<td data-sort="' + WeekDay + '">' + Round2(WeekDay / Units[0]) + '</td>' +
-      '<td data-sort="' + WeekEnd + '">' + Round2(WeekEnd / Units[0]) + '</td>' +
-      '<td data-sort="' + (WeekDay + WeekEnd) + '">' + Round2((WeekDay + WeekEnd) / Units[0]) + '</td>' +
+      '<td data-sort="' + E0 + '">' + ((WeekDay[i] !== undefined) ? Round2(ScaleToUnits(E0, Units)) : '-') + '</td>' +
+      '<td data-sort="' + E1 + '">' + ((WeekDay[i] !== undefined) ? Round2(ScaleToUnits(E1, Units)) : '-') + '</td>' +
+      '<td data-sort="' + E2 + '">' + ((WeekDay[i] !== undefined) ? Round2(ScaleToUnits(E2, Units)) : '-') + '</td>' +
       '</tr>');
   }
   WeekTable = $('#WeekTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
@@ -131,48 +133,45 @@ function UpdateWeeks(phasemask) {
                                           order: [0, 'asc']
   });
 }
-function UpdateMonths() {
+function UpdateMonths(visibleSeries) {
+  var WeekDay = [], WeekEnd = [];
   if(MonthTable !== null) {
     MonthTable.clear();
     MonthTable.destroy();
   }
-  var MonthWeekDayArray = [];
-  var MonthWeekEndArray = [];
   for(i = 0; i < EnergyData.length; i++) {
+    var Month     = new Date(EnergyData[i][0]).getMonth();
     var DayOfWeek =  new Date(EnergyData[i][0]).getDay();
-    var Month = new Date(EnergyData[i][0]).getMonth();
-    if(!MonthWeekDayArray[Month]) MonthWeekDayArray[Month] = 0.0;
-    if(!MonthWeekEndArray[Month]) MonthWeekEndArray[Month] = 0.0;
+    var Energy = 0;
+    if(WeekDay[Month] === undefined) WeekDay[Month] = 0.0;
+    if(WeekEnd[Month] === undefined) WeekEnd[Month] = 0.0;
     if((DayOfWeek === 0) || (DayOfWeek === 6)) {
-      MonthWeekEndArray[Month] = MonthWeekEndArray[Month] + EnergyData[i][1][SelectedPhase];
+      WeekEnd[Month] = WeekEnd[Month] + SumPhases(EnergyData[i], visibleSeries);
     } else {
-      MonthWeekDayArray[Month] = MonthWeekDayArray[Month] + EnergyData[i][1][SelectedPhase];
+      WeekDay[Month] = WeekDay[Month] + SumPhases(EnergyData[i], visibleSeries);
     }
   }
-  var Max = -Infinity;
-  var Min =  Infinity;
-  for(i in MonthWeekDayArray) {
-    Max = Math.max(Max, MonthWeekDayArray[i] + MonthWeekEndArray[i]);
-    Min = Math.min(Min, MonthWeekDayArray[i] + MonthWeekEndArray[i]);
+  var Max = -Infinity, Min =  Infinity;
+  for(i in WeekDay) {
+    Max = Math.max(Max, WeekDay[i] + WeekEnd[i]);
+    Min = Math.min(Min, WeekDay[i] + WeekEnd[i]);
   }
-  Min = 0;
-  var Units = GetBestUnitsEnergy(Math.max(Math.abs(Min), Math.abs(Max)));
-  $('#MonthUnits').html('<em>' + Units[1] + 'Wh</em>');
+  var Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
+  $('#MonthUnits').html('<em>' + Units + 'Wh</em>');
   var Contents = $('#MonthTable tbody');
   for(i = 0; i < 12; i++) {
     var startDate = new Date(SelectedYear, i, 1);
     var endDate = new Date(SelectedYear, i + 1, 0);
-    var WeekDay = (MonthWeekDayArray[i] !== undefined) ? MonthWeekDayArray[i] : 0;
-    var WeekEnd = (MonthWeekEndArray[i] !== undefined) ? MonthWeekEndArray[i] : 0;
+    var E0 = (WeekDay[i] !== undefined) ? WeekDay[i] : 0, E1 = (WeekEnd[i] !== undefined) ? WeekEnd[i] : 0, E2 = E0 + E1;
     Contents.append('<tr>' +
       '<td data-sort="' + i + '">' + $.fn.calendar.dates['custom']['monthsShort'][i] + '</td>' + 
-      '<td><div class="progress" style="margin-bottom:0px; position:relative">' +
-      '<div class="progress-bar" role="progressbar" style="width:' + (100 * WeekDay / Max) + '%"></div>' +
-      '<div class="progress-bar" role="progressbar" style="background-color: #7eb0db; width:' + (100 * WeekEnd / Max) + '%"></div>' +
+      '<td><div class="progress" style="margin-bottom:0px; position:relative; height: 16px">' +
+      '<div class="progress-bar" role="progressbar" style="width:' + (100 * E0 / Max) + '%"></div>' +
+      '<div class="progress-bar" role="progressbar" style="background-color: #7eb0db; width:' + (100 * E1 / Max) + '%"></div>' +
       '</div></td>' +
-      '<td data-sort="' + WeekDay + '">' + Round2(WeekDay / Units[0]) + '</td>' +
-      '<td data-sort="' + WeekEnd + '">' + Round2(WeekEnd / Units[0]) + '</td>' +
-      '<td data-sort="' + (WeekDay + WeekEnd) + '">' + Round2((WeekDay + WeekEnd) / Units[0]) + '</td>' +
+      '<td data-sort="' + E0 + '">' + ((WeekDay[i] !== undefined) ? Round2(ScaleToUnits(E0, Units)) : '-') + '</td>' +
+      '<td data-sort="' + E1 + '">' + ((WeekDay[i] !== undefined) ? Round2(ScaleToUnits(E1, Units)) : '-') + '</td>' +
+      '<td data-sort="' + E2 + '">' + ((WeekDay[i] !== undefined) ? Round2(ScaleToUnits(E2, Units)) : '-') + '</td>' +
       '</tr>');
   }
   MonthTable = $('#MonthTable').DataTable({ responsive: true, paging: false, info: false, searching: false, 
@@ -180,108 +179,93 @@ function UpdateMonths() {
                                             order: [0, 'asc']
   });
 }      
-function UpdateWeekDays() {
+function UpdateWeekDays(visibleSeries) {
+  var WeekDay = Array(7).fill(0), WeekDayCount = Array(7).fill(0);
   if(WeekDayTable !== null) {
     WeekDayTable.clear();
     WeekDayTable.destroy();
   }
-  WeekDayNumArray = [];
-  WeekDayCountArray = [];
   for(i = 0; i < EnergyData.length; i++) {
-    var DayOfWeek =  new Date(EnergyData[i][0]).getDay();
-    if(!WeekDayNumArray[DayOfWeek]) WeekDayNumArray[DayOfWeek] = 0.0;
-    if(!WeekDayCountArray[DayOfWeek]) WeekDayCountArray[DayOfWeek] = 0;   
-    WeekDayNumArray[DayOfWeek] = WeekDayNumArray[DayOfWeek] + EnergyData[i][1][SelectedPhase];
-    WeekDayCountArray[DayOfWeek] = WeekDayCountArray[DayOfWeek] + 1;
+    var DayOfWeek = new Date(EnergyData[i][0]).getDay();
+    WeekDay[DayOfWeek] = WeekDay[DayOfWeek] + SumPhases(EnergyData[i], visibleSeries);
+    WeekDayCount[DayOfWeek] = WeekDayCount[DayOfWeek] + 1;
   }
   var Max = -Infinity;
   var Min =  Infinity;
-  for(i in WeekDayNumArray) {
-    Max = Math.max(Max, WeekDayNumArray[i] / ((WeekDayCountArray[i] !== undefined) ? WeekDayCountArray[i] / 144 : 0));
-    Min = Math.min(Min, WeekDayNumArray[i] / ((WeekDayCountArray[i] !== undefined) ? WeekDayCountArray[i] / 144 : 0));
+  for(i in WeekDay) {
+    if(WeekDayCount[i] === 0) continue;
+    Max = Math.max(Max, WeekDay[i] / WeekDayCount[i]);
+    Min = Math.min(Min, WeekDay[i] / WeekDayCount[i]);
   }
-  Min = 0;
-  var Units = GetBestUnitsEnergy(Math.max(Math.abs(Min), Math.abs(Max)));
-  $('#WeekDayUnits').html('<em>' + Units[1] + 'Wh</em>');
+  var Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
+  $('#WeekDayUnits').html('<em>' + Units + 'Wh</em>');
   var Contents = $('#WeekDayTable tbody');
   for(i = 0; i < 7; i++) {
-    var Energy = (WeekDayNumArray[i] !== undefined) ? WeekDayNumArray[i] : 0;
-    var Count  = (WeekDayCountArray[i] !== undefined) ? WeekDayCountArray[i] / 144 : 0;
+    var Energy = WeekDay[i];
+    var Count  = WeekDayCount[i];
     Contents.append('<tr>' +
       '<td data-sort="' + ((i === 0) ? 7 : i) + '">' + $.fn.calendar.dates['custom']['daysShort'][i] + '</td>' + 
-      '<td data-sort="' + Energy + '"><div class="progress" style="margin-bottom:0px; position:relative">' +
+      '<td data-sort="' + Energy + '"><div class="progress" style="margin-bottom:0px; position:relative; height: 16px">' +
       '<div class="progress-bar" role="progressbar" style="width:' + (100 * (Energy / Count) / Max) + '%"></div>' +
       '</div></td>' + 
-      '<td data-sort="' + (Energy / Count) + '">' + Round2((Energy / Count) / Units[0]) + '</td>' +
-      '<td data-sort="' + Energy + '">' + Round2(Energy / Units[0]) + '</td>' +
+      '<td data-sort="' + (Energy / Count) + '">' + ((WeekDayCount[i] === 0) ? '-' : Round2(ScaleToUnits(Energy / Count, Units))) + '</td>' +
+      '<td data-sort="' + Energy + '">' + ((WeekDayCount[i] === 0) ? '-' : Round2(ScaleToUnits(Energy, Units))) + '</td>' +
       '</tr>');
   }
   WeekDayTable = $('#WeekDayTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
                                                 columnDefs: [ { targets: [1], sortable: false }, { targets: [2, 3], sortable: true, className: "text-right" }, { targets: [0], sortable: true, className: "text-center" } ],
                                                 order: [0, 'asc']
   });
-}             
-function UpdateView(event) {
-  if(this.id === 'btnStatsALLPhase') localStorage.setItem('StatPhase', 'ALL');
-  if(this.id === 'btnStatsRPhase') localStorage.setItem('StatPhase', 'R');
-  if(this.id === 'btnStatsSPhase') localStorage.setItem('StatPhase', 'S');
-  if(this.id === 'btnStatsTPhase') localStorage.setItem('StatPhase', 'T');
-  
-  $('#btnStatsALLPhase').removeClass('active');
-  $('#btnStatsRPhase').removeClass('active');
-  $('#btnStatsSPhase').removeClass('active');
-  $('#btnStatsTPhase').removeClass('active');
-  $('#btnStatsALLPhase').addClass('disabled');
-  $('#btnStatsRPhase').addClass('disabled');
-  $('#btnStatsSPhase').addClass('disabled');
-  $('#btnStatsTPhase').addClass('disabled');
- 
-  if(Analyzers[Analyzer]['Mode'] === '3Phase') {
-    $('#btnStatsALLPhase').removeClass('disabled');
-    $('#btnStatsRPhase').removeClass('disabled');
-    $('#btnStatsSPhase').removeClass('disabled');
-    $('#btnStatsTPhase').removeClass('disabled');
-
-    switch(localStorage.getItem('StatPhase')) {
-      case 'R' :
-        $('#btnStatsRPhase').addClass('active');
-        SelectedPhase = [0];
-        break;
-      case 'S' :
-        $('#btnStatsSPhase').addClass('active');
-        SelectedPhase = [1];
-        break;
-      case 'T' :
-        $('#btnStatsTPhase').addClass('active');
-        SelectedPhase = [2];
-        break;
-      default :
-        $('#btnStatsALLPhase').addClass('active');
-        SelectedPhase = [0, 1, 2];
-        break;
-    }
-  } else {
-    SelectedPhase = [0];
-  }
-  
-  
-UpdateCalendar(7);
-
-  
-  
-  
-  UpdateWeeks(7);
-//  UpdateMonths();
-//  UpdateWeekDays();
 }
-$('#btnStatsRPhase').click(UpdateView);
-$('#btnStatsSPhase').click(UpdateView);
-$('#btnStatsTPhase').click(UpdateView);
-$('#btnStatsALLPhase').click(UpdateView);
-$('#btnHeatmap1Hour').click(UpdateView);
-$('#btnHeatmap30Min').click(UpdateView);
-$('#btnHeatmap20Min').click(UpdateView);
-$('#btnHeatmap10Min').click(UpdateView);
+function UpdateHours(visibleSeries) {
+  var Hours = Array(24).fill(0), HoursCount = Array(24).fill(0);
+  if(HourTable !== null) {
+    HourTable.clear();
+    HourTable.destroy();
+  }
+  for(i = 0; i < EnergyData.length; i++) {
+    var Hour = new Date(EnergyData[i][0]).getHours();
+    Hours[Hour] = Hours[Hour] + SumPhases(EnergyData[i], visibleSeries);
+    HoursCount[Hour] = HoursCount[Hour] + 1;
+  }
+  var Max = -Infinity;
+  var Min =  Infinity;
+  for(i in Hours) {
+    if(Hours[i] === 0) continue;
+    Max = Math.max(Max, Hours[i] / HoursCount[i]);
+    Min = Math.min(Min, Hours[i] / HoursCount[i]);
+  }
+  var Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
+  $('#HourUnits').html('<em>' + Units + 'Wh</em>');
+  var Contents = $('#HourTable tbody');
+  for(i = 0; i < 24; i++) {
+    var Energy = Hours[i];
+    var Count  = HoursCount[i];
+    Contents.append('<tr>' +
+      '<td data-sort="' + i + '">' + i + '</td>' + 
+      '<td data-sort="' + Energy + '"><div class="progress" style="margin-bottom:0px; position:relative; height: 16px">' +
+      '<div class="progress-bar" role="progressbar" style="width:' + (100 * (Energy / Count) / Max) + '%"></div>' +
+      '</div></td>' + 
+      '<td data-sort="' + (Energy / Count) + '">' + ((HoursCount[i] === 0) ? '-' : Round2(ScaleToUnits(Energy / Count, Units))) + '</td>' +
+      '<td data-sort="' + Energy + '">' + ((HoursCount[i] === 0) ? '-' : Round2(ScaleToUnits(Energy, Units))) + '</td>' +
+      '</tr>');
+  }
+  HourTable = $('#HourTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
+                                                columnDefs: [ { targets: [1], sortable: false }, { targets: [2, 3], sortable: true, className: "text-right" }, { targets: [0], sortable: true, className: "text-center" } ],
+                                                order: [0, 'asc']
+  });
+}
+function EnergySeries(event) {
+  GroupButtons($('#groupEnergyPhases'), 'VisibleStatsPhases', 3, false, 
+  function(visibleSeries) {
+    UpdateCalendar(visibleSeries);
+    UpdateWeeks(visibleSeries);
+    UpdateMonths(visibleSeries);
+    UpdateWeekDays(visibleSeries);
+    UpdateHours(visibleSeries);
+  }, (event !== undefined) ? event.target : undefined);
+}
+$('#groupEnergyPhases').on('click', 'button', EnergySeries);
 function UpdatePage() {
   Ajax.GetSeriesRange('1h', 
     function(result) {

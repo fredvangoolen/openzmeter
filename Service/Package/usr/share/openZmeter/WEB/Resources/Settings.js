@@ -4,7 +4,7 @@ var NetworksDataset = [];
 var EditingNetwork  = null;
 var WifiSpinner     = new Spinner(SpinnerOpts);
 function AjaxGetNetworks() {
-  ShowSpinner(WifiSpinner, 'WifiSpinner');
+//  ShowSpinner(WifiSpinner, 'WifiSpinner');
   $.ajax({ url: "getSysInfo",
            timeout: 20000,
            type: "POST",

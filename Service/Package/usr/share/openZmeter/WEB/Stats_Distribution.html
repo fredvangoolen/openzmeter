@@ -2,12 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="description" content=""/>
-    <meta name="author" content="zRed"/>
     <base href="/">
     <link rel="shortcut icon" href="favicon.ico"/>
+    <script src="lib/pace.min.js"></script>
+    <link rel="stylesheet" href="lib/pace.min.css">    
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css"/>
     <link rel="stylesheet" href="lib/datatables/css/dataTables.bootstrap.css" />
     <link rel="stylesheet" href="lib/sidenav/sidenav.min.css"/>
@@ -30,13 +29,13 @@
               <span class="huge">Energy distribution</span>
               <div class="pull-right">
                 <div class="btn-group" data-load-block="Years_Block"></div>
-                <div class="btn-group" data-load-block="PhaseALL_Block"></div>
+                <div class="btn-group" data-load-block="PhaseV_Block" id="groupEnergyPhases"></div>
               </div>
               <span class="clearfix"> </span>
             </div>
             <div class="panel-body">
               <div class="row">
-                <div class="col-md-12 col-lg-6">
+                <div class="col-md-12">
                   <div class="panel panel-other"> 
                     <div class="panel-heading">
                       <span class="glyphicon glyphicon-calendar"></span> By day
@@ -49,59 +48,78 @@
                     </div>
                     <div id="Calendar"></div>
                   </div>
-                  
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12 col-lg-6">
                   <div class="panel panel-other">
                     <div class="panel-heading">
                       <i class="fa fa-calendar-o" aria-hidden="true"></i> By month
-                      <div style="float: right" id="MonthUnits"></div>
+                      <div class="pull-right" id="MonthUnits"></div>
                     </div>
-                      <div style="padding: 5px">
-                        <table id="MonthTable" class="table small table-striped table-responsive">
-                          <thead>
-                            <tr>
-                              <th style="width: 30px">Month</th><th style="width: 100%"></th><th>Weekday</th><th>Weekend</th><th>Total</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    <div class="panel panel-default" style="margin: 5px">
-                      <div class="panel-heading">
-                        <i class="fa fa-ellipsis-h" aria-hidden="true"></i> By week day
-                        <div style="float: right" id="WeekDayUnits"></div>
-                      </div>
-                      <div style="padding: 5px">
-                        <table id="WeekDayTable" class="table small table-striped table-responsive">
-                          <thead>
-                            <tr>
-                              <th style="width: 30px">Day</th><th style="width: 100%"></th><th>Average</th><th>Accumulated</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                          </tbody>
-                        </table>
-                      </div>
+                    <div class="panel-body">
+                      <table id="MonthTable" class="table small table-striped table-responsive">
+                        <thead>
+                          <tr>
+                            <th style="width: 30px">Month</th><th style="width: 100%"></th><th>Weekday</th><th>Weekend</th><th>Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                      </table>
                     </div>
                   </div>
-                  <div class="col-md-12 col-lg-6">
-                    <div class="panel panel-other">
-                      <div class="panel-heading">
-                        <i class="fa fa-bars" aria-hidden="true"></i> By week
-                        <div style="float: right" id="WeekUnits"></div>
-                      </div>
-                      <div style="padding: 5px">
-                        <table id="WeekTable" class="table small table-responsive">
-                          <thead>
-                            <tr>
-                              <th>Week</th><th>Mon</th><th>Thu</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th><th>Total</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                          </tbody>
-                        </table>
-                      </div>
+                  <div class="panel panel-other">
+                    <div class="panel-heading">
+                      <i class="fa fa-ellipsis-h" aria-hidden="true"></i> By week day
+                      <div style="float: right" id="WeekDayUnits"></div>
+                    </div>
+                    <div class="panel-body">
+                      <table id="WeekDayTable" class="table small table-striped table-responsive">
+                        <thead>
+                          <tr>
+                            <th style="width: 30px">Day</th><th style="width: 100%"></th><th>Average</th><th>Accumulated</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div class="panel panel-other">
+                    <div class="panel-heading">
+                      <i class="fa fa-clock-o" aria-hidden="true"></i></i> By hour
+                      <div style="float: right" id="HourUnits"></div>
+                    </div>
+                    <div class="panel-body">
+                      <table id="HourTable" class="table small table-striped table-responsive">
+                        <thead>
+                          <tr>
+                            <th style="width: 30px">Hour</th><th style="width: 100%"></th><th>Average</th><th>Accumulated</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-12 col-lg-6">
+                  <div class="panel panel-other">
+                    <div class="panel-heading">
+                      <i class="fa fa-bars" aria-hidden="true"></i> By week
+                      <div class="pull-right" id="WeekUnits"></div>
+                    </div>
+                    <div class="panel-body">
+                      <table id="WeekTable" class="table small table-responsive">
+                        <thead>
+                          <tr>
+                            <th style="width: 30px">Week</th><th style="width: 100%"></th><th>Weekday</th><th>Weekend</th><th>Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
@@ -109,9 +127,9 @@
             </div>
           </div>
         </div>
+      </div>
     </div>
-
-    <script src="lib/jquery/jquery.js"></script>
+    <script src="lib/jquery.min.js"></script>
     <script src="lib/bootstrap/js/bootstrap.js"></script>
     <script src="lib/sidenav/sidenav.min.js"></script>
     <script src="lib/spin.min.js"></script>
@@ -121,7 +139,7 @@
     <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
     <script src="lib/momentjs/moment.js"></script>
     <script src="lib/momentjs/moment-duration-format.js"></script>
-    <script src="lib/chroma/chroma.js"></script>
+    <script src="lib/chroma.min.js"></script>
     <script src="openZmeter.js"></script>
     <script src="Stats_Distribution.js"></script>
   </body>
