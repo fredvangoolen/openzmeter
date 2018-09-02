@@ -78,14 +78,10 @@ function Scrollable_UpdateCounters(change) {
   var Times = GetCountersTimePeriod();
   if(change === true) {
     $('#labelVoltageAvgPrimary').text(Times.PrimaryText + ' average');
-    $('#labelVoltageAvgPrimaryValue').text('Calculating...');
-    $('#labelVoltageAvgSecondary').text(Times.SecondaryText);
     $('#labelVoltageMaxPrimary').text(Times.PrimaryText + ' maximun');
-    $('#labelVoltageMaxPrimaryValue').text('Calculating...');
-    $('#labelVoltageMaxSecondary').text(Times.SecondaryText);
     $('#labelVoltageMinPrimary').text(Times.PrimaryText + ' minimun');
-    $('#labelVoltageMinPrimaryValue').text('Calculating...');
-    $('#labelVoltageMinSecondary').text(Times.SecondaryText);
+    $('#labelVoltageAvgPrimaryValue, #labelVoltageMaxPrimaryValue, #labelVoltageMinPrimaryValue').text('Calculating...');
+    $('#labelVoltageAvgSecondary, #labelVoltageMaxSecondary, #labelVoltageMinSecondary').text(Times.SecondaryText);
   }
   Ajax.GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)', 
     function(result) {
@@ -96,21 +92,21 @@ function Scrollable_UpdateCounters(change) {
     }
   );
   if(Times.SecondaryTo !== undefined) {
-    $('#labelVoltageAvgSecondaryValue').text('Calculating...');
-    $('#labelVoltageMaxSecondaryValue').text('Calculating...');
-    $('#labelVoltageMinSecondaryValue').text('Calculating...');
+    $('#labelVoltageAvgSecondaryValue, #labelVoltageMaxSecondaryValue, #labelVoltageMinSecondaryValue').text('Calculating...');
     Ajax.GetSeriesAggreg(Times.SecondaryPeriod, Times.SecondaryTo, Times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)',
       function(result) {
-        $('#labelVoltageAvgSecondaryValue').html(Array_Round2(result['avg_rms_v'], '&nbsp;') + '&nbsp;<em>V</em>');
-        $('#labelVoltageMinSecondaryValue').html(Array_Round2(result['min_rms_v'], '&nbsp;') + '&nbsp;<em>V</em>');
-        $('#labelVoltageMaxSecondaryValue').html(Array_Round2(result['max_rms_v'], '&nbsp;') + '&nbsp;<em>V</em>');
+        if(result['Samples'] !== 0) {
+          $('#labelVoltageAvgSecondaryValue').html(Array_Round2(result['avg_rms_v'], '&nbsp;') + '&nbsp;<em>V</em>');
+          $('#labelVoltageMinSecondaryValue').html(Array_Round2(result['min_rms_v'], '&nbsp;') + '&nbsp;<em>V</em>');
+          $('#labelVoltageMaxSecondaryValue').html(Array_Round2(result['max_rms_v'], '&nbsp;') + '&nbsp;<em>V</em>');
+        } else {
+          $('#labelVoltageAvgSecondaryValue, #labelVoltageMaxSecondaryValue, #labelVoltageMinSecondaryValue').text('No data'); 
+        }
         window.dispatchEvent(new Event('resize'));
       }
     );
   } else {
-    $('#labelVoltageAvgSecondaryValue').text('');
-    $('#labelVoltageMaxSecondaryValue').text('');
-    $('#labelVoltageMinSecondaryValue').text('');
+    $('#labelVoltageAvgSecondaryValue, #labelVoltageMaxSecondaryValue, #labelVoltageMinSecondaryValue').text('');
   }
 }
 

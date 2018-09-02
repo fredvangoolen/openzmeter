@@ -17,17 +17,16 @@
     <link rel="stylesheet" href="openZmeter.css"/>
     <title>openZmeter - Events - ITIC</title>
   </head>
-  <body>
+  <body onload="StartPageLoad()">
     <span data-load-block="Header_Block"></span>
     <div id="wrapper">
-
-        <div class="row">
-          <div class="col-lg-12">
-            <div class="panel panel-info" id="ITICPanel">
-              <div id="EventSpinner" class="spinnerdiv"></div>
-              <div class="panel-heading">
-                <span class="huge-small">ITIC Curve (CBEMA)</span>
-                <div class="pull-right">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="panel panel-other" id="ITICPanel">
+            <div id="EventSpinner" class="spinnerdiv"></div>
+            <div class="panel-heading">
+              <span class="huge header-text">ITIC Curve (CBEMA)</span>
+              <div class="header-buttons">
                   <span class="small">Time scale:</span><br>
                   <div class="btn-group">
                     <button type="button" class="btn btn-default btn-xs" id="btnShowEventYear"  data-toggle="tooltip" title="Select exactly a year period from current time">Year</button>

@@ -96,9 +96,9 @@ function GetWeekTimePeriod() {
   var Result = {};
   var now = new Date();
   Result.PrimaryPeriod = 86400000 * 7;
-  Result.PrimaryTo = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7 - now.getDay(), 23, 59, 59, 999).getTime();
-  Result.SecundaryPeriod = Result.CurrentDuration;
-  Result.SecondaryTo = Result.CurrentEnd - Result.CurrentDuration;
+  Result.PrimaryTo = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7 - ((now.getDay() === 0) ? 6 : now.getDay() - 1), 23, 59, 59, 999).getTime();
+  Result.SecundaryPeriod = Result.PrimaryPeriod;
+  Result.SecondaryTo = Result.PrimaryTo - Result.PrimaryPeriod;
   Result.PreferedAggreg = '1m';
   Result.PrimaryText = 'This week';
   Result.SecondaryText = 'Previous week';
