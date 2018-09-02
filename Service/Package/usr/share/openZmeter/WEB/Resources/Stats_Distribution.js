@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/* Calendar locales */
 ;(function($) {
   $.fn.calendar.dates['custom'] = {
 	  days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -26,8 +26,8 @@
 		weekShort: 'W',
 		weekStart: 1
 	};
-} (jQuery));
-var Calendar = null, WeekTable = null, MonthTable = null, WeekDayTable = null, HourTable = null, EnergyData   = [];
+} (jQuery)); 
+var Calendar = null, WeekTable = null, MonthTable = null, WeekDayTable = null, HourTable = null, EnergyData = [];
 var SelectedYear;
 function AjaxGetEnergy(selected_year) {
   $('#StatsSpinner').show();

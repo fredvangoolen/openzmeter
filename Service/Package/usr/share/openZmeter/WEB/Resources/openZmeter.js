@@ -8,7 +8,7 @@ var SpinnerOpts         = { lines: 10,  // The number of lines to draw
 Offline.options = {requests: false};
 Offline.on('confirmed-down', function() { $('#OfflineDiv').css('display', 'inherit'); });
 Offline.on('confirmed-up',   function() {  $('#OfflineDiv').css('display', 'none'); });
-                          
+                        
 /* Series names */
 var SeriesNames = {
   Harmonics: [ '1st',  '2nd',  '3rd',  '4th',  '5th',  '6th',  '7th',  '8th',  '9th', '10th',
