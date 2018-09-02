@@ -104,147 +104,147 @@ ${OBJECTDIR}/CMSIS/startup_stm32f37x.o: CMSIS/startup_stm32f37x.s
 
 ${OBJECTDIR}/CMSIS/system_stm32f37x.o: CMSIS/system_stm32f37x.c
 	${MKDIR} -p ${OBJECTDIR}/CMSIS
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/CMSIS/system_stm32f37x.o CMSIS/system_stm32f37x.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/CMSIS/system_stm32f37x.o CMSIS/system_stm32f37x.c
 
 ${OBJECTDIR}/Interface.o: Interface.c
 	${MKDIR} -p ${OBJECTDIR}
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/Interface.o Interface.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/Interface.o Interface.c
 
 ${OBJECTDIR}/Main.o: Main.c
 	${MKDIR} -p ${OBJECTDIR}
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/Main.o Main.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/Main.o Main.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_can.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o STM32F37x_StdPeriph_Driver/src/stm32f37x_can.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o STM32F37x_StdPeriph_Driver/src/stm32f37x_can.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.o STM32F37x_StdPeriph_Driver/src/stm32f37x_comp.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.o STM32F37x_StdPeriph_Driver/src/stm32f37x_crc.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.o STM32F37x_StdPeriph_Driver/src/stm32f37x_dac.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.o STM32F37x_StdPeriph_Driver/src/stm32f37x_dbgmcu.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.o STM32F37x_StdPeriph_Driver/src/stm32f37x_dma.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.o STM32F37x_StdPeriph_Driver/src/stm32f37x_exti.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.o STM32F37x_StdPeriph_Driver/src/stm32f37x_flash.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.o STM32F37x_StdPeriph_Driver/src/stm32f37x_gpio.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.o STM32F37x_StdPeriph_Driver/src/stm32f37x_i2c.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.o STM32F37x_StdPeriph_Driver/src/stm32f37x_iwdg.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.o STM32F37x_StdPeriph_Driver/src/stm32f37x_misc.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.o STM32F37x_StdPeriph_Driver/src/stm32f37x_pwr.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.o STM32F37x_StdPeriph_Driver/src/stm32f37x_rcc.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.o STM32F37x_StdPeriph_Driver/src/stm32f37x_rtc.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.o STM32F37x_StdPeriph_Driver/src/stm32f37x_sdadc.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.o STM32F37x_StdPeriph_Driver/src/stm32f37x_spi.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.o STM32F37x_StdPeriph_Driver/src/stm32f37x_syscfg.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.o STM32F37x_StdPeriph_Driver/src/stm32f37x_tim.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.o STM32F37x_StdPeriph_Driver/src/stm32f37x_usart.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.o STM32F37x_StdPeriph_Driver/src/stm32f37x_wwdg.c
 
 ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_core.o: STM32_USB-FS-Device_Driver/src/usb_core.c
 	${MKDIR} -p ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_core.o STM32_USB-FS-Device_Driver/src/usb_core.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_core.o STM32_USB-FS-Device_Driver/src/usb_core.c
 
 ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_init.o: STM32_USB-FS-Device_Driver/src/usb_init.c
 	${MKDIR} -p ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_init.o STM32_USB-FS-Device_Driver/src/usb_init.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_init.o STM32_USB-FS-Device_Driver/src/usb_init.c
 
 ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_int.o: STM32_USB-FS-Device_Driver/src/usb_int.c
 	${MKDIR} -p ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_int.o STM32_USB-FS-Device_Driver/src/usb_int.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_int.o STM32_USB-FS-Device_Driver/src/usb_int.c
 
 ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_mem.o: STM32_USB-FS-Device_Driver/src/usb_mem.c
 	${MKDIR} -p ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_mem.o STM32_USB-FS-Device_Driver/src/usb_mem.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_mem.o STM32_USB-FS-Device_Driver/src/usb_mem.c
 
 ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_regs.o: STM32_USB-FS-Device_Driver/src/usb_regs.c
 	${MKDIR} -p ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_regs.o STM32_USB-FS-Device_Driver/src/usb_regs.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_regs.o STM32_USB-FS-Device_Driver/src/usb_regs.c
 
 ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_sil.o: STM32_USB-FS-Device_Driver/src/usb_sil.c
 	${MKDIR} -p ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_sil.o STM32_USB-FS-Device_Driver/src/usb_sil.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_sil.o STM32_USB-FS-Device_Driver/src/usb_sil.c
 
 ${OBJECTDIR}/SysHandlers.o: SysHandlers.c
 	${MKDIR} -p ${OBJECTDIR}
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/SysHandlers.o SysHandlers.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/SysHandlers.o SysHandlers.c
 
 ${OBJECTDIR}/USB_CDC.o: USB_CDC.c
 	${MKDIR} -p ${OBJECTDIR}
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/USB_CDC.o USB_CDC.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/USB_CDC.o USB_CDC.c
 
 ${OBJECTDIR}/usb_istr.o: usb_istr.c
 	${MKDIR} -p ${OBJECTDIR}
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/usb_istr.o usb_istr.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/usb_istr.o usb_istr.c
 
 ${OBJECTDIR}/usb_pwr.o: usb_pwr.c
 	${MKDIR} -p ${OBJECTDIR}
-	$(COMPILE.c) -Werror -DSTM32F373CBT6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/usb_pwr.o usb_pwr.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/usb_pwr.o usb_pwr.c
 
 # Subprojects
 .build-subprojects:

@@ -39,6 +39,7 @@ function PeriodView_OnSuccess(result) {
         }
       }
     );
+    new GraphMaximizer('Voltage', VoltageChart, '#btnMaximizeVoltage');
   } else {
     VoltageChart.updateOptions({ file: VoltageData, dateWindow: [result['From'], result['To']]});
   }
@@ -69,6 +70,7 @@ function PeriodView_OnSuccess(result) {
         }
       }
     );
+    new GraphMaximizer('Current', CurrentChart, '#btnMaximizeCurrent');
   } else {
     CurrentChart.updateOptions({'file': CurrentData, dateWindow: [result['From'], result['To']]});
   }
@@ -95,6 +97,7 @@ function PeriodView_OnSuccess(result) {
         }
       }
     );
+    new GraphMaximizer('Active power', PowerChart, '#btnMaximizePower');
   } else {
     PowerChart.updateOptions({file: PowerData, dateWindow: [result['From'], result['To']]});
   }
@@ -118,6 +121,7 @@ function PeriodView_OnSuccess(result) {
         }
       }
     );
+    new GraphMaximizer('Frequency', FrequencyChart, '#btnMaximizeFrequency');
     Dygraph.synchronize([VoltageChart, CurrentChart, PowerChart, FrequencyChart], { range: false, zoom: false } );
   } else {
     FrequencyChart.updateOptions({'file': FrequencyData, valueRange: CalcRanges(FrequencyData, [1]), dateWindow: [result['From'], result['To']]});
@@ -128,49 +132,15 @@ function VoltageSeries(event) {
 }
 $('#groupVoltagePhases').on('click', 'button', VoltageSeries);
 $('#btnExportVoltage').click(function() {
-  exportToCsv("Voltage_" + Node + '_' + LastVoltageSample + '.csv', [['Time'].concat(VoltageNames)].concat(VoltageData));
+  exportToCsv('Voltage.csv', [['Time'].concat(SeriesNames.Voltage())].concat(VoltageData));
 });
-
-$('#btnMaximizeVoltage').click(function() {
-  $('#GraphDialogTitle').text('Voltage');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#VoltageCol');
-  DialogElement = $('#VoltageMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(VoltageChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    VoltageChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-
 function CurrentSeries(event) {
   GraphPhaseButtons(CurrentChart, $('#groupCurrentPhases'), 'VisibleDashboardCurrentPhases', false, function(series) { return CalcRanges(CurrentData, series, false); }, (event !== undefined) ? event.target : undefined); 
 }
 $('#groupCurrentPhases').on('click', 'button', CurrentSeries);
 $('#btnExportCurrent').click(function() {
-  exportToCsv("Current_" + Node + '_' + LastCurrentSample + '.csv', [['Time'].concat(CurrentNames)].concat(CurrentData));
+  exportToCsv('Current.csv', [['Time'].concat(SeriesNames.Current())].concat(CurrentData));
 });
-
-$('#btnMaximizeCurrent').click(function() {
-  $('#GraphDialogTitle').text('Current');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#CurrentCol');
-  DialogElement = $('#CurrentMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(CurrentChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    CurrentChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-
 function PowerSeries(event) {
   GraphPhaseButtons(PowerChart, $('#groupPowerPhases'), 'VisibleDashboardPowerPhases', false, function(series) { return CalcRanges(PowerData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
   var Annotations = [];
@@ -181,45 +151,11 @@ function PowerSeries(event) {
 }
 $('#groupPowerPhases').on('click', 'button', PowerSeries);
 $('#btnExportPower').click(function() {
-  exportToCsv("Power_" + Node + '_' + LastPowerSample + '.csv', [['Time'].concat(ActivePowerNames)].concat(PowerData));
+  exportToCsv('Power.csv', [['Time'].concat(SeriesNames.ActivePower())].concat(PowerData));
 });
-
-$('#btnMaximizePower').click(function() {
-  $('#GraphDialogTitle').text('Power');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#PowerCol');
-  DialogElement = $('#PowerMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(PowerChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    PowerChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-
 $('#btnExportFrequency').click(function() {
-  exportToCsv("Frequency_" + Node + '_' + LastFrequencySample + '.csv', ([['DateTime', 'Frequency']]).concat(FrequencyData));
+  exportToCsv('Frequency.csv', ([['Time', 'Frequency']]).concat(FrequencyData));
 });
-
-$('#btnMaximizeFrequency').click(function() {
-  $('#GraphDialogTitle').text('Frequency');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#FrequencyCol');
-  DialogElement = $('#FrequencyMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(FrequencyChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    FrequencyChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-
 /* Grafico de energia */
 var EnergyData = [], EnergyChart = null;
 function Scrollable_OnSuccess(result, clear) {
@@ -242,6 +178,7 @@ function Scrollable_OnSuccess(result, clear) {
     );
     $(window).bind('resize', EnergyResizeEvent);
     window.dispatchEvent(new Event('resize'));
+    new GraphMaximizer('Active energy', EnergyChart, '#btnMaximizeEnergy', EnergyResizeEvent);
   } else {
     EnergyChart.updateOptions( { file: EnergyData, dateWindow: [result['From'], result['To']] } );
   }
@@ -249,7 +186,7 @@ function Scrollable_OnSuccess(result, clear) {
 }
 function EnergyResizeEvent() {
   var Height = $('#EnergyBox').height() + $('#BudgetBox').height();
-  if(EnergyChart != null) EnergyChart.resize($('#EnergyCol').width(), Height + 12);
+  if(EnergyChart != null) EnergyChart.resize('100%', Height + 12);
 }
 function EnergySeries(event) {
   GraphPhaseButtons(EnergyChart, $('#groupEnergyPhases'), 'VisibleDashboardEnergyPhases', false, function(series) { return CalcRanges(EnergyData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
@@ -257,21 +194,6 @@ function EnergySeries(event) {
 $('#groupEnergyPhases').on('click', 'button', EnergySeries);
 $('#btnExportEnergy').click(function() {
   exportToCsv("ActiveEnergy_" + Node + '_' + LastEnergySample + '.csv', [['Time'].concat(ActiveEnergyNames)].concat(EnergyData));
-});
-
-$('#btnMaximizeEnergy').click(function() {
-  $('#GraphDialogTitle').text('Energy');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#EnergyCol');
-  DialogElement = $('#EnergyMaximizeDiv').detach();
-  DialogPrevResizeHandler = EnergyResizeEvent;
-  DialogResizeHandler = function() {
-    EnergyChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 110);
-  };
-  $(window).unbind('resize', EnergyResizeEvent);
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
 });
 
 /* Contadores de consumo */
@@ -378,18 +300,6 @@ function ParametersSeries(event) {
 }
 $('#groupParametersPhases').on('click', 'button', ParametersSeries);
 
-var DialogElement           = null;
-var PrevDialogContainer     = null;
-var DialogResizeHandler     = null;
-var DialogPrevResizeHandler = null;
-
-$('#GraphDialogClose').click(function() {
-  $(window).unbind('resize', DialogResizeHandler);
-  $(window).bind('resize', DialogPrevResizeHandler);
-  $(PrevDialogContainer).append(DialogElement);
-  $('#GraphDialog').modal('hide');
-  window.dispatchEvent(new Event('resize'));
-});
 var MainScrollable = null;
 function UpdatePage() {
   MainScrollable = new Scrollable( {Spinners: ['#EnergySpinner'], Series: 'active_energy', OnSuccess: Scrollable_OnSuccess} );

@@ -198,9 +198,9 @@ __IO bool     fSuspendEnabled = false;       /* true when suspend is possible */
  * Return         : None.
  *******************************************************************************/
 void CDC_Init(void) {
-  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7E8), &CDC_StringSerial[2]);  
-  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7EC), &CDC_StringSerial[18]);
-  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7F0), &CDC_StringSerial[34]);
+  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7AC), &CDC_StringSerial[2]);  
+  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7B0), &CDC_StringSerial[18]);
+  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7B4), &CDC_StringSerial[34]);
   
   pInformation->Current_Configuration = 0;
   PowerOn();

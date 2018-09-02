@@ -20,6 +20,8 @@
             <file>file:/home/edu/Proyectos/zMeter/STM32/inc/USB_CDC.h</file>
             <file>file:/home/edu/Proyectos/zMeter/STM32/USB_CDC.c</file>
         </group>
-        <group/>
+        <group>
+            <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/1Phase%20B/USB_CDC.c</file>
+        </group>
     </open-files>
 </project-private>

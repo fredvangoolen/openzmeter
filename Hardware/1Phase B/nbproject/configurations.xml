@@ -154,7 +154,7 @@
           </incDir>
           <commandLine>-mcpu=cortex-m4 -mthumb -g -g2 -fmerge-constants -Wl,-Map=Out.map -O0</commandLine>
           <preprocessorList>
-            <Elem>STM32F373CBT6</Elem>
+            <Elem>STM32F373C8T6</Elem>
             <Elem>STM32F37X</Elem>
             <Elem>USE_STDPERIPH_DRIVER</Elem>
           </preprocessorList>

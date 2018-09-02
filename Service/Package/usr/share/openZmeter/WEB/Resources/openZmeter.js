@@ -20,8 +20,8 @@ var SeriesNames = {
   Current: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['I'] : (Analyzers[Analyzer]['Mode'] === '3PHASE') ? ['I(R)', 'I(S)', 'I(T)'] : ['I(R)', 'I(S)', 'I(T)', 'I(N)']; },
   ActiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['L']  : ['P (R)', 'P (S)', 'P (T)']; },
   ReactiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['L']  : ['Reactive Energy (R)', 'Reactive Energy (S)', 'Reactive Energy (T)']; },
-  ActivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['L']  : ['R', 'Active Power (S)', 'Active Power (T)']; },
-  ReactivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['L']  : ['R', 'Reactive Power (S)', 'Reactive Power (T)']; }
+  ActivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['P']  : ['P(R)', 'P(S)', 'P(T)']; },
+  ReactivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Q']  : ['Q(R)', 'Q(S)', 'Q(T)']; }
 };
   
 /* redirect ajax error to login page */
@@ -245,7 +245,7 @@ function Live(opt) {
       if(Self.Timer !== null) clearInterval(Self.Timer);
     } else {
       $(Self.Opt.PauseBtn).removeClass('active');
-      Selft.GetSeries();
+      Self.GetSeries();
     }
   });
   Self.GetSeries = function() {
@@ -290,7 +290,6 @@ function PeriodView(opt) {
   };
   Self.GetSeries();
 }
-
 /* Tab selector */
 function TabSelector(variable, tab, divs, changeTabEvt) {
   this.Variable = variable;
@@ -301,13 +300,15 @@ function TabSelector(variable, tab, divs, changeTabEvt) {
   var Items = $(tab).children().length;
   $(tab).scrollingTabs();
   $(tab + ' > li > a').click(function(evt) {
-    $(divs + ' > div').hide();
+    $(Self.Divs + ' > div').hide();
     localStorage.setItem(Self.Variable, $(evt.target).parent().index());
-    $(divs + ' > div:nth-child(' + (Self.GetSaved() + 1) + ')').show();
+    $(Self.Tab + ' > li').removeClass('active');
+    $(Self.Tab + ' > li:nth-child(' + (Self.GetSaved() + 1) + ')').addClass('active');
+    $(Self.Divs + ' > div:nth-child(' + (Self.GetSaved() + 1) + ')').show();
     Self.ChangeEvent(Self.GetSaved());
     window.dispatchEvent(new Event('resize'));
   });
-    Self.GetSaved = function() {
+  Self.GetSaved = function() {
     var Data = parseInt(localStorage.getItem(Self.Variable));
     if((isNaN(Data) === true) || (Data >= Items) || (Data < 0)) {
       localStorage.setItem(Self.Variable, 0);
@@ -319,6 +320,33 @@ function TabSelector(variable, tab, divs, changeTabEvt) {
   $(tab + ' > li:nth-child(' + (Self.GetSaved() + 1) + ')').addClass('active');
   $(divs + ' > div:nth-child(' + (Self.GetSaved() + 1) + ')').show();
   Self.ChangeEvent(Self.GetSaved());
+}
+/* Div maximizer */
+function GraphMaximizer(title, graph, button, resizeHandler) {
+  this.Graph = graph;
+  this.Title = title;
+  this.PrevHandler = resizeHandler;
+  this.PrevContainer = $(graph.graphDiv).parent().parent();
+  var Self = this;
+  Self.DialogResizeHandler = function() { 
+    Self.Graph.resize($('#MaximizeDialogBody').width(), $('#MaximizeDialogContents').height() - 90);
+  }
+  $(button).click(function(evt) {
+    if(Self.PrevHandler !== undefined) $(window).unbind('resize', Self.PrevHandler);
+    $('#dlgMaximizeDialog').modal('show');
+    $('#MaximizeDialogTitle').text(Self.Title);
+    $('#MaximizeDialogBody').append($(Self.Graph.graphDiv).parent().detach());
+    $(window).bind('resize', Self.DialogResizeHandler);
+    window.dispatchEvent(new Event('resize'));
+    $('#MaximizeDialogClose').click(function() {
+      $(window).unbind('resize', Self.DialogResizeHandler);
+      $(Self.PrevContainer).append($(Self.Graph.graphDiv).parent().detach());
+      $(Self.Graph.graphDiv).parent().removeAttr('style');
+      if(Self.PrevHandler !== undefined) $(window).bind('resize', Self.PrevHandler);
+      $('#dlgMaximizeDialog').modal('hide');
+      window.dispatchEvent(new Event('resize'));
+    });
+  });
 }
 
 /* append samples of given series to array of graph data, and shift if needed */

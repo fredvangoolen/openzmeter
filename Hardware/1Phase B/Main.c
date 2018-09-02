@@ -105,17 +105,18 @@ void TIM2_IRQHandler() {
 }
 //Inicia los LEDs y buzzer de señalizacion al usuario
 void UserSignals() {
-  GPIO_InitTypeDef        GPIO_InitStructure;
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA | RCC_AHBPeriph_GPIOB | RCC_AHBPeriph_GPIOF, ENABLE);
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;                       /* Output for LEDs*/
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;                      /* Push-pull */
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;                   /* Pin max speed 50MHz */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_7 | GPIO_Pin_6 | GPIO_Pin_5 | GPIO_Pin_4 | GPIO_Pin_3;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);                              /* Config pins */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15 | GPIO_Pin_0 | GPIO_Pin_1;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);                              /* Config pins */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_6;
-  GPIO_Init(GPIOF, &GPIO_InitStructure);                              /* Config pins */
+//  GPIO_InitTypeDef        GPIO_InitStructure;
+//  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA | RCC_AHBPeriph_GPIOB | RCC_AHBPeriph_GPIOF, ENABLE);
+//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;                       /* Output for LEDs*/
+//  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;                      /* Push-pull */
+//  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;                   /* Pin max speed 50MHz */
+//  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_7 | GPIO_Pin_6 | GPIO_Pin_5 | GPIO_Pin_4 | GPIO_Pin_3;
+//  GPIO_Init(GPIOB, &GPIO_InitStructure);                              /* Config pins */
+//  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15 | GPIO_Pin_0 | GPIO_Pin_1;
+//  GPIO_Init(GPIOA, &GPIO_InitStructure);                              /* Config pins */
+//  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_6;
+//  GPIO_Init(GPIOF, &GPIO_InitStructure);                              /* Config pins */
+
 }
 //Inicia el bus SPI (Solo si se lee del Infineon)
 void Init_SPI() {
@@ -158,37 +159,41 @@ void Init_SDADC() {
   SDADC_AINStructTypeDef  SDADC_AINStructure;
   GPIO_InitTypeDef        GPIO_InitStructure;
   NVIC_InitTypeDef        NVIC_InitStructure;
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);                 /* Clock used devices */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_14 | GPIO_Pin_15;            /* Config ANALOG IN on pin PB0, PB1 and PB14*/
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;                        /* Setup mode */
-  GPIO_Init(GPIOB, &GPIO_InitStructure);                              /* Config pin */
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB | RCC_AHBPeriph_GPIOE, ENABLE);
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_14 | GPIO_Pin_15;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
+  GPIO_Init(GPIOB, &GPIO_InitStructure);
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
+  GPIO_Init(GPIOE, &GPIO_InitStructure);
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);
-  PWR_SDADCAnalogCmd(PWR_SDADCAnalog_1 | PWR_SDADCAnalog_2 | PWR_SDADCAnalog_3, ENABLE);  /* Enable SDADC1 and SDADC3 */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SDADC1 | RCC_APB2Periph_SDADC3, ENABLE);
+  PWR_SDADCAnalogCmd(PWR_SDADCAnalog_1 | PWR_SDADCAnalog_2 | PWR_SDADCAnalog_3, ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SDADC1 | RCC_APB2Periph_SDADC2 | RCC_APB2Periph_SDADC3, ENABLE);
   RCC_SDADCCLKConfig(RCC_SDADCCLK_SYSCLK_Div6);                      /* Set ADC prescaler (72MHz / 12 -> 6MHz) */
   SDADC_VREFSelect(SDADC_VREF_Ext);                                  /* External reference */
-//  SDADC_Cmd(SDADC1, ENABLE);
+  SDADC_Cmd(SDADC1, ENABLE);
+  SDADC_Cmd(SDADC2, ENABLE);
   SDADC_Cmd(SDADC3, ENABLE);
-//  while(SDADC_GetFlagStatus(SDADC1, SDADC_FLAG_STABIP) == RESET);     /* Wait stabilization */
-  while(SDADC_GetFlagStatus(SDADC3, SDADC_FLAG_STABIP) == RESET);     /* Wait stabilization */
-  
-//  SDADC_InitModeCmd(SDADC1, ENABLE);                                  /* Enter initialization mode */
+  while(SDADC_GetFlagStatus(SDADC1, SDADC_FLAG_STABIP) == RESET);
+  while(SDADC_GetFlagStatus(SDADC2, SDADC_FLAG_STABIP) == RESET);
+  while(SDADC_GetFlagStatus(SDADC3, SDADC_FLAG_STABIP) == RESET);
+
+  //  SDADC_InitModeCmd(SDADC1, ENABLE);                                  /* Enter initialization mode */
   SDADC_InitModeCmd(SDADC3, ENABLE);
 //  while(SDADC_GetFlagStatus(SDADC1, SDADC_FLAG_INITRDY) == RESET);
   while(SDADC_GetFlagStatus(SDADC3, SDADC_FLAG_INITRDY) == RESET);
 
-  SDADC_InitStruct.SDADC_Channel = SDADC_Channel_6;
+//  SDADC_InitStruct.SDADC_Channel = SDADC_Channel_6;
   SDADC_InitStruct.SDADC_ContinuousConvMode = DISABLE;
   SDADC_InitStruct.SDADC_FastConversionMode = DISABLE;
-  SDADC_Init(SDADC1, &SDADC_InitStruct);
+//  SDADC_Init(SDADC1, &SDADC_InitStruct);
   SDADC_InitStruct.SDADC_Channel = SDADC_Channel_8;
   SDADC_Init(SDADC3, &SDADC_InitStruct);
 
 //  SDADC_AINStructure.SDADC_InputMode = SDADC_InputMode_Diff;/* Configure Analog input */
-  SDADC_AINStructure.SDADC_Gain = SDADC_Gain_1;
+  SDADC_AINStructure.SDADC_Gain = SDADC_Gain_1_2;
   SDADC_AINStructure.SDADC_CommonMode = SDADC_CommonMode_VSSA;
   SDADC_AINStructure.SDADC_Offset = 0;
-  SDADC_AINInit(SDADC1, SDADC_Conf_0, &SDADC_AINStructure);
+//  SDADC_AINInit(SDADC1, SDADC_Conf_0, &SDADC_AINStructure);
   SDADC_AINStructure.SDADC_InputMode = SDADC_InputMode_Diff;/* Configure Analog input */
   SDADC_AINInit(SDADC3, SDADC_Conf_0, &SDADC_AINStructure);
   
