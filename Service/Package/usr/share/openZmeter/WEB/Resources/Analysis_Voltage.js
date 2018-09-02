@@ -151,28 +151,17 @@ function Live_OnSuccess(result) {
   UpdateHarmonicsChart();
   UpdateFFTChart();
   UpdatePhasorChart(result);
-  $('#PowerFactorNow').html(Array_Round2(result['power_factor'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
-  $('#THDNow').html(Array_Round2(result['thd_v'].map(function(val) {return val * 100.0; }), '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"]));
-  $('#PHINow').html(Array_Round2(result['phi'], '&nbsp;&nbsp;', ["#d9534f", "#534fd9", "#4fd953"], " (CAP)", " (IND)"));
+  $('#PowerFactorNow').html(Array_Round2(result['power_factor'], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)));
+  $('#THDNow').html(Array_Round2(result['thd_v'].map(function(val) {return val * 100.0; }), '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)));
+  $('#PHINow').html(Array_Round2(result['phi'], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3), " (CAP)", " (IND)"));
 }
 function DetailTabChange(index) {
-  if((index === 0) || (index === 1) || (index === 3)) {
-    $('#groupDetailPhasesMulti').show();
-    $('#btnShowDetailVoltageAndCurrent').show();
-  } else {
-    $('#groupDetailPhasesMulti').hide();
-    $('#btnShowDetailVoltageAndCurrent').hide();
-  }
-  if((index === 1) || (index === 3)) {
-    $('#btnShowDetailLog').show();
-  } else {
-    $('#btnShowDetailLog').hide();
-  }
-  if(index === 1) {
-    $('#btnShowDetail1Harmonic').show();
-  } else {
-    $('#btnShowDetail1Harmonic').hide();
-  }
+  $('#groupDetailPhasesSingle, #groupDetailPhasesMulti, #btnShowDetail1Harmonic, #btnShowDetailLog').hide();
+  if((index === 0) || (index === 1) || (index === 3)) $('#groupDetailPhasesMulti').show();
+  if((index === 0) || (index === 1) || (index === 3)) $('#btnShowDetailVoltageAndCurrent').show();
+  if((index === 2) || (index === 5)) $('#groupDetailPhasesSingle').show();
+  if((index === 1) || (index === 3)) $('#btnShowDetailLog').show();
+  if(index === 1) $('#btnShowDetail1Harmonic').show();
   if(WaveformChart !== null) {
     if(index === 0) $(WaveformChart.graphDiv).parent().removeAttr('style');
     UpdateWaveformChart();
@@ -526,49 +515,47 @@ function UpdatePhasorChart(result) {
 }
 
 /* Evolucion de parametros */
-var HarmonicsCharts = [], HarmonicsDatasets = [], PowerFactorChart = null, PowerFactorDataset = [], THDChart = null, THDDataset = [], PHIChart = null, PHIDataset = [];
+var HarmonicsCharts = [], HarmonicsData = [], PowerFactorChart = null, PowerFactorData = [], THDChart = null, THDData = [], PHIChart = null, PHIData = [];
 function PeriodView_OnSuccess(result) {
-  while(HarmonicsDatasets.length !== 50) HarmonicsDatasets.push([]);
+  while(HarmonicsData.length !== 50) HarmonicsData.push([]);
   for(k = 0; k < 50; k++) {
     for(i = 0; i < result['harmonics_v'].length; i++) {
       var Row = [new Date(result['Sampletime'][i])];
       for(j = 0; j < result['harmonics_v'][i].length; j++) Row.push(20 * Math.log10(result['harmonics_v'][i][j][k]));
-      HarmonicsDatasets[k].push(Row);
+      HarmonicsData[k].push(Row);
     }
-    ShiftArray(HarmonicsDatasets[k], result['MaxSamples']);
+    ShiftArray(HarmonicsData[k], result['MaxSamples']);
   }
-  PowerFactorDataset = GraphDataAppend(result, 'power_factor', PowerFactorDataset);
-  THDDataset = GraphDataAppend(result, 'thd_v', THDDataset);
-  PHIDataset = GraphDataAppend(result, 'phi', PHIDataset);
+  PowerFactorData = GraphDataAppend(result, 'power_factor', PowerFactorData);
+  THDData = GraphDataAppend(result, 'thd_v', THDData);
+  PHIData = GraphDataAppend(result, 'phi', PHIData);
   if(HarmonicsCharts.length === 0) {
     for(i = 0; i < 50; i++) {
-      HarmonicsCharts[i] = AppendCubismGraph($('#EvolutionPanel'), HarmonicsDatasets[i], SeriesNames.Harmonics[i] + ' harmonic', [result['From'], result['To']], function (x) { return Round2(x) + '<em>dB</em>' });
+      HarmonicsCharts[i] = AppendCubismGraph($('#EvolutionPanel'), HarmonicsData[i], SeriesNames.Harmonics[i] + ' harmonic', [result['From'], result['To']], function (x) { return Round2(x) + '<em>dB</em>' });
     }
     Dygraph.synchronize(HarmonicsCharts, { range: false, zoom: false });
-    PowerFactorChart = AppendCubismGraph($('#PowerFactorChart'), PowerFactorDataset, "Power Factor", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(x); });
-    THDChart         = AppendCubismGraph($('#THDChart'), THDDataset, "Voltage THD", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(x) + '<em>%</em>'; });
-    PHIChart         = AppendCubismGraph($('#PHIChart'), PHIDataset, "Phi", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'; });
+    PowerFactorChart = AppendCubismGraph($('#PowerFactorChart'), PowerFactorData, "Power Factor", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(x); });
+    THDChart         = AppendCubismGraph($('#THDChart'), THDData, "Voltage THD", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(x) + '<em>%</em>'; });
+    PHIChart         = AppendCubismGraph($('#PHIChart'), PHIData, "Phi", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'; });
   } else {
     for(i = 0; i < 50; i++) {
-      HarmonicsCharts[i].updateOptions({ file: HarmonicsDatasets[i], dateWindow: [result['From'], result['To']] });
+      HarmonicsCharts[i].updateOptions({ file: HarmonicsData[i], dateWindow: [result['From'], result['To']] });
     }
-    PowerFactorChart.updateOptions({ file: PowerFactorDataset, dateWindow: [result['From'], result['To']] });
-    THDChart.updateOptions({ file: THDDataset, dateWindow: [result['From'], result['To']] });
-    PHIChart.updateOptions({ file: PHIDataset, dateWindow: [result['From'], result['To']] });
+    PowerFactorChart.updateOptions({ file: PowerFactorData, dateWindow: [result['From'], result['To']] });
+    THDChart.updateOptions({ file: THDData, dateWindow: [result['From'], result['To']] });
+    PHIChart.updateOptions({ file: PHIData, dateWindow: [result['From'], result['To']] });
   }
   ParametersSeries();
 }
 function ParametersSeries(event) {
-  return;
+  GraphPhaseButtons(PowerFactorChart, $('#groupDetailPhasesSingle'), 'VisibleVoltageDetailPhasesSingle', true, function(series) { return CalcRanges(PowerFactorData, series, false); }, (event !== undefined) ? event.target : undefined); 
+  GraphPhaseButtons(PHIChart,         $('#groupDetailPhasesSingle'), 'VisibleVoltageDetailPhasesSingle', true, function(series) { return CalcRanges(PHIData, series, false); }, undefined); 
+  GraphPhaseButtons(THDChart,         $('#groupDetailPhasesSingle'), 'VisibleVoltageDetailPhasesSingle', true, function(series) { return CalcRanges(THDData, series, false); }, undefined); 
   for(i = 0; i < 50; i++) {
-    GraphPhaseButtons(HarmonicsCharts[i], $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { return CalcRanges(ReactiveData, series, false); }, (event !== undefined) ? event.target : undefined); 
+    GraphPhaseButtons(HarmonicsCharts[i], $('#groupDetailPhasesSingle'), 'VisibleVoltageDetailPhasesSingle', true, function(series) { return CalcRanges(HarmonicsData[i], series, false); }, undefined); 
   }
-  GraphPhaseButtons(PowerFactorChart, $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { return CalcRanges(PowerFactorData, series, false); }, undefined); 
-  GraphPhaseButtons(PhiChart,         $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { return CalcRanges(PhiData, series, false); }, undefined); 
-  GraphPhaseButtons(THDVChart,        $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { return CalcRanges(THDVData, series, false); }, undefined); 
-  GraphPhaseButtons(THDIChart,        $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { return CalcRanges(THDIData, series, false); }, undefined); 
 }
-
+$('#groupDetailPhasesSingle').on('click', 'button', ParametersSeries);
 /* Tabla de eventos */
 var EventLoaded        = false;
 var LastEventStartTime = 0;
@@ -858,7 +845,5 @@ function UpdatePage() {
   new Live( {PauseBtn: '#btnPauseDetail', RefreshInterval: 5000, Spinners: ['#DetailSpinner'], Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_v, phi, rms_v, rms_i', OnSuccess: Live_OnSuccess});
   new PeriodView( {Spinners: [], Series: 'power_factor, thd_v, phi, harmonics_v', Period: 86400000, Aggreg: '1m', OnSuccess: PeriodView_OnSuccess} );
   Scrollable_UpdateCounters(true);
-//  AjaxGetDetails();
-//  AjaxGetEvolution();
 }
 //1752
