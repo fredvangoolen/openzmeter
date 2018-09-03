@@ -1,5 +1,6 @@
 #include "stm32f37x.h"
 #include "USB_CDC.h"
+#include "Main.h"
 //#include "usb_pwr.h"
 #include <string.h>
 //----------------------------------------------------------------------------------------------------------------------
@@ -255,6 +256,8 @@ void Init_USB_HW() {
 	USB_Init();
 }
 int main(void) {
+//  Interface_Config();
+//  GPIO_SetBits(GPIOA, GPIO_Pin_2);
   //Init_SPI();
   Init_SDADC();
   Init_SPI();

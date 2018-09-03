@@ -7,6 +7,7 @@
     <link rel="shortcut icon" href="favicon.ico"/>
     <title>openZmeter - Analysis - Current</title>
     <script src="lib/pace.min.js"></script>
+    <link href="lib/pace.min.css" rel="stylesheet">
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css"/>
     <link rel="stylesheet" href="lib/datatables/css/dataTables.bootstrap.css" />
     <link rel="stylesheet" href="lib/sidenav/sidenav.min.css"/>
@@ -96,6 +97,7 @@
               <div class="header-text" id="DetailTime"></div>
               <div id="LowWarning" class="title-warning hidden"><i class="fa fa-exclamation-triangle"></i> No current or current too low</div>
               <div class="header-buttons">
+                <div class="btn-group" id="groupDetailPhasesSingle" data-load-block="PhaseI_Block"></div>
                 <div class="btn-group" id="groupDetailPhasesMulti" data-load-block="PhaseI_Block"></div>
                 <div class="btn-group">
                   <button type="button" class="btn btn-default btn-xs" id="btnShowDetail1Harmonic" data-toggle="tooltip" title="Show/hide 1st harmonic">1st harmonic</button>
@@ -182,7 +184,7 @@
     <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
     <script src="lib/momentjs/moment.js"></script>
     <script src="lib/momentjs/moment-duration-format.js"></script>
-    <script src="lib/chroma/chroma.js"></script>
+    <script src="lib/chroma.min.js"></script>
     <script src="lib/jquery.scrolling-tabs.min.js"></script>
     <script src="openZmeter.js"></script>
     <script src="Analysis_Current.js"></script>
