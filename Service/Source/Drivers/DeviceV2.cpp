@@ -250,19 +250,19 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
   }
   if((json_object_object_get_ex(config, "VoltageOffset", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
     if(ReadJSONFloatArray(Find, pVoltageOffset, 3) == false) {
-      Tools::LogMsg("ERROR", "CaptureV2: Voltage offset must have 3 double values\n");
+      Tools::LogMsg("ERROR", "DeviceV2: Voltage offset must have 3 double values\n");
       return;
     }
   }
   if((json_object_object_get_ex(config, "CurrentGain", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
     if(ReadJSONFloatArray(Find, pCurrentGain, 4) == false) {
-      Tools::LogMsg("ERROR", "CaptureV2: current gain must have 4 double values\n");
+      Tools::LogMsg("ERROR", "DeviceV2: current gain must have 4 double values\n");
       return;
     }   
   }
   if((json_object_object_get_ex(config, "CurrentOffset", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
     if(ReadJSONFloatArray(Find, pCurrentOffset, 4) == false) {
-      Tools::LogMsg("ERROR", "CaptureV2: current offset must have 4 double values\n");
+      Tools::LogMsg("ERROR", "DeviceV2: current offset must have 4 double values\n");
       return;
     }   
   }

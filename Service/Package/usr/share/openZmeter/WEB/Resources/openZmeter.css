@@ -141,7 +141,6 @@ body {
 }
 .header-buttons {
   float: right;
-  text-align: right;
 }
 .subpanel {
   color: #474544;
@@ -154,18 +153,14 @@ body {
   padding: 8px 5px;
 }
 @media(max-width:1024px) {
-  .panel-heading {
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
   .header-text {
     text-align: center;
     display: block;
   }
   .header-buttons {
-    text-align: center;
     border-top: 1px solid rgba(255,255,255,0.3);
     float: none;
+    text-align: center;
     padding-top: 2px;
   }
 }
@@ -1211,6 +1206,10 @@ text.area_text {
 .calendar .month-container {
   height: 210px;
 }
+.calendar table.month tr td .day-content {
+  padding: 5px 5px;
+}
+
 
 .table>tbody>tr>td {
   padding-top: 2px;

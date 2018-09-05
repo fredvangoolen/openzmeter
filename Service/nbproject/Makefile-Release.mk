@@ -51,7 +51,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/Source/Prices.o \
 	${OBJECTDIR}/Source/Stats.o \
 	${OBJECTDIR}/Source/Tools.o \
-	${OBJECTDIR}/Source/Upload.o \
 	${OBJECTDIR}/Source/ZeroCrossing.o
 
 
@@ -142,10 +141,6 @@ ${OBJECTDIR}/Source/Stats.o: Source/Stats.cpp
 ${OBJECTDIR}/Source/Tools.o: Source/Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Tools.o Source/Tools.cpp
-
-${OBJECTDIR}/Source/Upload.o: Source/Upload.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Upload.o Source/Upload.cpp
 
 ${OBJECTDIR}/Source/ZeroCrossing.o: Source/ZeroCrossing.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source

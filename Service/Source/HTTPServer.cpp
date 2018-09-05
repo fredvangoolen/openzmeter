@@ -82,7 +82,7 @@ void HTTPServer::RegisterMapping(char *url, char *file) {
   pMappings[pMappingssCount].File = file;
   pMappingssCount++;
 }
-char *HTTPServer::OpenSession(MHD_Connection* connection, Request_t* request) {
+void HTTPServer::OpenSession(MHD_Connection* connection, Request_t* request) {
   if(request->DB == NULL) request->DB = new Database(NULL);
   const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");
   if(Cookie != NULL) {
@@ -91,15 +91,17 @@ char *HTTPServer::OpenSession(MHD_Connection* connection, Request_t* request) {
     request->DB->ExecSentence();
     if(request->DB->ResultRows() == 1) {
       request->UserName = request->DB->ResultValue(0, (char*)"name");
+      request->SessionID = request->DB->ResultValue(0, (char*)"id");
       if(request->UserName) request->UserName = strdup(request->UserName);
-      return request->DB->ResultValue(0, (char*)"id");
+      if(request->SessionID) request->SessionID = strdup(request->SessionID);
+      return;
     }
   }
   request->DB->PrepareSentence("INSERT INTO sessions(name, timestamp) VALUES (NULL, ?) RETURNING id");
   request->DB->BindSingleUInt64(Tools::GetTime());
   request->DB->ExecSentence();
-  if(request->DB->ResultRows() == 1) return request->DB->ResultValue(0, (char*)"id");
-  return NULL;
+  if(request->DB->ResultRows() == 1) request->SessionID = request->DB->ResultValue(0, (char*)"id");
+  if(request->SessionID) request->SessionID = strdup(request->SessionID);
 }
 void HTTPServer::CloseSession(MHD_Connection* connection, Request_t* request) {
   if(request->DB == NULL) request->DB = new Database(NULL);
@@ -111,8 +113,9 @@ void HTTPServer::CloseSession(MHD_Connection* connection, Request_t* request) {
 }
 void HTTPServer::RemoveExpiredSessions() {
   Database DB(NULL);
-  DB.PrepareSentence("DELETE FROM sessions WHERE timestamp < ?");
+  DB.PrepareSentence("DELETE FROM sessions WHERE (timestamp < ? AND name IS NOT NULL) OR (timestamp < ? AND name IS NULL)");
   DB.BindSingleUInt64(Tools::GetTime() - 1296000000); //15 days
+  DB.BindSingleUInt64(Tools::GetTime() - 60000);      //1 minute
   DB.ExecSentence();
 }
 void HTTPServer::SetMimeType(struct MHD_Response *response, const char *url) {
@@ -157,7 +160,7 @@ int HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url)
   MHD_destroy_response(response);
   return Return;
 }
-int HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, const char *aditionalheadertype, const char *aditionalheadervalue) {
+int HTTPServer::SendFile(struct MHD_Connection *connection, const char *path) {
   int File = -1;
   struct stat FileStat;
   char *Path = (char*)malloc(sizeof(char) * (strlen(path) + strlen(pFilePath) + 1));
@@ -166,7 +169,6 @@ int HTTPServer::SendFile(struct MHD_Connection *connection, const char *path, co
   if(File == -1) return MHD_NO;
   struct MHD_Response *response = MHD_create_response_from_fd(FileStat.st_size, File);
   SetMimeType(response, path);
-  if((aditionalheadertype != NULL) && (aditionalheadervalue != NULL )) MHD_add_response_header(response, aditionalheadertype, aditionalheadervalue);
   MHD_add_response_header(response, "Cache-Control", "public, max-age=2592000");
   int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
   MHD_destroy_response(response);
@@ -181,6 +183,7 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
   if(Request->JSONWriter) json_object_put(Request->JSONWriter);
   if(Request->Deflate) free(Request->PostData);
   if(Request->UserName) free(Request->UserName);
+  if(Request->SessionID) free(Request->SessionID);
   free(Request);
 }
 int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
@@ -198,8 +201,8 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
   if(Request == NULL) {
     *ptr = (Request_t*)calloc(1, sizeof(Request_t));
     Request = (Request_t*)*ptr;
-    char *SessionID = OpenSession(connection, Request);
-    if(SessionID == NULL) return MHD_NO;
+    OpenSession(connection, Request);
+    if(Request->SessionID == NULL) return MHD_NO;
     Request->ResultCode = MHD_HTTP_OK;
     if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
       return MHD_YES;
@@ -207,9 +210,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
       if(((strcmp(url, "/Login") == 0) || (strcmp(url, "/") == 0)) && (Request->UserName != NULL)) {
         return SendRedirect(connection, pDefaultPage);
       } else if((strcmp(url, "/Login") == 0) && (Request->UserName == NULL)) {
-        char Cookie[256];
-        sprintf(Cookie, "SESSION=%s; httponly; Path=/", SessionID);
-        return SendFile(connection, (char*)"Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
+        return SendFile(connection, (char*)"Login.html");
       } else if(Request->UserName == NULL) {
         return SendRedirect(connection, "/Login");
       } else {
@@ -226,7 +227,75 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
   }
   if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
     if(*upload_data_size != 0) {
-      HandlePostRequest(connection, url, upload_data, upload_data_size, ptr);
+      Request->JSONReader = json_tokener_parse(upload_data);
+      if((Request->JSONReader == NULL) || (json_object_get_type(Request->JSONReader) != json_type_object)) {
+        Request->PostData  = (char*)"No valid JSON request";
+        Request->PostDataLen = strlen(Request->PostData);
+        Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+      } else {
+        if(strcmp(url, "/LogIn") == 0) {
+          char *Password = NULL, *Name = NULL;
+          bool UpdateLastLogin = true;
+          json_object *Find;
+          if((json_object_object_get_ex(Request->JSONReader, "Username", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Name = (char*)json_object_get_string(Find);
+          if((json_object_object_get_ex(Request->JSONReader, "Password", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Password = (char*)json_object_get_string(Find);
+          if((json_object_object_get_ex(Request->JSONReader, "UpdateLastLogin", &Find) == true) && (json_object_get_type(Find) == json_type_boolean)) UpdateLastLogin = json_object_get_boolean(Find);
+          if((Password == NULL) || (Name == NULL)) {
+            Request->PostData  = (char*)"'Password' and 'Username' params requiered";
+            Request->PostDataLen = strlen(Request->PostData);
+            Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+          } else {
+            if(Request->DB == NULL) Request->DB = new Database(NULL);
+            Request->DB->PrepareSentence("SELECT admin, lastlogin FROM users WHERE name = ? AND password = MD5(?)");
+            Request->DB->BindSingleString(Name);
+            Request->DB->BindSingleString(Password);
+            Request->DB->ExecSentence();
+            Request->JSONWriter = json_object_new_object();
+            if(Request->DB->ResultRows() != 1) {
+              json_object_object_add(Request->JSONWriter, "Result", json_object_new_boolean(false));
+            } else {
+              json_object_object_add(Request->JSONWriter, "Result", json_object_new_boolean(true));
+              char *LastLogin = Request->DB->ResultValue(0, (char*)"lastlogin");
+              if(LastLogin) json_object_object_add(Request->JSONWriter, "LastLogin", json_object_new_int64(atol(LastLogin)));
+              char *Admin = Request->DB->ResultValue(0, (char*)"admin");
+              if(Admin) json_object_object_add(Request->JSONWriter, "Admin", json_object_new_boolean((Admin[0] == 't') ? true : false));
+              if(UpdateLastLogin) {
+                Request->DB->PrepareSentence("UPDATE users SET lastlogin = ? WHERE name = ?");
+                Request->DB->BindSingleUInt64(Tools::GetTime());
+                Request->DB->BindSingleString(Name);
+                Request->DB->ExecSentence();
+              }
+              Request->DB->PrepareSentence("UPDATE sessions SET name = ? WHERE id = ?");
+              Request->DB->BindSingleString(Name);
+              Request->DB->BindSingleString(Request->SessionID);
+              Request->DB->ExecSentence();
+            }
+            Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostDataLen);
+          }  
+        } else {
+          if(Request->UserName == NULL) {
+            struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
+            if(((sockaddr_in*)Addr)->sin_addr.s_addr != 0x0100007F) {
+              Request->PostData  = (char*)"Unauthorided access to API";
+              Request->PostDataLen = strlen(Request->PostData);
+              Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
+            } else {
+              Request->UserName = strdup("API");
+            }    
+          }
+          if(Request->UserName != NULL) {
+            bool Handled = false;
+            for(uint32_t i = 0; i < pCallbacksCount; i++) {
+              if(strcmp(pCallbacks[i].HandleName, url) == 0) {
+                if(pCallbacks[i].Function(Request->UserName, Request->JSONReader, Request->DB, &Request->JSONWriter, &Request->PostData, &Request->PostDataLen) == false) Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+                Handled = true;
+                break;
+              }
+            }
+            if(Handled == false) Request->ResultCode = MHD_HTTP_METHOD_NOT_ALLOWED;
+          }
+        }
+      }
 	    *upload_data_size = 0;
   	  return MHD_YES;
 	  } else {
@@ -249,6 +318,11 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         Request->PostData = Tmp;      
       }
       struct MHD_Response *response = MHD_create_response_from_buffer(Request->PostDataLen, Request->PostData, MHD_RESPMEM_PERSISTENT);
+      if(strcmp(url, "/LogIn") == 0) {
+        char Cookie[256];
+        sprintf(Cookie, "SESSION=%s; httponly; Path=/", Request->SessionID);
+        MHD_add_response_header(response, MHD_HTTP_HEADER_SET_COOKIE, Cookie);
+      }
       MHD_add_response_header(response, "Content-Type", "application/json");
       if(Request->Deflate) MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_ENCODING, "deflate");
       int Return = MHD_queue_response(connection, Request->ResultCode, response);
@@ -258,72 +332,18 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
   }
 }
 void HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
+
+
+
+//        char Cookie[256];
+//        sprintf(Cookie, "SESSION=%s; httponly; Path=/", SessionID);
+//return SendFile(connection, (char*)"Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
+//if((aditionalheadertype != NULL) && (aditionalheadervalue != NULL )) MHD_add_response_header(response, aditionalheadertype, aditionalheadervalue);
+
+
+
   Request_t *Request = (Request_t*)*ptr;
-  Request->JSONReader = json_tokener_parse(upload_data);
-  if((Request->JSONReader == NULL) || (json_object_get_type(Request->JSONReader) != json_type_object)) {
-    Request->PostData  = (char*)"No valid JSON request";
-    Request->PostDataLen = strlen(Request->PostData);
-    Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-    return;
-  }
-  if(strcmp(url, "/LogIn") == 0) {
-    char *Password = NULL, *Name = NULL;
-    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
-      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) Password = (char*)json_object_get_string(JSON_Val);
-      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Username") == 0)) Name = (char*)json_object_get_string(JSON_Val);
-    }
-    if((Password == NULL) || (Name == NULL)) {
-      Request->PostData  = (char*)"'Password' and 'Username' params requiered";
-      Request->PostDataLen = strlen(Request->PostData);
-      Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-      return;
-    }
-    if(Request->DB == NULL) Request->DB = new Database(NULL);
-    Request->DB->PrepareSentence("SELECT admin, lastlogin FROM users WHERE name = ? AND password = MD5(?)");
-    Request->DB->BindSingleString(Name);
-    Request->DB->BindSingleString(Password);
-    Request->DB->ExecSentence();
-    Request->JSONWriter = json_object_new_object();
-    if(Request->DB->ResultRows() != 1) {
-      json_object_object_add(Request->JSONWriter, "Result", json_object_new_boolean(false));
-    } else {
-      json_object_object_add(Request->JSONWriter, "Result", json_object_new_boolean(true));
-      char *LastLogin = Request->DB->ResultValue(0, (char*)"lastlogin");
-      if(LastLogin) json_object_object_add(Request->JSONWriter, "LastLogin", json_object_new_int64(atol(LastLogin)));
-      char *Admin = Request->DB->ResultValue(0, (char*)"admin");
-      if(Admin) json_object_object_add(Request->JSONWriter, "Admin", json_object_new_boolean((Admin[0] == 't') ? true : false));
-      Request->DB->PrepareSentence("UPDATE users SET lastlogin = ? WHERE name = ?");
-      Request->DB->BindSingleUInt64(Tools::GetTime());
-      Request->DB->BindSingleString(Name);
-      Request->DB->ExecSentence();
-      const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");  
-      if(Cookie == NULL) return;
-      Request->DB->PrepareSentence("UPDATE sessions SET name = ? WHERE id = ?");
-      Request->DB->BindSingleString(Name);
-      Request->DB->BindSingleString(Cookie);
-      Request->DB->ExecSentence();
-    }
-    Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostDataLen);
-    return;
-  }
-  if(Request->UserName == NULL) {
-    struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
-    if(((sockaddr_in*)Addr)->sin_addr.s_addr != 0x0100007F) {
-      Request->PostData  = (char*)"Unauthorided access to API";
-      Request->PostDataLen = strlen(Request->PostData);
-      Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
-      return;
-    }
-    Request->UserName = strdup("API");
-  }
-  for(uint32_t i = 0; i < pCallbacksCount; i++) {
-    if(strcmp(pCallbacks[i].HandleName, url) == 0) {
-      if(pCallbacks[i].Function(Request->UserName, Request->JSONReader, Request->DB, &Request->JSONWriter, &Request->PostData, &Request->PostDataLen) == false) Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-      return;
-    }
-  }
-  Request->ResultCode = MHD_HTTP_METHOD_NOT_ALLOWED;
+  
 
 
 //  } else if(strcmp(url, "/getSysInfo") == 0) {

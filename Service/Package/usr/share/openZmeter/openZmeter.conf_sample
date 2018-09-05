@@ -3,7 +3,7 @@
   "PidFile": "/tmp/openZmeter.pid",
   "HTTPServer": {
     "Port": 8081,
-    "FilePath": "/home/maria/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/"
+    "FilePath": "/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/"
   },
   "Database": {
     "Hostname": "127.0.0.1",
@@ -13,6 +13,16 @@
     "Password": "openzmeter",
   },
   "Devices": [
+    { "Driver": "Remote",
+      "Mode": "Client",
+      "Username": "admin",
+      "Password": "admin",
+      "RemoteHost": "localhost:8081",
+      "Analyzer": "VIRTUAL"
+    },
+    { "Driver": "Remote",
+      "Mode": "Server",
+    },
     { "Driver": "DeviceV1",
       "NominalFrequency": 50,
       "NominalVoltage": 230,

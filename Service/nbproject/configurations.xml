@@ -40,8 +40,6 @@
       <itemPath>Source/Stats.h</itemPath>
       <itemPath>Source/Tools.cpp</itemPath>
       <itemPath>Source/Tools.h</itemPath>
-      <itemPath>Source/Upload.cpp</itemPath>
-      <itemPath>Source/Upload.h</itemPath>
       <itemPath>Source/ZeroCrossing.cpp</itemPath>
       <itemPath>Source/ZeroCrossing.h</itemPath>
     </logicalFolder>
@@ -454,6 +452,12 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -533,10 +537,6 @@
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Source/Tools.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Source/Upload.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="Source/Upload.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/ZeroCrossing.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -991,6 +991,12 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -1070,10 +1076,6 @@
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Source/Tools.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="Source/Upload.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="Source/Upload.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/ZeroCrossing.cpp" ex="false" tool="1" flavor2="0">
       </item>

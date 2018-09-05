@@ -15,13 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-var DaysNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-var EnergyData = [];
-var SelectedYear;
+var DaysNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], EnergyData = [], SelectedYear;
 function AjaxGetEnergy(selected_year) {
   $('#StatsSpinner').show();
-  $('#YearSelector button').removeClass('active');
-  $('#btnSelYear' + selected_year).addClass('active');
+  $('#btnYear + ul > li').removeClass('active');
+  $('#btnYear + ul > li > a:contains(' + selected_year +')').parent().addClass('active');
+  $('#btnYear span:first').text(selected_year);
   SelectedYear = selected_year;
   $('#StatsSpinner').show();
   var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
@@ -33,11 +32,6 @@ function AjaxGetEnergy(selected_year) {
       EnergySeries();      
     }
   );
-}
-function ShowColorScale(scale, outerdiv) {
-  scale.out('hex');
-  var width = outerdiv.width() - 1;
-  for(i = 0; i <= width; i++) outerdiv.append('<div style="width:1px; height:8px; display:inline; background:' + scale(i / width) + '"></div>');
 }
 function SumPhases(array, visibleSeries) {
   var Energy = 0.0;
@@ -76,31 +70,31 @@ function UpdateHeatMap(visibleSeries) {
   });
   var Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
   var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]);
+  var Len = 0;
   Days.forEach(function(Day) {
-    var Row = '<td>' + Day.WeekDay + '</td><td>' + Day.Date + '</td>';
-    Day.Cells.forEach(function(Cell) {
-      var Color = (Cell === undefined) ? '#EEE' : ColorScale((Cell - Min) / (Max - Min));
-      Row = Row + '<td style="background-color: ' + Color + '" colspan="' + Count + '" data-toogle="tooltip" title="' + ((Cell === undefined) ? 'No data for this period' : Round2Plain(ScaleToUnits(Cell, Units)) + Units + 'Wh') + '"></td>';
-    });
-    Body.append('<tr>' + Row + '</tr>');
+    var Row = $('<tr></tr>');
+    Row.append('<td>' + Day.WeekDay + '</td>');
+    Row.append('<td style="border-right: 1px solid #BBB">' + Day.Date + '</td>');
+    for(var i = 0; i < Day.Cells.length; i++) {
+      var Cell = Day.Cells[i];
+      var Tmp = $('<td colspan="' + Count + '" data-toogle="tooltip"></td>');
+      Tmp.css('background-color', (Cell === undefined) ? '#EEE' : ColorScale((Cell - Min) / (Max - Min)));
+      Tmp.attr('title', (Cell === undefined) ? 'No data for this period' : (Round2Plain(ScaleToUnits(Cell, Units)) + Units + 'Wh'));
+      if((i % (6 / Count)) === ((6 / Count) - 1)) Tmp.css('border-right', '1px solid #BBB');
+      if((Len === 0)  || (Day.WeekDay === DaysNames[1])) Tmp.css('border-top', '1px solid #BBB');
+      if(Len === (Object.keys(Days).length - 1)) Tmp.css('border-bottom', '1px solid #BBB');
+      Row.append(Tmp);
+    };
+     Len = Len + 1;
+    Body.append(Row);
   });
 }
 function UpdateView(event) {
-  if(this.id === 'btnShowAsTable')   localStorage.setItem('StatView', 'Table');
-  if(this.id === 'btnShowAsHeatmap') localStorage.setItem('StatView', 'Heatmap');
   if(this.id === 'btnHeatmap1Hour') localStorage.setItem('StatBlocks', '1h');
   if(this.id === 'btnHeatmap30Min') localStorage.setItem('StatBlocks', '30m');
   if(this.id === 'btnHeatmap20Min') localStorage.setItem('StatBlocks', '20m');
   if(this.id === 'btnHeatmap10Min') localStorage.setItem('StatBlocks', '10m');
-  if(this.id === 'btnStatsALLPhase') localStorage.setItem('StatPhase', 'ALL');
-  if(this.id === 'btnStatsRPhase') localStorage.setItem('StatPhase', 'R');
-  if(this.id === 'btnStatsSPhase') localStorage.setItem('StatPhase', 'S');
-  if(this.id === 'btnStatsTPhase') localStorage.setItem('StatPhase', 'T');
   
-  $('#ShowAsHeatmap').addClass('hidden');
-  $('#ShowAsTables').addClass('hidden');
-  $('#btnShowAsTable').removeClass('active');
-  $('#btnShowAsHeatmap').removeClass('active');
   $('#btnHeatmap1Hour').addClass('disabled');
   $('#btnHeatmap30Min').addClass('disabled');
   $('#btnHeatmap20Min').addClass('disabled');
@@ -109,19 +103,8 @@ function UpdateView(event) {
   $('#btnHeatmap30Min').removeClass('active');
   $('#btnHeatmap20Min').removeClass('active');
   $('#btnHeatmap10Min').removeClass('active');
-  $('#btnStatsALLPhase').removeClass('active');
-  $('#btnStatsRPhase').removeClass('active');
-  $('#btnStatsSPhase').removeClass('active');
-  $('#btnStatsTPhase').removeClass('active');
-  $('#btnStatsALLPhase').addClass('disabled');
-  $('#btnStatsRPhase').addClass('disabled');
-  $('#btnStatsSPhase').addClass('disabled');
-  $('#btnStatsTPhase').addClass('disabled');
   switch(localStorage.getItem('StatView')) {
-    case 'Table' : 
-      $('#btnShowAsTable').addClass('active');
-      $('#ShowAsTables').removeClass('hidden');
-      break;
+
     default :
       localStorage.setItem('StatView', 'Heatmap');
       $('#btnShowAsHeatmap').addClass('active');
@@ -132,33 +115,6 @@ function UpdateView(event) {
       $('#btnHeatmap10Min').removeClass('disabled');
       break;
   } 
-  if(Analyzers[Analyzer]['Mode'] === '3Phase') {
-    $('#btnStatsALLPhase').removeClass('disabled');
-    $('#btnStatsRPhase').removeClass('disabled');
-    $('#btnStatsSPhase').removeClass('disabled');
-    $('#btnStatsTPhase').removeClass('disabled');
-
-    switch(localStorage.getItem('StatPhase')) {
-      case 'R' :
-        $('#btnStatsRPhase').addClass('active');
-        SelectedPhase = [0];
-        break;
-      case 'S' :
-        $('#btnStatsSPhase').addClass('active');
-        SelectedPhase = [1];
-        break;
-      case 'T' :
-        $('#btnStatsTPhase').addClass('active');
-        SelectedPhase = [2];
-        break;
-      default :
-        $('#btnStatsALLPhase').addClass('active');
-        SelectedPhase = [0, 1, 2];
-        break;
-    }
-  } else {
-    SelectedPhase = [0];
-  }
   UpdateHeatMap();
 }
 //$('#btnHeatmap1Hour').click(ButtonClick);
@@ -174,8 +130,16 @@ function UpdatePage() {
   Ajax.GetSeriesRange('10m', 
     function(result) {
       for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) {
-        $('#YearSelector').append('<button type="button" class="btn btn-default btn-xs" id="btnSelYear' + year + '" onclick="AjaxGetEnergy(' + year + ')">' + year + '</button>');
+        $('#btnYear + ul').append('<li><a href="#">' + year + '</a></li>');
       }
+      $('#btnYear + ul > li > a').click(function(evt) { 
+        evt.preventDefault();
+        AjaxGetEnergy(parseInt(this.text));
+      });
+      $('#btnBlocks + ul > li').on(function(evt) {
+        evt.preventDefault();
+        AjaxGetEnergy(parseInt(this.text));
+      });
       AjaxGetEnergy(new Date(result['To']).getFullYear());
     }
   );

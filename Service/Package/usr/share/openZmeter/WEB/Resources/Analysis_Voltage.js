@@ -484,8 +484,8 @@ function ParametersSeries(event) {
   GraphPhaseButtons(PowerFactorChart, $('#groupDetailPhasesSingle'), 'VisibleVoltageDetailPhasesSingle', true, function(series) { return CalcRanges(PowerFactorData, series, false); }, (event !== undefined) ? event.target : undefined); 
   GraphPhaseButtons(PHIChart,         $('#groupDetailPhasesSingle'), 'VisibleVoltageDetailPhasesSingle', true, function(series) { return CalcRanges(PHIData, series, false); }, undefined); 
   GraphPhaseButtons(THDChart,         $('#groupDetailPhasesSingle'), 'VisibleVoltageDetailPhasesSingle', true, function(series) { return CalcRanges(THDData, series, false); }, undefined); 
-  for(i = 0; i < 50; i++) {
-    GraphPhaseButtons(HarmonicsCharts[i], $('#groupDetailPhasesSingle'), 'VisibleVoltageDetailPhasesSingle', true, function(series) { return CalcRanges(HarmonicsData[i], series, false); }, undefined); 
+  for(g = 0; g < 50; g++) {
+    GraphPhaseButtons(HarmonicsCharts[g], $('#groupDetailPhasesSingle'), 'VisibleVoltageDetailPhasesSingle', true, function(series) { return CalcRanges(HarmonicsData[g], series, false); }, undefined); 
   }
 }
 $('#groupDetailPhasesSingle').on('click', 'button', ParametersSeries);

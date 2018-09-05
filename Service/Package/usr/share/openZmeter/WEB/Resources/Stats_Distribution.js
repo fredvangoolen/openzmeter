@@ -27,12 +27,12 @@
 		weekStart: 1
 	};
 } (jQuery)); 
-var Calendar = null, WeekTable = null, MonthTable = null, WeekDayTable = null, HourTable = null, EnergyData = [];
-var SelectedYear;
+var Calendar = null, WeekTable = null, MonthTable = null, WeekDayTable = null, HourTable = null, EnergyData = [], SelectedYear;
 function AjaxGetEnergy(selected_year) {
   $('#StatsSpinner').show();
-  $('#YearSelector button').removeClass('active');
-  $('#btnSelYear' + selected_year).addClass('active');
+  $('#btnYear + ul > li').removeClass('active');
+  $('#btnYear + ul > li > a:contains(' + selected_year +')').parent().addClass('active');
+  $('#btnYear span:first').text(selected_year);
   SelectedYear = selected_year;
   $('#StatsSpinner').show();
   var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
@@ -270,8 +270,12 @@ function UpdatePage() {
   Ajax.GetSeriesRange('1h', 
     function(result) {
       for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) {
-        $('#YearSelector').append('<button type="button" class="btn btn-default btn-xs" id="btnSelYear' + year + '" onclick="AjaxGetEnergy(' + year + ')">' + year + '</button>');
+        $('#btnYear + ul').append('<li><a href="#">' + year + '</a></li>');
       }
+      $('#btnYear + ul > li > a').click(function(evt) { 
+        evt.preventDefault();
+        AjaxGetEnergy(parseInt(this.text));
+      });
       AjaxGetEnergy(new Date(result['To']).getFullYear());
     }
   );
