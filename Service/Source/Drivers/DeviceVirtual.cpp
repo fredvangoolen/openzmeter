@@ -65,6 +65,7 @@ DeviceVirtual::DeviceVirtual(json_object *config) : DeviceInterface() {
   char *Serial           = (char*)"VIRTUAL";
   pAnalyzer              = NULL;
   pSampleRate            = 10000;
+  json_object *Find;
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Serial") == 0)) {
@@ -80,6 +81,7 @@ DeviceVirtual::DeviceVirtual(json_object *config) : DeviceInterface() {
     }
   }
   pAnalyzer = new AnalyzerSoft(pSampleRate, Serial, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE3);
+  if((json_object_object_get_ex(config, "Remote", &Find) == true) && (json_object_get_type(Find) == json_type_object)) pAnalyzer->ConfigRemote(Find);
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;

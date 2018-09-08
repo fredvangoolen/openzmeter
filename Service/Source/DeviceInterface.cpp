@@ -47,13 +47,6 @@ void DeviceInterface::AddDeviceInterface(DeviceInterface* device) {
   pDevices[pDevicesCount] = device;
   pDevicesCount++;
 }
-AnalyzerInterface *DeviceInterface::FindAnalyzerGlobal(char *id) {
-  for(uint8_t j = 0; j < pDevicesCount; j++) {
-    AnalyzerInterface *Analyzer = pDevices[j]->FindAnalyzer(id);
-    if(Analyzer != NULL) return Analyzer;
-  }
-  return NULL;
-}
 DeviceInterface::DeviceInterface() {
   pTerminate       = false;
 }
@@ -67,8 +60,12 @@ bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Data
   db->ExecSentence();
   for(uint32_t i = 0; i < db->ResultRows(); i++) {
     char *Serial = db->ResultValue(i, (char*)"serial");
-    AnalyzerInterface *Analyzer = FindAnalyzerGlobal(Serial);
-    if(Analyzer != NULL) json_object_array_add(*writer, Analyzer->GetJSONDescriptor());
+    for(uint8_t j = 0; j < pDevicesCount; j++) {
+      AnalyzerInterface *Analyzer = pDevices[j]->FindAnalyzer(Serial);
+      if(Analyzer == NULL) continue;
+      json_object_array_add(*writer, Analyzer->GetJSONDescriptor());
+      break;
+    }
   }
   *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
   return true;    

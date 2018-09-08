@@ -116,7 +116,7 @@ bool Tools::ReadConfig(char *file) {
   LogMsg("INFO", "Loading config file...\n");
   int File = open(file, O_RDONLY);
   if(File == -1) {
-    LogMsg("ERROR", "Can not open config file (%d)\n", errno);
+    LogMsg("ERROR", "Can not open config file (%s)\n", strerror(errno));
     return false;
   }
   struct stat FileStatus;

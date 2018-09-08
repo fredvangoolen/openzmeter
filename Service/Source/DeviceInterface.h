@@ -7,7 +7,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceInterface {
   protected :
-    pthread_t pCaptureThread;           //Descriptor del hilo de captura 
+    pthread_t pCaptureThread;           //Descriptor del hilo de captura
     bool      pTerminate;               //Marca que deben detenerse los trabajos pendientes
   protected :
     virtual AnalyzerInterface *FindAnalyzer(char *serial) = 0;
@@ -26,5 +26,4 @@ class DeviceInterface {
     static bool GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
     static bool GetSeriesNowCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
     static bool GetSeriesRangeCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static AnalyzerInterface *FindAnalyzerGlobal(char *id);
 };

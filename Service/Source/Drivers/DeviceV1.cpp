@@ -30,24 +30,6 @@ void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
       }
     }
   }
-//  int16_t *Buff16 = (int16_t*)transfer->buffer;
-//  uint     Len = transfer->actual_length / 4;
-//  pthread_mutex_lock(&This->CaptureMutex);
-//  while(This->Used > (CAPTUREMONO_BUFFERSIZE - Len - This->Samplerate * EVENT_ENVELOPETIME)) {
-//    if(This->pTerminate) return;
-//    Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
-//    pthread_cond_wait(&This->WriteWait, &This->CaptureMutex);
-//  }
-//  for(uint i = 0; i < Len; i++) {
-//    int16_t Voltage = Buff16[i * 2 + 0];
-//    int16_t Current = Buff16[i * 2 + 1];
-//    This->Buffer[This->WritePos].Voltage = (Voltage - This->pVoltageOffset) * This->pVoltageGain;
-//    This->Buffer[This->WritePos].Current = (Current - This->pCurrentOffset) * This->pCurrentGain;
-//    This->WritePos = (This->WritePos + 1) % CAPTUREMONO_BUFFERSIZE;
-//  }
-//  This->Used += Len;
-//  pthread_cond_signal(&This->ReadWait);
-//  pthread_mutex_unlock(&This->CaptureMutex);
   if(This->pTerminate == false) libusb_submit_transfer(transfer);
 }
 int DeviceV1::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
@@ -208,27 +190,17 @@ DeviceV1::DeviceV1(json_object *config) : DeviceInterface() {
     Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
     return;
   }
-  json_object_object_foreach(config, JSON_Key, JSON_Val) {
-    enum json_type JSON_Type = json_object_get_type(JSON_Val);
-    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Serial") == 0)) {
-      pSerial = (char*)json_object_get_string(JSON_Val);
-    } else if((JSON_Type == json_type_double) && (strcmp(JSON_Key, "VoltageGain") == 0)) {
-      pVoltageGain = json_object_get_double(JSON_Val);
-    } else if((JSON_Type == json_type_double) && (strcmp(JSON_Key, "VoltageOffset") == 0)) {
-      pVoltageOffset = json_object_get_double(JSON_Val);
-    } else if((JSON_Type == json_type_double) && (strcmp(JSON_Key, "CurrentGain") == 0)) {
-      pCurrentGain = json_object_get_double(JSON_Val);
-    } else if((JSON_Type == json_type_double) && (strcmp(JSON_Key, "CurrentOffset") == 0)) {
-      pCurrentOffset = json_object_get_double(JSON_Val);
-    } else if((JSON_Type == json_type_double) && (strcmp(JSON_Key, "NominalVoltage") == 0)) {
-      NominalVoltage = json_object_get_double(JSON_Val);
-    } else if((JSON_Type == json_type_double) && (strcmp(JSON_Key, "NominalFrequency") == 0)) {
-      NominalFrequency = json_object_get_double(JSON_Val);
-    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "DisplayName") == 0)) {
-      Name = (char*)json_object_get_string(JSON_Val);
-    }
-  }
+  json_object *Find;
+  if((json_object_object_get_ex(config, "Serial", &Find) == true) && (json_object_get_type(Find) == json_type_string)) pSerial = (char*)json_object_get_string(Find);
+  if((json_object_object_get_ex(config, "VoltageGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pVoltageGain = json_object_get_double(Find);
+  if((json_object_object_get_ex(config, "VoltageOffset", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pVoltageOffset = json_object_get_double(Find);
+  if((json_object_object_get_ex(config, "CurrentGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pCurrentGain = json_object_get_double(Find);
+  if((json_object_object_get_ex(config, "CurrentOffset", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pCurrentOffset = json_object_get_double(Find);
+  if((json_object_object_get_ex(config, "NominalVoltage", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalVoltage = json_object_get_double(Find);
+  if((json_object_object_get_ex(config, "NominalFrequency", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalFrequency = json_object_get_double(Find);  
+  if((json_object_object_get_ex(config, "DisplayName", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Name = (char*)json_object_get_string(Find);
   pAnalyzer = new AnalyzerSoft(DEVICEV1_SAMPLEFREQ, pSerial, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
+  if((json_object_object_get_ex(config, "Remote", &Find) == true) && (json_object_get_type(Find) == json_type_object)) pAnalyzer->ConfigRemote(Find);
   int Error = libusb_init(NULL);
   if(Error < 0) {
     Tools::LogMsg("ERROR", "Can not open libUSB...\n");

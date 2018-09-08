@@ -80,12 +80,8 @@ bool Database::ExecSentence(const char* sql) {
   if((PQresultStatus(pResult) != PGRES_COMMAND_OK) && (PQresultStatus(pResult) != PGRES_TUPLES_OK)) {
     char *Save;
     Tools::LogMsg("ERROR", "Error in SQL query \"%s\" (%s)\n", sql, strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
-//    PQclear(pResult);
-//    pResult = NULL;
     return false;
   } else {
-//    PQclear(pResult);
-//    pResult = NULL;
     return true;  
   }
 }
@@ -96,12 +92,11 @@ char *Database::ExecSentenceJSON(const char* sql, size_t *len) {
   if(PQresultStatus(pResult) != PGRES_TUPLES_OK) {
     char *Save;
     Tools::LogMsg("ERROR", "Error in SQL query \"%s\" (%s)\n", sql, strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
-//    PQclear(pResult);
-//    pResult = NULL;
     return NULL;
   } else {
+    if(PQntuples(pResult) == 0) return NULL;
     *len = PQgetlength(pResult, 0, 0);
-    return PQgetvalue(pResult, 0, 0);
+    return (PQgetisnull(pResult, 0, 0) == true) ? NULL : PQgetvalue(pResult, 0, 0);
   }
 }
 void Database::PrepareSentence(const char *sentence) {

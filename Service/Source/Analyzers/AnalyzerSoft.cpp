@@ -9,15 +9,19 @@
 #include <sys/time.h>
 #include <sys/param.h>
 #include <unistd.h>
+#include <curl/curl.h>
 #include "AnalyzerSoft.h"
 #include "Tools.h"
+//----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(float samplerate, char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerInterface::AnalyzerMode mode) : AnalyzerInterface(id, nominal_voltage, nominal_frequency, name, max_current, min_current, mode) {
   pVoltageChannels = (mode == PHASE1) ? 1 : 3;
   pCurrentChannels = (mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4;
   pMaxSamples      = ceil(15.0 * samplerate / pNominalFrequency);
   pZC              = new ZeroCrossing((pMode == PHASE1) ? 1 : 3, samplerate, pNominalFrequency);
-  pStats           = new Stats((pMode != PHASE1) ? 1 : 3, this, pNominalVoltage, pNominalFrequency);
-//  pSamples         = 0; 
+  pSyncName        = NULL;
+  pSyncPassword    = NULL;
+  pSyncServer      = NULL;
+  pSyncThread      = 0;
   pSequence        = 0;
   pCycles          = 0;
   pWorking         = false;
@@ -62,9 +66,14 @@ AnalyzerSoft::AnalyzerSoft(float samplerate, char *id, float nominal_voltage, fl
   pthread_setname_np(pThread, (pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N");
 }
 AnalyzerSoft::~AnalyzerSoft() {
-  delete pZC;
+  pTerminate = true;
+  if(pSyncThread != 0) pthread_join(pSyncThread, NULL);
+  delete pZC;  
   for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) delete pVoltageFFT[i];
   for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) delete pCurrentFFT[i];
+}
+float AnalyzerSoft::PercentChange(float in, float reference) {
+  return ((in - reference) / reference) * 100;
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, uint64_t sampletime) {
   if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
@@ -160,8 +169,14 @@ void AnalyzerSoft::Analyze() {
     if(((pSequence % 15) == 0) && (pPrevTimestamp != 0)) {
       Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
       NormalizeAggreg(&pAggreg3S);
-      pStats->AppendFreq(pAggreg3S.Frequency, pAggreg3S.Flag);
+      if(pAggreg3S.Flag == false) {
+        float Variation = PercentChange(pAggreg3S.Frequency, pNominalFrequency);
+        for(uint Range = 0; Range < 40; Range++) {
+          if((Variation >= FrequencyRanges[Range]) && (Variation < FrequencyRanges[Range + 1])) pAggreg1H.StatsFrequency[Range]++;
+        }
+      }
       SaveAggreg(&pAggreg3S);
+      ResetAggreg(&pAggreg3S);
     }
     AccumulateAggreg(&pAggreg3S, &pAggreg10C);
     if(((pAggreg10C.Timestamp / 60000) > (pPrevTimestamp / 60000)) && (pPrevTimestamp != 0)) {
@@ -169,24 +184,47 @@ void AnalyzerSoft::Analyze() {
       pAggreg1M.Timestamp = pAggreg1M.Timestamp / 60000 * 60000 + 59999;
       NormalizeAggreg(&pAggreg1M);
       SaveAggreg(&pAggreg1M);
+      ResetAggreg(&pAggreg1M);
     }
     AccumulateAggreg(&pAggreg1M, &pAggreg10C);
     if(((pAggreg10C.Timestamp / 600000) > (pPrevTimestamp / 600000)) && (pPrevTimestamp != 0)) {
       Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
       pAggreg10M.Timestamp = pAggreg10M.Timestamp / 600000 * 600000 + 599999;
       NormalizeAggreg(&pAggreg10M);
-      pStats->AppendVoltage(pAggreg10M.RMS_V, pAggreg10M.Flag);
-      pStats->AppendHarmonics((float*)pAggreg10M.VoltageHarmonics, pAggreg10M.Flag);
-      pStats->AppendTHD(pAggreg10M.THD_V, pAggreg10M.Flag);
+      if(pAggreg10M.Flag == false) {
+        for(int i = 0; i < pVoltageChannels; i++) {
+          float Variation = PercentChange(pAggreg10M.RMS_V[i], pNominalVoltage);
+          for(uint Range = 0; Range < 26; Range++) {
+            if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) pAggreg1H.StatsVoltage[Range]++;
+          }
+          for(uint Range = 0; Range < 26; Range++) {
+            if((pAggreg10M.THD_V[i] >= THDRanges[Range]) && (pAggreg10M.THD_V[i] < THDRanges[Range + 1])) pAggreg1H.StatsTHD[Range]++;
+          }
+          bool HarmonicsInRange = true;
+          for(int n = 0; n < 25; n++) {
+            float Variation = PercentChange(pAggreg10M.VoltageHarmonics[i][n], pNominalVoltage);
+            if(Variation > HarmonicsAllowed[n]) {
+              HarmonicsInRange = false;
+              break;
+             }
+          }
+          if(HarmonicsInRange == true) {
+            pAggreg1H.StatsHarmonics[0]++;
+          } else {
+            pAggreg1H.StatsHarmonics[1]++;
+          }
+        }
+      }
       SaveAggreg(&pAggreg10M);
+      ResetAggreg(&pAggreg10M);
     }
     AccumulateAggreg(&pAggreg10M, &pAggreg10C);
     if(((pAggreg10C.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
       Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
       pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
       NormalizeAggreg(&pAggreg1H);
-      pStats->SaveStats(pAggreg1H.Timestamp);
       SaveAggreg(&pAggreg1H);
+      ResetAggreg(&pAggreg1H);
     }
     AccumulateAggreg(&pAggreg1H, &pAggreg10C);
     pPrevTimestamp = pAggreg10C.Timestamp;
@@ -200,7 +238,6 @@ void AnalyzerSoft::Analyze() {
     pthread_mutex_lock(&pThreadMutex);
     Tools::LogMsg("DEBUG", "Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", pName, Tools::GetTime() - Start, pSequence);
     pWorking = false;
-//    pSamples = 0;
     pCycles = 0;
     for(uint8_t i = 0; i < 20; i++) pCyclesLen[i] = 0;
     pSequence++;
@@ -254,14 +291,222 @@ bool AnalyzerSoft::IsFinished() {
   pthread_mutex_unlock(&pThreadMutex);
   return Result;
 }
-//char *AnalyzerSoft::GetTypeString() {
-//  if(pMode == PHASE3N) return (char*)"3PhaseN";
-//  if(pMode == PHASE3)  return (char*)"3Phase";
-//  if(pMode == PHASE1)  return (char*)"1Phase";
-//}
-//char *AnalyzerSoft::GetID() {
-//  return pID;
-//}
-//char *AnalyzerSoft::GetName() {
-//  return pName;
-//}
+void AnalyzerSoft::ConfigRemote(json_object* config) {
+  json_object *Find;
+  if((json_object_object_get_ex(config, "Username", &Find) == true) && (json_object_get_type(Find) == json_type_string)) pSyncName = (char*)json_object_get_string(Find);
+  if((json_object_object_get_ex(config, "Password", &Find) == true) && (json_object_get_type(Find) == json_type_string)) pSyncPassword = (char*)json_object_get_string(Find);
+  if((json_object_object_get_ex(config, "RemoteHost", &Find) == true) && (json_object_get_type(Find) == json_type_string)) pSyncServer = (char*)json_object_get_string(Find);
+  if((pSyncName == NULL) || (pSyncPassword == NULL) || (pSyncServer == NULL)) {
+    Tools::LogMsg("ERROR", "AnayzerSoft: Remote functionality mode need 'Username', 'Password' and 'RemoteServer' params\n");
+    return;
+  }
+  if(curl_global_init(CURL_GLOBAL_DEFAULT) != 0) {
+    Tools::LogMsg("ERROR", "AnayzerSoft: Failed to load libcurl\n");
+    return;  
+  }
+  if(pthread_create(&pSyncThread, NULL, Sync_Thread, this) != 0) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    return;
+  }
+}
+void AnalyzerSoft::AccumulateAggreg(Params_t *dst, Params_t *src) {
+  dst->Timestamp = src->Timestamp;
+  for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->RMS_V[i] += pow(src->RMS_V[i], 2.0);
+  for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) dst->RMS_I[i] += pow(src->RMS_I[i], 2.0);
+  for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Active_Power[i] += src->Active_Power[i];
+  for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Active_Energy[i] += src->Active_Energy[i];
+  for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Reactive_Power[i] += src->Reactive_Power[i];
+  for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Reactive_Energy[i] += src->Reactive_Energy[i];
+  dst->Flag |= src->Flag;
+  dst->Frequency += src->Frequency;
+  if(dst->Type == AGGREG_1M) {
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Power_Factor[i] += src->Power_Factor[i];
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) dst->THD_I[i] += pow(src->THD_I[i], 2.0);
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) {
+      for(int j = 0; j < 50; j++) dst->CurrentHarmonics[i][j] += pow(src->CurrentHarmonics[i][j], 2.0);
+    }
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Phi[i] += src->Phi[i];
+  }
+  if((dst->Type == AGGREG_1M) || (dst->Type == AGGREG_10M)) {
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->THD_V[i] += pow(src->THD_V[i], 2.0);
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) {
+      for(int j = 0; j < 50; j++) dst->VoltageHarmonics[i][j] += pow(src->VoltageHarmonics[i][j], 2.0);
+    }
+  }
+  dst->Samples++;
+}
+void AnalyzerSoft::NormalizeAggreg(Params_t *params) {
+  if(params->Samples > 1) {
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->RMS_V[i] = sqrt(params->RMS_V[i] / params->Samples);
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) params->RMS_I[i] = sqrt(params->RMS_I[i] / params->Samples);
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Active_Power[i] = params->Active_Power[i] / params->Samples;
+    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Reactive_Power[i] = params->Reactive_Power[i] / params->Samples;
+    params->Frequency = params->Frequency / params->Samples;
+    if(params->Type == AGGREG_1M) {
+      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Power_Factor[i] = params->Power_Factor[i] / params->Samples;
+      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->THD_I[i] = sqrt(params->THD_I[i] / params->Samples);
+      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Phi[i] = params->Phi[i] / params->Samples;
+      for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) {
+        for(int j = 0; j < 50; j++) params->CurrentHarmonics[i][j] = sqrt(params->CurrentHarmonics[i][j] / params->Samples);
+      }
+    }
+    if((params->Type == AGGREG_1M) || (params->Type == AGGREG_1M)) {
+      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->THD_V[i] = sqrt(params->THD_V[i] / params->Samples);
+      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) {
+        for(int j = 0; j < 50; j++) params->VoltageHarmonics[i][j] = sqrt(params->VoltageHarmonics[i][j] / params->Samples);
+      }    
+    }
+  }
+}
+size_t AnalyzerSoft::Curl_Read_Callback(void *contents, size_t size, size_t nmemb, void *userp) {
+  CurlBuff_t *Buff = (CurlBuff_t*)userp;
+  if((Buff->Size + size * nmemb + 1) > Buff->MaxSize) {
+    Buff->Buffer = (char*)realloc(Buff->Buffer, Buff->Size + size * nmemb + 1);
+    if(Buff->Buffer == NULL) {
+      return 0;
+    } else {
+      Buff->MaxSize = Buff->Size + size * nmemb + 1;
+    }
+  }
+  memcpy(&Buff->Buffer[Buff->Size], contents, size * nmemb);
+  Buff->Size += size * nmemb;
+  Buff->Buffer[Buff->Size] = 0;
+  return size * nmemb;
+}
+void *AnalyzerSoft::Sync_Thread(void *args) {
+  int Prio = sched_get_priority_min(SCHED_RR);
+  if(Prio == -1) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  } else {
+    struct sched_param Param;
+    Param.sched_priority = Prio;
+    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise thread priority -> %s\n", __func__);
+  }
+  AnalyzerSoft *This = (AnalyzerSoft*)args;
+  pthread_setname_np(This->pSyncThread, "Sync");
+  CurlBuff_t   CurlBuff;
+  json_object *Find;
+  size_t       JSONLen;
+  long         HTTPCode;
+  char         Tmp[1024];
+  uint64_t     Last3S      = 0;
+  uint64_t     Last1M      = 0;
+  uint64_t     Last10M     = 0;
+  uint64_t     Last1H      = 0;
+  uint64_t     LastEvent   = 0;
+  uint64_t     LastPrice   = 0;
+  bool         Registered  = false;
+  bool         Initialized = false;
+  CURL        *Curl        = curl_easy_init();
+  curl_slist  *Headers     = NULL;
+  Database     DB(This->pID);
+  curl_easy_setopt(Curl, CURLOPT_COOKIEFILE, "");
+  curl_easy_setopt(Curl, CURLOPT_POST, 1);
+  curl_easy_setopt(Curl, CURLOPT_WRITEDATA, (void*)&CurlBuff);
+  curl_easy_setopt(Curl, CURLOPT_WRITEFUNCTION, Curl_Read_Callback);
+  while(!This->pTerminate) {
+    if(Registered == false) {
+      if(Headers == NULL) {
+        curl_slist_free_all(Headers);
+        Headers = curl_slist_append(Headers, "Accept: application/json");
+        Headers = curl_slist_append(Headers, "Accept-Encoding: deflate");
+        Headers = curl_slist_append(Headers, "Connection: keep-alive");
+        Headers = curl_slist_append(Headers, "Content-Type: application/json");
+        curl_easy_setopt(Curl, CURLOPT_HTTPHEADER, Headers);
+      }
+      json_object *JSONWriter = json_object_new_object();
+      json_object_object_add(JSONWriter, "Username", json_object_new_string(This->pSyncName));
+      json_object_object_add(JSONWriter, "Password", json_object_new_string(This->pSyncPassword));
+      json_object_object_add(JSONWriter, "UpdateLastLogin", json_object_new_boolean(false));
+      CurlBuff.Size = 0;
+      snprintf(Tmp, sizeof(Tmp), "%s/LogIn", This->pSyncServer);
+      curl_easy_setopt(Curl, CURLOPT_URL, Tmp);
+      curl_easy_setopt(Curl, CURLOPT_POSTFIELDS, json_object_to_json_string_length(JSONWriter, JSON_C_TO_STRING_PLAIN, &JSONLen));
+      curl_easy_setopt(Curl, CURLOPT_POSTFIELDSIZE, JSONLen);
+      CURLcode Code = curl_easy_perform(Curl);
+      curl_easy_getinfo(Curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
+      if((Code != CURLE_OK) || (HTTPCode != 200)) {
+        Tools::LogMsg("WARN", "AnalyzerRemote: failed to register on remote server\n");
+      } else {
+        json_object *JSONReader = json_tokener_parse(CurlBuff.Buffer);
+        if((JSONReader != NULL) && (json_object_get_type(JSONReader) == json_type_object)) {
+          if((json_object_object_get_ex(JSONReader, "Result", &Find) == true) && (json_object_get_type(Find) == json_type_boolean)) {
+            Registered = json_object_get_boolean(Find);
+            if(Registered) Tools::LogMsg("INFO", "AnalyzerRemote: logged to remote server\n");
+          }
+          json_object_put(JSONReader);
+        }
+      }
+      if(Registered == false) usleep(1000000);
+      json_object_put(JSONWriter);
+    } else if(Initialized == false) {
+      snprintf(Tmp, sizeof(Tmp), "%s/setRemoteAnalyzer", This->pSyncServer);
+      json_object *JSONWriter = This->GetJSONDescriptor();
+      CurlBuff.Size = 0;
+      curl_easy_setopt(Curl, CURLOPT_URL, Tmp);
+      curl_easy_setopt(Curl, CURLOPT_POSTFIELDS, json_object_to_json_string_length(JSONWriter, JSON_C_TO_STRING_PLAIN, &JSONLen));
+      curl_easy_setopt(Curl, CURLOPT_POSTFIELDSIZE, JSONLen);
+      CURLcode Code = curl_easy_perform(Curl);
+      curl_easy_getinfo(Curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
+      if((Code != CURLE_OK) || (HTTPCode != 200)) {
+        Tools::LogMsg("WARN", "AnalyzerRemote: failed to config on remote server\n");
+      } else {
+        json_object *JSONReader = json_tokener_parse(CurlBuff.Buffer);
+        if((JSONReader != NULL) && (json_object_get_type(JSONReader) == json_type_object)) {
+          if((json_object_object_get_ex(JSONReader, "aggreg_3s", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Last3S = json_object_get_int64(Find);
+          if((json_object_object_get_ex(JSONReader, "aggreg_1m", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Last1M = json_object_get_int64(Find);
+          if((json_object_object_get_ex(JSONReader, "aggreg_10m", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Last10M = json_object_get_int64(Find);
+          if((json_object_object_get_ex(JSONReader, "aggreg_1h", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Last1H = json_object_get_int64(Find);
+          if((json_object_object_get_ex(JSONReader, "events", &Find) == true) && (json_object_get_type(Find) == json_type_int)) LastEvent = json_object_get_int64(Find);
+          if((json_object_object_get_ex(JSONReader, "prices", &Find) == true) && (json_object_get_type(Find) == json_type_int)) LastPrice = json_object_get_int64(Find);
+          Tools::LogMsg("INFO", "AnalyzerRemote: configured on remote server\n");
+          Initialized = true;
+        }
+      }
+      json_object_put(JSONWriter);
+      if(Initialized == false) usleep(1000000);
+    } else {
+      bool      Live    = false;
+      char     *Table   = (char*)"aggreg_3s";
+      uint64_t *Time    = &Last3S;
+      sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_3s' AS \"Table\", * FROM aggreg_3s WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", Last3S);
+      char *Result = DB.ExecSentenceJSON(Tmp, &JSONLen);
+//      if(Result == NULL) {
+//        char     *Table = (char*)"aggreg_1m";
+//        uint64_t *Time  = &Last1M;
+//        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_3s' AS \"Aggregation_Source\", * FROM aggreg_3s WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", Last3S);
+//        char *Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
+//      }
+//      if(Result == NULL) {
+//        char     *Table = (char*)"aggreg_1m";
+//        uint64_t *Time  = &Last1M;
+//        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_3s' AS \"Aggregation_Source\", * FROM aggreg_3s WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", Last3S);
+//        char *Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
+//      }
+      if(Result != NULL) {
+        snprintf(Tmp, sizeof(Tmp), "%s/setRemoteData", This->pSyncServer);
+        CurlBuff.Size = 0;
+        curl_easy_setopt(Curl, CURLOPT_URL, Tmp);
+        curl_easy_setopt(Curl, CURLOPT_POSTFIELDS, Result);
+        curl_easy_setopt(Curl, CURLOPT_POSTFIELDSIZE, JSONLen);
+        CURLcode Code = curl_easy_perform(Curl);
+        curl_easy_getinfo(Curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
+        if((Code != CURLE_OK) || (HTTPCode != 200)) {
+          Tools::LogMsg("WARN", "AnalyzerRemote: failed send data to server\n");
+        } else {
+          json_object *JSONReader = json_tokener_parse(CurlBuff.Buffer);
+          if((JSONReader != NULL) && (json_object_get_type(JSONReader) == json_type_object)) {
+            *Time = atol(DB.ResultValue(0, "sampletime"));
+            if((json_object_object_get_ex(JSONReader, "Live", &Find) == true) && (json_object_get_type(Find) == json_type_boolean)) Live = json_object_get_int64(Find);
+            Tools::LogMsg("DEBUG", "AnalyzerRemote: sampletime %" PRIu64 " saved in remote '%s' (Live: %s)\n", *Time, Table, (Live ? "true" : "false"));
+          }
+        }
+      }
+      usleep(1000000);
+      
+    }
+  }
+  curl_easy_cleanup(Curl);
+  return NULL;
+}
+//result = sendaggreg(tipoAggreg)

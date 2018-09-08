@@ -9,6 +9,11 @@ class AnalyzerInterface : protected Database {
     enum AnalyzerMode {PHASE1, PHASE3, PHASE3N};
     enum AggregType { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
   protected :
+    static const float FrequencyRanges[];   //Rangos de frecuencias para estadisticas
+    static const float VoltageRanges[];     //Rangos de tensiones para estadisticas
+    static const float THDRanges[];         //Rangos de distorsion harmonica para estadisticas
+    static const float HarmonicsAllowed[];  //Rangos permitidos para cada harmonico
+  protected :
     typedef struct {
       AggregType Type;                          //Tipo de agregacion
       uint64_t   Timestamp;                     //Timestamp de la muestra inicial
@@ -28,6 +33,10 @@ class AnalyzerInterface : protected Database {
       float      VoltageHarmonics[3][50];       //Armonicos del canal de tension
       float      CurrentHarmonics[4][50];       //Armonicos del canal de corriente
       float      Phi[3];                        //Angulo de Phi
+      uint16_t   StatsFrequency[40];            //Distribucion de frecuencias
+      uint16_t   StatsVoltage[26];              //Distribucion de tensiones
+      uint16_t   StatsTHD[26];                  //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
+      uint16_t   StatsHarmonics[2];             //Numero de muestras que cumplen los limites de harmonicos / no cumplen
     } Params_t;
     typedef struct {
       float     *Voltage[3];
@@ -35,9 +44,8 @@ class AnalyzerInterface : protected Database {
       float     *FFT_V[3];
       float     *FFT_I[4];
     } ExtParams_t;
-  private :
-    uint64_t      pLastSave;
   protected :
+    uint64_t      pLastSave;
     char         *pID;
     float         pNominalVoltage;
     float         pNominalFrequency;
@@ -47,10 +55,8 @@ class AnalyzerInterface : protected Database {
     float         pSamplerate;              //Velocidad de muestreo (NaN if unsuported)
     AnalyzerMode  pMode;
   protected :
-    void SaveAggreg(Params_t *params);
-    void AccumulateAggreg(Params_t *dst, Params_t *src);
-    void NormalizeAggreg(Params_t *params);
     void ResetAggreg(Params_t *params);
+    void SaveAggreg(Params_t *params);
   protected :
     virtual void GetParams(Params_t *params, ExtParams_t *extParams) = 0;
   public :

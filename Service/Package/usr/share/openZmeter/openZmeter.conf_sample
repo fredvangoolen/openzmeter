@@ -13,16 +13,6 @@
     "Password": "openzmeter",
   },
   "Devices": [
-    { "Driver": "Remote",
-      "Mode": "Client",
-      "Username": "admin",
-      "Password": "admin",
-      "RemoteHost": "localhost:8081",
-      "Analyzer": "VIRTUAL"
-    },
-    { "Driver": "Remote",
-      "Mode": "Server",
-    },
     { "Driver": "DeviceV1",
       "NominalFrequency": 50,
       "NominalVoltage": 230,
@@ -48,7 +38,12 @@
       "NominalFrequency": 50,
       "Mode": "1Phase",
       "Samplerate": 10000,
-      "DisplayName": "Virtual pruebas"
+      "DisplayName": "Virtual pruebas",
+      "Remote": {
+        "Username": "admin",
+        "Password": "admin",
+        "RemoteHost": "10.8.0.103:8082"  
+      },
     }
   ]
 }
