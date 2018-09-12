@@ -10,5 +10,5 @@ class AnalyzerRemote : public AnalyzerInterface {
   public :
     AnalyzerRemote(char *id, float nominalVoltage, float nominalFreq, char *name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online);
     void UpdateConfig(float nominalVoltage, float nominalFreq, char *name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online);
-    uint64_t SaveJSON(json_object *json, Database *db);
+    bool SaveJSON(json_object *json, Database *db);
 };

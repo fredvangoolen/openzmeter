@@ -22,6 +22,7 @@ void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
   for(int Block = 0; Block < (transfer->actual_length / 64); Block++) {
     int16_t *Pkg   = (int16_t*)&transfer->buffer[64 * Block];
     for(uint8_t Count = 0; Count < 16; Count++) {
+      if(Pkg[Count * 2 + 0] == -32768) continue;
       float Voltage = (Pkg[Count * 2 + 0] - This->pVoltageOffset) * This->pVoltageGain;
       float Current = (Pkg[Count * 2 + 1] - This->pCurrentOffset) * This->pCurrentGain;
       if(This->BuffersAppend(Voltage, Current) == false) {
@@ -41,6 +42,8 @@ int DeviceV1::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
       libusb_device *CurrentDev = libusb_get_device(This->pDeviceHandle);	
       if(dev == CurrentDev) {
         Tools::LogMsg("INFO", "DeviceV1 with serial '%s' disconnected\n", This->pSerial);
+        This->pTerminateSignal = true;
+        pthread_join(This->pSignalThread, NULL);
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL;
       }
@@ -70,7 +73,7 @@ bool DeviceV1::BuffersAppend(float voltageSample, float currentSample) {
   }
   return true;
 }
-void  *DeviceV1::Capture_Thread(void *args) {
+void *DeviceV1::Capture_Thread(void *args) {
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -136,7 +139,7 @@ void  *DeviceV1::Capture_Thread(void *args) {
           Tools::LogMsg("INFO", "Kernel driver dettached for DeviceV1 device with serial %s\n", This->pSerial);
         }
       }
-      Result = libusb_claim_interface(This->pDeviceHandle, 1);
+      Result = libusb_claim_interface(This->pDeviceHandle, 0);
       if(Result != LIBUSB_SUCCESS) {
         Tools::LogMsg("ERROR", "libusb_claim_interface returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
@@ -158,10 +161,22 @@ void  *DeviceV1::Capture_Thread(void *args) {
         continue;
       }
       Tools::LogMsg("INFO", "Capture started on CaptureMono device with serial %s\n", This->pSerial);
+      This->pTerminateSignal = false;
+      if(pthread_create(&This->pSignalThread, NULL, Signal_Thread, This) != 0) {
+        Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      }
       This->pNewDevice = NULL;
     }
   }
   return NULL;
+}
+void *DeviceV1::Signal_Thread(void* args) {
+  DeviceV1 *This = (DeviceV1*)args;
+  while(!This->pTerminateSignal) {
+    //Leo estado de mi analyzador
+    //Envio transferencia de control
+    //Leo datos, si hay algun boton pulsado llamo a los scripts!
+  }
 }
 AnalyzerInterface *DeviceV1::FindAnalyzer(char *serial) {
   return (strcmp(serial, pAnalyzer->GetID()) == 0) ? pAnalyzer : NULL;
@@ -241,6 +256,7 @@ DeviceV1::~DeviceV1() {
 //  return len;
 //}
 //void Adquisition_SetLEDs(float voltage, float current) {
+//int Error = libusb_control_transfer(This->pDeviceHandle, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0x01, 0x0000, 0x0000, NULL, 0, 0);
 //  uint8_t Val = 0;
 //  int Voltage = round(((voltage / EVENT_VOLTAGE) - 1.0) * 50.0 + 4.0);
 //  if(Voltage < 0) Voltage = 0;

@@ -25,8 +25,8 @@ AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nomi
   ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_1m  (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[] NOT NULL, rms_i real[] NOT NULL, active_power real[] NOT NULL, active_energy real[] NOT NULL, reactive_power real[] NOT NULL, reactive_energy real[] NOT NULL, freq real, flag boolean NOT NULL) WITH (OIDS=FALSE)");
   ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_10m (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[] NOT NULL, rms_i real[] NOT NULL, active_power real[] NOT NULL, active_energy real[] NOT NULL, reactive_power real[] NOT NULL, reactive_energy real[] NOT NULL, freq real, flag boolean NOT NULL) WITH (OIDS=FALSE)");
   ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_1h  (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[] NOT NULL, rms_i real[] NOT NULL, active_power real[] NOT NULL, active_energy real[] NOT NULL, reactive_power real[] NOT NULL, reactive_energy real[] NOT NULL, freq real, flag boolean NOT NULL) WITH (OIDS=FALSE)");
-  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_ext_1m  (sampletime_ext bigint NOT NULL PRIMARY KEY, power_factor real[] NOT NULL, thd_v real[] NOT NULL, thd_i real[] NOT NULL, phi real[] NOT NULL, harmonics_v real[] NOT NULL, harmonics_i real[] NOT NULL) WITH (OIDS=FALSE)");
-  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_stat_1h (sampletime_ext bigint NOT NULL PRIMARY KEY, stat_voltage int[] NOT NULL, stat_frequency int[] NOT NULL, stat_thd int[] NOT NULL, stat_harmonics int[] NOT NULL) WITH (OIDS=FALSE)");
+  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_ext_1m  (sampletime bigint NOT NULL PRIMARY KEY REFERENCES aggreg_1m(sampletime), power_factor real[] NOT NULL, thd_v real[] NOT NULL, thd_i real[] NOT NULL, phi real[] NOT NULL, harmonics_v real[] NOT NULL, harmonics_i real[] NOT NULL) WITH (OIDS=FALSE)");
+  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_stat_1h (sampletime bigint NOT NULL PRIMARY KEY REFERENCES aggreg_1h(sampletime), stat_voltage int[] NOT NULL, stat_frequency int[] NOT NULL, stat_thd int[] NOT NULL, stat_harmonics int[] NOT NULL) WITH (OIDS=FALSE)");
   ExecSentence("CREATE TABLE IF NOT EXISTS events (eventtime bigint NOT NULL PRIMARY KEY, duration  bigint NOT NULL, samplerate real, type character varying(16), voltage real, percent real, samples real[]) WITH (OIDS=FALSE)");
 }
 char *AnalyzerInterface::GetID() {
@@ -73,45 +73,41 @@ void AnalyzerInterface::SaveAggreg(Params_t *params) {
   if(params->Type == AGGREG_3S)
     PrepareSentence("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1M)  
-    PrepareSentence("INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    PrepareSentence("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING sampletime) "
+                    "INSERT INTO aggreg_ext_1m(sampletime, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) SELECT sampletime, ?, ?, ?, ?, ?, ? FROM Sample");
   else if(params->Type == AGGREG_10M)
     PrepareSentence("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
   else if(params->Type == AGGREG_1H)
-    PrepareSentence("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
-  BindSingleUInt64(params->Timestamp);                                                                       //sampletime
-  BindArrayFloat(params->RMS_V, (pMode == PHASE1) ? 1 : 3);                                                  //rms_v 
-  BindArrayFloat(params->RMS_I, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);                          //rms_i
-  BindArrayFloat(params->Active_Power, (pMode == PHASE1) ? 1 : 3);                                           //active_power
-  BindArrayFloat(params->Active_Energy, (pMode == PHASE1) ? 1 : 3);                                          //active_energy
-  BindArrayFloat(params->Reactive_Power, (pMode == PHASE1) ? 1 : 3);                                         //reactive_power
-  BindArrayFloat(params->Reactive_Energy, (pMode == PHASE1) ? 1 : 3);                                        //reactive_energy
-  BindSingleFloat(params->Frequency);                                                                        //frequency
-  BindSingleBool(params->Flag);                                                                              //flaged
-  ExecSentence();
+    PrepareSentence("WITH Sample AS (INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING sampletime) "
+                    "INSERT INTO aggreg_stat_1h(sampletime, stat_voltage, stat_frequency, stat_thd, stat_harmonics) SELECT sampletime, ?, ?, ?, ? FROM Sample");
+  BindSingleUInt64(params->Timestamp);                                                                            //sampletime
+  BindArrayFloat(params->RMS_V, (pMode == PHASE1) ? 1 : 3);                                                       //rms_v 
+  BindArrayFloat(params->RMS_I, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);                               //rms_i
+  BindArrayFloat(params->Active_Power, (pMode == PHASE1) ? 1 : 3);                                                //active_power
+  BindArrayFloat(params->Active_Energy, (pMode == PHASE1) ? 1 : 3);                                               //active_energy
+  BindArrayFloat(params->Reactive_Power, (pMode == PHASE1) ? 1 : 3);                                              //reactive_power
+  BindArrayFloat(params->Reactive_Energy, (pMode == PHASE1) ? 1 : 3);                                             //reactive_energy
+  BindSingleFloat(params->Frequency);                                                                             //frequency
+  BindSingleBool(params->Flag);                                                                                   //flaged
   if(params->Type == AGGREG_1M) {
-    PrepareSentence("INSERT INTO aggreg_ext_1m(sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES(?, ?, ?, ?, ?, ?, ?)");
-    BindSingleUInt64(params->Timestamp);                                                                     //sampletime
-    BindArrayFloat(params->Power_Factor, (pMode == PHASE1) ? 1 : 3);                                         //power_factor
-    BindArrayFloat(params->THD_V, (pMode == PHASE1) ? 1 : 3);                                                //thd_v
-    BindArrayFloat(params->THD_I, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);                        //thd_i
-    BindArrayFloat(params->Phi, (pMode == PHASE1) ? 1 : 3);                                                  //phi
+    BindArrayFloat(params->Power_Factor, (pMode == PHASE1) ? 1 : 3);                                              //power_factor
+    BindArrayFloat(params->THD_V, (pMode == PHASE1) ? 1 : 3);                                                     //thd_v
+    BindArrayFloat(params->THD_I, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);                             //thd_i
+    BindArrayFloat(params->Phi, (pMode == PHASE1) ? 1 : 3);                                                       //phi
     BindArrayArrayFloat((float*)params->VoltageHarmonics, (pMode == PHASE1) ? 1 : 3, 50);                         //harmonics_v
     BindArrayArrayFloat((float*)params->CurrentHarmonics, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, 50); //harmonics_i
-    ExecSentence();
-    PrepareSentence("DELETE FROM aggreg_ext_1m WHERE sampletime_ext < ?");
-    BindSingleUInt64(params->Timestamp - 86400000);                                                          //sampletime
+  } else if(params->Type == AGGREG_1H) {
+    BindArrayUInt16(params->StatsVoltage, 26);        //estadisticas de tension
+    BindArrayUInt16(params->StatsFrequency, 40);      //estadisticas de frequencia
+    BindArrayUInt16(params->StatsTHD, 26);            //estadisticas de distorsion harmonica
+    BindArrayUInt16(params->StatsHarmonics, 2);       //estadisticas de harmonicos en rango
+  }
+  ExecSentence();
+  if(params->Type == AGGREG_1M) {
+    PrepareSentence("DELETE FROM aggreg_ext_1m WHERE sampletime < ?");
+    BindSingleUInt64(params->Timestamp - 86400000);   //Delete 1 day old
     ExecSentence();
   }
-  if(params->Type == AGGREG_1H) {
-    PrepareSentence("INSERT INTO aggreg_stat_1h(sampletime_ext, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(?, ?, ?, ?, ?)");
-    BindSingleUInt64(params->Timestamp);
-    BindArrayUInt16(params->StatsVoltage, 26);     //estadisticas de tension
-    BindArrayUInt16(params->StatsFrequency, 40); //estadisticas de frequencia
-    BindArrayUInt16(params->StatsTHD, 26);             //estadisticas de distorsion harmonica
-    BindArrayUInt16(params->StatsHarmonics, 2);                                           //estadisticas de harmonicos en rango
-    ExecSentence();
-  }
-//  ResetAggreg(params);
   pLastSave = Tools::GetTime();
 }
 json_object *AnalyzerInterface::GetJSONDescriptor() {

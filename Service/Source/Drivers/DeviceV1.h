@@ -12,16 +12,7 @@
 #define DEVICEV1_ENDPOINT_IN       0x81       //Endpoint de lectura de datos
 #define DEVICEV1_SAMPLEFREQ    15625.00       //Frequencia de muestreo
 #define DEVICEV1_BUFFERSECONDS       10       //Tamaño del buffer (10 segundos)
-//----------------------------------------------------------------------------------------------------------------------
-
-
-//#define CAPTUREMONO_BUFFERSIZE    156250         //Tamaño del buffer (10 segundos)
-#define DEVICEV1_TRANSFERS          32       //Numero de transferencias a encolar
-
-//#define MAX_FRAME                     3688         //Longitud maxima de muestras de un frame (236ms)
-//#define ADQUISITION_SAFESAMPLES  MAX_FRAME         //Numero de muestras "seguras" antes y despues del punto de lectura 
-//#define PROCESSING_FREQCYCLES          500        //Numero de ciclos usados para calcular frequencia
-//#define PROCESSING_CURRENTOFFSET      0.10        //Corriente minima para realizar calculos
+#define DEVICEV1_TRANSFERS           32       //Numero de transferencias a encolar
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV1 : public DeviceInterface {
   private :
@@ -40,8 +31,11 @@ class DeviceV1 : public DeviceInterface {
     float                        pCurrentOffset;           //Offset de corriente
     struct libusb_device_handle *pDeviceHandle;            //Dispositivo de captura
     struct libusb_device        *pNewDevice;               //Dispositivo que se conecta    
+    pthread_t                    pSignalThread;            //Thread to handle LED and sounds
+    bool                         pTerminateSignal;         //Flag to terminate signal thread
   private : 
     static void  *Capture_Thread(void *args);
+    static void  *Signal_Thread(void *args);
     static void   ReadCallback(struct libusb_transfer *transfer);
     static int    PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :

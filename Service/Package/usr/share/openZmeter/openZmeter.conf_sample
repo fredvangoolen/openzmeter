@@ -19,8 +19,8 @@
       "VoltageGain": 0.0142450636311,
       "VoltageOffset": 0.00,
       "CurrentGain": -0.00078125,
-      "CurrentOffset": 32768,
-      "Serial": "420053004115D49593639302",
+      "CurrentOffset": 0.00,
+      "Serial": "B20052003115D49593639302",
       "DisplayName": "Casa de Paco"
     },
     { "Driver": "DeviceV1",

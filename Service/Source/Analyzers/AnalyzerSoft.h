@@ -60,12 +60,12 @@ class AnalyzerSoft : public AnalyzerInterface {
     void NormalizeAggreg(Params_t *params);
     void Analyze();
   protected :
-//    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
+    //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
     void GetParams(Params_t *params, ExtParams_t *extParams);
   public :
     AnalyzerSoft(float samplerate, char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerInterface::AnalyzerMode mode);
-    void ConfigRemote(json_object *config);
     ~AnalyzerSoft();
-    bool         BufferAppend(float *voltageSamples, float *CurrentSamples, uint64_t sampletime);
-    bool         IsFinished();
+    void ConfigRemote(json_object *config);
+    bool BufferAppend(float *voltageSamples, float *CurrentSamples, uint64_t sampletime);
+    bool IsFinished();
 };

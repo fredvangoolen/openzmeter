@@ -139,7 +139,7 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
   }
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS \"Sampletime\" FROM ");
   if(strcmp(Aggreg, "1m") == 0) {
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1m LEFT JOIN aggreg_ext_1m ON aggreg_1m.sampletime = aggreg_ext_1m.sampletime_ext) AS Tmp");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m) AS Tmp");
   } else {
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "aggreg_%s", Aggreg);
   }

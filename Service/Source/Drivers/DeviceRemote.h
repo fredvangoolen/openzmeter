@@ -10,9 +10,15 @@
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceRemote : public DeviceInterface {
   private :
-    static AnalyzerRemote **pAnalyzers;               //Analyzers list
+    typedef struct {
+      char           *ID;
+      char           *Name;
+      AnalyzerRemote *Analyzer;
+    } Analyzer_t;
+    static Analyzer_t      *pAnalyzers;               //Analyzers list
     static uint32_t         pAnalyzersCount;          //Analyzers count
-    static DeviceRemote    *pInstance;               //Only one instance allowed!
+    static DeviceRemote    *pInstance;                //Only one instance allowed!
+    static pthread_mutex_t  pListMutex;               //Access to list limited
   private :
     AnalyzerInterface *FindAnalyzer(char *serial);
   private :

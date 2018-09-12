@@ -199,14 +199,6 @@ void *DeviceV2::Capture_Thread(void *args) {
   }
   return NULL;
 }
-bool DeviceV2::ReadJSONFloatArray(json_object *object, float *dst, uint8_t len) {
-  if(json_object_array_length(object) != len) return false;
-  for(int i = 0; i < len; i++) {
-    if(json_object_get_type(json_object_array_get_idx(object, i)) != json_type_double) return false;
-    dst[i] = json_object_get_double(json_object_array_get_idx(object, i));
-  }
-  return true;
-}
 AnalyzerInterface *DeviceV2::FindAnalyzer(char *serial) {
   for(uint8_t i = 0; i < pAnalyzersCount; i++) {
     if(strcmp(serial, pAnalyzers[i].Analyzer->GetID()) == 0) return pAnalyzers[i].Analyzer;
@@ -237,34 +229,28 @@ DeviceV2::DeviceV2(json_object* config) : DeviceInterface() {
   float NominalVoltage   = 230.0;
   float NominalFrequency = 50.0;
   struct json_object *Find, *Find2;
+  
   if((json_object_object_get_ex(config, "Samplerate", &Find) == true) && (json_object_get_type(Find) == json_type_int)) pADCSamplerate = json_object_get_int(Find);
   if((json_object_object_get_ex(config, "Oversample", &Find) == true) && (json_object_get_type(Find) == json_type_int)) pOversample = json_object_get_int(Find);
+  Tools::JSONString(config, (char*)"Serial", &pSerial, false);
   if((json_object_object_get_ex(config, "Serial", &Find) == true) && (json_object_get_type(Find) == json_type_string)) pSerial = (char*)json_object_get_string(Find);
   if((json_object_object_get_ex(config, "NominalVoltage", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalVoltage = json_object_get_double(Find);
   if((json_object_object_get_ex(config, "NominalFrequency", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalFrequency = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "VoltageGain", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
-    if(ReadJSONFloatArray(Find, pVoltageGain, 3) == false) {
-      Tools::LogMsg("ERROR", "CaptureV2: Voltage gain must have 3 double values\n");
-      return;
-    }
+  if(Tools::JSONArrayFloat(config, (char*)"VoltageGain", pVoltageGain, 3) == false) {
+    Tools::LogMsg("ERROR", "CaptureV2: Voltage gain must have 3 double values\n");
+    return;
   }
-  if((json_object_object_get_ex(config, "VoltageOffset", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
-    if(ReadJSONFloatArray(Find, pVoltageOffset, 3) == false) {
-      Tools::LogMsg("ERROR", "DeviceV2: Voltage offset must have 3 double values\n");
-      return;
-    }
+  if(Tools::JSONArrayFloat(config, "VoltageOffset", pVoltageOffset, 3) == false) {
+    Tools::LogMsg("ERROR", "DeviceV2: Voltage offset must have 3 double values\n");
+    return;
   }
-  if((json_object_object_get_ex(config, "CurrentGain", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
-    if(ReadJSONFloatArray(Find, pCurrentGain, 4) == false) {
-      Tools::LogMsg("ERROR", "DeviceV2: current gain must have 4 double values\n");
-      return;
-    }   
+  if(Tools::JSONArrayFloat(config, "CurrentGain", pCurrentGain, 4) == false) {
+    Tools::LogMsg("ERROR", "DeviceV2: current gain must have 4 double values\n");
+    return;
   }
-  if((json_object_object_get_ex(config, "CurrentOffset", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
-    if(ReadJSONFloatArray(Find, pCurrentOffset, 4) == false) {
-      Tools::LogMsg("ERROR", "DeviceV2: current offset must have 4 double values\n");
-      return;
-    }   
+  if(Tools::JSONArrayFloat(config, "CurrentOffset", pCurrentOffset, 4) == false) {
+    Tools::LogMsg("ERROR", "DeviceV2: current offset must have 4 double values\n");
+    return;
   }
   pBuffLen = DEVICEV2_BUFFERSECONDS * pADCSamplerate / pOversample;
   pVoltageSamples = (float*)malloc(sizeof(float) * pBuffLen);

@@ -54,7 +54,6 @@ class DeviceV2 : public DeviceInterface {
     static int    PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
     bool BuffersAppend();
-    bool ReadJSONFloatArray(json_object *object, float *dst, uint8_t len);
     AnalyzerInterface *FindAnalyzer(char *serial);
   public :
     DeviceV2(json_object* config);

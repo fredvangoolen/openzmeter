@@ -10,9 +10,10 @@
 #include "DeviceRemote.h"
 #include "HTTPServer.h"
 //======================================================================================================================
-DeviceRemote    *DeviceRemote::pInstance = NULL;
-uint32_t         DeviceRemote::pAnalyzersCount = 0;
-AnalyzerRemote **DeviceRemote::pAnalyzers = NULL;
+DeviceRemote              *DeviceRemote::pInstance = NULL;
+uint32_t                   DeviceRemote::pAnalyzersCount = 0;
+DeviceRemote::Analyzer_t  *DeviceRemote::pAnalyzers = NULL;
+pthread_mutex_t            DeviceRemote::pListMutex = PTHREAD_MUTEX_INITIALIZER;
 // Funciones ===========================================================================================================
 DeviceRemote::DeviceRemote(json_object* config) : DeviceInterface()  {
   if(pInstance != NULL) {
@@ -58,10 +59,14 @@ bool DeviceRemote::SetRemoteAnalyzerCallback(char *user, json_object *reader, Da
   }
   AnalyzerRemote *Analyzer = (AnalyzerRemote*)pInstance->FindAnalyzer(Serial);
   if(Analyzer == NULL) {
-    pAnalyzers = (AnalyzerRemote**)realloc(pAnalyzers, sizeof(AnalyzerRemote*) * (pAnalyzersCount + 1));
-    Analyzer = new AnalyzerRemote(Serial, NominalVoltage, NominalFreq, Name, MaxCurrent, MinCurrent, ModeB, SampleFreq, Online);
-    pAnalyzers[pAnalyzersCount] = Analyzer;
+    pthread_mutex_lock(&pListMutex);
+    pAnalyzers = (Analyzer_t*)realloc(pAnalyzers, sizeof(Analyzer_t) * (pAnalyzersCount + 1));
+    pAnalyzers[pAnalyzersCount].ID   = strdup(Serial);
+    pAnalyzers[pAnalyzersCount].Name = strdup(Name);
+    Analyzer = new AnalyzerRemote(pAnalyzers[pAnalyzersCount].ID, NominalVoltage, NominalFreq, pAnalyzers[pAnalyzersCount].Name, MaxCurrent, MinCurrent, ModeB, SampleFreq, Online);
+    pAnalyzers[pAnalyzersCount].Analyzer = Analyzer;
     pAnalyzersCount++;
+    pthread_mutex_unlock(&pListMutex);
   } else {
     Analyzer->UpdateConfig(NominalVoltage, NominalFreq, Name, MaxCurrent, MinCurrent, ModeB, SampleFreq, Online);
   }
@@ -78,12 +83,9 @@ bool DeviceRemote::SetRemoteAnalyzerCallback(char *user, json_object *reader, Da
 }
 bool DeviceRemote::SetRemoteDataCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   char *Serial = NULL;
-  char *Table  = NULL;
-  json_object *Find;
-  if((json_object_object_get_ex(reader, "ID", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
-  if((json_object_object_get_ex(json, "Table", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Table = (char*)json_object_get_string(Find);
-  if((Serial == NULL)  (Table == NULL)) {
-    *postdata  = (char*)"'ID' and 'Table' params is requiered";
+  Tools::JSONString(reader, (char*)"ID", &Serial, false);
+  if(Serial == NULL) {
+    *postdata  = (char*)"'ID' params is requiered";
     *resultLen = strlen(*postdata);
     return false;
   }
@@ -93,34 +95,30 @@ bool DeviceRemote::SetRemoteDataCallback(char *user, json_object *reader, Databa
     *resultLen = strlen(*postdata);
     return false;  
   }
-  if(strcmp("aggreg_3s", Table) == 0) {
-    db->PrepareSentence("INSERT INTO SELECT * from json_populate_record(null::?, ?)")
-
-  *writer = json_object_new_object();
-  if(Analyzer->SaveJSON(reader, db) != 0) {
-    *postdata  = (char*)"Can save data";
+  db->PrepareSentence("SET search_path TO ?");
+  db->BindSingleString(Analyzer->GetID());
+  db->ExecSentence();
+  if(Analyzer->SaveJSON(reader, db) == false) {
+    *postdata  = (char*)"Invalid or imcomplete data to save";
     *resultLen = strlen(*postdata);
     return false;
+  } else {
+    *writer = json_object_new_object();
+    json_object_object_add(*writer, "RequiereLive", json_object_new_boolean(false));
+    *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
+    return true;
   }
-  
-    
- 
-  
-   
-  //  AnalyzerInterface::Params_t Params;
-//  if(Analyzer->ParamsFromJSON(reader, &Params) == false) {
-//    *postdata  = (char*)"Invalid JSON params";
-//    *resultLen = strlen(*postdata);
-//    return false;    
-//  }
-  //Guardo  
-  
-  
-  return true;
+  return false;
 }
 AnalyzerInterface *DeviceRemote::FindAnalyzer(char *serial) {
+  pthread_mutex_lock(&pListMutex);
+  AnalyzerInterface *Result = NULL;
   for(uint8_t i = 0; i < pAnalyzersCount; i++) {
-    if(strcmp(serial, pAnalyzers[i]->GetID()) == 0) return pAnalyzers[i];
+    if(strcmp(serial, pAnalyzers[i].ID) == 0) {
+      Result = pAnalyzers[i].Analyzer;
+      break;
+    }
   }
-  return NULL;
+  pthread_mutex_unlock(&pListMutex);
+  return Result;
 }

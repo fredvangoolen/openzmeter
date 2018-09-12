@@ -141,6 +141,7 @@ body {
 }
 .header-buttons {
   float: right;
+  text-align: right;
 }
 .subpanel {
   color: #474544;

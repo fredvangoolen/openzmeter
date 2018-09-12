@@ -466,23 +466,29 @@ void *AnalyzerSoft::Sync_Thread(void *args) {
       json_object_put(JSONWriter);
       if(Initialized == false) usleep(1000000);
     } else {
-      bool      Live    = false;
-      char     *Table   = (char*)"aggreg_3s";
-      uint64_t *Time    = &Last3S;
-      sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_3s' AS \"Table\", * FROM aggreg_3s WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", Last3S);
+      bool      Live  = false;
+      char     *Table = (char*)"aggreg_3s";
+      uint64_t *Time  = &Last3S;
+      sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_3s' AS \"Table\", * FROM aggreg_3s WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", This->pID, Last3S);
       char *Result = DB.ExecSentenceJSON(Tmp, &JSONLen);
-//      if(Result == NULL) {
-//        char     *Table = (char*)"aggreg_1m";
-//        uint64_t *Time  = &Last1M;
-//        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_3s' AS \"Aggregation_Source\", * FROM aggreg_3s WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", Last3S);
-//        char *Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
-//      }
-//      if(Result == NULL) {
-//        char     *Table = (char*)"aggreg_1m";
-//        uint64_t *Time  = &Last1M;
-//        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_3s' AS \"Aggregation_Source\", * FROM aggreg_3s WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", Last3S);
-//        char *Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
-//      }
+      if(Result == NULL) {
+        char     *Table = (char*)"aggreg_1m";
+        uint64_t *Time  = &Last1M;
+        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_1m' AS \"Aggregation_Source\", * FROM (SELECT * FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m) AS aggreg_1m WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", Last3S);
+        char *Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
+      }
+      if(Result == NULL) {
+        char     *Table = (char*)"aggreg_10m";
+        uint64_t *Time  = &Last10M;
+        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_10m' AS \"Aggregation_Source\", * FROM aggreg_10m WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", Last3S);
+        char *Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
+      }
+      if(Result == NULL) {
+        char     *Table = (char*)"aggreg_10m";
+        uint64_t *Time  = &Last1H;
+        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_1h' AS \"Aggregation_Source\", * FROM aggreg_1h WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", Last3S);
+        char *Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
+      }
       if(Result != NULL) {
         snprintf(Tmp, sizeof(Tmp), "%s/setRemoteData", This->pSyncServer);
         CurlBuff.Size = 0;
@@ -496,14 +502,14 @@ void *AnalyzerSoft::Sync_Thread(void *args) {
         } else {
           json_object *JSONReader = json_tokener_parse(CurlBuff.Buffer);
           if((JSONReader != NULL) && (json_object_get_type(JSONReader) == json_type_object)) {
-            *Time = atol(DB.ResultValue(0, "sampletime"));
+            *Time = atol(DB.ResultValue(0, (char*)"sampletime"));
             if((json_object_object_get_ex(JSONReader, "Live", &Find) == true) && (json_object_get_type(Find) == json_type_boolean)) Live = json_object_get_int64(Find);
             Tools::LogMsg("DEBUG", "AnalyzerRemote: sampletime %" PRIu64 " saved in remote '%s' (Live: %s)\n", *Time, Table, (Live ? "true" : "false"));
           }
         }
+      } else {
+        usleep(1000000);
       }
-      usleep(1000000);
-      
     }
   }
   curl_easy_cleanup(Curl);

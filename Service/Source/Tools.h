@@ -28,5 +28,9 @@ class Tools {
     static uint64_t     GetTime();
     static bool         GetSysInfo(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
     static void         RegisterHandlers(void (*function)(int));
+    static bool         JSONString(json_object *obj, const char *key, char **dst, bool copy);
+    static bool         JSONFloat(json_object *obj, const char *key, float *dst);
+    static bool         JSONUInt64(json_object *obj, const char *key, uint64_t *dst);
+    static bool         JSONArrayFloat(json_object *obj, const char *key, float *dst, int len);
 };
 //----------------------------------------------------------------------------------------------------------------------

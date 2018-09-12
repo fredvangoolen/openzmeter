@@ -2,6 +2,8 @@
  * File:     AnalyzerRemote.cpp
  * Author:   Eduardo Viciana (agosto de 2018)
  * -------------------------------------------------------------------------------------------------------------------*/
+#include <string.h>
+#include "Tools.h"
 #include "AnalyzerRemote.h"
 AnalyzerRemote::AnalyzerRemote(char* id, float nominalVoltage, float nominalFreq, char* name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online) : AnalyzerInterface(id, nominalVoltage, nominalFreq, name, maxCurrent, minCurrent, mode) {
  //llamo al update config
@@ -12,11 +14,79 @@ void AnalyzerRemote::UpdateConfig(float nominalVoltage, float nominalFreq, char*
 void AnalyzerRemote::GetParams(Params_t *params, ExtParams_t *extParams) {
 
 }
-uint64_t AnalyzerRemote::SaveJSON(json_object *json, Database *db) {
-  json_object *Find;
+bool AnalyzerRemote::SaveJSON(json_object *json, Database *db) {
   char *Table = NULL;
- 
-  if((json_object_object_get_ex(json, "Table", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Aggreg = (char*)json_object_get_string(Find);
+  Tools::JSONString(json, "Table", &Table, false);
+  if(Table == NULL) return false;
+  if((strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0)) {
+    Params_t Params;
+    if(strcmp("aggreg_3s", Table) == 0) Params.Type = AGGREG_3S;
+    if(Tools::JSONUInt64(json, "sampletime", &Params.Timestamp) == false) return false;                                                 //sampletime
+    if(Tools::JSONArrayFloat(json, "rms_v", Params.RMS_V, (pMode == PHASE1) ? 1 : 3) == false) return false;                            //rms_v 
+    if(Tools::JSONArrayFloat(json, "rms_i", Params.RMS_I, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4) == false) return false;    //rms_i 
+    if(Tools::JSONArrayFloat(json, "active_power", Params.Active_Power, (pMode == PHASE1) ? 1 : 3) == false) return false;              //active_power 
+    if(Tools::JSONArrayFloat(json, "active_energy", Params.Active_Energy, (pMode == PHASE1) ? 1 : 3) == false) return false;            //active_energy
+//  BindArrayFloat(params->Reactive_Power, (pMode == PHASE1) ? 1 : 3);                                         //reactive_power
+//  BindArrayFloat(params->Reactive_Energy, (pMode == PHASE1) ? 1 : 3);                                        //reactive_energy
+//  BindSingleFloat(params->Frequency);                                                                        //frequency
+//  BindSingleBool(params->Flag);                                                                              //flaged
+//  ExecSentence();
+//  if(params->Type == AGGREG_1M) {
+//    PrepareSentence("INSERT INTO aggreg_ext_1m(sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES(?, ?, ?, ?, ?, ?, ?)");
+//    BindSingleUInt64(params->Timestamp);                                                                     //sampletime
+//    BindArrayFloat(params->Power_Factor, (pMode == PHASE1) ? 1 : 3);                                         //power_factor
+//    BindArrayFloat(params->THD_V, (pMode == PHASE1) ? 1 : 3);                                                //thd_v
+//    BindArrayFloat(params->THD_I, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);                        //thd_i
+//    BindArrayFloat(params->Phi, (pMode == PHASE1) ? 1 : 3);                                                  //phi
+//    BindArrayArrayFloat((float*)params->VoltageHarmonics, (pMode == PHASE1) ? 1 : 3, 50);                         //harmonics_v
+//    BindArrayArrayFloat((float*)params->CurrentHarmonics, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, 50); //harmonics_i
+//    ExecSentence();
+//    PrepareSentence("DELETE FROM aggreg_ext_1m WHERE sampletime_ext < ?");
+//    BindSingleUInt64(params->Timestamp - 86400000);                                                          //sampletime
+//    ExecSentence();
+//  }
+//  if(params->Type == AGGREG_1H) {
+//    PrepareSentence("INSERT INTO aggreg_stat_1h(sampletime_ext, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(?, ?, ?, ?, ?)");
+//    BindSingleUInt64(params->Timestamp);
+//    BindArrayUInt16(params->StatsVoltage, 26);     //estadisticas de tension
+//    BindArrayUInt16(params->StatsFrequency, 40); //estadisticas de frequencia
+//    BindArrayUInt16(params->StatsTHD, 26);             //estadisticas de distorsion harmonica
+//    BindArrayUInt16(params->StatsHarmonics, 2);                                           //estadisticas de harmonicos en rango
+//    ExecSentence();
+//  }
+
+    
+    
+//    
+//    db->PrepareSentence("INSERT INTO aggreg_3s SELECT * from json_populate_record(null::\"aggreg_3s\", ?)");
+//    db->BindSingleString(json_object_to_json_string(reader));
+//    if(db->ExecSentence() == false) {
+//      *postdata  = (char*)"Can save data";
+//      *resultLen = strlen(*postdata);
+//      return false;
+//    } else {
+//      *writer = json_object_new_object();
+//      json_object_object_add(*writer, "RequiereLive", json_object_new_boolean(false));
+//      *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
+//      return true;
+//    }
+    SaveAggreg(&Params);
+    Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
+  } 
+  
+  
+  
+
+//  char *Table = NULL;
+//  if((json_object_object_get_ex(json, "Table", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Table = (char*)json_object_get_string(Find);
+//  db->PrepareSentence("SET search_path TO ?");
+//  db->BindSingleString(pID);
+//  db->ExecSentence();
+//  if(strcmp("aggreg_3s", Table) == 0) {
+//    db->PrepareSentence("INSERT INTO SELECT * from json_populate_record(null::\"aggreg_3s\", ?)");
+//    db->BindSingleString(json_object_to_json_string(json));
+//    return db->ExecSentence();
+//  }  
   
 //  
 //  if((json_object_object_get_ex(config, "aggreg", &Find) == true) && (json_object_get_type(Find) == json_type_string)) {

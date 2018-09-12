@@ -217,3 +217,32 @@ bool Tools::GetSysInfo(char *user, json_object *reader, Database *db, json_objec
   *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
   return true;
 }
+bool Tools::JSONString(json_object *obj, const char *key, char **dst, bool copy) {
+  json_object *Find;
+  if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_string)) *dst = (copy ? strdup((char*)json_object_get_string(Find)) : (char*)json_object_get_string(Find));
+  return (Find != NULL);
+}
+bool Tools::JSONFloat(json_object *obj, const char *key, float *dst) {
+  json_object *Find;
+  if((json_object_object_get_ex(obj, key, &Find) == true) && ((json_object_get_type(Find) == json_type_double) || (json_object_get_type(Find) == json_type_int))) *dst = json_object_get_double(Find);
+  return (Find != NULL);
+}
+bool Tools::JSONUInt64(json_object *obj, const char *key, uint64_t *dst) {
+  json_object *Find;
+  if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_int)) *dst = json_object_get_int64(Find);
+  return (Find != NULL);
+}
+bool Tools::JSONArrayFloat(json_object* obj, const char* key, float* dst, int len) {
+  json_object *Find;
+  if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
+    if(json_object_array_length(Find) != len) return false;
+    for(int i = 0; i < len; i++) {
+      json_object *Item = json_object_array_get_idx(Find, i);
+      json_type Type = json_object_get_type(Item);
+      if((Type != json_type_double) && (Type != json_type_int)) return false;
+      dst[i] = json_object_get_double(json_object_array_get_idx(Find, i));
+    }
+    return true;
+  }
+  return false;
+}
