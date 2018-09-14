@@ -4,16 +4,10 @@ var NetworksDataset = [];
 var EditingNetwork  = null;
 var WifiSpinner     = new Spinner(SpinnerOpts);
 function AjaxGetNetworks() {
-//  ShowSpinner(WifiSpinner, 'WifiSpinner');
-  $.ajax({ url: "getSysInfo",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Type: 'Connectivity' }),
+  $.ajax({ url: "getNetworks", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({}), 
            success: AjaxNetworks,
            complete: function() {
-             StopSpinner(WifiSpinner, 'WifiSpinner');
+             $('#WifiSpinner').hide();
            }
   });
 }

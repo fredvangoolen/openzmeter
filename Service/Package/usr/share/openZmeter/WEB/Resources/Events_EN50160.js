@@ -49,21 +49,21 @@ function GenerateFreqGraph(week) {
            valueFormatter: function (x) {
              if((x < 0) || (x >= Frequencies.length - 1)) return "";
              if(x === 0) {
-               return "Less than " + Round2(Nodes['NominalFreq'] * (1 + Frequencies[x + 1] / 100.0)) + ' Hz';
+               return "Less than " + Round2(Analyzers[Analyzer].NominalFreq * (1 + Frequencies[x + 1] / 100.0)) + ' Hz';
              } else if(x == (Frequencies.length - 2)) {
-               return "More than " + Round2(Nodes['NominalFreq'] * (1 + Frequencies[x] / 100.0)) + ' Hz';
+               return "More than " + Round2(Analyzers[Analyzer].NominalFreq * (1 + Frequencies[x] / 100.0)) + ' Hz';
              } else {
-               return "From " + Round2(Nodes['NominalFreq'] * (1 + Frequencies[x] / 100.0)) + " to " + Round2(Nodes['NominalFreq'] * (1 + Frequencies[x + 1] / 100.0)) + ' Hz';
+               return "From " + Round2(Analyzers[Analyzer].NominalFreq * (1 + Frequencies[x] / 100.0)) + " to " + Round2(Nodes['NominalFreq'] * (1 + Frequencies[x + 1] / 100.0)) + ' Hz';
              }
            },
            axisLabelFormatter: function (x) {
              if((x < 0) || (x >= Frequencies.length - 1)) return "";
              if(x === 0) {
-               return '<div style="font-size: 10px; line-height: 10px">≤' + Round2(Nodes['NominalFreq'] * (1 + Frequencies[x + 1] / 100.0))+ '</div>';
+               return '<div style="font-size: 10px; line-height: 10px">≤' + Round2(Analyzers[Analyzer].NominalFreq * (1 + Frequencies[x + 1] / 100.0))+ '</div>';
              } else if(x == (Frequencies.length - 2)) {
-               return '<div style="font-size: 10px; line-height: 10px">≥' + Round2(Nodes['NominalFreq'] * (1 + Frequencies[x] / 100.0))+ '</div>';
+               return '<div style="font-size: 10px; line-height: 10px">≥' + Round2(Analyzers[Analyzer].NominalFreq * (1 + Frequencies[x] / 100.0))+ '</div>';
              } else {
-               return '<div style="font-size: 10px; line-height: 10px">' + Round2(Nodes['NominalFreq'] * (1 + Frequencies[x] / 100.0)) + "<br/>" + Round2(Nodes['NominalFreq'] * (1 + Frequencies[x + 1] / 100.0)) + '</div>';
+               return '<div style="font-size: 10px; line-height: 10px">' + Round2(Analyzers[Analyzer].NominalFreq * (1 + Frequencies[x] / 100.0)) + "<br/>" + Round2(Analyzers[Analyzer].NominalFreq * (1 + Frequencies[x + 1] / 100.0)) + '</div>';
              }
            }
          }
@@ -113,21 +113,21 @@ function GenerateVoltGraph(week) {
             valueFormatter: function (x) {
               if((x < 0) || (x >= Voltages.length - 1)) return "";
               if(x === 0) {
-                return "Less than " + Round2(Nodes['NominalVoltage'] * (1 + Voltages[x + 1] / 100.0)) + ' V';
+                return "Less than " + Round2(Analyzers[Analyzer].NominalVoltage * (1 + Voltages[x + 1] / 100.0)) + ' V';
               } else if(x == (Voltages.length - 2)) {
-                return "More than " + Round2(Nodes['NominalVoltage'] * (1 + Voltages[x] / 100.0)) + ' V';
+                return "More than " + Round2(Analyzers[Analyzer].NominalVoltage * (1 + Voltages[x] / 100.0)) + ' V';
               } else {
-                return "From " + Round2(Nodes['NominalVoltage'] * (1 + Voltages[x] / 100.0)) + " to " + Round2(Nodes['NominalVoltage'] * (1 + Voltages[x + 1] / 100.0)) + ' V';
+                return "From " + Round2(Analyzers[Analyzer].NominalVoltage * (1 + Voltages[x] / 100.0)) + " to " + Round2(Analyzers[Analyzer].NominalVoltage * (1 + Voltages[x + 1] / 100.0)) + ' V';
               }
             },
             axisLabelFormatter: function (x) {
               if((x < 0) || (x >= Voltages.length - 1)) return "";
               if(x === 0) {
-                return '<div style="font-size: 10px; line-height: 10px">≤' + Round2(Nodes['NominalVoltage'] * (1 + Voltages[x + 1] / 100.0))+ '</div>';
+                return '<div style="font-size: 10px; line-height: 10px">≤' + Round2(Analyzers[Analyzer].NominalVoltage * (1 + Voltages[x + 1] / 100.0))+ '</div>';
               } else if(x == (Voltages.length - 2)) {
-                return '<div style="font-size: 10px; line-height: 10px">≥' + Round2(Nodes['NominalVoltage'] * (1 + Voltages[x] / 100.0))+ '</div>';
+                return '<div style="font-size: 10px; line-height: 10px">≥' + Round2(Analyzers[Analyzer].NominalVoltage * (1 + Voltages[x] / 100.0))+ '</div>';
               } else {
-                return '<div style="font-size: 10px; line-height: 10px">' + Round2(Nodes['NominalVoltage'] * (1 + Voltages[x] / 100.0)) + "<br/>" + Round2(Nodes['NominalVoltage'] * (1 + Voltages[x + 1] / 100.0)) + '</div>';
+                return '<div style="font-size: 10px; line-height: 10px">' + Round2(Analyzers[Analyzer].NominalVoltage * (1 + Voltages[x] / 100.0)) + "<br/>" + Round2(Analyzers[Analyzer].NominalVoltage * (1 + Voltages[x + 1] / 100.0)) + '</div>';
               }
             }
           }
@@ -232,13 +232,7 @@ function GenerateEventsGraph(week) {
 function AjaxGetEvents(selected_year) {
   var From = new Date(selected_year, 0, 1, 0, 0, 0, 0).getTime();
   var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
-  $.ajax({ url: "getEvents",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: To - From, To: To, LastEvent: 0, Node: 0 }),
-           success: function(result) {
+  Ajax.GetEvents(To - From, To, 0, function(result) {
              WeekStats = [];
              if(result['Starttime'] != null) {
                if(WeekStats[0] === undefined) InitWeek(0, new Date(selected_year, 0, 1, 0, 0, 0, 0), new Date(selected_year, 11, 31, 23, 59, 59, 999));
@@ -266,7 +260,7 @@ function AjaxGetEvents(selected_year) {
                }
              }
              GetStatsData(selected_year);
-           }
+       
          });  
 }
 function InitWeek(week, start, end) {
@@ -296,13 +290,7 @@ function GetStatsData(selected_year) {
   $('#btnSelYear' + selected_year).addClass('active');
   var From = new Date(selected_year, 0, 1, 0, 0, 0, 0).getTime();
   var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
-  $.ajax({ url: "getSeries",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: To - From, To: To, Aggreg: "1h", LastSample: 0, Series: 'stat_frequency, stat_voltage, stat_thd, stat_harmonics', Node: Node }),
-           success: function(result) {
+  Ajax.GetSeries(To - From, To, '1h', 0, 'stat_frequency, stat_voltage, stat_thd, stat_harmonics', function(result) {
              $('#ProgressYear').css('width', ((result['Sampletime'][result['Sampletime'].length - 1] - new Date(Date.UTC(selected_year, 0, 1, 0, 0, 0, 0)).getTime()) * 100 / 31536000000)  +'%');
              if(WeekStats[0] === undefined) InitWeek(0, new Date(selected_year, 0, 1, 0, 0, 0, 0), new Date(selected_year, 11, 31, 23, 59, 59, 999));
              for(i = 0; i < result['Sampletime'].length - 1; i++) {
@@ -356,8 +344,8 @@ function GetStatsData(selected_year) {
                $('#WeekList').append('<button type="button" class="btn btn-default btn-xs" id="btnWeek_' + Week + '" onclick="LoadWeek(' + Week + ')" data-toggle="tooltip" title="From ' + WeekStats[Week].Start.toLocaleDateString() + " to " + WeekStats[Week].End.toLocaleDateString() + '">' + ((Week == 0) ? 'Totals' : Week) + (InRange ? '' : ' <i class="fa fa-warning"></i>') + '</button>');
              }
              LoadWeek(0);
-//             StopSpinner(Spinner, 'EN50160Spinner');
-           }
+             $('#EN50160Spinner').hide();
+           
          });
 }
 function LoadWeek(week) {
@@ -372,7 +360,7 @@ function LoadWeek(week) {
 function UpdatePage() {
   $('#GridNominalFreq').text(Analyzers[Analyzer].NominalFreq);
   $('#GridNominalVoltage').text(Analyzers[Analyzer].NominalVoltage);
-  GetSeriesRange('1h', 
+  Ajax.GetSeriesRange('1h',
     function(result) {
       for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) $('#YearSelector').append('<button type="button" class="btn btn-default btn-xs" id="btnSelYear' + year + '" onclick="AjaxGetEvents(' + year + ')">' + year + '</button>');
       AjaxGetEvents(new Date(result['To']).getFullYear());

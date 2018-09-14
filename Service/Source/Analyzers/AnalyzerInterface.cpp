@@ -29,6 +29,9 @@ AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nomi
   ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_stat_1h (sampletime bigint NOT NULL PRIMARY KEY REFERENCES aggreg_1h(sampletime), stat_voltage int[] NOT NULL, stat_frequency int[] NOT NULL, stat_thd int[] NOT NULL, stat_harmonics int[] NOT NULL) WITH (OIDS=FALSE)");
   ExecSentence("CREATE TABLE IF NOT EXISTS events (eventtime bigint NOT NULL PRIMARY KEY, duration  bigint NOT NULL, samplerate real, type character varying(16), voltage real, percent real, samples real[]) WITH (OIDS=FALSE)");
 }
+float AnalyzerInterface::GetMaxCurrent() {
+  return pMaxCurrent;
+}
 char *AnalyzerInterface::GetID() {
   return pID;
 }

@@ -27,6 +27,10 @@ FILE        *Tools::pLogFile     = NULL;
 json_object *Tools::pConfig      = NULL;
 char        *Tools::pPidFile     = NULL;
 pthread_mutex_t Tools::pLogMutex = PTHREAD_MUTEX_INITIALIZER;
+
+uint8_t Tools::pBatteryLevel = 0;
+bool Tools::pBatteryCharging = false;
+bool Tools::pExternalPower = false;
 //----------------------------------------------------------------------------------------------------------------------
 void Tools::RegisterHandlers(void (*function)(int)) {
   signal(SIGINT, function);
@@ -207,7 +211,9 @@ bool Tools::GetSysInfo(char *user, json_object *reader, Database *db, json_objec
   json_object_object_add(*writer, "CPU_Count", json_object_new_int(get_nprocs()));
   json_object_object_add(*writer, "Disk_Total", json_object_new_int64((uint64_t)Disk.f_blocks * Disk.f_frsize));
   json_object_object_add(*writer, "Disk_Free", json_object_new_int64((uint64_t)Disk.f_bfree * Disk.f_frsize));
-  json_object_object_add(*writer, "Battery_Percent", json_object_new_int(100));
+  json_object_object_add(*writer, "Battery_Percent", json_object_new_int(pBatteryLevel));
+  json_object_object_add(*writer, "Battery_Charging", json_object_new_boolean(pBatteryCharging));
+  json_object_object_add(*writer, "External_Power", json_object_new_boolean(pExternalPower));
   int TempFile = open("/sys/class/thermal/thermal_zone0/temp", O_RDONLY);
   if(TempFile > 0) {
     char Temp[16];

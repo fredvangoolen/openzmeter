@@ -3,27 +3,33 @@
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="Source" displayName="Source" projectFiles="true">
       <logicalFolder name="Analyzers" displayName="Analyzers" projectFiles="true">
+        <itemPath>Source/Analyzers/AnalyzerInterface.cpp</itemPath>
+        <itemPath>Source/Analyzers/AnalyzerInterface.h</itemPath>
         <itemPath>Source/Analyzers/AnalyzerRemote.cpp</itemPath>
         <itemPath>Source/Analyzers/AnalyzerRemote.h</itemPath>
         <itemPath>Source/Analyzers/AnalyzerSoft.cpp</itemPath>
         <itemPath>Source/Analyzers/AnalyzerSoft.h</itemPath>
       </logicalFolder>
-      <logicalFolder name="Drivers" displayName="Drivers" projectFiles="true">
-        <itemPath>Source/Drivers/DeviceRemote.cpp</itemPath>
-        <itemPath>Source/Drivers/DeviceRemote.h</itemPath>
-        <itemPath>Source/Drivers/DeviceV1.cpp</itemPath>
-        <itemPath>Source/Drivers/DeviceV1.h</itemPath>
-        <itemPath>Source/Drivers/DeviceV2.cpp</itemPath>
-        <itemPath>Source/Drivers/DeviceV2.h</itemPath>
-        <itemPath>Source/Drivers/DeviceVirtual.cpp</itemPath>
-        <itemPath>Source/Drivers/DeviceVirtual.h</itemPath>
+      <logicalFolder name="Devices" displayName="Devices" projectFiles="true">
+        <itemPath>Source/Devices/DeviceInterface.cpp</itemPath>
+        <itemPath>Source/Devices/DeviceInterface.h</itemPath>
+        <itemPath>Source/Devices/DeviceRemote.cpp</itemPath>
+        <itemPath>Source/Devices/DeviceRemote.h</itemPath>
+        <itemPath>Source/Devices/DeviceV1.cpp</itemPath>
+        <itemPath>Source/Devices/DeviceV1.h</itemPath>
+        <itemPath>Source/Devices/DeviceV2.cpp</itemPath>
+        <itemPath>Source/Devices/DeviceV2.h</itemPath>
+        <itemPath>Source/Devices/DeviceVirtual.cpp</itemPath>
+        <itemPath>Source/Devices/DeviceVirtual.h</itemPath>
       </logicalFolder>
-      <itemPath>Source/AnalyzerInterface.cpp</itemPath>
-      <itemPath>Source/AnalyzerInterface.h</itemPath>
+      <logicalFolder name="Prices" displayName="Prices" projectFiles="true">
+        <itemPath>Source/Prices/ESIOS.cpp</itemPath>
+        <itemPath>Source/Prices/ESIOS.h</itemPath>
+        <itemPath>Source/Prices/PricesInterface.cpp</itemPath>
+        <itemPath>Source/Prices/PricesInterface.h</itemPath>
+      </logicalFolder>
       <itemPath>Source/Database.cpp</itemPath>
       <itemPath>Source/Database.h</itemPath>
-      <itemPath>Source/DeviceInterface.cpp</itemPath>
-      <itemPath>Source/DeviceInterface.h</itemPath>
       <itemPath>Source/Events.cpp</itemPath>
       <itemPath>Source/Events.h</itemPath>
       <itemPath>Source/FFT.cpp</itemPath>
@@ -468,6 +474,12 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -479,9 +491,15 @@
                             mandatory="false"/>
         </packInfoList>
       </packaging>
-      <item path="Source/AnalyzerInterface.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Analyzers/AnalyzerInterface.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
       </item>
-      <item path="Source/AnalyzerInterface.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Analyzers/AnalyzerInterface.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="Source/Analyzers/AnalyzerRemote.cpp"
             ex="false"
@@ -498,25 +516,25 @@
       </item>
       <item path="Source/Database.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/DeviceInterface.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Devices/DeviceInterface.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/DeviceInterface.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Devices/DeviceInterface.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceRemote.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Devices/DeviceRemote.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceRemote.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Devices/DeviceRemote.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceV1.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Devices/DeviceV1.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceV1.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Devices/DeviceV1.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceV2.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Devices/DeviceV2.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceV2.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Devices/DeviceV2.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceVirtual.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Devices/DeviceVirtual.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceVirtual.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Devices/DeviceVirtual.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/Events.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -539,6 +557,14 @@
       <item path="Source/Prices.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Source/Prices.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Source/Prices/ESIOS.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Source/Prices/ESIOS.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Source/Prices/PricesInterface.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Source/Prices/PricesInterface.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -1015,6 +1041,12 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
         <packInfoList>
           <packInfoListElem name="Package" value="openZmeter" mandatory="true"/>
@@ -1026,9 +1058,15 @@
                             mandatory="false"/>
         </packInfoList>
       </packaging>
-      <item path="Source/AnalyzerInterface.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Analyzers/AnalyzerInterface.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
       </item>
-      <item path="Source/AnalyzerInterface.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Analyzers/AnalyzerInterface.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="Source/Analyzers/AnalyzerRemote.cpp"
             ex="false"
@@ -1045,25 +1083,25 @@
       </item>
       <item path="Source/Database.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/DeviceInterface.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Devices/DeviceInterface.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/DeviceInterface.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Devices/DeviceInterface.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceRemote.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Devices/DeviceRemote.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceRemote.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Devices/DeviceRemote.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceV1.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Devices/DeviceV1.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceV1.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Devices/DeviceV1.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceV2.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Devices/DeviceV2.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceV2.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Devices/DeviceV2.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceVirtual.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Devices/DeviceVirtual.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Source/Drivers/DeviceVirtual.h" ex="false" tool="3" flavor2="0">
+      <item path="Source/Devices/DeviceVirtual.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/Events.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -1084,6 +1122,14 @@
       <item path="Source/NetworkManager.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/Prices.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Source/Prices/ESIOS.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Source/Prices/ESIOS.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Source/Prices/PricesInterface.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Source/Prices/PricesInterface.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="0">
       </item>

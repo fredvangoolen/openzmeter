@@ -35,20 +35,22 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/Source/AnalyzerInterface.o \
+	${OBJECTDIR}/Source/Analyzers/AnalyzerInterface.o \
 	${OBJECTDIR}/Source/Analyzers/AnalyzerRemote.o \
 	${OBJECTDIR}/Source/Analyzers/AnalyzerSoft.o \
 	${OBJECTDIR}/Source/Database.o \
-	${OBJECTDIR}/Source/DeviceInterface.o \
-	${OBJECTDIR}/Source/Drivers/DeviceRemote.o \
-	${OBJECTDIR}/Source/Drivers/DeviceV1.o \
-	${OBJECTDIR}/Source/Drivers/DeviceV2.o \
-	${OBJECTDIR}/Source/Drivers/DeviceVirtual.o \
+	${OBJECTDIR}/Source/Devices/DeviceInterface.o \
+	${OBJECTDIR}/Source/Devices/DeviceRemote.o \
+	${OBJECTDIR}/Source/Devices/DeviceV1.o \
+	${OBJECTDIR}/Source/Devices/DeviceV2.o \
+	${OBJECTDIR}/Source/Devices/DeviceVirtual.o \
 	${OBJECTDIR}/Source/FFT.o \
 	${OBJECTDIR}/Source/HTTPServer.o \
 	${OBJECTDIR}/Source/Main.o \
 	${OBJECTDIR}/Source/NetworkManager.o \
 	${OBJECTDIR}/Source/Prices.o \
+	${OBJECTDIR}/Source/Prices/ESIOS.o \
+	${OBJECTDIR}/Source/Prices/PricesInterface.o \
 	${OBJECTDIR}/Source/Tools.o \
 	${OBJECTDIR}/Source/ZeroCrossing.o
 
@@ -77,9 +79,9 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter ${OBJECTFILES} ${LDLIBSOPTIONS} -lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ldbus-1 -ljson-c -lz -lcurl -s
 
-${OBJECTDIR}/Source/AnalyzerInterface.o: Source/AnalyzerInterface.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/AnalyzerInterface.o Source/AnalyzerInterface.cpp
+${OBJECTDIR}/Source/Analyzers/AnalyzerInterface.o: Source/Analyzers/AnalyzerInterface.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source/Analyzers
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Analyzers/AnalyzerInterface.o Source/Analyzers/AnalyzerInterface.cpp
 
 ${OBJECTDIR}/Source/Analyzers/AnalyzerRemote.o: Source/Analyzers/AnalyzerRemote.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Analyzers
@@ -93,25 +95,25 @@ ${OBJECTDIR}/Source/Database.o: Source/Database.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Database.o Source/Database.cpp
 
-${OBJECTDIR}/Source/DeviceInterface.o: Source/DeviceInterface.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/DeviceInterface.o Source/DeviceInterface.cpp
+${OBJECTDIR}/Source/Devices/DeviceInterface.o: Source/Devices/DeviceInterface.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source/Devices
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceInterface.o Source/Devices/DeviceInterface.cpp
 
-${OBJECTDIR}/Source/Drivers/DeviceRemote.o: Source/Drivers/DeviceRemote.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source/Drivers
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Drivers/DeviceRemote.o Source/Drivers/DeviceRemote.cpp
+${OBJECTDIR}/Source/Devices/DeviceRemote.o: Source/Devices/DeviceRemote.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source/Devices
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceRemote.o Source/Devices/DeviceRemote.cpp
 
-${OBJECTDIR}/Source/Drivers/DeviceV1.o: Source/Drivers/DeviceV1.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source/Drivers
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Drivers/DeviceV1.o Source/Drivers/DeviceV1.cpp
+${OBJECTDIR}/Source/Devices/DeviceV1.o: Source/Devices/DeviceV1.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source/Devices
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceV1.o Source/Devices/DeviceV1.cpp
 
-${OBJECTDIR}/Source/Drivers/DeviceV2.o: Source/Drivers/DeviceV2.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source/Drivers
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Drivers/DeviceV2.o Source/Drivers/DeviceV2.cpp
+${OBJECTDIR}/Source/Devices/DeviceV2.o: Source/Devices/DeviceV2.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source/Devices
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceV2.o Source/Devices/DeviceV2.cpp
 
-${OBJECTDIR}/Source/Drivers/DeviceVirtual.o: Source/Drivers/DeviceVirtual.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source/Drivers
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Drivers/DeviceVirtual.o Source/Drivers/DeviceVirtual.cpp
+${OBJECTDIR}/Source/Devices/DeviceVirtual.o: Source/Devices/DeviceVirtual.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source/Devices
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceVirtual.o Source/Devices/DeviceVirtual.cpp
 
 ${OBJECTDIR}/Source/FFT.o: Source/FFT.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
@@ -132,6 +134,14 @@ ${OBJECTDIR}/Source/NetworkManager.o: Source/NetworkManager.cpp
 ${OBJECTDIR}/Source/Prices.o: Source/Prices.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Prices.o Source/Prices.cpp
+
+${OBJECTDIR}/Source/Prices/ESIOS.o: Source/Prices/ESIOS.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source/Prices
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Prices/ESIOS.o Source/Prices/ESIOS.cpp
+
+${OBJECTDIR}/Source/Prices/PricesInterface.o: Source/Prices/PricesInterface.cpp
+	${MKDIR} -p ${OBJECTDIR}/Source/Prices
+	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Prices/PricesInterface.o Source/Prices/PricesInterface.cpp
 
 ${OBJECTDIR}/Source/Tools.o: Source/Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source

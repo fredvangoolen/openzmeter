@@ -11,7 +11,24 @@
 pthread_mutex_t NetworkManager::pMutex = PTHREAD_MUTEX_INITIALIZER;
 const uint32_t  NetworkManager::NM_DEVICE_TYPE_WIFI = 2;
 //----------------------------------------------------------------------------------------------------------------------
- DBusConnection *NetworkManager::CreateConnection() {
+bool NetworkManager::GetNetworksCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+  DBusConnection *DBus = CreateConnection();
+  if(DBus == NULL) return NULL;  
+  *writer = json_object_new_object();
+  json_object *AccessPoints = json_object_new_array();
+  SendGetDevices(DBus, AccessPoints);
+  json_object_object_add(*writer, "AccessPoints", AccessPoints);
+  json_object *ActiveConnections = json_object_new_array();
+  SendGetActiveConnections(DBus, ActiveConnections);
+  json_object_object_add(*writer, "ActiveConnections", ActiveConnections);
+  json_object *Settings = json_object_new_array();
+  SendGetSettingsPaths(DBus, Settings);
+  json_object_object_add(*writer, "Settings", Settings);
+  dbus_connection_unref(DBus);
+  *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
+  return true;  
+}
+DBusConnection *NetworkManager::CreateConnection() {
   DBusError Error;
   dbus_error_init(&Error);
   DBusConnection *DBus = dbus_bus_get(DBUS_BUS_SYSTEM, &Error);
@@ -44,22 +61,6 @@ void NetworkManager::Reset() {
   sleep(1);
   pthread_mutex_unlock(&pMutex);
   dbus_connection_unref(DBus);
-}
-json_object *NetworkManager::GetJSONNetworks() {
-  DBusConnection *DBus = CreateConnection();
-  if(DBus == NULL) return NULL;  
-  json_object *Result = json_object_new_object();
-  json_object *AccessPoints = json_object_new_array();
-  SendGetDevices(DBus, AccessPoints);
-  json_object_object_add(Result, "AccessPoints", AccessPoints);
-  json_object *ActiveConnections = json_object_new_array();
-  SendGetActiveConnections(DBus, ActiveConnections);
-  json_object_object_add(Result, "ActiveConnections", ActiveConnections);
-  json_object *Settings = json_object_new_array();
-  SendGetSettingsPaths(DBus, Settings);
-  json_object_object_add(Result, "Settings", Settings);
-  dbus_connection_unref(DBus);
-  return Result;
 }
 uint8_t NetworkManager::GetConnectivityStatus() {
   DBusConnection *DBus = CreateConnection();

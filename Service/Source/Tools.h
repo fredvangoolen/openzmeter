@@ -7,7 +7,11 @@
 #include "Database.h"
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
-  private :
+  public :
+      static uint8_t pBatteryLevel;
+      static bool pBatteryCharging;
+      static bool pExternalPower;
+  private :      
     static bool            pDaemonized;
     static FILE           *pLogFile;
     static pthread_mutex_t pLogMutex;

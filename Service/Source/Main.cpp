@@ -58,12 +58,15 @@ int main(int argc, char** argv) {
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
   }
   Tools::RegisterHandlers(SignalHandler);
-  HTTPServer::RegisterCallback((char*)"/getSysInfo",      Tools::GetSysInfo);
-  HTTPServer::RegisterCallback((char*)"/getAnalyzers",    DeviceInterface::GetAnalyzersCallback);
-  HTTPServer::RegisterCallback((char*)"/getSeries",       DeviceInterface::GetSeriesCallback);
-  HTTPServer::RegisterCallback((char*)"/getSeriesAggreg", DeviceInterface::GetSeriesAggregCallback);
-  HTTPServer::RegisterCallback((char*)"/getSeriesNow",    DeviceInterface::GetSeriesNowCallback);
-  HTTPServer::RegisterCallback((char*)"/getSeriesRange",  DeviceInterface::GetSeriesRangeCallback);
+  HTTPServer::RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
+  HTTPServer::RegisterCallback("/getAnalyzers",        DeviceInterface::GetAnalyzersCallback);
+  HTTPServer::RegisterCallback("/getSeries",           DeviceInterface::GetSeriesCallback);
+  HTTPServer::RegisterCallback("/getSeriesAggreg",     DeviceInterface::GetSeriesAggregCallback);
+  HTTPServer::RegisterCallback("/getSeriesNow",        DeviceInterface::GetSeriesNowCallback);
+  HTTPServer::RegisterCallback("/getSeriesRange",      DeviceInterface::GetSeriesRangeCallback);
+  HTTPServer::RegisterCallback("/getEvents",           DeviceInterface::GetEventsCallback);
+  HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
+  
   
   HTTPServer::RegisterDefault((char*)"/Dashboard");
   HTTPServer::RegisterMapping((char*)"/Dashboard",            (char*)"Dashboard.html");

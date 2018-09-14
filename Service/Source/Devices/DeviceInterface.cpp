@@ -140,6 +140,8 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS \"Sampletime\" FROM ");
   if(strcmp(Aggreg, "1m") == 0) {
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m) AS Tmp");
+  } else if(strcmp(Aggreg, "1h") == 0) {
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1h NATURAL LEFT JOIN aggreg_stat_1h) AS Tmp");
   } else {
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "aggreg_%s", Aggreg);
   }
@@ -273,6 +275,37 @@ bool DeviceInterface::GetSeriesRangeCallback(char *user, json_object *reader, Da
   db->ExecSentence();
   char QueryText[8192];
   snprintf(QueryText, sizeof(QueryText), "SELECT row_to_json(Result) AS result FROM ( SELECT max(sampletime) AS \"To\", min(sampletime) AS \"From\" FROM aggreg_%s) AS Result", Aggreg);
+  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
+  return true;
+}
+bool DeviceInterface::GetEventsCallback(char* user, json_object* reader, Database* db, json_object** writer, char** postdata, size_t* resultLen) {
+  uint64_t LastEvent = 0, From = 0, To = 0, Period = 0;
+  char    *Analyzer = NULL;
+  if(Tools::JSONString(reader, "Analyzer", &Analyzer, false) == false) {
+    *postdata  = (char*)"'Analyzer' param is requiered";
+    *resultLen = strlen(*postdata);
+    return false;
+  }
+  Tools::JSONUInt64(reader, "LastEvent", &LastEvent);
+  Tools::JSONUInt64(reader, "To", &To);
+  Tools::JSONUInt64(reader, "Period", &Period);
+  if(To == 0) To = Tools::GetTime();
+  From = To - Period;
+  char QueryText[8192];
+  int  QueryLen = 0;
+  db->PrepareSentence("SET search_path TO ?");
+  db->BindSingleString(Analyzer);
+  db->ExecSentence();
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\", ", To); 
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(eventtime ORDER BY eventtime ASC) AS \"Starttime\", ");
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(duration ORDER BY eventtime ASC) AS \"Duration\", ");
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(samplerate ORDER BY eventtime ASC) AS \"SampleRate\", ");
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(type ORDER BY eventtime ASC) AS \"Type\", ");
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(voltage ORDER BY eventtime ASC) AS \"Voltage\", ");
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(percent ORDER BY eventtime ASC) AS \"Percentage\" ");
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE eventtime > %" PRIu64 " AND eventtime >= %" PRIu64 " AND eventtime <= %" PRIu64 ") AS Result", LastEvent, From, To);
   *postdata = db->ExecSentenceJSON(QueryText, resultLen);
   return true;
 }

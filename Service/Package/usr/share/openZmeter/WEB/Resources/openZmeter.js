@@ -31,12 +31,12 @@ $(document).on("mousedown", ":button", function(e) { e.preventDefault(); this.bl
 
 /* Ajax functions */
 var Ajax = {
-  GetSeries: function(period, to, aggreg, lastsample, series, onSuccess, onCompletion) { $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Analyzers[Analyzer].ID } ) }); },
-  GetSeriesRange: function(aggreg, onSuccess, onCompletion) { $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify({ Aggreg: '1h', Analyzer: Analyzers[Analyzer].ID}) }); },
-  GetSeriesNow: function(series, onSuccess, onCompletion) { $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Series: series, Analyzer: Analyzers[Analyzer].ID} ) }); },
-  GetSeriesAggreg: function(period, to, aggreg, series, onSuccess, onCompletion) { $.ajax({ url: "getSeriesAggreg", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, Series: series, Analyzer: Analyzers[Analyzer].ID } ) }); }  
+  GetSeries: function(period, to, aggreg, lastsample, series, onSuccess, onCompletion) { return $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Analyzers[Analyzer].ID } ) }); },
+  GetSeriesRange: function(aggreg, onSuccess, onCompletion) { return $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify({ Aggreg: '1h', Analyzer: Analyzers[Analyzer].ID}) }); },
+  GetSeriesNow: function(series, onSuccess, onCompletion) { return $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Series: series, Analyzer: Analyzers[Analyzer].ID} ) }); },
+  GetSeriesAggreg: function(period, to, aggreg, series, onSuccess, onCompletion) { return $.ajax({ url: "getSeriesAggreg", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, Series: series, Analyzer: Analyzers[Analyzer].ID } ) }); }  ,
+  GetEvents: function(period, to, lastevent, onSuccess, onCompletion) { return $.ajax({ url: "getEvents", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, LastEvent: lastevent, Analyzer: Analyzers[Analyzer].ID } ) }); }  
 };
-
 
 /* Return full text from aggregation short name */
 function GetAggregLongName(shortText) {

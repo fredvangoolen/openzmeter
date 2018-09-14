@@ -13,7 +13,7 @@ class AnalyzerInterface : protected Database {
     static const float VoltageRanges[];     //Rangos de tensiones para estadisticas
     static const float THDRanges[];         //Rangos de distorsion harmonica para estadisticas
     static const float HarmonicsAllowed[];  //Rangos permitidos para cada harmonico
-  protected :
+  public :
     typedef struct {
       AggregType Type;                          //Tipo de agregacion
       uint64_t   Timestamp;                     //Timestamp de la muestra inicial
@@ -57,11 +57,11 @@ class AnalyzerInterface : protected Database {
   protected :
     void ResetAggreg(Params_t *params);
     void SaveAggreg(Params_t *params);
-  protected :
+  public :
     virtual void GetParams(Params_t *params, ExtParams_t *extParams) = 0;
   public :
     AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode);
-    void        *GetParams();
+    float        GetMaxCurrent();
     float        GetNominalVoltage();
     float        GetNominalFrequency();
     char        *GetID();

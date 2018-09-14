@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="openZmeter.css"/>
     <title>openZmeter - Stats</title>
   </head>
-  <body>
+  <body onload="StartPageLoad()">
     <span data-load-block="Header_Block"></span>
     <div class="modal fade" id="NetworkModal" tabindex="-1" role="dialog" data-backdrop='static'>
       <div class="modal-dialog">
@@ -599,8 +599,5 @@
     <script src="lib/momentjs/moment-duration-format.js"></script>
     <script src="openZmeter.js"></script>
     <script src="Settings.js"></script>
-    <script>
-      StartPageLoad();
-    </script>
   </body>
 </html>

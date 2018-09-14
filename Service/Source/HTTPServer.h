@@ -24,8 +24,8 @@ class HTTPServer {
       json_object    *JSONWriter;
     } Request_t;
     typedef struct {
-      char   *HandleName;
-      Func_t  Function;
+      const char *HandleName;
+      Func_t      Function;
     } Callback_t;
     typedef struct {
       char *URL;
@@ -53,7 +53,7 @@ class HTTPServer {
   public :
     static bool Config(json_object *config);
     static void RegisterDefault(char *def);
-    static void RegisterCallback(char *handleName, Func_t function);
+    static void RegisterCallback(const char *handleName, Func_t function);
     static void RegisterMapping(char *url, char *file);
     static void Stop();
     static void RemoveExpiredSessions();

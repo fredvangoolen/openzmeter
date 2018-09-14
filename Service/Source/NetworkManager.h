@@ -29,7 +29,8 @@ class NetworkManager {
   public :
     static void         Reset();
     static uint8_t      GetConnectivityStatus();
+    static bool     GetNetworksCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
     static bool         SetJSONNetworkConfig(json_object *json);
-    static json_object *GetJSONNetworks();
+
 };
 

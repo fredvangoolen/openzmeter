@@ -365,13 +365,14 @@ function GenerateGraphs(min, max) {
   } else {
     ITICGraph.updateOptions({'file': ByITIC, valueRange: [0, 200], dateWindow: [1, 20000]});
   }
+  $('#EventSpinner').hide();
 }
 function ITICResizeEvent() {
   var Height = $('#SubGraphsDiv').height();
   if(ITICGraph != null) ITICGraph.resize($('#ITICDiv').width(), Height);
 }
 function CreateVoltageRangeSelector(result) {
-  VoltageData.push([new Date(result['From']), Nodes['NominalVoltage']]);
+  VoltageData.push([new Date(result['From']), Analyzers[Analyzer].NominalVoltage]);
   for(i = 0; i < result['Sampletime'].length; i++) {
     var Max = -Infinity;
     for(n = 0; n < result['rms_v'][i].length; n++) Max = Math.max(Max, result['rms_v'][i][n]);
@@ -417,31 +418,13 @@ function CreateVoltageRangeSelector(result) {
   ButtonsClick();
 }
 function GetEvents() {
-  $.ajax({ url: "getEvents",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: 31536000000, To: 0, LastEvent: 0, Node: 0 }),
-           success: function(result) {
-             if(result['Starttime'] !== null) {
-               for(i = 0; i < result['Starttime'].length; i++) EventsData.push([result['Starttime'][i], result['Duration'][i] / 15.6250, result['Type'][i], result['Voltage'][i], result['Percentage'][i]]);
-             }
-             GetVoltageData();
-           }
-         });  
+  Ajax.GetEvents(31536000000, 0, 0, function(result) {
+    if(result['Starttime'] !== null) {
+      for(i = 0; i < result['Starttime'].length; i++) EventsData.push([result['Starttime'][i], result['Duration'][i] / 15.6250, result['Type'][i], result['Voltage'][i], result['Percentage'][i]]);
+    }
+    Ajax.GetSeries(31536000000, 0, '1h', 0, 'rms_v', CreateVoltageRangeSelector);
+  });  
 }
-function GetVoltageData() {
-  $.ajax({ url: "getSeries",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: 31536000000, To: 0, Aggreg: "1h", LastSample: 0, Series: 'rms_v', Node: Node }),
-           success: CreateVoltageRangeSelector
-         });
-}
-
 /* Seleccion rapida de periodo */
 function ButtonsClick() {
   $('#btnShowEventYear').removeClass('active');
