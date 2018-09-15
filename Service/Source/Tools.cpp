@@ -89,7 +89,7 @@ bool Tools::CreatePidFile(char *name) {
     LogMsg("WARN", "Can not create PID file (%d)\n", errno);
     return true;
   }
-  ssize_t i = write(File, PID_Number, Len);
+  write(File, PID_Number, Len);
   close(File);
   return true;
 }
@@ -236,6 +236,11 @@ bool Tools::JSONFloat(json_object *obj, const char *key, float *dst) {
 bool Tools::JSONUInt64(json_object *obj, const char *key, uint64_t *dst) {
   json_object *Find;
   if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_int)) *dst = json_object_get_int64(Find);
+  return (Find != NULL);
+}
+bool Tools::JSONUInt32(json_object *obj, const char *key, uint32_t *dst) {
+  json_object *Find;
+  if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_int)) *dst = json_object_get_int(Find);
   return (Find != NULL);
 }
 bool Tools::JSONArrayFloat(json_object* obj, const char* key, float* dst, int len) {

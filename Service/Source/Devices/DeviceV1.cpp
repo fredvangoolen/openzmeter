@@ -16,6 +16,8 @@
 #include <sys/time.h>
 #include "DeviceV1.h"
 #include "Tools.h"
+//======================================================================================================================
+bool DeviceV1::pClassRegistered = DeviceInterface::RegisterType("V1", DeviceV1::CreateInstance);
 // Funciones ===========================================================================================================
 void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV1 *This = (DeviceV1*)transfer->user_data;
@@ -207,10 +209,10 @@ void *DeviceV1::Signal_Thread(void* args) {
     if(Params.RMS_V[0] > ((1.0 + (6.0 / 60.0)) * This->pAnalyzer->GetNominalVoltage())) Voltage |= 1 << 12;
     if(Params.Flag == true) {
       Beep = 50;
-      if(Toogle == true) Voltage == 0x0000;
+      if(Toogle == true) Voltage = 0x0000;
       Toogle = !Toogle;  
     }
-    uint8_t Write[5] = {Current & 0xFF, Current >> 8, Voltage & 0xFF, Voltage >> 8, Beep};
+    uint8_t Write[5] = {(uint8_t)(Current & 0xFF), (uint8_t)(Current >> 8), Voltage & 0xFF, Voltage >> 8, Beep};
     libusb_control_transfer(This->pDeviceHandle, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0xFF, 0x0000, 0x0000, Write, sizeof(Write), 0);
     uint8_t Read[2];
     libusb_control_transfer(This->pDeviceHandle, LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0xFE, 0x0000, 0x0000, Read, sizeof(Read), 0);
@@ -222,62 +224,66 @@ void *DeviceV1::Signal_Thread(void* args) {
     //Envio transferencia de control
     //Leo datos, si hay algun boton pulsado llamo a los scripts!
   }
+  return NULL;
 }
 AnalyzerInterface *DeviceV1::FindAnalyzer(char *serial) {
   return (strcmp(serial, pAnalyzer->GetID()) == 0) ? pAnalyzer : NULL;
 }
-DeviceV1::DeviceV1(json_object *config) : DeviceInterface() {
+DeviceInterface *DeviceV1::CreateInstance(json_object *config) {
+  DeviceV1 *This = new DeviceV1();
   Tools::LogMsg("INFO", "Starting DeviceV1 driver...\n");
-  pUsed                  = 0;
-  pBuffLen               = DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ;
-  pVoltageSamples      = (float*)malloc(sizeof(float) * pBuffLen);
-  pCurrentSamples      = (float*)malloc(sizeof(float) * pBuffLen);
-  pReadPos               = 0;
-  pWritePos              = 0;
-  pLastUpdate            = 0;
-  pDeviceHandle          = NULL;
-  pNewDevice             = NULL;
-  pSerial                = (char*)"000000000000000000000000";
-  pVoltageGain           = 1;
-  pCurrentGain           = 1;
-  pVoltageOffset         = 0;
-  pCurrentOffset         = 0;
-  pAnalyzer              = NULL;
-  float NominalVoltage   = 230.0;
-  float NominalFrequency = 50.0;
-  char *Name             = (char*)"Unnamed input";
-  if((pVoltageSamples == NULL) || (pCurrentSamples == NULL)) {
+  This->pUsed                  = 0;
+  This->pBuffLen               = DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ;
+  This->pVoltageSamples        = (float*)malloc(sizeof(float) * This->pBuffLen);
+  This->pCurrentSamples        = (float*)malloc(sizeof(float) * This->pBuffLen);
+  This->pReadPos               = 0;
+  This->pWritePos              = 0;
+  This->pLastUpdate            = 0;
+  This->pDeviceHandle          = NULL;
+  This->pNewDevice             = NULL;
+  This->pSerial                = (char*)"000000000000000000000000";
+  This->pVoltageGain           = 1;
+  This->pCurrentGain           = 1;
+  This->pVoltageOffset         = 0;
+  This->pCurrentOffset         = 0;
+  This->pAnalyzer              = NULL;
+  float NominalVoltage         = 230.0;
+  float NominalFrequency       = 50.0;
+  char *Name                   = (char*)"Unnamed input";
+  if((This->pVoltageSamples == NULL) || (This->pCurrentSamples == NULL)) {
     Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
-    return;
+    return NULL;
   }
   json_object *Find;
-  if((json_object_object_get_ex(config, "Serial", &Find) == true) && (json_object_get_type(Find) == json_type_string)) pSerial = (char*)json_object_get_string(Find);
-  if((json_object_object_get_ex(config, "VoltageGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pVoltageGain = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "VoltageOffset", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pVoltageOffset = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "CurrentGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pCurrentGain = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "CurrentOffset", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pCurrentOffset = json_object_get_double(Find);
+  if((json_object_object_get_ex(config, "Serial", &Find) == true) && (json_object_get_type(Find) == json_type_string)) This->pSerial = (char*)json_object_get_string(Find);
+  if((json_object_object_get_ex(config, "VoltageGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) This->pVoltageGain = json_object_get_double(Find);
+  if((json_object_object_get_ex(config, "VoltageOffset", &Find) == true) && (json_object_get_type(Find) == json_type_double)) This->pVoltageOffset = json_object_get_double(Find);
+  if((json_object_object_get_ex(config, "CurrentGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) This->pCurrentGain = json_object_get_double(Find);
+  if((json_object_object_get_ex(config, "CurrentOffset", &Find) == true) && (json_object_get_type(Find) == json_type_double)) This->pCurrentOffset = json_object_get_double(Find);
   if((json_object_object_get_ex(config, "NominalVoltage", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalVoltage = json_object_get_double(Find);
   if((json_object_object_get_ex(config, "NominalFrequency", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalFrequency = json_object_get_double(Find);  
   if((json_object_object_get_ex(config, "DisplayName", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Name = (char*)json_object_get_string(Find);
-  pAnalyzer = new AnalyzerSoft(DEVICEV1_SAMPLEFREQ, pSerial, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
-  if((json_object_object_get_ex(config, "Remote", &Find) == true) && (json_object_get_type(Find) == json_type_object)) pAnalyzer->ConfigRemote(Find);
+  This->pAnalyzer = new AnalyzerSoft(DEVICEV1_SAMPLEFREQ, This->pSerial, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
+  if((json_object_object_get_ex(config, "Remote", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigRemote(Find);
+  if((json_object_object_get_ex(config, "Prices", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigPrices(Find);
   int Error = libusb_init(NULL);
   if(Error < 0) {
     Tools::LogMsg("ERROR", "Can not open libUSB...\n");
-    return;
+    return NULL;
   }
-  if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
+  if(pthread_create(&This->pCaptureThread, NULL, Capture_Thread, This) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(NULL);
-    return;
+    return NULL;
   }
-  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV1_VID, DEVICEV1_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL);
+  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV1_VID, DEVICEV1_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, This, NULL);
   if(Error < 0) {
     Tools::LogMsg("ERROR", "Fallo al registrar callback de escucha libUSB...\n");
-    pTerminate = true;
-    pthread_join(pCaptureThread, NULL);
-    return;
+    This->pTerminate = true;
+    pthread_join(This->pCaptureThread, NULL);
+    return NULL;
   }
+  return This;
 }
 DeviceV1::~DeviceV1() {
   if(pVoltageSamples) free(pVoltageSamples);

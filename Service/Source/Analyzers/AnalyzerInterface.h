@@ -3,7 +3,10 @@
  * Author:   Eduardo Viciana (2018)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
+#include <vector>
 #include "Database.h"
+//----------------------------------------------------------------------------------------------------------------------
+using namespace std;
 class AnalyzerInterface : protected Database {
   public :
     enum AnalyzerMode {PHASE1, PHASE3, PHASE3N};
@@ -41,8 +44,8 @@ class AnalyzerInterface : protected Database {
     typedef struct {
       float     *Voltage[3];
       float     *Current[4];
-      float     *FFT_V[3];
-      float     *FFT_I[4];
+      vector< vector<float> >     FFT_V;
+      vector< vector<float> >     FFT_I;
     } ExtParams_t;
   protected :
     uint64_t      pLastSave;
@@ -61,6 +64,7 @@ class AnalyzerInterface : protected Database {
     virtual void GetParams(Params_t *params, ExtParams_t *extParams) = 0;
   public :
     AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode);
+    virtual ~AnalyzerInterface();
     float        GetMaxCurrent();
     float        GetNominalVoltage();
     float        GetNominalFrequency();

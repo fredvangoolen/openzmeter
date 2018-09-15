@@ -48,7 +48,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/Source/HTTPServer.o \
 	${OBJECTDIR}/Source/Main.o \
 	${OBJECTDIR}/Source/NetworkManager.o \
-	${OBJECTDIR}/Source/Prices.o \
 	${OBJECTDIR}/Source/Prices/ESIOS.o \
 	${OBJECTDIR}/Source/Prices/PricesInterface.o \
 	${OBJECTDIR}/Source/Tools.o \
@@ -130,10 +129,6 @@ ${OBJECTDIR}/Source/Main.o: Source/Main.cpp
 ${OBJECTDIR}/Source/NetworkManager.o: Source/NetworkManager.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/NetworkManager.o Source/NetworkManager.cpp
-
-${OBJECTDIR}/Source/Prices.o: Source/Prices.cpp
-	${MKDIR} -p ${OBJECTDIR}/Source
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Prices.o Source/Prices.cpp
 
 ${OBJECTDIR}/Source/Prices/ESIOS.o: Source/Prices/ESIOS.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Prices

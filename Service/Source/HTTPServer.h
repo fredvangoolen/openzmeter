@@ -3,11 +3,13 @@
  * Author:   Eduardo Viciana (20 de marzo de 2017)
  * ---------------------------------------------------------------------------- */
 #pragma once
+#include <vector>
 #include <stdlib.h>
 #include <json-c/json.h>
 #include <microhttpd.h>
 #include "Database.h"
 //----------------------------------------------------------------------------------------------------------------------
+using namespace std;
 class HTTPServer {
   public :
   typedef bool (*Func_t)(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
@@ -32,13 +34,11 @@ class HTTPServer {
       char *File;
     } Mapping_t;
   private:
-    static MHD_Daemon     *pDaemon;
-    static char           *pFilePath;
-    static Callback_t     *pCallbacks;
-    static uint32_t        pCallbacksCount;
-    static Mapping_t      *pMappings;
-    static char           *pDefaultPage;
-    static uint32_t        pMappingssCount;
+    static MHD_Daemon         *pDaemon;
+    static const char         *pFilePath;
+    static const char         *pDefaultPage;
+    static vector<Callback_t>  pCallbacks;
+    static vector<Mapping_t>   pMappings;
   private :
     static int   HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
     static void  HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe);

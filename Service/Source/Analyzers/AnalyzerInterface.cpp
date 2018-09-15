@@ -29,6 +29,7 @@ AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nomi
   ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_stat_1h (sampletime bigint NOT NULL PRIMARY KEY REFERENCES aggreg_1h(sampletime), stat_voltage int[] NOT NULL, stat_frequency int[] NOT NULL, stat_thd int[] NOT NULL, stat_harmonics int[] NOT NULL) WITH (OIDS=FALSE)");
   ExecSentence("CREATE TABLE IF NOT EXISTS events (eventtime bigint NOT NULL PRIMARY KEY, duration  bigint NOT NULL, samplerate real, type character varying(16), voltage real, percent real, samples real[]) WITH (OIDS=FALSE)");
 }
+AnalyzerInterface::~AnalyzerInterface() {}
 float AnalyzerInterface::GetMaxCurrent() {
   return pMaxCurrent;
 }
@@ -267,8 +268,8 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
   if(QueryParamsExt) {
     for(int i = 0; i < VoltageChannels; i++) free(ExtParams.Voltage[i]);
     for(int i = 0; i < CurrentChannels; i++) free(ExtParams.Current[i]);
-    for(int i = 0; i < VoltageChannels; i++) free(ExtParams.FFT_V[i]);
-    for(int i = 0; i < CurrentChannels; i++) free(ExtParams.FFT_I[i]);    
+//    for(int i = 0; i < VoltageChannels; i++) free(ExtParams.FFT_V[i]);
+//    for(int i = 0; i < CurrentChannels; i++) free(ExtParams.FFT_I[i]);    
   }  
   return Result;
 }

@@ -9,6 +9,7 @@
 #include "AnalyzerInterface.h"
 #include "FFT.h"
 #include "ZeroCrossing.h"
+#include "PricesInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoft : public AnalyzerInterface {
   private :
@@ -18,38 +19,40 @@ class AnalyzerSoft : public AnalyzerInterface {
       size_t MaxSize;
     } CurlBuff_t;
   private :
-    uint8_t         pVoltageChannels;         //Canales de tension
-    uint8_t         pCurrentChannels;         //Canales de corriente
-    uint64_t        pSequence;                //Numero de bloques analizados
-    Params_t        pAggreg10C;               //Agregacion de 10 ciclos
-    Params_t        pAggreg3S;                //Agregacion de 3 segundos
-    Params_t        pAggreg1M;                //Agregacion de 1 minuto
-    Params_t        pAggreg10M;               //Agregacion de 10 minutos
-    Params_t        pAggreg1H;                //Agregacion de 1 hora
-    ZeroCrossing   *pZC;                      //Generador de paso por cero y calculo de frecuencia
-    char           *pSyncServer;              //Server to sync
-    char           *pSyncName;                //Server user
-    char           *pSyncPassword;            //Server password
-    pthread_t       pSyncThread;              //Working thread
-    uint32_t        pMaxSamples;              //Numero maximo de muestras
-    float          *pVoltageSamples[3];       //Muestras de tension del bloque
-    float          *pCurrentSamples[4];       //Muestras de corriente del bloque
-    FFT            *pVoltageFFT[3];           //Muestras de FFT tension del bloque
-    FFT            *pCurrentFFT[4];           //Muestras de FFT corriente del bloque
-    uint32_t        pCyclesLen[20];           //Longitud de los ciclos detectados
-    uint8_t         pCycles;                  //Numero de ciclos detectados
-    bool            pWorking;                 //Flag para indicar que el hilo esta trabajando
-    pthread_t       pThread;                  //Hilo de ejecucion
-    pthread_mutex_t pThreadMutex;             //Mutex para la variable de condicion
-    pthread_cond_t  pThreadCond;              //Variable de condicion para esperar
-    bool            pTerminate;               //Marca para finalizar proceso
-    uint64_t        pPrevTimestamp;           //Timestamp del ultimo bloque procesado
-    uint32_t        pWaitingThreads;          //Hilos esperando datos
-    pthread_mutex_t pWaitingThreadsMutex;     //Mutex para registrar cambios en WaitingThreads
-    pthread_cond_t  pWaitingThreadsCond;      //Variable de condicion para bloquear el analizer
-    bool            pDataReady;               //Datos disponibles
-    pthread_mutex_t pDataReadyMutex;          //Mutex para registrar cambios en DataReady
-    pthread_cond_t  pDataReadyCond;           //Variable de condicion para bloquear los clientes
+    uint8_t          pVoltageChannels;         //Canales de tension
+    uint8_t          pCurrentChannels;         //Canales de corriente
+    uint64_t         pSequence;                //Numero de bloques analizados
+    Params_t         pAggreg10C;               //Agregacion de 10 ciclos
+    Params_t         pAggreg3S;                //Agregacion de 3 segundos
+    Params_t         pAggreg1M;                //Agregacion de 1 minuto
+    Params_t         pAggreg10M;               //Agregacion de 10 minutos
+    Params_t         pAggreg1H;                //Agregacion de 1 hora
+    ZeroCrossing    *pZC;                      //Generador de paso por cero y calculo de frecuencia
+    char            *pSyncServer;              //Server to sync
+    char            *pSyncName;                //Server user
+    char            *pSyncPassword;            //Server password
+    pthread_t        pSyncThread;              //Working thread
+    uint32_t         pMaxSamples;              //Numero maximo de muestras
+    float           *pVoltageSamples[3];       //Muestras de tension del bloque
+    float           *pCurrentSamples[4];       //Muestras de corriente del bloque
+    FFT             *pVoltageFFT[3];           //Muestras de FFT tension del bloque
+    FFT             *pCurrentFFT[4];           //Muestras de FFT corriente del bloque
+    uint32_t         pCyclesLen[20];           //Longitud de los ciclos detectados
+    uint8_t          pCycles;                  //Numero de ciclos detectados
+    bool             pWorking;                 //Flag para indicar que el hilo esta trabajando
+    pthread_t        pThread;                  //Hilo de ejecucion
+    pthread_mutex_t  pThreadMutex;             //Mutex para la variable de condicion
+    pthread_cond_t   pThreadCond;              //Variable de condicion para esperar
+    bool             pTerminate;               //Marca para finalizar proceso
+    uint64_t         pPrevTimestamp;           //Timestamp del ultimo bloque procesado
+    uint32_t         pWaitingThreads;          //Hilos esperando datos
+    pthread_mutex_t  pWaitingThreadsMutex;     //Mutex para registrar cambios en WaitingThreads
+    pthread_cond_t   pWaitingThreadsCond;      //Variable de condicion para bloquear el analizer
+    bool             pDataReady;               //Datos disponibles
+    pthread_mutex_t  pDataReadyMutex;          //Mutex para registrar cambios en DataReady
+    pthread_cond_t   pDataReadyCond;           //Variable de condicion para bloquear los clientes
+    PricesInterface *pPrices;                  //Module to query prices
+    //RemoteSync      *pRemote;                  //Module for remote sync
   private :
     static void  *Analyzer_Thread(void *args);
     static void  *Sync_Thread(void *args);
@@ -66,6 +69,7 @@ class AnalyzerSoft : public AnalyzerInterface {
     ~AnalyzerSoft();
     void GetParams(Params_t *params, ExtParams_t *extParams);
     void ConfigRemote(json_object *config);
+    void ConfigPrices(json_object *config);
     bool BufferAppend(float *voltageSamples, float *CurrentSamples, uint64_t sampletime);
     bool IsFinished();
 };

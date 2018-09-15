@@ -49,14 +49,16 @@ class DeviceV2 : public DeviceInterface {
     struct libusb_device        *pNewDevice;               //Dispositivo que se conecta
     USBState                     pUSBState;                //Indica si la lectura del USB esta sincronizada o no
   private :
-    static void  *Capture_Thread(void *args);
-    static void   ReadCallback(struct libusb_transfer *transfer);
-    static int    PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
+    static bool                  pClassRegistered;
+  private :
+    static void            *Capture_Thread(void *args);
+    static void             ReadCallback(struct libusb_transfer *transfer);
+    static int              PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
+    static DeviceInterface *CreateInstance(json_object* config);
   private :
     bool BuffersAppend();
     AnalyzerInterface *FindAnalyzer(char *serial);
   public :
-    DeviceV2(json_object* config);
     ~DeviceV2();
 };
 //----------------------------------------------------------------------------------------------------------------------

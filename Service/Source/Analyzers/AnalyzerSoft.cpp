@@ -34,13 +34,13 @@ AnalyzerSoft::AnalyzerSoft(float samplerate, char *id, float nominal_voltage, fl
   for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) {
     char Name[16];
     sprintf(Name, "FFT_V%u", i);
-    pVoltageFFT[i] = new FFT(pMaxSamples, Name);
+    pVoltageFFT[i] = new FFT(Name);
     pVoltageSamples[i] = (float*)malloc(sizeof(float) * pMaxSamples);
   }
   for(uint8_t i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) {
     char Name[16];
     sprintf(Name, "FFT_I%u", i);
-    pCurrentFFT[i] = new FFT(pMaxSamples, Name);
+    pCurrentFFT[i] = new FFT(Name);
     pCurrentSamples[i] = (float*)malloc(sizeof(float) * pMaxSamples);
   }
   pAggreg10C.Type = AGGREG_10C;
@@ -248,7 +248,6 @@ void AnalyzerSoft::GetParams(Params_t *params, ExtParams_t *extParams) {
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads++;
   pthread_mutex_unlock(&pWaitingThreadsMutex);
-  json_object *Result = NULL;
   pthread_mutex_lock(&pDataReadyMutex);
   int Error = 0;
   while((pDataReady == false) && (Error == 0)) {
@@ -264,18 +263,21 @@ void AnalyzerSoft::GetParams(Params_t *params, ExtParams_t *extParams) {
     memcpy(params, &pAggreg10C, sizeof(Params_t));
     if(extParams) {
       memset(extParams, 0, sizeof(ExtParams_t));
+      extParams->FFT_V.resize((pMode == PHASE1) ? 1 : 3);
+      extParams->FFT_I.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);
       for(int j = 0; j < ((pMode == PHASE1) ? 1 : 3); j++) {
         extParams->Voltage[j] = (float*)malloc(sizeof(float) * params->Samples);
         for(uint32_t i = 0; i < params->Samples; i++) extParams->Voltage[j][i] = pVoltageSamples[j][i];
-        extParams->FFT_V[j] = (float*)malloc(sizeof(float) * pVoltageFFT[j]->OutputLen);
-        for(uint32_t i = 0; i < pVoltageFFT[j]->OutputLen; i++) extParams->FFT_V[j][i] = pVoltageFFT[j]->BinPower(i);
+          extParams->FFT_V[j].reserve(pVoltageFFT[j]->Output.size()); 
+        // extParams->FFT_V[j] = (float*)malloc(sizeof(float) * pVoltageFFT[j]->OutputLen);
+        for(uint32_t i = 0; i < pVoltageFFT[j]->Output.size(); i++) extParams->FFT_V[j][i] = pVoltageFFT[j]->BinPower(i);
       }
       for(int j = 0; j < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); j++) {
         extParams->Current[j] = (float*)malloc(sizeof(float) * params->Samples);
         memcpy(extParams->Current[j], pCurrentSamples[j], sizeof(float) * params->Samples);
-        
-        extParams->FFT_I[j] = (float*)malloc(sizeof(float) * pCurrentFFT[j]->OutputLen);
-        for(uint32_t i = 0; i < pCurrentFFT[j]->OutputLen; i++) extParams->FFT_I[j][i] = pCurrentFFT[j]->BinPower(i);
+        extParams->FFT_I[j].reserve(pCurrentFFT[j]->Output.size());
+  //      extParams->FFT_I[j] = (float*)malloc(sizeof(float) * pCurrentFFT[j]->OutputLen);
+        for(uint32_t i = 0; i < pCurrentFFT[j]->Output.size(); i++) extParams->FFT_I[j][i] = pCurrentFFT[j]->BinPower(i);
       }
     }
   }
@@ -308,6 +310,9 @@ void AnalyzerSoft::ConfigRemote(json_object* config) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;
   }
+}
+void AnalyzerSoft::ConfigPrices(json_object* config) {
+//  pPrices = new PricesInterface()
 }
 void AnalyzerSoft::AccumulateAggreg(Params_t *dst, Params_t *src) {
   dst->Timestamp = src->Timestamp;
@@ -472,22 +477,22 @@ void *AnalyzerSoft::Sync_Thread(void *args) {
       sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_3s' AS \"Table\", * FROM aggreg_3s WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", This->pID, Last3S);
       char *Result = DB.ExecSentenceJSON(Tmp, &JSONLen);
       if(Result == NULL) {
-        char     *Table = (char*)"aggreg_1m";
-        uint64_t *Time  = &Last1M;
-        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_1m' AS \"Aggregation_Source\", * FROM (SELECT * FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m) AS aggreg_1m WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", Last3S);
-        char *Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
+        Table = (char*)"aggreg_1m";
+        Time  = &Last1M;
+        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_1m' AS \"Aggregation_Source\", * FROM (SELECT * FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m) AS aggreg_1m WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", This->pID, Last3S);
+        Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
       }
       if(Result == NULL) {
-        char     *Table = (char*)"aggreg_10m";
-        uint64_t *Time  = &Last10M;
-        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_10m' AS \"Aggregation_Source\", * FROM aggreg_10m WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", Last3S);
-        char *Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
+        Table = (char*)"aggreg_10m";
+        Time  = &Last10M;
+        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_10m' AS \"Aggregation_Source\", * FROM aggreg_10m WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", This->pID, Last3S);
+        Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
       }
       if(Result == NULL) {
-        char     *Table = (char*)"aggreg_10m";
-        uint64_t *Time  = &Last1H;
-        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_1h' AS \"Aggregation_Source\", * FROM aggreg_1h WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", Last3S);
-        char *Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
+        Table = (char*)"aggreg_10m";
+        Time  = &Last1H;
+        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_1h' AS \"Aggregation_Source\", * FROM aggreg_1h WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", This->pID, Last3S);
+        Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
       }
       if(Result != NULL) {
         snprintf(Tmp, sizeof(Tmp), "%s/setRemoteData", This->pSyncServer);

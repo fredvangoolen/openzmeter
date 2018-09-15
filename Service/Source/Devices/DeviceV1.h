@@ -33,17 +33,19 @@ class DeviceV1 : public DeviceInterface {
     struct libusb_device        *pNewDevice;               //Dispositivo que se conecta    
     pthread_t                    pSignalThread;            //Thread to handle LED and sounds
     bool                         pTerminateSignal;         //Flag to terminate signal thread
+  private :
+    static bool                  pClassRegistered;
   private : 
-    static void  *Capture_Thread(void *args);
-    static void  *Signal_Thread(void *args);
-    static void   ReadCallback(struct libusb_transfer *transfer);
-    static int    PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
+    static void            *Capture_Thread(void *args);
+    static void            *Signal_Thread(void *args);
+    static void             ReadCallback(struct libusb_transfer *transfer);
+    static int              PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
+    static DeviceInterface *CreateInstance(json_object* config);
   private :
     bool BuffersAppend(float voltageSample, float currentSample);
     bool ReadJSONFloatArray(json_object *object, float *dst, uint8_t len);
     AnalyzerInterface *FindAnalyzer(char *serial);
   public :
-    DeviceV1(json_object* config);
     ~DeviceV1();
 };
 //----------------------------------------------------------------------------------------------------------------------

@@ -27,10 +27,10 @@ class NetworkManager {
     static void    SendEnable(DBusConnection *dbus, int state);
     static uint8_t SendConnectivityState(DBusConnection *dbus);
   public :
-    static void         Reset();
-    static uint8_t      GetConnectivityStatus();
+    static void     Reset();
+    static uint8_t  GetConnectivityStatus();
     static bool     GetNetworksCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool         SetJSONNetworkConfig(json_object *json);
+    static bool     SetJSONNetworkConfig(json_object *json);
 
 };
 

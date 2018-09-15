@@ -5,14 +5,10 @@
 #include <string.h>
 #include <math.h>
 #include "DeviceInterface.h"
-#include "Drivers/DeviceV1.h"
-#include "Drivers/DeviceV2.h"
-#include "Drivers/DeviceVirtual.h"
-#include "Drivers/DeviceRemote.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-DeviceInterface **DeviceInterface::pDevices      = NULL;
-uint8_t           DeviceInterface::pDevicesCount = 0;
+vector<DeviceInterface*>        DeviceInterface::pDevices;
+vector<DeviceInterface::Type_t> DeviceInterface::pRegisteredTypes;
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceInterface::Config(json_object *config) {
   Database DB(NULL);
@@ -27,30 +23,35 @@ bool DeviceInterface::Config(json_object *config) {
   if(config == NULL) return true;
   for(int i = 0; i < json_object_array_length(config); i++) {
     json_object *Device = json_object_array_get_idx(config, i);
-    struct json_object *Driver;
-    if((json_object_object_get_ex(Device, "Driver", &Driver) == true) && (json_object_get_type(Driver) == json_type_string)) {
-      if(strcmp(json_object_get_string(Driver), "DeviceV1") == 0) {
-        AddDeviceInterface(new DeviceV1(Device));
-      } else if(strcmp(json_object_get_string(Driver), "DeviceV2") == 0) {
-        AddDeviceInterface(new DeviceV2(Device));
-      } else if(strcmp(json_object_get_string(Driver), "Virtual") == 0) {
-        AddDeviceInterface(new DeviceVirtual(Device));
-      } else if(strcmp(json_object_get_string(Driver), "Remote") == 0) {
-        AddDeviceInterface(new DeviceRemote(Device));
+    char *Name = NULL;
+    if(Tools::JSONString(Device, "Driver", &Name) == false) {
+      Tools::LogMsg("ERROR", "'Driver' parameter not specified\n");
+    } else {
+      for(vector<Type_t>::iterator it = pRegisteredTypes.begin() ; it != pRegisteredTypes.end(); ++it) {
+        if(strcmp(Name, it->Name) == 0) {
+          DeviceInterface *Instance = it->Constructor(Device);
+          if(Device != NULL) pDevices.push_back(Instance);
+          break;
+        }
       }
     }
   }
   return true;
 }
-void DeviceInterface::AddDeviceInterface(DeviceInterface* device) {
-  pDevices = (DeviceInterface**)realloc(pDevices, sizeof(DeviceInterface*) * (pDevicesCount) + 1);
-  pDevices[pDevicesCount] = device;
-  pDevicesCount++;
-}
 DeviceInterface::DeviceInterface() {
-  pTerminate       = false;
+  pTerminate     = false;
+  pCaptureThread = 0;
 }
 DeviceInterface::~DeviceInterface() {
+  if(pCaptureThread != 0) {
+    pTerminate = true;
+    pthread_join(pCaptureThread, NULL);
+  }
+}
+bool DeviceInterface::RegisterType(const char* name, ConstructorFunction constructor) {
+  Type_t Type = { name, constructor };
+  pRegisteredTypes.push_back(Type);
+  return true;
 }
 bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_array();
@@ -60,11 +61,12 @@ bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Data
   db->ExecSentence();
   for(uint32_t i = 0; i < db->ResultRows(); i++) {
     char *Serial = db->ResultValue(i, (char*)"serial");
-    for(uint8_t j = 0; j < pDevicesCount; j++) {
-      AnalyzerInterface *Analyzer = pDevices[j]->FindAnalyzer(Serial);
-      if(Analyzer == NULL) continue;
-      json_object_array_add(*writer, Analyzer->GetJSONDescriptor());
-      break;
+    for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+      AnalyzerInterface *Analyzer = (*it)->FindAnalyzer(Serial);
+      if(Analyzer != NULL) {
+        json_object_array_add(*writer, Analyzer->GetJSONDescriptor());
+        break;
+      }
     }
   }
   *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
@@ -242,12 +244,13 @@ bool DeviceInterface::GetSeriesNowCallback(char *user, json_object *reader, Data
     *resultLen = strlen(*postdata);
     return false;
   }
-  for(uint32_t i = 0; i < pDevicesCount; i++) {
-    AnalyzerInterface *Analyzer = pDevices[i]->FindAnalyzer(Serial);
-    if(Analyzer == NULL) continue;
-    *writer = Analyzer->GetJSONParams(Series);
-    *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
-    return true;      
+  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+    AnalyzerInterface *Analyzer = (*it)->FindAnalyzer(Serial);
+    if(Analyzer != NULL) {
+      *writer = Analyzer->GetJSONParams(Series);
+      *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
+      return true;
+    }      
   }
   return false;
 }

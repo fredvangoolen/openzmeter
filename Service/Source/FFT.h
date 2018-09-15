@@ -3,8 +3,11 @@
  * Author:   Eduardo Viciana (30 de mayo de 2018)
  * ------------------------------------------------------------------------------------------------------------------ */
 #pragma once
+#include <vector>
 #include <stdint.h>
 #include <pthread.h>
+//----------------------------------------------------------------------------------------------------------------------
+using namespace std;
 class FFT {
   public :
     typedef struct {
@@ -12,8 +15,8 @@ class FFT {
       float Imag;                         //Parte imaginaria
     } Complex_t;
   public :
-    Complex_t *Output;                    //Datos de salida
-    uint32_t   OutputLen;                 //Longitud de salida
+    vector<Complex_t> Output;                    //Datos de salida
+//    uint32_t   OutputLen;                 //Longitud de salida
   private :
     float          *pInput;                //Muestras de entrada
     uint32_t        pLen;                  //Longitud de la transformada
@@ -29,7 +32,7 @@ class FFT {
   public :
     static float CalcAngle(Complex_t a, Complex_t b);
   public :
-    FFT(uint32_t maxLen, char *name);
+    FFT(char *name);
     bool  Start(float *in, uint32_t len);
     void  Wait();
     bool  IsFinished();

@@ -81,87 +81,87 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/service: ${OBJECTFILES}
 ${OBJECTDIR}/Source/Analyzers/AnalyzerInterface.o: Source/Analyzers/AnalyzerInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Analyzers
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Analyzers/AnalyzerInterface.o Source/Analyzers/AnalyzerInterface.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Analyzers/AnalyzerInterface.o Source/Analyzers/AnalyzerInterface.cpp
 
 ${OBJECTDIR}/Source/Analyzers/AnalyzerRemote.o: Source/Analyzers/AnalyzerRemote.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Analyzers
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Analyzers/AnalyzerRemote.o Source/Analyzers/AnalyzerRemote.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Analyzers/AnalyzerRemote.o Source/Analyzers/AnalyzerRemote.cpp
 
 ${OBJECTDIR}/Source/Analyzers/AnalyzerSoft.o: Source/Analyzers/AnalyzerSoft.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Analyzers
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Analyzers/AnalyzerSoft.o Source/Analyzers/AnalyzerSoft.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Analyzers/AnalyzerSoft.o Source/Analyzers/AnalyzerSoft.cpp
 
 ${OBJECTDIR}/Source/Database.o: Source/Database.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Database.o Source/Database.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Database.o Source/Database.cpp
 
 ${OBJECTDIR}/Source/Devices/DeviceInterface.o: Source/Devices/DeviceInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Devices
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Devices/DeviceInterface.o Source/Devices/DeviceInterface.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Devices/DeviceInterface.o Source/Devices/DeviceInterface.cpp
 
 ${OBJECTDIR}/Source/Devices/DeviceRemote.o: Source/Devices/DeviceRemote.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Devices
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Devices/DeviceRemote.o Source/Devices/DeviceRemote.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Devices/DeviceRemote.o Source/Devices/DeviceRemote.cpp
 
 ${OBJECTDIR}/Source/Devices/DeviceV1.o: Source/Devices/DeviceV1.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Devices
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Devices/DeviceV1.o Source/Devices/DeviceV1.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Devices/DeviceV1.o Source/Devices/DeviceV1.cpp
 
 ${OBJECTDIR}/Source/Devices/DeviceV2.o: Source/Devices/DeviceV2.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Devices
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Devices/DeviceV2.o Source/Devices/DeviceV2.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Devices/DeviceV2.o Source/Devices/DeviceV2.cpp
 
 ${OBJECTDIR}/Source/Devices/DeviceVirtual.o: Source/Devices/DeviceVirtual.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Devices
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Devices/DeviceVirtual.o Source/Devices/DeviceVirtual.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Devices/DeviceVirtual.o Source/Devices/DeviceVirtual.cpp
 
 ${OBJECTDIR}/Source/FFT.o: Source/FFT.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/FFT.o Source/FFT.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/FFT.o Source/FFT.cpp
 
 ${OBJECTDIR}/Source/HTTPServer.o: Source/HTTPServer.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/HTTPServer.o Source/HTTPServer.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/HTTPServer.o Source/HTTPServer.cpp
 
 ${OBJECTDIR}/Source/Main.o: Source/Main.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Main.o Source/Main.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Main.o Source/Main.cpp
 
 ${OBJECTDIR}/Source/NetworkManager.o: Source/NetworkManager.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/NetworkManager.o Source/NetworkManager.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/NetworkManager.o Source/NetworkManager.cpp
 
 ${OBJECTDIR}/Source/Prices/ESIOS.o: Source/Prices/ESIOS.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Prices
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Prices/ESIOS.o Source/Prices/ESIOS.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Prices/ESIOS.o Source/Prices/ESIOS.cpp
 
 ${OBJECTDIR}/Source/Prices/PricesInterface.o: Source/Prices/PricesInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Prices
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Prices/PricesInterface.o Source/Prices/PricesInterface.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Prices/PricesInterface.o Source/Prices/PricesInterface.cpp
 
 ${OBJECTDIR}/Source/Tools.o: Source/Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Tools.o Source/Tools.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/Tools.o Source/Tools.cpp
 
 ${OBJECTDIR}/Source/ZeroCrossing.o: Source/ZeroCrossing.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Werror -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/ZeroCrossing.o Source/ZeroCrossing.cpp
+	$(COMPILE.cc) -g -Wall -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -ISource/Prices -ISource/Devices -ISource/Analyzers -std=c++98 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Source/ZeroCrossing.o Source/ZeroCrossing.cpp
 
 # Subprojects
 .build-subprojects:

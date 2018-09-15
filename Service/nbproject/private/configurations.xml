@@ -62,10 +62,10 @@
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}" --debug</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" </runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" --config=./Package/usr/share/openZmeter/openZmeter.conf_sample</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" --config=./Package/usr/share/openZmeter/openZmeter.conf_sample</runcommand>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <terminal-type>0</terminal-type>

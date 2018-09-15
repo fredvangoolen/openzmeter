@@ -14,14 +14,16 @@
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceVirtual : public DeviceInterface {
   private :
+    static bool    pClassRegistered;
+  private :
     AnalyzerSoft  *pAnalyzer;
     float          pSampleRate;
   private : 
-    static void *Capture_Thread(void *args);
+    static void            *Capture_Thread(void *args);
+    static DeviceInterface *CreateInstance(json_object *config);
   private :
     AnalyzerInterface *FindAnalyzer(char *serial);
   public :
-    DeviceVirtual(json_object *config);
     ~DeviceVirtual();
 };
 //----------------------------------------------------------------------------------------------------------------------

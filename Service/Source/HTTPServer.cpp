@@ -17,13 +17,11 @@
 #include "Tools.h"
 #include "NetworkManager.h"
 //----------------------------------------------------------------------------------------------------------------------
-MHD_Daemon             *HTTPServer::pDaemon         = NULL;
-HTTPServer::Callback_t *HTTPServer::pCallbacks      = NULL;
-uint32_t                HTTPServer::pCallbacksCount = 0;
-HTTPServer::Mapping_t  *HTTPServer::pMappings       = NULL;
-uint32_t                HTTPServer::pMappingssCount = 0;
-char                   *HTTPServer::pFilePath       = (char*)"/usr/share/openZmeter/WEB/";
-char                   *HTTPServer::pDefaultPage    = (char*)"";
+MHD_Daemon                     *HTTPServer::pDaemon         = NULL;
+const char                     *HTTPServer::pFilePath       = "/usr/share/openZmeter/WEB/";
+const char                     *HTTPServer::pDefaultPage    = "";
+vector<HTTPServer::Callback_t>  HTTPServer::pCallbacks;
+vector<HTTPServer::Mapping_t>   HTTPServer::pMappings;
 //----------------------------------------------------------------------------------------------------------------------
 bool HTTPServer::Config(json_object *config) {
   Database DB(NULL);
@@ -71,16 +69,12 @@ void HTTPServer::RegisterDefault(char *def) {
   pDefaultPage = def;
 }
 void HTTPServer::RegisterCallback(const char *handleName, HTTPServer::Func_t function) {
-  pCallbacks = (Callback_t*)realloc(pCallbacks, sizeof(Callback_t) * (pCallbacksCount + 1));
-  pCallbacks[pCallbacksCount].HandleName = handleName;
-  pCallbacks[pCallbacksCount].Function  = function;
-  pCallbacksCount++;
+  Callback_t Item = {handleName, function};
+  pCallbacks.push_back(Item);
 }
 void HTTPServer::RegisterMapping(char *url, char *file) {
-  pMappings = (Mapping_t*)realloc(pMappings, sizeof(Mapping_t) * (pMappingssCount + 1));
-  pMappings[pMappingssCount].URL  = url;
-  pMappings[pMappingssCount].File = file;
-  pMappingssCount++;
+  Mapping_t Item = {url, file};
+  pMappings.push_back(Item);
 }
 void HTTPServer::OpenSession(MHD_Connection* connection, Request_t* request) {
   if(request->DB == NULL) request->DB = new Database(NULL);
@@ -218,8 +212,8 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
           CloseSession(connection, Request);
           return SendRedirect(connection, "/Login");
         }
-        for(uint32_t i = 0; i < pMappingssCount; i++) {
-          if(strcmp(url, pMappings[i].URL) == 0) return SendFile(connection, pMappings[i].File);
+        for(vector<Mapping_t>::iterator it = pMappings.begin() ; it != pMappings.end(); ++it) {
+          if(strcmp(url, it->URL) == 0) return SendFile(connection, it->File);
         }
         return SendFile(connection, "Error404.html");
       }
@@ -285,9 +279,9 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
           }
           if(Request->UserName != NULL) {
             bool Handled = false;
-            for(uint32_t i = 0; i < pCallbacksCount; i++) {
-              if(strcmp(pCallbacks[i].HandleName, url) == 0) {
-                if(pCallbacks[i].Function(Request->UserName, Request->JSONReader, Request->DB, &Request->JSONWriter, &Request->PostData, &Request->PostDataLen) == false) Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+            for(vector<Callback_t>::iterator it = pCallbacks.begin() ; it != pCallbacks.end(); ++it) {
+              if(strcmp(url, it->HandleName) == 0) {
+                if(it->Function(Request->UserName, Request->JSONReader, Request->DB, &Request->JSONWriter, &Request->PostData, &Request->PostDataLen) == false) Request->ResultCode = MHD_HTTP_BAD_REQUEST;
                 Handled = true;
                 break;
               }
@@ -330,6 +324,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
       return Return;
     }
   }
+  return MHD_NO;
 }
 void HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
 
