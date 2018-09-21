@@ -6,7 +6,7 @@
 #include "AnalyzerInterface.h"
 class AnalyzerRemote : public AnalyzerInterface {
   protected :
-    void GetParams(Params_t *params, ExtParams_t *extParams);
+    void GetParams(Params_t *params, bool extParams);
   public :
     AnalyzerRemote(char *id, float nominalVoltage, float nominalFreq, char *name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online);
     void UpdateConfig(float nominalVoltage, float nominalFreq, char *name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online);

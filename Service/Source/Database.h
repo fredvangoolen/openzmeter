@@ -3,11 +3,13 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
+#include <vector>
+#include <sstream>
 #include <inttypes.h>
 #include <postgresql/libpq-fe.h>
 #include <json-c/json.h>
 //----------------------------------------------------------------------------------------------------------------------
-class Database;
+using namespace std;
 class Database {
   private :
     static char *pDatabaseName;
@@ -30,14 +32,14 @@ class Database {
     void      BindSingleUInt32(uint32_t param);
     void      BindSingleUInt64(uint64_t param);
     void      BindSingleFloat(float param);
-    void      BindArrayArrayFloat(float *params, int lenA, int lenB);
-    void      BindArrayFloat(float *params, int len);
+    void      BindArrayArrayFloat(const vector< vector<float> > &params, int lenA, int lenB);
+    void      BindArrayFloat(const vector<float> &params);
     void      BindArrayUInt16(uint16_t *params, int len);
     void      BindSingleBool(bool param);
     void      BindSingleString(const char *string, bool identifier = false);
     bool      ExecSentence();
     uint32_t  ResultRows();
-    char     *ResultValue(uint32_t row, char *name);
+    const char     *ResultValue(uint32_t row, char *name);
     bool      ExecSentence(const char *sql);
     char     *ExecSentenceJSON(const char* sql, size_t *len);
     Database(char *schema);

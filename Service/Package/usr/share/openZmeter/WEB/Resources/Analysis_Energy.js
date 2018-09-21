@@ -258,7 +258,7 @@ function EnergyUpdateCountersPrevs(result) {
 /* Secuencia de inicio para cargar la pagina */
 var MainScrollable = null;
 function UpdatePage() {
-  MainScrollable = new Scrollable( {Spinners: ['#EnergySpinner'], Series: 'active_energy, reactive_energy', OnSuccess: Scrollable_OnSuccess} );
+  MainScrollable = new Scrollable( {Spinners: ['#ActiveEnergySpinner', '#ReactiveEnergySpinner'], Series: 'active_energy, reactive_energy', OnSuccess: Scrollable_OnSuccess} );
   Scrollable_UpdateCounters(true);
 }
 

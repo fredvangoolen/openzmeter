@@ -54,24 +54,24 @@ int DeviceV1::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
   return 0;
 }
 bool DeviceV1::BuffersAppend(float voltageSample, float currentSample) {
-  if(pUsed == pBuffLen) return false;
-  pVoltageSamples[pWritePos] = voltageSample;
-  pCurrentSamples[pWritePos] = currentSample;
-  pWritePos = (pWritePos + 1) % pBuffLen;
-  pUsed++;
+  if(pBuffer.Full()) return false;
+  Sample_t Sample = { voltageSample, currentSample };
+  pBuffer.Push(Sample);
   uint64_t Sampletime = Tools::GetTime();
   if(pLastUpdate < (Sampletime - 500)) {
     char ThreadName[16];
-    sprintf(ThreadName, "DeviceV1_%02d", pUsed * 100 / pBuffLen);
+    sprintf(ThreadName, "DeviceV1_%02d", pBuffer.Size() * 100 / pBuffer.Capacity());
     pthread_setname_np(pCaptureThread, ThreadName);
     pLastUpdate = Sampletime;
   }
   if(pAnalyzer->IsFinished() == false) return true;
   bool Started = false;
-  for(uint8_t Sample = 0; (Sample < 5) && (pUsed > 0) && (Started == false); Sample++) {
-    if(pAnalyzer->BufferAppend(&pVoltageSamples[pReadPos], &pCurrentSamples[pReadPos], Sampletime) == true) Started = true;
-    pReadPos = (pReadPos + 1) % pBuffLen;
-    pUsed--;
+  while((pBuffer.Empty() == false) && (Started == false)) {
+    vector<float> Voltage, Current;
+    Sample = pBuffer.Pop();
+    Voltage.push_back(Sample.Voltage);
+    Current.push_back(Sample.Current);
+    if(pAnalyzer->BufferAppend(Voltage, Current, Sampletime) == true) Started = true;
   }
   return true;
 }
@@ -226,18 +226,19 @@ void *DeviceV1::Signal_Thread(void* args) {
   }
   return NULL;
 }
-AnalyzerInterface *DeviceV1::FindAnalyzer(char *serial) {
+AnalyzerInterface *DeviceV1::FindAnalyzer(const char *serial) {
   return (strcmp(serial, pAnalyzer->GetID()) == 0) ? pAnalyzer : NULL;
 }
 DeviceInterface *DeviceV1::CreateInstance(json_object *config) {
   DeviceV1 *This = new DeviceV1();
   Tools::LogMsg("INFO", "Starting DeviceV1 driver...\n");
-  This->pUsed                  = 0;
-  This->pBuffLen               = DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ;
-  This->pVoltageSamples        = (float*)malloc(sizeof(float) * This->pBuffLen);
-  This->pCurrentSamples        = (float*)malloc(sizeof(float) * This->pBuffLen);
-  This->pReadPos               = 0;
-  This->pWritePos              = 0;
+  This->pBuffer.Reset(DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ);
+//  This->pUsed                  = 0;
+//  This->pBuffLen               = DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ;
+//  This->pVoltageSamples        = (float*)malloc(sizeof(float) * This->pBuffLen);
+//  This->pCurrentSamples        = (float*)malloc(sizeof(float) * This->pBuffLen);
+//  This->pReadPos               = 0;
+//  This->pWritePos              = 0;
   This->pLastUpdate            = 0;
   This->pDeviceHandle          = NULL;
   This->pNewDevice             = NULL;
@@ -250,10 +251,10 @@ DeviceInterface *DeviceV1::CreateInstance(json_object *config) {
   float NominalVoltage         = 230.0;
   float NominalFrequency       = 50.0;
   char *Name                   = (char*)"Unnamed input";
-  if((This->pVoltageSamples == NULL) || (This->pCurrentSamples == NULL)) {
-    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
-    return NULL;
-  }
+//  if((This->pVoltageSamples == NULL) || (This->pCurrentSamples == NULL)) {
+//    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
+//    return NULL;
+//  }
   json_object *Find;
   if((json_object_object_get_ex(config, "Serial", &Find) == true) && (json_object_get_type(Find) == json_type_string)) This->pSerial = (char*)json_object_get_string(Find);
   if((json_object_object_get_ex(config, "VoltageGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) This->pVoltageGain = json_object_get_double(Find);
@@ -286,8 +287,8 @@ DeviceInterface *DeviceV1::CreateInstance(json_object *config) {
   return This;
 }
 DeviceV1::~DeviceV1() {
-  if(pVoltageSamples) free(pVoltageSamples);
-  if(pCurrentSamples) free(pCurrentSamples);
+//  if(pVoltageSamples) free(pVoltageSamples);
+//  if(pCurrentSamples) free(pCurrentSamples);
   if(pAnalyzer) delete pAnalyzer;
   //  if(Buffer) {
 //    pthread_cond_signal(&WriteWait);

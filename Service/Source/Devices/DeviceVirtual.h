@@ -22,7 +22,7 @@ class DeviceVirtual : public DeviceInterface {
     static void            *Capture_Thread(void *args);
     static DeviceInterface *CreateInstance(json_object *config);
   private :
-    AnalyzerInterface *FindAnalyzer(char *serial);
+    AnalyzerInterface *FindAnalyzer(const char *serial);
   public :
     ~DeviceVirtual();
 };

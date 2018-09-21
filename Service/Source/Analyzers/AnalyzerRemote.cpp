@@ -11,7 +11,7 @@ AnalyzerRemote::AnalyzerRemote(char* id, float nominalVoltage, float nominalFreq
 void AnalyzerRemote::UpdateConfig(float nominalVoltage, float nominalFreq, char* name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online) {
   //Si ha cambiado el modo tengo que asegurarme que las muestras que hay son coherentes, si no la web fallara!
 }
-void AnalyzerRemote::GetParams(Params_t *params, ExtParams_t *extParams) {
+void AnalyzerRemote::GetParams(Params_t *params, bool extended) {
 
 }
 bool AnalyzerRemote::SaveJSON(json_object *json, Database *db) {
@@ -22,10 +22,10 @@ bool AnalyzerRemote::SaveJSON(json_object *json, Database *db) {
     Params_t Params;
     if(strcmp("aggreg_3s", Table) == 0) Params.Type = AGGREG_3S;
     if(Tools::JSONUInt64(json, "sampletime", &Params.Timestamp) == false) return false;                                                 //sampletime
-    if(Tools::JSONArrayFloat(json, "rms_v", Params.RMS_V, (pMode == PHASE1) ? 1 : 3) == false) return false;                            //rms_v 
-    if(Tools::JSONArrayFloat(json, "rms_i", Params.RMS_I, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4) == false) return false;    //rms_i 
-    if(Tools::JSONArrayFloat(json, "active_power", Params.Active_Power, (pMode == PHASE1) ? 1 : 3) == false) return false;              //active_power 
-    if(Tools::JSONArrayFloat(json, "active_energy", Params.Active_Energy, (pMode == PHASE1) ? 1 : 3) == false) return false;            //active_energy
+    if(Tools::JSONArrayFloat(json, "rms_v", &Params.RMS_V[0], (pMode == PHASE1) ? 1 : 3) == false) return false;                            //rms_v 
+    if(Tools::JSONArrayFloat(json, "rms_i", &Params.RMS_I[0], (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4) == false) return false;    //rms_i 
+    if(Tools::JSONArrayFloat(json, "active_power", &Params.Active_Power[0], (pMode == PHASE1) ? 1 : 3) == false) return false;              //active_power 
+    if(Tools::JSONArrayFloat(json, "active_energy", &Params.Active_Energy[0], (pMode == PHASE1) ? 1 : 3) == false) return false;            //active_energy
 //  BindArrayFloat(params->Reactive_Power, (pMode == PHASE1) ? 1 : 3);                                         //reactive_power
 //  BindArrayFloat(params->Reactive_Energy, (pMode == PHASE1) ? 1 : 3);                                        //reactive_energy
 //  BindSingleFloat(params->Frequency);                                                                        //frequency

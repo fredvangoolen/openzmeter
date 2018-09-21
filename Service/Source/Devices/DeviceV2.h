@@ -57,7 +57,7 @@ class DeviceV2 : public DeviceInterface {
     static DeviceInterface *CreateInstance(json_object* config);
   private :
     bool BuffersAppend();
-    AnalyzerInterface *FindAnalyzer(char *serial);
+    AnalyzerInterface *FindAnalyzer(const char *serial);
   public :
     ~DeviceV2();
 };

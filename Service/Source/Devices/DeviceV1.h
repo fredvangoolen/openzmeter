@@ -6,6 +6,7 @@
 #include <libusb-1.0/libusb.h>
 #include "DeviceInterface.h"
 #include "Analyzers/AnalyzerSoft.h"
+#include "RingBuffer.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define DEVICEV1_VID             0x0483       //Product ID
 #define DEVICEV1_PID             0x7270       //Device ID
@@ -16,13 +17,19 @@
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV1 : public DeviceInterface {
   private :
+    typedef struct {
+      float Voltage;
+      float Current;
+    } Sample_t;
+  private :
     AnalyzerSoft                *pAnalyzer;                //Analizador
-    uint32_t                     pUsed;                    //Muestras en uso del buffer
-    uint32_t                     pBuffLen;                 //Tamaño del buffer
-    float                       *pVoltageSamples;          //Muestras de tension
-    float                       *pCurrentSamples;          //Muestras de corriente
-    uint32_t                     pReadPos;                 //Posicion de lectura del buffer
-    uint32_t                     pWritePos;                //Posicion de escritura del buffer
+//    uint32_t                     pUsed;                    //Muestras en uso del buffer
+    RingBuffer<Sample_t>         pBuffer;                  //Read buffer
+//    uint32_t                     pBuffLen;                 //Tamaño del buffer
+//    float                       *pVoltageSamples;          //Muestras de tension
+//    float                       *pCurrentSamples;          //Muestras de corriente
+//    uint32_t                     pReadPos;                 //Posicion de lectura del buffer
+//    uint32_t                     pWritePos;                //Posicion de escritura del buffer
     uint64_t                     pLastUpdate;              //Timestamp de la ultima vez que se actualizo el nombre del thread
     char                        *pSerial;                  //Numero de serie del dispositivo de captura
     float                        pVoltageGain;             //Ganancia de tension
@@ -44,7 +51,7 @@ class DeviceV1 : public DeviceInterface {
   private :
     bool BuffersAppend(float voltageSample, float currentSample);
     bool ReadJSONFloatArray(json_object *object, float *dst, uint8_t len);
-    AnalyzerInterface *FindAnalyzer(char *serial);
+    AnalyzerInterface *FindAnalyzer(const char *serial);
   public :
     ~DeviceV1();
 };

@@ -12,10 +12,10 @@
 pthread_mutex_t FFT::pPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
 FFT::FFT(char *name) {
   pTerminate = false;
-  //Output = (Complex_t*)malloc(sizeof(Complex_t) * ((maxLen / 2) + 1));
   pInput = NULL;
   pthread_cond_init(&pThreadCond, NULL);
   pthread_mutex_init(&pThreadMutex, NULL);
+  pThread = 0;
   if(pthread_create(&pThread, NULL, FFT_Thread, (void*)this) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;
@@ -23,18 +23,19 @@ FFT::FFT(char *name) {
   pthread_setname_np(pThread, name);
 }
 FFT::~FFT() {
+  if(pThread == 0) return;
   pTerminate = true;
   pthread_cond_signal(&pThreadCond);
   if(pthread_join(pThread, NULL) != 0) Tools::LogMsg("ERROR", "%s:%d -> (Unknown)\n", __func__, __LINE__);
   //free(Output);
 }
-bool FFT::Start(float *in, uint32_t len) {
+bool FFT::Start(vector<float> *in) {
   pthread_mutex_lock(&pThreadMutex);
   if(pInput != NULL) {
     pthread_mutex_unlock(&pThreadMutex);
     return false;
   }
-  pLen = len;
+//  pLen = len;
   pInput = in;
   pthread_mutex_unlock(&pThreadMutex);
   pthread_cond_signal(&pThreadCond);
@@ -53,14 +54,14 @@ void FFT::Process() {
     }
     pthread_mutex_unlock(&pThreadMutex);
     pthread_mutex_lock(&pPlannerMutex);
-    Output.reserve((pLen / 2) + 1);
-    fftwf_plan Plan = fftwf_plan_dft_r2c_1d(pLen, pInput, (fftwf_complex*)&Output[0], FFTW_ESTIMATE);
+    Output.reserve((pInput->size() / 2) + 1);
+    fftwf_plan Plan = fftwf_plan_dft_r2c_1d(pInput->size(), &(*pInput)[0], (fftwf_complex*)&Output[0], FFTW_ESTIMATE);
     pthread_mutex_unlock(&pPlannerMutex);
-    fftwf_execute_dft_r2c(Plan, pInput, (fftwf_complex*)&Output[0]);
-    Output.resize((pLen / 2) + 1);
+    fftwf_execute_dft_r2c(Plan, &(*pInput)[0], (fftwf_complex*)&Output[0]);
+    Output.resize((pInput->size() / 2) + 1);
     for(int i = 0; i < Output.size(); i++) {
-      Output[i].Real = Output[i].Real / pLen;
-      Output[i].Imag = Output[i].Imag / pLen;
+      Output[i].Real = Output[i].Real / pInput->size();
+      Output[i].Imag = Output[i].Imag / pInput->size();
     }
     pthread_mutex_lock(&pPlannerMutex);
     fftwf_destroy_plan(Plan);

@@ -84,18 +84,15 @@ void HTTPServer::OpenSession(MHD_Connection* connection, Request_t* request) {
     request->DB->BindSingleString(Cookie);
     request->DB->ExecSentence();
     if(request->DB->ResultRows() == 1) {
-      request->UserName = request->DB->ResultValue(0, (char*)"name");
-      request->SessionID = request->DB->ResultValue(0, (char*)"id");
-      if(request->UserName) request->UserName = strdup(request->UserName);
-      if(request->SessionID) request->SessionID = strdup(request->SessionID);
+      request->UserName = strdup(request->DB->ResultValue(0, "name"));
+      request->SessionID = strdup(request->DB->ResultValue(0, "id"));
       return;
     }
   }
   request->DB->PrepareSentence("INSERT INTO sessions(name, timestamp) VALUES (NULL, ?) RETURNING id");
   request->DB->BindSingleUInt64(Tools::GetTime());
   request->DB->ExecSentence();
-  if(request->DB->ResultRows() == 1) request->SessionID = request->DB->ResultValue(0, (char*)"id");
-  if(request->SessionID) request->SessionID = strdup(request->SessionID);
+  if(request->DB->ResultRows() == 1) request->SessionID = strdup(request->DB->ResultValue(0, (char*)"id"));
 }
 void HTTPServer::CloseSession(MHD_Connection* connection, Request_t* request) {
   if(request->DB == NULL) request->DB = new Database(NULL);
@@ -249,9 +246,9 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
               json_object_object_add(Request->JSONWriter, "Result", json_object_new_boolean(false));
             } else {
               json_object_object_add(Request->JSONWriter, "Result", json_object_new_boolean(true));
-              char *LastLogin = Request->DB->ResultValue(0, (char*)"lastlogin");
+              const char *LastLogin = Request->DB->ResultValue(0, "lastlogin");
               if(LastLogin) json_object_object_add(Request->JSONWriter, "LastLogin", json_object_new_int64(atol(LastLogin)));
-              char *Admin = Request->DB->ResultValue(0, (char*)"admin");
+              const char *Admin = Request->DB->ResultValue(0, "admin");
               if(Admin) json_object_object_add(Request->JSONWriter, "Admin", json_object_new_boolean((Admin[0] == 't') ? true : false));
               if(UpdateLastLogin) {
                 Request->DB->PrepareSentence("UPDATE users SET lastlogin = ? WHERE name = ?");

@@ -37,7 +37,10 @@ var Ajax = {
   GetSeriesAggreg: function(period, to, aggreg, series, onSuccess, onCompletion) { return $.ajax({ url: "getSeriesAggreg", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, Series: series, Analyzer: Analyzers[Analyzer].ID } ) }); }  ,
   GetEvents: function(period, to, lastevent, onSuccess, onCompletion) { return $.ajax({ url: "getEvents", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, LastEvent: lastevent, Analyzer: Analyzers[Analyzer].ID } ) }); }  
 };
-
+/* Short aggreg to period */
+function GetPeriodFromAggreg(aggreg) {
+  return (aggreg === '1h') ? 3600000 : (aggreg === '10m') ? 600000 : (aggreg === '1m') ? 60000 : 3000;
+}
 /* Return full text from aggregation short name */
 function GetAggregLongName(shortText) {
   return (shortText === '1h') ? '1 hour' : (shortText === '10m') ? '10 minutes' : (shortText === '1m') ? '1 minute' : (shortText === '3s') ? '3 seconds' : false;
@@ -53,17 +56,6 @@ function GetPeriodNameFromMS(elapsed) {
 /* Return MS time from period name */
 function GetMSFromPeriodName(elapsed) {
   return (elapsed === 'Day') ? 86400000 : (elapsed === 'Week') ? 604800000 : (elapsed === 'Month') ? 2592000000 : 31536000000;
-}
-/* return end end time and duration of current counters */
-function GetCountersTimePeriod() {
-  var Period = localStorage.getItem('CountersPeriod');
-  var Result = (Period === 'Year') ? GetYearTimePeriod() : (Period === 'Month') ? GetMonthTimePeriod() : (Period === 'Week') ? GetWeekTimePeriod() : GetDayTimePeriod();
-  return Result;
-}
-/* return end time and duration of custom period selection (include other useful values) */
-function GetCustomTimeDuration() {
-  var Result = {};
-  
 }
 /* return end time and duration of current and previous year (include other useful values) */
 function GetYearTimePeriod() {
@@ -118,12 +110,17 @@ function GetDayTimePeriod() {
   return Result;
 }
 
-/* Scrollable help class */
+/* Scrollable help class 
+ * NowBtn: pause the automatic update
+ * AggregBtn: Selected aggregation
+ * PeriodBtn: Period in view
+ * Counters: Callback function called when selected period changes (called with GetTimes result) */
 function Scrollable(opt) {
   this.LastSample = 0;
   this.Timer = null;
   this.Opt = Object.assign({NowBtn: '#btnScrollableNow', AggregBtn: '#btnScrollableAggreg', PeriodBtn: '#btnScrollablePeriod', Spinners: [], Series: ''}, opt);
   this.Range = [0, 0];
+  this.CountersTimes = null;
   var Self = this;
   Self.XAxis = { valueFormatter: function (x) { return new Date(x).toLocaleDateString() + ' - ' + new Date(x).toLocaleTimeString(); },
                  axisLabelFormatter: function (x) { return new Date(x).toLocaleTimeString() + '<br/>' + new Date(x).toLocaleDateString(); }
@@ -148,8 +145,6 @@ function Scrollable(opt) {
     localStorage.setItem('GraphPeriod', Period);
     Self.LastSample = 0;
     Self.GetSeries();
-    localStorage.setItem('CountersPeriod', PeriodName);
-    Scrollable_UpdateCounters(true);
   });
   $(Self.Opt.AggregBtn + ' + ul li a').click(function(event) {
     event.preventDefault();
@@ -157,6 +152,23 @@ function Scrollable(opt) {
     Self.LastSample = 0;
     Self.GetSeries();
   });
+  Self.GetCountersTimePeriod = function(name) {
+    if(parseInt(localStorage.getItem('GraphEnd')) === 0) {
+      if(name === 'Year')  return GetYearTimePeriod();
+      if(name === 'Month') return GetMonthTimePeriod();
+      if(name === 'Week')  return GetWeekTimePeriod();
+      if(name === 'Day')   return GetDayTimePeriod();
+    }
+    var Result = {};
+    Result.PrimaryPeriod = parseInt(localStorage.getItem('GraphPeriod'));
+    Result.PrimaryTo = parseInt(localStorage.getItem('GraphEnd'));
+    Result.PreferedAggreg = localStorage.getItem('GraphAggregation');
+    Result.PrimaryText = 'Displayed period';
+    var From = new Date(Result.PrimaryTo - Result.PrimaryPeriod);
+    var To = new Date(Result.PrimaryTo);
+    Result.SecondaryText = 'From ' + From.toLocaleDateString() + ' - ' + From.toLocaleTimeString() + ' to ' + To.toLocaleDateString() + ' - ' + To.toLocaleTimeString();
+    return Result;    
+  };  
   Self.GetSeries = function() {
     if(Self.Timer !== null) clearInterval(Self.Timer);
     $(Self.Opt.NowBtn).addClass('disabled');
@@ -192,6 +204,14 @@ function Scrollable(opt) {
         $(Self.Opt.PeriodBtn + ' div:first').text(PeriodName);
         $(Self.Opt.PeriodBtn).next().children().removeClass('active');
         $(Self.Opt.PeriodBtn).next().children(':contains(' + PeriodName + ')').addClass('active');
+        if(Self.CountersTimes === null) {
+          Self.CountersTimes = Self.GetCountersTimePeriod(PeriodName);
+          if(Self.Opt.Counters !== undefined) Self.Opt.Counters(Self.CountersTimes, true);
+        } else {
+          var Times = Self.GetCountersTimePeriod(PeriodName);
+          if(Self.Opt.Counters !== undefined) Self.Opt.Counters(Times, (Times.PrimaryTo !== Self.CountersTimes.PrimaryTo) || (Times.PrimaryPeriod !== Self.CountersTimes.PrimaryPeriod));
+          Self.CountersTimes = Times;
+        }
         var GraphAggregation = localStorage.getItem('GraphAggregation');
         if(GraphAggregation !== result['Aggregation_Source']) {
           $('#dlgAggregWarning').modal('show');
@@ -207,7 +227,7 @@ function Scrollable(opt) {
       }, 
       function() { 
         $(Self.Opt.NowBtn).removeClass('disabled');
-        if(parseInt(localStorage.getItem('GraphEnd')) === 0) Self.Timer = setTimeout(Self.GetSeries, 3000);
+        if(parseInt(localStorage.getItem('GraphEnd')) === 0) Self.Timer = setTimeout(Self.GetSeries, GetPeriodFromAggreg(GraphAggregation));
       }
     );  
   };
@@ -348,7 +368,6 @@ function GraphMaximizer(title, graph, button, resizeHandler) {
     });
   });
 }
-
 /* append samples of given series to array of graph data, and shift if needed */
 function GraphDataAppend(result, serie, data) {
   if(result['Sampletime'] !== null && result['Sampletime'].length > 0) {
@@ -394,7 +413,7 @@ function GraphHightlightWeekends(color, canvas, area, g) {
     fromTimestamp = Tmp;
   }
 }
-/* Hanle grouo button action (phases) */
+/* Handle group button action (phases) */
 function GroupButtons(buttongroup, variable, maxItems, unique, callback, sender) {
   var State = localStorage.getItem(variable);
   var NumElements = buttongroup.children().length;
@@ -603,7 +622,6 @@ function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter 
   );
   return Graph;
 }
-
 /* Generate an array of colors from a base */
 function ColorArray(base, items) {
   var Array = [];
@@ -613,7 +631,7 @@ function ColorArray(base, items) {
   }
   return Array;
 }
-
+/* Manage legend in graphs */
 function LegendFormatter_Follow(data) {
   if(data.x === undefined || data.x === null) return "";
   var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';
@@ -769,32 +787,24 @@ function GetIndicators() {
   );
 }
 function AjaxGetIndicatorsB() {
-  var From = GetDayTimestamp();
-
-  $.ajax({ url: "getSeriesAggreg",
-    timeout: 20000,
-    type: "POST",
-    dataType: "json",
-    contentType: 'application/json',
-    data: JSON.stringify({ Series: "sum(active_energy)", Aggreg: '1m', Period: 86400000, To: From + 86400000, Analyzer: Analyzers[Analyzer].ID }),
-    success: function(result) {
-      var Units = 'Wh';
+  var Times = GetDayTimePeriod();
+  Ajax.GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, "sum(active_energy)", 
+    function(result) {
+      var Units = GetBestUnits(ArrayMax(result['sum_active_energy']));
+      $('#IndicatorActiveEnergyUnits').text(Units + 'Wh');
+      $('#IndicatorTodayEnergyValues').html("");
+      result['sum_active_energy'] = ScaleArrayToUnits(result['sum_active_energy'], Units);
       for(i = 0; i < result['sum_active_energy'].length; i++) {
-        if(result['sum_active_energy'][i] > 1000) Units = 'kWh';
+        $('#IndicatorTodayEnergyValues').append('<span class="value">' + Round2(result['sum_active_energy'][i]) + '</span>');
       }
-      $('#EnergyIndicatorUnits').text(Units);
-      if(Units == 'kWh') {
-        for(i = 0; i < result['sum_active_energy'].length; i++) result['sum_active_energy'][i] = result['sum_active_energy'][i] / 1000;
-      }
-      $('#EnergyIndicator').html(Array_Round2(result['sum_active_energy'], ' | ', ''));
     },
-    error: function() {
-      $('EnergyIndicator').text('Offline');
-    },
-    complete: function() {
+    function() {
       setTimeout(AjaxGetIndicatorsB, 60000);
+    },
+    function() {
+      $('EnergyIndicator').text('Offline');
     }
- });
+  );
 }
 function AjaxGetSysStats() {
   $.ajax({ url: "getSysInfo",

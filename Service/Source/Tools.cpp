@@ -70,7 +70,7 @@ void Tools::LogMsg(const char *level, const char *msg, ...) {
   pthread_mutex_unlock(&pLogMutex);
   va_end(args);
 }
-bool Tools::CreateLogFile(char *name) {
+bool Tools::CreateLogFile(const char *name) {
   pLogFile = fopen(name, "at");
   if(!pLogFile) pLogFile = fopen(name, "wt");
   if(pLogFile < 0) {
@@ -115,7 +115,7 @@ void Tools::Daemonize() {
   close(STDOUT_FILENO);
   close(STDERR_FILENO);
 }
-bool Tools::ReadConfig(char *file) {
+bool Tools::ReadConfig(const char *file) {
   if(file == NULL) return true;
   LogMsg("INFO", "Loading config file...\n");
   int File = open(file, O_RDONLY);
@@ -223,27 +223,27 @@ bool Tools::GetSysInfo(char *user, json_object *reader, Database *db, json_objec
   *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
   return true;
 }
-bool Tools::JSONString(json_object *obj, const char *key, char **dst, bool copy) {
+bool Tools::JSONString(const json_object *obj, const char *key, char **dst, bool copy) {
   json_object *Find;
   if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_string)) *dst = (copy ? strdup((char*)json_object_get_string(Find)) : (char*)json_object_get_string(Find));
   return (Find != NULL);
 }
-bool Tools::JSONFloat(json_object *obj, const char *key, float *dst) {
+bool Tools::JSONFloat(const json_object *obj, const char *key, float *dst) {
   json_object *Find;
   if((json_object_object_get_ex(obj, key, &Find) == true) && ((json_object_get_type(Find) == json_type_double) || (json_object_get_type(Find) == json_type_int))) *dst = json_object_get_double(Find);
   return (Find != NULL);
 }
-bool Tools::JSONUInt64(json_object *obj, const char *key, uint64_t *dst) {
+bool Tools::JSONUInt64(const json_object *obj, const char *key, uint64_t *dst) {
   json_object *Find;
   if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_int)) *dst = json_object_get_int64(Find);
   return (Find != NULL);
 }
-bool Tools::JSONUInt32(json_object *obj, const char *key, uint32_t *dst) {
+bool Tools::JSONUInt32(const json_object *obj, const char *key, uint32_t *dst) {
   json_object *Find;
   if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_int)) *dst = json_object_get_int(Find);
   return (Find != NULL);
 }
-bool Tools::JSONArrayFloat(json_object* obj, const char* key, float* dst, int len) {
+bool Tools::JSONArrayFloat(const json_object* obj, const char* key, float* dst, int len) {
   json_object *Find;
   if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
     if(json_object_array_length(Find) != len) return false;

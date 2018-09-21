@@ -42,17 +42,16 @@
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Prices/ESIOS.cpp</file>
         </group>
         <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/AnalyzerSoft.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/AnalyzerSoft.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Database.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/AnalyzerRemote.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Tools.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Database.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/AnalyzerRemote.cpp</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Main.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/openZmeter.conf_sample</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/ZeroCrossing.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Tools.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/openZmeter.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/AnalyzerSoft.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Analysis_Energy.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Analysis_Voltage.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Analysis_Energy.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/AnalyzerInterface.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Common.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Analysis_Frequency.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Analysis_Power.html</file>
         </group>
     </open-files>
 </project-private>

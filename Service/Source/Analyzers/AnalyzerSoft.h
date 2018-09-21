@@ -19,8 +19,6 @@ class AnalyzerSoft : public AnalyzerInterface {
       size_t MaxSize;
     } CurlBuff_t;
   private :
-    uint8_t          pVoltageChannels;         //Canales de tension
-    uint8_t          pCurrentChannels;         //Canales de corriente
     uint64_t         pSequence;                //Numero de bloques analizados
     Params_t         pAggreg10C;               //Agregacion de 10 ciclos
     Params_t         pAggreg3S;                //Agregacion de 3 segundos
@@ -32,13 +30,9 @@ class AnalyzerSoft : public AnalyzerInterface {
     char            *pSyncName;                //Server user
     char            *pSyncPassword;            //Server password
     pthread_t        pSyncThread;              //Working thread
-    uint32_t         pMaxSamples;              //Numero maximo de muestras
-    float           *pVoltageSamples[3];       //Muestras de tension del bloque
-    float           *pCurrentSamples[4];       //Muestras de corriente del bloque
-    FFT             *pVoltageFFT[3];           //Muestras de FFT tension del bloque
-    FFT             *pCurrentFFT[4];           //Muestras de FFT corriente del bloque
-    uint32_t         pCyclesLen[20];           //Longitud de los ciclos detectados
-    uint8_t          pCycles;                  //Numero de ciclos detectados
+//    uint32_t         pMaxSamples;              //Numero maximo de muestras
+    vector<FFT*>     pVoltageFFT;           //Muestras de FFT tension del bloque
+    vector<FFT*>     pCurrentFFT;           //Muestras de FFT corriente del bloque
     bool             pWorking;                 //Flag para indicar que el hilo esta trabajando
     pthread_t        pThread;                  //Hilo de ejecucion
     pthread_mutex_t  pThreadMutex;             //Mutex para la variable de condicion
@@ -67,9 +61,9 @@ class AnalyzerSoft : public AnalyzerInterface {
   public :
     AnalyzerSoft(float samplerate, char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerInterface::AnalyzerMode mode);
     ~AnalyzerSoft();
-    void GetParams(Params_t *params, ExtParams_t *extParams);
+    void GetParams(Params_t *params, bool extParams);
     void ConfigRemote(json_object *config);
     void ConfigPrices(json_object *config);
-    bool BufferAppend(float *voltageSamples, float *CurrentSamples, uint64_t sampletime);
+    bool BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime);
     bool IsFinished();
 };

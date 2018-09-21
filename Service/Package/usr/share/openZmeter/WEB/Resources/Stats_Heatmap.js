@@ -29,7 +29,7 @@ function AjaxGetEnergy(selected_year) {
     function(result) {
       EnergyData = GraphDataAppend(result, 'active_energy', []);
       $('#StatsSpinner').hide();
-      EnergySeries();      
+      EnergySeries();
     }
   );
 }
@@ -41,12 +41,13 @@ function SumPhases(array, visibleSeries) {
   return Energy;
 }
 function UpdateHeatMap(visibleSeries) {
-  var Count = 1;
-  if($('#btnHeatmap1Hour').hasClass('active')) Count = 6;
-  if($('#btnHeatmap30Min').hasClass('active')) Count = 3;
-  if($('#btnHeatmap20Min').hasClass('active')) Count = 2;
-  if($('#btnHeatmap10Min').hasClass('active')) Count = 1;
-  Count = 1;
+  var Block = parseInt(localStorage.getItem('StatsBlock'));
+  var Count = (Block === 0) ? 6 : (Block === 1) ? 3 : (Block === 2) ? 2 : 1;
+//  if($('#btnHeatmap1Hour').hasClass('active')) Count = 6;
+//  if($('#btnHeatmap30Min').hasClass('active')) Count = 3;
+//  if($('#btnHeatmap20Min').hasClass('active')) Count = 2;
+//  if($('#btnHeatmap10Min').hasClass('active')) Count = 1;
+//  Count = 1;
   var Body = $('#HeatMap tbody');
   Body.html("");
   var Days = [];
@@ -89,44 +90,17 @@ function UpdateHeatMap(visibleSeries) {
     Body.append(Row);
   });
 }
-function UpdateView(event) {
-  if(this.id === 'btnHeatmap1Hour') localStorage.setItem('StatBlocks', '1h');
-  if(this.id === 'btnHeatmap30Min') localStorage.setItem('StatBlocks', '30m');
-  if(this.id === 'btnHeatmap20Min') localStorage.setItem('StatBlocks', '20m');
-  if(this.id === 'btnHeatmap10Min') localStorage.setItem('StatBlocks', '10m');
-  
-  $('#btnHeatmap1Hour').addClass('disabled');
-  $('#btnHeatmap30Min').addClass('disabled');
-  $('#btnHeatmap20Min').addClass('disabled');
-  $('#btnHeatmap10Min').addClass('disabled');
-  $('#btnHeatmap1Hour').removeClass('active');
-  $('#btnHeatmap30Min').removeClass('active');
-  $('#btnHeatmap20Min').removeClass('active');
-  $('#btnHeatmap10Min').removeClass('active');
-  switch(localStorage.getItem('StatView')) {
-
-    default :
-      localStorage.setItem('StatView', 'Heatmap');
-      $('#btnShowAsHeatmap').addClass('active');
-      $('#ShowAsHeatmap').removeClass('hidden');
-      $('#btnHeatmap1Hour').removeClass('disabled');
-      $('#btnHeatmap30Min').removeClass('disabled');
-      $('#btnHeatmap20Min').removeClass('disabled');
-      $('#btnHeatmap10Min').removeClass('disabled');
-      break;
-  } 
-  UpdateHeatMap();
-}
-//$('#btnHeatmap1Hour').click(ButtonClick);
-//$('#btnHeatmap30Min').click(ButtonClick);
-//$('#btnHeatmap20Min').click(ButtonClick);
-//$('#btnHeatmap10Min').click(ButtonClick);
-
 function EnergySeries(event) {
   GroupButtons($('#groupEnergyPhases'), 'VisibleStatsPhases', 3, false, UpdateHeatMap, (event !== undefined) ? event.target : undefined);
 }
 $('#groupEnergyPhases').on('click', 'button', EnergySeries);
 function UpdatePage() {
+  var State = parseInt(localStorage.getItem('StatsBlock'));
+  var NumElements = $('#btnBlocks + ul').children().length;
+  if(isNaN(State) || (State < 0) || (State > (NumElements - 1))) State = 0;
+  $('#btnBlocks + ul > li:nth-child(' + (State + 1) + ')').addClass('active');
+  $('#btnBlocks span:first').text($('#btnBlocks + ul > li:nth-child(' + (State + 1) + ') > a').text());
+  localStorage.setItem('StatsBlock', State);
   Ajax.GetSeriesRange('10m', 
     function(result) {
       for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) {
@@ -136,9 +110,13 @@ function UpdatePage() {
         evt.preventDefault();
         AjaxGetEnergy(parseInt(this.text));
       });
-      $('#btnBlocks + ul > li').on(function(evt) {
+      $('#btnBlocks + ul > li > a').click(function(evt) {
         evt.preventDefault();
-        AjaxGetEnergy(parseInt(this.text));
+        $('#btnBlocks').parent().find('li').removeClass('active');
+        $('#btnBlocks').parent().find('li > a:contains(' + this.text +')').parent().addClass('active');
+        $('#btnBlocks span:first').text(this.text);
+        localStorage.setItem('StatsBlock', $(this).parent().index());
+        EnergySeries();
       });
       AjaxGetEnergy(new Date(result['To']).getFullYear());
     }

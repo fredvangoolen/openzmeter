@@ -22,7 +22,7 @@ class DeviceInterface {
     pthread_t pCaptureThread;           //Descriptor del hilo de captura
     bool      pTerminate;               //Marca que deben detenerse los trabajos pendientes
   protected :
-    virtual AnalyzerInterface *FindAnalyzer(char *serial) = 0;
+    virtual AnalyzerInterface *FindAnalyzer(const char *serial) = 0;
   protected :
     DeviceInterface();
   protected :

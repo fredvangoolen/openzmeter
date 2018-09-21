@@ -60,7 +60,7 @@ bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Data
   db->BindSingleString(user);
   db->ExecSentence();
   for(uint32_t i = 0; i < db->ResultRows(); i++) {
-    char *Serial = db->ResultValue(i, (char*)"serial");
+    const char *Serial = db->ResultValue(i, "serial");
     for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
       AnalyzerInterface *Analyzer = (*it)->FindAnalyzer(Serial);
       if(Analyzer != NULL) {

@@ -128,21 +128,21 @@ function PeriodView_OnSuccess(result) {
   }
 }
 function VoltageSeries(event) {
-  GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'VisibleDashboardVoltagePhases', false, function(series) { return CalcRanges(VoltageData, series, false); }, (event !== undefined) ? event.target : undefined); 
+  GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'DashboardVoltageVisiblePhases', false, function(series) { return CalcRanges(VoltageData, series, false); }, (event !== undefined) ? event.target : undefined); 
 }
 $('#groupVoltagePhases').on('click', 'button', VoltageSeries);
 $('#btnExportVoltage').click(function() {
   exportToCsv('Voltage.csv', [['Time'].concat(SeriesNames.Voltage())].concat(VoltageData));
 });
 function CurrentSeries(event) {
-  GraphPhaseButtons(CurrentChart, $('#groupCurrentPhases'), 'VisibleDashboardCurrentPhases', false, function(series) { return CalcRanges(CurrentData, series, false); }, (event !== undefined) ? event.target : undefined); 
+  GraphPhaseButtons(CurrentChart, $('#groupCurrentPhases'), 'DashboardCurrentVisiblePhases', false, function(series) { return CalcRanges(CurrentData, series, false); }, (event !== undefined) ? event.target : undefined); 
 }
 $('#groupCurrentPhases').on('click', 'button', CurrentSeries);
 $('#btnExportCurrent').click(function() {
   exportToCsv('Current.csv', [['Time'].concat(SeriesNames.Current())].concat(CurrentData));
 });
 function PowerSeries(event) {
-  GraphPhaseButtons(PowerChart, $('#groupPowerPhases'), 'VisibleDashboardPowerPhases', false, function(series) { return CalcRanges(PowerData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
+  GraphPhaseButtons(PowerChart, $('#groupPowerPhases'), 'DashboardPowerVisiblePhases', false, function(series) { return CalcRanges(PowerData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
   var Annotations = [];
   var Result = ArrayGraphMinMax(PowerChart, true);
   Annotations.push( { series: Result.VisibleNames[0], xval: Result.MaxTime, shortText: 'MAX', text: 'Active power peak', width: 28, cssClass: 'annotation' });
@@ -179,6 +179,10 @@ function Scrollable_OnSuccess(result, clear) {
     $(window).bind('resize', EnergyResizeEvent);
     window.dispatchEvent(new Event('resize'));
     new GraphMaximizer('Active energy', EnergyChart, '#btnMaximizeEnergy', EnergyResizeEvent);
+    $('#groupEnergyPhases').on('click', 'button', EnergySeries);
+    $('#btnExportEnergy').click(function() {
+      exportToCsv('ActiveEnergy.csv', [['Time'].concat(SeriesNames.ActiveEnergy())].concat(EnergyData));
+    });
   } else {
     EnergyChart.updateOptions( { file: EnergyData, dateWindow: [result['From'], result['To']] } );
   }
@@ -191,10 +195,6 @@ function EnergyResizeEvent() {
 function EnergySeries(event) {
   GraphPhaseButtons(EnergyChart, $('#groupEnergyPhases'), 'VisibleDashboardEnergyPhases', false, function(series) { return CalcRanges(EnergyData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
 }
-$('#groupEnergyPhases').on('click', 'button', EnergySeries);
-$('#btnExportEnergy').click(function() {
-  exportToCsv("ActiveEnergy_" + Node + '_' + LastEnergySample + '.csv', [['Time'].concat(ActiveEnergyNames)].concat(EnergyData));
-});
 
 /* Contadores de consumo */
 var EnergyCountersTimer  = null;

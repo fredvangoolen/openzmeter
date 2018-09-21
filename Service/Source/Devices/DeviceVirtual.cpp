@@ -34,8 +34,8 @@ void  *DeviceVirtual::Capture_Thread(void *args) {
   uint64_t StartTime        = Tools::GetTime();
   uint64_t GeneratedSamples = 0;
   while(!This->pTerminate) {
-    float Voltage[3];
-    float Current[4];
+    vector<float> Voltage(3);
+    vector<float> Current(4);
     uint64_t Sampletime = Tools::GetTime();
     if((This->pAnalyzer->IsFinished() == true) && (((Sampletime - StartTime) * This->pSampleRate / 1000) > GeneratedSamples)) {
       Voltage[0] = This->pAnalyzer->GetNominalVoltage() * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pAnalyzer->GetNominalFrequency());
@@ -50,7 +50,7 @@ void  *DeviceVirtual::Capture_Thread(void *args) {
       Current[1] = Current[1] + Current[1] * 0.1 * sin((2.0 * M_PI * (GeneratedSamples - This->pSampleRate * 120.0)) / (This->pSampleRate * 100.0));
       Current[2] = 5.0 * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pAnalyzer->GetNominalFrequency() - 4.0 * M_PI / 3.0);
       Current[2] = Current[2] + Current[2] * 0.1 * sin((2.0 * M_PI * (GeneratedSamples - This->pSampleRate * 240.0)) / (This->pSampleRate * 100.0));
-      Current[3] =  Current[0] + Current[1] + Current[2];
+      Current[3] = Current[0] + Current[1] + Current[2];
       GeneratedSamples++;
       This->pAnalyzer->BufferAppend(Voltage, Current, Sampletime);
     } else {
@@ -98,7 +98,7 @@ DeviceVirtual::~DeviceVirtual() {
   pthread_join(pCaptureThread, NULL);
   if(pAnalyzer) delete pAnalyzer;
 }
-AnalyzerInterface *DeviceVirtual::FindAnalyzer(char *serial) {
+AnalyzerInterface *DeviceVirtual::FindAnalyzer(const char *serial) {
   return (strcmp(serial, pAnalyzer->GetID()) == 0) ? pAnalyzer : NULL;
 }
 //uint32_t DeviceVirtual::SamplesCopy(float **dest, uint32_t offset, uint32_t len) {

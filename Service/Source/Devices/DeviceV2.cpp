@@ -92,7 +92,8 @@ bool DeviceV2::BuffersAppend() {
   bool Started = false;
   for(uint8_t Sample = 0; (Sample < 5) && (pUsed > 0) && (Started == false); Sample++) {
     for(uint8_t i = 0; i < pAnalyzersCount; i++) {
-      if(pAnalyzers[0].Analyzer->BufferAppend(&pVoltageSamples[pReadPos * pVoltageChannelCount + pAnalyzers[0].OffsetV], &pCurrentSamples[pReadPos * pCurrentChannelCount + pAnalyzers[0].OffsetC], Sampletime) == true) Started = true;
+      
+//      if(pAnalyzers[0].Analyzer->BufferAppend(&pVoltageSamples[pReadPos * pVoltageChannelCount + pAnalyzers[0].OffsetV], &pCurrentSamples[pReadPos * pCurrentChannelCount + pAnalyzers[0].OffsetC], Sampletime) == true) Started = true;
     }
     pReadPos = (pReadPos + 1) % pBuffLen;
     pUsed--;
@@ -201,7 +202,7 @@ void *DeviceV2::Capture_Thread(void *args) {
   }
   return NULL;
 }
-AnalyzerInterface *DeviceV2::FindAnalyzer(char *serial) {
+AnalyzerInterface *DeviceV2::FindAnalyzer(const char *serial) {
   for(uint8_t i = 0; i < pAnalyzersCount; i++) {
     if(strcmp(serial, pAnalyzers[i].Analyzer->GetID()) == 0) return pAnalyzers[i].Analyzer;
   }

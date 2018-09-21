@@ -137,13 +137,13 @@ void Database::BindSingleFloat(float param) {
     pParamsLen++;
   }
 }
-void Database::BindArrayArrayFloat(float *params, int lenA, int lenB) {
+void Database::BindArrayArrayFloat(const vector< vector<float> > &params, int lenA, int lenB) {
   if(pParamsLen < pParamsAlloc) {
     pParams[pParamsLen] = (char*)malloc(4 + (4 * sizeof(char) * 18 * lenB * lenA));
     int Pos = sprintf(pParams[pParamsLen], "'{");
     for(int i = 0; i < lenA; i++) {
       Pos += sprintf(&pParams[pParamsLen][Pos], "{");
-      for(int n = 0; n < lenB; n++) Pos += sprintf(&pParams[pParamsLen][Pos], isnan(params[i * lenB + n]) ? "NULL, " : "%g, ", params[i * lenB + n]);    
+      for(int n = 0; n < lenB; n++) Pos += sprintf(&pParams[pParamsLen][Pos], isnan(params[i][n]) ? "NULL, " : "%g, ", params[i][n]);    
       if(lenB > 0) Pos -= 2;
       Pos += sprintf(&pParams[pParamsLen][Pos], "}, ");
     }
@@ -162,13 +162,27 @@ void Database::BindArrayUInt16(uint16_t *params, int len) {
     pParamsLen++;
   }
 }
-void Database::BindArrayFloat(float *params, int len) {
+void Database::BindArrayFloat(const vector<float> &params) {
   if(pParamsLen < pParamsAlloc) {
-    pParams[pParamsLen] = (char*)malloc(4 + sizeof(char) * 18 * len);
-    int Pos = sprintf(pParams[pParamsLen], "'{");
-    for(int i = 0; i < len; i++) Pos += sprintf(&pParams[pParamsLen][Pos], isnan(params[i]) ? "NULL, " : "%g, ", params[i]);
-    if(len > 0) Pos -= 2;
-    sprintf(&pParams[pParamsLen][Pos], "}'");
+    stringstream Stream;
+    Stream <<  "'{";
+    for(uint i = 0; i < params.size(); i++) {
+      if(isnan(params[i])) 
+        Stream << "NULL";
+      else
+        Stream << params[i];
+      if(i < (params.size() - 1)) Stream << ", ";
+    //    pParams[pParamsLen] = (char*)malloc(4 + sizeof(char) * 18 * len);
+//    int Pos = sprintf(pParams[pParamsLen], "'{");
+
+            
+//            for(int i = 0; i < len; i++) Pos += sprintf(&pParams[pParamsLen][Pos], isnan(params[i]) ? "NULL, " : "%g, ", params[i]);
+//    if(len > 0) Pos -= 2;
+    }
+    Stream <<  "}'";
+    
+//    sprintf(&pParams[pParamsLen][Pos], "}'");
+    pParams[pParamsLen] = strdup(Stream.str().c_str());
     pParamsLen++;
   }
 }
@@ -192,7 +206,7 @@ uint32_t Database::ResultRows() {
   if(pResult == NULL) return 0;
   return PQntuples(pResult);
 }
-char *Database::ResultValue(uint32_t row, char *name) {
+const char *Database::ResultValue(uint32_t row, char *name) {
   if(pResult == NULL) return NULL;
   if(PQntuples(pResult) < 1) return NULL;
   uint32_t Col = PQfnumber(pResult, name);
