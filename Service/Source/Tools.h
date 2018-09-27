@@ -38,6 +38,6 @@ class Tools {
     static bool         JSONFloat(const json_object *obj, const char *key, float *dst);
     static bool         JSONUInt64(const json_object *obj, const char *key, uint64_t *dst);
     static bool         JSONUInt32(const json_object *obj, const char *key, uint32_t *dst);
-    static bool         JSONArrayFloat(const json_object *obj, const char *key, float *dst, int len);
+    static bool         JSONArrayFloat(const json_object *obj, const char *key, float *dst, uint len);
 };
 //----------------------------------------------------------------------------------------------------------------------

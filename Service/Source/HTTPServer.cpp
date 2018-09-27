@@ -65,14 +65,14 @@ bool HTTPServer::Config(json_object *config) {
 void HTTPServer::Stop() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
 }
-void HTTPServer::RegisterDefault(char *def) {
+void HTTPServer::RegisterDefault(const char *def) {
   pDefaultPage = def;
 }
 void HTTPServer::RegisterCallback(const char *handleName, HTTPServer::Func_t function) {
   Callback_t Item = {handleName, function};
   pCallbacks.push_back(Item);
 }
-void HTTPServer::RegisterMapping(char *url, char *file) {
+void HTTPServer::RegisterMapping(const char *url, const char *file) {
   Mapping_t Item = {url, file};
   pMappings.push_back(Item);
 }

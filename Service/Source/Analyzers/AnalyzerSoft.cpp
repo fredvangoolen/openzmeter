@@ -305,7 +305,7 @@ void AnalyzerSoft::ConfigRemote(json_object* config) {
   }
 }
 void AnalyzerSoft::ConfigPrices(json_object* config) {
-//  pPrices = new PricesInterface()
+  pPrices = PricesInterface::Config(pID, config);
 }
 void AnalyzerSoft::AccumulateAggreg(Params_t *dst, Params_t *src) {
   dst->Timestamp = src->Timestamp;

@@ -8,7 +8,7 @@
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 vector<DeviceInterface*>        DeviceInterface::pDevices;
-vector<DeviceInterface::Type_t> DeviceInterface::pRegisteredTypes;
+vector<DeviceInterface::Type_t> DeviceInterface::pRegisteredTypes __attribute__((init_priority(200)));
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceInterface::Config(json_object *config) {
   Database DB(NULL);
@@ -30,7 +30,7 @@ bool DeviceInterface::Config(json_object *config) {
       for(vector<Type_t>::iterator it = pRegisteredTypes.begin() ; it != pRegisteredTypes.end(); ++it) {
         if(strcmp(Name, it->Name) == 0) {
           DeviceInterface *Instance = it->Constructor(Device);
-          if(Device != NULL) pDevices.push_back(Instance);
+          if(Instance != NULL) pDevices.push_back(Instance);
           break;
         }
       }

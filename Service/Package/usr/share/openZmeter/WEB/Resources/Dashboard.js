@@ -198,18 +198,32 @@ function EnergySeries(event) {
 
 /* Contadores de consumo */
 var EnergyCountersTimer  = null;
-function Scrollable_UpdateCounters(change) {
-  if(EnergyCountersTimer !== null) clearInterval(EnergyCountersTimer);
-  EnergyCountersTimer = setTimeout(Scrollable_UpdateCounters, 60000);
-  var Times = GetCountersTimePeriod();
-  if(change === true) {
-    $('#labelEnergyPrimary').text(Times.PrimaryText);
+function Scrollable_UpdateCounters(times, renew) {
+  if(renew === true) {
+    $('#labelEnergyPrimary').text(times.PrimaryText);
     $('#labelEnergyPrimaryValue').text('Calculating...');
-    $('#labelEnergyPrimaryUnits').text('');
-    $('#labelEnergyPrimaryPhases').text('');
-    $('#labelEnergySecondary').text(Times.SecondaryText);
+    $('#labelEnergyPrimaryUnits #labelEnergyPrimaryPhases').text('');
+    $('#labelEnergySecondary').text(times.SecondaryText);
+    $('#labelEnergySecondaryValue').text((times.SecondaryTo !== undefined) ? 'Calculating...' : '');
+    if(times.SecondaryTo !== undefined) {
+      $('#labelEnergySecondaryValue').text('Calculating...');
+      Ajax.GetSeriesAggreg(times.SecondaryPeriod, times.SecondaryTo, times.PreferedAggreg, 'sum(active_energy)', 
+        function(result) {
+          if(result['Samples'] !== 0) {
+            var Sum = ArraySum(result['sum_active_energy']);
+            var Units = GetBestUnits(Sum);
+            var Text = Round2(ScaleToUnits(Sum, Units)) + '&nbsp;' + Units + 'Wh';
+            if(result['sum_active_energy'].length > 1) Text += '(' + Array_Round2(ScaleArrayToUnits(result['sum_active_energy'], Units), '&nbsp;&nbsp;') + ')';
+            $('#labelEnergySecondaryValue').html(Text);
+          } else {
+            $('#labelEnergySecondaryValue').text('No data');
+          }
+          window.dispatchEvent(new Event('resize'));
+        }
+      );
+    }
   }
-  Ajax.GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, 'sum(active_energy)', 
+  Ajax.GetSeriesAggreg(times.PrimaryPeriod, times.PrimaryTo, times.PreferedAggreg, 'sum(active_energy)', 
     function(result) {
       var Sum = ArraySum(result['sum_active_energy']);
       var Units = GetBestUnits(Sum);
@@ -219,21 +233,7 @@ function Scrollable_UpdateCounters(change) {
       window.dispatchEvent(new Event('resize'));
     }
   );
-  if(Times.SecondaryTo !== undefined) {
-    $('#labelEnergySecondaryValue').text('Calculating...');
-    Ajax.GetSeriesAggreg(Times.SecondaryPeriod, Times.SecondaryTo, Times.PreferedAggreg, 'sum(active_energy)', 
-      function(result) {
-        var Sum = ArraySum(result['sum_active_energy']);
-        var Units = GetBestUnits(Sum);
-        var Text = Round2(ScaleToUnits(Sum, Units)) + '&nbsp;' + Units + 'Wh';
-        if(result['sum_active_energy'].length > 1) Text += '(' + Array_Round2(ScaleArrayToUnits(result['sum_active_energy'], Units), '&nbsp;&nbsp;') + ')';
-        $('#labelEnergySecondaryValue').html(Text);
-        window.dispatchEvent(new Event('resize'));
-      }
-    );
-  } else {
-    $('#labelEnergySecondaryValue').text('');
-  }
+  
 //  GetSeriesAggreg(Times.PrevPeriod, Times.PrevEnd, Times.PreferedAggreg, 'sum(active_energy)', EnergyUpdateCountersPrevs);
 //  $.ajax({ url: "getBudget",
 //           timeout: 20000,
@@ -302,8 +302,7 @@ $('#groupParametersPhases').on('click', 'button', ParametersSeries);
 
 var MainScrollable = null;
 function UpdatePage() {
-  MainScrollable = new Scrollable( {Spinners: ['#EnergySpinner'], Series: 'active_energy', OnSuccess: Scrollable_OnSuccess} );
-  Scrollable_UpdateCounters(true);
+  MainScrollable = new Scrollable( {Spinners: ['#EnergySpinner'], Series: 'active_energy', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters} );
   new PeriodView( {Spinners: ['#VoltageSpinner', '#CurrentSpinner', '#PowerSpinner', '#FrequencySpinner'], Series: 'rms_v, flag, rms_i, active_power, freq', Period: 7200000, Aggreg: '3s', OnSuccess: PeriodView_OnSuccess} );
   new PeriodView( {Spinners: ['#MainParametersSpinner'], Series: 'reactive_power, power_factor, phi, thd_v, thd_i', Period: 86400000, Aggreg: '1m', OnSuccess: PeriodViewParams_OnSuccess} );
 }

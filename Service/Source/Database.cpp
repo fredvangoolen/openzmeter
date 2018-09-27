@@ -15,7 +15,7 @@ int   Database::pPort         = 5432;
 char *Database::pUser         = (char*)"openzmeter";
 char *Database::pPassword     = (char*)"";
 //----------------------------------------------------------------------------------------------------------------------
-Database::Database(char *schema) {
+Database::Database(const char *schema) {
   pSchema    = (schema == NULL) ? (char*)"public" : schema;
   pParams    = NULL;
   pResult    = NULL;
@@ -206,7 +206,7 @@ uint32_t Database::ResultRows() {
   if(pResult == NULL) return 0;
   return PQntuples(pResult);
 }
-const char *Database::ResultValue(uint32_t row, char *name) {
+const char *Database::ResultValue(uint32_t row, const char *name) {
   if(pResult == NULL) return NULL;
   if(PQntuples(pResult) < 1) return NULL;
   uint32_t Col = PQfnumber(pResult, name);

@@ -243,11 +243,11 @@ bool Tools::JSONUInt32(const json_object *obj, const char *key, uint32_t *dst) {
   if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_int)) *dst = json_object_get_int(Find);
   return (Find != NULL);
 }
-bool Tools::JSONArrayFloat(const json_object* obj, const char* key, float* dst, int len) {
+bool Tools::JSONArrayFloat(const json_object* obj, const char* key, float* dst, uint len) {
   json_object *Find;
   if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
     if(json_object_array_length(Find) != len) return false;
-    for(int i = 0; i < len; i++) {
+    for(uint i = 0; i < len; i++) {
       json_object *Item = json_object_array_get_idx(Find, i);
       json_type Type = json_object_get_type(Item);
       if((Type != json_type_double) && (Type != json_type_int)) return false;

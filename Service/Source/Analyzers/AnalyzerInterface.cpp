@@ -28,12 +28,13 @@ AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nomi
   ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_ext_1m  (sampletime bigint NOT NULL PRIMARY KEY REFERENCES aggreg_1m(sampletime), power_factor real[] NOT NULL, thd_v real[] NOT NULL, thd_i real[] NOT NULL, phi real[] NOT NULL, harmonics_v real[] NOT NULL, harmonics_i real[] NOT NULL) WITH (OIDS=FALSE)");
   ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_stat_1h (sampletime bigint NOT NULL PRIMARY KEY REFERENCES aggreg_1h(sampletime), stat_voltage int[] NOT NULL, stat_frequency int[] NOT NULL, stat_thd int[] NOT NULL, stat_harmonics int[] NOT NULL) WITH (OIDS=FALSE)");
   ExecSentence("CREATE TABLE IF NOT EXISTS events (eventtime bigint NOT NULL PRIMARY KEY, duration  bigint NOT NULL, samplerate real, type character varying(16), voltage real, percent real, samples real[]) WITH (OIDS=FALSE)");
+  ExecSentence("CREATE TABLE IF NOT EXISTS prices (sampletime bigint NOT NULL PRIMARY KEY, price real NOT NULL) WITH (OIDS=FALSE)");
 }
 AnalyzerInterface::~AnalyzerInterface() {}
 float AnalyzerInterface::GetMaxCurrent() {
   return pMaxCurrent;
 }
-char *AnalyzerInterface::GetID() {
+const char *AnalyzerInterface::GetID() {
   return pID;
 }
 float AnalyzerInterface::GetNominalVoltage() {

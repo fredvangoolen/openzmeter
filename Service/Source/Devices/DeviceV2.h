@@ -20,6 +20,7 @@ class DeviceV2 : public DeviceInterface {
       uint8_t       OffsetV;
       uint8_t       OffsetC;
       AnalyzerSoft *Analyzer;
+      char         *ID;
     } Analyzer_t;
     enum USBState {USB_RESET, USB_WAIT, USB_SYNC};
   private :

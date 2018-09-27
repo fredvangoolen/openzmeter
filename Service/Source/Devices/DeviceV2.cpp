@@ -265,7 +265,7 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
   }  
   if((json_object_object_get_ex(config, "Outputs", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
     This->pAnalyzers = (Analyzer_t*)realloc(This->pAnalyzers, sizeof(Analyzer_t*) * json_object_array_length(Find));
-    for(int i = 0; i < json_object_array_length(Find); i++) {
+    for(uint i = 0; i < json_object_array_length(Find); i++) {
       json_object *Output = json_object_array_get_idx(Find, i);
       char *ReadMode = (char*)"3Phase";
       char *Name     = (char*)"Unnamed input";
@@ -279,7 +279,8 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
           return NULL;  
         }
         This->pChannelMask = This->pChannelMask | ((UseNeutral == true) ? 0x7F : 0x7E);
-        This->pAnalyzers[This->pAnalyzersCount].Analyzer = new AnalyzerSoft(This->pADCSamplerate / This->pOversample, strdup(This->pSerial), NominalVoltage, NominalFrequency, Name, 50.0, 0.1, UseNeutral ? AnalyzerInterface::PHASE3N : AnalyzerInterface::PHASE3);
+        This->pAnalyzers[This->pAnalyzersCount].ID = strdup(This->pSerial);
+        This->pAnalyzers[This->pAnalyzersCount].Analyzer = new AnalyzerSoft(This->pADCSamplerate / This->pOversample, This->pAnalyzers[This->pAnalyzersCount].ID, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, UseNeutral ? AnalyzerInterface::PHASE3N : AnalyzerInterface::PHASE3);
         This->pAnalyzers[This->pAnalyzersCount].OffsetV = 0;
         This->pAnalyzers[This->pAnalyzersCount].OffsetC = 0;
         This->pAnalyzersCount++;
@@ -327,9 +328,9 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
           return NULL;
         }
         This->pChannelMask = This->pChannelMask | CurrentMask | VoltageMask;
-        char *ID = (char*)malloc(strlen(This->pSerial) + 2);
-        sprintf(ID, "%s%s", This->pSerial, CurrentChannelText);
-        This->pAnalyzers[This->pAnalyzersCount].Analyzer = new AnalyzerSoft(This->pADCSamplerate / This->pOversample, ID, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
+        This->pAnalyzers[This->pAnalyzersCount].ID = (char*)malloc(strlen(This->pSerial) + 2);
+        sprintf(This->pAnalyzers[This->pAnalyzersCount].ID, "%s%s", This->pSerial, CurrentChannelText);
+        This->pAnalyzers[This->pAnalyzersCount].Analyzer = new AnalyzerSoft(This->pADCSamplerate / This->pOversample, This->pAnalyzers[This->pAnalyzersCount].ID, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
         This->pAnalyzersCount++;
       } else {
         Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, Mode must be one '1Phase' or '3Phase'\n");
@@ -380,7 +381,7 @@ DeviceV2::~DeviceV2() {
   if(pVoltageSamples) free(pVoltageSamples);
   if(pCurrentSamples) free(pCurrentSamples);
   for(int i = 0; i < pAnalyzersCount; i++) {
-    free(pAnalyzers[i].Analyzer->GetID());
+    free(pAnalyzers[i].ID);
     delete pAnalyzers[i].Analyzer;
   }
   free(pAnalyzers);

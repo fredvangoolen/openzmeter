@@ -30,8 +30,8 @@ class HTTPServer {
       Func_t      Function;
     } Callback_t;
     typedef struct {
-      char *URL;
-      char *File;
+      const char *URL;
+      const char *File;
     } Mapping_t;
   private:
     static MHD_Daemon         *pDaemon;
@@ -52,9 +52,9 @@ class HTTPServer {
     static void  CloseSession(MHD_Connection *connection, Request_t *request);
   public :
     static bool Config(json_object *config);
-    static void RegisterDefault(char *def);
+    static void RegisterDefault(const char *def);
     static void RegisterCallback(const char *handleName, Func_t function);
-    static void RegisterMapping(char *url, char *file);
+    static void RegisterMapping(const char *url, const char *file);
     static void Stop();
     static void RemoveExpiredSessions();
 };

@@ -12,116 +12,83 @@
 #include <libxml/xpathInternals.h>
 #include "Tools.h"
 #include "ESIOS.h"
-/* Genera consultas de forma periodica a la pagina de REE para descargar las tarifas y calcular el precio del consumo */
-ESIOS::ESIOS(AnalyzerInterface *analyzer, json_object *config) : PricesInterface(analyzer, "€") {
+// Register ============================================================================================================
+bool  ESIOS::pClassRegistered = PricesInterface::RegisterType("ESIOS", ESIOS::CreateInstance);
+// Funciones ===========================================================================================================
+ESIOS::ESIOS(const char* id) : PricesInterface(id) {
+  pRate = "Z01";
+}
+PricesInterface *ESIOS::CreateInstance(const char *name, json_object *config) {
+  ESIOS *This = new ESIOS(name);
+  //Leo si estoy en Z01...
   curl_global_init(CURL_GLOBAL_DEFAULT);
-  pTerminate = false;
-//  pLastCheck = 0;
-  
-  /*SELECT MAX(sampletime) FROM (
-  SELECT MAX(sampletime / 1000) AS sampletime FROM prices
-UNION
-  SELECT MIN(sampletime / 1000) FROM aggreg_1h) AS Tmp;*/
-  
-  if(pthread_create(&pThread, NULL, Update_Thread, this) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    curl_global_cleanup();
+  This->pCurlBuff.Buffer  = NULL;
+  This->pCurlBuff.MaxSize = 0;
+  This->pCurlBuff.Size    = 0;
+  This->pCurl = curl_easy_init();
+  curl_easy_setopt(This->pCurl, CURLOPT_WRITEDATA, (void*)&This->pCurlBuff);
+  curl_easy_setopt(This->pCurl, CURLOPT_WRITEFUNCTION, Curl_Read_Callback);
+  This->StartThread();
+  return This;
+}
+void ESIOS::XMLError(void *ctx, const char *msg,...) {}
+ESIOS::~ESIOS() {
+  curl_easy_cleanup(pCurl);
+  if(pCurlBuff.Buffer) free(pCurlBuff.Buffer);
+  curl_global_cleanup();
+}
+size_t ESIOS::Curl_Read_Callback(void *contents, size_t size, size_t nmemb, void *userp) {
+  CurlBuff_t *Buff = (CurlBuff_t*)userp;
+  if((Buff->Size + size * nmemb + 1) > Buff->MaxSize) {
+    Buff->Buffer = (char*)realloc(Buff->Buffer, Buff->Size + size * nmemb + 1);
+    if(Buff->Buffer == NULL) {
+      return 0;
+    } else {
+      Buff->MaxSize = Buff->Size + size * nmemb + 1;
+    }
+  }
+  memcpy(&Buff->Buffer[Buff->Size], contents, size * nmemb);
+  Buff->Size += size * nmemb;
+  Buff->Buffer[Buff->Size] = 0;
+  return size * nmemb;
+}
+void ESIOS::CheckPrices(uint64_t from) {
+  long   HTTPCode;
+  char   Tmp[256];
+  time_t Timestamp = ((from / 1000) / 86400) * 86400;
+  struct tm Time;
+  pCurlBuff.Size = 0;
+  gmtime_r(&Timestamp, &Time);
+  strftime(Tmp, sizeof(Tmp), "https://api.esios.ree.es/archives/80/download?date=%Y-%m-%d", &Time);
+  xmlGenericErrorFunc ErrorHandler = XMLError;
+  initGenericErrorDefaultFunc(&ErrorHandler);
+  curl_easy_setopt(pCurl, CURLOPT_URL, Tmp);
+  CURLcode Result = curl_easy_perform(pCurl);
+  curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &HTTPCode);
+  if((Result != CURLE_OK) || (HTTPCode != 200)) {
+    Tools::LogMsg("ERROR", "curl_easy_perform() failed: %s\n", curl_easy_strerror(Result));
     return;
+  } 
+  xmlDoc *Doc = xmlReadMemory(pCurlBuff.Buffer, pCurlBuff.Size, Tmp, NULL, 0);
+  if(Doc != NULL) {
+    xmlXPathContext *Context = xmlXPathNewContext(Doc);
+    xmlXPathRegisterNs(Context, (const xmlChar*)"ns", (const xmlChar*)"http://sujetos.esios.ree.es/schemas/2014/04/01/PVPCDesgloseHorario-esios-MP/");
+    if(Context != NULL) {
+      snprintf(Tmp, sizeof(Tmp), "/ns:PVPCDesgloseHorario/ns:SeriesTemporales[ns:TerminoCosteHorario[@v='FEU'] and ns:TipoPrecio[@v='%s']]/ns:Periodo/ns:Intervalo/ns:Ctd", pRate);
+      xmlXPathObject *Result = xmlXPathEvalExpression((xmlChar*)Tmp, Context);
+      xmlXPathFreeContext(Context);
+      if(Result != NULL) {
+        xmlNodeSet *NodeSet = Result->nodesetval;
+        if(NodeSet->nodeNr == 24) {
+          for(int i = 0; i < NodeSet->nodeNr; i++) {
+            float Price = atof((const char *)xmlGetProp(NodeSet->nodeTab[i], (const xmlChar*)"v"));
+            SavePrice((uint64_t)Timestamp * 1000 + (i * 3600000), Price);
+          }
+          Tools::LogMsg("INFO", "Price information downloaded from ESIOS for day %d/%d/%d\n", Time.tm_mday, Time.tm_mon + 1, Time.tm_year + 1900);
+        }
+        xmlXPathFreeObject(Result);
+      }
+    }
+    xmlFreeDoc(Doc);
   }
 }
-ESIOS::~ESIOS() {
-//  pTerminate = true;
-//  pthread_join(pThread, NULL);
-//  curl_global_cleanup();
-}
-void *ESIOS::Update_Thread(void* args) {
-  ESIOS *This = (ESIOS*)args;
-  pthread_setname_np(This->pThread, "PriceServer");
-  while(!This->pTerminate) {
-//    uint32_t CurrentTimestamp = (uint32_t)time(NULL);
-    usleep(1000000);
-//
-//
-//    Timestamp = (Timestamp / 86400) * 86400;
-//    if(Timestamp > CurrentTimestamp) continue;
-//    CURL *Curl = curl_easy_init();
-//    struct tm Time;
-//    gmtime_r((time_t*)&Timestamp, &Time);
-//    MemBuffer_t Buffer;
-//    Buffer.Buffer = NULL;
-//    Buffer.Size = 0;
-//    char URL[1024];
-//    int Len = sprintf(URL, "https://api.esios.ree.es/archives/80/download?date_type=datos&locale=es");
-//    Len    += strftime(&URL[Len], 100, "&start_date=%Y-%m-%dT00:00:00+00:00", &Time);
-//    Len    += strftime(&URL[Len], 100, "&end_date=%Y-%m-%dT23:59:59+00:00", &Time);
-//    curl_easy_setopt(Curl, CURLOPT_URL, URL);
-//    curl_easy_setopt(Curl, CURLOPT_SSL_VERIFYPEER, 0L);
-//    curl_easy_setopt(Curl, CURLOPT_SSL_VERIFYHOST, 0L);
-//    curl_easy_setopt(Curl, CURLOPT_WRITEDATA, &Buffer);
-//    curl_easy_setopt(Curl, CURLOPT_WRITEFUNCTION, Prices_ReadCallback);
-//    CURLcode Result = curl_easy_perform(Curl);
-//    if(Result != CURLE_OK) {
-////      LogMsg("ERROR", "curl_easy_perform() failed: %s\n", curl_easy_strerror(Result));
-//      curl_easy_cleanup(Curl);
-//      continue;
-//    }
-//    xmlDoc *Doc = xmlReadMemory(Buffer.Buffer, Buffer.Size, URL, NULL, 0);
-//    //Lo que quiero es la serie "FEU" con tarifa "Z01", "Z02" o "Z03" segun seleccione
-//    if(Doc != NULL) {
-//      xmlXPathContext *Context = xmlXPathNewContext(Doc);
-//      xmlXPathRegisterNs(Context, "ns", "http://sujetos.esios.ree.es/schemas/2014/04/01/PVPCDesgloseHorario-esios-MP/");
-//      if(Context != NULL) {
-//        xmlChar *xPath = (xmlChar*)"/ns:PVPCDesgloseHorario/ns:SeriesTemporales[ns:TerminoCosteHorario[@v='FEU'] and ns:TipoPrecio[@v='Z01']]/ns:Periodo/ns:Intervalo/ns:Ctd";
-//        xmlXPathObject *Result = xmlXPathEvalExpression(xPath, Context);
-//        xmlXPathFreeContext(Context);
-//	      if(Result != NULL) {
-//          xmlNodeSet *NodeSet = Result->nodesetval;
-//          float *Prices = malloc(sizeof(float) * 24);
-//          if(NodeSet->nodeNr == 24) {
-//            for(int i = 0; i < NodeSet->nodeNr; i++) Prices[i] = atof(xmlGetProp(NodeSet->nodeTab[i], "v"));
-//            char StrDate[64];
-//            strftime(StrDate, sizeof(StrDate), "%d/%m/%Y", &Time);
-////            LogMsg("INFO", "Actualizando precios del dia %s\n", StrDate);
-////            DB_Save(PRICES, 0, Timestamp, Prices, true);
-//            Timestamp += 86400;
-//          }
-//          xmlXPathFreeObject(Result);
-//        }
-//      }
-//      fflush(stdout);
-//      xmlFreeDoc(Doc);
-//      xmlCleanupParser();
-    }
-//    free(Buffer.Buffer);
-//    curl_easy_cleanup(Curl);
-  return NULL;
-}
-
-
-
-
-
-// Tipos privados ======================================================================================================
-typedef struct {
-  char  *Buffer;
-  size_t Size;
-} MemBuffer_t;
-
-
-//======================================================================================================================
-size_t Prices_ReadCallback(void *contents, size_t size, size_t nmemb, void *userp) {
-//  size_t realsize = size * nmemb;
-//  MemBuffer_t *mem = (MemBuffer_t*)userp;
-//  mem->Buffer = realloc(mem->Buffer, mem->Size + realsize + 1);
-//  if(mem->Buffer == NULL) {
-////    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    return 0;
-//  }
-//  memcpy(&(mem->Buffer[mem->Size]), contents, realsize);
-//  mem->Size += realsize;
-//  mem->Buffer[mem->Size] = 0;
-//  return realsize;
-  return 0;
-}
-//======================================================================================================================
-

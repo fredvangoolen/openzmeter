@@ -47,7 +47,7 @@ class AnalyzerInterface : protected Database {
     } Params_t;
   protected :
     uint64_t      pLastSave;
-    char         *pID;
+    const char   *pID;
     float         pNominalVoltage;
     float         pNominalFrequency;
     char         *pName;
@@ -67,7 +67,7 @@ class AnalyzerInterface : protected Database {
     float        GetMaxCurrent();
     float        GetNominalVoltage();
     float        GetNominalFrequency();
-    char        *GetID();
+    const char  *GetID();
     json_object *GetJSONDescriptor();
     json_object *GetJSONParams(char *series);
 };

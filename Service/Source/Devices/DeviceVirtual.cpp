@@ -85,6 +85,8 @@ DeviceInterface* DeviceVirtual::CreateInstance(json_object* config) {
   }
   This->pAnalyzer = new AnalyzerSoft(This->pSampleRate, Serial, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE3);
   if((json_object_object_get_ex(config, "Remote", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigRemote(Find);
+  if((json_object_object_get_ex(config, "Prices", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigPrices(Find);
+
   if(pthread_create(&This->pCaptureThread, NULL, Capture_Thread, This) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     delete This;

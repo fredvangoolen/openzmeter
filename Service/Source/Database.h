@@ -20,7 +20,7 @@ class Database {
   private :
     PGconn      *pDBConn;
     char       **pParams;
-    char        *pSchema;
+    const char  *pSchema;
     int          pParamsLen;
     int          pParamsAlloc;
     const char  *pSentence;
@@ -28,21 +28,21 @@ class Database {
   private :
     bool Connect();
   public :
-    void      PrepareSentence(const char *sentence);
-    void      BindSingleUInt32(uint32_t param);
-    void      BindSingleUInt64(uint64_t param);
-    void      BindSingleFloat(float param);
-    void      BindArrayArrayFloat(const vector< vector<float> > &params, int lenA, int lenB);
-    void      BindArrayFloat(const vector<float> &params);
-    void      BindArrayUInt16(uint16_t *params, int len);
-    void      BindSingleBool(bool param);
-    void      BindSingleString(const char *string, bool identifier = false);
-    bool      ExecSentence();
-    uint32_t  ResultRows();
-    const char     *ResultValue(uint32_t row, char *name);
-    bool      ExecSentence(const char *sql);
-    char     *ExecSentenceJSON(const char* sql, size_t *len);
-    Database(char *schema);
+    void        PrepareSentence(const char *sentence);
+    void        BindSingleUInt32(uint32_t param);
+    void        BindSingleUInt64(uint64_t param);
+    void        BindSingleFloat(float param);
+    void        BindArrayArrayFloat(const vector< vector<float> > &params, int lenA, int lenB);
+    void        BindArrayFloat(const vector<float> &params);
+    void        BindArrayUInt16(uint16_t *params, int len);
+    void        BindSingleBool(bool param);
+    void        BindSingleString(const char *string, bool identifier = false);
+    bool        ExecSentence();
+    uint32_t    ResultRows();
+    const char *ResultValue(uint32_t row, const char *name);
+    bool        ExecSentence(const char *sql);
+    char       *ExecSentenceJSON(const char* sql, size_t *len);
+    Database(const char *schema);
     ~Database();
   public :
     static bool Config(json_object *config);
