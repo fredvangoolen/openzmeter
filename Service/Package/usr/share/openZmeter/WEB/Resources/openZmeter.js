@@ -35,7 +35,8 @@ var Ajax = {
   GetSeriesRange: function(aggreg, onSuccess, onCompletion) { return $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify({ Aggreg: '1h', Analyzer: Analyzers[Analyzer].ID}) }); },
   GetSeriesNow: function(series, onSuccess, onCompletion) { return $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Series: series, Analyzer: Analyzers[Analyzer].ID} ) }); },
   GetSeriesAggreg: function(period, to, aggreg, series, onSuccess, onCompletion) { return $.ajax({ url: "getSeriesAggreg", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, Series: series, Analyzer: Analyzers[Analyzer].ID } ) }); }  ,
-  GetEvents: function(period, to, lastevent, onSuccess, onCompletion) { return $.ajax({ url: "getEvents", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, LastEvent: lastevent, Analyzer: Analyzers[Analyzer].ID } ) }); }  
+  GetEvents: function(period, to, lastevent, onSuccess, onCompletion) { return $.ajax({ url: "getEvents", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, LastEvent: lastevent, Analyzer: Analyzers[Analyzer].ID } ) }); },
+  GetPrices: function(period, to, lastsample, onSuccess, onCompletion) { return $.ajax({ url: "getPrices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, LastSample: lastsample, Analyzer: Analyzers[Analyzer].ID } ) }); }  
 };
 /* Short aggreg to period */
 function GetPeriodFromAggreg(aggreg) {
@@ -168,7 +169,43 @@ function Scrollable(opt) {
     var To = new Date(Result.PrimaryTo);
     Result.SecondaryText = 'From ' + From.toLocaleDateString() + ' - ' + From.toLocaleTimeString() + ' to ' + To.toLocaleDateString() + ' - ' + To.toLocaleTimeString();
     return Result;    
-  };  
+  };
+  Self.OnSuccess = function(result) {
+    for(i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
+    Self.Opt.OnSuccess(result, Self.LastSample === 0);
+    Self.LastSample = LastSampletime(result, Self.LastSample);
+    $(Self.Opt.AggregBtn + ' div:first').text(GetAggregLongName(result['Aggregation_Source']));
+    $(Self.Opt.AggregBtn).next().children().removeClass('active');
+    $(Self.Opt.AggregBtn).next().children(':contains(' + GetAggregLongName(result['Aggregation_Source']) + ')').addClass('active');
+    Self.Range = [result['From'], result['To']];
+    var Period = result['To'] - result['From'];
+    var PeriodName = GetPeriodNameFromMS(Period);
+    $(Self.Opt.PeriodBtn + ' div:first').text(PeriodName);
+    $(Self.Opt.PeriodBtn).next().children().removeClass('active');
+    $(Self.Opt.PeriodBtn).next().children(':contains(' + PeriodName + ')').addClass('active');
+    if(Self.CountersTimes === null) {
+      Self.CountersTimes = Self.GetCountersTimePeriod(PeriodName);
+      if(Self.Opt.Counters !== undefined) Self.Opt.Counters(Self.CountersTimes, true);
+    } else {
+      var Times = Self.GetCountersTimePeriod(PeriodName);
+      if(Self.Opt.Counters !== undefined) Self.Opt.Counters(Times, (Times.PrimaryTo !== Self.CountersTimes.PrimaryTo) || (Times.PrimaryPeriod !== Self.CountersTimes.PrimaryPeriod));
+      Self.CountersTimes = Times;
+    }
+    if(Self.Opt.Series !== 'Prices') {
+      var GraphAggregation = localStorage.getItem('GraphAggregation');
+      if(GraphAggregation !== result['Aggregation_Source']) {
+        $('#dlgAggregWarning').modal('show');
+        GraphAggregation = result['Aggregation_Source'];
+      }
+      var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
+      if(GraphEnd === 0) {
+        $(Self.Opt.NowBtn).addClass('active');
+      } else {
+        $(Self.Opt.NowBtn).removeClass('active');
+      }
+      localStorage.setItem('GraphAggregation', GraphAggregation);
+    }
+  };
   Self.GetSeries = function() {
     if(Self.Timer !== null) clearInterval(Self.Timer);
     $(Self.Opt.NowBtn).addClass('disabled');
@@ -190,46 +227,23 @@ function Scrollable(opt) {
       GraphAggregation = '10m';
       localStorage.setItem('GraphAggregation', GraphAggregation);
     }
-    Ajax.GetSeries(Period, GraphEnd, GraphAggregation, Self.LastSample, Self.Opt.Series, 
-      function(result) {
-        for(i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
-        Self.Opt.OnSuccess(result, Self.LastSample === 0);
-        Self.LastSample = LastSampletime(result, Self.LastSample);
-        $(Self.Opt.AggregBtn + ' div:first').text(GetAggregLongName(result['Aggregation_Source']));
-        $(Self.Opt.AggregBtn).next().children().removeClass('active');
-        $(Self.Opt.AggregBtn).next().children(':contains(' + GetAggregLongName(result['Aggregation_Source']) + ')').addClass('active');
-        Self.Range = [result['From'], result['To']];
-        var Period = result['To'] - result['From'];
-        var PeriodName = GetPeriodNameFromMS(Period);
-        $(Self.Opt.PeriodBtn + ' div:first').text(PeriodName);
-        $(Self.Opt.PeriodBtn).next().children().removeClass('active');
-        $(Self.Opt.PeriodBtn).next().children(':contains(' + PeriodName + ')').addClass('active');
-        if(Self.CountersTimes === null) {
-          Self.CountersTimes = Self.GetCountersTimePeriod(PeriodName);
-          if(Self.Opt.Counters !== undefined) Self.Opt.Counters(Self.CountersTimes, true);
-        } else {
-          var Times = Self.GetCountersTimePeriod(PeriodName);
-          if(Self.Opt.Counters !== undefined) Self.Opt.Counters(Times, (Times.PrimaryTo !== Self.CountersTimes.PrimaryTo) || (Times.PrimaryPeriod !== Self.CountersTimes.PrimaryPeriod));
-          Self.CountersTimes = Times;
+    if(Self.Opt.Series === 'Prices') {
+      Ajax.GetPrices(Period, GraphEnd, Self.LastSample,
+        Self.OnSuccess, 
+        function() { 
+          $(Self.Opt.NowBtn).removeClass('disabled');
+          if(parseInt(localStorage.getItem('GraphEnd')) === 0) Self.Timer = setTimeout(Self.GetSeries, GetPeriodFromAggreg(GraphAggregation));
         }
-        var GraphAggregation = localStorage.getItem('GraphAggregation');
-        if(GraphAggregation !== result['Aggregation_Source']) {
-          $('#dlgAggregWarning').modal('show');
-          GraphAggregation = result['Aggregation_Source'];
+      );      
+    } else {
+      Ajax.GetSeries(Period, GraphEnd, GraphAggregation, Self.LastSample, Self.Opt.Series, 
+        Self.OnSuccess, 
+        function() { 
+          $(Self.Opt.NowBtn).removeClass('disabled');
+          if(parseInt(localStorage.getItem('GraphEnd')) === 0) Self.Timer = setTimeout(Self.GetSeries, GetPeriodFromAggreg(GraphAggregation));
         }
-        var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
-        if(GraphEnd === 0) {
-          $(Self.Opt.NowBtn).addClass('active');
-        } else {
-          $(Self.Opt.NowBtn).removeClass('active');
-        }
-        localStorage.setItem('GraphAggregation', GraphAggregation);    
-      }, 
-      function() { 
-        $(Self.Opt.NowBtn).removeClass('disabled');
-        if(parseInt(localStorage.getItem('GraphEnd')) === 0) Self.Timer = setTimeout(Self.GetSeries, GetPeriodFromAggreg(GraphAggregation));
-      }
-    );  
+      );
+    }
   };
   Self.GetSeries();
   Self.ZoomEvt = function(minDate, maxDate, yRanges) {
@@ -483,7 +497,7 @@ function GraphWaveTimeTicks(max) {
 /* find max value of array (maybe array of arrays) */
 function ArrayMax(array) {
   var Max = -Infinity;
-  for(i in array) {
+  for(var i in array) {
     Max = Math.max(Max, Array.isArray(array[i]) ? ArrayMax(array[i]) : array[i]);
   }
   return Max;
@@ -491,7 +505,7 @@ function ArrayMax(array) {
 /* find min value of array (maybe array of arrays) */
 function ArrayMin(array) {
   var Min = +Infinity;
-  for(i in array) {
+  for(var i in array) {
     Min = Math.min(Min, Array.isArray(array[i]) ? ArrayMin(array[i]) : array[i]);
   }
   return Min;
@@ -499,7 +513,7 @@ function ArrayMin(array) {
 /* sum array */
 function ArraySum(array) {
   var Sum = 0;
-  for(i = 0; i < array.length; i++) {
+  for(var i = 0; i < array.length; i++) {
     Sum += array[i];
   }
   return Sum;
@@ -507,8 +521,8 @@ function ArraySum(array) {
 /* Find the max value of graph series data (array of arrays where first column is time) */
 function ArrayGraphMax(array) {
   var Max = 0;
-  for(i = 0; i < array.length; i++) {
-    for(n = 1; n < array[i].length; n++) {      
+  for(var i = 0; i < array.length; i++) {
+    for(var n = 1; n < array[i].length; n++) {      
       Max = Math.max(Max, array[i][n]);
     }
   }

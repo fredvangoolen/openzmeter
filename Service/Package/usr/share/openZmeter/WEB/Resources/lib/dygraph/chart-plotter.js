@@ -132,6 +132,39 @@ Dygraph.Plugins.PolarCrosshair = (function() {
   };
   return polarCrosshair;
 })();
+/* Draw bar and line char without spaces and steped line  (prices) */
+function barChartLineNoSpacedPlotter(e) {
+  if(e.seriesIndex !== 0) return;
+  var g = e.dygraph;
+  var ctx = e.drawingContext;
+  var sets = e.allSeriesPoints;
+  var y_bottom = e.dygraph.toDomYCoord(0);
+  var min_sep = Infinity;
+  for(var i = 1; i < e.points.length; i++) {
+    var sep = Math.abs(e.points[i].canvasx - e.points[i - 1].canvasx);
+    if(sep < min_sep) min_sep = sep;
+  }
+  var bar_width = Math.floor(min_sep);
+  if(bar_width == 0) bar_width = min_sep;
+  ctx.strokeStyle = g.getColors()[0];
+  ctx.fillStyle = darkenColor(ctx.strokeStyle);    
+  for(var i = 0; i < sets[0].length; i++) {
+    var p = sets[0][i];
+    var center_x = p.canvasx;
+    ctx.fillRect(center_x - bar_width, p.canvasy, bar_width, y_bottom - p.canvasy);
+    if (bar_width > 5) ctx.strokeRect(center_x - bar_width, p.canvasy, bar_width, y_bottom - p.canvasy);
+    p.canvasx = p.canvasx - bar_width / 2;
+  }
+  ctx.strokeStyle = g.getColors()[1];
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(sets[1][0].canvasx - bar_width, sets[1][0].canvasy);
+  for(var i = 0; i < sets[1].length; i++) {
+    ctx.lineTo(sets[1][i].canvasx - bar_width, sets[1][i].canvasy);
+    ctx.lineTo(sets[1][i].canvasx, sets[1][i].canvasy);
+  }
+  ctx.stroke();
+}
 
 /* Draw bars without spacing*/
 function barChartNoSpacedPlotter(e) {

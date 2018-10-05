@@ -25,8 +25,8 @@ AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nomi
   ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_1m  (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[] NOT NULL, rms_i real[] NOT NULL, active_power real[] NOT NULL, active_energy real[] NOT NULL, reactive_power real[] NOT NULL, reactive_energy real[] NOT NULL, freq real, flag boolean NOT NULL) WITH (OIDS=FALSE)");
   ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_10m (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[] NOT NULL, rms_i real[] NOT NULL, active_power real[] NOT NULL, active_energy real[] NOT NULL, reactive_power real[] NOT NULL, reactive_energy real[] NOT NULL, freq real, flag boolean NOT NULL) WITH (OIDS=FALSE)");
   ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_1h  (sampletime bigint NOT NULL PRIMARY KEY, rms_v real[] NOT NULL, rms_i real[] NOT NULL, active_power real[] NOT NULL, active_energy real[] NOT NULL, reactive_power real[] NOT NULL, reactive_energy real[] NOT NULL, freq real, flag boolean NOT NULL) WITH (OIDS=FALSE)");
-  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_ext_1m  (sampletime bigint NOT NULL PRIMARY KEY REFERENCES aggreg_1m(sampletime), power_factor real[] NOT NULL, thd_v real[] NOT NULL, thd_i real[] NOT NULL, phi real[] NOT NULL, harmonics_v real[] NOT NULL, harmonics_i real[] NOT NULL) WITH (OIDS=FALSE)");
-  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_stat_1h (sampletime bigint NOT NULL PRIMARY KEY REFERENCES aggreg_1h(sampletime), stat_voltage int[] NOT NULL, stat_frequency int[] NOT NULL, stat_thd int[] NOT NULL, stat_harmonics int[] NOT NULL) WITH (OIDS=FALSE)");
+  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_ext_1m  (sampletime bigint NOT NULL PRIMARY KEY REFERENCES aggreg_1m(sampletime) ON UPDATE CASCADE ON DELETE CASCADE, power_factor real[] NOT NULL, thd_v real[] NOT NULL, thd_i real[] NOT NULL, phi real[] NOT NULL, harmonics_v real[] NOT NULL, harmonics_i real[] NOT NULL) WITH (OIDS=FALSE)");
+  ExecSentence("CREATE TABLE IF NOT EXISTS aggreg_stat_1h (sampletime bigint NOT NULL PRIMARY KEY REFERENCES aggreg_1h(sampletime) ON UPDATE CASCADE ON DELETE CASCADE, stat_voltage int[] NOT NULL, stat_frequency int[] NOT NULL, stat_thd int[] NOT NULL, stat_harmonics int[] NOT NULL) WITH (OIDS=FALSE)");
   ExecSentence("CREATE TABLE IF NOT EXISTS events (eventtime bigint NOT NULL PRIMARY KEY, duration  bigint NOT NULL, samplerate real, type character varying(16), voltage real, percent real, samples real[]) WITH (OIDS=FALSE)");
   ExecSentence("CREATE TABLE IF NOT EXISTS prices (sampletime bigint NOT NULL PRIMARY KEY, price real NOT NULL) WITH (OIDS=FALSE)");
 }
@@ -68,7 +68,7 @@ void AnalyzerInterface::InitAggreg(Params_t* params, AggregType type) {
     params->Current.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);
     params->Voltage.resize((pMode == PHASE1) ? 1 : 3);
   }
-//  ResetAggreg(params);
+  ResetAggreg(params);
 }
 void AnalyzerInterface::ResetAggreg(Params_t *params) {
   params->Timestamp = 0;
@@ -118,19 +118,19 @@ void AnalyzerInterface::SaveAggreg(Params_t *params) {
   else if(params->Type == AGGREG_1H)
     PrepareSentence("WITH Sample AS (INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING sampletime) "
                     "INSERT INTO aggreg_stat_1h(sampletime, stat_voltage, stat_frequency, stat_thd, stat_harmonics) SELECT sampletime, ?, ?, ?, ? FROM Sample");
-  BindSingleUInt64(params->Timestamp);                                                                            //sampletime
+  BindSingleUInt64(params->Timestamp);                                                 //sampletime
   BindArrayFloat(params->RMS_V);                                                       //rms_v 
-  BindArrayFloat(params->RMS_I);                               //rms_i
+  BindArrayFloat(params->RMS_I);                                                       //rms_i
   BindArrayFloat(params->Active_Power);                                                //active_power
   BindArrayFloat(params->Active_Energy);                                               //active_energy
   BindArrayFloat(params->Reactive_Power);                                              //reactive_power
   BindArrayFloat(params->Reactive_Energy);                                             //reactive_energy
-  BindSingleFloat(params->Frequency);                                                                             //frequency
-  BindSingleBool(params->Flag);                                                                                   //flaged
+  BindSingleFloat(params->Frequency);                                                  //frequency
+  BindSingleBool(params->Flag);                                                        //flaged
   if(params->Type == AGGREG_1M) {
     BindArrayFloat(params->Power_Factor);                                              //power_factor
     BindArrayFloat(params->THD_V);                                                     //thd_v
-    BindArrayFloat(params->THD_I);                             //thd_i
+    BindArrayFloat(params->THD_I);                                                     //thd_i
     BindArrayFloat(params->Phi);                                                       //phi
     BindArrayArrayFloat(params->VoltageHarmonics, (pMode == PHASE1) ? 1 : 3, 50);                         //harmonics_v
     BindArrayArrayFloat(params->CurrentHarmonics, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, 50); //harmonics_i

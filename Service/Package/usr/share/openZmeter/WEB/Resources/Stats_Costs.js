@@ -15,268 +15,221 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* Calendar locales */
-;(function($) {
-  $.fn.calendar.dates['custom'] = {
-	  days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-		daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-		daysMin: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
-		months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-		monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-		weekShort: 'W',
-		weekStart: 1
-	};
-} (jQuery)); 
-var Calendar = null, WeekTable = null, MonthTable = null, WeekDayTable = null, HourTable = null, EnergyData = [], SelectedYear;
-function AjaxGetEnergy(selected_year) {
-  $('#StatsSpinner').show();
-  $('#btnYear + ul > li').removeClass('active');
-  $('#btnYear + ul > li > a:contains(' + selected_year +')').parent().addClass('active');
-  $('#btnYear span:first').text(selected_year);
-  SelectedYear = selected_year;
-  $('#StatsSpinner').show();
-  var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
-  var From = new Date(selected_year, 0, 1, 0, 0, 0, 0).getTime();
-  Ajax.GetSeries(To - From, To, '1h', 0, 'active_energy',
-    function(result) {
-      EnergyData = GraphDataAppend(result, 'active_energy', []);
-      $('#StatsSpinner').hide();
-      EnergySeries();      
-    }
-  );
-}
-function ShowColorScale(scale, outerdiv) {
-  scale.out('hex');
-  var width = outerdiv.width() - 1;
-  for(i = 0; i <= width; i++) outerdiv.append('<div style="width:1px; height:8px; display:inline; background:' + scale(i / width) + '"></div>');
-}
-function SumPhases(array, visibleSeries) {
-  var Energy = 0.0;
-  for(phase = 0; phase < visibleSeries.length; phase++) {
-    if(visibleSeries[phase] === true) Energy = Energy + EnergyData[i][phase + 1];
+var ActiveEnergyConsumptionData = [], ActiveEnergyCostData = [], ActiveEnergyConsumptionChart = null, ActiveEnergyCostChart = null;
+function Scrollable_OnSuccess(result, clear) {
+  if(clear)  {
+    ActiveEnergyConsumptionData = [];
+    ActiveEnergyCostData        = [];
   }
-  return Energy;
-}
-function UpdateCalendar(visibleSeries) {
-  var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]), DayArray = [];
-  for(i = 0; i < EnergyData.length; i++) {
-    var Day = GetDayOfYear(EnergyData[i][0]);
-    if(DayArray[Day] === undefined) DayArray[Day] = 0.0;
-    DayArray[Day] = DayArray[Day] + SumPhases(EnergyData[i], visibleSeries);
-  }
-  var Max = ArrayMax(DayArray), Min = ArrayMin(DayArray), Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
-  if(Calendar === null) {
-    Calendar = $('#Calendar').calendar({ language: "custom" });
-    ShowColorScale(ColorScale, $('#CalendarScale'));
-  }
-  $('#CalendarMin').html(Round2(ScaleToUnits(Min, Units)));
-  $('#CalendarMax').html(Round2(ScaleToUnits(Max, Units)));
-  $('#CalendarUnits').html(Units + 'Wh');
-  Calendar.setYear(SelectedYear);
-  var Disabled = [];
-  Calendar.setCustomDayRenderer(function(element, date) {
-    var Day = GetDayOfYear(date.getTime());
-    if(DayArray[Day] === undefined) {
-      Disabled.push(new Date(date));
-    } else {
-      var Energy = DayArray[Day];
-      var Color = ColorScale((Energy - Min) / (Max - Min));
-      $(element).css({ 'background-color': Color, 'color': chroma(Color).luminance() > 0.5 ? '#000' : '#FFF', 'border': '1px solid #fff'});
-      $(element).prop({'data-toggle': 'tooltip', 'title': Round2Plain(ScaleToUnits(Energy, Units)) + ' ' + Units + 'Wh'} );
-    }
-  });
-  Calendar.setDisabledDays(Disabled);
-}
-function UpdateWeeks(visibleSeries) {
-  var WeekDay = [], WeekEnd = [];
-  if(WeekTable !== null) {
-    WeekTable.clear();
-    WeekTable.destroy();
-  }
-  for(i = 0; i < EnergyData.length; i++) {
-    var Week      = GetWeekOfYear(EnergyData[i][0]);
-    var DayOfWeek = new Date(EnergyData[i][0]).getDay();
-    if(WeekDay[Week] === undefined) WeekDay[Week] = 0.0;
-    if(WeekEnd[Week] === undefined) WeekEnd[Week] = 0.0;
-    if((DayOfWeek === 0) || (DayOfWeek === 6)) {
-      WeekEnd[Week] = WeekEnd[Week] + SumPhases(EnergyData[i], visibleSeries);
-    } else {
-      WeekDay[Week] = WeekDay[Week] + SumPhases(EnergyData[i], visibleSeries);
+  if(result['Sampletime'] !== null && result['Sampletime'].length > 0) {
+    if(ActiveEnergyConsumptionData.length === 0 || ActiveEnergyConsumptionData[ActiveEnergyConsumptionData.length - 1][0] < result['Sampletime'][0]) {
+      for(i = 0; i < result['Sampletime'].length; i++) {
+        ActiveEnergyConsumptionData.push([new Date(result['Sampletime'][i]), result['active_energy'][i], result['price'][i]]);
+        ActiveEnergyCostData.push([new Date(result['Sampletime'][i]), result['active_energy'][i] * result['price'][i] / 1000.0, result['price'][i]]);
+      }
+      ShiftArray(ActiveEnergyConsumptionData, result['MaxSamples']);
+      ShiftArray(ActiveEnergyCostData, result['MaxSamples']);
     }
   }
-  var Max = -Infinity, Min =  Infinity;
-  for(i in WeekDay) {
-    Max = Math.max(Max, WeekDay[i] + WeekEnd[i]);
-    Min = Math.min(Min, WeekDay[i] + WeekEnd[i]);
+  if(ActiveEnergyConsumptionChart == null) {
+    ActiveEnergyConsumptionChart = new Dygraph(document.getElementById("ActiveEnergyConsumptionChart"), ActiveEnergyConsumptionData,
+      { strokeWidth: 0.5, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], dateWindow: [result['From'], result['To']], includeZero: true, plotter: barChartLineNoSpacedPlotter,
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time', 'Consumption', 'Price'],
+        zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
+        colors: [$('#ActiveEnergyConsumptionPanel').css('border-color'), '#d9534f'], plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
+        underlayCallback: function(context, area, dygraph) { GraphHightlightWeekends("#EEE", context, area, dygraph); },
+        series: {'Price': { axis: 'y2' } },
+        axes: {
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
+               valueFormatter: function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + ' <em class="x-small">' + Units + 'Wh</em>'; },
+               axisLabelFormatter: function (x) {var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)); }
+             },
+          y2: { pixelsPerLabel: 15, axisLabelWidth: 26,
+                valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">€/kWh</em>'; },
+                axisLabelFormatter: function (x) { return Round2(x); }
+              },
+          x: MainScrollable.XAxis
+          }
+        }
+    );
+  } else {
+    ActiveEnergyConsumptionChart.updateOptions({file: ActiveEnergyConsumptionData, dateWindow: [result['From'], result['To']] });
   }
-  var Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
-  $('#WeekUnits').html('<em>' + Units + 'Wh</em>');
-  var Contents = $('#WeekTable tbody');
-  for(i = 1; ;i++) {
-    var startDate = GetDateOfISOWeek(i, SelectedYear);
-    var endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 6);
-    if(endDate.getFullYear() !== SelectedYear) break;
-    var E0 = (WeekDay[i] !== undefined) ? WeekDay[i] : 0, E1 = (WeekEnd[i] !== undefined) ? WeekEnd[i] : 0, E2 = E0 + E1;
-    Contents.append('<tr>' +
-      '<td data-toogle="tooltip" title="From ' + startDate.toLocaleDateString() + ' to ' + endDate.toLocaleDateString() + '">' + i + '</td>' + 
-      '<td><div class="progress" style="margin-bottom:0px; position:relative; height: 16px">' +
-      '<div class="progress-bar" role="progressbar" style="width:' + (100 * E0 / Max) + '%"></div>' +
-      '<div class="progress-bar" role="progressbar" style="background-color: #7eb0db; width:' + (100 * E1 / Max) + '%"></div>' +
-      '</div></td>' +
-      '<td data-sort="' + E0 + '">' + ((WeekDay[i] !== undefined) ? Round2(ScaleToUnits(E0, Units)) : '-') + '</td>' +
-      '<td data-sort="' + E1 + '">' + ((WeekDay[i] !== undefined) ? Round2(ScaleToUnits(E1, Units)) : '-') + '</td>' +
-      '<td data-sort="' + E2 + '">' + ((WeekDay[i] !== undefined) ? Round2(ScaleToUnits(E2, Units)) : '-') + '</td>' +
-      '</tr>');
+  if(ActiveEnergyCostChart == null) {
+    ActiveEnergyCostChart = new Dygraph(document.getElementById("ActiveEnergyCostChart"), ActiveEnergyCostData,
+      { strokeWidth: 0.5, stepPlot: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], dateWindow: [result['From'], result['To']], includeZero: true, plotter: barChartLineNoSpacedPlotter,
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time', 'Cost', 'Price'],
+        zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
+        colors: [$('#ActiveEnergyCostPanel').css('border-color'), '#d9534f'], plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
+        underlayCallback: function(context, area, dygraph) { GraphHightlightWeekends("#EEE", context, area, dygraph); },
+        series: {'Price': { axis: 'y2' } },
+        axes: {
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
+               valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">' + '€' + '</em>'; },
+               axisLabelFormatter: function (x) { return Round2(x); }
+             },
+          y2: { pixelsPerLabel: 15, axisLabelWidth: 26,
+                valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">€/kWh</em>'; },
+                axisLabelFormatter: function (x) { return Round2(x); }
+              },
+          x: MainScrollable.XAxis
+          }
+        }
+    );
+    Dygraph.synchronize([ActiveEnergyConsumptionChart, ActiveEnergyCostChart], { range: false, zoom: false } );
+  } else {
+    ActiveEnergyCostChart.updateOptions({file: ActiveEnergyCostData, dateWindow: [result['From'], result['To']]});
   }
-  WeekTable = $('#WeekTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
-                                          columnDefs: [ { targets: [1], sortable: false }, { targets: [0, 2, 3, 4], sortable: true, className: "text-center" } ],
-                                          order: [0, 'asc']
-  });
+//  EnergySeries();
 }
-function UpdateMonths(visibleSeries) {
-  var WeekDay = [], WeekEnd = [];
-  if(MonthTable !== null) {
-    MonthTable.clear();
-    MonthTable.destroy();
-  }
-  for(i = 0; i < EnergyData.length; i++) {
-    var Month     = new Date(EnergyData[i][0]).getMonth();
-    var DayOfWeek =  new Date(EnergyData[i][0]).getDay();
-    var Energy = 0;
-    if(WeekDay[Month] === undefined) WeekDay[Month] = 0.0;
-    if(WeekEnd[Month] === undefined) WeekEnd[Month] = 0.0;
-    if((DayOfWeek === 0) || (DayOfWeek === 6)) {
-      WeekEnd[Month] = WeekEnd[Month] + SumPhases(EnergyData[i], visibleSeries);
-    } else {
-      WeekDay[Month] = WeekDay[Month] + SumPhases(EnergyData[i], visibleSeries);
-    }
-  }
-  var Max = -Infinity, Min =  Infinity;
-  for(i in WeekDay) {
-    Max = Math.max(Max, WeekDay[i] + WeekEnd[i]);
-    Min = Math.min(Min, WeekDay[i] + WeekEnd[i]);
-  }
-  var Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
-  $('#MonthUnits').html('<em>' + Units + 'Wh</em>');
-  var Contents = $('#MonthTable tbody');
-  for(i = 0; i < 12; i++) {
-    var startDate = new Date(SelectedYear, i, 1);
-    var endDate = new Date(SelectedYear, i + 1, 0);
-    var E0 = (WeekDay[i] !== undefined) ? WeekDay[i] : 0, E1 = (WeekEnd[i] !== undefined) ? WeekEnd[i] : 0, E2 = E0 + E1;
-    Contents.append('<tr>' +
-      '<td data-sort="' + i + '">' + $.fn.calendar.dates['custom']['monthsShort'][i] + '</td>' + 
-      '<td><div class="progress" style="margin-bottom:0px; position:relative; height: 16px">' +
-      '<div class="progress-bar" role="progressbar" style="width:' + (100 * E0 / Max) + '%"></div>' +
-      '<div class="progress-bar" role="progressbar" style="background-color: #7eb0db; width:' + (100 * E1 / Max) + '%"></div>' +
-      '</div></td>' +
-      '<td data-sort="' + E0 + '">' + ((WeekDay[i] !== undefined) ? Round2(ScaleToUnits(E0, Units)) : '-') + '</td>' +
-      '<td data-sort="' + E1 + '">' + ((WeekDay[i] !== undefined) ? Round2(ScaleToUnits(E1, Units)) : '-') + '</td>' +
-      '<td data-sort="' + E2 + '">' + ((WeekDay[i] !== undefined) ? Round2(ScaleToUnits(E2, Units)) : '-') + '</td>' +
-      '</tr>');
-  }
-  MonthTable = $('#MonthTable').DataTable({ responsive: true, paging: false, info: false, searching: false, 
-                                            columnDefs: [ { targets: [1], sortable: false }, { targets: [0, 2, 3, 4], sortable: true, className: "text-center" } ],
-                                            order: [0, 'asc']
-  });
-}      
-function UpdateWeekDays(visibleSeries) {
-  var WeekDay = Array(7).fill(0), WeekDayCount = Array(7).fill(0);
-  if(WeekDayTable !== null) {
-    WeekDayTable.clear();
-    WeekDayTable.destroy();
-  }
-  for(i = 0; i < EnergyData.length; i++) {
-    var DayOfWeek = new Date(EnergyData[i][0]).getDay();
-    WeekDay[DayOfWeek] = WeekDay[DayOfWeek] + SumPhases(EnergyData[i], visibleSeries);
-    WeekDayCount[DayOfWeek] = WeekDayCount[DayOfWeek] + 1;
-  }
-  var Max = -Infinity;
-  var Min =  Infinity;
-  for(i in WeekDay) {
-    if(WeekDayCount[i] === 0) continue;
-    Max = Math.max(Max, WeekDay[i] / WeekDayCount[i]);
-    Min = Math.min(Min, WeekDay[i] / WeekDayCount[i]);
-  }
-  var Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
-  $('#WeekDayUnits').html('<em>' + Units + 'Wh</em>');
-  var Contents = $('#WeekDayTable tbody');
-  for(i = 0; i < 7; i++) {
-    var Energy = WeekDay[i];
-    var Count  = WeekDayCount[i];
-    Contents.append('<tr>' +
-      '<td data-sort="' + ((i === 0) ? 7 : i) + '">' + $.fn.calendar.dates['custom']['daysShort'][i] + '</td>' + 
-      '<td data-sort="' + Energy + '"><div class="progress" style="margin-bottom:0px; position:relative; height: 16px">' +
-      '<div class="progress-bar" role="progressbar" style="width:' + (100 * (Energy / Count) / Max) + '%"></div>' +
-      '</div></td>' + 
-      '<td data-sort="' + (Energy / Count) + '">' + ((WeekDayCount[i] === 0) ? '-' : Round2(ScaleToUnits(Energy / Count, Units))) + '</td>' +
-      '<td data-sort="' + Energy + '">' + ((WeekDayCount[i] === 0) ? '-' : Round2(ScaleToUnits(Energy, Units))) + '</td>' +
-      '</tr>');
-  }
-  WeekDayTable = $('#WeekDayTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
-                                                columnDefs: [ { targets: [1], sortable: false }, { targets: [2, 3], sortable: true, className: "text-right" }, { targets: [0], sortable: true, className: "text-center" } ],
-                                                order: [0, 'asc']
-  });
-}
-function UpdateHours(visibleSeries) {
-  var Hours = Array(24).fill(0), HoursCount = Array(24).fill(0);
-  if(HourTable !== null) {
-    HourTable.clear();
-    HourTable.destroy();
-  }
-  for(i = 0; i < EnergyData.length; i++) {
-    var Hour = new Date(EnergyData[i][0]).getHours();
-    Hours[Hour] = Hours[Hour] + SumPhases(EnergyData[i], visibleSeries);
-    HoursCount[Hour] = HoursCount[Hour] + 1;
-  }
-  var Max = -Infinity;
-  var Min =  Infinity;
-  for(i in Hours) {
-    if(Hours[i] === 0) continue;
-    Max = Math.max(Max, Hours[i] / HoursCount[i]);
-    Min = Math.min(Min, Hours[i] / HoursCount[i]);
-  }
-  var Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
-  $('#HourUnits').html('<em>' + Units + 'Wh</em>');
-  var Contents = $('#HourTable tbody');
-  for(i = 0; i < 24; i++) {
-    var Energy = Hours[i];
-    var Count  = HoursCount[i];
-    Contents.append('<tr>' +
-      '<td data-sort="' + i + '">' + i + '</td>' + 
-      '<td data-sort="' + Energy + '"><div class="progress" style="margin-bottom:0px; position:relative; height: 16px">' +
-      '<div class="progress-bar" role="progressbar" style="width:' + (100 * (Energy / Count) / Max) + '%"></div>' +
-      '</div></td>' + 
-      '<td data-sort="' + (Energy / Count) + '">' + ((HoursCount[i] === 0) ? '-' : Round2(ScaleToUnits(Energy / Count, Units))) + '</td>' +
-      '<td data-sort="' + Energy + '">' + ((HoursCount[i] === 0) ? '-' : Round2(ScaleToUnits(Energy, Units))) + '</td>' +
-      '</tr>');
-  }
-  HourTable = $('#HourTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
-                                                columnDefs: [ { targets: [1], sortable: false }, { targets: [2, 3], sortable: true, className: "text-right" }, { targets: [0], sortable: true, className: "text-center" } ],
-                                                order: [0, 'asc']
-  });
+function ActiveEnergyResizeEvent() {
+  var Height = $('#ActiveEnergyCurrentPanel').height() + $('#ActiveEnergyPrevPanel').height() + $('#ActiveEnergySelectedPanel').height();
+  if(ActiveEnergyChart !== null) ActiveEnergyChart.resize($('#ActiveEnergyCol').width(), Height + 6);
 }
 function EnergySeries(event) {
-  GroupButtons($('#groupEnergyPhases'), 'VisibleStatsPhases', 3, false, 
-  function(visibleSeries) {
-    UpdateCalendar(visibleSeries);
-    UpdateWeeks(visibleSeries);
-    UpdateMonths(visibleSeries);
-    UpdateWeekDays(visibleSeries);
-    UpdateHours(visibleSeries);
-  }, (event !== undefined) ? event.target : undefined);
+  GraphPhaseButtons(ActiveEnergyChart, $('#groupEnergyPhases'), 'VisibleEnergyPhases', false, function(series) { return CalcRanges(ActiveEnergyData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
+  GraphPhaseButtons(ReactiveEnergyChart, $('#groupEnergyPhases'), 'VisibleEnergyPhases', false, function(series) { return CalcRanges(ReactiveEnergyData, series, true, false, true); }, undefined); 
 }
 $('#groupEnergyPhases').on('click', 'button', EnergySeries);
-function UpdatePage() {
-  Ajax.GetSeriesRange('1h', 
+
+$('#btnShowEnergy').click(function() {
+  $('#EnergyPowerTitle').text('Energy');
+  $('#EnergySubPanel').removeClass('hidden');
+  $('#PowerSubPanel').addClass('hidden');
+  if(ActiveEnergyChart) $(ActiveEnergyChart.graphDiv).parent().removeAttr('style');
+  if(ReactiveEnergyChart) $(ReactiveEnergyChart.graphDiv).parent().removeAttr('style');
+  window.dispatchEvent(new Event('resize'));
+  $('#btnShowEnergy').addClass('active');
+  $('#btnShowPower').removeClass('active');
+  localStorage.setItem('EnergyPowerTab', 'Energy');
+});
+$('#btnShowPower').click(function() {
+  $('#EnergyPowerTitle').text('Power');
+  $('#EnergySubPanel').addClass('hidden');
+  $('#PowerSubPanel').removeClass('hidden');
+  if(ActivePowerChart) $(ActivePowerChart.graphDiv).parent().removeAttr('style');
+  if(ReactivePowerChart) $(ReactivePowerChart.graphDiv).parent().removeAttr('style');
+  window.dispatchEvent(new Event('resize'));
+  $('#btnShowEnergy').removeClass('active');
+  $('#btnShowPower').addClass('active');
+  localStorage.setItem('EnergyPowerTab', 'Power');
+});
+
+/* Maximizar y minimizar graficos */
+var DialogElement           = null;
+var PrevDialogContainer     = null;
+var DialogResizeHandler     = null;
+var DialogPrevResizeHandler = null;
+$('#aggreg_modal_close').click(function() {
+  $('#aggreg_modal').modal('hide');
+});
+$('#btnMaximizeActiveEnergy').click(function() {
+  $('#GraphDialogTitle').text('Active Energy');
+  $('#GraphDialog').modal('show');
+  PrevDialogContainer = $('#ActiveEnergyCol');
+  DialogElement = $('#ActiveEnergyMaximizeDiv').detach();
+  DialogPrevResizeHandler = function() {
+    $(ActiveEnergyChart.graphDiv).parent().removeAttr('style');
+  };
+  DialogResizeHandler = function() {
+    ActiveEnergyChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
+  };
+  $('#GraphDialogBody').append(DialogElement);
+  $(window).bind('resize', DialogResizeHandler);
+  window.dispatchEvent(new Event('resize'));  
+});
+$('#btnMaximizeReactiveEnergy').click(function() {
+  $('#GraphDialogTitle').text('Reactive Energy');
+  $('#GraphDialog').modal('show');
+  PrevDialogContainer = $('#ReactiveEnergyCol');
+  DialogElement = $('#ReactiveEnergyMaximizeDiv').detach();
+  DialogPrevResizeHandler = function() {
+    $(ReactiveEnergyChart.graphDiv).parent().removeAttr('style');
+  };
+  DialogResizeHandler = function() {
+    ReactiveEnergyChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
+  };
+  $('#GraphDialogBody').append(DialogElement);
+  $(window).bind('resize', DialogResizeHandler);
+  window.dispatchEvent(new Event('resize'));  
+});
+$('#btnMaximizeActivePower').click(function() {
+  $('#GraphDialogTitle').text('Active Power');
+  $('#GraphDialog').modal('show');
+  PrevDialogContainer = $('#ActivePowerCol');
+  DialogElement = $('#ActivePowerMaximizeDiv').detach();
+  DialogPrevResizeHandler = function() {
+    $(ActivePowerChart.graphDiv).parent().removeAttr('style');
+  };
+  DialogResizeHandler = function() {
+    ActivePowerChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
+  };
+  $('#GraphDialogBody').append(DialogElement);
+  $(window).bind('resize', DialogResizeHandler);
+  window.dispatchEvent(new Event('resize'));  
+});
+$('#btnMaximizeReactivePower').click(function() {
+  $('#GraphDialogTitle').text('Reactive Power');
+  $('#GraphDialog').modal('show');
+  PrevDialogContainer = $('#ReactivePowerCol');
+  DialogElement = $('#ReactivePowerMaximizeDiv').detach();
+  DialogPrevResizeHandler = function() {
+    $(ReactivePowerChart.graphDiv).parent().removeAttr('style');
+  };
+  DialogResizeHandler = function() {
+    ReactivePowerChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
+  };
+  $('#GraphDialogBody').append(DialogElement);
+  $(window).bind('resize', DialogResizeHandler);
+  window.dispatchEvent(new Event('resize'));  
+});
+$('#GraphDialogClose').click(function() {
+  $(window).unbind('resize', DialogResizeHandler);
+  $(window).bind('resize', DialogPrevResizeHandler);
+  $(PrevDialogContainer).append(DialogElement);
+  $('#GraphDialog').modal('hide');
+  window.dispatchEvent(new Event('resize'));
+});
+
+/* Contadores de energia */
+var EnergyCountersTimer  = null;
+function Scrollable_UpdateCounters(change) {
+  if(EnergyCountersTimer != null) clearInterval(EnergyCountersTimer);
+  EnergyCountersTimer = setTimeout(EnergyCountersTimer, 60000);
+  var Times = GetCountersTimePeriod();
+  if(change === true) {
+
+  }
+  Ajax.GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, 'sum(active_energy)',
     function(result) {
-      for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) {
-        $('#btnYear + ul').append('<li><a href="#">' + year + '</a></li>');
-      }
-      $('#btnYear + ul > li > a').click(function(evt) { 
-        evt.preventDefault();
-        AjaxGetEnergy(parseInt(this.text));
-      });
-      AjaxGetEnergy(new Date(result['To']).getFullYear());
     }
   );
+  if(Times.SecondaryTo !== undefined) {
+    Ajax.GetSeriesAggreg(Times.SecondaryPeriod, Times.SecondaryTo, Times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)',
+      function(result) {
+      }
+    );
+  } else {
+  }
 }
+
+
+/* Secuencia de inicio para cargar la pagina */
+var MainScrollable = null;
+function UpdatePage() {
+  MainScrollable = new Scrollable( {Spinners: ['#ActiveEnergyConsumptionSpinner', '#ActiveEnergyCostSpinner'], Series: 'Prices', OnSuccess: Scrollable_OnSuccess} );
+}
+
+/* Exportar datos */
+$('#btnExportActivePower').click(function() {
+  exportToCsv("ActivePower_" + Node + '_' + LastEnergyPowerSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Active Power R', 'Active Power S', 'Active Power T']] : [['DateTime', 'Active Power']]).concat(ActivePowerData));
+});
+$('#btnExportReactivePower').click(function() {
+  exportToCsv("ReactivePower_" + Node + '_' + LastEnergyPowerSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Reactive Power R', 'Reactive Power S', 'Reactive Power T']] : [['DateTime', 'Reactive Power']]).concat(ReactivePowerData));
+});
+$('#btnExportActiveEnergy').click(function() {
+  exportToCsv("ActiveEnergy_" + Node + '_' + LastEnergyPowerSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Active Energy R', 'Active Energy S', 'Active Energy T']] : [['DateTime', 'Active Energy']]).concat(ActiveEnergyData));
+});
+$('#btnExportReactiveEnergy').click(function() {
+  exportToCsv("ReactiveEnergy_" + Node + '_' + LastEnergyPowerSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Reactive Energy R', 'Reactive Energy S', 'Reactive Energy T']] : [['DateTime', 'Reactive Energy']]).concat(ReactiveEnergyData));
+});//792

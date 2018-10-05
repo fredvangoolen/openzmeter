@@ -65,24 +65,25 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterCallback("/getSeriesNow",        DeviceInterface::GetSeriesNowCallback);
   HTTPServer::RegisterCallback("/getSeriesRange",      DeviceInterface::GetSeriesRangeCallback);
   HTTPServer::RegisterCallback("/getEvents",           DeviceInterface::GetEventsCallback);
+  HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
   HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
   
   
   HTTPServer::RegisterDefault("/Dashboard");
-  HTTPServer::RegisterMapping("/Dashboard",            (char*)"Dashboard.html");
-  HTTPServer::RegisterMapping("/Analysis/Frequency",   (char*)"Analysis_Frequency.html");
-  HTTPServer::RegisterMapping("/Analysis/Voltage",     (char*)"Analysis_Voltage.html");
-  HTTPServer::RegisterMapping((char*)"/Analysis/Current",     (char*)"Analysis_Current.html");
-  HTTPServer::RegisterMapping((char*)"/Analysis/Power",       (char*)"Analysis_Power.html");
-  HTTPServer::RegisterMapping((char*)"/Analysis/Energy",      (char*)"Analysis_Energy.html");
-  HTTPServer::RegisterMapping((char*)"/Events/ITIC",          (char*)"Events_ITIC.html");
-  HTTPServer::RegisterMapping((char*)"/Events/Disturbances",  (char*)"Events_Disturbances.html");
-  HTTPServer::RegisterMapping((char*)"/Events/EN50160",       (char*)"Events_EN50160.html");
-  HTTPServer::RegisterMapping((char*)"/Stats/Costs",          (char*)"Stats_Costs.html");
-  HTTPServer::RegisterMapping((char*)"/Stats/Heatmap",        (char*)"Stats_Heatmap.html");
-  HTTPServer::RegisterMapping((char*)"/Stats/Distribution",   (char*)"Stats_Distribution.html");
-  HTTPServer::RegisterMapping((char*)"/Settings",             (char*)"Settings.html");
-  HTTPServer::RegisterMapping((char*)"/Help",                 (char*)"Help.html");
+  HTTPServer::RegisterMapping("/Dashboard",            "Dashboard.html");
+  HTTPServer::RegisterMapping("/Analysis/Frequency",   "Analysis_Frequency.html");
+  HTTPServer::RegisterMapping("/Analysis/Voltage",     "Analysis_Voltage.html");
+  HTTPServer::RegisterMapping("/Analysis/Current",     "Analysis_Current.html");
+  HTTPServer::RegisterMapping("/Analysis/Power",       "Analysis_Power.html");
+  HTTPServer::RegisterMapping("/Analysis/Energy",      "Analysis_Energy.html");
+  HTTPServer::RegisterMapping("/Events/ITIC",          "Events_ITIC.html");
+  HTTPServer::RegisterMapping("/Events/Disturbances",  "Events_Disturbances.html");
+  HTTPServer::RegisterMapping("/Events/EN50160",       "Events_EN50160.html");
+  HTTPServer::RegisterMapping("/Stats/Costs",          "Stats_Costs.html");
+  HTTPServer::RegisterMapping("/Stats/Heatmap",        "Stats_Heatmap.html");
+  HTTPServer::RegisterMapping("/Stats/Distribution",   "Stats_Distribution.html");
+  HTTPServer::RegisterMapping("/Settings",             "Settings.html");
+  HTTPServer::RegisterMapping("/Help",                 "Help.html");
 
 
 

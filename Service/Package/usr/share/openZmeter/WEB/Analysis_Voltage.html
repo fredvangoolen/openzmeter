@@ -138,7 +138,7 @@
                   </div>
                   <div class="col-md-8 col-lg-9 col-xl-10">
                     <h4>Voltage and current phase angle</h4>
-                    <table id="PhasorsTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
+                    <table id="PhasorsTable" class="table small table-striped table-responsive">
                       <thead>
                         <tr>
                           <th>Phase</th><th>Channel</th><th>Angle</th><th>Value</th>
@@ -185,27 +185,27 @@
                   </div>
                 </div>
               </div>
-              <div class="hidden" id="EventsPanel">
-                <div class="col col-lg-12">
-                  <table id="EventsTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
-                    <thead>
-                      <tr>
-                        <th style="width: 130px">Date</th><th>Type</th><th>Duration <em>(s)</em></th><th>ΔU <em>(V)</em></th><th>ΔU <em>(%)</em></th><th style="width: 60px"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="col col-lg-12">
-                  <div id="EventSpinner" class="spinnerdiv"></div>
-                  <div id="EventWaveformPanel">
-                    <div id="EventWaveformMaximize">
-                      <div style="padding:5px">
-                        <div style="display:inline-block">&nbsp;</div>
-                        <div id="EventChartLegend" style="float: right"></div>
+              <div id="EventsPanel">
+                <div class="row">
+                  <div class="col col-lg-12 col-xl-6">
+                    <table id="EventsTable" class="table small table-striped table-responsive">
+                      <thead>
+                        <tr>
+                          <th style="width: 130px">Date</th><th>Type</th><th>Duration <em>(s)</em></th><th>ΔU <em>(V)</em></th><th>ΔU <em>(%)</em></th><th style="width: 60px"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="col col-lg-12 col-xl-6">
+                    <div class="panel panel-noborder">
+                      <div id="EventSpinner" class="spinnerdiv"></div>
+                      <div id="EventWaveformPanel">
+                        <div id="EventWaveformMaximize">
+                          <div id="EventChart" class="chart big_chart"></div>
+                        </div>
                       </div>
-                      <div id="EventChart" class="chart big_chart"></div>
                     </div>
                   </div>
                 </div>

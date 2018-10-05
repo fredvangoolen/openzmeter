@@ -21,6 +21,7 @@ var VoltageChart     = null;
 var VoltageData      = [];
 function Scrollable_OnSuccess(result, clear) {
   if(clear) VoltageData = [];
+  AjaxGetEvents(result['From'], result['To'], clear);
   VoltageData = GraphDataAppend(result, 'rms_v', VoltageData);
   if(VoltageChart == null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
@@ -69,9 +70,7 @@ $('#btnMaximizeVoltage').click(function() {
   $(window).bind('resize', DialogResizeHandler);
   window.dispatchEvent(new Event('resize'));  
 });
-
 /* Voltage counters */
-//var VoltageCountersTimer  = null;
 function Scrollable_UpdateCounters(times, renew) {
   if(renew === true) {
     $('#labelVoltageAvgPrimary').text(times.PrimaryText + ' average');
@@ -104,7 +103,6 @@ function Scrollable_UpdateCounters(times, renew) {
     }
   );
 }
-
 /* Ventana de maximizar y de error de agregaciones */
 var DialogElement           = null;
 var PrevDialogContainer     = null;
@@ -117,7 +115,6 @@ $('#GraphDialogClose').click(function() {
   $('#GraphDialog').modal('hide');
   window.dispatchEvent(new Event('resize'));
 });
-
 var WaveformDataset = [], HarmonicsDataset = [], FFTDataset = [];
 function Live_OnSuccess(result) {
   $('#DetailTime').text('Last update at ' + new Date(result['Sampletime']).toLocaleTimeString() + '.' + new Date(result['Sampletime']).getMilliseconds());
@@ -184,17 +181,12 @@ function DetailTabChange(index) {
       $(PHIChart.graphDiv).parent().removeAttr('style');
     }
   }
-//  switch(localStorage.getItem('VoltageDetailView')) {
-//    case 'Parameters' :
-//      if(PowerFactorChart !== null) UpdatePowerFactorChart(null);
-//      if(THDChart !== null) UpdateTHDChart(null);
-//      if(PHIChart !== null) UpdatePHIChart(null);
-//      break;
-
-//    case 'Events' :
-//      if(EventChart !== null) $(EventChart.graphDiv).parent().removeAttr('style');
-//      break;
-//  }
+  if(EventChart !== null) {
+    if(index === 6) {
+      $(EventChart.graphDiv).parent().removeAttr('style');
+      EventsTable.columns.adjust();
+    }
+  }
 }
 $(window).bind('resize', PhasorResizeEvent);
 function PhasorResizeEvent() {
@@ -268,7 +260,7 @@ $('#btnShowDetailLog').click(function() {
   UpdateHarmonicsChart();
   UpdateFFTChart();
 });
-
+$('#groupDetailPhasesSingle').on('click', 'button', ParametersSeries);
 /* Waveform view */
 var WaveformChart = null;
 function UpdateWaveformChart() {
@@ -308,7 +300,6 @@ function UpdateWaveformChart() {
       }
     }, undefined);
 }
-
 /* Grafica de armonicos */
 var HarmonicsChart      = null;
 var HarmonicsVOffset    = 0;
@@ -368,7 +359,6 @@ function UpdateHarmonicsChart() {
       }
   }, undefined);
 }
-
 /* Grafica de FFT */
 var FFTChart            = null;
 var FFTVOffset          = 0;
@@ -440,7 +430,6 @@ function UpdateFFTChart() {
     }
   }, undefined);
 }
-
 /* Evolucion de parametros */
 var HarmonicsCharts = [], HarmonicsData = [], PowerFactorChart = null, PowerFactorData = [], THDChart = null, THDData = [], PHIChart = null, PHIData = [];
 function PeriodView_OnSuccess(result) {
@@ -483,7 +472,6 @@ function ParametersSeries(event) {
     GraphPhaseButtons(HarmonicsCharts[g], $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { return CalcRanges(HarmonicsData[g], series, false); }, undefined); 
   }
 }
-$('#groupDetailPhasesSingle').on('click', 'button', ParametersSeries);
 /* Grafico de fasores */
 var PhasorChart = null;
 var PhasorTable = null;
@@ -551,7 +539,6 @@ function UpdatePhasorChart(result) {
   }
   PhasorResizeEvent();
 }
-
 /* Tabla de eventos */
 var EventLoaded        = false;
 var LastEventStartTime = 0;
@@ -559,52 +546,42 @@ var EventsDatasheet    = [];
 var EventsTable        = null;
 var EventChart         = null;
 var EventSpinner       = new Spinner(SpinnerOpts);
-function AjaxGetEvents(period, to, node) {
-  $.ajax({ url: "getEvents",
-           timeout: 20000,
-           type: "POST",
-           dataType: "json",
-           contentType: 'application/json',
-           data: JSON.stringify({ Period: period, To: to, LastEvent: LastEventStartTime, Analyzer: Analyzers[Analyzer].ID}),
-           success: AjaxEvents,
-           complete: function() { 
-             $('#btnVoltageNow').removeClass('disabled');
-             if(parseInt(localStorage.getItem('GraphEnd')) === 0) VoltageTimer = setTimeout(AjaxGetVoltage, 3000);
-           }
-    });
-}
-function AjaxEvents(result) {
-  if(EventsTable === null) {
-    EventsTable = $('#EventsTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">', language: { info: "_MAX_ events in selected period", infoEmpty: "No events in selection"},
-                                                columnDefs: [ { targets: [5], orderable: false }, { targets: [0, 1, 2, 3, 4], searchable: true } ],
-                                                order: [0, 'desc']
-    });
-  }
-  if(LastEventStartTime === 0) {
-    EventsTable.clear().draw();
-    EventsDatasheet = [];
-  }
-  if(result['Starttime'] !== null) {
-    for(i = 0; i < result['Starttime'].length; i++) {
-      var Time = new Date(result['Starttime'][i]);
-      var RowText = $('<tr>').append('<td data-search="' + result['Starttime'][i] + '">' + Time.toLocaleString() + '.' + Time.getMilliseconds() + '</td><td>' + result['Type'][i] + '</td><td>' + Round2(result['Duration'][i] / Nodes[Node]['SampleFreq']) + '</td><td>' + Round2(result['Voltage'][i]) + '</td><td>' + Round2(result['Percentage'][i]) + '</td><td><button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button></td>');
-      EventsTable.row.add(RowText).draw();
-      LastEventStartTime = result['Starttime'][i];
-      EventsDatasheet.push(result['Starttime'][i]);
+function AjaxGetEvents(from, to, clear) {
+  if(clear) LastEventStartTime = 0;
+  Ajax.GetEvents(to - from, to, LastEventStartTime,
+    function(result) {
+      if(EventsTable === null) EventsTable = $('#EventsTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">', language: { info: "_MAX_ events in selected period", infoEmpty: "No events in selection"}, columnDefs: [ { targets: [5], orderable: false }, { targets: [0, 1, 2, 3, 4], searchable: true } ], order: [0, 'desc']});
+      if(LastEventStartTime === 0) {
+        EventsTable.clear().draw();
+        EventsDatasheet = [];
+      }
+      if(result['Starttime'] !== null) {
+        for(i = 0; i < result['Starttime'].length; i++) {
+          var Time = new Date(result['Starttime'][i]);
+          var RowText = '<tr>' +
+            '<td data-search="' + result['Starttime'][i] + '">' + Time.toLocaleString() + '.' + Time.getMilliseconds() + '</td>' +
+            '<td>' + result['Type'][i] + '</td>' +
+            '<td>' + Round2(result['Duration'][i] / Analyzers[Analyzer]['SampleFreq']) + '</td>' +
+            '<td>' + Round2(result['Voltage'][i]) + '</td>' +
+            '<td>' + Round2(result['Percentage'][i]) + '</td>' +
+            '<td><button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button></td>' +
+            '</tr>';
+          EventsTable.row.add($(RowText)).draw();
+          LastEventStartTime = result['Starttime'][i];
+          EventsDatasheet.push(result['Starttime'][i]);
+        }
+      }
+      if(EventChart === null) {
+        EventChart = new Dygraph(document.getElementById("EventChart"), [Array(SeriesNames.Voltage().length + 1).fill(0)], {
+          strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], labels: ['Time'].concat(SeriesNames.Voltage()), legend: 'follow', legendFormatter: LegendFormatter_Follow,
+          colors: ColorArray($('#VoltagePanel').css('border-color'), 3), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
+          interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
+        });
+        $('#EventChart').append('<div class="no-data"><div class="alert alert-info float-center">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
+        $('#EventSpinner').hide();
+      }
     }
-  }
-  if(EventChart === null) {
-    EventChart = new Dygraph(document.getElementById("EventChart"), (Nodes[Node]['Type'] == '3Phase') ? [[0, 0, 0, 0]] : [[0, 0]], {
-      strokeWidth: 0.5,
-      gridLineColor: "#999",
-      gridLinePattern: [4, 4],
-      labels: (Nodes[Node]['Type'] == '3Phase') ? ['Time', 'Voltage (R)', 'Voltage (S)', 'Voltage (T)'] :['Time', 'Voltage'],
-      colors: ["#d9534f", "#534fd9", "#4fd953"],
-      interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
-      labelsDiv: "EventChartLegend"
-    });
-    $('#EventChart').append('<div class="no-data event_instructions"><div class="alert alert-info">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
-  }
+  );
 }
 $("table#EventsTable").on('click', 'button.get_samples', function () {
   var Row = EventsTable.row($(this).parents('tr'));

@@ -312,3 +312,40 @@ bool DeviceInterface::GetEventsCallback(char* user, json_object* reader, Databas
   *postdata = db->ExecSentenceJSON(QueryText, resultLen);
   return true;
 }
+bool DeviceInterface::GetPricesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+  uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
+  char    *Analyzer = NULL;
+  json_object_object_foreach(reader, JSON_Key, JSON_Val) {
+    enum json_type JSON_Type = json_object_get_type(JSON_Val);
+    if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Period") == 0))      
+      Period = json_object_get_int64(JSON_Val);
+    else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "To") == 0))
+      To = json_object_get_int64(JSON_Val);
+    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Analyzer") == 0))
+      Analyzer = (char*)json_object_get_string(JSON_Val);     
+   else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastSample") == 0))
+      LastSample = json_object_get_int64(JSON_Val);
+  }
+  if(Analyzer == NULL) {
+    *postdata  = (char*)"'Analyzer' param is requiered";
+    *resultLen = strlen(*postdata);
+    return false;
+  }
+  if(To == 0) To = Tools::GetTime();
+  From = To - Period;
+  db->PrepareSentence("SET search_path TO ?");
+  db->BindSingleString(Analyzer);
+  db->ExecSentence();
+  char QueryText[8192];
+  int  QueryLen = 0;
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS \"Sampletime\",");
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(active_energy ORDER BY sampletime ASC), '{}') AS active_energy,");
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(price ORDER BY sampletime ASC), '{}') AS price,");
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\" ", To);
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM (SELECT sampletime, COALESCE((SELECT SUM(s) FROM UNNEST(active_energy) s), 0) as active_energy, price FROM aggreg_1h NATURAL FULL JOIN prices ");
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "WHERE sampletime > %" PRIu64 " AND sampletime >= %" PRIu64 " AND sampletime <= %" PRIu64 ") AS T1) AS Result", LastSample, From, To);    
+  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
+  return true;
+}

@@ -42,8 +42,12 @@
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Prices/ESIOS.cpp</file>
         </group>
         <group name="ServiceV2">
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/openZmeter.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Stats_Costs.js</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Analysis_Voltage.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Dashboard.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/Analysis_Energy.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Stats_Costs.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.cpp</file>
         </group>
     </open-files>
 </project-private>

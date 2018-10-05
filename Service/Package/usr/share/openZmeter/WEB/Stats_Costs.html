@@ -5,141 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <base href="/">
     <link rel="shortcut icon" href="favicon.ico"/>
-    <title>openZmeter - Stats - Distribution</title>
+    <title>openZmeter - Stats - Costs</title>
     <script src="lib/pace.min.js"></script>
-    <link rel="stylesheet" href="lib/pace.min.css">    
+    <link rel="stylesheet" href="lib/pace.min.css">
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css"/>
     <link rel="stylesheet" href="lib/datatables/css/dataTables.bootstrap.css" />
     <link rel="stylesheet" href="lib/sidenav/sidenav.min.css"/>
     <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.css"/>
     <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
     <link rel="stylesheet" href="lib/offline.min.css" type="text/css"/>
-    <link rel="stylesheet" href="lib/bootstrap-year-calendar/bootstrap-year-calendar.css" type="text/css"/>
     <link rel="stylesheet" href="openZmeter.css"/>
   </head>
   <body onload="StartPageLoad()">
     <span data-load-block="Header_Block"></span>
+    <span data-load-block="AggregWarningDialog"></span>
+    <div class="modal" id="GraphDialog" tabindex="1" role="dialog" data-backdrop='static'>
+      <div class="modal-dialog" style="width: 100%; height: 100%; padding: 10px; margin: 0px">
+        <div class="modal-content" style="height: 100%" id="GraphDialogContents">
+          <div class="modal-header">
+            <div class="pull-left">
+            <h3 class="modal-title" id="GraphDialogTitle"></h3>
+            </div>
+            <div class="pull-right">
+              <button type="button" class="btn btn-default btn-sm" id="GraphDialogClose">
+                <i class="fa fa-compress"></i>
+              </button>
+            </div>
+            <div class="clearfix"></div>
+          </div>
+          <div class="modal-body" id="GraphDialogBody" style="padding-top: 0px"></div>
+        </div>
+      </div>
+    </div>
     <div id="wrapper">
       <div class="row">
         <div class="col-lg-12">
-          <div class="panel panel-active-energy">
-            <div id="StatsSpinner" class="spinnerdiv"></div>
+          <div class="panel panel-active-energy" id="ActiveEnergyConsumptionPanel">
+            <div id="ActiveEnergyConsumptionSpinner" class="spinnerdiv"></div>
             <div class="panel-heading">
-              <span class="huge header-text">Energy distribution</span>
+              <div class="huge header-text">Active energy consumption</div>
               <div class="header-buttons">
-                <div class="btn-group" data-load-block="Years_Block"></div>
-                <div class="btn-group" data-load-block="PhaseV_Block" id="groupEnergyPhases"></div>
+                <div class="btn-group" data-load-block="ScrollableTime_Block"></div>
+                <div class="btn-group" data-load-block="GraphToolsPlay_Block"></div>
               </div>
-              <span class="clearfix"> </span>
+              <span class="clearfix"> </span> 
             </div>
             <div class="panel-body">
-              <div class="row">
-                <div class="col-md-12">
-                  <div class="panel panel-other"> 
-                    <div class="panel-heading">
-                      <span class="glyphicon glyphicon-calendar"></span> By day
-                      <div style="float: right; width: 200px">
-                        <div id="CalendarScale" style="height: 10px; width: 200px; display: flex; flex-direction:row; border: 1px solid #EEE"></div>
-                        <div style="float: left; font-size: 80%" id="CalendarMin">?</div>
-                        <div style="float: right; font-size: 80%" id="CalendarMax">?</div>
-                        <div style="text-align: center; font-size: 80%"><em id="CalendarUnits"></em></div>
-                      </div>
-                    </div>
-                    <div id="Calendar"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-md-12 col-lg-6">
-                  <div class="panel panel-other">
-                    <div class="panel-heading">
-                      <i class="fa fa-calendar-o" aria-hidden="true"></i> By month
-                      <div class="pull-right" id="MonthUnits"></div>
-                    </div>
-                    <div class="panel-body">
-                      <table id="MonthTable" class="table small table-striped table-responsive">
-                        <thead>
-                          <tr>
-                            <th style="width: 30px">Month</th><th style="width: 100%"></th><th>Weekday</th><th>Weekend</th><th>Total</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  <div class="panel panel-other">
-                    <div class="panel-heading">
-                      <i class="fa fa-ellipsis-h" aria-hidden="true"></i> By week day
-                      <div style="float: right" id="WeekDayUnits"></div>
-                    </div>
-                    <div class="panel-body">
-                      <table id="WeekDayTable" class="table small table-striped table-responsive">
-                        <thead>
-                          <tr>
-                            <th style="width: 30px">Day</th><th style="width: 100%"></th><th>Average</th><th>Accumulated</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  <div class="panel panel-other">
-                    <div class="panel-heading">
-                      <i class="fa fa-clock-o" aria-hidden="true"></i></i> By hour
-                      <div style="float: right" id="HourUnits"></div>
-                    </div>
-                    <div class="panel-body">
-                      <table id="HourTable" class="table small table-striped table-responsive">
-                        <thead>
-                          <tr>
-                            <th style="width: 30px">Hour</th><th style="width: 100%"></th><th>Average</th><th>Accumulated</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-12 col-lg-6">
-                  <div class="panel panel-other">
-                    <div class="panel-heading">
-                      <i class="fa fa-bars" aria-hidden="true"></i> By week
-                      <div class="pull-right" id="WeekUnits"></div>
-                    </div>
-                    <div class="panel-body">
-                      <table id="WeekTable" class="table small table-responsive">
-                        <thead>
-                          <tr>
-                            <th style="width: 30px">Week</th><th style="width: 100%"></th><th>Weekday</th><th>Weekend</th><th>Total</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+              <div id="ActiveEnergyConsumptionCol">
+                <div id="ActiveEnergyConsumptionMaximizeDiv">
+                  <div id="ActiveEnergyConsumptionChart" class="chart big_chart"></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="panel panel-cost" id="ActiveEnergyCostPanel">
+            <div id="ActiveEnergyCostSpinner" class="spinnerdiv"></div>
+            <div class="panel-heading">
+              <div class="header-text"><i class="fa fa-money" aria-hidden="true"></i> Active energy cost</div>
+              <div class="pull-right btn-group">
+                <button type="button" class="btn btn-default btn-xs" id="btnExportReactiveEnergy" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
+                <button type="button" class="btn btn-default btn-xs" id="btnMaximizeReactiveEnergy" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-expand"></i></button>
+              </div>
+            </div>
+            <div class="panel-body">  
+              <div id="ActiveEnergyCostCol">
+                <div id="ActiveEnergyCostMaximizeDiv">
+                  <div id="ActiveEnergyCostChart" class="chart big_chart"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div> 
+      </div>
     </div>
     <script src="lib/jquery.min.js"></script>
     <script src="lib/bootstrap/js/bootstrap.js"></script>
     <script src="lib/sidenav/sidenav.min.js"></script>
     <script src="lib/spin.min.js"></script>
+    <script src="lib/dygraph/dygraph.js"></script>
+    <script src="lib/dygraph/crosshair.js"></script>
+    <script src="lib/dygraph/dygraph-interaction.js"></script>
+    <script src="lib/dygraph/synchronize.js"></script>
+    <script src="lib/dygraph/chart-plotter.js"></script>
     <script src="lib/offline.min.js"></script>
-    <script src="lib/bootstrap-year-calendar/bootstrap-year-calendar.js"></script>
+    <script src="lib/momentjs/moment.js"></script>
+    <script src="lib/chroma.min.js"></script>
+    <script src="lib/momentjs/moment-duration-format.js"></script>
     <script src="lib/datatables/js/jquery.dataTables.js"></script>
     <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
-    <script src="lib/momentjs/moment.js"></script>
-    <script src="lib/momentjs/moment-duration-format.js"></script>
-    <script src="lib/chroma.min.js"></script>
     <script src="openZmeter.js"></script>
-    <script src="Stats_Distribution.js"></script>
+    <script src="Stats_Costs.js"></script>
   </body>
 </html>

@@ -197,14 +197,15 @@ function EnergySeries(event) {
 }
 
 /* Contadores de consumo */
-var EnergyCountersTimer  = null;
 function Scrollable_UpdateCounters(times, renew) {
   if(renew === true) {
     $('#labelEnergyPrimary').text(times.PrimaryText);
+    $('#labelBudgetPrimary').text(times.PrimaryText + ' budget');
     $('#labelEnergyPrimaryValue').text('Calculating...');
-    $('#labelEnergyPrimaryUnits #labelEnergyPrimaryPhases').text('');
-    $('#labelEnergySecondary').text(times.SecondaryText);
+    $('#labelEnergyPrimaryUnits #labelEnergyPrimaryPhases, #labelBudgetUnits').text('');
+    $('#labelEnergySecondary, #labelBudgetSecondary').text(times.SecondaryText);
     $('#labelEnergySecondaryValue').text((times.SecondaryTo !== undefined) ? 'Calculating...' : '');
+    $('#labelBudgetSecondaryValue').text((times.SecondaryTo !== undefined) ? 'Calculating...' : '');
     if(times.SecondaryTo !== undefined) {
       $('#labelEnergySecondaryValue').text('Calculating...');
       Ajax.GetSeriesAggreg(times.SecondaryPeriod, times.SecondaryTo, times.PreferedAggreg, 'sum(active_energy)', 
@@ -221,6 +222,18 @@ function Scrollable_UpdateCounters(times, renew) {
           window.dispatchEvent(new Event('resize'));
         }
       );
+      Ajax.GetPrices(times.SecondaryPeriod, times.SecondaryTo, 0,
+        function(result) {
+          if(result['Sampletime'].length !== 0) {
+            $('#labelBudgetUnits').text('€');
+            var Budget = 0.0;
+            for(var i = 0; i < result['Sampletime'].length; i++) Budget += result['active_energy'][i] * result['price'][i] / 1000.0;
+            $('#labelBudgetSecondaryValue').html(Round2(Budget));
+          } else {
+            $('#labelEnergySecondaryValue').text('No data');
+          }
+        }
+      );
     }
   }
   Ajax.GetSeriesAggreg(times.PrimaryPeriod, times.PrimaryTo, times.PreferedAggreg, 'sum(active_energy)', 
@@ -233,39 +246,15 @@ function Scrollable_UpdateCounters(times, renew) {
       window.dispatchEvent(new Event('resize'));
     }
   );
-  
-//  GetSeriesAggreg(Times.PrevPeriod, Times.PrevEnd, Times.PreferedAggreg, 'sum(active_energy)', EnergyUpdateCountersPrevs);
-//  $.ajax({ url: "getBudget",
-//           timeout: 20000,
-//           type: "POST",
-//           dataType: "json",
-//           contentType: 'application/json',
-//           data: JSON.stringify({ Period: Period, To: Current, Analyzer: Analyzers[Analyzer].ID }),
-//           success: EnergyUpdateCountersBudget
-//  });
+  Ajax.GetPrices(times.PrimaryPeriod, times.PrimaryTo, 0,
+    function(result) {
+      $('#labelBudgetUnits').text('€');
+      var Budget = 0.0;
+      for(var i = 0; i < result['Sampletime'].length; i++) Budget += result['active_energy'][i] * result['price'][i] / 1000.0;
+      $('#labelBudgetPrimaryValue').html(Round2(Budget));
+    }
+  );
 }
-
-function EnergyUpdateCountersBudget(result) {
-  var date = new Date(result['budget_lastcalc'] * 1000);
-  $('#budget_lastcalc').text(date.toLocaleDateString() + ' - ' + date.toLocaleTimeString());
-  
-  Round2Labels(result['current_budget'], $('#budget_integer'), $('#budget_decimal'));Ar
-  if(Math.abs(result['current_energy']) < 1000.0) {
-    Round2Labels(result['current_energy'], $('#energy_integer'), $('#energy_decimal'));
-    $('#EnergyUnits').text('Wh');
-  } else {
-    Round2Labels(result['current_energy'] / 1000.0, $('#energy_integer'), $('#energy_decimal'));
-    $('#EnergyUnits').text('kWh');
-  }
-  if(Math.abs(result['prev_energy']) < 1000.0) {
-    $('#PrevEnergy').text(Round2(result['prev_energy']));
-    $('#PrevEnergyUnits').text('Wh');
-  } else {
-    $('#PrevEnergy').text(Round2(result['prev_energy'] / 1000.0));
-    $('#PrevEnergyUnits').text('kWh');
-  }
-}
-
 /* Parameters */
 var ReactiveChart = null, ReactiveData = [], PowerFactorChart = null, PowerFactorData = [], PhiChart = null, PhiData = [], THDVChart = null, THDVData = [], THDIChart = null, THDIData = [];
 function PeriodViewParams_OnSuccess(result) {
