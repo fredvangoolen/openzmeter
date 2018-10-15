@@ -76,75 +76,75 @@ LDLIBSOPTIONS=-L/usr/local/lib
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter ${OBJECTFILES} ${LDLIBSOPTIONS} -lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ldbus-1 -ljson-c -lz -lcurl -s
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter ${OBJECTFILES} ${LDLIBSOPTIONS} -lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ldbus-1 -ljson-c -lz -lcurl -lxml2 ./build/ResourceFiles.o -s
 
 ${OBJECTDIR}/Source/Analyzers/AnalyzerInterface.o: Source/Analyzers/AnalyzerInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Analyzers
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Analyzers/AnalyzerInterface.o Source/Analyzers/AnalyzerInterface.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/Analyzers/AnalyzerInterface.o Source/Analyzers/AnalyzerInterface.cpp
 
 ${OBJECTDIR}/Source/Analyzers/AnalyzerRemote.o: Source/Analyzers/AnalyzerRemote.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Analyzers
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Analyzers/AnalyzerRemote.o Source/Analyzers/AnalyzerRemote.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/Analyzers/AnalyzerRemote.o Source/Analyzers/AnalyzerRemote.cpp
 
 ${OBJECTDIR}/Source/Analyzers/AnalyzerSoft.o: Source/Analyzers/AnalyzerSoft.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Analyzers
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Analyzers/AnalyzerSoft.o Source/Analyzers/AnalyzerSoft.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/Analyzers/AnalyzerSoft.o Source/Analyzers/AnalyzerSoft.cpp
 
 ${OBJECTDIR}/Source/Database.o: Source/Database.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Database.o Source/Database.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/Database.o Source/Database.cpp
 
 ${OBJECTDIR}/Source/Devices/DeviceInterface.o: Source/Devices/DeviceInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Devices
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceInterface.o Source/Devices/DeviceInterface.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceInterface.o Source/Devices/DeviceInterface.cpp
 
 ${OBJECTDIR}/Source/Devices/DeviceRemote.o: Source/Devices/DeviceRemote.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Devices
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceRemote.o Source/Devices/DeviceRemote.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceRemote.o Source/Devices/DeviceRemote.cpp
 
 ${OBJECTDIR}/Source/Devices/DeviceV1.o: Source/Devices/DeviceV1.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Devices
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceV1.o Source/Devices/DeviceV1.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceV1.o Source/Devices/DeviceV1.cpp
 
 ${OBJECTDIR}/Source/Devices/DeviceV2.o: Source/Devices/DeviceV2.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Devices
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceV2.o Source/Devices/DeviceV2.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceV2.o Source/Devices/DeviceV2.cpp
 
 ${OBJECTDIR}/Source/Devices/DeviceVirtual.o: Source/Devices/DeviceVirtual.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Devices
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceVirtual.o Source/Devices/DeviceVirtual.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/Devices/DeviceVirtual.o Source/Devices/DeviceVirtual.cpp
 
 ${OBJECTDIR}/Source/FFT.o: Source/FFT.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/FFT.o Source/FFT.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/FFT.o Source/FFT.cpp
 
 ${OBJECTDIR}/Source/HTTPServer.o: Source/HTTPServer.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/HTTPServer.o Source/HTTPServer.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/HTTPServer.o Source/HTTPServer.cpp
 
 ${OBJECTDIR}/Source/Main.o: Source/Main.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Main.o Source/Main.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/Main.o Source/Main.cpp
 
 ${OBJECTDIR}/Source/NetworkManager.o: Source/NetworkManager.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/NetworkManager.o Source/NetworkManager.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/NetworkManager.o Source/NetworkManager.cpp
 
 ${OBJECTDIR}/Source/Prices/ESIOS.o: Source/Prices/ESIOS.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Prices
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Prices/ESIOS.o Source/Prices/ESIOS.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/Prices/ESIOS.o Source/Prices/ESIOS.cpp
 
 ${OBJECTDIR}/Source/Prices/PricesInterface.o: Source/Prices/PricesInterface.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source/Prices
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Prices/PricesInterface.o Source/Prices/PricesInterface.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/Prices/PricesInterface.o Source/Prices/PricesInterface.cpp
 
 ${OBJECTDIR}/Source/Tools.o: Source/Tools.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/Tools.o Source/Tools.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/Tools.o Source/Tools.cpp
 
 ${OBJECTDIR}/Source/ZeroCrossing.o: Source/ZeroCrossing.cpp
 	${MKDIR} -p ${OBJECTDIR}/Source
-	$(COMPILE.cc) -Werror -s -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -std=c++98 -o ${OBJECTDIR}/Source/ZeroCrossing.o Source/ZeroCrossing.cpp
+	$(COMPILE.cc) -Werror -s -DEMBED_RESOURCES -I/usr/include/libxml2 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include -ISource -I/usr/include/postgresql -ISource/Prices -ISource/Analyzers -ISource/Devices -std=c++98 -o ${OBJECTDIR}/Source/ZeroCrossing.o Source/ZeroCrossing.cpp
 
 # Subprojects
 .build-subprojects:

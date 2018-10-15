@@ -95,15 +95,15 @@ void AnalyzerInterface::ResetAggreg(Params_t *params) {
     }
   }
   if(params->Type == AGGREG_10C) {
-    for(int i = 0; i < params->Apparent_Power.size(); i++) params->Apparent_Power[i] = 0;
-    for(int i = 0; i < params->Voltage.size(); i++) params->Voltage[i].resize(0);
-    for(int i = 0; i < params->Current.size(); i++) params->Current[i].resize(0);
+    for(uint i = 0; i < params->Apparent_Power.size(); i++) params->Apparent_Power[i] = 0;
+    for(uint i = 0; i < params->Voltage.size(); i++) params->Voltage[i].resize(0);
+    for(uint i = 0; i < params->Current.size(); i++) params->Current[i].resize(0);
   }
   if(params->Type == AGGREG_1H) {
-    for(int i = 0; i < 40; i++) params->StatsFrequency[i] = 0;
-    for(int i = 0; i < 26; i++) params->StatsVoltage[i] = 0;
-    for(int i = 0; i < 26; i++) params->StatsTHD[i] = 0;
-    for(int i = 0; i < 2; i++)  params->StatsHarmonics[i] = 0;
+    for(uint i = 0; i < 40; i++) params->StatsFrequency[i] = 0;
+    for(uint i = 0; i < 26; i++) params->StatsVoltage[i] = 0;
+    for(uint i = 0; i < 26; i++) params->StatsTHD[i] = 0;
+    for(uint i = 0; i < 2; i++)  params->StatsHarmonics[i] = 0;
   }
   params->Samples = 0;
 }

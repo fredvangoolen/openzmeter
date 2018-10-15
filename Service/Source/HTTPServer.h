@@ -45,7 +45,6 @@ class HTTPServer {
     static void  ExpireSessions();
     static void  SetMimeType(struct MHD_Response *response, const char *url);
     static int   SendFile(struct MHD_Connection *connection, const char *path);
-    static void  HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr);
     static int   SendRedirect(struct MHD_Connection *connection, const char *url);
     static int   SendError(struct MHD_Connection *connection, int error, const char *text);
     static void  OpenSession(MHD_Connection *connection, Request_t *request);

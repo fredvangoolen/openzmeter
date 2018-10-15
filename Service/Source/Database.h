@@ -6,7 +6,7 @@
 #include <vector>
 #include <sstream>
 #include <inttypes.h>
-#include <postgresql/libpq-fe.h>
+#include <libpq-fe.h>
 #include <json-c/json.h>
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;

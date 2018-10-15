@@ -21,17 +21,48 @@
 #include "HTTPServer.h"
 #include "DeviceInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
-bool         Tools::Debug        = false;
-bool         Tools::pDaemonized  = false;
-FILE        *Tools::pLogFile     = NULL;
-json_object *Tools::pConfig      = NULL;
-char        *Tools::pPidFile     = NULL;
+bool            Tools::Debug        = false;
+bool            Tools::pDaemonized  = false;
+FILE           *Tools::pLogFile     = NULL;
+json_object    *Tools::pConfig      = NULL;
+char           *Tools::pPidFile     = NULL;
 pthread_mutex_t Tools::pLogMutex = PTHREAD_MUTEX_INITIALIZER;
 
 uint8_t Tools::pBatteryLevel = 0;
 bool Tools::pBatteryCharging = false;
 bool Tools::pExternalPower = false;
 //----------------------------------------------------------------------------------------------------------------------
+#ifdef EMBED_RESOURCES
+extern char _binary_ResourceFiles_start[];
+extern char _binary_ResourceFiles_end[];
+vector<Tools::File_t> Tools::pFiles;
+//uint32_t Tools::FileCount = 0;
+uint8_t *Tools::GetFile(const char* name, uint32_t* size) {
+  if(pFiles.size() == 0) {
+    char *Ptr   = _binary_ResourceFiles_start;
+    uint32_t FileCount = atoi(Ptr);
+    pFiles.reserve(FileCount);
+    Ptr = &Ptr[strlen(Ptr) + 1];
+    for(uint32_t i = 0; i < FileCount; i++) {
+      File_t File;
+      File.Name = strdup(Ptr);
+      Ptr = &Ptr[strlen(Ptr) + 1];
+      File.Size = atoi(Ptr);
+      Ptr = &Ptr[strlen(Ptr) + 1];
+      File.Ptr = (uint8_t*)Ptr;
+      Ptr = &Ptr[File.Size];
+      pFiles.push_back(File);
+    }
+  }
+  for(uint32_t i = 0; i < pFiles.size(); i++) {
+    if(strcmp(name, pFiles[i].Name) == 0) {
+      *size = pFiles[i].Size;
+      return pFiles[i].Ptr;
+    }
+  }
+  return NULL;
+}
+#endif
 void Tools::RegisterHandlers(void (*function)(int)) {
   signal(SIGINT, function);
   signal(SIGTERM, function);

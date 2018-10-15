@@ -17,6 +17,7 @@ $('form').submit(function (e) {
         } else {
           $('.alert-success').slideDown(1000, function () {
             localStorage.setItem('UserName', $('#username').val());
+            localStorage.setItem('LastLogin', response['LastLogin']);
             location.reload(true);
           });
         }

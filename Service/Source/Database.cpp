@@ -209,7 +209,7 @@ uint32_t Database::ResultRows() {
 const char *Database::ResultValue(uint32_t row, const char *name) {
   if(pResult == NULL) return NULL;
   if(PQntuples(pResult) < 1) return NULL;
-  uint32_t Col = PQfnumber(pResult, name);
+  int32_t Col = PQfnumber(pResult, name);
   if(Col == -1) return NULL;
   if(PQgetisnull(pResult, row, Col) == 1) return NULL;
   return PQgetvalue(pResult, row, Col);

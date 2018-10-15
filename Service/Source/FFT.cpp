@@ -59,7 +59,7 @@ void FFT::Process() {
     pthread_mutex_unlock(&pPlannerMutex);
     fftwf_execute_dft_r2c(Plan, &(*pInput)[0], (fftwf_complex*)&Output[0]);
     Output.resize((pInput->size() / 2) + 1);
-    for(int i = 0; i < Output.size(); i++) {
+    for(uint i = 0; i < Output.size(); i++) {
       Output[i].Real = Output[i].Real / pInput->size();
       Output[i].Imag = Output[i].Imag / pInput->size();
     }

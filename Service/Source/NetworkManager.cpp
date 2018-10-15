@@ -83,7 +83,7 @@ uint8_t NetworkManager::SendConnectivityState(DBusConnection *dbus) {
   if(Reply) {
     DBusMessageIter Struct;
     if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_UINT32)) {
-      DBusMessageIter Value;
+//      DBusMessageIter Value;
 //      dbus_message_iter_recurse(&Struct, &Value);
       dbus_message_iter_get_basic(&Struct, &Result);
     }
@@ -765,7 +765,7 @@ bool NetworkManager::SendSaveSettings(DBusConnection *dbus, json_object *json) {
     dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[5]);
     dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, "ay", &Variant);
     dbus_message_iter_open_container(&Variant, DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE_AS_STRING, &VariantArray);
-    for(int i = 0; i < strlen(SSID); i++) dbus_message_iter_append_basic(&VariantArray, DBUS_TYPE_BYTE, &SSID[i]);
+    for(uint i = 0; i < strlen(SSID); i++) dbus_message_iter_append_basic(&VariantArray, DBUS_TYPE_BYTE, &SSID[i]);
     dbus_message_iter_close_container(&Variant, &VariantArray);
     dbus_message_iter_close_container(&SubDict, &Variant);
     dbus_message_iter_close_container(&SubArray, &SubDict);

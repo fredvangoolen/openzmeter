@@ -4,21 +4,29 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <string>
+#include <vector>
 #include <json-c/json.h>
 #include "Database.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 class Tools {
+  private :
+    typedef struct {
+      char    *Name;
+      uint32_t Size;
+      uint8_t *Ptr;
+    } File_t;
   public :
-      static uint8_t pBatteryLevel;
-      static bool pBatteryCharging;
-      static bool pExternalPower;
+    static uint8_t pBatteryLevel;
+    static bool    pBatteryCharging;
+    static bool    pExternalPower;
   private :      
     static bool            pDaemonized;
     static FILE           *pLogFile;
     static pthread_mutex_t pLogMutex;
     static json_object    *pConfig;
     static char           *pPidFile;
+    static vector<File_t>  pFiles;
   public :
     static bool          Debug;
   private :
@@ -39,5 +47,6 @@ class Tools {
     static bool         JSONUInt64(const json_object *obj, const char *key, uint64_t *dst);
     static bool         JSONUInt32(const json_object *obj, const char *key, uint32_t *dst);
     static bool         JSONArrayFloat(const json_object *obj, const char *key, float *dst, uint len);
+    static uint8_t     *GetFile(const char *mame, uint32_t *size);
 };
 //----------------------------------------------------------------------------------------------------------------------

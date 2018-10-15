@@ -21,7 +21,7 @@ bool DeviceInterface::Config(json_object *config) {
                   "CONSTRAINT permisions_name_pkey FOREIGN KEY (name) REFERENCES users (name) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE"
                   ") WITH (OIDS=FALSE)");
   if(config == NULL) return true;
-  for(int i = 0; i < json_object_array_length(config); i++) {
+  for(uint i = 0; i < json_object_array_length(config); i++) {
     json_object *Device = json_object_array_get_idx(config, i);
     char *Name = NULL;
     if(Tools::JSONString(Device, "Driver", &Name) == false) {
