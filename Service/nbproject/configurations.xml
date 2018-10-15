@@ -301,7 +301,7 @@
     <conf name="Release" type="1">
       <toolsSet>
         <compilerSet>GNU|GNU</compilerSet>
-        <dependencyChecking>false</dependencyChecking>
+        <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
@@ -326,6 +326,7 @@
             <pElem>Source/Prices</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>Source/Devices</pElem>
+            <pElem>/usr/local/pgsql/include</pElem>
           </incDir>
           <commandLine>-march=native -Os</commandLine>
           <preprocessorList>
@@ -343,6 +344,7 @@
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/openZmeter</output>
           <linkerAddLib>
             <pElem>/usr/local/lib</pElem>
+            <pElem>/usr/local/pgsql/lib</pElem>
           </linkerAddLib>
           <stripSymbols>true</stripSymbols>
           <commandLine>-lfftw3f -lpthread -lusb-1.0 -lpq -lmicrohttpd -ldbus-1 -ljson-c -lz -lcurl -lxml2 ./build/ResourceFiles.o</commandLine>

@@ -120,7 +120,7 @@ bool Tools::CreatePidFile(char *name) {
     LogMsg("WARN", "Can not create PID file (%d)\n", errno);
     return true;
   }
-  write(File, PID_Number, Len);
+  if(write(File, PID_Number, Len) <= 0) LogMsg("WARN", "Can not create PID file (%d)\n", errno);
   close(File);
   return true;
 }
