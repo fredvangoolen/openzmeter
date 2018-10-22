@@ -9,7 +9,7 @@
             <url>usb_istr.c</url>
             <bookmark id="1">
                 <name/>
-                <line>108</line>
+                <line>90</line>
                 <key/>
             </bookmark>
         </file>
@@ -20,8 +20,7 @@
             <file>file:/home/edu/Proyectos/zMeter/STM32/inc/USB_CDC.h</file>
             <file>file:/home/edu/Proyectos/zMeter/STM32/USB_CDC.c</file>
         </group>
-        <group>
-            <file>file:/home/maria/Proyectos/zMeter/V2/Hardware/1Phase%20B/USB_CDC.c</file>
-        </group>
+        <group/>
+        <group name="ServiceV2"/>
     </open-files>
 </project-private>

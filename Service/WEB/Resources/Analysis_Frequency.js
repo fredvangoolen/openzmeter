@@ -20,7 +20,7 @@
 var FrequencyChart   = null;
 var FrequencyData    = [];
 function Scrollable_OnSuccess(result, clear) {
-  if(clear) FrequencyData = [[0, 0]];
+  if(clear) FrequencyData = [];
   FrequencyData = GraphDataAppend(result, 'freq', FrequencyData);
   if(FrequencyChart == null) {
     FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"), FrequencyData,

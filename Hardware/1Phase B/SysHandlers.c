@@ -1,7 +1,7 @@
 //#include "stm32f10x_it.h"
 #include "usb_lib.h"
 #include "usb_istr.h"
-#include "USB_CDC.h"
+//#include "USB_Clas.h"
 
 /*******************************************************************************
  * Function Name  : NMI_Handler
@@ -87,12 +87,4 @@ void DebugMon_Handler(void) {
 void PendSV_Handler(void) {
 }
 
-/*******************************************************************************
- * Function Name  : SysTick_Handler
- * Description    : This function handles SysTick Handler.
- * Input          : None
- * Output         : None
- * Return         : None
- *******************************************************************************/
-void SysTick_Handler(void) {
-}
+

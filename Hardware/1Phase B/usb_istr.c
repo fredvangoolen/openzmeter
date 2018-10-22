@@ -9,25 +9,7 @@ __IO uint8_t bIntPackSOF = 0; /* SOFs received between 2 consecutive packets */
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 /* function pointers to non-control endpoints service routines */
-void (*pEpInt_IN[7])(void) ={
-  EP1_IN_Callback,
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-};
 
-void (*pEpInt_OUT[7])(void) ={
-  NOP_Process,
-  NOP_Process,
-  EP3_OUT_Callback,
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-  NOP_Process,
-};
 
 #define SOF_CALLBACK
 /*******************************************************************************

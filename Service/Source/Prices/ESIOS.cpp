@@ -16,6 +16,7 @@
 bool  ESIOS::pClassRegistered = PricesInterface::RegisterType("ESIOS", ESIOS::CreateInstance);
 // Funciones ===========================================================================================================
 ESIOS::ESIOS(const char* id) : PricesInterface(id) {
+  Tools::LogMsg("DEBUG", "ESIOS price interface started\n");
   pRate = "Z01";
 }
 PricesInterface *ESIOS::CreateInstance(const char *name, json_object *config) {

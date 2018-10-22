@@ -14,14 +14,14 @@ GREP=grep
 NM=nm
 CCADMIN=CCadmin
 RANLIB=ranlib
-CC=arm-none-eabi-gcc
-CCC=arm-none-eabi-g++
-CXX=arm-none-eabi-g++
+CC=gcc
+CCC=g++
+CXX=g++
 FC=gfortran
-AS=arm-none-eabi-as
+AS=as
 
 # Macros
-CND_PLATFORM=arm-none-eabi-Linux
+CND_PLATFORM=GNU-Linux
 CND_DLIB_EXT=so
 CND_CONF=Release
 CND_DISTDIR=dist
@@ -37,9 +37,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/CMSIS/startup_stm32f37x.o \
 	${OBJECTDIR}/CMSIS/system_stm32f37x.o \
-	${OBJECTDIR}/Interface.o \
 	${OBJECTDIR}/Main.o \
-	${OBJECTDIR}/SDADC_Capture.o \
 	${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o \
 	${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o \
 	${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_cec.o \
@@ -70,9 +68,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_regs.o \
 	${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_sil.o \
 	${OBJECTDIR}/SysHandlers.o \
-	${OBJECTDIR}/USB_CDC.o \
-	${OBJECTDIR}/usb_istr.o \
-	${OBJECTDIR}/usb_pwr.o
+	${OBJECTDIR}/USB_Class.o \
+	${OBJECTDIR}/usb_istr.o
 
 
 # C Compiler Flags
@@ -108,20 +105,10 @@ ${OBJECTDIR}/CMSIS/system_stm32f37x.o: CMSIS/system_stm32f37x.c
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CMSIS/system_stm32f37x.o CMSIS/system_stm32f37x.c
 
-${OBJECTDIR}/Interface.o: Interface.c
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Interface.o Interface.c
-
 ${OBJECTDIR}/Main.o: Main.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Main.o Main.c
-
-${OBJECTDIR}/SDADC_Capture.o: SDADC_Capture.c
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SDADC_Capture.o SDADC_Capture.c
 
 ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o: STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.c
 	${MKDIR} -p ${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src
@@ -273,20 +260,15 @@ ${OBJECTDIR}/SysHandlers.o: SysHandlers.c
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SysHandlers.o SysHandlers.c
 
-${OBJECTDIR}/USB_CDC.o: USB_CDC.c
+${OBJECTDIR}/USB_Class.o: USB_Class.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/USB_CDC.o USB_CDC.c
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/USB_Class.o USB_Class.c
 
 ${OBJECTDIR}/usb_istr.o: usb_istr.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/usb_istr.o usb_istr.c
-
-${OBJECTDIR}/usb_pwr.o: usb_pwr.c
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/usb_pwr.o usb_pwr.c
 
 # Subprojects
 .build-subprojects:

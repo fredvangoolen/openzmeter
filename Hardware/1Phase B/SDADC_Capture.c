@@ -5,13 +5,6 @@
 #include "Main.h"
 #include <arm_math.h>
 //Definiciones locales -------------------------------------------------------------------------------------------------
-float Offsets[7];
-typedef struct {
-  float Offset;
-  float Sample;
-  float Z1;
-  float Z2;  
-} ChannelConf_t;
 typedef struct {
   float A0;     //A2=A0 en low pass
   float A1;

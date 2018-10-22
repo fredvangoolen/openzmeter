@@ -37,7 +37,6 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/CMSIS/startup_stm32f37x.o \
 	${OBJECTDIR}/CMSIS/system_stm32f37x.o \
-	${OBJECTDIR}/Interface.o \
 	${OBJECTDIR}/Main.o \
 	${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_adc.o \
 	${OBJECTDIR}/STM32F37x_StdPeriph_Driver/src/stm32f37x_can.o \
@@ -69,9 +68,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_regs.o \
 	${OBJECTDIR}/STM32_USB-FS-Device_Driver/src/usb_sil.o \
 	${OBJECTDIR}/SysHandlers.o \
-	${OBJECTDIR}/USB_CDC.o \
-	${OBJECTDIR}/usb_istr.o \
-	${OBJECTDIR}/usb_pwr.o
+	${OBJECTDIR}/USB_Class.o \
+	${OBJECTDIR}/usb_istr.o
 
 
 # C Compiler Flags
@@ -96,7 +94,7 @@ LDLIBSOPTIONS=
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/1phase_b: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/1phase_b ${OBJECTFILES} ${LDLIBSOPTIONS} -TLink.ld -Wl,--gc-sections --specs=nosys.specs
+	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/1phase_b ${OBJECTFILES} ${LDLIBSOPTIONS} -lm -TLink.ld -Wl,--gc-sections --specs=nosys.specs
 
 ${OBJECTDIR}/CMSIS/startup_stm32f37x.o: CMSIS/startup_stm32f37x.s
 	${MKDIR} -p ${OBJECTDIR}/CMSIS
@@ -105,10 +103,6 @@ ${OBJECTDIR}/CMSIS/startup_stm32f37x.o: CMSIS/startup_stm32f37x.s
 ${OBJECTDIR}/CMSIS/system_stm32f37x.o: CMSIS/system_stm32f37x.c
 	${MKDIR} -p ${OBJECTDIR}/CMSIS
 	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/CMSIS/system_stm32f37x.o CMSIS/system_stm32f37x.c
-
-${OBJECTDIR}/Interface.o: Interface.c
-	${MKDIR} -p ${OBJECTDIR}
-	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/Interface.o Interface.c
 
 ${OBJECTDIR}/Main.o: Main.c
 	${MKDIR} -p ${OBJECTDIR}
@@ -234,17 +228,13 @@ ${OBJECTDIR}/SysHandlers.o: SysHandlers.c
 	${MKDIR} -p ${OBJECTDIR}
 	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/SysHandlers.o SysHandlers.c
 
-${OBJECTDIR}/USB_CDC.o: USB_CDC.c
+${OBJECTDIR}/USB_Class.o: USB_Class.c
 	${MKDIR} -p ${OBJECTDIR}
-	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/USB_CDC.o USB_CDC.c
+	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/USB_Class.o USB_Class.c
 
 ${OBJECTDIR}/usb_istr.o: usb_istr.c
 	${MKDIR} -p ${OBJECTDIR}
 	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/usb_istr.o usb_istr.c
-
-${OBJECTDIR}/usb_pwr.o: usb_pwr.c
-	${MKDIR} -p ${OBJECTDIR}
-	$(COMPILE.c) -Werror -DSTM32F373C8T6 -DSTM32F37X -DUSE_STDPERIPH_DRIVER -ICMSIS -ISTM32_USB-FS-Device_Driver/inc -ISTM32F37x_StdPeriph_Driver/inc -Icmsis_boot -Icmsis -Iinc -I. -std=c99 -o ${OBJECTDIR}/usb_pwr.o usb_pwr.c
 
 # Subprojects
 .build-subprojects:

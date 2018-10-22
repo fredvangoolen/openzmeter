@@ -91,11 +91,11 @@ LDLIBSOPTIONS=
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/hardware
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/1phase_a
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/hardware: ${OBJECTFILES}
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/1phase_a: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/hardware ${OBJECTFILES} ${LDLIBSOPTIONS}
+	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/1phase_a ${OBJECTFILES} ${LDLIBSOPTIONS}
 
 ${OBJECTDIR}/CMSIS/startup_stm32f37x.o: CMSIS/startup_stm32f37x.s
 	${MKDIR} -p ${OBJECTDIR}/CMSIS

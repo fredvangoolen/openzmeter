@@ -1,4 +1,4 @@
-#Mon Oct 15 18:40:02 CEST 2018
+#Wed Oct 17 11:28:17 CEST 2018
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/active_power.png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Logo.svg=c1519894691000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/Firmware_SETUP_CAPTURE.png=c1519034874000
@@ -44,6 +44,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Analysis_Current.html=c1538726923000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/Database.sql=c1530710204000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/offline.min.js=c1534409091000
+/home/edu/Proyectos/zMeter/V2/Service/nbproject/project.properties=c1539623129000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/datatables/images/sort_asc_disabled.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/visjs/img/network/zoomExtends.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.svg=c1512396200000
@@ -219,7 +220,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.eot=c1469450582000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Analysis_Energy.js=c1537443989000
 /home/edu/Proyectos/zMeter/V2/Service/Source/Devices/DeviceRemote.cpp=c1536738368000
-/home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-Release.mk=c1539621597000
+/home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-Release.mk=c1539623129000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/dygraph/dygraph.js=c1532938572000
 /home/edu/Proyectos/zMeter/V2/Service/Source/FFT.cpp=c1539159365000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Standard\ IEC61000-4-30.html=c1513952649000
@@ -227,7 +228,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/jquery.lineProgressbar/jquery.lineProgressbar.js=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/HelpPages/zeroC.png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/bootstrap/js/.directory=c1530606705000
-/home/edu/Proyectos/zMeter/V2/Service/nbproject/Package-Release.bash=c1539601394000
+/home/edu/Proyectos/zMeter/V2/Service/nbproject/Package-Release.bash=c1539700348000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Zero\ Crossing.md=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/visjs/img/network/deleteIcon.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/Source/Devices/DeviceVirtual.h=c1537310303000
@@ -271,7 +272,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Analysis_Frequency.html=c1535962585000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Events_Disturbances.js=c1521226023000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/dygraph/synchronize.js=c1507189006000
-/home/edu/Proyectos/zMeter/V2/Service/nbproject/Package-Debug.bash=c1539601394000
+/home/edu/Proyectos/zMeter/V2/Service/nbproject/Package-Debug.bash=c1539700348000
 /home/edu/Proyectos/zMeter/V2/Service/Source/ZeroCrossing.cpp=c1537439957000
 /home/edu/Proyectos/zMeter/V2/Service/Source/Devices/DeviceInterface.h=c1538069556000
 /home/edu/Proyectos/zMeter/V2/Service/nbproject/Makefile-variables.mk=c1523517727000
@@ -380,7 +381,7 @@
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/sbin/openZmeter=c1527148197000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/lib/datatables/css/dataTables.bootstrap.css=c1520326780000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/Hardware.md=c1513952649000
-/home/edu/Proyectos/zMeter/V2/Service/Source/Prices/ESIOS.cpp=c1538041839000
+/home/edu/Proyectos/zMeter/V2/Service/Source/Prices/ESIOS.cpp=c1539768492000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/visjs/img/network/editIcon.png=c1507189006000
 /home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/HelpPages/zeroC_interharmonic.png=c1513952649000
 /home/edu/Proyectos/zMeter/V2/Service/Package/usr/share/openZmeter/WEB/Resources/lib/visjs/img/network/deleteIcon.png=c1507189006000
