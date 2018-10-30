@@ -35,6 +35,7 @@ clean:
 
 package: $(BUILD_DIR)/$(TARGET_EXEC)
 	@cp -r Package $(BUILD_DIR)
+	@mkdir -p $(BUILD_DIR)/Package/usr/sbin/$(TARGET_EXEC)
 	@cp $(BUILD_DIR)/$(TARGET_EXEC) $(BUILD_DIR)/Package/usr/sbin/$(TARGET_EXEC)
 	@dpkg-deb -b $(BUILD_DIR)/Package $(BUILD_DIR)/openZmeter.deb
 
