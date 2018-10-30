@@ -1,127 +1,58 @@
-#
-#  There exist several targets which are by default empty and which can be 
-#  used for execution of your targets. These targets are usually executed 
-#  before and after some main targets. They are: 
-#
-#     .build-pre:              called before 'build' target
-#     .build-post:             called after 'build' target
-#     .clean-pre:              called before 'clean' target
-#     .clean-post:             called after 'clean' target
-#     .clobber-pre:            called before 'clobber' target
-#     .clobber-post:           called after 'clobber' target
-#     .all-pre:                called before 'all' target
-#     .all-post:               called after 'all' target
-#     .help-pre:               called before 'help' target
-#     .help-post:              called after 'help' target
-#
-#  Targets beginning with '.' are not intended to be called on their own.
-#
-#  Main targets can be executed directly, and they are:
-#  
-#     build                    build a specific configuration
-#     clean                    remove built files from a configuration
-#     clobber                  remove all built files
-#     all                      build all configurations
-#     help                     print help mesage
-#  
-#  Targets .build-impl, .clean-impl, .clobber-impl, .all-impl, and
-#  .help-impl are implemented in nbproject/makefile-impl.mk.
-#
-#  Available make variables:
-#
-#     CND_BASEDIR                base directory for relative paths
-#     CND_DISTDIR                default top distribution directory (build artifacts)
-#     CND_BUILDDIR               default top build directory (object files, ...)
-#     CONF                       name of current configuration
-#     CND_PLATFORM_${CONF}       platform name (current configuration)
-#     CND_ARTIFACT_DIR_${CONF}   directory of build artifact (current configuration)
-#     CND_ARTIFACT_NAME_${CONF}  name of build artifact (current configuration)
-#     CND_ARTIFACT_PATH_${CONF}  path to build artifact (current configuration)
-#     CND_PACKAGE_DIR_${CONF}    directory of package (current configuration)
-#     CND_PACKAGE_NAME_${CONF}   name of package (current configuration)
-#     CND_PACKAGE_PATH_${CONF}   path to package (current configuration)
-#
-# NOCDDL
+#include dirs
+INC_DIRS = /usr/include/postgresql /usr/include/dbus-1.0 /usr/lib/x86_64-linux-gnu/dbus-1.0/include /usr/include/libxml2
 
+#General options
+CC       = gcc
+CPPFLAGS = -Wall -no-pie
+LDFLAGS  = -lm -ljson-c -ldbus-1 -lcurl -lpthread -lz -lpq -lfftw3f -lstdc++ -lusb-1.0 -lmicrohttpd -lxml2
 
-# Environment 
-MKDIR=mkdir
-CP=cp
-CCADMIN=CCadmin
+#Specific options
+debug: CXXFLAGS += -O0 -g
+release: CXXFLAGS += -Os -DEMBED_RESOURCES
 
-# build
-build: .build-post
+#Source and targets files
+TARGET_EXEC  = openZmeter
+BUILD_DIR    = Tmp
+MAINSOURCES  = $(shell find ./Source -maxdepth 2 -name "*.cpp" ! -type d -print)
+MAINSOURCES += $(shell find ./Source -mindepth 3 -name "*.cpp" ! -type d -print)
+WEBSOURCES   = $(shell find ./WEB ! -type d -print | sort)
+WEBTARGET    = $(BUILD_DIR)/ResourceFiles.o
+WEBTMP       = $(BUILD_DIR)/ResourceFiles
+OBJS         = $(MAINSOURCES:%=$(BUILD_DIR)/%.o)
+INC_DIRS    += $(shell find $(SRC_DIRS) -type d)
+INC_FLAGS    += $(addprefix -I,$(INC_DIRS))
+CPPFLAGS     += $(INC_FLAGS)
+debug: $(OBJS)
+	@echo "Linking debug target" $(TARGET_EXEC)
+	@$(CC) $(CPPFLAGS) $(CXXFLAGS) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
+	
+release: $(OBJS) $(WEBTARGET)
+	@echo "Linking release target" $(TARGET_EXEC)
+	@$(CC) $(CPPFLAGS) $(CXXFLAGS) $(OBJS) $(WEBTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
 
-.build-pre:
-# Add your pre 'build' code here...
+clean:
+	@rm -rf $(BUILD_DIR)
 
-.build-post: .build-impl
-# Add your post 'build' code here...
+package: $(BUILD_DIR)/$(TARGET_EXEC)
+	@cp -r Package $(BUILD_DIR)
+	@cp $(BUILD_DIR)/$(TARGET_EXEC) $(BUILD_DIR)/Package/usr/sbin/$(TARGET_EXEC)
+	@dpkg-deb -b $(BUILD_DIR)/Package $(BUILD_DIR)/openZmeter.deb
 
+$(BUILD_DIR)/%.cpp.o: %.cpp
+	@mkdir -p $(dir $@)
+	@echo "Bulding" $@
+	@$(CC) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-# clean
-clean: .clean-post
-
-.clean-pre:
-# Add your pre 'clean' code here...
-
-.clean-post: .clean-impl
-# Add your post 'clean' code here...
-
-
-# clobber
-clobber: .clobber-post
-
-.clobber-pre:
-# Add your pre 'clobber' code here...
-
-.clobber-post: .clobber-impl
-# Add your post 'clobber' code here...
-
-
-# all
-all: .all-post
-
-.all-pre:
-# Add your pre 'all' code here...
-
-.all-post: .all-impl
-# Add your post 'all' code here...
-
-
-# build tests
-build-tests: .build-tests-post
-
-.build-tests-pre:
-# Add your pre 'build-tests' code here...
-
-.build-tests-post: .build-tests-impl
-# Add your post 'build-tests' code here...
-
-
-# run tests
-test: .test-post
-
-.test-pre: build-tests
-# Add your pre 'test' code here...
-
-.test-post: .test-impl
-# Add your post 'test' code here...
-
-
-# help
-help: .help-post
-
-.help-pre:
-# Add your pre 'help' code here...
-
-.help-post: .help-impl
-# Add your post 'help' code here...
-
-
-
-# include project implementation makefile
-include nbproject/Makefile-impl.mk
-
-# include project make variables
-include nbproject/Makefile-variables.mk
+$(WEBTARGET): $(WEBSOURCES)
+	@echo  "Building resource file"
+	@mkdir -p $(BUILD_DIR)
+	@rm -f $(WEBTARGET) $(WEBTMP)
+	@printf "%s\x00" $(words $(WEBSOURCES)) > $(WEBTMP)
+	@for FILE in $(WEBSOURCES); \
+	do \
+		echo "Append " $$FILE ; \
+		printf "%s\x00%d\x00" `echo $$FILE | cut -d'/' -f3-` `stat --printf="%s" $$FILE` >> $(WEBTMP) ; \
+		cat $$FILE >> $(WEBTMP) ; \
+	done
+	@cd $(BUILD_DIR); ld -r -b binary -o ResourceFiles.o ResourceFiles; cd ..
+	@rm $(WEBTMP)
