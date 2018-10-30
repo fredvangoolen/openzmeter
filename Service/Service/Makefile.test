@@ -1,0 +1,35 @@
+#General options
+MAKE    = make
+CC      = gcc
+CFLAGS  = -g -Wall -O0 -std=c99
+LDFLAGS = -lm
+
+#Specific options
+
+
+#Source and targets files
+OUTPUTDIR=Tmp
+MAINSOURCES = Source
+WEBSOURCES  = $(shell find ./WEB ! -type d -print | sort)
+WEBTARGET   = $(OUTPUTDIR)/ResourceFiles.o
+
+debug: $(SOURCEDIR)
+	echo "Linking target"
+release: $(MAINSOURCES) $(WEBTARGET)
+	echo "Linking target"
+clean:
+	rm -rf $(OUTPUTDIR)
+
+$(MAINSOURCES) :
+
+$(WEBTARGET): $(WEBSOURCES)
+	@echo  "Building resource file"
+	@mkdir -p $(OUTPUTDIR)
+	@rm -f $(WEBTARGET)
+	@printf "%s\x00" $(words $(WEBSOURCES)) > $(WEBTARGET)
+	@for FILE in $(WEBSOURCES); \
+	do \
+		echo "Append " $$FILE ; \
+		printf "%s\x00%d\x00" `echo $$FILE | cut -d'/' -f3-` `stat --printf="%s" $$FILE` >> $(WEBTARGET) ; \
+		cat $$FILE >> $(WEBTARGET) ; \
+	done
