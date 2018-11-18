@@ -8,7 +8,7 @@
 #include "Tools.h"
 #include "PricesInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
-vector<PricesInterface::Type_t> PricesInterface::pRegisteredTypes  __attribute__((init_priority(200)));
+vector<PricesInterface::Type_t> PricesInterface::pRegisteredTypes;
 //----------------------------------------------------------------------------------------------------------------------
 PricesInterface::PricesInterface(const char *id) : Database(id) {
   pThread    = 0;
@@ -16,7 +16,7 @@ PricesInterface::PricesInterface(const char *id) : Database(id) {
   pLastPrice = 0;
   ExecSentence("SELECT MAX(sampletime) AS sampletime FROM (SELECT MAX(sampletime) AS sampletime FROM prices UNION SELECT MIN(sampletime) - 3600000 FROM aggreg_1h) AS Tmp");
   const char *Value = ResultValue(0, "sampletime");
-  if(Value != NULL) pLastPrice = atol(Value);
+  if(Value != NULL) pLastPrice = strtoull(Value, NULL, 10);
 }
 void PricesInterface::StartThread() {
   if(pthread_create(&pThread, NULL, Update_Thread, this) != 0) {
@@ -27,6 +27,7 @@ void PricesInterface::StartThread() {
 bool PricesInterface::RegisterType(const char* name, ConstructorFunction constructor) {
   Type_t Type = { name, constructor };
   pRegisteredTypes.push_back(Type);
+  Tools::LogMsg("INFO", "Registering '%s' price interface plugin\n", name);
   return true;
 }
 PricesInterface *PricesInterface::Config(const char *name, json_object *config) {
@@ -54,6 +55,7 @@ void *PricesInterface::Update_Thread(void* args) {
   while(!This->pTerminate) {
     uint64_t Now = Tools::GetTime();
     if(This->pLastPrice < Now) {
+      Tools::LogMsg("DEBUG", "Check prices for %"PRIu64"\n", This->pLastPrice + 1);
       This->CheckPrices(This->pLastPrice + 1);
       LastQuery = Tools::GetTime();
     } else if((This->pLastPrice > Now) && ((Now - LastQuery) > 600000)) {

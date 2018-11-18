@@ -66,9 +66,10 @@ int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
   return 0;
 }
 bool DeviceV2::BuffersAppend() {
-  if(pUsed == pBuffLen) return false;
-  float *VoltagePos = &pVoltageSamples[pVoltageChannelCount * pWritePos];
-  float *CurrentPos = &pCurrentSamples[pCurrentChannelCount * pWritePos];
+  if(pBuffer.Full()) return false;
+  Sample_t Sample;
+  float *VoltagePos = Sample.Voltage;
+  float *CurrentPos = Sample.Current;
   float *ReadPos    = pReadSamples;
   if(pChannelMask & 0x40) *VoltagePos++ = *ReadPos++ * pVoltageGain[0];
   if(pChannelMask & 0x20) *CurrentPos++ = *ReadPos++ * pCurrentGain[0];
@@ -77,26 +78,26 @@ bool DeviceV2::BuffersAppend() {
   if(pChannelMask & 0x04) *VoltagePos++ = *ReadPos++ * pVoltageGain[2];
   if(pChannelMask & 0x02) *CurrentPos++ = *ReadPos++ * pCurrentGain[2];
   if(pChannelMask & 0x01) *CurrentPos++ = *ReadPos++ * pCurrentGain[3];
-  pWritePos = (pWritePos + 1) % pBuffLen;
-  pUsed++;
+  pBuffer.Push(Sample);
   uint64_t Sampletime = Tools::GetTime();
   if(pLastUpdate < (Sampletime - 500)) {
     char ThreadName[16];
-    sprintf(ThreadName, "DeviceV2_%02d", pUsed * 100 / pBuffLen);
+    sprintf(ThreadName, "DeviceV2_%02d", pBuffer.Size() * 100 / pBuffer.Capacity());
     pthread_setname_np(pCaptureThread, ThreadName);
     pLastUpdate = Sampletime;
   }
-  for(uint8_t i = 0; i < pAnalyzersCount; i++) {
+  for(uint8_t i = 0; i < pAnalyzers.size(); i++) {
     if(pAnalyzers[i].Analyzer->IsFinished() == false) return true;
   }
   bool Started = false;
-  for(uint8_t Sample = 0; (Sample < 5) && (pUsed > 0) && (Started == false); Sample++) {
-    for(uint8_t i = 0; i < pAnalyzersCount; i++) {
-      
-//      if(pAnalyzers[0].Analyzer->BufferAppend(&pVoltageSamples[pReadPos * pVoltageChannelCount + pAnalyzers[0].OffsetV], &pCurrentSamples[pReadPos * pCurrentChannelCount + pAnalyzers[0].OffsetC], Sampletime) == true) Started = true;
+  while((pBuffer.Empty() == false) && (Started == false)) {
+    Sample = pBuffer.Pop();
+    for(uint8_t i = 0; i < pAnalyzers.size(); i++) {
+      vector<float> Voltage, Current;
+      for(uint8_t n = 0; n < pAnalyzers[i].VoltageCount; n++) Voltage.push_back(Sample.Voltage[pAnalyzers[i].OffsetV + n]);
+      for(uint8_t n = 0; n < pAnalyzers[i].CurrentCount; n++) Current.push_back(Sample.Current[pAnalyzers[i].OffsetC + n]);
+      if(pAnalyzers[i].Analyzer->BufferAppend(Voltage, Current, Sampletime) == true) Started = true;
     }
-    pReadPos = (pReadPos + 1) % pBuffLen;
-    pUsed--;
   }
   return true;
 }
@@ -203,7 +204,7 @@ void *DeviceV2::Capture_Thread(void *args) {
   return NULL;
 }
 AnalyzerInterface *DeviceV2::FindAnalyzer(const char *serial) {
-  for(uint8_t i = 0; i < pAnalyzersCount; i++) {
+  for(uint8_t i = 0; i < pAnalyzers.size(); i++) {
     if(strcmp(serial, pAnalyzers[i].Analyzer->GetID()) == 0) return pAnalyzers[i].Analyzer;
   }
   return NULL;
@@ -215,13 +216,13 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
   for(int i = 0; i < 3; i++) This->pVoltageOffset[i] = 0;
   for(int i = 0; i < 4; i++) This->pCurrentGain[i]   = 1;
   for(int i = 0; i < 4; i++) This->pCurrentOffset[i] = 0;
-  This->pUsed                  = 0;
+//  This->pUsed                  = 0;
   This->pVoltageChannelCount   = 0;
   This->pCurrentChannelCount   = 0;
   This->pChannelMask           = 0;
   This->pChannelCount          = 0;
-  This->pReadPos               = 0;
-  This->pWritePos              = 0;
+//  This->pReadPos               = 0;
+//  This->pWritePos              = 0;
   This->pLastUpdate            = 0;
   This->pDeviceHandle          = NULL;
   This->pNewDevice             = NULL;
@@ -229,7 +230,7 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
   This->pADCSamplerate         = 20000;
   This->pUSBState              = USB_WAIT;
   This->pSerial                = (char*)"000000000000000000000000";
-  This->pAnalyzersCount        = 0;
+//  This->pAnalyzersCount        = 0;
   float NominalVoltage   = 230.0;
   float NominalFrequency = 50.0;
   struct json_object *Find, *Find2;
@@ -256,15 +257,16 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
     Tools::LogMsg("ERROR", "DeviceV2: current offset must have 4 double values\n");
     return NULL;
   }
-  This->pBuffLen = DEVICEV2_BUFFERSECONDS * This->pADCSamplerate / This->pOversample;
-  This->pVoltageSamples = (float*)malloc(sizeof(float) * This->pBuffLen);
-  This->pCurrentSamples = (float*)malloc(sizeof(float) * This->pBuffLen);
-  if((This->pVoltageSamples == NULL) || (This->pCurrentSamples == NULL)) {
-    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
-    return NULL;
-  }  
+  This->pBuffer.Reset(DEVICEV2_BUFFERSECONDS * This->pADCSamplerate / This->pOversample);
+//  This->pBuffLen = DEVICEV2_BUFFERSECONDS * This->pADCSamplerate / This->pOversample;
+//  This->pVoltageSamples = (float*)malloc(sizeof(float) * This->pBuffLen);
+//  This->pCurrentSamples = (float*)malloc(sizeof(float) * This->pBuffLen);
+//  if((This->pVoltageSamples == NULL) || (This->pCurrentSamples == NULL)) {
+//    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
+//    return NULL;
+//  }  
   if((json_object_object_get_ex(config, "Outputs", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
-    This->pAnalyzers = (Analyzer_t*)realloc(This->pAnalyzers, sizeof(Analyzer_t*) * json_object_array_length(Find));
+//    This->pAnalyzers = (Analyzer_t*)realloc(This->pAnalyzers, sizeof(Analyzer_t*) * json_object_array_length(Find));
     for(uint i = 0; i < json_object_array_length(Find); i++) {
       json_object *Output = json_object_array_get_idx(Find, i);
       char *ReadMode = (char*)"3Phase";
@@ -279,45 +281,51 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
           return NULL;  
         }
         This->pChannelMask = This->pChannelMask | ((UseNeutral == true) ? 0x7F : 0x7E);
-        This->pAnalyzers[This->pAnalyzersCount].ID = strdup(This->pSerial);
-        This->pAnalyzers[This->pAnalyzersCount].Analyzer = new AnalyzerSoft(This->pADCSamplerate / This->pOversample, This->pAnalyzers[This->pAnalyzersCount].ID, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, UseNeutral ? AnalyzerInterface::PHASE3N : AnalyzerInterface::PHASE3);
-        This->pAnalyzers[This->pAnalyzersCount].OffsetV = 0;
-        This->pAnalyzers[This->pAnalyzersCount].OffsetC = 0;
-        This->pAnalyzersCount++;
+        Analyzer_t Analyzer;
+        Analyzer.ID = strdup(This->pSerial);
+        Analyzer.Analyzer = new AnalyzerSoft(This->pADCSamplerate / This->pOversample, Analyzer.ID, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, UseNeutral ? AnalyzerInterface::PHASE3N : AnalyzerInterface::PHASE3);
+        Analyzer.OffsetV = 0;
+        Analyzer.VoltageCount = 3;
+        Analyzer.OffsetC = 0;
+        Analyzer.CurrentCount = (UseNeutral == true) ? 4 : 3;
+        This->pAnalyzers.push_back(Analyzer);
       } else if(strcmp("1Phase", ReadMode) == 0) {
         char    *CurrentChannelText = (char*)"R";
         uint8_t  VoltageMask = 0;
         uint8_t  CurrentMask = 0;
+        Analyzer_t Analyzer;
+        Analyzer.VoltageCount = 1;
         if((json_object_object_get_ex(Output, "VoltageChannel", &Find2) == true) && (json_object_get_type(Find2) == json_type_string)) {
           char *VoltageChannelText = (char*)json_object_get_string(Find2);
           if(strcmp("R", VoltageChannelText) == 0) {
             VoltageMask = 0x40;
-            This->pAnalyzers[This->pAnalyzersCount].OffsetV = 0;
+            Analyzer.OffsetV = 0;
           } else if(strcmp("S", VoltageChannelText) == 0) {
             VoltageMask = 0x10;
-            This->pAnalyzers[This->pAnalyzersCount].OffsetV = 1;
+            Analyzer.OffsetV = 1;
           } else if(strcmp("T", VoltageChannelText) == 0) {
             VoltageMask = 0x04;
-            This->pAnalyzers[This->pAnalyzersCount].OffsetV = 2;
+            Analyzer.OffsetV = 2;
           } else {
             Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S' or 'T'\n");
             return NULL;
           }
         }
+        Analyzer.CurrentCount = 1;
         if((json_object_object_get_ex(Output, "CurrentChannel", &Find2) == true) && (json_object_get_type(Find2) == json_type_string)) {
           CurrentChannelText = (char*)json_object_get_string(Find2);
           if(strcmp("R", CurrentChannelText) == 0) {
             CurrentMask = 0x20;
-            This->pAnalyzers[This->pAnalyzersCount].OffsetC = 0;
+            Analyzer.OffsetC = 0;
           } else if(strcmp("S", CurrentChannelText) == 0) {
             CurrentMask = 0x08;
-            This->pAnalyzers[This->pAnalyzersCount].OffsetC = 1;
+            Analyzer.OffsetC = 1;
           } else if(strcmp("T", CurrentChannelText) == 0) {
             CurrentMask = 0x02;
-            This->pAnalyzers[This->pAnalyzersCount].OffsetC = 2;
+            Analyzer.OffsetC = 2;
           } else if(strcmp("N", CurrentChannelText) == 0) {
             CurrentMask = 0x01;
-            This->pAnalyzers[This->pAnalyzersCount].OffsetC = 3;
+            Analyzer.OffsetC = 3;
           } else {
             Tools::LogMsg("ERROR", "CaptureV2: Invalid channel, try 'R', 'S', 'T' or 'N'\n");
             return NULL;
@@ -328,10 +336,10 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
           return NULL;
         }
         This->pChannelMask = This->pChannelMask | CurrentMask | VoltageMask;
-        This->pAnalyzers[This->pAnalyzersCount].ID = (char*)malloc(strlen(This->pSerial) + 2);
-        sprintf(This->pAnalyzers[This->pAnalyzersCount].ID, "%s%s", This->pSerial, CurrentChannelText);
-        This->pAnalyzers[This->pAnalyzersCount].Analyzer = new AnalyzerSoft(This->pADCSamplerate / This->pOversample, This->pAnalyzers[This->pAnalyzersCount].ID, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
-        This->pAnalyzersCount++;
+        Analyzer.ID = (char*)malloc(strlen(This->pSerial) + 2);
+        sprintf(Analyzer.ID, "%s%s", This->pSerial, CurrentChannelText);
+        Analyzer.Analyzer = new AnalyzerSoft(This->pADCSamplerate / This->pOversample, Analyzer.ID, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
+        This->pAnalyzers.push_back(Analyzer);
       } else {
         Tools::LogMsg("ERROR", "CaptureV2: Invalid output config, Mode must be one '1Phase' or '3Phase'\n");
         return NULL;
@@ -348,7 +356,7 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
   if(This->pChannelMask & 0x01) This->pCurrentChannelCount++;
   This->pChannelCount = This->pVoltageChannelCount + This->pCurrentChannelCount;
   //Adjust sample offset on 1phase devices
-  for(uint8_t i = 0; i < This->pAnalyzersCount; i++) {
+  for(uint8_t i = 0; i < This->pAnalyzers.size(); i++) {
     if((This->pAnalyzers[i].OffsetV > 1) && ((This->pChannelMask && 0x10) == 0)) This->pAnalyzers[i].OffsetV--;
     if((This->pAnalyzers[i].OffsetV > 0) && ((This->pChannelMask && 0x40) == 0)) This->pAnalyzers[i].OffsetV--;
     if((This->pAnalyzers[i].OffsetC > 2) && ((This->pChannelMask && 0x02) == 0)) This->pAnalyzers[i].OffsetC--;
@@ -378,12 +386,12 @@ DeviceV2::~DeviceV2() {
   pTerminate = true;
   Tools::LogMsg("INFO", "Waiting for adquisition thread ends...\n");
   pthread_join(pCaptureThread, NULL);
-  if(pVoltageSamples) free(pVoltageSamples);
-  if(pCurrentSamples) free(pCurrentSamples);
-  for(int i = 0; i < pAnalyzersCount; i++) {
-    free(pAnalyzers[i].ID);
+//  if(pVoltageSamples) free(pVoltageSamples);
+//  if(pCurrentSamples) free(pCurrentSamples);
+  for(uint i = 0; i < pAnalyzers.size(); i++) {
     delete pAnalyzers[i].Analyzer;
+    free(pAnalyzers[i].ID);
   }
-  free(pAnalyzers);
+//  free(pAnalyzers);
 }
 //======================================================================================================================

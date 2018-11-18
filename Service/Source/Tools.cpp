@@ -26,7 +26,7 @@ bool            Tools::pDaemonized  = false;
 FILE           *Tools::pLogFile     = NULL;
 json_object    *Tools::pConfig      = NULL;
 char           *Tools::pPidFile     = NULL;
-pthread_mutex_t Tools::pLogMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t Tools::pLogMutex    = PTHREAD_MUTEX_INITIALIZER;
 
 uint8_t Tools::pBatteryLevel = 0;
 bool Tools::pBatteryCharging = false;
@@ -36,7 +36,6 @@ bool Tools::pExternalPower = false;
 extern char _binary_ResourceFiles_start[];
 extern char _binary_ResourceFiles_end[];
 vector<Tools::File_t> Tools::pFiles;
-//uint32_t Tools::FileCount = 0;
 uint8_t *Tools::GetFile(const char* name, uint32_t* size) {
   if(pFiles.size() == 0) {
     char *Ptr   = _binary_ResourceFiles_start;

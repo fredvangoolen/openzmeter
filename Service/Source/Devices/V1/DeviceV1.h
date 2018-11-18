@@ -50,7 +50,6 @@ class DeviceV1 : public DeviceInterface {
     static DeviceInterface *CreateInstance(json_object* config);
   private :
     bool BuffersAppend(float voltageSample, float currentSample);
-    bool ReadJSONFloatArray(json_object *object, float *dst, uint8_t len);
     AnalyzerInterface *FindAnalyzer(const char *serial);
   public :
     ~DeviceV1();

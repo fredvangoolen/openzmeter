@@ -1,5 +1,7 @@
 #include dirs
-INC_DIRS = /usr/include/postgresql /usr/include/dbus-1.0 /usr/lib/x86_64-linux-gnu/dbus-1.0/include /usr/include/libxml2
+INC_DIRS = /usr/include/postgresql /usr/include/dbus-1.0 /usr/lib/x86_64-linux-gnu/dbus-1.0/include /usr/include/libxml2 \
+	   /usr/local/pgsql/include /usr/lib/arm-linux-gnueabihf/dbus-1.0/include
+LIB_DIRS = /usr/local/pgsql/lib
 
 #General options
 CC       = gcc
@@ -7,7 +9,7 @@ CPPFLAGS = -Wall -no-pie
 LDFLAGS  = -lm -ljson-c -ldbus-1 -lcurl -lpthread -lz -lpq -lfftw3f -lstdc++ -lusb-1.0 -lmicrohttpd -lxml2
 
 #Specific options
-debug: CXXFLAGS += -O0 -g
+debug: CXXFLAGS += -O0 -g -DEMBED_RESOURCES
 release: CXXFLAGS += -Os -DEMBED_RESOURCES
 
 #Source and targets files
@@ -20,15 +22,16 @@ WEBTARGET    = $(BUILD_DIR)/ResourceFiles.o
 WEBTMP       = $(BUILD_DIR)/ResourceFiles
 OBJS         = $(MAINSOURCES:%=$(BUILD_DIR)/%.o)
 INC_DIRS    += $(shell find $(SRC_DIRS) -type d)
-INC_FLAGS    += $(addprefix -I,$(INC_DIRS))
-CPPFLAGS     += $(INC_FLAGS)
-debug: $(OBJS)
+INC_FLAGS   += $(addprefix -I,$(INC_DIRS))
+LDFLAGS     += $(addprefix -L,$(LIB_DIRS))
+CPPFLAGS    += $(INC_FLAGS)
+debug: $(OBJS) $(WEBTARGET)
 	@echo "Linking debug target" $(TARGET_EXEC)
-	@$(CC) $(CPPFLAGS) $(CXXFLAGS) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
+	@$(CC) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(WEBTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
 	
 release: $(OBJS) $(WEBTARGET)
 	@echo "Linking release target" $(TARGET_EXEC)
-	@$(CC) $(CPPFLAGS) $(CXXFLAGS) $(OBJS) $(WEBTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
+	@$(CC) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(WEBTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
 
 clean:
 	@rm -rf $(BUILD_DIR)
@@ -48,11 +51,11 @@ $(WEBTARGET): $(WEBSOURCES)
 	@echo  "Building resource file"
 	@mkdir -p $(BUILD_DIR)
 	@rm -f $(WEBTARGET) $(WEBTMP)
-	@printf "%s\x00" $(words $(WEBSOURCES)) > $(WEBTMP)
+	@printf "%s\000" $(words $(WEBSOURCES)) > $(WEBTMP)
 	@for FILE in $(WEBSOURCES); \
 	do \
 		echo "Append " $$FILE ; \
-		printf "%s\x00%d\x00" `echo $$FILE | cut -d'/' -f3-` `stat --printf="%s" $$FILE` >> $(WEBTMP) ; \
+		printf '%s\000%d\000' `echo $$FILE | cut -d'/' -f3-` `stat --printf="%s" $$FILE` >> $(WEBTMP) ; \
 		cat $$FILE >> $(WEBTMP) ; \
 	done
 	@cd $(BUILD_DIR); ld -r -b binary -o ResourceFiles.o ResourceFiles; cd ..
