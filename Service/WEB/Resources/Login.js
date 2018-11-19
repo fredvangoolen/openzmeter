@@ -10,7 +10,7 @@ $('form').submit(function (e) {
     data: JSON.stringify({ Username: $('#username').val(), Password: $('#password').val() }),
     success: function (response) {
       $('.alert-danger').slideUp(500, function () {
-        if (response == null || response['Result'] == false) {
+        if (response === null || response['Result'] === false) {
           $('.alert-danger').slideDown(500);
           $('form button').removeAttr('disabled');
           localStorage.removeItem('UserName');
@@ -24,4 +24,7 @@ $('form').submit(function (e) {
       });
     }
   });
-})
+});
+function StartPageLoad() {
+  $('button').removeClass("disabled");
+}
