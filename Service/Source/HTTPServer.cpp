@@ -278,12 +278,10 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         } else {
           if(Request->UserName == NULL) {
             struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
-            if(((sockaddr_in*)Addr)->sin_addr.s_addr != 0x0100007F) {
+            if(((sockaddr_in*)Addr)->sin_addr.s_addr == 0x0100007F) {
               Request->PostData  = (char*)"Unauthorided access to API";
               Request->PostDataLen = strlen(Request->PostData);
               Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
-            } else {
-              Request->UserName = strdup("API");
             }    
           }
           if(Request->UserName != NULL) {
@@ -296,6 +294,10 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
               }
             }
             if(Handled == false) Request->ResultCode = MHD_HTTP_METHOD_NOT_ALLOWED;
+          } else {
+            Request->PostData  = (char*)"Unauthorided access to API";
+            Request->PostDataLen = strlen(Request->PostData);
+            Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
           }
         }
       }
