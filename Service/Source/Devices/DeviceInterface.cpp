@@ -11,15 +11,6 @@ vector<DeviceInterface*>        DeviceInterface::pDevices;
 vector<DeviceInterface::Type_t> DeviceInterface::pRegisteredTypes __attribute__((init_priority(200)));
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceInterface::Config(json_object *config) {
-  Database DB(NULL);
-  Tools::LogMsg("DEBUG", "Creating device tables\n");
-  DB.ExecSentence("CREATE TABLE IF NOT EXISTS permisions("
-                  "  name   character varying NOT NULL,"
-                  "  serial character varying NOT NULL,"
-                  "  read   boolean           NOT NULL,"
-                  "  write  boolean           NOT NULL,"
-                  "CONSTRAINT permisions_name_pkey FOREIGN KEY (name) REFERENCES users (name) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE"
-                  ") WITH (OIDS=FALSE)");
   if(config == NULL) return true;
   for(uint i = 0; i < json_object_array_length(config); i++) {
     json_object *Device = json_object_array_get_idx(config, i);

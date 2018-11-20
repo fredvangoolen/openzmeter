@@ -906,68 +906,94 @@ function exportToCsv(filename, rows) {
 var Analyzers = [];
 var Analyzer = parseInt(localStorage.getItem("SelAnalyzer"));
 var TableAnalyzers = null;
-function GetAnalyzersCompletes(result) {
-  $("#tblAnalyzers").on('click', 'button', function () {
-    var Row = TableAnalyzers.row($(this).parents('tr'));
-    TableAnalyzers.rows().nodes().to$().removeClass('info');
-    $(Row.node()).addClass('info');
-    localStorage.setItem('SelAnalyzer', Row.node()._DT_RowIndex);
-    location.reload();
+function LoadAnalyzers(result) {
+  $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
+    function(result) {
+      $("#tblAnalyzers").on('click', 'button', function () {
+        var Row = TableAnalyzers.row($(this).parents('tr'));
+        TableAnalyzers.rows().nodes().to$().removeClass('info');
+        $(Row.node()).addClass('info');
+        localStorage.setItem('SelAnalyzer', Row.node()._DT_RowIndex);
+        location.reload();
+      });
+      if(result.length > 0) $('#btnSearchAnalyzer').removeClass('disabled');
+      Analyzers = result;
+      TableAnalyzers = $('#tblAnalyzers').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', 
+                                                      dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', 
+                                                      language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices", zeroRecords: " "},
+                                                      columnDefs: [ { targets: 0, width: "20px", orderable: false, searchable: false }, { targets: 1, width: "auto" }, { targets: 2, width: "40px" }, { targets: 3, width: "100px" }, { targets: 4, width: "60px", orderable: false, searchable: false } ], order: [1, 'desc']
+      });
+      for(i = 0; i < result.length; i++) {
+        var RowText = $('<tr ' + ((i === Analyzer) ? 'class="info"' : '') + '>').append('<td class="text-center">' + ((result[i].Online === true) ? '<i class="fa fa-circle" title="Online"></i>' : '<i class="fa fa-circle-thin" title="Offline"></i>') + '</td><td>' + result[i].Name + '</td><td>' + result[i].Mode + '</td><td style="font-family: monospace; font-size : 11px">' + result[i].ID + '</td><td>' + ((i === Analyzer) ? '<div class="text-success text-center">Selected</div></td>' : '<button class="btn btn-xs btn-primary" style="width: 100%">Select</button></td>'));
+        TableAnalyzers.row.add(RowText).draw();
+      }
+      $('#dlgSearchAnalyzer').on('shown.bs.modal',function() { TableAnalyzers.columns.adjust(); } );
+      $('#btnSearchAnalyzer').on('click', function() { $('#dlgSearchAnalyzer').modal('show'); });
+      if(Analyzers[Analyzer] === undefined) {
+        $('#dlgSearchAnalyzer').modal('show');
+        return;
+      } else {
+        $('#labelAnalyzerName').text(Analyzers[Analyzer].Name);
+        GetIndicators();
+        AjaxGetIndicatorsB();
+      }
+      AjaxGetSysStats();
+      UpdatePage();
+    }
   });
-  if(result.length > 0) $('#btnSearchAnalyzer').removeClass('disabled');
-  Analyzers = result;
-  TableAnalyzers = $('#tblAnalyzers').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', 
-                                                  dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', 
-                                                  language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices", zeroRecords: " "},
-                                                  columnDefs: [ { targets: 0, width: "20px", orderable: false, searchable: false }, { targets: 1, width: "auto" }, { targets: 2, width: "40px" }, { targets: 3, width: "100px" }, { targets: 4, width: "60px", orderable: false, searchable: false } ], order: [1, 'desc']
-  });
-  for(i = 0; i < result.length; i++) {
-    
-    
-    
-    
-    var RowText = $('<tr ' + ((i === Analyzer) ? 'class="info"' : '') + '>').append('<td class="text-center">' + ((result[i].Online === true) ? '<i class="fa fa-circle" title="Online"></i>' : '<i class="fa fa-circle-thin" title="Offline"></i>') + '</td><td>' + result[i].Name + '</td><td>' + result[i].Mode + '</td><td style="font-family: monospace; font-size : 11px">' + result[i].ID + '</td><td>' + ((i === Analyzer) ? '<div class="text-success text-center">Selected</div></td>' : '<button class="btn btn-xs btn-primary" style="width: 100%">Select</button></td>'));
-    TableAnalyzers.row.add(RowText).draw();
-  }
-  $('#dlgSearchAnalyzer').on('shown.bs.modal',function() { TableAnalyzers.columns.adjust(); } );
-  $('#btnSearchAnalyzer').on('click', function() { $('#dlgSearchAnalyzer').modal('show'); });
-  if(Analyzers[Analyzer] === undefined) {
-    $('#dlgSearchAnalyzer').modal('show');
+}
+
+/* Load News and wait users accepts all*/
+var News = null;
+function LoadNews() {
+  $('#dlgNews').on('hidden.bs.modal', NewsShow());
+  $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ LastLogin: parseInt(localStorage.getItem('LastLogin')) }), success: 
+    function(result) {
+      News = result;
+      NewsShow();
+    }
+  }); 
+}
+function NewsShow() {
+  if(News === null) return;
+  if(News['Headers'].length === 0) {
+    LoadAnalyzers();
     return;
-  } else {
-    $('#labelAnalyzerName').text(Analyzers[Analyzer].Name);
-    GetIndicators();
-    AjaxGetIndicatorsB();
   }
-  AjaxGetSysStats();
-  UpdatePage();
+  $('#dlgNews .modal-header h3 span').html(News['Headers'][0]);
+  $('#dlgNews .modal-body').html(News['Contents'][0]);
+  localStorage.setItem('LastLogin', News['Timestamp'][0] + 1);
+  $('#dlgNews').modal('show');
+  News['Headers'].shift();
+  News['Contents'].shift();
 }
 
 /* Genera la secuencia de pasos una vez cargado todo el javascript para mostrar la pagina */
-var LoadedPending;
+var LoadedPending = 0;
+function LoadCommon() {
+  LoadedPending = $('*[data-load-block]').length;
+  $.ajax( { url: 'Common.html', success: 
+    function(result) {
+      var Template = $('<div></div>');
+      Template.append(result.trim());
+      $('*[data-load-block]').each(
+        function(index) { 
+          $(this).html(Template.children('#' + $(this).data('loadBlock')).html());
+          LoadedPending--;
+          if(LoadedPending === 0) {
+            $('[data-sidenav]').sidenav();
+            $('#labelUserName').text(localStorage.getItem('UserName'));
+            $('ul.sidenav-menu li a').filter( function() { return this.href === window.location.href; }).addClass('active').parent().parent().show().parent().children('a').addClass('active');
+            LoadNews();
+          }
+        }
+      );        
+    } 
+  });
+}
 function StartPageLoad() {
   $('.spinnerdiv').each(function(index, element) { new Spinner(SpinnerOpts).spin(element); });
-  LoadedPending = $('*[data-load-block]').length;
-  if(LoadedPending > 0) {
-    $.ajax( { url: 'Common.html', success: 
-      function(result) {
-        var Template = $('<div></div>');
-        Template.append(result.trim());
-        $('*[data-load-block]').each(
-          function(index) { 
-            $(this).html(Template.children('#' + $(this).data('loadBlock')).html());
-            LoadedPending--;
-            if(LoadedPending === 0) {
-              $('[data-sidenav]').sidenav();
-              $('#labelUserName').text(localStorage.getItem('UserName'));
-              $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: GetAnalyzersCompletes });
-              $('ul.sidenav-menu li a').filter( function() { return this.href === window.location.href; }).addClass('active').parent().parent().show().parent().children('a').addClass('active');
-            }
-          }
-        );        
-      } 
-    });
-  }
+  LoadCommon();
 }
 
 

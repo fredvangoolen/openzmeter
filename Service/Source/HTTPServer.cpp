@@ -25,23 +25,6 @@ vector<HTTPServer::Mapping_t>   HTTPServer::pMappings;
 //----------------------------------------------------------------------------------------------------------------------
 bool HTTPServer::Config(json_object *config) {
   Database DB(NULL);
-  Tools::LogMsg("DEBUG", "Creating WEB service tables\n");
-  DB.ExecSentence("CREATE TABLE IF NOT EXISTS users("
-                  "  name      character varying NOT NULL,"
-                  "  password  character varying NOT NULL,"
-                  "  lastlogin bigint            NOT NULL,"
-                  "  admin     boolean           NOT NULL,"
-                  "CONSTRAINT users_pkey PRIMARY KEY (name)"
-                  ") WITH (OIDS=FALSE)");
-  DB.ExecSentence("CREATE TABLE IF NOT EXISTS sessions ("
-                  "  id   serial NOT NULL,"
-                  "  name character varying,"
-                  "  timestamp bigint NOT NULL,"
-                  "CONSTRAINT sessions_pkey PRIMARY KEY (id),"
-                  "CONSTRAINT sessions_name_fkey FOREIGN KEY (name) REFERENCES users (name) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE"
-                  ") WITH (OIDS=FALSE)");
-  DB.ExecSentence("CREATE INDEX IF NOT EXISTS sessions_timestamp_idx ON sessions USING btree (timestamp)");
-  DB.ExecSentence("INSERT INTO users(name, password, lastlogin, admin) VALUES('admin', MD5('admin'), 0, true) ON CONFLICT (name) DO NOTHING");
   uint16_t Port = 8080;
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
@@ -278,27 +261,22 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         } else {
           if(Request->UserName == NULL) {
             struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
-            if(((sockaddr_in*)Addr)->sin_addr.s_addr == 0x0100007F) {
-              Request->PostData  = (char*)"Unauthorided access to API";
-              Request->PostDataLen = strlen(Request->PostData);
-              Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
-            }    
+            if(((sockaddr_in*)Addr)->sin_addr.s_addr == 0x0100007F) Tools::JSONString(Request->JSONReader, "UserName", &Request->UserName, true);
           }
-          if(Request->UserName != NULL) {
-            bool Handled = false;
-            for(vector<Callback_t>::iterator it = pCallbacks.begin() ; it != pCallbacks.end(); ++it) {
-              if(strcmp(url, it->HandleName) == 0) {
-                if(it->Function(Request->UserName, Request->JSONReader, Request->DB, &Request->JSONWriter, &Request->PostData, &Request->PostDataLen) == false) Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-                Handled = true;
-                break;
-              }
-            }
-            if(Handled == false) Request->ResultCode = MHD_HTTP_METHOD_NOT_ALLOWED;
-          } else {
+          if(Request->UserName == NULL) {
             Request->PostData  = (char*)"Unauthorided access to API";
             Request->PostDataLen = strlen(Request->PostData);
-            Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
+            Request->ResultCode = MHD_HTTP_UNAUTHORIZED;          
           }
+          bool Handled = false;
+          for(vector<Callback_t>::iterator it = pCallbacks.begin() ; it != pCallbacks.end(); ++it) {
+            if(strcmp(url, it->HandleName) == 0) {
+              if(it->Function(Request->UserName, Request->JSONReader, Request->DB, &Request->JSONWriter, &Request->PostData, &Request->PostDataLen) == false) Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+              Handled = true;
+              break;
+            }
+          }
+          if(Handled == false) Request->ResultCode = MHD_HTTP_METHOD_NOT_ALLOWED;
         }
       }
 	    *upload_data_size = 0;

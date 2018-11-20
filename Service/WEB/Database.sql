@@ -1,0 +1,33 @@
+-- Create database
+CREATE TABLE IF NOT EXISTS users(
+  name      character varying NOT NULL PRIMARY KEY,
+  password  character varying NOT NULL,
+  lastlogin bigint            NOT NULL,
+  admin     boolean           NOT NULL
+) WITH (OIDS=FALSE);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  id        serial NOT NULL PRIMARY KEY,
+  name      character varying REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE,
+  timestamp bigint NOT NULL
+) WITH (OIDS=FALSE);
+CREATE INDEX IF NOT EXISTS sessions_timestamp_idx ON sessions USING btree (timestamp);
+
+INSERT INTO users(name, password, lastlogin, admin) VALUES('admin', MD5('admin'), 0, true) ON CONFLICT (name) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS permisions(
+  name       character varying NOT NULL,
+  serial     character varying NOT NULL,
+  read       boolean           NOT NULL,
+  write      boolean           NOT NULL,
+  lastevents bigint            NOT NULL,
+  CONSTRAINT permisions_name_pkey FOREIGN KEY (name) REFERENCES users (name) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE
+) WITH (OIDS=FALSE);
+
+CREATE TABLE IF NOT EXISTS news(
+  newstime  bigint NOT NULL PRIMARY KEY,
+  header    character varying NOT NULL,
+  contents  text              NOT NULL
+) WITH (OIDS=FALSE);
+
+INSERT INTO news(newstime, header, contents) VALUES( 0, 'Welcome!', 'openZmeter...... bla bla bla') ON CONFLICT (newstime) DO NOTHING;

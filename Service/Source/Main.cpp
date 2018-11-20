@@ -10,10 +10,21 @@
 #include "HTTPServer.h"
 #include "DeviceInterface.h"
 #include "NetworkManager.h"
-//#include "Capture.h"
 static bool Terminate = false;
 void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
+}
+bool GetNewsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+  uint64_t LastLogin;
+  if(Tools::JSONUInt64(reader, "LastLogin", &LastLogin) == false) {
+    *postdata  = (char*)"'LastLogin' param is requiered";
+    *resultLen = strlen(*postdata);
+    return false;
+  }
+  char Query[1024];  
+  sprintf(Query, "SELECT row_to_json(Result) AS result FROM (SELECT ARRAY_AGG(header ORDER BY newstime ASC) AS \"Headers\", ARRAY_AGG(contents ORDER BY newstime ASC) AS \"Contents\", ARRAY_AGG(newstime ORDER BY newstime ASC) AS \"Timestamp\" FROM news WHERE newstime >= %" PRIu64 ") AS Result", LastLogin);
+  *postdata = db->ExecSentenceJSON(Query, resultLen);
+  return true;  
 }
 int main(int argc, char** argv) {
   for(int i = 20; i < 20; i++) {
@@ -21,14 +32,6 @@ int main(int argc, char** argv) {
     fflush(stdout);
     sleep(1);
   }
-//  NetworkManager *Networks = new NetworkManager();
-//  Networks->SendGetDevices();
-//  Tools::GetJSONNetworks();
-//  return 0;
-//  NetworkManager::SetJSONNetworkConfig(NULL);
-//  NetworkManager::GetJSONNetworks();
-//  return 0;
-  
   char *ConfigFile = (char*)"/etc/openZmeter.conf";
   bool  Daemonize  = false;
   for(int i = 1; i != argc; i++) {
@@ -57,6 +60,7 @@ int main(int argc, char** argv) {
     Param.sched_priority = Prio;
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
   }
+  
   Tools::RegisterHandlers(SignalHandler);
   HTTPServer::RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
   HTTPServer::RegisterCallback("/getAnalyzers",        DeviceInterface::GetAnalyzersCallback);
@@ -67,7 +71,7 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterCallback("/getEvents",           DeviceInterface::GetEventsCallback);
   HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
   HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
-  
+  HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
   
   HTTPServer::RegisterDefault("/Dashboard");
   HTTPServer::RegisterMapping("/Dashboard",            "Dashboard.html");
@@ -85,34 +89,8 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterMapping("/Settings",             "Settings.html");
   HTTPServer::RegisterMapping("/Help",                 "Help.html");
 
-
-
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
-  
-//  if(Tools::CreateLogFile() == false) return EXIT_FAILURE;
-  //CaptureInterface **Interfaces = (CaptureInterface**)calloc(sizeof(CaptureInterface*), Tools::Devices.Len);
-//  for(uint i = 0; i < Tools::Devices.Len; i++) {
-//    if(strcmp(Tools::Devices.Items[i].Type, "Mono") == 0) {
-//      Tools::Devices.Items[i].Instance = new CaptureMono(Tools::Devices.Items[i].Serial, Tools::Devices.Items[i].VoltageGain, Tools::Devices.Items[i].VoltageOffset, 
-//                                                         Tools::Devices.Items[i].CurrentGain, Tools::Devices.Items[i].CurrentOffset, i);
-//    } else if(strcmp(Tools::Devices.Items[i].Type, "VirtualMono") == 0) {
-//      Tools::Devices.Items[i].Instance = new CaptureVirtual(true, 1.0, i);
-//    }
-//  }
-//  if(HTTPServer::Start() == false) return EXIT_FAILURE;
-    
-  //  uint32_t LastPrice;
-//  if(DB_Start(&LastPrice) == true) {
-//    if(Analyzer_Start() == false) goto Stop;
-//    DB_Started = true;
-//  }
 
-//  if(RequestServer_Start(Config.Global.Listen) == false) goto Stop;
-//  Devices::Start();
-//  HTTPServer::Start();
-
-//  Events_Init();
-//  Prices_Start(LastPrice);
   int Iter = 0;
   while(!Terminate) {
     usleep(1000000);
