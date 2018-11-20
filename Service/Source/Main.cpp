@@ -22,7 +22,7 @@ bool GetNewsCallback(char *user, json_object *reader, Database *db, json_object 
     return false;
   }
   char Query[1024];  
-  sprintf(Query, "SELECT row_to_json(Result) AS result FROM (SELECT ARRAY_AGG(header ORDER BY newstime ASC) AS \"Headers\", ARRAY_AGG(contents ORDER BY newstime ASC) AS \"Contents\", ARRAY_AGG(newstime ORDER BY newstime ASC) AS \"Timestamp\" FROM news WHERE newstime >= %" PRIu64 ") AS Result", LastLogin);
+  sprintf(Query, "SELECT row_to_json(Result) AS result FROM (SELECT COALESCE(ARRAY_AGG(header ORDER BY newstime ASC), '{}') AS \"Headers\", COALESCE(ARRAY_AGG(contents ORDER BY newstime ASC), '{}') AS \"Contents\", COALESCE(ARRAY_AGG(newstime ORDER BY newstime ASC), '{}') AS \"Timestamp\" FROM news WHERE newstime >= %" PRIu64 ") AS Result", LastLogin);
   *postdata = db->ExecSentenceJSON(Query, resultLen);
   return true;  
 }
