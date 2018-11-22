@@ -173,7 +173,7 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
   free(Request);
 }
 int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
-  if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
+  if((strcmp(method, MHD_HTTP_METHOD_GET) == 0) || (strcmp(method, MHD_HTTP_METHOD_HEAD) == 0)) {
     char *FilePath = (char*)malloc(strlen(url) + 10);
     sprintf(FilePath, "Resources%s", url);
     int Return = SendFile(connection, FilePath);

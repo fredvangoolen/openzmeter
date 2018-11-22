@@ -443,6 +443,7 @@ function PeriodView_OnSuccess(result) {
     ShiftArray(HarmonicsData[k], result['MaxSamples']);
   }
   PowerFactorData = GraphDataAppend(result, 'power_factor', PowerFactorData);
+  result['thd_v'] = result['thd_v'].map(function(x) { return x * 100.0; });
   THDData = GraphDataAppend(result, 'thd_v', THDData);
   PHIData = GraphDataAppend(result, 'phi', PHIData);
   if(HarmonicsCharts.length === 0) {

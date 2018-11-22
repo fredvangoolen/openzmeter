@@ -5,7 +5,7 @@ var SpinnerOpts         = { lines: 10,  // The number of lines to draw
                             radius: 10  // The radius of the inner circle
                           };
 /* offline.js configuration and tools */
-Offline.options = {requests: false};
+Offline.options = {requests: true};
 Offline.on('confirmed-down', function() { $('#OfflineDiv').css('display', 'inherit'); });
 Offline.on('confirmed-up',   function() {  $('#OfflineDiv').css('display', 'none'); });
                         
@@ -25,7 +25,7 @@ var SeriesNames = {
 };
   
 /* redirect ajax error to login page */
-$(document).ajaxError(function (event, jqxhr, settings, exception) { if(jqxhr.status === 401) window.location.href = 'Login'; });
+//$(document).ajaxError(function (event, jqxhr, settings, exception) { if(jqxhr.status === 401) window.location.href = 'Login'; });
 /* handle buttons events to avoid 'selected' effect */
 $(document).on("mousedown", ":button", function(e) { e.preventDefault(); this.blur(); } );
 
