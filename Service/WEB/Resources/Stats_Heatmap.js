@@ -43,11 +43,6 @@ function SumPhases(array, visibleSeries) {
 function UpdateHeatMap(visibleSeries) {
   var Block = parseInt(localStorage.getItem('StatsBlock'));
   var Count = (Block === 0) ? 6 : (Block === 1) ? 3 : (Block === 2) ? 2 : 1;
-//  if($('#btnHeatmap1Hour').hasClass('active')) Count = 6;
-//  if($('#btnHeatmap30Min').hasClass('active')) Count = 3;
-//  if($('#btnHeatmap20Min').hasClass('active')) Count = 2;
-//  if($('#btnHeatmap10Min').hasClass('active')) Count = 1;
-//  Count = 1;
   var Body = $('#HeatMap tbody');
   Body.html("");
   var Days = [];
@@ -72,18 +67,17 @@ function UpdateHeatMap(visibleSeries) {
   var Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
   var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]);
   var Len = 0;
-  Days.forEach(function(Day) {
+  Days.slice().reverse().forEach(function(Day) {
     var Row = $('<tr></tr>');
     Row.append('<td>' + Day.WeekDay + '</td>');
-    Row.append('<td style="border-right: 1px solid #BBB">' + Day.Date + '</td>');
+    Row.append('<td style="border-right: 1px solid #333">' + Day.Date + '</td>');
     for(var i = 0; i < Day.Cells.length; i++) {
       var Cell = Day.Cells[i];
       var Tmp = $('<td colspan="' + Count + '" data-toogle="tooltip"></td>');
-      Tmp.css('background-color', (Cell === undefined) ? '#EEE' : ColorScale((Cell - Min) / (Max - Min)));
+      var Color = ColorScale((Cell - Min) / (Max - Min));
+      Tmp.css('background-color', (Cell === undefined) ? '#555' : Color);
       Tmp.attr('title', (Cell === undefined) ? 'No data for this period' : (Round2Plain(ScaleToUnits(Cell, Units)) + Units + 'Wh'));
-      if((i % (6 / Count)) === ((6 / Count) - 1)) Tmp.css('border-right', '1px solid #BBB');
-      if((Len === 0)  || (Day.WeekDay === DaysNames[1])) Tmp.css('border-top', '1px solid #BBB');
-      if(Len === (Object.keys(Days).length - 1)) Tmp.css('border-bottom', '1px solid #BBB');
+      Tmp.css('border', '1px solid #333');
       Row.append(Tmp);
     };
      Len = Len + 1;
