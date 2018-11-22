@@ -262,6 +262,8 @@ function PeriodViewParams_OnSuccess(result) {
   ReactiveData = GraphDataAppend(result, 'reactive_power', ReactiveData);
   PowerFactorData = GraphDataAppend(result, 'power_factor', PowerFactorData);
   PhiData  = GraphDataAppend(result, 'phi', PhiData);
+  result['thd_v'] = result['thd_v'].map(function(x) { return x * 100.0; });
+  result['thd_i'] = result['thd_i'].map(function(x) { return x * 100.0; });
   THDVData = GraphDataAppend(result, 'thd_v', THDVData);
   THDIData = GraphDataAppend(result, 'thd_i', THDIData);
   if(ReactiveChart === null) {

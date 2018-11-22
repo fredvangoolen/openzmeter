@@ -221,12 +221,9 @@ function barChartPlotterCubism(e) {
   var area = e.plotArea;
   if(area.h <= 0 || area.w <= 0) return;
   var points = e.points;
-  var max_range = Math.abs(points[0].yval);
   var BarWidth = Infinity;
   for(var i = 1; i < points.length; i++) {
-    var Value = Math.abs(points[i].yval);
     var Sep = points[i].canvasx - points[i - 1].canvasx;
-    if(Value > max_range) max_range = Value;
     if(Sep < BarWidth) BarWidth = Sep;
   }
   var ColorP = Dygraph.toRGB_(e.color);
@@ -234,8 +231,10 @@ function barChartPlotterCubism(e) {
   var ColorN = Dygraph.toRGB_(e.color);
   ColorN = 'rgba(' + Math.floor(255 - ColorN.r) + ',' + Math.floor(255 - ColorN.g) + ',' + Math.floor(255 - ColorN.b) + ', 0.3)';
   var Height = area.h - 1;
+  var Midpoint = ( e.axis.minyval + e.axis.maxyval) / 2;
+  var Scale = (Height * 3) / (e.axis.maxyval - Midpoint);
   for(var i = 0; i < points.length; i++) {
-    var BarHeight = (points[i].yval / max_range) * Height * 3;
+    var BarHeight = (points[i].yval - Midpoint) * Scale;
     while(true) {
       ctx.fillStyle = (BarHeight > 0) ? ColorP : ColorN;
       if(BarHeight > area.h) {

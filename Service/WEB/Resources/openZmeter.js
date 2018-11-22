@@ -171,7 +171,7 @@ function Scrollable(opt) {
     return Result;    
   };
   Self.OnSuccess = function(result) {
-    for(i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
+    for(var i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
     Self.Opt.OnSuccess(result, Self.LastSample === 0);
     Self.LastSample = LastSampletime(result, Self.LastSample);
     $(Self.Opt.AggregBtn + ' div:first').text(GetAggregLongName(result['Aggregation_Source']));
@@ -210,7 +210,7 @@ function Scrollable(opt) {
     if(Self.Timer !== null) clearInterval(Self.Timer);
     $(Self.Opt.NowBtn).addClass('disabled');
     if(Self.LastSample === 0) {
-      for(i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).show();
+      for(var i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).show();
     }
     var Period = parseInt(localStorage.getItem('GraphPeriod'));
     if(!Period) {
@@ -286,7 +286,7 @@ function Live(opt) {
     $(Self.Opt.PauseBtn).addClass('disabled');
     Ajax.GetSeriesNow(Self.Opt.Series, 
       function(result) {
-        for(i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
+        for(var i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
         Self.Opt.OnSuccess(result);
         Self.LastSample = result['Sampletime'];
       },
@@ -309,7 +309,7 @@ function PeriodView(opt) {
       function(result) {
         if(result['Sampletime'] === null) return;
         if(result['Sampletime'].length === 0) return;
-        for(i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
+        for(var i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
         Self.Opt.OnSuccess(result);
         Self.LastSample = LastSampletime(result, Self.LastSample);
       },
@@ -386,7 +386,7 @@ function GraphMaximizer(title, graph, button, resizeHandler) {
 function GraphDataAppend(result, serie, data) {
   if(result['Sampletime'] !== null && result['Sampletime'].length > 0) {
     if(data.length === 0 || data[data.length - 1][0] < result['Sampletime'][0]) {
-      for(i = 0; i < result['Sampletime'].length; i++) {
+      for(var i = 0; i < result['Sampletime'].length; i++) {
         data.push([new Date(result['Sampletime'][i])].concat(result[serie][i]));
       }
       ShiftArray(data, result['MaxSamples']);
@@ -448,7 +448,7 @@ function GroupButtons(buttongroup, variable, maxItems, unique, callback, sender)
   var Visibles = [];
   if(Analyzers[Analyzer].Mode !== '1PHASE') {
     buttongroup.removeClass('hidden');
-    for(i = 0; i < NumElements; i++) {
+    for(var i = 0; i < NumElements; i++) {
       if(i >= maxItems) {
         $(buttongroup.children()[i]).addClass('disabled');
       } else if(State & Math.pow(2, i)) {
@@ -484,7 +484,7 @@ function GraphDBTicks(min, max, offset) {
 /* Generate odd harmonic ticks */
 function GraphOddHarmonics() {
   var Ticks = [];
-  for(i = 0; i < SeriesNames.Harmonics.length; i = i + 2) Ticks.push({ v: i, label: SeriesNames.Harmonics[i] });
+  for(var i = 0; i < SeriesNames.Harmonics.length; i = i + 2) Ticks.push({ v: i, label: SeriesNames.Harmonics[i] });
   return Ticks;
 }
 function GraphWaveTimeTicks(max) {
@@ -531,9 +531,7 @@ function ArrayGraphMax(array) {
 /* Scale all values of an array to units ('', 'k', 'M') */
 function ScaleArrayToUnits(array, units) {
   if(units === '') return array;
-  for(i = 0; i < array.length; i++) {
-    array[i] = ScaleToUnits(array[i], units);
-  }
+  for(var i = 0; i < array.length; i++) array[i] = ScaleToUnits(array[i], units);
   return array;
 }
 
@@ -559,13 +557,13 @@ function GetBestUnits(value) {
 /* Find the max,min value of graph visible series data (array of arrays where first column is time) */
 function ArrayGraphMinMax(graph, accum) {
   var Result = {VisibleNames: [], Min: Infinity, Max: -Infinity, MinTime: 0, MaxTime: 0};
-  for(i = 0; i < graph.attrs_.visibility.length; i++) {
+  for(var i = 0; i < graph.attrs_.visibility.length; i++) {
     if(graph.attrs_.visibility[i] === true) Result.VisibleNames.push(graph.attributes_.labels_[i]);
   }
-  for(i = 0; i < graph.rawData_.length; i++) {
+  for(var i = 0; i < graph.rawData_.length; i++) {
     if(accum === true) {
       var Value = 0;
-      for(n = 1; n < graph.rawData_[i].length; n++) {      
+      for(var n = 1; n < graph.rawData_[i].length; n++) {      
         if(graph.attrs_.visibility[n - 1] === true) Value = Value + graph.rawData_[i][n];
       }
       if(Value < Result.Min) {
@@ -577,7 +575,7 @@ function ArrayGraphMinMax(graph, accum) {
         Result.MaxTime = graph.rawData_[i][0];
       }
     } else {
-      for(n = 1; n < graph.rawData_[i].length; n++) {      
+      for(var n = 1; n < graph.rawData_[i].length; n++) {      
         if(graph.attrs_.visibility[n - 1] === true) {
           var Value = Value + graph.rawData_[i][n];
           if(Value < Result.Min) {
@@ -611,8 +609,13 @@ function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter 
         if(data.x == null) {
           return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
         } else {
-          for(i = 0; i < data.series.length; i++)  {
-            if(data.series[i].yHTML !== undefined) return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' + data.xHTML + data.series[i].yHTML;
+          for(var i = 0; i < data.series.length; i++)  {
+            var Text;
+            if(data.series[i].yHTML !== undefined) 
+              Text = data.series[i].yHTML;
+            else 
+              Text = '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + yvalueformatter(data.series[i].y) + '</div>'
+            return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' + data.xHTML + Text;
           }      
         }
       },
@@ -639,7 +642,7 @@ function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter 
 /* Generate an array of colors from a base */
 function ColorArray(base, items) {
   var Array = [];
-  for(i = 0; i < items; i++) {
+  for(var i = 0; i < items; i++) {
    Array.push(base); 
    base = chroma(base).darken();
   }
@@ -649,7 +652,7 @@ function ColorArray(base, items) {
 function LegendFormatter_Follow(data) {
   if(data.x === undefined || data.x === null) return "";
   var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';
-  for(i = 0; i < data.series.length; i++)  {
+  for(var i = 0; i < data.series.length; i++)  {
     if(data.series[i].isVisible) {
       Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
     }
