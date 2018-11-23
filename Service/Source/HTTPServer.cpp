@@ -12,7 +12,6 @@
 #include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <zlib.h>
 #include "HTTPServer.h"
 #include "Tools.h"
 #include "NetworkManager.h"
@@ -93,38 +92,26 @@ void HTTPServer::RemoveExpiredSessions() {
   DB.ExecSentence();
 }
 void HTTPServer::SetMimeType(struct MHD_Response *response, const char *url) {
-  char *MimeType = NULL;
   int FileNameLen = strlen(url);
   if((strlen(url) >= 3) && (strcmp(&url[FileNameLen - 3], ".js")) == 0) 
-    MimeType = (char*)"text/javascript";
+    MHD_add_response_header(response, "Content-Type", "text/javascript");
   else if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".css")) == 0) 
-    MimeType = (char*)"text/css";
-  else if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".ico")) == 0) 
-    MimeType = (char*)"image/x-icon";
+    MHD_add_response_header(response, "Content-Type", "text/css");
+  else if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".ico")) == 0)
+    MHD_add_response_header(response, "Content-Type", "image/x-icon");
   else if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".png")) == 0) 
-    MimeType = (char*)"image/png";
+    MHD_add_response_header(response, "Content-Type", "image/png");
   else if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".svg")) == 0) 
-    MimeType = (char*)"image/svg+xml";
+    MHD_add_response_header(response, "Content-Type", "image/svg+xml");
   else if((strlen(url) >= 5) && (strcmp(&url[FileNameLen - 5], ".html")) == 0) 
-    MimeType = (char*)"text/html";
+    MHD_add_response_header(response, "Content-Type", "text/html");
   else if((strlen(url) >= 5) && (strcmp(&url[FileNameLen - 6], ".woff2")) == 0) 
-    MimeType = (char*)"font/woff2";
+    MHD_add_response_header(response, "Content-Type", "font/woff2");
   else {
-    MimeType = (char*)"application/octet-stream";
-    Tools::LogMsg("DEBUG", "No mimetype defined for request '%s', '%s' used\n", url, MimeType);
+    MHD_add_response_header(response, "Content-Type", "application/octet-stream");
+    Tools::LogMsg("DEBUG", "No mimetype defined for request '%s'\n", url);
   }
-  MHD_add_response_header(response, "Content-Type", MimeType);
-}
-int  HTTPServer::SendError(struct MHD_Connection *connection, int error, const char *text) {
-  int Len = strlen(text);
-  if(Len == 0)
-    Tools::LogMsg("DEBUG", "Error %d on request\n", error);
-  else
-    Tools::LogMsg("DEBUG", "Error %d (%s) on request\n", error, text);
-  struct MHD_Response *response = MHD_create_response_from_buffer(strlen(text), (void*)text, MHD_RESPMEM_PERSISTENT);
-  int Return = MHD_queue_response(connection, error, response);
-  MHD_destroy_response(response);
-  return Return;
+  MHD_add_response_header(response, "Cache-Control", "public, max-age=2592000");
 }
 int HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url) {
   Tools::LogMsg("DEBUG", "Redirecting client to '%s'\n", url);
@@ -134,82 +121,91 @@ int HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url)
   MHD_destroy_response(response);
   return Return;
 }
-int HTTPServer::SendFile(struct MHD_Connection *connection, const char *path) {
-#ifndef EMBED_RESOURCES
-  int File = -1;
-  struct stat FileStat;
-  char *Path = (char*)malloc(sizeof(char) * (strlen(path) + strlen(pFilePath) + 1));
-  sprintf(Path, "%s%s", pFilePath, path);
-  if((stat(Path, &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) File = open(Path, O_RDONLY);
-  if(File == -1) return MHD_NO;
-  struct MHD_Response *response = MHD_create_response_from_fd(FileStat.st_size, File);
-  SetMimeType(response, path);
-  MHD_add_response_header(response, "Cache-Control", "public, max-age=2592000");
-  int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
-  MHD_destroy_response(response);
-  free(Path);
-  return Return;
-#else
-  uint32_t Size;
-  uint8_t *Ptr = Tools::GetFile(path, &Size);
-  if(Ptr == NULL) return MHD_NO;
-  struct MHD_Response *response = MHD_create_response_from_buffer(Size, Ptr, MHD_RESPMEM_PERSISTENT);
-  SetMimeType(response, path);
-  MHD_add_response_header(response, "Cache-Control", "public, max-age=2592000");
-  int Return = MHD_queue_response(connection, MHD_HTTP_OK, response);
-  MHD_destroy_response(response);
-  return Return;
-#endif
-}
 void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe) {
   Request_t *Request = (Request_t*)*con_cls;
   if(Request == NULL) return;
   if(Request->DB) delete Request->DB;
   if(Request->JSONReader) json_object_put(Request->JSONReader);
   if(Request->JSONWriter) json_object_put(Request->JSONWriter);
-  if(Request->Deflate) free(Request->PostData);
+  if(Request->Deflate) deflateEnd(&Request->DeflateObj);
   if(Request->UserName) free(Request->UserName);
   if(Request->SessionID) free(Request->SessionID);
   free(Request);
 }
-int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
-  if((strcmp(method, MHD_HTTP_METHOD_GET) == 0) || (strcmp(method, MHD_HTTP_METHOD_HEAD) == 0)) {
-    char *FilePath = (char*)malloc(strlen(url) + 10);
-    sprintf(FilePath, "Resources%s", url);
-    int Return = SendFile(connection, FilePath);
-    free(FilePath);
-    if(Return == MHD_YES) {
-      Tools::LogMsg("DEBUG", "Client GET request '%s'\n", url);
-      return MHD_YES;
+ssize_t HTTPServer::WriteFunction(void *cls, uint64_t pos, char *buf, size_t max) {
+  Request_t *Request = (Request_t*)cls;
+  if(Request->Deflate) {
+    if(pos == 0) {
+      Request->DeflateObj.zalloc = Z_NULL;
+      Request->DeflateObj.zfree = Z_NULL;
+      Request->DeflateObj.opaque = Z_NULL;
+      Request->DeflateObj.avail_in = Request->PostDataLen;
+      Request->DeflateObj.next_in = (uint8_t*)Request->PostData;
+      if(deflateInit(&Request->DeflateObj, Z_BEST_SPEED) != Z_OK) return MHD_CONTENT_READER_END_OF_STREAM;
     }
+    Request->DeflateObj.next_out = (uint8_t*)buf;
+    Request->DeflateObj.avail_out = max;
+    deflate(&Request->DeflateObj, Z_FINISH);
+    if(Request->DeflateObj.avail_out != max) {
+      return (max - Request->DeflateObj.avail_out); 
+    } else {
+      return MHD_CONTENT_READER_END_OF_STREAM;
+    }
+  } else {
+    if(max > (Request->PostDataLen - pos)) max = Request->PostDataLen - pos; 
+    if(max == 0) return MHD_CONTENT_READER_END_OF_STREAM;
+    memcpy(buf, &Request->PostData[pos], max);
+    return max;
   }
+}
+int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
   Request_t *Request = (Request_t*)*ptr;
   if(Request == NULL) {
+    char FilePath[256];
     *ptr = (Request_t*)calloc(1, sizeof(Request_t));
     Request = (Request_t*)*ptr;
     OpenSession(connection, Request);
     if(Request->SessionID == NULL) return MHD_NO;
     Request->ResultCode = MHD_HTTP_OK;
-    if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
-      return MHD_YES;
-    } else if(strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
+    if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) return MHD_YES;
+    if((strcmp(method, MHD_HTTP_METHOD_GET) == 0) || (strcmp(method, MHD_HTTP_METHOD_HEAD) == 0)) {
+      snprintf(FilePath, sizeof(FilePath), "Resources%s", url);
+      Request->PostData = (char*)Tools::GetFile(FilePath, &Request->PostDataLen);
+    }
+    if((Request->PostData == NULL) && (strcmp(method, MHD_HTTP_METHOD_GET) == 0)) {
       if(((strcmp(url, "/Login") == 0) || (strcmp(url, "/") == 0)) && (Request->UserName != NULL)) {
         return SendRedirect(connection, pDefaultPage);
+      } else if(strcmp(url, "/Logout") == 0) {
+        CloseSession(connection, Request);
+        return SendRedirect(connection, "/Login");
       } else if((strcmp(url, "/Login") == 0) && (Request->UserName == NULL)) {
-        return SendFile(connection, (char*)"Login.html");
+        snprintf(FilePath, sizeof(FilePath), "Login.html");
+        Request->PostData = (char*)Tools::GetFile(FilePath, &Request->PostDataLen);
       } else if(Request->UserName == NULL) {
         return SendRedirect(connection, "/Login");
       } else {
-        if(strcmp(url, "/Logout") == 0) {
-          CloseSession(connection, Request);
-          return SendRedirect(connection, "/Login");
-        }
         for(vector<Mapping_t>::iterator it = pMappings.begin() ; it != pMappings.end(); ++it) {
-          if(strcmp(url, it->URL) == 0) return SendFile(connection, it->File);
-        }
-        return SendFile(connection, "Error404.html");
+          if(strcmp(url, it->URL) == 0) {
+            snprintf(FilePath, sizeof(FilePath), it->File);
+            Request->PostData = (char*)Tools::GetFile(FilePath, &Request->PostDataLen);
+          }
+        }    
       }
     }
+    if(Request->PostData == NULL) {
+      snprintf(FilePath, sizeof(FilePath), "Error404.html");
+      Request->PostData = (char*)Tools::GetFile(FilePath, &Request->PostDataLen);
+    }
+    if(Request->PostData != NULL) {
+      MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &WriteFunction, Request, NULL);
+      SetMimeType(Response, FilePath);
+      char *AcceptEncoding = (char*)MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT_ENCODING);
+      Request->Deflate = ((AcceptEncoding != NULL) && (strstr(AcceptEncoding, "deflate") != NULL) && (Request->PostDataLen > 256));
+      if(Request->Deflate) MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_ENCODING, "deflate");
+      int Return = MHD_queue_response(connection, Request->ResultCode, Response);
+      MHD_destroy_response(Response);        
+      return Return;
+    }    
   }
   if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
     if(*upload_data_size != 0) {
@@ -282,34 +278,20 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
 	    *upload_data_size = 0;
   	  return MHD_YES;
 	  } else {
-      char *AcceptEncoding = (char*)MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT_ENCODING);
-      Request->Deflate = ((AcceptEncoding != NULL) && (strstr(AcceptEncoding, "deflate") != NULL) && (Request->PostDataLen > 256));
-      if(Request->Deflate) {
-        char *Tmp = (char*)malloc(Request->PostDataLen);
-        z_stream Deflate;
-        Deflate.zalloc = Z_NULL;
-        Deflate.zfree = Z_NULL;
-        Deflate.opaque = Z_NULL;
-        Deflate.avail_in = Request->PostDataLen;
-        Deflate.next_in = (uint8_t*)Request->PostData;
-        Deflate.avail_out = Request->PostDataLen;
-        Deflate.next_out = (uint8_t*)Tmp;
-        deflateInit(&Deflate, Z_BEST_SPEED);
-        deflate(&Deflate, Z_FINISH);
-        deflateEnd(&Deflate);
-        Request->PostDataLen = Deflate.total_out;
-        Request->PostData = Tmp;      
-      }
-      struct MHD_Response *response = MHD_create_response_from_buffer(Request->PostDataLen, Request->PostData, MHD_RESPMEM_PERSISTENT);
+      MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &WriteFunction, Request, NULL);
+      MHD_add_response_header(Response, "Content-Type", "application/json");
       if(strcmp(url, "/LogIn") == 0) {
         char Cookie[256];
         sprintf(Cookie, "SESSION=%s; httponly; Path=/", Request->SessionID);
-        MHD_add_response_header(response, MHD_HTTP_HEADER_SET_COOKIE, Cookie);
+        MHD_add_response_header(Response, MHD_HTTP_HEADER_SET_COOKIE, Cookie);
       }
-      MHD_add_response_header(response, "Content-Type", "application/json");
-      if(Request->Deflate) MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_ENCODING, "deflate");
-      int Return = MHD_queue_response(connection, Request->ResultCode, response);
-      MHD_destroy_response(response);
+      
+      //      SetMimeType(Response, FilePath);
+      char *AcceptEncoding = (char*)MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT_ENCODING);
+      Request->Deflate = ((AcceptEncoding != NULL) && (strstr(AcceptEncoding, "deflate") != NULL) && (Request->PostDataLen > 256));
+      if(Request->Deflate) MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_ENCODING, "deflate");
+      int Return = MHD_queue_response(connection, Request->ResultCode, Response);
+      MHD_destroy_response(Response);        
       return Return;
     }
   }

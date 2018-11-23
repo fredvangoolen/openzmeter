@@ -55,7 +55,7 @@ void *PricesInterface::Update_Thread(void* args) {
   while(!This->pTerminate) {
     uint64_t Now = Tools::GetTime();
     if(This->pLastPrice < Now) {
-      Tools::LogMsg("DEBUG", "Check prices for %"PRIu64"\n", This->pLastPrice + 1);
+      Tools::LogMsg("DEBUG", "Check prices for %" PRIu64 "\n", This->pLastPrice + 1);
       This->CheckPrices(This->pLastPrice + 1);
       LastQuery = Tools::GetTime();
     } else if((This->pLastPrice > Now) && ((Now - LastQuery) > 600000)) {

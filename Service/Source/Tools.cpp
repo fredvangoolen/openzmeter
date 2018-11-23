@@ -32,11 +32,10 @@ uint8_t Tools::pBatteryLevel = 0;
 bool Tools::pBatteryCharging = false;
 bool Tools::pExternalPower = false;
 //----------------------------------------------------------------------------------------------------------------------
-#ifdef EMBED_RESOURCES
 extern char _binary_ResourceFiles_start[];
 extern char _binary_ResourceFiles_end[];
 vector<Tools::File_t> Tools::pFiles;
-uint8_t *Tools::GetFile(const char* name, uint32_t* size) {
+uint8_t *Tools::GetFile(const char* name, size_t* size) {
   if(pFiles.size() == 0) {
     char *Ptr   = _binary_ResourceFiles_start;
     uint32_t FileCount = atoi(Ptr);
@@ -61,7 +60,6 @@ uint8_t *Tools::GetFile(const char* name, uint32_t* size) {
   }
   return NULL;
 }
-#endif
 void Tools::RegisterHandlers(void (*function)(int)) {
   signal(SIGINT, function);
   signal(SIGTERM, function);

@@ -9,8 +9,8 @@ CPPFLAGS = -Wall -no-pie
 LDFLAGS  = -lm -ljson-c -ldbus-1 -lcurl -lpthread -lz -lpq -lfftw3f -lstdc++ -lusb-1.0 -lmicrohttpd -lxml2
 
 #Specific options
-debug: CXXFLAGS += -O0 -g -DEMBED_RESOURCES
-release: CXXFLAGS += -Os -DEMBED_RESOURCES
+debug: CXXFLAGS += -O0 -g
+release: CXXFLAGS += -Os
 
 #Source and targets files
 TARGET_EXEC  = openZmeter
