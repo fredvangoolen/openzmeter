@@ -66,7 +66,7 @@ void HTTPServer::OpenSession(MHD_Connection* connection, Request_t* request) {
     request->DB->BindSingleString(Cookie);
     request->DB->ExecSentence();
     if(request->DB->ResultRows() == 1) {
-      request->UserName = strdup(request->DB->ResultValue(0, "name"));
+      request->UserName = (request->DB->ResultValue(0, "name") != NULL) ? strdup(request->DB->ResultValue(0, "name")) : NULL;
       request->SessionID = strdup(request->DB->ResultValue(0, "id"));
       return;
     }
@@ -186,7 +186,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
       } else {
         for(vector<Mapping_t>::iterator it = pMappings.begin() ; it != pMappings.end(); ++it) {
           if(strcmp(url, it->URL) == 0) {
-            snprintf(FilePath, sizeof(FilePath), it->File);
+            strncpy(FilePath, it->File, sizeof(FilePath));
             Request->PostData = (char*)Tools::GetFile(FilePath, &Request->PostDataLen);
           }
         }    

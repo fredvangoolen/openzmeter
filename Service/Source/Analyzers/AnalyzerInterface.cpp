@@ -21,6 +21,11 @@ AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nomi
   pMinCurrent = min_current;
   pMode = mode;
   pLastSave = 0;
+  size_t Len;
+  char *Script = (char*)Tools::GetFile("Database_Analyzer.sql", &Len);
+  Script[Len - 1] = 0;
+  Tools::LogMsg("DEBUG", "Creating database tables\n");
+  ExecSentence(Script);
 }
 AnalyzerInterface::~AnalyzerInterface() {}
 float AnalyzerInterface::GetMaxCurrent() {

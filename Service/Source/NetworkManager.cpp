@@ -720,13 +720,13 @@ bool NetworkManager::SendSaveSettings(DBusConnection *dbus, json_object *json) {
     }
     if((Mode == NULL) || ((strcmp("Open", Mode) != 0) && (strcmp("WPA", Mode) != 0) && (strcmp("WEP", Mode) != 0))) return false;
     if((strcmp("Open", Mode) == 0) && (Password != NULL)) return false;
-    uint32_t bDNS0, bDNS1, bGateway, bIP, bMask = 24;
+    uint32_t bDNS0, bDNS1, bGateway, bIP, bMask = 24, Reconnect = 0;
     if((DHCP == false) && ((IP == NULL) || (DNS0 == NULL) || (Gateway == NULL))) return false;
     if((IP != NULL) && (inet_aton(IP, (struct in_addr *)&bIP) == 0)) return false;
     if((Gateway != NULL) && (inet_aton(Gateway, (struct in_addr *)&bGateway) == 0)) return false;
     if((DNS0 != NULL) && (inet_aton(DNS0, (struct in_addr *)&bDNS0) == 0)) return false;
     if((DNS1 != NULL) && (inet_aton(DNS1, (struct in_addr *)&bDNS1) == 0)) return false;
-    const char *Strings[] = { "Setup by openZmeter", "connection", "id", "type", "802-11-wireless", "ssid", "bssid", "ipv4", "method", "auto", "manual", "dns", "addresses", "802-11-wireless-security", "key-mgmt", "none", "wpa-psk", "wep-key0", "psk", "uuid" };
+    const char *Strings[] = { "Setup by openZmeter", "connection", "id", "type", "802-11-wireless", "ssid", "bssid", "ipv4", "method", "auto", "manual", "dns", "addresses", "802-11-wireless-security", "key-mgmt", "none", "wpa-psk", "wep-key0", "psk", "uuid", "autoconnect-retries" };
     DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", (ConfigPath == NULL) ? "/org/freedesktop/NetworkManager/Settings" : ConfigPath, (ConfigPath == NULL) ? "org.freedesktop.NetworkManager.Settings" : "org.freedesktop.NetworkManager.Settings.Connection", (ConfigPath == NULL) ? "AddConnection" : "Update");
     DBusMessageIter ArgsIter, Array, Dict, SubArray, SubDict, Variant, VariantArray, VariantSubArray;
     dbus_message_iter_init_append(Msg, &ArgsIter);
@@ -745,6 +745,12 @@ bool NetworkManager::SendSaveSettings(DBusConnection *dbus, json_object *json) {
     dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[3]);
     dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, DBUS_TYPE_STRING_AS_STRING, &Variant);
     dbus_message_iter_append_basic(&Variant, DBUS_TYPE_STRING, &Strings[4]);
+    dbus_message_iter_close_container(&SubDict, &Variant);
+    dbus_message_iter_close_container(&SubArray, &SubDict);
+    dbus_message_iter_open_container(&SubArray, DBUS_TYPE_DICT_ENTRY, NULL, &SubDict);
+    dbus_message_iter_append_basic(&SubDict, DBUS_TYPE_STRING, &Strings[20]);
+    dbus_message_iter_open_container(&SubDict, DBUS_TYPE_VARIANT, DBUS_TYPE_INT32_AS_STRING, &Variant);
+    dbus_message_iter_append_basic(&Variant, DBUS_TYPE_INT32, &Reconnect);
     dbus_message_iter_close_container(&SubDict, &Variant);
     dbus_message_iter_close_container(&SubArray, &SubDict);
     if(UUID != NULL) {

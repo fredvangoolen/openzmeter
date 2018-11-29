@@ -155,10 +155,10 @@ function Scrollable(opt) {
   });
   Self.GetCountersTimePeriod = function(name) {
     if(parseInt(localStorage.getItem('GraphEnd')) === 0) {
-      if(name === 'Year')  return GetYearTimePeriod();
-      if(name === 'Month') return GetMonthTimePeriod();
-      if(name === 'Week')  return GetWeekTimePeriod();
-      if(name === 'Day')   return GetDayTimePeriod();
+      if(name === 'Year')  return Object.assign(GetYearTimePeriod(),  { PreferedAggreg: localStorage.getItem('GraphAggregation') });
+      if(name === 'Month') return Object.assign(GetMonthTimePeriod(), { PreferedAggreg: localStorage.getItem('GraphAggregation') });
+      if(name === 'Week')  return Object.assign(GetWeekTimePeriod(),  { PreferedAggreg: localStorage.getItem('GraphAggregation') });
+      if(name === 'Day')   return Object.assign(GetDayTimePeriod(),   { PreferedAggreg: localStorage.getItem('GraphAggregation') });
     }
     var Result = {};
     Result.PrimaryPeriod = parseInt(localStorage.getItem('GraphPeriod'));
