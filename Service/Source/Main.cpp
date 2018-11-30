@@ -72,6 +72,7 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
   HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
   HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
+  HTTPServer::RegisterCallback("/getTimeZones",        Tools::GetTimeZonesCallback);
   
   HTTPServer::RegisterDefault("/Dashboard");
   HTTPServer::RegisterMapping("/Dashboard",            "Dashboard.html");

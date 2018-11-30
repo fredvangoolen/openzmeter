@@ -285,3 +285,22 @@ bool Tools::JSONArrayFloat(const json_object* obj, const char* key, float* dst, 
   }
   return false;
 }
+bool Tools::GetTimeZonesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+  FILE *File = fopen("/usr/share/zoneinfo/zone.tab", "r");
+  if(File == NULL) return false;
+  char  *Line = NULL;
+  size_t Len  = 0;
+  *writer = json_object_new_array();
+  while(getline(&Line, &Len, File) != -1) {
+    if(Line[0] == '#') continue;
+    char  *Tmp  = Line;
+    strtok_r(Tmp, "\t", &Tmp);
+    strtok_r(Tmp, "\t", &Tmp);
+    char *Result = strtok_r(Tmp, "\t", &Tmp);
+    if(Result) json_object_array_add(*writer, json_object_new_string(Result));
+  }
+  if(Line != NULL) free(Line);
+  fclose(File);  
+  *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
+  return true;
+}

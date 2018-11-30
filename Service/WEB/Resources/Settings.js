@@ -232,7 +232,17 @@ function NetworkForget(index) {
            }
   });
 }
+function AjaxGetTimeZones() {
+  $.ajax({ url: "getTimeZones", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
+    function(result) {
+      if(result.length > 0) $('#dropdownTimeZone').addClass('disabled');
+      result.sort();
+      for(i = 0; i < result.length; i++) $('#dropdownTimeZone').append('<option value="' + result[i] + '">' + result[i] + '</option>');
+    }
+  });
+}
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
+  AjaxGetTimeZones();
   AjaxGetNetworks();
 }

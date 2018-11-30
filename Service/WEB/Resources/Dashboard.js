@@ -230,7 +230,7 @@ function Scrollable_UpdateCounters(times, renew) {
             for(var i = 0; i < result['Sampletime'].length; i++) Budget += result['active_energy'][i] * result['price'][i] / 1000.0;
             $('#labelBudgetSecondaryValue').html(Round2(Budget));
           } else {
-            $('#labelEnergySecondaryValue').text('No data');
+            $('#labelBudgetSecondaryValue').text('No data');
           }
         }
       );
