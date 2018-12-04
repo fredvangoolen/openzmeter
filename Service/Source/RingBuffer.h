@@ -14,9 +14,6 @@ class RingBuffer {
     uint32_t  pReadPos;
     uint32_t  pWritePos;
     uint32_t  pSize;
-    
-//    const size_t max_size_;
-//    bool full_ = 0;
   public:
     RingBuffer() {
       Reset(10);
@@ -59,4 +56,3 @@ class RingBuffer {
       return Val;
     }
 };
-

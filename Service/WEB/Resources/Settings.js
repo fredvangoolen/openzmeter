@@ -240,6 +240,7 @@ function AjaxGetTimeZones() {
       for(i = 0; i < result.length; i++) $('#dropdownTimeZone').append('<option value="' + result[i] + '">' + result[i] + '</option>');
     }
   });
+  $('#dropdownTimeZone').removeclass('disable');
 }
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {

@@ -17,33 +17,18 @@
 using namespace std;
 class ZeroCrossing {
   private :
-    typedef struct {
-      float Z1[ZEROCROSSING_FILTERSTAGES];
-      float Z2[ZEROCROSSING_FILTERSTAGES];
-    } FilterStage_t;
-    typedef struct {
-      float                 A0;
-      float                 A1;
-      float                 A2;
-      float                 B1;
-      float                 B2;
-      vector<FilterStage_t> Channels;
-    } Filter_t;
+
   private :
-    vector<float>    pLastSamples;
-    vector<uint32_t> pCycles;
-    vector<uint32_t> pBlockCycles;
-    Filter_t         pFilters;
-    float            pSamplerate;
-    float            pNominalFrequency;
-    uint32_t         pMaxSamples;
-    uint32_t         pCyclesPos;
-//    uint8_t          pBlockCycles;
-    uint32_t         pBlockLen;
-    uint32_t         pCycleLen;
+//    Filter_t               pFilters;
+    float                  pSamplerate;
+    float                  pNominalFrequency;
+//    uint32_t               pMaxSamples;
+//    uint32_t               pCyclesPos;
+//    uint32_t               pBlockLen;
+//    uint32_t               pCycleLen;
   public :
-    ZeroCrossing(uint8_t channels, float samplerate, float freq);
-    ~ZeroCrossing();
-    bool  ProcessSample(const vector<float> &samples);
-    float Frequency();
+//    ZeroCrossing(uint8_t channels, float samplerate, float freq);
+//    ~ZeroCrossing();
+//    bool  ProcessSample(const vector<float> &samples);
+//    float Frequency();
 };

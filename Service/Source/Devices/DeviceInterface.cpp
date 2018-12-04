@@ -41,6 +41,7 @@ DeviceInterface::~DeviceInterface() {
 }
 bool DeviceInterface::RegisterType(const char* name, ConstructorFunction constructor) {
   Type_t Type = { name, constructor };
+  Tools::LogMsg("INFO", "Registering '%s' device interface plugin\n", name);
   pRegisteredTypes.push_back(Type);
   return true;
 }
