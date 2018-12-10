@@ -51,7 +51,7 @@ AnalyzerSoft::AnalyzerSoft(float samplerate, char *id, float nominal_voltage, fl
     char Name[16];
     sprintf(Name, "FFT_V%u", i);
     pVoltageFFT.push_back(new FFT(Name));
-    uint32_t PhaseShift = (pSamplerate * ZEROCROSSING_FILTERSTAGES) / (nominal_frequency * 2);
+    uint32_t PhaseShift = (pSamplerate * ZEROCROSSING_FILTERSTAGES) / (nominal_frequency * 2) + 3;
     pDelayVoltage[i].Reset(PhaseShift);
     for(int n = 0; n < PhaseShift; n++) pDelayVoltage[i].Push(0.0);
   }
@@ -59,8 +59,8 @@ AnalyzerSoft::AnalyzerSoft(float samplerate, char *id, float nominal_voltage, fl
     char Name[16];
     sprintf(Name, "FFT_I%u", i);
     pCurrentFFT.push_back(new FFT(Name));
-    pDelayCurrent[i].Reset(100);
-    for(int n = 0; n < 20; n++) pDelayCurrent[i].Push(0.0);
+    pDelayCurrent[i].Reset(1);
+    for(int n = 0; n < 1; n++) pDelayCurrent[i].Push(0.0);
   }
   pthread_mutex_init(&pThreadMutex, NULL);
   pthread_cond_init (&pThreadCond, NULL);

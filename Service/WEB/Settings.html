@@ -91,32 +91,40 @@
     <div id="wrapper">
       <div class="row">
         <div class="col-lg-6 col-xs-12">
-            <div class="panel panel-other">
-              <div class="panel-heading">
-                <i class="fa fa-clock-o fa-fw"></i> System time
-              </div>
-              <div class="panel-body">
-                <div class="row">
-                  <div class="col-md-12">
-                    <label class="control-label">Current time</label>
-                    <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>                             
-                  </div>
-                  <div class="col-md-12">
-                    <label class="control-label">Time zone</label>
-                    <select id="dropdownTimeZone" class="form-control"></select>
-                  </div>
-                  <div class="col-md-12">
-                    <label class="control-label">NTP Server</label>
-                    <div class="input-group">
-                      <span class="input-group-addon"><input type="checkbox"></span>
-                      <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric="" required="">
-                      <span class="input-group-btn"><button type="button" class="btn btn-default">Sync now</button></span>
+          <div class="panel panel-other">
+            <div class="panel-heading">
+              <i class="fa fa-clock-o fa-fw"></i> System time
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-md-12">
+                  <label class="control-label">Current time/zone</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" name="current_time" data-bv-numeric required>
+                    <div class="input-group-btn">
+                      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdownTimeZone"><span>UTC</span><span class="caret"></span></button>
+                      <ul class="dropdown-menu dropdown-menu-right scrollable-menu" id="dropdownListTimeZone">
+                      </ul>
                     </div>
                   </div>
+                </div>
+                <div class="col-md-12">
+                  <label class="control-label">NTP Server</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><input type="checkbox" id="checkNTP"></span>
+                    <input type="text" class="form-control" name="ntp_server">
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <div style="margin: 5px"></div>
+                  <button type="button" class="btn btn-sm btn-default" style="width: 100%">Save</button>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+        
+        
         
         <div class="col-lg-6 col-xs-12">
           <div class="panel panel-info">

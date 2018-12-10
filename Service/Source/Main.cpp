@@ -10,6 +10,7 @@
 #include "HTTPServer.h"
 #include "DeviceInterface.h"
 #include "NetworkManager.h"
+#include "NTP.h"
 static bool Terminate = false;
 void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
@@ -51,6 +52,7 @@ int main(int argc, char** argv) {
       printf("Option %s not recogniced. Use --help to show valid options.", argv[i]);
     }
   }
+  NTP(NULL);
   if(Daemonize == true) Tools::Daemonize();
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {
@@ -72,7 +74,7 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
   HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
   HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
-  HTTPServer::RegisterCallback("/getTimeZones",        Tools::GetTimeZonesCallback);
+  HTTPServer::RegisterCallback("/getTimeZones",        NTP::GetTimeSettingsCallback);
   
   HTTPServer::RegisterDefault("/Dashboard");
   HTTPServer::RegisterMapping("/Dashboard",            "Dashboard.html");

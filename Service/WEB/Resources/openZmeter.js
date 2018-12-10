@@ -986,7 +986,7 @@ function LoadCommon() {
           if(LoadedPending === 0) {
             $('[data-sidenav]').sidenav();
             $('#labelUserName').text(localStorage.getItem('UserName'));
-            if(localStorage.getItem('UserName') === "admin") $('#menuSettings').show();
+            if(localStorage.getItem('UserName') === "admin") $('#menuSettings').removeClass('hide');
             $('ul.sidenav-menu li a').filter( function() { return this.href === window.location.href; }).addClass('active').parent().parent().show().parent().children('a').addClass('active');
             LoadNews();
           }

@@ -11,7 +11,7 @@
 #include "PricesInterface.h"
 #include "RingBuffer.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define ZEROCROSSING_FILTERSTAGES          1
+#define ZEROCROSSING_FILTERSTAGES          5
 #define ZEROCROSSING_SECONDS              10        //Numero de segundos usados para calcular frequencia
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoft : public AnalyzerInterface {

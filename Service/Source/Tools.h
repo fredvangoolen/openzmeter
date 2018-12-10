@@ -48,6 +48,5 @@ class Tools {
     static bool         JSONUInt32(const json_object *obj, const char *key, uint32_t *dst);
     static bool         JSONArrayFloat(const json_object *obj, const char *key, float *dst, uint len);
     static uint8_t     *GetFile(const char *mame, size_t *size);
-    static bool         GetTimeZonesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
 };
 //----------------------------------------------------------------------------------------------------------------------
