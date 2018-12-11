@@ -106,7 +106,37 @@ bool NTP::GetTimeSettingsCallback(char *user, json_object *reader, Database *db,
   return true;
 }
 bool NTP::SetTimeSettingsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
-  *writer = json_object_new_object();
+  if(strcmp(user, "admin") != 0) {
+    *postdata  = (char*)"Only admin can change time settings";
+    *resultLen = strlen(*postdata);
+    return false;
+  }
+  json_object *Config = Tools::GetConfigObject();
+  json_object *NTPConfig = json_object_new_object();
+  json_object_object_foreach(reader, JSON_Key, JSON_Val) {
+    enum json_type JSON_Type = json_object_get_type(JSON_Val);
+    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "NTP_Server") == 0)) {
+      pServer = (char*)json_object_get_string(JSON_Val);
+    } else if((JSON_Type == json_type_boolean) && (strcmp(JSON_Key, "NTP_Enabled") == 0)) {
+      pEnabled = json_object_get_boolean(JSON_Val);
+    }
+  }
+  json_object_object_add(NTPConfig, "Server", json_object_new_string((pServer == NULL) ? "" : pServer));
+  json_object_object_add(NTPConfig, "Enabled", json_object_new_boolean(pEnabled));
+  json_object_object_add(Config, "NTP", NTPConfig);
+  if(Tools::SaveConfig() == false) {
+    *postdata  = (char*)"Can not save settings";
+    *resultLen = strlen(*postdata);
+    return false;
+  }
+  return true;
+  //Ajusto zona
+  //Inicio o detengo cliente NTP
+  //Si hace falta ajusto hora
+  
+
+
+
   FILE *File = fopen("/usr/share/zoneinfo/zone.tab", "r");
   if(File != NULL) {
     json_object *Zones = json_object_new_array();

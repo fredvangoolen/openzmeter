@@ -235,12 +235,13 @@ function NetworkForget(index) {
 var NTP_DateTimePicker = null;
 $('#checkNTP').change(function() {
   if($(this).prop('checked')) {
-    $('#inputCurrentTime').attr("disabled", "true");
+    $('#inputCurrentTime > span').css("pointer-events", "none");
+    $('#inputCurrentTime > input').attr("disabled", "true");
     $('#inputNTPServer').removeAttr("disabled");
   } else {
     $('#inputNTPServer').attr("disabled", "true");
-    $('#inputCurrentTime').removeAttr("disabled");
-    NTP_DateTimePicker.disable();
+    $('#inputCurrentTime > input').removeAttr("disabled");
+    $('#inputCurrentTime > span').css("pointer-events", "inherit");
   }
 });
 function AjaxGetTimeZones() {

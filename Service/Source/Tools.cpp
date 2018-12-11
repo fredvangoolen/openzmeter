@@ -27,6 +27,7 @@ bool            Tools::pDaemonized  = false;
 FILE           *Tools::pLogFile     = NULL;
 json_object    *Tools::pConfig      = NULL;
 const char     *Tools::pPidFile     = NULL;
+const char     *Tools::pConfigFile  = NULL;
 pthread_mutex_t Tools::pLogMutex    = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t Tools::pConfigMutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -146,7 +147,11 @@ void Tools::Daemonize() {
   close(STDERR_FILENO);
 }
 bool Tools::ReadConfig(const char *file) {
-  if(file == NULL) return true;
+  pConfigFile = file;
+  if(file == NULL) {
+    LogMsg("ERROR", "No config file!\n");
+    return false;
+  }
   LogMsg("INFO", "Loading config file...\n");
   pthread_mutex_lock(&pConfigMutex);
   int File = open(file, O_RDONLY);
@@ -169,35 +174,53 @@ bool Tools::ReadConfig(const char *file) {
     pthread_mutex_unlock(&pConfigMutex);
     return false;
   }
-  json_object *Config = json_tokener_parse(ConfigText);
+  pConfig = json_tokener_parse(ConfigText);
   munmap(ConfigText, FileStatus.st_size);
   close(File);
-  if(Config == NULL) {
+  if(pConfig == NULL) {
     LogMsg("ERROR", "Can not open config file (Invalid JSON format)\n");
     pthread_mutex_unlock(&pConfigMutex);
     return false;
   }
   json_object *Find;
-  if((json_object_object_get_ex(Config, "LogFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreateLogFile((char*)json_object_get_string(Find));
-  if((json_object_object_get_ex(Config, "PidFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreatePidFile((char*)json_object_get_string(Find));
-  if(((json_object_object_get_ex(Config, "Database", &Find) == true) && (json_object_get_type(Find) == json_type_object)) && (Database::Config(Find) == false)) {
+  if((json_object_object_get_ex(pConfig, "LogFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreateLogFile((char*)json_object_get_string(Find));
+  if((json_object_object_get_ex(pConfig, "PidFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreatePidFile((char*)json_object_get_string(Find));
+  if(((json_object_object_get_ex(pConfig, "Database", &Find) == true) && (json_object_get_type(Find) == json_type_object)) && (Database::Config(Find) == false)) {
     pthread_mutex_unlock(&pConfigMutex);
     return false;
   }
-  if(((json_object_object_get_ex(Config, "HTTPServer", &Find) == true) && (json_object_get_type(Find) == json_type_object)) && (HTTPServer::Config(Find) == false)) {
+  if(((json_object_object_get_ex(pConfig, "HTTPServer", &Find) == true) && (json_object_get_type(Find) == json_type_object)) && (HTTPServer::Config(Find) == false)) {
     pthread_mutex_unlock(&pConfigMutex);
     return false;
   }
-  if(NTP::Config(((json_object_object_get_ex(Config, "NTP", &Find) == true) && (json_object_get_type(Find) == json_type_object)) ? Find : NULL) == false) {
+  if(NTP::Config(((json_object_object_get_ex(pConfig, "NTP", &Find) == true) && (json_object_get_type(Find) == json_type_object)) ? Find : NULL) == false) {
     pthread_mutex_unlock(&pConfigMutex);
     return false;
   }
-  if(DeviceInterface::Config(((json_object_object_get_ex(Config, "Devices", &Find) == true) && (json_object_get_type(Find) == json_type_array)) ? Find : NULL) == false) {
+  if(DeviceInterface::Config(((json_object_object_get_ex(pConfig, "Devices", &Find) == true) && (json_object_get_type(Find) == json_type_array)) ? Find : NULL) == false) {
     pthread_mutex_unlock(&pConfigMutex);
     return false;
   }
   pthread_mutex_unlock(&pConfigMutex);
   return true;
+}
+bool Tools::SaveConfig() {
+  int File = open(pConfigFile, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+  if(File < 0) {
+    LogMsg("ERROR", "Can not write configuration to file (%d)\n", errno);
+    return false;
+  }
+  size_t Len = 0;
+  char *ConfigText = (char*)json_object_to_json_string_length(pConfig, JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_SPACED, &Len);
+  if(write(File, ConfigText, Len) <= 0) {
+    LogMsg("ERROR", "Can not write configuration to file (%d)\n", errno);
+    return false;
+  }
+  close(File);
+  return true;
+}
+json_object *Tools::GetConfigObject() {
+  return pConfig;
 }
 uint64_t Tools::GetTime() {
   struct timeval Time;

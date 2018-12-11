@@ -20,10 +20,10 @@ class NTP {
       uint32_t txTm_f;         // 32 bits. Transmit time-stamp fraction of a second.
     } NTP_Packet;              // Total: 384 bits or 48 bytes.
   private :
-    static bool       pTerminate;
-    static pthread_t  pThread;
-    static bool       pEnabled;
-    static char      *pServer;
+    static bool         pTerminate;
+    static pthread_t    pThread;
+    static bool         pEnabled;
+    static char        *pServer;
   private :
     static void *NTP_Thread(void *args);
   public:

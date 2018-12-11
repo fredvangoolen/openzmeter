@@ -262,17 +262,18 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
           if(Request->UserName == NULL) {
             Request->PostData  = (char*)"Unauthorided access to API";
             Request->PostDataLen = strlen(Request->PostData);
-            Request->ResultCode = MHD_HTTP_UNAUTHORIZED;          
-          }
-          bool Handled = false;
-          for(vector<Callback_t>::iterator it = pCallbacks.begin() ; it != pCallbacks.end(); ++it) {
-            if(strcmp(url, it->HandleName) == 0) {
-              if(it->Function(Request->UserName, Request->JSONReader, Request->DB, &Request->JSONWriter, &Request->PostData, &Request->PostDataLen) == false) Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-              Handled = true;
-              break;
+            Request->ResultCode = MHD_HTTP_UNAUTHORIZED;
+          } else {
+            bool Handled = false;
+            for(vector<Callback_t>::iterator it = pCallbacks.begin() ; it != pCallbacks.end(); ++it) {
+              if(strcmp(url, it->HandleName) == 0) {
+                if(it->Function(Request->UserName, Request->JSONReader, Request->DB, &Request->JSONWriter, &Request->PostData, &Request->PostDataLen) == false) Request->ResultCode = MHD_HTTP_BAD_REQUEST;
+                Handled = true;
+                break;
+              }
             }
+            if(Handled == false) Request->ResultCode = MHD_HTTP_METHOD_NOT_ALLOWED;
           }
-          if(Handled == false) Request->ResultCode = MHD_HTTP_METHOD_NOT_ALLOWED;
         }
       }
 	    *upload_data_size = 0;

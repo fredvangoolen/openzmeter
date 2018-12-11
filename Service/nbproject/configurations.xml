@@ -429,6 +429,16 @@
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/V1_1</pElem>
+            <pElem>Tmp/Source/Devices/V1</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Devices/V2</pElem>
+            <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -542,6 +552,16 @@
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/V1_1</pElem>
+            <pElem>Tmp/Source/Devices/V1</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Devices/V2</pElem>
+            <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -712,8 +732,16 @@
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/V1_1</pElem>
+            <pElem>Tmp/Source/Devices/V1</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Devices/V2</pElem>
             <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
             <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>

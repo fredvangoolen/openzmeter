@@ -23,6 +23,7 @@ class Tools {
   private :      
     static bool            pDaemonized;
     static FILE           *pLogFile;
+    static const char     *pConfigFile;
     static pthread_mutex_t pLogMutex;
     static pthread_mutex_t pConfigMutex;
     static json_object    *pConfig;
@@ -37,7 +38,7 @@ class Tools {
     static bool     RemovePidFile();
   public :
     static bool         ReadConfig(const char *file);
-    static bool         SaveConfig(const char *file);
+    static bool         SaveConfig();
     static void         LogMsg(const char *level, const char *msg, ...);
     static void         Daemonize();
     static bool         CreateLogFile(const char *name);
@@ -50,5 +51,6 @@ class Tools {
     static bool         JSONUInt32(const json_object *obj, const char *key, uint32_t *dst);
     static bool         JSONArrayFloat(const json_object *obj, const char *key, float *dst, uint len);
     static uint8_t     *GetFile(const char *mame, size_t *size);
+    static json_object *GetConfigObject();
 };
 //----------------------------------------------------------------------------------------------------------------------
