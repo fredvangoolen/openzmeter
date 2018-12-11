@@ -20,14 +20,15 @@ class NTP {
       uint32_t txTm_f;         // 32 bits. Transmit time-stamp fraction of a second.
     } NTP_Packet;              // Total: 384 bits or 48 bytes.
   private :
-    bool pTerminate;
-    pthread_t          pThread;               //Hilo de ejecucion
+    static bool       pTerminate;
+    static pthread_t  pThread;
+    static bool       pEnabled;
+    static char      *pServer;
   private :
     static void *NTP_Thread(void *args);
   public:
-    NTP(json_object *config);
-    virtual ~NTP();
-  public :
+    static bool Config(json_object *config);
     static bool GetTimeSettingsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool SetTimeSettingsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
 };
 

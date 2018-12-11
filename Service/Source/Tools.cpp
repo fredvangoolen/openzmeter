@@ -20,13 +20,15 @@
 #include "NetworkManager.h"
 #include "HTTPServer.h"
 #include "DeviceInterface.h"
+#include "NTP.h"
 //----------------------------------------------------------------------------------------------------------------------
 bool            Tools::Debug        = false;
 bool            Tools::pDaemonized  = false;
 FILE           *Tools::pLogFile     = NULL;
 json_object    *Tools::pConfig      = NULL;
-char           *Tools::pPidFile     = NULL;
+const char     *Tools::pPidFile     = NULL;
 pthread_mutex_t Tools::pLogMutex    = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t Tools::pConfigMutex = PTHREAD_MUTEX_INITIALIZER;
 
 uint8_t Tools::pBatteryLevel = 0;
 bool Tools::pBatteryCharging = false;
@@ -107,7 +109,7 @@ bool Tools::CreateLogFile(const char *name) {
   }
   return true;
 }
-bool Tools::CreatePidFile(char *name) {
+bool Tools::CreatePidFile(const char *name) {
   pPidFile = name;
   char PID_Number[64];
   int Len = sprintf(PID_Number, "%d", getpid());
@@ -146,46 +148,55 @@ void Tools::Daemonize() {
 bool Tools::ReadConfig(const char *file) {
   if(file == NULL) return true;
   LogMsg("INFO", "Loading config file...\n");
+  pthread_mutex_lock(&pConfigMutex);
   int File = open(file, O_RDONLY);
   if(File == -1) {
     LogMsg("ERROR", "Can not open config file (%s)\n", strerror(errno));
+    pthread_mutex_unlock(&pConfigMutex);
     return false;
   }
   struct stat FileStatus;
   if(fstat(File, &FileStatus) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     close(File);
+    pthread_mutex_unlock(&pConfigMutex);
     return false;
   }
-  char *ConfigText = (char*)malloc(FileStatus.st_size + 1);
+  char *ConfigText = (char*)mmap(NULL, FileStatus.st_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, File, 0);
   if(ConfigText == NULL) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     close(File);
+    pthread_mutex_unlock(&pConfigMutex);
     return false;
   }
-  FileStatus.st_size = read(File, ConfigText, FileStatus.st_size);
-  ConfigText[FileStatus.st_size] = 0;
   json_object *Config = json_tokener_parse(ConfigText);
+  munmap(ConfigText, FileStatus.st_size);
   close(File);
-  free(ConfigText);
   if(Config == NULL) {
     LogMsg("ERROR", "Can not open config file (Invalid JSON format)\n");
+    pthread_mutex_unlock(&pConfigMutex);
     return false;
   }
-  json_object *Find;  
+  json_object *Find;
   if((json_object_object_get_ex(Config, "LogFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreateLogFile((char*)json_object_get_string(Find));
   if((json_object_object_get_ex(Config, "PidFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreatePidFile((char*)json_object_get_string(Find));
-  if((json_object_object_get_ex(Config, "Database", &Find) == true) && (json_object_get_type(Find) == json_type_object)) {
-    if(Database::Config(Find) == false) return false;
+  if(((json_object_object_get_ex(Config, "Database", &Find) == true) && (json_object_get_type(Find) == json_type_object)) && (Database::Config(Find) == false)) {
+    pthread_mutex_unlock(&pConfigMutex);
+    return false;
   }
-  if((json_object_object_get_ex(Config, "HTTPServer", &Find) == true) && (json_object_get_type(Find) == json_type_object)) {
-    if(HTTPServer::Config(Find) == false) return false;
+  if(((json_object_object_get_ex(Config, "HTTPServer", &Find) == true) && (json_object_get_type(Find) == json_type_object)) && (HTTPServer::Config(Find) == false)) {
+    pthread_mutex_unlock(&pConfigMutex);
+    return false;
   }
-  if((json_object_object_get_ex(Config, "Devices", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
-    if(DeviceInterface::Config(Find) == false) return false;
-  } else {
-    if(DeviceInterface::Config(NULL)  == false) return false;
+  if(NTP::Config(((json_object_object_get_ex(Config, "NTP", &Find) == true) && (json_object_get_type(Find) == json_type_object)) ? Find : NULL) == false) {
+    pthread_mutex_unlock(&pConfigMutex);
+    return false;
   }
+  if(DeviceInterface::Config(((json_object_object_get_ex(Config, "Devices", &Find) == true) && (json_object_get_type(Find) == json_type_array)) ? Find : NULL) == false) {
+    pthread_mutex_unlock(&pConfigMutex);
+    return false;
+  }
+  pthread_mutex_unlock(&pConfigMutex);
   return true;
 }
 uint64_t Tools::GetTime() {

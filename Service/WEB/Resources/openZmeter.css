@@ -453,7 +453,9 @@ body {
   max-height: 200px;
   overflow-x: hidden;
 }
-
+.input-group-addon-toogle {
+  padding: 0px 12px;
+}
 
 
 .datatable-toolbar {

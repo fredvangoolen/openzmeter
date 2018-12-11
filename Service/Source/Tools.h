@@ -24,18 +24,20 @@ class Tools {
     static bool            pDaemonized;
     static FILE           *pLogFile;
     static pthread_mutex_t pLogMutex;
+    static pthread_mutex_t pConfigMutex;
     static json_object    *pConfig;
-    static char           *pPidFile;
+    static const char     *pPidFile;
     static vector<File_t>  pFiles;
   public :
     static bool          Debug;
   private :
     static uint64_t ParseProcMem(char *name, char *buff);
     static bool     GetMemory(uint64_t *total, uint64_t *available);
-    static bool     CreatePidFile(char *name);
+    static bool     CreatePidFile(const char *name);
     static bool     RemovePidFile();
   public :
     static bool         ReadConfig(const char *file);
+    static bool         SaveConfig(const char *file);
     static void         LogMsg(const char *level, const char *msg, ...);
     static void         Daemonize();
     static bool         CreateLogFile(const char *name);

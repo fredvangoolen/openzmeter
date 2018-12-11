@@ -232,12 +232,33 @@ function NetworkForget(index) {
            }
   });
 }
+var NTP_DateTimePicker = null;
+$('#checkNTP').change(function() {
+  if($(this).prop('checked')) {
+    $('#inputCurrentTime').attr("disabled", "true");
+    $('#inputNTPServer').removeAttr("disabled");
+  } else {
+    $('#inputNTPServer').attr("disabled", "true");
+    $('#inputCurrentTime').removeAttr("disabled");
+    NTP_DateTimePicker.disable();
+  }
+});
 function AjaxGetTimeZones() {
-  $.ajax({ url: "getTimeZones", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
+  $.ajax({ url: "getTimeSettings", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
     function(result) {
-      $('#dropdownTimeZone span:first-child').text("bliu");
-      result.sort();
-      for(i = 0; i < result.length; i++) $('#dropdownListTimeZone').append('<li><a href="#">' + result[i] + '</a></li>');
+      NTP_DateTimePicker = $('#inputCurrentTime').datetimepicker({ date: new Date(result.Time), format: 'dd/mm/yyyy hh:ii:ss', pickerPosition: "bottom-left", autoclose: true });
+      $('#inputCurrentTime > input').attr('value', moment(new Date(result.Time)).format('DD/MM/YYYY HH:mm:ss'));
+      $('#dropdownTimeZone span:first-child').text(result.TimeZone);
+      $('#inputNTPServer').val(result.NTP_Server);
+      if(result.NTP_Enabled === true) {
+        $('#checkNTP').bootstrapToggle('on');
+        $('#inputNTPServer').removeAttr("disabled");
+      } else {
+        $('#checkNTP').bootstrapToggle('off');
+        $('#inputNTPServer').attr("disabled", "true");
+      }
+      result.TimeZones.sort();
+      for(i = 0; i < result.TimeZones.length; i++) $('#dropdownListTimeZone').append('<li><a href="#">' + result.TimeZones[i] + '</a></li>');
     }
   });
 }
