@@ -554,9 +554,9 @@ function ScaleToUnits(val, units) {
 }
 /* Find units for high values of energy */
 function GetBestUnits(value) {
-  if(value > 1000000) {
+  if(Math.abs(value) > 1000000) {
    return 'M';
-  } else if(value > 1000) {
+  } else if(Math.abs(value) > 1000) {
     return 'k';
   } else {
     return '';
@@ -618,13 +618,9 @@ function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter 
           return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
         } else {
           for(var i = 0; i < data.series.length; i++)  {
-            var Text;
-            if(data.series[i].yHTML !== undefined) 
-              Text = data.series[i].yHTML;
-            else 
-              Text = '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + yvalueformatter(data.series[i].y) + '</div>'
-            return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' + data.xHTML + Text;
-          }      
+            if(data.series[i].yHTML !== undefined) return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' + data.xHTML + data.series[i].yHTML;
+          }
+          return "";
         }
       },
       axes: {
@@ -634,14 +630,14 @@ function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter 
         x: { valueFormatter: function (x) { return '<div style="font-size: 10px; line-height: 10px">' + new Date(x).toLocaleTimeString() + '</div>'; },
              axisLabelFormatter: (Index !== 0) ? function() { return null; } : 
              function(x, i) {
-                var date = new Date(x);
-                if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
-                  return '<div class="timeline-day">' + date.toLocaleDateString() + '</div>';
-                } else {
-                  return '<div class="timeline">' + date.toLocaleTimeString() + '</div>';                       
-                }
-              }
-            }
+               var date = new Date(x);
+               if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
+                 return '<div class="timeline-day">' + date.toLocaleDateString() + '</div>';
+               } else {
+                 return '<div class="timeline">' + date.toLocaleTimeString() + '</div>';                       
+               }
+             }
+           }
       }
     }
   );
