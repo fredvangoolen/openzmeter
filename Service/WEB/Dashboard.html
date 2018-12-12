@@ -27,10 +27,13 @@
             <div id="EnergySpinner" class="spinnerdiv"></div>
             <div class="panel-heading">
               <div class="huge header-text">Energy consumption</div>
-              <div class="header-buttons">
+              <div class="header-buttons" id="toolbarEnergy">
                 <div class="btn-group" data-load-block="ScrollableAggreg_Block"></div>
+                <span>&nbsp;</span>
                 <div class="btn-group" data-load-block="ScrollableTime_Block"></div>
+                <span>&nbsp;</span>
                 <div class="btn-group hide" id="groupEnergyPhases" data-load-block="PhaseV_Block"></div>
+                <span>&nbsp;</span>
                 <div class="btn-group" data-load-block="GraphToolsPlay_Block"></div>
               </div>
               <span class="clearfix"></span>
@@ -102,12 +105,11 @@
               <a href="Analysis/Current">
                 <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
               </a>
-              <div class="btn-group pull-right">
-                <button type="button" class="btn btn-default btn-xs" id="btnExportCurrent" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
-                <button type="button" class="btn btn-default btn-xs pull-right" id="btnMaximizeCurrent"><i class="fa fa-expand"></i></button>
-              </div>                
-              <div class="pull-right">&nbsp;</div>
-              <div class="btn-group pull-right hide" id="groupCurrentPhases" data-load-block="PhaseI_Block"></div>
+              <div class="pull-right" id="toolbarCurrent">
+                <div class="btn-group hide" id="groupCurrentPhases" data-load-block="PhaseI_Block"></div>
+                <span>&nbsp;</span>
+                <div class="btn-group" data-load-block="GraphTools_Block"></div>
+              </div>
               <div class="clearfix"></div>
             </div>
           </div>
@@ -133,12 +135,11 @@
               <a href="Analysis/EnergyPower">
                 <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
               </a>
-              <div class="btn-group pull-right">
-                <button type="button" class="btn btn-default btn-xs" id="btnExportPower" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
-                <button type="button" class="btn btn-default btn-xs pull-right" id="btnMaximizePower"><i class="fa fa-expand"></i></button>
+              <div class="pull-right" id="toolbarPower">
+                <div class="btn-group hide" id="groupPowerPhases" data-load-block="PhaseV_Block"></div>
+                <span>&nbsp;</span>
+                <div class="btn-group" data-load-block="GraphTools_Block"></div>
               </div>
-              <div class="pull-right">&nbsp;</div>
-              <div class="btn-group pull-right hide" id="groupPowerPhases" data-load-block="PhaseV_Block"></div>
               <div class="clearfix"></div>
             </div>
           </div>
@@ -160,9 +161,8 @@
               <a href="Analysis/Frequency">
                 <span class="pull-left">View Details  <i class="fa fa-arrow-circle-right"></i></span>
               </a>
-              <div class="btn-group pull-right">
-                <button type="button" class="btn btn-default btn-xs" id="btnExportFrequency" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
-                <button type="button" class="btn btn-default btn-xs pull-right" id="btnMaximizeFrequency"><i class="fa fa-expand"></i></button>
+              <div class="pull-right" id="toolbarFrequency">
+                <div class="btn-group" data-load-block="GraphTools_Block"></div>
               </div>
               <div class="clearfix"></div>
             </div>

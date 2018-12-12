@@ -356,7 +356,7 @@ function TabSelector(variable, tab, divs, changeTabEvt) {
   Self.ChangeEvent(Self.GetSaved());
 }
 /* Graph maximize and export */
-function GraphTools(title, graph, toolbar, resizeHandler) {
+function GraphTools(title, graph, toolbar, resizeHandler, exportFunction) {
   this.Graph = graph;
   this.Title = title;
   this.PrevHandler = resizeHandler;
@@ -388,6 +388,7 @@ function GraphTools(title, graph, toolbar, resizeHandler) {
     }
     window.dispatchEvent(new Event('resize'));
   });
+  if(exportFunction !== undefined) $(Self.Toolbar + ' button[data-function="Export"]').click(exportFunction);
 }
 /* append samples of given series to array of graph data, and shift if needed */
 function GraphDataAppend(result, serie, data) {
