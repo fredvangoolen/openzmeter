@@ -39,13 +39,11 @@ function PeriodView_OnSuccess(result) {
         }
       }
     );
-    new GraphMaximizer('Voltage', VoltageChart, '#btnMaximizeVoltage');
+    new GraphTools('Voltage', VoltageChart, '#toolbarVoltage');
   } else {
     VoltageChart.updateOptions({ file: VoltageData, dateWindow: [result['From'], result['To']]});
   }
-  for(n = 0; n < SeriesNames.Voltage().length; n++) {
-    AddEvents(result, SeriesNames.Voltage()[n], VoltageChart);
-  }
+  for(var n = 0; n < SeriesNames.Voltage().length; n++) AddEvents(result, SeriesNames.Voltage()[n], VoltageChart);
   VoltageSeries();
   CurrentData = GraphDataAppend(result, 'rms_i', CurrentData);
   $('#labelCurrent').html(Array_Round2(result['rms_i'][result['rms_i'].length - 1], '&nbsp;', ColorArray($('#CurrentPanel').css('border-color'), 4)));
@@ -70,7 +68,7 @@ function PeriodView_OnSuccess(result) {
         }
       }
     );
-    new GraphMaximizer('Current', CurrentChart, '#btnMaximizeCurrent');
+//    new GraphMaximizer('Current', CurrentChart, '#btnMaximizeCurrent');
   } else {
     CurrentChart.updateOptions({'file': CurrentData, dateWindow: [result['From'], result['To']]});
   }
@@ -97,7 +95,7 @@ function PeriodView_OnSuccess(result) {
         }
       }
     );
-    new GraphMaximizer('Active power', PowerChart, '#btnMaximizePower');
+//    new GraphMaximizer('Active power', PowerChart, '#btnMaximizePower');
   } else {
     PowerChart.updateOptions({file: PowerData, dateWindow: [result['From'], result['To']]});
   }
@@ -121,7 +119,7 @@ function PeriodView_OnSuccess(result) {
         }
       }
     );
-    new GraphMaximizer('Frequency', FrequencyChart, '#btnMaximizeFrequency');
+//    new GraphMaximizer('Frequency', FrequencyChart, '#btnMaximizeFrequency');
     Dygraph.synchronize([VoltageChart, CurrentChart, PowerChart, FrequencyChart], { range: false, zoom: false } );
   } else {
     FrequencyChart.updateOptions({'file': FrequencyData, valueRange: CalcRanges(FrequencyData, [1]), dateWindow: [result['From'], result['To']]});
@@ -178,7 +176,7 @@ function Scrollable_OnSuccess(result, clear) {
     );
     $(window).bind('resize', EnergyResizeEvent);
     window.dispatchEvent(new Event('resize'));
-    new GraphMaximizer('Active energy', EnergyChart, '#btnMaximizeEnergy', EnergyResizeEvent);
+//    new GraphMaximizer('Active energy', EnergyChart, '#btnMaximize', EnergyResizeEvent);
     $('#groupEnergyPhases').on('click', 'button', EnergySeries);
     $('#btnExportEnergy').click(function() {
       exportToCsv('ActiveEnergy.csv', [['Time'].concat(SeriesNames.ActiveEnergy())].concat(EnergyData));

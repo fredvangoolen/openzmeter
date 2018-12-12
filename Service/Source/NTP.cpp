@@ -3,10 +3,13 @@
 #include <unistd.h>
 #include "NTP.h"
 #include "HTTPServer.h"
-bool      NTP::pTerminate = false;
-pthread_t NTP::pThread = 0;
-bool      NTP::pEnabled = false;
-char     *NTP::pServer = NULL;
+//======================================================================================================================
+bool            NTP::pTerminate = false;
+pthread_t       NTP::pThread = 0;
+bool            NTP::pEnabled = false;
+char           *NTP::pServer = NULL;
+pthread_mutex_t NTP::pMutex = PTHREAD_MUTEX_INITIALIZER;
+//======================================================================================================================
 bool NTP::Config(json_object *config) {
   if(config != NULL) {
     json_object_object_foreach(config, JSON_Key, JSON_Val) {
@@ -119,8 +122,18 @@ bool NTP::SetTimeSettingsCallback(char *user, json_object *reader, Database *db,
       pServer = (char*)json_object_get_string(JSON_Val);
     } else if((JSON_Type == json_type_boolean) && (strcmp(JSON_Key, "NTP_Enabled") == 0)) {
       pEnabled = json_object_get_boolean(JSON_Val);
-    }
+    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "TimeZone") == 0)) {
+      //Aqui ajusto la zona horaria
+      //remove(pPidFile);
+      //int symlink(const char *path1, const char *path2);
+//      int File = open();
+//      write();
+//      close(File);
+    } 
   }
+  //Inicio o detengo cliente NTP
+  //Si hace falta ajusto hora
+  
   json_object_object_add(NTPConfig, "Server", json_object_new_string((pServer == NULL) ? "" : pServer));
   json_object_object_add(NTPConfig, "Enabled", json_object_new_boolean(pEnabled));
   json_object_object_add(Config, "NTP", NTPConfig);
@@ -129,44 +142,8 @@ bool NTP::SetTimeSettingsCallback(char *user, json_object *reader, Database *db,
     *resultLen = strlen(*postdata);
     return false;
   }
-  return true;
-  //Ajusto zona
-  //Inicio o detengo cliente NTP
-  //Si hace falta ajusto hora
-  
-
-
-
-  FILE *File = fopen("/usr/share/zoneinfo/zone.tab", "r");
-  if(File != NULL) {
-    json_object *Zones = json_object_new_array();
-    char  *Line = NULL;
-    size_t Len  = 0;
-    while(getline(&Line, &Len, File) != -1) {
-      if(Line[0] == '#') continue;
-      char  *Tmp  = Line;
-      strtok_r(Tmp, "\t", &Tmp);
-      strtok_r(Tmp, "\t", &Tmp);
-      char *Result = strtok_r(Tmp, "\t", &Tmp);
-      if(Result) json_object_array_add(Zones, json_object_new_string(Result));
-    }
-    if(Line != NULL) free(Line);
-    fclose(File);
-    json_object_object_add(*writer, "TimeZones", Zones);
-  }
-  File = fopen("/etc/timezone", "r");
-  if(File != NULL) {
-    char  *Line = NULL;
-    size_t Len  = 0;
-    if(getline(&Line, &Len, File) != -1) {
-      if((strlen(Line) > 0) && (Line[strlen(Line) - 1] == '\n')) Line[strlen(Line) - 1] = 0;
-      json_object_object_add(*writer, "TimeZone", json_object_new_string(Line));
-    }
-    if(Line != NULL) free(Line);
-    fclose(File);
-  }
-  json_object_object_add(*writer, "NTP_Enabled", json_object_new_boolean(pEnabled));
-  json_object_object_add(*writer, "NTP_Server", json_object_new_string((pServer == NULL) ? "" : pServer));
+  *writer = json_object_new_object();
+  json_object_object_add(*writer, "Result", json_object_new_boolean(true));
   *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
   return true;
 }

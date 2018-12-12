@@ -76,16 +76,11 @@
               <a href="Analysis/Voltage">
                 <span class="pull-left">View Details <i class="fa fa-arrow-circle-right"></i></span>
               </a>
-              <div class="btn-group pull-right">
-                <button type="button" class="btn btn-default btn-xs" id="btnExportVoltage" data-toggle="tooltip" title="Export data to CSV file">
-                  <i class="fa fa-table fa-fw"></i>
-                </button>
-                <button type="button" class="btn btn-default btn-xs" id="btnMaximizeVoltage" data-toggle="tooltip" title="Maximize graph">
-                  <i class="fa fa-expand"></i>
-                </button>
+              <div class="pull-right" id="toolbarVoltage">
+                <div class="btn-group hide" id="groupVoltagePhases" data-load-block="PhaseV_Block"></div>
+                <span>&nbsp;</span>
+                <div class="btn-group" data-load-block="GraphTools_Block"></div>
               </div>
-              <div class="pull-right">&nbsp;</div>
-              <div class="btn-group pull-right hide" id="groupVoltagePhases" data-load-block="PhaseV_Block"></div>
               <div class="clearfix"></div>
             </div>
           </div>

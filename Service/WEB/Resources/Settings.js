@@ -263,6 +263,21 @@ function AjaxGetTimeZones() {
     }
   });
 }
+$('#btnNTPSave').click(function() {
+  $('#btnNTPSave').attr("disabled");
+  $.ajax({ url: "setTimeSettings", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', 
+    data: JSON.stringify({ NTP_Enabled: false, NTP_Server: "bliu" }), 
+    success: function(result) {
+      alert("Se ha guardao to bien");
+    },
+    error: function(result) {
+      alert("algo se ha jodio");
+    },
+    complete: function(result) {
+      $('#btnNTPSave').removeAttr("disabled");    
+    }
+  });
+});
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
   AjaxGetTimeZones();

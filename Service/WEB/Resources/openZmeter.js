@@ -355,31 +355,38 @@ function TabSelector(variable, tab, divs, changeTabEvt) {
   $(divs + ' > div:nth-child(' + (Self.GetSaved() + 1) + ')').show();
   Self.ChangeEvent(Self.GetSaved());
 }
-/* Div maximizer */
-function GraphMaximizer(title, graph, button, resizeHandler) {
+/* Graph maximize and export */
+function GraphTools(title, graph, toolbar, resizeHandler) {
   this.Graph = graph;
   this.Title = title;
   this.PrevHandler = resizeHandler;
   this.PrevContainer = $(graph.graphDiv).parent().parent();
+  this.Toolbar = toolbar;
   var Self = this;
-  Self.DialogResizeHandler = function() { 
+  Self.DialogResizeHandler = function() {
     Self.Graph.resize($('#MaximizeDialogBody').width(), $('#MaximizeDialogContents').height() - 90);
   }
-  $(button).click(function(evt) {
-    if(Self.PrevHandler !== undefined) $(window).unbind('resize', Self.PrevHandler);
-    $('#dlgMaximizeDialog').modal('show');
-    $('#MaximizeDialogTitle').text(Self.Title);
-    $('#MaximizeDialogBody').append($(Self.Graph.graphDiv).parent().detach());
-    $(window).bind('resize', Self.DialogResizeHandler);
-    window.dispatchEvent(new Event('resize'));
-    $('#MaximizeDialogClose').click(function() {
+  $(Self.Toolbar + ' button[data-function="Maximize"]').click(function(evt) {
+    if($('#dlgMaximizeDialog').hasClass('in')) {
+      $(Self.Toolbar + ' button[data-function="Maximize"] > i').addClass('fa-expand');
+      $(Self.Toolbar + ' button[data-function="Maximize"] > i').removeClass('fa-compress');
       $(window).unbind('resize', Self.DialogResizeHandler);
       $(Self.PrevContainer).append($(Self.Graph.graphDiv).parent().detach());
       $(Self.Graph.graphDiv).parent().removeAttr('style');
       if(Self.PrevHandler !== undefined) $(window).bind('resize', Self.PrevHandler);
+      $(Self.Toolbar).append($('#MaximizeToolbar').children().detach());
       $('#dlgMaximizeDialog').modal('hide');
-      window.dispatchEvent(new Event('resize'));
-    });
+    } else {
+      $(Self.Toolbar + ' button[data-function="Maximize"] > i').removeClass('fa-expand');
+      $(Self.Toolbar + ' button[data-function="Maximize"] > i').addClass('fa-compress');
+      if(Self.PrevHandler !== undefined) $(window).unbind('resize', Self.PrevHandler);
+      $('#dlgMaximizeDialog').modal('show');
+      $('#MaximizeDialogTitle').text(Self.Title);
+      $('#MaximizeToolbar').append($(Self.Toolbar).children().detach());
+      $('#MaximizeDialogBody').append($(Self.Graph.graphDiv).parent().detach());
+      $(window).bind('resize', Self.DialogResizeHandler);
+    }
+    window.dispatchEvent(new Event('resize'));
   });
 }
 /* append samples of given series to array of graph data, and shift if needed */
@@ -447,7 +454,7 @@ function GroupButtons(buttongroup, variable, maxItems, unique, callback, sender)
   var VisibleSeries = [];
   var Visibles = [];
   if(Analyzers[Analyzer].Mode !== '1PHASE') {
-    buttongroup.removeClass('hidden');
+    buttongroup.removeClass('hide');
     for(var i = 0; i < NumElements; i++) {
       if(i >= maxItems) {
         $(buttongroup.children()[i]).addClass('disabled');
@@ -463,7 +470,7 @@ function GroupButtons(buttongroup, variable, maxItems, unique, callback, sender)
       }
     }
   } else {
-    buttongroup.hide();
+    buttongroup.addClas("hide");
     Visibles.push(1);
     VisibleSeries.push(true);
   }
