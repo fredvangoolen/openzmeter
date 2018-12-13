@@ -22,6 +22,21 @@
   </head>
   <body onload="StartPageLoad()">
     <span data-load-block="Header_Block"></span>
+    <div class="modal fade" id="dlgSave" tabindex="-1" role="dialog" data-backdrop='static'>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title"><i class="fa fa-info"></i> Information</h3>
+          </div>
+          <div class="modal-body">
+            <p></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-success" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span>  Continue</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="modal fade" id="NetworkModal" tabindex="-1" role="dialog" data-backdrop='static'>
       <div class="modal-dialog">
         <div class="modal-content">
@@ -622,6 +637,7 @@
     <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
     <script src="lib/momentjs/moment.js"></script>
     <script src="lib/momentjs/moment-duration-format.js"></script>
+    <script src="lib/moment-timezone.min.js"></script>
     <script src="lib/bootstrap-toggle.min.js"></script>
     <script src="lib/bootstrap-datetimepicker.min.js"></script>
     <script src="openZmeter.js"></script>

@@ -98,6 +98,6 @@ void ESIOS::CheckPrices(uint64_t from) {
     }
     xmlFreeDoc(Doc);
   } else {
-    Tools::LogMsg("ERROR", "Invalid XML response\n");
+    Tools::LogMsg("DEBUG", "No data for requested day (Invalid XML response)\n");
   }
 }

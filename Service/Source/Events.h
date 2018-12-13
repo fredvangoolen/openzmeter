@@ -23,10 +23,10 @@ class Events : public Database {
     } EventCycle_t;
     typedef struct {
       enum EventType Type;                 //Tipo de evento (puede cambiar durante el evento)
-      uint64_t        Start;                //Timestamp de inicio
-      uint64_t        Duration;             //Duracion en samples
-      float           Voltage;              //Tension maxima o minima durante el evento
-      float           Change;               //Porcentage de desviacion del evento
+      uint64_t       Start;                //Timestamp de inicio
+      uint64_t       Duration;             //Duracion en samples
+      float          Voltage;              //Tension maxima o minima durante el evento
+      float          Change;               //Porcentage de desviacion del evento
     } Event_t;
   private :
     bool            pTriphase;    

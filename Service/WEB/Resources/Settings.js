@@ -260,18 +260,25 @@ function AjaxGetTimeZones() {
       }
       result.TimeZones.sort();
       for(i = 0; i < result.TimeZones.length; i++) $('#dropdownListTimeZone').append('<li><a href="#">' + result.TimeZones[i] + '</a></li>');
+      
+      $("#dropdownListTimeZone li a").click(function(event) {
+        event.preventDefault();
+        $('#dropdownTimeZone span:first-child').text($(this).text());
+     });
     }
   });
 }
 $('#btnNTPSave').click(function() {
   $('#btnNTPSave').attr("disabled");
   $.ajax({ url: "setTimeSettings", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', 
-    data: JSON.stringify({ NTP_Enabled: false, NTP_Server: "bliu" }), 
+    data: JSON.stringify({ NTP_Enabled: $('#checkNTP').is(':checked'), NTP_Server: $('#inputNTPServer').val(), TimeZone: $('#dropdownTimeZone span:first-child').text(), Time: moment.tz($('#inputCurrentTime > input').val(), 'DD/MM/YYYY HH:mm:ss', $('#dropdownTimeZone span:first-child').text()).utc().valueOf() }), 
     success: function(result) {
-      alert("Se ha guardao to bien");
+      $('#dlgSave .modal-body > p').html("Settings changed correctly!");
+      $('#dlgSave').modal('show'); 
     },
     error: function(result) {
-      alert("algo se ha jodio");
+      $('#dlgSave .modal-body > p').html("Failed to save settings!");
+      $('#dlgSave').modal('show'); 
     },
     complete: function(result) {
       $('#btnNTPSave').removeAttr("disabled");    

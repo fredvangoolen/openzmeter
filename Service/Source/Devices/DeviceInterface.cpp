@@ -294,7 +294,7 @@ bool DeviceInterface::GetEventsCallback(char* user, json_object* reader, Databas
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\", ", To); 
-  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(eventtime ORDER BY eventtime ASC) AS \"Starttime\", ");
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(eventtime ORDER BY eventtime ASC) AS \"EventTime\", ");
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(duration ORDER BY eventtime ASC) AS \"Duration\", ");
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(samplerate ORDER BY eventtime ASC) AS \"SampleRate\", ");
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "array_agg(type ORDER BY eventtime ASC) AS \"Type\", ");
