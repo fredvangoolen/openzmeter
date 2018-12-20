@@ -28,7 +28,7 @@ function Scrollable_OnSuccess(result, clear) {
       { strokeWidth: 0.5, stepPlot: true, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4],
         legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.Voltage()), dateWindow: [result['From'], result['To']],
         zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
-        colors: ColorArray($('#VoltagePanel').css('border-color'), 3), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
+        colors: ColorArray($('#VoltagePanel').css('border-color'), 3), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], xAxisHeight: 24,
         underlayCallback: function(canvas, area, g) {
           var NV = Analyzers[Analyzer].NominalVoltage, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
           GraphHBackgroundRanges([[NV * 1.1, NV * 1.07, Yellow], [NV * 0.93, NV * 0.9, Yellow], [Infinity, NV * 1.1, Red], [NV * 0.9, -Infinity, Red]], g, canvas);
@@ -42,34 +42,21 @@ function Scrollable_OnSuccess(result, clear) {
           }
         }  
     );
-    $(window).bind('resize', function() { VoltageChart.resize($('#VoltageCol').width(), $('#panelCounters').height() - 4); });
+    $(window).bind('resize', VoltageResizeEvent);
     window.dispatchEvent(new Event('resize'));
+    new GraphTools('Voltage', VoltageChart, '#toolbarVoltage', VoltageResizeEvent, function() { exportToCsv('Voltage.csv', [['Time'].concat(SeriesNames.Voltage())].concat(VoltageData)); });
   } else {
     VoltageChart.updateOptions({file: VoltageData, dateWindow: [result['From'], result['To']]});
   }
   VoltageSeries();
 }
+function VoltageResizeEvent() { 
+  if(VoltageChart != null) VoltageChart.resize('100%', $('#VoltagePanel > .panel-body > .row > div:first-child').height());
+}
 function VoltageSeries(event) {
   GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'VisibleVoltageMainPhases', false, function(series) { return CalcRanges(VoltageData, series, false); }, (event !== undefined) ? event.target : undefined); 
 }
 $('#groupVoltagePhases').on('click', 'button', VoltageSeries);
-$('#btnExportVoltage').click(function() {
-  exportToCsv("Voltage_" + Node + '_' + LastVoltageSample + '.csv', [['Time'].concat(VoltageNames)].concat(VoltageData));
-});
-$('#btnMaximizeVoltage').click(function() {
-  $('#GraphDialogTitle').text('Voltage');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#VoltageCol');
-  DialogElement = $('#VoltageMaximizeDiv').detach();
-  DialogPrevResizeHandler = VoltageResizeEvent;
-  DialogResizeHandler = function() {
-    VoltageChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 110);
-  };
-  $(window).unbind('resize', VoltageResizeEvent);
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
 /* Voltage counters */
 function Scrollable_UpdateCounters(times, renew) {
   if(renew === true) {
@@ -103,18 +90,6 @@ function Scrollable_UpdateCounters(times, renew) {
     }
   );
 }
-/* Ventana de maximizar y de error de agregaciones */
-var DialogElement           = null;
-var PrevDialogContainer     = null;
-var DialogResizeHandler     = null;
-var DialogPrevResizeHandler = null;
-$('#GraphDialogClose').click(function() {
-  $(window).unbind('resize', DialogResizeHandler);
-  $(window).bind('resize', DialogPrevResizeHandler);
-  $(PrevDialogContainer).append(DialogElement);
-  $('#GraphDialog').modal('hide');
-  window.dispatchEvent(new Event('resize'));
-});
 var WaveformDataset = [], HarmonicsDataset = [], FFTDataset = [];
 function Live_OnSuccess(result) {
   $('#DetailTime').text('Last update at ' + new Date(result['Sampletime']).toLocaleTimeString() + '.' + new Date(result['Sampletime']).getMilliseconds());
@@ -815,7 +790,7 @@ var MainScrollable = null;
 function UpdatePage() {
   new TabSelector('VoltageDetailView', '#DetailTabs', '#DetailDivs', DetailTabChange);
   DetailsButtonUpdate();
-  MainScrollable = new Scrollable( {Spinners: ['#VoltageSpinner'], Series: 'rms_v', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
+  MainScrollable = new Scrollable( {Spinners: ['#VoltageSpinner'], NowBtn: '#toolbarVoltage button[data-function="Update"]', Series: 'rms_v', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
   new Live( {PauseBtn: '#btnPauseDetail', RefreshInterval: 5000, Spinners: ['#DetailSpinner'], Series: 'wave_v, wave_i, harmonics_v, harmonics_i, fft_v, fft_i, power_factor, thd_v, phi, rms_v, rms_i', OnSuccess: Live_OnSuccess});
   new PeriodView( {Spinners: [], Series: 'power_factor, thd_v, phi, harmonics_v', Period: 86400000, Aggreg: '1m', OnSuccess: PeriodView_OnSuccess} );
 }

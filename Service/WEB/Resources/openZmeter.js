@@ -368,8 +368,9 @@ function GraphTools(title, graph, toolbar, resizeHandler, exportFunction) {
   }
   $(Self.Toolbar + ' button[data-function="Maximize"]').click(function(evt) {
     if($('#dlgMaximizeDialog').hasClass('in')) {
-      $(Self.Toolbar + ' button[data-function="Maximize"] > i').addClass('fa-expand');
-      $(Self.Toolbar + ' button[data-function="Maximize"] > i').removeClass('fa-compress');
+      $('#MaximizeToolbar button[data-function="Maximize"] > i').addClass('fa-expand');
+      $('#MaximizeToolbar button[data-function="Maximize"] > i').removeClass('fa-compress');
+      $('#MaximizeToolbar button[data-function="Maximize"]').attr('title', 'Maximize graph');
       $(window).unbind('resize', Self.DialogResizeHandler);
       $(Self.PrevContainer).append($(Self.Graph.graphDiv).parent().detach());
       $(Self.Graph.graphDiv).parent().removeAttr('style');
@@ -379,6 +380,7 @@ function GraphTools(title, graph, toolbar, resizeHandler, exportFunction) {
     } else {
       $(Self.Toolbar + ' button[data-function="Maximize"] > i').removeClass('fa-expand');
       $(Self.Toolbar + ' button[data-function="Maximize"] > i').addClass('fa-compress');
+      $(Self.Toolbar + ' button[data-function="Maximize"]').attr('title', 'Minimize graph');
       if(Self.PrevHandler !== undefined) $(window).unbind('resize', Self.PrevHandler);
       $('#dlgMaximizeDialog').modal('show');
       $('#MaximizeDialogTitle').text(Self.Title);

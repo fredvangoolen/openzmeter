@@ -89,5 +89,5 @@ function Scrollable_UpdateCounters(times, renew) {
 }
 var MainScrollable = null;
 function UpdatePage() {
-  MainScrollable = new Scrollable( {Spinners: ['#FrequencySpinner'], Series: 'freq', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters} );
+  MainScrollable = new Scrollable( {Spinners: ['#FrequencySpinner'], NowBtn: '#toolbarFrequency button[data-function="Update"]', Series: 'freq', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters} );
 }//426

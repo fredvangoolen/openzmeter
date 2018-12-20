@@ -278,7 +278,7 @@ function ParametersSeries(event) {
 $('#groupParametersPhases').on('click', 'button', ParametersSeries);
 var MainScrollable = null;
 function UpdatePage() {
-  MainScrollable = new Scrollable( {Spinners: ['#EnergySpinner'], Series: 'active_energy', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
+  MainScrollable = new Scrollable( {Spinners: ['#EnergySpinner'], NowBtn: '#toolbarEnergy button[data-function="Update"]', Series: 'active_energy', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
   new PeriodView( {Spinners: ['#VoltageSpinner', '#CurrentSpinner', '#PowerSpinner', '#FrequencySpinner'], Series: 'rms_v, flag, rms_i, active_power, freq', Period: 7200000, Aggreg: '3s', OnSuccess: PeriodView_OnSuccess} );
   new PeriodView( {Spinners: ['#MainParametersSpinner'], Series: 'active_power, reactive_power, power_factor, phi, thd_v, thd_i', Period: 86400000, Aggreg: '1m', OnSuccess: PeriodViewParams_OnSuccess} );
 }
