@@ -18,68 +18,47 @@
   </head>
   <body onload="StartPageLoad()">
     <span data-load-block="Header_Block"></span>
-    <span data-load-block="AggregWarningDialog"></span>
-    <div class="modal" id="GraphDialog" tabindex="1" role="dialog" data-backdrop='static'>
-      <div class="modal-dialog" style="width: 100%; height: 100%; padding: 10px; margin: 0px">
-        <div class="modal-content" style="height: 100%" id="GraphDialogContents">
-          <div class="modal-header">
-            <div class="pull-left">
-            <h3 class="modal-title" id="GraphDialogTitle"></h3>
-            </div>
-            <div class="pull-right">
-              <button type="button" class="btn btn-default btn-sm" id="GraphDialogClose">
-                <i class="fa fa-compress"></i>
-              </button>
-            </div>
-            <div class="clearfix"></div>
-          </div>
-          <div class="modal-body" id="GraphDialogBody" style="padding-top: 0px"></div>
-        </div>
-      </div>
-    </div>
+    <span data-load-block="MaximizeDialog"></span>
     <div id="wrapper">
       <div class="row">
         <div class="col-lg-12">
-          <div class="panel panel-active-energy" id="ActiveEnergyConsumptionPanel">
-            <div id="ActiveEnergyConsumptionSpinner" class="spinnerdiv"></div>
+          <div class="panel panel-active-energy" id="CostPanel">
+            <div id="CostSpinner" class="spinnerdiv"></div>
             <div class="panel-heading">
-              <div class="huge header-text">Active energy consumption</div>
-              <div class="header-buttons">
+              <div class="huge header-text">Energy costs</div>
+              <div class="header-buttons" id="toolbarCost">
                 <div class="btn-group" data-load-block="ScrollableTime_Block"></div>
+                <span>&nbsp;</span>
                 <div class="btn-group" data-load-block="GraphToolsPlay_Block"></div>
               </div>
               <span class="clearfix"> </span> 
             </div>
             <div class="panel-body">
-              <div id="ActiveEnergyConsumptionCol">
-                <div id="ActiveEnergyConsumptionMaximizeDiv">
-                  <div id="ActiveEnergyConsumptionChart" class="chart big_chart"></div>
+              <div class="row">
+                <div class="col-md-12 col-lg-4 col-xl-3">
+                  <div class="subpanel" id="PriceBox">
+                    <div class="huge-small" id="labelPricePrimary">Loading data...</div>
+                    <div><span id="labelPricePrimaryValue" class="huge">?</span>&nbsp;<em class="huge-small-unit" id="labelPricePrimaryUnits"></em></div>
+                    <div><span id="labelPriceSecondary">Loading data...</span>&nbsp;<span id="labelPriceSecondaryValue"></span></div>
+                  </div>
+                  <div class="subpanel" id="EnergyBox">
+                    <div class="huge-small" id="labelEnergyPrimary">Loading data...</div>
+                    <div><span id="labelEnergyPrimaryValue" class="huge">?</span>&nbsp;<em class="huge-small-unit" id="labelEnergyPrimaryUnits"></em></div>
+                    <div><span id="labelEnergySecondary">Loading data...</span>&nbsp;<span id="labelEnergySecondaryValue"></span></div>
+                  </div>
+                  <div class="subpanel" id="BudgetBox">
+                    <div class="huge-small" id="labelBudgetPrimary">Loading data...</div>
+                    <span id="labelBudgetPrimaryValue" class="huge">?</span>&nbsp;<em class="huge-small-unit" id="labelBudgetUnits"></em>
+                    <div><span id="labelBudgetSecondary">Loading data...</span>&nbsp;<span id="labelBudgetSecondaryValue"></span></div>
+                  </div>
+                </div>
+                <div class="col-md-12 col-lg-8 col-xl-9">
+                  <div id="CostChart" class="chart big_chart"></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      <div class="row">
-        <div class="col-lg-12">
-          <div class="panel panel-cost" id="ActiveEnergyCostPanel">
-            <div id="ActiveEnergyCostSpinner" class="spinnerdiv"></div>
-            <div class="panel-heading">
-              <div class="header-text"><i class="fa fa-money" aria-hidden="true"></i> Active energy cost</div>
-              <div class="pull-right btn-group">
-                <button type="button" class="btn btn-default btn-xs" id="btnExportReactiveEnergy" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
-                <button type="button" class="btn btn-default btn-xs" id="btnMaximizeReactiveEnergy" data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-expand"></i></button>
-              </div>
-            </div>
-            <div class="panel-body">  
-              <div id="ActiveEnergyCostCol">
-                <div id="ActiveEnergyCostMaximizeDiv">
-                  <div id="ActiveEnergyCostChart" class="chart big_chart"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div> 
       </div>
     </div>
     <script src="lib/jquery.min.js"></script>

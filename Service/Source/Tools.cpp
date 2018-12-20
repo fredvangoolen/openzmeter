@@ -319,3 +319,11 @@ bool Tools::JSONArrayFloat(const json_object* obj, const char* key, float* dst, 
   }
   return false;
 }
+char *Tools::trim(char *str) {
+  if(str == NULL) return NULL;
+  while((str[0] == 0) && (str[0] == ' ')) str++;
+  char *Start = str;
+  while((str[0] != 0) && (str[0] != ' ')) str++;
+  str[0] = 0;
+  return Start;
+}

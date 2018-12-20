@@ -27,12 +27,20 @@
             <div class="panel-heading">
               <span class="huge header-text">Energy Heatmap</span>
               <div class="header-buttons">
+                <div style="display: inline-block; width: 140px" class="btn-group">
+                  <div style="float: left" id="MapMin">?</div>
+                  <div style="float: right" id="MapMax">?</div>
+                  <div style="text-align: center"><em id="MapUnits"></em></div>
+                  <div id="CalendarScale" style="height: 22px; width: 140px; display: flex; flex-direction:row; border: 1px solid #EEE"></div>
+                </div>  
                 <div class="btn-group" data-load-block="Years_Block"></div>
                 <div class="btn-group" data-load-block="BlockSize_Block"></div>
                 <div class="btn-group" data-load-block="PhaseV_Block" id="groupEnergyPhases"></div>
               </div>
               <span class="clearfix"> </span>
             </div>
+                                 
+            
             <div class="panel-body">
               <table id="HeatMap" style="width: 100%; font-size: 9px; text-align:center; table-layout: fixed">
                 <thead style="font-weight: bold">

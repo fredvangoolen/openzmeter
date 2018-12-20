@@ -67,6 +67,7 @@ class AnalyzerInterface : protected Database {
     float        GetMaxCurrent();
     float        GetNominalVoltage();
     float        GetNominalFrequency();
+    AnalyzerMode GetMode();
     const char  *GetID();
     json_object *GetJSONDescriptor();
     json_object *GetJSONParams(char *series);

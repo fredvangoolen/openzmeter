@@ -197,13 +197,13 @@ function Scrollable(opt) {
         $('#dlgAggregWarning').modal('show');
         GraphAggregation = result['Aggregation_Source'];
       }
-      var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
-      if(GraphEnd === 0) {
-        $(Self.Opt.NowBtn).addClass('active');
-      } else {
-        $(Self.Opt.NowBtn).removeClass('active');
-      }
       localStorage.setItem('GraphAggregation', GraphAggregation);
+    }      
+    var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
+    if(GraphEnd === 0) {
+      $(Self.Opt.NowBtn).addClass('active');
+    } else {
+      $(Self.Opt.NowBtn).removeClass('active');
     }
   };
   Self.GetSeries = function() {
@@ -471,7 +471,7 @@ function GroupButtons(buttongroup, variable, maxItems, unique, callback, sender)
       }
     }
   } else {
-    buttongroup.addClas("hide");
+    buttongroup.addClass("hide");
     Visibles.push(1);
     VisibleSeries.push(true);
   }
@@ -501,6 +501,14 @@ function GraphWaveTimeTicks(max) {
     ticks.push({ v: i * Analyzers[Analyzer].SampleFreq / Analyzers[Analyzer].NominalFreq, label: Round2(i / Analyzers[Analyzer].NominalFreq * 1000) });
   }
   return ticks;
+}
+/* find abs max value of array (maybe array of arrays) */
+function ArrayAbsMax(array) {
+  var Max = -Infinity;
+  for(var i in array) {
+    Max = Math.max(Max, Array.isArray(Math.abs(array[i])) ? ArrayMax(array[i]) : array[i]);
+  }
+  return Max;
 }
 /* find max value of array (maybe array of arrays) */
 function ArrayMax(array) {
@@ -617,10 +625,11 @@ function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter 
         if(data.x == null) {
           return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
         } else {
+          var Caption = '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' + data.xHTML;
           for(var i = 0; i < data.series.length; i++)  {
-            if(data.series[i].yHTML !== undefined) return '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' + data.xHTML + data.series[i].yHTML;
+            if(data.series[i].yHTML !== undefined) return Caption + data.series[i].yHTML;
           }
-          return "";
+          return Caption + '<div style="font-size: 14px; line-height: 18px; font-weight: bold">No data</div>';
         }
       },
       axes: {
@@ -642,6 +651,11 @@ function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter 
     }
   );
   return Graph;
+}
+function ShowColorScale(scale, outerdiv) {
+  scale.out('hex');
+  var width = outerdiv.width() - 1;
+  for(i = 0; i <= width; i++) outerdiv.append('<div style="width:1px; height:' + $(outerdiv).height() + 'px; display:inline; background:' + scale(i / width) + '"></div>');
 }
 /* Generate an array of colors from a base */
 function ColorArray(base, items) {
@@ -1063,7 +1077,7 @@ function GetEndYearTimestamp() {
 }
 
 /* Calcula rango para las graficas, la entrada es un array y un array de columnas a comprobar */
-function CalcRanges(input, cols, fromzero, onlypositive, sum) {
+function CalcRanges(input, cols, fromzero, onlypositive, sum, noOffset) {
   var UpperRange = -Infinity;
   var LowerRange =  Infinity;
   for(i = 0; i < input.length; i++) {
@@ -1083,17 +1097,19 @@ function CalcRanges(input, cols, fromzero, onlypositive, sum) {
       }
     }
   }
-  var Variation = (UpperRange - LowerRange);
-  if(Variation < 1) Variation = 1.0;
-  if((fromzero === true) && (UpperRange >= 0) && (LowerRange >= 0)) {
-    UpperRange = UpperRange + Variation * 0.1;
-    LowerRange = 0;
-  } else if((fromzero === true) && (UpperRange <= 0) && (LowerRange <= 0)) {
-    UpperRange = 0;
-    LowerRange = LowerRange - Variation * 0.1;
-  } else {
-    UpperRange = UpperRange + Variation * 0.1;
-    LowerRange = LowerRange - Variation * 0.1;
+  if((noOffset === undefined) || (noOffset === false)) {
+    var Variation = (UpperRange - LowerRange);
+    if(Variation < 1) Variation = 1.0;
+    if((fromzero === true) && (UpperRange >= 0) && (LowerRange >= 0)) {
+      UpperRange = UpperRange + Variation * 0.1;
+      LowerRange = 0;
+    } else if((fromzero === true) && (UpperRange <= 0) && (LowerRange <= 0)) {
+      UpperRange = 0;
+      LowerRange = LowerRange - Variation * 0.1;
+    } else {
+      UpperRange = UpperRange + Variation * 0.1;
+      LowerRange = LowerRange - Variation * 0.1;
+    }
   }
   if((onlypositive === true) && (LowerRange < 0)) {
     LowerRange = 0;

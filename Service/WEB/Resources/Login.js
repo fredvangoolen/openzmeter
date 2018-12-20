@@ -25,6 +25,7 @@ $('form').submit(function (e) {
     }
   });
 });
+particlesJS("divParticles", {particles:{number:{value:50},color:{value:"#2b2e2e"},size:{value:2},line_linked:{enable:true,distance:150,color:"#e8701c",opacity:0.3,width:1}}});
 function StartPageLoad() {
   $('button').removeClass("disabled");
 }

@@ -38,10 +38,13 @@ function HandleRebase() {
 //    }
   });
 }
-$('#Topics a').bind('click', function(e) {
-  $('#Contents').load("/HelpPages/" + $(this).attr('href'));
-  e.preventDefault();
-});
+
 function UpdatePage() {
-  $('#Contents').load("HelpPages/Home.html", HandleRebase);
+  $.get("Help/Topics.json", function(result) { 
+    JSON.parse(result).forEach(function(name) { $('#Topics').append('<li><a href="' + name + '">' + name + '</a></li>'); });
+    $('#Topics a').click(function(e) {
+      $('#Contents .panel-heading').html($(this).attr('href')); e.preventDefault();
+      $('#Contents .panel-body').load('Help/' + $(this).attr('href') + '.html'); e.preventDefault();
+    });
+  });
 }

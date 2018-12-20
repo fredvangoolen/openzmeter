@@ -1,0 +1,789 @@
+<p>An <strong>Application Programming Interface</strong> <strong>API</strong> has been implemented to access all the available information inside oZm in real time, some functions are intended only for WEB interface use, other are more useful to query the system from external programs.</p>
+<p>To gather specific information, POST request are sent to the embedded web server. The server replies with an JSON object with the requested parameters. Input parameters is olso requiered to be valid JSON.</p>
+<p>The web server requieres authorization by default (for example, a web session has been initiated), except for &lt;code&gt;localhost&lt;/code&gt; petitions, which are authorized by default. In localhost, the user must be supplied as additional ‘Username’ parameter in queries. This allow to impersonate named user.</p>
+<h1><a id="LogIn_6"></a>LogIn</h1>
+<p>Create a user session for laters queries.</p>
+<table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th><strong>Inputs params</strong></th>
+<th style="text-align:center">Type</th>
+<th>Requiered</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Username</td>
+<td style="text-align:center">string</td>
+<td>false</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Password</td>
+<td style="text-align:center">string</td>
+<td>false</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>UpdateLastLogin</td>
+<td style="text-align:center">boolean</td>
+<td>false</td>
+<td>true</td>
+<td>if set to true updates the last login information for the user to current time</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th><strong>Outputs params</strong></th>
+<th style="text-align:center">Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Result</td>
+<td style="text-align:center">boolean</td>
+<td>true if logins success, also COOKIE is set in HTTP header</td>
+</tr>
+<tr>
+<td>LastLogin</td>
+<td style="text-align:center">uint64</td>
+<td>Last login timestamp</td>
+</tr>
+</tbody>
+</table>
+<h1><a id="getNews_20"></a>getNews</h1>
+<p>Retrieve software changes, news or usage instructions since last user login.</p>
+<table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th><strong>Inputs params</strong></th>
+<th style="text-align:center">Type</th>
+<th>Requiered</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LastLogin</td>
+<td style="text-align:center">uint64</td>
+<td>true</td>
+<td></td>
+<td>Retrieve messages since this timestamp</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th><strong>Outputs params</strong></th>
+<th style="text-align:center">Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Headers</td>
+<td style="text-align:center">[string]</td>
+<td>Sorted from older to newer</td>
+</tr>
+<tr>
+<td>Contents</td>
+<td style="text-align:center">[string]</td>
+<td>Same order as headers</td>
+</tr>
+<tr>
+<td>Timestamp</td>
+<td style="text-align:center">[uint64]</td>
+<td>Same order as headers</td>
+</tr>
+</tbody>
+</table>
+<h1><a id="getTimeSettings_33"></a>getTimeSettings</h1>
+<p>Retrieve system timezones, and current NTP configuration. Requieres no input params.</p>
+<table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th><strong>Inputs params</strong></th>
+<th style="text-align:center">Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TimeZones</td>
+<td style="text-align:center">[string]</td>
+<td>System allowed time zones</td>
+</tr>
+<tr>
+<td>TimeZone</td>
+<td style="text-align:center">string</td>
+<td>Current time zone</td>
+</tr>
+<tr>
+<td>NTP_Enabled</td>
+<td style="text-align:center">boolean</td>
+<td>Tell if NTP server is active or not</td>
+</tr>
+<tr>
+<td>NTP_Server</td>
+<td style="text-align:center">string</td>
+<td>Tell NTP server IP or name</td>
+</tr>
+<tr>
+<td>Time</td>
+<td style="text-align:center">int64</td>
+<td>Current system timestamp in UTC</td>
+</tr>
+</tbody>
+</table>
+<h1><a id="setTimeSettings_44"></a>setTimeSettings</h1>
+<p>Save system timezones, and current NTP configuration.</p>
+<table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th><strong>Outputs params</strong></th>
+<th style="text-align:center">Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TimeZone</td>
+<td style="text-align:center">string</td>
+<td>Current time zone</td>
+</tr>
+<tr>
+<td>NTP_Enabled</td>
+<td style="text-align:center">boolean</td>
+<td>Tell if NTP server is active or not</td>
+</tr>
+<tr>
+<td>NTP_Server</td>
+<td style="text-align:center">string</td>
+<td>Tell NTP server IP or name</td>
+</tr>
+<tr>
+<td>Time</td>
+<td style="text-align:center">int64</td>
+<td>Current system timestamp in UTC</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th><strong>Ouputs params</strong></th>
+<th style="text-align:center">Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Result</td>
+<td style="text-align:center">boolean</td>
+<td>true on success</td>
+</tr>
+</tbody>
+</table>
+<p>Operation can fail if configuration file is read only or service is running under unprivileged user.<br>
+Time is updated only is NTP server is disabled, otherwise ignored.</p>
+<p>The following data series are stored in the database and can be queried:</p>
+<p>&lt;table style=“border:1px solid black”&gt;<br>
+&lt;tr&gt;<br>
+&lt;th&gt;Param&lt;/th&gt;<br>
+&lt;th &gt;Type&lt;/th&gt;<br>
+&lt;th&gt;Description&lt;/th&gt;<br>
+&lt;/tr&gt;</p>
+<p>&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;rms_v&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;real[1]&lt;/code&gt;&lt;img src=&quot;/uploads/b9d6dd872765fdcdf96f955794c7e221/1F.png&quot;/&gt;&lt;br/&gt;&lt;code&gt;real[3]&lt;/code&gt;&lt;img src=&quot;/uploads/0f7d1d420d40db5c39d880c48f4ae5b9/3F.png&quot;/&gt;&lt;/td&gt;<br>
+&lt;td&gt;RMS Voltage&lt;/td&gt;<br>
+&lt;/tr&gt;</p>
+<p>&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;rms_i&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;real[1]&lt;/code&gt;&lt;img src=&quot;/uploads/b9d6dd872765fdcdf96f955794c7e221/1F.png&quot;/&gt;&lt;br/&gt;&lt;code&gt;real[4]&lt;/code&gt;&lt;img src=&quot;/uploads/0f7d1d420d40db5c39d880c48f4ae5b9/3F.png&quot;/&gt;&lt;/td&gt;<br>
+&lt;td&gt;RMS Current&lt;/td&gt;<br>
+&lt;/tr&gt;</p>
+<p>&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;active_power&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td style=“vertical-align:middle” rowspan=“5”&gt;&lt;code&gt;real[1]&lt;/code&gt;&lt;img src=&quot;/uploads/b9d6dd872765fdcdf96f955794c7e221/1F.png&quot;/&gt;&lt;br/&gt;&lt;code&gt;real[3]&lt;/code&gt;&lt;img src=&quot;/uploads/0f7d1d420d40db5c39d880c48f4ae5b9/3F.png&quot;/&gt;&lt;/td&gt;<br>
+&lt;td&gt;Total Active Power&lt;/td&gt;<br>
+&lt;/tr&gt;</p>
+<p>&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;power_factor&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;Power Factor&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;active_energy&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;Active Energy&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;fundamental_reactive_power&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;Fundamental Reactive Energy for  50/60 Hz&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;thd_v&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;Total Harmonic Distortion for voltage&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;thd_i&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;real[1]&lt;/code&gt;&lt;img src=&quot;/uploads/b9d6dd872765fdcdf96f955794c7e221/1F.png&quot;/&gt;&lt;br/&gt;&lt;code&gt;real[4]&lt;/code&gt;&lt;img src=&quot;/uploads/0f7d1d420d40db5c39d880c48f4ae5b9/3F.png&quot;/&gt;&lt;/td&gt;<br>
+&lt;td&gt;Total Harmonic Distortion for current&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;freq&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;real&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;Grid frequency&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;phi&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;real[1]&lt;/code&gt;&lt;img src=&quot;/uploads/b9d6dd872765fdcdf96f955794c7e221/1F.png&quot;/&gt;&lt;br/&gt;&lt;code&gt;real[3]&lt;/code&gt;&lt;img src=&quot;/uploads/0f7d1d420d40db5c39d880c48f4ae5b9/3F.png&quot;/&gt;&lt;/td&gt;<br>
+&lt;td&gt;Voltage to current phase angle&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;flag&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;bool&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;flag for voltage events&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;harmonics_v&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td style=“vertical-align:middle” rowspan=“2”&gt;&lt;code&gt;real[1][50]&lt;/code&gt;&lt;img src=&quot;/uploads/b9d6dd872765fdcdf96f955794c7e221/1F.png&quot;/&gt;&lt;br/&gt;&lt;code&gt;real[3][50]&lt;code&gt;&lt;img src=&quot;/uploads/0f7d1d420d40db5c39d880c48f4ae5b9/3F.png&quot;/&gt;&lt;/td&gt;<br>
+&lt;td&gt;Voltage harmonics (1 to 50)&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;harmonics_i&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;Current harmonics (1 to 50)&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;/table&gt;</p>
+<p>There are some functions that can be used from any modern programming language. For example, &lt;code&gt;curl&lt;/code&gt; sentences can be used from &lt;code&gt;bash&lt;/code&gt; console. By default, port 8080 is used and option &lt;code&gt;–compress&lt;/code&gt; can be used for compression deflate.<br>
+&lt;!–Las funciones son fácilmente accesibles desde cualquier lenguaje, incluso pueden lanzarse desde linea de comandos usando el comando &lt;code&gt;curl&lt;/code&gt;. Por defecto, el puerto es el 80 y puede indicarse la opción <code>--compress</code> para usar compresión deflate.–&gt;</p>
+<p><code>curl --compress localhost:port/functionName -d '{&quot;param1&quot;:&quot;value1&quot;, &quot;param2&quot;:&quot;value2&quot;, ...}'</code></p>
+<h1><a id="getNodes_146"></a>getNodes</h1>
+<p>Returns information about available capturing nodes. No parameter is required.<br>
+&lt;!–Devuelve información de los nodos de captura disponibles. No requiere ningún parámetro.–&gt;</p>
+<h2><a id="Example_150"></a>Example</h2>
+<p><code>curl localhost:8080/getNodes -d '{}'</code></p>
+<pre><code class="language-json">{
+   "<span class="hljs-attribute">NominalVoltage</span>":<span class="hljs-value"><span class="hljs-number">230</span></span>,
+   "<span class="hljs-attribute">NominalFreq</span>":<span class="hljs-value"><span class="hljs-number">50</span></span>,
+   "<span class="hljs-attribute">Devices</span>":<span class="hljs-value">[
+      {
+         "<span class="hljs-attribute">Name</span>":<span class="hljs-value"><span class="hljs-string">"VirtualDevice"</span></span>,
+         "<span class="hljs-attribute">Type</span>":<span class="hljs-value"><span class="hljs-string">"3Phase"</span></span>,
+         "<span class="hljs-attribute">SampleFreq</span>":<span class="hljs-value"><span class="hljs-number">15625</span></span>,
+         "<span class="hljs-attribute">MaxCurrent</span>":<span class="hljs-value"><span class="hljs-number">20</span>
+      </span>},
+      {
+         "<span class="hljs-attribute">Name</span>":<span class="hljs-value"><span class="hljs-string">"RealDevice"</span></span>,
+         "<span class="hljs-attribute">Type</span>":<span class="hljs-value"><span class="hljs-string">"1Phase"</span></span>,
+         "<span class="hljs-attribute">SampleFreq</span>":<span class="hljs-value"><span class="hljs-number">15625</span></span>,
+         "<span class="hljs-attribute">MaxCurrent</span>":<span class="hljs-value"><span class="hljs-number">20</span>
+      </span>}
+   ]
+</span>}
+</code></pre>
+<h1><a id="getSeries_175"></a>getSeries</h1>
+<p>Returns one or several data series according to the specified range<br>
+&lt;!–Devuelve una o varias series de datos correspondientes al rango que se indique.–&gt;</p>
+<h2><a id="Inputs_179"></a>Inputs</h2>
+<p>&lt;table style=“border:1px solid black”&gt;<br>
+&lt;tr&gt;<br>
+&lt;th&gt;Option&lt;/th&gt;<br>
+&lt;th&gt;Required&lt;/th&gt;<br>
+&lt;th&gt;Default&lt;/th&gt;<br>
+&lt;th&gt;Description&lt;/th&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;Series:&lt;/b&gt;string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;Yes&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt; Series name to gather, separated by commas. For example &lt;code&gt;rms_v,rms_i&lt;/code&gt; to get RMS voltage and current&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;Aggreg&lt;/b&gt;:string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;Yes&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;Preferred aggregation timespan among &lt;code&gt;3s, 1m, 10m&lt;/code&gt; or &lt;code&gt;1h&lt;/code&gt; for 3 seconds, 1 minute, 10 minutes y 1 hour, respectively &lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;LastSample&lt;/b&gt;:date&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;No&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;0&lt;/td&gt;<br>
+&lt;td&gt;Last sample time stamp. Used to fetch data progressively when &lt;code&gt;To&lt;/code&gt; equals to 0&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;To&lt;/b&gt;:date&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;No&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;0&lt;/td&gt;<br>
+&lt;td&gt;date to retrieve data. A 0 value means current timestamp, i.e. now, so data will be retrieved from &lt;code&gt;LastSample&lt;/code&gt; or &lt;code&gt;Period&lt;/code&gt; &lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;Node&lt;/b&gt;:string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;No&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;0&lt;/td&gt;<br>
+&lt;td&gt;Node identifier to be queried&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;Period&lt;/b&gt;:integer&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;No&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;0&lt;/td&gt;<br>
+&lt;td&gt;Time span for data retrieving in ms&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;/table&gt;</p>
+<h2><a id="Ouputs_225"></a>Ouputs</h2>
+<p>&lt;table style=“border:1px solid black”&gt;<br>
+&lt;tr&gt;<br>
+&lt;th&gt;Option&lt;/th&gt;<br>
+&lt;th&gt;Required&lt;/th&gt;<br>
+&lt;th&gt;Default&lt;/th&gt;<br>
+&lt;th&gt;Description&lt;/th&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;From&lt;/b&gt;:date&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code–&lt;/code&lt;/td&gt;<br>
+&lt;td&gt;&lt;code–&lt;/code&lt;/td&gt;<br>
+&lt;td&gt; initial timestamp&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;To&lt;/b&gt;:date&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code–&lt;/code&lt;/td&gt;<br>
+&lt;td&gt;&lt;code–&lt;/code&lt;/td&gt;<br>
+&lt;td&gt; final timestamp &lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;MaxSamples&lt;/b&gt;:integer&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code–&lt;/code&lt;/td&gt;<br>
+&lt;td&gt;&lt;code–&lt;/code&lt;/td&gt;<br>
+&lt;td&gt;Maximum number of samples for the selected interval&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;Aggregation_Source&lt;/b&gt;:string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code–&lt;/code&lt;/td&gt;<br>
+&lt;td&gt;&lt;code–&lt;/code&lt;/td&gt;<br>
+&lt;td&gt;Source of requested data for the selected aggregation method. A maximum of 10 000 points can be fetched at a time. If this limit is reached, the upper aggregation source will be selected.&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;Sampletime&lt;/b&gt;:array&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code–&lt;/code&lt;/td&gt;<br>
+&lt;td&gt;&lt;code–&lt;/code&lt;/td&gt;<br>
+&lt;td&gt; sample time list for the selected data&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;Serie_name&lt;/b&gt;:array&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code–&lt;/code&lt;/td&gt;<br>
+&lt;td&gt;&lt;code–&lt;/code&lt;/td&gt;<br>
+&lt;td&gt; series name for the selected data. It has the same length as &lt;codeSampletime&lt;code&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;/table&gt;</p>
+<h2><a id="Example_271"></a>Example</h2>
+<p><code>curl localhost:8080/getSeries -d '{&quot;Period&quot;:7200000,&quot;To&quot;:0,&quot;Aggreg&quot;:&quot;3s&quot;,&quot;LastSample&quot;:1516797396840,&quot;Series&quot;:&quot;rms_v, flag&quot;,&quot;Node&quot;:0}'</code></p>
+<pre><code class="language-json">{
+   "<span class="hljs-attribute">From</span>":<span class="hljs-value"><span class="hljs-number">1516790204703</span></span>,
+   "<span class="hljs-attribute">To</span>":<span class="hljs-value"><span class="hljs-number">1516797404703</span></span>,
+   "<span class="hljs-attribute">MaxSamples</span>":<span class="hljs-value"><span class="hljs-number">2402</span></span>,
+   "<span class="hljs-attribute">Aggregation_Source</span>":<span class="hljs-value"><span class="hljs-string">"3s"</span></span>,
+   "<span class="hljs-attribute">rms_v</span>":<span class="hljs-value">[
+      [
+         <span class="hljs-number">233.606</span>,
+         <span class="hljs-number">237.037</span>,
+         <span class="hljs-number">239.653</span>
+      ],
+      [
+         <span class="hljs-number">233.559</span>,
+         <span class="hljs-number">236.991</span>,
+         <span class="hljs-number">239.779</span>
+      ]
+   ]</span>,
+   "<span class="hljs-attribute">flag</span>":<span class="hljs-value">[
+      <span class="hljs-literal">false</span>,
+      <span class="hljs-literal">false</span>
+   ]</span>,
+   "<span class="hljs-attribute">Sampletime</span>":<span class="hljs-value">[
+      <span class="hljs-number">1516797399633</span>,
+      <span class="hljs-number">1516797402839</span>
+   ]
+</span>}
+</code></pre>
+<h1><a id="getSeriesAggreg_302"></a>getSeriesAggreg</h1>
+<p>Returns a unique value for the selected series name after applying an aggregation method in the specified interval.</p>
+<h2><a id="Inputs_306"></a>Inputs</h2>
+<p>&lt;table style=“border:1px solid black”&gt;<br>
+&lt;tr&gt;<br>
+&lt;th&gt;Option&lt;/th&gt;<br>
+&lt;th&gt;Required&lt;/th&gt;<br>
+&lt;th&gt;Default&lt;/th&gt;<br>
+&lt;th&gt;Description&lt;/th&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;Series&lt;/b&gt;:string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;Yes&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt; Series name to fetch and function applied to it (delimited by commas), e.g., &lt;code&gt;max(rms)_v&lt;/code&gt; or &lt;code&gt;min(rms_i)&lt;/code&gt; for max and min value of RMS voltage and current, respectively. Several series can be used for the same aggregation method. The following functions are allowed &lt;code&gt;sum&lt;/code&gt;, &lt;code&gt;max&lt;/code&gt;, &lt;code&gt;min&lt;/code&gt;, &lt;code&gt;avg&lt;/code&gt;, &lt;code&gt;rms&lt;/code&gt;, &lt;code&gt;and&lt;/code&gt; and &lt;code&gt;or&lt;/code&gt;, but be aware that not all functions apply to all series.&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;Aggreg&lt;/b&gt;:string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;Yes&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt; Preferred aggregation method. Can be choosen from  &lt;code&gt;3s&lt;/code&gt;, &lt;code&gt;1m&lt;/code&gt;, &lt;code&gt;10m&lt;/code&gt; o &lt;code&gt;1h&lt;/code&gt;&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;To&lt;/b&gt;:date&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;No&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;0&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;   date to retrieve data. A 0 value means current timestamp, i.e. now, so data will be retrieved from &lt;code&gt;LastSample&lt;/code&gt; or &lt;code&gt;Period&lt;/code&gt; &lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;Node&lt;/b&gt;:string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;No&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;0&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;node identifier to be queried&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;Period&lt;/b&gt;:integer&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;No&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;0&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;Time span for data retrieving&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;/table&gt;</p>
+<h2><a id="Outputs_347"></a>Outputs</h2>
+<p>&lt;table style=“border:1px solid black”&gt;<br>
+&lt;tr&gt;<br>
+&lt;th&gt;Option&lt;/th&gt;<br>
+&lt;th&gt;Required&lt;/th&gt;<br>
+&lt;th&gt;Default&lt;/th&gt;<br>
+&lt;th&gt;Description&lt;/th&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;From&lt;/b&gt;:date&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;Initial timestamp&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;To&lt;/b&gt;:date&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;final timestamp&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;Samples&lt;/b&gt;:integer&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt; number of samples retrieved&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;&lt;b&gt;Serie_name&lt;/b&gt;:string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt; function applied to the data.&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;/table&gt;</p>
+<h2><a id="Example_381"></a>Example</h2>
+<p><code>curl localhost:8080/getSeriesAggreg -d '{&quot;Series&quot;:&quot;sum(active_energy)&quot;,&quot;Aggreg&quot;:&quot;1m&quot;,&quot;Period&quot;:86400000,&quot;To&quot;:1516834800000,&quot;Node&quot;:0}'</code></p>
+<pre><code class="language-json">{
+   "<span class="hljs-attribute">Samples</span>":<span class="hljs-value"><span class="hljs-number">809</span></span>,
+   "<span class="hljs-attribute">sum_active_energy</span>":<span class="hljs-value">[
+      <span class="hljs-number">9068.53</span>,
+      <span class="hljs-number">8837.43</span>,
+      <span class="hljs-number">8851.17</span>
+   ]</span>,
+   "<span class="hljs-attribute">From</span>":<span class="hljs-value"><span class="hljs-number">1516748400000</span></span>,
+   "<span class="hljs-attribute">To</span>":<span class="hljs-value"><span class="hljs-number">1516834800000</span>
+</span>}
+</code></pre>
+<h1><a id="getSeriesNow_397"></a>getSeriesNow</h1>
+<p>Returns de current value for one or several data series. This query does not retrieve data from the Database but from the oZm daemon itself after a whole block is processed. If a node is not alive, then no data will be returned.</p>
+<p>In addition to aforementioned series, the following series are also available for on-the-fly analisys (i.e., not stored in the database)</p>
+<p>&lt;table style=“border:1px solid black”&gt;<br>
+&lt;tr&gt;<br>
+&lt;th&gt;Parameter&lt;/th&gt;<br>
+&lt;th&gt;Type&lt;/th&gt;<br>
+&lt;th&gt;Description&lt;/th&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;</p>
+<pre><code>&lt;td&gt;&lt;code&gt;apparent_power&lt;/code&gt;&lt;/td&gt;
+</code></pre>
+<p>&lt;td style=“vertical-align:middle” rowspan=“4”&gt;&lt;code&gt;real[1]&lt;/code&gt;&lt;img src=&quot;/uploads/b9d6dd872765fdcdf96f955794c7e221/1F.png&quot;/&gt;&lt;br/&gt;&lt;code&gt;real[3]&lt;/code&gt;&lt;img src=&quot;/uploads/0f7d1d420d40db5c39d880c48f4ae5b9/3F.png&quot;/&gt;&lt;/td&gt;<br>
+&lt;td&gt;total apparent power&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;fundamental_active_power&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;fundamental active power at 50/60 Hz&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;fundamental_apparent_power&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;fundamental apparent power at 50/60 Hz&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;fundamental_power_factor&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;fundamental power factor at 50/60 Hz&lt;/td&gt;<br>
+&lt;/tr&gt;</p>
+<p>&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;wave_v&lt;/code&gt; &lt;/td&gt;<br>
+&lt;td  style=“vertical-align:middle” rowspan=“2”&gt;&lt;code&gt;real[1][n]&lt;/code&gt;&lt;img src=&quot;/uploads/b9d6dd872765fdcdf96f955794c7e221/1F.png&quot;/&gt;&lt;br/&gt;&lt;code&gt;real[3][n]&lt;/code&gt;&lt;img src=&quot;/uploads/0f7d1d420d40db5c39d880c48f4ae5b9/3F.png&quot;/&gt;&lt;/td&gt;<br>
+&lt;td&gt;raw &lt;code&gt;n&lt;/code&gt;samples for the voltage wave&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;fft_v&lt;/code&gt; &lt;/td&gt;<br>
+&lt;td&gt;absolute value for the FFT applied to voltage wave&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;wave_i&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td  style=“vertical-align:middle” rowspan=“2”&gt;&lt;code&gt;real[1][n]&lt;/code&gt;&lt;img src=&quot;/uploads/b9d6dd872765fdcdf96f955794c7e221/1F.png&quot;/&gt;&lt;br/&gt;&lt;code&gt;real[4][n]&lt;/code&gt;&lt;img src=&quot;/uploads/0f7d1d420d40db5c39d880c48f4ae5b9/3F.png&quot;/&gt;&lt;/td&gt;<br>
+&lt;td&gt;raw &lt;code&gt;n&lt;/code&gt;samples for the current wave&lt;/td&gt;<br>
+&lt;/tr&gt;</p>
+<p>&lt;tr&gt;<br>
+&lt;td&gt;&lt;code&gt;fft_i&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;absolute value for the FFT applied to current wave&lt;/td&gt;<br>
+&lt;/tr&gt;</p>
+<p>&lt;/table&gt;</p>
+<h2><a id="Inputs_451"></a>Inputs</h2>
+<p>&lt;table style=“border:1px solid black”&gt;<br>
+&lt;tr&gt;<br>
+&lt;th&gt;Option&lt;/th&gt;<br>
+&lt;th&gt;Required&lt;/th&gt;<br>
+&lt;th&gt;Default&lt;/th&gt;<br>
+&lt;th&gt;Description&lt;/th&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;Series&lt;/b&gt;:string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;Yes&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt; name series to retrieve, delimited by commas. For example,  &lt;code&gt;rms_v,rms_i&lt;/code&gt; to get RMS voltage and current&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;Node&lt;/b&gt;:string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;No&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;0&lt;/td&gt;<br>
+&lt;td&gt;  node identifier to be queried&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;/table&gt;</p>
+<h2><a id="Outputs_473"></a>Outputs</h2>
+<p>&lt;table style=“border:1px solid black”&gt;<br>
+&lt;tr&gt;<br>
+&lt;th&gt;Option&lt;/th&gt;<br>
+&lt;th&gt;Requiered&lt;/th&gt;<br>
+&lt;th&gt;Default&lt;/th&gt;<br>
+&lt;th&gt;Description&lt;/th&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;<strong>Sampletime</strong>:date&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;data timestamp for the returned values&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&gt;<strong>Serie_name</strong>:array&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt; List with the values for the returned &lt;code&gt;Sampletime&lt;/code&gt;.&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;/table&gt;</p>
+<h2><a id="Example_495"></a>Example</h2>
+<p><code>curl localhost:8080/getSeriesNow -d '{&quot;Series&quot;:&quot;power_factor, thd_v, phi, rms_v, rms_i&quot;,&quot;Node&quot;:0}'</code></p>
+<pre><code class="language-json">{
+   "<span class="hljs-attribute">power_factor</span>":<span class="hljs-value">[
+      <span class="hljs-number">0.9902571439743042</span>,
+      <span class="hljs-number">0.99025511741638184</span>,
+      <span class="hljs-number">0.9902530312538147</span>
+   ]</span>,
+   "<span class="hljs-attribute">thd_v</span>":<span class="hljs-value">[
+      <span class="hljs-number">6.6917618823936209e-07</span>,
+      <span class="hljs-number">1.4311850691228756e-06</span>,
+      <span class="hljs-number">1.3881367522117216e-06</span>
+   ]</span>,
+   "<span class="hljs-attribute">phi</span>":<span class="hljs-value">[
+      -<span class="hljs-number">8.0038509368896484</span>,
+      -<span class="hljs-number">8.0054559707641602</span>,
+      -<span class="hljs-number">8.0053815841674805</span>
+   ]</span>,
+   "<span class="hljs-attribute">rms_v</span>":<span class="hljs-value">[
+      <span class="hljs-number">230.30120849609375</span>,
+      <span class="hljs-number">236.42063903808594</span>,
+      <span class="hljs-number">237.84268188476562</span>
+   ]</span>,
+   "<span class="hljs-attribute">rms_i</span>":<span class="hljs-value">[
+      <span class="hljs-number">4.397191047668457</span>,
+      <span class="hljs-number">4.4521832466125488</span>,
+      <span class="hljs-number">4.6385493278503418</span>,
+      <span class="hljs-number">0.0</span>
+   ]</span>,
+   "<span class="hljs-attribute">Sampletime</span>":<span class="hljs-value"><span class="hljs-number">1516798650833</span>
+</span>}
+</code></pre>
+<h1><a id="getEvents_529"></a>getEvents</h1>
+<p>Returns the events started in the specified time interval.</p>
+<h2><a id="Inputs_533"></a>Inputs</h2>
+<p>&lt;table style=“border:1px solid black”&gt;<br>
+&lt;tr&gt;<br>
+&lt;th&gt;Option&lt;/th&gt;<br>
+&lt;th&gt;Required&lt;/th&gt;<br>
+&lt;th&gt;Default&lt;/th&gt;<br>
+&lt;th&gt;Description&lt;/th&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;LastEvent&lt;/b&gt;:date&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;No&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;0&lt;/td&gt;<br>
+&lt;td&gt;  date time for the last event stored. Used to progressively retrieve events when &lt;code&gt;To&lt;/code&gt; equals to 0.&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;To&lt;/b&gt;:date&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;No&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;0&lt;/td&gt;<br>
+&lt;td&gt; End date to retrieve events. A 0 value means the current time, i.e. now, starting from &lt;code&gt;LastEvent&lt;/code&gt; or applying &lt;code&gt;Period&lt;/code&gt;&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;Node&lt;/b&gt;:string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;No&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;0&lt;/td&gt;<br>
+&lt;td&gt; node identifier to be queried&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;Period&lt;/b&gt;:integer&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;No&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;0&lt;/td&gt;<br>
+&lt;td&gt;time span to be retrieved in ms&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;/table&gt;</p>
+<h2><a id="Outputs_567"></a>Outputs</h2>
+<p>&lt;table style=“border:1px solid black”&gt;<br>
+&lt;tr&gt;<br>
+&lt;th&gt;Option&lt;/th&gt;<br>
+&lt;th&gt;Required&lt;/th&gt;<br>
+&lt;th&gt;Default&lt;/th&gt;<br>
+&lt;th&gt;Description&lt;/th&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;StartTime&lt;/b&gt;:date&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;initial timestamp of the event&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;Duration&lt;/b&gt;:integer&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;duration of the event in samples. Use the sampling frequency to calculate the duration&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;Type&lt;/b&gt;:string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;Type of event: &lt;code&gt;DIP&quot;, &lt;code&gt;SWELL&lt;/code&gt;, &lt;code&gt;RVC&lt;/code&gt;, &lt;code&gt;INTERRUPTION&lt;/code&gt;, &lt;code&gt;GLITCH&lt;/code&gt; (to be implemented)&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;Voltage&lt;/b&gt;:string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;absolute value of voltage variation regarding the reference/nominal voltage for every type of event (For “RVC” the reference voltage is the mean of the las 100 cycles, for  &lt;code&gt;DIP&quot;, &lt;code&gt;SWELL&lt;/code&gt;, &lt;code&gt;INTERRUPTION&lt;/code&gt;the reference is the nominal voltage.&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;Percentage&lt;/b&gt;:string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt; percentage variation for the voltage regarding the reference for the type of  event&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;/table&gt;</p>
+<h2><a id="example_607"></a>example</h2>
+<p><code>curl localhost:8080/getEvents -d '{&quot;LastEvent&quot;:0, &quot;To&quot;:0, &quot;Period&quot;:7200000}'</code></p>
+<pre><code class="language-json">{
+   "<span class="hljs-attribute">From</span>":<span class="hljs-value"><span class="hljs-number">1516963947548</span></span>,
+   "<span class="hljs-attribute">To</span>":<span class="hljs-value"><span class="hljs-number">1516971147548</span></span>,
+   "<span class="hljs-attribute">Starttime</span>":<span class="hljs-value">[
+      <span class="hljs-number">1516969103486</span>
+   ]</span>,
+   "<span class="hljs-attribute">Duration</span>":<span class="hljs-value">[
+      <span class="hljs-number">156250</span>
+   ]</span>,
+   "<span class="hljs-attribute">Type</span>":<span class="hljs-value">[
+      <span class="hljs-string">"DIP"</span>
+   ]</span>,
+   "<span class="hljs-attribute">Voltage</span>":<span class="hljs-value">[
+      -<span class="hljs-number">46.355</span>
+   ]</span>,
+   "<span class="hljs-attribute">Percentage</span>":<span class="hljs-value">[
+      -<span class="hljs-number">20.1543</span>
+   ]
+</span>}
+</code></pre>
+<h1><a id="getEventSamples_631"></a>getEventSamples</h1>
+<p>Returns the voltage samples for an event<br>
+&lt;!–Devuelve las muestras de tensión de un evento.–&gt;</p>
+<h2><a id="Inputs_635"></a>Inputs</h2>
+<p>&lt;table style=“border:1px solid black”&gt;<br>
+&lt;tr&gt;<br>
+&lt;th&gt;Option&lt;/th&gt;<br>
+&lt;th&gt;Required&lt;/th&gt;<br>
+&lt;th&gt;Default&lt;/th&gt;<br>
+&lt;th&gt;Description&lt;/th&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;Starttime&lt;/b&gt;:date&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;Yes&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;0&lt;/td&gt;<br>
+&lt;td&gt;initial timestamp for the event&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;Node&lt;/b&gt;:string&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;No&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;0&lt;/td&gt;<br>
+&lt;td&gt;node identifier to be queried&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;/table&gt;</p>
+<h2><a id="Output_657"></a>Output</h2>
+<p>&lt;table style=“border:1px solid black”&gt;<br>
+&lt;tr&gt;<br>
+&lt;th&gt;Option&lt;/th&gt;<br>
+&lt;th&gt;Required&lt;/th&gt;<br>
+&lt;th&gt;Default&lt;/th&gt;<br>
+&lt;th&gt;Description&lt;/th&gt;<br>
+&lt;/tr&gt;<br>
+&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;Samples&lt;/b&gt;:float[][]&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td  style=“vertical-align:middle”&gt;&lt;code&gt;real[n][1]&lt;/code&gt;&lt;img src=&quot;/uploads/b9d6dd872765fdcdf96f955794c7e221/1F.png&quot;/&gt;&lt;br/&gt;&lt;code&gt;real[n][3]&lt;/code&gt;&lt;img src=&quot;/uploads/0f7d1d420d40db5c39d880c48f4ae5b9/3F.png&quot;/&gt;&lt;/td&gt;<br>
+&lt;td&gt;event samples&lt;/td&gt;<br>
+&lt;/tr&gt;</p>
+<p>&lt;tr&gt;<br>
+&lt;td&gt;&lt;pre&lt;b&gt;Envelope&lt;/b&gt;:integer&lt;/pre&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt;&lt;code&gt;–&lt;/code&gt;&lt;/td&gt;<br>
+&lt;td&gt; the &lt;code&gt;Samples&lt;/code&gt; field contains the previous and subsequent samples of the event along with the samples after the beginning and before the ending of the event.  &lt;code&gt;Envelope&lt;/code&gt; establishes the number of samples corresponding the previous and subsequent. If the event is not too big, all the samples are stores, but on the contrary, only the beginning and the end of the event is stored as detailed in the following figure:<br>
+&lt;br/&gt;<br>
+&lt;img src=&quot;/uploads/ef5b016db00ec2819e0ed4691fd1fde0/envelope.png&quot; alt=“Envelope”/&gt;<br>
+&lt;/td&gt;<br>
+&lt;/tr&gt;<br>
+&lt;/table&gt;</p>
+<h2><a id="Example_683"></a>Example</h2>
+<p><code>curl localhost:8080/getEvents -d '{&quot;LastEvent&quot;:0, &quot;To&quot;:0, &quot;Period&quot;:7200000}'</code></p>
+<pre><code class="language-json">{
+   "<span class="hljs-attribute">From</span>":<span class="hljs-value"><span class="hljs-number">1516963947548</span></span>,
+   "<span class="hljs-attribute">To</span>":<span class="hljs-value"><span class="hljs-number">1516971147548</span></span>,
+   "<span class="hljs-attribute">Starttime</span>":<span class="hljs-value">[
+      <span class="hljs-number">1516969103486</span>
+   ]</span>,
+   "<span class="hljs-attribute">Duration</span>":<span class="hljs-value">[
+      <span class="hljs-number">156250</span>
+   ]</span>,
+   "<span class="hljs-attribute">Type</span>":<span class="hljs-value">[
+      <span class="hljs-string">"DIP"</span>
+   ]</span>,
+   "<span class="hljs-attribute">Voltage</span>":<span class="hljs-value">[
+      -<span class="hljs-number">46.355</span>
+   ]</span>,
+   "<span class="hljs-attribute">Percentage</span>":<span class="hljs-value">[
+      -<span class="hljs-number">20.1543</span>
+   ]
+</span>}
+</code></pre>
+<h1><a id="getSamplesRange_707"></a>getSamplesRange</h1>

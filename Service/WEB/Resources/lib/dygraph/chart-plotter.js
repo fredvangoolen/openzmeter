@@ -235,6 +235,7 @@ function barChartPlotterCubism(e) {
   var Scale = (Height * 3) / (e.axis.maxyval - Midpoint);
   for(var i = 0; i < points.length; i++) {
     var BarHeight = (points[i].yval - Midpoint) * Scale;
+    if((BarHeight > (Height * 3)) || (BarHeight < (-Height * 3))) continue;
     while(true) {
       ctx.fillStyle = (BarHeight > 0) ? ColorP : ColorN;
       if(BarHeight > area.h) {

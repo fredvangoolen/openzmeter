@@ -45,11 +45,6 @@ function AjaxGetEnergy(selected_year) {
     }
   );
 }
-function ShowColorScale(scale, outerdiv) {
-  scale.out('hex');
-  var width = outerdiv.width() - 1;
-  for(i = 0; i <= width; i++) outerdiv.append('<div style="width:1px; height:8px; display:inline; background:' + scale(i / width) + '"></div>');
-}
 function SumPhases(array, visibleSeries) {
   var Energy = 0.0;
   for(phase = 0; phase < visibleSeries.length; phase++) {

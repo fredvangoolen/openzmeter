@@ -66,7 +66,8 @@ bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Data
 }
 bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
-  char    *Analyzer = NULL, *Aggreg = NULL, *Series = NULL;
+  char    *Serial = NULL, *Aggreg = NULL, *Series = NULL;
+  AnalyzerInterface *Analyzer = NULL; 
   json_object_object_foreach(reader, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
@@ -80,9 +81,9 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
     else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastSample") == 0))
       LastSample = json_object_get_int64(JSON_Val);
     else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Analyzer") == 0))
-      Analyzer = (char*)json_object_get_string(JSON_Val);
+      Serial = (char*)json_object_get_string(JSON_Val);
   }
-  if(Analyzer == NULL) {
+  if(Serial == NULL) {
     *postdata  = (char*)"'Analyzer' param is requiered";
     *resultLen = strlen(*postdata);
     return false;
@@ -94,6 +95,15 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
   }
   if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0))) {
     *postdata  = (char*)"'Aggreg' need to be '3s', '1m', '10m' or '1h'";
+    *resultLen = strlen(*postdata);
+    return false;
+  }
+  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+    Analyzer = (*it)->FindAnalyzer(Serial);
+    if(Analyzer != NULL) break;
+  }
+  if(Analyzer == NULL) {
+    *postdata  = (char*)"Analyzer not found";
     *resultLen = strlen(*postdata);
     return false;
   }
@@ -121,21 +131,50 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
     PeriodSeconds = 3600000;
   }
   db->PrepareSentence("SET search_path TO ?");
-  db->BindSingleString(Analyzer);
+  db->BindSingleString(Serial);
   db->ExecSentence();
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"MaxSamples\", ", (To - From) / PeriodSeconds);
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'%s' AS \"Aggregation_Source\", ", Aggreg);
   char *Save;
-  char *Serie = strtok_r(Series, ", ", &Save);
+  char *Serie = Tools::trim(strtok_r(Series, ", ", &Save));
   while(Serie != NULL) {
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(%s ORDER BY sampletime ASC), '{}') AS %s, ", Serie, Serie);
-    Serie = strtok_r(NULL, ", ", &Save);
+    int ArrayLenA = 0, ArrayLenB = 0;
+    if((strcmp(Serie, "rms_v") == 0) || (strcmp(Serie, "active_power") == 0) || (strcmp(Serie, "active_energy") == 0) || (strcmp(Serie, "reactive_power") == 0) || (strcmp(Serie, "reactive_energy") == 0)) {
+      ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : 3;
+    } else if((strcmp(Aggreg, "1m") == 0) && ((strcmp(Serie, "power_factor") == 0) || (strcmp(Serie, "thd_v") == 0) || (strcmp(Serie, "phi") == 0))) {
+      ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : 3;
+    } else if((strcmp(Serie, "freq") == 0) || (strcmp(Serie, "flag") == 0)) {
+    } else if(strcmp(Serie, "rms_i") == 0) {
+      ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : (Analyzer->GetMode() == AnalyzerInterface::PHASE3) ? 3 : 4;
+    } else if((strcmp(Aggreg, "1m") == 0) && (strcmp(Serie, "thd_i") == 0)) { 
+      ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : (Analyzer->GetMode() == AnalyzerInterface::PHASE3) ? 3 : 4;
+    } else if((strcmp(Aggreg, "1h") == 0) && (strcmp(Serie, "price") == 0)) {
+    } else if((strcmp(Aggreg, "1m") == 0) && (strcmp(Serie, "harmonics_v") == 0)) {
+      ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : 3;
+      ArrayLenB = 50;
+    } else if((strcmp(Aggreg, "1m") == 0) && ((strcmp(Serie, "stat_voltage") == 0) || (strcmp(Serie, "stat_frequency") == 0) || (strcmp(Serie, "stat_thd") == 0) || (strcmp(Serie, "stat_harmonics") == 0))) {
+      ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : (Analyzer->GetMode() == AnalyzerInterface::PHASE3) ? 3 : 4;
+      ArrayLenB = 50;
+    } else if((strcmp(Aggreg, "1h") == 0) && (strcmp(Serie, "price") == 0)) {
+    } else {
+      *postdata  = (char*)"Invalid serie in selected aggregation";
+      *resultLen = strlen(*postdata);
+      return false;
+    }
+    if((ArrayLenA != 0) && (ArrayLenB == 0)) {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(CASE WHEN (%s IS NULL OR array_length(%s, 1) <> %d) THEN array_fill(NULL::real, array[%d]) ELSE %s END ORDER BY sampletime ASC), '{}') AS %s, ", Serie, Serie, ArrayLenA, ArrayLenA, Serie, Serie);
+    } else if((ArrayLenA != 0) && (ArrayLenB != 0)) {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(CASE WHEN (%s IS NULL OR array_length(%s, 1) <> %d OR array_length(%s, 2) <> %d) THEN array_fill(NULL::real, array[%d, %d]) ELSE %s END ORDER BY sampletime ASC), '{}') AS %s, ", Serie, Serie, ArrayLenA, Serie, ArrayLenB, ArrayLenA, ArrayLenB, Serie, Serie);
+    } else {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(%s ORDER BY sampletime ASC), '{}') AS %s, ", Serie, Serie);
+    }
+    Serie = Tools::trim(strtok_r(NULL, ", ", &Save));
   }
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS \"Sampletime\" FROM ");
   if(strcmp(Aggreg, "1m") == 0) {
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m) AS Tmp");
   } else if(strcmp(Aggreg, "1h") == 0) {
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1h NATURAL LEFT JOIN aggreg_stat_1h) AS Tmp");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1h NATURAL LEFT JOIN aggreg_stat_1h NATURAL FULL JOIN prices) AS Tmp");
   } else {
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "aggreg_%s", Aggreg);
   }

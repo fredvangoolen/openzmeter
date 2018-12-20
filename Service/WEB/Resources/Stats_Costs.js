@@ -15,30 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-var ActiveEnergyConsumptionData = [], ActiveEnergyCostData = [], ActiveEnergyConsumptionChart = null, ActiveEnergyCostChart = null;
+var CostData = [], CostChart = null;
 function Scrollable_OnSuccess(result, clear) {
-  if(clear)  {
-    ActiveEnergyConsumptionData = [];
-    ActiveEnergyCostData        = [];
-  }
+  if(clear) CostData = [];
   if(result['Sampletime'] !== null && result['Sampletime'].length > 0) {
-    if(ActiveEnergyConsumptionData.length === 0 || ActiveEnergyConsumptionData[ActiveEnergyConsumptionData.length - 1][0] < result['Sampletime'][0]) {
-      for(i = 0; i < result['Sampletime'].length; i++) {
-        ActiveEnergyConsumptionData.push([new Date(result['Sampletime'][i]), result['active_energy'][i], result['price'][i]]);
-        ActiveEnergyCostData.push([new Date(result['Sampletime'][i]), result['active_energy'][i] * result['price'][i] / 1000.0, result['price'][i]]);
-      }
-      ShiftArray(ActiveEnergyConsumptionData, result['MaxSamples']);
-      ShiftArray(ActiveEnergyCostData, result['MaxSamples']);
+    if(CostData.length === 0 || CostData[CostData.length - 1][0] < result['Sampletime'][0]) {
+      for(var i = 0; i < result['Sampletime'].length; i++) CostData.push([new Date(result['Sampletime'][i]), result['active_energy'][i], result['price'][i], result['active_energy'][i] * result['price'][i] / 1000.0]);
+      ShiftArray(CostData, result['MaxSamples']);
     }
   }
-  if(ActiveEnergyConsumptionChart == null) {
-    ActiveEnergyConsumptionChart = new Dygraph(document.getElementById("ActiveEnergyConsumptionChart"), ActiveEnergyConsumptionData,
+  if(CostChart == null) {
+    CostChart = new Dygraph(document.getElementById("CostChart"), CostData,
       { strokeWidth: 0.5, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], dateWindow: [result['From'], result['To']], includeZero: true, plotter: barChartLineNoSpacedPlotter,
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time', 'Consumption', 'Price'],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time', 'Consumption', 'Price', 'Cost'],
         zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
-        colors: [$('#ActiveEnergyConsumptionPanel').css('border-color'), '#d9534f'], plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
+        colors: [$('#CostPanel').css('border-color'), '#d9534f'], plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
         underlayCallback: function(context, area, dygraph) { GraphHightlightWeekends("#EEE", context, area, dygraph); },
-        series: {'Price': { axis: 'y2' } },
+        series: {'Price': { axis: 'y2' }, 'Cost': { strokeWidth: 0 } }, xAxisHeight: 20,
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + ' <em class="x-small">' + Units + 'Wh</em>'; },
@@ -52,184 +45,76 @@ function Scrollable_OnSuccess(result, clear) {
           }
         }
     );
+    $(window).bind('resize', CostResizeEvent);
+    window.dispatchEvent(new Event('resize'));
+    new GraphTools('Energy costs', CostChart, '#toolbarCost', CostResizeEvent, function() { exportToCsv('Costs.csv', [['Time', 'Consumption', 'Price', 'Cost']].concat(CostData)); });
   } else {
-    ActiveEnergyConsumptionChart.updateOptions({file: ActiveEnergyConsumptionData, dateWindow: [result['From'], result['To']] });
+    CostChart.updateOptions({file: CostData, dateWindow: [result['From'], result['To']] });
   }
-  if(ActiveEnergyCostChart == null) {
-    ActiveEnergyCostChart = new Dygraph(document.getElementById("ActiveEnergyCostChart"), ActiveEnergyCostData,
-      { strokeWidth: 0.5, stepPlot: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], dateWindow: [result['From'], result['To']], includeZero: true, plotter: barChartLineNoSpacedPlotter,
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time', 'Cost', 'Price'],
-        zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
-        colors: [$('#ActiveEnergyCostPanel').css('border-color'), '#d9534f'], plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
-        underlayCallback: function(context, area, dygraph) { GraphHightlightWeekends("#EEE", context, area, dygraph); },
-        series: {'Price': { axis: 'y2' } },
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">' + '€' + '</em>'; },
-               axisLabelFormatter: function (x) { return Round2(x); }
-             },
-          y2: { pixelsPerLabel: 15, axisLabelWidth: 26,
-                valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">€/kWh</em>'; },
-                axisLabelFormatter: function (x) { return Round2(x); }
-              },
-          x: MainScrollable.XAxis
+}
+function CostResizeEvent() {
+  if(CostChart !== null) CostChart.resize('100%', $('#CostPanel > .panel-body > .row > div:first-child').height());
+}
+/* Costs counters */
+function Scrollable_UpdateCounters(times, renew) {
+  if(renew === true) {
+    $('#labelPricePrimary').text(times.PrimaryText + ' average kWh price');
+    $('#labelEnergyPrimary').text(times.PrimaryText + ' energy');
+    $('#labelBudgetPrimary').text(times.PrimaryText + ' budget');
+    $('#labelPricePrimaryValue, #labelEnergyPrimaryValue, #labelBudgetPrimaryValue').text('Calculating...');
+    $('#labelPricePrimaryUnits #labelEnergyPrimaryUnits, #labelBudgetUnits').text('');
+    $('#labelPriceSecondary, #labelEnergySecondary, #labelBudgetSecondary').text(times.SecondaryText);
+    $('#labelPriceSecondaryValue, #labelEnergySecondaryValue, #labelBudgetSecondaryValue').text((times.SecondaryTo !== undefined) ? 'Calculating...' : '');
+    if(times.SecondaryTo !== undefined) {
+      Ajax.GetSeriesAggreg(times.SecondaryPeriod, times.SecondaryTo, times.PreferedAggreg, 'sum(active_energy)', 
+        function(result) {
+          if(result['Samples'] !== 0) {
+            var Sum = ArraySum(result['sum_active_energy']);
+            var Units = GetBestUnits(Sum);
+            var Text = Round2(ScaleToUnits(Sum, Units)) + '&nbsp;' + Units + 'Wh';
+            if(result['sum_active_energy'].length > 1) Text += '(' + Array_Round2(ScaleArrayToUnits(result['sum_active_energy'], Units), '&nbsp;&nbsp;') + ')';
+            $('#labelEnergySecondaryValue').html(Text);
+          } else {
+            $('#labelEnergySecondaryValue').text('No data');
+          }
+          window.dispatchEvent(new Event('resize'));
+        }
+      );
+      Ajax.GetPrices(times.SecondaryPeriod, times.SecondaryTo, 0,
+        function(result) {
+          if(result['Sampletime'].length !== 0) {
+            $('#labelBudgetUnits').text('€');
+            var Budget = 0.0;
+            for(var i = 0; i < result['Sampletime'].length; i++) Budget += result['active_energy'][i] * result['price'][i] / 1000.0;
+            $('#labelBudgetSecondaryValue').html(Round2(Budget));
+          } else {
+            $('#labelBudgetSecondaryValue').text('No data');
           }
         }
-    );
-    Dygraph.synchronize([ActiveEnergyConsumptionChart, ActiveEnergyCostChart], { range: false, zoom: false } );
-  } else {
-    ActiveEnergyCostChart.updateOptions({file: ActiveEnergyCostData, dateWindow: [result['From'], result['To']]});
+      );
+    }
   }
-//  EnergySeries();
-}
-function ActiveEnergyResizeEvent() {
-  var Height = $('#ActiveEnergyCurrentPanel').height() + $('#ActiveEnergyPrevPanel').height() + $('#ActiveEnergySelectedPanel').height();
-  if(ActiveEnergyChart !== null) ActiveEnergyChart.resize($('#ActiveEnergyCol').width(), Height + 6);
-}
-function EnergySeries(event) {
-  GraphPhaseButtons(ActiveEnergyChart, $('#groupEnergyPhases'), 'VisibleEnergyPhases', false, function(series) { return CalcRanges(ActiveEnergyData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
-  GraphPhaseButtons(ReactiveEnergyChart, $('#groupEnergyPhases'), 'VisibleEnergyPhases', false, function(series) { return CalcRanges(ReactiveEnergyData, series, true, false, true); }, undefined); 
-}
-$('#groupEnergyPhases').on('click', 'button', EnergySeries);
-
-$('#btnShowEnergy').click(function() {
-  $('#EnergyPowerTitle').text('Energy');
-  $('#EnergySubPanel').removeClass('hidden');
-  $('#PowerSubPanel').addClass('hidden');
-  if(ActiveEnergyChart) $(ActiveEnergyChart.graphDiv).parent().removeAttr('style');
-  if(ReactiveEnergyChart) $(ReactiveEnergyChart.graphDiv).parent().removeAttr('style');
-  window.dispatchEvent(new Event('resize'));
-  $('#btnShowEnergy').addClass('active');
-  $('#btnShowPower').removeClass('active');
-  localStorage.setItem('EnergyPowerTab', 'Energy');
-});
-$('#btnShowPower').click(function() {
-  $('#EnergyPowerTitle').text('Power');
-  $('#EnergySubPanel').addClass('hidden');
-  $('#PowerSubPanel').removeClass('hidden');
-  if(ActivePowerChart) $(ActivePowerChart.graphDiv).parent().removeAttr('style');
-  if(ReactivePowerChart) $(ReactivePowerChart.graphDiv).parent().removeAttr('style');
-  window.dispatchEvent(new Event('resize'));
-  $('#btnShowEnergy').removeClass('active');
-  $('#btnShowPower').addClass('active');
-  localStorage.setItem('EnergyPowerTab', 'Power');
-});
-
-/* Maximizar y minimizar graficos */
-var DialogElement           = null;
-var PrevDialogContainer     = null;
-var DialogResizeHandler     = null;
-var DialogPrevResizeHandler = null;
-$('#aggreg_modal_close').click(function() {
-  $('#aggreg_modal').modal('hide');
-});
-$('#btnMaximizeActiveEnergy').click(function() {
-  $('#GraphDialogTitle').text('Active Energy');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#ActiveEnergyCol');
-  DialogElement = $('#ActiveEnergyMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(ActiveEnergyChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    ActiveEnergyChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-$('#btnMaximizeReactiveEnergy').click(function() {
-  $('#GraphDialogTitle').text('Reactive Energy');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#ReactiveEnergyCol');
-  DialogElement = $('#ReactiveEnergyMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(ReactiveEnergyChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    ReactiveEnergyChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-$('#btnMaximizeActivePower').click(function() {
-  $('#GraphDialogTitle').text('Active Power');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#ActivePowerCol');
-  DialogElement = $('#ActivePowerMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(ActivePowerChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    ActivePowerChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-$('#btnMaximizeReactivePower').click(function() {
-  $('#GraphDialogTitle').text('Reactive Power');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#ReactivePowerCol');
-  DialogElement = $('#ReactivePowerMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(ReactivePowerChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    ReactivePowerChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-$('#GraphDialogClose').click(function() {
-  $(window).unbind('resize', DialogResizeHandler);
-  $(window).bind('resize', DialogPrevResizeHandler);
-  $(PrevDialogContainer).append(DialogElement);
-  $('#GraphDialog').modal('hide');
-  window.dispatchEvent(new Event('resize'));
-});
-
-/* Contadores de energia */
-var EnergyCountersTimer  = null;
-function Scrollable_UpdateCounters(change) {
-  if(EnergyCountersTimer != null) clearInterval(EnergyCountersTimer);
-  EnergyCountersTimer = setTimeout(EnergyCountersTimer, 60000);
-  var Times = GetCountersTimePeriod();
-  if(change === true) {
-
-  }
-  Ajax.GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, 'sum(active_energy)',
+  Ajax.GetSeriesAggreg(times.PrimaryPeriod, times.PrimaryTo, times.PreferedAggreg, 'sum(active_energy)', 
     function(result) {
+      var Sum = ArraySum(result['sum_active_energy']);
+      var Units = GetBestUnits(Sum);
+      $('#labelEnergyPrimaryValue').html(Round2(ScaleToUnits(Sum, Units)))
+      $('#labelEnergyPrimaryUnits').text(Units + 'Wh');
+      if(result['sum_active_energy'].length > 1) $('#labelEnergyPrimaryPhases').html('By phases:&nbsp;&nbsp;' + Array_Round2(ScaleArrayToUnits(result['sum_active_energy'], Units), '&nbsp;&nbsp;') + '&nbsp;&nbsp;' + Units + 'Wh');
+      window.dispatchEvent(new Event('resize'));
     }
   );
-  if(Times.SecondaryTo !== undefined) {
-    Ajax.GetSeriesAggreg(Times.SecondaryPeriod, Times.SecondaryTo, Times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)',
-      function(result) {
-      }
-    );
-  } else {
-  }
+  Ajax.GetPrices(times.PrimaryPeriod, times.PrimaryTo, 0,
+    function(result) {
+      $('#labelBudgetUnits').text('€');
+      var Budget = 0.0;
+      for(var i = 0; i < result['Sampletime'].length; i++) Budget += result['active_energy'][i] * result['price'][i] / 1000.0;
+      $('#labelBudgetPrimaryValue').html(Round2(Budget));
+    }
+  );
 }
-
-
-/* Secuencia de inicio para cargar la pagina */
+/* Page startup sequence */
 var MainScrollable = null;
 function UpdatePage() {
-  MainScrollable = new Scrollable( {Spinners: ['#ActiveEnergyConsumptionSpinner', '#ActiveEnergyCostSpinner'], Series: 'Prices', OnSuccess: Scrollable_OnSuccess} );
+  MainScrollable = new Scrollable( {Spinners: ['#CostSpinner'], Series: 'Prices', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
 }
-
-/* Exportar datos */
-$('#btnExportActivePower').click(function() {
-  exportToCsv("ActivePower_" + Node + '_' + LastEnergyPowerSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Active Power R', 'Active Power S', 'Active Power T']] : [['DateTime', 'Active Power']]).concat(ActivePowerData));
-});
-$('#btnExportReactivePower').click(function() {
-  exportToCsv("ReactivePower_" + Node + '_' + LastEnergyPowerSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Reactive Power R', 'Reactive Power S', 'Reactive Power T']] : [['DateTime', 'Reactive Power']]).concat(ReactivePowerData));
-});
-$('#btnExportActiveEnergy').click(function() {
-  exportToCsv("ActiveEnergy_" + Node + '_' + LastEnergyPowerSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Active Energy R', 'Active Energy S', 'Active Energy T']] : [['DateTime', 'Active Energy']]).concat(ActiveEnergyData));
-});
-$('#btnExportReactiveEnergy').click(function() {
-  exportToCsv("ReactiveEnergy_" + Node + '_' + LastEnergyPowerSample + '.csv', ((Nodes['Devices'][Node]['Type'] == '3Phase') ? [['DateTime', 'Reactive Energy R', 'Reactive Energy S', 'Reactive Energy T']] : [['DateTime', 'Reactive Energy']]).concat(ReactiveEnergyData));
-});//792

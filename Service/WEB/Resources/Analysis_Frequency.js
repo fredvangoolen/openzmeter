@@ -26,7 +26,7 @@ function Scrollable_OnSuccess(result, clear) {
     FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"), FrequencyData,
       { strokeWidth: 0.5, stepPlot: true, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4],
         legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ["Time", "Frequency"], dateWindow: [result['From'], result['To']],
-        colors: $('#FreqeuncyPanel').css('border-color'), plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
+        colors: [$('#FrequencyPanel').css('border-color')], plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], xAxisHeight: 24,
         zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },
         underlayCallback: function(canvas, area, g) {
           var NF = Analyzers[Analyzer].NominalFreq, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
@@ -43,35 +43,17 @@ function Scrollable_OnSuccess(result, clear) {
           }
         }  
     );
-    $(window).bind('resize', function() { FrequencyChart.resize($('#FrequencyCol').width(), $('#panelCounters').height() - 4); });
+    $(window).bind('resize', FrequencyResizeEvent);
     window.dispatchEvent(new Event('resize'));
+    new GraphTools('Frequency', FrequencyChart, '#toolbarFrequency', FrequencyResizeEvent, function() { exportToCsv('Frequency.csv', [['Index', 'Frequency']].concat(FrequencyData)); });
   } else {
     FrequencyChart.updateOptions( {'file': FrequencyData, valueRange: CalcRanges(FrequencyData, [1], false), dateWindow: [result['From'], result['To']]});
   }
   FrequencyChart.updateOptions({ valueRange: CalcRanges(FrequencyData, [1]) });
 }
-$('#btnMaximizeFrequency').click(function() {
-  $('#GraphDialogTitle').text('Frequency');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#FrequencyCol');
-  DialogElement = $('#FrequencyMaximizeDiv').detach();
-  DialogPrevResizeHandler = FrequencyResizeEvent;
-  DialogResizeHandler = function() {
-    FrequencyChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 110);
-  };
-  $(window).unbind('resize', FrequencyResizeEvent);
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-$('#btnExportFrequency').click(function() {
-  var Data = [];
-  var Filename = "Frequency_" + LastFrequencyTime + '.csv';
-  Data.push([['Index', 'Frequency']]);
-  Data = Data.concat(FrequencyData);
-  exportToCsv(Filename, Data);
-});
-
+function FrequencyResizeEvent() {
+  if(FrequencyChart != null) FrequencyChart.resize('100%', $('#FrequencyPanel > .panel-body > .row > div:first-child').height());
+}
 /* Contadores de frequencia */
 var FrequencyCountersTimer  = null;
 function Scrollable_UpdateCounters(times, renew) {
@@ -105,20 +87,6 @@ function Scrollable_UpdateCounters(times, renew) {
     }
   );
 }
-/* Ventana de maximizar y de error de agregaciones */
-var DialogElement           = null;
-var PrevDialogContainer     = null;
-var DialogResizeHandler     = null;
-var DialogPrevResizeHandler = null;
-
-$('#GraphDialogClose').click(function() {
-  $(window).unbind('resize', DialogResizeHandler);
-  $(window).bind('resize', DialogPrevResizeHandler);
-  $(PrevDialogContainer).append(DialogElement);
-  $('#GraphDialog').modal('hide');
-  window.dispatchEvent(new Event('resize'));
-});
-
 var MainScrollable = null;
 function UpdatePage() {
   MainScrollable = new Scrollable( {Spinners: ['#FrequencySpinner'], Series: 'freq', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters} );

@@ -1,5 +1,6 @@
 #include <string.h>
 #include <netdb.h>
+#include <errno.h>
 #include <unistd.h>
 #include "NTP.h"
 #include "HTTPServer.h"

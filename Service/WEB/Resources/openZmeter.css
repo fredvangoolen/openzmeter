@@ -166,19 +166,16 @@ body {
   }
 }
 @media(min-width:768px) {
-  #wrapper {
-    left: 256px;
-    top: 56px;
+  .navbar-toggle {
+    display: block;
   }
-  .sidenav {
-    transform: none;
+  #wrapper {
     top: 56px;
-    box-shadow: none;
   }
   .indicator-bar {
     background-image: none;
     position: absolute;
-    right: 0px;
+    right: 54px;
     text-align: right;
     border: none;
   }
@@ -193,6 +190,22 @@ body {
   }
   .indicator-bar {
     font-size: 18x;
+  }
+}
+@media(min-width:1024px) {
+  .sidenav {
+    transform: none;
+    top: 56px;
+    box-shadow: none;
+  }
+  .navbar-toggle {
+    display: none;
+  }
+  .indicator-bar {
+    right: 0px;
+  }
+  #wrapper {
+    left: 256px;
   }
 }
 .indicator-bar > div {

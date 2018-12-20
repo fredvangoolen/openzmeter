@@ -52,5 +52,6 @@ class Tools {
     static bool         JSONArrayFloat(const json_object *obj, const char *key, float *dst, uint len);
     static uint8_t     *GetFile(const char *mame, size_t *size);
     static json_object *GetConfigObject();
+    static char        *trim(char *str);
 };
 //----------------------------------------------------------------------------------------------------------------------

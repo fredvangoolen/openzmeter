@@ -16,7 +16,7 @@ class DeviceInterface {
       ConstructorFunction  Constructor;
     } Type_t;
   private :
-    static vector<Type_t>           pRegisteredTypes; 
+    static vector<Type_t>           pRegisteredTypes;
     static vector<DeviceInterface*> pDevices;
   protected :
     pthread_t pCaptureThread;           //Descriptor del hilo de captura

@@ -305,3 +305,6 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
   }  
   return Result;
 }
+AnalyzerInterface::AnalyzerMode AnalyzerInterface::GetMode() {
+  return pMode;
+}

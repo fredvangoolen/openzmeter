@@ -10,7 +10,7 @@ LDFLAGS  = -lm -ljson-c -ldbus-1 -lcurl -lpthread -lz -lpq -lfftw3f -lstdc++ -lu
 
 #Specific options
 debug: CXXFLAGS += -O0 -g
-release: CXXFLAGS += -Os
+release: CXXFLAGS += -Os -Wall
 
 #Source and targets files
 TARGET_EXEC  = openZmeter

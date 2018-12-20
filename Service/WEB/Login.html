@@ -23,6 +23,8 @@
         display: table-cell;
         vertical-align: middle;
         width: 100%;
+        position: relative;
+        z-index: 10;
       }
       .card {
         max-width: 350px;
@@ -41,9 +43,15 @@
       .alert {
         margin-top: 10px;
       }
+      #divParticles {
+        position: absolute; 
+        width: 100%; 
+        height: 100%
+      }
     </style>
   </head>
   <body onload="StartPageLoad()">
+    <div id="divParticles"></div>
     <div class="container">
       <div class="card">
         <div>
@@ -70,6 +78,7 @@
       </div>
     </div>
     <script src="lib/jquery.min.js"></script>
+    <script src="lib/particles.min.js"></script>
     <script src="Login.js"></script>
   </body>
 </html>

@@ -65,6 +65,9 @@ function UpdateHeatMap(visibleSeries) {
     });
   });
   var Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
+  $('#MapMin').html(Round2(ScaleToUnits(Min, Units)));
+  $('#MapMax').html(Round2(ScaleToUnits(Max, Units)));
+  $('#MapUnits').html(Units + 'Wh');
   var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]);
   var Len = 0;
   Days.slice().reverse().forEach(function(Day) {
@@ -113,6 +116,8 @@ function UpdatePage() {
         EnergySeries();
       });
       AjaxGetEnergy(new Date(result['To']).getFullYear());
+      var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]);
+      ShowColorScale(ColorScale, $('#CalendarScale'));
     }
   );
 }
