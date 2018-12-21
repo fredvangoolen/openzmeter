@@ -25,7 +25,7 @@ var SeriesNames = {
 };
   
 /* redirect ajax error to login page */
-//$(document).ajaxError(function (event, jqxhr, settings, exception) { if(jqxhr.status === 401) window.location.href = 'Login'; });
+$(document).ajaxError(function (event, jqxhr, settings, exception) { if(jqxhr.status === 401) window.location.href = 'Login'; });
 /* handle buttons events to avoid 'selected' effect */
 $(document).on("mousedown", ":button", function(e) { e.preventDefault(); this.blur(); } );
 
@@ -270,20 +270,21 @@ function Live(opt) {
   this.DetailPaused = false;
   this.LastSample = 0;
   this.Timer = null;
-  this.Opt = Object.assign({PauseBtn: '#btnPause', Spinners: [], Series: ''}, opt);
+  this.Opt = Object.assign({NowBtn: '#btnPause', Spinners: [], Series: ''}, opt);
   var Self = this;
-  $(Self.Opt.PauseBtn).click(function() {
+  $(Self.Opt.NowBtn).click(function() {
     Self.DetailPaused = !Self.DetailPaused;
     if(Self.DetailPaused) {
-      $(Self.Opt.PauseBtn).addClass('active');
+      $(Self.Opt.NowBtn).removeClass('active');
       if(Self.Timer !== null) clearInterval(Self.Timer);
     } else {
-      $(Self.Opt.PauseBtn).removeClass('active');
+      $(Self.Opt.NowBtn).addClass('active');
       Self.GetSeries();
     }
   });
+  $(Self.Opt.NowBtn).addClass('active');
   Self.GetSeries = function() {
-    $(Self.Opt.PauseBtn).addClass('disabled');
+    $(Self.Opt.NowBtn).addClass('disabled');
     Ajax.GetSeriesNow(Self.Opt.Series, 
       function(result) {
         for(var i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
@@ -291,7 +292,7 @@ function Live(opt) {
         Self.LastSample = result['Sampletime'];
       },
       function() {
-        $(Self.Opt.PauseBtn).removeClass('disabled');
+        $(Self.Opt.NowBtn).removeClass('disabled');
         Self.Timer = setTimeout(Self.GetSeries, 3000);
       }
     );
@@ -360,11 +361,11 @@ function GraphTools(title, graph, toolbar, resizeHandler, exportFunction) {
   this.Graph = graph;
   this.Title = title;
   this.PrevHandler = resizeHandler;
-  this.PrevContainer = $(graph.graphDiv).parent().parent();
+  this.Graph = graph;
   this.Toolbar = toolbar;
   var Self = this;
   Self.DialogResizeHandler = function() {
-    Self.Graph.resize($('#MaximizeDialogBody').width(), $('#MaximizeDialogContents').height() - 90);
+    ((typeof(Self.Graph) === 'function') ? Self.Graph() : Self.Graph).resize($('#MaximizeDialogBody').width(), $('#MaximizeDialogContents').height() - 90);
   }
   $(Self.Toolbar + ' button[data-function="Maximize"]').click(function(evt) {
     if($('#dlgMaximizeDialog').hasClass('in')) {
@@ -372,8 +373,8 @@ function GraphTools(title, graph, toolbar, resizeHandler, exportFunction) {
       $('#MaximizeToolbar button[data-function="Maximize"] > i').removeClass('fa-compress');
       $('#MaximizeToolbar button[data-function="Maximize"]').attr('title', 'Maximize graph');
       $(window).unbind('resize', Self.DialogResizeHandler);
-      $(Self.PrevContainer).append($(Self.Graph.graphDiv).parent().detach());
-      $(Self.Graph.graphDiv).parent().removeAttr('style');
+      $(Self.PrevContainer).append($(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph()).graphDiv).parent().detach());
+      $(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph()).graphDiv).parent().removeAttr('style');
       if(Self.PrevHandler !== undefined) $(window).bind('resize', Self.PrevHandler);
       $(Self.Toolbar).append($('#MaximizeToolbar').children().detach());
       $('#dlgMaximizeDialog').modal('hide');
@@ -381,11 +382,12 @@ function GraphTools(title, graph, toolbar, resizeHandler, exportFunction) {
       $(Self.Toolbar + ' button[data-function="Maximize"] > i').removeClass('fa-expand');
       $(Self.Toolbar + ' button[data-function="Maximize"] > i').addClass('fa-compress');
       $(Self.Toolbar + ' button[data-function="Maximize"]').attr('title', 'Minimize graph');
+      Self.PrevContainer = $(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph()).graphDiv).parent().parent();
       if(Self.PrevHandler !== undefined) $(window).unbind('resize', Self.PrevHandler);
       $('#dlgMaximizeDialog').modal('show');
-      $('#MaximizeDialogTitle').text(Self.Title);
+      $('#MaximizeDialogTitle').text((typeof(Self.Title) === 'function') ? Self.Title() : Self.Title);
       $('#MaximizeToolbar').append($(Self.Toolbar).children().detach());
-      $('#MaximizeDialogBody').append($(Self.Graph.graphDiv).parent().detach());
+      $('#MaximizeDialogBody').append($(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph()).graphDiv).parent().detach());
       $(window).bind('resize', Self.DialogResizeHandler);
     }
     window.dispatchEvent(new Event('resize'));
@@ -625,7 +627,9 @@ function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter 
       plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
       legendFormatter: function(data) {
         if(data.x == null) {
-          return '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
+          var Value = '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
+          if(data.dygraph.user_attrs_.labels[0] !== 'Time') Value = Value + '<br/><span style="vertical-align:middle; font-size:14px"><i class="fa fa-play-circle" aria-hidden="true"></i><span style="font-size: 20px; font-weight: bold"> ' + data.dygraph.user_attrs_.labels[0] + '</span></span>';
+          return  Value;
         } else {
           var Caption = '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' + data.xHTML;
           for(var i = 0; i < data.series.length; i++)  {
