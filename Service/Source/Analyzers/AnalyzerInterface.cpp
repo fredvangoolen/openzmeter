@@ -162,7 +162,7 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
   Params_t    Params;
   InitAggreg(&Params, AGGREG_10C);
 //  ExtParams_t ExtParams;
-  bool RMS_V = false, RMS_I = false, Active_Power = false, Apparent_Power = false, Power_Factor = false, Active_Energy = false,
+  bool RMS_V = false, RMS_I = false, Active_Power = false, Reactive_Power = false, Apparent_Power = false, Power_Factor = false, Active_Energy = false,
        Frequency = false, Flag = false, THD_V = false, THD_I = false, VoltageHarmonics = false, CurrentHarmonics = false, Phi = false,
        Voltage = false, Current = false, FFT_V = false, FFT_I = false, QueryParams = false, QueryParamsExt = false;
   char *Save;
@@ -171,6 +171,7 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
     if(strcmp(Serie, "rms_v") == 0)               RMS_V = QueryParams = true;
     else if(strcmp(Serie, "rms_i") == 0)          RMS_I = QueryParams = true;
     else if(strcmp(Serie, "active_power") == 0)   Active_Power = QueryParams = true;
+    else if(strcmp(Serie, "reactive_power") == 0) Reactive_Power = QueryParams = true;
     else if(strcmp(Serie, "apparent_power") == 0) Apparent_Power = QueryParams = true;
     else if(strcmp(Serie, "power_factor") == 0)   Power_Factor = QueryParams = true;
     else if(strcmp(Serie, "active_energy") == 0)  Active_Energy = QueryParams = true;
@@ -205,6 +206,11 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
     json_object *Obj = json_object_new_array();
     for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params.Active_Power[i]));
     json_object_object_add(Result, "active_power", Obj);
+  }
+  if(Reactive_Power) {
+    json_object *Obj = json_object_new_array();
+    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, json_object_new_double(Params.Reactive_Power[i]));
+    json_object_object_add(Result, "reactive_power", Obj);
   }
   if(Apparent_Power) {
     json_object *Obj = json_object_new_array();

@@ -245,8 +245,8 @@ function PeriodViewParams_OnSuccess(result) {
   ReactiveData = GraphDataAppend(result, 'reactive_power', ReactiveData);
   PowerFactorData = GraphDataAppend(result, 'power_factor', PowerFactorData);
   PhiData  = GraphDataAppend(result, 'phi', PhiData);
-  result['thd_v'] = result['thd_v'].map(function(x) { return x * 100.0; });
-  result['thd_i'] = result['thd_i'].map(function(x) { return x * 100.0; });
+//  result['thd_v'] = result['thd_v'].map(function(x) { return x * 100.0; });
+//  result['thd_i'] = result['thd_i'].map(function(x) { return x * 100.0; });
   THDVData = GraphDataAppend(result, 'thd_v', THDVData);
   THDIData = GraphDataAppend(result, 'thd_i', THDIData);
   if(ReactiveChart === null) {
@@ -254,8 +254,8 @@ function PeriodViewParams_OnSuccess(result) {
     ReactiveChart    = AppendCubismGraph($('#EvolutionPanel'), ReactiveData,    "Reactive Power", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'VAr</em>'; });
     PowerFactorChart = AppendCubismGraph($('#EvolutionPanel'), PowerFactorData, "Power Factor",   [result['From'], result['To']], function (x) { return Round2(x); });
     PhiChart         = AppendCubismGraph($('#EvolutionPanel'), PhiData,         "Angle",          [result['From'], result['To']], function (x) { return Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'; });
-    THDVChart        = AppendCubismGraph($('#EvolutionPanel'), THDVData,        "Voltage THD",    [result['From'], result['To']], function (x) { return Round2(x) + '<em>%</em>'; });
-    THDIChart        = AppendCubismGraph($('#EvolutionPanel'), THDIData,        "Current THD",    [result['From'], result['To']], function (x) { return Round2(x) + '<em>%</em>'; });
+    THDVChart        = AppendCubismGraph($('#EvolutionPanel'), THDVData,        "Voltage THD",    [result['From'], result['To']], function (x) { return Round2(x * 100.0) + '<em>%</em>'; });
+    THDIChart        = AppendCubismGraph($('#EvolutionPanel'), THDIData,        "Current THD",    [result['From'], result['To']], function (x) { return Round2(x * 100.0) + '<em>%</em>'; });
     Dygraph.synchronize([ActiveChart, ReactiveChart, PowerFactorChart, PhiChart, THDVChart, THDIChart], { range: false, zoom: false });
   } else {
     ActiveChart.updateOptions({ file: ActiveData, dateWindow: [result['From'], result['To']] });
@@ -270,15 +270,25 @@ function PeriodViewParams_OnSuccess(result) {
 function ParametersSeries(event) {
   GraphPhaseButtons(ActiveChart,      $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(ActiveData, series, false)); return [-Range, Range]; }, (event !== undefined) ? event.target : undefined); 
   GraphPhaseButtons(ReactiveChart,    $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(ReactiveData, series, false)); return [-Range, Range]; }, (event !== undefined) ? event.target : undefined); 
-  GraphPhaseButtons(PowerFactorChart, $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { return CalcRanges(PowerFactorData, series, false); }, undefined); 
+  GraphPhaseButtons(PowerFactorChart, $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PowerFactorData, series, false)); return [-Range, Range]; }, undefined); 
   GraphPhaseButtons(PhiChart,         $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PhiData, series, false, false, false, true)); return [-Range, Range]; }, undefined); 
   GraphPhaseButtons(THDVChart,        $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(THDVData, series, false, true, false, true)); return [-Range, Range]; }, undefined); 
   GraphPhaseButtons(THDIChart,        $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(THDIData, series, false, true, false, true)); return [-Range, Range]; }, undefined); 
+}
+
+function Live_OnSuccess(result) {
+  SetCubismNowLabel(ActiveChart, result['active_power']);
+  SetCubismNowLabel(ReactiveChart, result['reactive_power']);
+  SetCubismNowLabel(PowerFactorChart, result['power_factor']);
+  SetCubismNowLabel(PhiChart, result['phi']);
+  SetCubismNowLabel(THDVChart, result['thd_v']);
+  SetCubismNowLabel(THDIChart, result['thd_i']);
 }
 $('#groupParametersPhases').on('click', 'button', ParametersSeries);
 var MainScrollable = null;
 function UpdatePage() {
   MainScrollable = new Scrollable( {Spinners: ['#EnergySpinner'], NowBtn: '#toolbarEnergy button[data-function="Update"]', Series: 'active_energy', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
+  new Live( { NowBtn: undefined, RefreshInterval: 5000, Spinners: [], Series: 'active_power, reactive_power, power_factor, phi, thd_v, thd_i', OnSuccess: Live_OnSuccess});
   new PeriodView( {Spinners: ['#VoltageSpinner', '#CurrentSpinner', '#PowerSpinner', '#FrequencySpinner'], Series: 'rms_v, flag, rms_i, active_power, freq', Period: 7200000, Aggreg: '3s', OnSuccess: PeriodView_OnSuccess} );
   new PeriodView( {Spinners: ['#MainParametersSpinner'], Series: 'active_power, reactive_power, power_factor, phi, thd_v, thd_i', Period: 86400000, Aggreg: '1m', OnSuccess: PeriodViewParams_OnSuccess} );
 }
