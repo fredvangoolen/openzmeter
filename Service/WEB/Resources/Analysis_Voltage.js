@@ -118,16 +118,9 @@ function Live_OnSuccess(result) {
   UpdateHarmonicsChart();
   UpdateFFTChart();
   UpdatePhasorChart(result);
-  
-  if(THDChart !== null) {
-    var Labels = THDChart.user_attrs_.labels;
-    Labels[0] = Round2(result['thd_v'][0] * 100.0) + ' <em>%</em>';
-    THDChart.updateOptions( { labels: Labels });
-  }
-  
-  $('#PowerFactorNow').html(Array_Round2(result['power_factor'], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)));
-  $('#THDNow').html(Array_Round2(result['thd_v'].map(function(val) {return val * 100.0; }), '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)));
-  $('#PHINow').html(Array_Round2(result['phi'], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3), " (CAP)", " (IND)"));  
+  SetCubismNowLabel(PowerFactorChart, result['power_factor']);
+  SetCubismNowLabel(THDChart, result['thd_v']); 
+  SetCubismNowLabel(PHIChart, result['phi']); 
 }
 function DetailTabChange(index) {
   $('#groupDetailPhasesSingle, #groupDetailPhasesMulti, #btnShowDetail1Harmonic, #btnShowDetailLog, #btnShowDetailCurrent, #toolbarDetails button[data-function="Maximize"]').hide();
@@ -424,9 +417,9 @@ function PeriodView_OnSuccess(result) {
   ParametersSeries();
 }
 function ParametersSeries(event) {
-  GraphPhaseButtons(PowerFactorChart, $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { return CalcRanges(PowerFactorData, series, false); }, (event !== undefined) ? event.target : undefined); 
-  GraphPhaseButtons(PHIChart,         $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { return CalcRanges(PHIData, series, false); }, undefined); 
-  GraphPhaseButtons(THDChart,         $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { return CalcRanges(THDData, series, false); }, undefined); 
+  GraphPhaseButtons(PowerFactorChart, $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PowerFactorData, series, false)); return [-Range, Range]; }, (event !== undefined) ? event.target : undefined); 
+  GraphPhaseButtons(PHIChart,         $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PhiData, series, false, false, false, true)); return [-Range, Range]; }, undefined); 
+  GraphPhaseButtons(THDChart,         $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(THDData, series, false, false, false, true)); return [-Range, Range];}, undefined); 
   for(var g = 0; g < 50; g++) GraphPhaseButtons(HarmonicsCharts[g], $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { return CalcRanges(HarmonicsData[g], series, false); }, undefined); 
 }
 /* Grafico de fasores */
@@ -498,12 +491,11 @@ function UpdatePhasorChart(result) {
   PhasorResizeEvent();
 }
 /* Tabla de eventos */
-var EventLoaded        = false;
 var LastEventStartTime = 0;
 var EventsDatasheet    = [];
 var EventsTable        = null;
-var EventChart         = null;
-var EventSpinner       = new Spinner(SpinnerOpts);
+//var EventChart         = null;
+//var EventSpinner       = new Spinner(SpinnerOpts);
 function AjaxGetEvents(from, to, clear) {
   if(clear) LastEventStartTime = 0;
   Ajax.GetEvents(to - from, to, LastEventStartTime,
@@ -704,6 +696,17 @@ function ExportDetail() {
       Data.push(Row);
     }
     exportToCsv('Voltage_Harmonics_Evolution.csv', Data);
+  } else if(DetailTabSelector.GetSaved() === 5) {
+    var Header = ['Date/Time'].concat(SeriesNames.PowerFactor()).concat(SeriesNames.THDv()).concat(SeriesNames.PHI());
+    Data.push(Header);
+    for(var i = 0; i < PowerFactorData.length; i++) {
+      var Row = [new Date(PowerFactorData[i][0]).toLocaleTimeString()];
+      for(var k = 0; k < SeriesNames.PowerFactor().length; k++) Row.push(PowerFactorData[i][k + 1]);
+      for(var k = 0; k < SeriesNames.THDv().length; k++) Row.push(THDData[i][k + 1]);
+      for(var k = 0; k < SeriesNames.PHI().length; k++) Row.push(PHIData[i][k + 1]);
+      Data.push(Row);
+    }
+    exportToCsv('PF_THDv_PHI.csv', Data);
   }
 }
 var MainScrollable = null;

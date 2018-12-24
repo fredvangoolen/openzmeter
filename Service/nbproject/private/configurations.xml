@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name="Package">
+        <df name="DEBIAN">
+        </df>
+        <df name="lib">
+          <df name="systemd">
+            <df name="system">
+            </df>
+          </df>
+        </df>
+        <df name="usr">
+          <df name="share">
+            <df name="openZmeter">
+            </df>
+          </df>
+        </df>
+      </df>
+      <df name="Source">
+        <df name="Analyzers">
+          <df name="Remote">
+            <in>AnalyzerRemote.cpp</in>
+            <in>AnalyzerRemote.h</in>
+          </df>
+          <df name="Soft">
+            <in>AnalyzerSoft.cpp</in>
+            <in>AnalyzerSoft.h</in>
+          </df>
+          <in>AnalyzerInterface.cpp</in>
+          <in>AnalyzerInterface.h</in>
+        </df>
+        <df name="Devices">
+          <df name="Remote">
+            <in>DeviceRemote.cpp</in>
+            <in>DeviceRemote.h</in>
+          </df>
+          <df name="V1">
+            <in>DeviceV1.cpp</in>
+            <in>DeviceV1.h</in>
+          </df>
+          <df name="V1_1">
+            <in>DeviceV1_1.cpp</in>
+            <in>DeviceV1_1.h</in>
+          </df>
+          <df name="V2">
+            <in>DeviceV2.cpp</in>
+            <in>DeviceV2.h</in>
+          </df>
+          <df name="Virtual">
+            <in>DeviceVirtual.cpp</in>
+            <in>DeviceVirtual.h</in>
+          </df>
+          <in>DeviceInterface.cpp</in>
+          <in>DeviceInterface.h</in>
+        </df>
+        <df name="Prices">
+          <df name="ESIOS">
+            <in>ESIOS.cpp</in>
+            <in>ESIOS.h</in>
+          </df>
+          <in>ESIOS.cpp</in>
+          <in>PricesInterface.cpp</in>
+          <in>PricesInterface.h</in>
+        </df>
+        <in>Database.cpp</in>
+        <in>Database.h</in>
+        <in>Events.cpp</in>
+        <in>Events.h</in>
+        <in>FFT.cpp</in>
+        <in>FFT.h</in>
+        <in>HTTPServer.cpp</in>
+        <in>HTTPServer.h</in>
+        <in>Main.cpp</in>
+        <in>NTP.cpp</in>
+        <in>NTP.h</in>
+        <in>NetworkManager.cpp</in>
+        <in>NetworkManager.h</in>
+        <in>RingBuffer.h</in>
+        <in>Tools.cpp</in>
+        <in>Tools.h</in>
+      </df>
+      <df name="Tmp">
+        <df name="Source">
+          <df name="Analyzers">
+            <df name="Remote">
+            </df>
+            <df name="Soft">
+            </df>
+          </df>
+          <df name="Devices">
+            <df name="Remote">
+            </df>
+            <df name="V1">
+            </df>
+            <df name="V1_1">
+            </df>
+            <df name="V2">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Prices">
+            <df name="ESIOS">
+            </df>
+          </df>
+        </df>
+      </df>
+      <df name="WEB">
+        <df name="Resources">
+          <df name="Fonts">
+          </df>
+          <df name="Help">
+          </df>
+          <df name="lib">
+            <df name="bootstrap">
+              <df name="css">
+              </df>
+              <df name="fonts">
+              </df>
+              <df name="js">
+              </df>
+            </df>
+            <df name="bootstrap-year-calendar">
+            </df>
+            <df name="datatables">
+              <df name="css">
+              </df>
+              <df name="images">
+              </df>
+              <df name="js">
+              </df>
+            </df>
+            <df name="dygraph">
+            </df>
+            <df name="font-awesome">
+              <df name="css">
+              </df>
+              <df name="fonts">
+              </df>
+            </df>
+            <df name="jquery.lineProgressbar">
+            </df>
+            <df name="marked">
+            </df>
+            <df name="metisMenu">
+            </df>
+            <df name="momentjs">
+            </df>
+            <df name="qtip2">
+            </df>
+            <df name="sidenav">
+            </df>
+            <df name="visjs">
+              <df name="img">
+                <df name="network">
+                </df>
+                <df name="timeline">
+                </df>
+              </df>
+            </df>
+          </df>
+          <df name="MiniViews">
+          </df>
+        </df>
+      </df>
+      <in>Makefile</in>
+    </df>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <platform>2</platform>
+      </toolsSet>
+      <compile>
+        <compiledirpicklist>
+          <compiledirpicklistitem>.</compiledirpicklistitem>
+          <compiledirpicklistitem>${AUTO_FOLDER}</compiledirpicklistitem>
+        </compiledirpicklist>
+        <compiledir>${AUTO_FOLDER}</compiledir>
+        <compilecommandpicklist>
+          <compilecommandpicklistitem>${MAKE} ${ITEM_NAME}.o</compilecommandpicklistitem>
+          <compilecommandpicklistitem>${AUTO_COMPILE}</compilecommandpicklistitem>
+        </compilecommandpicklist>
+        <compilecommand>${AUTO_COMPILE}</compilecommand>
+      </compile>
+      <dbx_gdbdebugger version="1">
+        <gdb_pathmaps>
+        </gdb_pathmaps>
+        <gdb_interceptlist>
+          <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
+        </gdb_interceptlist>
+        <gdb_options>
+          <DebugOptions>
+          </DebugOptions>
+        </gdb_options>
+        <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
+      </dbx_gdbdebugger>
+      <nativedebugger version="1">
+        <engine>gdb</engine>
+      </nativedebugger>
+      <runprofile version="9">
+        <runcommandpicklist>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+        </runcommandpicklist>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <rundir></rundir>
+        <buildfirst>false</buildfirst>
+        <terminal-type>0</terminal-type>
+        <remove-instrumentation>0</remove-instrumentation>
+        <environment>
+        </environment>
+      </runprofile>
+    </conf>
+  </confs>
+</configurationDescriptor>

@@ -221,6 +221,7 @@ body {
   display: table-cell;
   vertical-align: middle;
   padding: 0 4px;
+  text-align: center;
 }
 .indicator-bar > div > div > div:first-child {
   text-align: right;
@@ -394,7 +395,6 @@ body {
   margin-top: -63px;
   font-weight: bold;
 }
-
 /*--------------------------------------------------------------------------------------------------------------------*/
 .dygraph-axis-label {
   font-size: 10px;
@@ -442,6 +442,10 @@ body {
   border-bottom-style: solid;
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
+.btn-group-xs>.btn, .btn-xs {
+  border-radius: 0px;
+}
+
 .nav-tabs>li>a {
   border: 1px solid #CCC;
   border-bottom: 1px solid transparent;

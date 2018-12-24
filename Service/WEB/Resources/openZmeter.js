@@ -18,10 +18,13 @@ var SeriesNames = {
                '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'],
   Voltage: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['V'] : ['V(R)', 'V(S)', 'V(T)']; },
   Current: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['I'] : (Analyzers[Analyzer]['Mode'] === '3PHASE') ? ['I(R)', 'I(S)', 'I(T)'] : ['I(R)', 'I(S)', 'I(T)', 'I(N)']; },
-  ActiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['L']  : ['P (R)', 'P (S)', 'P (T)']; },
-  ReactiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['L']  : ['Reactive Energy (R)', 'Reactive Energy (S)', 'Reactive Energy (T)']; },
+  ActiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['P']  : ['P(R)', 'P(S)', 'P(T)']; },
+  ReactiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Q']  : ['Q(R)', 'Q(S)', 'Q(T)']; },
   ActivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['P']  : ['P(R)', 'P(S)', 'P(T)']; },
-  ReactivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Q']  : ['Q(R)', 'Q(S)', 'Q(T)']; }
+  ReactivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Q']  : ['Q(R)', 'Q(S)', 'Q(T)']; },
+  PowerFactor: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['PF']  : ['PF(R)', 'PF(S)', 'PF(T)']; },
+  THDv: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['THDv']  : ['THDv(R)', 'THDv(S)', 'THDv(T)']; },
+  PHI: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['PHI']  : ['PHI(R)', 'PHI(S)', 'PHI(T)']; },
 };
   
 /* redirect ajax error to login page */
@@ -775,8 +778,8 @@ function Round2Labels(value, integer, fraction) {
 
 /* Retorna un numero como cadena con dos decimales */
 function Round2(value) {
-  if(isNaN(value)) {
-    return '?';
+  if(value === null) {
+    return '-';
   } else {
     value = Math.round(value * 100);
     var Integer = Math.trunc(value / 100);
@@ -789,8 +792,8 @@ function Round2(value) {
 
 /* Retorna un numero como cadena con dos decimales pero sin formato html */
 function Round2Plain(value) {
-  if(isNaN(value)) {
-    return '?';
+  if(value === null) {
+    return '-';
   } else {
     value = Math.round(value * 100);
     var Integer = Math.trunc(value / 100);

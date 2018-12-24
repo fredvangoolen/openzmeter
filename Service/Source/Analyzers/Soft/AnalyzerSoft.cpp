@@ -143,13 +143,13 @@ void AnalyzerSoft::Analyze() {
     uint32_t MaxCycle = pSamplerate / (pNominalFrequency * 0.85 * 2.0);
     for(uint i = 0; i < pCycles.size(); i++) {
       if((pCycles[i] < MinCycle) || (pCycles[i] > MaxCycle)) {
-        pAggreg10C.Frequency = NAN;
+        Samples = 0;
         break;
       } else {
         Samples += pCycles[i];
       }
     } 
-    if(isnan(pAggreg10C.Frequency) == false) pAggreg10C.Frequency = (Samples / pSamplerate) * 10.0;
+    if(Samples > 0) pAggreg10C.Frequency = (Samples / pSamplerate) * 10.0;
     //Inicia FFTs
     for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) pVoltageFFT[i]->Start(&pAggreg10C.Voltage[i]);
     for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) pCurrentFFT[i]->Start(&pAggreg10C.Current[i]);
@@ -162,7 +162,6 @@ void AnalyzerSoft::Analyze() {
     for(uint j = 0; j < pAggreg10C.RMS_V.size(); j++) pAggreg10C.RMS_V[j] = sqrt(pAggreg10C.RMS_V[j] / pAggreg10C.Samples);
     for(uint j = 0; j < pAggreg10C.RMS_I.size(); j++) pAggreg10C.RMS_I[j] = sqrt(pAggreg10C.RMS_I[j] / pAggreg10C.Samples);
     for(uint j = 0; j < pAggreg10C.Active_Power.size(); j++) pAggreg10C.Active_Power[j] = pAggreg10C.Active_Power[j] / pAggreg10C.Samples;
-    for(uint j = 0; j < ((pMode == PHASE1) ? 1 : 3); j++) pAggreg10C.Apparent_Power[j] = pAggreg10C.RMS_V[j] * pAggreg10C.RMS_I[j];
     //Calculo harmonicos de tension
     for(uint j = 0; j < pAggreg10C.VoltageHarmonics.size(); j++) {
       pVoltageFFT[j]->Wait();
@@ -174,7 +173,12 @@ void AnalyzerSoft::Analyze() {
     }
     for(int j = 0; j < ((pMode == PHASE1) ? 1 : 3); j++) {
       pCurrentFFT[j]->Wait();
-      if(pAggreg10C.RMS_I[j] < pMinCurrent) continue;
+      if(pAggreg10C.RMS_I[j] < pMinCurrent) {
+        pAggreg10C.RMS_I[j] = NAN;
+        pAggreg10C.Active_Power[j] = NAN;
+        continue;
+      }
+      pAggreg10C.Apparent_Power[j] = pAggreg10C.RMS_V[j] * pAggreg10C.RMS_I[j];
       for(int i = 10; i <= 500 ; i = i + 10) {
         int   Harmonic = (i / 10) - 1;
         float CurrentHarmonic = pCurrentFFT[j]->BinPower(i);
@@ -365,7 +369,16 @@ void AnalyzerSoft::ConfigPrices(json_object* config) {
 }
 void AnalyzerSoft::AccumulateAggreg(Params_t *dst, Params_t *src) {
   dst->Timestamp = src->Timestamp;
-  for(uint i = 0; i < dst->RMS_V.size(); i++) dst->RMS_V[i] += pow(src->RMS_V[i], 2.0);
+  //Si habia nan y entra nan      -> nada
+  //Si habia nan y entra no nan   hay = nuevo
+  //si no habia nan y entra nan   -> nada
+  //Si no habia nan y entr no nan -> hay += nuevo
+  
+  for(uint i = 0; i < dst->RMS_V.size(); i++) {
+    if(isnan(src->RMS_V[i])) continue;
+    if(isnan(dst->RMS_V[i])) dst->RMS_V[i] = 0.0;
+    dst->RMS_V[i] += pow(src->RMS_V[i], 2.0);
+  }
   for(uint i = 0; i < dst->RMS_I.size(); i++) dst->RMS_I[i] += pow(src->RMS_I[i], 2.0);
   for(uint i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Active_Power[i] += src->Active_Power[i];
   for(uint i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Active_Energy[i] += src->Active_Energy[i];

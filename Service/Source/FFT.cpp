@@ -27,7 +27,6 @@ FFT::~FFT() {
   pTerminate = true;
   pthread_cond_signal(&pThreadCond);
   if(pthread_join(pThread, NULL) != 0) Tools::LogMsg("ERROR", "%s:%d -> (Unknown)\n", __func__, __LINE__);
-  //free(Output);
 }
 bool FFT::Start(vector<float> *in) {
   pthread_mutex_lock(&pThreadMutex);
