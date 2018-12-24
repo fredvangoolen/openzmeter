@@ -22,6 +22,9 @@ Database::Database(const char *schema) {
   pParamsLen = 0;
   pDBConn    = NULL;
 }
+const char *Database::GetSchema() {
+  return (pSchema) ? pSchema : "public";
+}
 bool Database::Connect() {
   if((pDBConn != NULL) && (PQstatus(pDBConn) == CONNECTION_BAD)) {
     PQfinish(pDBConn);
