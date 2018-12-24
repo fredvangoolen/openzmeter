@@ -82,36 +82,14 @@
         <in>Tools.h</in>
       </df>
       <df name="Tmp">
-        <df name="Source">
-          <df name="Analyzers">
-            <df name="Remote">
-            </df>
-            <df name="Soft">
-            </df>
-          </df>
-          <df name="Devices">
-            <df name="Remote">
-            </df>
-            <df name="V1">
-            </df>
-            <df name="V1_1">
-            </df>
-            <df name="V2">
-            </df>
-            <df name="Virtual">
-            </df>
-          </df>
-          <df name="Prices">
-            <df name="ESIOS">
-            </df>
-          </df>
-        </df>
       </df>
       <df name="WEB">
         <df name="Resources">
           <df name="Fonts">
           </df>
           <df name="Help">
+          </df>
+          <df name="HelpPages">
           </df>
           <df name="lib">
             <df name="bootstrap">

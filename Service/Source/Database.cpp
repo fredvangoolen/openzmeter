@@ -16,7 +16,7 @@ char *Database::pUser         = (char*)"openzmeter";
 char *Database::pPassword     = (char*)"";
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(const char *schema) {
-  pSchema    = (schema == NULL) ? (char*)"public" : schema;
+  pSchema    = (schema == NULL) ? NULL : strdup(schema);
   pParams    = NULL;
   pResult    = NULL;
   pParamsLen = 0;
@@ -41,7 +41,7 @@ bool Database::Connect() {
   }
   ExecSentence("SET synchronous_commit TO OFF");
   ExecSentence("SET client_min_messages = error");
-  if(pSchema != NULL) {
+  if(pSchema) {
     PrepareSentence("CREATE SCHEMA IF NOT EXISTS ?");
     BindSingleString(pSchema, true);
     ExecSentence();
@@ -52,6 +52,7 @@ bool Database::Connect() {
   return true;
 }
 Database::~Database() {
+  if(pSchema) free(pSchema);
   if(pResult != NULL) PQclear(pResult);
   PQfinish(pDBConn);
 }
