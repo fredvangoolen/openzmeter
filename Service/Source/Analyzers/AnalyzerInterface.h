@@ -18,11 +18,10 @@ class AnalyzerInterface : protected Database {
     static const float HarmonicsAllowed[];  //Rangos permitidos para cada harmonico
   public :
     typedef struct {
-      AggregType              Type;                       //Tipo de agregacion
-      uint64_t                Timestamp;                  //Timestamp de la muestra inicial
-      uint32_t                Samples;                    //Muestras que han formado esta agregacion
-      vector<float>           RMS_V;                      //Valor RMS de la tension durante el bloque
-      vector<float>           RMS_I;                      //Valor RMS de la intensidad durante el bloque
+      AggregType              Type;                       //Aggregation type
+      uint64_t                Timestamp;                  //Aggregation timestampt
+      vector<float>           RMS_V;                      //Aggregation average RMS voltage
+      vector<float>           RMS_I;                      //Aggregation average RMS current
       vector<float>           Active_Power;               //Potencia activa (P)
       vector<float>           Apparent_Power;             //Potencia aparente (S)
       vector<float>           Power_Factor;               //Factor de potencia (cos(PHI))
@@ -42,12 +41,11 @@ class AnalyzerInterface : protected Database {
       uint16_t                StatsHarmonics[2];          //Numero de muestras que cumplen los limites de harmonicos / no cumplen
       vector< vector<float> > FFT_V;                      //Resultados de la FFT en tension
       vector< vector<float> > FFT_I;                      //Resultados de la FFT en corriente
-      vector< vector<float> > Voltage;
-      vector< vector<float> > Current;
+      vector< vector<float> > Voltage;                    //Voltage samples
+      vector< vector<float> > Current;                    //Current samples
     } Params_t;
   protected :
     uint64_t      pLastSave;
-    const char   *pID;
     float         pNominalVoltage;
     float         pNominalFrequency;
     char         *pName;

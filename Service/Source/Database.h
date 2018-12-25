@@ -42,6 +42,7 @@ class Database {
     const char *ResultValue(uint32_t row, const char *name);
     bool        ExecSentence(const char *sql);
     char       *ExecSentenceJSON(const char* sql, size_t *len);
+    const char *GetSchema();
     Database(const char *schema);
     ~Database();
   public :

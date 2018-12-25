@@ -53,7 +53,7 @@ AnalyzerSoft::AnalyzerSoft(float samplerate, char *id, float nominal_voltage, fl
     pVoltageFFT.push_back(new FFT(Name));
     uint32_t PhaseShift = (pSamplerate * ZEROCROSSING_FILTERSTAGES) / (nominal_frequency * 2) + 3;
     pDelayVoltage[i].Reset(PhaseShift);
-    for(int n = 0; n < PhaseShift; n++) pDelayVoltage[i].Push(0.0);
+    for(uint32_t n = 0; n < PhaseShift; n++) pDelayVoltage[i].Push(0.0);
   }
   for(uint8_t i = 0; i < pAggreg10C.Current.size(); i++) {
     char Name[16];
@@ -216,7 +216,7 @@ void AnalyzerSoft::Analyze() {
     pthread_cond_broadcast(&pDataReadyCond);
     if(((pSequence % 15) == 0) && (pPrevTimestamp != 0)) {
       Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
-      NormalizeAggreg(&pAggreg3S);
+      Params_t Aggreg3S = NormalizeAggreg(&pAggreg3S);
       if(pAggreg3S.Flag == false) {
         float Variation = PercentChange(pAggreg3S.Frequency, pNominalFrequency);
         for(uint Range = 0; Range < 40; Range++) {
@@ -466,7 +466,7 @@ void *AnalyzerSoft::Sync_Thread(void *args) {
   bool         Initialized = false;
   CURL        *Curl        = curl_easy_init();
   curl_slist  *Headers     = NULL;
-  Database     DB(This->pID);
+  Database     DB(This->GetID());
   curl_easy_setopt(Curl, CURLOPT_COOKIEFILE, "");
   curl_easy_setopt(Curl, CURLOPT_POST, 1);
   curl_easy_setopt(Curl, CURLOPT_WRITEDATA, (void*)&CurlBuff);
@@ -536,24 +536,24 @@ void *AnalyzerSoft::Sync_Thread(void *args) {
       bool      Live  = false;
       char     *Table = (char*)"aggreg_3s";
       uint64_t *Time  = &Last3S;
-      sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_3s' AS \"Table\", * FROM aggreg_3s WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", This->pID, Last3S);
+//      sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_3s' AS \"Table\", * FROM aggreg_3s WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", This->pID, Last3S);
       char *Result = DB.ExecSentenceJSON(Tmp, &JSONLen);
       if(Result == NULL) {
         Table = (char*)"aggreg_1m";
         Time  = &Last1M;
-        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_1m' AS \"Aggregation_Source\", * FROM (SELECT * FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m) AS aggreg_1m WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", This->pID, Last3S);
+//        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_1m' AS \"Aggregation_Source\", * FROM (SELECT * FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m) AS aggreg_1m WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", This->pID, Last3S);
         Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
       }
       if(Result == NULL) {
         Table = (char*)"aggreg_10m";
         Time  = &Last10M;
-        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_10m' AS \"Aggregation_Source\", * FROM aggreg_10m WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", This->pID, Last3S);
+//        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_10m' AS \"Aggregation_Source\", * FROM aggreg_10m WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", This->pID, Last3S);
         Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
       }
       if(Result == NULL) {
         Table = (char*)"aggreg_10m";
         Time  = &Last1H;
-        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_1h' AS \"Aggregation_Source\", * FROM aggreg_1h WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", This->pID, Last3S);
+//        sprintf(Tmp, "SELECT row_to_json(Result), sampletime FROM (SELECT '%s' AS \"ID\", 'aggreg_1h' AS \"Aggregation_Source\", * FROM aggreg_1h WHERE sampletime > %" PRIu64 " ORDER BY sampletime ASC LIMIT 1) AS Result", This->pID, Last3S);
         Result = DB.ExecSentenceJSON(Tmp, &JSONLen);        
       }
       if(Result != NULL) {

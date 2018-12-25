@@ -55,7 +55,7 @@ bool Database::Connect() {
   return true;
 }
 Database::~Database() {
-  if(pSchema) free(pSchema);
+  if(pSchema) free((char*)pSchema);
   if(pResult != NULL) PQclear(pResult);
   PQfinish(pDBConn);
 }

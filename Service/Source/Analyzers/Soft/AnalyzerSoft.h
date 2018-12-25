@@ -74,8 +74,8 @@ class AnalyzerSoft : public AnalyzerInterface {
     static size_t Curl_Read_Callback(void *contents, size_t size, size_t nmemb, void *userp);
   private :
     float PercentChange(float in, float reference);
-    void  AccumulateAggreg(Params_t *dst, Params_t *src);
-    void  NormalizeAggreg(Params_t *params);
+    void  AccumulateAggreg(Params_t *src, Params_t *dst);
+    void  NormalizeAggreg(Params_t *src);
     void  Analyze();
   protected :
     //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;

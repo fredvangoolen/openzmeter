@@ -13,7 +13,6 @@ const float AnalyzerInterface::THDRanges[]        = {0, 0.5, 1, 1.5, 2, 2.5, 3, 
 const float AnalyzerInterface::HarmonicsAllowed[] = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode) : Database(id) {
-  pID = id;
   pNominalVoltage = nominal_voltage;
   pNominalFrequency = nominal_frequency;
   pName = name;
@@ -32,7 +31,7 @@ float AnalyzerInterface::GetMaxCurrent() {
   return pMaxCurrent;
 }
 const char *AnalyzerInterface::GetID() {
-  return pID;
+  return GetSchema();
 }
 float AnalyzerInterface::GetNominalVoltage() {
   return pNominalVoltage;
@@ -65,7 +64,6 @@ void AnalyzerInterface::InitAggreg(Params_t* params, AggregType type) {
     params->Current.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);
     params->Voltage.resize((pMode == PHASE1) ? 1 : 3);
   }
-//  ResetAggreg(params);
 }
 void AnalyzerInterface::ResetAggreg(Params_t *params) {
   params->Timestamp = 0;
@@ -147,7 +145,7 @@ void AnalyzerInterface::SaveAggreg(Params_t *params) {
 }
 json_object *AnalyzerInterface::GetJSONDescriptor() {
   json_object *Device = json_object_new_object();
-  json_object_object_add(Device, "ID", json_object_new_string(pID));
+  json_object_object_add(Device, "ID", json_object_new_string(GetID()));
   json_object_object_add(Device, "NominalVoltage", json_object_new_double(pNominalVoltage));
   json_object_object_add(Device, "NominalFreq", json_object_new_double(pNominalFrequency));
   json_object_object_add(Device, "Name", json_object_new_string(pName));
