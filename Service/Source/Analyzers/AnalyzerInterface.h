@@ -6,6 +6,21 @@
 #include <vector>
 #include "Database.h"
 //----------------------------------------------------------------------------------------------------------------------
+RMS_V:
+  - Es NULL en todas las fases si no se detectan ciclos en ninguna fase.
+  - Si al menos una fase tiene ciclos, se guarda el valor de todas.
+  - Se agrega haciendo RMS de las muestras no nulas capturadas.
+
+RMS_I:
+  - Es NULL si el valor es inferior al limite fijado. Independiente en cada fase.
+  - Se agrega haciendo RMS de las muestras no nulas capturadas.
+
+Active_Power:
+  - Es NULL si RMS_I esta por debajo del limite. Independiente en cada fase.
+  - Se agrega haciendo la media de las muestras no nulas.
+
+
+
 using namespace std;
 class AnalyzerInterface : protected Database {
   public :
@@ -20,9 +35,14 @@ class AnalyzerInterface : protected Database {
     typedef struct {
       AggregType              Type;                       //Aggregation type
       uint64_t                Timestamp;                  //Aggregation timestampt
+      uint16_t                RMS_V_Inputs;               //Valid RMS_V samples in aggregation
       vector<float>           RMS_V;                      //Aggregation average RMS voltage
+      vector<uint16_t>        RMS_I_Inputs;               //Valid RMS_I samples in aggregation
       vector<float>           RMS_I;                      //Aggregation average RMS current
-      vector<float>           Active_Power;               //Potencia activa (P)
+      vector<uint16_t>        Active_Power_Inputs;        //Valid Active_Power samples in aggregation
+      vector<float>           Active_Power;               //Aggregation average Active Power (P)
+      
+      
       vector<float>           Apparent_Power;             //Potencia aparente (S)
       vector<float>           Power_Factor;               //Factor de potencia (cos(PHI))
       vector<float>           Active_Energy;              //Energia consumida
@@ -35,14 +55,18 @@ class AnalyzerInterface : protected Database {
       vector< vector<float> > VoltageHarmonics;           //Armonicos del canal de tension
       vector< vector<float> > CurrentHarmonics;           //Armonicos del canal de corriente
       vector<float>           Phi;                        //Angulo de Phi
-      uint16_t                StatsFrequency[40];         //Distribucion de frecuencias
-      uint16_t                StatsVoltage[26];           //Distribucion de tensiones
-      uint16_t                StatsTHD[26];               //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
-      uint16_t                StatsHarmonics[2];          //Numero de muestras que cumplen los limites de harmonicos / no cumplen
       vector< vector<float> > FFT_V;                      //Resultados de la FFT en tension
       vector< vector<float> > FFT_I;                      //Resultados de la FFT en corriente
       vector< vector<float> > Voltage;                    //Voltage samples
       vector< vector<float> > Current;                    //Current samples
+      uint16_t                StatsFrequency[40];         //Distribucion de frecuencias
+      uint16_t                StatsVoltage[26];           //Distribucion de tensiones
+      uint16_t                StatsTHD[26];               //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
+      uint16_t                StatsHarmonics[2];          //Numero de muestras que cumplen los limites de harmonicos / no cumplen
+
+      uint16_t  ValidVInputs;
+      uint16_t  ValidIInputs;
+      uint16_t  ValidFInputs;
     } Params_t;
   protected :
     uint64_t      pLastSave;
