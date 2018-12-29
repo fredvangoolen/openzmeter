@@ -55,6 +55,7 @@ function polarLinePlotter(e) {
   ctx.fill();
   ctx.setLineDash([]);
   for(i = 0; i < e.points.length; i++) {
+    if(isNaN(e.allSeriesPoints[1][i].yval)) continue;
     var X = e.dygraph.toDomXCoord((100.0 * e.allSeriesPoints[1][i].yval - 5) * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0));
     var Y = e.dygraph.toDomYCoord((100.0 * e.allSeriesPoints[1][i].yval - 5) * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0));
     if(i % 2) {

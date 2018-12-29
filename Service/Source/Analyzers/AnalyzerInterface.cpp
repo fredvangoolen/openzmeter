@@ -6,13 +6,140 @@
 #include <string.h>
 #include "AnalyzerInterface.h"
 #include "Tools.h"
-//----------------------------------------------------------------------------------------------------------------------
-const float AnalyzerInterface::FrequencyRanges[]  = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
-const float AnalyzerInterface::VoltageRanges[]    = {-INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY};
-const float AnalyzerInterface::THDRanges[]        = {0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY};
-const float AnalyzerInterface::HarmonicsAllowed[] = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
+//------------- ---------------------------------------------------------------------------------------------------------
+vector<float> AnalyzerInterface::FrequencyRanges;
+vector<float> AnalyzerInterface::VoltageRanges;
+vector<float> AnalyzerInterface::THDRanges;
+vector<float> AnalyzerInterface::HarmonicsAllowed;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode) : Database(id) {
+  if(FrequencyRanges.empty()) {
+    FrequencyRanges.push_back(-INFINITY);
+    FrequencyRanges.push_back(-5);
+    FrequencyRanges.push_back(-4);
+    FrequencyRanges.push_back(-3);
+    FrequencyRanges.push_back(-2);
+    FrequencyRanges.push_back(-1);
+    FrequencyRanges.push_back(-0.9);
+    FrequencyRanges.push_back(-0.8);
+    FrequencyRanges.push_back(-0.7);
+    FrequencyRanges.push_back(-0.6);
+    FrequencyRanges.push_back(-0.5);
+    FrequencyRanges.push_back(-0.45);
+    FrequencyRanges.push_back(-0.40);
+    FrequencyRanges.push_back(-0.35);
+    FrequencyRanges.push_back(-0.30);
+    FrequencyRanges.push_back(-0.25);
+    FrequencyRanges.push_back(-0.20);
+    FrequencyRanges.push_back(-0.15);
+    FrequencyRanges.push_back(-0.10);
+    FrequencyRanges.push_back(-0.05);
+    FrequencyRanges.push_back(0.00);
+    FrequencyRanges.push_back(0.05);
+    FrequencyRanges.push_back(0.10);
+    FrequencyRanges.push_back(0.15);
+    FrequencyRanges.push_back(0.20);
+    FrequencyRanges.push_back(0.25);
+    FrequencyRanges.push_back(0.30);
+    FrequencyRanges.push_back(0.35);
+    FrequencyRanges.push_back(0.40);
+    FrequencyRanges.push_back(0.45);
+    FrequencyRanges.push_back(0.5);
+    FrequencyRanges.push_back(0.6);
+    FrequencyRanges.push_back(0.7);
+    FrequencyRanges.push_back(0.8);
+    FrequencyRanges.push_back(0.9);
+    FrequencyRanges.push_back(1);
+    FrequencyRanges.push_back(2);
+    FrequencyRanges.push_back(3);
+    FrequencyRanges.push_back(4);
+    FrequencyRanges.push_back(5);
+    FrequencyRanges.push_back(INFINITY);
+  }
+  if(VoltageRanges.empty()) {
+    VoltageRanges.push_back(-INFINITY);
+    VoltageRanges.push_back(-20);
+    VoltageRanges.push_back(-15);
+    VoltageRanges.push_back(-10);
+    VoltageRanges.push_back(-9);
+    VoltageRanges.push_back(-8);
+    VoltageRanges.push_back(-7);
+    VoltageRanges.push_back(-6);
+    VoltageRanges.push_back(-5);
+    VoltageRanges.push_back(-4);
+    VoltageRanges.push_back(-3);
+    VoltageRanges.push_back(-2);
+    VoltageRanges.push_back(-1);
+    VoltageRanges.push_back(0);
+    VoltageRanges.push_back(1);
+    VoltageRanges.push_back(2);
+    VoltageRanges.push_back(3);
+    VoltageRanges.push_back(4);
+    VoltageRanges.push_back(5);
+    VoltageRanges.push_back(6);
+    VoltageRanges.push_back(7);
+    VoltageRanges.push_back(8);
+    VoltageRanges.push_back(9);
+    VoltageRanges.push_back(10);
+    VoltageRanges.push_back(15);
+    VoltageRanges.push_back(20);
+    VoltageRanges.push_back(INFINITY);
+  }
+  if(THDRanges.empty()) {
+    THDRanges.push_back(0);
+    THDRanges.push_back(0.5);
+    THDRanges.push_back(1);
+    THDRanges.push_back(1.5);
+    THDRanges.push_back(2);
+    THDRanges.push_back(2.5);
+    THDRanges.push_back(3);
+    THDRanges.push_back(3.5);
+    THDRanges.push_back(4);
+    THDRanges.push_back(4.5);
+    THDRanges.push_back(5);
+    THDRanges.push_back(5.5);
+    THDRanges.push_back(6);
+    THDRanges.push_back(6.5);
+    THDRanges.push_back(7);
+    THDRanges.push_back(7.5);
+    THDRanges.push_back(8);
+    THDRanges.push_back(8.5);
+    THDRanges.push_back(9);
+    THDRanges.push_back(9.5);
+    THDRanges.push_back(10);
+    THDRanges.push_back(11);
+    THDRanges.push_back(12);
+    THDRanges.push_back(13);
+    THDRanges.push_back(14);
+    THDRanges.push_back(15);
+    THDRanges.push_back(INFINITY);
+  }
+  if(HarmonicsAllowed.empty()) {
+    HarmonicsAllowed.push_back(2);
+    HarmonicsAllowed.push_back(5);
+    HarmonicsAllowed.push_back(1);
+    HarmonicsAllowed.push_back(6);
+    HarmonicsAllowed.push_back(0.5);
+    HarmonicsAllowed.push_back(5);
+    HarmonicsAllowed.push_back(0.5);
+    HarmonicsAllowed.push_back(1.5);
+    HarmonicsAllowed.push_back(0.5);
+    HarmonicsAllowed.push_back(3.5);
+    HarmonicsAllowed.push_back(0.5);
+    HarmonicsAllowed.push_back(3);
+    HarmonicsAllowed.push_back(0.5);
+    HarmonicsAllowed.push_back(0.5);
+    HarmonicsAllowed.push_back(0.5);
+    HarmonicsAllowed.push_back(2);
+    HarmonicsAllowed.push_back(0.5);
+    HarmonicsAllowed.push_back(1.5);
+    HarmonicsAllowed.push_back(0.5);
+    HarmonicsAllowed.push_back(0.5);
+    HarmonicsAllowed.push_back(0.5);
+    HarmonicsAllowed.push_back(1.5);
+    HarmonicsAllowed.push_back(0.5);
+    HarmonicsAllowed.push_back(1.5);
+  }
   pNominalVoltage = nominal_voltage;
   pNominalFrequency = nominal_frequency;
   pName = name;
@@ -39,106 +166,114 @@ float AnalyzerInterface::GetNominalVoltage() {
 float AnalyzerInterface::GetNominalFrequency() {
   return pNominalFrequency;
 }
-void AnalyzerInterface::InitAggreg(Params_t* params, AggregType type) {
-  params->Type = type;
-  params->RMS_V.resize((pMode == PHASE1) ? 1 : 3, NAN);
-  params->RMS_I.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, NAN);
-  params->Active_Power.resize((pMode == PHASE1) ? 1 : 3, NAN);
-  params->Reactive_Power.resize((pMode == PHASE1) ? 1 : 3, NAN);
-  params->Active_Energy.resize((pMode == PHASE1) ? 1 : 3, NAN);
-  params->Reactive_Energy.resize((pMode == PHASE1) ? 1 : 3, NAN);
-  if((params->Type == AGGREG_10C) || (params->Type == AGGREG_1M)) {
-    params->THD_I.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, NAN);
-    params->Phi.resize((pMode == PHASE1) ? 1 : 3, NAN);
-    params->Power_Factor.resize((pMode == PHASE1) ? 1 : 3, NAN);
-    params->CurrentHarmonics.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(50, NAN));
-//    for(uint i = 0; i < params->CurrentHarmonics.size(); i++) params->CurrentHarmonics[i].resize(50);
+void AnalyzerInterface::InitAggreg(Params_t &params, AggregType type) {
+  params.Type = type;
+  params.Frequency = NAN;
+  params.Flag = false;
+  params.Timestamp = 0;
+  params.RMS_V_Inputs = 0;
+  params.Freq_Inputs = 0;
+  if(params.Type == AGGREG_1H) {
+    params.StatsFrequency.resize(FrequencyRanges.size(), 0);
+    params.StatsVoltage.resize(VoltageRanges.size(), 0);
+    params.StatsTHD.resize(THDRanges.size(), 0);
+    params.StatsHarmonics.resize(2, 0);
   }
-  if((params->Type == AGGREG_10C) || (params->Type == AGGREG_1M) || (params->Type == AGGREG_10M)) {
-    params->THD_V.resize((pMode == PHASE1) ? 1 : 3, NAN);
-    params->VoltageHarmonics.resize((pMode == PHASE1) ? 1 : 3, vector<float>(50, NAN));
-//    for(uint i = 0; i < params->VoltageHarmonics.size(); i++) params->VoltageHarmonics[i].resize(50);    
+  params.RMS_I_Inputs.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, 0);
+  params.RMS_V.resize((pMode == PHASE1) ? 1 : 3, NAN);
+  params.RMS_I.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, NAN);
+  params.Active_Power.resize((pMode == PHASE1) ? 1 : 3, NAN);
+  params.Reactive_Power.resize((pMode == PHASE1) ? 1 : 3, NAN);
+  params.Active_Energy.resize((pMode == PHASE1) ? 1 : 3, NAN);
+  params.Reactive_Energy.resize((pMode == PHASE1) ? 1 : 3, NAN);
+  if((params.Type == AGGREG_10C) || (params.Type == AGGREG_1M)) {
+    params.THD_I.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, NAN);
+    params.Phi.resize((pMode == PHASE1) ? 1 : 3, NAN);
+    params.Power_Factor.resize((pMode == PHASE1) ? 1 : 3, NAN);
+    params.CurrentHarmonics.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(50, NAN));
   }
-  if(params->Type == AGGREG_10C) {
-    params->Apparent_Power.resize((pMode == PHASE1) ? 1 : 3, NAN);
-    params->Current.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);
-    params->Voltage.resize((pMode == PHASE1) ? 1 : 3);
+  if((params.Type == AGGREG_10C) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M)) {
+    params.THD_V.resize((pMode == PHASE1) ? 1 : 3, NAN);
+    params.VoltageHarmonics.resize((pMode == PHASE1) ? 1 : 3, vector<float>(50, NAN));
+  }
+  if(params.Type == AGGREG_10C) {
+    params.Apparent_Power.resize((pMode == PHASE1) ? 1 : 3, NAN);
+    params.Current.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);
+    params.Voltage.resize((pMode == PHASE1) ? 1 : 3);
+    params.FFT_I.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);
+    params.FFT_V.resize((pMode == PHASE1) ? 1 : 3);
   }
 }
-void AnalyzerInterface::ResetAggreg(Params_t *params) {
-  params->Timestamp = 0;
-  for(uint i = 0; i < params->RMS_V.size(); i++) params->RMS_V[i] = NAN;
-  for(uint i = 0; i < params->RMS_I.size(); i++) params->RMS_I[i] = NAN;
-  for(uint i = 0; i < params->Active_Power.size(); i++) params->Active_Power[i] = NAN;
-  for(uint i = 0; i < params->Reactive_Power.size(); i++) params->Reactive_Power[i] = NAN;
-  for(uint i = 0; i < params->Reactive_Energy.size(); i++) params->Reactive_Energy[i] = NAN;
-  for(uint i = 0; i < params->Active_Energy.size(); i++) params->Active_Energy[i] = NAN;
-  params->Frequency = NAN;
-  params->Flag = false;
-  if((params->Type == AGGREG_10C) || (params->Type == AGGREG_1M)) {
-    for(uint i = 0; i < params->THD_I.size(); i++) params->THD_I[i] = NAN;
-    for(uint i = 0; i < params->Phi.size(); i++) params->Phi[i] = NAN;
-    for(uint i = 0; i < params->Power_Factor.size(); i++) params->Power_Factor[i] = NAN;
-    for(uint i = 0; i < params->CurrentHarmonics.size(); i++) {
-      for(uint n = 0; n < params->CurrentHarmonics[i].size(); n++) params->CurrentHarmonics[i][n] = NAN;
-    }
+void AnalyzerInterface::ResetAggreg(Params_t &params) {
+  params.Frequency = NAN;
+  params.Flag = false;
+  params.Timestamp = 0;
+  params.RMS_V_Inputs = 0;
+  params.Freq_Inputs = 0;
+  for(uint i = 0; i < params.StatsFrequency.size(); i++) params.StatsFrequency[i] = 0;
+  for(uint i = 0; i < params.StatsVoltage.size(); i++) params.StatsVoltage[i] = 0;
+  for(uint i = 0; i < params.StatsTHD.size(); i++) params.StatsTHD[i] = 0;
+  for(uint i = 0; i < params.StatsHarmonics.size(); i++) params.StatsHarmonics[i] = 0;
+  for(uint i = 0; i < params.RMS_I_Inputs.size(); i++) params.RMS_I_Inputs[i] = 0;
+  for(uint i = 0; i < params.RMS_V.size(); i++) params.RMS_V[i] = NAN;
+  for(uint i = 0; i < params.RMS_I.size(); i++) params.RMS_I[i] = NAN;
+  for(uint i = 0; i < params.Active_Power.size(); i++) params.Active_Power[i] = NAN;
+  for(uint i = 0; i < params.Reactive_Power.size(); i++) params.Reactive_Power[i] = NAN;
+  for(uint i = 0; i < params.Active_Energy.size(); i++) params.Active_Energy[i] = NAN;
+  for(uint i = 0; i < params.Reactive_Energy.size(); i++) params.Reactive_Energy[i] = NAN;
+  for(uint i = 0; i < params.Apparent_Power.size(); i++) params.Apparent_Power[i] = NAN;
+  for(uint i = 0; i < params.Power_Factor.size(); i++) params.Power_Factor[i] = NAN;
+  for(uint i = 0; i < params.THD_V.size(); i++) params.THD_V[i] = NAN;
+  for(uint i = 0; i < params.THD_I.size(); i++) params.THD_I[i] = NAN;
+  for(uint i = 0; i < params.Phi.size(); i++) params.Phi[i] = NAN;
+  for(uint i = 0; i < params.VoltageHarmonics.size(); i++) {
+    for(uint n = 0; n < params.VoltageHarmonics[i].size(); n++) params.VoltageHarmonics[i][n] = NAN;
   }
-  if((params->Type == AGGREG_10C) || (params->Type == AGGREG_1M) || (params->Type == AGGREG_10M)) {
-    for(uint i = 0; i < params->THD_V.size(); i++) params->THD_V[i] = NAN;
-    for(uint i = 0; i < params->VoltageHarmonics.size(); i++) {
-      for(uint n = 0; n < params->VoltageHarmonics[i].size(); n++) params->VoltageHarmonics[i][n] = NAN;
-    }
+  for(uint i = 0; i < params.CurrentHarmonics.size(); i++) {
+    for(uint n = 0; n < params.CurrentHarmonics[i].size(); n++) params.CurrentHarmonics[i][n] = NAN;
   }
-  if(params->Type == AGGREG_10C) {
-    for(uint i = 0; i < params->Apparent_Power.size(); i++) params->Apparent_Power[i] = NAN;
-    for(uint i = 0; i < params->Voltage.size(); i++) params->Voltage[i].resize(0);
-    for(uint i = 0; i < params->Current.size(); i++) params->Current[i].resize(0);
-  }
-  if(params->Type == AGGREG_1H) {
-    for(uint i = 0; i < 40; i++) params->StatsFrequency[i] = 0;
-    for(uint i = 0; i < 26; i++) params->StatsVoltage[i] = 0;
-    for(uint i = 0; i < 26; i++) params->StatsTHD[i] = 0;
-    for(uint i = 0; i < 2; i++)  params->StatsHarmonics[i] = 0;
-  }
-  params->Samples = 0;
+  for(uint i = 0; i < params.Voltage.size(); i++) params.Voltage[i].resize(0);
+  for(uint i = 0; i < params.Current.size(); i++) params.Current[i].resize(0);
+  for(uint i = 0; i < params.FFT_V.size(); i++) params.FFT_V[i].resize(0);
+  for(uint i = 0; i < params.FFT_I.size(); i++) params.FFT_I[i].resize(0);
 }
-void AnalyzerInterface::SaveAggreg(Params_t *params) {
-  if(params->Type == AGGREG_3S)
+void AnalyzerInterface::SaveAggreg(Params_t &params) {
+  if(params.Type == AGGREG_3S)
     PrepareSentence("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
-  else if(params->Type == AGGREG_1M)  
+  else if(params.Type == AGGREG_1M)  
     PrepareSentence("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING sampletime) "
                     "INSERT INTO aggreg_ext_1m(sampletime, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) SELECT sampletime, ?, ?, ?, ?, ?, ? FROM Sample");
-  else if(params->Type == AGGREG_10M)
+  else if(params.Type == AGGREG_10M)
     PrepareSentence("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
-  else if(params->Type == AGGREG_1H)
+  else if(params.Type == AGGREG_1H)
     PrepareSentence("WITH Sample AS (INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, active_power, active_energy, reactive_power, reactive_energy, freq, flag) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING sampletime) "
                     "INSERT INTO aggreg_stat_1h(sampletime, stat_voltage, stat_frequency, stat_thd, stat_harmonics) SELECT sampletime, ?, ?, ?, ? FROM Sample");
-  BindSingleUInt64(params->Timestamp);                                                 //sampletime
-  BindArrayFloat(params->RMS_V);                                                       //rms_v 
-  BindArrayFloat(params->RMS_I);                                                       //rms_i
-  BindArrayFloat(params->Active_Power);                                                //active_power
-  BindArrayFloat(params->Active_Energy);                                               //active_energy
-  BindArrayFloat(params->Reactive_Power);                                              //reactive_power
-  BindArrayFloat(params->Reactive_Energy);                                             //reactive_energy
-  BindSingleFloat(params->Frequency);                                                  //frequency
-  BindSingleBool(params->Flag);                                                        //flaged
-  if(params->Type == AGGREG_1M) {
-    BindArrayFloat(params->Power_Factor);                                              //power_factor
-    BindArrayFloat(params->THD_V);                                                     //thd_v
-    BindArrayFloat(params->THD_I);                                                     //thd_i
-    BindArrayFloat(params->Phi);                                                       //phi
-    BindArrayArrayFloat(params->VoltageHarmonics, (pMode == PHASE1) ? 1 : 3, 50);                         //harmonics_v
-    BindArrayArrayFloat(params->CurrentHarmonics, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, 50); //harmonics_i
-  } else if(params->Type == AGGREG_1H) {
-    BindArrayUInt16(params->StatsVoltage, 26);        //estadisticas de tension
-    BindArrayUInt16(params->StatsFrequency, 40);      //estadisticas de frequencia
-    BindArrayUInt16(params->StatsTHD, 26);            //estadisticas de distorsion harmonica
-    BindArrayUInt16(params->StatsHarmonics, 2);       //estadisticas de harmonicos en rango
+  BindSingleUInt64(params.Timestamp);                                                 //sampletime
+  BindArrayFloat(params.RMS_V);                                                       //rms_v 
+  BindArrayFloat(params.RMS_I);                                                       //rms_i
+  BindArrayFloat(params.Active_Power);                                                //active_power
+  BindArrayFloat(params.Active_Energy);                                               //active_energy
+  BindArrayFloat(params.Reactive_Power);                                              //reactive_power
+  BindArrayFloat(params.Reactive_Energy);                                             //reactive_energy
+  BindSingleFloat(params.Frequency);                                                  //frequency
+  BindSingleBool(params.Flag);                                                        //flaged
+  if(params.Type == AGGREG_1M) {
+    BindArrayFloat(params.Power_Factor);                                              //power_factor
+    BindArrayFloat(params.THD_V);                                                     //thd_v
+    BindArrayFloat(params.THD_I);                                                     //thd_i
+    BindArrayFloat(params.Phi);                                                       //phi
+    BindArrayArrayFloat(params.VoltageHarmonics);                                     //harmonics_v
+    BindArrayArrayFloat(params.CurrentHarmonics);                                     //harmonics_i
+  } else if(params.Type == AGGREG_1H) {
+    BindArrayUInt16(params.StatsVoltage);        //estadisticas de tension
+    BindArrayUInt16(params.StatsFrequency);      //estadisticas de frequencia
+    BindArrayUInt16(params.StatsTHD);            //estadisticas de distorsion harmonica
+    BindArrayUInt16(params.StatsHarmonics);      //estadisticas de harmonicos en rango
   }
   ExecSentence();
-  if(params->Type == AGGREG_1M) {
+  if(params.Type == AGGREG_1M) {
     PrepareSentence("DELETE FROM aggreg_ext_1m WHERE sampletime < ?");
-    BindSingleUInt64(params->Timestamp - 86400000);   //Delete 1 day old
+    BindSingleUInt64(params.Timestamp - 86400000);   //Delete 1 day old
     ExecSentence();
   }
   pLastSave = Tools::GetTime();
@@ -157,158 +292,209 @@ json_object *AnalyzerInterface::GetJSONDescriptor() {
   return Device;
 }
 json_object *AnalyzerInterface::GetJSONParams(char *series) {
-  Params_t    Params;
-  InitAggreg(&Params, AGGREG_10C);
-//  ExtParams_t ExtParams;
-  bool RMS_V = false, RMS_I = false, Active_Power = false, Reactive_Power = false, Apparent_Power = false, Power_Factor = false, Active_Energy = false,
-       Frequency = false, Flag = false, THD_V = false, THD_I = false, VoltageHarmonics = false, CurrentHarmonics = false, Phi = false,
-       Voltage = false, Current = false, FFT_V = false, FFT_I = false, QueryParams = false, QueryParamsExt = false;
+  Params_t Params;
+  InitAggreg(Params, AGGREG_10C);
+  bool Frequency = false, Flag = false, RMS_V = false, RMS_I = false, Active_Power = false, Reactive_Power = false, Active_Energy = false,
+       Reactive_Energy = false, Apparent_Power = false, Power_Factor = false, THD_V = false, THD_I = false, Phi = false, VoltageHarmonics = false, 
+       CurrentHarmonics = false, FFT_V = false, FFT_I = false, Voltage = false, Current = false;
   char *Save;
   char *Serie = strtok_r(series, ", ", &Save);
   while(Serie != NULL) {
-    if(strcmp(Serie, "rms_v") == 0)               RMS_V = QueryParams = true;
-    else if(strcmp(Serie, "rms_i") == 0)          RMS_I = QueryParams = true;
-    else if(strcmp(Serie, "active_power") == 0)   Active_Power = QueryParams = true;
-    else if(strcmp(Serie, "reactive_power") == 0) Reactive_Power = QueryParams = true;
-    else if(strcmp(Serie, "apparent_power") == 0) Apparent_Power = QueryParams = true;
-    else if(strcmp(Serie, "power_factor") == 0)   Power_Factor = QueryParams = true;
-    else if(strcmp(Serie, "active_energy") == 0)  Active_Energy = QueryParams = true;
-    else if(strcmp(Serie, "freq") == 0)           Frequency = QueryParams = true;
-    else if(strcmp(Serie, "flag") == 0)           Flag = QueryParams = true;
-    else if(strcmp(Serie, "thd_v") == 0)          THD_V = QueryParams = true;
-    else if(strcmp(Serie, "thd_i") == 0)          THD_I = QueryParams = true;
-    else if(strcmp(Serie, "harmonics_v") == 0)    VoltageHarmonics = QueryParams = true;
-    else if(strcmp(Serie, "harmonics_i") == 0)    CurrentHarmonics = QueryParams = true;
-    else if(strcmp(Serie, "phi") == 0)            Phi = QueryParams = true;
-    else if(strcmp(Serie, "wave_v") == 0)         Voltage = QueryParams = QueryParamsExt = true;
-    else if(strcmp(Serie, "wave_i") == 0)         Current = QueryParams = QueryParamsExt = true;
-    else if(strcmp(Serie, "fft_v") == 0)          FFT_V = QueryParams = QueryParamsExt = true;
-    else if(strcmp(Serie, "fft_i") == 0)          FFT_I = QueryParams = QueryParamsExt = true;
+    if(strcmp(Serie, "freq") == 0)                 Frequency = true;
+    else if(strcmp(Serie, "flag") == 0)            Flag = true;
+    else if(strcmp(Serie, "rms_v") == 0)           RMS_V = true;
+    else if(strcmp(Serie, "rms_i") == 0)           RMS_I = true;
+    else if(strcmp(Serie, "active_power") == 0)    Active_Power = true;
+    else if(strcmp(Serie, "reactive_power") == 0)  Reactive_Power = true;
+    else if(strcmp(Serie, "active_energy") == 0)   Active_Energy = true;
+    else if(strcmp(Serie, "reactive_energy") == 0) Reactive_Energy = true;
+    else if(strcmp(Serie, "apparent_power") == 0)  Apparent_Power = true;
+    else if(strcmp(Serie, "power_factor") == 0)    Power_Factor = true;
+    else if(strcmp(Serie, "thd_v") == 0)           THD_V = true;
+    else if(strcmp(Serie, "thd_i") == 0)           THD_I = true;
+    else if(strcmp(Serie, "phi") == 0)             Phi = true;
+    else if(strcmp(Serie, "harmonics_v") == 0)     VoltageHarmonics = true;
+    else if(strcmp(Serie, "harmonics_i") == 0)     CurrentHarmonics = true;
+    else if(strcmp(Serie, "fft_v") == 0)           FFT_V = true;
+    else if(strcmp(Serie, "fft_i") == 0)           FFT_I = true;
+    else if(strcmp(Serie, "wave_v") == 0)          Voltage = true;
+    else if(strcmp(Serie, "wave_i") == 0)          Current = true;
     Serie = strtok_r(NULL, ", ", &Save);
   }
-  GetParams(QueryParams ? &Params : NULL, QueryParamsExt);
+  GetParams(Params, Frequency, Flag, RMS_V, RMS_I, Active_Power, Reactive_Power, Active_Energy, Reactive_Energy, Apparent_Power, Power_Factor, THD_V, THD_I, Phi, VoltageHarmonics, CurrentHarmonics, FFT_V, FFT_I, Voltage, Current);
   json_object *Result = json_object_new_object();
-  uint8_t VoltageChannels = ((pMode == PHASE1) ? 1 : 3);
-  uint8_t CurrentChannels = ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);
+  if(Frequency) json_object_object_add(Result, "freq", (isnan(Params.Frequency)) ? NULL : json_object_new_double(Params.Frequency));
+  if(Flag) json_object_object_add(Result, "flag", json_object_new_boolean(Params.Flag));
   if(RMS_V) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, (isnan(Params.RMS_V[i])) ? NULL : json_object_new_double(Params.RMS_V[i]));
+    for(uint i = 0; i < Params.RMS_V.size(); i++) json_object_array_add(Obj, (isnan(Params.RMS_V[i])) ? NULL : json_object_new_double(Params.RMS_V[i]));
     json_object_object_add(Result, "rms_v", Obj);
   }
   if(RMS_I) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < CurrentChannels; i++) json_object_array_add(Obj, (isnan(Params.RMS_I[i])) ? NULL : json_object_new_double(Params.RMS_I[i]));
+    for(uint i = 0; i < Params.RMS_I.size(); i++) json_object_array_add(Obj, (isnan(Params.RMS_I[i])) ? NULL : json_object_new_double(Params.RMS_I[i]));
     json_object_object_add(Result, "rms_i", Obj);
   }
   if(Active_Power) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, (isnan(Params.Active_Power[i])) ? NULL : json_object_new_double(Params.Active_Power[i]));
+    for(uint i = 0; i < Params.Active_Power.size(); i++) json_object_array_add(Obj, (isnan(Params.Active_Power[i])) ? NULL : json_object_new_double(Params.Active_Power[i]));
     json_object_object_add(Result, "active_power", Obj);
   }
   if(Reactive_Power) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, (isnan(Params.Reactive_Power[i])) ? NULL : json_object_new_double(Params.Reactive_Power[i]));
+    for(uint i = 0; i < Params.Reactive_Power.size(); i++) json_object_array_add(Obj, (isnan(Params.Reactive_Power[i])) ? NULL : json_object_new_double(Params.Reactive_Power[i]));
     json_object_object_add(Result, "reactive_power", Obj);
+  }
+  if(Active_Energy) {
+    json_object *Obj = json_object_new_array();
+    for(uint i = 0; i < Params.Active_Energy.size(); i++) json_object_array_add(Obj, (isnan(Params.Active_Energy[i])) ? NULL : json_object_new_double(Params.Active_Energy[i]));
+    json_object_object_add(Result, "active_energy", Obj);
+  }
+  if(Reactive_Energy) {
+    json_object *Obj = json_object_new_array();
+    for(uint i = 0; i < Params.Reactive_Energy.size(); i++) json_object_array_add(Obj, (isnan(Params.Reactive_Energy[i])) ? NULL : json_object_new_double(Params.Reactive_Energy[i]));
+    json_object_object_add(Result, "reactive_energy", Obj);
   }
   if(Apparent_Power) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, (isnan(Params.Apparent_Power[i])) ? NULL : json_object_new_double(Params.Apparent_Power[i]));
+    for(uint i = 0; i < Params.Apparent_Power.size(); i++) json_object_array_add(Obj, (isnan(Params.Apparent_Power[i])) ? NULL : json_object_new_double(Params.Apparent_Power[i]));
     json_object_object_add(Result, "apparent_power", Obj);
   }
   if(Power_Factor) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, (isnan(Params.Power_Factor[i])) ? NULL : json_object_new_double(Params.Power_Factor[i]));
+    for(uint i = 0; i < Params.Power_Factor.size(); i++) json_object_array_add(Obj, (isnan(Params.Power_Factor[i])) ? NULL : json_object_new_double(Params.Power_Factor[i]));
     json_object_object_add(Result, "power_factor", Obj);
-  }
-  if(Active_Energy) {
-    json_object *Obj = json_object_new_array();
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) json_object_array_add(Obj, (isnan(Params.Active_Energy[i])) ? NULL : json_object_new_double(Params.Active_Energy[i]));
-    json_object_object_add(Result, "active_energy", Obj);
   }
   if(THD_V) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, (isnan(Params.THD_V[i])) ? NULL : json_object_new_double(Params.THD_V[i]));
+    for(uint i = 0; i < Params.THD_V.size(); i++) json_object_array_add(Obj, (isnan(Params.THD_V[i])) ? NULL : json_object_new_double(Params.THD_V[i]));
     json_object_object_add(Result, "thd_v", Obj);
   }
   if(THD_I) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < CurrentChannels; i++) json_object_array_add(Obj, (isnan(Params.THD_I[i])) ? NULL : json_object_new_double(Params.THD_I[i]));
+    for(uint i = 0; i < Params.THD_I.size(); i++) json_object_array_add(Obj, (isnan(Params.THD_I[i])) ? NULL : json_object_new_double(Params.THD_I[i]));
     json_object_object_add(Result, "thd_i", Obj);
-  }
-  if(Frequency) {
-    if(isnan(Params.Frequency) == false) json_object_object_add(Result, "freq", (isnan(Params.Frequency)) ? NULL : json_object_new_double(Params.Frequency));
   }
   if(Phi) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) json_object_array_add(Obj, (isnan(Params.Phi[i])) ? NULL : json_object_new_double(Params.Phi[i]));
+    for(uint i = 0; i < Params.Phi.size(); i++) json_object_array_add(Obj, (isnan(Params.Phi[i])) ? NULL : json_object_new_double(Params.Phi[i]));
     json_object_object_add(Result, "phi", Obj);
-  }
-  if(Flag) {
-    json_object_object_add(Result, "flag", json_object_new_boolean(Params.Flag));
   }
   if(VoltageHarmonics) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) {
+    for(uint i = 0; i < Params.VoltageHarmonics.size(); i++) {
       json_object *Obj2 = json_object_new_array();
-      for(int j = 0; j < 50; j++) json_object_array_add(Obj2, (isnan(Params.VoltageHarmonics[i][j])) ? NULL : json_object_new_double(Params.VoltageHarmonics[i][j]));
+      for(uint j = 0; j < Params.VoltageHarmonics[i].size(); j++) json_object_array_add(Obj2, (isnan(Params.VoltageHarmonics[i][j])) ? NULL : json_object_new_double(Params.VoltageHarmonics[i][j]));
       json_object_array_add(Obj, Obj2);
     }
     json_object_object_add(Result, "harmonics_v", Obj);
   }
   if(CurrentHarmonics) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < CurrentChannels; i++) {
+    for(uint i = 0; i < Params.CurrentHarmonics.size(); i++) {
       json_object *Obj2 = json_object_new_array();
-      for(int j = 0; j < 50; j++) json_object_array_add(Obj2, (isnan(Params.CurrentHarmonics[i][j])) ? NULL : json_object_new_double(Params.CurrentHarmonics[i][j]));
+      for(uint j = 0; j < Params.CurrentHarmonics[i].size(); j++) json_object_array_add(Obj2, (isnan(Params.CurrentHarmonics[i][j])) ? NULL : json_object_new_double(Params.CurrentHarmonics[i][j]));
       json_object_array_add(Obj, Obj2);
     }
     json_object_object_add(Result, "harmonics_i", Obj);
   }
   if(Voltage) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) {
+    for(uint i = 0; i < Params.Voltage.size(); i++) {
       json_object *Obj2 = json_object_new_array();
-      for(uint32_t j = 0; j < Params.Samples; j++) json_object_array_add(Obj2, (isnan(Params.Voltage[i][j])) ? NULL : json_object_new_double(Params.Voltage[i][j]));
+      for(uint j = 0; j < Params.Voltage[i].size(); j++) json_object_array_add(Obj2, (isnan(Params.Voltage[i][j])) ? NULL : json_object_new_double(Params.Voltage[i][j]));
       json_object_array_add(Obj, Obj2);
     }
     json_object_object_add(Result, "wave_v", Obj);
   }
   if(Current) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < CurrentChannels; i++) {
+    for(uint i = 0; i < Params.Current.size(); i++) {
       json_object *Obj2 = json_object_new_array();
-      for(uint32_t j = 0; j < Params.Samples; j++) json_object_array_add(Obj2, (isnan(Params.Current[i][j])) ? NULL : json_object_new_double(Params.Current[i][j]));
+      for(uint j = 0; j < Params.Current[i].size(); j++) json_object_array_add(Obj2, (isnan(Params.Current[i][j])) ? NULL : json_object_new_double(Params.Current[i][j]));
       json_object_array_add(Obj, Obj2);
     }
     json_object_object_add(Result, "wave_i", Obj);
   }
-  if(FFT_V && (Params.Samples > 0)) {
+  if(FFT_V) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < VoltageChannels; i++) {
+    for(uint i = 0; i < Params.FFT_V.size(); i++) {
       json_object *Obj2 = json_object_new_array();
-      for(uint j = 0; j < ((Params.Samples / 2) + 1); j++) json_object_array_add(Obj2, (isnan(Params.FFT_V[i][j])) ? NULL : json_object_new_double(Params.FFT_V[i][j]));
+      for(uint j = 0; j < Params.FFT_V[i].size(); j++) json_object_array_add(Obj2, (isnan(Params.FFT_V[i][j])) ? NULL : json_object_new_double(Params.FFT_V[i][j]));
       json_object_array_add(Obj, Obj2);
     }
     json_object_object_add(Result, "fft_v", Obj);
   }
-  if(FFT_I && (Params.Samples > 0)) {
+  if(FFT_I) {
     json_object *Obj = json_object_new_array();
-    for(int i = 0; i < CurrentChannels; i++) {
+    for(uint i = 0; i < Params.FFT_I.size(); i++) {
       json_object *Obj2 = json_object_new_array();
-      for(uint j = 0; j < ((Params.Samples / 2) + 1); j++) json_object_array_add(Obj2, (isnan(Params.FFT_I[i][j])) ? NULL : json_object_new_double(Params.FFT_I[i][j]));
+      for(uint j = 0; j < Params.FFT_I[i].size(); j++) json_object_array_add(Obj2, (isnan(Params.FFT_I[i][j])) ? NULL : json_object_new_double(Params.FFT_I[i][j]));
       json_object_array_add(Obj, Obj2);
     }
     json_object_object_add(Result, "fft_i", Obj);
   }
-  if(QueryParams) json_object_object_add(Result, "Sampletime", json_object_new_int64(Params.Timestamp));
-  if(QueryParamsExt) {
-//    for(int i = 0; i < VoltageChannels; i++) free(Params.Voltage[i]);
-//    for(int i = 0; i < CurrentChannels; i++) free(Params.Current[i]);
-//    for(int i = 0; i < VoltageChannels; i++) free(ExtParams.FFT_V[i]);
-//    for(int i = 0; i < CurrentChannels; i++) free(ExtParams.FFT_I[i]);    
-  }  
+  json_object_object_add(Result, "Sampletime", json_object_new_int64(Params.Timestamp));
   return Result;
 }
 AnalyzerInterface::AnalyzerMode AnalyzerInterface::GetMode() {
   return pMode;
+}
+void AnalyzerInterface::AccumulateAggreg(Params_t &dst, Params_t &src) {
+  dst.Timestamp = src.Timestamp;
+  for(uint i = 0; i < dst.RMS_V.size(); i++) dst.RMS_V[i] = AccumulateRMS(dst.RMS_V[i], src.RMS_V[i]);
+  dst.RMS_V_Inputs += src.RMS_V_Inputs;
+  dst.Frequency = AccumulateSUM(dst.Frequency, src.Frequency);
+  dst.Freq_Inputs += src.Freq_Inputs;
+  for(uint i = 0; i < dst.RMS_I.size(); i++) dst.RMS_I[i] = AccumulateRMS(dst.RMS_I[i], src.RMS_I[i]);
+  for(uint i = 0; i < dst.RMS_I_Inputs.size(); i++) dst.RMS_I_Inputs[i] += src.RMS_I_Inputs[i];
+  for(uint i = 0; i < dst.Active_Power.size(); i++) dst.Active_Power[i] = AccumulateSUM(dst.Active_Power[i], src.Active_Power[i]);
+  for(uint i = 0; i < dst.Active_Energy.size(); i++) dst.Active_Energy[i] = AccumulateSUM(dst.Active_Energy[i], src.Active_Energy[i]);
+  for(uint i = 0; i < dst.Reactive_Power.size(); i++) dst.Reactive_Power[i] = AccumulateSUM(dst.Reactive_Power[i], src.Reactive_Power[i]);
+  for(uint i = 0; i < dst.Reactive_Energy.size(); i++) dst.Reactive_Energy[i] = AccumulateSUM(dst.Reactive_Energy[i], src.Reactive_Energy[i]);
+  for(uint i = 0; i < dst.Power_Factor.size(); i++) dst.Power_Factor[i] = AccumulateSUM(dst.Power_Factor[i], src.Power_Factor[i]);
+  for(uint i = 0; i < dst.THD_V.size(); i++) dst.THD_V[i] = AccumulateRMS(dst.THD_V[i], src.THD_V[i]);
+  for(uint i = 0; i < dst.THD_I.size(); i++) dst.THD_I[i] = AccumulateRMS(dst.THD_I[i], src.THD_I[i]);
+  for(uint i = 0; i < dst.Phi.size(); i++) dst.Phi[i] = AccumulateSUM(dst.Phi[i], src.Phi[i]);
+  for(uint i = 0; i < dst.VoltageHarmonics.size(); i++) {
+    for(uint j = 0; j < dst.VoltageHarmonics[i].size(); j++) dst.VoltageHarmonics[i][j] = AccumulateRMS(dst.VoltageHarmonics[i][j], src.VoltageHarmonics[i][j]);
+  }
+  for(uint i = 0; i < dst.CurrentHarmonics.size(); i++) {
+    for(uint j = 0; j < dst.CurrentHarmonics[i].size(); j++) dst.CurrentHarmonics[i][j] = AccumulateRMS(dst.CurrentHarmonics[i][j], src.CurrentHarmonics[i][j]);
+  }
+  dst.Flag |= src.Flag;
+}
+void AnalyzerInterface::NormalizeAggreg(Params_t &params) {
+  for(uint i = 0; i < params.RMS_V.size(); i++) params.RMS_V[i] = sqrt(params.RMS_V[i] / params.RMS_V_Inputs);
+  for(uint i = 0; i < params.RMS_I.size(); i++) params.RMS_I[i] = sqrt(params.RMS_I[i] / params.RMS_I_Inputs[i]);
+  for(uint i = 0; i < params.Active_Power.size(); i++) params.Active_Power[i] = params.Active_Power[i] / params.RMS_I_Inputs[i];
+  for(uint i = 0; i < params.Reactive_Power.size(); i++) params.Reactive_Power[i] = params.Reactive_Power[i] / params.RMS_I_Inputs[i];
+  for(uint i = 0; i < params.Power_Factor.size(); i++) params.Power_Factor[i] = params.Power_Factor[i] / params.RMS_I_Inputs[i];
+  for(uint i = 0; i < params.THD_I.size(); i++) params.THD_I[i] = sqrt(params.THD_I[i] / params.RMS_I_Inputs[i]);
+  for(uint i = 0; i < params.Phi.size(); i++) params.Phi[i] = params.Phi[i] / params.RMS_I_Inputs[i];
+  for(uint i = 0; i < params.THD_V.size(); i++) params.THD_V[i] = sqrt(params.THD_V[i] / params.RMS_V_Inputs);
+  for(uint i = 0; i < params.CurrentHarmonics.size(); i++) {
+    for(uint j = 0; j < params.CurrentHarmonics[i].size(); j++) params.CurrentHarmonics[i][j] = sqrt(params.CurrentHarmonics[i][j] / params.RMS_I_Inputs[i]);
+  }
+  for(uint i = 0; i < params.VoltageHarmonics.size(); i++) {
+    for(uint j = 0; j < params.VoltageHarmonics[i].size(); j++) params.VoltageHarmonics[i][j] = sqrt(params.VoltageHarmonics[i][j] / params.RMS_V_Inputs);
+  }
+  params.Frequency = params.Frequency / params.Freq_Inputs;
+  if(params.Freq_Inputs > 1) params.Freq_Inputs = 1;
+  if(params.RMS_V_Inputs > 1) params.RMS_V_Inputs = 1;
+  for(uint i = 0; i < params.RMS_I_Inputs.size(); i++) {
+    if(params.RMS_I_Inputs[i] > 1) params.RMS_I_Inputs[i] = 1;
+  }
+}
+float AnalyzerInterface::AccumulateSUM(float val1, float val2) {
+  if(isnan(val1) && isnan(val2))   return NAN;
+  if(isnan(val1) && !isnan(val2))  return val2;
+  if(!isnan(val1) && isnan(val2))  return val1;
+  return val1 + val2;
+}
+float AnalyzerInterface::AccumulateRMS(float val1, float val2) {
+  if(isnan(val1) && isnan(val2))   return NAN;
+  if(isnan(val1) && !isnan(val2))  return pow(val2, 2.0);
+  if(!isnan(val1) && isnan(val2))  return val1;
+  return val1 + pow(val2, 2.0);
 }

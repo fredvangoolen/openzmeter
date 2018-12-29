@@ -650,7 +650,7 @@ function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter 
           for(var i = 0; i < data.series.length; i++)  {
             if(data.series[i].yHTML !== undefined) return Caption + '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + data.series[i].yHTML + '</div>';
           }
-          return Caption + '<div style="font-size: 14px; line-height: 18px; font-weight: bold">No data</div>';
+          return Caption + '<div style="font-size: 14px; line-height: 18px; font-weight: bold">-</div>';
         }
       },
       axes: {
@@ -779,7 +779,7 @@ function Round2Labels(value, integer, fraction) {
 /* Retorna un numero como cadena con dos decimales */
 function Round2(value) {
   if(value === null) {
-    return '-';
+    return '~';
   } else {
     value = Math.round(value * 100);
     var Integer = Math.trunc(value / 100);
@@ -1103,18 +1103,22 @@ function CalcRanges(input, cols, fromzero, onlypositive, sum, noOffset) {
     if(sum == true) {
       var Sum = 0; 
       for(n = 0; n < cols.length; n++) {
-        if(input[i][cols[n]] == null) continue;
+        if(input[i][cols[n]] === null) continue;
         Sum += input[i][cols[n]];
       }
       if(Sum > UpperRange) UpperRange = Sum;
       if(Sum < LowerRange) LowerRange = Sum;
     } else {
       for(n = 0; n < cols.length; n++) {
-        if(input[i][cols[n]] == null) continue;
+        if(input[i][cols[n]] === null) continue;
         if(input[i][cols[n]] > UpperRange) UpperRange = input[i][cols[n]];
         if(input[i][cols[n]] < LowerRange) LowerRange = input[i][cols[n]];
       }
     }
+  }
+  if((UpperRange === -Infinity) && (LowerRange === Infinity)) {
+    LowerRange = 0;
+    UpperRange = 0;
   }
   if((noOffset === undefined) || (noOffset === false)) {
     var Variation = (UpperRange - LowerRange);

@@ -11,7 +11,9 @@ AnalyzerRemote::AnalyzerRemote(char* id, float nominalVoltage, float nominalFreq
 void AnalyzerRemote::UpdateConfig(float nominalVoltage, float nominalFreq, char* name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online) {
   //Si ha cambiado el modo tengo que asegurarme que las muestras que hay son coherentes, si no la web fallara!
 }
-void AnalyzerRemote::GetParams(Params_t *params, bool extended) {
+void AnalyzerRemote::GetParams(Params_t &params, bool frequency, bool flag, bool rms_v, bool rms_i, bool active_power, bool reactive_power, bool active_energy,
+                                     bool reactive_energy, bool apparent_power, bool power_factor, bool thd_v, bool thd_i, bool phi, bool voltage_harmonics, 
+                                     bool current_harmonics, bool fft_v, bool fft_i, bool voltage, bool current) {
 
 }
 bool AnalyzerRemote::SaveJSON(json_object *json, Database *db) {
@@ -70,7 +72,7 @@ bool AnalyzerRemote::SaveJSON(json_object *json, Database *db) {
 //      *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
 //      return true;
 //    }
-    SaveAggreg(&Params);
+    SaveAggreg(Params);
     Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
   } 
   

@@ -145,27 +145,36 @@ void Database::BindSingleFloat(float param) {
     pParamsLen++;
   }
 }
-void Database::BindArrayArrayFloat(const vector< vector<float> > &params, int lenA, int lenB) {
+void Database::BindArrayArrayFloat(const vector< vector<float> > &params) {
   if(pParamsLen < pParamsAlloc) {
-    pParams[pParamsLen] = (char*)malloc(4 + (4 * sizeof(char) * 18 * lenB * lenA));
-    int Pos = sprintf(pParams[pParamsLen], "'{");
-    for(int i = 0; i < lenA; i++) {
-      Pos += sprintf(&pParams[pParamsLen][Pos], "{");
-      for(int n = 0; n < lenB; n++) Pos += sprintf(&pParams[pParamsLen][Pos], isnan(params[i][n]) ? "NULL, " : "%g, ", params[i][n]);    
-      if(lenB > 0) Pos -= 2;
-      Pos += sprintf(&pParams[pParamsLen][Pos], "}, ");
+    stringstream Stream;
+    Stream <<  "'{";
+    for(uint i = 0; i < params.size(); i++) {
+      Stream <<  "{";
+      for(uint n = 0; n < params[i].size(); n++) {
+        if(isnan(params[i][n])) 
+          Stream << "NULL";
+        else
+          Stream << params[i][n];
+        if(n < (params[i].size() - 1))
+          Stream << ", ";
+        else
+          Stream << "}";
+      }
+      if(i < (params.size() - 1)) Stream << ", ";
     }
-    if(lenA > 0) Pos -= 2;
-    sprintf(&pParams[pParamsLen][Pos], "}'");
-    pParamsLen++;    
+    Stream <<  "}'";
+    //sprintf(&pParams[pParamsLen][Pos], "}'");
+    pParams[pParamsLen] = strdup(Stream.str().c_str());
+    pParamsLen++;   
   }
 }
-void Database::BindArrayUInt16(uint16_t *params, int len) {
+void Database::BindArrayUInt16(const vector<uint16_t> &params) {
   if(pParamsLen < pParamsAlloc) {
-    pParams[pParamsLen] = (char*)malloc(4 + sizeof(char) * 5 * len);
+    pParams[pParamsLen] = (char*)malloc(4 + sizeof(char) * 5 * params.size());
     int Pos = sprintf(pParams[pParamsLen], "'{");
-    for(int i = 0; i < len; i++) Pos += sprintf(&pParams[pParamsLen][Pos], "%u, ", params[i]);
-    if(len > 0) Pos -= 2;
+    for(uint i = 0; i < params.size(); i++) Pos += sprintf(&pParams[pParamsLen][Pos], "%u, ", params[i]);
+    if(params.size() > 0) Pos -= 2;
     sprintf(&pParams[pParamsLen][Pos], "}'");
     pParamsLen++;
   }

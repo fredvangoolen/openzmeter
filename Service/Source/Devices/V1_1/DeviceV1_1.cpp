@@ -177,7 +177,7 @@ void *DeviceV1_1::Signal_Thread(void* args) {
   bool Toogle = false;
   while(!This->pTerminateSignal) {
     AnalyzerInterface::Params_t Params;
-    This->pAnalyzer->GetParams(&Params, NULL);
+/*    This->pAnalyzer->GetParams(&Params, NULL);
     uint16_t Current = 0;
     uint16_t Voltage = 1 << 6;
     uint8_t  Beep    = 0;
@@ -219,7 +219,7 @@ void *DeviceV1_1::Signal_Thread(void* args) {
     Tools::pBatteryLevel = Read[1];
     Tools::pBatteryCharging = (Read[0] & 0x02);
     Tools::pExternalPower = (Read[0] & 0x01);
-    fflush(stdout);
+    fflush(stdout);*/
     usleep(100000);
     //Envio transferencia de control
     //Leo datos, si hay algun boton pulsado llamo a los scripts!

@@ -390,23 +390,22 @@ function PeriodView_OnSuccess(result) {
   for(k = 0; k < 50; k++) {
     for(i = 0; i < result['harmonics_v'].length; i++) {
       var Row = [new Date(result['Sampletime'][i])];
-      for(j = 0; j < result['harmonics_v'][i].length; j++) Row.push(20 * Math.log10(result['harmonics_v'][i][j][k]));
+      for(j = 0; j < result['harmonics_v'][i].length; j++) Row.push(20 * Math.log10(Math.max(0.000000001, result['harmonics_v'][i][j][k])));
       HarmonicsData[k].push(Row);
     }
     ShiftArray(HarmonicsData[k], result['MaxSamples']);
   }
   PowerFactorData = GraphDataAppend(result, 'power_factor', PowerFactorData);
-  result['thd_v'] = result['thd_v'].map(function(x) { return x * 100.0; });
   THDData = GraphDataAppend(result, 'thd_v', THDData);
   PHIData = GraphDataAppend(result, 'phi', PHIData);
   if(HarmonicsCharts.length === 0) {
     for(i = 0; i < 50; i++) {
-      HarmonicsCharts[i] = AppendCubismGraph($('#EvolutionPanel'), HarmonicsData[i], SeriesNames.Harmonics[i] + ' harmonic', [result['From'], result['To']], function (x) { return Round2(x) + '<em>dB</em>' });
+      HarmonicsCharts[i] = AppendCubismGraph($('#EvolutionPanel'), HarmonicsData[i], SeriesNames.Harmonics[i] + ' harmonic', [result['From'], result['To']], function (x) { return (x === null) ? '~' : Round2(x) + '<em>dB</em>' });
     }
     Dygraph.synchronize(HarmonicsCharts, { range: false, zoom: false });
-    PowerFactorChart = AppendCubismGraph($('#ParametersPanel'), PowerFactorData, "Power Factor", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(x); });
-    THDChart         = AppendCubismGraph($('#ParametersPanel'), THDData, "Voltage THD", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(x) + '<em>%</em>'; });
-    PHIChart         = AppendCubismGraph($('#ParametersPanel'), PHIData, "Phi", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'; });
+    PowerFactorChart = AppendCubismGraph($('#ParametersPanel'), PowerFactorData, "Power Factor", [result['From'], result['To']], function (x) { return (x === null) ? '~' : Round2(x); });
+    THDChart         = AppendCubismGraph($('#ParametersPanel'), THDData, "Voltage THD", [result['From'], result['To']], function (x) { return (x === null) ? '~' : (Round2(x * 100.0) + '<em>%</em>'); });
+    PHIChart         = AppendCubismGraph($('#ParametersPanel'), PHIData, "Angle", [result['From'], result['To']], function (x) { return (x === null) ? '~' : (Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'); });
     Dygraph.synchronize([PowerFactorChart, THDChart, PHIChart], { range: false, zoom: false });
   } else {
     for(var i = 0; i < 50; i++) HarmonicsCharts[i].updateOptions({ file: HarmonicsData[i], dateWindow: [result['From'], result['To']] });
@@ -418,7 +417,7 @@ function PeriodView_OnSuccess(result) {
 }
 function ParametersSeries(event) {
   GraphPhaseButtons(PowerFactorChart, $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PowerFactorData, series, false)); return [-Range, Range]; }, (event !== undefined) ? event.target : undefined); 
-  GraphPhaseButtons(PHIChart,         $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PhiData, series, false, false, false, true)); return [-Range, Range]; }, undefined); 
+  GraphPhaseButtons(PHIChart,         $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PHIData, series, false, false, false, true)); return [-Range, Range]; }, undefined); 
   GraphPhaseButtons(THDChart,         $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(THDData, series, false, false, false, true)); return [-Range, Range];}, undefined); 
   for(var g = 0; g < 50; g++) GraphPhaseButtons(HarmonicsCharts[g], $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { return CalcRanges(HarmonicsData[g], series, false); }, undefined); 
 }

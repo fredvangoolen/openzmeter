@@ -31,6 +31,9 @@
           <in>DeviceInterface.cpp</in>
         </df>
         <df name="Prices">
+          <df name="ESIOS">
+            <in>ESIOS.cpp</in>
+          </df>
           <in>ESIOS.cpp</in>
           <in>PricesInterface.cpp</in>
         </df>
@@ -39,6 +42,7 @@
         <in>FFT.cpp</in>
         <in>HTTPServer.cpp</in>
         <in>Main.cpp</in>
+        <in>NTP.cpp</in>
         <in>NetworkManager.cpp</in>
         <in>Tools.cpp</in>
       </df>
@@ -91,7 +95,25 @@
       <item path="Source/Analyzers/AnalyzerInterface.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="11">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="Source/Analyzers/Remote/AnalyzerRemote.cpp"
+            ex="false"
+            tool="1"
+            flavor2="4">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="Source/Analyzers/Soft/AnalyzerSoft.cpp"
+            ex="false"
+            tool="1"
+            flavor2="11">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="Source/Database.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
             <pElem>/usr/local/pgsql/include</pElem>
@@ -138,6 +160,7 @@
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
             <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
             <pElem>WEB/Resources/lib/metisMenu</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
@@ -167,126 +190,8 @@
           </incDir>
         </ccTool>
       </item>
-      <item path="Source/Analyzers/Remote/AnalyzerRemote.cpp"
-            ex="false"
-            tool="1"
-            flavor2="4">
-        <ccTool flags="0">
-        </ccTool>
-      </item>
-      <item path="Source/Analyzers/Soft/AnalyzerSoft.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool flags="0">
-        </ccTool>
-      </item>
-      <item path="Source/Database.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="0">
-          <incDir>
-            <pElem>.</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_1</pElem>
-            <pElem>Source/Devices/V1</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2</pElem>
-            <pElem>Source/Prices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
-            <pElem>Tmp/Source/Prices</pElem>
-            <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
-            <pElem>Package/lib</pElem>
-            <pElem>Package/lib/systemd</pElem>
-            <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>WEB</pElem>
-            <pElem>WEB/Resources</pElem>
-            <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
-            <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
-            <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
-            <pElem>WEB/Resources/lib/marked</pElem>
-            <pElem>WEB/Resources/lib/sidenav</pElem>
-            <pElem>WEB/Resources/lib/visjs</pElem>
-            <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
-            <pElem>WEB/Resources/Fonts</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
-          </incDir>
-        </ccTool>
-      </item>
       <item path="Source/Devices/DeviceInterface.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
-          <incDir>
-            <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
-            <pElem>Package/lib</pElem>
-            <pElem>Package/lib/systemd</pElem>
-            <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>WEB</pElem>
-            <pElem>WEB/Resources</pElem>
-            <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
-            <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
-            <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
-            <pElem>WEB/Resources/lib/marked</pElem>
-            <pElem>WEB/Resources/lib/sidenav</pElem>
-            <pElem>WEB/Resources/lib/visjs</pElem>
-            <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
-            <pElem>WEB/Resources/Fonts</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
-          </incDir>
         </ccTool>
       </item>
       <item path="Source/Devices/Remote/DeviceRemote.cpp"
@@ -318,310 +223,483 @@
       <item path="Source/Events.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
             <pElem>.</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_1</pElem>
-            <pElem>Source/Devices/V1</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2</pElem>
-            <pElem>Source/Prices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Devices/V1_1</pElem>
+            <pElem>Tmp/Source/Devices/V2</pElem>
+            <pElem>Tmp/Source/Devices/V1</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
+            <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/usr</pElem>
+            <pElem>Package/usr/share</pElem>
+            <pElem>Package/usr/share/openZmeter</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
             <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_1</pElem>
+            <pElem>Source/Devices/V2</pElem>
+            <pElem>Source/Devices/V1</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Prices</pElem>
+            <pElem>Source/Prices/ESIOS</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>nbproject</pElem>
             <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
+            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
             <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
             <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
             <pElem>WEB/Resources/lib/sidenav</pElem>
             <pElem>WEB/Resources/lib/visjs</pElem>
             <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
             <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
             <pElem>WEB/Resources/Fonts</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/Help</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/FFT.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
             <pElem>.</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_1</pElem>
-            <pElem>Source/Devices/V1</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2</pElem>
-            <pElem>Source/Prices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Devices/V1_1</pElem>
+            <pElem>Tmp/Source/Devices/V2</pElem>
+            <pElem>Tmp/Source/Devices/V1</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
+            <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/usr</pElem>
+            <pElem>Package/usr/share</pElem>
+            <pElem>Package/usr/share/openZmeter</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
             <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_1</pElem>
+            <pElem>Source/Devices/V2</pElem>
+            <pElem>Source/Devices/V1</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Prices</pElem>
+            <pElem>Source/Prices/ESIOS</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>nbproject</pElem>
             <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
+            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
             <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
             <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
             <pElem>WEB/Resources/lib/sidenav</pElem>
             <pElem>WEB/Resources/lib/visjs</pElem>
             <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
             <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
             <pElem>WEB/Resources/Fonts</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/Help</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
             <pElem>.</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_1</pElem>
-            <pElem>Source/Devices/V1</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2</pElem>
-            <pElem>Source/Prices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Devices/V1_1</pElem>
+            <pElem>Tmp/Source/Devices/V2</pElem>
+            <pElem>Tmp/Source/Devices/V1</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
+            <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/usr</pElem>
+            <pElem>Package/usr/share</pElem>
+            <pElem>Package/usr/share/openZmeter</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
             <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_1</pElem>
+            <pElem>Source/Devices/V2</pElem>
+            <pElem>Source/Devices/V1</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Prices</pElem>
+            <pElem>Source/Prices/ESIOS</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>nbproject</pElem>
             <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
+            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
             <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
             <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
             <pElem>WEB/Resources/lib/sidenav</pElem>
             <pElem>WEB/Resources/lib/visjs</pElem>
             <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
             <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
             <pElem>WEB/Resources/Fonts</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/Help</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/Main.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
             <pElem>.</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_1</pElem>
-            <pElem>Source/Devices/V1</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2</pElem>
-            <pElem>Source/Prices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Devices/V1_1</pElem>
+            <pElem>Tmp/Source/Devices/V2</pElem>
+            <pElem>Tmp/Source/Devices/V1</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
             <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/usr</pElem>
+            <pElem>Package/usr/share</pElem>
+            <pElem>Package/usr/share/openZmeter</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
             <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_1</pElem>
+            <pElem>Source/Devices/V2</pElem>
+            <pElem>Source/Devices/V1</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Prices</pElem>
+            <pElem>Source/Prices/ESIOS</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>nbproject</pElem>
             <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
+            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
             <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
             <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
             <pElem>WEB/Resources/lib/sidenav</pElem>
             <pElem>WEB/Resources/lib/visjs</pElem>
             <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
             <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
             <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Help</pElem>
+          </incDir>
+        </ccTool>
+      </item>
+      <item path="Source/NTP.cpp" ex="false" tool="1" flavor2="11">
+        <ccTool flags="0">
+          <incDir>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
+            <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Devices/V1_1</pElem>
+            <pElem>Tmp/Source/Devices/V2</pElem>
+            <pElem>Tmp/Source/Devices/V1</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
+            <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
+            <pElem>Package</pElem>
+            <pElem>Package/usr</pElem>
+            <pElem>Package/usr/share</pElem>
+            <pElem>Package/usr/share/openZmeter</pElem>
+            <pElem>Package/lib</pElem>
+            <pElem>Package/lib/systemd</pElem>
+            <pElem>Package/lib/systemd/system</pElem>
+            <pElem>Package/DEBIAN</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_1</pElem>
+            <pElem>Source/Devices/V2</pElem>
+            <pElem>Source/Devices/V1</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Prices</pElem>
+            <pElem>Source/Prices/ESIOS</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>WEB</pElem>
+            <pElem>WEB/Resources</pElem>
             <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
+            <pElem>WEB/Resources/lib</pElem>
+            <pElem>WEB/Resources/lib/metisMenu</pElem>
+            <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
+            <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/lib/sidenav</pElem>
+            <pElem>WEB/Resources/lib/visjs</pElem>
+            <pElem>WEB/Resources/lib/visjs/img</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
+            <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Help</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/NetworkManager.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
             <pElem>.</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_1</pElem>
-            <pElem>Source/Devices/V1</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2</pElem>
-            <pElem>Source/Prices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Devices/V1_1</pElem>
+            <pElem>Tmp/Source/Devices/V2</pElem>
+            <pElem>Tmp/Source/Devices/V1</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
             <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/usr</pElem>
+            <pElem>Package/usr/share</pElem>
+            <pElem>Package/usr/share/openZmeter</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
             <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_1</pElem>
+            <pElem>Source/Devices/V2</pElem>
+            <pElem>Source/Devices/V1</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Prices</pElem>
+            <pElem>Source/Prices/ESIOS</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>nbproject</pElem>
             <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
+            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
             <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
             <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
             <pElem>WEB/Resources/lib/sidenav</pElem>
             <pElem>WEB/Resources/lib/visjs</pElem>
             <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
             <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
             <pElem>WEB/Resources/Fonts</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/Help</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/Prices/ESIOS.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>.</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_1</pElem>
+            <pElem>Source/Devices/V1</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V2</pElem>
+            <pElem>Source/Prices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -665,185 +743,165 @@
           </incDir>
         </ccTool>
       </item>
+      <item path="Source/Prices/ESIOS/ESIOS.cpp" ex="false" tool="1" flavor2="11">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
       <item path="Source/Prices/PricesInterface.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
+            <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Devices/V1_1</pElem>
+            <pElem>Tmp/Source/Devices/V2</pElem>
+            <pElem>Tmp/Source/Devices/V1</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
             <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/usr</pElem>
+            <pElem>Package/usr/share</pElem>
+            <pElem>Package/usr/share/openZmeter</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
             <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_1</pElem>
+            <pElem>Source/Devices/V2</pElem>
+            <pElem>Source/Devices/V1</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Prices</pElem>
+            <pElem>Source/Prices/ESIOS</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>nbproject</pElem>
             <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
+            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
             <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
             <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
             <pElem>WEB/Resources/lib/sidenav</pElem>
             <pElem>WEB/Resources/lib/visjs</pElem>
             <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
             <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
             <pElem>WEB/Resources/Fonts</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/Help</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
             <pElem>.</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_1</pElem>
-            <pElem>Source/Devices/V1</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2</pElem>
-            <pElem>Source/Prices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Devices/V1_1</pElem>
+            <pElem>Tmp/Source/Devices/V2</pElem>
+            <pElem>Tmp/Source/Devices/V1</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
             <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
             <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/usr</pElem>
+            <pElem>Package/usr/share</pElem>
+            <pElem>Package/usr/share/openZmeter</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
             <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_1</pElem>
+            <pElem>Source/Devices/V2</pElem>
+            <pElem>Source/Devices/V1</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Prices</pElem>
+            <pElem>Source/Prices/ESIOS</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>nbproject</pElem>
             <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
+            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
             <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
             <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
             <pElem>WEB/Resources/lib/sidenav</pElem>
             <pElem>WEB/Resources/lib/visjs</pElem>
             <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
             <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
             <pElem>WEB/Resources/Fonts</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/Help</pElem>
           </incDir>
         </ccTool>
       </item>
-      <folder path="0/Source/Analyzers/Remote">
-        <ccTool>
-          <incDir>
-            <pElem>.</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_1</pElem>
-            <pElem>Source/Devices/V1</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2</pElem>
-            <pElem>Source/Prices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
-            <pElem>Tmp/Source/Devices/V1_1</pElem>
-            <pElem>Tmp/Source/Devices/V1</pElem>
-            <pElem>Tmp/Source/Devices/Remote</pElem>
-            <pElem>Tmp/Source/Devices/Virtual</pElem>
-            <pElem>Tmp/Source/Devices/V2</pElem>
-            <pElem>Tmp/Source/Prices</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
-            <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
-            <pElem>Package/lib</pElem>
-            <pElem>Package/lib/systemd</pElem>
-            <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>WEB</pElem>
-            <pElem>WEB/Resources</pElem>
-            <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
-            <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
-            <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
-            <pElem>WEB/Resources/lib/marked</pElem>
-            <pElem>WEB/Resources/lib/sidenav</pElem>
-            <pElem>WEB/Resources/lib/visjs</pElem>
-            <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
-            <pElem>WEB/Resources/Fonts</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
-          </incDir>
-        </ccTool>
-      </folder>
-      <folder path="0/Source/Analyzers/Soft">
+      <folder path="0/Source/Analyzers">
         <ccTool>
           <incDir>
             <pElem>/usr/local/pgsql/include</pElem>
@@ -890,6 +948,7 @@
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
             <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
             <pElem>WEB/Resources/lib/metisMenu</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
@@ -922,296 +981,154 @@
       <folder path="0/Source/Devices">
         <ccTool>
           <incDir>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
             <pElem>.</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_1</pElem>
-            <pElem>Source/Devices/V1</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2</pElem>
-            <pElem>Source/Prices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
-          </incDir>
-        </ccTool>
-      </folder>
-      <folder path="0/Source/Devices/Remote">
-        <ccTool>
-          <incDir>
             <pElem>Tmp/Source/Devices</pElem>
-            <pElem>Tmp/Source/Devices/V1_1</pElem>
-            <pElem>Tmp/Source/Devices/V1</pElem>
-            <pElem>Tmp/Source/Prices</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
-            <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
-            <pElem>Package/lib</pElem>
-            <pElem>Package/lib/systemd</pElem>
-            <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>WEB</pElem>
-            <pElem>WEB/Resources</pElem>
-            <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
-            <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
-            <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
-            <pElem>WEB/Resources/lib/marked</pElem>
-            <pElem>WEB/Resources/lib/sidenav</pElem>
-            <pElem>WEB/Resources/lib/visjs</pElem>
-            <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
-            <pElem>WEB/Resources/Fonts</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
-          </incDir>
-        </ccTool>
-      </folder>
-      <folder path="0/Source/Devices/V1">
-        <ccTool>
-          <incDir>
-            <pElem>Tmp/Source/Devices</pElem>
-            <pElem>Tmp/Source/Devices/V1_1</pElem>
-            <pElem>Tmp/Source/Prices</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
-            <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
-            <pElem>Package/lib</pElem>
-            <pElem>Package/lib/systemd</pElem>
-            <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>WEB</pElem>
-            <pElem>WEB/Resources</pElem>
-            <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
-            <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
-            <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
-            <pElem>WEB/Resources/lib/marked</pElem>
-            <pElem>WEB/Resources/lib/sidenav</pElem>
-            <pElem>WEB/Resources/lib/visjs</pElem>
-            <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
-            <pElem>WEB/Resources/Fonts</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
-          </incDir>
-        </ccTool>
-      </folder>
-      <folder path="0/Source/Devices/V1_1">
-        <ccTool>
-          <incDir>
-            <pElem>Tmp/Source/Devices</pElem>
-            <pElem>Tmp/Source/Prices</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
-            <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
-            <pElem>Package/lib</pElem>
-            <pElem>Package/lib/systemd</pElem>
-            <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>WEB</pElem>
-            <pElem>WEB/Resources</pElem>
-            <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
-            <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
-            <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
-            <pElem>WEB/Resources/lib/marked</pElem>
-            <pElem>WEB/Resources/lib/sidenav</pElem>
-            <pElem>WEB/Resources/lib/visjs</pElem>
-            <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
-            <pElem>WEB/Resources/Fonts</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
-          </incDir>
-        </ccTool>
-      </folder>
-      <folder path="0/Source/Devices/V2">
-        <ccTool>
-          <incDir>
-            <pElem>Tmp/Source/Devices</pElem>
-            <pElem>Tmp/Source/Devices/V1_1</pElem>
-            <pElem>Tmp/Source/Devices/V1</pElem>
-            <pElem>Tmp/Source/Devices/Remote</pElem>
             <pElem>Tmp/Source/Devices/Virtual</pElem>
-            <pElem>Tmp/Source/Prices</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
-            <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
-            <pElem>Package/lib</pElem>
-            <pElem>Package/lib/systemd</pElem>
-            <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>WEB</pElem>
-            <pElem>WEB/Resources</pElem>
-            <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
-            <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
-            <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
-            <pElem>WEB/Resources/lib/marked</pElem>
-            <pElem>WEB/Resources/lib/sidenav</pElem>
-            <pElem>WEB/Resources/lib/visjs</pElem>
-            <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
-            <pElem>WEB/Resources/Fonts</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
-          </incDir>
-        </ccTool>
-      </folder>
-      <folder path="0/Source/Devices/Virtual">
-        <ccTool>
-          <incDir>
-            <pElem>Tmp/Source/Devices</pElem>
             <pElem>Tmp/Source/Devices/V1_1</pElem>
+            <pElem>Tmp/Source/Devices/V2</pElem>
             <pElem>Tmp/Source/Devices/V1</pElem>
             <pElem>Tmp/Source/Devices/Remote</pElem>
             <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
             <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/usr</pElem>
+            <pElem>Package/usr/share</pElem>
+            <pElem>Package/usr/share/openZmeter</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
             <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_1</pElem>
+            <pElem>Source/Devices/V2</pElem>
+            <pElem>Source/Devices/V1</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Prices</pElem>
+            <pElem>Source/Prices/ESIOS</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>nbproject</pElem>
             <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
+            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/datatables</pElem>
-            <pElem>WEB/Resources/lib/datatables/js</pElem>
-            <pElem>WEB/Resources/lib/datatables/images</pElem>
-            <pElem>WEB/Resources/lib/datatables/css</pElem>
             <pElem>WEB/Resources/lib/metisMenu</pElem>
-            <pElem>WEB/Resources/lib/qtip2</pElem>
-            <pElem>WEB/Resources/lib/font-awesome</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
-            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/bootstrap</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
-            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
-            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
-            <pElem>WEB/Resources/lib/dygraph</pElem>
-            <pElem>WEB/Resources/lib/momentjs</pElem>
             <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
             <pElem>WEB/Resources/lib/sidenav</pElem>
             <pElem>WEB/Resources/lib/visjs</pElem>
             <pElem>WEB/Resources/lib/visjs/img</pElem>
-            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
             <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
             <pElem>WEB/Resources/Fonts</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/Help</pElem>
           </incDir>
         </ccTool>
       </folder>
-      <folder path="0/Source/Prices">
+      <folder path="0/Source/Prices/ESIOS">
         <ccTool>
           <incDir>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
             <pElem>.</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_1</pElem>
-            <pElem>Source/Devices/V1</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2</pElem>
-            <pElem>Source/Prices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Devices/V1_1</pElem>
+            <pElem>Tmp/Source/Devices/V2</pElem>
+            <pElem>Tmp/Source/Devices/V1</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
+            <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
+            <pElem>Package</pElem>
+            <pElem>Package/usr</pElem>
+            <pElem>Package/usr/share</pElem>
+            <pElem>Package/usr/share/openZmeter</pElem>
+            <pElem>Package/lib</pElem>
+            <pElem>Package/lib/systemd</pElem>
+            <pElem>Package/lib/systemd/system</pElem>
+            <pElem>Package/DEBIAN</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_1</pElem>
+            <pElem>Source/Devices/V2</pElem>
+            <pElem>Source/Devices/V1</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Prices</pElem>
+            <pElem>Source/Prices/ESIOS</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>WEB</pElem>
+            <pElem>WEB/Resources</pElem>
+            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
+            <pElem>WEB/Resources/lib</pElem>
+            <pElem>WEB/Resources/lib/metisMenu</pElem>
+            <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
+            <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/lib/sidenav</pElem>
+            <pElem>WEB/Resources/lib/visjs</pElem>
+            <pElem>WEB/Resources/lib/visjs/img</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
+            <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Help</pElem>
           </incDir>
         </ccTool>
       </folder>

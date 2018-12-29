@@ -74,15 +74,16 @@ class AnalyzerSoft : public AnalyzerInterface {
     static size_t Curl_Read_Callback(void *contents, size_t size, size_t nmemb, void *userp);
   private :
     float PercentChange(float in, float reference);
-    void  AccumulateAggreg(Params_t *src, Params_t *dst);
-    void  NormalizeAggreg(Params_t *src);
     void  Analyze();
+    float CalcFrequency();
   protected :
     //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
   public :
     AnalyzerSoft(float samplerate, char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerInterface::AnalyzerMode mode);
     ~AnalyzerSoft();
-    void GetParams(Params_t *params, bool extParams);
+    void GetParams(Params_t &params, bool frequency, bool flag, bool rms_v, bool rms_i, bool active_power, bool reactive_power, bool active_energy,
+                                     bool reactive_energy, bool apparent_power, bool power_factor, bool thd_v, bool thd_i, bool phi, bool voltage_harmonics, 
+                                     bool current_harmonics, bool fft_v, bool fft_i, bool voltage, bool current);
     void ConfigRemote(json_object *config);
     void ConfigPrices(json_object *config);
     bool BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime);

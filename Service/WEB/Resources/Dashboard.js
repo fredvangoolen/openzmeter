@@ -50,7 +50,7 @@ function PeriodView_OnSuccess(result) {
   CurrentData = GraphDataAppend(result, 'rms_i', CurrentData);
   $('#labelCurrent').html(Array_Round2(result['rms_i'][result['rms_i'].length - 1], '&nbsp;', ColorArray($('#CurrentPanel').css('border-color'), 4)));
   $('#CurrentAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
-  if(CurrentChart == null) {
+  if(CurrentChart === null) {
     CurrentChart = new Dygraph(document.getElementById("CurrentChart"), CurrentData,
       { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {}, 
@@ -80,9 +80,9 @@ function PeriodView_OnSuccess(result) {
   $('#labelPowerUnits').text(PowerChartUnits + 'W');
   $('#labelPower').html(Array_Round2(ScaleArrayToUnits(result['active_power'][result['active_power'].length - 1], PowerChartUnits), '&nbsp;&nbsp;', ColorArray($('#PowerPanel').css('border-color'), 3)));
   $('#PowerAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
-  if(PowerChart == null) {
+  if(PowerChart === null) {
     PowerChart = new Dygraph(document.getElementById("PowerChart"), PowerData, 
-      { strokeWidth: 0.5, stepPlot: true, stackedGraph: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
+      { strokeWidth: 0.5, stepPlot: true, /*stackedGraph: true, */drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
         legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.ActivePower()), colors: ColorArray($('#PowerPanel').css('border-color'), 3), dateWindow: [result['From'], result['To']],
         axes: {
@@ -105,7 +105,7 @@ function PeriodView_OnSuccess(result) {
   FrequencyData = GraphDataAppend(result, 'freq', FrequencyData);
   $('#labelFrequency').html(Round2(result['freq'][result['freq'].length - 1]));
   $('#FrequencyAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
-  if(FrequencyChart == null) {
+  if(FrequencyChart === null) {
     FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"), FrequencyData,
       { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
@@ -128,11 +128,11 @@ function PeriodView_OnSuccess(result) {
   }
 }
 function VoltageSeries(event) {
-  GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'DashboardVoltageVisiblePhases', false, function(series) { return CalcRanges(VoltageData, series, false); }, (event !== undefined) ? event.target : undefined); 
+  GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'DashboardVoltageVisiblePhases', false, function(series) { return CalcRanges(VoltageData, series, false, true); }, (event !== undefined) ? event.target : undefined); 
 }
 $('#groupVoltagePhases').on('click', 'button', VoltageSeries);
 function CurrentSeries(event) {
-  GraphPhaseButtons(CurrentChart, $('#groupCurrentPhases'), 'DashboardCurrentVisiblePhases', false, function(series) { return CalcRanges(CurrentData, series, false); }, (event !== undefined) ? event.target : undefined); 
+  GraphPhaseButtons(CurrentChart, $('#groupCurrentPhases'), 'DashboardCurrentVisiblePhases', false, function(series) { return CalcRanges(CurrentData, series, false, true); }, (event !== undefined) ? event.target : undefined); 
 }
 $('#groupCurrentPhases').on('click', 'button', CurrentSeries);
 function PowerSeries(event) {
@@ -149,9 +149,9 @@ var EnergyData = [], EnergyChart = null;
 function Scrollable_OnSuccess(result, clear) {
   if(clear) EnergyData = [new Array(SeriesNames.ActiveEnergy().length + 1).fill(0)];
   EnergyData = GraphDataAppend(result, 'active_energy', EnergyData);
-  if(EnergyChart == null) {
+  if(EnergyChart === null) {
     EnergyChart = new Dygraph(document.getElementById("EnergyChart"), EnergyData,
-      { strokeWidth: 0.5, stackedGraph: true, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], plotter: barChartNoSpacedPlotter,
+      { strokeWidth: 0.5, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], plotter: barChartNoSpacedPlotter, stackedGraphNaNFill: 'none',
         legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.ActiveEnergy()), dateWindow: [result['From'], result['To']],
         zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },
         underlayCallback: function(context, area, dygraph) { GraphHightlightWeekends("#EEE", context, area, dygraph); }, colors: ColorArray($('#EnergyPanel').css('border-color'), 3), xAxisHeight: 24,
@@ -173,7 +173,7 @@ function Scrollable_OnSuccess(result, clear) {
   EnergySeries();
 }
 function EnergyResizeEvent() {
-  if(EnergyChart != null) EnergyChart.resize('100%', $('#EnergyPanel > .panel-body > .row > div:first-child').height());
+  if(EnergyChart !== null) EnergyChart.resize('100%', $('#EnergyPanel > .panel-body > .row > div:first-child').height());
 }
 function EnergySeries(event) {
   GraphPhaseButtons(EnergyChart, $('#groupEnergyPhases'), 'VisibleDashboardEnergyPhases', false, function(series) { return CalcRanges(EnergyData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
@@ -222,7 +222,7 @@ function Scrollable_UpdateCounters(times, renew) {
     function(result) {
       var Sum = ArraySum(result['sum_active_energy']);
       var Units = GetBestUnits(Sum);
-      $('#labelEnergyPrimaryValue').html(Round2(ScaleToUnits(Sum, Units)))
+      $('#labelEnergyPrimaryValue').html(Round2(ScaleToUnits(Sum, Units)));
       $('#labelEnergyPrimaryUnits').text(Units + 'Wh');
       if(result['sum_active_energy'].length > 1) $('#labelEnergyPrimaryPhases').html('By phases:&nbsp;&nbsp;' + Array_Round2(ScaleArrayToUnits(result['sum_active_energy'], Units), '&nbsp;&nbsp;') + '&nbsp;&nbsp;' + Units + 'Wh');
       window.dispatchEvent(new Event('resize'));
@@ -245,17 +245,15 @@ function PeriodViewParams_OnSuccess(result) {
   ReactiveData = GraphDataAppend(result, 'reactive_power', ReactiveData);
   PowerFactorData = GraphDataAppend(result, 'power_factor', PowerFactorData);
   PhiData  = GraphDataAppend(result, 'phi', PhiData);
-//  result['thd_v'] = result['thd_v'].map(function(x) { return x * 100.0; });
-//  result['thd_i'] = result['thd_i'].map(function(x) { return x * 100.0; });
   THDVData = GraphDataAppend(result, 'thd_v', THDVData);
   THDIData = GraphDataAppend(result, 'thd_i', THDIData);
   if(ReactiveChart === null) {
-    ActiveChart      = AppendCubismGraph($('#EvolutionPanel'), ActiveData,      "Active Power",   [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'W</em>'; });
-    ReactiveChart    = AppendCubismGraph($('#EvolutionPanel'), ReactiveData,    "Reactive Power", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'VAr</em>'; });
-    PowerFactorChart = AppendCubismGraph($('#EvolutionPanel'), PowerFactorData, "Power Factor",   [result['From'], result['To']], function (x) { return Round2(x); });
-    PhiChart         = AppendCubismGraph($('#EvolutionPanel'), PhiData,         "Angle",          [result['From'], result['To']], function (x) { return Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'; });
-    THDVChart        = AppendCubismGraph($('#EvolutionPanel'), THDVData,        "Voltage THD",    [result['From'], result['To']], function (x) { return Round2(x * 100.0) + '<em>%</em>'; });
-    THDIChart        = AppendCubismGraph($('#EvolutionPanel'), THDIData,        "Current THD",    [result['From'], result['To']], function (x) { return Round2(x * 100.0) + '<em>%</em>'; });
+    ActiveChart      = AppendCubismGraph($('#EvolutionPanel'), ActiveData,      "Active Power",   [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return (x === null) ? '~' : (Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'W</em>'); });
+    ReactiveChart    = AppendCubismGraph($('#EvolutionPanel'), ReactiveData,    "Reactive Power", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return (x === null) ? '~' : (Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'VAr</em>'); });
+    PowerFactorChart = AppendCubismGraph($('#EvolutionPanel'), PowerFactorData, "Power Factor",   [result['From'], result['To']], function (x) { return (x === null) ? '~' : Round2(x); });
+    PhiChart         = AppendCubismGraph($('#EvolutionPanel'), PhiData,         "Angle",          [result['From'], result['To']], function (x) { return (x === null) ? '~' : (Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'); });
+    THDVChart        = AppendCubismGraph($('#EvolutionPanel'), THDVData,        "Voltage THD",    [result['From'], result['To']], function (x) { return (x === null) ? '~' : (Round2(x * 100.0) + '<em>%</em>'); });
+    THDIChart        = AppendCubismGraph($('#EvolutionPanel'), THDIData,        "Current THD",    [result['From'], result['To']], function (x) { return (x === null) ? '~' : (Round2(x * 100.0) + '<em>%</em>'); });
     Dygraph.synchronize([ActiveChart, ReactiveChart, PowerFactorChart, PhiChart, THDVChart, THDIChart], { range: false, zoom: false });
   } else {
     ActiveChart.updateOptions({ file: ActiveData, dateWindow: [result['From'], result['To']] });
@@ -275,7 +273,6 @@ function ParametersSeries(event) {
   GraphPhaseButtons(THDVChart,        $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(THDVData, series, false, true, false, true)); return [-Range, Range]; }, undefined); 
   GraphPhaseButtons(THDIChart,        $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(THDIData, series, false, true, false, true)); return [-Range, Range]; }, undefined); 
 }
-
 function Live_OnSuccess(result) {
   SetCubismNowLabel(ActiveChart, result['active_power']);
   SetCubismNowLabel(ReactiveChart, result['reactive_power']);

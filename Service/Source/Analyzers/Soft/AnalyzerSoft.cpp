@@ -40,11 +40,11 @@ AnalyzerSoft::AnalyzerSoft(float samplerate, char *id, float nominal_voltage, fl
   pWaitingThreads  = 0;
   pDataReady       = false;
   pPrevTimestamp   = 0;
-  InitAggreg(&pAggreg10C, AGGREG_10C);
-  InitAggreg(&pAggreg3S, AGGREG_3S);
-  InitAggreg(&pAggreg1M, AGGREG_1M);
-  InitAggreg(&pAggreg10M, AGGREG_10M);
-  InitAggreg(&pAggreg1H, AGGREG_1H);
+  InitAggreg(pAggreg10C, AGGREG_10C);
+  InitAggreg(pAggreg3S, AGGREG_3S);
+  InitAggreg(pAggreg1M, AGGREG_1M);
+  InitAggreg(pAggreg10M, AGGREG_10M);
+  InitAggreg(pAggreg1H, AGGREG_1H);
   pDelayVoltage.resize(pAggreg10C.Voltage.size());
   pDelayCurrent.resize(pAggreg10C.Current.size());
   for(uint8_t i = 0; i < pAggreg10C.Voltage.size(); i++) {
@@ -77,9 +77,8 @@ AnalyzerSoft::AnalyzerSoft(float samplerate, char *id, float nominal_voltage, fl
 AnalyzerSoft::~AnalyzerSoft() {
   pTerminate = true;
   if(pSyncThread != 0) pthread_join(pSyncThread, NULL);
-//  delete pZC;  
-  for(uint8_t i = 0; i < pAggreg10C.Voltage.size(); i++) delete pVoltageFFT[i];
-  for(uint8_t i = 0; i < pAggreg10C.Current.size(); i++) delete pCurrentFFT[i];
+  for(uint8_t i = 0; i < pVoltageFFT.size(); i++) delete pVoltageFFT[i];
+  for(uint8_t i = 0; i < pCurrentFFT.size(); i++) delete pCurrentFFT[i];
 }
 float AnalyzerSoft::PercentChange(float in, float reference) {
   return ((in - reference) / reference) * 100;
@@ -88,12 +87,8 @@ bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vecto
   for(uint8_t i = 0; i < pAggreg10C.Voltage.size(); i++) pDelayVoltage[i].Push(voltageSamples[i]);
   for(uint8_t i = 0; i < pAggreg10C.Current.size(); i++) pDelayCurrent[i].Push(currentSamples[i]);
   if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
-//  vector<float> VoltageSamples = pDelayVoltage.Pop();
-//  vector<float> CurrentSamples = pDelayCurrent.Pop();
   for(uint8_t i = 0; i < pAggreg10C.Voltage.size(); i++) pAggreg10C.Voltage[i].push_back(pDelayVoltage[i].Pop());
   for(uint8_t i = 0; i < pAggreg10C.Current.size(); i++) pAggreg10C.Current[i].push_back(pDelayCurrent[i].Pop());
-  pAggreg10C.Samples++;
-
   vector<float> Outs = voltageSamples;
   for(uint8_t i = 0; i < voltageSamples.size(); i++) {
     for(int j = 0; j < ZEROCROSSING_FILTERSTAGES; j++) {
@@ -105,7 +100,7 @@ bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vecto
   }
   if(pBlockCycles.size() == pBlockCycles.capacity()) pBlockCycles.clear();
   pCycleLen++;
-  if((((pLastSamples[0] >= 0.0) && (Outs[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (Outs[0] > 0.0))) && (pAggreg10C.Samples < pMaxSamples)) {
+  if((((pLastSamples[0] >= 0.0) && (Outs[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (Outs[0] > 0.0))) && (pAggreg10C.Voltage[0].size() < pMaxSamples)) {
     pBlockCycles.push_back(pCycleLen);
     if(pCycles.size() < pCycles.capacity()) {
       pCycles.push_back(pCycleLen);
@@ -129,6 +124,16 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
   ((AnalyzerSoft*)args)->Analyze();
   return NULL;
 }
+float AnalyzerSoft::CalcFrequency() {
+  uint32_t Samples = 0;
+  uint32_t MinCycle = pSamplerate / (pNominalFrequency * 1.15 * 2.0);
+  uint32_t MaxCycle = pSamplerate / (pNominalFrequency * 0.85 * 2.0);
+  for(uint i = 0; i < pCycles.size(); i++) {
+    if((pCycles[i] < MinCycle) || (pCycles[i] > MaxCycle)) return NAN;
+    Samples += pCycles[i];
+  } 
+  return (Samples / pSamplerate) * 10.0;
+}
 void AnalyzerSoft::Analyze() {
   while(true) {
     pthread_mutex_lock(&pThreadMutex);
@@ -138,75 +143,69 @@ void AnalyzerSoft::Analyze() {
     }
     uint64_t Start = Tools::GetTime();
     pthread_mutex_unlock(&pThreadMutex);
-    uint32_t Samples = 0;
-    uint32_t MinCycle = pSamplerate / (pNominalFrequency * 1.15 * 2.0);
-    uint32_t MaxCycle = pSamplerate / (pNominalFrequency * 0.85 * 2.0);
-    for(uint i = 0; i < pCycles.size(); i++) {
-      if((pCycles[i] < MinCycle) || (pCycles[i] > MaxCycle)) {
-        Samples = 0;
-        break;
-      } else {
-        Samples += pCycles[i];
-      }
-    } 
-    if(Samples > 0) pAggreg10C.Frequency = (Samples / pSamplerate) * 10.0;
     //Inicia FFTs
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) pVoltageFFT[i]->Start(&pAggreg10C.Voltage[i]);
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) pCurrentFFT[i]->Start(&pAggreg10C.Current[i]);
-    //Calcula valores basicos (RMS, potencia activa y energia) que son validos aun habiendo eventos
-    for(uint32_t i = 0; i < pAggreg10C.Samples; i++) {
-      for(uint j = 0; j < pAggreg10C.RMS_V.size(); j++) pAggreg10C.RMS_V[j] += pow(pAggreg10C.Voltage[j][i], 2.0);
-      for(uint j = 0; j < pAggreg10C.RMS_I.size(); j++) pAggreg10C.RMS_I[j] += pow(pAggreg10C.Current[j][i], 2.0);
-      for(uint j = 0; j < pAggreg10C.Active_Power.size(); j++) pAggreg10C.Active_Power[j] += pAggreg10C.Voltage[j][i] * pAggreg10C.Current[j][i];
+    for(uint i = 0; i < pVoltageFFT.size(); i++) pVoltageFFT[i]->Start(&pAggreg10C.Voltage[i]);
+    for(uint i = 0; i < pCurrentFFT.size(); i++) pCurrentFFT[i]->Start(&pAggreg10C.Current[i]);
+    pAggreg10C.Frequency = CalcFrequency();
+    if(!isnan(pAggreg10C.Frequency)) pAggreg10C.Freq_Inputs = 1;
+    bool Valid = false;
+    vector<float> RMS = vector<float>(pAggreg10C.RMS_V.size(), 0);
+    for(uint j = 0; j < pAggreg10C.RMS_V.size(); j++) {
+      for(uint32_t i = 0; i < pAggreg10C.Voltage[j].size(); i++) RMS[j] += pow(pAggreg10C.Voltage[j][i], 2.0);
+      RMS[j] = sqrt(RMS[j] / pAggreg10C.Voltage[j].size());
+      if(RMS[j] > 1) Valid = true;
     }
-    for(uint j = 0; j < pAggreg10C.RMS_V.size(); j++) pAggreg10C.RMS_V[j] = sqrt(pAggreg10C.RMS_V[j] / pAggreg10C.Samples);
-    for(uint j = 0; j < pAggreg10C.RMS_I.size(); j++) pAggreg10C.RMS_I[j] = sqrt(pAggreg10C.RMS_I[j] / pAggreg10C.Samples);
-    for(uint j = 0; j < pAggreg10C.Active_Power.size(); j++) pAggreg10C.Active_Power[j] = pAggreg10C.Active_Power[j] / pAggreg10C.Samples;
-    //Calculo harmonicos de tension
-    for(uint j = 0; j < pAggreg10C.VoltageHarmonics.size(); j++) {
+    if(Valid) pAggreg10C.RMS_V.assign(RMS.begin(), RMS.end());
+    if(Valid) pAggreg10C.RMS_V_Inputs = 1;
+    for(uint j = 0; j < pAggreg10C.RMS_I.size(); j++) {
+      float RMS = 0;
+      for(uint32_t i = 0; i < pAggreg10C.Current[j].size(); i++) RMS += pow(pAggreg10C.Current[j][i], 2.0);
+      RMS = sqrt(RMS / pAggreg10C.Current[j].size());
+      if(RMS > pMinCurrent) {
+        pAggreg10C.RMS_I_Inputs[j] = 1;
+        pAggreg10C.RMS_I[j] = RMS;
+        for(uint32_t i = 0; i < pAggreg10C.Current[j].size(); i++) pAggreg10C.Active_Power[j] = AccumulateSUM(pAggreg10C.Active_Power[j], pAggreg10C.Voltage[j][i] * pAggreg10C.Current[j][i]);
+        pAggreg10C.Active_Power[j] = pAggreg10C.Active_Power[j] / pAggreg10C.Current[j].size();
+      }
+    }
+    for(uint j = 0; j < pAggreg10C.RMS_V.size(); j++) {
       pVoltageFFT[j]->Wait();
+      if(isnan(pAggreg10C.RMS_V[j])) continue;
       for(uint i = 0; i < pAggreg10C.VoltageHarmonics[j].size(); i++) {
         pAggreg10C.VoltageHarmonics[j][i] = pVoltageFFT[j]->BinPower(10 + i * 10);
-        if(i > 0) pAggreg10C.THD_V[j] += pow(pAggreg10C.VoltageHarmonics[j][i], 2.0);
+        if(i > 0) pAggreg10C.THD_V[j] = AccumulateSUM(pAggreg10C.THD_V[j], pow(pAggreg10C.VoltageHarmonics[j][i], 2.0));
       }
       pAggreg10C.THD_V[j] = sqrt(pAggreg10C.THD_V[j]) / pAggreg10C.VoltageHarmonics[j][0];
     }
     for(int j = 0; j < ((pMode == PHASE1) ? 1 : 3); j++) {
       pCurrentFFT[j]->Wait();
-      if(pAggreg10C.RMS_I[j] < pMinCurrent) {
-        pAggreg10C.RMS_I[j] = NAN;
-        pAggreg10C.Active_Power[j] = NAN;
-        continue;
-      }
+      if(isnan(pAggreg10C.RMS_I[j]) || isnan(pAggreg10C.RMS_V[j])) continue;
       pAggreg10C.Apparent_Power[j] = pAggreg10C.RMS_V[j] * pAggreg10C.RMS_I[j];
       for(int i = 10; i <= 500 ; i = i + 10) {
         int   Harmonic = (i / 10) - 1;
         float CurrentHarmonic = pCurrentFFT[j]->BinPower(i);
-        if(Harmonic > 0) pAggreg10C.THD_I[j] += pow(CurrentHarmonic, 2.0);
+        if(Harmonic > 0) pAggreg10C.THD_I[j] = AccumulateSUM(pAggreg10C.THD_I[j], pow(CurrentHarmonic, 2.0));
         float VoltageHarmonic = pAggreg10C.VoltageHarmonics[j][Harmonic];
         float PHI = FFT::CalcAngle(pVoltageFFT[j]->Output[i], pCurrentFFT[j]->Output[i]);
         pAggreg10C.CurrentHarmonics[j][Harmonic] = CurrentHarmonic;
         if(Harmonic == 0) {
-//          pAggreg10C.Fundamental_Active_Power[j]   = VoltageHarmonic * CurrentHarmonic * cos(PHI);
           pAggreg10C.Reactive_Power[j] = VoltageHarmonic * CurrentHarmonic * sin(PHI);
-//          pAggreg10C.Fundamental_Apparent_Power[j] = VoltageHarmonic * CurrentHarmonic;
-//          pAggreg10C.Fundamental_Power_Factor[j]   = pAggreg10C.Fundamental_Active_Power[j] / pAggreg10C.Fundamental_Apparent_Power[j];
           PHI = fmod(PHI, 2.0 * M_PI);
           if(PHI > M_PI) PHI = PHI -  2.0 * M_PI;
           pAggreg10C.Phi[j] = PHI * 180.0 / M_PI;
         }
       }
       pAggreg10C.THD_I[j] = sqrt(pAggreg10C.THD_I[j]) / pAggreg10C.CurrentHarmonics[j][0];
-      pAggreg10C.Active_Energy[j] = (pAggreg10C.Active_Power[j] * pAggreg10C.Samples) / (pSamplerate * 3600.0);
+      pAggreg10C.Active_Energy[j] = (pAggreg10C.Active_Power[j] * pAggreg10C.RMS_I_Inputs[j]) / (pSamplerate * 3600.0);
       pAggreg10C.Power_Factor[j] = pAggreg10C.Active_Power[j] / pAggreg10C.Apparent_Power[j];
-      pAggreg10C.Reactive_Energy[j] = (pAggreg10C.Reactive_Power[j] * pAggreg10C.Samples) / (pSamplerate * 3600.0);
+      pAggreg10C.Reactive_Energy[j] = (pAggreg10C.Reactive_Power[j] * pAggreg10C.RMS_I_Inputs[j]) / (pSamplerate * 3600.0);
     }
-    if(pMode == PHASE3N) {
+    if((pMode == PHASE3N) && (!isnan(pAggreg10C.RMS_I[3]))) {
       pCurrentFFT[3]->Wait();
       for(int i = 10; i <= 500 ; i = i + 10) {
         int   Harmonic = (i / 10) - 1;
         float CurrentHarmonic = pCurrentFFT[3]->BinPower(i);
-        if(Harmonic > 0) pAggreg10C.THD_I[3] += pow(CurrentHarmonic, 2.0);
+        if(Harmonic > 0) pAggreg10C.THD_I[3] = AccumulateSUM(pAggreg10C.THD_I[3], pow(CurrentHarmonic, 2.0));
       }
     }
     //Guardar resultados
@@ -216,65 +215,65 @@ void AnalyzerSoft::Analyze() {
     pthread_cond_broadcast(&pDataReadyCond);
     if(((pSequence % 15) == 0) && (pPrevTimestamp != 0)) {
       Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
-      Params_t Aggreg3S = NormalizeAggreg(&pAggreg3S);
+      NormalizeAggreg(pAggreg3S);
       if(pAggreg3S.Flag == false) {
         float Variation = PercentChange(pAggreg3S.Frequency, pNominalFrequency);
         for(uint Range = 0; Range < 40; Range++) {
           if((Variation >= FrequencyRanges[Range]) && (Variation < FrequencyRanges[Range + 1])) pAggreg1H.StatsFrequency[Range]++;
         }
       }
-      SaveAggreg(&pAggreg3S);
-      ResetAggreg(&pAggreg3S);
+      SaveAggreg(pAggreg3S);
+      ResetAggreg(pAggreg3S);
     }
-    AccumulateAggreg(&pAggreg3S, &pAggreg10C);
+    AccumulateAggreg(pAggreg3S, pAggreg10C);
     if(((pAggreg10C.Timestamp / 60000) > (pPrevTimestamp / 60000)) && (pPrevTimestamp != 0)) {
       Tools::LogMsg("DEBUG", "Storing 1M aggregation\n");
       pAggreg1M.Timestamp = pAggreg1M.Timestamp / 60000 * 60000 + 59999;
-      NormalizeAggreg(&pAggreg1M);
-      SaveAggreg(&pAggreg1M);
-      ResetAggreg(&pAggreg1M);
-    }
-    AccumulateAggreg(&pAggreg1M, &pAggreg10C);
-    if(((pAggreg10C.Timestamp / 600000) > (pPrevTimestamp / 600000)) && (pPrevTimestamp != 0)) {
-      Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
-      pAggreg10M.Timestamp = pAggreg10M.Timestamp / 600000 * 600000 + 599999;
-      NormalizeAggreg(&pAggreg10M);
-      if(pAggreg10M.Flag == false) {
-        for(uint i = 0; i < pAggreg10M.RMS_V.size(); i++) {
-          float Variation = PercentChange(pAggreg10M.RMS_V[i], pNominalVoltage);
-          for(uint Range = 0; Range < 26; Range++) {
-            if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) pAggreg1H.StatsVoltage[Range]++;
-          }
-          for(uint Range = 0; Range < 26; Range++) {
-            if((pAggreg10M.THD_V[i] >= THDRanges[Range]) && (pAggreg10M.THD_V[i] < THDRanges[Range + 1])) pAggreg1H.StatsTHD[Range]++;
-          }
-          bool HarmonicsInRange = true;
-          for(int n = 0; n < 25; n++) {
-            float Variation = PercentChange(pAggreg10M.VoltageHarmonics[i][n], pNominalVoltage);
-            if(Variation > HarmonicsAllowed[n]) {
-              HarmonicsInRange = false;
-              break;
-             }
-          }
-          if(HarmonicsInRange == true) {
-            pAggreg1H.StatsHarmonics[0]++;
-          } else {
-            pAggreg1H.StatsHarmonics[1]++;
+      NormalizeAggreg(pAggreg1M);
+      SaveAggreg(pAggreg1M);
+      if(((pAggreg10C.Timestamp / 600000) > (pPrevTimestamp / 600000)) && (pPrevTimestamp != 0)) {
+        Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
+        pAggreg10M.Timestamp = pAggreg10M.Timestamp / 600000 * 600000 + 599999;
+        NormalizeAggreg(pAggreg10M);
+        if(pAggreg10M.Flag == false) {
+          for(uint i = 0; i < pAggreg10M.RMS_V.size(); i++) {
+            float Variation = PercentChange(pAggreg10M.RMS_V[i], pNominalVoltage);
+            for(uint Range = 0; Range < (VoltageRanges.size() - 1); Range++) {
+              if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) pAggreg1H.StatsVoltage[Range]++;
+            }
+            for(uint Range = 0; Range < (THDRanges.size() - 1); Range++) {
+              if((pAggreg10M.THD_V[i] >= THDRanges[Range]) && (pAggreg10M.THD_V[i] < THDRanges[Range + 1])) pAggreg1H.StatsTHD[Range]++;
+            }
+            bool HarmonicsInRange = true;
+            for(uint n = 0; n < HarmonicsAllowed.size(); n++) {
+              float Variation = PercentChange(pAggreg10M.VoltageHarmonics[i][n], pNominalVoltage);
+              if(Variation > HarmonicsAllowed[n]) {
+                HarmonicsInRange = false;
+                break;
+               }
+            }
+            if(HarmonicsInRange == true) {
+              pAggreg1H.StatsHarmonics[0]++;
+            } else {
+              pAggreg1H.StatsHarmonics[1]++;
+            }
           }
         }
+        SaveAggreg(pAggreg10M);
+        if(((pAggreg10C.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
+          Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
+          pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
+          NormalizeAggreg(pAggreg1H);
+          SaveAggreg(pAggreg1H);
+          ResetAggreg(pAggreg1H);
+        }
+        AccumulateAggreg(pAggreg1H, pAggreg10M);       
+        ResetAggreg(pAggreg10M);
       }
-      SaveAggreg(&pAggreg10M);
-      ResetAggreg(&pAggreg10M);
+      AccumulateAggreg(pAggreg10M, pAggreg1M);
+      ResetAggreg(pAggreg1M);
     }
-    AccumulateAggreg(&pAggreg10M, &pAggreg10C);
-    if(((pAggreg10C.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
-      Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
-      pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
-      NormalizeAggreg(&pAggreg1H);
-      SaveAggreg(&pAggreg1H);
-      ResetAggreg(&pAggreg1H);
-    }
-    AccumulateAggreg(&pAggreg1H, &pAggreg10C);
+    AccumulateAggreg(pAggreg1M, pAggreg10C);
     pPrevTimestamp = pAggreg10C.Timestamp;
     pthread_mutex_lock(&pWaitingThreadsMutex);
     while(pWaitingThreads != 0) pthread_cond_wait(&pWaitingThreadsCond, &pWaitingThreadsMutex);
@@ -282,7 +281,7 @@ void AnalyzerSoft::Analyze() {
     pthread_mutex_lock(&pDataReadyMutex);
     pDataReady = false;
     pthread_mutex_unlock(&pDataReadyMutex);
-    ResetAggreg(&pAggreg10C);
+    ResetAggreg(pAggreg10C);
     pthread_mutex_lock(&pThreadMutex);
     Tools::LogMsg("DEBUG", "Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", pName, Tools::GetTime() - Start, pSequence);
     pWorking = false;
@@ -290,7 +289,7 @@ void AnalyzerSoft::Analyze() {
     pthread_mutex_unlock(&pThreadMutex);
   }
 }
-void AnalyzerSoft::GetParams(Params_t *params, bool extended) {
+void AnalyzerSoft::GetParams(Params_t &params, bool frequency, bool flag, bool rms_v, bool rms_i, bool active_power, bool reactive_power, bool active_energy, bool reactive_energy, bool apparent_power, bool power_factor, bool thd_v, bool thd_i, bool phi, bool voltage_harmonics, bool current_harmonics, bool fft_v, bool fft_i, bool voltage, bool current) {
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads++;
   pthread_mutex_unlock(&pWaitingThreadsMutex);
@@ -306,32 +305,42 @@ void AnalyzerSoft::GetParams(Params_t *params, bool extended) {
   }
   pthread_mutex_unlock(&pDataReadyMutex);
   if(Error == 0) {
-    *params = pAggreg10C;
-//    memcpy(params, &pAggreg10C, sizeof(Params_t));
-    if(extended) {
-//      memset(extParams, 0, sizeof(ExtParams_t));
-      params->FFT_V.resize((pMode == PHASE1) ? 1 : 3);
-      params->FFT_I.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);
-      params->Voltage.resize((pMode == PHASE1) ? 1 : 3);
-      params->Current.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);
-      for(int j = 0; j < ((pMode == PHASE1) ? 1 : 3); j++) {
-        params->Voltage[j].reserve(params->Samples); 
-//        params->Voltage[j] = (float*)malloc(sizeof(float) * params->Samples);
-        for(uint32_t i = 0; i < params->Samples; i++) params->Voltage[j][i] = pAggreg10C.Voltage[j][i];
-          params->FFT_V[j].reserve(pVoltageFFT[j]->Output.size()); 
-        // extParams->FFT_V[j] = (float*)malloc(sizeof(float) * pVoltageFFT[j]->OutputLen);
-        for(uint32_t i = 0; i < pVoltageFFT[j]->Output.size(); i++) params->FFT_V[j][i] = pVoltageFFT[j]->BinPower(i);
+    params.Type = AGGREG_10C;
+    params.Timestamp = pAggreg10C.Timestamp;
+    if(frequency) params.Frequency = pAggreg10C.Frequency;
+    if(flag) params.Flag = pAggreg10C.Flag;
+    if(rms_v) params.RMS_V.assign(pAggreg10C.RMS_V.begin(), pAggreg10C.RMS_V.end());
+    if(rms_i) params.RMS_I.assign(pAggreg10C.RMS_I.begin(), pAggreg10C.RMS_I.end());
+    if(active_power) params.Active_Power.assign(pAggreg10C.Active_Power.begin(), pAggreg10C.Active_Power.end());
+    if(reactive_power) params.Reactive_Power.assign(pAggreg10C.Reactive_Power.begin(), pAggreg10C.Reactive_Power.end());
+    if(active_energy) params.Active_Energy.assign(pAggreg10C.Active_Energy.begin(), pAggreg10C.Active_Energy.end());
+    if(reactive_energy) params.Reactive_Energy.assign(pAggreg10C.Reactive_Energy.begin(), pAggreg10C.Reactive_Energy.end());
+    if(apparent_power) params.Apparent_Power.assign(pAggreg10C.Apparent_Power.begin(), pAggreg10C.Apparent_Power.end());
+    if(power_factor) params.Power_Factor.assign(pAggreg10C.Power_Factor.begin(), pAggreg10C.Power_Factor.end());
+    if(thd_v) params.THD_V.assign(pAggreg10C.THD_V.begin(), pAggreg10C.THD_V.end());
+    if(thd_i) params.THD_I.assign(pAggreg10C.THD_I.begin(), pAggreg10C.THD_I.end());
+    if(phi) params.Phi.assign(pAggreg10C.Phi.begin(), pAggreg10C.Phi.end());
+    if(voltage_harmonics) {
+      for(uint i = 0; i < params.VoltageHarmonics.size(); i++) params.VoltageHarmonics[i].assign(pAggreg10C.VoltageHarmonics[i].begin(), pAggreg10C.VoltageHarmonics[i].end());
+    }
+    if(current_harmonics) {
+      for(uint i = 0; i < params.CurrentHarmonics.size(); i++) params.CurrentHarmonics[i].assign(pAggreg10C.CurrentHarmonics[i].begin(), pAggreg10C.CurrentHarmonics[i].end());
+    }
+    if(fft_v) {
+      for(uint i = 0; i < params.FFT_V.size(); i++) {
+        for(uint n = 0; n < pVoltageFFT[i]->Output.size(); n++) params.FFT_V[i].push_back(pVoltageFFT[i]->BinPower(n));
       }
-      for(int j = 0; j < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); j++) {
-        params->Current[j].reserve(params->Samples); 
-
-//        extParams->Current[j] = (float*)malloc(sizeof(float) * params->Samples);
-//        memcpy(extParams->Current[j], pCurrentSamples[j], sizeof(float) * params->Samples);
-        for(uint32_t i = 0; i < params->Samples; i++) params->Current[j][i] = pAggreg10C.Current[j][i];
-        params->FFT_I[j].reserve(pCurrentFFT[j]->Output.size());
-  //      extParams->FFT_I[j] = (float*)malloc(sizeof(float) * pCurrentFFT[j]->OutputLen);
-        for(uint32_t i = 0; i < pCurrentFFT[j]->Output.size(); i++) params->FFT_I[j][i] = pCurrentFFT[j]->BinPower(i);
+    }
+    if(fft_i) {
+      for(uint i = 0; i < params.FFT_I.size(); i++) {
+        for(uint n = 0; n < pCurrentFFT[i]->Output.size(); n++) params.FFT_I[i].push_back(pCurrentFFT[i]->BinPower(n));
       }
+    }
+    if(voltage) {
+      for(uint i = 0; i < params.Voltage.size(); i++) params.Voltage[i].assign(pAggreg10C.Voltage[i].begin(), pAggreg10C.Voltage[i].end());
+    }
+    if(current) {
+      for(uint i = 0; i < params.Current.size(); i++) params.Current[i].assign(pAggreg10C.Current[i].begin(), pAggreg10C.Current[i].end());
     }
   }
   pthread_mutex_lock(&pWaitingThreadsMutex);
@@ -365,65 +374,7 @@ void AnalyzerSoft::ConfigRemote(json_object* config) {
   }
 }
 void AnalyzerSoft::ConfigPrices(json_object* config) {
-  pPrices = PricesInterface::Config(pID, config);
-}
-void AnalyzerSoft::AccumulateAggreg(Params_t *dst, Params_t *src) {
-  dst->Timestamp = src->Timestamp;
-  //Si habia nan y entra nan      -> nada
-  //Si habia nan y entra no nan   hay = nuevo
-  //si no habia nan y entra nan   -> nada
-  //Si no habia nan y entr no nan -> hay += nuevo
-  
-  for(uint i = 0; i < dst->RMS_V.size(); i++) {
-    if(isnan(src->RMS_V[i])) continue;
-    if(isnan(dst->RMS_V[i])) dst->RMS_V[i] = 0.0;
-    dst->RMS_V[i] += pow(src->RMS_V[i], 2.0);
-  }
-  for(uint i = 0; i < dst->RMS_I.size(); i++) dst->RMS_I[i] += pow(src->RMS_I[i], 2.0);
-  for(uint i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Active_Power[i] += src->Active_Power[i];
-  for(uint i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Active_Energy[i] += src->Active_Energy[i];
-  for(uint i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Reactive_Power[i] += src->Reactive_Power[i];
-  for(uint i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Reactive_Energy[i] += src->Reactive_Energy[i];
-  dst->Flag |= src->Flag;
-  dst->Frequency += src->Frequency;
-  if(dst->Type == AGGREG_1M) {
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Power_Factor[i] += src->Power_Factor[i];
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) dst->THD_I[i] += pow(src->THD_I[i], 2.0);
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) {
-      for(int j = 0; j < 50; j++) dst->CurrentHarmonics[i][j] += pow(src->CurrentHarmonics[i][j], 2.0);
-    }
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->Phi[i] += src->Phi[i];
-  }
-  if((dst->Type == AGGREG_1M) || (dst->Type == AGGREG_10M)) {
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) dst->THD_V[i] += pow(src->THD_V[i], 2.0);
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) {
-      for(int j = 0; j < 50; j++) dst->VoltageHarmonics[i][j] += pow(src->VoltageHarmonics[i][j], 2.0);
-    }
-  }
-  dst->Samples++;
-}
-void AnalyzerSoft::NormalizeAggreg(Params_t *params) {
-  if(params->Samples > 1) {
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->RMS_V[i] = sqrt(params->RMS_V[i] / params->Samples);
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) params->RMS_I[i] = sqrt(params->RMS_I[i] / params->Samples);
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Active_Power[i] = params->Active_Power[i] / params->Samples;
-    for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Reactive_Power[i] = params->Reactive_Power[i] / params->Samples;
-    params->Frequency = params->Frequency / params->Samples;
-    if(params->Type == AGGREG_1M) {
-      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Power_Factor[i] = params->Power_Factor[i] / params->Samples;
-      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->THD_I[i] = sqrt(params->THD_I[i] / params->Samples);
-      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->Phi[i] = params->Phi[i] / params->Samples;
-      for(int i = 0; i < ((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4); i++) {
-        for(int j = 0; j < 50; j++) params->CurrentHarmonics[i][j] = sqrt(params->CurrentHarmonics[i][j] / params->Samples);
-      }
-    }
-    if((params->Type == AGGREG_1M) || (params->Type == AGGREG_1M)) {
-      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) params->THD_V[i] = sqrt(params->THD_V[i] / params->Samples);
-      for(int i = 0; i < ((pMode == PHASE1) ? 1 : 3); i++) {
-        for(int j = 0; j < 50; j++) params->VoltageHarmonics[i][j] = sqrt(params->VoltageHarmonics[i][j] / params->Samples);
-      }    
-    }
-  }
+  pPrices = PricesInterface::Config(GetSchema(), config);
 }
 size_t AnalyzerSoft::Curl_Read_Callback(void *contents, size_t size, size_t nmemb, void *userp) {
   CurlBuff_t *Buff = (CurlBuff_t*)userp;

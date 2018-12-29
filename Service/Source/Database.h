@@ -32,9 +32,9 @@ class Database {
     void        BindSingleUInt32(uint32_t param);
     void        BindSingleUInt64(uint64_t param);
     void        BindSingleFloat(float param);
-    void        BindArrayArrayFloat(const vector< vector<float> > &params, int lenA, int lenB);
+    void        BindArrayArrayFloat(const vector< vector<float> > &params);
     void        BindArrayFloat(const vector<float> &params);
-    void        BindArrayUInt16(uint16_t *params, int len);
+    void        BindArrayUInt16(const vector<uint16_t> &params);
     void        BindSingleBool(bool param);
     void        BindSingleString(const char *string, bool identifier = false);
     bool        ExecSentence();
