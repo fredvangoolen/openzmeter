@@ -97,6 +97,31 @@
             tool="1"
             flavor2="11">
         <ccTool flags="0">
+          <incDir>
+            <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/lib/sidenav</pElem>
+            <pElem>WEB/Resources/lib/visjs</pElem>
+            <pElem>WEB/Resources/lib/visjs/img</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
+            <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Help</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Analyzers/Remote/AnalyzerRemote.cpp"
@@ -192,6 +217,30 @@
       </item>
       <item path="Source/Devices/DeviceInterface.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
+          <incDir>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/lib/sidenav</pElem>
+            <pElem>WEB/Resources/lib/visjs</pElem>
+            <pElem>WEB/Resources/lib/visjs/img</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
+            <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Help</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Devices/Remote/DeviceRemote.cpp"
@@ -952,7 +1001,41 @@
             <pElem>WEB/Resources/lib</pElem>
             <pElem>WEB/Resources/lib/metisMenu</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Analyzers/Remote">
+        <ccTool>
+          <incDir>
             <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/lib/sidenav</pElem>
+            <pElem>WEB/Resources/lib/visjs</pElem>
+            <pElem>WEB/Resources/lib/visjs/img</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
+            <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Help</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Analyzers/Soft">
+        <ccTool>
+          <incDir>
             <pElem>WEB/Resources/lib/datatables</pElem>
             <pElem>WEB/Resources/lib/datatables/images</pElem>
             <pElem>WEB/Resources/lib/datatables/js</pElem>
@@ -1029,6 +1112,128 @@
             <pElem>WEB/Resources/lib</pElem>
             <pElem>WEB/Resources/lib/metisMenu</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Devices/Remote">
+        <ccTool>
+          <incDir>
+            <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/lib/sidenav</pElem>
+            <pElem>WEB/Resources/lib/visjs</pElem>
+            <pElem>WEB/Resources/lib/visjs/img</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
+            <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Help</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Devices/V1">
+        <ccTool>
+          <incDir>
+            <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/lib/sidenav</pElem>
+            <pElem>WEB/Resources/lib/visjs</pElem>
+            <pElem>WEB/Resources/lib/visjs/img</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
+            <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Help</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Devices/V1_1">
+        <ccTool>
+          <incDir>
+            <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/lib/sidenav</pElem>
+            <pElem>WEB/Resources/lib/visjs</pElem>
+            <pElem>WEB/Resources/lib/visjs/img</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
+            <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Help</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Devices/V2">
+        <ccTool>
+          <incDir>
+            <pElem>WEB/Resources/lib/marked</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/lib/sidenav</pElem>
+            <pElem>WEB/Resources/lib/visjs</pElem>
+            <pElem>WEB/Resources/lib/visjs/img</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
+            <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Help</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Devices/Virtual">
+        <ccTool>
+          <incDir>
             <pElem>WEB/Resources/lib/marked</pElem>
             <pElem>WEB/Resources/lib/datatables</pElem>
             <pElem>WEB/Resources/lib/datatables/images</pElem>

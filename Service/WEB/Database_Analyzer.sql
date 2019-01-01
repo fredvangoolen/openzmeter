@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS aggreg_stat_1h (
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS events (
-  eventtime bigint NOT NULL PRIMARY KEY, 
+  starttime bigint NOT NULL PRIMARY KEY, 
   duration  bigint NOT NULL, 
   samplerate real, 
   type character varying(16), 

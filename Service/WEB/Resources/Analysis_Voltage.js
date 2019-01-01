@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2015 Pedro Sánchez Alguacil
- *               2017 Eduardo Viciana Gamez
+ *               2018 Eduardo Viciana Gamez
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-/* Voltage graph */
 var VoltageChart     = null;
 var VoltageData      = [];
 function Scrollable_OnSuccess(result, clear) {
@@ -57,7 +55,6 @@ function VoltageSeries(event) {
   GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'VisibleVoltageMainPhases', false, function(series) { return CalcRanges(VoltageData, series, false); }, (event !== undefined) ? event.target : undefined); 
 }
 $('#groupVoltagePhases').on('click', 'button', VoltageSeries);
-/* Voltage counters */
 function Scrollable_UpdateCounters(times, renew) {
   if(renew === true) {
     $('#labelVoltageAvgPrimary').text(times.PrimaryText + ' average');
@@ -493,7 +490,7 @@ function UpdatePhasorChart(result) {
 var LastEventStartTime = 0;
 var EventsDatasheet    = [];
 var EventsTable        = null;
-//var EventChart         = null;
+var EventChart         = null;
 //var EventSpinner       = new Spinner(SpinnerOpts);
 function AjaxGetEvents(from, to, clear) {
   if(clear) LastEventStartTime = 0;
@@ -504,21 +501,19 @@ function AjaxGetEvents(from, to, clear) {
         EventsTable.clear().draw();
         EventsDatasheet = [];
       }
-      if(result['Starttime'] !== null) {
-        for(i = 0; i < result['Starttime'].length; i++) {
-          var Time = new Date(result['Starttime'][i]);
-          var RowText = '<tr>' +
-            '<td data-search="' + result['Starttime'][i] + '">' + Time.toLocaleString() + '.' + Time.getMilliseconds() + '</td>' +
-            '<td>' + result['Type'][i] + '</td>' +
-            '<td>' + Round2(result['Duration'][i] / Analyzers[Analyzer]['SampleFreq']) + '</td>' +
-            '<td>' + Round2(result['Voltage'][i]) + '</td>' +
-            '<td>' + Round2(result['Percentage'][i]) + '</td>' +
-            '<td><button class="btn btn-xs btn-primary get_samples"><i class="fa fa-line-chart fa-fw"></i> Get samples</button></td>' +
-            '</tr>';
-          EventsTable.row.add($(RowText)).draw();
-          LastEventStartTime = result['Starttime'][i];
-          EventsDatasheet.push(result['Starttime'][i]);
-        }
+      for(var i = 0; i < result['StartTime'].length; i++) {
+        var Time = new Date(result['StartTime'][i]);
+        var RowText = '<tr>' +
+          '<td data-search="' + result['StartTime'][i] + '">' + Time.toLocaleString() + '.' + Time.getMilliseconds() + '</td>' +
+          '<td>' + result['Type'][i] + '</td>' +
+          '<td>' + Round2(result['Duration'][i] / result['SampleRate'][i]) + '</td>' +
+          '<td>' + Round2(result['Voltage'][i]) + '</td>' +
+          '<td>' + Round2(result['Percentage'][i]) + '</td>' +
+          '<td><div class="btn-group"><button class="btn btn-xs btn-primary"><i class="fa fa-line-chart"></i> Get samples</button><button class="btn btn-xs btn-danger delete_event"><i class="fa fa-trash"></i> Delete event</button></div></td>' +
+          '</tr>';
+        EventsTable.row.add($(RowText)).draw();
+        LastEventStartTime = result['StartTime'][i];
+        EventsDatasheet.push(result['StartTime'][i]);
       }
       if(EventChart === null) {
         EventChart = new Dygraph(document.getElementById("EventChart"), [Array(SeriesNames.Voltage().length + 1).fill(0)], {
@@ -526,18 +521,16 @@ function AjaxGetEvents(from, to, clear) {
           colors: ColorArray($('#VoltagePanel').css('border-color'), 3), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
           interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
         });
-        $('#EventChart').append('<div class="no-data"><div class="alert alert-info float-center">Press <strong><em>Get samples</em></strong> to view the waveform of an event.</div></div>');
-        $('#EventSpinner').hide();
       }
     }
   );
 }
-$("table#EventsTable").on('click', 'button.get_samples', function () {
+$("#EventsTable").on('click', 'button:nth-child(1)', function () {
   var Row = EventsTable.row($(this).parents('tr'));
   $('#EventChart div.no-data').addClass('hidden');
   EventsTable.rows().nodes().to$().removeClass('info');
   $(Row.node()).addClass('info');
-  ShowSpinner(EventSpinner, 'EventSpinner');
+//  ShowSpinner(EventSpinner, 'EventSpinner');
   $.ajax({
     url: "getEventSamples",
     type: "POST",
@@ -546,6 +539,22 @@ $("table#EventsTable").on('click', 'button.get_samples', function () {
     data: JSON.stringify({ Node: Nodes[Node].ID, Starttime: EventsDatasheet[Row.index()] }),
     success: AjaxSamples
   });
+});
+$("#EventsTable").on('click', 'button:nth-child(2)', function () {
+  var Row = EventsTable.row($(this).parents('tr'));
+//  $('#EventChart div.no-data').addClass('hidden');
+  EventsTable.rows().nodes().to$().removeClass('info');
+  $(Row.node()).addClass('info');
+  $('#dlgDeleteEventDialog').modal('show');
+//  ShowSpinner(EventSpinner, 'EventSpinner');
+//  $.ajax({
+//    url: "getEventSamples",
+//    type: "POST",
+//    dataType: "json",
+//    contentType: 'application/json',
+//    data: JSON.stringify({ Node: Nodes[Node].ID, Starttime: EventsDatasheet[Row.index()] }),
+//    success: AjaxSamples
+//  });
 });
 function AjaxSamples(result) {
   StopSpinner(EventSpinner, 'EventSpinner');

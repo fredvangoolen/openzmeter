@@ -21,6 +21,7 @@
     <span data-load-block="Header_Block"></span>
     <span data-load-block="AggregWarningDialog"></span>
     <span data-load-block="MaximizeDialog"></span>
+    <span data-load-block="DeleteEventDialog"></span>
     <div id="wrapper">
       <div class="row">
         <div class="col-lg-12">
@@ -140,19 +141,18 @@
               <div id="EventsPanel">
                 <div class="row">
                   <div class="col col-lg-12 col-xl-6">
-                    <table id="EventsTable" class="table small table-striped table-responsive">
+                    <table id="EventsTable" class="table small table-striped table-responsive" width="100%">
                       <thead>
                         <tr>
-                          <th style="width: 130px">Date</th><th>Type</th><th>Duration <em>(s)</em></th><th>ΔU <em>(V)</em></th><th>ΔU <em>(%)</em></th><th style="width: 60px"></th>
+                          <th style="width: 130px">Date</th><th>Type</th><th>Duration <em>(s)</em></th><th>ΔU <em>(V)</em></th><th>ΔU <em>(%)</em></th><th style="width: 190px"></th>
                         </tr>
                       </thead>
                       <tbody>
                       </tbody>
                     </table>
                   </div>
-                  <div class="col col-lg-12 col-xl-6">
+                  <div class="col col-lg-12 col-xl-6 hide">
                     <div class="panel panel-noborder">
-                      <div id="EventSpinner" class="spinnerdiv"></div>
                       <div id="EventWaveformPanel">
                         <div id="EventWaveformMaximize">
                           <div id="EventChart" class="chart big_chart"></div>

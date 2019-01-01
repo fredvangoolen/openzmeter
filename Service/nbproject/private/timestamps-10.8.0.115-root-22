@@ -1,8 +1,8 @@
-#Sat Dec 29 04:52:12 CET 2018
+#Mon Dec 31 17:48:13 CET 2018
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/Login.js=c1545516010000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/visjs/vis.css=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/Source/Devices/Remote/DeviceRemote.cpp=c1541233339000
-/home/edu/Proyectos/openZmeter/Service/WEB/Database_Analyzer.sql=c1545516010000
+/home/edu/Proyectos/openZmeter/Service/WEB/Database_Analyzer.sql=c1546205739000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/datatables/images/sort_asc.png=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/bootstrap/js/bootstrap.js=c1545521205000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/sidenav/sidenav.min.css=c1541233339000
@@ -11,14 +11,14 @@
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/Background.png=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/favicon.ico=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/bootstrap-datetimepicker.min.css=c1545516010000
-/home/edu/Proyectos/openZmeter/Service/WEB/Database.sql=c1545516010000
+/home/edu/Proyectos/openZmeter/Service/WEB/Database.sql=c1546209953000
 /home/edu/Proyectos/openZmeter/Service/Package/lib/systemd/system/openZmeter.service=c1539383245000
 /home/edu/Proyectos/openZmeter/Service/WEB/Stats_Distribution.html=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/nbproject/private/tools/root_10.8.0.115_22/GNU/gcc=c1545519317000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/pace.min.js=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/bootstrap/js/.directory=c1541233339000
-/home/edu/Proyectos/openZmeter/Service/Source/Analyzers/Soft/AnalyzerSoft.cpp=c1546055509000
-/home/edu/Proyectos/openZmeter/Service/WEB/Analysis_Voltage.html=c1545516010000
+/home/edu/Proyectos/openZmeter/Service/Source/Analyzers/Soft/AnalyzerSoft.cpp=c1546274874000
+/home/edu/Proyectos/openZmeter/Service/WEB/Analysis_Voltage.html=c1546208584000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/font-awesome/css/font-awesome.css=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/HelpPages/Zero_Crossing.md=c1545810936000
 /home/edu/Proyectos/openZmeter/Service/Package/DEBIAN/control=c1539383245000
@@ -31,7 +31,7 @@
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/dygraph/dygraph.min.js=c1545831693000
 /home/edu/Proyectos/openZmeter/Service/Source/Prices/PricesInterface.cpp=c1545516010000
 /home/edu/Proyectos/openZmeter/Service/WEB/Settings.html=c1545516010000
-/home/edu/Proyectos/openZmeter/Service/Source/Devices/DeviceInterface.cpp=c1545516010000
+/home/edu/Proyectos/openZmeter/Service/Source/Devices/DeviceInterface.cpp=c1546206879000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/datatables/images/sort_asc_disabled.png=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/bootstrap/fonts/glyphicons-halflings-regular.woff2=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/bootstrap/css/.directory=c1541233339000
@@ -41,7 +41,7 @@
 /home/edu/Proyectos/openZmeter/Service/Source/Analyzers/AnalyzerInterface.cpp=c1546053757000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/visjs/img/network/downArrow.png=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.svg=c1541233339000
-/home/edu/Proyectos/openZmeter/Service/WEB/Resources/Analysis_Voltage.js=c1546048808000
+/home/edu/Proyectos/openZmeter/Service/WEB/Resources/Analysis_Voltage.js=c1546209002000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/font-awesome/fonts/fontawesome-webfont.woff2=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/momentjs/moment.js=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/Source/Main.cpp=c1545516010000
@@ -119,11 +119,11 @@
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/qtip2/jquery.qtip.js=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/visjs/img/network/acceptDeleteIcon.png=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/Source/NetworkManager.h=c1545516488000
-/home/edu/Proyectos/openZmeter/Service/WEB/Resources/openZmeter.js=c1546036487000
+/home/edu/Proyectos/openZmeter/Service/WEB/Resources/openZmeter.js=c1546211032000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/Stats_Heatmap.js=c1545516010000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/visjs/img/timeline/delete.png=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/Source/Analyzers/Remote/AnalyzerRemote.h=c1546052652000
-/home/edu/Proyectos/openZmeter/Service/WEB/Resources/Common.html=c1545516010000
+/home/edu/Proyectos/openZmeter/Service/WEB/Resources/Common.html=c1546208584000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/visjs/vis.js=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/WEB/Login.html=c1545516010000
 /home/edu/Proyectos/openZmeter/Service/Source/Devices/V1_1/DeviceV1_1.cpp=c1546052459000
@@ -173,6 +173,7 @@
 /home/edu/Proyectos/openZmeter/Service/Source/Events.cpp=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/bootstrap-datetimepicker.min.js=c1545516010000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/bootstrap-year-calendar/bootstrap-year-calendar.js=c1541233339000
+/home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/moment.min.js=c1546204044000
 /home/edu/Proyectos/openZmeter/Service/WEB/Analysis_Energy.html=c1541233339000
 /home/edu/Proyectos/openZmeter/Service/WEB/Resources/lib/moment-timezone.min.js=c1545516010000
 /home/edu/Proyectos/openZmeter/Service/WEB/Events_EN50160.html=c1541233339000

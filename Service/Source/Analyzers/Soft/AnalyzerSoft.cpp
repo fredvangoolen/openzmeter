@@ -231,49 +231,49 @@ void AnalyzerSoft::Analyze() {
       pAggreg1M.Timestamp = pAggreg1M.Timestamp / 60000 * 60000 + 59999;
       NormalizeAggreg(pAggreg1M);
       SaveAggreg(pAggreg1M);
-      if(((pAggreg10C.Timestamp / 600000) > (pPrevTimestamp / 600000)) && (pPrevTimestamp != 0)) {
-        Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
-        pAggreg10M.Timestamp = pAggreg10M.Timestamp / 600000 * 600000 + 599999;
-        NormalizeAggreg(pAggreg10M);
-        if(pAggreg10M.Flag == false) {
-          for(uint i = 0; i < pAggreg10M.RMS_V.size(); i++) {
-            float Variation = PercentChange(pAggreg10M.RMS_V[i], pNominalVoltage);
-            for(uint Range = 0; Range < (VoltageRanges.size() - 1); Range++) {
-              if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) pAggreg1H.StatsVoltage[Range]++;
-            }
-            for(uint Range = 0; Range < (THDRanges.size() - 1); Range++) {
-              if((pAggreg10M.THD_V[i] >= THDRanges[Range]) && (pAggreg10M.THD_V[i] < THDRanges[Range + 1])) pAggreg1H.StatsTHD[Range]++;
-            }
-            bool HarmonicsInRange = true;
-            for(uint n = 0; n < HarmonicsAllowed.size(); n++) {
-              float Variation = PercentChange(pAggreg10M.VoltageHarmonics[i][n], pNominalVoltage);
-              if(Variation > HarmonicsAllowed[n]) {
-                HarmonicsInRange = false;
-                break;
-               }
-            }
-            if(HarmonicsInRange == true) {
-              pAggreg1H.StatsHarmonics[0]++;
-            } else {
-              pAggreg1H.StatsHarmonics[1]++;
-            }
-          }
-        }
-        SaveAggreg(pAggreg10M);
-        if(((pAggreg10C.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
-          Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
-          pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
-          NormalizeAggreg(pAggreg1H);
-          SaveAggreg(pAggreg1H);
-          ResetAggreg(pAggreg1H);
-        }
-        AccumulateAggreg(pAggreg1H, pAggreg10M);       
-        ResetAggreg(pAggreg10M);
-      }
-      AccumulateAggreg(pAggreg10M, pAggreg1M);
       ResetAggreg(pAggreg1M);
     }
     AccumulateAggreg(pAggreg1M, pAggreg10C);
+    if(((pAggreg10C.Timestamp / 600000) > (pPrevTimestamp / 600000)) && (pPrevTimestamp != 0)) {
+      Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
+      pAggreg10M.Timestamp = pAggreg10M.Timestamp / 600000 * 600000 + 599999;
+      NormalizeAggreg(pAggreg10M);
+      if(pAggreg10M.Flag == false) {
+        for(uint i = 0; i < pAggreg10M.RMS_V.size(); i++) {
+          float Variation = PercentChange(pAggreg10M.RMS_V[i], pNominalVoltage);
+          for(uint Range = 0; Range < (VoltageRanges.size() - 1); Range++) {
+            if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) pAggreg1H.StatsVoltage[Range]++;
+          }
+          for(uint Range = 0; Range < (THDRanges.size() - 1); Range++) {
+            if((pAggreg10M.THD_V[i] >= THDRanges[Range]) && (pAggreg10M.THD_V[i] < THDRanges[Range + 1])) pAggreg1H.StatsTHD[Range]++;
+          }
+          bool HarmonicsInRange = true;
+          for(uint n = 0; n < HarmonicsAllowed.size(); n++) {
+            float Variation = PercentChange(pAggreg10M.VoltageHarmonics[i][n], pNominalVoltage);
+            if(Variation > HarmonicsAllowed[n]) {
+              HarmonicsInRange = false;
+              break;
+             }
+          }
+          if(HarmonicsInRange == true) {
+            pAggreg1H.StatsHarmonics[0]++;
+          } else {
+            pAggreg1H.StatsHarmonics[1]++;
+          }
+        }
+      }
+      SaveAggreg(pAggreg10M);
+      ResetAggreg(pAggreg10M);
+    }
+    AccumulateAggreg(pAggreg10M, pAggreg10C);
+    if(((pAggreg10C.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
+      Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
+      pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
+      NormalizeAggreg(pAggreg1H);
+      SaveAggreg(pAggreg1H);
+      ResetAggreg(pAggreg1H);
+    }
+    AccumulateAggreg(pAggreg1H, pAggreg10C);
     pPrevTimestamp = pAggreg10C.Timestamp;
     pthread_mutex_lock(&pWaitingThreadsMutex);
     while(pWaitingThreads != 0) pthread_cond_wait(&pWaitingThreadsCond, &pWaitingThreadsMutex);

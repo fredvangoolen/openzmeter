@@ -376,8 +376,8 @@ function GraphTools(title, graph, toolbar, resizeHandler, exportFunction) {
       $('#MaximizeToolbar button[data-function="Maximize"] > i').removeClass('fa-compress');
       $('#MaximizeToolbar button[data-function="Maximize"]').attr('title', 'Maximize graph');
       $(window).unbind('resize', Self.DialogResizeHandler);
-      $(Self.PrevContainer).append($(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph()).graphDiv).parent().detach());
-      $(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph()).graphDiv).parent().removeAttr('style');
+      $(Self.PrevContainer).append($(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph).graphDiv).parent().detach());
+      $(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph).graphDiv).parent().removeAttr('style');
       if(Self.PrevHandler !== undefined) $(window).bind('resize', Self.PrevHandler);
       $(Self.Toolbar).append($('#MaximizeToolbar').children().detach());
       $('#dlgMaximizeDialog').modal('hide');
@@ -385,12 +385,12 @@ function GraphTools(title, graph, toolbar, resizeHandler, exportFunction) {
       $(Self.Toolbar + ' button[data-function="Maximize"] > i').removeClass('fa-expand');
       $(Self.Toolbar + ' button[data-function="Maximize"] > i').addClass('fa-compress');
       $(Self.Toolbar + ' button[data-function="Maximize"]').attr('title', 'Minimize graph');
-      Self.PrevContainer = $(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph()).graphDiv).parent().parent();
+      Self.PrevContainer = $(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph).graphDiv).parent().parent();
       if(Self.PrevHandler !== undefined) $(window).unbind('resize', Self.PrevHandler);
       $('#dlgMaximizeDialog').modal('show');
       $('#MaximizeDialogTitle').text((typeof(Self.Title) === 'function') ? Self.Title() : Self.Title);
       $('#MaximizeToolbar').append($(Self.Toolbar).children().detach());
-      $('#MaximizeDialogBody').append($(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph()).graphDiv).parent().detach());
+      $('#MaximizeDialogBody').append($(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph).graphDiv).parent().detach());
       $(window).bind('resize', Self.DialogResizeHandler);
     }
     window.dispatchEvent(new Event('resize'));
