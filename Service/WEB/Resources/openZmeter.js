@@ -523,6 +523,7 @@ function ArrayMax(array) {
   for(var i in array) {
     Max = Math.max(Max, Array.isArray(array[i]) ? ArrayMax(array[i]) : array[i]);
   }
+  if(Max === -Infinity) return 0;
   return Max;
 }
 /* find min value of array (maybe array of arrays) */
@@ -531,6 +532,7 @@ function ArrayMin(array) {
   for(var i in array) {
     Min = Math.min(Min, Array.isArray(array[i]) ? ArrayMin(array[i]) : array[i]);
   }
+  if(Min === +Infinity) return 0;
   return Min;
 }
 /* sum array */
@@ -546,7 +548,7 @@ function ArrayGraphMax(array) {
   var Max = 0;
   for(var i = 0; i < array.length; i++) {
     for(var n = 1; n < array[i].length; n++) {      
-      Max = Math.max(Max, array[i][n]);
+      Max = Math.max(Max, Math.abs(array[i][n]));
     }
   }
   return Max;
