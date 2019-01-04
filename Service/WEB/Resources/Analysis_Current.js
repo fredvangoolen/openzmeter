@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2015 Pedro Sánchez Alguacil
- *               2017 Eduardo Viciana Gamez
+ *               2018 Eduardo Viciana Gamez
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-/* Current graph */
 var CurrentChart     = null;
 var CurrentData      = [];
 function Scrollable_OnSuccess(result, clear) {
@@ -41,36 +39,21 @@ function Scrollable_OnSuccess(result, clear) {
         }
       }
     );
-    $(window).bind('resize', function() { CurrentChart.resize($('#CurrentCol').width(), $('#panelCounters').height() - 4); });
+    $(window).bind('resize', CurrentResizeEvent);
     window.dispatchEvent(new Event('resize'));
+    new GraphTools('Current', CurrentChart, '#toolbarCurrent', CurrentResizeEvent, function() { exportToCsv('Current.csv', [['Time'].concat(SeriesNames.Current())].concat(CurrentData)); });
   } else {
     CurrentChart.updateOptions({'file': CurrentData, dateWindow: [result['From'], result['To']]});
   }
   CurrentSeries();
 }
+function CurrentResizeEvent() { 
+  if(CurrentChart !== null) CurrentChart.resize('100%', $('#CurrentPanel > .panel-body > .row > div:first-child').height());
+}
 function CurrentSeries(event) {
   GraphPhaseButtons(CurrentChart, $('#groupCurrentPhases'), 'VisibleCurrentMainPhases', false, function(series) { return CalcRanges(CurrentData, series, false); }, (event !== undefined) ? event.target : undefined); 
 }
 $('#groupCurrentPhases').on('click', 'button', CurrentSeries);
-$('#btnExportCurrent').click(function() {
-  exportToCsv('Current.csv', [['Time'].concat(CurerntNames)].concat(CurrentData));
-});
-$('#btnMaximizeCurrent').click(function() {
-  $('#GraphDialogTitle').text('Current');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#CurrentCol');
-  DialogElement = $('#CurrentMaximizeDiv').detach();
-  DialogPrevResizeHandler = CurrentResizeEvent;
-  DialogResizeHandler = function() {
-    CurrentChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 110);
-  };
-  $(window).unbind('resize', CurrentResizeEvent);
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-
-/* Current counters */
 function Scrollable_UpdateCounters(times, renew) {
   if(renew === true) {
     $('#labelCurrentAvgPrimary').text(times.PrimaryText + ' average');
@@ -103,20 +86,6 @@ function Scrollable_UpdateCounters(times, renew) {
     }
   );
 }
-
-/* Ventana de maximizar y de error de agregaciones */
-var DialogElement           = null;
-var PrevDialogContainer     = null;
-var DialogResizeHandler     = null;
-var DialogPrevResizeHandler = null;
-$('#GraphDialogClose').click(function() {
-  $(window).unbind('resize', DialogResizeHandler);
-  $(window).bind('resize', DialogPrevResizeHandler);
-  $(PrevDialogContainer).append(DialogElement);
-  $('#GraphDialog').modal('hide');
-  window.dispatchEvent(new Event('resize'));
-});
-
 var WaveformDataset = [], HarmonicsDataset = [], FFTDataset = [];
 function Live_OnSuccess(result) {
   $('#DetailTime').text('Last update at ' + new Date(result['Sampletime']).toLocaleTimeString() + '.' + new Date(result['Sampletime']).getMilliseconds());
@@ -144,14 +113,15 @@ function Live_OnSuccess(result) {
   UpdateWaveformChart();
   UpdateHarmonicsChart();
   UpdateFFTChart();
-  $('#PowerFactorNow').html(Array_Round2(result['power_factor'], '&nbsp;', ColorArray($('#CurrentPanel').css('border-color'), 3)));
-  $('#THDNow').html(Array_Round2(result['thd_i'].map(function(val) {return val * 100.0; }), '&nbsp;', ColorArray($('#CurrentPanel').css('border-color'), 3)));
-  $('#PHINow').html(Array_Round2(result['phi'], '&nbsp;', ColorArray($('#CurrentPanel').css('border-color'), 3), " (CAP)", " (IND)"));
+  SetCubismNowLabel(PowerFactorChart, result['power_factor']);
+  SetCubismNowLabel(THDChart, result['thd_i']);
+  SetCubismNowLabel(PHIChart, result['phi']);
 }
 function DetailTabChange(index) {
-  $('#groupDetailPhasesSingle, #groupDetailPhasesMulti, #btnShowDetail1Harmonic, #btnShowDetailLog, #btnShowDetailVoltage').hide();
+  $('#groupDetailPhasesSingle, #groupDetailPhasesMulti, #btnShowDetail1Harmonic, #btnShowDetailLog, #btnShowDetailVoltage, #toolbarDetails button[data-function="Maximize"]').hide();
   if((index === 0) || (index === 1) || (index === 3)) $('#groupDetailPhasesMulti').show();
   if((index === 0) || (index === 1) || (index === 3)) $('#btnShowDetailVoltage').show();
+  if((index === 0) || (index === 1) || (index === 3)) $('#toolbarDetails button[data-function="Maximize"]').show();
   if((index === 2) || (index === 4)) $('#groupDetailPhasesSingle').show();
   if((index === 1) || (index === 3)) $('#btnShowDetailLog').show();
   if(index === 1) $('#btnShowDetail1Harmonic').show();
@@ -265,7 +235,6 @@ function UpdateWaveformChart() {
     }
   }, undefined);
 }
-
 /* Grafica de armonicos */
 var HarmonicsChart      = null;
 var HarmonicsVOffset    = 0;
@@ -307,7 +276,7 @@ function UpdateHarmonicsChart() {
                valueFormatter: function(x) { return Round2(x - HarmonicsCOffset) + '<em class="x-small">' + (Log ? 'dB' : 'A') + '</em>'; },
                axisLabelFormatter: function (x) { return Round2(x); }
              },
-          y2: { pixelsPerLabel: 15, axisLabelWidth: ShowVoltage ? 15 : 0, valueRange: [Y2Range[0] + HarmonicsVOffset, Y2Range[1] + HarmonicsVOffset],
+          y2: { pixelsPerLabel: 15, axisLabelWidth: ShowVoltage ? 34 : 0, valueRange: [Y2Range[0] + HarmonicsVOffset, Y2Range[1] + HarmonicsVOffset],
                 valueFormatter: function(x) { return Round2(x - HarmonicsVOffset) + '<em class="x-small">' + (Log ? 'dB' : 'V') + '</em>'; },
                 ticker: (Log || ShowVoltage === false) ? function(min, max) { return (ShowVoltage === true) ? GraphDBTicks(min, max, HarmonicsVOffset) : []; } : Dygraph.numericTicks,
                 axisLabelFormatter: function (x) { return Round2(x); }
@@ -331,8 +300,8 @@ var FFTVOffset          = 0;
 var FFTCOffset          = 0;
 function UpdateFFTChart() {
   var ToShow      = [];
-  var ShowVoltage = (localStorage.getItem("DetailVoltageCurrent") === 'true');
-  var Log         = (localStorage.getItem('DetailLog') === 'true');
+  var ShowVoltage = (localStorage.getItem("CurrentDetailVoltage") === 'true');
+  var Log         = (localStorage.getItem('CurrentDetailLog') === 'true');
   for(i = 0; i < FFTDataset.length; i++) {
     var Row = [i];
     for(n = 0; n < FFTDataset[i].length; n++) Row.push(Log ? 20.0 * Math.log10(Math.max(0.001, FFTDataset[i][n])) : FFTDataset[i][n]);
@@ -365,7 +334,7 @@ function UpdateFFTChart() {
                valueFormatter: function(x) { return Round2(x - HarmonicsCOffset) + '<em class="x-small">' + (Log ? 'dB' : 'A') + '</em>'; },
                axisLabelFormatter: function (x) { return Round2(x); }
               },
-          y2: { pixelsPerLabel: 15, axisLabelWidth: ShowVoltage ? 15 : 0, valueRange: [Y2Range[0] + FFTVOffset, Y2Range[1] + FFTVOffset],
+          y2: { pixelsPerLabel: 15, axisLabelWidth: ShowVoltage ? 34 : 0, valueRange: [Y2Range[0] + FFTVOffset, Y2Range[1] + FFTVOffset],
                 valueFormatter: function(x) { return Round2(x - FFTVOffset) + ' <em class="x-small">' + (Log ? 'dB' : 'V') + '</em>'; },
                 ticker: (Log || ShowVoltage === false) ? function(min, max) { return (ShowVoltage === true) ? GraphDBTicks(min, max, FFTVOffset) : []; } : Dygraph.numericTicks,
                 axisLabelFormatter: function (x) { return Round2(x); }
@@ -383,9 +352,8 @@ function UpdateFFTChart() {
                if((y % 1) != 0) return "";
                return y + '<em class="small"> Hz</em>';
              }
-           }
-        
-               }
+           }        
+         }
     }
   };
     if(FFTChart === null) {
@@ -417,9 +385,9 @@ function PeriodView_OnSuccess(result) {
       HarmonicsCharts[i] = AppendCubismGraph($('#EvolutionPanel'), HarmonicsData[i], SeriesNames.Harmonics[i] + ' harmonic', [result['From'], result['To']], function (x) { return Round2(x) + '<em>dB</em>' });
     }
     Dygraph.synchronize(HarmonicsCharts, { range: false, zoom: false });
-    PowerFactorChart = AppendCubismGraph($('#PowerFactorChart'), PowerFactorData, "Power Factor", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(x); });
-    THDChart         = AppendCubismGraph($('#THDChart'), THDData, "Current THD", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(x) + '<em>%</em>'; });
-    PHIChart         = AppendCubismGraph($('#PHIChart'), PHIData, "Phi", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'; });
+    PowerFactorChart = AppendCubismGraph($('#ParametersPanel'), PowerFactorData, "Power Factor", [result['From'], result['To']], function (x) { return (x === null) ? '~' : Round2(x); });
+    THDChart         = AppendCubismGraph($('#ParametersPanel'), THDData, "Current THD", [result['From'], result['To']], function (x) { return (x === null) ? '~' : (Round2(x * 100.0) + '<em>%</em>'); });
+    PHIChart         = AppendCubismGraph($('#ParametersPanel'), PHIData, "Phi", [result['From'], result['To']], function (x) { return (x === null) ? '~' : (Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'); });
     Dygraph.synchronize([PowerFactorChart, THDChart, PHIChart], { range: false, zoom: false });
   } else {
     for(var i = 0; i < 50; i++) {
@@ -432,112 +400,74 @@ function PeriodView_OnSuccess(result) {
   ParametersSeries();
 }
 function ParametersSeries(event) {
-  GraphPhaseButtons(PowerFactorChart, $('#groupDetailPhasesSingle'), 'CurrentDetailVisiblePhasesSingle', true, function(series) { return CalcRanges(PowerFactorData, series, false); }, (event !== undefined) ? event.target : undefined); 
-  GraphPhaseButtons(PHIChart,         $('#groupDetailPhasesSingle'), 'CurrentDetailVisiblePhasesSingle', true, function(series) { return CalcRanges(PHIData, series, false); }, undefined); 
-  GraphPhaseButtons(THDChart,         $('#groupDetailPhasesSingle'), 'CurrentDetailVisiblePhasesSingle', true, function(series) { return CalcRanges(THDData, series, false); }, undefined); 
+  GraphPhaseButtons(PowerFactorChart, $('#groupDetailPhasesSingle'), 'CurrentDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PowerFactorData, series, false)); return [-Range, Range]; }, (event !== undefined) ? event.target : undefined); 
+  GraphPhaseButtons(PHIChart,         $('#groupDetailPhasesSingle'), 'CurrentDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PHIData, series, false, false, false, true)); return [-Range, Range]; }, undefined); 
+  GraphPhaseButtons(THDChart,         $('#groupDetailPhasesSingle'), 'CurrentDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(THDData, series, false, false, false, true)); return [-Range, Range]; }, undefined); 
   for(var i = 0; i < 50; i++) {
     GraphPhaseButtons(HarmonicsCharts[i], $('#groupDetailPhasesSingle'), 'CurrentDetailVisiblePhasesSingle', true, function(series) { return CalcRanges(HarmonicsData[i], series, false); }, undefined); 
   }
 }
-
-/* Exportar y ampliar graficas de detalles */
-$('#btnExportDetail').click(function () {
+function ExportDetail() {
   var Data = [];
   var Filename;
-  if($('#WaveformPanel').hasClass('hidden') === false) {
-    exportToCsv("Current_Waveform_" + Node + '_' + DetailTimestamp + '.csv', ((Nodes['Devices'][Node]['Type'] === '3Phase') ? [['DateTime', 'Voltage R', 'Voltage S', 'Voltage T', 'Current R', 'Current S', 'Current T']] : [['DateTime', 'Voltage', 'Current']]).concat(WaveformDataset));
-  } else if($('#FFTPanel').hasClass('hidden') === false) {
-    Data = [['Index'].concat(((Nodes['Devices'][Node]['Type'] === '3Phase') ? ['dB (R)', 'V_rms (R)', 'dB (S)', 'V_rms (S)', 'dB (T)', 'V_rms (T)', 'dB (R)', 'I_rms (R)', 'dB (S)', 'I_rms (S)', 'dB (T)', 'I_rms (T)'] : ['dB', 'V_rms', 'dB', 'I_rms'])).concat('Note: This is the result of our FFT algorithm. The index colum should be multiplied by 5 in order to get the frequencies.')];
-    for(i = 0; i < FFTDataset.length; i++) {
-      if(Nodes['Devices'][Node]['Type'] === '3Phase') {    
-        Data.push([i, 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][0])), FFTDataset[i][0], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][1])), FFTDataset[i][1],
-                      20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][2])), FFTDataset[i][2], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][3])), FFTDataset[i][3],
-                      20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][4])), FFTDataset[i][4], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][5])), FFTDataset[i][5]]);
-      } else {
-        Data.push([i, 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][0])), FFTDataset[i][0], 20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][1])), FFTDataset[i][1]]);
-      }
+  if(DetailTabSelector.GetSaved() === 0) {
+    exportToCsv('Waveform.csv', [['Time'].concat(SeriesNames.Current()).concat(SeriesNames.Voltage())].concat(WaveformDataset));
+  } else if(DetailTabSelector.GetSaved() === 3) {
+    var Header = ['Index'];
+    for(var i = 0; i < SeriesNames.Current().length; i++) { Header.push(SeriesNames.Current()[i]); Header.push(SeriesNames.Current()[i] + ' (dB)'); }
+    for(var i = 0; i < SeriesNames.Voltage().length; i++) { Header.push(SeriesNames.Voltage()[i]); Header.push(SeriesNames.Voltage()[i] + ' (dB)'); }
+    Data.push(Header);
+    for(var i = 0; i < FFTDataset.length; i++) {
+      var Row = [i];
+      for(var n = 0; n < SeriesNames.Voltage().length + SeriesNames.Current().length; n++) { Row.push(FFTDataset[i][n]); Row.push(20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][n]))); }
+      Data.push(Row);
     }
-    exportToCsv("Current_FFT_" + Node + '_' + DetailTimestamp + '.csv', Data);
-  } else if($('#HarmonicsPanel').hasClass('hidden') == false) {
-    Data = [['Harmonic'].concat(((Nodes['Devices'][Node]['Type'] === '3Phase') ? ['dB (R)', 'V_rms (R)', 'dB (S)', 'V_rms (S)', 'dB (T)', 'V_rms (T)', 'dB (R)', 'I_rms (R)', 'dB (S)', 'I_rms (S)', 'dB (T)', 'I_rms (T)'] : ['dB', 'V_rms', 'dB', 'I_rms'])).concat('Note: This is the result of our FFT algorithm.')];
+    exportToCsv('FFT.csv', Data);
+  } else if(DetailTabSelector.GetSaved() === 1) {
+    var Header = ['Harmonic'];
+    for(var i = 0; i < SeriesNames.Current().length; i++) { Header.push(SeriesNames.Current()[i]); Header.push(SeriesNames.Current()[i] + ' (dB)'); }
+    for(var i = 0; i < SeriesNames.Voltage().length; i++) { Header.push(SeriesNames.Voltage()[i]); Header.push(SeriesNames.Voltage()[i] + ' (dB)'); }
+    Data.push(Header);
     for(i = 0; i < HarmonicsDataset.length; i++) {
-      if(Nodes['Devices'][Node]['Type'] === '3Phase') {
-        Data.push([HarmonicsNames[i], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][0])), HarmonicsDataset[i][0], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][1])), HarmonicsDataset[i][1],
-                                      20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][2])), HarmonicsDataset[i][2], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][3])), HarmonicsDataset[i][3],
-                                      20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][4])), HarmonicsDataset[i][4], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][5])), HarmonicsDataset[i][5]]);
-      } else {
-        Data.push([HarmonicsNames[i], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][0])), HarmonicsDataset[i][0], 20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][1])), HarmonicsDataset[i][1]]);
-      }
+      var Row = [SeriesNames.Harmonics[i]];
+      for(var n = 0; n < SeriesNames.Voltage().length + SeriesNames.Current().length; n++) { Row.push(HarmonicsDataset[i][n]); Row.push(20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][n]))); }
+      Data.push(Row);
     }
-    exportToCsv("Current_Harmonics_" + Node + '_' + DetailTimestamp + '.csv', Data);
-  } else if($('#EvolutionPanel').hasClass('hidden') == false) {
-    Filename = 'Current_Harmonics_Evolution' + LastTimestamp + '.csv';
-    Data = [['Date/Time']];
-    Data[0] = Data[0].concat(HarmonicsNames);
-    for(i = 0; i <  EvolutionDatasets[0].length; i++) {
-      var Row = [EvolutionDatasets[0][i][0]];
-      for(j = 0; j <  EvolutionDatasets.length; j++) {
-        Row.push(EvolutionDatasets[j][i][1])
+    exportToCsv('Harmonics.csv', Data);
+  } else if(DetailTabSelector.GetSaved() === 2) {
+    var Header = ['Date/Time'];
+    for(var i = 0; i < SeriesNames.Harmonics.length; i++) {
+      for(var n = 0; n < SeriesNames.Voltage().length; n++) Header.push( SeriesNames.Harmonics[i] + '(' + SeriesNames.Current()[n] + ')');
+    }
+    Data.push(Header);
+    for(var i = 0; i < HarmonicsData[0].length; i++) {
+      var Row = [new Date(HarmonicsData[0][i][0]).toLocaleTimeString()];
+      for(var j = 0; j < SeriesNames.Harmonics.length; j++) {
+        for(var k = 0; k < SeriesNames.Voltage().length; k++) Row.push(HarmonicsData[j][i][k + 1]);
       }
       Data.push(Row);
     }
-    exportToCsv("Current_Harmonics_Evolution" + ((Nodes['Devices'][Node]['Type'] === '3Phase') ? '(' + localStorage.getItem('VoltageDetailEvolutionPhase') + ')_' : '_') + Node + '_' + DetailTimestamp + '.csv', Data);  
+    exportToCsv('Current_Harmonics_Evolution.csv', Data);
+  } else if(DetailTabSelector.GetSaved() === 4) {
+    var Header = ['Date/Time'].concat(SeriesNames.PowerFactor()).concat(SeriesNames.THDi()).concat(SeriesNames.PHI());
+    Data.push(Header);
+    for(var i = 0; i < PowerFactorData.length; i++) {
+      var Row = [new Date(PowerFactorData[i][0]).toLocaleTimeString()];
+      for(var k = 0; k < SeriesNames.PowerFactor().length; k++) Row.push(PowerFactorData[i][k + 1]);
+      for(var k = 0; k < SeriesNames.THDv().length; k++) Row.push(THDData[i][k + 1]);
+      for(var k = 0; k < SeriesNames.PHI().length; k++) Row.push(PHIData[i][k + 1]);
+      Data.push(Row);
+    }
+    exportToCsv('PF_THDi_PHI.csv', Data);
   }
-});
-$('#btnMaximizeDetail').click(function() {
-  if(localStorage.getItem('CurrentDetailView') === 'Waveform') {
-    $('#GraphDialogTitle').text('Waveform');
-    PrevDialogContainer = $('#WaveformPanel');
-  } else if(localStorage.getItem('CurrentDetailView') === 'Harmonics') {
-    $('#GraphDialogTitle').text('Harmonics');
-    PrevDialogContainer = $('#HarmonicsPanel');
-  } else if(localStorage.getItem('CurrentDetailView') === 'Advanced') {
-    $('#GraphDialogTitle').text('Advanced');
-    PrevDialogContainer = $('#FFTPanel');
-  }
-  $('#GraphDialog').modal('show');
-  if(localStorage.getItem('CurrentDetailView') === 'Waveform') {
-    DialogElement = $('#WaveformMaximize').detach();
-    DialogPrevResizeHandler = function() {
-      $(WaveformChart.graphDiv).parent().removeAttr('style');
-    };
-    DialogResizeHandler = function() {
-      WaveformChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 110);
-    };
-  } else if(localStorage.getItem('CurrentDetailView') === 'Harmonics') {
-    DialogElement = $('#HarmonicsMaximize').detach();
-    DialogPrevResizeHandler = function() {
-      $(HarmonicsChart.graphDiv).parent().removeAttr('style');
-    };
-    DialogResizeHandler = function() {
-      HarmonicsChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 110);
-    };
-  } else if(localStorage.getItem('CurrentDetailView') === 'Advanced') {
-    DialogElement = $('#FFTMaximize').detach();
-    DialogPrevResizeHandler = function() {
-      $(FFTChart.graphDiv).parent().removeAttr('style');
-    };
-    DialogResizeHandler = function() {
-      FFTChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 110);
-    };
-  }
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-$('#GraphDialogClose').click(function() {
-  $(window).unbind('resize', DialogResizeHandler);
-  $(window).bind('resize', DialogPrevResizeHandler);
-  $(PrevDialogContainer).append(DialogElement);
-  $('#GraphDialog').modal('hide');
-  window.dispatchEvent(new Event('resize'));
-});
-
+}
 var MainScrollable = null;
+var DetailTabSelector = null;
 function UpdatePage() {
-  new TabSelector('CurrentDetailView', '#DetailTabs', '#DetailDivs', DetailTabChange);
+  DetailTabSelector = new TabSelector('CurrentDetailView', '#DetailTabs', '#DetailDivs', DetailTabChange);
   DetailsButtonUpdate();
-  MainScrollable = new Scrollable( {Spinners: ['#CurrentSpinner'], Series: 'rms_i', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
-  new Live( {RefreshInterval: 5000, Spinners: ['#DetailSpinner'], Series: 'wave_i, wave_v, harmonics_i, harmonics_v, fft_i, fft_v, power_factor, thd_i, phi, rms_i, rms_v', OnSuccess: Live_OnSuccess});
+  MainScrollable = new Scrollable( {Spinners: ['#CurrentSpinner'], NowBtn: '#toolbarCurrent button[data-function="Update"]', Series: 'rms_i', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
+  new Live( {NowBtn: '#toolbarDetails button[data-function="Update"]', RefreshInterval: 5000, Spinners: ['#DetailSpinner'], Series: 'wave_i, wave_v, harmonics_i, harmonics_v, fft_i, fft_v, power_factor, thd_i, phi, rms_i, rms_v', OnSuccess: Live_OnSuccess});
   new PeriodView( {Spinners: [], Series: 'power_factor, thd_i, phi, harmonics_i', Period: 86400000, Aggreg: '1m', OnSuccess: PeriodView_OnSuccess} );
+  new GraphTools(function() { return ['Waveform', 'Harmonics', '', 'Advanced'][DetailTabSelector.GetSaved()]; }, function() { return [WaveformChart, HarmonicsChart, null, FFTChart][DetailTabSelector.GetSaved()]; }, '#toolbarDetails', undefined, ExportDetail);
 }//1485

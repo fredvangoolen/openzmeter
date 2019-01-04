@@ -60,7 +60,6 @@
             <in>ESIOS.cpp</in>
             <in>ESIOS.h</in>
           </df>
-          <in>ESIOS.cpp</in>
           <in>PricesInterface.cpp</in>
           <in>PricesInterface.h</in>
         </df>
@@ -170,7 +169,7 @@
   <confs>
     <conf name="Default" type="0">
       <toolsSet>
-        <developmentServer>root@10.8.0.115:22</developmentServer>
+        <developmentServer>root@192.168.0.192:22</developmentServer>
         <platform>2</platform>
       </toolsSet>
       <compile>
@@ -191,6 +190,8 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
+        <gdb_signals>
+        </gdb_signals>
         <gdb_options>
           <DebugOptions>
           </DebugOptions>

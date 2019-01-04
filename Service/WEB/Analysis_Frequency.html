@@ -67,14 +67,14 @@
       </div>
     </div>
     <script src="lib/jquery.min.js"></script>
-    <script src="lib/bootstrap/js/bootstrap.js"></script>
+    <script src="lib/bootstrap/js/bootstrap.min.js"></script>
     <script src="lib/sidenav/sidenav.min.js"></script>
     <script src="lib/spin.min.js"></script>
-    <script src="lib/dygraph/dygraph.js"></script>
+    <script src="lib/dygraph/dygraph.min.js"></script>
     <script src="lib/dygraph/crosshair.js"></script>
     <script src="lib/dygraph/dygraph-interaction.js"></script>
     <script src="lib/offline.min.js"></script>
-    <script src="lib/momentjs/moment.js"></script>
+    <script src="lib/moment.min.js"></script>
     <script src="lib/momentjs/moment-duration-format.js"></script>
     <script src="lib/datatables/js/jquery.dataTables.js"></script>
     <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
@@ -82,3 +82,8 @@
     <script src="Analysis_Frequency.js"></script>
   </body>
 </html>
+
+echo 1 > /proc/sys/net/ipv4/ip_forward
+iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+iptables -A FORWARD -i eth1 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -i wlan0 -o eth1 -j ACCEPT

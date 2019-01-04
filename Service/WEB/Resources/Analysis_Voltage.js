@@ -368,7 +368,6 @@ function UpdateFFTChart() {
                return y + '<em class="small"> Hz</em>';
              }
            }
-           
          }
     }
   };
@@ -415,7 +414,7 @@ function PeriodView_OnSuccess(result) {
 function ParametersSeries(event) {
   GraphPhaseButtons(PowerFactorChart, $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PowerFactorData, series, false)); return [-Range, Range]; }, (event !== undefined) ? event.target : undefined); 
   GraphPhaseButtons(PHIChart,         $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PHIData, series, false, false, false, true)); return [-Range, Range]; }, undefined); 
-  GraphPhaseButtons(THDChart,         $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(THDData, series, false, false, false, true)); return [-Range, Range];}, undefined); 
+  GraphPhaseButtons(THDChart,         $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(THDData, series, false, false, false, true)); return [-Range, Range]; }, undefined); 
   for(var g = 0; g < 50; g++) GraphPhaseButtons(HarmonicsCharts[g], $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { return CalcRanges(HarmonicsData[g], series, false); }, undefined); 
 }
 /* Grafico de fasores */
@@ -464,7 +463,6 @@ function UpdatePhasorChart(result) {
   if(PhasorChart === null) {
     PhasorChart = new Dygraph(document.getElementById("PhasorChart"), Vectors, Options);
     $(window).bind('resize', PhasorResizeEvent);
-  } else {
     PhasorChart.updateOptions({ file: Vectors });
     PhasorChart.updateOptions(Options);
   }

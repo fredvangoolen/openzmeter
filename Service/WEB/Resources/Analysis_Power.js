@@ -23,8 +23,8 @@ var ActivePowerChart     = null;
 var ReactivePowerChart   = null;
 function Scrollable_OnSuccess(result, clear) {
   if(clear)  {
-    ActivePowerData    = [Array(SeriesNames.ActivePower().length + 1).fill(0)];
-    ReactivePowerData  = [Array(SeriesNames.ActivePower().length + 1).fill(0)];
+    ActivePowerData    = [];
+    ReactivePowerData  = [];
   }
   ActivePowerData    = GraphDataAppend(result, 'active_power', ActivePowerData);
   ReactivePowerData  = GraphDataAppend(result, 'reactive_power', ReactivePowerData);
@@ -38,7 +38,7 @@ function Scrollable_OnSuccess(result, clear) {
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + ' <em class="x-small">' + Units + 'W</em>'; },
-               axisLabelFormatter: function (x) { return  Round2(x) + '</div>'; }
+               axisLabelFormatter: function (x) { return  Round2(x); }
              },
           x: MainScrollable.XAxis
           }
@@ -47,18 +47,6 @@ function Scrollable_OnSuccess(result, clear) {
   } else {
     ActivePowerChart.updateOptions({'file': ActivePowerData,dateWindow: [result['From'], result['To']]});
   }
-//
-//  Range = CalcRanges(ReactivePowerData, [1], true);
-//  var toSHow = [];
-//  if((Math.abs(Range[0]) > 1000) || (Math.abs(Range[1]) > 1000)) {
-//    ReactivePowerChartUnits = 'kvar';
-//    Range[0] = Range[0] / 1000;
-//    Range[1] = Range[1] / 1000;
-//    toShow = Div1000(ReactivePowerData);
-//  } else {
-//    ReactivePowerChartUnits = 'var';
-//    toShow = ReactivePowerData;
-//  }
   if(ReactivePowerChart == null) {
     ReactivePowerChart = new Dygraph(document.getElementById("ReactivePowerChart"), ReactivePowerData,
       { strokeWidth: 0.5, stackedGraph: true, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], xAxisHeight: 26, dateWindow: [result['From'], result['To']], 
@@ -67,229 +55,27 @@ function Scrollable_OnSuccess(result, clear) {
         colors: ColorArray($('#ReactivePowerPanel').css('border-color'), 3), plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) {
-                 return Round2(x) + ' <em class="x-small">' + ReactivePowerChartUnits + '</em>';
-               },
-               axisLabelFormatter: function (x) {
-                 return '<div style="font-size: 10px; margin-top: -2px">' + Round2(x) + '</div>';
-               }
+               valueFormatter: function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + ' <em class="x-small">' + Units + 'var</em>'; },
+               axisLabelFormatter: function (x) { return  Round2(x); }
              },
           x: MainScrollable.XAxis
           }
         }
     );
     window.dispatchEvent(new Event('resize'));
-    Dygraph.synchronize([ActiveEnergyChart, ReactiveEnergyChart, ActivePowerChart, ReactivePowerChart], { range: false, zoom: false } );
+    Dygraph.synchronize([ActivePowerChart, ReactivePowerChart], { range: false, zoom: false } );
   } else {
     ReactivePowerChart.updateOptions({'file': toShow, valueRange: Range, dateWindow: [result['From'], result['To']]});
   }
-  $('#btnShowEnergyPowerYear').removeClass('active');
-  $('#btnShowEnergyPowerMonth').removeClass('active');
-  $('#btnShowEnergyPowerWeek').removeClass('active');
-  $('#btnShowEnergyPowerDay').removeClass('active');
-  if((result['To'] - result['From']) === 86400000) {
-    $('#btnShowEnergyPowerDay').addClass('active');
-  } else if((result['To'] - result['From']) === 604800000) {
-    $('#btnShowEnergyPowerWeek').addClass('active');
-  } else if((result['To'] - result['From']) === 2592000000) {
-    $('#btnShowEnergyPowerMonth').addClass('active');
-  } else if((result['To'] - result['From']) === 31536000000) {
-    $('#btnShowEnergyPowerYear').addClass('active');
-  }
-  var GraphAggregation = localStorage.getItem('GraphAggregation');
-  if(GraphAggregation !== result['Aggregation_Source']) {
-    $('#aggreg_modal').modal('show');
-    GraphAggregation = result['Aggregation_Source'];
-  }
-  $('#btnEnergyPower3S').removeClass('active');
-  $('#btnEnergyPower1M').removeClass('active');
-  $('#btnEnergyPower10M').removeClass('active');
-  $('#btnEnergyPower1H').removeClass('active');
-  if(GraphAggregation == '3s') {
-    $('#btnEnergyPower3S').addClass('active');
-  } else if(GraphAggregation == '1m') {
-    $('#btnEnergyPower1M').addClass('active');
-  } else if(GraphAggregation == '10m') {
-    $('#btnEnergyPower10M').addClass('active');
-  } else if(GraphAggregation == '1h') {
-    $('#btnEnergyPower1H').addClass('active');
-  }
-  var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
-  if(GraphEnd === 0) {
-    $('#btnEnergyPowerNow').addClass('active');
-  } else {
-    $('#btnEnergyPowerNow').removeClass('active');
-  }
-  localStorage.setItem('GraphAggregation', GraphAggregation);
 }
 function ActiveEnergyResizeEvent() {
   var Height = $('#ActiveEnergyCurrentPanel').height() + $('#ActiveEnergyPrevPanel').height() + $('#ActiveEnergySelectedPanel').height();
   if(ActiveEnergyChart !== null) ActiveEnergyChart.resize($('#ActiveEnergyCol').width(), Height + 6);
 }
-$('#btnEnergyPower3S').click(function() {
-  localStorage.setItem('GraphAggregation', '3s');
-  LastEnergyPowerSample = 0;
-  AjaxGetEnergyPower();
-});
-$('#btnEnergyPower1M').click(function() {
-  localStorage.setItem('GraphAggregation', '1m');
-  LastEnergyPowerSample = 0;
-  AjaxGetEnergyPower();
-});
-$('#btnEnergyPower10M').click(function() {
-  localStorage.setItem('GraphAggregation', '10m');
-  LastEnergyPowerSample = 0;
-  AjaxGetEnergyPower();
-});
-$('#btnEnergyPower1H').click(function() {
-  localStorage.setItem('GraphAggregation', '1h');
-  LastEnergyPowerSample = 0;
-  AjaxGetEnergyPower();
-});
-$('#btnShowEnergyPowerYear').click(function() {
-  localStorage.setItem('GraphPeriod', 31536000000);
-  LastEnergyPowerSample = 0;
-  AjaxGetEnergyPower();
-  localStorage.setItem('CountersPeriod', 'Year');
-  AjaxGetEnergyCounters();
-});
-$('#btnShowEnergyPowerMonth').click(function() {
-  localStorage.setItem('GraphPeriod', 2592000000);
-  LastEnergyPowerSample = 0;
-  AjaxGetEnergyPower();
-  localStorage.setItem('CountersPeriod', 'Month');
-  AjaxGetEnergyCounters();
-});
-$('#btnShowEnergyPowerWeek').click(function() {
-  localStorage.setItem('GraphPeriod', 604800000);
-  LastEnergyPowerSample = 0;
-  AjaxGetEnergyPower();
-  localStorage.setItem('CountersPeriod', 'Week');
-  AjaxGetEnergyCounters();
-});
-$('#btnShowEnergyPowerDay').click(function() {
-  localStorage.setItem('GraphPeriod', 86400000);
-  LastEnergyPowerSample = 0;
-  AjaxGetEnergyPower();
-  localStorage.setItem('CountersPeriod', 'Day');
-  AjaxGetEnergyCounters();
-  
-});
-$('#btnEnergyPowerNow').click(function() {
-  var End = parseInt(localStorage.getItem('GraphEnd'));
-  if(End === 0) {
-    $('#btnEnergyPowerNow').removeClass('active');
-    localStorage.setItem('GraphEnd', ActiveEnergyChart.getOption('dateWindow')[1]);
-    if(EnergyPowerTimer !== null) clearInterval(EnergyPowerTimer);
-  } else {
-    $('#btnEnergyPowerNow').addClass('active');
-    localStorage.setItem('GraphEnd', 0);
-    LastEnergyPowerSample = 0;
-    AjaxGetEnergyPower();
-  }
-});
-$('#btnShowEnergy').click(function() {
-  $('#EnergyPowerTitle').text('Energy');
-  $('#EnergySubPanel').removeClass('hidden');
-  $('#PowerSubPanel').addClass('hidden');
-  if(ActiveEnergyChart) $(ActiveEnergyChart.graphDiv).parent().removeAttr('style');
-  if(ReactiveEnergyChart) $(ReactiveEnergyChart.graphDiv).parent().removeAttr('style');
-  window.dispatchEvent(new Event('resize'));
-  $('#btnShowEnergy').addClass('active');
-  $('#btnShowPower').removeClass('active');
-  localStorage.setItem('EnergyPowerTab', 'Energy');
-});
-$('#btnShowPower').click(function() {
-  $('#EnergyPowerTitle').text('Power');
-  $('#EnergySubPanel').addClass('hidden');
-  $('#PowerSubPanel').removeClass('hidden');
-  if(ActivePowerChart) $(ActivePowerChart.graphDiv).parent().removeAttr('style');
-  if(ReactivePowerChart) $(ReactivePowerChart.graphDiv).parent().removeAttr('style');
-  window.dispatchEvent(new Event('resize'));
-  $('#btnShowEnergy').removeClass('active');
-  $('#btnShowPower').addClass('active');
-  localStorage.setItem('EnergyPowerTab', 'Power');
-});
-
-/* Maximizar y minimizar graficos */
-var DialogElement           = null;
-var PrevDialogContainer     = null;
-var DialogResizeHandler     = null;
-var DialogPrevResizeHandler = null;
-$('#aggreg_modal_close').click(function() {
-  $('#aggreg_modal').modal('hide');
-});
-$('#btnMaximizeActiveEnergy').click(function() {
-  $('#GraphDialogTitle').text('Active Energy');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#ActiveEnergyCol');
-  DialogElement = $('#ActiveEnergyMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(ActiveEnergyChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    ActiveEnergyChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-$('#btnMaximizeReactiveEnergy').click(function() {
-  $('#GraphDialogTitle').text('Reactive Energy');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#ReactiveEnergyCol');
-  DialogElement = $('#ReactiveEnergyMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(ReactiveEnergyChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    ReactiveEnergyChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-$('#btnMaximizeActivePower').click(function() {
-  $('#GraphDialogTitle').text('Active Power');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#ActivePowerCol');
-  DialogElement = $('#ActivePowerMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(ActivePowerChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    ActivePowerChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-$('#btnMaximizeReactivePower').click(function() {
-  $('#GraphDialogTitle').text('Reactive Power');
-  $('#GraphDialog').modal('show');
-  PrevDialogContainer = $('#ReactivePowerCol');
-  DialogElement = $('#ReactivePowerMaximizeDiv').detach();
-  DialogPrevResizeHandler = function() {
-    $(ReactivePowerChart.graphDiv).parent().removeAttr('style');
-  };
-  DialogResizeHandler = function() {
-    ReactivePowerChart.resize($('#GraphDialogBody').width(), $('#GraphDialogContents').height() - 100);
-  };
-  $('#GraphDialogBody').append(DialogElement);
-  $(window).bind('resize', DialogResizeHandler);
-  window.dispatchEvent(new Event('resize'));  
-});
-$('#GraphDialogClose').click(function() {
-  $(window).unbind('resize', DialogResizeHandler);
-  $(window).bind('resize', DialogPrevResizeHandler);
-  $(PrevDialogContainer).append(DialogElement);
-  $('#GraphDialog').modal('hide');
-  window.dispatchEvent(new Event('resize'));
-});
-
 /* Contadores de energia */
 var EnergyCountersTimer  = null;
 function Scrollable_UpdateCounters(change) {
+  return;
   if(EnergyCountersTimer != null) clearInterval(EnergyCountersTimer);
   EnergyCountersTimer = setTimeout(EnergyCountersTimer, 60000);
   var CountersPeriod = localStorage.getItem('CountersPeriod');
@@ -388,7 +174,7 @@ function EnergyUpdateCountersPrevs(result) {
 /* Secuencia de inicio para cargar la pagina */
 var MainScrollable = null;
 function UpdatePage() {
-  MainScrollable = new Scrollable( {Spinners: ['#PowerSpinner'], Series: 'active_power, reactive_power', OnSuccess: Scrollable_OnSuccess} );
+  MainScrollable = new Scrollable( {Spinners: ['#ActivePowerSpinner'], Series: 'active_power, reactive_power', OnSuccess: Scrollable_OnSuccess} );
   Scrollable_UpdateCounters(true);
 }
 
