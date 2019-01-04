@@ -152,6 +152,11 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
     } else if((strcmp(Aggreg, "1m") == 0) && (strcmp(Serie, "harmonics_v") == 0)) {
       ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : 3;
       ArrayLenB = 50;
+    } else if((strcmp(Aggreg, "1m") == 0) && (strcmp(Serie, "harmonics_i") == 0)) {
+      ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : (Analyzer->GetMode() == AnalyzerInterface::PHASE3) ? 3 : 4;
+      ArrayLenB = 50;
+
+
     } else if((strcmp(Aggreg, "1m") == 0) && ((strcmp(Serie, "stat_voltage") == 0) || (strcmp(Serie, "stat_frequency") == 0) || (strcmp(Serie, "stat_thd") == 0) || (strcmp(Serie, "stat_harmonics") == 0))) {
       ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : (Analyzer->GetMode() == AnalyzerInterface::PHASE3) ? 3 : 4;
       ArrayLenB = 50;

@@ -18,12 +18,13 @@ var SeriesNames = {
                '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'],
   Voltage: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['V'] : ['V(R)', 'V(S)', 'V(T)']; },
   Current: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['I'] : (Analyzers[Analyzer]['Mode'] === '3PHASE') ? ['I(R)', 'I(S)', 'I(T)'] : ['I(R)', 'I(S)', 'I(T)', 'I(N)']; },
-  ActiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['P']  : ['P(R)', 'P(S)', 'P(T)']; },
-  ReactiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Q']  : ['Q(R)', 'Q(S)', 'Q(T)']; },
-  ActivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['P']  : ['P(R)', 'P(S)', 'P(T)']; },
-  ReactivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Q']  : ['Q(R)', 'Q(S)', 'Q(T)']; },
-  PowerFactor: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['PF']  : ['PF(R)', 'PF(S)', 'PF(T)']; },
-  THDv: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['THDv']  : ['THDv(R)', 'THDv(S)', 'THDv(T)']; },
+  ActiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)']; },
+  ReactiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
+  ActivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)']; },
+  ReactivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
+  PowerFactor: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['PF'] : ['PF(R)', 'PF(S)', 'PF(T)']; },
+  THDv: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['THDv'] : ['THDv(R)', 'THDv(S)', 'THDv(T)']; },
+  THDi: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['THDi'] : (Analyzers[Analyzer]['Mode'] === '3PHASE') ? ['THDi(R)', 'THDi(S)', 'THDi(T)'] : ['THDi(R)', 'THDi(S)', 'THDi(T)', 'THDi(N)']; },
   PHI: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['PHI']  : ['PHI(R)', 'PHI(S)', 'PHI(T)']; },
 };
   
@@ -168,9 +169,13 @@ function Scrollable(opt) {
     Result.PrimaryTo = parseInt(localStorage.getItem('GraphEnd'));
     Result.PreferedAggreg = localStorage.getItem('GraphAggregation');
     Result.PrimaryText = 'Displayed period';
-    var From = new Date(Result.PrimaryTo - Result.PrimaryPeriod);
-    var To = new Date(Result.PrimaryTo);
-    Result.SecondaryText = 'From ' + From.toLocaleDateString() + ' - ' + From.toLocaleTimeString() + ' to ' + To.toLocaleDateString() + ' - ' + To.toLocaleTimeString();
+    if(Result.PrimaryTo === 0) {
+      Result.SecondaryText = 'Last ' + moment.duration(Result.PrimaryPeriod / 1000, "seconds").format("d [days] h [hours] m [minutes]");
+    } else {
+      var From = new Date(Result.PrimaryTo - Result.PrimaryPeriod);
+      var To = new Date(Result.PrimaryTo);
+      Result.SecondaryText = 'From ' + From.toLocaleDateString() + ' - ' + From.toLocaleTimeString() + ' to ' + To.toLocaleDateString() + ' - ' + To.toLocaleTimeString();
+    }
     return Result;    
   };
   Self.OnSuccess = function(result) {
@@ -511,10 +516,8 @@ function GraphWaveTimeTicks(max) {
 }
 /* find abs max value of array (maybe array of arrays) */
 function ArrayAbsMax(array) {
-  var Max = -Infinity;
-  for(var i in array) {
-    Max = Math.max(Max, Array.isArray(Math.abs(array[i])) ? ArrayMax(array[i]) : array[i]);
-  }
+  var Max = 0;
+  for(var i in array) Max = Math.max(Max, Array.isArray(array[i]) ? ArrayMax(array[i]) : Math.abs(array[i]));
   return Max;
 }
 /* find max value of array (maybe array of arrays) */

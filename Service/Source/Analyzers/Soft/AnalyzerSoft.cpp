@@ -196,7 +196,7 @@ void AnalyzerSoft::Analyze() {
         }
       }
       pAggreg10C.THD_I[j] = sqrt(pAggreg10C.THD_I[j]) / pAggreg10C.CurrentHarmonics[j][0];
-      pAggreg10C.Active_Energy[j] = (pAggreg10C.Active_Power[j] * pAggreg10C.RMS_I_Inputs[j]) / (pSamplerate * 3600.0);
+      pAggreg10C.Active_Energy[j] = (pAggreg10C.Active_Power[j] * pAggreg10C.Current[j].size()) / (pSamplerate * 3600.0);
       pAggreg10C.Power_Factor[j] = pAggreg10C.Active_Power[j] / pAggreg10C.Apparent_Power[j];
       pAggreg10C.Reactive_Energy[j] = (pAggreg10C.Reactive_Power[j] * pAggreg10C.RMS_I_Inputs[j]) / (pSamplerate * 3600.0);
     }
