@@ -45,9 +45,11 @@
 body {
   background-color: #F1F1F1;
   overflow-x: hidden;
-  background-image: url(Background.png);
+  background-image: url(Imgs/Background.png);
 }
-
+img {
+  margin-top: -2px;
+}
 /* Ajustes de la barra duperior de indicadores y logo */
 .navbar-brand {
   text-align: left;

@@ -7,17 +7,11 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/home/edu/Proyectos/openZmeter/Service/Source/Database.cpp</file>
-            <file>file:/home/edu/Proyectos/openZmeter/Service/WEB/Resources/Analysis_Voltage.js</file>
-            <file>file:/home/edu/Proyectos/openZmeter/Service/Source/Analyzers/AnalyzerInterface.h</file>
-            <file>file:/home/edu/Proyectos/openZmeter/Service/WEB/Analysis_Voltage.html</file>
-            <file>file:/home/edu/Proyectos/openZmeter/Service/WEB/Resources/openZmeter.css</file>
-            <file>file:/home/edu/Proyectos/openZmeter/Service/WEB/Database_Analyzer.sql</file>
-            <file>file:/home/edu/Proyectos/openZmeter/Service/Source/Analyzers/AnalyzerInterface.cpp</file>
-            <file>file:/home/edu/Proyectos/openZmeter/Service/WEB/Resources/openZmeter.js</file>
-            <file>file:/home/edu/Proyectos/openZmeter/Service/Source/Analyzers/Soft/AnalyzerSoft.h</file>
-            <file>file:/home/edu/Proyectos/openZmeter/Service/WEB/Resources/Dashboard.js</file>
-            <file>file:/home/edu/Proyectos/openZmeter/Service/Source/Analyzers/Soft/AnalyzerSoft.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/Soft/AnalyzerSoft.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Analysis_Voltage.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/AnalyzerInterface.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/AnalyzerInterface.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/Soft/AnalyzerSoft.cpp</file>
         </group>
     </open-files>
 </project-private>
