@@ -17,7 +17,7 @@
 #include "NetworkManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon                     *HTTPServer::pDaemon         = NULL;
-const char                     *HTTPServer::pFilePath       = "/usr/share/openZmeter/WEB/";
+//const char                     *HTTPServer::pFilePath       = "/usr/share/openZmeter/WEB/";
 const char                     *HTTPServer::pDefaultPage    = "";
 vector<HTTPServer::Callback_t>  HTTPServer::pCallbacks;
 vector<HTTPServer::Mapping_t>   HTTPServer::pMappings;
@@ -29,8 +29,8 @@ bool HTTPServer::Config(json_object *config) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
     if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) {
       Port = json_object_get_int(JSON_Val);
-    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "FilePath") == 0)) {
-      pFilePath = (char*)json_object_get_string(JSON_Val);
+//    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "FilePath") == 0)) {
+//      pFilePath = (char*)json_object_get_string(JSON_Val);
     }
   }
   pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, Port, NULL, NULL, 
@@ -169,7 +169,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     Request->ResultCode = MHD_HTTP_OK;
     if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) return MHD_YES;
     if((strcmp(method, MHD_HTTP_METHOD_GET) == 0) || (strcmp(method, MHD_HTTP_METHOD_HEAD) == 0)) {
-      snprintf(FilePath, sizeof(FilePath), "Resources%s", url);
+      snprintf(FilePath, sizeof(FilePath), "WEB%s", url);
       Request->PostData = (char*)Tools::GetFile(FilePath, &Request->PostDataLen);
     }
     if((Request->PostData == NULL) && (strcmp(method, MHD_HTTP_METHOD_GET) == 0)) {
@@ -186,7 +186,8 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
       } else {
         for(vector<Mapping_t>::iterator it = pMappings.begin() ; it != pMappings.end(); ++it) {
           if(strcmp(url, it->URL) == 0) {
-            strncpy(FilePath, it->File, sizeof(FilePath));
+            snprintf(FilePath, sizeof(FilePath), "WEB%s", it->File);
+//            strncpy(FilePath, it->File, sizeof(FilePath));
             Request->PostData = (char*)Tools::GetFile(FilePath, &Request->PostDataLen);
           }
         }    

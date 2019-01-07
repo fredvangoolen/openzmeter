@@ -11,7 +11,7 @@
   font-family: 'Titillium Web';
   font-style: italic;
   font-weight: 400;
-  src: local('Titillium Web Italic'), local('TitilliumWeb-Italic'), url(Fonts/TitilliumWebItalic.woff2) format('woff2');
+  src: local('Titillium Web Italic'), local('TitilliumWeb-Italic'), url(../Fonts/TitilliumWebItalic.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 /* latin */
@@ -19,7 +19,7 @@
   font-family: 'Titillium Web';
   font-style: italic;
   font-weight: 700;
-  src: local('Titillium Web Bold Italic'), local('TitilliumWeb-BoldItalic'), url(Fonts/TitilliumWebBoldItalic.woff2) format('woff2');
+  src: local('Titillium Web Bold Italic'), local('TitilliumWeb-BoldItalic'), url(../Fonts/TitilliumWebBoldItalic.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 /* latin */
@@ -27,7 +27,7 @@
   font-family: 'Titillium Web';
   font-style: normal;
   font-weight: 400;
-  src: local('Titillium Web Regular'), local('TitilliumWeb-Regular'), url(Fonts/TitilliumWebRegular.woff2) format('woff2');
+  src: local('Titillium Web Regular'), local('TitilliumWeb-Regular'), url(../Fonts/TitilliumWebRegular.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 /* latin */
@@ -35,7 +35,7 @@
   font-family: 'Titillium Web';
   font-style: normal;
   font-weight: 700;
-  src: local('Titillium Web Bold'), local('TitilliumWeb-Bold'), url(Fonts/TitilliumWebBold.woff2) format('woff2');
+  src: local('Titillium Web Bold'), local('TitilliumWeb-Bold'), url(../Fonts/TitilliumWebBold.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
@@ -45,7 +45,7 @@
 body {
   background-color: #F1F1F1;
   overflow-x: hidden;
-  background-image: url(Imgs/Background.png);
+  background-image: url(../Imgs/Background.png);
 }
 img {
   margin-top: -2px;
@@ -445,9 +445,6 @@ img {
   border-bottom-style: solid;
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
-.btn-group-xs>.btn, .btn-xs {
-  border-radius: 0px;
-}
 
 .nav-tabs>li>a {
   border: 1px solid #CCC;
@@ -472,6 +469,7 @@ img {
 
 .btn-group,.btn-group-vertical {
   vertical-align: text-bottom;
+  display: inline-table;
 }
 .btn .caret {
   margin-left: 3px;
@@ -1272,4 +1270,12 @@ text.area_text {
   padding-top: 2px;
   padding-bottom: 2px;
   vertical-align: middle;
+}
+.input-group-xs>.form-control,
+.input-group-xs>.input-group-addon,
+.input-group-xs>.input-group-btn>.btn {
+    height: 22px;
+    padding: 1px 5px;
+    font-size: 12px;
+    line-height: 1.5;
 }

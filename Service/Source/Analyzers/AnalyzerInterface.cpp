@@ -148,7 +148,7 @@ AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nomi
   pMode = mode;
   pLastSave = 0;
   size_t Len;
-  char *Script = (char*)Tools::GetFile("Database_Analyzer.sql", &Len);
+  char *Script = (char*)Tools::GetFile("SQL/Database_Analyzer.sql", &Len);
   Script[Len - 1] = 0;
   Tools::LogMsg("DEBUG", "Creating database tables\n");
   ExecSentence(Script);

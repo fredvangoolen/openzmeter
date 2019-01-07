@@ -182,13 +182,13 @@ function Scrollable(opt) {
     for(var i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
     Self.Opt.OnSuccess(result, Self.LastSample === 0);
     Self.LastSample = LastSampletime(result, Self.LastSample);
-    $(Self.Opt.AggregBtn + ' div:first').text(GetAggregLongName(result['Aggregation_Source']));
+    $(Self.Opt.AggregBtn + ' span:first').text(GetAggregLongName(result['Aggregation_Source']));
     $(Self.Opt.AggregBtn).next().children().removeClass('active');
     $(Self.Opt.AggregBtn).next().children(':contains(' + GetAggregLongName(result['Aggregation_Source']) + ')').addClass('active');
     Self.Range = [result['From'], result['To']];
     var Period = result['To'] - result['From'];
     var PeriodName = GetPeriodNameFromMS(Period);
-    $(Self.Opt.PeriodBtn + ' div:first').text(PeriodName);
+    $(Self.Opt.PeriodBtn + ' span:first').text(PeriodName);
     $(Self.Opt.PeriodBtn).next().children().removeClass('active');
     $(Self.Opt.PeriodBtn).next().children(':contains(' + PeriodName + ')').addClass('active');
     if(Self.CountersTimes === null) {
@@ -377,8 +377,7 @@ function GraphTools(title, graph, toolbar, resizeHandler, exportFunction) {
   }
   $(Self.Toolbar + ' button[data-function="Maximize"]').click(function(evt) {
     if($('#dlgMaximizeDialog').hasClass('in')) {
-      $('#MaximizeToolbar button[data-function="Maximize"] > i').addClass('fa-expand');
-      $('#MaximizeToolbar button[data-function="Maximize"] > i').removeClass('fa-compress');
+      $('#MaximizeToolbar button[data-function="Maximize"] > img').attr('src', 'Imgs/arrow_out.png');
       $('#MaximizeToolbar button[data-function="Maximize"]').attr('title', 'Maximize graph');
       $(window).unbind('resize', Self.DialogResizeHandler);
       $(Self.PrevContainer).append($(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph).graphDiv).parent().detach());
@@ -387,8 +386,7 @@ function GraphTools(title, graph, toolbar, resizeHandler, exportFunction) {
       $(Self.Toolbar).append($('#MaximizeToolbar').children().detach());
       $('#dlgMaximizeDialog').modal('hide');
     } else {
-      $(Self.Toolbar + ' button[data-function="Maximize"] > i').removeClass('fa-expand');
-      $(Self.Toolbar + ' button[data-function="Maximize"] > i').addClass('fa-compress');
+      $(Self.Toolbar + ' button[data-function="Maximize"] > img').attr('src', 'Imgs/arrow_in.png');
       $(Self.Toolbar + ' button[data-function="Maximize"]').attr('title', 'Minimize graph');
       Self.PrevContainer = $(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph).graphDiv).parent().parent();
       if(Self.PrevHandler !== undefined) $(window).unbind('resize', Self.PrevHandler);

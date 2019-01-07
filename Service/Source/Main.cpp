@@ -76,20 +76,20 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
   
   HTTPServer::RegisterDefault("/Dashboard");
-  HTTPServer::RegisterMapping("/Dashboard",            "Dashboard.html");
-  HTTPServer::RegisterMapping("/Analysis/Frequency",   "Analysis_Frequency.html");
-  HTTPServer::RegisterMapping("/Analysis/Voltage",     "Analysis_Voltage.html");
-  HTTPServer::RegisterMapping("/Analysis/Current",     "Analysis_Current.html");
-  HTTPServer::RegisterMapping("/Analysis/Power",       "Analysis_Power.html");
-  HTTPServer::RegisterMapping("/Analysis/Energy",      "Analysis_Energy.html");
-  HTTPServer::RegisterMapping("/Events/ITIC",          "Events_ITIC.html");
-  HTTPServer::RegisterMapping("/Events/Disturbances",  "Events_Disturbances.html");
-  HTTPServer::RegisterMapping("/Events/EN50160",       "Events_EN50160.html");
-  HTTPServer::RegisterMapping("/Stats/Costs",          "Stats_Costs.html");
-  HTTPServer::RegisterMapping("/Stats/Heatmap",        "Stats_Heatmap.html");
-  HTTPServer::RegisterMapping("/Stats/Distribution",   "Stats_Distribution.html");
-  HTTPServer::RegisterMapping("/Settings",             "Settings.html");
-  HTTPServer::RegisterMapping("/Help",                 "Help.html");
+  HTTPServer::RegisterMapping("/Dashboard",            "/Dashboard.html");
+  HTTPServer::RegisterMapping("/Analysis/Frequency",   "/Analysis_Frequency.html");
+  HTTPServer::RegisterMapping("/Analysis/Voltage",     "/Analysis_Voltage.html");
+  HTTPServer::RegisterMapping("/Analysis/Current",     "/Analysis_Current.html");
+  HTTPServer::RegisterMapping("/Analysis/Power",       "/Analysis_Power.html");
+  HTTPServer::RegisterMapping("/Analysis/Energy",      "/Analysis_Energy.html");
+  HTTPServer::RegisterMapping("/Events/ITIC",          "/Events_ITIC.html");
+  HTTPServer::RegisterMapping("/Events/Disturbances",  "/Events_Disturbances.html");
+  HTTPServer::RegisterMapping("/Events/EN50160",       "/Events_EN50160.html");
+  HTTPServer::RegisterMapping("/Stats/Costs",          "/Stats_Costs.html");
+  HTTPServer::RegisterMapping("/Stats/Heatmap",        "/Stats_Heatmap.html");
+  HTTPServer::RegisterMapping("/Stats/Distribution",   "/Stats_Distribution.html");
+  HTTPServer::RegisterMapping("/Settings",             "/Settings.html");
+  HTTPServer::RegisterMapping("/Help",                 "/Help.html");
 
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
 

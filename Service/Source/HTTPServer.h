@@ -39,7 +39,7 @@ class HTTPServer {
     } Mapping_t;
   private:
     static MHD_Daemon         *pDaemon;
-    static const char         *pFilePath;
+//    static const char         *pFilePath;
     static const char         *pDefaultPage;
     static vector<Callback_t>  pCallbacks;
     static vector<Mapping_t>   pMappings;

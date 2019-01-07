@@ -119,11 +119,6 @@
               <pElem>Source/Analyzers</pElem>
               <pElem>Source/Analyzers/Soft</pElem>
               <pElem>Source/Analyzers/Remote</pElem>
-              <pElem>nbproject</pElem>
-              <pElem>nbproject/private</pElem>
-              <pElem>nbproject/private/tools</pElem>
-              <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-              <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             </incDir>
           </ccTool>
         </makeTool>
@@ -138,14 +133,72 @@
             flavor2="11">
         <ccTool flags="0">
           <incDir>
+            <pElem>Resources</pElem>
+            <pElem>Resources/SQL</pElem>
+            <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/WEB/Lib</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/datatables/css</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
+            <pElem>Resources/WEB/Lib/sidenav</pElem>
+            <pElem>Resources/WEB/Lib/visjs</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
+            <pElem>Resources/WEB/Lib/momentjs</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Icons</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Imgs</pElem>
+            <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>WEB</pElem>
+            <pElem>WEB/SQL</pElem>
+            <pElem>WEB/Views</pElem>
             <pElem>WEB/Resources</pElem>
             <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/Lib</pElem>
+            <pElem>WEB/Resources/Lib/jquery.lineProgressbar</pElem>
+            <pElem>WEB/Resources/Lib/datatables</pElem>
+            <pElem>WEB/Resources/Lib/datatables/images</pElem>
+            <pElem>WEB/Resources/Lib/datatables/js</pElem>
+            <pElem>WEB/Resources/Lib/datatables/css</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/Lib/sidenav</pElem>
+            <pElem>WEB/Resources/Lib/visjs</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/Lib/momentjs</pElem>
+            <pElem>WEB/Resources/Lib/qtip2</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/Lib/dygraph</pElem>
+            <pElem>WEB/Resources/Icons</pElem>
             <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/metisMenu</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/marked</pElem>
             <pElem>WEB/Resources/lib/datatables</pElem>
             <pElem>WEB/Resources/lib/datatables/images</pElem>
             <pElem>WEB/Resources/lib/datatables/js</pElem>
@@ -167,7 +220,10 @@
             <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
             <pElem>WEB/Resources/lib/dygraph</pElem>
             <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Imgs</pElem>
+            <pElem>WEB/Resources/CSS</pElem>
             <pElem>WEB/Resources/Help</pElem>
+            <pElem>WEB/Resources/JS</pElem>
           </incDir>
         </ccTool>
       </item>
@@ -188,14 +244,72 @@
       <item path="Source/Database.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>Resources</pElem>
+            <pElem>Resources/SQL</pElem>
+            <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/WEB/Lib</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/datatables/css</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
+            <pElem>Resources/WEB/Lib/sidenav</pElem>
+            <pElem>Resources/WEB/Lib/visjs</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
+            <pElem>Resources/WEB/Lib/momentjs</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Icons</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Imgs</pElem>
+            <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>WEB</pElem>
+            <pElem>WEB/SQL</pElem>
+            <pElem>WEB/Views</pElem>
             <pElem>WEB/Resources</pElem>
             <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/Lib</pElem>
+            <pElem>WEB/Resources/Lib/jquery.lineProgressbar</pElem>
+            <pElem>WEB/Resources/Lib/datatables</pElem>
+            <pElem>WEB/Resources/Lib/datatables/images</pElem>
+            <pElem>WEB/Resources/Lib/datatables/js</pElem>
+            <pElem>WEB/Resources/Lib/datatables/css</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/Lib/sidenav</pElem>
+            <pElem>WEB/Resources/Lib/visjs</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/Lib/momentjs</pElem>
+            <pElem>WEB/Resources/Lib/qtip2</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/Lib/dygraph</pElem>
+            <pElem>WEB/Resources/Icons</pElem>
             <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/metisMenu</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/marked</pElem>
             <pElem>WEB/Resources/lib/datatables</pElem>
             <pElem>WEB/Resources/lib/datatables/images</pElem>
             <pElem>WEB/Resources/lib/datatables/js</pElem>
@@ -217,12 +331,65 @@
             <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
             <pElem>WEB/Resources/lib/dygraph</pElem>
             <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Imgs</pElem>
+            <pElem>WEB/Resources/CSS</pElem>
             <pElem>WEB/Resources/Help</pElem>
+            <pElem>WEB/Resources/JS</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/Devices/DeviceInterface.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
+          <incDir>
+            <pElem>WEB/Resources/Lib</pElem>
+            <pElem>WEB/Resources/Lib/jquery.lineProgressbar</pElem>
+            <pElem>WEB/Resources/Lib/datatables</pElem>
+            <pElem>WEB/Resources/Lib/datatables/images</pElem>
+            <pElem>WEB/Resources/Lib/datatables/js</pElem>
+            <pElem>WEB/Resources/Lib/datatables/css</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/Lib/sidenav</pElem>
+            <pElem>WEB/Resources/Lib/visjs</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/Lib/momentjs</pElem>
+            <pElem>WEB/Resources/Lib/qtip2</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/Lib/dygraph</pElem>
+            <pElem>WEB/Resources/Icons</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
+            <pElem>WEB/Resources/lib</pElem>
+            <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/lib/sidenav</pElem>
+            <pElem>WEB/Resources/lib/visjs</pElem>
+            <pElem>WEB/Resources/lib/visjs/img</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
+            <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Imgs</pElem>
+            <pElem>WEB/Resources/CSS</pElem>
+            <pElem>WEB/Resources/Help</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Devices/Remote/DeviceRemote.cpp"
@@ -254,6 +421,11 @@
       <item path="Source/Events.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
             <pElem>WEB/Resources/MiniViews</pElem>
@@ -290,6 +462,11 @@
       <item path="Source/FFT.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
             <pElem>WEB/Resources/MiniViews</pElem>
@@ -326,14 +503,72 @@
       <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>Resources</pElem>
+            <pElem>Resources/SQL</pElem>
+            <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/WEB/Lib</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/datatables/css</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
+            <pElem>Resources/WEB/Lib/sidenav</pElem>
+            <pElem>Resources/WEB/Lib/visjs</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
+            <pElem>Resources/WEB/Lib/momentjs</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Icons</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Imgs</pElem>
+            <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>WEB</pElem>
+            <pElem>WEB/SQL</pElem>
+            <pElem>WEB/Views</pElem>
             <pElem>WEB/Resources</pElem>
             <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/Lib</pElem>
+            <pElem>WEB/Resources/Lib/jquery.lineProgressbar</pElem>
+            <pElem>WEB/Resources/Lib/datatables</pElem>
+            <pElem>WEB/Resources/Lib/datatables/images</pElem>
+            <pElem>WEB/Resources/Lib/datatables/js</pElem>
+            <pElem>WEB/Resources/Lib/datatables/css</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/Lib/sidenav</pElem>
+            <pElem>WEB/Resources/Lib/visjs</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/Lib/momentjs</pElem>
+            <pElem>WEB/Resources/Lib/qtip2</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/Lib/dygraph</pElem>
+            <pElem>WEB/Resources/Icons</pElem>
             <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/metisMenu</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/marked</pElem>
             <pElem>WEB/Resources/lib/datatables</pElem>
             <pElem>WEB/Resources/lib/datatables/images</pElem>
             <pElem>WEB/Resources/lib/datatables/js</pElem>
@@ -355,21 +590,82 @@
             <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
             <pElem>WEB/Resources/lib/dygraph</pElem>
             <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Imgs</pElem>
+            <pElem>WEB/Resources/CSS</pElem>
             <pElem>WEB/Resources/Help</pElem>
+            <pElem>WEB/Resources/JS</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/Main.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>Resources</pElem>
+            <pElem>Resources/SQL</pElem>
+            <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/WEB/Lib</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/datatables/css</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
+            <pElem>Resources/WEB/Lib/sidenav</pElem>
+            <pElem>Resources/WEB/Lib/visjs</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
+            <pElem>Resources/WEB/Lib/momentjs</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Icons</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Imgs</pElem>
+            <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>WEB</pElem>
+            <pElem>WEB/SQL</pElem>
+            <pElem>WEB/Views</pElem>
             <pElem>WEB/Resources</pElem>
             <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/Lib</pElem>
+            <pElem>WEB/Resources/Lib/jquery.lineProgressbar</pElem>
+            <pElem>WEB/Resources/Lib/datatables</pElem>
+            <pElem>WEB/Resources/Lib/datatables/images</pElem>
+            <pElem>WEB/Resources/Lib/datatables/js</pElem>
+            <pElem>WEB/Resources/Lib/datatables/css</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/Lib/sidenav</pElem>
+            <pElem>WEB/Resources/Lib/visjs</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/Lib/momentjs</pElem>
+            <pElem>WEB/Resources/Lib/qtip2</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/Lib/dygraph</pElem>
+            <pElem>WEB/Resources/Icons</pElem>
             <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/metisMenu</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/marked</pElem>
             <pElem>WEB/Resources/lib/datatables</pElem>
             <pElem>WEB/Resources/lib/datatables/images</pElem>
             <pElem>WEB/Resources/lib/datatables/js</pElem>
@@ -391,13 +687,21 @@
             <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
             <pElem>WEB/Resources/lib/dygraph</pElem>
             <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Imgs</pElem>
+            <pElem>WEB/Resources/CSS</pElem>
             <pElem>WEB/Resources/Help</pElem>
+            <pElem>WEB/Resources/JS</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/NTP.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="0">
           <incDir>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
             <pElem>WEB/Resources/MiniViews</pElem>
@@ -434,6 +738,11 @@
       <item path="Source/NetworkManager.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
             <pElem>WEB/Resources/MiniViews</pElem>
@@ -478,14 +787,72 @@
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>Resources</pElem>
+            <pElem>Resources/SQL</pElem>
+            <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/WEB/Lib</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/datatables/css</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
+            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
+            <pElem>Resources/WEB/Lib/sidenav</pElem>
+            <pElem>Resources/WEB/Lib/visjs</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
+            <pElem>Resources/WEB/Lib/momentjs</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
+            <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Icons</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Imgs</pElem>
+            <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>WEB</pElem>
+            <pElem>WEB/SQL</pElem>
+            <pElem>WEB/Views</pElem>
             <pElem>WEB/Resources</pElem>
             <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/Lib</pElem>
+            <pElem>WEB/Resources/Lib/jquery.lineProgressbar</pElem>
+            <pElem>WEB/Resources/Lib/datatables</pElem>
+            <pElem>WEB/Resources/Lib/datatables/images</pElem>
+            <pElem>WEB/Resources/Lib/datatables/js</pElem>
+            <pElem>WEB/Resources/Lib/datatables/css</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/Lib/sidenav</pElem>
+            <pElem>WEB/Resources/Lib/visjs</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/Lib/momentjs</pElem>
+            <pElem>WEB/Resources/Lib/qtip2</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/Lib/dygraph</pElem>
+            <pElem>WEB/Resources/Icons</pElem>
             <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
-            <pElem>WEB/Resources/lib/metisMenu</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
-            <pElem>WEB/Resources/lib/marked</pElem>
             <pElem>WEB/Resources/lib/datatables</pElem>
             <pElem>WEB/Resources/lib/datatables/images</pElem>
             <pElem>WEB/Resources/lib/datatables/js</pElem>
@@ -507,13 +874,21 @@
             <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
             <pElem>WEB/Resources/lib/dygraph</pElem>
             <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Imgs</pElem>
+            <pElem>WEB/Resources/CSS</pElem>
             <pElem>WEB/Resources/Help</pElem>
+            <pElem>WEB/Resources/JS</pElem>
           </incDir>
         </ccTool>
       </item>
       <folder path="0/Source/Analyzers/Remote">
         <ccTool>
           <incDir>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
             <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>WEB</pElem>
@@ -550,11 +925,86 @@
       <folder path="0/Source/Analyzers/Soft">
         <ccTool>
           <incDir>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
             <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>WEB</pElem>
             <pElem>WEB/Resources</pElem>
             <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/Lib</pElem>
+            <pElem>WEB/Resources/Lib/jquery.lineProgressbar</pElem>
+            <pElem>WEB/Resources/Lib/datatables</pElem>
+            <pElem>WEB/Resources/Lib/datatables/images</pElem>
+            <pElem>WEB/Resources/Lib/datatables/js</pElem>
+            <pElem>WEB/Resources/Lib/datatables/css</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/Lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/Lib/sidenav</pElem>
+            <pElem>WEB/Resources/Lib/visjs</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/Lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/Lib/momentjs</pElem>
+            <pElem>WEB/Resources/Lib/qtip2</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/Lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/Lib/dygraph</pElem>
+            <pElem>WEB/Resources/Icons</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
+            <pElem>WEB/Resources/lib</pElem>
+            <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/lib/sidenav</pElem>
+            <pElem>WEB/Resources/lib/visjs</pElem>
+            <pElem>WEB/Resources/lib/visjs/img</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
+            <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Imgs</pElem>
+            <pElem>WEB/Resources/CSS</pElem>
+            <pElem>WEB/Resources/Help</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Devices">
+        <ccTool>
+          <incDir>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
+            <pElem>WEB</pElem>
+            <pElem>WEB/Resources</pElem>
+            <pElem>WEB/Resources/MiniViews</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Devices/Remote">
+        <ccTool>
+          <incDir>
             <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
@@ -583,14 +1033,102 @@
           </incDir>
         </ccTool>
       </folder>
-      <folder path="0/Source/Devices">
+      <folder path="0/Source/Devices/V1">
         <ccTool>
           <incDir>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>WEB</pElem>
-            <pElem>WEB/Resources</pElem>
-            <pElem>WEB/Resources/MiniViews</pElem>
+            <pElem>WEB/Resources/HelpPages</pElem>
+            <pElem>WEB/Resources/lib</pElem>
+            <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/lib/sidenav</pElem>
+            <pElem>WEB/Resources/lib/visjs</pElem>
+            <pElem>WEB/Resources/lib/visjs/img</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
+            <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Help</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Devices/V1_1">
+        <ccTool>
+          <incDir>
+            <pElem>WEB/Resources/HelpPages</pElem>
+            <pElem>WEB/Resources/lib</pElem>
+            <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/lib/sidenav</pElem>
+            <pElem>WEB/Resources/lib/visjs</pElem>
+            <pElem>WEB/Resources/lib/visjs/img</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
+            <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Help</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Devices/V2">
+        <ccTool>
+          <incDir>
+            <pElem>WEB/Resources/HelpPages</pElem>
+            <pElem>WEB/Resources/lib</pElem>
+            <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
+            <pElem>WEB/Resources/lib/datatables</pElem>
+            <pElem>WEB/Resources/lib/datatables/images</pElem>
+            <pElem>WEB/Resources/lib/datatables/js</pElem>
+            <pElem>WEB/Resources/lib/datatables/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/css</pElem>
+            <pElem>WEB/Resources/lib/font-awesome/fonts</pElem>
+            <pElem>WEB/Resources/lib/sidenav</pElem>
+            <pElem>WEB/Resources/lib/visjs</pElem>
+            <pElem>WEB/Resources/lib/visjs/img</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/timeline</pElem>
+            <pElem>WEB/Resources/lib/visjs/img/network</pElem>
+            <pElem>WEB/Resources/lib/momentjs</pElem>
+            <pElem>WEB/Resources/lib/qtip2</pElem>
+            <pElem>WEB/Resources/lib/bootstrap</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/js</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/css</pElem>
+            <pElem>WEB/Resources/lib/bootstrap/fonts</pElem>
+            <pElem>WEB/Resources/lib/bootstrap-year-calendar</pElem>
+            <pElem>WEB/Resources/lib/dygraph</pElem>
+            <pElem>WEB/Resources/Fonts</pElem>
+            <pElem>WEB/Resources/Help</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Devices/Virtual">
+        <ccTool>
+          <incDir>
             <pElem>WEB/Resources/HelpPages</pElem>
             <pElem>WEB/Resources/lib</pElem>
             <pElem>WEB/Resources/lib/jquery.lineProgressbar</pElem>
@@ -622,6 +1160,11 @@
       <folder path="0/Source/Prices">
         <ccTool>
           <incDir>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
             <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
             <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>WEB</pElem>

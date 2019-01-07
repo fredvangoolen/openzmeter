@@ -76,7 +76,7 @@ bool Database::Config(json_object *config) {
   }
   Database DB(NULL);
   size_t Len;
-  char *Script = (char*)Tools::GetFile("Database.sql", &Len);
+  char *Script = (char*)Tools::GetFile("SQL/Database.sql", &Len);
   Script[Len - 1] = 0;
   Tools::LogMsg("DEBUG", "Creating database tables\n");
   return DB.ExecSentence(Script);

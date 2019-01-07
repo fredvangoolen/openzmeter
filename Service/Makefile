@@ -17,21 +17,21 @@ TARGET_EXEC  = openZmeter
 BUILD_DIR    = Tmp
 MAINSOURCES  = $(shell find ./Source -maxdepth 2 -name "*.cpp" ! -type d -print)
 MAINSOURCES += $(shell find ./Source -mindepth 3 -name "*.cpp" ! -type d -print)
-WEBSOURCES   = $(shell find ./WEB ! -type d -print | sort)
-WEBTARGET    = $(BUILD_DIR)/ResourceFiles.o
-WEBTMP       = $(BUILD_DIR)/ResourceFiles
+RESOURCES    = $(shell find ./Resources ! -type d -print | sort)
+RESTARGET    = $(BUILD_DIR)/ResourceFiles.o
+RESTMP       = $(BUILD_DIR)/ResourceFiles
 OBJS         = $(MAINSOURCES:%=$(BUILD_DIR)/%.o)
 INC_DIRS    += $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS   += $(addprefix -I,$(INC_DIRS))
 LDFLAGS     += $(addprefix -L,$(LIB_DIRS))
 CPPFLAGS    += $(INC_FLAGS)
-debug: $(OBJS) $(WEBTARGET)
+debug: $(OBJS) $(RESTARGET)
 	@echo "Linking debug target" $(TARGET_EXEC)
-	@$(CC) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(WEBTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
+	@$(CC) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(RESTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
 	
 release: $(OBJS) $(WEBTARGET)
 	@echo "Linking release target" $(TARGET_EXEC)
-	@$(CC) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(WEBTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
+	@$(CC) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(RESTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
 
 clean:
 	@rm -rf $(BUILD_DIR)
@@ -47,16 +47,16 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 	@echo "Bulding" $@
 	@$(CC) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-$(WEBTARGET): $(WEBSOURCES)
+$(RESTARGET): $(RESOURCES)
 	@echo  "Building resource file"
 	@mkdir -p $(BUILD_DIR)
-	@rm -f $(WEBTARGET) $(WEBTMP)
-	@printf "%s\000" $(words $(WEBSOURCES)) > $(WEBTMP)
-	@for FILE in $(WEBSOURCES); \
+	@rm -f $(RESTARGET) $(RESTMP)
+	@printf "%s\000" $(words $(RESOURCES)) > $(RESTMP)
+	@for FILE in $(RESOURCES); \
 	do \
 		echo "Append " $$FILE ; \
-		printf '%s\000%d\000' `echo $$FILE | cut -d'/' -f3-` `stat --printf="%s" $$FILE` >> $(WEBTMP) ; \
-		cat $$FILE >> $(WEBTMP) ; \
+		printf '%s\000%d\000' `echo $$FILE | cut -d'/' -f3-` `stat --printf="%s" $$FILE` >> $(RESTMP) ; \
+		cat $$FILE >> $(RESTMP) ; \
 	done
 	@cd $(BUILD_DIR); ld -r -b binary -o ResourceFiles.o ResourceFiles; cd ..
-	@rm $(WEBTMP)
+	@rm $(RESTMP)

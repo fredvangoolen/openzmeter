@@ -129,6 +129,7 @@ bool Tools::RemovePidFile() {
   return true;
 }
 void Tools::Daemonize() {
+  Tools::LogMsg("INFO", "Move to background task\n");
   pid_t ProcID = fork();
   if(ProcID < 0) {
     LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
