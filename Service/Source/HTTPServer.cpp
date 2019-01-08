@@ -17,7 +17,6 @@
 #include "NetworkManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon                     *HTTPServer::pDaemon         = NULL;
-//const char                     *HTTPServer::pFilePath       = "/usr/share/openZmeter/WEB/";
 const char                     *HTTPServer::pDefaultPage    = "";
 vector<HTTPServer::Callback_t>  HTTPServer::pCallbacks;
 vector<HTTPServer::Mapping_t>   HTTPServer::pMappings;
@@ -27,11 +26,7 @@ bool HTTPServer::Config(json_object *config) {
   uint16_t Port = 8080;
   json_object_object_foreach(config, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
-    if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) {
-      Port = json_object_get_int(JSON_Val);
-//    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "FilePath") == 0)) {
-//      pFilePath = (char*)json_object_get_string(JSON_Val);
-    }
+    if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) Port = json_object_get_int(JSON_Val);
   }
   pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, Port, NULL, NULL, 
                              &HandleClient, NULL,
@@ -62,16 +57,16 @@ void HTTPServer::OpenSession(MHD_Connection* connection, Request_t* request) {
   if(request->DB == NULL) request->DB = new Database(NULL);
   const char *Cookie = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");
   if(Cookie != NULL) {
-    request->DB->PrepareSentence("SELECT id, name FROM sessions WHERE id = ?");
+    request->DB->PrepareSentence("SELECT id, username FROM sessions WHERE id = ?");
     request->DB->BindSingleString(Cookie);
     request->DB->ExecSentence();
     if(request->DB->ResultRows() == 1) {
-      request->UserName = (request->DB->ResultValue(0, "name") != NULL) ? strdup(request->DB->ResultValue(0, "name")) : NULL;
+      request->UserName = (request->DB->ResultValue(0, "username") != NULL) ? strdup(request->DB->ResultValue(0, "username")) : NULL;
       request->SessionID = strdup(request->DB->ResultValue(0, "id"));
       return;
     }
   }
-  request->DB->PrepareSentence("INSERT INTO sessions(name, timestamp) VALUES (NULL, ?) RETURNING id");
+  request->DB->PrepareSentence("INSERT INTO sessions(username, timestamp) VALUES (NULL, ?) RETURNING id");
   request->DB->BindSingleUInt64(Tools::GetTime());
   request->DB->ExecSentence();
   if(request->DB->ResultRows() == 1) request->SessionID = strdup(request->DB->ResultValue(0, (char*)"id"));
@@ -86,7 +81,7 @@ void HTTPServer::CloseSession(MHD_Connection* connection, Request_t* request) {
 }
 void HTTPServer::RemoveExpiredSessions() {
   Database DB(NULL);
-  DB.PrepareSentence("DELETE FROM sessions WHERE (timestamp < ? AND name IS NOT NULL) OR (timestamp < ? AND name IS NULL)");
+  DB.PrepareSentence("DELETE FROM sessions WHERE (timestamp < ? AND username IS NOT NULL) OR (timestamp < ? AND username IS NULL)");
   DB.BindSingleUInt64(Tools::GetTime() - 1296000000); //15 days
   DB.BindSingleUInt64(Tools::GetTime() - 60000);      //1 minute
   DB.ExecSentence();
@@ -161,6 +156,7 @@ ssize_t HTTPServer::WriteFunction(void *cls, uint64_t pos, char *buf, size_t max
 int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
   Request_t *Request = (Request_t*)*ptr;
   if(Request == NULL) {
+    Tools::LogMsg("DEBUG", "HTTP %s request '%s'\n", method, url);
     char FilePath[256];
     *ptr = (Request_t*)calloc(1, sizeof(Request_t));
     Request = (Request_t*)*ptr;
@@ -179,7 +175,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         CloseSession(connection, Request);
         return SendRedirect(connection, "/Login");
       } else if((strcmp(url, "/Login") == 0) && (Request->UserName == NULL)) {
-        snprintf(FilePath, sizeof(FilePath), "Login.html");
+        snprintf(FilePath, sizeof(FilePath), "WEB/Login.html");
         Request->PostData = (char*)Tools::GetFile(FilePath, &Request->PostDataLen);
       } else if(Request->UserName == NULL) {
         return SendRedirect(connection, "/Login");
@@ -187,7 +183,6 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         for(vector<Mapping_t>::iterator it = pMappings.begin() ; it != pMappings.end(); ++it) {
           if(strcmp(url, it->URL) == 0) {
             snprintf(FilePath, sizeof(FilePath), "WEB%s", it->File);
-//            strncpy(FilePath, it->File, sizeof(FilePath));
             Request->PostData = (char*)Tools::GetFile(FilePath, &Request->PostDataLen);
           }
         }    
@@ -229,7 +224,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
             Request->ResultCode = MHD_HTTP_BAD_REQUEST;
           } else {
             if(Request->DB == NULL) Request->DB = new Database(NULL);
-            Request->DB->PrepareSentence("SELECT admin, lastlogin FROM users WHERE name = ? AND password = MD5(?)");
+            Request->DB->PrepareSentence("SELECT admin, lastlogin, photo FROM users WHERE username = ? AND password = ?");
             Request->DB->BindSingleString(Name);
             Request->DB->BindSingleString(Password);
             Request->DB->ExecSentence();
@@ -243,12 +238,12 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
               const char *Admin = Request->DB->ResultValue(0, "admin");
               if(Admin) json_object_object_add(Request->JSONWriter, "Admin", json_object_new_boolean((Admin[0] == 't') ? true : false));
               if(UpdateLastLogin) {
-                Request->DB->PrepareSentence("UPDATE users SET lastlogin = ? WHERE name = ?");
+                Request->DB->PrepareSentence("UPDATE users SET lastlogin = ? WHERE username = ?");
                 Request->DB->BindSingleUInt64(Tools::GetTime());
                 Request->DB->BindSingleString(Name);
                 Request->DB->ExecSentence();
               }
-              Request->DB->PrepareSentence("UPDATE sessions SET name = ? WHERE id = ?");
+              Request->DB->PrepareSentence("UPDATE sessions SET username = ? WHERE id = ?");
               Request->DB->BindSingleString(Name);
               Request->DB->BindSingleString(Request->SessionID);
               Request->DB->ExecSentence();

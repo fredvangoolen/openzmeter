@@ -75,11 +75,14 @@ bool Database::Config(json_object *config) {
     }
   }
   Database DB(NULL);
-  size_t Len;
-  char *Script = (char*)Tools::GetFile("SQL/Database.sql", &Len);
-  Script[Len - 1] = 0;
   Tools::LogMsg("DEBUG", "Creating database tables\n");
-  return DB.ExecSentence(Script);
+  return DB.ExecResource("SQL/Database.sql");
+}
+bool Database::ExecResource(const char *file) {
+  size_t Len;
+  char *Script = (char*)Tools::GetFile(file, &Len);
+  Script[Len - 1] = 0;
+  return ExecSentence(Script);
 }
 bool Database::ExecSentence(const char* sql) {
   if(pResult != NULL) PQclear(pResult);

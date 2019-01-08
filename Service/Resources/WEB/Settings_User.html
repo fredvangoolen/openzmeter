@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="modal-dialog">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">User settings</h3>
+    </div>
+    <div class="modal-body">
+      <div class="row">
+        <div class="col-xs-6">
+          <div class="row">
+            <div class="col-xs-12">
+              <label class="control-label">Username</label>
+              <input type="text" class="form-control" id="AnalyzerID" disabled>
+            </div>
+            <div class="col-xs-12">
+              <label class="control-label">Password</label>
+              <input type="password" class="form-control" aria-label="...">
+            </div>
+            <div class="col-xs-12">
+              <label class="control-label">E-Mail</label>
+              <input type="text" class="form-control" id="NetworkPassword">
+            </div>
+            <div class="col-xs-12">
+              <label class="control-label">Telegram ID</label>
+              <input type="text" class="form-control" id="NetworkPassword">
+            </div>
+          </div>
+        </div>
+        <div class="col-xs-6">
+          <div class="row">
+            <div class="col-xs-12">
+              <div class="popover fade bottom in" style="top: -17px; display: block; width: 100%">
+                <h3 class="popover-title"><strong>Profile image</strong>
+                  <button type="button" id="close-preview" style="font-size: initial;" class="close pull-right">Remove</button>
+                  <button type="button" id="close-preview" style="font-size: initial;" class="close pull-right">Change</button>
+                  </h3>
+                <div class="popover-content" style="text-align: center">
+                <img id="dynamic" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYxIDY0LjE0MDk0OSwgMjAxMC8xMi8wNy0xMDo1NzowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNS4xIFdpbmRvd3MiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NkRGM0FBNENBNzUwMTFFMTg3RUVENDc3MzNDODRBOEYiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NkRGM0FBNERBNzUwMTFFMTg3RUVENDc3MzNDODRBOEYiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo2REYzQUE0QUE3NTAxMUUxODdFRUQ0NzczM0M4NEE4RiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo2REYzQUE0QkE3NTAxMUUxODdFRUQ0NzczM0M4NEE4RiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqVW+oIAAAIeSURBVHjazJfNLgRBEMereoasIOGyibj4OnoTDp6AFxDPIXEiTuKyXgCJfRNHHycXFw5cxHarmhmy3VNj/sRuVNK7melfddVUVX8xEeVHvauLwLzhvScKNFphIucccQj9vZ3NLX01e3jWD+MWtam2c/npBF9+9s3DM2kIeEQfH6oQrC3OUWWzow6wSNG1tDDXFr3WDCEMlUaLP3VAcsJ0cHpJ74OBra15EwXlvHjuQ6hzCFNxeZbRVGfy61X3sIfVwP7J+Z8wRQ30ihroFhEovBW5vnukKjJR5rR7faVLA42QySFMzH3azMv35UOWOQljkaAhHQ1nHMUahzApFzlQieaQRSvyWfOajJ5yCNPExQ5kXFQnJ1Mn8PA0qnMIk3K2A1yFLRGfrAwWhzAWFzsgGpZSOp1MDmEMrlYDDlgGEQ4dK3Ig05yxvbq1cQhjcfUi/C5qoZlDGCMDxjQElCwOYVodkMKFdkKEQ8eq1QAiCIeOlUeLh8OUEK6NCU01ADkAcO4nEfg/DowxBQ1F6HTHNhYPpjYOYSwunoayeFjHKE7CaXEIY3G1GgjUrmRxCPP/Hcj0RBvaK9riEMbi8uEdSvu+XcEY4Bgb67PHlTuXg6bMRJ7/CTNsUx3pHp/1b+UwPeMHvukuUZ5w5FKpF1i9eIRfMF+cGM+IXna3N1b1We9jy9LmiUZ2LbS2gidp92pwQtq0tEkar7xJe/0QYAAFQ5kvEpljPQAAAABJRU5ErkJggg==" style="width: 192px; height: 192px;"></div></div>
+              </div>
+            </div>
+        </div>
+        
+        <div class="col-xs-12">
+          <label class="control-label">Name</label>
+          <input type="text" class="form-control" id="NetworkPassword">
+        </div>
+        <div class="col-xs-12">
+          <label class="control-label">Surname</label>
+          <input type="text" class="form-control" id="NetworkPassword">
+        </div>
+        <div class="col-xs-6">
+          <label class="control-label">ID Card</label>
+          <input type="text" class="form-control" id="NetworkPassword">
+        </div>
+        <div class="col-xs-6">
+          <label class="control-label">Company</label>
+          <input type="text" class="form-control" id="NetworkPassword">
+        </div>
+        <div class="col-xs-12">
+          <label class="control-label">Address</label>
+          <input type="text" class="form-control" id="NetworkPassword">
+        </div>
+
+      </div>
+      <div class="alert alert-danger text-center" id="NetworkErrorBox" style="display:none; margin: 0px 15px 15px 15px;">
+            <i class="fa fa-times"></i> <span id="NetworkError"></span>
+          </div>
+              </div>
+
+          <div class="modal-footer">
+      <button type="button" class="btn btn-success" id="NetworkConfigSave"><span class="glyphicon glyphicon-floppy-disk"></span>Save</button>
+      <button type="button" class="btn btn-default" id="NetworkConfigClose"><span class="glyphicon glyphicon-remove"></span>Close</button>
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>

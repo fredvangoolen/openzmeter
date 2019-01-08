@@ -1,19 +1,26 @@
 -- Create database
 CREATE TABLE IF NOT EXISTS users(
-  name      character varying NOT NULL PRIMARY KEY,
+  username  character varying NOT NULL PRIMARY KEY,
   password  character varying NOT NULL,
   lastlogin bigint            NOT NULL,
-  admin     boolean           NOT NULL
+  name     character varying  NOT NULL,
+	surname  character varying  NOT NULL,
+	id_card  character varying  NOT NULL,
+	address  character varying  NOT NULL,
+	company  character varying  NOT NULL,
+	photo    character varying  NULL,
+	email    character varying  NOT NULL,
+	telegram character varying  NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS sessions (
   id        serial NOT NULL PRIMARY KEY,
-  name      character varying REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE,
+  username  character varying REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE,
   timestamp bigint NOT NULL
 ) WITH (OIDS=FALSE);
 CREATE INDEX IF NOT EXISTS sessions_timestamp_idx ON sessions USING btree (timestamp);
 
-INSERT INTO users(name, password, lastlogin, admin) VALUES('admin', MD5('admin'), 0, true) ON CONFLICT (name) DO NOTHING;
+INSERT INTO users(username, password, lastlogin, admin, name, surname, id_card, address, company, photo, email, telegram) VALUES('admin', MD5('admin'), 0, true, 'System administrator', '', '', '', '', '', '', '') ON CONFLICT (username) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS permisions(
   name       character varying NOT NULL,

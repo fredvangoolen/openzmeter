@@ -38,6 +38,7 @@ class Database {
     void        BindSingleBool(bool param);
     void        BindSingleString(const char *string, bool identifier = false);
     bool        ExecSentence();
+    bool        ExecResource(const char *file);
     uint32_t    ResultRows();
     const char *ResultValue(uint32_t row, const char *name);
     bool        ExecSentence(const char *sql);

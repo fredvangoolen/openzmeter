@@ -47,7 +47,7 @@ bool DeviceInterface::RegisterType(const char* name, ConstructorFunction constru
 }
 bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_array();
-  db->PrepareSentence("SELECT serial FROM permisions WHERE name = ? AND read = TRUE UNION SELECT nspname FROM users, pg_catalog.pg_namespace WHERE nspname !~ '^pg_' AND nspname <> 'information_schema' AND nspname <> 'public' AND admin = true AND name = ?");
+  db->PrepareSentence("SELECT serial FROM permisions WHERE username = ? AND read = TRUE UNION SELECT nspname FROM users, pg_catalog.pg_namespace WHERE nspname !~ '^pg_' AND nspname <> 'information_schema' AND nspname <> 'public' AND admin = true AND username = ?");
   db->BindSingleString(user);
   db->BindSingleString(user);
   db->ExecSentence();

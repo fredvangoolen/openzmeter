@@ -5,6 +5,8 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
+        <df name="etc">
+        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -12,6 +14,8 @@
           </df>
         </df>
         <df name="usr">
+          <df name="sbin">
+          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -40,8 +44,6 @@
             <df name="bootstrap-year-calendar">
             </df>
             <df name="datatables">
-              <df name="css">
-              </df>
               <df name="images">
               </df>
               <df name="js">
@@ -56,8 +58,6 @@
               </df>
             </df>
             <df name="jquery.lineProgressbar">
-            </df>
-            <df name="momentjs">
             </df>
             <df name="qtip2">
             </df>
@@ -171,7 +171,7 @@
   <confs>
     <conf name="Default" type="0">
       <toolsSet>
-        <developmentServer>root@192.168.0.192:22</developmentServer>
+        <developmentServer>localhost</developmentServer>
         <platform>2</platform>
       </toolsSet>
       <compile>
@@ -192,8 +192,6 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
-        <gdb_signals>
-        </gdb_signals>
         <gdb_options>
           <DebugOptions>
           </DebugOptions>

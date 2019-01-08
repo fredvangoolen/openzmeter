@@ -52,7 +52,7 @@
     </div>
     <div id="ScrollableAggreg_Block">
       <div class="input-group input-group-xs">
-        <span class="input-group-addon"><img src="Icons/clock_15.png"/></span>
+        <span class="input-group-addon"><img src="Imgs/clock_15.png"/></span>
         <div class="input-group-btn">
           <button class="btn btn-default dropdown-toggle" type="button" id="btnScrollableAggreg" data-toggle="dropdown"><span style="display: inline-block; width: 56px; text-align: left;">1 hour</span><span class="caret"></span></button>
           <ul class="dropdown-menu">
@@ -66,7 +66,7 @@
     </div>
     <div id="ScrollableTime_Block">
       <div class="input-group input-group-xs">
-        <span class="input-group-addon"><img src="Icons/outlook_calendar_work_week.png"/></span>
+        <span class="input-group-addon"><img src="Imgs/outlook_calendar_work_week.png"/></span>
         <div class="input-group-btn">
           <button class="btn btn-default dropdown-toggle" type="button" id="btnScrollablePeriod" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><span style="display: inline-block; width: 37px; text-align: left;">Custom</span><span class="caret"></span></button>
           <ul class="dropdown-menu">
@@ -125,7 +125,7 @@
       <div id="DisableDiv" class="overlay"></div>
       <div class="navbar-header">
         <div class="navbar-brand">
-        <embed src="Logo2.svg" type="image/svg+xml" /><br/>
+        <embed src="Imgs/Logo2.svg" type="image/svg+xml" /><br/>
           <div style="font-size: 12px; color: #FFF; margin-top: -5px">
             <span class="navbar-time">Node time:&nbsp;</span><span id="NodeTime">?</span>
           </div>
@@ -178,24 +178,24 @@
       </div>
       <nav class="sidenav" data-sidenav data-sidenav-toggle="#sidenav-toggle">
         <div class="sidenav-header">
-          <div class="small pull-left"><i class="fa fa-user-circle-o"></i> <span id="labelUserName"></span></div>
+          <div class="small pull-left"><span id="labelUserName"></span></div>
           <div class="btn-group pull-right">
-            <button type="button" class="btn btn-default btn-xs navbar-btn"><i class="fa fa-key"></i></button>
-            <button type="button" class="btn btn-default btn-xs navbar-btn" onclick="window.location.href='Logout'"><i class="fa fa-sign-out fa-fw"></i></button>
+            <button type="button" class="btn btn-default btn-xs navbar-btn" data-toggle="tooltip" title="User configuration"><img src="Imgs/user_edit.png"></button>
+            <button type="button" class="btn btn-default btn-xs navbar-btn" data-toggle="tooltip" title="User logout" onclick="window.location.href='Logout'"><img src="Imgs/user_go.png"></button>
           </div>
           <span class="clearfix"></span>
        </div>
         <div class="sidenav-header">
-          <div class="small pull-left"><i class="fa fa-plug" aria-hidden="true"></i> <span id="labelAnalyzerName"></span></div>
+          <div class="small pull-left"><span id="labelAnalyzerName"></span></div>
           <div class="btn-group pull-right">
             <button type="button" class="btn btn-default btn-xs navbar-btn disabled">
-              <i class="fa fa-cog"></i>
+              <img src="Imgs/cog_edit.png">
             </button>
             <button type="button" class="btn btn-default btn-xs navbar-btn disabled" id="btnSearchAnalyzer">
-              <i class="fa fa-search"></i>
+              <img src="Imgs/magnifier.png">
             </button>
             <button type="button" class="btn btn-default btn-xs navbar-btn disabled">
-              <i class="fa fa-exclamation-triangle"></i>
+              <img src="Imgs/exclamation.png">
             </button>
           </div>
           <table>
