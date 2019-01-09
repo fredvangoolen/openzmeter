@@ -17,8 +17,29 @@
 #include "DeviceVirtual.h"
 #include "Tools.h"
 // Register ============================================================================================================
-bool DeviceVirtual::pClassRegistered = DeviceInterface::RegisterType("Virtual", DeviceVirtual::CreateInstance);
+bool DeviceVirtual::pClassRegistered = DeviceVirtual::Init();
 // Funciones ===========================================================================================================
+bool DeviceVirtual::Init() {
+  DeviceVirtual *This = new DeviceVirtual();
+  This->pAnalyzer        = NULL;
+  This->pSampleRate      = 10000;
+  json_object *Find;
+  AddDevice(This);
+  return true;
+}
+uint32_t DeviceVirtual::AnalyzersCount() {
+  return (pAnalyzer == NULL) ? 0 : 1;
+}
+const char *DeviceVirtual::Serial() {
+  return "Unavaliable";
+}
+const char *DeviceVirtual::Driver() {
+  return "VIRTUAL";
+}
+const char *DeviceVirtual::Name() {
+  return "Emulate most of real capture device for testing";
+}
+
 void  *DeviceVirtual::Capture_Thread(void *args) {
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {

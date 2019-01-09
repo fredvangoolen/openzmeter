@@ -65,13 +65,6 @@ int main(int argc, char** argv) {
   
   Tools::RegisterHandlers(SignalHandler);
   HTTPServer::RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
-  HTTPServer::RegisterCallback("/getAnalyzers",        DeviceInterface::GetAnalyzersCallback);
-  HTTPServer::RegisterCallback("/getSeries",           DeviceInterface::GetSeriesCallback);
-  HTTPServer::RegisterCallback("/getSeriesAggreg",     DeviceInterface::GetSeriesAggregCallback);
-  HTTPServer::RegisterCallback("/getSeriesNow",        DeviceInterface::GetSeriesNowCallback);
-  HTTPServer::RegisterCallback("/getSeriesRange",      DeviceInterface::GetSeriesRangeCallback);
-  HTTPServer::RegisterCallback("/getEvents",           DeviceInterface::GetEventsCallback);
-  HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
   HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
   HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
   

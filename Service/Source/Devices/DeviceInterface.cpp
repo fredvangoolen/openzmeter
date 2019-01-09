@@ -5,33 +5,37 @@
 #include <string.h>
 #include <math.h>
 #include "DeviceInterface.h"
+#include "HTTPServer.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 vector<DeviceInterface*>        DeviceInterface::pDevices;
-vector<DeviceInterface::Type_t> DeviceInterface::pRegisteredTypes __attribute__((init_priority(200)));
+//vector<DeviceInterface::Type_t> DeviceInterface::pRegisteredTypes;
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceInterface::Config(json_object *config) {
   if(config == NULL) return true;
-  for(uint i = 0; i < json_object_array_length(config); i++) {
-    json_object *Device = json_object_array_get_idx(config, i);
-    char *Name = NULL;
-    if(Tools::JSONString(Device, "Driver", &Name) == false) {
-      Tools::LogMsg("ERROR", "'Driver' parameter not specified\n");
-    } else {
-      for(vector<Type_t>::iterator it = pRegisteredTypes.begin() ; it != pRegisteredTypes.end(); ++it) {
-        if(strcmp(Name, it->Name) == 0) {
-          DeviceInterface *Instance = it->Constructor(Device);
-          if(Instance != NULL) pDevices.push_back(Instance);
-          break;
-        }
-      }
-    }
-  }
+  //LLamo a todos los inits de los plugins o algo asi, para que busquen dispositivos
+
+//  for(uint i = 0; i < json_object_array_length(config); i++) {
+//    json_object *Device = json_object_array_get_idx(config, i);
+//    char *Name = NULL;
+//    if(Tools::JSONString(Device, "Driver", &Name) == false) {
+//      Tools::LogMsg("ERROR", "'Driver' parameter not specified\n");
+//    } else {
+//      for(vector<Type_t>::iterator it = pRegisteredTypes.begin() ; it != pRegisteredTypes.end(); ++it) {
+//        if(strcmp(Name, it->Name) == 0) {
+//          DeviceInterface *Instance = it->Constructor(Device);
+//          if(Instance != NULL) pDevices.push_back(Instance);
+//          break;
+//        }
+//      }
+//    }
+//  }
   return true;
 }
 DeviceInterface::DeviceInterface() {
   pTerminate     = false;
   pCaptureThread = 0;
+  pState = UNCONFIGURED;
 }
 DeviceInterface::~DeviceInterface() {
   if(pCaptureThread != 0) {
@@ -39,11 +43,49 @@ DeviceInterface::~DeviceInterface() {
     pthread_join(pCaptureThread, NULL);
   }
 }
-bool DeviceInterface::RegisterType(const char* name, ConstructorFunction constructor) {
-  Type_t Type = { name, constructor };
-  Tools::LogMsg("INFO", "Registering '%s' device interface plugin\n", name);
-  pRegisteredTypes.push_back(Type);
-  return true;
+void DeviceInterface::AddDevice(DeviceInterface* device) {
+  if(pDevices.size() == 0) {
+    HTTPServer::RegisterCallback("/getAnalyzers",        DeviceInterface::GetAnalyzersCallback);
+    HTTPServer::RegisterCallback("/getSeries",           DeviceInterface::GetSeriesCallback);
+    HTTPServer::RegisterCallback("/getSeriesAggreg",     DeviceInterface::GetSeriesAggregCallback);
+    HTTPServer::RegisterCallback("/getSeriesNow",        DeviceInterface::GetSeriesNowCallback);
+    HTTPServer::RegisterCallback("/getSeriesRange",      DeviceInterface::GetSeriesRangeCallback);
+    HTTPServer::RegisterCallback("/getEvents",           DeviceInterface::GetEventsCallback);
+    HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
+    HTTPServer::RegisterCallback("/getDevices",          DeviceInterface::GetDevicesCallback);
+  }
+  Tools::LogMsg("INFO", "Registering '%s' device interface plugin\n", device->Driver());
+  pDevices.push_back(device);
+}
+//bool DeviceInterface::RegisterType(const char* name, ConstructorFunction constructor) {
+//  if(pRegisteredTypes.size() == 0) {
+//    HTTPServer::RegisterCallback("/getAnalyzers",        DeviceInterface::GetAnalyzersCallback);
+//    HTTPServer::RegisterCallback("/getSeries",           DeviceInterface::GetSeriesCallback);
+//    HTTPServer::RegisterCallback("/getSeriesAggreg",     DeviceInterface::GetSeriesAggregCallback);
+//    HTTPServer::RegisterCallback("/getSeriesNow",        DeviceInterface::GetSeriesNowCallback);
+//    HTTPServer::RegisterCallback("/getSeriesRange",      DeviceInterface::GetSeriesRangeCallback);
+//    HTTPServer::RegisterCallback("/getEvents",           DeviceInterface::GetEventsCallback);
+//    HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
+//    HTTPServer::RegisterCallback("/getDevices",          DeviceInterface::GetDevicesCallback);
+//  }
+//  Type_t Type = { name, constructor };
+//  Tools::LogMsg("INFO", "Registering '%s' device interface plugin\n", name);
+//  pRegisteredTypes.push_back(Type);
+//  return true;
+//}
+bool DeviceInterface::GetDevicesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+  *writer = json_object_new_array();
+  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+    json_object *Device = json_object_new_object();
+    json_object_object_add(Device, "Driver", json_object_new_string((*it)->Driver()));
+    json_object_object_add(Device, "Name", json_object_new_string((*it)->Name()));
+    json_object_object_add(Device, "Serial", json_object_new_string((*it)->Serial()));
+    json_object_object_add(Device, "Analyzers", json_object_new_int((*it)->AnalyzersCount()));
+    json_object_object_add(Device, "Status", json_object_new_string(""));
+    json_object_array_add(*writer, Device);
+  }
+  *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
+  return true; 
 }
 bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_array();

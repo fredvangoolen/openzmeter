@@ -232,6 +232,36 @@ function NetworkForget(index) {
            }
   });
 }
+// Devices -------------------------------------------------------------------------------------------------------------
+var DeviceTable = null;
+function AjaxGetDevices() {
+$.ajax({ url: "getDevices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
+    function(result) {
+      DeviceTable = $('#DeviceTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [5], orderable: false }, { targets: [0, 1, 2, 3, 4], searchable: true } ], order: [0, 'desc']});
+      for(var i = 0; i < result.length; i++) {
+        var RowText = '<tr>' +
+          '<td>' + result[i]['Driver'] + '</td>' +
+          '<td>' + result[i]['Name'] + '</td>' +
+          '<td>' + result[i]['Serial'] + '</td>' +
+          '<td>' + result[i]['Analyzers'] + '</td>' +
+          '<td>' + result[i]['Status'] + '</td>' +
+          '<td><div class="btn-group" style="width:100%"><button class="btn btn-xs btn-success" style="width:33%">Enable</button><button class="btn btn-xs btn-success" style="width:33%">Start</button><button class="btn btn-xs btn-default" style="width:34%">Configure</button></div></td>' +
+          '</tr>';
+        DeviceTable.row.add($(RowText)).draw();
+      }
+    }
+  });
+}
+function EnableDevice() {
+  
+}
+function StartDevice() {
+  
+}
+function ConfigureDevice() {
+  
+}
+// NTP -----------------------------------------------------------------------------------------------------------------
 var NTP_DateTimePicker = null;
 $('#checkNTP').change(function() {
   if($(this).prop('checked')) {
@@ -288,5 +318,6 @@ $('#btnNTPSave').click(function() {
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
   AjaxGetTimeZones();
+  AjaxGetDevices();
   AjaxGetNetworks();
 }

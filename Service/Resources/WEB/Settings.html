@@ -22,6 +22,10 @@
   </head>
   <body onload="StartPageLoad()">
     <span data-load-block="Header_Block"></span>
+    
+    
+    
+    
     <div class="modal fade" id="dlgSave" tabindex="-1" role="dialog" data-backdrop='static'>
       <div class="modal-dialog">
         <div class="modal-content">
@@ -105,16 +109,26 @@
         </div>
       </div>
     </div>
+    
+    
+    
+    
     <div id="wrapper">
       <div class="row">
-        <div class="col-lg-6 col-xs-12">
+        <!-- NTP Time configuration -->
+        <div class="col-xs-12">
           <div class="panel panel-other">
             <div class="panel-heading">
-              <i class="fa fa-clock-o fa-fw"></i> System time
+              <div class="huge-small header-text">System time</div>
+              <div class="header-buttons">
+                <div class="btn-group">
+                  <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes"><img src="Imgs/diskette.png"> Save</button>
+                </div>
+              </div>
             </div>
             <div class="panel-body">
               <div class="row">
-                <div class="col-md-12">
+                <div class="col-xs-12 col-sm-6">
                   <label class="control-label">Current time/zone</label>
                   <div class='input-group date' id='inputCurrentTime'>
                     <div class="input-group-btn">
@@ -128,7 +142,7 @@
                     </span>
                   </div>
                 </div>
-                <div class="col-md-12">
+                <div class="col-xs-12 col-sm-6">
                   <label class="control-label">NTP Server</label>
                   <div class="input-group">
                     <span class="input-group-addon input-group-addon-toogle">
@@ -137,14 +151,29 @@
                     <input type="text" class="form-control" id="inputNTPServer">
                   </div>
                 </div>
-                <div class="col-md-12">
-                  <div style="margin: 5px"></div>
-                  <button type="button" class="btn btn-sm btn-default" style="width: 100%" id="btnNTPSave">Save</button>
-                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Device configuration -->
+        <div class="col-xs-12">
+          <div class="panel panel-other">
+            <div class="panel-heading">
+              <div class="huge-small header-text">Input devices</div>
+            </div>
+            <div class="panel-body">
+                <table id="DeviceTable" class="table small table-striped table-responsive">
+                  <thead><tr><th>Driver</th><th>Description</th><th>Serial</th><th>Analyzers</th><th>Status</th><th style="width: 190px"></th></tr></thead>
+                  <tbody>
+                  </tbody>
+                </table>
+            </div>
+          </div>
+        </div>
+        
+        
+        
         
         
         

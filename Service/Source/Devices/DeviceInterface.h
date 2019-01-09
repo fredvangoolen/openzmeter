@@ -10,23 +10,30 @@
 using namespace std;
 class DeviceInterface {
   private :
-    typedef DeviceInterface* (*ConstructorFunction)(json_object *config);
-    typedef struct {
-      const char          *Name;
-      ConstructorFunction  Constructor;
-    } Type_t;
+    enum DeviceState {UNCONFIGURED, DISABLED, STOPPED, RUNNING};
+    //    typedef DeviceInterface* (*ConstructorFunction)(json_object *config);
+//    typedef struct {
+//      const char          *Name;
+//      ConstructorFunction  Constructor;
+//    } Type_t;
   private :
-    static vector<Type_t>           pRegisteredTypes;
+//    static vector<Type_t>           pRegisteredTypes;
     static vector<DeviceInterface*> pDevices;
   protected :
-    pthread_t pCaptureThread;           //Descriptor del hilo de captura
-    bool      pTerminate;               //Marca que deben detenerse los trabajos pendientes
+    pthread_t   pCaptureThread;           //Descriptor del hilo de captura
+    bool        pTerminate;               //Marca que deben detenerse los trabajos pendientes
+    DeviceState pState;                   //Device state
   protected :
     virtual AnalyzerInterface *FindAnalyzer(const char *serial) = 0;
+    virtual uint32_t           AnalyzersCount() = 0;
+    virtual const char        *Serial() = 0;
+    virtual const char        *Driver() = 0;
+    virtual const char        *Name() = 0;
   protected :
     DeviceInterface();
   protected :
-    static bool RegisterType(const char *name, ConstructorFunction constructor);
+    static void AddDevice(DeviceInterface *device);
+//    static bool RegisterType(const char *name, ConstructorFunction constructor);
   public :
     virtual ~DeviceInterface();
   public :
@@ -38,4 +45,5 @@ class DeviceInterface {
     static bool GetSeriesRangeCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
     static bool GetEventsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
     static bool GetPricesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetDevicesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
 };

@@ -974,12 +974,12 @@ function LoadAnalyzers(result) {
       $('#btnSearchAnalyzer').on('click', function() { $('#dlgSearchAnalyzer').modal('show'); });
       if(Analyzers[Analyzer] === undefined) {
         if(Analyzers.length !== 0) $('#dlgSearchAnalyzer').modal('show');
-        $('#AnalyzerMenu').addClass('hide');
-        $('#AnalyzerNavHeader').addClass('hide');
         $('#NodeTime').text('Not connected!');
-        $('.indicator-bar').addClass('hide');
       } else {
         $('#labelAnalyzerName').text(Analyzers[Analyzer].Name);
+        $('#AnalyzerMenu').removeClass('hide');
+        $('#AnalyzerNavHeader').removeClass('hide');
+        $('.indicator-bar').removeClass('hide');
         GetIndicators();
         AjaxGetIndicatorsB();
         AjaxGetSysStats();

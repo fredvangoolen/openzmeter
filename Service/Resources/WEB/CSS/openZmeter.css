@@ -913,6 +913,7 @@ label.btn:active, label.btn.active {
 
 .huge-small {
     font-size: 20px;
+    line-height: 20px;
 }
 
 .huge-small-unit {

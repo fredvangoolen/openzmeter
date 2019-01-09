@@ -19,10 +19,15 @@ class DeviceVirtual : public DeviceInterface {
     AnalyzerSoft  *pAnalyzer;
     float          pSampleRate;
   private : 
+    static bool             Init();
     static void            *Capture_Thread(void *args);
     static DeviceInterface *CreateInstance(json_object *config);
   private :
     AnalyzerInterface *FindAnalyzer(const char *serial);
+    uint32_t           AnalyzersCount();
+    const char        *Serial();
+    const char        *Driver();
+    const char        *Name();
   public :
     ~DeviceVirtual();
 };
