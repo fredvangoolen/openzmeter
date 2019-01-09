@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 ) WITH (OIDS=FALSE);
 CREATE INDEX IF NOT EXISTS sessions_timestamp_idx ON sessions USING btree (timestamp);
 
-INSERT INTO users(username, password, lastlogin, admin, name, surname, id_card, address, company, photo, email, telegram) VALUES('admin', MD5('admin'), 0, true, 'System administrator', '', '', '', '', '', '', '') ON CONFLICT (username) DO NOTHING;
+INSERT INTO users(username, password, lastlogin, name, surname, id_card, address, company, photo, email, telegram) VALUES('admin', MD5('admin'), 0, 'System administrator', '', '', '', '', '', '', '') ON CONFLICT (username) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS permisions(
   name       character varying NOT NULL,

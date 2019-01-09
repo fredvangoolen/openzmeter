@@ -966,26 +966,28 @@ function LoadAnalyzers(result) {
                                                       language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices", zeroRecords: " "},
                                                       columnDefs: [ { targets: 0, width: "20px", orderable: false, searchable: false }, { targets: 1, width: "auto" }, { targets: 2, width: "40px" }, { targets: 3, width: "100px" }, { targets: 4, width: "60px", orderable: false, searchable: false } ], order: [1, 'desc']
       });
-      for(i = 0; i < result.length; i++) {
-        var RowText = $('<tr ' + ((i === Analyzer) ? 'class="info"' : '') + '>').append('<td class="text-center">' + ((result[i].Online === true) ? '<i class="fa fa-circle" title="Online"></i>' : '<i class="fa fa-circle-thin" title="Offline"></i>') + '</td><td>' + result[i].Name + '</td><td>' + result[i].Mode + '</td><td style="font-family: monospace; font-size : 11px">' + result[i].ID + '</td><td>' + ((i === Analyzer) ? '<div class="text-success text-center">Selected</div></td>' : '<button class="btn btn-xs btn-primary" style="width: 100%">Select</button></td>'));
+      for(var i = 0; i < Analyzers.length; i++) {
+        var RowText = $('<tr ' + ((i === Analyzer) ? 'class="info"' : '') + '>').append('<td class="text-center">' + ((Analyzers[i].Online === true) ? '<i class="fa fa-circle" title="Online"></i>' : '<i class="fa fa-circle-thin" title="Offline"></i>') + '</td><td>' + Analyzers[i].Name + '</td><td>' + Analyzers[i].Mode + '</td><td style="font-family: monospace; font-size : 11px">' + Analyzers[i].ID + '</td><td>' + ((i === Analyzer) ? '<div class="text-success text-center">Selected</div></td>' : '<button class="btn btn-xs btn-primary" style="width: 100%">Select</button></td>'));
         TableAnalyzers.row.add(RowText).draw();
       }
       $('#dlgSearchAnalyzer').on('shown.bs.modal',function() { TableAnalyzers.columns.adjust(); } );
       $('#btnSearchAnalyzer').on('click', function() { $('#dlgSearchAnalyzer').modal('show'); });
       if(Analyzers[Analyzer] === undefined) {
-        $('#dlgSearchAnalyzer').modal('show');
-        return;
+        if(Analyzers.length !== 0) $('#dlgSearchAnalyzer').modal('show');
+        $('#AnalyzerMenu').addClass('hide');
+        $('#AnalyzerNavHeader').addClass('hide');
+        $('#NodeTime').text('Not connected!');
+        $('.indicator-bar').addClass('hide');
       } else {
         $('#labelAnalyzerName').text(Analyzers[Analyzer].Name);
         GetIndicators();
         AjaxGetIndicatorsB();
+        AjaxGetSysStats();
       }
-      AjaxGetSysStats();
       UpdatePage();
     }
   });
 }
-
 /* Load News and wait users accepts all*/
 var News = null;
 function LoadNews() {
@@ -1010,7 +1012,6 @@ function NewsShow() {
   News['Headers'].shift();
   News['Contents'].shift();
 }
-
 /* Genera la secuencia de pasos una vez cargado todo el javascript para mostrar la pagina */
 var LoadedPending = 0;
 function LoadCommon() {
@@ -1036,6 +1037,10 @@ function LoadCommon() {
   });
 }
 function StartPageLoad() {
+  if((localStorage.getItem('SelAnalyzer') === null) && (window.location.pathname !== '/Settings')) {
+    window.location.href = 'Settings';
+    return;
+  }  
   $('.spinnerdiv').each(function(index, element) { new Spinner(SpinnerOpts).spin(element); });
   LoadCommon();
 }
@@ -1359,3 +1364,8 @@ $('#eventsDropdown').on('hidden.bs.dropdown', function () {
     $('#eventsDropdown .event_alert').remove();
     $('#eventsDropdown .divider').remove();
 })
+
+function EditUser() {
+  $('#dlgUserEdit').modal('show');
+  
+}

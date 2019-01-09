@@ -224,7 +224,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
             Request->ResultCode = MHD_HTTP_BAD_REQUEST;
           } else {
             if(Request->DB == NULL) Request->DB = new Database(NULL);
-            Request->DB->PrepareSentence("SELECT admin, lastlogin, photo FROM users WHERE username = ? AND password = ?");
+            Request->DB->PrepareSentence("SELECT lastlogin FROM users WHERE username = ? AND password = ?");
             Request->DB->BindSingleString(Name);
             Request->DB->BindSingleString(Password);
             Request->DB->ExecSentence();

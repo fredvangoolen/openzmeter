@@ -4,20 +4,20 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <base href="/">
-    <link rel="shortcut icon" href="favicon.ico"/>
-    <script src="lib/pace.min.js"></script>
-    <link rel="stylesheet" href="lib/pace.min.css">    
-    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css"/>
-    <link rel="stylesheet" href="lib/datatables/css/dataTables.bootstrap.css" />
-    <link rel="stylesheet" href="lib/sidenav/sidenav.min.css"/>
-    <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.css"/>
-    <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
-    <link rel="stylesheet" href="lib/offline.min.css" type="text/css"/>
-    <link rel="stylesheet" href="lib/bootstrap-year-calendar/bootstrap-year-calendar.css" type="text/css"/>
-    <link rel="stylesheet" href="lib/bootstrap-toggle.min.css">
-    <link rel="stylesheet" href="lib/bootstrap-datetimepicker.min.css">
-    <link rel="stylesheet" href="lib/qtip2/jquery.qtip.css" type="text/css"/>
-    <link rel="stylesheet" href="openZmeter.css"/>
+    <link rel="shortcut icon" href="Imgs/favicon.ico"/>
+    <script src="JS/pace.min.js"></script>
+    <link rel="stylesheet" href="CSS/pace.min.css">    
+    <link rel="stylesheet" href="CSS/bootstrap.min.css"/>
+    <link rel="stylesheet" href="CSS/dataTables.bootstrap.min.css" />
+    <link rel="stylesheet" href="CSS/sidenav.min.css"/>
+    <!--link rel="stylesheet" href="Lib/font-awesome/css/font-awesome.css"/-->
+    <link rel="stylesheet" href="Lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
+    <link rel="stylesheet" href="CSS/offline.min.css" type="text/css"/>
+    <link rel="stylesheet" href="Lib/bootstrap-year-calendar/bootstrap-year-calendar.css" type="text/css"/>
+    <link rel="stylesheet" href="Lib/bootstrap-toggle.min.css">
+    <link rel="stylesheet" href="Lib/bootstrap-datetimepicker.min.css">
+    <link rel="stylesheet" href="Lib/qtip2/jquery.qtip.css" type="text/css"/>
+    <link rel="stylesheet" href="CSS/openZmeter.css"/>
     <title>openZmeter - Stats</title>
   </head>
   <body onload="StartPageLoad()">
@@ -118,13 +118,13 @@
                   <label class="control-label">Current time/zone</label>
                   <div class='input-group date' id='inputCurrentTime'>
                     <div class="input-group-btn">
-                      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdownTimeZone"><span>UTC</span><span class="caret"></span></button>
+                      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdownTimeZone"><span>UTC</span><span> &#9662;</span></button>
                       <ul class="dropdown-menu scrollable-menu" id="dropdownListTimeZone">
                       </ul>
                     </div>
                     <input type='text' class="form-control" />
                     <span class="input-group-addon">
-                      <span class="glyphicon glyphicon-calendar"></span>
+                      <span class="glyphicon-calendar"></span>
                     </span>
                   </div>
                 </div>
@@ -627,20 +627,19 @@
         <br>
       </div>
       <!-- /#page-wrapper -->
-    </div>
-    <script src="lib/jquery.min.js"></script>
-    <script src="lib/bootstrap/js/bootstrap.js"></script>
-    <script src="lib/sidenav/sidenav.min.js"></script>
-    <script src="lib/spin.min.js"></script>
-    <script src="lib/offline.min.js"></script>
-    <script src="lib/datatables/js/jquery.dataTables.js"></script>
-    <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
-    <script src="lib/momentjs/moment.js"></script>
-    <script src="lib/momentjs/moment-duration-format.js"></script>
-    <script src="lib/moment-timezone.min.js"></script>
-    <script src="lib/bootstrap-toggle.min.js"></script>
-    <script src="lib/bootstrap-datetimepicker.min.js"></script>
-    <script src="openZmeter.js"></script>
-    <script src="Settings.js"></script>
+    <script src="JS/jquery.min.js"></script>
+    <script src="JS/bootstrap.min.js"></script>
+    <script src="JS/sidenav.min.js"></script>
+    <script src="JS/spin.min.js"></script>
+    <script src="JS/offline.min.js"></script>
+    <script src="Lib/datatables/js/jquery.dataTables.js"></script>
+    <script src="JS/dataTables.bootstrap.min.js"></script>
+    <script src="JS/moment.min.js"></script>
+    <script src="JS/moment-duration-format.min.js"></script>
+    <script src="Lib/moment-timezone.min.js"></script>
+    <script src="Lib/bootstrap-toggle.min.js"></script>
+    <script src="Lib/bootstrap-datetimepicker.min.js"></script>
+    <script src="JS/openZmeter.js"></script>
+    <script src="JS/openZmeter.Settings.js"></script>
   </body>
 </html>
