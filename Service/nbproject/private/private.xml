@@ -6,11 +6,11 @@
     </data>
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Analysis_Voltage.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/Dashboard.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/WEB/Resources/openZmeter.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/Soft/AnalyzerSoft.cpp</file>
+        <group>
+            <file>file:/home/edu/Proyectos/openZmeter/Service/Source/NetworkManager.h</file>
+            <file>file:/home/edu/Proyectos/openZmeter/Service/Source/Analyzers/AnalyzerInterface.cpp</file>
+            <file>file:/home/edu/Proyectos/openZmeter/Service/Source/FFT.cpp</file>
+            <file>file:/home/edu/Proyectos/openZmeter/Service/Source/Analyzers/Soft/AnalyzerSoft.cpp</file>
         </group>
     </open-files>
 </project-private>

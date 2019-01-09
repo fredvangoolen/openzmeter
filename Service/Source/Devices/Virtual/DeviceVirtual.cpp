@@ -23,6 +23,7 @@ bool DeviceVirtual::Init() {
   DeviceVirtual *This = new DeviceVirtual();
   This->pAnalyzer        = NULL;
   This->pSampleRate      = 10000;
+  Tools::LogMsg("INFO", "Registering 'VIRTUAL' device driver instance\n");
   AddDevice(This);
   return true;
 }

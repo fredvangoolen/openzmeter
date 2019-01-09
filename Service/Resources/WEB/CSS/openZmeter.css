@@ -168,6 +168,10 @@ img {
   border-radius: 0px;
   padding: 8px 5px;
 }
+.rounded-panel {
+  border: 1px solid rgba(0,0,0,.2);
+  border-radius: 6px;
+}
 @media(max-width:1024px) {
   .header-text {
     text-align: center;

@@ -74,9 +74,9 @@ bool DeviceV1::Init() {
     This->pVoltageOffset = 0;
     This->pCurrentOffset = 0;
     This->pAnalyzer      = NULL;
+    Tools::LogMsg("INFO", "Registering 'V1' device driver instance for USB with serial '%s'\n", String);
     AddDevice(This);
   }
-  
   libusb_free_device_list(Devs, Count);
 	libusb_exit(Context);
   return true;
@@ -96,6 +96,9 @@ const char *DeviceV1::Name() {
 bool DeviceV1::Config(json_object *config, bool save) {
   return true;
 }
+
+
+
 void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV1 *This = (DeviceV1*)transfer->user_data;
   for(int Block = 0; Block < (transfer->actual_length / 64); Block++) {
@@ -105,8 +108,8 @@ void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
       float Voltage = (Pkg[Count * 2 + 0] - This->pVoltageOffset) * This->pVoltageGain;
       float Current = (Pkg[Count * 2 + 1] - This->pCurrentOffset) * This->pCurrentGain;
       if(This->BuffersAppend(Voltage, Current) == false) {
-        //NO HAY SITIO!!! que hago?
         Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
+        break;
       }
     }
   }
@@ -253,8 +256,8 @@ void *DeviceV1::Signal_Thread(void* args) {
   DeviceV1 *This = (DeviceV1*)args;
   bool Toogle = false;
   while(!This->pTerminateSignal) {
-/*    AnalyzerInterface::Params_t Params;
-    This->pAnalyzer->GetParams(&Params, NULL);
+    AnalyzerInterface::Params_t Params = { AnalyzerInterface::UNINITIALIZED };
+    This->pAnalyzer->GetParams(Params, (AnalyzerInterface::ParamsType)(AnalyzerInterface::RMS_V | AnalyzerInterface::RMS_V));
     uint16_t Current = 0;
     uint16_t Voltage = 1 << 6;
     uint8_t  Beep    = 0;
@@ -297,7 +300,7 @@ void *DeviceV1::Signal_Thread(void* args) {
     Tools::pBatteryLevel = Read[1];
     Tools::pBatteryCharging = (Read[0] & 0x02);
     Tools::pExternalPower = (Read[0] & 0x01);
-    fflush(stdout);*/
+    fflush(stdout);
     usleep(100000);
     //Envio transferencia de control
     //Leo datos, si hay algun boton pulsado llamo a los scripts!
@@ -377,6 +380,7 @@ DeviceV1::~DeviceV1() {
 //    pthread_join(AnalyzeThread, NULL);
 //    free(Buffer);
 //  }
+  if(pSerial) free(pSerial);
 }
 //uint32_t CaptureMono::SamplesCopy(float **dest, uint32_t offset, uint32_t len) {
 //  for(uint i = 0; i < len; i++) {

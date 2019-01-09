@@ -54,7 +54,6 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
     HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
     HTTPServer::RegisterCallback("/getDevices",          DeviceInterface::GetDevicesCallback);
   }
-  Tools::LogMsg("INFO", "Registering '%s' device interface plugin\n", device->Driver());
   pDevices.push_back(device);
 }
 //bool DeviceInterface::RegisterType(const char* name, ConstructorFunction constructor) {
