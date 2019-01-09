@@ -23,7 +23,6 @@ bool DeviceVirtual::Init() {
   DeviceVirtual *This = new DeviceVirtual();
   This->pAnalyzer        = NULL;
   This->pSampleRate      = 10000;
-  json_object *Find;
   AddDevice(This);
   return true;
 }
@@ -39,7 +38,9 @@ const char *DeviceVirtual::Driver() {
 const char *DeviceVirtual::Name() {
   return "Emulate most of real capture device for testing";
 }
-
+bool DeviceVirtual::Config(json_object *config, bool save) {
+  return true;
+}
 void  *DeviceVirtual::Capture_Thread(void *args) {
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {

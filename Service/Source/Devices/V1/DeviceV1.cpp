@@ -17,8 +17,85 @@
 #include "DeviceV1.h"
 #include "Tools.h"
 //======================================================================================================================
-bool DeviceV1::pClassRegistered = DeviceInterface::RegisterType("V1", DeviceV1::CreateInstance);
+bool DeviceV1::pClassRegistered = DeviceV1::Init();
 // Funciones ===========================================================================================================
+bool DeviceV1::Init() {
+  libusb_context *Context;
+  if(libusb_init(&Context) < 0) {
+    Tools::LogMsg("ERROR", "Can not open libUSB...\n");
+    return false;
+  }
+  libusb_device **Devs;
+  int Count = libusb_get_device_list(NULL, &Devs);
+  if(Count < 0) {
+    Tools::LogMsg("ERROR", "Can not enumerate USB devices...\n");
+    return false;
+  }
+  for(int i = 0; i < Count; ++i) {
+    libusb_device_descriptor Descriptor;
+    if(libusb_get_device_descriptor(Devs[i], &Descriptor) < 0) {
+      Tools::LogMsg("ERROR", "Can not load USB descriptor...\n");
+      return false;
+    }
+    if(Descriptor.idVendor != DEVICEV1_VID) continue;
+    if(Descriptor.iProduct != DEVICEV1_PID) continue;
+    if(Descriptor.bcdDevice != DEVICEV1_VERSION) continue;
+    libusb_device_handle *Dev_Handle = NULL;
+    if(libusb_open(Devs[i], &Dev_Handle) != LIBUSB_SUCCESS) {
+      Tools::LogMsg("ERROR", "Can not open USB device...\n");
+    }
+    char String[256];
+    if(libusb_get_string_descriptor_ascii(Dev_Handle, Descriptor.iManufacturer, (unsigned char*)String, sizeof(String)) < 0) {
+      Tools::LogMsg("ERROR", "Can not load USB string...\n");
+      libusb_close(Dev_Handle);
+      continue;
+    }
+    if(strcmp(String, DEVICEV1_MANSTRING) != 0) continue;
+    if(libusb_get_string_descriptor_ascii(Dev_Handle, Descriptor.iProduct, (unsigned char*)String, sizeof(String)) < 0) {
+      Tools::LogMsg("ERROR", "Can not load USB string...\n");
+      libusb_close(Dev_Handle);
+      continue;
+    }
+    if(strcmp(String, DEVICEV1_PRODSTRING) != 0) continue;    
+    if(libusb_get_string_descriptor_ascii(Dev_Handle, Descriptor.iSerialNumber, (unsigned char*)String, sizeof(String)) < 0) {
+      Tools::LogMsg("ERROR", "Can not load USB string...\n");
+      libusb_close(Dev_Handle);
+      continue;
+    }
+    libusb_close(Dev_Handle);
+    DeviceV1 *This = new DeviceV1();
+    This->pBuffer.Reset(DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ);
+    This->pLastUpdate    = 0;
+    This->pDeviceHandle  = NULL;
+    This->pNewDevice     = NULL;
+    This->pSerial        = strdup(String);
+    This->pVoltageGain   = 1;
+    This->pCurrentGain   = 1;
+    This->pVoltageOffset = 0;
+    This->pCurrentOffset = 0;
+    This->pAnalyzer      = NULL;
+    AddDevice(This);
+  }
+  
+  libusb_free_device_list(Devs, Count);
+	libusb_exit(Context);
+  return true;
+}
+uint32_t DeviceV1::AnalyzersCount() {
+  return (pAnalyzer == NULL) ? 0 : 1;
+}
+const char *DeviceV1::Serial() {
+  return pSerial;
+}
+const char *DeviceV1::Driver() {
+  return "V1";
+}
+const char *DeviceV1::Name() {
+  return "Capture device V1";
+}
+bool DeviceV1::Config(json_object *config, bool save) {
+  return true;
+}
 void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV1 *This = (DeviceV1*)transfer->user_data;
   for(int Block = 0; Block < (transfer->actual_length / 64); Block++) {
@@ -230,63 +307,63 @@ void *DeviceV1::Signal_Thread(void* args) {
 AnalyzerInterface *DeviceV1::FindAnalyzer(const char *serial) {
   return (strcmp(serial, pAnalyzer->GetID()) == 0) ? pAnalyzer : NULL;
 }
-DeviceInterface *DeviceV1::CreateInstance(json_object *config) {
-  DeviceV1 *This = new DeviceV1();
-  Tools::LogMsg("INFO", "Starting DeviceV1 driver...\n");
-  This->pBuffer.Reset(DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ);
-//  This->pUsed                  = 0;
-//  This->pBuffLen               = DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ;
-//  This->pVoltageSamples        = (float*)malloc(sizeof(float) * This->pBuffLen);
-//  This->pCurrentSamples        = (float*)malloc(sizeof(float) * This->pBuffLen);
-//  This->pReadPos               = 0;
-//  This->pWritePos              = 0;
-  This->pLastUpdate            = 0;
-  This->pDeviceHandle          = NULL;
-  This->pNewDevice             = NULL;
-  This->pSerial                = (char*)"000000000000000000000000";
-  This->pVoltageGain           = 1;
-  This->pCurrentGain           = 1;
-  This->pVoltageOffset         = 0;
-  This->pCurrentOffset         = 0;
-  This->pAnalyzer              = NULL;
-  float NominalVoltage         = 230.0;
-  float NominalFrequency       = 50.0;
-  char *Name                   = (char*)"Unnamed input";
-//  if((This->pVoltageSamples == NULL) || (This->pCurrentSamples == NULL)) {
-//    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
+//DeviceInterface *DeviceV1::CreateInstance(json_object *config) {
+//  DeviceV1 *This = new DeviceV1();
+//  Tools::LogMsg("INFO", "Starting DeviceV1 driver...\n");
+//  This->pBuffer.Reset(DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ);
+////  This->pUsed                  = 0;
+////  This->pBuffLen               = DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ;
+////  This->pVoltageSamples        = (float*)malloc(sizeof(float) * This->pBuffLen);
+////  This->pCurrentSamples        = (float*)malloc(sizeof(float) * This->pBuffLen);
+////  This->pReadPos               = 0;
+////  This->pWritePos              = 0;
+//  This->pLastUpdate            = 0;
+//  This->pDeviceHandle          = NULL;
+//  This->pNewDevice             = NULL;
+//  This->pSerial                = (char*)"000000000000000000000000";
+//  This->pVoltageGain           = 1;
+//  This->pCurrentGain           = 1;
+//  This->pVoltageOffset         = 0;
+//  This->pCurrentOffset         = 0;
+//  This->pAnalyzer              = NULL;
+//  float NominalVoltage         = 230.0;
+//  float NominalFrequency       = 50.0;
+//  char *Name                   = (char*)"Unnamed input";
+////  if((This->pVoltageSamples == NULL) || (This->pCurrentSamples == NULL)) {
+////    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
+////    return NULL;
+////  }
+//  json_object *Find;
+//  if((json_object_object_get_ex(config, "Serial", &Find) == true) && (json_object_get_type(Find) == json_type_string)) This->pSerial = (char*)json_object_get_string(Find);
+//  if((json_object_object_get_ex(config, "VoltageGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) This->pVoltageGain = json_object_get_double(Find);
+//  if((json_object_object_get_ex(config, "VoltageOffset", &Find) == true) && (json_object_get_type(Find) == json_type_double)) This->pVoltageOffset = json_object_get_double(Find);
+//  if((json_object_object_get_ex(config, "CurrentGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) This->pCurrentGain = json_object_get_double(Find);
+//  if((json_object_object_get_ex(config, "CurrentOffset", &Find) == true) && (json_object_get_type(Find) == json_type_double)) This->pCurrentOffset = json_object_get_double(Find);
+//  if((json_object_object_get_ex(config, "NominalVoltage", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalVoltage = json_object_get_double(Find);
+//  if((json_object_object_get_ex(config, "NominalFrequency", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalFrequency = json_object_get_double(Find);  
+//  if((json_object_object_get_ex(config, "DisplayName", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Name = (char*)json_object_get_string(Find);
+//  This->pAnalyzer = new AnalyzerSoft(DEVICEV1_SAMPLEFREQ, This->pSerial, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
+//  if((json_object_object_get_ex(config, "Remote", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigRemote(Find);
+//  if((json_object_object_get_ex(config, "Prices", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigPrices(Find);
+//  int Error = libusb_init(NULL);
+//  if(Error < 0) {
+//    Tools::LogMsg("ERROR", "Can not open libUSB...\n");
 //    return NULL;
 //  }
-  json_object *Find;
-  if((json_object_object_get_ex(config, "Serial", &Find) == true) && (json_object_get_type(Find) == json_type_string)) This->pSerial = (char*)json_object_get_string(Find);
-  if((json_object_object_get_ex(config, "VoltageGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) This->pVoltageGain = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "VoltageOffset", &Find) == true) && (json_object_get_type(Find) == json_type_double)) This->pVoltageOffset = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "CurrentGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) This->pCurrentGain = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "CurrentOffset", &Find) == true) && (json_object_get_type(Find) == json_type_double)) This->pCurrentOffset = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "NominalVoltage", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalVoltage = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "NominalFrequency", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalFrequency = json_object_get_double(Find);  
-  if((json_object_object_get_ex(config, "DisplayName", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Name = (char*)json_object_get_string(Find);
-  This->pAnalyzer = new AnalyzerSoft(DEVICEV1_SAMPLEFREQ, This->pSerial, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
-  if((json_object_object_get_ex(config, "Remote", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigRemote(Find);
-  if((json_object_object_get_ex(config, "Prices", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigPrices(Find);
-  int Error = libusb_init(NULL);
-  if(Error < 0) {
-    Tools::LogMsg("ERROR", "Can not open libUSB...\n");
-    return NULL;
-  }
-  if(pthread_create(&This->pCaptureThread, NULL, Capture_Thread, This) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    libusb_exit(NULL);
-    return NULL;
-  }
-  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV1_VID, DEVICEV1_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, This, NULL);
-  if(Error < 0) {
-    Tools::LogMsg("ERROR", "Fallo al registrar callback de escucha libUSB...\n");
-    This->pTerminate = true;
-    pthread_join(This->pCaptureThread, NULL);
-    return NULL;
-  }
-  return This;
-}
+//  if(pthread_create(&This->pCaptureThread, NULL, Capture_Thread, This) != 0) {
+//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//    libusb_exit(NULL);
+//    return NULL;
+//  }
+//  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV1_VID, DEVICEV1_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, This, NULL);
+//  if(Error < 0) {
+//    Tools::LogMsg("ERROR", "Fallo al registrar callback de escucha libUSB...\n");
+//    This->pTerminate = true;
+//    pthread_join(This->pCaptureThread, NULL);
+//    return NULL;
+//  }
+//  return This;
+//}
 DeviceV1::~DeviceV1() {
 //  if(pVoltageSamples) free(pVoltageSamples);
 //  if(pCurrentSamples) free(pCurrentSamples);

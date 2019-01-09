@@ -23,11 +23,12 @@ class DeviceVirtual : public DeviceInterface {
     static void            *Capture_Thread(void *args);
     static DeviceInterface *CreateInstance(json_object *config);
   private :
+    bool               Config(json_object *config, bool save);
     AnalyzerInterface *FindAnalyzer(const char *serial);
-    uint32_t           AnalyzersCount();
     const char        *Serial();
     const char        *Driver();
     const char        *Name();
+    uint32_t           AnalyzersCount();
   public :
     ~DeviceVirtual();
 };

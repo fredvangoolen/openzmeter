@@ -11,13 +11,7 @@ using namespace std;
 class DeviceInterface {
   private :
     enum DeviceState {UNCONFIGURED, DISABLED, STOPPED, RUNNING};
-    //    typedef DeviceInterface* (*ConstructorFunction)(json_object *config);
-//    typedef struct {
-//      const char          *Name;
-//      ConstructorFunction  Constructor;
-//    } Type_t;
   private :
-//    static vector<Type_t>           pRegisteredTypes;
     static vector<DeviceInterface*> pDevices;
   protected :
     pthread_t   pCaptureThread;           //Descriptor del hilo de captura
@@ -25,15 +19,15 @@ class DeviceInterface {
     DeviceState pState;                   //Device state
   protected :
     virtual AnalyzerInterface *FindAnalyzer(const char *serial) = 0;
-    virtual uint32_t           AnalyzersCount() = 0;
     virtual const char        *Serial() = 0;
     virtual const char        *Driver() = 0;
     virtual const char        *Name() = 0;
+    virtual uint32_t           AnalyzersCount() = 0;
+    virtual bool               Config(json_object *config, bool save) = 0;
   protected :
     DeviceInterface();
   protected :
     static void AddDevice(DeviceInterface *device);
-//    static bool RegisterType(const char *name, ConstructorFunction constructor);
   public :
     virtual ~DeviceInterface();
   public :

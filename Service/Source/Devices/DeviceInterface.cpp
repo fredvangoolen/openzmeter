@@ -81,7 +81,7 @@ bool DeviceInterface::GetDevicesCallback(char *user, json_object *reader, Databa
     json_object_object_add(Device, "Name", json_object_new_string((*it)->Name()));
     json_object_object_add(Device, "Serial", json_object_new_string((*it)->Serial()));
     json_object_object_add(Device, "Analyzers", json_object_new_int((*it)->AnalyzersCount()));
-    json_object_object_add(Device, "Status", json_object_new_string(""));
+    json_object_object_add(Device, "Status", json_object_new_string((*it)->pState == UNCONFIGURED ? "UNCONFIGURED" : ""));
     json_object_array_add(*writer, Device);
   }
   *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
