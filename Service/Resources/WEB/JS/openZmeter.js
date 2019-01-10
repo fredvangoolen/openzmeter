@@ -451,6 +451,7 @@ function GroupButtons(buttongroup, variable, maxItems, unique, callback, sender)
   var NumElements = buttongroup.children().length;
   if(State <= 0 || State >= Math.pow(2, maxItems)) State = 1;
   if(sender !== undefined) {
+    while($(sender).is("button") == false) sender = $(sender).parent();
     var Index = $(sender).index();
     if(State == Math.pow(2, Index)) { //only one iten selected
       //do nothing!, i cant deselect if only one item is selected
