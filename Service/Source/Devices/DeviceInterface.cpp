@@ -9,27 +9,20 @@
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 vector<DeviceInterface*>        DeviceInterface::pDevices;
-//vector<DeviceInterface::Type_t> DeviceInterface::pRegisteredTypes;
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceInterface::Config(json_object *config) {
-  if(config == NULL) return true;
-  //LLamo a todos los inits de los plugins o algo asi, para que busquen dispositivos
-
-//  for(uint i = 0; i < json_object_array_length(config); i++) {
-//    json_object *Device = json_object_array_get_idx(config, i);
-//    char *Name = NULL;
-//    if(Tools::JSONString(Device, "Driver", &Name) == false) {
-//      Tools::LogMsg("ERROR", "'Driver' parameter not specified\n");
-//    } else {
-//      for(vector<Type_t>::iterator it = pRegisteredTypes.begin() ; it != pRegisteredTypes.end(); ++it) {
-//        if(strcmp(Name, it->Name) == 0) {
-//          DeviceInterface *Instance = it->Constructor(Device);
-//          if(Instance != NULL) pDevices.push_back(Instance);
-//          break;
-//        }
-//      }
-//    }
-//  }
+  if(config == NULL) return false;
+  for(uint i = 0; i < json_object_array_length(config); i++) {
+    json_object *Device = json_object_array_get_idx(config, i);
+    char *Name = NULL;
+    if(Tools::JSONString(Device, "Driver", &Name) == false) {
+      Tools::LogMsg("ERROR", "'Driver' parameter not specified\n");
+    } else {
+      for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+        if((strcmp(Name, (*it)->Driver()) == 0) && ((*it)->ConfigDev(Device) == true)) break;
+      }
+    }
+  }
   return true;
 }
 DeviceInterface::DeviceInterface() {
@@ -81,7 +74,7 @@ bool DeviceInterface::GetDevicesCallback(char *user, json_object *reader, Databa
     json_object_object_add(Device, "Name", json_object_new_string((*it)->Name()));
     json_object_object_add(Device, "Serial", json_object_new_string((*it)->Serial()));
     json_object_object_add(Device, "Analyzers", json_object_new_int((*it)->AnalyzersCount()));
-    json_object_object_add(Device, "Status", json_object_new_string((*it)->pState == UNCONFIGURED ? "UNCONFIGURED" : ""));
+    json_object_object_add(Device, "Status", json_object_new_string(((*it)->pState == UNCONFIGURED) ? "UNCONFIGURED" : ((*it)->pState == STOPPED) ? "STOPPED" : "RUNNING"));
     json_object_array_add(*writer, Device);
   }
   *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
@@ -89,7 +82,8 @@ bool DeviceInterface::GetDevicesCallback(char *user, json_object *reader, Databa
 }
 bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_array();
-  db->PrepareSentence("SELECT serial FROM permisions WHERE username = ? AND read = TRUE UNION SELECT nspname FROM users, pg_catalog.pg_namespace WHERE nspname !~ '^pg_' AND nspname <> 'information_schema' AND nspname <> 'public' AND admin = true AND username = ?");
+  db->PrepareSentence("SELECT serial FROM permisions WHERE username = ? AND read = TRUE UNION SELECT serial FROM analyzers WHERE username = ? UNION SELECT serial FROM analyzers WHERE 'admin' = ?");
+  db->BindSingleString(user);
   db->BindSingleString(user);
   db->BindSingleString(user);
   db->ExecSentence();
