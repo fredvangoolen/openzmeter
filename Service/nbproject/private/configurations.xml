@@ -136,6 +136,24 @@
         <in>Tools.cpp</in>
         <in>Tools.h</in>
       </df>
+      <df name="Tmp">
+        <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
+          <df name="Devices">
+            <df name="Remote">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Prices">
+            <df name="ESIOS">
+            </df>
+          </df>
+        </df>
+      </df>
       <in>Makefile</in>
     </df>
   </logicalFolder>

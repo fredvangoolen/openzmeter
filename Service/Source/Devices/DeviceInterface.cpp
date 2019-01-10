@@ -81,17 +81,20 @@ bool DeviceInterface::GetDevicesCallback(char *user, json_object *reader, Databa
 }
 bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_array();
-  db->PrepareSentence("SELECT serial FROM permisions WHERE username = ? AND read = TRUE UNION SELECT serial FROM analyzers WHERE username = ? UNION SELECT serial FROM analyzers WHERE 'admin' = ?");
+  db->PrepareSentence("SELECT serial, editable FROM (SELECT serial, false AS editable FROM permisions WHERE username = ? AND read = TRUE UNION SELECT serial, true FROM analyzers WHERE username = ? UNION SELECT serial, true FROM analyzers WHERE 'admin' = ?) AS Result ORDER BY serial ASC, editable DESC");
   db->BindSingleString(user);
   db->BindSingleString(user);
   db->BindSingleString(user);
   db->ExecSentence();
   for(uint32_t i = 0; i < db->ResultRows(); i++) {
     const char *Serial = db->ResultValue(i, "serial");
+    AnalyzerInterface *Analyzer = NULL;
     for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
-      AnalyzerInterface *Analyzer = (*it)->FindAnalyzer(Serial);
+      Analyzer = (*it)->FindAnalyzer(Serial);
       if(Analyzer != NULL) {
-        json_object_array_add(*writer, Analyzer->GetJSONDescriptor());
+        json_object *Device = Analyzer->GetJSONDescriptor();
+        json_object_object_add(Device, "Editable", json_object_new_boolean(strcmp("f", db->ResultValue(i, "editable")) == 0));
+        json_object_array_add(*writer, Device);
         break;
       }
     }

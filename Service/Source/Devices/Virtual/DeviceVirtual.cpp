@@ -21,7 +21,6 @@ bool DeviceVirtual::pClassRegistered = DeviceVirtual::Init();
 // Funciones ===========================================================================================================
 bool DeviceVirtual::Init() {
   DeviceVirtual *This = new DeviceVirtual();
-<<<<<<< HEAD
   This->pAnalyzer         = NULL;
   This->pSampleRate       = 10000;
   This->pNominalVoltage   = 230.0;
@@ -29,11 +28,6 @@ bool DeviceVirtual::Init() {
   This->pName             = (char*)"Unnamed input";
   This->pAutoStart        = false;
   This->pMutex            = PTHREAD_MUTEX_INITIALIZER;
-=======
-  This->pAnalyzer        = NULL;
-  This->pSampleRate      = 10000;
-  Tools::LogMsg("INFO", "Registering 'VIRTUAL' device driver instance\n");
->>>>>>> 31ccd0f082e6df9e5673fd9e24419f61aa03e42a
   AddDevice(This);
   return true;
 }

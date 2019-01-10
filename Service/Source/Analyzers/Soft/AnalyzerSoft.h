@@ -81,7 +81,7 @@ class AnalyzerSoft : public AnalyzerInterface {
   public :
     AnalyzerSoft(float samplerate, char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerInterface::AnalyzerMode mode);
     ~AnalyzerSoft();
-    void GetParams(Params_t &params, ParamsType copy);
+    void GetParams(Params_t &params, ParamsType &copy);
     void ConfigRemote(json_object *config);
     void ConfigPrices(json_object *config);
     bool BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime);
