@@ -5,6 +5,8 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
+        <df name="etc">
+        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -12,6 +14,8 @@
           </df>
         </df>
         <df name="usr">
+          <df name="sbin">
+          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -40,8 +44,6 @@
             <df name="bootstrap-year-calendar">
             </df>
             <df name="datatables">
-              <df name="css">
-              </df>
               <df name="images">
               </df>
               <df name="js">
@@ -57,11 +59,7 @@
             </df>
             <df name="jquery.lineProgressbar">
             </df>
-            <df name="momentjs">
-            </df>
             <df name="qtip2">
-            </df>
-            <df name="sidenav">
             </df>
             <df name="visjs">
               <df name="img">
@@ -137,35 +135,6 @@
         <in>RingBuffer.h</in>
         <in>Tools.cpp</in>
         <in>Tools.h</in>
-      </df>
-      <df name="Tmp">
-        <df name="Source">
-          <df name="Analyzers">
-            <df name="Remote">
-            </df>
-            <df name="Soft">
-            </df>
-          </df>
-          <df name="Devices">
-            <df name="Remote">
-            </df>
-<<<<<<< HEAD
-=======
-            <df name="V1">
-            </df>
-            <df name="V1_1">
-            </df>
-            <df name="V2">
-            </df>
->>>>>>> 31ccd0f082e6df9e5673fd9e24419f61aa03e42a
-            <df name="Virtual">
-            </df>
-          </df>
-          <df name="Prices">
-            <df name="ESIOS">
-            </df>
-          </df>
-        </df>
       </df>
       <in>Makefile</in>
     </df>
