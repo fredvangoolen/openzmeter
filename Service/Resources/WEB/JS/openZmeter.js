@@ -1364,8 +1364,3 @@ $('#eventsDropdown').on('hidden.bs.dropdown', function () {
     $('#eventsDropdown .event_alert').remove();
     $('#eventsDropdown .divider').remove();
 })
-
-function EditUser() {
-  $('#dlgUserEdit').modal('show');
-  
-}

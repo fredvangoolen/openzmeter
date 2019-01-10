@@ -10,7 +10,8 @@ using namespace std;
 class AnalyzerInterface : protected Database {
   public :
     enum AnalyzerMode {PHASE1, PHASE3, PHASE3N};
-    enum AggregType { AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
+    enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_1H };
+    enum ParamsType { FREQUENCY = 0x00000001, FLAG = 0x00000002, RMS_V = 0x00000004, RMS_I = 0x00000008, ACTIVE_POWER = 0x00000010, REACTIVE_POWER = 0x00000020, ACTIVE_ENERGY = 0x00000040, REACTIVE_ENERGY = 0x00000080, APPARENT_POWER = 0x00000100, POWER_FACTOR = 0x00000200, THD_V = 0x00000400, THD_I = 0x00000800, PHI = 0x00001000, VALTAGE_HARMONICS = 0x00002000, CURRENT_HARMONICS = 0x00004000, FFT_V = 0x00008000, FFT_I = 0x00010000, VOLTAGE = 0x00020000, CURRENT = 0x00040000 };
   protected :
     static vector<float>  FrequencyRanges;   //Rangos de frecuencias para estadisticas
     static vector<float>  VoltageRanges;     //Rangos de tensiones para estadisticas
@@ -65,9 +66,7 @@ class AnalyzerInterface : protected Database {
     float AccumulateSUM(float val1, float val2);
     float AccumulateRMS(float val1, float val2);
   public :
-    virtual void GetParams(Params_t &params, bool frequency, bool flag, bool rms_v, bool rms_i, bool active_power, bool reactive_power, bool active_energy,
-                                             bool reactive_energy, bool apparent_power, bool power_factor, bool thd_v, bool thd_i, bool phi, bool voltage_harmonics, 
-                                             bool current_harmonics, bool fft_v, bool fft_i, bool voltage, bool current) = 0;
+    virtual void GetParams(Params_t &params, ParamsType copy) = 0;
   public :
     AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode);
     virtual ~AnalyzerInterface();
