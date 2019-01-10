@@ -6,31 +6,11 @@
     </data>
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/NTP.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/FFT.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Database.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/CSS/openZmeter.css</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Main.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Settings_Analyzer_Soft.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Analysis_Voltage.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/JS/openZmeter.Settings.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/SQL/Database.sql</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Devices/Virtual/DeviceVirtual.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/Soft/AnalyzerSoft.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Database.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Tools.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Devices/DeviceInterface.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Dashboard.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/Remote/AnalyzerRemote.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/AnalyzerInterface.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Settings.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/AnalyzerInterface.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/JS/openZmeter.Analysis_Voltage.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/Soft/AnalyzerSoft.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Devices/DeviceInterface.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Common.html</file>
+        <group>
+            <file>file:/home/edu/Proyectos/openZmeter/Service/Source/NetworkManager.h</file>
+            <file>file:/home/edu/Proyectos/openZmeter/Service/Source/Analyzers/AnalyzerInterface.cpp</file>
+            <file>file:/home/edu/Proyectos/openZmeter/Service/Source/FFT.cpp</file>
+            <file>file:/home/edu/Proyectos/openZmeter/Service/Source/Analyzers/Soft/AnalyzerSoft.cpp</file>
         </group>
     </open-files>
 </project-private>

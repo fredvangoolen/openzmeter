@@ -305,13 +305,13 @@ void AnalyzerSoft::GetParams(Params_t &params, ParamsType &copy) {
   }
   pthread_mutex_unlock(&pDataReadyMutex);
   if(Error == 0) {
-//    params.Type = AGGREG_10C;
-//    params.Timestamp = pAggreg10C.Timestamp;
-//    if(frequency) params.Frequency = pAggreg10C.Frequency;
-//    if(flag) params.Flag = pAggreg10C.Flag;
-//    if(rms_v) params.RMS_V.assign(pAggreg10C.RMS_V.begin(), pAggreg10C.RMS_V.end());
-//    if(rms_i) params.RMS_I.assign(pAggreg10C.RMS_I.begin(), pAggreg10C.RMS_I.end());
-//    if(active_power) params.Active_Power.assign(pAggreg10C.Active_Power.begin(), pAggreg10C.Active_Power.end());
+    if(params.Type == UNINITIALIZED) InitAggreg(params, AGGREG_10C);
+    params.Timestamp = pAggreg10C.Timestamp;
+    if(copy & FREQUENCY) params.Frequency = pAggreg10C.Frequency;
+    if(copy & FLAG) params.Flag = pAggreg10C.Flag;
+    if(copy & RMS_V) params.RMS_V.assign(pAggreg10C.RMS_V.begin(), pAggreg10C.RMS_V.end());
+    if(copy & RMS_I) params.RMS_I.assign(pAggreg10C.RMS_I.begin(), pAggreg10C.RMS_I.end());
+    if(copy & ACTIVE_POWER) params.Active_Power.assign(pAggreg10C.Active_Power.begin(), pAggreg10C.Active_Power.end());
 //    if(reactive_power) params.Reactive_Power.assign(pAggreg10C.Reactive_Power.begin(), pAggreg10C.Reactive_Power.end());
 //    if(active_energy) params.Active_Energy.assign(pAggreg10C.Active_Energy.begin(), pAggreg10C.Active_Energy.end());
 //    if(reactive_energy) params.Reactive_Energy.assign(pAggreg10C.Reactive_Energy.begin(), pAggreg10C.Reactive_Energy.end());

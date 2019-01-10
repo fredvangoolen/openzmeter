@@ -320,23 +320,23 @@ json_object *AnalyzerInterface::GetJSONParams(char *series) {
   }
   GetParams(Params, Copy);
   json_object *Result = json_object_new_object();
-  if(Copy | FREQUENCY) json_object_object_add(Result, "freq", (isnan(Params.Frequency)) ? NULL : json_object_new_double(Params.Frequency));
-  if(Copy | FLAG) json_object_object_add(Result, "flag", json_object_new_boolean(Params.Flag));
-//  if(RMS_V) {
-//    json_object *Obj = json_object_new_array();
-//    for(uint i = 0; i < Params.RMS_V.size(); i++) json_object_array_add(Obj, (isnan(Params.RMS_V[i])) ? NULL : json_object_new_double(Params.RMS_V[i]));
-//    json_object_object_add(Result, "rms_v", Obj);
-//  }
-//  if(RMS_I) {
-//    json_object *Obj = json_object_new_array();
-//    for(uint i = 0; i < Params.RMS_I.size(); i++) json_object_array_add(Obj, (isnan(Params.RMS_I[i])) ? NULL : json_object_new_double(Params.RMS_I[i]));
-//    json_object_object_add(Result, "rms_i", Obj);
-//  }
-//  if(Active_Power) {
-//    json_object *Obj = json_object_new_array();
-//    for(uint i = 0; i < Params.Active_Power.size(); i++) json_object_array_add(Obj, (isnan(Params.Active_Power[i])) ? NULL : json_object_new_double(Params.Active_Power[i]));
-//    json_object_object_add(Result, "active_power", Obj);
-//  }
+  if(Copy & FREQUENCY) json_object_object_add(Result, "freq", (isnan(Params.Frequency)) ? NULL : json_object_new_double(Params.Frequency));
+  if(Copy & FLAG) json_object_object_add(Result, "flag", json_object_new_boolean(Params.Flag));
+  if(Copy & RMS_V) {
+    json_object *Obj = json_object_new_array();
+    for(uint i = 0; i < Params.RMS_V.size(); i++) json_object_array_add(Obj, (isnan(Params.RMS_V[i])) ? NULL : json_object_new_double(Params.RMS_V[i]));
+    json_object_object_add(Result, "rms_v", Obj);
+  }
+  if(Copy & RMS_I) {
+    json_object *Obj = json_object_new_array();
+    for(uint i = 0; i < Params.RMS_I.size(); i++) json_object_array_add(Obj, (isnan(Params.RMS_I[i])) ? NULL : json_object_new_double(Params.RMS_I[i]));
+    json_object_object_add(Result, "rms_i", Obj);
+  }
+  if(Copy & ACTIVE_POWER) {
+    json_object *Obj = json_object_new_array();
+    for(uint i = 0; i < Params.Active_Power.size(); i++) json_object_array_add(Obj, (isnan(Params.Active_Power[i])) ? NULL : json_object_new_double(Params.Active_Power[i]));
+    json_object_object_add(Result, "active_power", Obj);
+  }
 //  if(Reactive_Power) {
 //    json_object *Obj = json_object_new_array();
 //    for(uint i = 0; i < Params.Reactive_Power.size(); i++) json_object_array_add(Obj, (isnan(Params.Reactive_Power[i])) ? NULL : json_object_new_double(Params.Reactive_Power[i]));

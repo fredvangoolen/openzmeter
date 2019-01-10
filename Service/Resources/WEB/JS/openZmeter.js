@@ -964,16 +964,21 @@ function LoadAnalyzers(result) {
       TableAnalyzers = $('#tblAnalyzers').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', 
                                                       dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', 
                                                       language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices", zeroRecords: " "},
-                                                      columnDefs: [ { targets: 0, width: "20px", orderable: false, searchable: false }, { targets: 1, width: "auto" }, { targets: 2, width: "40px" }, { targets: 3, width: "100px" }, { targets: 4, width: "60px", orderable: false, searchable: false } ], order: [1, 'desc']
+                                                      columnDefs: [ { targets: 0, width: "20px", orderable: false, searchable: false }, { targets: 1, width: "auto" }, { targets: 2, width: '40px' }, { targets: 3, visible: false, width: "100px" }, { targets: 4, width: "114px", orderable: false, searchable: false }, { targets: [0, 2, 3], className: 'text-center' } ], order: [1, 'desc']
       });
       for(var i = 0; i < Analyzers.length; i++) {
         var RowText = '<tr' + ((i === Analyzer) ? ' class="info"' : '') + '>' +
-                      '<td class="text-center">' + ((Analyzers[i].Online === true) ? '<i class="fa fa-circle" title="Online"></i>' : '<i class="fa fa-circle-thin" title="Offline"></i>') + '</td>' +
-                      '<td>' + Analyzers[i].Name + '</td>' +
+                      '<td>' + ((Analyzers[i].Online === true) ? 'ONLINE' : 'OFFLINE') + '</td>' +
+                      '<td data-toggle="tooltip" title="' + Analyzers[i].ID + '">' + Analyzers[i].Name + '</td>' +
                       '<td>' + Analyzers[i].Mode + '</td>' +
                       '<td style="font-family: monospace; font-size : 11px">' + Analyzers[i].ID + '</td>' +
-                      '<td>' + ((i === Analyzer) ? '<div class="text-success text-center">Selected</div></td>' : '<button class="btn btn-xs btn-primary" style="width: 100%">Select</button></td>');
-        TableAnalyzers.row.add(RowText).draw();
+                      '<td><div class="btn-group">'+
+                      '<button class="btn btn-xs btn-success' + ((i === Analyzer) ? ' disabled' : '') + '" style="width:43px">Select</button>'+
+                      '<button class="btn btn-xs btn-default" style="width:31px">ACL</button>' +
+                      '<button class="btn btn-xs btn-default" style="width:38px">Tariff</button>' +
+                      '</div></td>' +      
+                      '</tr>';
+        TableAnalyzers.row.add($(RowText)).draw();
       }
       $('#dlgSearchAnalyzer').on('shown.bs.modal',function() { TableAnalyzers.columns.adjust(); } );
       $('#btnSearchAnalyzer').on('click', function() { $('#dlgSearchAnalyzer').modal('show'); });

@@ -47,24 +47,9 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
     HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
     HTTPServer::RegisterCallback("/getDevices",          DeviceInterface::GetDevicesCallback);
   }
+  Tools::LogMsg("INFO", "Registering '%s' device driver...\n", device->Driver());
   pDevices.push_back(device);
 }
-//bool DeviceInterface::RegisterType(const char* name, ConstructorFunction constructor) {
-//  if(pRegisteredTypes.size() == 0) {
-//    HTTPServer::RegisterCallback("/getAnalyzers",        DeviceInterface::GetAnalyzersCallback);
-//    HTTPServer::RegisterCallback("/getSeries",           DeviceInterface::GetSeriesCallback);
-//    HTTPServer::RegisterCallback("/getSeriesAggreg",     DeviceInterface::GetSeriesAggregCallback);
-//    HTTPServer::RegisterCallback("/getSeriesNow",        DeviceInterface::GetSeriesNowCallback);
-//    HTTPServer::RegisterCallback("/getSeriesRange",      DeviceInterface::GetSeriesRangeCallback);
-//    HTTPServer::RegisterCallback("/getEvents",           DeviceInterface::GetEventsCallback);
-//    HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
-//    HTTPServer::RegisterCallback("/getDevices",          DeviceInterface::GetDevicesCallback);
-//  }
-//  Type_t Type = { name, constructor };
-//  Tools::LogMsg("INFO", "Registering '%s' device interface plugin\n", name);
-//  pRegisteredTypes.push_back(Type);
-//  return true;
-//}
 bool DeviceInterface::GetDevicesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_array();
   for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {

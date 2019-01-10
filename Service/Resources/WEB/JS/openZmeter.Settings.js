@@ -237,7 +237,7 @@ var DeviceTable = null;
 function AjaxGetDevices() {
 $.ajax({ url: "getDevices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
     function(result) {
-      DeviceTable = $('#DeviceTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [0, 1, 2, 3, 4, 5], orderable: false }, { targets: [2, 3, 4], className: 'dataTables_empty' } ], order: [0, 'desc']});
+      DeviceTable = $('#DeviceTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [0, 1, 2, 3, 4, 5], orderable: false }, { targets: [2, 3, 4], className: 'text-center' } ], order: [0, 'desc']});
       for(var i = 0; i < result.length; i++) {
         var RowText = '<tr>' +
           '<td>' + result[i]['Driver'] + '</td>' +

@@ -12,23 +12,25 @@ CREATE TABLE IF NOT EXISTS users(
 	email    character varying  NOT NULL,
 	telegram character varying  NOT NULL
 ) WITH (OIDS=FALSE);
+INSERT INTO users(username, password, lastlogin, name, surname, id_card, address, company, photo, email, telegram) VALUES('admin', MD5('admin'), 0, 'System administrator', '', '', '', '', '', '', '') ON CONFLICT (username) DO NOTHING;
 
-CREATE TABLE IF NOT EXISTS sessions (
+CREATE TABLE IF NOT EXISTS sessions(
   id        serial NOT NULL PRIMARY KEY,
   username  character varying REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE,
   timestamp bigint NOT NULL
 ) WITH (OIDS=FALSE);
 CREATE INDEX IF NOT EXISTS sessions_timestamp_idx ON sessions USING btree (timestamp);
 
-INSERT INTO users(username, password, lastlogin, name, surname, id_card, address, company, photo, email, telegram) VALUES('admin', MD5('admin'), 0, 'System administrator', '', '', '', '', '', '', '') ON CONFLICT (username) DO NOTHING;
+CREATE TABLE IF NOT EXISTS analyzers(
+  serial   character varying NOT NULL PRIMARY KEY,
+  username character varying NOT NULL REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE
+) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS permisions(
-  name       character varying NOT NULL,
-  serial     character varying NOT NULL,
+  username   character varying NOT NULL REFERENCES users(username) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,
+  serial     character varying NOT NULL REFERENCES analyzers(serial) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,
   read       boolean           NOT NULL,
-  write      boolean           NOT NULL,
-  lastevents bigint            NOT NULL,
-  CONSTRAINT permisions_name_pkey FOREIGN KEY (name) REFERENCES users (name) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE
+  write      boolean           NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS news(
