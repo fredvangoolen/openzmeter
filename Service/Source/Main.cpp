@@ -28,11 +28,6 @@ bool GetNewsCallback(char *user, json_object *reader, Database *db, json_object 
   return true;  
 }
 int main(int argc, char** argv) {
-  for(int i = 20; i < 20; i++) {
-    printf("Esperando al depurador (%d)\n", i);
-    fflush(stdout);
-    sleep(1);
-  }
   char *ConfigFile = (char*)"/etc/openZmeter.conf";
   bool  Daemonize  = false;
   for(int i = 1; i != argc; i++) {
@@ -52,7 +47,6 @@ int main(int argc, char** argv) {
       printf("Option %s not recogniced. Use --help to show valid options.", argv[i]);
     }
   }
-//  NTP(NULL);
   if(Daemonize == true) Tools::Daemonize();
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {

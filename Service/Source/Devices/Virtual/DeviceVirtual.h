@@ -16,14 +16,22 @@ class DeviceVirtual : public DeviceInterface {
   private :
     static bool    pClassRegistered;
   private :
-    AnalyzerSoft  *pAnalyzer;
-    float          pSampleRate;
+    AnalyzerSoft   *pAnalyzer;
+    float           pSampleRate;
+    float           pNominalVoltage;
+    float           pNominalFrequency = 50.0;
+    char           *pName;
+    bool            pAutoStart;
+    pthread_mutex_t pMutex;
+    json_object    *pConfig;
   private : 
     static bool             Init();
     static void            *Capture_Thread(void *args);
     static DeviceInterface *CreateInstance(json_object *config);
   private :
-    bool               Config(json_object *config, bool save);
+    bool               ConfigDev(json_object *config);
+    bool               Start();
+    bool               Stop();
     AnalyzerInterface *FindAnalyzer(const char *serial);
     const char        *Serial();
     const char        *Driver();

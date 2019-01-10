@@ -147,8 +147,6 @@
           <df name="Devices">
             <df name="Remote">
             </df>
-            <df name="V1">
-            </df>
             <df name="Virtual">
             </df>
           </df>

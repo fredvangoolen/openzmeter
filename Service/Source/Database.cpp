@@ -48,7 +48,7 @@ bool Database::Connect() {
     PrepareSentence("CREATE SCHEMA IF NOT EXISTS ?");
     BindSingleString(pSchema, true);
     ExecSentence();
-    PrepareSentence("SET search_path TO ?");
+    PrepareSentence("SET search_path TO ?, public");
     BindSingleString(pSchema);
     ExecSentence();
   }

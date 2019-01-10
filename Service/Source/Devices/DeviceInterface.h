@@ -9,8 +9,8 @@
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 class DeviceInterface {
-  private :
-    enum DeviceState {UNCONFIGURED, DISABLED, STOPPED, RUNNING};
+  protected :
+    enum DeviceState {UNCONFIGURED, STOPPED, RUNNING};
   private :
     static vector<DeviceInterface*> pDevices;
   protected :
@@ -23,7 +23,9 @@ class DeviceInterface {
     virtual const char        *Driver() = 0;
     virtual const char        *Name() = 0;
     virtual uint32_t           AnalyzersCount() = 0;
-    virtual bool               Config(json_object *config, bool save) = 0;
+    virtual bool               ConfigDev(json_object *config) = 0;
+    virtual bool               Start() = 0;
+    virtual bool               Stop() = 0;
   protected :
     DeviceInterface();
   protected :

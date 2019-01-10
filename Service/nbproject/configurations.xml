@@ -138,7 +138,8 @@
             flavor2="11">
         <ccTool flags="0">
           <incDir>
-            <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -183,7 +184,13 @@
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
             <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -211,6 +218,13 @@
       <item path="Source/Devices/DeviceInterface.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
           <incDir>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -477,8 +491,13 @@
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
             <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
             <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -509,18 +528,17 @@
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Remote</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
           </incDir>
         </ccTool>
       </folder>
       <folder path="0/Source/Analyzers/Remote">
         <ccTool>
           <incDir>
-            <pElem>Tmp/Source/Devices/V1</pElem>
-            <pElem>Tmp/Source/Devices/Remote</pElem>
-            <pElem>Tmp/Source/Devices/Virtual</pElem>
-            <pElem>Tmp/Source/Prices</pElem>
-            <pElem>Tmp/Source/Prices/ESIOS</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -548,12 +566,6 @@
       <folder path="0/Source/Analyzers/Soft">
         <ccTool>
           <incDir>
-            <pElem>Tmp/Source/Devices/V1</pElem>
-            <pElem>Tmp/Source/Devices/Remote</pElem>
-            <pElem>Tmp/Source/Devices/Virtual</pElem>
-            <pElem>Tmp/Source/Prices</pElem>
-            <pElem>Tmp/Source/Prices/ESIOS</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
             <pElem>Tmp/Source/Analyzers/Remote</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
@@ -591,7 +603,6 @@
       <folder path="0/Source/Devices/Remote">
         <ccTool>
           <incDir>
-            <pElem>Tmp/Source/Devices/V1</pElem>
             <pElem>Tmp/Source/Prices</pElem>
             <pElem>Tmp/Source/Analyzers</pElem>
             <pElem>Package</pElem>
@@ -621,9 +632,6 @@
       <folder path="0/Source/Devices/V1">
         <ccTool>
           <incDir>
-            <pElem>Tmp/Source/Devices/V1</pElem>
-            <pElem>Tmp/Source/Devices/Remote</pElem>
-            <pElem>Tmp/Source/Devices/Virtual</pElem>
             <pElem>Tmp/Source/Prices</pElem>
             <pElem>Tmp/Source/Analyzers</pElem>
             <pElem>Package</pElem>
@@ -715,11 +723,13 @@
       <folder path="0/Source/Devices/Virtual">
         <ccTool>
           <incDir>
-            <pElem>Tmp/Source/Devices/V1</pElem>
             <pElem>Tmp/Source/Devices/Remote</pElem>
             <pElem>Tmp/Source/Devices/Virtual</pElem>
             <pElem>Tmp/Source/Prices</pElem>
+            <pElem>Tmp/Source/Prices/ESIOS</pElem>
             <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Remote</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -756,7 +766,6 @@
       <folder path="0/Source/Prices/ESIOS">
         <ccTool>
           <incDir>
-            <pElem>Tmp/Source/Devices/V1</pElem>
             <pElem>Tmp/Source/Devices/Remote</pElem>
             <pElem>Tmp/Source/Devices/Virtual</pElem>
             <pElem>Tmp/Source/Prices</pElem>

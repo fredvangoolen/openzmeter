@@ -186,20 +186,26 @@ bool Tools::ReadConfig(const char *file) {
   json_object *Find;
   if((json_object_object_get_ex(pConfig, "LogFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreateLogFile((char*)json_object_get_string(Find));
   if((json_object_object_get_ex(pConfig, "PidFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreatePidFile((char*)json_object_get_string(Find));
-  if(((json_object_object_get_ex(pConfig, "Database", &Find) == true) && (json_object_get_type(Find) == json_type_object)) && (Database::Config(Find) == false)) {
+  if((json_object_object_get_ex(pConfig, "Database", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (Database::Config(Find) == false)) {
     pthread_mutex_unlock(&pConfigMutex);
+    LogMsg("ERROR", "Can not connect to database\n");
     return false;
   }
-  if(((json_object_object_get_ex(pConfig, "HTTPServer", &Find) == true) && (json_object_get_type(Find) == json_type_object)) && (HTTPServer::Config(Find) == false)) {
+  if((json_object_object_get_ex(pConfig, "HTTPServer", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (HTTPServer::Config(Find) == false)) {
     pthread_mutex_unlock(&pConfigMutex);
+    LogMsg("ERROR", "Can not create HTTP server\n");
     return false;
   }
-  if(NTP::Config(((json_object_object_get_ex(pConfig, "NTP", &Find) == true) && (json_object_get_type(Find) == json_type_object)) ? Find : NULL) == false) {
+  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(pConfig, "NTP", json_object_new_object());
+  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (NTP::Config(Find) == false)) {
     pthread_mutex_unlock(&pConfigMutex);
+    LogMsg("ERROR", "Can not create NTP client\n");
     return false;
   }
-  if(DeviceInterface::Config(((json_object_object_get_ex(pConfig, "Devices", &Find) == true) && (json_object_get_type(Find) == json_type_array)) ? Find : NULL) == false) {
+  if((json_object_object_get_ex(pConfig, "Devices", &Find) != true) || (json_object_get_type(Find) != json_type_array)) json_object_object_add(pConfig, "Devices", json_object_new_array());
+  if((json_object_object_get_ex(pConfig, "Devices", &Find) != true) || (json_object_get_type(Find) != json_type_array) || (DeviceInterface::Config(Find) == false)) {
     pthread_mutex_unlock(&pConfigMutex);
+    LogMsg("ERROR", "Can not create device manager\n");
     return false;
   }
   pthread_mutex_unlock(&pConfigMutex);

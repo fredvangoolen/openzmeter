@@ -12,16 +12,15 @@ char           *NTP::pServer = NULL;
 pthread_mutex_t NTP::pMutex = PTHREAD_MUTEX_INITIALIZER;
 //======================================================================================================================
 bool NTP::Config(json_object *config) {
-  if(config != NULL) {
-    json_object_object_foreach(config, JSON_Key, JSON_Val) {
-      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Server") == 0)) {
-        pServer = strdup((char*)json_object_get_string(JSON_Val));
-      } else if((JSON_Type == json_type_boolean) && (strcmp(JSON_Key, "Enabled") == 0)) {
-        pEnabled = json_object_get_boolean(JSON_Val);
-      }
-    }  
-  }
+  if(config == NULL) return false;
+  json_object_object_foreach(config, JSON_Key, JSON_Val) {
+    enum json_type JSON_Type = json_object_get_type(JSON_Val);
+    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Server") == 0)) {
+      pServer = strdup((char*)json_object_get_string(JSON_Val));
+    } else if((JSON_Type == json_type_boolean) && (strcmp(JSON_Key, "Enabled") == 0)) {
+      pEnabled = json_object_get_boolean(JSON_Val);
+    }
+  }  
   HTTPServer::RegisterCallback("/getTimeSettings", GetTimeSettingsCallback);
   HTTPServer::RegisterCallback("/setTimeSettings", SetTimeSettingsCallback);
   if(pthread_create(&pThread, NULL, NTP_Thread, NULL) != 0) {

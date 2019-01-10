@@ -149,6 +149,9 @@ AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nomi
   pLastSave = 0;
   Tools::LogMsg("DEBUG", "Creating database tables\n");
   ExecResource("SQL/Database_Analyzer.sql");
+  PrepareSentence("INSERT INTO analyzers(username, serial) VALUES('admin', ?) ON CONFLICT (serial) DO NOTHING;");
+  BindSingleString(id);
+  ExecSentence();
 }
 AnalyzerInterface::~AnalyzerInterface() {}
 float AnalyzerInterface::GetMaxCurrent() {

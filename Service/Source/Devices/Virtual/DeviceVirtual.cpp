@@ -21,8 +21,13 @@ bool DeviceVirtual::pClassRegistered = DeviceVirtual::Init();
 // Funciones ===========================================================================================================
 bool DeviceVirtual::Init() {
   DeviceVirtual *This = new DeviceVirtual();
-  This->pAnalyzer        = NULL;
-  This->pSampleRate      = 10000;
+  This->pAnalyzer         = NULL;
+  This->pSampleRate       = 10000;
+  This->pNominalVoltage   = 230.0;
+  This->pNominalFrequency = 50.0;
+  This->pName             = (char*)"Unnamed input";
+  This->pAutoStart        = false;
+  This->pMutex            = PTHREAD_MUTEX_INITIALIZER;
   AddDevice(This);
   return true;
 }
@@ -30,15 +35,68 @@ uint32_t DeviceVirtual::AnalyzersCount() {
   return (pAnalyzer == NULL) ? 0 : 1;
 }
 const char *DeviceVirtual::Serial() {
-  return "Unavaliable";
+  return "VIRTUAL";
 }
 const char *DeviceVirtual::Driver() {
-  return "VIRTUAL";
+  return "Virtual";
 }
 const char *DeviceVirtual::Name() {
   return "Emulate most of real capture device for testing";
 }
-bool DeviceVirtual::Config(json_object *config, bool save) {
+bool DeviceVirtual::ConfigDev(json_object *config) {
+  if(pState == RUNNING) return false;
+  Tools::LogMsg("INFO", "Configuring 'Virtual' driver...\n");
+  json_object *Find;
+  if((json_object_object_get_ex(config, "NominalVoltage", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pNominalVoltage = json_object_get_double(Find);
+  if((json_object_object_get_ex(config, "NominalFrequency", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pNominalFrequency = json_object_get_double(Find);
+  if((json_object_object_get_ex(config, "SampleRate", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pSampleRate = json_object_get_double(Find);
+  if((json_object_object_get_ex(config, "AutoStart", &Find) == true) && (json_object_get_type(Find) == json_type_boolean)) pAutoStart = json_object_get_boolean(Find);
+  if((json_object_object_get_ex(config, "DisplayName", &Find) == true) && (json_object_get_type(Find) == json_type_boolean)) pName = (char*)json_object_get_string(Find);
+  if(pState == UNCONFIGURED) {
+    pConfig = config;
+    pState = STOPPED;  
+    if(pAutoStart == true) return Start();
+    return true;
+  }
+  json_object_object_add(pConfig, "NominalVoltage", json_object_new_double(pNominalVoltage));
+  json_object_object_add(pConfig, "NominalFrequency", json_object_new_double(pNominalFrequency));
+  json_object_object_add(pConfig, "AutoStart", json_object_new_boolean(pAutoStart));
+  json_object_object_add(pConfig, "DisplayName", json_object_new_string(pName));
+  return Tools::SaveConfig();
+}
+bool DeviceVirtual::Start() {
+  pthread_mutex_lock(&pMutex);
+  if(pState == RUNNING) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  Tools::LogMsg("INFO", "Starting 'Virtual' driver...\n");
+  pTerminate = false;
+  pAnalyzer = new AnalyzerSoft(pSampleRate, (char*)"VIRTUAL", pNominalVoltage, pNominalFrequency, pName, 50.0, 0.1, AnalyzerInterface::PHASE3);
+//  if((json_object_object_get_ex(config, "Remote", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigRemote(Find);
+//  if((json_object_object_get_ex(config, "Prices", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigPrices(Find);
+  if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    delete pAnalyzer;
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  pState = RUNNING;
+  pthread_mutex_unlock(&pMutex);
+  return true;
+}
+bool DeviceVirtual::Stop() {
+  pthread_mutex_lock(&pMutex);
+  if(pState != RUNNING) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  Tools::LogMsg("INFO", "Stopping 'Virtual' driver...\n");
+  pTerminate = true;
+  pthread_join(pCaptureThread, NULL);
+  if(pAnalyzer) delete pAnalyzer;
+  pState = STOPPED;  
+  pthread_mutex_unlock(&pMutex);
   return true;
 }
 void  *DeviceVirtual::Capture_Thread(void *args) {
