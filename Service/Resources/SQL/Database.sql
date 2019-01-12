@@ -23,8 +23,25 @@ CREATE INDEX IF NOT EXISTS sessions_timestamp_idx ON sessions USING btree (times
 
 CREATE TABLE IF NOT EXISTS analyzers(
   serial   character varying NOT NULL PRIMARY KEY,
-  username character varying NOT NULL REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE
+  username character varying NOT NULL REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE,
+  cups     character varying NOT NULL,
+  zipcode  character varying NOT NULL,
+  geo      point
 ) WITH (OIDS=FALSE);
+
+CREATE TABLE IF NOT EXISTS rates(
+  rate int NOT           NULL PRIMARY KEY,
+  name character varying NOT NULL
+) WITH (OIDS=FALSE);
+
+CREATE TABLE IF NOT EXISTS analyzers_rates(
+  serial    character varying NOT NULL REFERENCES analyzers ON UPDATE CASCADE ON DELETE CASCADE,
+  rate      int               NOT NULL REFERENCES rates ON UPDATE CASCADE ON DELETE CASCADE,
+  startdate bigint            NOT NULL,
+  reactive  bool              NOT NULL,
+  power     real[]            NOT NULL
+) WITH (OIDS=FALSE);
+CREATE UNIQUE INDEX IF NOT EXISTS analyzers_rates_serial_startdate_idx ON analyzers_rates USING btree (serial, startdate);
 
 CREATE TABLE IF NOT EXISTS permisions(
   username   character varying NOT NULL REFERENCES users(username) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,

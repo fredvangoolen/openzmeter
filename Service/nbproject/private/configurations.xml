@@ -5,6 +5,8 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
+        <df name="etc">
+        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -12,6 +14,8 @@
           </df>
         </df>
         <df name="usr">
+          <df name="sbin">
+          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -40,8 +44,6 @@
             <df name="bootstrap-year-calendar">
             </df>
             <df name="datatables">
-              <df name="css">
-              </df>
               <df name="images">
               </df>
               <df name="js">
@@ -57,11 +59,7 @@
             </df>
             <df name="jquery.lineProgressbar">
             </df>
-            <df name="momentjs">
-            </df>
             <df name="qtip2">
-            </df>
-            <df name="sidenav">
             </df>
             <df name="visjs">
               <df name="img">
@@ -145,6 +143,8 @@
             </df>
           </df>
           <df name="Devices">
+            <df name="Remote">
+            </df>
             <df name="Virtual">
             </df>
           </df>
@@ -155,6 +155,122 @@
         </df>
       </df>
       <in>Makefile</in>
+    </df>
+    <df root="." name="1">
+      <df name="Package">
+        <df name="DEBIAN">
+        </df>
+        <df name="etc">
+        </df>
+        <df name="lib">
+          <df name="systemd">
+            <df name="system">
+            </df>
+          </df>
+        </df>
+        <df name="usr">
+          <df name="sbin">
+          </df>
+          <df name="share">
+            <df name="openZmeter">
+            </df>
+          </df>
+        </df>
+      </df>
+      <df name="Resources">
+        <df name="SQL">
+        </df>
+        <df name="WEB">
+          <df name="CSS">
+          </df>
+          <df name="Fonts">
+          </df>
+          <df name="Help">
+          </df>
+          <df name="Imgs">
+          </df>
+          <df name="JS">
+          </df>
+          <df name="Lib">
+            <df name="bootstrap">
+              <df name="fonts">
+              </df>
+            </df>
+            <df name="bootstrap-year-calendar">
+            </df>
+            <df name="datatables">
+              <df name="images">
+              </df>
+              <df name="js">
+              </df>
+            </df>
+            <df name="dygraph">
+            </df>
+            <df name="font-awesome">
+              <df name="css">
+              </df>
+              <df name="fonts">
+              </df>
+            </df>
+            <df name="jquery.lineProgressbar">
+            </df>
+            <df name="qtip2">
+            </df>
+            <df name="visjs">
+              <df name="img">
+                <df name="network">
+                </df>
+                <df name="timeline">
+                </df>
+              </df>
+            </df>
+          </df>
+          <df name="MiniViews">
+          </df>
+        </df>
+      </df>
+      <df name="Source">
+        <df name="Analyzers">
+          <df name="Remote">
+          </df>
+          <df name="Soft">
+          </df>
+        </df>
+        <df name="Devices">
+          <df name="Remote">
+          </df>
+          <df name="V1">
+          </df>
+          <df name="V1_1">
+          </df>
+          <df name="V2">
+          </df>
+          <df name="Virtual">
+          </df>
+        </df>
+        <df name="Prices">
+          <df name="ESIOS">
+          </df>
+        </df>
+      </df>
+      <df name="Tmp">
+        <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
+          <df name="Devices">
+            <df name="Remote">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Prices">
+            <df name="ESIOS">
+            </df>
+          </df>
+        </df>
+      </df>
     </df>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
@@ -182,8 +298,6 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
-        <gdb_signals>
-        </gdb_signals>
         <gdb_options>
           <DebugOptions>
           </DebugOptions>

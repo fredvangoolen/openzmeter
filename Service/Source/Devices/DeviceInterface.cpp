@@ -31,10 +31,7 @@ DeviceInterface::DeviceInterface() {
   pState = UNCONFIGURED;
 }
 DeviceInterface::~DeviceInterface() {
-  if(pCaptureThread != 0) {
-    pTerminate = true;
-    pthread_join(pCaptureThread, NULL);
-  }
+  Stop();
 }
 void DeviceInterface::AddDevice(DeviceInterface* device) {
   if(pDevices.size() == 0) {
@@ -46,9 +43,14 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
     HTTPServer::RegisterCallback("/getEvents",           DeviceInterface::GetEventsCallback);
     HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
     HTTPServer::RegisterCallback("/getDevices",          DeviceInterface::GetDevicesCallback);
+    HTTPServer::RegisterCallback("/getTariffs",          DeviceInterface::GetTariffsCallback);
   }
   Tools::LogMsg("INFO", "Registering '%s' device driver...\n", device->Driver());
   pDevices.push_back(device);
+}
+bool DeviceInterface::GetTariffsCallback(char* user, json_object* reader, Database* db, json_object** writer, char** postdata, size_t* resultLen) {
+  
+
 }
 bool DeviceInterface::GetDevicesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_array();

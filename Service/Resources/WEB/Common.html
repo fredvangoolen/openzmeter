@@ -291,18 +291,36 @@
           <div class="modal-content">
             <div class="modal-header">
               <div class="pull-left"><h4 class="modal-title">Search input device</h4></div>
-              <div class="pull-right"><button type="button" class="btn btn-default btn-xs" data-dismiss="modal"><img src="Imgs/arrow_undo.png"></button></div>
+              <div class="pull-right">
+                <button type="button" class="btn btn-default btn-xs" data-dismiss="modal"><img src="Imgs/arrow_undo.png"></button>
+              </div>
             </div>
             <div class="modal-body">
-              <table id="tblAnalyzers" class="table small table-striped table-responsive">
-                <thead>
-                  <tr>
-                    <th>Status</th><th>Name</th><th>Type</th><th>Serial</th><th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                </tbody>
-              </table>
+              <div id="divAnalyzers">
+                <table id="tblAnalyzers" class="table small table-striped table-responsive">
+                  <thead>
+                    <tr>
+                      <th>Status</th><th>Name</th><th>Type</th><th>Serial</th><th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+              <div class="hide" id="divACL">
+
+              </div>
+              <div class="hide" id="divTariff">
+                <table id="tblTariff" class="table small table-striped table-responsive">
+                  <thead>
+                    <tr>
+                      <th>Name</th><th>Start date</th><th>End date</th><th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>                  
+              </div>
             </div>
           </div>
         </div>

@@ -42,4 +42,5 @@ class DeviceInterface {
     static bool GetEventsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
     static bool GetPricesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
     static bool GetDevicesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetTariffsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
 };
