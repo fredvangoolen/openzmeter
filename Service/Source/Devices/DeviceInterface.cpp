@@ -30,9 +30,9 @@ DeviceInterface::DeviceInterface() {
   pCaptureThread = 0;
   pState = UNCONFIGURED;
 }
-DeviceInterface::~DeviceInterface() {
-  Stop();
-}
+//DeviceInterface::~DeviceInterface() {
+//  Stop();
+//}
 void DeviceInterface::AddDevice(DeviceInterface* device) {
   if(pDevices.size() == 0) {
     HTTPServer::RegisterCallback("/getAnalyzers",        DeviceInterface::GetAnalyzersCallback);
@@ -49,8 +49,19 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
   pDevices.push_back(device);
 }
 bool DeviceInterface::GetTariffsCallback(char* user, json_object* reader, Database* db, json_object** writer, char** postdata, size_t* resultLen) {
-  
-
+  char *Serial = NULL;
+  json_object *Find;
+  if((json_object_object_get_ex(reader, "Analyzer", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
+  if(Serial == NULL) {
+    *postdata  = (char*)"'Analyzer' param is requiered";
+    *resultLen = strlen(*postdata);
+    return false;
+  }
+  char QueryText[8192];
+  int  QueryLen = 0;
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT array_to_json(array_agg(row_to_json(Result))) FROM (SELECT rate as \"RateID\", startdate as \"StartDate\", name AS \"Name\", module AS \"Module\" FROM analyzers_rates NATURAL JOIN rates WHERE serial = '%s') as Result", Serial);
+  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
+  return true;
 }
 bool DeviceInterface::GetDevicesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_array();

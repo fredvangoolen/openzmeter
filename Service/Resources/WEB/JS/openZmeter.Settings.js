@@ -245,7 +245,7 @@ $.ajax({ url: "getDevices", timeout: 20000, type: "POST", dataType: "json", cont
           '<td>' + result[i]['Serial'] + '</td>' +
           '<td>' + result[i]['Analyzers'] + '</td>' +
           '<td>' + result[i]['Status'] + '</td>' +
-          '<td><div class="btn-group" style="width:100%"><button class="btn btn-xs btn-success" style="width:33%">Enable</button><button class="btn btn-xs btn-success" style="width:33%">Start</button><button class="btn btn-xs btn-default" style="width:34%">Configure</button></div></td>' +
+          '<td><div class="btn-group" style="width:100%"><button class="btn btn-xs btn-success" style="width:40%">Start</button><button class="btn btn-xs btn-default" style="width:60%">Configure</button></div></td>' +
           '</tr>';
         DeviceTable.row.add($(RowText)).draw();
       }

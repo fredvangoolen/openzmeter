@@ -10,7 +10,7 @@
 using namespace std;
 class DeviceInterface {
   protected :
-    enum DeviceState {UNCONFIGURED, STOPPED, RUNNING};
+    enum DeviceState { UNCONFIGURED, STOPPED, RUNNING };
   private :
     static vector<DeviceInterface*> pDevices;
   protected :
@@ -30,8 +30,6 @@ class DeviceInterface {
     DeviceInterface();
   protected :
     static void AddDevice(DeviceInterface *device);
-  public :
-    virtual ~DeviceInterface();
   public :
     static bool Config(json_object *config);
     static bool GetSeriesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);

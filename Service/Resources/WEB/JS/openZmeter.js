@@ -945,46 +945,112 @@ function exportToCsv(filename, rows) {
     }
   }
 }
+/* Load analyzer tariffs */
+var Tariffs = [];
+var TableTariffs = null;
+function LoadTariffs(analyzer) {
+  $('#divAnalyzersTariffSpinner').removeClass('hide');
+  if(TableTariffs !== null) {
+    TableTariffs.clear();
+  } else {
+    TableTariffs = $('#tblAnalyzersTariff').DataTable({ responsive: false, paging: false, scrollCollapse: true, 
+                                                        dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', 
+                                                        language: { info: "_MAX_ avaliable tarifs", infoEmpty: "No configured tariffs", zeroRecords: " "},
+                                                        columnDefs: [ { targets: 0, orderable: true, searchable: true }, { targets: [1, 2], width: "80px", orderable: true, className: 'text-center' }, { targets: 3, width: "80px", orderable: false, searchable: false }], order: [2, 'desc']
+    });
+  }
+  $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer }), success: 
+    function(result) {
+      Tariffs = result;
+      for(var i = 0; i < Tariffs.length; i++) {
+        var RowText = '<tr' + ((i === Analyzer) ? ' class="info"' : '') + '>' +
+                      '<td>' + Tariffs[i].Name + '</td>' +
+                      '<td>' + Tariffs[i].Module + '</td>' +
+                      '<td data-sort="' + Tariffs[i].StartDate + '">' + new Date(Tariffs[i].StartDate).toLocaleDateString() + '</td>' +
+                      '<td><div class="btn-group" data-tariff="' + result[i].RateID + '">' +
+                      '<button type="button" class="btn btn-default btn-xs">Edit</button><button type="button" class="btn btn-danger btn-xs">Delete</button>' +
+                      '</div></td>' +
+                      '</tr>';
+        TableTariffs.row.add($(RowText)).draw();
+      }
+  
+  
+      TableTariffs.columns.adjust();
+      $('#divAnalyzersTariffSpinner').addClass('hide');
+    }
+  });
+}
+
 
 /* Actualiza el desplegable de nodos disponibles y selecciona el que este activo para la sesion */
 var Analyzers = [];
 var Analyzer = parseInt(localStorage.getItem("SelAnalyzer"));
 var TableAnalyzers = null;
-function LoadAnalyzers(result) {
+function LoadAnalyzers() {
+  $('#btnSearchAnalyzer').click(function() { 
+    $('#dlgAnalyzers > div > div').addClass('hide');
+    $('#divAnalyzers').removeClass('hide');
+    $('#dlgAnalyzers').modal('show'); 
+  });
+  $('#dlgAnalyzers').on('shown.bs.modal',function() {
+    $('#dlgAnalyzers > div > div').addClass('hide');
+    $('#divAnalyzers').removeClass('hide');
+    TableAnalyzers.columns.adjust();
+  });
+  $('#tblAnalyzers').on('click', 'button:first-child, a', function(event) {
+    event.preventDefault();
+    if($(event.target).is('button')) {
+      var Row = TableAnalyzers.row($(this).parents('tr'));
+      TableAnalyzers.rows().nodes().to$().removeClass('info');
+      $(Row.node()).addClass('info');
+      localStorage.setItem('SelAnalyzer', Row.node()._DT_RowIndex);
+      location.reload();
+    }
+    $('#btnAnalyzersConfigBack, #btnAnalyzersACLBack, #btnAnalyzersTariffsBack').click(function(event) {
+      $('#dlgAnalyzers > div > div').addClass('hide');
+      $('#divAnalyzers').removeClass('hide');
+    });
+    if($(event.target).is('a')) {
+      if($(event.target).parent('li').index() === 0) {
+        $('#divAnalyzers').addClass('hide');
+        $('#divAnalyzersConfig').removeClass('hide');
+      } else if($(event.target).parent('li').index() === 1) {
+        $('#divAnalyzers').addClass('hide');
+        $('#divAnalyzersACL').removeClass('hide');        
+      } else if($(event.target).parent('li').index() === 2) {
+        $('#divAnalyzers').addClass('hide');
+        $('#divAnalyzersTariff').removeClass('hide');
+        LoadTariffs($(event.target).parents('div').attr('data-analyzer'));
+      } else if($(event.target).parent('li').index() === 4) {
+        $('#divAnalyzers').addClass('hide');
+        $('#divAnalyzersMaintenance').removeClass('hide');
+      }
+    }
+  });
   $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
     function(result) {
-      $("#tblAnalyzers").on('click', 'button', function () {
-        var Row = TableAnalyzers.row($(this).parents('tr'));
-        TableAnalyzers.rows().nodes().to$().removeClass('info');
-        $(Row.node()).addClass('info');
-        localStorage.setItem('SelAnalyzer', Row.node()._DT_RowIndex);
-        location.reload();
-      });
       if(result.length > 0) $('#btnSearchAnalyzer').removeClass('disabled');
       Analyzers = result;
-      TableAnalyzers = $('#tblAnalyzers').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', 
+      TableAnalyzers = $('#tblAnalyzers').DataTable({ responsive: false, paging: false, scrollCollapse: true, 
                                                       dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', 
                                                       language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices", zeroRecords: " "},
-                                                      columnDefs: [ { targets: 0, width: "20px", orderable: false, searchable: false }, { targets: 1, width: "auto" }, { targets: 2, width: '40px' }, { targets: 3, visible: false, width: "100px" }, { targets: 4, width: "114px", orderable: false, searchable: false }, { targets: [0, 2, 3], className: 'text-center' } ], order: [1, 'desc']
+                                                      columnDefs: [ { targets: 0, width: "20px", orderable: false, searchable: false }, { targets: 1, width: "auto" }, { targets: 2, width: '40px' }, { targets: 3, visible: false, width: "100px" }, { targets: 4, width: "76px", orderable: false, searchable: false }, { targets: [0, 2, 3], className: 'text-center' } ], order: [1, 'desc']
       });
       for(var i = 0; i < Analyzers.length; i++) {
         var RowText = '<tr' + ((i === Analyzer) ? ' class="info"' : '') + '>' +
                       '<td>' + ((Analyzers[i].Online === true) ? 'ONLINE' : 'OFFLINE') + '</td>' +
-                      '<td data-toggle="tooltip" title="' + Analyzers[i].ID + '">' + Analyzers[i].Name + '</td>' +
+                      '<td>' + Analyzers[i].Name + '</td>' +
                       '<td>' + Analyzers[i].Mode + '</td>' +
                       '<td style="font-family: monospace; font-size : 11px">' + Analyzers[i].ID + '</td>' +
-                      '<td><div class="btn-group">'+
-                      '<button class="btn btn-xs btn-success' + ((i === Analyzer) ? ' disabled' : '') + '" style="width:43px">Select</button>'+
-                      '<button class="btn btn-xs btn-default" style="width:31px">ACL</button>' +
-                      '<button class="btn btn-xs btn-default" style="width:38px">Tariff</button>' +
-                      '</div></td>' +      
+                      '<td><div class="btn-group" data-analyzer="' + result[i].ID + '">' +
+                      '<button type="button" class="btn btn-success btn-xs' + ((i === Analyzer) ? ' disabled' : '') + '">Select</button><button type="button" class="btn btn-success dropdown-toggle btn-xs" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>' +
+                      '<ul class="dropdown-menu pull-right"><li><a href="#">Configure</a></li><li><a href="#">ACL</a></li><li><a href="#">Tariff</a></li><li role="separator" class="divider"></li><li><a href="#">Maintenance</a></li></ul>' +
+                      '</div></td>' +
                       '</tr>';
         TableAnalyzers.row.add($(RowText)).draw();
       }
-      $('#dlgSearchAnalyzer').on('shown.bs.modal',function() { TableAnalyzers.columns.adjust(); } );
-      $('#btnSearchAnalyzer').on('click', function() { $('#dlgSearchAnalyzer').modal('show'); });
       if(Analyzers[Analyzer] === undefined) {
-        if(Analyzers.length !== 0) $('#dlgSearchAnalyzer').modal('show');
+        if(Analyzers.length !== 0) $('#dlgAnalyzers').modal('show');
         $('#NodeTime').text('Not connected!');
       } else {
         $('#labelAnalyzerName').text(Analyzers[Analyzer].Name);
@@ -1051,7 +1117,7 @@ function StartPageLoad() {
   if((localStorage.getItem('SelAnalyzer') === null) && (window.location.pathname !== '/Settings')) {
     window.location.href = 'Settings';
     return;
-  }  
+  }
   $('.spinnerdiv').each(function(index, element) { new Spinner(SpinnerOpts).spin(element); });
   LoadCommon();
 }

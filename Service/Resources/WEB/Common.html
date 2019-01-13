@@ -55,7 +55,7 @@
         <span class="input-group-addon"><img src="Imgs/clock_15.png"/></span>
         <div class="input-group-btn">
           <button class="btn btn-default dropdown-toggle" type="button" id="btnScrollableAggreg" data-toggle="dropdown"><span style="display: inline-block; width: 56px; text-align: left;">1 hour</span><span class="caret"></span></button>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu pull-right">
               <li><a href="#">3 seconds</a></li>
               <li><a href="#">1 minute</a></li>
               <li><a href="#">10 minutes</a></li>
@@ -69,7 +69,7 @@
         <span class="input-group-addon"><img src="Imgs/outlook_calendar_work_week.png"/></span>
         <div class="input-group-btn">
           <button class="btn btn-default dropdown-toggle" type="button" id="btnScrollablePeriod" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><span style="display: inline-block; width: 37px; text-align: left;">Custom</span><span class="caret"></span></button>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu pull-right">
             <li><a href="#">Day</a></li>
             <li><a href="#">Week</a></li>
             <li><a href="#">Month</a></li>
@@ -90,7 +90,7 @@
       <span>Blocks</span><br>
       <div class="dropdown">
         <button class="btn btn-default dropdown-toggle btn-xs" type="button" id="btnBlocks" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><span style="display: inline-block; width: 80px; text-align: left;"></span><span class="caret"></span></button>
-        <ul class="dropdown-menu">
+        <ul class="dropdown-menu pull-right">
           <li><a href="#">1 hour</a></li>
           <li><a href="#">30 minutes</a></li>
           <li><a href="#">20 minutes</a></li>
@@ -286,40 +286,132 @@
         </ul>
       </nav>
       <div id="OfflineDiv" class="overlay"></div>
-      <div class="modal" id="dlgSearchAnalyzer" tabindex="1" role="dialog" data-backdrop='static'>
+      <div class="modal" id="dlgAnalyzers" tabindex="1" role="dialog" data-backdrop='static'>
         <div class="modal-dialog">
-          <div class="modal-content">
+          <div class="modal-content" id="divAnalyzers">
             <div class="modal-header">
-              <div class="pull-left"><h4 class="modal-title">Search input device</h4></div>
+              <div class="pull-left"><h4 class="modal-title">Analyzers</h4></div>
               <div class="pull-right">
                 <button type="button" class="btn btn-default btn-xs" data-dismiss="modal"><img src="Imgs/arrow_undo.png"></button>
               </div>
             </div>
             <div class="modal-body">
-              <div id="divAnalyzers">
-                <table id="tblAnalyzers" class="table small table-striped table-responsive">
-                  <thead>
-                    <tr>
-                      <th>Status</th><th>Name</th><th>Type</th><th>Serial</th><th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  </tbody>
-                </table>
+              <table id="tblAnalyzers" class="table small table-striped table-responsive" style="width:100%;">
+                <thead>
+                  <tr>
+                    <th>Status</th><th>Name</th><th>Type</th><th>Serial</th><th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-content hide" id="divAnalyzersConfig">
+            <div class="modal-header">
+              <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Configuration</h4></div>
+              <div class="pull-right btn-group">
+                <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersConfigSave"><img src="Imgs/diskette.png" alt="Save"></button>
+                <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersConfigBack"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
               </div>
-              <div class="hide" id="divACL">
+            </div>
+            <div class="modal-body">
+              <div class="row" id="divAnalyzersConfig">
+                <div class="col-xs-12">
+                  <label class="control-label">Serial number</label>
+                  <input type="text" class="form-control" id="inputAnalyzerID" disabled>
+                </div>
+                <div class="col-xs-12">
+                  <label class="control-label">Display name</label>
+                  <input type="text" class="form-control" id="AnalyzerID">
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                  <label class="control-label">Voltage</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="AnalyzerID">
+                    <span class="input-group-addon" id="basic-addon1">V</span>
+                  </div>
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                  <label class="control-label">Frequency</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="AnalyzerID">
+                    <span class="input-group-addon" id="basic-addon1">Hz</span>
+                  </div>
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                  <label class="control-label">CUPS</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="AnalyzerID">
+                    <span class="input-group-addon" id="basic-addon1">Hz</span>
+                  </div>
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                  <label class="control-label">Postal code</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="AnalyzerID">
+                    <span class="input-group-addon" id="basic-addon1">Hz</span>
+                  </div>
+                </div>
+                <div class="col-xs-12 col-sm-12">
+                  <label class="control-label">Location</label>
+                  <div class="input-group">
+                    <span class="input-group-addon" id="basic-addon1">Lat</span>
+                    <input type="text" class="form-control" id="AnalyzerID">
+                    <span class="input-group-addon" id="basic-addon1">Long</span>
+                    <input type="text" class="form-control" id="AnalyzerID">
+                    <span class="input-group-addon" id="basic-addon1">BTN</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-content hide" id="divAnalyzersACL">
+            <div class="modal-header">
+              <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; ACL</h4></div>
+              <div class="pull-right btn-group">
+                <button type="button" class="btn btn-default btn-xs"><img src="Imgs/diskette.png" alt="Save"></button>
+                <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersACLBack"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
+              </div>
+            </div>
+            <div class="modal-body">
+              <div class="row">
 
               </div>
-              <div class="hide" id="divTariff">
-                <table id="tblTariff" class="table small table-striped table-responsive">
-                  <thead>
-                    <tr>
-                      <th>Name</th><th>Start date</th><th>End date</th><th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  </tbody>
-                </table>                  
+            </div>
+          </div>
+          <div class="modal-content hide" id="divAnalyzersTariff">
+            <div id="divAnalyzersTariffSpinner" class="spinnerdiv"></div>
+            <div class="modal-header">
+              <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Tariffs</h4></div>
+              <div class="pull-right btn-group">
+                <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersTariffsAdd"><img src="Imgs/plus.png" alt="New tariff"></button>
+                <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersTariffsBack"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
+              </div>
+            </div>
+            <div class="modal-body">
+              <table id="tblAnalyzersTariff" class="table small table-striped table-responsive" style="width: 100%">
+                <thead>
+                  <tr>
+                    <th>Name</th><th>Module</th><th>Start date</th><th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>                  
+            </div>
+          </div>
+          <div class="modal-content hide" id="divAnalyzersMaintenance">
+            <div class="modal-header">
+              <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Maintenance</h4></div>
+              <div class="pull-right btn-group">
+                <button type="button" class="btn btn-default btn-xs"><img src="Imgs/diskette.png" alt="Save"></button>
+                <button type="button" class="btn btn-default btn-xs"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
+              </div>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                
               </div>
             </div>
           </div>
