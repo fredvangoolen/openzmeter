@@ -1,27 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
- * File:   Tariff_Spain.h
- * Author: root
- *
- * Created on 13 de enero de 2019, 21:26
- */
-
-#ifndef TARIFF_SPAIN_H
-#define TARIFF_SPAIN_H
-
+#pragma once
 class Tariff_Spain {
+  private :
+    typedef struct {
+      //para guardar config especifica del contrato
+    } User_Conf;
+    typedef struct {
+      //Para guardar estructura de periodos
+    } Rate_Conf;
+    typedef struct {
+      //Para guardar dias
+    } Calendar_Conf;
 public:
   Tariff_Spain();
-  Tariff_Spain(const Tariff_Spain& orig);
-  virtual ~Tariff_Spain();
+  ~Tariff_Spain();
 private:
 
 };
-
-#endif /* TARIFF_SPAIN_H */
-

@@ -13,7 +13,7 @@
     <!--link rel="stylesheet" href="Lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/-->
     <link rel="stylesheet" href="CSS/offline.min.css" type="text/css"/>
     <link rel="stylesheet" href="Lib/bootstrap-year-calendar/bootstrap-year-calendar.css" type="text/css"/>
-    <link rel="stylesheet" href="Lib/bootstrap-toggle.min.css">
+    <link rel="stylesheet" href="CSS/bootstrap-toggle.min.css">
     <link rel="stylesheet" href="Lib/bootstrap-datetimepicker.min.css">
     <link rel="stylesheet" href="Lib/qtip2/jquery.qtip.css" type="text/css"/>
     <link rel="stylesheet" href="CSS/openZmeter.css"/>
@@ -173,6 +173,22 @@
           </div>
         </div>
         
+        <!-- Tariffs settings -->
+        <div class="col-xs-12">
+          <div class="panel panel-other">
+            <div class="panel-heading">
+              <div class="huge-small header-text">Tariffs</div>
+            </div>
+            <div class="panel-body">
+                <table id="TariffsTable" class="table small table-striped table-responsive">
+                  <thead><tr><th style="width: 40px">Module</th><th>Name</th><th>Description</th><th style="width: 20px">Company</th><th style="width: 90px"></th><th style="width: 180px"></th></tr></thead>
+                  <tbody>
+                  </tbody>
+                </table>
+            </div>
+          </div>
+        </div>
+        
         <!-- User configuration -->
         <div class="col-xs-12">
           <div class="panel panel-other">
@@ -203,19 +219,19 @@
                   <div class="row">
                     <div class="col-xs-12">
                       <label class="control-label">Username</label>
-                      <input type="text" class="form-control" id="AnalyzerID" disabled="">
+                      <input type="text" class="form-control" id="inputUserName" disabled>
                     </div>
                     <div class="col-xs-12">
                       <label class="control-label">Password</label>
-                      <input type="password" class="form-control" aria-label="...">
+                      <input type="password" class="form-control" id="inputPassword">
                     </div>
                     <div class="col-xs-12">
                       <label class="control-label">E-Mail</label>
-                      <input type="text" class="form-control" id="NetworkPassword">
+                      <input type="text" class="form-control" id="inputEMail">
                     </div>
                     <div class="col-xs-12">
                       <label class="control-label">Telegram ID</label>
-                      <input type="text" class="form-control" id="NetworkPassword">
+                      <input type="text" class="form-control" id="inputTelegram">
                     </div>
                   </div>
                 </div>
@@ -223,23 +239,23 @@
               <div class="row">
                 <div class="col-xs-12 col-sm-6 col-lg-4">
                   <label class="control-label">Name</label>
-                  <input type="text" class="form-control" id="NetworkPassword">
+                  <input type="text" class="form-control" id="inputName">
                 </div>
                 <div class="col-xs-12 col-sm-6 col-lg-4">
                   <label class="control-label">Surname</label>
-                  <input type="text" class="form-control" id="NetworkPassword">
+                  <input type="text" class="form-control" id="inputSurname">
                 </div>
                 <div class="col-xs-12 col-sm-6 col-lg-4">
                   <label class="control-label">ID Card</label>
-                  <input type="text" class="form-control" id="NetworkPassword">
+                  <input type="text" class="form-control" id="inputIDCard">
                 </div>
                 <div class="col-xs-12 col-sm-6 col-lg-6">
                   <label class="control-label">Company</label>
-                  <input type="text" class="form-control" id="NetworkPassword">
+                  <input type="text" class="form-control" id="inputCompany">
                 </div>
                 <div class="col-xs-12 col-lg-6">
                   <label class="control-label">Address</label>
-                  <input type="text" class="form-control" id="NetworkPassword">
+                  <input type="text" class="form-control" id="inputAddress">
                 </div>
               </div>
             </div>
@@ -749,7 +765,7 @@
     <script src="JS/moment.min.js"></script>
     <script src="JS/moment-duration-format.min.js"></script>
     <script src="Lib/moment-timezone.min.js"></script>
-    <script src="Lib/bootstrap-toggle.min.js"></script>
+    <script src="JS/bootstrap-toggle.min.js"></script>
     <script src="Lib/bootstrap-datetimepicker.min.js"></script>
     <script src="JS/openZmeter.js"></script>
     <script src="JS/openZmeter.Settings.js"></script>

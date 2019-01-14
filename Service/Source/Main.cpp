@@ -75,7 +75,9 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterMapping("/Stats/Costs",          "/Stats_Costs.html");
   HTTPServer::RegisterMapping("/Stats/Heatmap",        "/Stats_Heatmap.html");
   HTTPServer::RegisterMapping("/Stats/Distribution",   "/Stats_Distribution.html");
-  HTTPServer::RegisterMapping("/Settings",             "/Settings.html");
+  HTTPServer::RegisterMapping("/Settings/System",      "/Settings_System.html");
+  HTTPServer::RegisterMapping("/Settings/User",        "/Settings_User.html");
+  HTTPServer::RegisterMapping("/Settings/Tariffs",     "/Settings_Tariffs.html");  
   HTTPServer::RegisterMapping("/Help",                 "/Help.html");
 
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;

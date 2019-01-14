@@ -950,6 +950,30 @@ var Tariffs = [];
 var TableTariffs = null;
 function LoadTariffs(analyzer) {
   $('#divAnalyzersTariffSpinner').removeClass('hide');
+  $('#tblAnalyzersTariff').on('click', 'button', function(event) {
+    if($(event.target).index() == 0) {
+      $('#divAnalyzersTariff').addClass('hide');
+      $('#divAnalyzersTariffEdit').removeClass('hide');
+      $('#divAnalyzersTariffEditSpinner').addClass('hide');
+    }
+    if($(event.target).is('a')) {
+      if($(event.target).parent('li').index() === 0) {
+        $('#divAnalyzers').addClass('hide');
+        $('#divAnalyzersConfig').removeClass('hide');
+      } else if($(event.target).parent('li').index() === 1) {
+        $('#divAnalyzers').addClass('hide');
+        $('#divAnalyzersACL').removeClass('hide');        
+      } else if($(event.target).parent('li').index() === 2) {
+        $('#divAnalyzers').addClass('hide');
+        $('#divAnalyzersTariff').removeClass('hide');
+        LoadTariffs($(event.target).parents('div').attr('data-analyzer'));
+      } else if($(event.target).parent('li').index() === 4) {
+        $('#divAnalyzers').addClass('hide');
+        $('#divAnalyzersMaintenance').removeClass('hide');
+      }
+    }
+  });
+  
   if(TableTariffs !== null) {
     TableTariffs.clear();
   } else {

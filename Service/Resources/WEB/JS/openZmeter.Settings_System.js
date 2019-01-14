@@ -232,6 +232,27 @@ function NetworkForget(index) {
            }
   });
 }
+// Tariffs -------------------------------------------------------------------------------------------------------------
+var TariffTable = null;
+function AjaxGetTariffs() {
+  $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
+    function(result) {
+      TariffTable = $('#TariffsTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [0, 1, 2, 3, 4, 5], orderable: false }, { targets: [2, 3, 4], className: 'text-center' } ], order: [0, 'desc']});
+      for(var i = 0; i < result.length; i++) {
+        var RowText = '<tr>' +
+          '<td>' + result[i]['Module'] + '</td>' +
+          '<td>' + result[i]['Name'] + '</td>' +
+          '<td>' + "sdfsdfsdfsdf" + '</td>' +
+          '<td>' + "swerwe" + '</td>' +
+          '<td>' + "loren" + '</td>' +
+          '<td><div class="btn-group" style="width:100%"><button class="btn btn-xs btn-success" style="width:40%">Start</button><button class="btn btn-xs btn-default" style="width:60%">Configure</button></div></td>' +
+          '</tr>';
+        TariffTable.row.add($(RowText)).draw();
+      }
+    }
+  });
+}
+
 // Devices -------------------------------------------------------------------------------------------------------------
 var DeviceTable = null;
 function AjaxGetDevices() {
@@ -251,9 +272,6 @@ $.ajax({ url: "getDevices", timeout: 20000, type: "POST", dataType: "json", cont
       }
     }
   });
-}
-function EnableDevice() {
-  
 }
 function StartDevice() {
   
@@ -319,5 +337,6 @@ $('#btnNTPSave').click(function() {
 function UpdatePage() {
   AjaxGetTimeZones();
   AjaxGetDevices();
+  AjaxGetTariffs();
   AjaxGetNetworks();
 }

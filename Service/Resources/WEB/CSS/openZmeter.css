@@ -84,9 +84,12 @@ img {
   color: #FAFAFA;
   background: #474544;
 }
-.sidenav-dropdown-icon, .sidenav-link-icon {
-  top: 13px;
-  left: 12px;
+.sidenav-dropdown-icon {
+  top: 10px;
+}
+.sidenav-link-icon {
+  top: 7px;
+  left: 6px;
 }
 .sidenav-link-title {
   padding-left: 14px;
