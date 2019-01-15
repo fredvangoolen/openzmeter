@@ -5,16 +5,41 @@
  */
 
 /*@import url(http://fonts.googleapis.com/css?family=Titillium+Web:400,700,400italic,700italic);  */
-/* icons */
+
+/* replaced icons in external plugins */
 .glyphicon-calendar {
   background-image: url(../Imgs/outlook_calendar_work_week.png);
-    width: 16px !important;
-    height: 16px !important;
-    display: inline-block;
+  width: 16px !important;
+  height: 16px !important;
+  display: inline-block;
 }
 .glyphicon-calendar:before {
   content: none;
 }
+
+/* dataTables icons */
+table.dataTable thead .sorting_desc:after {
+  content: no-open-quote;
+  background-image: url(../Imgs/bullet_arrow_down.png);
+  width: 16px !important;
+  height: 16px !important;
+  right: 0px;
+}
+table.dataTable thead .sorting_asc:after {
+  content: no-open-quote;
+  background-image: url(../Imgs/bullet_arrow_up.png);
+  width: 16px !important;
+  height: 16px !important;
+  right: 0px;
+}
+table.dataTable thead .sorting:after {
+  content: no-open-quote;
+  background-image: url(../Imgs/sort.png);
+  width: 16px !important;
+  height: 16px !important;
+  right: 0px;
+}
+
 /* latin */
 @font-face {
   font-family: 'Titillium Web';

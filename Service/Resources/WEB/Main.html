@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <base href="/">
+    <title>openZmeter</title>
+    <script src="JS/pace.min.js"></script>
+    <link rel="shortcut icon" href="Imgs/favicon.ico"/>
+    <link rel="stylesheet" href="CSS/pace.min.css">
+    <link rel="stylesheet" href="CSS/bootstrap.min.css"/>
+    <link rel="stylesheet" href="CSS/dataTables.min.css" />
+    <link rel="stylesheet" href="CSS/sidenav.min.css"/>
+    <link rel="stylesheet" href="CSS/bootstrap-toggle.min.css">
+    <link rel="stylesheet" href="Lib/font-awesome/css/font-awesome.css"/>
+    <link rel="stylesheet" href="Lib/jquery.lineProgressbar/jquery.lineProgressbar.css"/>
+    <link rel="stylesheet" href="CSS/offline.min.css"/>
+    <link rel="stylesheet" href="CSS/openZmeter.css"/>
+  </head>
+  <body onload="StartPageLoad()">
+    <div class="navbar-header">
+      <div class="navbar-brand">
+      <embed src="Imgs/Logo2.svg" type="image/svg+xml" /><br/>
+        <div style="font-size: 12px; color: #FFF; margin-top: -5px">
+          <span class="navbar-time">Node time:&nbsp;</span><span id="NodeTime">?</span>
+        </div>
+      </div>
+      <button type="button" class="navbar-toggle" id="sidenav-toggle">
+        <span class="glyphicon glyphicon-menu-hamburger"></span>
+      </button>
+    </div>
+    <div class="indicator-bar hide">
+      <div class="indicator-voltage">
+        <div>
+          <div id="IndicatorVoltageValues">
+            <span class="value">Offline</span>
+          </div>
+          <div>V</div>
+        </div>
+      </div>
+      <div class="indicator-current">
+        <div>
+          <div id="IndicatorCurrentValues">
+            <span class="value">Offline</span>
+          </div>
+          <div>A</div>
+        </div>
+      </div>
+      <div class="indicator-active-power">
+        <div>
+          <div id="IndicatorActivePowerValues">
+            <span class="value">Offline</span>
+          </div>
+          <div id="IndicatorActivePowerUnits">W</div>
+        </div>
+      </div>
+      <div class="indicator-frequency">
+        <div>
+          <div id="IndicatorFrequencyValues">
+            <span class="value">Offline</span>
+          </div>
+          <div>Hz</div>
+        </div>
+      </div>
+      <div class="indicator-active-energy">
+        <div>
+          <div id="IndicatorTodayEnergyValues">
+            <span class="value">Offline</span>
+          </div>
+          <div id="IndicatorActiveEnergyUnits">Wh</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sidenav" data-sidenav data-sidenav-toggle="#sidenav-toggle">
+      <div class="sidenav-header">
+        <div class="small pull-left"><span id="labelUserName"></span></div>
+        <div class="btn-group pull-right">
+          <button type="button" class="btn btn-default btn-xs navbar-btn" data-toggle="tooltip" title="User logout" onclick="window.location.href='Logout'"><img src="Imgs/user_go.png"></button>
+        </div>
+        <span class="clearfix"></span>
+      </div>
+      <div class="sidenav-header hide" id="AnalyzerNavHeader">
+        <div class="small pull-left"><span id="labelAnalyzerName"></span></div>
+        <div class="btn-group pull-right">
+          <button type="button" class="btn btn-default btn-xs navbar-btn disabled" id="btnSearchAnalyzer"><img src="Imgs/magnifier.png"></button>
+          <button type="button" class="btn btn-default btn-xs navbar-btn disabled"><img src="Imgs/exclamation.png"></button>
+        </div>
+        <table>
+          <tr><td>Disk:</td><td><div class="progress"><div class="progress-bar" id="DiskPercent" role="progressbar" style="width:0%"></div></div></td></tr>
+          <tr><td>Battery:</td><td><div class="progress" style="margin-bottom:0px; position:relative"><div class="progress-bar" id="BatteryPercent" role="progressbar" style="width:0%"></div></div></td></tr>
+          <tr id="StatusRow"><td>Usage:</td><td id="UsageText"></td></tr>              
+          <tr><td>Uptime:</td><td id="UptimeText"></td></tr>
+        </table>
+      </div>        
+      <ul class="sidenav-menu hide" id="AnalyzerMenu">
+        <li>
+          <a href="Dashboard">
+            <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/dashboard.png"></span>
+            <span class="sidenav-link-title">Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="javascript:;" data-sidenav-dropdown-toggle>
+            <span class="sidenav-link-icon"><i class="fa fa-search-plus fa-fw"></i></span>
+            <span class="sidenav-link-title">Analysis</span>
+            <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><i class="fa fa-caret-down"></i></span>
+            <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><i class="fa fa-caret-up"></i></span>
+          </a>
+          <ul class="sidenav-dropdown" data-sidenav-dropdown>
+            <li><a href="Analysis/Voltage">Voltage</a></li>
+            <li><a href="Analysis/Current">Current</a></li>
+            <li><a href="Analysis/Power">Power</a></li>
+            <li><a href="Analysis/Energy">Energy</a></li>
+            <li><a href="Analysis/Frequency">Frequency</a></li>
+          </ul>
+        </li>
+        <li>
+          <a href="javascript:;" data-sidenav-dropdown-toggle>
+            <span class="sidenav-link-icon"><i class="fa fa-exclamation-triangle fa-fw"></i></span>
+            <span class="sidenav-link-title">Events</span>
+            <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><i class="fa fa-caret-down"></i></span>
+            <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><i class="fa fa-caret-up"></i></span>
+          </a>
+          <ul class="sidenav-dropdown" data-sidenav-dropdown>
+            <li><a href="Events/ITIC">ITIC</a></li>
+            <li><a href="Events/Disturbances">Disturbances</a></li>
+            <li><a href="Events/EN50160">EN50160</a></li>
+          </ul>
+        </li>
+        <li>
+          <a href="javascript:;" data-sidenav-dropdown-toggle>
+            <span class="sidenav-link-icon"><i class="fa fa-bar-chart-o fa-fw"></i></span>
+            <span class="sidenav-link-title">Energy Stats</span>
+            <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><i class="fa fa-caret-down"></i></span>
+            <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><i class="fa fa-caret-up"></i></span>
+          </a>
+          <ul class="sidenav-dropdown" data-sidenav-dropdown>
+            <li><a href="Stats/Costs">Costs</a></li>
+            <li><a href="Stats/Heatmap">Heatmap</a></li>
+            <li><a href="Stats/Distribution">Distribution</a></li>
+          </ul>
+        </li>
+      </ul>
+      <ul class="sidenav-menu">
+        <li class="hide" id="menuSettings">
+          <a href="javascript:;" data-sidenav-dropdown-toggle>
+            <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/cog.png"></span>
+            <span class="sidenav-link-title">Settings</span>
+            <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_down.png"></span>
+            <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_up.png"></span>
+          </a>
+          <ul class="sidenav-dropdown" data-sidenav-dropdown>
+            <li><a href="Settings/System">System</a></li>
+            <li><a href="Settings/User">User</a></li>
+            <li><a href="Settings/Tariffs">Tariffs</a></li>
+          </ul>
+        </li>
+        <li>
+          <a href="Help">
+            <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/help.png"></span>
+            <span class="sidenav-link-title">Help</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="modal" id="dlgAnalyzers" tabindex="1" role="dialog" data-backdrop='static'>
+      <div class="modal-dialog">
+        <div class="modal-content" id="divAnalyzers">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Analyzers</h4></div>
+            <div class="pull-right">
+              <button type="button" class="btn btn-default btn-xs" data-dismiss="modal"><img src="Imgs/arrow_undo.png"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <table id="tblAnalyzers" class="table small table-striped table-responsive" style="width:100%;">
+              <thead>
+                <tr>
+                  <th>Status</th><th>Name</th><th>Type</th><th>Serial</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-content hide" id="divAnalyzersConfig">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Configuration</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersConfigSave"><img src="Imgs/diskette.png" alt="Save"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersConfigBack"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="row" id="divAnalyzersConfig">
+              <div class="col-xs-12">
+                <label class="control-label">Serial number</label>
+                <input type="text" class="form-control" id="inputAnalyzerID" disabled>
+              </div>
+              <div class="col-xs-12">
+                <label class="control-label">Display name</label>
+                <input type="text" class="form-control" id="inputAnalyzerName">
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <label class="control-label">Voltage</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="inputAnalyzerVoltage">
+                  <span class="input-group-addon" id="basic-addon1">V</span>
+                </div>
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <label class="control-label">Frequency</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="inputAnalyzerFrequency">
+                  <span class="input-group-addon" id="basic-addon1">Hz</span>
+                </div>
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <label class="control-label">CUPS</label>
+                <input type="text" class="form-control" id="inputAnalyzerCUPS">
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <label class="control-label">Postal code</label>
+                <input type="text" class="form-control" id="inputAnalyzerZIP">
+              </div>
+              <div class="col-xs-12 col-sm-12">
+                <label class="control-label">Location</label>
+                <div class="input-group">
+                  <span class="input-group-addon">Lat</span>
+                  <input type="text" class="form-control" id="inputAnalyzerLat">
+                  <span class="input-group-addon">Long</span>
+                  <input type="text" class="form-control" id="inputAnalyzerLong">
+                  <span class="input-group-btn"><button class="btn btn-default"><img src="Imgs/globe_africa.png"></button></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-content hide" id="divAnalyzersACL">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; ACL</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs"><img src="Imgs/diskette.png" alt="Save"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersACLBack"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+
+            </div>
+          </div>
+        </div>
+        <div class="modal-content hide" id="divAnalyzersTariff">
+          <div id="divAnalyzersTariffSpinner" class="spinnerdiv"></div>
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Tariffs</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersTariffsAdd"><img src="Imgs/plus.png" alt="New tariff"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersTariffsBack"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <table id="tblAnalyzersTariff" class="table small table-striped table-responsive" style="width: 100%">
+              <thead>
+                <tr>
+                  <th>Name</th><th>Module</th><th>Start date</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>                  
+          </div>
+        </div>
+        <div class="modal-content hide" id="divAnalyzersTariffEdit">
+          <div id="divAnalyzersTariffEditSpinner" class="spinnerdiv"></div>
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Tariffs &raquo; Edit</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersTariffsAdd"><img src="Imgs/diskette.png" alt="New tariff"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersTariffsBack"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-xs-12">
+                <label class="control-label">Base Tariff</label>
+                <input type="text" class="form-control" id="AnalyzerID" disabled>
+              </div>
+              <div class="col-xs-12">
+                <label class="control-label">Start date</label>
+                <input type="password" class="form-control" aria-label="...">
+              </div>
+              <div class="col-xs-6" style="margin-top:8px">
+                <div class="toggle btn btn-sm btn-success" data-toggle="toggle" style="width: 49px; height: 30px;"><input type="checkbox" data-toggle="toggle" id="checkNTP" data-size="small" data-onstyle="success"><div class="toggle-group"><label class="btn btn-success btn-sm toggle-on">On</label><label class="btn btn-default btn-sm active toggle-off">Off</label><span class="toggle-handle btn btn-default btn-sm"></span></div></div>
+                <label class="control-label">Reactive</label>
+              </div>
+              <div class="col-xs-6" style="margin-top:8px">
+                <div class="toggle btn btn-sm btn-success" data-toggle="toggle" style="width: 49px; height: 30px;"><input type="checkbox" data-toggle="toggle" id="checkNTP" data-size="small" data-onstyle="success"><div class="toggle-group"><label class="btn btn-success btn-sm toggle-on">On</label><label class="btn btn-default btn-sm active toggle-off">Off</label><span class="toggle-handle btn btn-default btn-sm"></span></div></div>
+                <label class="control-label">Maxmeter</label>
+              </div>
+              <div class="col-xs-12">
+                <label class="control-label">Contracted Power</label>
+              </div>
+              <div class="col-xs-6">
+                <div class="input-group">
+                  <span class="input-group-addon">P1</span>
+                  <input type="text" class="form-control" id="NetworkIP">
+                  <span class="input-group-addon">kW</span>
+                </div>
+              </div>
+              <div class="col-xs-6">
+                <div class="input-group">
+                  <span class="input-group-addon">P1</span>
+                  <input type="text" class="form-control" id="NetworkIP">
+                  <span class="input-group-addon">€/kW x day</span>
+                </div>
+              </div>
+              <div class="col-xs-12"></div>
+              <div class="col-xs-6">
+                <div class="input-group">
+                  <span class="input-group-addon">P2</span>
+                  <input type="text" class="form-control" id="NetworkIP">
+                  <span class="input-group-addon">kW</span>
+                </div>
+              </div>
+              <div class="col-xs-6">
+                <div class="input-group">
+                  <span class="input-group-addon">P2</span>
+                  <input type="text" class="form-control" id="NetworkIP">
+                  <span class="input-group-addon">€/kW x day</span>
+                </div>
+              </div>
+              <div class="col-xs-12"></div>
+              <div class="col-xs-6">
+                <div class="input-group">
+                  <span class="input-group-addon">P3</span>
+                  <input type="text" class="form-control" id="NetworkIP">
+                  <span class="input-group-addon">kW</span>
+                </div>
+              </div>
+              <div class="col-xs-6">
+                <div class="input-group">
+                  <span class="input-group-addon">P3</span>
+                  <input type="text" class="form-control" id="NetworkIP">
+                  <span class="input-group-addon">€/kW x day</span>
+                </div>
+              </div>
+              <div class="col-xs-12"></div>
+              <div class="col-xs-6">
+                <div class="input-group">
+                  <span class="input-group-addon">P4</span>
+                  <input type="text" class="form-control" id="NetworkIP">
+                  <span class="input-group-addon">kW</span>
+                </div>
+              </div>
+              <div class="col-xs-6">
+                <div class="input-group">
+                  <span class="input-group-addon">P4</span>
+                  <input type="text" class="form-control" id="NetworkIP">
+                  <span class="input-group-addon">€/kW x day</span>
+                </div>
+              </div>
+              <div class="col-xs-12"></div>
+              <div class="col-xs-6">
+                <div class="input-group">
+                  <span class="input-group-addon">P5</span>
+                  <input type="text" class="form-control" id="NetworkIP">
+                  <span class="input-group-addon">kW</span>
+                </div>
+              </div>
+              <div class="col-xs-6">
+                <div class="input-group">
+                  <span class="input-group-addon">P5</span>
+                  <input type="text" class="form-control" id="NetworkIP">
+                  <span class="input-group-addon">€/kW x day</span>
+                </div>
+              </div>
+              <div class="col-xs-12"></div>
+              <div class="col-xs-6">
+                <div class="input-group">
+                  <span class="input-group-addon">P6</span>
+                  <input type="text" class="form-control" id="NetworkIP">
+                  <span class="input-group-addon">kW</span>
+                </div>
+              </div>
+              <div class="col-xs-6">
+                <div class="input-group">
+                  <span class="input-group-addon">P6</span>
+                  <input type="text" class="form-control" id="NetworkIP">
+                  <span class="input-group-addon">€/kW x day</span>
+                </div>
+              </div>
+
+
+              <div class="col-xs-12">
+                <label class="control-label">IVA</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="NetworkIP">
+                  <span class="input-group-addon">%</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>          
+
+
+
+        <div class="modal-content hide" id="divAnalyzersMaintenance">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Maintenance</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs"><img src="Imgs/diskette.png" alt="Save"></button>
+              <button type="button" class="btn btn-default btn-xs"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal" id="dlgNews" tabindex="1" role="dialog" data-backdrop='static'>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="pull-left"><h3 class="modal-title"><i class="fa fa-newspaper-o"></i> <span>News!</span></h3></div>
+            <div class="pull-right"><button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-times" aria-hidden="true"></i></button></div>
+          </div>
+          <div class="modal-body">
+          </div>
+        </div>
+      </div>
+    </div>    
+    <div class="modal" id="dlgAggregWarning" tabindex="-1" role="dialog" data-backdrop='static'>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title"><i class="fa fa-exclamation-triangle"></i> Aggregation change...</h3>
+          </div>
+          <div class="modal-body">
+            <p>Requested aggregation returns to much points.<br/>Zoom in and try again.</p><p>Aggregation period has been changed to the lowest allowed.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-success" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span>  Continue</button>
+          </div>
+        </div>
+      </div>
+    </div>    
+    <div class="modal" id="dlgMaximizeDialog" tabindex="1" role="dialog" data-backdrop='static'>
+      <div class="modal-dialog" style="width: 100%; height: 100%; padding: 10px; margin: 0px">
+        <div class="modal-content" id="MaximizeDialogContents" style="height: 100%">
+          <div class="modal-header">
+            <div class="pull-left">
+              <h4 class="modal-title" id="MaximizeDialogTitle">Dialog</h4>
+            </div>
+            <div class="pull-right" id="MaximizeToolbar"></div>
+            <div class="clearfix"></div>
+          </div>
+          <div class="modal-body" id="MaximizeDialogBody"></div>
+        </div>
+      </div>
+    </div>
+    
+    
+    <div id="divDisable" class="overlay"></div>
+
+    <div id="OfflineDiv" class="overlay"></div>
+
+
+
+
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    <div id="wrapper">
+
+    </div>
+    <script src="JS/jquery.min.js"></script>
+    <script src="JS/bootstrap.min.js"></script>
+    <script src="JS/sidenav.min.js"></script>
+    <script src="JS/spin.min.js"></script>
+    <script src="JS/bootstrap-toggle.min.js"></script>
+    <script src="JS/dataTables.min.js"></script>
+    <script src="JS/offline.min.js"></script>
+    <script src="JS/moment.min.js"></script>
+    <script src="JS/moment-duration-format.min.js"></script>
+    <script src="JS/chroma.min.js"></script>
+    <script src="JS/openZmeter.js"></script>
+    
+    
+    
+    
+        <script src="Lib/dygraph/dygraph.min.js"></script>
+    <script src="Lib/dygraph/crosshair.js"></script>
+    <script src="Lib/dygraph/dygraph-interaction.js"></script>
+    <script src="Lib/dygraph/chart-plotter.js"></script>
+    <script src="Lib/dygraph/synchronize.js"></script>
+    <script src="Lib/datatables/js/jquery.dataTables.js"></script>
+    <script src="Lib/jquery.lineProgressbar/jquery.lineProgressbar.js"></script>
+
+    
+    
+    <script src="JS/openZmeter.Dashboard.js"></script>
+  </body>
+</html>

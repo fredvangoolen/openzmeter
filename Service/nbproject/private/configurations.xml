@@ -5,8 +5,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -14,8 +12,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -164,8 +160,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -173,8 +167,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -231,6 +223,9 @@
           </df>
           <df name="MiniViews">
           </df>
+          <in>Dashboard2.html</in>
+          <in>Main.html</in>
+          <in>Settings_Tariffs.html</in>
         </df>
       </df>
       <df name="Source">
