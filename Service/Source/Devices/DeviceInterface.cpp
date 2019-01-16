@@ -55,7 +55,7 @@ bool DeviceInterface::GetTariffsCallback(char* user, json_object* reader, Databa
   char QueryText[8192];
   int  QueryLen = 0;
   if(Serial == NULL) {
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT array_to_json(array_agg(row_to_json(Result))) FROM (SELECT rate as \"RateID\", name AS \"Name\", module AS \"Module\" FROM rates) as Result");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT array_to_json(array_agg(row_to_json(t1))) FROM (  SELECT     rates.rate as \"RateID\", rates.name as \"Name\", rates.description as \"Description\", rates.country_code as \"Country\", rates.startdate as \"StartDate\", rates.enddate as \"EndDate\",    (select to_json(json_object_agg(q1.name, json_build_object('StarDate', q1.startdate, 'EndDate', q1.enddate, 'DayPeriods', q1.dayperiods))) from (select name, startdate, enddate, dayperiods from rates_seasons where rates.rate = rates_seasons.rate) as q1) as \"Seasons\" from rates) as t1");
   } else {
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT array_to_json(array_agg(row_to_json(Result))) FROM (SELECT rate as \"RateID\", startdate as \"StartDate\", name AS \"Name\", module AS \"Module\" FROM analyzers_rates NATURAL JOIN rates WHERE serial = '%s') as Result", Serial);
   }

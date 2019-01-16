@@ -34,7 +34,7 @@
             </div>
             <div class="panel-body">
               <table id="DeviceTable" class="table small table-striped table-responsive">
-                <thead><tr><th style="width: 40px">Driver</th><th>Description</th><th style="width: 250px">Serial</th><th style="width: 20px">Analyzers</th><th style="width: 90px">Status</th><th style="width: 180px"></th></tr></thead>
+                <thead><tr><th style="width: 40px">Short Name</th><th>Description</th><th style="width: 40px">Periods</th><th style="width: 20px">Private</th><th style="width: 50px"></th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -64,28 +64,179 @@
               <div class="huge-small header-text">Tariffs</div>
               <div class="header-buttons">
                 <div class="btn-group">
-                  <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes"><img src="Imgs/plus.png"> Add</button>
+                  <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes" id="btnAddTariff"><img src="Imgs/plus.png"> Add</button>
                 </div>
               </div>
             </div>
             <div class="panel-body">
-                <table id="TariffsTable" class="table small table-striped table-responsive">
-                  <thead><tr><th style="width: 40px">Module</th><th>Name</th><th>Description</th><th style="width: 20px">Company</th><th style="width: 90px"></th><th style="width: 180px"></th></tr></thead>
-                  <tbody>
-                  </tbody>
-                </table>
+              <table id="TariffsTable" class="table small table-striped table-responsive">
+                <thead><tr><th style="width: 20px">Country</th><th>Name</th><th style="width: 80px">Start date</th><th style="width: 80px">End date</th><th style="width: 80px"></th></tr></thead>
+                <tbody></tbody>
+              </table>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+
+    <!-- Tariffs -->
+    <div class="modal" id="dlgTariff" tabindex="-1" role="dialog" data-backdrop='static'>
+      <div class="modal-dialog">
+        <div class="modal-content" id="divTariffMain">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Tariffs template</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffSave"><img src="Imgs/diskette.png" alt="New tariff"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffHolidays">Holidays</button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffSeasons">Seasons</button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffSeasons">Periods</button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffBack" data-dismiss="modal"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-xs-12 col-sm-6">
+                <label class="control-label">Name</label>
+                <input type="text" class="form-control" id="inputTariffName">
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <label class="control-label">Max. day periods types</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" value="4" style="pointer-events: none" id="inputTariffPeriods">
+                  <div class="input-group-btn-vertical">
+                    <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></button>
+                    <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xs-12">
+                <label class="control-label">Description</label>
+                <textarea class="form-control" rows="5" id="inputTariffComments" style="resize: none"></textarea>
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <div class="btn-group" style="margin-top:8px;width:100%;">
+                  <div class="input-group">
+                    <span class="input-group-addon" style="width: 100%"><strong>Weekends as</strong></span>
+                    <div class="input-group-btn">
+                      <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false" id="btnTariffWeekend"><span style="display: inline-block;width: 50px;">P1</span><span class="caret"></span></button>
+                      <ul class="dropdown-menu pull-right">
+                        <li><a href="#">P1</a></li>
+                        <li><a href="#">P2</a></li>
+                        <li class="active"><a href="#">P3</a></li>
+                        <li class=""><a href="#">P4</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <div class="btn-group" style="margin-top: 8px;width: 100%;">
+                  <div class="input-group">
+                    <span class="input-group-addon" style="width: 100%"><strong>Holidays as</strong></span>
+                    <div class="input-group-btn">
+                      <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false" id="btnTariffHoliday"><span style="display: inline-block;width: 50px;">P1</span><span class="caret"></span></button>
+                      <ul class="dropdown-menu pull-right">
+                        <li><a href="#">P1</a></li>
+                        <li><a href="#">P2</a></li>
+                        <li class="active"><a href="#">P3</a></li>
+                        <li class=""><a href="#">P4</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-content hide" id="divTariffHolidays">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Holidays</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffHolidaysAdd"><img src="Imgs/plus.png" alt="New holiday"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffHolidaysBack"><img src="Imgs/arrow_undo.png" alt="Go back"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-xs-12">
+                <table id="DeviceTable" class="table small table-striped table-responsive">
+                  <thead><tr><th style="width: 40px">Driver</th><th>Description</th><th style="width: 250px">Serial</th><th style="width: 20px">Analyzers</th><th style="width: 90px">Status</th><th style="width: 180px"></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div> 
+        <div class="modal-content hide" id="divTariffSeasons">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Seasons</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffSeasonsAdd"><img src="Imgs/plus.png" alt="New season"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffSeasonsBack"><img src="Imgs/arrow_undo.png" alt="Go back"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-xs-12">
+                <table id="SeasonsTable" class="table small table-striped table-responsive" style="width: 100%">
+                  <thead><tr><th>Name</th><th style="width:80px">From</th><th style="width:80px">To</th><th style="width:140px"></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div> 
+        <div class="modal-content hide" id="divTariffSeason">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Seasons &raquo; Season</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffSeasonBack"><img src="Imgs/arrow_undo.png" alt="Go back"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-xs-12">
+                <label class="control-label">Name</label>
+                <input type="text" class="form-control" id="AnalyzerID">
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <label class="control-label">From</label>
+                <input type="text" class="form-control" id="AnalyzerID">
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <label class="control-label">To</label>
+                <input type="text" class="form-control" id="AnalyzerID">
+              </div>
+              <div class="col-xs-12">
+                <label class="control-label">Hourly rates</label>
+                <div style=" display:flex;flex-flow: wrap; margin: -4px -4px" id="hourlyRates"></div>
+              </div>
+              
+              
+              
+            </div>
+          </div>
+        </div> 
+        
+        
+
+
+      </div>
+    </div>
+    
+    
+    
+      
+    
+    
     <script src="JS/jquery.min.js"></script>
     <script src="JS/bootstrap.min.js"></script>
     <script src="JS/sidenav.min.js"></script>
     <script src="JS/spin.min.js"></script>
     <script src="JS/offline.min.js"></script>
     <script src="JS/dataTables.min.js"></script>
-    <script src="JS/dataTables.bootstrap.min.js"></script>
+    <script src="JS/dataTables.min.js"></script>
     <script src="JS/moment.min.js"></script>
     <script src="JS/moment-duration-format.min.js"></script>
     <script src="Lib/moment-timezone.min.js"></script>
