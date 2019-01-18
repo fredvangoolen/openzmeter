@@ -32,4 +32,3 @@ class NTP {
     static bool GetTimeSettingsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
     static bool SetTimeSettingsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
 };
-

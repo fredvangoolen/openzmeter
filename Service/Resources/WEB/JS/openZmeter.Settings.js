@@ -233,75 +233,80 @@ function NetworkForget(index) {
   });
 }
 // Tariffs -------------------------------------------------------------------------------------------------------------
-var TariffTable = null;
+function PopulatePeriodDropdown(dropdown, count, prefix, selection, nullText) {
+  var List = dropdown.parent().children('ul');
+  List.html('');
+  if(selection < 1) selection = 1;
+  if(selection > count) selection = count;
+  for(var i = 1; i <= count; i++) List.append('<li class="' + ((selection === i) ? 'active' : '') + '"><a href="' + i + '">' + prefix + i + '</a></li>');
+  if(nullText !== undefined) {
+    List.append('<li role="separator" class="divider"></li>');
+    List.append('<li class="' + ((selection === null) ? 'active' : '') + '"><a href="null">' + nullText + '</a></li>');
+    dropdown.children('span:first-child').html(nullText);
+  } else {
+    dropdown.children('span:first-child').html(prefix + selection);
+  }
+  return selection;
+}
+function DropdownValue(dropdown) {
+  var Val = dropdown.parent().find('ul li.active a').attr('href');
+  return (Val === "null") ? null : parseInt(Val);
+}
+function DropDownUpdateValue(event) {
+  event.preventDefault();
+  $(this).parent().parent().find('li').removeClass('active');
+  $(this).parent().addClass('active');
+  $(this).parent().parent().parent().find('button > span:first-child').html($(this).text())
+}
+var TariffsTable = null;
 var Tariffs = [];
 function AjaxGetTariffs() {
   $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
     function(result) {
       Tariffs = result;
-      TariffTable = $('#TariffsTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [0, 1, 2, 3], orderable: true }, { targets: [0, 2, 3], className: 'text-center' }, { targets: [4], orderable: false, searchable: false } ], order: [0, 'desc']});
-      for(var i = 0; i < Tariffs.length; i++) {
+      if(TariffsTable === null) {
+        TariffsTable = $('#TariffsTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [0, 1, 2, 3], orderable: true }, { targets: [0, 2, 3], className: 'text-center' }, { targets: [4], orderable: false, searchable: false } ], order: [0, 'desc']});
+      } else {
+        TariffsTable.clear();    
+      }        
+      for(var Key in Tariffs) {
         var RowText = '<tr>' +
-          '<td>' + Tariffs[i].Country + '</td>' +
-          '<td>' + Tariffs[i].Name + '</td>' +
-          '<td>' + Tariffs[i].StartDate + '</td>' +
-          '<td>' + Tariffs[i].EndDate + '</td>' +
-          '<td data-tariff="'+ Tariffs[i].RateID + '"><div class="btn-group"><button class="btn btn-xs btn-default">Edit</button><button class="btn btn-xs btn-danger">Delete</button></div></td>' +
+          '<td>' + Tariffs[Key].Country + '</td>' +
+          '<td>' + Tariffs[Key].Name + '</td>' +
+          '<td>' + Tariffs[Key].StartDate + '</td>' +
+          '<td>' + Tariffs[Key].EndDate + '</td>' +
+          '<td data-tariff="' + Key + '"><div class="btn-group"><button class="btn btn-xs btn-default">Edit</button><button class="btn btn-xs btn-danger">Delete</button></div></td>' +
           '</tr>';
-        TariffTable.row.add($(RowText)).draw();
+        TariffsTable.row.add($(RowText)).draw();
       }
     }
   });
 }
-var TariffIndex   = -1;
-$('#btnAddTariff').click(LoadTariffDialog);
-
-function LoadTariffDialog(index) {
-  if(typeof(index) !== 'number') {
-    TariffIndex = -1;
-    TariffDefinition = { Name: 'No nane', Description: 'Add tariff description here', DayPeriods: 1, Seasons: [{Name: "Enero-Marzo", StartDate:1546297200000,EndDate:1554069599999,"DayPeriods":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]}], Periods: [], Holidays: []};
-  } else {
-    //Consulto la DB
-  }
+var TariffKey;
+$('#btnAddTariff').click(function() {
+  TariffKey = null;
+  LoadTariffDialog({ Country: null, StartDate: new Date(new Date().getFullYear(), 0, 1, 0, 0, 0, 0).getTime(), EndDate: new Date(new Date().getFullYear(), 11, 31, 23, 59, 59, 999).getTime(), Name: 'No nane', Description: 'Add tariff description here', DayPeriods: 1, Seasons: [], Periods: [], Holidays: [] });
+});
+$('#TariffsTable').on('click', 'button:nth-child(1)', function() {
+  TariffKey = $(this).parents('td').attr('data-tariff');
+  LoadTariffDialog(Tariffs[TariffKey]);
+});
+///TODO: Falta borrar tarifa
+///TODO: Falta guardar tarifa
+function LoadTariffDialog(definition) {
+  TariffDefinition = definition;
   $('#dlgTariff > div > div').addClass('hide');
   $('#divTariffMain').removeClass('hide');
+  $('#dlgTariff').modal('show');
   $('#inputTariffName').val(TariffDefinition.Name);
   $('#inputTariffPeriods').val(TariffDefinition.DayPeriods);
   $('#inputTariffComments').val(TariffDefinition.Description);
-//  PopulatePeriodDropdown($('#btnTariffWeekend'));
-//  PopulatePeriodDropdown($('#btnTariffHoliday'));
-//elijo periodo si esta disponible
-//  $('#inputTariffPeriods').val(1);
-//  $('#inputTariffPeriods').val(1);
-//  if(HolidaysTable === null) {
-//        
-//  } else {
-//    HolidaysTable.clear();
-//  }
- 
-  $('#dlgTariff').modal('show');
-  //cargo lista de estaciones si hace falta
+  TariffDefinition.WeekendPeriod = PopulatePeriodDropdown($('#btnTariffWeekend'), TariffDefinition.DayPeriods, 'P', TariffDefinition.WeekendPeriod, "Don't apply");
+  TariffDefinition.HolidayPeriod = PopulatePeriodDropdown($('#btnTariffHoliday'), TariffDefinition.DayPeriods, 'P', TariffDefinition.HolidayPeriod, "Don't apply");
 }
-
-var HolidaysTable = null;
-var SeasonsTable  = null;
-var TariffDefinition = {};
-
-
-function AddSeasonRow(row) {
-  var RowText = '<tr>' +
-                '<td>' + row.Name + '</td>' +
-                '<td>' + new Date(row.StartDate).toDateString() + '</td>' +
-                '<td>' + new Date(row.EndDate).toDateString() + '</td>' +
-                '<td data-season="' + row.Name + '"><div class="btn-group">' +
-                  '<button type="button" class="btn btn-default btn-xs">Duplicate</button>' +
-                  '<button type="button" class="btn btn-default btn-xs">Edit</button>' +
-                  '<button type="button" class="btn btn-danger btn-xs">Delete</button>' +
-                '</div></td>' +
-                '</tr>';
-  SeasonsTable.row.add($(RowText)).draw();
-}
-$('#btnTariffSeasons').click(function() {
+var SeasonsTable = null;
+$('#btnTariffSeasons').click(LoadSeasons);
+function LoadSeasons() {
   $('#dlgTariff > div > div').addClass('hide');
   $('#divTariffSeasons').removeClass('hide');
   if(SeasonsTable === null) {
@@ -309,72 +314,81 @@ $('#btnTariffSeasons').click(function() {
   } else {
     SeasonsTable.clear();
   }
-  for(var i = 0; i < TariffDefinition.Seasons.length; i++) AddSeasonRow(TariffDefinition.Seasons[i]);
-  SeasonsTable.columns.adjust();
-});
-$('#SeasonsTable').on('click', 'button:nth-child(3)', function(event) {
-  var Name = $(this).parents('td').attr('data-season');
-  TariffDefinition
-  SeasonsTable.row($(this).parents('tr')).remove().draw();
+  for(var key in TariffDefinition.Seasons) {
+    var RowText = '<tr>' +
+                  '<td>' + key + '</td>' +
+                  '<td>' + moment(TariffDefinition.Seasons[key].StartDate).format('DD/MM HH:mm') + '</td>' +
+                  '<td>' + moment(TariffDefinition.Seasons[key].EndDate).format('DD/MM HH:mm') + '</td>' +
+                  '<td data-season="' + key + '"><div class="btn-group">' +
+                  '<button type="button" class="btn btn-default btn-xs">Duplicate</button>' +
+                  '<button type="button" class="btn btn-default btn-xs">Edit</button>' +
+                  '<button type="button" class="btn btn-danger btn-xs">Delete</button>' +
+                  '</div></td>' +
+                  '</tr>';
+    SeasonsTable.row.add($(RowText)).draw();
+  }
+  SeasonsTable.columns.adjust();  
+}
+var SeasonKey;
+$('#btnTariffSeasonsAdd').click(function() {
+  SeasonKey = null;
+  LoadSeasonDialog({ StartDate:  new Date(new Date().getFullYear(), 0, 1, 0, 0, 0, 0).getTime(), EndDate:  new Date(new Date().getFullYear(), 11, 31, 23, 59, 59, 999).getTime(), DayPeriods: new Array(24).fill(1) });
 });
 $('#SeasonsTable').on('click', 'button:nth-child(2)', function(event) {
-  var Name = $(this).parents('td').attr('data-season');
-  EditSeason(Name);
+  SeasonKey = $(this).parents('td').attr('data-season');
+  LoadSeasonDialog(Tariffs[TariffKey].Seasons[SeasonKey]);
 });
-$('#btnTariffSeasonsAdd').click(EditSeason);
-function EditSeason(name) {
+$('#SeasonsTable').on('click', 'button:nth-child(3)', function(event) {
+  delete Tariffs[TariffKey].Seasons[$(this).parents('td').attr('data-season')];
+  LoadSeasons();
+});
+$('#SeasonsTable').on('click', 'button:nth-child(1)', function(event) {
+  SeasonKey = null;
+  LoadSeasonDialog(Tariffs[TariffKey].Seasons[$(this).parents('td').attr('data-season')]);
+});
+function LoadSeasonDialog(season) {
   $('#dlgTariff > div > div').addClass('hide');
-  $('#hourlyRates').html("");
-  var Row;
-  if(typeof(name) !== 'string') {
-    Row = {Name: "No name", StartDate: 0, EndDate: 100, DayPeriods: new Array(24).fill(1) };
-  } else {
-    
-  }
+  $('#divTariffSeason').removeClass('hide');
+  $('#hourlyRates').html('');
+  $('#inputSeasonName').val((SeasonKey === null) ? 'No name' : SeasonKey);
+  $('#inputSeasonFrom').datetimepicker({ format: 'DD/MM/YYYY HH:mm:00', defaultDate: new Date(season.StartDate), sideBySide: true });
+  $('#inputSeasonTo').datetimepicker({ format: 'DD/MM/YYYY HH:mm:59', defaultDate: new Date(season.EndDate), sideBySide: true });
   for(var i = 0; i < 24; i++) {
     $('#hourlyRates').append('<div class="btn-group" style="margin: 4px 4px">' +
                              '  <div class="input-group input-group-xs">' +
                              '    <span class="input-group-addon">' + ("0" + i).slice(-2) + '</span>' +
                              '    <div class="input-group-btn">' +
-                             '      <button class="btn btn-default dropdown-toggle" type="button"data-toggle="dropdown"><span style="display: inline-block; width: 30px;">P1</span><span class="caret"></span></button>' +
+                             '      <button class="btn btn-default dropdown-toggle" type="button"data-toggle="dropdown" id="btnHour' + i + '"><span style="display: inline-block; width: 30px;">P1</span><span class="caret"></span></button>' +
                              '      <ul class="dropdown-menu pull-right">' +
-                             '        <li><a href="#">P1</a></li>' +
-                             '        <li><a href="#">P2</a></li>' +
-                             '        <li class="active"><a href="#">P3</a></li>' +
-                             '        <li class=""><a href="#">P4</a></li>' +
                              '      </ul>' +
                              '    </div>' +
                              '  </div>' +
                              '</div>');
-    
+    season.DayPeriods[i] = PopulatePeriodDropdown($('#btnHour' + i), Tariffs[TariffKey].DayPeriods, 'P', season.DayPeriods[i]);
+    $('#btnHour' + i + ' + ul li a').click(DropDownUpdateValue);
   }
-  
-  $('#divTariffSeason').removeClass('hide');
-  
-  
-  
 }
-
-
-
-$('#btnTariffSeasons').click(function() {
+$('#btnTariffSeasonBack').click(function() {
   $('#dlgTariff > div > div').addClass('hide');
   $('#divTariffSeasons').removeClass('hide');
-  if(SeasonsTable === null) {
-    SeasonsTable = $('#SeasonsTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [0, 1, 2], orderable: true }, { targets: [1, 2], className: 'text-center' }, { targets: [3], orderable: false } ], order: [1, 'asc']});
-  } else {
-    SeasonsTable.clear();
-  }
-  for(var i = 0; i < TariffDefinition.Seasons.length; i++) AddSeasonRow(TariffDefinition.Seasons[i]);
-  SeasonsTable.columns.adjust();
+  var Season = {};
+  Season.StartDate = $('#inputSeasonFrom').data("DateTimePicker").viewDate().utc().valueOf();
+  Season.EndDate = $('#inputSeasonTo').data("DateTimePicker").viewDate().utc().valueOf();
+  Season.DayPeriods = [];
+  for(var i = 0; i < 24; i++) Season.DayPeriods.push(DropdownValue($('#btnHour' + i)));
+  Tariffs[TariffKey].Seasons[$('#inputSeasonName').val()] = Season;
+  LoadSeasons();
 });
 
 
+var HolidaysTable = null;
 
 
 
-function PopulatePeriodDropdown(dropdown, selection) {
-}
+
+
+
+
 
 
 
@@ -388,10 +402,7 @@ $('#btnTariffHolidaysBack, #btnTariffSeasonsBack').click(function() {
   $('#dlgTariff > div > div').addClass('hide');
   $('#divTariffMain').removeClass('hide');
 });
-$('#btnTariffSeasonBack').click(function() {
-  $('#dlgTariff > div > div').addClass('hide');
-  $('#divTariffSeasons').removeClass('hide');
-});
+
 
 
 
@@ -443,7 +454,7 @@ $('#checkNTP').change(function() {
 function AjaxGetTimeZones() {
   $.ajax({ url: "getTimeSettings", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
     function(result) {
-      NTP_DateTimePicker = $('#inputCurrentTime').datetimepicker({ date: new Date(result.Time), format: 'dd/mm/yyyy hh:ii:ss', pickerPosition: "bottom-left", autoclose: true });
+      NTP_DateTimePicker = $('#inputCurrentTime').datetimepicker({ format: 'DD/MM/YYYY HH:mm:00', defaultDate: new Date(result.Time), sideBySide: true });
       $('#inputCurrentTime > input').attr('value', moment(new Date(result.Time)).format('DD/MM/YYYY HH:mm:ss'));
       $('#dropdownTimeZone span:first-child').text(result.TimeZone);
       $('#inputNTPServer').val(result.NTP_Server);

@@ -67,9 +67,9 @@ function Scrollable_UpdateCounters(times, renew) {
       Ajax.GetSeriesAggreg(times.SecondaryPeriod, times.SecondaryTo, times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)',
         function(result) {
           if(result['Samples'] !== 0) {
-            $('#labelVoltageAvgSecondaryValue').html(Array_Round2(result['avg_rms_v'], '&nbsp;') + '&nbsp;<em>V</em>');
-            $('#labelVoltageMinSecondaryValue').html(Array_Round2(result['min_rms_v'], '&nbsp;') + '&nbsp;<em>V</em>');
-            $('#labelVoltageMaxSecondaryValue').html(Array_Round2(result['max_rms_v'], '&nbsp;') + '&nbsp;<em>V</em>');
+            $('#labelVoltageAvgSecondaryValue').html(Array_Round2(result['avg_rms_v']) + '&nbsp;<em>V</em>');
+            $('#labelVoltageMinSecondaryValue').html(Array_Round2(result['min_rms_v']) + '&nbsp;<em>V</em>');
+            $('#labelVoltageMaxSecondaryValue').html(Array_Round2(result['max_rms_v']) + '&nbsp;<em>V</em>');
           } else {
             $('#labelVoltageAvgSecondaryValue, #labelVoltageMaxSecondaryValue, #labelVoltageMinSecondaryValue').text('No data'); 
           }
@@ -80,9 +80,9 @@ function Scrollable_UpdateCounters(times, renew) {
   }
   Ajax.GetSeriesAggreg(times.PrimaryPeriod, times.PrimaryTo, times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)', 
     function(result) {
-      $('#labelVoltageAvgPrimaryValue').html(Array_Round2(result['avg_rms_v'], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
-      $('#labelVoltageMinPrimaryValue').html(Array_Round2(result['min_rms_v'], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
-      $('#labelVoltageMaxPrimaryValue').html(Array_Round2(result['max_rms_v'], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
+      $('#labelVoltageAvgPrimaryValue').html(Array_Round2(result['avg_rms_v'], ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
+      $('#labelVoltageMinPrimaryValue').html(Array_Round2(result['min_rms_v'], ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
+      $('#labelVoltageMaxPrimaryValue').html(Array_Round2(result['max_rms_v'], ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
       window.dispatchEvent(new Event('resize'));
     }
   );

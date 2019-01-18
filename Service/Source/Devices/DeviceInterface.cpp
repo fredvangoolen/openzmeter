@@ -30,9 +30,6 @@ DeviceInterface::DeviceInterface() {
   pCaptureThread = 0;
   pState = UNCONFIGURED;
 }
-//DeviceInterface::~DeviceInterface() {
-//  Stop();
-//}
 void DeviceInterface::AddDevice(DeviceInterface* device) {
   if(pDevices.size() == 0) {
     HTTPServer::RegisterCallback("/getAnalyzers",        DeviceInterface::GetAnalyzersCallback);
@@ -50,12 +47,16 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
 }
 bool DeviceInterface::GetTariffsCallback(char* user, json_object* reader, Database* db, json_object** writer, char** postdata, size_t* resultLen) {
   char *Serial = NULL;
+  uint32_t Index = 0;
   json_object *Find;
   if((json_object_object_get_ex(reader, "Analyzer", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
+  if((json_object_object_get_ex(reader, "ID", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Index = json_object_get_int(Find);
   char QueryText[8192];
   int  QueryLen = 0;
   if(Serial == NULL) {
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT array_to_json(array_agg(row_to_json(t1))) FROM (  SELECT     rates.rate as \"RateID\", rates.name as \"Name\", rates.description as \"Description\", rates.country_code as \"Country\", rates.startdate as \"StartDate\", rates.enddate as \"EndDate\",    (select to_json(json_object_agg(q1.name, json_build_object('StarDate', q1.startdate, 'EndDate', q1.enddate, 'DayPeriods', q1.dayperiods))) from (select name, startdate, enddate, dayperiods from rates_seasons where rates.rate = rates_seasons.rate) as q1) as \"Seasons\" from rates) as t1");
+    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT to_json(array_agg(row_to_json(t1))) FROM (SELECT rate as \"RateID\", name as \"Name\", startdate as \"StartDate\", enddate as \"EndDate\", country_code as \"CountryCode\", username as \"Owner\" from rates) as t1;"  );    
+  
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT to_json(json_object_agg(t1.rate, json_build_object('Name', t1.name, 'Description', description, 'DayPeriods', day_periods, 'WeekendPeriod', weekend_period,\r\n'HolidayPeriod', holiday_period, 'Country', country_code, 'Year', year, 'Seasons', seasons))) FROM (\r\nSELECT rate, name, description, day_periods, weekend_period, holiday_period, country_code, year,\r\n(select to_json(json_object_agg(q1.name, json_build_object('StartDate', q1.startdate, 'EndDate', q1.enddate, 'DayPeriods', q1.dayperiods))) from (select name, startdate, enddate, dayperiods from rates_seasons where rates.rate = rates_seasons.rate) as q1) as \"seasons\" from rates) as t1");
   } else {
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT array_to_json(array_agg(row_to_json(Result))) FROM (SELECT rate as \"RateID\", startdate as \"StartDate\", name AS \"Name\", module AS \"Module\" FROM analyzers_rates NATURAL JOIN rates WHERE serial = '%s') as Result", Serial);
   }

@@ -95,13 +95,36 @@
             </div>
           </div>
           <div class="modal-body">
+            <div class="alert alert-danger text-center" id="divTariffError" style="display:none; margin: 0px 15px 15px 15px;">
+              Error!
+            </div>
             <div class="row">
               <div class="col-xs-12 col-sm-6">
                 <label class="control-label">Name</label>
                 <input type="text" class="form-control" id="inputTariffName">
               </div>
               <div class="col-xs-12 col-sm-6">
-                <label class="control-label">Max. day periods types</label>
+                <label class="control-label">Country/Zone</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" value="Spain" style="pointer-events: none" id="inputTariffCountry">
+                  <div class="input-group-btn-vertical">
+                    <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></button>
+                    <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xs-6">
+                <label class="control-label">Year</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" value="2019" style="pointer-events: none" id="inputTariffYear">
+                  <div class="input-group-btn-vertical">
+                    <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></button>
+                    <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xs-6">
+                <label class="control-label">Day periods</label>
                 <div class="input-group">
                   <input type="text" class="form-control" value="4" style="pointer-events: none" id="inputTariffPeriods">
                   <div class="input-group-btn-vertical">
@@ -119,12 +142,8 @@
                   <div class="input-group">
                     <span class="input-group-addon" style="width: 100%"><strong>Weekends as</strong></span>
                     <div class="input-group-btn">
-                      <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false" id="btnTariffWeekend"><span style="display: inline-block;width: 50px;">P1</span><span class="caret"></span></button>
+                      <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false" id="btnTariffWeekend"><span style="display: inline-block;width: 80px;"></span><span class="caret"></span></button>
                       <ul class="dropdown-menu pull-right">
-                        <li><a href="#">P1</a></li>
-                        <li><a href="#">P2</a></li>
-                        <li class="active"><a href="#">P3</a></li>
-                        <li class=""><a href="#">P4</a></li>
                       </ul>
                     </div>
                   </div>
@@ -135,12 +154,8 @@
                   <div class="input-group">
                     <span class="input-group-addon" style="width: 100%"><strong>Holidays as</strong></span>
                     <div class="input-group-btn">
-                      <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false" id="btnTariffHoliday"><span style="display: inline-block;width: 50px;">P1</span><span class="caret"></span></button>
+                      <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false" id="btnTariffHoliday"><span style="display: inline-block;width: 80px;"></span><span class="caret"></span></button>
                       <ul class="dropdown-menu pull-right">
-                        <li><a href="#">P1</a></li>
-                        <li><a href="#">P2</a></li>
-                        <li class="active"><a href="#">P3</a></li>
-                        <li class=""><a href="#">P4</a></li>
                       </ul>
                     </div>
                   </div>
@@ -198,15 +213,25 @@
             <div class="row">
               <div class="col-xs-12">
                 <label class="control-label">Name</label>
-                <input type="text" class="form-control" id="AnalyzerID">
+                <input type="text" class="form-control" id="inputSeasonName">
               </div>
               <div class="col-xs-12 col-sm-6">
                 <label class="control-label">From</label>
-                <input type="text" class="form-control" id="AnalyzerID">
+                <div class='input-group date' id='inputSeasonFrom'>
+                  <input type='text' class="form-control" style="pointer-events: none;"/>
+                  <span class="input-group-addon">
+                    <span class="glyphicon-calendar"></span>
+                  </span>
+                </div>
               </div>
               <div class="col-xs-12 col-sm-6">
                 <label class="control-label">To</label>
-                <input type="text" class="form-control" id="AnalyzerID">
+                <div class='input-group date' id='inputSeasonTo'>
+                  <input type='text' class="form-control" style="pointer-events: none;"/>
+                  <span class="input-group-addon">
+                    <span class="glyphicon-calendar"></span>
+                  </span>
+                </div>
               </div>
               <div class="col-xs-12">
                 <label class="control-label">Hourly rates</label>
@@ -239,9 +264,9 @@
     <script src="JS/dataTables.min.js"></script>
     <script src="JS/moment.min.js"></script>
     <script src="JS/moment-duration-format.min.js"></script>
-    <script src="Lib/moment-timezone.min.js"></script>
+    <script src="JS/moment-timezone.min.js"></script>
     <script src="JS/bootstrap-toggle.min.js"></script>
-    <script src="Lib/bootstrap-datetimepicker.min.js"></script>
+    <script src="JS/bootstrap-datetimepicker.min.js"></script>
     <script src="JS/openZmeter.js"></script>
     <script src="JS/openZmeter.Settings.js"></script>
   </body>

@@ -27,6 +27,11 @@ bool GetNewsCallback(char *user, json_object *reader, Database *db, json_object 
   *postdata = db->ExecSentenceJSON(Query, resultLen);
   return true;  
 }
+bool GetCountriesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+  uint64_t LastLogin;
+  *postdata = db->ExecSentenceJSON("SELECT array_to_json(array_agg(row_to_json(t1))) FROM (  select country_code as \"CountryCode\", country as \"Name\", currency as \"Currency\", timezone as \"TimeZone\" from country) as t1;", resultLen);
+  return true;  
+}
 int main(int argc, char** argv) {
   char *ConfigFile = (char*)"/etc/openZmeter.conf";
   bool  Daemonize  = false;
@@ -61,6 +66,7 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
   HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
   HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
+  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);
 
   HTTPServer::RegisterDefault("/Dashboard");
 //  HTTPServer::RegisterMapping("/Dashboard",            "/Main.html");
@@ -76,9 +82,7 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterMapping("/Stats/Costs",          "/Stats_Costs.html");
   HTTPServer::RegisterMapping("/Stats/Heatmap",        "/Stats_Heatmap.html");
   HTTPServer::RegisterMapping("/Stats/Distribution",   "/Stats_Distribution.html");
-  HTTPServer::RegisterMapping("/Settings/System",      "/Settings_System.html");
-  HTTPServer::RegisterMapping("/Settings/User",        "/Settings_User.html");
-  HTTPServer::RegisterMapping("/Settings/Tariffs",     "/Settings_Tariffs.html");  
+  HTTPServer::RegisterMapping("/Settings",             "/Settings.html");
   HTTPServer::RegisterMapping("/Help",                 "/Help.html");
 
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;

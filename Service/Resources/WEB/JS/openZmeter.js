@@ -7,7 +7,7 @@ var SpinnerOpts         = { lines: 10,  // The number of lines to draw
 /* offline.js configuration and tools */
 Offline.options = {requests: true};
 Offline.on('confirmed-down', function() { $('#OfflineDiv').css('display', 'inherit'); });
-Offline.on('confirmed-up',   function() {  $('#OfflineDiv').css('display', 'none'); });
+Offline.on('confirmed-up',   function() { $('#OfflineDiv').css('display', 'none'); });
                         
 /* Series names */
 var SeriesNames = {
@@ -723,10 +723,10 @@ function AddEvents(result, serieName, graph) {
   graph.setAnnotations(Events);
 }
 /* Convierte un array de floats a cadena con dos decimales, separados por el caracter dado y usando los colores que se pongan (añadiendo cadena1 si es negativo y cadena2 si positivo)*/
-function Array_Round2(values, separator, colors, cadena1, cadena2) {
+function Array_Round2(values, colors, cadena1, cadena2) {
   for(i = 0; i < values.length; i++) {
     if((colors !== undefined) && (colors[i] !== undefined)) {
-     var Text = '<div style="padding: 0px 2px; margin: 0px 5px; border-radius: 5px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]);
+     var Text = '<div style="padding: 3px 10px; margin: 0px 5px; border-radius: 3px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]);
      if((values[i] > 0) && (cadena2 !== undefined)) Text += cadena2;
      if((values[i] < 0) && (cadena1 !== undefined)) Text += cadena1;
      values[i] = Text + '</div>';
@@ -737,7 +737,7 @@ function Array_Round2(values, separator, colors, cadena1, cadena2) {
      values[i] = Text + '</div>';
    }
   }
-  return values.join(separator);
+  return values.join('');
 }
 
 /* Busca el mejor divisor y unidades para un valor de entrada, ya sea B, kB, MB o GB */

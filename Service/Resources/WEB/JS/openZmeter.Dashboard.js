@@ -19,7 +19,7 @@
 var VoltageChart = null, VoltageData = [], CurrentChart = null, CurrentData = [], PowerChart = null, PowerData = [], PowerChartUnits = '', FrequencyChart = null, FrequencyData = [];
 function PeriodView_OnSuccess(result) {
   VoltageData = GraphDataAppend(result, 'rms_v', VoltageData);
-  $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], '&nbsp;', ColorArray($('#VoltagePanel').css('border-color'), 3)));
+  $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], ColorArray($('#VoltagePanel').css('border-color'), 3)));
   $('#labelVoltageAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
   if(VoltageChart === null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
@@ -48,7 +48,7 @@ function PeriodView_OnSuccess(result) {
   for(var n = 0; n < SeriesNames.Voltage().length; n++) AddEvents(result, SeriesNames.Voltage()[n], VoltageChart);
   VoltageSeries();
   CurrentData = GraphDataAppend(result, 'rms_i', CurrentData);
-  $('#labelCurrent').html(Array_Round2(result['rms_i'][result['rms_i'].length - 1], '&nbsp;', ColorArray($('#CurrentPanel').css('border-color'), 4)));
+  $('#labelCurrent').html(Array_Round2(result['rms_i'][result['rms_i'].length - 1], ColorArray($('#CurrentPanel').css('border-color'), 4)));
   $('#CurrentAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
   if(CurrentChart === null) {
     CurrentChart = new Dygraph(document.getElementById("CurrentChart"), CurrentData,
@@ -78,7 +78,7 @@ function PeriodView_OnSuccess(result) {
   PowerData = GraphDataAppend(result, 'active_power', PowerData);
   PowerChartUnits = GetBestUnits(ArrayGraphMax(PowerData));
   $('#labelPowerUnits').text(PowerChartUnits + 'W');
-  $('#labelPower').html(Array_Round2(ScaleArrayToUnits(result['active_power'][result['active_power'].length - 1], PowerChartUnits), '&nbsp;&nbsp;', ColorArray($('#PowerPanel').css('border-color'), 3)));
+  $('#labelPower').html(Array_Round2(ScaleArrayToUnits(result['active_power'][result['active_power'].length - 1], PowerChartUnits), ColorArray($('#PowerPanel').css('border-color'), 3)));
   $('#PowerAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
   if(PowerChart === null) {
     PowerChart = new Dygraph(document.getElementById("PowerChart"), PowerData, 
@@ -103,7 +103,7 @@ function PeriodView_OnSuccess(result) {
   }
   PowerSeries();
   FrequencyData = GraphDataAppend(result, 'freq', FrequencyData);
-  $('#labelFrequency').html(Round2(result['freq'][result['freq'].length - 1]));
+  $('#labelFrequency').html(Array_Round2([result['freq'][result['rms_i'].length - 1]], ColorArray($('#FrequencyPanel').css('border-color'), 1)));
   $('#FrequencyAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
   if(FrequencyChart === null) {
     FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"), FrequencyData,
@@ -196,7 +196,7 @@ function Scrollable_UpdateCounters(times, renew) {
             var Sum = ArraySum(result['sum_active_energy']);
             var Units = GetBestUnits(Sum);
             var Text = Round2(ScaleToUnits(Sum, Units)) + '&nbsp;' + Units + 'Wh';
-            if(result['sum_active_energy'].length > 1) Text += '(' + Array_Round2(ScaleArrayToUnits(result['sum_active_energy'], Units), '&nbsp;&nbsp;') + ')';
+            if(result['sum_active_energy'].length > 1) Text += '(' + Array_Round2(ScaleArrayToUnits(result['sum_active_energy'], Units)) + ')';
             $('#labelEnergySecondaryValue').html(Text);
           } else {
             $('#labelEnergySecondaryValue').text('No data');
@@ -224,7 +224,7 @@ function Scrollable_UpdateCounters(times, renew) {
       var Units = GetBestUnits(Sum);
       $('#labelEnergyPrimaryValue').html(Round2(ScaleToUnits(Sum, Units)));
       $('#labelEnergyPrimaryUnits').text(Units + 'Wh');
-      if(result['sum_active_energy'].length > 1) $('#labelEnergyPrimaryPhases').html('By phases:&nbsp;&nbsp;' + Array_Round2(ScaleArrayToUnits(result['sum_active_energy'], Units), '&nbsp;&nbsp;') + '&nbsp;&nbsp;' + Units + 'Wh');
+      if(result['sum_active_energy'].length > 1) $('#labelEnergyPrimaryPhases').html('By phases:&nbsp;' + Array_Round2(ScaleArrayToUnits(result['sum_active_energy'], Units)) + '&nbsp;' + Units + 'Wh');
       window.dispatchEvent(new Event('resize'));
     }
   );

@@ -98,6 +98,7 @@ bool NTP::GetTimeSettingsCallback(char *user, json_object *reader, Database *db,
       strtok_r(Tmp, "\t", &Tmp);
       strtok_r(Tmp, "\t", &Tmp);
       char *Result = strtok_r(Tmp, "\t", &Tmp);
+      while((strlen(Result) > 0) && ((Result[strlen(Result) - 1] == '\n') || (Result[strlen(Result) - 1] == '\r'))) Result[strlen(Result) - 1] = 0;
       if(Result) json_object_array_add(Zones, json_object_new_string(Result));
     }
     if(Line != NULL) free(Line);
@@ -109,7 +110,7 @@ bool NTP::GetTimeSettingsCallback(char *user, json_object *reader, Database *db,
     char  *Line = NULL;
     size_t Len  = 0;
     if(getline(&Line, &Len, File) != -1) {
-      if((strlen(Line) > 0) && (Line[strlen(Line) - 1] == '\n')) Line[strlen(Line) - 1] = 0;
+      while((strlen(Line) > 0) && ((Line[strlen(Line) - 1] == '\n') || (Line[strlen(Line) - 1] == '\r'))) Line[strlen(Line) - 1] = 0;
       json_object_object_add(*writer, "TimeZone", json_object_new_string(Line));
     }
     if(Line != NULL) free(Line);
