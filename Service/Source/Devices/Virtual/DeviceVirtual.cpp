@@ -178,8 +178,10 @@ DeviceVirtual::~DeviceVirtual() {
   Tools::LogMsg("INFO", "Waiting for adquisition thread ends...\n");
   pthread_join(pCaptureThread, NULL);
   if(pAnalyzer) delete pAnalyzer;
+  pAnalyzer = NULL;
 }
 AnalyzerInterface *DeviceVirtual::FindAnalyzer(const char *serial) {
+  if(pAnalyzer == NULL) return NULL;
   return (strcmp(serial, pAnalyzer->GetID()) == 0) ? pAnalyzer : NULL;
 }
 //uint32_t DeviceVirtual::SamplesCopy(float **dest, uint32_t offset, uint32_t len) {

@@ -102,35 +102,28 @@ bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Data
 }
 bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
-  char    *Serial = NULL, *Aggreg = NULL, *Series = NULL;
-  AnalyzerInterface *Analyzer = NULL; 
-  json_object_object_foreach(reader, JSON_Key, JSON_Val) {
-    enum json_type JSON_Type = json_object_get_type(JSON_Val);
-    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
-      Series = (char*)json_object_get_string(JSON_Val);
-    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Aggreg") == 0))
-      Aggreg = (char*)json_object_get_string(JSON_Val);
-    else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Period") == 0))      
-      Period = json_object_get_int64(JSON_Val);
-    else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "To") == 0))
-      To = json_object_get_int64(JSON_Val);
-    else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastSample") == 0))
-      LastSample = json_object_get_int64(JSON_Val);
-    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Analyzer") == 0))
-      Serial = (char*)json_object_get_string(JSON_Val);
-  }
+  char    *Serial = NULL, *Aggreg = NULL;
+  AnalyzerInterface *Analyzer = NULL;
+  json_object *Series = NULL;
+  json_object *Find;
+  if((json_object_object_get_ex(reader, "Analyzer", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
+  if((json_object_object_get_ex(reader, "Aggreg", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Aggreg = (char*)json_object_get_string(Find);
+  if((json_object_object_get_ex(reader, "LastSample", &Find) == true) && (json_object_get_type(Find) == json_type_int)) LastSample = json_object_get_int64(Find);
+  if((json_object_object_get_ex(reader, "Period", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Period = json_object_get_int64(Find);
+  if((json_object_object_get_ex(reader, "To", &Find) == true) && (json_object_get_type(Find) == json_type_int)) To = json_object_get_int64(Find);
+  if((json_object_object_get_ex(reader, "Series", &Find) == true) && (json_object_get_type(Find) == json_type_array)) Series = Find;
   if(Serial == NULL) {
     *postdata  = (char*)"'Analyzer' param is requiered";
     *resultLen = strlen(*postdata);
     return false;
   }
   if(Series == NULL) {
-    *postdata  = (char*)"'Series' param is requiered";
+    *postdata  = (char*)"Series must be an array of valid serie names";
     *resultLen = strlen(*postdata);
     return false;
   }
   if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0))) {
-    *postdata  = (char*)"'Aggreg' need to be '3s', '1m', '10m' or '1h'";
+    *postdata  = (char*)"'Aggreg' need to be '3s', '1m', '10m', '15m' or '1h'";
     *resultLen = strlen(*postdata);
     return false;
   }
@@ -149,7 +142,7 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
   int  QueryLen = 0;
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
-  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\", ", To); 
+  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\", ", To);
   uint32_t MaxPoints = 100000, PeriodSeconds = 3000;
   if(strcmp(Aggreg, "1m")  == 0) PeriodSeconds = 60000;
   if(strcmp(Aggreg, "10m") == 0) PeriodSeconds = 600000;
@@ -171,9 +164,13 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
   db->ExecSentence();
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"MaxSamples\", ", (To - From) / PeriodSeconds);
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'%s' AS \"Aggregation_Source\", ", Aggreg);
-  char *Save;
-  char *Serie = Tools::trim(strtok_r(Series, ", ", &Save));
-  while(Serie != NULL) {
+  for(uint i = 0; i < json_object_array_length(Series); i++) {
+    if(json_object_get_type(json_object_array_get_idx(Series, i)) != json_type_string) {
+      *postdata  = (char*)"Series must be an array of valid serie names";
+      *resultLen = strlen(*postdata);
+      return false;
+    }
+    char *Serie = (char*)json_object_get_string(json_object_array_get_idx(Series, i));
     int ArrayLenA = 0, ArrayLenB = 0;
     if((strcmp(Serie, "rms_v") == 0) || (strcmp(Serie, "active_power") == 0) || (strcmp(Serie, "active_energy") == 0) || (strcmp(Serie, "reactive_power") == 0) || (strcmp(Serie, "reactive_energy") == 0)) {
       ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : 3;
@@ -209,13 +206,12 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
     } else {
       QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(%s ORDER BY sampletime ASC), '{}') AS %s, ", Serie, Serie);
     }
-    Serie = Tools::trim(strtok_r(NULL, ", ", &Save));
   }
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS \"Sampletime\" FROM ");
   if(strcmp(Aggreg, "1m") == 0) {
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m) AS Tmp");
-  } else if(strcmp(Aggreg, "1h") == 0) {
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1h NATURAL LEFT JOIN aggreg_stat_1h NATURAL FULL JOIN prices) AS Tmp");
+//  } else if(strcmp(Aggreg, "1h") == 0) {
+//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1h NATURAL LEFT JOIN aggreg_stat_1h NATURAL FULL JOIN prices) AS Tmp");
   } else {
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "aggreg_%s", Aggreg);
   }

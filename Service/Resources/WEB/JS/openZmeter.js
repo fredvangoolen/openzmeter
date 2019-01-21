@@ -44,15 +44,15 @@ var Ajax = {
 };
 /* Short aggreg to period */
 function GetPeriodFromAggreg(aggreg) {
-  return (aggreg === '1h') ? 3600000 : (aggreg === '10m') ? 600000 : (aggreg === '1m') ? 60000 : 3000;
+  return (aggreg === '1h') ? 3600000 : (aggreg === '15m') ? 900000 : (aggreg === '10m') ? 600000 : (aggreg === '1m') ? 60000 : 3000;
 }
 /* Return full text from aggregation short name */
 function GetAggregLongName(shortText) {
-  return (shortText === '1h') ? '1 hour' : (shortText === '10m') ? '10 minutes' : (shortText === '1m') ? '1 minute' : (shortText === '3s') ? '3 seconds' : false;
+  return (shortText === '1h') ? '1 hour' : (shortText === '15m') ? '15 minutes' : (shortText === '10m') ? '10 minutes' : (shortText === '1m') ? '1 minute' : (shortText === '3s') ? '3 seconds' : false;
 }
 /* Return short name from full aggregation text*/
 function GetAggregShortName(longText) {
-  return (longText === '1 hour') ? '1h' : (longText === '10 minutes') ? '10m' : (longText === '1 minute') ? '1m' : (longText === '3 seconds') ? '3s' : false;
+  return (longText === '1 hour') ? '1h' : (longText === '15 minutes') ? '15m' : (longText === '10 minutes') ? '10m' : (longText === '1 minute') ? '1m' : (longText === '3 seconds') ? '3s' : false;
 }
 /* Return period name from MS time */
 function GetPeriodNameFromMS(elapsed) {
@@ -373,7 +373,7 @@ function GraphTools(title, graph, toolbar, resizeHandler, exportFunction) {
   this.Toolbar = toolbar;
   var Self = this;
   Self.DialogResizeHandler = function() {
-    ((typeof(Self.Graph) === 'function') ? Self.Graph() : Self.Graph).resize($('#MaximizeDialogBody').width(), $('#MaximizeDialogContents').height() - 90);
+    ((typeof(Self.Graph) === 'function') ? Self.Graph() : Self.Graph).resize($('#MaximizeDialogBody').width(), $('#MaximizeDialogContents').height() - 70);
   }
   $(Self.Toolbar + ' button[data-function="Maximize"]').click(function(evt) {
     if($('#dlgMaximizeDialog').hasClass('in')) {

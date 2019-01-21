@@ -148,7 +148,11 @@ $('#groupPowerPhases').on('click', 'button', PowerSeries);
 var EnergyData = [], EnergyChart = null;
 function Scrollable_OnSuccess(result, clear) {
   if(clear) EnergyData = [new Array(SeriesNames.ActiveEnergy().length + 1).fill(0)];
-  EnergyData = GraphDataAppend(result, 'active_energy', EnergyData);
+  for(var i = 0; i < result['active_power']; i++) {
+    for(var n = 0; n < result['active_power'][i]; n++) result['active_power'][i][n] = result['active_power'][i][n] * ((result['Aggregation_Source'] === '1h') ? 1.0 : 0.25);
+    
+  }
+  EnergyData = GraphDataAppend(result, 'active_power', EnergyData);
   if(EnergyChart === null) {
     EnergyChart = new Dygraph(document.getElementById("EnergyChart"), EnergyData,
       { strokeWidth: 0.5, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], plotter: barChartNoSpacedPlotter, stackedGraphNaNFill: 'none',
@@ -284,8 +288,8 @@ function Live_OnSuccess(result) {
 $('#groupParametersPhases').on('click', 'button', ParametersSeries);
 var MainScrollable = null;
 function UpdatePage() {
-  MainScrollable = new Scrollable( {Spinners: ['#EnergySpinner'], NowBtn: '#toolbarEnergy button[data-function="Update"]', Series: 'active_energy', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
+  MainScrollable = new Scrollable( {Spinners: ['#EnergySpinner'], NowBtn: '#toolbarEnergy button[data-function="Update"]', Series: ['active_power'], OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
   new Live( { NowBtn: undefined, RefreshInterval: 5000, Spinners: [], Series: 'active_power, reactive_power, power_factor, phi, thd_v, thd_i', OnSuccess: Live_OnSuccess});
-  new PeriodView( {Spinners: ['#VoltageSpinner', '#CurrentSpinner', '#PowerSpinner', '#FrequencySpinner'], Series: 'rms_v, flag, rms_i, active_power, freq', Period: 7200000, Aggreg: '3s', OnSuccess: PeriodView_OnSuccess} );
-  new PeriodView( {Spinners: ['#MainParametersSpinner'], Series: 'active_power, reactive_power, power_factor, phi, thd_v, thd_i', Period: 86400000, Aggreg: '1m', OnSuccess: PeriodViewParams_OnSuccess} );
+  new PeriodView( {Spinners: ['#VoltageSpinner', '#CurrentSpinner', '#PowerSpinner', '#FrequencySpinner'], Series: ['rms_v', 'flag', 'rms_i', 'active_power', 'freq'], Period: 7200000, Aggreg: '3s', OnSuccess: PeriodView_OnSuccess} );
+  new PeriodView( {Spinners: ['#MainParametersSpinner'], Series: ['active_power', 'reactive_power', 'power_factor', 'phi', 'thd_v', 'thd_i'], Period: 86400000, Aggreg: '1m', OnSuccess: PeriodViewParams_OnSuccess} );
 }

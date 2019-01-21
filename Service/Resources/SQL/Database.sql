@@ -6,13 +6,6 @@ CREATE TABLE IF NOT EXISTS country(
   currency      character varying
 ) WITH (OIDS=FALSE);
 
-CREATE TABLE IF NOT EXISTS holidays(
-  country_code  character varying NOT NULL REFERENCES country(country_code) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,
-  description   text              NOT NULL,
-  startdate     bigint            NOT NULL,
-  enddate       bigint            NOT NULL
-) WITH (OIDS=FALSE);
-
 CREATE TABLE IF NOT EXISTS users(
   username      character varying  NOT NULL PRIMARY KEY,
   password      character varying  NOT NULL,
@@ -39,7 +32,7 @@ CREATE INDEX IF NOT EXISTS sessions_timestamp_idx ON sessions USING btree (times
 CREATE TABLE IF NOT EXISTS analyzers(
   serial    character varying NOT NULL PRIMARY KEY,
   username  character varying NOT NULL REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE,
-  cups      character varying NOT NULL,
+  contract  character varying NOT NULL,
   zipcode   character varying NOT NULL,
   frequency real              NOT NULL,
   voltage   real              NOT NULL,

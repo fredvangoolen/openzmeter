@@ -56,14 +56,6 @@ CREATE TABLE IF NOT EXISTS aggreg_ext_1m (
   harmonics_i real[] NOT NULL
 ) WITH (OIDS=FALSE);
 
-CREATE TABLE IF NOT EXISTS aggreg_stat_1h (
-  sampletime bigint NOT NULL PRIMARY KEY REFERENCES aggreg_1h(sampletime) ON UPDATE CASCADE ON DELETE CASCADE,
-  stat_voltage int[] NOT NULL,
-  stat_frequency int[] NOT NULL,
-  stat_thd int[] NOT NULL,
-  stat_harmonics int[] NOT NULL
-) WITH (OIDS=FALSE);
-
 CREATE TABLE IF NOT EXISTS events (
   starttime bigint NOT NULL PRIMARY KEY, 
   duration  bigint NOT NULL, 

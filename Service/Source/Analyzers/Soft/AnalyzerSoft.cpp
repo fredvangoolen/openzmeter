@@ -312,36 +312,36 @@ void AnalyzerSoft::GetParams(Params_t &params, ParamsType &copy) {
     if(copy & RMS_V) params.RMS_V.assign(pAggreg10C.RMS_V.begin(), pAggreg10C.RMS_V.end());
     if(copy & RMS_I) params.RMS_I.assign(pAggreg10C.RMS_I.begin(), pAggreg10C.RMS_I.end());
     if(copy & ACTIVE_POWER) params.Active_Power.assign(pAggreg10C.Active_Power.begin(), pAggreg10C.Active_Power.end());
-//    if(reactive_power) params.Reactive_Power.assign(pAggreg10C.Reactive_Power.begin(), pAggreg10C.Reactive_Power.end());
-//    if(active_energy) params.Active_Energy.assign(pAggreg10C.Active_Energy.begin(), pAggreg10C.Active_Energy.end());
+    if(copy & REACTIVE_POWER) params.Reactive_Power.assign(pAggreg10C.Reactive_Power.begin(), pAggreg10C.Reactive_Power.end());
+    if(copy & ACTIVE_ENERGY) params.Active_Energy.assign(pAggreg10C.Active_Energy.begin(), pAggreg10C.Active_Energy.end());
 //    if(reactive_energy) params.Reactive_Energy.assign(pAggreg10C.Reactive_Energy.begin(), pAggreg10C.Reactive_Energy.end());
 //    if(apparent_power) params.Apparent_Power.assign(pAggreg10C.Apparent_Power.begin(), pAggreg10C.Apparent_Power.end());
 //    if(power_factor) params.Power_Factor.assign(pAggreg10C.Power_Factor.begin(), pAggreg10C.Power_Factor.end());
 //    if(thd_v) params.THD_V.assign(pAggreg10C.THD_V.begin(), pAggreg10C.THD_V.end());
 //    if(thd_i) params.THD_I.assign(pAggreg10C.THD_I.begin(), pAggreg10C.THD_I.end());
-//    if(phi) params.Phi.assign(pAggreg10C.Phi.begin(), pAggreg10C.Phi.end());
-//    if(voltage_harmonics) {
-//      for(uint i = 0; i < params.VoltageHarmonics.size(); i++) params.VoltageHarmonics[i].assign(pAggreg10C.VoltageHarmonics[i].begin(), pAggreg10C.VoltageHarmonics[i].end());
-//    }
-//    if(current_harmonics) {
-//      for(uint i = 0; i < params.CurrentHarmonics.size(); i++) params.CurrentHarmonics[i].assign(pAggreg10C.CurrentHarmonics[i].begin(), pAggreg10C.CurrentHarmonics[i].end());
-//    }
-//    if(fft_v) {
-//      for(uint i = 0; i < params.FFT_V.size(); i++) {
-//        for(uint n = 0; n < pVoltageFFT[i]->Output.size(); n++) params.FFT_V[i].push_back(pVoltageFFT[i]->BinPower(n));
-//      }
-//    }
-//    if(fft_i) {
-//      for(uint i = 0; i < params.FFT_I.size(); i++) {
-//        for(uint n = 0; n < pCurrentFFT[i]->Output.size(); n++) params.FFT_I[i].push_back(pCurrentFFT[i]->BinPower(n));
-//      }
-//    }
-//    if(voltage) {
-//      for(uint i = 0; i < params.Voltage.size(); i++) params.Voltage[i].assign(pAggreg10C.Voltage[i].begin(), pAggreg10C.Voltage[i].end());
-//    }
-//    if(current) {
-//      for(uint i = 0; i < params.Current.size(); i++) params.Current[i].assign(pAggreg10C.Current[i].begin(), pAggreg10C.Current[i].end());
-//    }
+    if(copy & PHI) params.Phi.assign(pAggreg10C.Phi.begin(), pAggreg10C.Phi.end());
+    if(copy & HARMONICS_V) {
+      for(uint i = 0; i < params.VoltageHarmonics.size(); i++) params.VoltageHarmonics[i].assign(pAggreg10C.VoltageHarmonics[i].begin(), pAggreg10C.VoltageHarmonics[i].end());
+    }
+    if(copy & HARMONICS_I) {
+      for(uint i = 0; i < params.CurrentHarmonics.size(); i++) params.CurrentHarmonics[i].assign(pAggreg10C.CurrentHarmonics[i].begin(), pAggreg10C.CurrentHarmonics[i].end());
+    }
+    if(copy & FFT_V) {
+      for(uint i = 0; i < params.FFT_V.size(); i++) {
+        for(uint n = 0; n < pVoltageFFT[i]->Output.size(); n++) params.FFT_V[i].push_back(pVoltageFFT[i]->BinPower(n));
+      }
+    }
+    if(copy & FFT_I) {
+      for(uint i = 0; i < params.FFT_I.size(); i++) {
+        for(uint n = 0; n < pCurrentFFT[i]->Output.size(); n++) params.FFT_I[i].push_back(pCurrentFFT[i]->BinPower(n));
+      }
+    }
+    if(copy & VOLTAGE) {
+      for(uint i = 0; i < params.Voltage.size(); i++) params.Voltage[i].assign(pAggreg10C.Voltage[i].begin(), pAggreg10C.Voltage[i].end());
+    }
+    if(copy & CURRENT) {
+      for(uint i = 0; i < params.Current.size(); i++) params.Current[i].assign(pAggreg10C.Current[i].begin(), pAggreg10C.Current[i].end());
+    }
   }
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads--;

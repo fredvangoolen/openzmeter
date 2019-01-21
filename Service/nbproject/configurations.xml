@@ -121,12 +121,7 @@
             <pElem>Resources/WEB/Lib/datatables/js</pElem>
             <pElem>Resources/WEB/Lib/datatables/images</pElem>
             <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
             <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
             <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
             <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
@@ -155,6 +150,12 @@
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Tariffs</pElem>
+            <pElem>Tmp/Source/Tariffs/Spain</pElem>
+            <pElem>Tmp/Source/Tariffs/ESIOS</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -204,12 +205,7 @@
             <pElem>Resources/WEB/Lib/datatables/js</pElem>
             <pElem>Resources/WEB/Lib/datatables/images</pElem>
             <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
             <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
             <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
             <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
@@ -273,12 +269,7 @@
             <pElem>Resources/WEB/Lib/datatables/js</pElem>
             <pElem>Resources/WEB/Lib/datatables/images</pElem>
             <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
             <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
             <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
             <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
@@ -306,6 +297,13 @@
             <pElem>Source/Tariffs/ESIOS</pElem>
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Tariffs</pElem>
+            <pElem>Tmp/Source/Tariffs/Spain</pElem>
+            <pElem>Tmp/Source/Tariffs/ESIOS</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -367,12 +365,7 @@
             <pElem>Resources/WEB/Lib/datatables/js</pElem>
             <pElem>Resources/WEB/Lib/datatables/images</pElem>
             <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
             <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
             <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
             <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
@@ -436,12 +429,7 @@
             <pElem>Resources/WEB/Lib/datatables/js</pElem>
             <pElem>Resources/WEB/Lib/datatables/images</pElem>
             <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
             <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
             <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
             <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
@@ -502,12 +490,7 @@
             <pElem>Resources/WEB/Lib/datatables/js</pElem>
             <pElem>Resources/WEB/Lib/datatables/images</pElem>
             <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
             <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
             <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
             <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
@@ -571,12 +554,7 @@
             <pElem>Resources/WEB/Lib/datatables/js</pElem>
             <pElem>Resources/WEB/Lib/datatables/images</pElem>
             <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
             <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
             <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
             <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
@@ -640,12 +618,7 @@
             <pElem>Resources/WEB/Lib/datatables/js</pElem>
             <pElem>Resources/WEB/Lib/datatables/images</pElem>
             <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
             <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
             <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
             <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
@@ -709,12 +682,7 @@
             <pElem>Resources/WEB/Lib/datatables/js</pElem>
             <pElem>Resources/WEB/Lib/datatables/images</pElem>
             <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
             <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
             <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
             <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
@@ -820,12 +788,7 @@
             <pElem>Resources/WEB/Lib/datatables/js</pElem>
             <pElem>Resources/WEB/Lib/datatables/images</pElem>
             <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
             <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
             <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
             <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
@@ -975,12 +938,7 @@
             <pElem>Resources/WEB/Lib/datatables/js</pElem>
             <pElem>Resources/WEB/Lib/datatables/images</pElem>
             <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
             <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
             <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
             <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
@@ -1011,7 +969,10 @@
             <pElem>Tmp/Source/Devices</pElem>
             <pElem>Tmp/Source/Devices/Virtual</pElem>
             <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
             <pElem>Tmp/Source/Tariffs</pElem>
+            <pElem>Tmp/Source/Tariffs/Spain</pElem>
+            <pElem>Tmp/Source/Tariffs/ESIOS</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -1372,12 +1333,7 @@
             <pElem>Resources/WEB/Lib/datatables/js</pElem>
             <pElem>Resources/WEB/Lib/datatables/images</pElem>
             <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
             <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
             <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
             <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
@@ -1406,8 +1362,12 @@
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
             <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
             <pElem>Tmp/Source/Tariffs</pElem>
+            <pElem>Tmp/Source/Tariffs/Spain</pElem>
+            <pElem>Tmp/Source/Tariffs/ESIOS</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -1443,12 +1403,7 @@
             <pElem>Resources/WEB/Lib/datatables/js</pElem>
             <pElem>Resources/WEB/Lib/datatables/images</pElem>
             <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/fonts</pElem>
-            <pElem>Resources/WEB/Lib/font-awesome/css</pElem>
             <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap</pElem>
-            <pElem>Resources/WEB/Lib/bootstrap/fonts</pElem>
             <pElem>Resources/WEB/Lib/bootstrap-year-calendar</pElem>
             <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>

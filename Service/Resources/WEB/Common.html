@@ -59,7 +59,19 @@
         <li><a href="#">3 seconds</a></li>
         <li><a href="#">1 minute</a></li>
         <li><a href="#">10 minutes</a></li>
-        <li class="active"><a href="#">1 hour</a></li>
+        <li><a href="#">1 hour</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div id="ScrollableAggregEnergy_Block">
+  <div class="input-group input-group-xs">
+    <span class="input-group-addon"><img src="Imgs/clock_15.png"/></span>
+    <div class="input-group-btn">
+      <button class="btn btn-default dropdown-toggle" type="button" id="btnScrollableAggreg" data-toggle="dropdown"><span style="display: inline-block; width: 56px; text-align: left;">1 hour</span><span class="caret"></span></button>
+      <ul class="dropdown-menu pull-right">
+        <li><a href="#">15 minutes</a></li>
+        <li><a href="#">1 hour</a></li>
       </ul>
     </div>
   </div>
@@ -231,10 +243,10 @@
       </li>
       <li>
         <a href="javascript:;" data-sidenav-dropdown-toggle>
-          <span class="sidenav-link-icon"><i class="fa fa-search-plus fa-fw"></i></span>
+          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/draw_wave.png"></span>
           <span class="sidenav-link-title">Analysis</span>
-          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><i class="fa fa-caret-down"></i></span>
-          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><i class="fa fa-caret-up"></i></span>
+          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_down.png"></span>
+          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_up.png"></span>          
         </a>
         <ul class="sidenav-dropdown" data-sidenav-dropdown>
           <li><a href="Analysis/Voltage">Voltage</a></li>
@@ -246,10 +258,10 @@
       </li>
       <li>
         <a href="javascript:;" data-sidenav-dropdown-toggle>
-          <span class="sidenav-link-icon"><i class="fa fa-exclamation-triangle fa-fw"></i></span>
+          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/warning.png"></span>
           <span class="sidenav-link-title">Events</span>
-          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><i class="fa fa-caret-down"></i></span>
-          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><i class="fa fa-caret-up"></i></span>
+          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_down.png"></span>
+          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_up.png"></span>
         </a>
         <ul class="sidenav-dropdown" data-sidenav-dropdown>
           <li><a href="Events/ITIC">ITIC</a></li>
@@ -259,10 +271,10 @@
       </li>
       <li>
         <a href="javascript:;" data-sidenav-dropdown-toggle>
-          <span class="sidenav-link-icon"><i class="fa fa-bar-chart-o fa-fw"></i></span>
+          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/table_money.png"></span>
           <span class="sidenav-link-title">Energy Stats</span>
-          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><i class="fa fa-caret-down"></i></span>
-          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><i class="fa fa-caret-up"></i></span>
+          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_down.png"></span>
+          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_up.png"></span>
         </a>
         <ul class="sidenav-dropdown" data-sidenav-dropdown>
           <li><a href="Stats/Costs">Costs</a></li>
@@ -285,6 +297,17 @@
         </a>
       </li>
     </ul>
+    
+    
+    
+    
+    <div class="sidenav-version"><span>Build 21-01-2018</span>
+      <div class="btn-group pull-right">
+        <button type="button" class="btn btn-default btn-xs navbar-btn" id="btnSearchAnalyzer">
+          <img src="Imgs/newspaper.png">
+        </button>
+      </div>
+    </div>
   </nav>
   
   <div class="modal" id="dlgAnalyzers" tabindex="1" role="dialog" data-backdrop='static'>

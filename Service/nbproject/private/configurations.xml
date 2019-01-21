@@ -47,12 +47,6 @@
             </df>
             <df name="dygraph">
             </df>
-            <df name="font-awesome">
-              <df name="css">
-              </df>
-              <df name="fonts">
-              </df>
-            </df>
             <df name="jquery.lineProgressbar">
             </df>
             <df name="qtip2">
@@ -201,12 +195,6 @@
               </df>
             </df>
             <df name="dygraph">
-            </df>
-            <df name="font-awesome">
-              <df name="css">
-              </df>
-              <df name="fonts">
-              </df>
             </df>
             <df name="jquery.lineProgressbar">
             </df>

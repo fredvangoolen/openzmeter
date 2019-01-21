@@ -4,17 +4,17 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <base href="/">
-    <link rel="shortcut icon" href="favicon.ico"/>
+    <link rel="shortcut icon" href="Imgs/favicon.ico"/>
     <title>openZmeter - Analysys - Frequency</title>
-    <script src="lib/pace.min.js"></script>
-    <link rel="stylesheet" href="lib/pace.min.css">
-    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css"/>
-    <link rel="stylesheet" href="lib/datatables/css/dataTables.bootstrap.css" />
-    <link rel="stylesheet" href="lib/sidenav/sidenav.min.css"/>
-    <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.css"/>
-    <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
-    <link rel="stylesheet" href="lib/offline.min.css" type="text/css"/>
-    <link rel="stylesheet" href="openZmeter.css"/>
+    <script src="JS/pace.min.js"></script>
+    <link rel="stylesheet" href="CSS/pace.min.css">
+    <link rel="stylesheet" href="CSS/bootstrap.min.css"/>
+    <link rel="stylesheet" href="CSS/dataTables.min.css" />
+    <link rel="stylesheet" href="CSS/sidenav.min.css"/>
+    <!--link rel="stylesheet" href="lib/font-awesome/css/font-awesome.css"/-->
+    <!--link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/-->
+    <link rel="stylesheet" href="CSS/offline.min.css" type="text/css"/>
+    <link rel="stylesheet" href="CSS/openZmeter.css"/>
   </head>
   <body onload="StartPageLoad()">
     <span data-load-block="Header_Block"></span>
@@ -40,17 +40,17 @@
               <div class="row">
                 <div class="col-md-6 col-lg-4 col-xl-3">
                   <div class="subpanel">
-                    <div class="huge-small" id="labelFrequencyAvgPrimary">Loading data...</div>
+                    <h4 class="huge-small" id="labelFrequencyAvgPrimary">Loading data...</h4>
                     <div class="huge-small" id="labelFrequencyAvgPrimaryValue">?</div>
                     <div><span id="labelFrequencyAvgSecondary">Loading data...</span>&nbsp;<span id="labelFrequencyAvgSecondaryValue"></span></div>
                   </div>
                   <div class="subpanel">
-                    <div class="huge-small" id="labelFrequencyMaxPrimary">Loading data...</div>
+                    <h4 class="huge-small" id="labelFrequencyMaxPrimary">Loading data...</h4>
                     <div class="huge-small" id="labelFrequencyMaxPrimaryValue">?</div>
                     <div><span id="labelFrequencyMaxSecondary">Loading data...</span>&nbsp;<span id="labelFrequencyMaxSecondaryValue"></span></div>
                   </div>
                   <div class="subpanel">
-                    <div class="huge-small" id="labelFrequencyMinPrimary">Loading data...</div>
+                    <h4 class="huge-small" id="labelFrequencyMinPrimary">Loading data...</h4>
                     <div class="huge-small" id="labelFrequencyMinPrimaryValue">?</div>
                     <div><span id="labelFrequencyMinSecondary">Loading data...</span>&nbsp;<span id="labelFrequencyMinSecondaryValue"></span></div>
                   </div>
@@ -66,24 +66,19 @@
         </div>
       </div>
     </div>
-    <script src="lib/jquery.min.js"></script>
-    <script src="lib/bootstrap/js/bootstrap.min.js"></script>
-    <script src="lib/sidenav/sidenav.min.js"></script>
-    <script src="lib/spin.min.js"></script>
-    <script src="lib/dygraph/dygraph.min.js"></script>
-    <script src="lib/dygraph/crosshair.js"></script>
-    <script src="lib/dygraph/dygraph-interaction.js"></script>
-    <script src="lib/offline.min.js"></script>
-    <script src="lib/moment.min.js"></script>
-    <script src="lib/momentjs/moment-duration-format.js"></script>
-    <script src="lib/datatables/js/jquery.dataTables.js"></script>
-    <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
-    <script src="openZmeter.js"></script>
-    <script src="Analysis_Frequency.js"></script>
+    <script src="JS/jquery.min.js"></script>
+    <script src="JS/bootstrap.min.js"></script>
+    <script src="JS/sidenav.min.js"></script>
+    <script src="JS/spin.min.js"></script>
+    <script src="Lib/dygraph/dygraph.min.js"></script>
+    <script src="Lib/dygraph/crosshair.js"></script>
+    <script src="Lib/dygraph/dygraph-interaction.js"></script>
+    <script src="JS/offline.min.js"></script>
+    <script src="JS/moment.min.js"></script>
+    <script src="JS/moment-duration-format.min.js"></script>
+    <script src="JS/dataTables.min.js"></script>
+    <script src="JS/chroma.min.js"></script>
+    <script src="JS/openZmeter.js"></script>
+    <script src="JS/openZmeter.Analysis_Frequency.js"></script>
   </body>
 </html>
-
-echo 1 > /proc/sys/net/ipv4/ip_forward
-iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
-iptables -A FORWARD -i eth1 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
-iptables -A FORWARD -i wlan0 -o eth1 -j ACCEPT

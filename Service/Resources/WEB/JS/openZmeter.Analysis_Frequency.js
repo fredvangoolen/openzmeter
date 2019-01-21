@@ -80,14 +80,14 @@ function Scrollable_UpdateCounters(times, renew) {
   }
   Ajax.GetSeriesAggreg(times.PrimaryPeriod, times.PrimaryTo, times.PreferedAggreg, 'avg(freq), max(freq), min(freq)', 
     function FrequencyUpdateCountersCurrent(result) {
-      $('#labelFrequencyAvgPrimaryValue').html(Round2(result['avg_freq']) + '&nbsp;<em class="huge-small-unit">Hz</em>');
-      $('#labelFrequencyMaxPrimaryValue').html(Round2(result['max_freq']) + '&nbsp;<em class="huge-small-unit">Hz</em>');
-      $('#labelFrequencyMinPrimaryValue').html(Round2(result['min_freq']) + '&nbsp;<em class="huge-small-unit">Hz</em>');
+      $('#labelFrequencyAvgPrimaryValue').html(Array_Round2([result['avg_freq']], ColorArray($('#FrequencyPanel').css('border-color'), 1)) + '<em class="huge-small-unit">Hz</em>');
+      $('#labelFrequencyMaxPrimaryValue').html(Array_Round2([result['max_freq']], ColorArray($('#FrequencyPanel').css('border-color'), 1)) + '<em class="huge-small-unit">Hz</em>');
+      $('#labelFrequencyMinPrimaryValue').html(Array_Round2([result['min_freq']], ColorArray($('#FrequencyPanel').css('border-color'), 1)) + '<em class="huge-small-unit">Hz</em>');
       window.dispatchEvent(new Event('resize'));
     }
   );
 }
 var MainScrollable = null;
 function UpdatePage() {
-  MainScrollable = new Scrollable( {Spinners: ['#FrequencySpinner'], NowBtn: '#toolbarFrequency button[data-function="Update"]', Series: 'freq', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters} );
+  MainScrollable = new Scrollable( {Spinners: ['#FrequencySpinner'], NowBtn: '#toolbarFrequency button[data-function="Update"]', Series: ['freq'], OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters} );
 }//426
