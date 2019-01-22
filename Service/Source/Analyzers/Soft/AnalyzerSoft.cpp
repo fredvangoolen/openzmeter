@@ -314,11 +314,12 @@ void AnalyzerSoft::GetParams(Params_t &params, ParamsType &copy) {
     if(copy & ACTIVE_POWER) params.Active_Power.assign(pAggreg10C.Active_Power.begin(), pAggreg10C.Active_Power.end());
     if(copy & REACTIVE_POWER) params.Reactive_Power.assign(pAggreg10C.Reactive_Power.begin(), pAggreg10C.Reactive_Power.end());
     if(copy & ACTIVE_ENERGY) params.Active_Energy.assign(pAggreg10C.Active_Energy.begin(), pAggreg10C.Active_Energy.end());
-//    if(reactive_energy) params.Reactive_Energy.assign(pAggreg10C.Reactive_Energy.begin(), pAggreg10C.Reactive_Energy.end());
-//    if(apparent_power) params.Apparent_Power.assign(pAggreg10C.Apparent_Power.begin(), pAggreg10C.Apparent_Power.end());
-//    if(power_factor) params.Power_Factor.assign(pAggreg10C.Power_Factor.begin(), pAggreg10C.Power_Factor.end());
-//    if(thd_v) params.THD_V.assign(pAggreg10C.THD_V.begin(), pAggreg10C.THD_V.end());
-//    if(thd_i) params.THD_I.assign(pAggreg10C.THD_I.begin(), pAggreg10C.THD_I.end());
+    if(copy & REACTIVE_ENERGY) params.Reactive_Energy.assign(pAggreg10C.Reactive_Energy.begin(), pAggreg10C.Reactive_Energy.end());
+    if(copy & APPARENT_POWER) params.Apparent_Power.assign(pAggreg10C.Apparent_Power.begin(), pAggreg10C.Apparent_Power.end());
+    if(copy & POWER_FACTOR) params.Power_Factor.assign(pAggreg10C.Power_Factor.begin(), pAggreg10C.Power_Factor.end());
+    if(copy & THD_V) params.THD_V.assign(pAggreg10C.THD_V.begin(), pAggreg10C.THD_V.end());
+    if(copy & THD_I) params.THD_I.assign(pAggreg10C.THD_I.begin(), pAggreg10C.THD_I.end());
+    if(copy & PHASE_V) params.Phase_V.assign(pAggreg10C.Phase_V.begin(), pAggreg10C.Phase_V.end());
     if(copy & PHI) params.Phi.assign(pAggreg10C.Phi.begin(), pAggreg10C.Phi.end());
     if(copy & HARMONICS_V) {
       for(uint i = 0; i < params.VoltageHarmonics.size(); i++) params.VoltageHarmonics[i].assign(pAggreg10C.VoltageHarmonics[i].begin(), pAggreg10C.VoltageHarmonics[i].end());

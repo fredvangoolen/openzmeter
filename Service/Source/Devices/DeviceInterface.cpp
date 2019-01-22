@@ -47,10 +47,10 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
 }
 bool DeviceInterface::GetTariffsCallback(char* user, json_object* reader, Database* db, json_object** writer, char** postdata, size_t* resultLen) {
   char *Serial = NULL;
-  uint32_t Index = 0;
+//  uint32_t Index = 0;
   json_object *Find;
   if((json_object_object_get_ex(reader, "Analyzer", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
-  if((json_object_object_get_ex(reader, "ID", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Index = json_object_get_int(Find);
+//  if((json_object_object_get_ex(reader, "ID", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Index = json_object_get_int(Find);
   char QueryText[8192];
   int  QueryLen = 0;
   if(Serial == NULL) {
@@ -122,8 +122,8 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
     *resultLen = strlen(*postdata);
     return false;
   }
-  if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0))) {
-    *postdata  = (char*)"'Aggreg' need to be '3s', '1m', '10m', '15m' or '1h'";
+  if((Aggreg == NULL) || ((strcmp(Aggreg, "3S") != 0) && (strcmp(Aggreg, "1M") != 0) && (strcmp(Aggreg, "10M") != 0) && (strcmp(Aggreg, "15M") != 0) && (strcmp(Aggreg, "1H") != 0))) {
+    *postdata  = (char*)"'Aggreg' need to be '3S', '1M', '10M', '15M' or '1H'";
     *resultLen = strlen(*postdata);
     return false;
   }
@@ -138,27 +138,21 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
   }
   if(To == 0) To = Tools::GetTime();
   From = To - Period;
+  uint32_t PeriodSeconds = 3000;
+  if(strcmp(Aggreg, "1M")  == 0) PeriodSeconds = 60000;
+  if(strcmp(Aggreg, "10M") == 0) PeriodSeconds = 600000;
+  if(strcmp(Aggreg, "15M") == 0) PeriodSeconds = 900000;
+  if(strcmp(Aggreg, "1H")  == 0) PeriodSeconds = 3600000;
+  if((Period / PeriodSeconds) > 100000) {
+    *postdata  = (char*)"Returned period to large for this aggregation level";
+    *resultLen = strlen(*postdata);
+    return false;
+  }  
   char QueryText[8192];
   int  QueryLen = 0;
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\", ", To);
-  uint32_t MaxPoints = 100000, PeriodSeconds = 3000;
-  if(strcmp(Aggreg, "1m")  == 0) PeriodSeconds = 60000;
-  if(strcmp(Aggreg, "10m") == 0) PeriodSeconds = 600000;
-  if(strcmp(Aggreg, "1h")  == 0) PeriodSeconds = 3600000;
-  if((strcmp(Aggreg, "3s") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
-    Aggreg = (char*)"1m";
-    PeriodSeconds = 60000;
-  } 
-  if((strcmp(Aggreg, "1m") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
-    Aggreg = (char*)"10m";
-    PeriodSeconds = 600000;
-  } 
-  if((strcmp(Aggreg, "10m") == 0) && ((Period / PeriodSeconds) > MaxPoints)) {
-    Aggreg = (char*)"1h";
-    PeriodSeconds = 3600000;
-  }
   db->PrepareSentence("SET search_path TO ?");
   db->BindSingleString(Serial);
   db->ExecSentence();
@@ -171,44 +165,45 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
       return false;
     }
     char *Serie = (char*)json_object_get_string(json_object_array_get_idx(Series, i));
-    int ArrayLenA = 0, ArrayLenB = 0;
-    if((strcmp(Serie, "rms_v") == 0) || (strcmp(Serie, "active_power") == 0) || (strcmp(Serie, "active_energy") == 0) || (strcmp(Serie, "reactive_power") == 0) || (strcmp(Serie, "reactive_energy") == 0)) {
-      ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : 3;
-    } else if((strcmp(Aggreg, "1m") == 0) && ((strcmp(Serie, "power_factor") == 0) || (strcmp(Serie, "thd_v") == 0) || (strcmp(Serie, "phi") == 0))) {
-      ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : 3;
-    } else if((strcmp(Serie, "freq") == 0) || (strcmp(Serie, "flag") == 0)) {
-    } else if(strcmp(Serie, "rms_i") == 0) {
-      ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : (Analyzer->GetMode() == AnalyzerInterface::PHASE3) ? 3 : 4;
-    } else if((strcmp(Aggreg, "1m") == 0) && (strcmp(Serie, "thd_i") == 0)) { 
-      ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : (Analyzer->GetMode() == AnalyzerInterface::PHASE3) ? 3 : 4;
-    } else if((strcmp(Aggreg, "1h") == 0) && (strcmp(Serie, "price") == 0)) {
-    } else if((strcmp(Aggreg, "1m") == 0) && (strcmp(Serie, "harmonics_v") == 0)) {
-      ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : 3;
-      ArrayLenB = 50;
-    } else if((strcmp(Aggreg, "1m") == 0) && (strcmp(Serie, "harmonics_i") == 0)) {
-      ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : (Analyzer->GetMode() == AnalyzerInterface::PHASE3) ? 3 : 4;
-      ArrayLenB = 50;
-
-
-    } else if((strcmp(Aggreg, "1m") == 0) && ((strcmp(Serie, "stat_voltage") == 0) || (strcmp(Serie, "stat_frequency") == 0) || (strcmp(Serie, "stat_thd") == 0) || (strcmp(Serie, "stat_harmonics") == 0))) {
-      ArrayLenA = (Analyzer->GetMode() == AnalyzerInterface::PHASE1) ? 1 : (Analyzer->GetMode() == AnalyzerInterface::PHASE3) ? 3 : 4;
-      ArrayLenB = 50;
-    } else if((strcmp(Aggreg, "1h") == 0) && (strcmp(Serie, "price") == 0)) {
+    if((strcmp(Serie, "FREQUENCY") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "10M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(freq ORDER BY sampletime ASC), '{}') AS \"Frequency\", ");
+    } else if((strcmp(Serie, "FLAG") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "10M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(flag ORDER BY sampletime ASC), '{}') AS \"Flag\", ");
+    } else if((strcmp(Serie, "RMS_V") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "10M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(rms_v ORDER BY sampletime ASC), '{}') AS \"RMS_V\", ");
+    } else if((strcmp(Serie, "RMS_I") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "10M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(rms_i ORDER BY sampletime ASC), '{}') AS \"RMS_I\", ");
+    } else if((strcmp(Serie, "ACTIVE_POWER") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "15M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(active_power ORDER BY sampletime ASC), '{}') AS \"Active_Power\", ");
+    } else if((strcmp(Serie, "REACTIVE_POWER") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "15M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(reactive_power ORDER BY sampletime ASC), '{}') AS \"Reactive_Power\", ");
+    } else if((strcmp(Serie, "POWER_FACTOR") == 0) && (strcmp(Aggreg, "1M") == 0)) {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(power_factor ORDER BY sampletime ASC), '{}') AS \"Power_Factor\", ");
+    } else if((strcmp(Serie, "THD_V") == 0) && (strcmp(Aggreg, "1M") == 0)) {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(thd_v ORDER BY sampletime ASC), '{}') AS \"THD_V\", ");
+    } else if((strcmp(Serie, "THD_I") == 0) && (strcmp(Aggreg, "1M") == 0)) {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(thd_i ORDER BY sampletime ASC), '{}') AS \"THD_I\", ");
+    } else if((strcmp(Serie, "PHI") == 0) && (strcmp(Aggreg, "1M") == 0)) {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(phi ORDER BY sampletime ASC), '{}') AS \"Phi\", ");
+    } else if((strcmp(Serie, "HARMONICS_V") == 0) && (strcmp(Aggreg, "1M") == 0)) {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(harmonics_v ORDER BY sampletime ASC), '{}') AS \"Harmonics_V\", ");
+    } else if((strcmp(Serie, "HARMONICS_I") == 0) && (strcmp(Aggreg, "1M") == 0)) {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(harmonics_i ORDER BY sampletime ASC), '{}') AS \"Harmonics_I\", ");
     } else {
       *postdata  = (char*)"Invalid serie in selected aggregation";
       *resultLen = strlen(*postdata);
       return false;
     }
-    if((ArrayLenA != 0) && (ArrayLenB == 0)) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(CASE WHEN (%s IS NULL OR array_length(%s, 1) <> %d) THEN array_fill(NULL::real, array[%d]) ELSE %s END ORDER BY sampletime ASC), '{}') AS %s, ", Serie, Serie, ArrayLenA, ArrayLenA, Serie, Serie);
-    } else if((ArrayLenA != 0) && (ArrayLenB != 0)) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(CASE WHEN (%s IS NULL OR array_length(%s, 1) <> %d OR array_length(%s, 2) <> %d) THEN array_fill(NULL::real, array[%d, %d]) ELSE %s END ORDER BY sampletime ASC), '{}') AS %s, ", Serie, Serie, ArrayLenA, Serie, ArrayLenB, ArrayLenA, ArrayLenB, Serie, Serie);
-    } else {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(%s ORDER BY sampletime ASC), '{}') AS %s, ", Serie, Serie);
-    }
+//    if((ArrayLenA != 0) && (ArrayLenB == 0)) {
+//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(CASE WHEN (%s IS NULL OR array_length(%s, 1) <> %d) THEN array_fill(NULL::real, array[%d]) ELSE %s END ORDER BY sampletime ASC), '{}') AS %s, ", Serie, Serie, ArrayLenA, ArrayLenA, Serie, Serie);
+//    } else if((ArrayLenA != 0) && (ArrayLenB != 0)) {
+//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(CASE WHEN (%s IS NULL OR array_length(%s, 1) <> %d OR array_length(%s, 2) <> %d) THEN array_fill(NULL::real, array[%d, %d]) ELSE %s END ORDER BY sampletime ASC), '{}') AS %s, ", Serie, Serie, ArrayLenA, Serie, ArrayLenB, ArrayLenA, ArrayLenB, Serie, Serie);
+//    } else {
+//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(%s ORDER BY sampletime ASC), '{}') AS %s, ", Serie, Serie);
+//    }
   }
   QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS \"Sampletime\" FROM ");
-  if(strcmp(Aggreg, "1m") == 0) {
+  if(strcmp(Aggreg, "1M") == 0) {
     QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m) AS Tmp");
 //  } else if(strcmp(Aggreg, "1h") == 0) {
 //    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1h NATURAL LEFT JOIN aggreg_stat_1h NATURAL FULL JOIN prices) AS Tmp");
@@ -294,31 +289,27 @@ bool DeviceInterface::GetSeriesAggregCallback(char *user, json_object *reader, D
   return true;
 }
 bool DeviceInterface::GetSeriesNowCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
-  char *Serial = NULL, *Series = NULL;
-  json_object_object_foreach(reader, JSON_Key, JSON_Val) {
-    enum json_type JSON_Type = json_object_get_type(JSON_Val);
-    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
-      Series = (char*)json_object_get_string(JSON_Val);
-    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Analyzer") == 0))
-      Serial = (char*)json_object_get_string(JSON_Val);
-  }
+  char *Serial = NULL;
+  json_object *Series = NULL;
+  json_object *Find;
+  if((json_object_object_get_ex(reader, "Analyzer", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
+  if((json_object_object_get_ex(reader, "Series", &Find) == true) && (json_object_get_type(Find) == json_type_array)) Series = Find;
   if(Serial == NULL) {
     *postdata  = (char*)"'Analyzer' param is requiered";
     *resultLen = strlen(*postdata);
     return false;
   }
   if(Series == NULL) {
-    *postdata  = (char*)"'Series' param is requiered";
+    *postdata  = (char*)"Series must be an array of valid serie names";
     *resultLen = strlen(*postdata);
     return false;
   }
   for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
     AnalyzerInterface *Analyzer = (*it)->FindAnalyzer(Serial);
-    if(Analyzer != NULL) {
-      *writer = Analyzer->GetJSONParams(Series);
-      *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
-      return true;
-    }      
+    if(Analyzer == NULL) continue;
+    *writer = Analyzer->GetJSONParams(Series);
+    *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
+    return true;
   }
   return false;
 }

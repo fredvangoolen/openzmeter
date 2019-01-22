@@ -44,15 +44,15 @@ var Ajax = {
 };
 /* Short aggreg to period */
 function GetPeriodFromAggreg(aggreg) {
-  return (aggreg === '1h') ? 3600000 : (aggreg === '15m') ? 900000 : (aggreg === '10m') ? 600000 : (aggreg === '1m') ? 60000 : 3000;
+  return (aggreg === '1H') ? 3600000 : (aggreg === '15M') ? 900000 : (aggreg === '10M') ? 600000 : (aggreg === '1M') ? 60000 : 3000;
 }
 /* Return full text from aggregation short name */
 function GetAggregLongName(shortText) {
-  return (shortText === '1h') ? '1 hour' : (shortText === '15m') ? '15 minutes' : (shortText === '10m') ? '10 minutes' : (shortText === '1m') ? '1 minute' : (shortText === '3s') ? '3 seconds' : false;
+  return (shortText === '1H') ? '1 hour' : (shortText === '15M') ? '15 minutes' : (shortText === '10M') ? '10 minutes' : (shortText === '1M') ? '1 minute' : (shortText === '3S') ? '3 seconds' : false;
 }
 /* Return short name from full aggregation text*/
 function GetAggregShortName(longText) {
-  return (longText === '1 hour') ? '1h' : (longText === '15 minutes') ? '15m' : (longText === '10 minutes') ? '10m' : (longText === '1 minute') ? '1m' : (longText === '3 seconds') ? '3s' : false;
+  return (longText === '1 hour') ? '1H' : (longText === '15 minutes') ? '15M' : (longText === '10 minutes') ? '10M' : (longText === '1 minute') ? '1M' : (longText === '3 seconds') ? '3S' : false;
 }
 /* Return period name from MS time */
 function GetPeriodNameFromMS(elapsed) {
@@ -70,7 +70,7 @@ function GetYearTimePeriod() {
   Result.PrimaryPeriod = Result.PrimaryTo - new Date(now.getFullYear(), 1, 1, 0, 0, 0, 0).getTime();
   Result.SecondaryTo = new Date(now.getFullYear(), 1, 0, 23, 59, 59, 999).getTime();;
   Result.SecundaryPeriod = Result.SecondaryTo - new Date(now.getFullYear() - 1, 1, 1, 0, 0, 0, 0).getTime();
-  Result.PreferedAggreg = '1h';
+  Result.PreferedAggreg = '1H';
   Result.PrimaryText = 'This year';
   Result.SecondaryText = 'Previous year';
   return Result;
@@ -83,7 +83,7 @@ function GetMonthTimePeriod() {
   Result.PrimaryPeriod = Result.PrimaryTo - new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0).getTime();
   Result.SecondaryTo = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999).getTime();;
   Result.SecundaryPeriod = Result.SecondaryTo - new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0).getTime();
-  Result.PreferedAggreg = '10m';
+  Result.PreferedAggreg = '10M';
   Result.PrimaryText = 'This month';
   Result.SecondaryText = 'Previous month';
   return Result;
@@ -96,7 +96,7 @@ function GetWeekTimePeriod() {
   Result.PrimaryTo = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7 - ((now.getDay() === 0) ? 6 : now.getDay() - 1), 23, 59, 59, 999).getTime();
   Result.SecundaryPeriod = Result.PrimaryPeriod;
   Result.SecondaryTo = Result.PrimaryTo - Result.PrimaryPeriod;
-  Result.PreferedAggreg = '1m';
+  Result.PreferedAggreg = '1M';
   Result.PrimaryText = 'This week';
   Result.SecondaryText = 'Previous week';
   return Result;
@@ -109,7 +109,7 @@ function GetDayTimePeriod() {
   Result.PrimaryTo = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
   Result.SecondaryPeriod = Result.PrimaryPeriod;
   Result.SecondaryTo = Result.PrimaryTo - Result.PrimaryPeriod;
-  Result.PreferedAggreg = '1m';
+  Result.PreferedAggreg = '1M';
   Result.PrimaryText = 'Today';
   Result.SecondaryText = 'Yesterday';
   return Result;
@@ -123,7 +123,7 @@ function GetDayTimePeriod() {
 function Scrollable(opt) {
   this.LastSample = 0;
   this.Timer = null;
-  this.Opt = Object.assign({NowBtn: '#btnScrollableNow', AggregBtn: '#btnScrollableAggreg', PeriodBtn: '#btnScrollablePeriod', Spinners: [], Series: ''}, opt);
+  this.Opt = Object.assign({NowBtn: '#btnScrollableNow', AggregBtn: '#btnScrollableAggreg', PeriodBtn: '#btnScrollablePeriod', Spinners: [], Series: '', AggregVariable: 'GraphAggregation'}, opt);
   this.Range = [0, 0];
   this.CountersTimes = null;
   var Self = this;
@@ -153,21 +153,21 @@ function Scrollable(opt) {
   });
   $(Self.Opt.AggregBtn + ' + ul li a').click(function(event) {
     event.preventDefault();
-    localStorage.setItem('GraphAggregation', GetAggregShortName($(this).text()));
+    localStorage.setItem(Self.Opt.AggregVariable, GetAggregShortName($(this).text()));
     Self.LastSample = 0;
     Self.GetSeries();
   });
   Self.GetCountersTimePeriod = function(name) {
     if(parseInt(localStorage.getItem('GraphEnd')) === 0) {
-      if(name === 'Year')  return Object.assign(GetYearTimePeriod(),  { PreferedAggreg: localStorage.getItem('GraphAggregation') });
-      if(name === 'Month') return Object.assign(GetMonthTimePeriod(), { PreferedAggreg: localStorage.getItem('GraphAggregation') });
-      if(name === 'Week')  return Object.assign(GetWeekTimePeriod(),  { PreferedAggreg: localStorage.getItem('GraphAggregation') });
-      if(name === 'Day')   return Object.assign(GetDayTimePeriod(),   { PreferedAggreg: localStorage.getItem('GraphAggregation') });
+      if(name === 'Year')  return Object.assign(GetYearTimePeriod(),  { PreferedAggreg: localStorage.getItem(Self.Opt.AggregVariable) });
+      if(name === 'Month') return Object.assign(GetMonthTimePeriod(), { PreferedAggreg: localStorage.getItem(Self.Opt.AggregVariable) });
+      if(name === 'Week')  return Object.assign(GetWeekTimePeriod(),  { PreferedAggreg: localStorage.getItem(Self.Opt.AggregVariable) });
+      if(name === 'Day')   return Object.assign(GetDayTimePeriod(),   { PreferedAggreg: localStorage.getItem(Self.Opt.AggregVariable) });
     }
     var Result = {};
     Result.PrimaryPeriod = parseInt(localStorage.getItem('GraphPeriod'));
     Result.PrimaryTo = parseInt(localStorage.getItem('GraphEnd'));
-    Result.PreferedAggreg = localStorage.getItem('GraphAggregation');
+    Result.PreferedAggreg = localStorage.getItem(Self.Opt.AggregVariable);
     Result.PrimaryText = 'Displayed period';
     if(Result.PrimaryTo === 0) {
       Result.SecondaryText = 'Last ' + moment.duration(Result.PrimaryPeriod / 1000, "seconds").format("d [days] h [hours] m [minutes]");
@@ -200,12 +200,12 @@ function Scrollable(opt) {
       Self.CountersTimes = Times;
     }
     if(Self.Opt.Series !== 'Prices') {
-      var GraphAggregation = localStorage.getItem('GraphAggregation');
+      var GraphAggregation = localStorage.getItem(Self.Opt.AggregVariable);
       if(GraphAggregation !== result['Aggregation_Source']) {
         $('#dlgAggregWarning').modal('show');
         GraphAggregation = result['Aggregation_Source'];
       }
-      localStorage.setItem('GraphAggregation', GraphAggregation);
+      localStorage.setItem(Self.Opt.AggregVariable, GraphAggregation);
     }      
     var GraphEnd = parseInt(localStorage.getItem('GraphEnd'));
     if(GraphEnd === 0) {
@@ -230,10 +230,10 @@ function Scrollable(opt) {
       GraphEnd = 0;
       localStorage.setItem('GraphEnd', 0);
     }
-    var GraphAggregation = localStorage.getItem('GraphAggregation');
+    var GraphAggregation = localStorage.getItem(Self.Opt.AggregVariable);
     if(!GraphAggregation || (GetAggregLongName(GraphAggregation) === false)) {
-      GraphAggregation = '10m';
-      localStorage.setItem('GraphAggregation', GraphAggregation);
+      GraphAggregation = '1H';
+      localStorage.setItem(Self.Opt.AggregVariable, GraphAggregation);
     }
     if(Self.Opt.Series === 'Prices') {
       Ajax.GetPrices(Period, GraphEnd, Self.LastSample,
@@ -311,7 +311,7 @@ function Live(opt) {
 function PeriodView(opt) {
   this.LastSample = 0;
   this.Timer = null;
-  this.Opt = Object.assign({Spinners: [], Series: '', Period: 86400000, Aggreg: '1m'}, opt);
+  this.Opt = Object.assign({Spinners: [], Series: '', Period: 86400000, Aggreg: '1M'}, opt);
   var Self = this;
   Self.GetSeries = function() {
     Ajax.GetSeries(Self.Opt.Period, 0, Self.Opt.Aggreg, Self.LastSample, Self.Opt.Series, 
@@ -323,7 +323,7 @@ function PeriodView(opt) {
         Self.LastSample = LastSampletime(result, Self.LastSample);
       },
       function() {
-        if(Self.Opt.Aggreg === '3s') {
+        if(Self.Opt.Aggreg === '3S') {
           Self.Timer = setTimeout(Self.GetSeries, 3000);
         } else {
           Self.Timer = setTimeout(Self.GetSeries, 60000);
@@ -711,7 +711,7 @@ function LegendFormatter_Follow(data) {
 function AddEvents(result, serieName, graph) {
   var Events = graph.annotations();
   for(i = 0; i < result['Sampletime'].length; i++) {
-    if(result['flag'][i] === false) continue;
+    if(result['Flag'][i] === false) continue;
     var EventID = {
       series: serieName,
       xval: result['Sampletime'][i],
@@ -811,22 +811,22 @@ function Round2Plain(value) {
 
 /* Update header info periodicaly */
 function GetIndicators() {
-  Ajax.GetSeriesNow('rms_v, rms_i, active_power, freq', 
+  Ajax.GetSeriesNow(['RMS_V', 'RMS_I', 'ACTIVE_POWER', 'FREQUENCY'], 
     function(result) {
       var Time = new Date(result['Sampletime']);
       $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
       $('#IndicatorVoltageValues').html("");
-      for(i = 0; i < result['rms_v'].length; i++) {
+      for(i = 0; i < result['RMS_V'].length; i++) {
         $('#IndicatorVoltageValues').append('<span class="value">' + Round2(result['rms_v'][i]) + '</span>');
       }
       $('#IndicatorCurrentValues').html("");
-      for(i = 0; i < result['rms_v'].length; i++) {
+      for(i = 0; i < result['RMS_I'].length; i++) {
         $('#IndicatorCurrentValues').append('<span class="value">' + Round2(result['rms_i'][i]) + '</span>');
       }
       $('#IndicatorActivePowerValues').html("");
       var Units = GetBestUnits(ArrayMax(result['active_power']));
       $('#IndicatorActivePowerUnits').text(Units + "W");
-      result['active_power'] = ScaleArrayToUnits(result['active_power'], Units);
+      result['Active_Power'] = ScaleArrayToUnits(result['active_power'], Units);
       for(i = 0; i < result['active_power'].length; i++) {
         $('#IndicatorActivePowerValues').append('<span class="value">' + Round2(result['active_power'][i]) + '</span>');
       }

@@ -18,8 +18,8 @@
 
 var VoltageChart = null, VoltageData = [], CurrentChart = null, CurrentData = [], PowerChart = null, PowerData = [], PowerChartUnits = '', FrequencyChart = null, FrequencyData = [];
 function PeriodView_OnSuccess(result) {
-  VoltageData = GraphDataAppend(result, 'rms_v', VoltageData);
-  $('#labelVoltage').html(Array_Round2(result['rms_v'][result['rms_v'].length - 1], ColorArray($('#VoltagePanel').css('border-color'), 3)));
+  VoltageData = GraphDataAppend(result, 'RMS_V', VoltageData);
+  $('#labelVoltage').html(Array_Round2(result['RMS_V'][result['RMS_V'].length - 1], ColorArray($('#VoltagePanel').css('border-color'), 3)));
   $('#labelVoltageAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
   if(VoltageChart === null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
@@ -47,8 +47,8 @@ function PeriodView_OnSuccess(result) {
   }
   for(var n = 0; n < SeriesNames.Voltage().length; n++) AddEvents(result, SeriesNames.Voltage()[n], VoltageChart);
   VoltageSeries();
-  CurrentData = GraphDataAppend(result, 'rms_i', CurrentData);
-  $('#labelCurrent').html(Array_Round2(result['rms_i'][result['rms_i'].length - 1], ColorArray($('#CurrentPanel').css('border-color'), 4)));
+  CurrentData = GraphDataAppend(result, 'RMS_I', CurrentData);
+  $('#labelCurrent').html(Array_Round2(result['RMS_I'][result['RMS_I'].length - 1], ColorArray($('#CurrentPanel').css('border-color'), 4)));
   $('#CurrentAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
   if(CurrentChart === null) {
     CurrentChart = new Dygraph(document.getElementById("CurrentChart"), CurrentData,
@@ -75,14 +75,14 @@ function PeriodView_OnSuccess(result) {
     CurrentChart.updateOptions({'file': CurrentData, dateWindow: [result['From'], result['To']]});
   }
   CurrentSeries();
-  PowerData = GraphDataAppend(result, 'active_power', PowerData);
+  PowerData = GraphDataAppend(result, 'Active_Power', PowerData);
   PowerChartUnits = GetBestUnits(ArrayGraphMax(PowerData));
   $('#labelPowerUnits').text(PowerChartUnits + 'W');
-  $('#labelPower').html(Array_Round2(ScaleArrayToUnits(result['active_power'][result['active_power'].length - 1], PowerChartUnits), ColorArray($('#PowerPanel').css('border-color'), 3)));
+  $('#labelPower').html(Array_Round2(ScaleArrayToUnits(result['Active_Power'][result['Active_Power'].length - 1], PowerChartUnits), ColorArray($('#PowerPanel').css('border-color'), 3)));
   $('#PowerAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
   if(PowerChart === null) {
     PowerChart = new Dygraph(document.getElementById("PowerChart"), PowerData, 
-      { strokeWidth: 0.5, stepPlot: true, /*stackedGraph: true, */drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
+      { strokeWidth: 0.5, stepPlot: true, stackedGraph: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
         legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.ActivePower()), colors: ColorArray($('#PowerPanel').css('border-color'), 3), dateWindow: [result['From'], result['To']],
         axes: {
@@ -102,8 +102,8 @@ function PeriodView_OnSuccess(result) {
     PowerChart.updateOptions({file: PowerData, dateWindow: [result['From'], result['To']]});
   }
   PowerSeries();
-  FrequencyData = GraphDataAppend(result, 'freq', FrequencyData);
-  $('#labelFrequency').html(Array_Round2([result['freq'][result['rms_i'].length - 1]], ColorArray($('#FrequencyPanel').css('border-color'), 1)));
+  FrequencyData = GraphDataAppend(result, 'Frequency', FrequencyData);
+  $('#labelFrequency').html(Array_Round2([result['Frequency'][result['Frequency'].length - 1]], ColorArray($('#FrequencyPanel').css('border-color'), 1)));
   $('#FrequencyAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
   if(FrequencyChart === null) {
     FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"), FrequencyData,
@@ -148,11 +148,10 @@ $('#groupPowerPhases').on('click', 'button', PowerSeries);
 var EnergyData = [], EnergyChart = null;
 function Scrollable_OnSuccess(result, clear) {
   if(clear) EnergyData = [new Array(SeriesNames.ActiveEnergy().length + 1).fill(0)];
-  for(var i = 0; i < result['active_power']; i++) {
-    for(var n = 0; n < result['active_power'][i]; n++) result['active_power'][i][n] = result['active_power'][i][n] * ((result['Aggregation_Source'] === '1h') ? 1.0 : 0.25);
-    
+  for(var i = 0; i < result['Active_Power']; i++) {
+    for(var n = 0; n < result['Active_Power'][i]; n++) result['Active_Power'][i][n] = result['Active_Power'][i][n] * ((result['Aggregation_Source'] === '1h') ? 1.0 : 0.25);
   }
-  EnergyData = GraphDataAppend(result, 'active_power', EnergyData);
+  EnergyData = GraphDataAppend(result, 'Active_Power', EnergyData);
   if(EnergyChart === null) {
     EnergyChart = new Dygraph(document.getElementById("EnergyChart"), EnergyData,
       { strokeWidth: 0.5, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], plotter: barChartNoSpacedPlotter, stackedGraphNaNFill: 'none',
@@ -245,12 +244,12 @@ function Scrollable_UpdateCounters(times, renew) {
 var ActiveChart = null, ReactiveChart = null, ActiveData = [], ReactiveData = [], PowerFactorChart = null, PowerFactorData = [], PhiChart = null, PhiData = [], THDVChart = null, THDVData = [], THDIChart = null, THDIData = [];
 function PeriodViewParams_OnSuccess(result) {
   $('#labelParametersAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
-  ActiveData = GraphDataAppend(result, 'active_power', ActiveData);
-  ReactiveData = GraphDataAppend(result, 'reactive_power', ReactiveData);
-  PowerFactorData = GraphDataAppend(result, 'power_factor', PowerFactorData);
-  PhiData  = GraphDataAppend(result, 'phi', PhiData);
-  THDVData = GraphDataAppend(result, 'thd_v', THDVData);
-  THDIData = GraphDataAppend(result, 'thd_i', THDIData);
+  ActiveData = GraphDataAppend(result, 'Active_Power', ActiveData);
+  ReactiveData = GraphDataAppend(result, 'Reactive_Power', ReactiveData);
+  PowerFactorData = GraphDataAppend(result, 'Power_Factor', PowerFactorData);
+  PhiData  = GraphDataAppend(result, 'Phi', PhiData);
+  THDVData = GraphDataAppend(result, 'THD_V', THDVData);
+  THDIData = GraphDataAppend(result, 'THD_I', THDIData);
   if(ReactiveChart === null) {
     ActiveChart      = AppendCubismGraph($('#EvolutionPanel'), ActiveData,      "Active Power",   [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return (x === null) ? '~' : (Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'W</em>'); });
     ReactiveChart    = AppendCubismGraph($('#EvolutionPanel'), ReactiveData,    "Reactive Power", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return (x === null) ? '~' : (Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'VAr</em>'); });
@@ -288,8 +287,8 @@ function Live_OnSuccess(result) {
 $('#groupParametersPhases').on('click', 'button', ParametersSeries);
 var MainScrollable = null;
 function UpdatePage() {
-  MainScrollable = new Scrollable( {Spinners: ['#EnergySpinner'], NowBtn: '#toolbarEnergy button[data-function="Update"]', Series: ['active_power'], OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
-  new Live( { NowBtn: undefined, RefreshInterval: 5000, Spinners: [], Series: 'active_power, reactive_power, power_factor, phi, thd_v, thd_i', OnSuccess: Live_OnSuccess});
-  new PeriodView( {Spinners: ['#VoltageSpinner', '#CurrentSpinner', '#PowerSpinner', '#FrequencySpinner'], Series: ['rms_v', 'flag', 'rms_i', 'active_power', 'freq'], Period: 7200000, Aggreg: '3s', OnSuccess: PeriodView_OnSuccess} );
-  new PeriodView( {Spinners: ['#MainParametersSpinner'], Series: ['active_power', 'reactive_power', 'power_factor', 'phi', 'thd_v', 'thd_i'], Period: 86400000, Aggreg: '1m', OnSuccess: PeriodViewParams_OnSuccess} );
+  MainScrollable = new Scrollable( {Spinners: ['#EnergySpinner'], NowBtn: '#toolbarEnergy button[data-function="Update"]', Series: ['ACTIVE_POWER'], AggregVariable: 'GraphAggregationEnergy', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
+  new Live( { NowBtn: undefined, RefreshInterval: 5000, Spinners: [], Series: ['ACTIVE_POWER', 'REACTIVE_POWER', 'POWER_FACTOR', 'PHI', 'THD_V', 'THD_I'], OnSuccess: Live_OnSuccess});
+  new PeriodView( {Spinners: ['#VoltageSpinner', '#CurrentSpinner', '#PowerSpinner', '#FrequencySpinner'], Series: ['RMS_V', 'FLAG', 'RMS_I', 'ACTIVE_POWER', 'FREQUENCY'], Period: 7200000, Aggreg: '3S', OnSuccess: PeriodView_OnSuccess} );
+  new PeriodView( {Spinners: ['#MainParametersSpinner'], Series: ['ACTIVE_POWER', 'REACTIVE_POWER', 'POWER_FACTOR', 'PHI', 'THD_V', 'THD_I'], Period: 86400000, Aggreg: '1M', OnSuccess: PeriodViewParams_OnSuccess} );
 }

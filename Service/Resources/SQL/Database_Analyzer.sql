@@ -1,59 +1,59 @@
 CREATE TABLE IF NOT EXISTS aggreg_3s (
-  sampletime bigint NOT NULL PRIMARY KEY, 
-  rms_v real[] NOT NULL, 
-  rms_i real[] NOT NULL, 
-  active_power real[] NOT NULL, 
-  active_energy real[] NOT NULL, 
-  reactive_power real[] NOT NULL, 
-  reactive_energy real[] NOT NULL, 
-  freq real, 
-  flag boolean NOT NULL
+  sampletime     bigint NOT NULL PRIMARY KEY,
+  rms_v          real[] NOT NULL,
+  rms_i          real[] NOT NULL,
+  freq           real,
+  flag           boolean NOT NULL,
+  active_power   real[] NOT NULL,
+  reactive_power real[] NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS aggreg_1m (
   sampletime bigint NOT NULL PRIMARY KEY, 
-  rms_v real[] NOT NULL, 
-  rms_i real[] NOT NULL,
-  active_power real[] NOT NULL,
-  active_energy real[] NOT NULL,
+  rms_v      real[] NOT NULL, 
+  rms_i      real[] NOT NULL,
+  freq       real,
+  flag       boolean NOT NULL
+) WITH (OIDS=FALSE);
+
+CREATE TABLE IF NOT EXISTS aggreg_ext_1m (
+  sampletime     bigint NOT NULL PRIMARY KEY REFERENCES aggreg_1m(sampletime) ON UPDATE CASCADE ON DELETE CASCADE,
+  power_factor   real[] NOT NULL,
+  thd_v          real[] NOT NULL,
+  thd_i          real[] NOT NULL,
+  active_power   real[] NOT NULL,
   reactive_power real[] NOT NULL,
-  reactive_energy real[] NOT NULL,
-  freq real,
-  flag boolean NOT NULL
+  phi            real[] NOT NULL,
+  harmonics_v    real[] NOT NULL,
+  harmonics_i    real[] NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS aggreg_10m (
   sampletime bigint NOT NULL PRIMARY KEY, 
-  rms_v real[] NOT NULL, 
-  rms_i real[] NOT NULL, 
-  active_power real[] NOT NULL, 
-  active_energy real[] NOT NULL, 
-  reactive_power real[] NOT NULL,
-  reactive_energy real[] NOT NULL,
-  freq real, 
-  flag boolean NOT NULL
+  rms_v      real[] NOT NULL, 
+  rms_i      real[] NOT NULL, 
+  freq       real, 
+  flag       boolean NOT NULL
+) WITH (OIDS=FALSE);
+
+CREATE TABLE IF NOT EXISTS aggreg_15m (
+  sampletime     bigint NOT NULL PRIMARY KEY, 
+  active_power   real[] NOT NULL, 
+  reactive_power real[] NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS aggreg_1h (
   sampletime bigint NOT NULL PRIMARY KEY, 
-  rms_v real[] NOT NULL,
-  rms_i real[] NOT NULL,
-  active_power real[] NOT NULL,
-  active_energy real[] NOT NULL,
-  reactive_power real[] NOT NULL,
-  reactive_energy real[] NOT NULL,
-  freq real,
-  flag boolean NOT NULL
-) WITH (OIDS=FALSE);
-
-CREATE TABLE IF NOT EXISTS aggreg_ext_1m (
-  sampletime bigint NOT NULL PRIMARY KEY REFERENCES aggreg_1m(sampletime) ON UPDATE CASCADE ON DELETE CASCADE,
-  power_factor real[] NOT NULL,
-  thd_v real[] NOT NULL,
-  thd_i real[] NOT NULL,
-  phi real[] NOT NULL,
-  harmonics_v real[] NOT NULL,
-  harmonics_i real[] NOT NULL
+  rms_v          real[]  NOT NULL,
+  rms_i          real[]  NOT NULL,
+  freq           real,
+  flag           boolean NOT NULL,
+  active_power   real[]  NOT NULL,
+  reactive_power real[]  NOT NULL,
+  stat_voltage   int4[]  NOT NULL,
+	stat_frequency int4[]  NOT NULL,
+	stat_thd       int4[]  NOT NULL,
+	stat_harmonics int4[]  NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS events (

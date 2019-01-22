@@ -11,7 +11,7 @@ class AnalyzerInterface : protected Database {
   public :
     enum AnalyzerMode {PHASE1, PHASE3, PHASE3N};
     enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
-    enum ParamsType { FREQUENCY = 0x00000001, FLAG = 0x00000002, RMS_V = 0x00000004, RMS_I = 0x00000008, ACTIVE_POWER = 0x00000010, REACTIVE_POWER = 0x00000020, ACTIVE_ENERGY = 0x00000040, REACTIVE_ENERGY = 0x00000080, APPARENT_POWER = 0x00000100, POWER_FACTOR = 0x00000200, THD_V = 0x00000400, THD_I = 0x00000800, PHI = 0x00001000, HARMONICS_V = 0x00002000, HARMONICS_I = 0x00004000, FFT_V = 0x00008000, FFT_I = 0x00010000, VOLTAGE = 0x00020000, CURRENT = 0x00040000 };
+    enum ParamsType { FREQUENCY = 0x00000001, FLAG = 0x00000002, RMS_V = 0x00000004, RMS_I = 0x00000008, ACTIVE_POWER = 0x00000010, REACTIVE_POWER = 0x00000020, ACTIVE_ENERGY = 0x00000040, REACTIVE_ENERGY = 0x00000080, APPARENT_POWER = 0x00000100, POWER_FACTOR = 0x00000200, THD_V = 0x00000400, THD_I = 0x00000800, PHASE_V = 0x00001000, PHI = 0x00002000, HARMONICS_V = 0x00004000, HARMONICS_I = 0x00008000, FFT_V = 0x00010000, FFT_I = 0x00020000, VOLTAGE = 0x00040000, CURRENT = 0x00080000 };
   protected :
     static vector<float>  FrequencyRanges;   //Rangos de frecuencias para estadisticas
     static vector<float>  VoltageRanges;     //Rangos de tensiones para estadisticas
@@ -40,6 +40,7 @@ class AnalyzerInterface : protected Database {
       vector<float>           Power_Factor;               //Factor de potencia (cos(PHI))
       vector<float>           THD_V;                      //Distorsion harmonica de la tension
       vector<float>           THD_I;                      //Distorsion harmonica de la corriente
+      vector<float>           Phase_V;                    //Angulo entre canales de tension
       vector<float>           Phi;                        //Angulo de Phi
       vector< vector<float> > VoltageHarmonics;           //Armonicos del canal de tension
       vector< vector<float> > CurrentHarmonics;           //Armonicos del canal de corriente
@@ -76,5 +77,5 @@ class AnalyzerInterface : protected Database {
     AnalyzerMode GetMode();
     const char  *GetID();
     json_object *GetJSONDescriptor();
-    json_object *GetJSONParams(char *series);
+    json_object *GetJSONParams(json_object *series);
 };
