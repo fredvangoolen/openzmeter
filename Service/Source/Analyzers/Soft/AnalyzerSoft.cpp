@@ -44,6 +44,7 @@ AnalyzerSoft::AnalyzerSoft(float samplerate, char *id, float nominal_voltage, fl
   InitAggreg(pAggreg3S, AGGREG_3S);
   InitAggreg(pAggreg1M, AGGREG_1M);
   InitAggreg(pAggreg10M, AGGREG_10M);
+  InitAggreg(pAggreg15M, AGGREG_15M);
   InitAggreg(pAggreg1H, AGGREG_1H);
   pDelayVoltage.resize(pAggreg10C.Voltage.size());
   pDelayCurrent.resize(pAggreg10C.Current.size());
@@ -266,6 +267,14 @@ void AnalyzerSoft::Analyze() {
       ResetAggreg(pAggreg10M);
     }
     AccumulateAggreg(pAggreg10M, pAggreg10C);
+    if(((pAggreg10C.Timestamp / 900000) > (pPrevTimestamp / 900000)) && (pPrevTimestamp != 0)) {
+      Tools::LogMsg("DEBUG", "Storing 15M aggregation\n");
+      pAggreg15M.Timestamp = pAggreg15M.Timestamp / 900000 * 900000 + 899999;
+      NormalizeAggreg(pAggreg15M);
+      SaveAggreg(pAggreg15M);
+      ResetAggreg(pAggreg15M);
+    }
+    AccumulateAggreg(pAggreg15M, pAggreg10C);
     if(((pAggreg10C.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
       Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
       pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;

@@ -39,6 +39,7 @@ class AnalyzerSoft : public AnalyzerInterface {
     Params_t                   pAggreg3S;                //Agregacion de 3 segundos
     Params_t                   pAggreg1M;                //Agregacion de 1 minuto
     Params_t                   pAggreg10M;               //Agregacion de 10 minutos
+    Params_t                   pAggreg15M;               //Agregacion de 15 minutos
     Params_t                   pAggreg1H;                //Agregacion de 1 hora
     char                      *pSyncServer;              //Server to sync
     char                      *pSyncName;                //Server user

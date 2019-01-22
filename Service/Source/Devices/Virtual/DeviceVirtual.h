@@ -7,10 +7,7 @@
 #include "AnalyzerSoft.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define CAPTUREVIRTUAL_SAMPLEFREQ      6000.00        //Frequencia de muestreo
-#define CAPTUREVIRTUAL_BUFFERSIZE     60000           //Tamaño del buffer (100 segundos)
-#define CAPTUREVIRTUAL_SAMPLESREAD       64           //Numero de muestras generado cada vez
-#define PROCESSING_FREQCYCLES           500           //Numero de ciclos usados para calcular frequencia
-#define PROCESSING_CURRENTOFFSET          0.10        //Corriente minima para realizar calculos
+#define CAPTUREVIRTUAL_BUFFERSIZE     60000           //Tamaño del buffer (10 segundos)
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceVirtual : public DeviceInterface {
   private :
@@ -19,24 +16,22 @@ class DeviceVirtual : public DeviceInterface {
     AnalyzerSoft   *pAnalyzer;
     float           pSampleRate;
     float           pNominalVoltage;
-    float           pNominalFrequency = 50.0;
-    char           *pName;
-    bool            pAutoStart;
+    float           pNominalFrequency;
     pthread_mutex_t pMutex;
     json_object    *pConfig;
   private : 
-    static bool             Init();
-    static void            *Capture_Thread(void *args);
-    static DeviceInterface *CreateInstance(json_object *config);
+    static bool     Init();
+    static void    *Capture_Thread(void *args);
   private :
     bool               ConfigDev(json_object *config);
-    bool               Start();
-    bool               Stop();
     AnalyzerInterface *FindAnalyzer(const char *serial);
+    uint32_t           AnalyzersCount();
     const char        *Serial();
     const char        *Driver();
     const char        *Name();
-    uint32_t           AnalyzersCount();
+    bool               Start();
+    bool               Stop();
+
   public :
     ~DeviceVirtual();
 };
