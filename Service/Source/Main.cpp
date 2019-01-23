@@ -22,14 +22,14 @@ bool GetNewsCallback(char *user, json_object *reader, Database *db, json_object 
     *resultLen = strlen(*postdata);
     return false;
   }
-  char Query[1024];  
-  sprintf(Query, "SELECT row_to_json(Result) AS result FROM (SELECT COALESCE(ARRAY_AGG(header ORDER BY newstime ASC), '{}') AS \"Headers\", COALESCE(ARRAY_AGG(contents ORDER BY newstime ASC), '{}') AS \"Contents\", COALESCE(ARRAY_AGG(newstime ORDER BY newstime ASC), '{}') AS \"Timestamp\" FROM news WHERE newstime >= %" PRIu64 ") AS Result", LastLogin);
+  char Query[1024];
+  sprintf(Query, "SELECT jsonb_build_object('Timestamp', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime >= %" PRIu64 " ORDER BY newstime DESC LIMIT 1", LastLogin);
   *postdata = db->ExecSentenceJSON(Query, resultLen);
   return true;  
 }
 bool GetCountriesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *postdata = db->ExecSentenceJSON("SELECT array_to_json(array_agg(row_to_json(t1))) FROM (  select country_code as \"CountryCode\", country as \"Name\", currency as \"Currency\", timezone as \"TimeZone\" from country) as t1;", resultLen);
-  return true;  
+  return true;
 }
 int main(int argc, char** argv) {
   char *ConfigFile = (char*)"/etc/openZmeter.conf";
@@ -68,7 +68,6 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);
 
   HTTPServer::RegisterDefault("/Dashboard");
-//  HTTPServer::RegisterMapping("/Dashboard",            "/Main.html");
   HTTPServer::RegisterMapping("/Dashboard",            "/Dashboard.html");
   HTTPServer::RegisterMapping("/Analysis/Frequency",   "/Analysis_Frequency.html");
   HTTPServer::RegisterMapping("/Analysis/Voltage",     "/Analysis_Voltage.html");

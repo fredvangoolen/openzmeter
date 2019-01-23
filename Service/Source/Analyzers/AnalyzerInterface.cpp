@@ -12,7 +12,7 @@ vector<float> AnalyzerInterface::VoltageRanges;
 vector<float> AnalyzerInterface::THDRanges;
 vector<float> AnalyzerInterface::HarmonicsAllowed;
 //----------------------------------------------------------------------------------------------------------------------
-AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode) : Database(id) {
+AnalyzerInterface::AnalyzerInterface(char *id, AnalyzerMode mode) : Database(id) {
   if(FrequencyRanges.empty()) {
     FrequencyRanges.push_back(-INFINITY);
     FrequencyRanges.push_back(-5);
@@ -140,20 +140,33 @@ AnalyzerInterface::AnalyzerInterface(char *id, float nominal_voltage, float nomi
     HarmonicsAllowed.push_back(0.5);
     HarmonicsAllowed.push_back(1.5);
   }
-  pNominalVoltage = nominal_voltage;
-  pNominalFrequency = nominal_frequency;
-  pName = name;
-  pMaxCurrent = max_current;
-  pMinCurrent = min_current;
-  pMode = mode;
-  pLastSave = 0;
   Tools::LogMsg("DEBUG", "Creating analyzer database tables\n");
   ExecResource("SQL/Database_Analyzer.sql");
-  PrepareSentence("INSERT INTO analyzers(username, serial, contract, zipcode, frequency, voltage, name, geo) VALUES('admin', ?, '','',50,230,'','(0,0)') ON CONFLICT (serial) DO NOTHING;");
+  pMode = mode;
+  pLastSave = 0;
+  PrepareSentence("SELECT frequency, voltage, name, max_current, min_current FROM analyzers WHERE serial = ?");
   BindSingleString(id);
-  ExecSentence();
+  if((ExecSentence() == false) || (ResultRows() != 1)) {
+    pNominalVoltage = 230.0;
+    pNominalFrequency = 50.0;
+    pName = strdup("Unnamed input analyzer");
+    pMaxCurrent = 50.0;
+    pMinCurrent =  0.1;
+    PrepareSentence("INSERT INTO analyzers(username, serial, contract, zipcode, frequency, voltage, name, geo, max_current, min_current) "
+                    "VALUES('admin', ?, '', '', 50.0, 230.0, 'Unnamed input analyzer', '{0,0}', 50.0, 0.1)");
+    BindSingleString(id);
+    ExecSentence();    
+  } else {
+    pNominalVoltage = atof(ResultValue(0, "voltage"));
+    pNominalFrequency = atof(ResultValue(0, "frequency"));
+    pName = strdup(ResultValue(0, "name"));
+    pMaxCurrent = atof(ResultValue(0, "max_current"));
+    pMinCurrent =  atof(ResultValue(0, "min_current"));
+  }
 }
-AnalyzerInterface::~AnalyzerInterface() {}
+AnalyzerInterface::~AnalyzerInterface() {
+  if(pName) free(pName);
+}
 float AnalyzerInterface::GetMaxCurrent() {
   return pMaxCurrent;
 }

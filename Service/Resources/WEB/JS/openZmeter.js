@@ -1097,6 +1097,9 @@ function LoadNews() {
     function(result) {
       News = result;
       NewsShow();
+    },
+    complete : function() {
+      LoadAnalyzers();
     }
   }); 
 }

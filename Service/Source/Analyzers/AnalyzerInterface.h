@@ -69,8 +69,8 @@ class AnalyzerInterface : protected Database {
   public :
     virtual void GetParams(Params_t &params, ParamsType &copy) = 0;
   public :
-    AnalyzerInterface(char *id, float nominal_voltage, float nominal_frequency, char *name, float max_current, float min_current, AnalyzerMode mode);
-    virtual ~AnalyzerInterface();
+    AnalyzerInterface(char *id, AnalyzerMode mode);
+    virtual     ~AnalyzerInterface();
     float        GetMaxCurrent();
     float        GetNominalVoltage();
     float        GetNominalFrequency();

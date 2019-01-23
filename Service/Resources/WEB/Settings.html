@@ -95,9 +95,9 @@
             <div class="pull-left"><h4 class="modal-title">Tariffs template</h4></div>
             <div class="pull-right btn-group">
               <button type="button" class="btn btn-default btn-xs" id="btnTariffSave"><img src="Imgs/diskette.png" alt="New tariff"></button>
-              <button type="button" class="btn btn-default btn-xs" id="btnTariffHolidays">Holidays</button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffPeriods">Periods</button>
               <button type="button" class="btn btn-default btn-xs" id="btnTariffSeasons">Seasons</button>
-              <button type="button" class="btn btn-default btn-xs" id="btnTariffSeasons">Periods</button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffHolidays">Holidays</button>
               <button type="button" class="btn btn-default btn-xs" id="btnTariffBack" data-dismiss="modal"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
             </div>
           </div>
@@ -121,9 +121,9 @@
                 </div>
               </div>
               <div class="col-xs-6">
-                <label class="control-label">Year</label>
+                <label class="control-label">Start date</label>
                 <div class="input-group">
-                  <input type="text" class="form-control" value="2019" style="pointer-events: none" id="inputTariffYear">
+                  <input type="text" class="form-control" style="pointer-events: none" id="inputTariffStartDate">
                   <div class="input-group-btn-vertical">
                     <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></button>
                     <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></button>
@@ -131,9 +131,9 @@
                 </div>
               </div>
               <div class="col-xs-6">
-                <label class="control-label">Day periods</label>
+                <label class="control-label">End date</label>
                 <div class="input-group">
-                  <input type="text" class="form-control" value="4" style="pointer-events: none" id="inputTariffPeriods">
+                  <input type="text" class="form-control" style="pointer-events: none" id="inputTariffEndDate">
                   <div class="input-group-btn-vertical">
                     <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></button>
                     <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></button>
@@ -171,19 +171,20 @@
             </div>
           </div>
         </div>
-        <div class="modal-content hide" id="divTariffHolidays">
+        <div class="modal-content hide" id="divTariffPeriods">
           <div class="modal-header">
-            <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Holidays</h4></div>
+            <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Periods</h4></div>
             <div class="pull-right btn-group">
-              <button type="button" class="btn btn-default btn-xs" id="btnTariffHolidaysAdd"><img src="Imgs/plus.png" alt="New holiday"></button>
-              <button type="button" class="btn btn-default btn-xs" id="btnTariffHolidaysBack"><img src="Imgs/arrow_undo.png" alt="Go back"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffPeriodsDel"><img src="Imgs/cross.png" alt="Delete period"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffPeriodsAdd"><img src="Imgs/plus.png" alt="New period"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffPeriodsBack"><img src="Imgs/arrow_undo.png" alt="Go back"></button>
             </div>
           </div>
           <div class="modal-body">
             <div class="row">
               <div class="col-xs-12">
-                <table id="DeviceTable" class="table small table-striped table-responsive">
-                  <thead><tr><th style="width: 40px">Driver</th><th>Description</th><th style="width: 250px">Serial</th><th style="width: 20px">Analyzers</th><th style="width: 90px">Status</th><th style="width: 180px"></th></tr></thead>
+                <table class="table small table-striped table-responsive" id="PeriodsTable">
+                  <thead><tr><th style="width: 20px">Name</th><th>Power model</th><th>Reactive model</th></thead>
                   <tbody></tbody>
                 </table>
               </div>
@@ -203,6 +204,25 @@
               <div class="col-xs-12">
                 <table id="SeasonsTable" class="table small table-striped table-responsive" style="width: 100%">
                   <thead><tr><th>Name</th><th style="width:80px">From</th><th style="width:80px">To</th><th style="width:140px"></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-content hide" id="divTariffHolidays">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Holidays</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffHolidaysAdd"><img src="Imgs/plus.png" alt="New holiday"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffHolidaysBack"><img src="Imgs/arrow_undo.png" alt="Go back"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-xs-12">
+                <table class="table small table-striped table-responsive">
+                  <thead><tr><th style="width: 40px">Driver</th><th>Description</th><th style="width: 250px">Serial</th><th style="width: 20px">Analyzers</th><th style="width: 90px">Status</th><th style="width: 180px"></th></tr></thead>
                   <tbody></tbody>
                 </table>
               </div>
@@ -327,7 +347,7 @@
             </div>
             <div class="panel-body">
               <table id="TariffsTable" class="table small table-striped table-responsive">
-                <thead><tr><th style="width: 20px">Country</th><th>Name</th><th style="width: 80px">Start date</th><th style="width: 80px">End date</th><th style="width: 80px"></th></tr></thead>
+                <thead><tr><th style="width: 20px">Country</th><th>Name</th><th style="width: 120px">Start date</th><th style="width: 120px">End date</th><th style="width: 80px"></th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
