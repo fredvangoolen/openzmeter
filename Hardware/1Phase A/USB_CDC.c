@@ -14,7 +14,7 @@ const uint8_t CDC_DeviceDescriptor[VIRTUAL_COM_PORT_SIZ_DEVICE_DESC] = {
   0x70,
   0x72,                       /* idProduct */
   0x00,
-  0x02,                       /* bcdDevice = 2.00 */
+  0x01,                       /* bcdDevice = 2.00 */
   1,                          /* Index of string descriptor describing manufacturer */
   2,                          /* Index of string descriptor describing product */
   3,                          /* Index of string descriptor describing the device's serial number */
@@ -128,11 +128,10 @@ const uint8_t CDC_StringVendor[VIRTUAL_COM_PORT_SIZ_STRING_VENDOR] = {
 const uint8_t CDC_StringProduct[VIRTUAL_COM_PORT_SIZ_STRING_PRODUCT] = {
   VIRTUAL_COM_PORT_SIZ_STRING_PRODUCT, /* bLength */
   USB_STRING_DESCRIPTOR_TYPE,          /* bDescriptorType */
-  'z', 0, 'M', 0, 'e', 0, 't', 0, 'e', 0, 'r', 0, ' ', 0, '-', 0, 
-  ' ', 0, 'A', 0, 'n', 0, 'a', 0, 'l', 0, 'i', 0, 'z', 0, 'a', 0,
-  'd', 0, 'o', 0, 'r', 0, ' ', 0, 'd', 0, 'e', 0, ' ', 0, 'c', 0, 
-  'a', 0, 'l', 0, 'i', 0, 'd', 0, 'a', 0, 'd', 0, ' ', 0, 'e', 0, 
-  'l', 0, 'e', 0, 'c', 0, 't', 0, 'r', 0, 'i', 0, 'c', 0, 'a', 0
+  'o', 0, 'p', 0, 'e', 0, 'n', 0, 'Z', 0, 'm', 0, 'e', 0, 't', 0, 
+  'e', 0, 'r', 0, ' ', 0, '-', 0, ' ', 0, 'C', 0, 'a', 0, 'p', 0,
+  't', 0, 'u', 0, 'r', 0, 'e', 0, ' ', 0, 'd', 0, 'e', 0, 'v', 0,
+  'i', 0, 'c', 0, 'e', 0 
 };
 
 uint8_t CDC_StringSerial[VIRTUAL_COM_PORT_SIZ_STRING_SERIAL] = {
@@ -198,9 +197,9 @@ __IO bool     fSuspendEnabled = false;       /* true when suspend is possible */
  * Return         : None.
  *******************************************************************************/
 void CDC_Init(void) {
-  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7E8), &CDC_StringSerial[2]);  
-  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7EC), &CDC_StringSerial[18]);
-  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7F0), &CDC_StringSerial[34]);
+  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7AC), &CDC_StringSerial[2]);  
+  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7B0), &CDC_StringSerial[18]);
+  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7B4), &CDC_StringSerial[34]);
   
   pInformation->Current_Configuration = 0;
   PowerOn();
