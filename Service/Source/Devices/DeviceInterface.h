@@ -18,11 +18,11 @@ class DeviceInterface {
     bool        pTerminate;               //Marca que deben detenerse los trabajos pendientes
     DeviceState pState;                   //Device state
   protected :
+    virtual uint32_t           AnalyzersCount() = 0;
     virtual AnalyzerInterface *FindAnalyzer(const char *serial) = 0;
     virtual const char        *Serial() = 0;
     virtual const char        *Driver() = 0;
     virtual const char        *Name() = 0;
-    virtual uint32_t           AnalyzersCount() = 0;
     virtual bool               ConfigDev(json_object *config) = 0;
     virtual bool               Start() = 0;
     virtual bool               Stop() = 0;

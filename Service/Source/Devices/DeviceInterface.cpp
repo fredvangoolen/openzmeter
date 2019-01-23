@@ -8,19 +8,16 @@
 #include "HTTPServer.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-vector<DeviceInterface*>        DeviceInterface::pDevices;
+vector<DeviceInterface*> DeviceInterface::pDevices;
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceInterface::Config(json_object *config) {
   if(config == NULL) return false;
-  for(uint i = 0; i < json_object_array_length(config); i++) {
-    json_object *Device = json_object_array_get_idx(config, i);
-    char *Name = NULL;
-    if(Tools::JSONString(Device, "Driver", &Name) == false) {
-      Tools::LogMsg("ERROR", "'Driver' parameter not specified\n");
-    } else {
-      for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
-        if((strcmp(Name, (*it)->Driver()) == 0) && ((*it)->ConfigDev(Device) == true)) break;
-      }
+  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+    const char *Serial = (*it)->Serial();
+    json_object *Find;
+    if((json_object_object_get_ex(config, Serial, &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(config, Serial, json_object_new_object());
+    if((json_object_object_get_ex(config, Serial, &Find) != true) || (json_object_get_type(Find) != json_type_object) || ((*it)->ConfigDev(Find) != true)) {
+      Tools::LogMsg("WARN", "invalid configuration for driver with serial '%s'\n", Serial);
     }
   }
   return true;

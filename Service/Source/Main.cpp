@@ -28,7 +28,6 @@ bool GetNewsCallback(char *user, json_object *reader, Database *db, json_object 
   return true;  
 }
 bool GetCountriesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
-  uint64_t LastLogin;
   *postdata = db->ExecSentenceJSON("SELECT array_to_json(array_agg(row_to_json(t1))) FROM (  select country_code as \"CountryCode\", country as \"Name\", currency as \"Currency\", timezone as \"TimeZone\" from country) as t1;", resultLen);
   return true;  
 }

@@ -252,7 +252,7 @@ void AnalyzerInterface::SaveAggreg(Params_t &params) {
   else if(params.Type == AGGREG_10M)
     PrepareSentence("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(?, ?, ?, ?, ?)");
   else if(params.Type == AGGREG_15M)
-    PrepareSentence("INSERT INTO aggreg_15m(sampletime, active_energy, reactive_energy) VALUES(?, ?, ?)");
+    PrepareSentence("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(?, ?, ?)");
   else if(params.Type == AGGREG_1H)
     PrepareSentence("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   BindSingleUInt64(params.Timestamp);                                                 //sampletime

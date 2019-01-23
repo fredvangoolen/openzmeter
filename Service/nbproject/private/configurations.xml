@@ -5,6 +5,8 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
+        <df name="etc">
+        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -12,6 +14,8 @@
           </df>
         </df>
         <df name="usr">
+          <df name="sbin">
+          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -78,16 +82,15 @@
             <in>DeviceRemote.cpp</in>
             <in>DeviceRemote.h</in>
           </df>
-          <df name="V1">
-            <in>DeviceV1.cpp</in>
-            <in>DeviceV1.h</in>
+          <df name="V1_00">
+            <in>DeviceV1_00.cpp</in>
+            <in>DeviceV1_00.h</in>
           </df>
-          <df name="V1_1">
-            <in>DeviceV1_1.cpp</in>
-            <in>DeviceV1_1.h</in>
+          <df name="V1_01">
+            <in>DeviceV1_01.cpp</in>
+            <in>DeviceV1_01.h</in>
           </df>
-          <df name="V2">
-            <in>DeviceV2.cpp</in>
+          <df name="V2_00">
             <in>DeviceV2.h</in>
           </df>
           <df name="Virtual">
@@ -133,6 +136,10 @@
             </df>
           </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
             <df name="Virtual">
             </df>
           </df>
@@ -150,6 +157,8 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
+        <df name="etc">
+        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -157,6 +166,8 @@
           </df>
         </df>
         <df name="usr">
+          <df name="sbin">
+          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -215,11 +226,11 @@
         <df name="Devices">
           <df name="Remote">
           </df>
-          <df name="V1">
+          <df name="V1_00">
           </df>
-          <df name="V1_1">
+          <df name="V1_01">
           </df>
-          <df name="V2">
+          <df name="V2_00">
           </df>
           <df name="Virtual">
           </df>
@@ -238,6 +249,234 @@
             </df>
           </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
+          </df>
+        </df>
+      </df>
+    </df>
+    <df root="." name="2">
+      <df name="Package">
+        <df name="DEBIAN">
+        </df>
+        <df name="etc">
+        </df>
+        <df name="lib">
+          <df name="systemd">
+            <df name="system">
+            </df>
+          </df>
+        </df>
+        <df name="usr">
+          <df name="sbin">
+          </df>
+          <df name="share">
+            <df name="openZmeter">
+            </df>
+          </df>
+        </df>
+      </df>
+      <df name="Resources">
+        <df name="SQL">
+        </df>
+        <df name="WEB">
+          <df name="CSS">
+          </df>
+          <df name="Fonts">
+          </df>
+          <df name="Help">
+          </df>
+          <df name="Imgs">
+          </df>
+          <df name="JS">
+          </df>
+          <df name="Lib">
+            <df name="bootstrap-year-calendar">
+            </df>
+            <df name="datatables">
+              <df name="images">
+              </df>
+              <df name="js">
+              </df>
+            </df>
+            <df name="dygraph">
+            </df>
+            <df name="jquery.lineProgressbar">
+            </df>
+            <df name="qtip2">
+            </df>
+            <df name="visjs">
+              <df name="img">
+                <df name="network">
+                </df>
+                <df name="timeline">
+                </df>
+              </df>
+            </df>
+          </df>
+          <df name="MiniViews">
+          </df>
+        </df>
+      </df>
+      <df name="Source">
+        <df name="Analyzers">
+          <df name="Remote">
+          </df>
+          <df name="Soft">
+          </df>
+        </df>
+        <df name="Devices">
+          <df name="Remote">
+          </df>
+          <df name="V1_00">
+          </df>
+          <df name="V1_01">
+          </df>
+          <df name="V2_00">
+          </df>
+          <df name="Virtual">
+          </df>
+        </df>
+        <df name="Tariffs">
+          <df name="ESIOS">
+          </df>
+          <df name="Spain">
+          </df>
+        </df>
+      </df>
+      <df name="Tmp">
+        <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
+          <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
+          </df>
+        </df>
+      </df>
+    </df>
+    <df root="." name="3">
+      <df name="Package">
+        <df name="DEBIAN">
+        </df>
+        <df name="etc">
+        </df>
+        <df name="lib">
+          <df name="systemd">
+            <df name="system">
+            </df>
+          </df>
+        </df>
+        <df name="usr">
+          <df name="sbin">
+          </df>
+          <df name="share">
+            <df name="openZmeter">
+            </df>
+          </df>
+        </df>
+      </df>
+      <df name="Resources">
+        <df name="SQL">
+        </df>
+        <df name="WEB">
+          <df name="CSS">
+          </df>
+          <df name="Fonts">
+          </df>
+          <df name="Help">
+          </df>
+          <df name="Imgs">
+          </df>
+          <df name="JS">
+          </df>
+          <df name="Lib">
+            <df name="bootstrap-year-calendar">
+            </df>
+            <df name="datatables">
+              <df name="images">
+              </df>
+              <df name="js">
+              </df>
+            </df>
+            <df name="dygraph">
+            </df>
+            <df name="jquery.lineProgressbar">
+            </df>
+            <df name="qtip2">
+            </df>
+            <df name="visjs">
+              <df name="img">
+                <df name="network">
+                </df>
+                <df name="timeline">
+                </df>
+              </df>
+            </df>
+          </df>
+          <df name="MiniViews">
+          </df>
+        </df>
+      </df>
+      <df name="Source">
+        <df name="Analyzers">
+          <df name="Remote">
+          </df>
+          <df name="Soft">
+          </df>
+        </df>
+        <df name="Devices">
+          <df name="Remote">
+          </df>
+          <df name="V1_00">
+          </df>
+          <df name="V1_01">
+          </df>
+          <df name="V2_00">
+          </df>
+          <df name="Virtual">
+          </df>
+        </df>
+        <df name="Tariffs">
+          <df name="ESIOS">
+          </df>
+          <df name="Spain">
+          </df>
+        </df>
+      </df>
+      <df name="Tmp">
+        <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
+          <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
             <df name="Virtual">
             </df>
           </df>
@@ -276,6 +515,8 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
+        <gdb_signals>
+        </gdb_signals>
         <gdb_options>
           <DebugOptions>
           </DebugOptions>
