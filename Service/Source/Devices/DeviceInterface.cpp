@@ -38,24 +38,33 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
     HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
     HTTPServer::RegisterCallback("/getDevices",          DeviceInterface::GetDevicesCallback);
     HTTPServer::RegisterCallback("/getTariffs",          DeviceInterface::GetTariffsCallback);
+    HTTPServer::RegisterCallback("/StopDevice",          DeviceInterface::StopDeviceCallback);
+    HTTPServer::RegisterCallback("/StartDevice",         DeviceInterface::StartDeviceCallback);
   }
   Tools::LogMsg("INFO", "Registering '%s' device driver...\n", device->Driver());
   pDevices.push_back(device);
 }
 bool DeviceInterface::GetTariffsCallback(char* user, json_object* reader, Database* db, json_object** writer, char** postdata, size_t* resultLen) {
-  char *Serial = NULL;
-//  uint32_t Index = 0;
+  char     QueryText[8192];
+  char    *Serial = NULL;
   json_object *Find;
   if((json_object_object_get_ex(reader, "Analyzer", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
-//  if((json_object_object_get_ex(reader, "ID", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Index = json_object_get_int(Find);
-  char QueryText[8192];
-  int  QueryLen = 0;
   if(Serial == NULL) {
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT to_json(array_agg(row_to_json(t1))) FROM (SELECT rate as \"RateID\", name as \"Name\", startdate as \"StartDate\", enddate as \"EndDate\", country_code as \"CountryCode\", username as \"Owner\" from rates) as t1;"  );    
-  
-//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT to_json(json_object_agg(t1.rate, json_build_object('Name', t1.name, 'Description', description, 'DayPeriods', day_periods, 'WeekendPeriod', weekend_period,\r\n'HolidayPeriod', holiday_period, 'Country', country_code, 'Year', year, 'Seasons', seasons))) FROM (\r\nSELECT rate, name, description, day_periods, weekend_period, holiday_period, country_code, year,\r\n(select to_json(json_object_agg(q1.name, json_build_object('StartDate', q1.startdate, 'EndDate', q1.enddate, 'DayPeriods', q1.dayperiods))) from (select name, startdate, enddate, dayperiods from rates_seasons where rates.rate = rates_seasons.rate) as q1) as \"seasons\" from rates) as t1");
+    uint32_t Index = 0;
+    if((json_object_object_get_ex(reader, "RateID", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Index = json_object_get_int(Find);
+    if(Index == 0) {
+      snprintf(QueryText, sizeof(QueryText), "SELECT COALESCE(to_json(array_agg(jsonb_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username))), '[]') from rates");
+    } else {
+      snprintf(QueryText, sizeof(QueryText), "SELECT jsonb_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = %d", Index);
+    }  
   } else {
-    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT array_to_json(array_agg(row_to_json(Result))) FROM (SELECT rate as \"RateID\", startdate as \"StartDate\", name AS \"Name\", module AS \"Module\" FROM analyzers_rates NATURAL JOIN rates WHERE serial = '%s') as Result", Serial);
+    uint64_t StartDate = 0;
+    if((json_object_object_get_ex(reader, "StartDate", &Find) == true) && (json_object_get_type(Find) == json_type_int)) StartDate = json_object_get_int64(Find);
+    if(StartDate == 0) {
+      snprintf(QueryText, sizeof(QueryText), "SELECT COALESCE(to_json(array_agg(jsonb_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') from analyzers_rates WHERE serial = '%s'", Serial);
+    } else {
+      snprintf(QueryText, sizeof(QueryText), "SELECT jsonb_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = %" PRIu64, StartDate);
+    }  
   }
   *postdata = db->ExecSentenceJSON(QueryText, resultLen);
   return true;
@@ -74,6 +83,49 @@ bool DeviceInterface::GetDevicesCallback(char *user, json_object *reader, Databa
   *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
   return true; 
 }
+bool DeviceInterface::StartDeviceCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+  char        *Serial = NULL;
+  json_object *Find;
+  if((json_object_object_get_ex(reader, "Device", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
+  if(Serial == NULL) {
+    *postdata  = (char*)"'Analyzer' param is requiered";
+    *resultLen = strlen(*postdata);
+    return false;
+  }
+  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+    if(strcmp((*it)->Serial(), Serial) == 0) {
+      *writer = json_object_new_object();
+      json_object_object_add(*writer, "Status", json_object_new_boolean((*it)->Start()));
+      *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
+      return true; 
+    }
+  }
+  *postdata  = (char*)"Analyzer not found";
+  *resultLen = strlen(*postdata);
+  return false;
+}
+bool DeviceInterface::StopDeviceCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+  char        *Serial = NULL;
+  json_object *Find;
+  if((json_object_object_get_ex(reader, "Device", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
+  if(Serial == NULL) {
+    *postdata  = (char*)"'Analyzer' param is requiered";
+    *resultLen = strlen(*postdata);
+    return false;
+  }
+  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+    if(strcmp((*it)->Serial(), Serial) == 0) {
+      *writer = json_object_new_object();
+      json_object_object_add(*writer, "Status", json_object_new_boolean((*it)->Stop()));
+      *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
+      return true; 
+    }
+  }
+  *postdata  = (char*)"Analyzer not found";
+  *resultLen = strlen(*postdata);
+  return false;
+}
+
 bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_array();
   db->PrepareSentence("SELECT serial, editable FROM (SELECT serial, false AS editable FROM permisions WHERE username = ? AND read = TRUE UNION SELECT serial, true FROM analyzers WHERE username = ? UNION SELECT serial, true FROM analyzers WHERE 'admin' = ?) AS Result ORDER BY serial ASC, editable DESC");
@@ -387,6 +439,17 @@ bool DeviceInterface::GetPricesCallback(char *user, json_object *reader, Databas
     *resultLen = strlen(*postdata);
     return false;
   }
+  //Obtengo tarifas y las cargo como json! desde la que acaba despues de from hasta la que empieze en to
+  //Obtengo consumos de la tabla de 15 minutos, de activa y reactiva sumados por fases!
+  //para cada fila de consumo.... TELA!
+  //  busco tarifa aplicable en el periodo
+  //  busco periodo del dia en el que estoy
+  //  Es festivo ? es fin de semana?
+  //  calculo coste de energia y otros factores para el bloque de 15 minutos
+  //  Aplico configuracion de modulos adicionales
+  //  Si he pedido agregacion de 15 minutos escupo datos y reinicio contadores, si es la de 1 hora y ha habido cambio de hora pues lo mismo
+  //  
+  
   if(To == 0) To = Tools::GetTime();
   From = To - Period;
   db->PrepareSentence("SET search_path TO ?");

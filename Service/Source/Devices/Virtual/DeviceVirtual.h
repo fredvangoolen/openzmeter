@@ -13,15 +13,16 @@ class DeviceVirtual : public DeviceInterface {
   private :
     static bool    pClassRegistered;
   private :
-    AnalyzerSoft   *pAnalyzer;
-    float           pSampleRate;
-    float           pNominalVoltage;
-    float           pNominalFrequency;
-    pthread_mutex_t pMutex;
-    json_object    *pConfig;
+    AnalyzerSoft                   *pAnalyzer;
+    AnalyzerInterface::AnalyzerMode pMode;
+    float                           pSampleRate;
+    float                           pVoltage;
+    float                           pFrequency;
+    pthread_mutex_t                 pMutex;
+    json_object                    *pConfig;
   private : 
-    static bool     Init();
-    static void    *Capture_Thread(void *args);
+    static bool  Init();
+    static void *Capture_Thread(void *args);
   private :
     bool               ConfigDev(json_object *config);
     AnalyzerInterface *FindAnalyzer(const char *serial);

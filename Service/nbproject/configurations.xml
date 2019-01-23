@@ -586,14 +586,6 @@
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
-            <pElem>Tmp/Source/Devices/V1_01</pElem>
-            <pElem>Tmp/Source/Devices/V1_00</pElem>
-            <pElem>Tmp/Source/Devices/Virtual</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
-            <pElem>Tmp/Source/Analyzers/Soft</pElem>
-            <pElem>Tmp/Source/Tariffs</pElem>
-            <pElem>Tmp/Source/Tariffs/Spain</pElem>
-            <pElem>Tmp/Source/Tariffs/ESIOS</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
