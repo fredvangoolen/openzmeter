@@ -20,7 +20,7 @@ var VoltageData      = [];
 function Scrollable_OnSuccess(result, clear) {
   if(clear) VoltageData = [];
   AjaxGetEvents(result['From'], result['To'], clear);
-  VoltageData = GraphDataAppend(result, 'rms_v', VoltageData);
+  VoltageData = GraphDataAppend(result, 'Voltage', VoltageData);
   if(VoltageChart === null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
       { strokeWidth: 0.5, stepPlot: true, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4],
@@ -424,7 +424,7 @@ function UpdatePhasorChart(result) {
   var Vectors = [];
   var MaxCurrent = 0;
   var MaxVoltage = 0;
-  for(i = 0; i < result['rms_v'].length; i++) {
+  for(i = 0; i < result['Voltage'].length; i++) {
     Vectors.push([2 * i, 120 * i, result['rms_v'][i]]);
     Vectors.push([2 * i + 1, 120 * i - result['phi'][i], result['rms_i'][i]]);
     MaxVoltage = Math.max(MaxVoltage, result['rms_v'][i]);

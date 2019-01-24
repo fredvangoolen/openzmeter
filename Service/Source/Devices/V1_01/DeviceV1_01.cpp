@@ -38,7 +38,7 @@ bool DeviceV1_01::Init() {
       return false;
     }
     if(Descriptor.idVendor != DEVICEV1_01_VID) continue;
-    if(Descriptor.iProduct != DEVICEV1_01_PID) continue;
+    if(Descriptor.idProduct != DEVICEV1_01_PID) continue;
     if(Descriptor.bcdDevice != DEVICEV1_01_VERSION) continue;
     libusb_device_handle *Dev_Handle = NULL;
     if(libusb_open(Devs[i], &Dev_Handle) != LIBUSB_SUCCESS) {

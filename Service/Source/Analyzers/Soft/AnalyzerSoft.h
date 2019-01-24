@@ -21,17 +21,19 @@ class AnalyzerSoft : public AnalyzerInterface {
       size_t Size;
       size_t MaxSize;
     } CurlBuff_t;
-    typedef struct {
-      float Z1[ZEROCROSSING_FILTERSTAGES];
-      float Z2[ZEROCROSSING_FILTERSTAGES];
-    } FilterStage_t;
+//    typedef struct {
+//      float Z1[ZEROCROSSING_FILTERSTAGES];
+//      float Z2[ZEROCROSSING_FILTERSTAGES];
+//    } FilterStage_t;
     typedef struct {
       float                 A0;
       float                 A1;
       float                 A2;
       float                 B1;
       float                 B2;
-      vector<FilterStage_t> Channels;
+      vector<float>         ChannelsZ1;
+      vector<float>         ChannelsZ2;
+//      vector<FilterStage_t> Channels;
     } Filter_t;
   private :
     uint64_t                   pSequence;                //Numero de bloques analizados

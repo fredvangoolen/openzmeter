@@ -18,8 +18,8 @@
 
 var VoltageChart = null, VoltageData = [], CurrentChart = null, CurrentData = [], PowerChart = null, PowerData = [], PowerChartUnits = '', FrequencyChart = null, FrequencyData = [];
 function PeriodView_OnSuccess(result) {
-  VoltageData = GraphDataAppend(result, 'RMS_V', VoltageData);
-  $('#labelVoltage').html(Array_Round2(result['RMS_V'][result['RMS_V'].length - 1], ColorArray($('#VoltagePanel').css('border-color'), 3)));
+  VoltageData = GraphDataAppend(result, 'Voltage', VoltageData);
+  $('#labelVoltage').html(Array_Round2(result['Voltage'][result['Voltage'].length - 1], ColorArray($('#VoltagePanel').css('border-color'), 3)));
   $('#labelVoltageAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
   if(VoltageChart === null) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
@@ -47,8 +47,8 @@ function PeriodView_OnSuccess(result) {
   }
   for(var n = 0; n < SeriesNames.Voltage().length; n++) AddEvents(result, SeriesNames.Voltage()[n], VoltageChart);
   VoltageSeries();
-  CurrentData = GraphDataAppend(result, 'RMS_I', CurrentData);
-  $('#labelCurrent').html(Array_Round2(result['RMS_I'][result['RMS_I'].length - 1], ColorArray($('#CurrentPanel').css('border-color'), 4)));
+  CurrentData = GraphDataAppend(result, 'Current', CurrentData);
+  $('#labelCurrent').html(Array_Round2(result['Current'][result['Current'].length - 1], ColorArray($('#CurrentPanel').css('border-color'), 4)));
   $('#CurrentAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
   if(CurrentChart === null) {
     CurrentChart = new Dygraph(document.getElementById("CurrentChart"), CurrentData,
@@ -148,8 +148,8 @@ $('#groupPowerPhases').on('click', 'button', PowerSeries);
 var EnergyData = [], EnergyChart = null;
 function Scrollable_OnSuccess(result, clear) {
   if(clear) EnergyData = [new Array(SeriesNames.ActiveEnergy().length + 1).fill(0)];
-  for(var i = 0; i < result['Active_Power']; i++) {
-    for(var n = 0; n < result['Active_Power'][i]; n++) result['Active_Power'][i][n] = result['Active_Power'][i][n] * ((result['Aggregation_Source'] === '1h') ? 1.0 : 0.25);
+  for(var i = 0; i < result['Active_Power'].length; i++) {
+    for(var n = 0; n < result['Active_Power'][i].length; n++) result['Active_Power'][i][n] = result['Active_Power'][i][n] * ((result['Aggregation_Source'] === '1H') ? 1.0 : 0.25);
   }
   EnergyData = GraphDataAppend(result, 'Active_Power', EnergyData);
   if(EnergyChart === null) {
@@ -248,8 +248,8 @@ function PeriodViewParams_OnSuccess(result) {
   ReactiveData = GraphDataAppend(result, 'Reactive_Power', ReactiveData);
   PowerFactorData = GraphDataAppend(result, 'Power_Factor', PowerFactorData);
   PhiData  = GraphDataAppend(result, 'Phi', PhiData);
-  THDVData = GraphDataAppend(result, 'THD_V', THDVData);
-  THDIData = GraphDataAppend(result, 'THD_I', THDIData);
+  THDVData = GraphDataAppend(result, 'Voltage_THD', THDVData);
+  THDIData = GraphDataAppend(result, 'Current_THD', THDIData);
   if(ReactiveChart === null) {
     ActiveChart      = AppendCubismGraph($('#EvolutionPanel'), ActiveData,      "Active Power",   [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return (x === null) ? '~' : (Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'W</em>'); });
     ReactiveChart    = AppendCubismGraph($('#EvolutionPanel'), ReactiveData,    "Reactive Power", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return (x === null) ? '~' : (Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'VAr</em>'); });
@@ -277,18 +277,18 @@ function ParametersSeries(event) {
   GraphPhaseButtons(THDIChart,        $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(THDIData, series, false, true, false, true)); return [-Range, Range]; }, undefined); 
 }
 function Live_OnSuccess(result) {
-  SetCubismNowLabel(ActiveChart, result['active_power']);
-  SetCubismNowLabel(ReactiveChart, result['reactive_power']);
-  SetCubismNowLabel(PowerFactorChart, result['power_factor']);
-  SetCubismNowLabel(PhiChart, result['phi']);
-  SetCubismNowLabel(THDVChart, result['thd_v']);
-  SetCubismNowLabel(THDIChart, result['thd_i']);
+  SetCubismNowLabel(ActiveChart, result['Active_Power']);
+  SetCubismNowLabel(ReactiveChart, result['Reactive_Power']);
+  SetCubismNowLabel(PowerFactorChart, result['Power_Factor']);
+  SetCubismNowLabel(PhiChart, result['Phi']);
+  SetCubismNowLabel(THDVChart, result['Voltage_THD']);
+  SetCubismNowLabel(THDIChart, result['Current_THD']);
 }
 $('#groupParametersPhases').on('click', 'button', ParametersSeries);
 var MainScrollable = null;
 function UpdatePage() {
   MainScrollable = new Scrollable( {Spinners: ['#EnergySpinner'], NowBtn: '#toolbarEnergy button[data-function="Update"]', Series: ['ACTIVE_POWER'], AggregVariable: 'GraphAggregationEnergy', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
-  new Live( { NowBtn: undefined, RefreshInterval: 5000, Spinners: [], Series: ['ACTIVE_POWER', 'REACTIVE_POWER', 'POWER_FACTOR', 'PHI', 'THD_V', 'THD_I'], OnSuccess: Live_OnSuccess});
-  new PeriodView( {Spinners: ['#VoltageSpinner', '#CurrentSpinner', '#PowerSpinner', '#FrequencySpinner'], Series: ['RMS_V', 'FLAG', 'RMS_I', 'ACTIVE_POWER', 'FREQUENCY'], Period: 7200000, Aggreg: '3S', OnSuccess: PeriodView_OnSuccess} );
-  new PeriodView( {Spinners: ['#MainParametersSpinner'], Series: ['ACTIVE_POWER', 'REACTIVE_POWER', 'POWER_FACTOR', 'PHI', 'THD_V', 'THD_I'], Period: 86400000, Aggreg: '1M', OnSuccess: PeriodViewParams_OnSuccess} );
+  new Live( { NowBtn: undefined, RefreshInterval: 5000, Spinners: [], Series: ['ACTIVE_POWER', 'REACTIVE_POWER', 'POWER_FACTOR', 'PHI', 'VOLTAGE_THD', 'CURRENT_THD'], OnSuccess: Live_OnSuccess});
+  new PeriodView( {Spinners: ['#VoltageSpinner', '#CurrentSpinner', '#PowerSpinner', '#FrequencySpinner'], Series: ['VOLTAGE', 'FLAG', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'], Period: 7200000, Aggreg: '3S', OnSuccess: PeriodView_OnSuccess} );
+  new PeriodView( {Spinners: ['#MainParametersSpinner'], Series: ['ACTIVE_POWER', 'REACTIVE_POWER', 'POWER_FACTOR', 'PHI', 'VOLTAGE_THD', 'CURRENT_THD'], Period: 86400000, Aggreg: '1M', OnSuccess: PeriodViewParams_OnSuccess} );
 }

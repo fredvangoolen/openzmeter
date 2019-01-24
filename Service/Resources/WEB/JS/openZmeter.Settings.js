@@ -261,7 +261,7 @@ var TariffKey = null;
 var TariffDefinition = null;
 $('#btnAddTariff').click(function() {
   TariffKey = null;
-  LoadTariffDialog({ Country: null, StartDate: new Date(new Date().getFullYear(), 0, 1, 0, 0, 0, 0).getTime(), EndDate: new Date(new Date().getFullYear(), 11, 31, 23, 59, 59, 999).getTime(), Name: 'No nane', Description: 'Add tariff description here', DayPeriods: 1, Seasons: [], Periods: [ { "ReactiveMode": null, "PowerMode": null } ], Holidays: [] });
+  LoadTariffDialog({ Country: null, StartDate: new Date(new Date().getFullYear(), 0, 1, 0, 0, 0, 0).getTime(), EndDate: new Date(new Date().getFullYear(), 11, 31, 23, 59, 59, 999).getTime(), Name: 'No nane', Details: {Description: 'Add tariff description here', Seasons: [], Periods: [ { "ReactiveMode": null, "PowerMode": null } ], Holidays: [] } });
 });
 $('#TariffsTable').on('click', 'button:nth-child(1)', function() {
   TariffKey = parseInt($(this).parents('td').attr('data-tariff'));
@@ -479,7 +479,7 @@ $.ajax({ url: "getDevices", timeout: 20000, type: "POST", dataType: "json", cont
           '<td>' + result[i]['Serial'] + '</td>' +
           '<td>' + result[i]['Analyzers'] + '</td>' +
           '<td>' + result[i]['Status'] + '</td>' +
-          '<td><div class="btn-group" style="width:100%"><button class="btn btn-xs btn-success" style="width:40%">Start</button><button class="btn btn-xs btn-default" style="width:60%">Configure</button></div></td>' +
+          '<td><div class="btn-group" style="width:100%"><button class="btn btn-xs btn-' + ((result[i]['Status'] === 'RUNNING') ? 'danger' : 'success') + '" style="width:40%">' + ((result[i]['Status'] === 'RUNNING') ? 'Stop' : 'Start') + '</button><button class="btn btn-xs btn-default" style="width:60%">Configure</button></div></td>' +
           '</tr>';
         DeviceTable.row.add($(RowText)).draw();
       }

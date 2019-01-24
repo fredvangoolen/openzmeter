@@ -10,7 +10,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 #define DEVICEV1_00_VID             0x0483                          //Product ID
 #define DEVICEV1_00_PID             0x7270                          //Device ID
-#define DEVICEV1_00_VERSION         0x0001                          //Device version
+#define DEVICEV1_00_VERSION         0x0100                          //Device version
 #define DEVICEV1_00_MANSTRING       "zRed"                          //Manufacturer string
 #define DEVICEV1_00_PRODSTRING      "openZmeter - Capture device"   //Product string
 #define DEVICEV1_00_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
@@ -36,8 +36,9 @@ class DeviceV1_00 : public DeviceInterface {
     struct libusb_device_handle *pDeviceHandle;            //Dispositivo de captura
     struct libusb_device        *pNewDevice;               //Dispositivo que se conecta    
     pthread_t                    pSignalThread;            //Thread to handle LED and sounds
-    pthread_mutex_t              pMutex;
-    json_object                 *pConfig;
+    pthread_mutex_t              pMutex;                   //Start/Stop mutex
+    json_object                 *pConfig;                  //Configuration section
+    libusb_context              *pContext;                 //USB context
   private :
     static bool                  pClassRegistered;
   private :

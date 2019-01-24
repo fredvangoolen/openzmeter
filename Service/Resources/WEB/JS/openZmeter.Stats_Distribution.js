@@ -37,9 +37,9 @@ function AjaxGetEnergy(selected_year) {
   $('#StatsSpinner').show();
   var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
   var From = new Date(selected_year, 0, 1, 0, 0, 0, 0).getTime();
-  Ajax.GetSeries(To - From, To, '1h', 0, 'active_energy',
+  Ajax.GetSeries(To - From, To, '1H', 0, ['ACTIVE_POWER'],
     function(result) {
-      EnergyData = GraphDataAppend(result, 'active_energy', []);
+      EnergyData = GraphDataAppend(result, 'Active_Power', []);
       $('#StatsSpinner').hide();
       EnergySeries();      
     }

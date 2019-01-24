@@ -811,26 +811,26 @@ function Round2Plain(value) {
 
 /* Update header info periodicaly */
 function GetIndicators() {
-  Ajax.GetSeriesNow(['RMS_V', 'RMS_I', 'ACTIVE_POWER', 'FREQUENCY'], 
+  Ajax.GetSeriesNow(['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'], 
     function(result) {
       var Time = new Date(result['Sampletime']);
       $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
       $('#IndicatorVoltageValues').html("");
-      for(i = 0; i < result['RMS_V'].length; i++) {
-        $('#IndicatorVoltageValues').append('<span class="value">' + Round2(result['rms_v'][i]) + '</span>');
+      for(i = 0; i < result['Voltage'].length; i++) {
+        $('#IndicatorVoltageValues').append('<span class="value">' + Round2(result['Voltage'][i]) + '</span>');
       }
       $('#IndicatorCurrentValues').html("");
-      for(i = 0; i < result['RMS_I'].length; i++) {
-        $('#IndicatorCurrentValues').append('<span class="value">' + Round2(result['rms_i'][i]) + '</span>');
+      for(i = 0; i < result['Current'].length; i++) {
+        $('#IndicatorCurrentValues').append('<span class="value">' + Round2(result['Current'][i]) + '</span>');
       }
       $('#IndicatorActivePowerValues').html("");
-      var Units = GetBestUnits(ArrayMax(result['active_power']));
+      var Units = GetBestUnits(ArrayMax(result['Active_Power']));
       $('#IndicatorActivePowerUnits').text(Units + "W");
-      result['Active_Power'] = ScaleArrayToUnits(result['active_power'], Units);
-      for(i = 0; i < result['active_power'].length; i++) {
-        $('#IndicatorActivePowerValues').append('<span class="value">' + Round2(result['active_power'][i]) + '</span>');
+      result['Active_Power'] = ScaleArrayToUnits(result['Active_Power'], Units);
+      for(i = 0; i < result['Active_Power'].length; i++) {
+        $('#IndicatorActivePowerValues').append('<span class="value">' + Round2(result['Active_Power'][i]) + '</span>');
       }
-      $('#IndicatorFrequencyValues').html('<span class="value">' + Round2(result['freq']) + '</span>');
+      $('#IndicatorFrequencyValues').html('<span class="value">' + Round2(result['Frequency']) + '</span>');
     },
     function() { 
       setTimeout(GetIndicators, 5000); 
@@ -1067,7 +1067,7 @@ function LoadAnalyzers() {
                       '<td>' + Analyzers[i].Mode + '</td>' +
                       '<td style="font-family: monospace; font-size : 11px">' + Analyzers[i].ID + '</td>' +
                       '<td><div class="btn-group" data-analyzer="' + result[i].ID + '">' +
-                      '<button type="button" class="btn btn-success btn-xs' + ((i === Analyzer) ? ' disabled' : '') + '">Select</button><button type="button" class="btn btn-success dropdown-toggle btn-xs" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>' +
+                      '<button type="button" class="btn btn-success btn-xs' + ((i === Analyzer) ? ' disabled' : '') + '">Select</button><button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>' +
                       '<ul class="dropdown-menu pull-right"><li><a href="#">Configure</a></li><li><a href="#">ACL</a></li><li><a href="#">Tariff</a></li><li role="separator" class="divider"></li><li><a href="#">Maintenance</a></li></ul>' +
                       '</div></td>' +
                       '</tr>';
@@ -1089,32 +1089,21 @@ function LoadAnalyzers() {
     }
   });
 }
-/* Load News and wait users accepts all*/
-var News = null;
+/* Load News and show dialog if any */
 function LoadNews() {
-  $('#dlgNews').on('hidden.bs.modal', NewsShow());
+  $('#btnNewsNext').click(LoadNews);
   $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ LastLogin: parseInt(localStorage.getItem('LastLogin')) }), success: 
     function(result) {
-      News = result;
-      NewsShow();
-    },
-    complete : function() {
-      LoadAnalyzers();
+      if(result === null) {
+        $('#dlgNews').modal('hide');
+        return;
+      }
+      $('#dlgNews .modal-header h4').html(result.Header);
+      $('#dlgNews .modal-body').html(result.Contents);
+      $('#dlgNews').modal('show');
+      localStorage.setItem('LastLogin', result.Timestamp + 1);
     }
   }); 
-}
-function NewsShow() {
-  if(News === null) return;
-  if(News['Headers'].length === 0) {
-    LoadAnalyzers();
-    return;
-  }
-  $('#dlgNews .modal-header h3 span').html(News['Headers'][0]);
-  $('#dlgNews .modal-body').html(News['Contents'][0]);
-  localStorage.setItem('LastLogin', News['Timestamp'][0] + 1);
-  $('#dlgNews').modal('show');
-  News['Headers'].shift();
-  News['Contents'].shift();
 }
 /* Genera la secuencia de pasos una vez cargado todo el javascript para mostrar la pagina */
 var LoadedPending = 0;
@@ -1133,6 +1122,7 @@ function LoadCommon() {
             $('#labelUserName').text(localStorage.getItem('UserName'));
             if(localStorage.getItem('UserName') === "admin") $('#menuSettings').removeClass('hide');
             $('ul.sidenav-menu li a').filter( function() { return this.href === window.location.href; }).addClass('active').parent().parent().show().parent().children('a').addClass('active');
+            LoadAnalyzers();
             LoadNews();
           }
         }

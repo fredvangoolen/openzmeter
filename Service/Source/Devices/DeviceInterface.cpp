@@ -41,7 +41,6 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
     HTTPServer::RegisterCallback("/StopDevice",          DeviceInterface::StopDeviceCallback);
     HTTPServer::RegisterCallback("/StartDevice",         DeviceInterface::StartDeviceCallback);
   }
-  Tools::LogMsg("INFO", "Registering '%s' device driver...\n", device->Driver());
   pDevices.push_back(device);
 }
 bool DeviceInterface::GetTariffsCallback(char* user, json_object* reader, Database* db, json_object** writer, char** postdata, size_t* resultLen) {
@@ -218,26 +217,26 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
       QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(freq ORDER BY sampletime ASC), '{}') AS \"Frequency\", ");
     } else if((strcmp(Serie, "FLAG") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "10M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
       QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(flag ORDER BY sampletime ASC), '{}') AS \"Flag\", ");
-    } else if((strcmp(Serie, "RMS_V") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "10M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(rms_v ORDER BY sampletime ASC), '{}') AS \"RMS_V\", ");
-    } else if((strcmp(Serie, "RMS_I") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "10M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(rms_i ORDER BY sampletime ASC), '{}') AS \"RMS_I\", ");
+    } else if((strcmp(Serie, "VOLTAGE") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "10M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(rms_v ORDER BY sampletime ASC), '{}') AS \"Voltage\", ");
+    } else if((strcmp(Serie, "CURRENT") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "10M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(rms_i ORDER BY sampletime ASC), '{}') AS \"Current\", ");
     } else if((strcmp(Serie, "ACTIVE_POWER") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "15M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
       QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(active_power ORDER BY sampletime ASC), '{}') AS \"Active_Power\", ");
     } else if((strcmp(Serie, "REACTIVE_POWER") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "15M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
       QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(reactive_power ORDER BY sampletime ASC), '{}') AS \"Reactive_Power\", ");
     } else if((strcmp(Serie, "POWER_FACTOR") == 0) && (strcmp(Aggreg, "1M") == 0)) {
       QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(power_factor ORDER BY sampletime ASC), '{}') AS \"Power_Factor\", ");
-    } else if((strcmp(Serie, "THD_V") == 0) && (strcmp(Aggreg, "1M") == 0)) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(thd_v ORDER BY sampletime ASC), '{}') AS \"THD_V\", ");
-    } else if((strcmp(Serie, "THD_I") == 0) && (strcmp(Aggreg, "1M") == 0)) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(thd_i ORDER BY sampletime ASC), '{}') AS \"THD_I\", ");
+    } else if((strcmp(Serie, "VOLTAGE_THD") == 0) && (strcmp(Aggreg, "1M") == 0)) {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(thd_v ORDER BY sampletime ASC), '{}') AS \"Voltage_THD\", ");
+    } else if((strcmp(Serie, "CURRENT_THD") == 0) && (strcmp(Aggreg, "1M") == 0)) {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(thd_i ORDER BY sampletime ASC), '{}') AS \"Current_THD\", ");
     } else if((strcmp(Serie, "PHI") == 0) && (strcmp(Aggreg, "1M") == 0)) {
       QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(phi ORDER BY sampletime ASC), '{}') AS \"Phi\", ");
-    } else if((strcmp(Serie, "HARMONICS_V") == 0) && (strcmp(Aggreg, "1M") == 0)) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(harmonics_v ORDER BY sampletime ASC), '{}') AS \"Harmonics_V\", ");
-    } else if((strcmp(Serie, "HARMONICS_I") == 0) && (strcmp(Aggreg, "1M") == 0)) {
-      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(harmonics_i ORDER BY sampletime ASC), '{}') AS \"Harmonics_I\", ");
+    } else if((strcmp(Serie, "VOLTAGE_HARMONICS") == 0) && (strcmp(Aggreg, "1M") == 0)) {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(harmonics_v ORDER BY sampletime ASC), '{}') AS \"Voltage_Harmonics\", ");
+    } else if((strcmp(Serie, "CURRENT_HARMONICS") == 0) && (strcmp(Aggreg, "1M") == 0)) {
+      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(harmonics_i ORDER BY sampletime ASC), '{}') AS \"Current_Harmonics\", ");
     } else {
       *postdata  = (char*)"Invalid serie in selected aggregation";
       *resultLen = strlen(*postdata);

@@ -37,8 +37,6 @@
           <df name="JS">
           </df>
           <df name="Lib">
-            <df name="bootstrap-year-calendar">
-            </df>
             <df name="datatables">
               <df name="images">
               </df>
@@ -189,8 +187,6 @@
           <df name="JS">
           </df>
           <df name="Lib">
-            <df name="bootstrap-year-calendar">
-            </df>
             <df name="datatables">
               <df name="images">
               </df>
@@ -301,8 +297,6 @@
           <df name="JS">
           </df>
           <df name="Lib">
-            <df name="bootstrap-year-calendar">
-            </df>
             <df name="datatables">
               <df name="images">
               </df>
@@ -413,8 +407,6 @@
           <df name="JS">
           </df>
           <df name="Lib">
-            <df name="bootstrap-year-calendar">
-            </df>
             <df name="datatables">
               <df name="images">
               </df>
@@ -515,8 +507,6 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
-        <gdb_signals>
-        </gdb_signals>
         <gdb_options>
           <DebugOptions>
           </DebugOptions>

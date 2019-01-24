@@ -4,18 +4,16 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <base href="/">
-    <link rel="shortcut icon" href="favicon.ico"/>
+    <link rel="shortcut icon" href="Imgs/favicon.ico"/>
     <title>openZmeter - Stats - Distribution</title>
-    <script src="lib/pace.min.js"></script>
-    <link rel="stylesheet" href="lib/pace.min.css">    
-    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css"/>
-    <link rel="stylesheet" href="lib/datatables/css/dataTables.bootstrap.css" />
-    <link rel="stylesheet" href="lib/sidenav/sidenav.min.css"/>
-    <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.css"/>
-    <link rel="stylesheet" href="lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/>
-    <link rel="stylesheet" href="lib/offline.min.css" type="text/css"/>
-    <link rel="stylesheet" href="lib/bootstrap-year-calendar/bootstrap-year-calendar.css" type="text/css"/>
-    <link rel="stylesheet" href="openZmeter.css"/>
+    <script src="JS/pace.min.js"></script>
+    <link rel="stylesheet" href="CSS/pace.min.css" type="text/css">
+    <link rel="stylesheet" href="CSS/bootstrap.min.css" type="text/css"/>
+    <link rel="stylesheet" href="CSS/dataTables.min.css" type="text/css"/>
+    <link rel="stylesheet" href="CSS/sidenav.min.css" type="text/css"/>
+    <link rel="stylesheet" href="CSS/offline.min.css" type="text/css"/>
+    <link rel="stylesheet" href="CSS/bootstrap-year-calendar.min.css" type="text/css"/>
+    <link rel="stylesheet" href="CSS/openZmeter.css"/>
   </head>
   <body onload="StartPageLoad()">
     <span data-load-block="Header_Block"></span>
@@ -37,7 +35,7 @@
                 <div class="col-md-12">
                   <div class="panel panel-other"> 
                     <div class="panel-heading">
-                      <span class="glyphicon glyphicon-calendar"></span> By day
+                      <span>By day</span>
                       <div style="float: right; width: 200px">
                         <div id="CalendarScale" style="height: 10px; width: 200px; display: flex; flex-direction:row; border: 1px solid #EEE"></div>
                         <div style="float: left; font-size: 80%" id="CalendarMin">?</div>
@@ -128,18 +126,17 @@
         </div>
       </div>
     </div>
-    <script src="lib/jquery.min.js"></script>
-    <script src="lib/bootstrap/js/bootstrap.min.js"></script>
-    <script src="lib/sidenav/sidenav.min.js"></script>
-    <script src="lib/spin.min.js"></script>
-    <script src="lib/offline.min.js"></script>
-    <script src="lib/bootstrap-year-calendar/bootstrap-year-calendar.js"></script>
-    <script src="lib/datatables/js/jquery.dataTables.js"></script>
-    <script src="lib/datatables/js/dataTables.bootstrap.js"></script>
-    <script src="lib/moment.min.js"></script>
-    <script src="lib/momentjs/moment-duration-format.js"></script>
-    <script src="lib/chroma.min.js"></script>
-    <script src="openZmeter.js"></script>
-    <script src="Stats_Distribution.js"></script>
+    <script src="JS/jquery.min.js"></script>
+    <script src="JS/bootstrap.min.js"></script>
+    <script src="JS/sidenav.min.js"></script>
+    <script src="JS/spin.min.js"></script>
+    <script src="JS/offline.min.js"></script>
+    <script src="JS/bootstrap-year-calendar.min.js"></script>
+    <script src="JS/dataTables.min.js"></script>
+    <script src="JS/moment.min.js"></script>
+    <script src="JS/moment-duration-format.min.js"></script>
+    <script src="JS/chroma.min.js"></script>
+    <script src="JS/openZmeter.js"></script>
+    <script src="JS/openZmeter.Stats_Distribution.js"></script>
   </body>
 </html>

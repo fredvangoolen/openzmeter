@@ -2,9 +2,10 @@
 CREATE TABLE IF NOT EXISTS country(
   country_code  character varying NOT NULL PRIMARY KEY,
   country       character varying NOT NULL,
-  icon          character varying NOT NULL,
-  currency      character varying
+  currency      character varying NOT NULL,
+  timezone      varchar NOT NULL
 ) WITH (OIDS=FALSE);
+INSERT INTO country(country_code, country, currency, timezone) VALUES('ESP', 'Spain', '€', 'Europe/Madrid') ON CONFLICT(country_code) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS users(
   username      character varying  NOT NULL PRIMARY KEY,
@@ -30,26 +31,35 @@ CREATE TABLE IF NOT EXISTS sessions(
 CREATE INDEX IF NOT EXISTS sessions_timestamp_idx ON sessions USING btree (timestamp);
 
 CREATE TABLE IF NOT EXISTS analyzers(
-  serial    character varying NOT NULL PRIMARY KEY,
-  username  character varying NOT NULL REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE,
-  contract  character varying NOT NULL,
-  zipcode   character varying NOT NULL,
-  frequency real              NOT NULL,
-  voltage   real              NOT NULL,
-  name      character varying NOT NULL,
-  geo       point
+  serial      character varying NOT NULL PRIMARY KEY,
+  username    character varying NOT NULL REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE,
+  contract    character varying NOT NULL,
+  zipcode     character varying NOT NULL,
+  frequency   real              NOT NULL,
+  voltage     real              NOT NULL,
+	max_current real              NOT NULL,
+	min_current real              NOT NULL,
+  name        character varying NOT NULL,
+  geo         point
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS rates(
-  rate int NOT           NULL PRIMARY KEY,
-  name character varying NOT NULL
+  rate         int               NOT NULL PRIMARY KEY,
+  name         character varying NOT NULL,
+  username     varchar           NOT NULL REFERENCES users(username) ON UPDATE CASCADE ON DELETE CASCADE,
+	country_code varchar           NOT NULL REFERENCES country(country_code) ON UPDATE CASCADE ON DELETE CASCADE,
+	details      jsonb             NOT NULL,
+	startdate    bigint            NOT NULL,
+	enddate      bigint            NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS analyzers_rates(
   serial    character varying NOT NULL REFERENCES analyzers ON UPDATE CASCADE ON DELETE CASCADE,
-  rate      int               NOT NULL REFERENCES rates ON UPDATE CASCADE ON DELETE CASCADE,
+  name      character varying NOT NULL,
   startdate bigint            NOT NULL,
-  config    jsonb             NOT NULL
+  enddate   bigint            NOT NULL,
+  config    jsonb             NOT NULL,
+  details   jsonb             NOT NULL
 ) WITH (OIDS=FALSE);
 CREATE UNIQUE INDEX IF NOT EXISTS analyzers_rates_serial_startdate_idx ON analyzers_rates USING btree (serial, startdate);
 
@@ -59,7 +69,6 @@ CREATE TABLE IF NOT EXISTS permisions(
   read       boolean           NOT NULL,
   write      boolean           NOT NULL
 ) WITH (OIDS=FALSE);
-
 
 CREATE TABLE IF NOT EXISTS news(
   newstime  bigint NOT NULL PRIMARY KEY,

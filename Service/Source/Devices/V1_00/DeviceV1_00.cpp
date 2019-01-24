@@ -38,7 +38,7 @@ bool DeviceV1_00::Init() {
       return false;
     }
     if(Descriptor.idVendor != DEVICEV1_00_VID) continue;
-    if(Descriptor.iProduct != DEVICEV1_00_PID) continue;
+    if(Descriptor.idProduct != DEVICEV1_00_PID) continue;
     if(Descriptor.bcdDevice != DEVICEV1_00_VERSION) continue;
     libusb_device_handle *Dev_Handle = NULL;
     if(libusb_open(Devs[i], &Dev_Handle) != LIBUSB_SUCCESS) {
@@ -74,7 +74,7 @@ bool DeviceV1_00::Init() {
     This->pVoltageOffset = 0;
     This->pCurrentOffset = 0;
     This->pAnalyzer      = NULL;
-    Tools::LogMsg("INFO", "Registering 'V1.00' device driver instance for USB with serial '%s'\n", String);
+    Tools::LogMsg("INFO", "Adding 'V1.00' device driver instance for USB with serial '%s'\n", String);
     AddDevice(This);
   }
   libusb_free_device_list(Devs, Count);
@@ -95,7 +95,7 @@ const char *DeviceV1_00::Driver() {
   return "V1";
 }
 const char *DeviceV1_00::Name() {
-  return "Capture device V1";
+  return "Capture device V1.00";
 }
 void  DeviceV1_00::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV1_00 *This = (DeviceV1_00*)transfer->user_data;
@@ -216,7 +216,7 @@ void *DeviceV1_00::Capture_Thread(void *args) {
           This->pNewDevice = NULL;
           continue;
         } else {
-          Tools::LogMsg("INFO", "Kernel driver dettached for DeviceV1 device with serial %s\n", This->pSerial);
+          Tools::LogMsg("INFO", "Kernel driver dettached for 'V1.00' device with serial '%s'\n", This->pSerial);
         }
       }
       Result = libusb_claim_interface(This->pDeviceHandle, 0);
@@ -227,7 +227,7 @@ void *DeviceV1_00::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       } else {
-        Tools::LogMsg("INFO", "Claimed interface 1 on CaptureMono device with serial %s\n", This->pSerial);
+        Tools::LogMsg("INFO", "Claimed interface 1 on 'V1.00' device with serial '%s'\n", This->pSerial);
       }
       for(int i = 0; i < DEVICEV1_00_TRANSFERS; i++) {
         libusb_fill_bulk_transfer(TransferIN[i], This->pDeviceHandle, DEVICEV1_00_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, -1);
@@ -240,7 +240,7 @@ void *DeviceV1_00::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       }
-      Tools::LogMsg("INFO", "Capture started on device V1.00 with serial %s\n", This->pSerial);
+      Tools::LogMsg("INFO", "Capture started on device 'V1.00' with serial '%s'\n", This->pSerial);
 //      This->pTerminateSignal = false;
       if(pthread_create(&This->pSignalThread, NULL, Signal_Thread, This) != 0) {
         Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -308,7 +308,7 @@ void *DeviceV1_00::Signal_Thread(void* args) {
 }
 bool  DeviceV1_00::ConfigDev(json_object *config) {
   if((pState == RUNNING) || (config == NULL) || (json_object_get_type(config) != json_type_object)) return false;
-  Tools::LogMsg("INFO", "Configuring 'V1.00' driver...\n");
+  Tools::LogMsg("INFO", "Configuring 'V1.00' driver with serial '%s'...\n", pSerial);
   bool AutoStart = false;
   json_object *Find;
   if((json_object_object_get_ex(config, "VoltageGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pVoltageGain = json_object_get_double(Find);
@@ -324,63 +324,47 @@ bool  DeviceV1_00::ConfigDev(json_object *config) {
   json_object_object_add(pConfig, "VoltageGain", json_object_new_double(pVoltageGain));
   json_object_object_add(pConfig, "VoltageOffset", json_object_new_double(pVoltageOffset));
   json_object_object_add(pConfig, "CurrentGain", json_object_new_double(pCurrentGain));
-  json_object_object_add(pConfig, "CurrentOffset", json_object_new_boolean(pCurrentOffset));
+  json_object_object_add(pConfig, "CurrentOffset", json_object_new_double(pCurrentOffset));
   json_object_object_add(pConfig, "AutoStart", json_object_new_boolean(AutoStart));
   if(Tools::SaveConfig() == false) return false;
   return true;
 }
 bool DeviceV1_00::Start() {
-  
-  //  DeviceV1 *This = new DeviceV1();
-//  Tools::LogMsg("INFO", "Starting DeviceV1 driver...\n");
-//  This->pBuffer.Reset(DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ);
-////  This->pUsed                  = 0;
-////  This->pBuffLen               = DEVICEV1_BUFFERSECONDS * DEVICEV1_SAMPLEFREQ;
-////  This->pVoltageSamples        = (float*)malloc(sizeof(float) * This->pBuffLen);
-////  This->pCurrentSamples        = (float*)malloc(sizeof(float) * This->pBuffLen);
-////  This->pReadPos               = 0;
-////  This->pWritePos              = 0;
-//  This->pLastUpdate            = 0;
-//  This->pDeviceHandle          = NULL;
-//  This->pNewDevice             = NULL;
-//  This->pSerial                = (char*)"000000000000000000000000";
-//  This->pVoltageGain           = 1;
-//  This->pCurrentGain           = 1;
-//  This->pVoltageOffset         = 0;
-//  This->pCurrentOffset         = 0;
-//  This->pAnalyzer              = NULL;
-//  float NominalVoltage         = 230.0;
-//  float NominalFrequency       = 50.0;
-//  char *Name                   = (char*)"Unnamed input";
-////  if((This->pVoltageSamples == NULL) || (This->pCurrentSamples == NULL)) {
-////    Tools::LogMsg("ERROR", "CaptureV2: Can not allocate memory for capture buffers\n");
-////    return NULL;
-////  }
-//  json_object *Find;
-//  if((json_object_object_get_ex(config, "Serial", &Find) == true) && (json_object_get_type(Find) == json_type_string)) This->pSerial = (char*)json_object_get_string(Find);
-//  if((json_object_object_get_ex(config, "NominalVoltage", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalVoltage = json_object_get_double(Find);
-//  if((json_object_object_get_ex(config, "NominalFrequency", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalFrequency = json_object_get_double(Find);  
-//  if((json_object_object_get_ex(config, "DisplayName", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Name = (char*)json_object_get_string(Find);
-//  This->pAnalyzer = new AnalyzerSoft(DEVICEV1_SAMPLEFREQ, This->pSerial, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
+  pthread_mutex_lock(&pMutex);
+  if(pState == RUNNING) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  Tools::LogMsg("INFO", "Starting 'V1.00' driver with serial '%s'...\n", pSerial);
+  pBuffer.Reset(DEVICEV1_00_BUFFERSECONDS * DEVICEV1_00_SAMPLEFREQ);
+  pTerminate    = false;
+  pLastUpdate   = 0;
+  pDeviceHandle = NULL;
+  pNewDevice    = NULL;
+  pAnalyzer     = new AnalyzerSoft(pSerial, AnalyzerInterface::PHASE1, DEVICEV1_00_SAMPLEFREQ);
 //  if((json_object_object_get_ex(config, "Remote", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigRemote(Find);
 //  if((json_object_object_get_ex(config, "Prices", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigPrices(Find);
-//  int Error = libusb_init(NULL);
-//  if(Error < 0) {
-//    Tools::LogMsg("ERROR", "Can not open libUSB...\n");
-//    return NULL;
-//  }
-//  if(pthread_create(&This->pCaptureThread, NULL, Capture_Thread, This) != 0) {
-//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    libusb_exit(NULL);
-//    return NULL;
-//  }
-//  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV1_VID, DEVICEV1_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, This, NULL);
-//  if(Error < 0) {
-//    Tools::LogMsg("ERROR", "Fallo al registrar callback de escucha libUSB...\n");
-//    This->pTerminate = true;
-//    pthread_join(This->pCaptureThread, NULL);
-//    return NULL;
-//  }
+  if(libusb_init(&pContext) < 0) {
+    Tools::LogMsg("ERROR", "Can not open libUSB...\n");
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    libusb_exit(pContext);
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  if(libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV1_00_VID, DEVICEV1_00_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL) < 0) {
+    Tools::LogMsg("ERROR", "Failed to register libUSB calback...\n");
+    pTerminate = true;
+    pthread_join(pCaptureThread, NULL);
+    libusb_exit(pContext);
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  pState = RUNNING;
+  pthread_mutex_unlock(&pMutex);
   return true;
 }
 bool DeviceV1_00::Stop() {

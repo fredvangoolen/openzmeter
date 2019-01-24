@@ -23,7 +23,7 @@ bool GetNewsCallback(char *user, json_object *reader, Database *db, json_object 
     return false;
   }
   char Query[1024];
-  sprintf(Query, "SELECT jsonb_build_object('Timestamp', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime >= %" PRIu64 " ORDER BY newstime DESC LIMIT 1", LastLogin);
+  sprintf(Query, "SELECT COALESCE((SELECT jsonb_build_object('Timestamp', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime >= %" PRIu64 " ORDER BY newstime ASC LIMIT 1), 'null')", LastLogin);
   *postdata = db->ExecSentenceJSON(Query, resultLen);
   return true;  
 }
