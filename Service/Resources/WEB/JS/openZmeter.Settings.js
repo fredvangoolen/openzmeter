@@ -280,17 +280,29 @@ function LoadTariffDialog(definition) {
   $('#divTariffMain').removeClass('hide');
   $('#dlgTariff').modal('show');
   $('#inputTariffName').val(TariffDefinition.Name);
-  $('#inputTariffStartDate').val(moment(TariffDefinition.StartDate).format('DD/MM/YYYY HH:mm:ss'));
-  $('#inputTariffEndDate').val(moment(TariffDefinition.EndDate).format('DD/MM/YYYY HH:mm:ss'));
+  $('#inputTariffStartDate').datetimepicker({ format: 'DD/MM/YYYY', defaultDate: new Date(TariffDefinition.StartDate), viewMode: 'months' });
+  $('#inputTariffEndDate').datetimepicker({ format: 'DD/MM/YYYY', defaultDate: new Date(TariffDefinition.EndDate), viewMode: 'months' });
   $('#inputTariffComments').val(TariffDefinition.Details.Description);
   if(PeriodsTable === null) PeriodsTable = $('#PeriodsTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [0, 1, 2], orderable: false, className: 'text-center' } ] } );
   if(SeasonsTable === null) SeasonsTable = $('#SeasonsTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [0, 1, 2], orderable: true }, { targets: [1, 2], className: 'text-center' }, { targets: [3], orderable: false } ], order: [1, 'asc']});
   if(HolidaysTable === null) HolidaysTable = $('#HolidaysTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [0, 1, 2], orderable: true }, { targets: [1, 2], className: 'text-center' }, { targets: [3], orderable: false } ], order: [1, 'asc']});
   TariffDefinition.WeekendPeriod = PopulatePeriodDropdown($('#btnTariffWeekend'), TariffDefinition.Details.Periods.length, 'P', TariffDefinition.WeekendPeriod, "Don't apply");
   TariffDefinition.HolidayPeriod = PopulatePeriodDropdown($('#btnTariffHoliday'), TariffDefinition.Details.Periods.length, 'P', TariffDefinition.HolidayPeriod, "Don't apply");
+  CheckTariff(TariffDefinition);
 }
+$('#inputTariffStartDate, inputTariffEndDate').on('dp.change', function(e) {
+  if(this.id === 'inputTariffStartDate') TariffDefinition.StartDate = e.date.startOf('day').utc().valueOf();
+  if(this.id === 'inputTariffEndDate') TariffDefinition.EndDate = e.date.endOf('day').utc().valueOf();
+  CheckTariff();
+});
 $('#btnTariffSave').click(function() { 
-//Guardar pendiente!!!
+  TariffDefinition.Name = $('#inputTariffName').val();
+  TariffDefinition.Details.Description = $('#inputTariffComments').val();
+  if(TariffKey !== null) TariffDefinition.RateID = TariffKey;
+  $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(TariffDefinition), 
+    success: function() { $('#dlgTariff').modal('hide'); },
+    error: function() { $('#divTariffError').text('Failed to save tariff!').removeClass('hide'); $('#btnTariffSave').addClass('disabled'); setTimeout(CheckTariff, 2000); }
+  });
 });
 $('#btnTariffPeriods').click(LoadPeriods);
 function LoadPeriods() {
@@ -316,22 +328,23 @@ $('#btnTariffPeriodsAdd').click(function() {
   TariffDefinition.Details.Periods.push({ "ReactiveMode": null, "PowerMode": null });
   LoadPeriods();
 });
-$('#btnTariffSeasons').click(LoadSeasons);
-$('#btnTariffPeriodsBack').click(function() { 
+$('#btnTariffPeriodsBack, #btnTariffSeasonsBack, #btnTariffHolidaysBack').click(function() { 
   $('#dlgTariff > div > div').addClass('hide');
   $('#divTariffMain').removeClass('hide');
   TariffDefinition.WeekendPeriod = PopulatePeriodDropdown($('#btnTariffWeekend'), TariffDefinition.Details.Periods.length, 'P', TariffDefinition.WeekendPeriod, "Don't apply");
   TariffDefinition.HolidayPeriod = PopulatePeriodDropdown($('#btnTariffHoliday'), TariffDefinition.Details.Periods.length, 'P', TariffDefinition.HolidayPeriod, "Don't apply");
+  CheckTariff(TariffDefinition);
 });
+$('#btnTariffSeasons').click(LoadSeasons);
 function LoadSeasons() {
   $('#dlgTariff > div > div').addClass('hide');
   $('#divTariffSeasons').removeClass('hide');
-  SeasonsTable.clear();
+  SeasonsTable.clear().draw();
   for(var i = 0; i < TariffDefinition.Details.Seasons.length; i++) {
     var RowText = '<tr>' +
                   '<td>' + TariffDefinition.Details.Seasons[i].Name + '</td>' +
-                  '<td>' + moment(TariffDefinition.Details.Seasons[i].StartDate).format('DD/MM HH:mm') + '</td>' +
-                  '<td>' + moment(TariffDefinition.Details.Seasons[i].EndDate).format('DD/MM HH:mm') + '</td>' +
+                  '<td>' + moment(TariffDefinition.Details.Seasons[i].StartDate).format('DD/MM/YYYY') + '</td>' +
+                  '<td>' + moment(TariffDefinition.Details.Seasons[i].EndDate).format('DD/MM/YYYY') + '</td>' +
                   '<td><div class="btn-group">' +
                   '<button type="button" class="btn btn-default btn-xs">Duplicate</button>' +
                   '<button type="button" class="btn btn-default btn-xs">Edit</button>' +
@@ -364,8 +377,8 @@ function LoadSeasonDialog(season) {
   $('#divTariffSeason').removeClass('hide');
   $('#hourlyRates').html('');
   $('#inputSeasonName').val(season.Name);
-  $('#inputSeasonFrom').datetimepicker({ format: 'DD/MM/YYYY HH:mm:00', defaultDate: new Date(season.StartDate), sideBySide: true });
-  $('#inputSeasonTo').datetimepicker({ format: 'DD/MM/YYYY HH:mm:59', defaultDate: new Date(season.EndDate), sideBySide: true });
+  $('#inputSeasonFrom').datetimepicker({ format: 'DD/MM/YYYY', viewMode: 'months', defaultDate: new Date(season.StartDate) });
+  $('#inputSeasonTo').datetimepicker({ format: 'DD/MM/YYYY', viewMode: 'months', defaultDate: new Date(season.EndDate) });
   for(var i = 0; i < 24; i++) {
     $('#hourlyRates').append('<div class="btn-group" style="margin: 4px 4px">' +
                              '  <div class="input-group input-group-xs">' +
@@ -386,8 +399,8 @@ $('#btnTariffSeasonBack').click(function() {
   $('#divTariffSeasons').removeClass('hide');
   var Season = {};
   Season.Name = $('#inputSeasonName').val();
-  Season.StartDate = $('#inputSeasonFrom').data("DateTimePicker").viewDate().utc().valueOf();
-  Season.EndDate = $('#inputSeasonTo').data("DateTimePicker").viewDate().utc().valueOf();
+  Season.StartDate = $('#inputSeasonFrom').data("DateTimePicker").viewDate().startOf('day').utc().valueOf();
+  Season.EndDate = $('#inputSeasonTo').data("DateTimePicker").viewDate().endOf('day').utc().valueOf();
   Season.DayPeriods = [];
   for(var i = 0; i < 24; i++) Season.DayPeriods.push(DropdownValue($('#btnHour' + i)));
   if(SeasonKey === null) 
@@ -396,20 +409,42 @@ $('#btnTariffSeasonBack').click(function() {
     TariffDefinition.Details.Seasons[SeasonKey] = Season;
   LoadSeasons();
 });
-
-
 $('#btnTariffHolidays').click(function() { 
   $('#dlgTariff > div > div').addClass('hide');
   $('#divTariffHolidays').removeClass('hide');
 });
-
-
-$('#btnTariffHolidaysBack, #btnTariffSeasonsBack').click(function() { 
-  $('#dlgTariff > div > div').addClass('hide');
-  $('#divTariffMain').removeClass('hide');
-});
-
-
+function CheckTariff() {
+  $('#divTariffScuccess').addClass('hide');
+  $('#divTariffError').addClass('hide');
+  $('#btnTariffSave').addClass('disabled');
+  var FindSeason = function(date) {
+    for(var i = 0; i < TariffDefinition.Details.Seasons.length; i++) { if(TariffDefinition.Details.Seasons[i].StartDate === date) return i; }
+    return null;   
+  };
+  for(var i = 0; i < TariffDefinition.Details.Seasons.length; i++) {
+    for(var h = 0; h < 24; h++) {
+      if((TariffDefinition.Details.Seasons[i].DayPeriods[h] < 1) || (TariffDefinition.Details.Seasons[i].DayPeriods[h] > TariffDefinition.Details.Periods.length)) {
+        $('#divTariffError').text('Deriods in season "' + TariffDefinition.Details.Seasons[i].Name + '" out of range!').removeClass('hide');
+        return;
+      }
+    }
+  }
+  var Used = TariffDefinition.Details.Seasons.length;
+  var Date = TariffDefinition.StartDate;
+  while(Used > 0) {
+    var Find = FindSeason(Date);
+    if(Find === null) break;
+    Date = TariffDefinition.Details.Seasons[Find].EndDate;
+    Used = Used - 1;
+    if(Used > 0) Date = Date + 1;
+  }
+  if((Used > 0) || (Date !== TariffDefinition.EndDate)) {
+    $('#divTariffError').text('Defined tariff period is not correctly covered by defined seasons!').removeClass('hide');
+    return;
+  }
+  $('#divTariffScuccess').text('Tariff contains ' + TariffDefinition.Details.Seasons.length + ' seasons, a total of ' + TariffDefinition.Details.Periods.length + ' day periods and ' + TariffDefinition.Details.Holidays.length + ' holidays').removeClass('hide');
+  $('#btnTariffSave').removeClass('disabled');
+}
 function PopulatePeriodDropdown(dropdown, count, prefix, selection, nullText) {
   var List = dropdown.parent().children('ul');
   List.html('');

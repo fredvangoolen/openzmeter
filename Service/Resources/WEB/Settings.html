@@ -94,7 +94,7 @@
           <div class="modal-header">
             <div class="pull-left"><h4 class="modal-title">Tariffs template</h4></div>
             <div class="pull-right btn-group">
-              <button type="button" class="btn btn-default btn-xs" id="btnTariffSave"><img src="Imgs/diskette.png" alt="New tariff"></button>
+              <button type="button" class="btn btn-default btn-xs disabled" id="btnTariffSave"><img src="Imgs/diskette.png" alt="New tariff"></button>
               <button type="button" class="btn btn-default btn-xs" id="btnTariffPeriods">Periods</button>
               <button type="button" class="btn btn-default btn-xs" id="btnTariffSeasons">Seasons</button>
               <button type="button" class="btn btn-default btn-xs" id="btnTariffHolidays">Holidays</button>
@@ -102,9 +102,8 @@
             </div>
           </div>
           <div class="modal-body">
-            <div class="alert alert-danger text-center" id="divTariffError" style="display:none; margin: 0px 15px 15px 15px;">
-              Error!
-            </div>
+            <div class="alert alert-danger text-center hide" id="divTariffError" style="margin-bottom: 5px; padding: 5px;"></div>
+            <div class="alert alert-success text-center" id="divTariffScuccess" style="margin-bottom: 5px; padding: 5px;"></div>
             <div class="row">
               <div class="col-xs-12 col-sm-6">
                 <label class="control-label">Name</label>
@@ -120,24 +119,22 @@
                   </div>
                 </div>
               </div>
-              <div class="col-xs-6">
+              <div class="col-xs-12 col-sm-6">
                 <label class="control-label">Start date</label>
-                <div class="input-group">
-                  <input type="text" class="form-control" style="pointer-events: none" id="inputTariffStartDate">
-                  <div class="input-group-btn-vertical">
-                    <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></button>
-                    <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></button>
-                  </div>
+                <div class='input-group date' id='inputTariffStartDate'>
+                  <input type='text' class="form-control" />
+                  <span class="input-group-addon">
+                    <span class="glyphicon-calendar"></span>
+                  </span>
                 </div>
               </div>
-              <div class="col-xs-6">
+              <div class="col-xs-12 col-sm-6">
                 <label class="control-label">End date</label>
-                <div class="input-group">
-                  <input type="text" class="form-control" style="pointer-events: none" id="inputTariffEndDate">
-                  <div class="input-group-btn-vertical">
-                    <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></button>
-                    <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></button>
-                  </div>
+                <div class='input-group date' id='inputTariffEndDate'>
+                  <input type='text' class="form-control" />
+                  <span class="input-group-addon">
+                    <span class="glyphicon-calendar"></span>
+                  </span>
                 </div>
               </div>
               <div class="col-xs-12">
@@ -181,6 +178,7 @@
             </div>
           </div>
           <div class="modal-body">
+            <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px;">Define the maximum periods of days and their pricing model</div>
             <div class="row">
               <div class="col-xs-12">
                 <table class="table small table-striped table-responsive" id="PeriodsTable">
@@ -200,6 +198,7 @@
             </div>
           </div>
           <div class="modal-body">
+            <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px;">Define seasons of the year</div>
             <div class="row">
               <div class="col-xs-12">
                 <table id="SeasonsTable" class="table small table-striped table-responsive" style="width: 100%">
