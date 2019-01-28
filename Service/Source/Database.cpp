@@ -106,7 +106,7 @@ char *Database::ExecSentenceJSON(const char* sql, size_t *len) {
     return NULL;
   } else {
     if(PQntuples(pResult) == 0) return NULL;
-    *len = PQgetlength(pResult, 0, 0);
+    if(len) *len = PQgetlength(pResult, 0, 0);
     return (PQgetisnull(pResult, 0, 0) == true) ? NULL : PQgetvalue(pResult, 0, 0);
   }
 }

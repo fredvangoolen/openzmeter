@@ -7,6 +7,8 @@
 #include "DeviceInterface.h"
 #include "HTTPServer.h"
 #include "Tools.h"
+#include <json.hpp>
+using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 vector<DeviceInterface*> DeviceInterface::pDevices;
 //----------------------------------------------------------------------------------------------------------------------
@@ -52,17 +54,17 @@ bool DeviceInterface::GetTariffsCallback(char* user, json_object* reader, Databa
     uint32_t Index = 0;
     if((json_object_object_get_ex(reader, "RateID", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Index = json_object_get_int(Find);
     if(Index == 0) {
-      snprintf(QueryText, sizeof(QueryText), "SELECT COALESCE(to_json(array_agg(jsonb_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username))), '[]') from rates");
+      snprintf(QueryText, sizeof(QueryText), "SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username))), '[]') from rates");
     } else {
-      snprintf(QueryText, sizeof(QueryText), "SELECT jsonb_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = %d", Index);
+      snprintf(QueryText, sizeof(QueryText), "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = %d", Index);
     }  
   } else {
     uint64_t StartDate = 0;
     if((json_object_object_get_ex(reader, "StartDate", &Find) == true) && (json_object_get_type(Find) == json_type_int)) StartDate = json_object_get_int64(Find);
     if(StartDate == 0) {
-      snprintf(QueryText, sizeof(QueryText), "SELECT COALESCE(to_json(array_agg(jsonb_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') from analyzers_rates WHERE serial = '%s'", Serial);
+      snprintf(QueryText, sizeof(QueryText), "SELECT COALESCE(to_json(array_agg(json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') from analyzers_rates WHERE serial = '%s'", Serial);
     } else {
-      snprintf(QueryText, sizeof(QueryText), "SELECT jsonb_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = %" PRIu64, StartDate);
+      snprintf(QueryText, sizeof(QueryText), "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = %" PRIu64, StartDate);
     }  
   }
   *postdata = db->ExecSentenceJSON(QueryText, resultLen);
@@ -124,7 +126,6 @@ bool DeviceInterface::StopDeviceCallback(char *user, json_object *reader, Databa
   *resultLen = strlen(*postdata);
   return false;
 }
-
 bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_array();
   db->PrepareSentence("SELECT serial, editable FROM (SELECT serial, false AS editable FROM permisions WHERE username = ? AND read = TRUE UNION SELECT serial, true FROM analyzers WHERE username = ? UNION SELECT serial, true FROM analyzers WHERE 'admin' = ?) AS Result ORDER BY serial ASC, editable DESC");
@@ -420,27 +421,108 @@ bool DeviceInterface::GetEventsCallback(char* user, json_object* reader, Databas
   return true;
 }
 bool DeviceInterface::GetPricesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
-  uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
-  char    *Analyzer = NULL;
-  json_object_object_foreach(reader, JSON_Key, JSON_Val) {
-    enum json_type JSON_Type = json_object_get_type(JSON_Val);
-    if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Period") == 0))      
-      Period = json_object_get_int64(JSON_Val);
-    else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "To") == 0))
-      To = json_object_get_int64(JSON_Val);
-    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Analyzer") == 0))
-      Analyzer = (char*)json_object_get_string(JSON_Val);     
-   else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "LastSample") == 0))
-      LastSample = json_object_get_int64(JSON_Val);
-  }
-  if(Analyzer == NULL) {
+  uint64_t     Period = 0, From = 0, To = 0, LastSample  = 0;
+  char        *Aggreg = NULL;
+  char        *Serial = NULL;
+  json_object *Find;
+
+  if((json_object_object_get_ex(reader, "Analyzer", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
+  if((json_object_object_get_ex(reader, "Aggreg", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Aggreg = (char*)json_object_get_string(Find);
+  if((json_object_object_get_ex(reader, "LastSample", &Find) == true) && (json_object_get_type(Find) == json_type_int)) LastSample = json_object_get_int64(Find);
+  if((json_object_object_get_ex(reader, "Period", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Period = json_object_get_int64(Find);
+  if((json_object_object_get_ex(reader, "To", &Find) == true) && (json_object_get_type(Find) == json_type_int)) To = json_object_get_int64(Find);
+  if(Serial == NULL) {
     *postdata  = (char*)"'Analyzer' param is requiered";
     *resultLen = strlen(*postdata);
     return false;
   }
-  //Obtengo tarifas y las cargo como json! desde la que acaba despues de from hasta la que empieze en to
-  //Obtengo consumos de la tabla de 15 minutos, de activa y reactiva sumados por fases!
-  //para cada fila de consumo.... TELA!
+  if((Aggreg == NULL) || ((strcmp(Aggreg, "15M") != 0) && (strcmp(Aggreg, "1H") != 0))) {
+    *postdata  = (char*)"'Aggreg' need to be '15M' or '1H'";
+    *resultLen = strlen(*postdata);
+    return false;
+  }
+  *writer = json_object_new_object();
+  if(To == 0) To = Tools::GetTime();
+  From = To - Period;
+  To = (To / 900000) * 900000 - 1;
+  json_object_object_add(*writer, "To", json_object_new_int64(To));
+  From = (From / 900000) * 900000;
+  json_object_object_add(*writer, "From", json_object_new_int64(From));
+  From += 899999;
+  json_object *Sampletimes = json_object_new_array();
+  json_object *Actives = json_object_new_array();
+  json_object *Reactives = json_object_new_array();
+  json_object *Periods = json_object_new_array();
+  json_object *Powers = json_object_new_array();
+  char QueryText[8192];
+  sprintf(QueryText, "SELECT to_json(array_agg(json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Details', details))) FROM analyzers_rates WHERE serial = '%s'", Serial);
+  json Tariffs = json::parse(db->ExecSentenceJSON(QueryText, NULL));
+  sprintf(QueryText, "SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power  FROM \"%s\".aggreg_15m WHERE sampletime > %" PRIu64 " AND sampletime >= %" PRIu64 " AND sampletime <= %" PRIu64, Serial, LastSample, From, To);  
+  db->ExecSentence(QueryText);
+  Tools::LogMsg("INFO", "Calculando desde: %" PRIu64 "\n", From);
+  uint32_t Row = 0;
+  while(From < To) {
+    json_object_array_add(Sampletimes, json_object_new_int64(From));
+    // Busco la potencia en el periodo que estoy procesando
+    float Active = NAN;
+    float Reactive = NAN;
+    if((Row < db->ResultRows()) && (strtoull(db->ResultValue(Row, "sampletime"), NULL, 10) == From)) {
+      Active   = atof(db->ResultValue(Row, "active_power"));
+      Reactive = atof(db->ResultValue(Row, "reactive_power"));
+      Row++;
+      json_object_array_add(Actives, json_object_new_double(Active));
+      json_object_array_add(Reactives, json_object_new_double(Reactive));
+    } else {
+      json_object_array_add(Actives, NULL);
+      json_object_array_add(Reactives, NULL);
+    }
+    //Busco la tarifa que cubre el rango y el tipo de periodo
+    uint32_t Tariff = UINT32_MAX;
+    uint8_t Period = UINT8_MAX;
+    for(uint32_t n = 0; n < Tariffs.size(); n++) {
+      if((Tariffs[n]["StartDate"] >= From) || (Tariffs[n]["EndDate"] < From)) continue;
+      Tariff = n;
+      for(uint32_t m = 0; m < Tariffs[n]["Details"]["Seasons"].size(); m++) {
+        if((Tariffs[n]["Details"]["Seasons"][m]["StartDate"] >= From) || (Tariffs[n]["Details"]["Seasons"][m]["EndDate"] < From)) continue;
+        uint8_t Hour   = (From / 3600000) % 24;
+        Period = Tariffs[n]["Details"]["Seasons"][m]["DayPeriods"][Hour];
+        break;
+      }
+      break;
+    }
+    if(Period != UINT8_MAX) {
+      char PeriodName[16];
+      snprintf(PeriodName, sizeof(PeriodName), "P%d", Period);
+      json_object_array_add(Periods, json_object_new_string(PeriodName));
+      json_object_array_add(Powers, json_object_new_double(Tariffs[Tariff]["Details"]["Periods"][Period - 1]["Contracted_Power"]));
+    } else {
+      json_object_array_add(Periods, NULL);
+      json_object_array_add(Powers, NULL);
+
+    }
+    
+      
+
+//      Tools::LogMsg("INFO", "Hora %d\n", Hour);
+      //esta es la tarifa que esta en el rango
+      //tengo que extraer la hora en localtime!
+
+
+
+//    if(Tariff != UINT32_MAX) Tools::LogMsg("INFO", "Tarifa encontrada para el rango\n");
+    //Busco en las tarifas en cual de ellas cae el periodo en el que estoy    
+    
+    
+    
+      
+    
+    
+    //float Active   = atof(db->ResultValue(i, "active_power"));
+//    float Reactive = atof(db->ResultValue(i, "reactive_power"));
+//    uint64_t Time  = strtoull(db->ResultValue(i, "sampletime"), NULL, 10);
+//    Tools::LogMsg("INFO", "Sampletime: %" PRIu64 ", Activa: %f, Reactiva: %f\n", Time, Active, Reactive);
+
+    
   //  busco tarifa aplicable en el periodo
   //  busco periodo del dia en el que estoy
   //  Es festivo ? es fin de semana?
@@ -448,22 +530,39 @@ bool DeviceInterface::GetPricesCallback(char *user, json_object *reader, Databas
   //  Aplico configuracion de modulos adicionales
   //  Si he pedido agregacion de 15 minutos escupo datos y reinicio contadores, si es la de 1 hora y ha habido cambio de hora pues lo mismo
   //  
+    
+  From += 900000;
+    
+
+
+
+
+
+  }
+  json_object_object_add(*writer, "Sampletime", Sampletimes);
+  json_object_object_add(*writer, "Active_Energy", Actives);
+  json_object_object_add(*writer, "Reactive_Energy", Reactives);
+  json_object_object_add(*writer, "Period_Name", Periods);
+  json_object_object_add(*writer, "Contracted_Power", Powers);
+  *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
+  return true;
   
-  if(To == 0) To = Tools::GetTime();
-  From = To - Period;
-  db->PrepareSentence("SET search_path TO ?");
-  db->BindSingleString(Analyzer);
-  db->ExecSentence();
-  char QueryText[8192];
-  int  QueryLen = 0;
-  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS \"Sampletime\",");
-  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(active_energy ORDER BY sampletime ASC), '{}') AS active_energy,");
-  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(price ORDER BY sampletime ASC), '{}') AS price,");
-  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
-  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\" ", To);
-  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM (SELECT sampletime, COALESCE((SELECT SUM(s) FROM UNNEST(active_energy) s), 0) as active_energy, price FROM aggreg_1h NATURAL FULL JOIN prices ");
-  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "WHERE sampletime > %" PRIu64 " AND sampletime >= %" PRIu64 " AND sampletime <= %" PRIu64 ") AS T1) AS Result", LastSample, From, To);    
-  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
+  
+  
+//  
+//  db->PrepareSentence("SET search_path TO ?");
+//  db->BindSingleString(Analyzer);
+//  db->ExecSentence();
+//  char QueryText[8192];
+//  int  QueryLen = 0;
+//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
+//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS \"Sampletime\",");
+//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(active_energy ORDER BY sampletime ASC), '{}') AS active_energy,");
+//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(price ORDER BY sampletime ASC), '{}') AS price,");
+//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
+//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\" ", To);
+//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM (SELECT sampletime, COALESCE((SELECT SUM(s) FROM UNNEST(active_energy) s), 0) as active_energy, price FROM aggreg_1h NATURAL FULL JOIN prices ");
+//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "WHERE sampletime > %" PRIu64 " AND sampletime >= %" PRIu64 " AND sampletime <= %" PRIu64 ") AS T1) AS Result", LastSample, From, To);    
+//  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
   return true;
 }
