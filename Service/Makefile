@@ -1,6 +1,6 @@
 #include dirs
 INC_DIRS = /usr/include/postgresql /usr/include/dbus-1.0 /usr/lib/x86_64-linux-gnu/dbus-1.0/include /usr/include/libxml2 \
-	   /usr/local/pgsql/include /usr/lib/arm-linux-gnueabihf/dbus-1.0/include
+	   /usr/local/pgsql/include /usr/lib/arm-linux-gnueabihf/dbus-1.0/include /usr/include/nlohmann
 LIB_DIRS = /usr/local/pgsql/lib
 
 #General options

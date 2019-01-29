@@ -25,9 +25,9 @@ function PeriodView_OnSuccess(result) {
     VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
       { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: false, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.Voltage()), colors: ColorArray($('#VoltagePanel').css('border-color'), 3), dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(Analyzer.GetSeriesNames('Voltage')), colors: ColorArray($('#VoltagePanel').css('border-color'), 3), dateWindow: [result['From'], result['To']],
         underlayCallback: function(canvas, area, g) {
-          var NV = Analyzers[Analyzer].NominalVoltage, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
+          var NV = Analyzer.GetSelected().NominalVoltage, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
           GraphHBackgroundRanges([[NV * 1.1, NV * 1.07, Yellow], [NV * 0.93, NV * 0.9, Yellow], [Infinity, NV * 1.1, Red], [NV * 0.9, -Infinity, Red]], g, canvas);
         },
         axes: {
@@ -45,7 +45,7 @@ function PeriodView_OnSuccess(result) {
   } else {
     VoltageChart.updateOptions({ file: VoltageData, dateWindow: [result['From'], result['To']]});
   }
-  for(var n = 0; n < SeriesNames.Voltage().length; n++) AddEvents(result, SeriesNames.Voltage()[n], VoltageChart);
+  for(var n = 0; n < Analyzer.GetSeriesNames('Voltage').length; n++) AddEvents(result, Analyzer.GetSeriesNames('Voltage')[n], VoltageChart);
   VoltageSeries();
   CurrentData = GraphDataAppend(result, 'Current', CurrentData);
   $('#labelCurrent').html(Array_Round2(result['Current'][result['Current'].length - 1], ColorArray($('#CurrentPanel').css('border-color'), 4)));
@@ -54,9 +54,9 @@ function PeriodView_OnSuccess(result) {
     CurrentChart = new Dygraph(document.getElementById("CurrentChart"), CurrentData,
       { strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {}, 
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.Current()), colors: ColorArray($('#CurrentPanel').css('border-color'), 4), dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(Analyzer.GetSeriesNames('Current')), colors: ColorArray($('#CurrentPanel').css('border-color'), 4), dateWindow: [result['From'], result['To']],
         underlayCallback: function(canvas, area, g) {
-          var MC = Analyzers[Analyzer]['MaxCurrent'], Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
+          var MC = Analyzer.GetSelected().MaxCurrent, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
           GraphHBackgroundRanges([[MC * 0.7, MC * 0.6, Yellow], [Infinity, MC * 0.7, Red]], g, canvas);
         },
         axes: {
@@ -84,7 +84,7 @@ function PeriodView_OnSuccess(result) {
     PowerChart = new Dygraph(document.getElementById("PowerChart"), PowerData, 
       { strokeWidth: 0.5, stepPlot: true, stackedGraph: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: true, rollPeriod: 0,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], interactionModel: {},
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.ActivePower()), colors: ColorArray($('#PowerPanel').css('border-color'), 3), dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(Analyzer.GetSeriesNames('Active_Power')), colors: ColorArray($('#PowerPanel').css('border-color'), 3), dateWindow: [result['From'], result['To']],
         axes: {
           y: { pixelsPerLabel: 15,
                axisLabelWidth: 34,
@@ -97,7 +97,7 @@ function PeriodView_OnSuccess(result) {
         }
       }
     );
-    new GraphTools('Active power', PowerChart, '#toolbarPower', undefined, function() { exportToCsv('Active power.csv', [['Time'].concat(SeriesNames.ActivePower())].concat(PowerData)); });
+    new GraphTools('Active power', PowerChart, '#toolbarPower', undefined, function() { exportToCsv('Active power.csv', [['Time'].concat(Analyzer.GetSeriesNames('Active_Power'))].concat(PowerData)); });
   } else {
     PowerChart.updateOptions({file: PowerData, dateWindow: [result['From'], result['To']]});
   }
@@ -147,7 +147,7 @@ $('#groupPowerPhases').on('click', 'button', PowerSeries);
 /* Grafico de energia */
 var EnergyData = [], EnergyChart = null;
 function Scrollable_OnSuccess(result, clear) {
-  if(clear) EnergyData = [new Array(SeriesNames.ActiveEnergy().length + 1).fill(0)];
+  if(clear) EnergyData = [new Array(Analyzer.GetSeriesNames('Active_Energy').length + 1).fill(0)];
   for(var i = 0; i < result['Active_Power'].length; i++) {
     for(var n = 0; n < result['Active_Power'][i].length; n++) result['Active_Power'][i][n] = result['Active_Power'][i][n] * ((result['Aggregation_Source'] === '1H') ? 1.0 : 0.25);
   }
@@ -155,7 +155,7 @@ function Scrollable_OnSuccess(result, clear) {
   if(EnergyChart === null) {
     EnergyChart = new Dygraph(document.getElementById("EnergyChart"), EnergyData,
       { strokeWidth: 0.5, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], plotter: barChartNoSpacedPlotter, stackedGraphNaNFill: 'none',
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.ActiveEnergy()), dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(Analyzer.GetSeriesNames('Active_Energy')), dateWindow: [result['From'], result['To']],
         zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },
         underlayCallback: function(context, area, dygraph) { GraphHightlightWeekends("#EEE", context, area, dygraph); }, colors: ColorArray($('#EnergyPanel').css('border-color'), 3), xAxisHeight: 24,
         axes: {
@@ -193,7 +193,7 @@ function Scrollable_UpdateCounters(times, renew) {
     $('#labelEnergySecondary, #labelBudgetSecondary').text(times.SecondaryText);
     $('#labelEnergySecondaryValue, #labelBudgetSecondaryValue').text((times.SecondaryTo !== undefined) ? 'Calculating...' : '');
     if(times.SecondaryTo !== undefined) {
-      Ajax.GetSeriesAggreg(times.SecondaryPeriod, times.SecondaryTo, times.PreferedAggreg, 'sum(active_energy)', 
+      Analyzer.GetSeriesAggreg(times.SecondaryPeriod, times.SecondaryTo, times.PreferedAggreg, 'sum(active_energy)', 
         function(result) {
           if(result['Samples'] !== 0) {
             var Sum = ArraySum(result['sum_active_energy']);
@@ -207,7 +207,7 @@ function Scrollable_UpdateCounters(times, renew) {
           window.dispatchEvent(new Event('resize'));
         }
       );
-      Ajax.GetPrices(times.SecondaryPeriod, times.SecondaryTo, 0,
+      Analyzer.GetPrices(times.SecondaryPeriod, times.SecondaryTo, 0,
         function(result) {
           if(result['Sampletime'].length !== 0) {
             $('#labelBudgetUnits').text('€');
@@ -221,7 +221,7 @@ function Scrollable_UpdateCounters(times, renew) {
       );
     }
   }
-  Ajax.GetSeriesAggreg(times.PrimaryPeriod, times.PrimaryTo, times.PreferedAggreg, 'sum(active_energy)', 
+  Analyzer.GetSeriesAggreg(times.PrimaryPeriod, times.PrimaryTo, times.PreferedAggreg, 'sum(active_energy)', 
     function(result) {
       var Sum = ArraySum(result['sum_active_energy']);
       var Units = GetBestUnits(Sum);
@@ -231,7 +231,7 @@ function Scrollable_UpdateCounters(times, renew) {
       window.dispatchEvent(new Event('resize'));
     }
   );
-  Ajax.GetPrices(times.PrimaryPeriod, times.PrimaryTo, 0,
+  Analyzer.GetPrices(times.PrimaryPeriod, times.PrimaryTo, 0,
     function(result) {
       $('#labelBudgetUnits').text('€');
       var Budget = 0.0;

@@ -1,47 +1,13 @@
-/* default options for spinner */
-var SpinnerOpts         = { lines: 10,  // The number of lines to draw
-                            length: 10, // The length of each line
-                            width: 5,   // The line thickness
-                            radius: 10  // The radius of the inner circle
-                          };
+var SpinnerOpts = { lines: 10, length: 10, width: 5, radius: 10 }; // default options for spinner
 /* offline.js configuration and tools */
-Offline.options = {requests: true};
+Offline.options = { requests: true };
 Offline.on('confirmed-down', function() { $('#OfflineDiv').css('display', 'inherit'); });
 Offline.on('confirmed-up',   function() { $('#OfflineDiv').css('display', 'none'); });
-                        
-/* Series names */
-var SeriesNames = {
-  Harmonics: [ '1st',  '2nd',  '3rd',  '4th',  '5th',  '6th',  '7th',  '8th',  '9th', '10th',
-               '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th',
-               '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th',
-               '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th',
-               '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'],
-  Voltage: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['V'] : ['V(R)', 'V(S)', 'V(T)']; },
-  Current: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['I'] : (Analyzers[Analyzer]['Mode'] === '3PHASE') ? ['I(R)', 'I(S)', 'I(T)'] : ['I(R)', 'I(S)', 'I(T)', 'I(N)']; },
-  ActiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)']; },
-  ReactiveEnergy: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
-  ActivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)']; },
-  ReactivePower: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
-  PowerFactor: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['PF'] : ['PF(R)', 'PF(S)', 'PF(T)']; },
-  THDv: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['THDv'] : ['THDv(R)', 'THDv(S)', 'THDv(T)']; },
-  THDi: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['THDi'] : (Analyzers[Analyzer]['Mode'] === '3PHASE') ? ['THDi(R)', 'THDi(S)', 'THDi(T)'] : ['THDi(R)', 'THDi(S)', 'THDi(T)', 'THDi(N)']; },
-  PHI: function() { return (Analyzers[Analyzer]['Mode'] === '1PHASE') ? ['PHI']  : ['PHI(R)', 'PHI(S)', 'PHI(T)']; },
-};
-  
 /* redirect ajax error to login page */
 $(document).ajaxError(function (event, jqxhr, settings, exception) { if(jqxhr.status === 401) window.location.href = 'Login'; });
 /* handle buttons events to avoid 'selected' effect */
 $(document).on("mousedown", ":button", function(e) { e.preventDefault(); this.blur(); } );
 
-/* Ajax functions */
-var Ajax = {
-  GetSeries: function(period, to, aggreg, lastsample, series, onSuccess, onCompletion) { return $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Analyzers[Analyzer].ID } ) }); },
-  GetSeriesRange: function(aggreg, onSuccess, onCompletion) { return $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify({ Aggreg: '1h', Analyzer: Analyzers[Analyzer].ID}) }); },
-  GetSeriesNow: function(series, onSuccess, onCompletion) { return $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Series: series, Analyzer: Analyzers[Analyzer].ID} ) }); },
-  GetSeriesAggreg: function(period, to, aggreg, series, onSuccess, onCompletion) { return $.ajax({ url: "getSeriesAggreg", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, Series: series, Analyzer: Analyzers[Analyzer].ID } ) }); }  ,
-  GetEvents: function(period, to, lastevent, onSuccess, onCompletion) { return $.ajax({ url: "getEvents", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, LastEvent: lastevent, Analyzer: Analyzers[Analyzer].ID } ) }); },
-  GetPrices: function(period, to, lastsample, onSuccess, onCompletion) { return $.ajax({ url: "getPrices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, data: JSON.stringify( { Period: period, To: to, LastSample: lastsample, Analyzer: Analyzers[Analyzer].ID } ) }); }  
-};
 /* Short aggreg to period */
 function GetPeriodFromAggreg(aggreg) {
   return (aggreg === '1H') ? 3600000 : (aggreg === '15M') ? 900000 : (aggreg === '10M') ? 600000 : (aggreg === '1M') ? 60000 : 3000;
@@ -244,7 +210,7 @@ function Scrollable(opt) {
         }
       );      
     } else {
-      Ajax.GetSeries(Period, GraphEnd, GraphAggregation, Self.LastSample, Self.Opt.Series, 
+      Analyzer.GetSeries(Period, GraphEnd, GraphAggregation, Self.LastSample, Self.Opt.Series, 
         Self.OnSuccess, 
         function() { 
           $(Self.Opt.NowBtn).removeClass('disabled');
@@ -293,7 +259,7 @@ function Live(opt) {
   $(Self.Opt.NowBtn).addClass('active');
   Self.GetSeries = function() {
     $(Self.Opt.NowBtn).addClass('disabled');
-    Ajax.GetSeriesNow(Self.Opt.Series, 
+    Analyzer.GetSeriesNow(Self.Opt.Series, 
       function(result) {
         for(var i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
         Self.Opt.OnSuccess(result);
@@ -314,7 +280,7 @@ function PeriodView(opt) {
   this.Opt = Object.assign({Spinners: [], Series: '', Period: 86400000, Aggreg: '1M'}, opt);
   var Self = this;
   Self.GetSeries = function() {
-    Ajax.GetSeries(Self.Opt.Period, 0, Self.Opt.Aggreg, Self.LastSample, Self.Opt.Series, 
+    Analyzer.GetSeries(Self.Opt.Period, 0, Self.Opt.Aggreg, Self.LastSample, Self.Opt.Series, 
       function(result) {
         if(result['Sampletime'] === null) return;
         if(result['Sampletime'].length === 0) return;
@@ -465,7 +431,7 @@ function GroupButtons(buttongroup, variable, maxItems, unique, callback, sender)
   }
   var VisibleSeries = [];
   var Visibles = [];
-  if(Analyzers[Analyzer].Mode !== '1PHASE') {
+  if(Analyzer.GetSelected().Mode !== '1PHASE') {
     buttongroup.removeClass('hide');
     for(var i = 0; i < NumElements; i++) {
       if(i >= maxItems) {
@@ -808,111 +774,6 @@ function Round2Plain(value) {
   }
 }
 
-
-/* Update header info periodicaly */
-function GetIndicators() {
-  Ajax.GetSeriesNow(['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'], 
-    function(result) {
-      var Time = new Date(result['Sampletime']);
-      $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
-      $('#IndicatorVoltageValues').html("");
-      for(i = 0; i < result['Voltage'].length; i++) {
-        $('#IndicatorVoltageValues').append('<span class="value">' + Round2(result['Voltage'][i]) + '</span>');
-      }
-      $('#IndicatorCurrentValues').html("");
-      for(i = 0; i < result['Current'].length; i++) {
-        $('#IndicatorCurrentValues').append('<span class="value">' + Round2(result['Current'][i]) + '</span>');
-      }
-      $('#IndicatorActivePowerValues').html("");
-      var Units = GetBestUnits(ArrayMax(result['Active_Power']));
-      $('#IndicatorActivePowerUnits').text(Units + "W");
-      result['Active_Power'] = ScaleArrayToUnits(result['Active_Power'], Units);
-      for(i = 0; i < result['Active_Power'].length; i++) {
-        $('#IndicatorActivePowerValues').append('<span class="value">' + Round2(result['Active_Power'][i]) + '</span>');
-      }
-      $('#IndicatorFrequencyValues').html('<span class="value">' + Round2(result['Frequency']) + '</span>');
-    },
-    function() { 
-      setTimeout(GetIndicators, 5000); 
-    }, 
-    function() {
-      $('#IndicatorVoltageValues').html('<span class="value">Offline</span>');
-      $('#IndicatorCurrentValues').html('<span class="value">Offline</span>');
-      $('#IndicatorActivePowerValues').html('<span class="value">Offline</span>');
-      $('#IndicatorFrequencyValues').html('<span class="value">Offline</span>');
-      $('NodeTime').text('Offline');   
-    }
-  );
-}
-function AjaxGetIndicatorsB() {
-  var Times = GetDayTimePeriod();
-  Ajax.GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, "sum(active_energy)", 
-    function(result) {
-      var Units = GetBestUnits(ArrayMax(result['sum_active_energy']));
-      $('#IndicatorActiveEnergyUnits').text(Units + 'Wh');
-      $('#IndicatorTodayEnergyValues').html("");
-      result['sum_active_energy'] = ScaleArrayToUnits(result['sum_active_energy'], Units);
-      for(i = 0; i < result['sum_active_energy'].length; i++) {
-        $('#IndicatorTodayEnergyValues').append('<span class="value">' + Round2(result['sum_active_energy'][i]) + '</span>');
-      }
-    },
-    function() {
-      setTimeout(AjaxGetIndicatorsB, 60000);
-    },
-    function() {
-      $('EnergyIndicator').text('Offline');
-    }
-  );
-}
-function AjaxGetSysStats() {
-  $.ajax({ url: "getSysInfo",
-    timeout: 20000,
-    type: "POST",
-    dataType: "json",
-    contentType: 'application/json',
-    data: JSON.stringify({ Type: 'Performance' }),
-    success: function(result) {
-      var Status = [];
-      if(result['CPU_Usage'] != undefined) {
-        if(result['CPU_Count'] != undefined) {
-          Status.push(Math.round(result['CPU_Usage'] / result['CPU_Count'] * 100) + '%(CPU)');
-        } else {
-          Status.push(result['CPU_Usage'] + '%(CPU)');
-        }
-      }
-      if((result['RAM_Total'] != undefined) && (result['RAM_Total'] != undefined)) {
-        Status.push(Math.round((result['RAM_Total'] - result['RAM_Free']) / result['RAM_Total'] * 100) + '%(RAM)');
-      }
-      if((result['Swap_Total'] != undefined) && (result['Swap_Free'] != undefined)) {      
-        Status.push(Math.round((result['Swap_Total'] - result['Swap_Free']) / result['Swap_Total'] * 100) + '%(Swap)');
-      }
-      if(Status.length == 0) {
-        $('#StatusRow').css('display', 'none');
-      } else {
-        $('#StatusRow').css('display', 'inherited');
-        $('#UsageText').text(Status.join(' - '));
-      }
-//      $('#CPUPercent').css('width', );
-//      $('#CPUText').html(Round2(result['CPU_Usage'] / result['CPU_Count'] * 100) + '%');
-//      var Units = GetBestUnits(result['RAM_Total']);
-//      $('#RAMPercent').css('width', (result['RAM_Total'] - result['RAM_Free']) / result['RAM_Total'] * 100 + '%');
-//      $('#RAMText').html(Round2((result['RAM_Total'] - result['RAM_Free']) / Units[0]) + '/' + Round2(result['RAM_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
-//      Units = GetBestUnits(result['Swap_Total']);
-//      $('#SwapPercent').css('width', (result['Swap_Total'] - result['Swap_Free']) / result['Swap_Total'] * 100 + '%');
-//      $('#SwapText').html(Round2((result['Swap_Total'] - result['Swap_Free']) / Units[0]) + '/' + Round2(result['Swap_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
-//      Units = GetBestUnits(result['Disk_Total']);
-      $('#DiskPercent').css('width', (result['Disk_Total'] - result['Disk_Free']) / result['Disk_Total'] * 100 + '%');
-//      $('#DiskText').html(Round2((result['Disk_Total'] - result['Disk_Free']) / Units[0]) + '/' + Round2(result['Disk_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
-      $('#UptimeText').html(moment.duration(result['UpTime'], "seconds").format("d [days] h [hours] m [minutes]"));
-      $('#BatteryPercent').css('width', result['Battery_Percent'] + '%');
-//      $('#BatteryText').html(Round2(result['Battery_Percent']) + '%');
-    },
-    complete: function() {
-      setTimeout(AjaxGetSysStats, 5000);
-    }
-  });  
-}
-
 /* Guardar array como archivo CSV, incluyendo la cabecera */
 function exportToCsv(filename, rows) {
   var processRow = function (row) {
@@ -950,36 +811,22 @@ var Tariffs = [];
 var TableTariffs = null;
 function LoadTariffs(analyzer) {
   $('#divAnalyzersTariffSpinner').removeClass('hide');
-  $('#tblAnalyzersTariff').on('click', 'button', function(event) {
-    if($(event.target).index() == 0) {
-      $('#divAnalyzersTariff').addClass('hide');
-      $('#divAnalyzersTariffEdit').removeClass('hide');
-      $('#divAnalyzersTariffEditSpinner').addClass('hide');
-    }
-    if($(event.target).is('a')) {
-      if($(event.target).parent('li').index() === 0) {
-        $('#divAnalyzers').addClass('hide');
-        $('#divAnalyzersConfig').removeClass('hide');
-      } else if($(event.target).parent('li').index() === 1) {
-        $('#divAnalyzers').addClass('hide');
-        $('#divAnalyzersACL').removeClass('hide');        
-      } else if($(event.target).parent('li').index() === 2) {
-        $('#divAnalyzers').addClass('hide');
-        $('#divAnalyzersTariff').removeClass('hide');
-        LoadTariffs($(event.target).parents('div').attr('data-analyzer'));
-      } else if($(event.target).parent('li').index() === 4) {
-        $('#divAnalyzers').addClass('hide');
-        $('#divAnalyzersMaintenance').removeClass('hide');
-      }
-    }
+  $('#tblAnalyzersTariff button').click(function(event) {
+    $('#dlgAnalyzers > div > div').addClass('hide');
+    $('#divAnalyzersTariffEdit').removeClass('hide');
+    $('#divAnalyzersTariffEditSpinner').addClass('hide');
   });
-  
+  $('#btnAnalyzersTariffsAdd').click(function() {
+    $('#dlgAnalyzers > div > div').addClass('hide');
+    $('#divAnalyzersTariffEdit').removeClass('hide');
+    $('#divAnalyzersTariffEditSpinner').addClass('hide');
+  });
   if(TableTariffs !== null) {
     TableTariffs.clear();
   } else {
     TableTariffs = $('#tblAnalyzersTariff').DataTable({ responsive: false, paging: false, scrollCollapse: true, 
                                                         dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', 
-                                                        language: { info: "_MAX_ avaliable tarifs", infoEmpty: "No configured tariffs", zeroRecords: " "},
+                                                        language: { info: "_MAX_ avaliable tarifs", infoEmpty: "No configured tariffs"},
                                                         columnDefs: [ { targets: 0, orderable: true, searchable: true }, { targets: [1, 2], width: "80px", orderable: true, className: 'text-center' }, { targets: 3, width: "80px", orderable: false, searchable: false }], order: [2, 'desc']
     });
   }
@@ -1004,90 +851,29 @@ function LoadTariffs(analyzer) {
     }
   });
 }
-
-
-/* Actualiza el desplegable de nodos disponibles y selecciona el que este activo para la sesion */
-var Analyzers = [];
-var Analyzer = parseInt(localStorage.getItem("SelAnalyzer"));
-var TableAnalyzers = null;
 function LoadAnalyzers() {
-  $('#btnSearchAnalyzer').click(function() { 
+
+  $('#btnAnalyzersConfigBack, #btnAnalyzersACLBack, #btnAnalyzersTariffsBack').click(function(event) {
     $('#dlgAnalyzers > div > div').addClass('hide');
     $('#divAnalyzers').removeClass('hide');
-    $('#dlgAnalyzers').modal('show'); 
   });
-  $('#dlgAnalyzers').on('shown.bs.modal',function() {
-    $('#dlgAnalyzers > div > div').addClass('hide');
-    $('#divAnalyzers').removeClass('hide');
-    TableAnalyzers.columns.adjust();
-  });
-  $('#tblAnalyzers').on('click', 'button:first-child, a', function(event) {
+  $('#tblAnalyzers').on('click', 'a', function(event) {
     event.preventDefault();
-    if($(event.target).is('button')) {
-      var Row = TableAnalyzers.row($(this).parents('tr'));
-      TableAnalyzers.rows().nodes().to$().removeClass('info');
-      $(Row.node()).addClass('info');
-      localStorage.setItem('SelAnalyzer', Row.node()._DT_RowIndex);
-      location.reload();
-    }
-    $('#btnAnalyzersConfigBack, #btnAnalyzersACLBack, #btnAnalyzersTariffsBack').click(function(event) {
+if($(event.target).is('a')) {
       $('#dlgAnalyzers > div > div').addClass('hide');
-      $('#divAnalyzers').removeClass('hide');
-    });
-    if($(event.target).is('a')) {
       if($(event.target).parent('li').index() === 0) {
-        $('#divAnalyzers').addClass('hide');
         $('#divAnalyzersConfig').removeClass('hide');
       } else if($(event.target).parent('li').index() === 1) {
-        $('#divAnalyzers').addClass('hide');
         $('#divAnalyzersACL').removeClass('hide');        
       } else if($(event.target).parent('li').index() === 2) {
-        $('#divAnalyzers').addClass('hide');
         $('#divAnalyzersTariff').removeClass('hide');
         LoadTariffs($(event.target).parents('div').attr('data-analyzer'));
       } else if($(event.target).parent('li').index() === 4) {
-        $('#divAnalyzers').addClass('hide');
         $('#divAnalyzersMaintenance').removeClass('hide');
       }
     }
   });
-  $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
-    function(result) {
-      if(result.length > 0) $('#btnSearchAnalyzer').removeClass('disabled');
-      Analyzers = result;
-      TableAnalyzers = $('#tblAnalyzers').DataTable({ responsive: false, paging: false, scrollCollapse: true, 
-                                                      dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', 
-                                                      language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices", zeroRecords: " "},
-                                                      columnDefs: [ { targets: 0, width: "20px", orderable: false, searchable: false }, { targets: 1, width: "auto" }, { targets: 2, width: '40px' }, { targets: 3, visible: false, width: "100px" }, { targets: 4, width: "76px", orderable: false, searchable: false }, { targets: [0, 2, 3], className: 'text-center' } ], order: [1, 'desc']
-      });
-      for(var i = 0; i < Analyzers.length; i++) {
-        var RowText = '<tr' + ((i === Analyzer) ? ' class="info"' : '') + '>' +
-                      '<td>' + ((Analyzers[i].Online === true) ? 'ONLINE' : 'OFFLINE') + '</td>' +
-                      '<td>' + Analyzers[i].Name + '</td>' +
-                      '<td>' + Analyzers[i].Mode + '</td>' +
-                      '<td style="font-family: monospace; font-size : 11px">' + Analyzers[i].ID + '</td>' +
-                      '<td><div class="btn-group" data-analyzer="' + result[i].ID + '">' +
-                      '<button type="button" class="btn btn-success btn-xs' + ((i === Analyzer) ? ' disabled' : '') + '">Select</button><button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>' +
-                      '<ul class="dropdown-menu pull-right"><li><a href="#">Configure</a></li><li><a href="#">ACL</a></li><li><a href="#">Tariff</a></li><li role="separator" class="divider"></li><li><a href="#">Maintenance</a></li></ul>' +
-                      '</div></td>' +
-                      '</tr>';
-        TableAnalyzers.row.add($(RowText)).draw();
-      }
-      if(Analyzers[Analyzer] === undefined) {
-        if(Analyzers.length !== 0) $('#dlgAnalyzers').modal('show');
-        $('#NodeTime').text('Not connected!');
-      } else {
-        $('#labelAnalyzerName').text(Analyzers[Analyzer].Name);
-        $('#AnalyzerMenu').removeClass('hide');
-        $('#AnalyzerNavHeader').removeClass('hide');
-        $('.indicator-bar').removeClass('hide');
-        GetIndicators();
-        AjaxGetIndicatorsB();
-        AjaxGetSysStats();
-      }
-      UpdatePage();
-    }
-  });
+  
 }
 /* Load News and show dialog if any */
 function LoadNews() {
@@ -1105,39 +891,240 @@ function LoadNews() {
     }
   }); 
 }
-/* Genera la secuencia de pasos una vez cargado todo el javascript para mostrar la pagina */
-var LoadedPending = 0;
-function LoadCommon() {
-  LoadedPending = $('*[data-load-block]').length;
-  $.ajax( { url: 'Common.html', success: 
-    function(result) {
-      var Template = $('<div></div>');
-      Template.append(result.trim());
-      $('*[data-load-block]').each(
-        function(index) { 
-          $(this).html(Template.children('#' + $(this).data('loadBlock')).html());
-          LoadedPending--;
-          if(LoadedPending === 0) {
-            $('[data-sidenav]').sidenav();
-            $('#labelUserName').text(localStorage.getItem('UserName'));
-            if(localStorage.getItem('UserName') === "admin") $('#menuSettings').removeClass('hide');
-            $('ul.sidenav-menu li a').filter( function() { return this.href === window.location.href; }).addClass('active').parent().parent().show().parent().children('a').addClass('active');
-            LoadAnalyzers();
-            LoadNews();
+function User_Manager() {
+  var Self = this;
+  Self.Edit = function() {
+  };
+  Self.Logout = function() {
+    window.location.href = 'Logout';
+  };
+  $('#labelUserName').text(localStorage.getItem('UserName'));
+  if(localStorage.getItem('UserName') === "admin") $('#menuSettings').removeClass('hide');
+  $('#btnUserEdit').click(Self.Edit);
+  $('#btnUserLogout').click(Self.Logout);
+};
+function Analyzer_Manager() {
+  var Self = this;
+  Self.AddAnalyzers = function(result) {
+    if(result.length === 0) return;
+    $('#btnAnalyzerSearch').removeClass('disabled');
+    Self.AvaliableAnalyzers = result;
+    for(var i = 0; i < Self.AvaliableAnalyzers.length; i++) {
+      var RowText = '<tr' + ((i === Self.CurrentAnalyzerIndex) ? ' class="info"' : '') + '>' +
+                    '<td>' + ((result[i].Online === true) ? 'ONLINE' : 'OFFLINE') + '</td>' +
+                    '<td>' + result[i].Name + '</td>' +
+                    '<td>' + result[i].Mode + '</td>' +
+                    '<td><div class="btn-group" data-analyzer="' + result[i].ID + '">' +
+                    '<button type="button" class="btn btn-success btn-xs' + ((i === Self.CurrentAnalyzerIndex) ? ' disabled' : '') + '">Select</button><button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>' +
+                    '<ul class="dropdown-menu pull-right"><li><a href="#">Configure</a></li><li><a href="#">ACL</a></li><li><a href="#">Tariff</a></li><li role="separator" class="divider"></li><li><a href="#">Maintenance</a></li></ul>' +
+                    '</div></td>' +
+                    '</tr>';
+      Self.TableAnalyzers.row.add($(RowText)).draw();
+    }
+    $('#tblAnalyzers').on('click', 'button:first-child', function() { Self.SetSelected(TableAnalyzers.row($(this).parents('tr')).node()._DT_RowIndex); } );
+    $('#tblAnalyzers').on('click', 'li:nth-child(1) > a', function(event) { event.preventDefault(); Self.Configure($(this).parents('td').attr('data-analyzer')); } );
+    
+    if(Self.AvaliableAnalyzers[Self.CurrentAnalyzerIndex] === undefined) {
+      if(Self.AvaliableAnalyzers.length !== 0) $('#dlgAnalyzers').modal('show');
+      $('#NodeTime').text('Not connected!');
+    } else {
+      $('#labelAnalyzerName').text(Self.AvaliableAnalyzers[Self.CurrentAnalyzerIndex].Name);
+      $('#AnalyzerMenu').removeClass('hide');
+      $('#AnalyzerNavHeader').removeClass('hide');
+      $('.indicator-bar').removeClass('hide');
+      Self.GetIndicators();
+      Self.GetIndicatorsB();
+      Self.GetSysStats();
+    }
+  };
+  Self.Search = function() {
+    $('#dlgAnalyzers > div > div').addClass('hide');
+    $('#divAnalyzers').removeClass('hide');
+    $('#dlgAnalyzers').modal('show'); 
+    Self.TableAnalyzers.columns.adjust();
+  };
+  Self.Configure = function(serial) {
+    alert("bliu");
+  };
+  Self.GetSelected = function() {
+    return Self.AvaliableAnalyzers[Self.CurrentAnalyzerIndex];
+  };
+  Self.SetSelected = function(index) {
+    localStorage.setItem('SelAnalyzer', index);
+    location.reload();
+  };
+  Self.GetSeries = function(period, to, aggreg, lastsample, series, onSuccess, onCompletion, onError) {
+    return $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, erro: onError, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Self.GetSelected().ID } ) }); 
+  };
+  Self.GetSeriesNow = function(series, onSuccess, onCompletion, onError) { 
+    return $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify( { Series: series, Analyzer: Self.GetSelected().ID } ) }); 
+  };
+  Self.GetSeriesRange = function(aggreg, onSuccess, onCompletion, onError) { 
+    return $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify({ Aggreg: '1h', Analyzer: Self.GetSelected().ID }) }); 
+  };
+  Self.GetSeriesAggreg = function(period, to, aggreg, series, onSuccess, onCompletion, onError) { 
+    return $.ajax({ url: "getSeriesAggreg", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, Series: series, Analyzer: Self.GetSelected().ID } ) }); 
+  };
+  Self.GetEvents = function(period, to, lastevent, onSuccess, onCompletion, onError) { 
+    return $.ajax({ url: "getEvents", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify( { Period: period, To: to, LastEvent: lastevent, Analyzer: Self.GetSelected().ID } ) }); 
+  };
+  Self.GetPrices = function(period, to, lastsample, onSuccess, onCompletion, onError) {
+    return $.ajax({ url: "getPrices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify( { Period: period, To: to, LastSample: lastsample, Analyzer: Self.GetSelected().ID } ) }); 
+  };
+  Self.GetIndicators = function() {
+    Self.GetSeriesNow(['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'], 
+      function(result) {
+        var Time = new Date(result['Sampletime']);
+        $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
+        $('#IndicatorVoltageValues').html("");
+        for(i = 0; i < result['Voltage'].length; i++) {
+          $('#IndicatorVoltageValues').append('<span class="value">' + Round2(result['Voltage'][i]) + '</span>');
+        }
+        $('#IndicatorCurrentValues').html("");
+        for(i = 0; i < result['Current'].length; i++) {
+          $('#IndicatorCurrentValues').append('<span class="value">' + Round2(result['Current'][i]) + '</span>');
+        }
+        $('#IndicatorActivePowerValues').html("");
+        var Units = GetBestUnits(ArrayMax(result['Active_Power']));
+        $('#IndicatorActivePowerUnits').text(Units + "W");
+        result['Active_Power'] = ScaleArrayToUnits(result['Active_Power'], Units);
+        for(i = 0; i < result['Active_Power'].length; i++) {
+          $('#IndicatorActivePowerValues').append('<span class="value">' + Round2(result['Active_Power'][i]) + '</span>');
+        }
+        $('#IndicatorFrequencyValues').html('<span class="value">' + Round2(result['Frequency']) + '</span>');
+      },
+      function() { 
+        setTimeout(Self.GetIndicators, 5000); 
+      }, 
+      function() {
+        $('#IndicatorVoltageValues').html('<span class="value">Offline</span>');
+        $('#IndicatorCurrentValues').html('<span class="value">Offline</span>');
+        $('#IndicatorActivePowerValues').html('<span class="value">Offline</span>');
+        $('#IndicatorFrequencyValues').html('<span class="value">Offline</span>');
+        $('NodeTime').text('Offline');   
+      }
+    );
+  };
+  Self.GetIndicatorsB = function() {
+    var Times = GetDayTimePeriod();
+    Self.GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, "sum(active_energy)", 
+      function(result) {
+        var Units = GetBestUnits(ArrayMax(result['sum_active_energy']));
+        $('#IndicatorActiveEnergyUnits').text(Units + 'Wh');
+        $('#IndicatorTodayEnergyValues').html("");
+        result['sum_active_energy'] = ScaleArrayToUnits(result['sum_active_energy'], Units);
+        for(i = 0; i < result['sum_active_energy'].length; i++) {
+          $('#IndicatorTodayEnergyValues').append('<span class="value">' + Round2(result['sum_active_energy'][i]) + '</span>');
+        }
+      },
+      function() {
+        setTimeout(Self.GetIndicatorsB, 60000);
+      },
+      function() {
+        $('EnergyIndicator').text('Offline');
+      }
+    );
+  };
+  Self.GetSysStats = function() {
+    $.ajax({ url: "getSysInfo", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: 'Performance' }),
+      success: function(result) {
+        var Status = [];
+        if(result['CPU_Usage'] != undefined) {
+          if(result['CPU_Count'] != undefined) {
+            Status.push(Math.round(result['CPU_Usage'] / result['CPU_Count'] * 100) + '%(CPU)');
+          } else {
+            Status.push(result['CPU_Usage'] + '%(CPU)');
           }
         }
-      );        
-    } 
-  });
+        if((result['RAM_Total'] != undefined) && (result['RAM_Total'] != undefined)) {
+          Status.push(Math.round((result['RAM_Total'] - result['RAM_Free']) / result['RAM_Total'] * 100) + '%(RAM)');
+        }
+        if((result['Swap_Total'] != undefined) && (result['Swap_Free'] != undefined)) {      
+          Status.push(Math.round((result['Swap_Total'] - result['Swap_Free']) / result['Swap_Total'] * 100) + '%(Swap)');
+        }
+        if(Status.length == 0) {
+          $('#StatusRow').css('display', 'none');
+        } else {
+          $('#StatusRow').css('display', 'inherited');
+          $('#UsageText').text(Status.join(' - '));
+        }
+  //      $('#CPUPercent').css('width', );
+  //      $('#CPUText').html(Round2(result['CPU_Usage'] / result['CPU_Count'] * 100) + '%');
+  //      var Units = GetBestUnits(result['RAM_Total']);
+  //      $('#RAMPercent').css('width', (result['RAM_Total'] - result['RAM_Free']) / result['RAM_Total'] * 100 + '%');
+  //      $('#RAMText').html(Round2((result['RAM_Total'] - result['RAM_Free']) / Units[0]) + '/' + Round2(result['RAM_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
+  //      Units = GetBestUnits(result['Swap_Total']);
+  //      $('#SwapPercent').css('width', (result['Swap_Total'] - result['Swap_Free']) / result['Swap_Total'] * 100 + '%');
+  //      $('#SwapText').html(Round2((result['Swap_Total'] - result['Swap_Free']) / Units[0]) + '/' + Round2(result['Swap_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
+  //      Units = GetBestUnits(result['Disk_Total']);
+        $('#DiskPercent').css('width', (result['Disk_Total'] - result['Disk_Free']) / result['Disk_Total'] * 100 + '%');
+  //      $('#DiskText').html(Round2((result['Disk_Total'] - result['Disk_Free']) / Units[0]) + '/' + Round2(result['Disk_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
+        $('#UptimeText').html(moment.duration(result['UpTime'], "seconds").format("d [days] h [hours] m [minutes]"));
+        $('#BatteryPercent').css('width', result['Battery_Percent'] + '%');
+  //      $('#BatteryText').html(Round2(result['Battery_Percent']) + '%');
+      },
+      complete: function() {
+        setTimeout(Self.GetSysStats, 5000);
+      }
+    });  
+  };
+  Self.GetSeriesNames = function(varName) {
+    if(varName === 'Harmonics') return ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
+    if(varName === 'Voltage')   return (Self.GetSelected().Mode === '1PHASE') ? ['V'] : ['V(R)', 'V(S)', 'V(T)'];
+    if(varName === 'Current')   return (Self.GetSelected().Mode === '1PHASE') ? ['I'] : (Self.GetSelected().Mode === '3PHASE') ? ['I(R)', 'I(S)', 'I(T)'] : ['I(R)', 'I(S)', 'I(T)', 'I(N)'];
+    if(varName === 'Active_Energy') return (Self.GetSelected().Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)'];
+//  ReactiveEnergy: function() { return (Analyzer.GetCurrentMode() === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
+    if(varName === 'Active_Power') return (Self.GetSelected().Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)'];
+//  ReactivePower: function() { return (Analyzer.GetCurrentMode() === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
+//  PowerFactor: function() { return (Analyzer.GetCurrentMode() === '1PHASE') ? ['PF'] : ['PF(R)', 'PF(S)', 'PF(T)']; },
+//  THDv: function() { return (Analyzer.GetCurrentMode() === '1PHASE') ? ['THDv'] : ['THDv(R)', 'THDv(S)', 'THDv(T)']; },
+//  THDi: function() { return (Analyzer.GetCurrentMode() === '1PHASE') ? ['THDi'] : (Analyzer.GetCurrentMode() === '3PHASE') ? ['THDi(R)', 'THDi(S)', 'THDi(T)'] : ['THDi(R)', 'THDi(S)', 'THDi(T)', 'THDi(N)']; },
+//  PHI: function() { return (Analyzer.GetCurrentMode() === '1PHASE') ? ['PHI']  : ['PHI(R)', 'PHI(S)', 'PHI(T)']; },
+
+  };
+  Self.AvaliableAnalyzers = [];
+  Self.CurrentAnalyzerIndex = parseInt(localStorage.getItem("SelAnalyzer"));
+  Self.TableAnalyzers = $('#tblAnalyzers').DataTable({ responsive: false, paging: false, scrollCollapse: true, dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices" }, columnDefs: [ { targets: [0], width: "20px", orderable: false, searchable: false }, { targets: [2], width: '40px' }, { targets: [3], width: "40px", orderable: false, searchable: false }, { targets: [0, 2], className: 'text-center' } ], order: [1, 'desc'] });
+  $.ajax({ url: "getAnalyzers", timeout: 20000, async: false, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: this.AddAnalyzers });
+  $('#btnAnalyzerSearch').click(Self.Search);
 }
-function StartPageLoad() {
-  if((localStorage.getItem('SelAnalyzer') === null) && (window.location.pathname !== '/Settings')) {
-    window.location.href = 'Settings';
-    return;
-  }
-  $('.spinnerdiv').each(function(index, element) { new Spinner(SpinnerOpts).spin(element); });
-  LoadCommon();
-}
+// JS entry point for all page loading
+if((localStorage.getItem('SelAnalyzer') === null) && (window.location.pathname !== '/Settings')) { window.location.href = 'Settings'; }
+$.ajax( { url: 'Common.html', async: false, success: 
+  function(result) {
+    var Template = $('<div></div>').append(result.trim());
+    $('*[data-load-block]').each( function(index) { $(this).html(Template.children('#' + $(this).data('loadBlock')).html()); } );        
+  } 
+});
+$('.spinnerdiv').each(function(index, element) { new Spinner(SpinnerOpts).spin(element); });
+$('[data-sidenav]').sidenav();
+$('ul.sidenav-menu li a').filter( function() { return this.href === window.location.href; }).addClass('active').parent().parent().show().parent().children('a').addClass('active');            
+var User = new User_Manager();
+var Analyzer = new Analyzer_Manager();
+
+
+LoadNews();
+UpdatePage();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1458,3 +1445,4 @@ $('#eventsDropdown').on('hidden.bs.dropdown', function () {
     $('#eventsDropdown .event_alert').remove();
     $('#eventsDropdown .divider').remove();
 })
+//1446

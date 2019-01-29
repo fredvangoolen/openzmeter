@@ -192,15 +192,15 @@
     <div class="sidenav-header">
       <div class="small pull-left"><span id="labelUserName"></span></div>
       <div class="btn-group pull-right">
-        <button type="button" class="btn btn-default btn-xs navbar-btn" data-toggle="tooltip" title="User edit" onclick="window.location.href = 'Logout'"><img src="Imgs/user_edit.png"></button>
-        <button type="button" class="btn btn-default btn-xs navbar-btn" data-toggle="tooltip" title="User logout" onclick="window.location.href = 'Logout'"><img src="Imgs/user_go.png"></button>
+        <button type="button" class="btn btn-default btn-xs navbar-btn" data-toggle="tooltip" title="User edit" id="btnUserEdit"><img src="Imgs/user_edit.png"></button>
+        <button type="button" class="btn btn-default btn-xs navbar-btn" data-toggle="tooltip" title="User logout" id="btnUserLogout"><img src="Imgs/user_go.png"></button>
       </div>
       <span class="clearfix"></span>
     </div>
     <div class="sidenav-header hide" id="AnalyzerNavHeader">
       <div class="small pull-left"><span id="labelAnalyzerName"></span></div>
       <div class="btn-group pull-right">
-        <button type="button" class="btn btn-default btn-xs navbar-btn disabled" id="btnSearchAnalyzer">
+        <button type="button" class="btn btn-default btn-xs navbar-btn disabled" id="btnAnalyzerSearch">
           <img src="Imgs/magnifier.png">
         </button>
         <button type="button" class="btn btn-default btn-xs navbar-btn disabled">
@@ -318,7 +318,7 @@
           <table id="tblAnalyzers" class="table small table-striped table-responsive" style="width:100%;">
             <thead>
               <tr>
-                <th>Status</th><th>Name</th><th>Type</th><th>Serial</th><th></th>
+                <th>Status</th><th>Name</th><th>Type</th><th></th>
               </tr>
             </thead>
             <tbody>
