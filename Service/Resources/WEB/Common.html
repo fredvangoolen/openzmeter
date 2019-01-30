@@ -305,7 +305,7 @@
       </div>
     </div>
   </nav>
-  <div class="modal fade" id="dlgAnalyzers" tabindex="1" role="dialog" data-backdrop='static'>
+  <div class="modal" id="dlgAnalyzers" tabindex="1" role="dialog" data-backdrop='static'>
     <div class="modal-dialog">
       <div class="modal-content" id="divAnalyzers">
         <div class="modal-header">
@@ -315,12 +315,8 @@
           </div>
         </div>
         <div class="modal-body">
-          <table id="tblAnalyzers" class="table small table-striped table-responsive" style="width:100%;">
-            <thead>
-              <tr>
-                <th>Status</th><th>Name</th><th>Type</th><th></th>
-              </tr>
-            </thead>
+          <table id="tblAnalyzers" class="table small table-striped table-responsive" style="width: 100%">
+            <thead><tr><th style="width:20px">Status</th><th>Name</th><th style="width:60px">Type</th><th style="width:80px"></th></tr></thead>
             <tbody>
             </tbody>
           </table>
@@ -419,123 +415,50 @@
         <div class="modal-header">
           <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Tariffs &raquo; Edit</h4></div>
           <div class="pull-right btn-group">
-            <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersTariffsAdd"><img src="Imgs/diskette.png" alt="New tariff"></button>
-            <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersTariffsBack"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
+            <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersTariffSave"><img src="Imgs/diskette.png" alt="New tariff"></button>
+            <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersTariffBack"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
           </div>
         </div>
         <div class="modal-body">
+          <div class="alert alert-danger text-center hide" id="divAnalyzersTariffError" style="margin-bottom: 5px; padding: 5px;"></div>
+          <div class="alert alert-success text-center hide" id="divAnalyzersTariffSuccess" style="margin-bottom: 5px; padding: 5px;"></div>
           <div class="row">
             <div class="col-xs-12">
               <label class="control-label">Base Tariff</label>
-              <input type="text" class="form-control" id="AnalyzerID" disabled>
+              <div class="input-group">
+                <input type="text" class="form-control" id="inputAnalyzerTariffBase" autocomplete="off">
+                <div class="input-group-btn">
+                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle=""><span class="caret"></span></button>
+                  <ul class="dropdown-menu dropdown-menu-right" role="menu"></ul>
+                </div>
+              </div>
             </div>
-            <div class="col-xs-12">
+            <div class="col-xs-12 col-sm-6">
               <label class="control-label">Start date</label>
-              <input type="text" class="form-control" aria-label="...">
+              <div class='input-group date' id='inputAnalyzerTariffStartDate'>
+                <input type='text' class="form-control" />
+                <span class="input-group-addon">
+                  <span class="glyphicon-calendar"></span>
+                </span>
+              </div>
             </div>
-            <div class="col-xs-6" style="margin-top:8px">
-              <div class="toggle btn btn-sm btn-success" data-toggle="toggle" style="width: 49px; height: 30px;"><input type="checkbox" data-toggle="toggle" id="checkNTP" data-size="small" data-onstyle="success"><div class="toggle-group"><label class="btn btn-success btn-sm toggle-on">On</label><label class="btn btn-default btn-sm active toggle-off">Off</label><span class="toggle-handle btn btn-default btn-sm"></span></div></div>
-              <label class="control-label">Reactive</label>
-            </div>
-            <div class="col-xs-6" style="margin-top:8px">
-              <div class="toggle btn btn-sm btn-success" data-toggle="toggle" style="width: 49px; height: 30px;"><input type="checkbox" data-toggle="toggle" id="checkNTP" data-size="small" data-onstyle="success"><div class="toggle-group"><label class="btn btn-success btn-sm toggle-on">On</label><label class="btn btn-default btn-sm active toggle-off">Off</label><span class="toggle-handle btn btn-default btn-sm"></span></div></div>
-              <label class="control-label">Maxmeter</label>
+            <div class="col-xs-12 col-sm-6">
+              <label class="control-label">End date</label>
+              <div class='input-group date' id='inputAnalyzerTariffEndDate'>
+                <input type='text' class="form-control" />
+                <span class="input-group-addon">
+                  <span class="glyphicon-calendar"></span>
+                </span>
+              </div>
             </div>
             <div class="col-xs-12">
-              <label class="control-label">Contracted Power</label>
+              <label class="control-label">Description</label>
+              <textarea class="form-control" rows="3" id="inputAnalyzerTariffComments" style="resize: none"></textarea>
             </div>
-            <div class="col-xs-6">
-              <div class="input-group">
-                <span class="input-group-addon">P1</span>
-                <input type="text" class="form-control">
-                <span class="input-group-addon">kW</span>
-              </div>
-            </div>
-            <div class="col-xs-6">
-              <div class="input-group">
-                <span class="input-group-addon">P1</span>
-                <input type="text" class="form-control">
-                <span class="input-group-addon">€/kW x day</span>
-              </div>
-            </div>
-            <div class="col-xs-12"></div>
-            <div class="col-xs-6">
-              <div class="input-group">
-                <span class="input-group-addon">P2</span>
-                <input type="text" class="form-control">
-                <span class="input-group-addon">kW</span>
-              </div>
-            </div>
-            <div class="col-xs-6">
-              <div class="input-group">
-                <span class="input-group-addon">P2</span>
-                <input type="text" class="form-control">
-                <span class="input-group-addon">€/kW x day</span>
-              </div>
-            </div>
-            <div class="col-xs-12"></div>
-            <div class="col-xs-6">
-              <div class="input-group">
-                <span class="input-group-addon">P3</span>
-                <input type="text" class="form-control">
-                <span class="input-group-addon">kW</span>
-              </div>
-            </div>
-            <div class="col-xs-6">
-              <div class="input-group">
-                <span class="input-group-addon">P3</span>
-                <input type="text" class="form-control">
-                <span class="input-group-addon">€/kW x day</span>
-              </div>
-            </div>
-            <div class="col-xs-12"></div>
-            <div class="col-xs-6">
-              <div class="input-group">
-                <span class="input-group-addon">P4</span>
-                <input type="text" class="form-control">
-                <span class="input-group-addon">kW</span>
-              </div>
-            </div>
-            <div class="col-xs-6">
-              <div class="input-group">
-                <span class="input-group-addon">P4</span>
-                <input type="text" class="form-control">
-                <span class="input-group-addon">€/kW x day</span>
-              </div>
-            </div>
-            <div class="col-xs-12"></div>
-            <div class="col-xs-6">
-              <div class="input-group">
-                <span class="input-group-addon">P5</span>
-                <input type="text" class="form-control">
-                <span class="input-group-addon">kW</span>
-              </div>
-            </div>
-            <div class="col-xs-6">
-              <div class="input-group">
-                <span class="input-group-addon">P5</span>
-                <input type="text" class="form-control">
-                <span class="input-group-addon">€/kW x day</span>
-              </div>
-            </div>
-            <div class="col-xs-12"></div>
-            <div class="col-xs-6">
-              <div class="input-group">
-                <span class="input-group-addon">P6</span>
-                <input type="text" class="form-control">
-                <span class="input-group-addon">kW</span>
-              </div>
-            </div>
-            <div class="col-xs-6">
-              <div class="input-group">
-                <span class="input-group-addon">P6</span>
-                <input type="text" class="form-control">
-                <span class="input-group-addon">€/kW x day</span>
-              </div>
+            <div id="divAnalyzerTariffPeriods">
             </div>
 
-
-            <div class="col-xs-12">
+            <div class="col-xs-12 hide">
               <label class="control-label">IVA</label>
               <div class="input-group">
                 <input type="text" class="form-control">

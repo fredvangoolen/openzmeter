@@ -22,12 +22,12 @@
 #include "DeviceInterface.h"
 #include "NTP.h"
 //----------------------------------------------------------------------------------------------------------------------
-bool            Tools::Debug        = false;
-bool            Tools::pDaemonized  = false;
-FILE           *Tools::pLogFile     = NULL;
-json_object    *Tools::pConfig      = NULL;
-const char     *Tools::pPidFile     = NULL;
-const char     *Tools::pConfigFile  = NULL;
+bool         Tools::Debug        = false;
+bool         Tools::pDaemonized  = false;
+FILE        *Tools::pLogFile     = NULL;
+json_object *Tools::pConfig      = NULL;
+string       Tools::pPidFile;
+string       Tools::pConfigFile;
 pthread_mutex_t Tools::pLogMutex    = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t Tools::pConfigMutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -38,7 +38,7 @@ bool Tools::pExternalPower = false;
 extern char _binary_ResourceFiles_start[];
 extern char _binary_ResourceFiles_end[];
 vector<Tools::File_t> Tools::pFiles;
-uint8_t *Tools::GetFile(const char* name, size_t* size) {
+uint8_t *Tools::GetFile(string name, size_t* size) {
   if(pFiles.size() == 0) {
     char *Ptr   = _binary_ResourceFiles_start;
     uint32_t FileCount = atoi(Ptr);
@@ -56,7 +56,7 @@ uint8_t *Tools::GetFile(const char* name, size_t* size) {
     }
   }
   for(uint32_t i = 0; i < pFiles.size(); i++) {
-    if(strcmp(name, pFiles[i].Name) == 0) {
+    if(pFiles[i].Name.compare(name) == 0) {
       *size = pFiles[i].Size;
       return pFiles[i].Ptr;
     }
@@ -114,8 +114,8 @@ bool Tools::CreatePidFile(const char *name) {
   pPidFile = name;
   char PID_Number[64];
   int Len = sprintf(PID_Number, "%d", getpid());
-  if(pPidFile) remove(pPidFile);
-  int File = open(pPidFile, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+  if(!pPidFile.empty()) remove(pPidFile.c_str());
+  int File = open(pPidFile.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
   if(File < 0) {
     LogMsg("WARN", "Can not create PID file (%d)\n", errno);
     return true;
@@ -125,7 +125,7 @@ bool Tools::CreatePidFile(const char *name) {
   return true;
 }
 bool Tools::RemovePidFile() {
-  if(pPidFile) return remove(pPidFile);
+  if(!pPidFile.empty()) return remove(pPidFile.c_str());
   return true;
 }
 void Tools::Daemonize() {
@@ -147,15 +147,15 @@ void Tools::Daemonize() {
   close(STDOUT_FILENO);
   close(STDERR_FILENO);
 }
-bool Tools::ReadConfig(const char *file) {
+bool Tools::ReadConfig(string file) {
   pConfigFile = file;
-  if(file == NULL) {
+  if(file.empty()) {
     LogMsg("ERROR", "No config file!\n");
     return false;
   }
   LogMsg("INFO", "Loading config file...\n");
   pthread_mutex_lock(&pConfigMutex);
-  int File = open(file, O_RDONLY);
+  int File = open(file.c_str(), O_RDONLY);
   if(File == -1) {
     LogMsg("ERROR", "Can not open config file (%s)\n", strerror(errno));
     pthread_mutex_unlock(&pConfigMutex);
@@ -212,7 +212,7 @@ bool Tools::ReadConfig(const char *file) {
   return true;
 }
 bool Tools::SaveConfig() {
-  int File = open(pConfigFile, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+  int File = open(pConfigFile.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
   if(File < 0) {
     LogMsg("ERROR", "Can not write configuration to file (%d)\n", errno);
     return false;
@@ -257,7 +257,7 @@ bool Tools::GetMemory(uint64_t *total, uint64_t *available) {
   *available = ParseProcMem((char*)"MemFree:", Buffer) + ParseProcMem((char*)"Cached:", Buffer) + ParseProcMem((char*)"Buffers:", Buffer);
   return ((*total != 0) && (*available != 0));
 }
-bool Tools::GetSysInfo(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool Tools::GetSysInfo(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   struct sysinfo Info;
   struct statvfs Disk;
   if(sysinfo(&Info) != 0) {

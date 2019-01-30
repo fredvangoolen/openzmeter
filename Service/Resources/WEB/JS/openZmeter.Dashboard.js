@@ -41,7 +41,7 @@ function PeriodView_OnSuccess(result) {
         }
       }
     );
-    new GraphTools('Voltage', VoltageChart, '#toolbarVoltage', undefined, function() { exportToCsv('Voltage.csv', [['Time'].concat(SeriesNames.Voltage())].concat(VoltageData)); });
+    new GraphTools('Voltage', VoltageChart, '#toolbarVoltage', undefined, function() { exportToCsv('Voltage.csv', [['Time'].concat(Analyzer.GetSeriesNames('Voltage'))].concat(VoltageData)); });
   } else {
     VoltageChart.updateOptions({ file: VoltageData, dateWindow: [result['From'], result['To']]});
   }
@@ -70,7 +70,7 @@ function PeriodView_OnSuccess(result) {
         }
       }
     );
-    new GraphTools('Current', CurrentChart, '#toolbarCurrent', undefined, function() { exportToCsv('Current.csv', [['Time'].concat(SeriesNames.Current())].concat(CurrentData)); });
+    new GraphTools('Current', CurrentChart, '#toolbarCurrent', undefined, function() { exportToCsv('Current.csv', [['Time'].concat(Analyzer.GetSeriesNames('Current'))].concat(CurrentData)); });
   } else {
     CurrentChart.updateOptions({'file': CurrentData, dateWindow: [result['From'], result['To']]});
   }

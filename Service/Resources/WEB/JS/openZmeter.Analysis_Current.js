@@ -18,12 +18,12 @@
 var CurrentChart     = null;
 var CurrentData      = [];
 function Scrollable_OnSuccess(result, clear) {
-  if(clear) CurrentData = [Array(SeriesNames.Current().length + 1).fill(0)];
+  if(clear) CurrentData = [Array(Analyzer.GetSeriesNames('Current').length + 1).fill(0)];
   CurrentData = GraphDataAppend(result, 'rms_i', CurrentData);
   if(CurrentChart == null) {
     CurrentChart = new Dygraph(document.getElementById("CurrentChart"), CurrentData,
       { strokeWidth: 0.5, stepPlot: true, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4],
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.Current()), dateWindow: [result['From'], result['To']],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(Analyzer.GetSeriesNames('Current')), dateWindow: [result['From'], result['To']],
         zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
         colors: ColorArray($('#CurrentPanel').css('border-color'), 4), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
         underlayCallback: function(canvas, area, g) {
@@ -41,7 +41,7 @@ function Scrollable_OnSuccess(result, clear) {
     );
     $(window).bind('resize', CurrentResizeEvent);
     window.dispatchEvent(new Event('resize'));
-    new GraphTools('Current', CurrentChart, '#toolbarCurrent', CurrentResizeEvent, function() { exportToCsv('Current.csv', [['Time'].concat(SeriesNames.Current())].concat(CurrentData)); });
+    new GraphTools('Current', CurrentChart, '#toolbarCurrent', CurrentResizeEvent, function() { exportToCsv('Current.csv', [['Time'].concat(Analyzer.GetSeriesNames('Current'))].concat(CurrentData)); });
   } else {
     CurrentChart.updateOptions({'file': CurrentData, dateWindow: [result['From'], result['To']]});
   }
@@ -151,7 +151,7 @@ function DetailTabChange(index) {
   }
 }
 function DetailsButtonUpdate(event) {
-  GroupButtons($('#groupDetailPhasesMulti'), 'DetailPhases', Math.max(SeriesNames.Current().length, SeriesNames.Voltage().length), false, undefined, undefined);
+  GroupButtons($('#groupDetailPhasesMulti'), 'DetailPhases', Math.max(Analyzer.GetSeriesNames('Current').length, Analyzer.GetSeriesNames('Voltage').length), false, undefined, undefined);
   if(localStorage.getItem('CurrentDetailFirstHarmonic') === 'true') {
     $('#btnShowDetail1Harmonic').addClass('active');
   } else {
@@ -169,7 +169,7 @@ function DetailsButtonUpdate(event) {
   }
 }
 $('#groupDetailPhasesMulti').on('click', 'button', function(evt) {
-  GroupButtons($('#groupDetailPhasesMulti'), 'CurrentDetailVisiblePhasesMulti', Math.max(SeriesNames.Current().length, SeriesNames.Voltage().length), false,
+  GroupButtons($('#groupDetailPhasesMulti'), 'CurrentDetailVisiblePhasesMulti', Math.max(Analyzer.GetSeriesNames('Current').length, Analyzer.GetSeriesNames('Voltage').length), false,
     function() { UpdateWaveformChart(); UpdateHarmonicsChart(); }, evt.target);
 });
 $('#btnShowDetailVoltage').click(function() {
@@ -201,18 +201,18 @@ var WaveformChart = null;
 function UpdateWaveformChart() {
   var VoltageVisibility = [], CurrentVisibility = [], Y1Range = [], Y2Range = [], Series = {};
   var ShowVoltage = (localStorage.getItem("CurrentDetailVoltage") === 'true');
-  GroupButtons($('#groupDetailPhasesMulti'), 'CurrentDetailVisiblePhasesMulti', Math.max(SeriesNames.Current().length, SeriesNames.Voltage().length), false, 
+  GroupButtons($('#groupDetailPhasesMulti'), 'CurrentDetailVisiblePhasesMulti', Math.max(Analyzer.GetSeriesNames('Current').length, Analyzer.GetSeriesNames('Voltage').length), false, 
     function(VisibleSeries, Visibles) {
-      VoltageVisibility = VisibleSeries.slice(0, SeriesNames.Voltage().length);
-      CurrentVisibility = VisibleSeries.slice(0, SeriesNames.Current().length);
+      VoltageVisibility = VisibleSeries.slice(0, Analyzer.GetSeriesNames('Voltage').length);
+      CurrentVisibility = VisibleSeries.slice(0, Analyzer.GetSeriesNames('Current').length);
       if(ShowVoltage === false) VoltageVisibility.fill(false);
       Y1Range = CalcRanges(WaveformDataset, Visibles);
-      Y2Range = CalcRanges(WaveformDataset, Visibles.map(function(val) { return val + SeriesNames.Current().length }));
-      SeriesNames.Voltage().map(function(val) {Series[val] = { axis: 'y2' }; });
+      Y2Range = CalcRanges(WaveformDataset, Visibles.map(function(val) { return val + Analyzer.GetSeriesNames('Current').length }));
+      Analyzer.GetSeriesNames('Voltage').map(function(val) {Series[val] = { axis: 'y2' }; });
       var Options = { 
         strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Sample'].concat(SeriesNames.Current()).concat(SeriesNames.Voltage()), series: Series, visibility: CurrentVisibility.concat(VoltageVisibility),
-        colors: ColorArray($('#CurrentPanel').css('border-color'), SeriesNames.Current().length).concat(ColorArray('#d9534f', SeriesNames.Current().length)), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Sample'].concat(Analyzer.GetSeriesNames('Current')).concat(Analyzer.GetSeriesNames('Voltage')), series: Series, visibility: CurrentVisibility.concat(VoltageVisibility),
+        colors: ColorArray($('#CurrentPanel').css('border-color'), Analyzer.GetSeriesNames('Current').length).concat(ColorArray('#d9534f', Analyzer.GetSeriesNames('Current').length)), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: Y1Range, 
                valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">A</em>'; },
@@ -250,26 +250,26 @@ function UpdateHarmonicsChart() {
     ToShow.push(Row);
   }
   var VoltageVisibility = [], CurrentVisibility = [], Y1Range = [], Y2Range = [], Series = {};
-  GroupButtons($('#groupDetailPhasesMulti'), 'CurrentDetailVisiblePhasesMulti', Math.max(SeriesNames.Current().length, SeriesNames.Voltage().length), false, 
+  GroupButtons($('#groupDetailPhasesMulti'), 'CurrentDetailVisiblePhasesMulti', Math.max(Analyzer.GetSeriesNames('Current').length, Analyzer.GetSeriesNames('Voltage').length), false, 
     function(VisibleSeries, Visibles) {
-      VoltageVisibility = VisibleSeries.slice(0, SeriesNames.Voltage().length);
-      CurrentVisibility = VisibleSeries.slice(0, SeriesNames.Current().length);
+      VoltageVisibility = VisibleSeries.slice(0, Analyzer.GetSeriesNames('Voltage').length);
+      CurrentVisibility = VisibleSeries.slice(0, Analyzer.GetSeriesNames('Current').length);
       if(ShowVoltage === false) VoltageVisibility.fill(false);
       Y1Range = CalcRanges(ToShow, Visibles, !Log);
-      Y2Range = CalcRanges(ToShow, Visibles.map(function(val) { return val + SeriesNames.Current().length }), !Log);
+      Y2Range = CalcRanges(ToShow, Visibles.map(function(val) { return val + Analyzer.GetSeriesNames('Current').length }), !Log);
       HarmonicsCOffset = (Y1Range[0] < 0.0) ? -Y1Range[0] : 0.0;
       HarmonicsVOffset = (Y2Range[0] < 0.0) ? -Y2Range[0] : 0.0;
       for(i = 0; i < ToShow.length; i++) {
         var Row = [ToShow[i][0]];
-        for(n = 0; n < SeriesNames.Current().length; n++) Row.push(ToShow[i][n + 1] + HarmonicsCOffset);
-        for(n = 0; n < SeriesNames.Voltage().length; n++) Row.push(ToShow[i][n + 1 + SeriesNames.Current().length] + HarmonicsVOffset);
+        for(n = 0; n < Analyzer.GetSeriesNames('Current').length; n++) Row.push(ToShow[i][n + 1] + HarmonicsCOffset);
+        for(n = 0; n < Analyzer.GetSeriesNames('Voltage').length; n++) Row.push(ToShow[i][n + 1 + Analyzer.GetSeriesNames('Current').length] + HarmonicsVOffset);
         ToShow[i] = Row;
       }
-      SeriesNames.Voltage().map(function(val) {Series[val] = { axis: 'y2' }; });  
+      Analyzer.GetSeriesNames('Voltage').map(function(val) {Series[val] = { axis: 'y2' }; });  
       var Options = { 
         strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], interactionModel: { }, plotter: multiColumnBarPlotter, dateWindow: [ToShow[0][0] - 0.5, ToShow[ToShow.length - 1][0] + 0.5],
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Harmonic'].concat(SeriesNames.Current()).concat(SeriesNames.Voltage()), series: Series,
-        colors: ColorArray($('#CurrentPanel').css('border-color'), SeriesNames.Current().length).concat(ColorArray('#d9534f', SeriesNames.Voltage().length)), visibility: CurrentVisibility.concat(VoltageVisibility),
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Harmonic'].concat(Analyzer.GetSeriesNames('Current')).concat(Analyzer.GetSeriesNames('Voltage')), series: Series,
+        colors: ColorArray($('#CurrentPanel').css('border-color'), Analyzer.GetSeriesNames('Current').length).concat(ColorArray('#d9534f', Analyzer.GetSeriesNames('Voltage').length)), visibility: CurrentVisibility.concat(VoltageVisibility),
         axes: { 
           y: { pixelsPerLabel: 15, axisLabelWidth: 20, valueRange: [Y1Range[0] + HarmonicsCOffset, Y1Range[1] + HarmonicsCOffset],
                ticker: Log ? function(min, max) { return GraphDBTicks(min, max, HarmonicsCOffset); } : Dygraph.numericTicks,
@@ -308,26 +308,26 @@ function UpdateFFTChart() {
     ToShow.push(Row);
   }
   var VoltageVisibility = [], CurrentVisibility = [], Y1Range = [], Y2Range = [], Series = {};
-  GroupButtons($('#groupDetailPhasesMulti'), 'CurrentDetailVisiblePhasesMulti', Math.max(SeriesNames.Current().length, SeriesNames.Voltage().length), false, 
+  GroupButtons($('#groupDetailPhasesMulti'), 'CurrentDetailVisiblePhasesMulti', Math.max(Analyzer.GetSeriesNames('Current').length, Analyzer.GetSeriesNames('Voltage').length), false, 
     function(VisibleSeries, Visibles) {
-      VoltageVisibility = VisibleSeries.slice(0, SeriesNames.Voltage().length);
-      CurrentVisibility = VisibleSeries.slice(0, SeriesNames.Current().length);
+      VoltageVisibility = VisibleSeries.slice(0, Analyzer.GetSeriesNames('Voltage').length);
+      CurrentVisibility = VisibleSeries.slice(0, Analyzer.GetSeriesNames('Current').length);
       if(ShowVoltage === false) VoltageVisibility.fill(false);
       Y1Range = CalcRanges(ToShow, Visibles, !Log);
-      Y2Range = CalcRanges(ToShow, Visibles.map(function(val) { return val + SeriesNames.Current().length }), !Log);
+      Y2Range = CalcRanges(ToShow, Visibles.map(function(val) { return val + Analyzer.GetSeriesNames('Current').length }), !Log);
       FFTCOffset = (Y1Range[0] < 0.0) ? -Y1Range[0] : 0.0;
       FFTVOffset = (Y2Range[0] < 0.0) ? -Y2Range[0] : 0.0;
       for(i = 0; i < ToShow.length; i++) {
         var Row = [i];
-        for(n = 0; n < SeriesNames.Current().length; n++) Row.push(ToShow[i][n + 1] + FFTCOffset);
-        for(n = 0; n < SeriesNames.Voltage().length; n++) Row.push(ToShow[i][n + 1 + SeriesNames.Voltage().length] + FFTVOffset);
+        for(n = 0; n < Analyzer.GetSeriesNames('Current').length; n++) Row.push(ToShow[i][n + 1] + FFTCOffset);
+        for(n = 0; n < Analyzer.GetSeriesNames('Voltage').length; n++) Row.push(ToShow[i][n + 1 + Analyzer.GetSeriesNames('Voltage').length] + FFTVOffset);
         ToShow[i] = Row;
       }
-      SeriesNames.Voltage().map(function(val) {Series[val] = { axis: 'y2' }; });
+      Analyzer.GetSeriesNames('Voltage').map(function(val) {Series[val] = { axis: 'y2' }; });
       var Options = {
         strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], fillGraph: true, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Bin'].concat(SeriesNames.Current()).concat(SeriesNames.Voltage()), series: Series, plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
-        colors: ColorArray($('#CurrentPanel').css('border-color'), SeriesNames.Current().length).concat(ColorArray('#d9534f', SeriesNames.Voltage().length)), visibility: CurrentVisibility.concat(VoltageVisibility),
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Bin'].concat(Analyzer.GetSeriesNames('Current')).concat(Analyzer.GetSeriesNames('Voltage')), series: Series, plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
+        colors: ColorArray($('#CurrentPanel').css('border-color'), Analyzer.GetSeriesNames('Current').length).concat(ColorArray('#d9534f', Analyzer.GetSeriesNames('Voltage').length)), visibility: CurrentVisibility.concat(VoltageVisibility),
         axes: { 
           y: { pixelsPerLabel: 15, axisLabelWidth: 20, valueRange: [Y1Range[0] + FFTCOffset, Y1Range[1] + FFTCOffset], 
                ticker: Log ? function(min, max) { return GraphDBTicks(min, max, FFTCOffset); } : Dygraph.numericTicks,
@@ -411,39 +411,39 @@ function ExportDetail() {
   var Data = [];
   var Filename;
   if(DetailTabSelector.GetSaved() === 0) {
-    exportToCsv('Waveform.csv', [['Time'].concat(SeriesNames.Current()).concat(SeriesNames.Voltage())].concat(WaveformDataset));
+    exportToCsv('Waveform.csv', [['Time'].concat(Analyzer.GetSeriesNames('Current')).concat(Analyzer.GetSeriesNames('Voltage'))].concat(WaveformDataset));
   } else if(DetailTabSelector.GetSaved() === 3) {
     var Header = ['Index'];
-    for(var i = 0; i < SeriesNames.Current().length; i++) { Header.push(SeriesNames.Current()[i]); Header.push(SeriesNames.Current()[i] + ' (dB)'); }
-    for(var i = 0; i < SeriesNames.Voltage().length; i++) { Header.push(SeriesNames.Voltage()[i]); Header.push(SeriesNames.Voltage()[i] + ' (dB)'); }
+    for(var i = 0; i < Analyzer.GetSeriesNames('Current').length; i++) { Header.push(Analyzer.GetSeriesNames('Current')[i]); Header.push(Analyzer.GetSeriesNames('Current')[i] + ' (dB)'); }
+    for(var i = 0; i < Analyzer.GetSeriesNames('Voltage').length; i++) { Header.push(Analyzer.GetSeriesNames('Voltage')[i]); Header.push(Analyzer.GetSeriesNames('Voltage')[i] + ' (dB)'); }
     Data.push(Header);
     for(var i = 0; i < FFTDataset.length; i++) {
       var Row = [i];
-      for(var n = 0; n < SeriesNames.Voltage().length + SeriesNames.Current().length; n++) { Row.push(FFTDataset[i][n]); Row.push(20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][n]))); }
+      for(var n = 0; n < Analyzer.GetSeriesNames('Voltage').length + Analyzer.GetSeriesNames('Current').length; n++) { Row.push(FFTDataset[i][n]); Row.push(20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][n]))); }
       Data.push(Row);
     }
     exportToCsv('FFT.csv', Data);
   } else if(DetailTabSelector.GetSaved() === 1) {
     var Header = ['Harmonic'];
-    for(var i = 0; i < SeriesNames.Current().length; i++) { Header.push(SeriesNames.Current()[i]); Header.push(SeriesNames.Current()[i] + ' (dB)'); }
-    for(var i = 0; i < SeriesNames.Voltage().length; i++) { Header.push(SeriesNames.Voltage()[i]); Header.push(SeriesNames.Voltage()[i] + ' (dB)'); }
+    for(var i = 0; i < Analyzer.GetSeriesNames('Current').length; i++) { Header.push(Analyzer.GetSeriesNames('Current')[i]); Header.push(Analyzer.GetSeriesNames('Current')[i] + ' (dB)'); }
+    for(var i = 0; i < Analyzer.GetSeriesNames('Voltage').length; i++) { Header.push(Analyzer.GetSeriesNames('Voltage')[i]); Header.push(Analyzer.GetSeriesNames('Voltage')[i] + ' (dB)'); }
     Data.push(Header);
     for(i = 0; i < HarmonicsDataset.length; i++) {
       var Row = [SeriesNames.Harmonics[i]];
-      for(var n = 0; n < SeriesNames.Voltage().length + SeriesNames.Current().length; n++) { Row.push(HarmonicsDataset[i][n]); Row.push(20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][n]))); }
+      for(var n = 0; n < Analyzer.GetSeriesNames('Voltage').length + Analyzer.GetSeriesNames('Current').length; n++) { Row.push(HarmonicsDataset[i][n]); Row.push(20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][n]))); }
       Data.push(Row);
     }
     exportToCsv('Harmonics.csv', Data);
   } else if(DetailTabSelector.GetSaved() === 2) {
     var Header = ['Date/Time'];
     for(var i = 0; i < SeriesNames.Harmonics.length; i++) {
-      for(var n = 0; n < SeriesNames.Voltage().length; n++) Header.push( SeriesNames.Harmonics[i] + '(' + SeriesNames.Current()[n] + ')');
+      for(var n = 0; n < Analyzer.GetSeriesNames('Voltage').length; n++) Header.push( SeriesNames.Harmonics[i] + '(' + Analyzer.GetSeriesNames('Current')[n] + ')');
     }
     Data.push(Header);
     for(var i = 0; i < HarmonicsData[0].length; i++) {
       var Row = [new Date(HarmonicsData[0][i][0]).toLocaleTimeString()];
       for(var j = 0; j < SeriesNames.Harmonics.length; j++) {
-        for(var k = 0; k < SeriesNames.Voltage().length; k++) Row.push(HarmonicsData[j][i][k + 1]);
+        for(var k = 0; k < Analyzer.GetSeriesNames('Voltage').length; k++) Row.push(HarmonicsData[j][i][k + 1]);
       }
       Data.push(Row);
     }

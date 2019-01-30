@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="CSS/openZmeter.css"/>
     <title>openZmeter - Stats</title>
   </head>
-  <body onload="StartPageLoad()">
+  <body>
     <div id="OfflineDiv" class="overlay"></div>
     <span data-load-block="Header_Block"></span>
     <div class="modal fade" id="NetworkModal" tabindex="-1" role="dialog" data-backdrop='static'>
@@ -103,7 +103,7 @@
           </div>
           <div class="modal-body">
             <div class="alert alert-danger text-center hide" id="divTariffError" style="margin-bottom: 5px; padding: 5px;"></div>
-            <div class="alert alert-success text-center" id="divTariffScuccess" style="margin-bottom: 5px; padding: 5px;"></div>
+            <div class="alert alert-success text-center" id="divTariffSuccess" style="margin-bottom: 5px; padding: 5px;"></div>
             <div class="row">
               <div class="col-xs-12 col-sm-6">
                 <label class="control-label">Name</label>
@@ -812,7 +812,8 @@
     <script src="JS/moment-timezone.min.js"></script>
     <script src="JS/bootstrap-toggle.min.js"></script>
     <script src="JS/bootstrap-datetimepicker.min.js"></script>
-    <script src="JS/openZmeter.js"></script>
+    <script src="JS/bootstrap-suggest.min.js"></script>    
     <script src="JS/openZmeter.Settings.js"></script>
+    <script src="JS/openZmeter.js"></script>
   </body>
 </html>

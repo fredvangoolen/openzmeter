@@ -2,7 +2,7 @@
 var NetworksTable   = null;
 var NetworksDataset = [];
 var EditingNetwork  = null;
-var WifiSpinner     = new Spinner(SpinnerOpts);
+//var WifiSpinner     = new Spinner(SpinnerOpts);
 function AjaxGetNetworks() {
   $.ajax({ url: "getNetworks", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({}), 
            success: AjaxNetworks,
@@ -414,8 +414,7 @@ $('#btnTariffHolidays').click(function() {
   $('#divTariffHolidays').removeClass('hide');
 });
 function CheckTariff() {
-  $('#divTariffScuccess').addClass('hide');
-  $('#divTariffError').addClass('hide');
+  $('#divTariffSuccess, #divTariffError').addClass('hide');
   $('#btnTariffSave').addClass('disabled');
   var FindSeason = function(date) {
     for(var i = 0; i < TariffDefinition.Details.Seasons.length; i++) { if(TariffDefinition.Details.Seasons[i].StartDate === date) return i; }
@@ -442,7 +441,7 @@ function CheckTariff() {
     $('#divTariffError').text('Defined tariff period is not correctly covered by defined seasons!').removeClass('hide');
     return;
   }
-  $('#divTariffScuccess').text('Tariff contains ' + TariffDefinition.Details.Seasons.length + ' seasons, a total of ' + TariffDefinition.Details.Periods.length + ' day periods and ' + TariffDefinition.Details.Holidays.length + ' holidays').removeClass('hide');
+  $('#divTariffSuccess').text('Tariff contains ' + TariffDefinition.Details.Seasons.length + ' seasons, a total of ' + TariffDefinition.Details.Periods.length + ' day periods and ' + TariffDefinition.Details.Holidays.length + ' holidays').removeClass('hide');
   $('#btnTariffSave').removeClass('disabled');
 }
 function PopulatePeriodDropdown(dropdown, count, prefix, selection, nullText) {

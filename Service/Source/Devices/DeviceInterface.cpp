@@ -45,7 +45,7 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
   }
   pDevices.push_back(device);
 }
-bool DeviceInterface::GetTariffsCallback(char* user, json_object* reader, Database* db, json_object** writer, char** postdata, size_t* resultLen) {
+bool DeviceInterface::GetTariffsCallback(string user, json_object* reader, Database* db, json_object** writer, char** postdata, size_t* resultLen) {
   char     QueryText[8192];
   char    *Serial = NULL;
   json_object *Find;
@@ -56,21 +56,46 @@ bool DeviceInterface::GetTariffsCallback(char* user, json_object* reader, Databa
     if(Index == 0) {
       snprintf(QueryText, sizeof(QueryText), "SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username))), '[]') from rates");
     } else {
-      snprintf(QueryText, sizeof(QueryText), "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = %d", Index);
+      snprintf(QueryText, sizeof(QueryText), "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = %u", Index);
     }  
   } else {
-    uint64_t StartDate = 0;
-    if((json_object_object_get_ex(reader, "StartDate", &Find) == true) && (json_object_get_type(Find) == json_type_int)) StartDate = json_object_get_int64(Find);
-    if(StartDate == 0) {
-      snprintf(QueryText, sizeof(QueryText), "SELECT COALESCE(to_json(array_agg(json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') from analyzers_rates WHERE serial = '%s'", Serial);
+    uint32_t Index = 0;
+    if((json_object_object_get_ex(reader, "RateID", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Index = json_object_get_int64(Find);
+    if(Index == 0) {
+      snprintf(QueryText, sizeof(QueryText), "SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') from analyzers_rates WHERE serial = '%s'", Serial);
     } else {
-      snprintf(QueryText, sizeof(QueryText), "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = %" PRIu64, StartDate);
+      snprintf(QueryText, sizeof(QueryText), "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Details', details) from analyzers_rates where rate = %u", Index);
     }  
   }
   *postdata = db->ExecSentenceJSON(QueryText, resultLen);
   return true;
 }
-bool DeviceInterface::GetDevicesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool DeviceInterface::SetTariffsCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+  char     QueryText[8192];
+  char    *Serial = NULL;
+  json_object *Find;
+  if((json_object_object_get_ex(reader, "Analyzer", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
+  if(Serial == NULL) {
+    uint32_t Index = 0;
+    if((json_object_object_get_ex(reader, "RateID", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Index = json_object_get_int(Find);
+    if(Index == 0) {
+//      snprintf(QueryText, sizeof(QueryText), "insert into rates(\"name\", username, country_code, details, startdate, enddate) select \"Name\", 'admin', \"Country\", \"Details\", \"StartDate\", \"EndDate\" from json_to_record(?) as x(\"Name\" text, \"Country\" text, \"Details\" jsonb, \"StartDate\" bigint, \"EndDate\" bigint)", );
+    } else {
+      snprintf(QueryText, sizeof(QueryText), "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = %u", Index);
+    }  
+  } else {
+    uint32_t Index = 0;
+    if((json_object_object_get_ex(reader, "RateID", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Index = json_object_get_int64(Find);
+    if(Index == 0) {
+      snprintf(QueryText, sizeof(QueryText), "SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') from analyzers_rates WHERE serial = '%s'", Serial);
+    } else {
+      snprintf(QueryText, sizeof(QueryText), "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Details', details) from analyzers_rates where rate = %u", Index);
+    }  
+  }
+  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
+  return true;
+}
+bool DeviceInterface::GetDevicesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_array();
   for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
     json_object *Device = json_object_new_object();
@@ -84,7 +109,7 @@ bool DeviceInterface::GetDevicesCallback(char *user, json_object *reader, Databa
   *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
   return true; 
 }
-bool DeviceInterface::StartDeviceCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool DeviceInterface::StartDeviceCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   char        *Serial = NULL;
   json_object *Find;
   if((json_object_object_get_ex(reader, "Device", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
@@ -105,7 +130,7 @@ bool DeviceInterface::StartDeviceCallback(char *user, json_object *reader, Datab
   *resultLen = strlen(*postdata);
   return false;
 }
-bool DeviceInterface::StopDeviceCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool DeviceInterface::StopDeviceCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   char        *Serial = NULL;
   json_object *Find;
   if((json_object_object_get_ex(reader, "Device", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
@@ -126,12 +151,12 @@ bool DeviceInterface::StopDeviceCallback(char *user, json_object *reader, Databa
   *resultLen = strlen(*postdata);
   return false;
 }
-bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool DeviceInterface::GetAnalyzersCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_array();
   db->PrepareSentence("SELECT serial, editable FROM (SELECT serial, false AS editable FROM permisions WHERE username = ? AND read = TRUE UNION SELECT serial, true FROM analyzers WHERE username = ? UNION SELECT serial, true FROM analyzers WHERE 'admin' = ?) AS Result ORDER BY serial ASC, editable DESC");
-  db->BindSingleString(user);
-  db->BindSingleString(user);
-  db->BindSingleString(user);
+  db->BindSingleString(user.c_str());
+  db->BindSingleString(user.c_str());
+  db->BindSingleString(user.c_str());
   db->ExecSentence();
   for(uint32_t i = 0; i < db->ResultRows(); i++) {
     const char *Serial = db->ResultValue(i, "serial");
@@ -149,7 +174,7 @@ bool DeviceInterface::GetAnalyzersCallback(char *user, json_object *reader, Data
   *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
   return true;    
 }
-bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool DeviceInterface::GetSeriesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
   char    *Serial = NULL, *Aggreg = NULL;
   AnalyzerInterface *Analyzer = NULL;
@@ -263,7 +288,7 @@ bool DeviceInterface::GetSeriesCallback(char *user, json_object *reader, Databas
   *postdata = db->ExecSentenceJSON(QueryText, resultLen);
   return true;
 }
-bool DeviceInterface::GetSeriesAggregCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool DeviceInterface::GetSeriesAggregCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   uint64_t Period = 0, From = 0, To = 0;
   char    *Analyzer = NULL, *Aggreg = NULL, *Series = NULL;
   json_object_object_foreach(reader, JSON_Key, JSON_Val) {
@@ -337,7 +362,7 @@ bool DeviceInterface::GetSeriesAggregCallback(char *user, json_object *reader, D
   *postdata = db->ExecSentenceJSON(QueryText, resultLen);
   return true;
 }
-bool DeviceInterface::GetSeriesNowCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool DeviceInterface::GetSeriesNowCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   char *Serial = NULL;
   json_object *Series = NULL;
   json_object *Find;
@@ -362,7 +387,7 @@ bool DeviceInterface::GetSeriesNowCallback(char *user, json_object *reader, Data
   }
   return false;
 }
-bool DeviceInterface::GetSeriesRangeCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool DeviceInterface::GetSeriesRangeCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   char *Analyzer = NULL, *Aggreg = NULL;
   json_object_object_foreach(reader, JSON_Key, JSON_Val) {
     enum json_type JSON_Type = json_object_get_type(JSON_Val);
@@ -389,7 +414,7 @@ bool DeviceInterface::GetSeriesRangeCallback(char *user, json_object *reader, Da
   *postdata = db->ExecSentenceJSON(QueryText, resultLen);
   return true;
 }
-bool DeviceInterface::GetEventsCallback(char* user, json_object* reader, Database* db, json_object** writer, char** postdata, size_t* resultLen) {
+bool DeviceInterface::GetEventsCallback(string user, json_object* reader, Database* db, json_object** writer, char** postdata, size_t* resultLen) {
   uint64_t LastEvent = 0, From = 0, To = 0, Period = 0;
   char    *Analyzer = NULL;
   if(Tools::JSONString(reader, "Analyzer", &Analyzer, false) == false) {
@@ -420,7 +445,7 @@ bool DeviceInterface::GetEventsCallback(char* user, json_object* reader, Databas
   *postdata = db->ExecSentenceJSON(QueryText, resultLen);
   return true;
 }
-bool DeviceInterface::GetPricesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool DeviceInterface::GetPricesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   uint64_t     Period = 0, From = 0, To = 0, LastSample  = 0;
   char        *Aggreg = NULL;
   char        *Serial = NULL;

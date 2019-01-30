@@ -11,11 +11,12 @@
 #include "DeviceInterface.h"
 #include "NetworkManager.h"
 #include "NTP.h"
+
 static bool Terminate = false;
 void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
 }
-bool GetNewsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool GetNewsCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   uint64_t LastLogin;
   if(Tools::JSONUInt64(reader, "LastLogin", &LastLogin) == false) {
     *postdata  = (char*)"'LastLogin' param is requiered";
@@ -27,12 +28,12 @@ bool GetNewsCallback(char *user, json_object *reader, Database *db, json_object 
   *postdata = db->ExecSentenceJSON(Query, resultLen);
   return true;  
 }
-bool GetCountriesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool GetCountriesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *postdata = db->ExecSentenceJSON("SELECT array_to_json(array_agg(row_to_json(t1))) FROM (  select country_code as \"CountryCode\", country as \"Name\", currency as \"Currency\", timezone as \"TimeZone\" from country) as t1;", resultLen);
   return true;
 }
 int main(int argc, char** argv) {
-  char *ConfigFile = (char*)"/etc/openZmeter.conf";
+  string ConfigFile = "/etc/openZmeter.conf";
   bool  Daemonize  = false;
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
@@ -56,11 +57,9 @@ int main(int argc, char** argv) {
   if(Prio == -1) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   } else {
-    struct sched_param Param;
-    Param.sched_priority = Prio;
+    sched_param Param {.sched_priority = Prio };
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
   }
-  
   Tools::RegisterHandlers(SignalHandler);
   HTTPServer::RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
   HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);

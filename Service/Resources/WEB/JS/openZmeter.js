@@ -469,13 +469,13 @@ function GraphDBTicks(min, max, offset) {
 /* Generate odd harmonic ticks */
 function GraphOddHarmonics() {
   var Ticks = [];
-  for(var i = 0; i < SeriesNames.Harmonics.length; i = i + 2) Ticks.push({ v: i, label: SeriesNames.Harmonics[i] });
+  for(var i = 0; i < Analyzer.GetSeriesNames('Harmonics').length; i = i + 2) Ticks.push({ v: i, label: Analyzer.GetSeriesNames('Harmonics')[i] });
   return Ticks;
 }
 function GraphWaveTimeTicks(max) {
   var ticks = [];
-  for(var i = 0; i <= Math.floor(max / Analyzers[Analyzer].SampleFreq * Analyzers[Analyzer].NominalFreq); i++) {
-    ticks.push({ v: i * Analyzers[Analyzer].SampleFreq / Analyzers[Analyzer].NominalFreq, label: Round2(i / Analyzers[Analyzer].NominalFreq * 1000) });
+  for(var i = 0; i <= Math.floor(max / Analyzer.GetSelected().SampleFreq * Analyzer.GetSelected().NominalFreq); i++) {
+    ticks.push({ v: i * Analyzer.GetSelected().SampleFreq / Analyzer.GetSelected().NominalFreq, label: Round2(i / Analyzer.GetSelected().NominalFreq * 1000) });
   }
   return ticks;
 }
@@ -806,51 +806,6 @@ function exportToCsv(filename, rows) {
     }
   }
 }
-/* Load analyzer tariffs */
-var Tariffs = [];
-var TableTariffs = null;
-function LoadTariffs(analyzer) {
-  $('#divAnalyzersTariffSpinner').removeClass('hide');
-  $('#tblAnalyzersTariff button').click(function(event) {
-    $('#dlgAnalyzers > div > div').addClass('hide');
-    $('#divAnalyzersTariffEdit').removeClass('hide');
-    $('#divAnalyzersTariffEditSpinner').addClass('hide');
-  });
-  $('#btnAnalyzersTariffsAdd').click(function() {
-    $('#dlgAnalyzers > div > div').addClass('hide');
-    $('#divAnalyzersTariffEdit').removeClass('hide');
-    $('#divAnalyzersTariffEditSpinner').addClass('hide');
-  });
-  if(TableTariffs !== null) {
-    TableTariffs.clear();
-  } else {
-    TableTariffs = $('#tblAnalyzersTariff').DataTable({ responsive: false, paging: false, scrollCollapse: true, 
-                                                        dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', 
-                                                        language: { info: "_MAX_ avaliable tarifs", infoEmpty: "No configured tariffs"},
-                                                        columnDefs: [ { targets: 0, orderable: true, searchable: true }, { targets: [1, 2], width: "80px", orderable: true, className: 'text-center' }, { targets: 3, width: "80px", orderable: false, searchable: false }], order: [2, 'desc']
-    });
-  }
-  $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer }), success: 
-    function(result) {
-      Tariffs = result;
-      for(var i = 0; i < Tariffs.length; i++) {
-        var RowText = '<tr' + ((i === Analyzer) ? ' class="info"' : '') + '>' +
-                      '<td>' + Tariffs[i].Name + '</td>' +
-                      '<td>' + Tariffs[i].Module + '</td>' +
-                      '<td data-sort="' + Tariffs[i].StartDate + '">' + new Date(Tariffs[i].StartDate).toLocaleDateString() + '</td>' +
-                      '<td><div class="btn-group" data-tariff="' + result[i].RateID + '">' +
-                      '<button type="button" class="btn btn-default btn-xs">Edit</button><button type="button" class="btn btn-danger btn-xs">Delete</button>' +
-                      '</div></td>' +
-                      '</tr>';
-        TableTariffs.row.add($(RowText)).draw();
-      }
-  
-  
-      TableTariffs.columns.adjust();
-      $('#divAnalyzersTariffSpinner').addClass('hide');
-    }
-  });
-}
 function LoadAnalyzers() {
 
   $('#btnAnalyzersConfigBack, #btnAnalyzersACLBack, #btnAnalyzersTariffsBack').click(function(event) {
@@ -859,15 +814,14 @@ function LoadAnalyzers() {
   });
   $('#tblAnalyzers').on('click', 'a', function(event) {
     event.preventDefault();
-if($(event.target).is('a')) {
+    if($(event.target).is('a')) {
       $('#dlgAnalyzers > div > div').addClass('hide');
       if($(event.target).parent('li').index() === 0) {
         $('#divAnalyzersConfig').removeClass('hide');
       } else if($(event.target).parent('li').index() === 1) {
         $('#divAnalyzersACL').removeClass('hide');        
       } else if($(event.target).parent('li').index() === 2) {
-        $('#divAnalyzersTariff').removeClass('hide');
-        LoadTariffs($(event.target).parents('div').attr('data-analyzer'));
+
       } else if($(event.target).parent('li').index() === 4) {
         $('#divAnalyzersMaintenance').removeClass('hide');
       }
@@ -916,14 +870,11 @@ function Analyzer_Manager() {
                     '<td>' + result[i].Mode + '</td>' +
                     '<td><div class="btn-group" data-analyzer="' + result[i].ID + '">' +
                     '<button type="button" class="btn btn-success btn-xs' + ((i === Self.CurrentAnalyzerIndex) ? ' disabled' : '') + '">Select</button><button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>' +
-                    '<ul class="dropdown-menu pull-right"><li><a href="#">Configure</a></li><li><a href="#">ACL</a></li><li><a href="#">Tariff</a></li><li role="separator" class="divider"></li><li><a href="#">Maintenance</a></li></ul>' +
+                    '<ul class="dropdown-menu pull-right"><li><a href="#">Configure</a></li><li><a href="#">ACL</a></li><li><a href="#">Tariff</a></li><li><a href="#">Alerts</a></li><li role="separator" class="divider"></li><li><a href="#">Maintenance</a></li></ul>' +
                     '</div></td>' +
                     '</tr>';
       Self.TableAnalyzers.row.add($(RowText)).draw();
     }
-    $('#tblAnalyzers').on('click', 'button:first-child', function() { Self.SetSelected(TableAnalyzers.row($(this).parents('tr')).node()._DT_RowIndex); } );
-    $('#tblAnalyzers').on('click', 'li:nth-child(1) > a', function(event) { event.preventDefault(); Self.Configure($(this).parents('td').attr('data-analyzer')); } );
-    
     if(Self.AvaliableAnalyzers[Self.CurrentAnalyzerIndex] === undefined) {
       if(Self.AvaliableAnalyzers.length !== 0) $('#dlgAnalyzers').modal('show');
       $('#NodeTime').text('Not connected!');
@@ -940,11 +891,127 @@ function Analyzer_Manager() {
   Self.Search = function() {
     $('#dlgAnalyzers > div > div').addClass('hide');
     $('#divAnalyzers').removeClass('hide');
-    $('#dlgAnalyzers').modal('show'); 
+    $('#dlgAnalyzers').modal('show');
     Self.TableAnalyzers.columns.adjust();
   };
   Self.Configure = function(serial) {
-    alert("bliu");
+    alert("Coinfigure not yet implemented!");
+  };
+  Self.ACL = function(serial) {
+    alert("ACL not yet implemented!");
+  };
+  Self.Tariffs = function(serial) {
+    $('#dlgAnalyzers > div > div').addClass('hide');
+    $('#divAnalyzersTariff').removeClass('hide');
+    $('#divAnalyzersTariffSpinner').removeClass('hide');
+    Self.TableTariffs.clear();
+    $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Analyzer: Self.GetSelected().ID } ), 
+      success: function(result) {
+        for(var i = 0; i < result.length; i++) {
+          var RowText = '<tr>' +
+                        '<td>' + result[i].Name + '</td>' +
+                        '<td data-sort="' + result[i].StartDate + '">' + moment(result[i].StartDate).format('DD/MM/YYYY HH:mm:ss') + '</td>' +
+                        '<td data-sort="' + result[i].EndDate + '">' + moment(result[i].EndDate).format('DD/MM/YYYY HH:mm:ss') + '</td>' +
+                        '<td data-tariff="' + result[i].RateID + '"><div class="btn-group">' +
+                        '<button type="button" class="btn btn-default btn-xs">Edit</button><button type="button" class="btn btn-danger btn-xs">Delete</button>' +
+                        '</div></td>' +
+                        '</tr>';
+          Self.TableTariffs.row.add($(RowText)).draw();
+        }
+        Self.AvaliableTariffs = result;
+        Self.TableTariffs.columns.adjust();
+        $('#divAnalyzersTariffSpinner').addClass('hide');
+      }
+    });
+    Self.OnEditAnalyzer = serial;
+  };
+  Self.TariffDelete = function(id) {
+    alert("Not yet implemented!");
+  };
+  Self.TariffUnselect = function() {
+    $('#inputAnalyzerTariffStartDate').data("DateTimePicker").disable();
+    $('#inputAnalyzerTariffEndDate').data("DateTimePicker").disable();
+    $('#inputAnalyzerTariffStartDate').data("DateTimePicker").clear();
+    $('#inputAnalyzerTariffEndDate').data("DateTimePicker").clear();
+    $('#inputAnalyzerTariffComments').prop('disabled');
+    $('#inputAnalyzerTariffComments').html('');
+    $('#divAnalyzerTariffPeriods').html('');
+    Self.TariffValidate();
+  };
+  Self.TariffSelect = function(id) {
+    Self.OnEditTariff = Self.OnEditTariffCurrent;
+    if(id !== 'CURRENT') $.ajax({ url: "getTariffs", timeout: 20000, async: false, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: parseInt(id) }), success: function(result) { Self.OnEditTariff = result; } });
+    Self.OnEditTariff.RateID = (Self.OnEditTariffCurrent !== null) ? Self.OnEditTariffCurrent.RateID : null;
+    $('#inputAnalyzerTariffStartDate').data("DateTimePicker").enable();
+    $('#inputAnalyzerTariffEndDate').data("DateTimePicker").enable();
+    $('#inputAnalyzerTariffStartDate').data("DateTimePicker").date(moment(Self.OnEditTariff.StartDate));
+    $('#inputAnalyzerTariffEndDate').data("DateTimePicker").date(moment(Self.OnEditTariff.EndDate));
+    $('#inputAnalyzerTariffComments').removeProp('disabled');
+    $('#inputAnalyzerTariffComments').html(Self.OnEditTariff.Details.Description);
+    $('#divAnalyzerTariffPeriods').html('');
+    $('#divAnalyzerTariffPeriods').html('<div class="col-xs-12"><label class="control-label">Period settings</label></div>');
+    for(var i = 0; i < Self.OnEditTariff.Details.Periods.length; i++) {
+      $('#divAnalyzerTariffPeriods').append(
+        '<div class="col-xs-6"><div class="input-group input-group-xs"><span class="input-group-addon">P' + (i + 1) + '</span><input type="text" class="form-control" value="0.0"><span class="input-group-addon">kW</span></div></div>' +
+        '<div class="col-xs-6"><div class="input-group input-group-xs"><span class="input-group-addon">P' + (i + 1) + '</span><input type="text" class="form-control" value="0.0"><span class="input-group-addon">€/kW/day</span></div></div>' +
+        '<div class="col-xs-12" style="height: 2px"></div>');
+    }
+    Self.TariffValidate();
+  };
+  Self.TariffEdit = function(id) {
+    $('#dlgAnalyzers > div > div').addClass('hide');
+    $('#divAnalyzersTariffEdit').removeClass('hide');
+    $('#inputAnalyzerTariffStartDate').datetimepicker({ format: 'DD/MM/YYYY', viewMode: 'months' });
+    $('#inputAnalyzerTariffEndDate').datetimepicker({ format: 'DD/MM/YYYY', viewMode: 'months' });
+    Self.OnEditTariff = { RateID: null, StartDate: null, EndDate: null, Details: { Description: '', Periods: [] } };
+    Self.OnEditTariffCurrent = null;
+    Self.TariffUnselect();
+    if(id !== null) {
+      $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", async: false, dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: parseInt(id), Analyzer: Self.OnEditAnalyzer}), success: function(result) { Self.OnEditTariff = result; }});
+      Self.OnEditTariffCurrent = Self.OnEditTariff;
+    }
+    $("#inputAnalyzerTariffBase").bsSuggest("destroy");
+    var Data = [];
+    if(Self.OnEditTariffCurrent !== null) {
+      Data.push({id: "CURRENT", name: Self.OnEditTariffCurrent.Name + ' (Copy)', description: 'From ' + moment(Self.OnEditTariffCurrent.StartDate).format('DD/MM/YYYY') + ' to ' + moment(Self.OnEditTariffCurrent.EndDate).format('DD/MM/YYYY')});
+      $("#inputAnalyzerTariffBase").attr('data-id', 'CURRENT');
+      $("#inputAnalyzerTariffBase").val(Data[0].name);    
+    } else {
+      $("#inputAnalyzerTariffBase").attr('data-id', '');
+      $("#inputAnalyzerTariffBase").val('');
+    }
+    $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", async: false, dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: function(result) { for(var i = 0; i < result.length; i++) Data.push({ id: result[i].RateID, name: result[i].Name, description: 'From ' + moment(result[i].StartDate).format('DD/MM/YYYY') + ' to ' + moment(result[i].EndDate).format('DD/MM/YYYY')}); } });
+    if(Self.OnEditTariffCurrent !== null) Self.TariffSelect('CURRENT');
+    $("#inputAnalyzerTariffBase").bsSuggest( { hideOnSelect: true, effectiveFields: ['name', 'description'], showHeader: false, ignorecase: true, indexId: 0, indexKey: 1, data: { value: Data } } );    
+    $("#inputAnalyzerTariffBase").on('onSetSelectValue', function (e, keyword) { Self.TariffSelect(keyword.id); });
+    $("#inputAnalyzerTariffBase").on('onUnsetSelectValue', function (e) { Self.TariffUnselect(); });
+    $('#divAnalyzersTariffEditSpinner').addClass('hide');
+    Self.TariffValidate();
+  };
+  Self.TariffValidate = function() {
+    $('#divAnalyzersTariffSuccess, #divAnalyzersTariffError').addClass('hide');
+    $('#btnAnalyzersTariffSave').addClass('disabled');
+    if($('#inputAnalyzerTariffBase').attr('data-id') == '') {
+      $('#divAnalyzersTariffError').text('Choose a tariff base!').removeClass('hide');
+      return;
+    }
+    var Overlap = false;
+    for(var i = 0; i < Self.AvaliableTariffs.length; i++) {
+      if(Self.OnEditTariff.RateID === Self.AvaliableTariffs[i].RateID) continue;
+      if((Self.OnEditTariff.StartDate < Self.AvaliableTariffs[i].EndDate) && (Self.AvaliableTariffs[i].StartDate < Self.OnEditTariff.EndDate)) Overlap = true
+    }
+    if(Overlap) {
+      $('#divAnalyzersTariffError').text('Defined tariff period overlaps with other assigned tariffs').removeClass('hide');
+      return;
+    }
+    $('#divAnalyzersTariffSuccess').text('Tariff is correctly configured').removeClass('hide');
+    $('#btnAnalyzersTariffSave').removeClass('disabled');
+  };
+  Self.TariffSave = function() {
+    
+  };  
+  Self.Maintenance = function(serial) {
+    alert("Maintenance not yet implemented!");
   };
   Self.GetSelected = function() {
     return Self.AvaliableAnalyzers[Self.CurrentAnalyzerIndex];
@@ -1073,20 +1140,32 @@ function Analyzer_Manager() {
     if(varName === 'Voltage')   return (Self.GetSelected().Mode === '1PHASE') ? ['V'] : ['V(R)', 'V(S)', 'V(T)'];
     if(varName === 'Current')   return (Self.GetSelected().Mode === '1PHASE') ? ['I'] : (Self.GetSelected().Mode === '3PHASE') ? ['I(R)', 'I(S)', 'I(T)'] : ['I(R)', 'I(S)', 'I(T)', 'I(N)'];
     if(varName === 'Active_Energy') return (Self.GetSelected().Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)'];
-//  ReactiveEnergy: function() { return (Analyzer.GetCurrentMode() === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
+    if(varName === 'Reactive_Energy') return (Self.GetSelected().Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)'];
     if(varName === 'Active_Power') return (Self.GetSelected().Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)'];
-//  ReactivePower: function() { return (Analyzer.GetCurrentMode() === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
-//  PowerFactor: function() { return (Analyzer.GetCurrentMode() === '1PHASE') ? ['PF'] : ['PF(R)', 'PF(S)', 'PF(T)']; },
-//  THDv: function() { return (Analyzer.GetCurrentMode() === '1PHASE') ? ['THDv'] : ['THDv(R)', 'THDv(S)', 'THDv(T)']; },
-//  THDi: function() { return (Analyzer.GetCurrentMode() === '1PHASE') ? ['THDi'] : (Analyzer.GetCurrentMode() === '3PHASE') ? ['THDi(R)', 'THDi(S)', 'THDi(T)'] : ['THDi(R)', 'THDi(S)', 'THDi(T)', 'THDi(N)']; },
-//  PHI: function() { return (Analyzer.GetCurrentMode() === '1PHASE') ? ['PHI']  : ['PHI(R)', 'PHI(S)', 'PHI(T)']; },
-
+    if(varName === 'Reactive_Power') return (Self.GetSelected().Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)'];
+    if(varName === 'Power_Factor')  return (Self.GetSelected().Mode === '1PHASE') ? ['PF'] : ['PF(R)', 'PF(S)', 'PF(T)'];
+    if(varName === 'Voltage_THD')  return (Self.GetSelected().Mode === '1PHASE') ? ['THDv'] : ['THDv(R)', 'THDv(S)', 'THDv(T)'];
+    if(varName === 'Current_THD')  return (Self.GetSelected().Mode === '1PHASE') ? ['THDi'] : (Self.GetSelected().Mode) ? ['THDi(R)', 'THDi(S)', 'THDi(T)'] : ['THDi(R)', 'THDi(S)', 'THDi(T)', 'THDi(N)'];
+    if(varName === 'Phi')  return (Self.GetSelected().Mode === '1PHASE') ? ['PHI']  : ['PHI(R)', 'PHI(S)', 'PHI(T)'];
   };
   Self.AvaliableAnalyzers = [];
   Self.CurrentAnalyzerIndex = parseInt(localStorage.getItem("SelAnalyzer"));
-  Self.TableAnalyzers = $('#tblAnalyzers').DataTable({ responsive: false, paging: false, scrollCollapse: true, dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices" }, columnDefs: [ { targets: [0], width: "20px", orderable: false, searchable: false }, { targets: [2], width: '40px' }, { targets: [3], width: "40px", orderable: false, searchable: false }, { targets: [0, 2], className: 'text-center' } ], order: [1, 'desc'] });
+  Self.TableAnalyzers = $('#tblAnalyzers').DataTable({ responsive: false, paging: false, scrollCollapse: true, dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices" }, columnDefs: [ { targets: [0], orderable: false, searchable: false }, { targets: [3], orderable: false, searchable: false }, { targets: [0, 2], className: 'text-center' } ], order: [1, 'desc'] });
+  Self.TableTariffs = $('#tblAnalyzersTariff').DataTable({ responsive: false, paging: false, scrollCollapse: true, dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', language: { info: "_MAX_ avaliable tarifs", infoEmpty: "No configured tariffs"}, columnDefs: [ { targets: 0, orderable: true, searchable: true }, { targets: [1, 2], orderable: true, className: 'text-center' }, { targets: 3, width: "80px", orderable: false, searchable: false }], order: [2, 'desc'] });
   $.ajax({ url: "getAnalyzers", timeout: 20000, async: false, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: this.AddAnalyzers });
   $('#btnAnalyzerSearch').click(Self.Search);
+  $('#tblAnalyzers').on('click', 'button:first-child', function() { Self.SetSelected(TableAnalyzers.row($(this).parents('tr')).node()._DT_RowIndex); } );
+  $('#tblAnalyzers').on('click', 'li:nth-child(1) > a', function(event) { event.preventDefault(); Self.Configure($(this).parents('div').attr('data-analyzer')); } );
+  $('#tblAnalyzers').on('click', 'li:nth-child(2) > a', function(event) { event.preventDefault(); Self.ACL($(this).parents('div').attr('data-analyzer')); } );
+  $('#tblAnalyzers').on('click', 'li:nth-child(3) > a', function(event) { event.preventDefault(); Self.Tariffs($(this).parents('div').attr('data-analyzer')); } );
+  
+  $('#tblAnalyzers').on('click', 'li:nth-child(6) > a', function(event) { event.preventDefault(); Self.Maintenance($(this).parents('div').attr('data-analyzer')); } );
+  $('#tblAnalyzersTariff').on('click', 'button:nth-child(1)', function(event) { Self.TariffEdit($(this).parents('td').attr('data-tariff')); } );
+  $('#tblAnalyzersTariff').on('click', 'button:nth-child(2)', function(event) { Self.TariffDelete($(this).parents('td').attr('data-tariff')); } );
+  $('#btnAnalyzersTariffsBack').click(Self.Search);
+  $('#btnAnalyzersTariffBack').click(function() { Self.Tariffs(Self.OnEditAnalyzer); });
+  $('#btnAnalyzersTariffsAdd').click(function() { Self.TariffEdit(null); });
+  $('#btnAnalyzersTariffSave').click(Self.TariffSave);
 }
 // JS entry point for all page loading
 if((localStorage.getItem('SelAnalyzer') === null) && (window.location.pathname !== '/Settings')) { window.location.href = 'Settings'; }

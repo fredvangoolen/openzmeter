@@ -5,7 +5,7 @@
 #pragma once
 #include <vector>
 #include <stdlib.h>
-#include <json-c/json.h>
+//#include <json-c/json.h>
 #include <zlib.h>
 #include <microhttpd.h>
 #include "Database.h"
@@ -15,7 +15,7 @@
 using namespace std;
 class HTTPServer {
   public :
-  typedef bool (*Func_t)(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+  typedef bool (*Func_t)(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
   private :
     typedef struct {
       char           *UserName;
@@ -30,32 +30,32 @@ class HTTPServer {
       z_stream        DeflateObj;
     } Request_t;
     typedef struct {
-      const char *HandleName;
-      Func_t      Function;
+      string HandleName;
+      Func_t Function;
     } Callback_t;
     typedef struct {
-      const char *URL;
-      const char *File;
+      string URL;
+      string File;
     } Mapping_t;
   private:
     static MHD_Daemon         *pDaemon;
-    static const char         *pDefaultPage;
+    static string              pDefaultPage;
     static vector<Callback_t>  pCallbacks;
     static vector<Mapping_t>   pMappings;
   private :
     static int     HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
     static void    HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe);
     static void    ExpireSessions();
-    static void    SetMimeType(struct MHD_Response *response, const char *url);
-    static int     SendRedirect(struct MHD_Connection *connection, const char *url);
+    static void    SetMimeType(struct MHD_Response *response, string url);
+    static int     SendRedirect(struct MHD_Connection *connection, string url);
     static void    OpenSession(MHD_Connection *connection, Request_t *request);
     static void    CloseSession(MHD_Connection *connection, Request_t *request);
     static ssize_t WriteFunction(void *cls, uint64_t pos, char *buf, size_t max);
   public :
     static bool Config(json_object *config);
-    static void RegisterDefault(const char *def);
-    static void RegisterCallback(const char *handleName, Func_t function);
-    static void RegisterMapping(const char *url, const char *file);
+    static void RegisterDefault(string def);
+    static void RegisterCallback(string handleName, Func_t function);
+    static void RegisterMapping(string url, string file);
     static void Stop();
     static void RemoveExpiredSessions();
 };

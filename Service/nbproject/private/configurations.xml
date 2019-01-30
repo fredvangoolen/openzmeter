@@ -5,6 +5,8 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
+        <df name="etc">
+        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -12,6 +14,8 @@
           </df>
         </df>
         <df name="usr">
+          <df name="sbin">
+          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -125,23 +129,7 @@
       </df>
       <df name="Tmp">
         <df name="Source">
-          <df name="Analyzers">
-            <df name="Soft">
-            </df>
-          </df>
           <df name="Devices">
-            <df name="V1_00">
-            </df>
-            <df name="V1_01">
-            </df>
-            <df name="Virtual">
-            </df>
-          </df>
-          <df name="Tariffs">
-            <df name="ESIOS">
-            </df>
-            <df name="Spain">
-            </df>
           </df>
         </df>
       </df>
@@ -151,6 +139,8 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
+        <df name="etc">
+        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -158,6 +148,8 @@
           </df>
         </df>
         <df name="usr">
+          <df name="sbin">
+          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -232,23 +224,7 @@
       </df>
       <df name="Tmp">
         <df name="Source">
-          <df name="Analyzers">
-            <df name="Soft">
-            </df>
-          </df>
           <df name="Devices">
-            <df name="V1_00">
-            </df>
-            <df name="V1_01">
-            </df>
-            <df name="Virtual">
-            </df>
-          </df>
-          <df name="Tariffs">
-            <df name="ESIOS">
-            </df>
-            <df name="Spain">
-            </df>
           </df>
         </df>
       </df>
@@ -257,6 +233,8 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
+        <df name="etc">
+        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -264,6 +242,8 @@
           </df>
         </df>
         <df name="usr">
+          <df name="sbin">
+          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -338,23 +318,7 @@
       </df>
       <df name="Tmp">
         <df name="Source">
-          <df name="Analyzers">
-            <df name="Soft">
-            </df>
-          </df>
           <df name="Devices">
-            <df name="V1_00">
-            </df>
-            <df name="V1_01">
-            </df>
-            <df name="Virtual">
-            </df>
-          </df>
-          <df name="Tariffs">
-            <df name="ESIOS">
-            </df>
-            <df name="Spain">
-            </df>
           </df>
         </df>
       </df>
@@ -363,6 +327,8 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
+        <df name="etc">
+        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -370,6 +336,8 @@
           </df>
         </df>
         <df name="usr">
+          <df name="sbin">
+          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -444,23 +412,7 @@
       </df>
       <df name="Tmp">
         <df name="Source">
-          <df name="Analyzers">
-            <df name="Soft">
-            </df>
-          </df>
           <df name="Devices">
-            <df name="V1_00">
-            </df>
-            <df name="V1_01">
-            </df>
-            <df name="Virtual">
-            </df>
-          </df>
-          <df name="Tariffs">
-            <df name="ESIOS">
-            </df>
-            <df name="Spain">
-            </df>
           </df>
         </df>
       </df>
@@ -469,6 +421,8 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
+        <df name="etc">
+        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -476,6 +430,8 @@
           </df>
         </df>
         <df name="usr">
+          <df name="sbin">
+          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -550,23 +506,7 @@
       </df>
       <df name="Tmp">
         <df name="Source">
-          <df name="Analyzers">
-            <df name="Soft">
-            </df>
-          </df>
           <df name="Devices">
-            <df name="V1_00">
-            </df>
-            <df name="V1_01">
-            </df>
-            <df name="Virtual">
-            </df>
-          </df>
-          <df name="Tariffs">
-            <df name="ESIOS">
-            </df>
-            <df name="Spain">
-            </df>
           </df>
         </df>
       </df>
@@ -575,6 +515,8 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
+        <df name="etc">
+        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -582,6 +524,8 @@
           </df>
         </df>
         <df name="usr">
+          <df name="sbin">
+          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -656,23 +600,7 @@
       </df>
       <df name="Tmp">
         <df name="Source">
-          <df name="Analyzers">
-            <df name="Soft">
-            </df>
-          </df>
           <df name="Devices">
-            <df name="V1_00">
-            </df>
-            <df name="V1_01">
-            </df>
-            <df name="Virtual">
-            </df>
-          </df>
-          <df name="Tariffs">
-            <df name="ESIOS">
-            </df>
-            <df name="Spain">
-            </df>
           </df>
         </df>
       </df>
@@ -681,6 +609,8 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
+        <df name="etc">
+        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -688,6 +618,8 @@
           </df>
         </df>
         <df name="usr">
+          <df name="sbin">
+          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -762,23 +694,7 @@
       </df>
       <df name="Tmp">
         <df name="Source">
-          <df name="Analyzers">
-            <df name="Soft">
-            </df>
-          </df>
           <df name="Devices">
-            <df name="V1_00">
-            </df>
-            <df name="V1_01">
-            </df>
-            <df name="Virtual">
-            </df>
-          </df>
-          <df name="Tariffs">
-            <df name="ESIOS">
-            </df>
-            <df name="Spain">
-            </df>
           </df>
         </df>
       </df>
@@ -787,6 +703,8 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
+        <df name="etc">
+        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -794,6 +712,8 @@
           </df>
         </df>
         <df name="usr">
+          <df name="sbin">
+          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -868,23 +788,759 @@
       </df>
       <df name="Tmp">
         <df name="Source">
-          <df name="Analyzers">
-            <df name="Soft">
-            </df>
-          </df>
           <df name="Devices">
-            <df name="V1_00">
-            </df>
-            <df name="V1_01">
-            </df>
-            <df name="Virtual">
+          </df>
+        </df>
+      </df>
+    </df>
+    <df root="." name="8">
+      <df name="Package">
+        <df name="DEBIAN">
+        </df>
+        <df name="etc">
+        </df>
+        <df name="lib">
+          <df name="systemd">
+            <df name="system">
             </df>
           </df>
-          <df name="Tariffs">
-            <df name="ESIOS">
+        </df>
+        <df name="usr">
+          <df name="sbin">
+          </df>
+          <df name="share">
+            <df name="openZmeter">
             </df>
-            <df name="Spain">
+          </df>
+        </df>
+      </df>
+      <df name="Resources">
+        <df name="SQL">
+        </df>
+        <df name="WEB">
+          <df name="CSS">
+          </df>
+          <df name="Fonts">
+          </df>
+          <df name="Help">
+          </df>
+          <df name="Imgs">
+          </df>
+          <df name="JS">
+          </df>
+          <df name="Lib">
+            <df name="datatables">
+              <df name="images">
+              </df>
+              <df name="js">
+              </df>
             </df>
+            <df name="dygraph">
+            </df>
+            <df name="jquery.lineProgressbar">
+            </df>
+            <df name="qtip2">
+            </df>
+            <df name="visjs">
+              <df name="img">
+                <df name="network">
+                </df>
+                <df name="timeline">
+                </df>
+              </df>
+            </df>
+          </df>
+          <df name="MiniViews">
+          </df>
+        </df>
+      </df>
+      <df name="Source">
+        <df name="Analyzers">
+          <df name="Remote">
+          </df>
+          <df name="Soft">
+          </df>
+        </df>
+        <df name="Devices">
+          <df name="Remote">
+          </df>
+          <df name="V1_00">
+          </df>
+          <df name="V1_01">
+          </df>
+          <df name="V2_00">
+          </df>
+          <df name="Virtual">
+          </df>
+        </df>
+        <df name="Tariffs">
+          <df name="ESIOS">
+          </df>
+          <df name="Spain">
+          </df>
+        </df>
+      </df>
+      <df name="Tmp">
+        <df name="Source">
+          <df name="Devices">
+          </df>
+        </df>
+      </df>
+    </df>
+    <df root="." name="9">
+      <df name="Package">
+        <df name="DEBIAN">
+        </df>
+        <df name="etc">
+        </df>
+        <df name="lib">
+          <df name="systemd">
+            <df name="system">
+            </df>
+          </df>
+        </df>
+        <df name="usr">
+          <df name="sbin">
+          </df>
+          <df name="share">
+            <df name="openZmeter">
+            </df>
+          </df>
+        </df>
+      </df>
+      <df name="Resources">
+        <df name="SQL">
+        </df>
+        <df name="WEB">
+          <df name="CSS">
+          </df>
+          <df name="Fonts">
+          </df>
+          <df name="Help">
+          </df>
+          <df name="Imgs">
+          </df>
+          <df name="JS">
+          </df>
+          <df name="Lib">
+            <df name="datatables">
+              <df name="images">
+              </df>
+              <df name="js">
+              </df>
+            </df>
+            <df name="dygraph">
+            </df>
+            <df name="jquery.lineProgressbar">
+            </df>
+            <df name="qtip2">
+            </df>
+            <df name="visjs">
+              <df name="img">
+                <df name="network">
+                </df>
+                <df name="timeline">
+                </df>
+              </df>
+            </df>
+          </df>
+          <df name="MiniViews">
+          </df>
+        </df>
+      </df>
+      <df name="Source">
+        <df name="Analyzers">
+          <df name="Remote">
+          </df>
+          <df name="Soft">
+          </df>
+        </df>
+        <df name="Devices">
+          <df name="Remote">
+          </df>
+          <df name="V1_00">
+          </df>
+          <df name="V1_01">
+          </df>
+          <df name="V2_00">
+          </df>
+          <df name="Virtual">
+          </df>
+        </df>
+        <df name="Tariffs">
+          <df name="ESIOS">
+          </df>
+          <df name="Spain">
+          </df>
+        </df>
+      </df>
+      <df name="Tmp">
+        <df name="Source">
+          <df name="Devices">
+          </df>
+        </df>
+      </df>
+    </df>
+    <df root="." name="10">
+      <df name="Package">
+        <df name="DEBIAN">
+        </df>
+        <df name="etc">
+        </df>
+        <df name="lib">
+          <df name="systemd">
+            <df name="system">
+            </df>
+          </df>
+        </df>
+        <df name="usr">
+          <df name="sbin">
+          </df>
+          <df name="share">
+            <df name="openZmeter">
+            </df>
+          </df>
+        </df>
+      </df>
+      <df name="Resources">
+        <df name="SQL">
+        </df>
+        <df name="WEB">
+          <df name="CSS">
+          </df>
+          <df name="Fonts">
+          </df>
+          <df name="Help">
+          </df>
+          <df name="Imgs">
+          </df>
+          <df name="JS">
+          </df>
+          <df name="Lib">
+            <df name="datatables">
+              <df name="images">
+              </df>
+              <df name="js">
+              </df>
+            </df>
+            <df name="dygraph">
+            </df>
+            <df name="jquery.lineProgressbar">
+            </df>
+            <df name="qtip2">
+            </df>
+            <df name="visjs">
+              <df name="img">
+                <df name="network">
+                </df>
+                <df name="timeline">
+                </df>
+              </df>
+            </df>
+          </df>
+          <df name="MiniViews">
+          </df>
+        </df>
+      </df>
+      <df name="Source">
+        <df name="Analyzers">
+          <df name="Remote">
+          </df>
+          <df name="Soft">
+          </df>
+        </df>
+        <df name="Devices">
+          <df name="Remote">
+          </df>
+          <df name="V1_00">
+          </df>
+          <df name="V1_01">
+          </df>
+          <df name="V2_00">
+          </df>
+          <df name="Virtual">
+          </df>
+        </df>
+        <df name="Tariffs">
+          <df name="ESIOS">
+          </df>
+          <df name="Spain">
+          </df>
+        </df>
+      </df>
+      <df name="Tmp">
+        <df name="Source">
+          <df name="Devices">
+          </df>
+        </df>
+      </df>
+    </df>
+    <df root="." name="11">
+      <df name="Package">
+        <df name="DEBIAN">
+        </df>
+        <df name="etc">
+        </df>
+        <df name="lib">
+          <df name="systemd">
+            <df name="system">
+            </df>
+          </df>
+        </df>
+        <df name="usr">
+          <df name="sbin">
+          </df>
+          <df name="share">
+            <df name="openZmeter">
+            </df>
+          </df>
+        </df>
+      </df>
+      <df name="Resources">
+        <df name="SQL">
+        </df>
+        <df name="WEB">
+          <df name="CSS">
+          </df>
+          <df name="Fonts">
+          </df>
+          <df name="Help">
+          </df>
+          <df name="Imgs">
+          </df>
+          <df name="JS">
+          </df>
+          <df name="Lib">
+            <df name="datatables">
+              <df name="images">
+              </df>
+              <df name="js">
+              </df>
+            </df>
+            <df name="dygraph">
+            </df>
+            <df name="jquery.lineProgressbar">
+            </df>
+            <df name="qtip2">
+            </df>
+            <df name="visjs">
+              <df name="img">
+                <df name="network">
+                </df>
+                <df name="timeline">
+                </df>
+              </df>
+            </df>
+          </df>
+          <df name="MiniViews">
+          </df>
+        </df>
+      </df>
+      <df name="Source">
+        <df name="Analyzers">
+          <df name="Remote">
+          </df>
+          <df name="Soft">
+          </df>
+        </df>
+        <df name="Devices">
+          <df name="Remote">
+          </df>
+          <df name="V1_00">
+          </df>
+          <df name="V1_01">
+          </df>
+          <df name="V2_00">
+          </df>
+          <df name="Virtual">
+          </df>
+        </df>
+        <df name="Tariffs">
+          <df name="ESIOS">
+          </df>
+          <df name="Spain">
+          </df>
+        </df>
+      </df>
+      <df name="Tmp">
+        <df name="Source">
+          <df name="Devices">
+          </df>
+        </df>
+      </df>
+    </df>
+    <df root="." name="12">
+      <df name="Package">
+        <df name="DEBIAN">
+        </df>
+        <df name="etc">
+        </df>
+        <df name="lib">
+          <df name="systemd">
+            <df name="system">
+            </df>
+          </df>
+        </df>
+        <df name="usr">
+          <df name="sbin">
+          </df>
+          <df name="share">
+            <df name="openZmeter">
+            </df>
+          </df>
+        </df>
+      </df>
+      <df name="Resources">
+        <df name="SQL">
+        </df>
+        <df name="WEB">
+          <df name="CSS">
+          </df>
+          <df name="Fonts">
+          </df>
+          <df name="Help">
+          </df>
+          <df name="Imgs">
+          </df>
+          <df name="JS">
+          </df>
+          <df name="Lib">
+            <df name="datatables">
+              <df name="images">
+              </df>
+              <df name="js">
+              </df>
+            </df>
+            <df name="dygraph">
+            </df>
+            <df name="jquery.lineProgressbar">
+            </df>
+            <df name="qtip2">
+            </df>
+            <df name="visjs">
+              <df name="img">
+                <df name="network">
+                </df>
+                <df name="timeline">
+                </df>
+              </df>
+            </df>
+          </df>
+          <df name="MiniViews">
+          </df>
+        </df>
+      </df>
+      <df name="Source">
+        <df name="Analyzers">
+          <df name="Remote">
+          </df>
+          <df name="Soft">
+          </df>
+        </df>
+        <df name="Devices">
+          <df name="Remote">
+          </df>
+          <df name="V1_00">
+          </df>
+          <df name="V1_01">
+          </df>
+          <df name="V2_00">
+          </df>
+          <df name="Virtual">
+          </df>
+        </df>
+        <df name="Tariffs">
+          <df name="ESIOS">
+          </df>
+          <df name="Spain">
+          </df>
+        </df>
+      </df>
+      <df name="Tmp">
+        <df name="Source">
+          <df name="Devices">
+          </df>
+        </df>
+      </df>
+    </df>
+    <df root="." name="13">
+      <df name="Package">
+        <df name="DEBIAN">
+        </df>
+        <df name="etc">
+        </df>
+        <df name="lib">
+          <df name="systemd">
+            <df name="system">
+            </df>
+          </df>
+        </df>
+        <df name="usr">
+          <df name="sbin">
+          </df>
+          <df name="share">
+            <df name="openZmeter">
+            </df>
+          </df>
+        </df>
+      </df>
+      <df name="Resources">
+        <df name="SQL">
+        </df>
+        <df name="WEB">
+          <df name="CSS">
+          </df>
+          <df name="Fonts">
+          </df>
+          <df name="Help">
+          </df>
+          <df name="Imgs">
+          </df>
+          <df name="JS">
+          </df>
+          <df name="Lib">
+            <df name="datatables">
+              <df name="images">
+              </df>
+              <df name="js">
+              </df>
+            </df>
+            <df name="dygraph">
+            </df>
+            <df name="jquery.lineProgressbar">
+            </df>
+            <df name="qtip2">
+            </df>
+            <df name="visjs">
+              <df name="img">
+                <df name="network">
+                </df>
+                <df name="timeline">
+                </df>
+              </df>
+            </df>
+          </df>
+          <df name="MiniViews">
+          </df>
+        </df>
+      </df>
+      <df name="Source">
+        <df name="Analyzers">
+          <df name="Remote">
+          </df>
+          <df name="Soft">
+          </df>
+        </df>
+        <df name="Devices">
+          <df name="Remote">
+          </df>
+          <df name="V1_00">
+          </df>
+          <df name="V1_01">
+          </df>
+          <df name="V2_00">
+          </df>
+          <df name="Virtual">
+          </df>
+        </df>
+        <df name="Tariffs">
+          <df name="ESIOS">
+          </df>
+          <df name="Spain">
+          </df>
+        </df>
+      </df>
+      <df name="Tmp">
+        <df name="Source">
+          <df name="Devices">
+          </df>
+        </df>
+      </df>
+    </df>
+    <df root="." name="14">
+      <df name="Package">
+        <df name="DEBIAN">
+        </df>
+        <df name="etc">
+        </df>
+        <df name="lib">
+          <df name="systemd">
+            <df name="system">
+            </df>
+          </df>
+        </df>
+        <df name="usr">
+          <df name="sbin">
+          </df>
+          <df name="share">
+            <df name="openZmeter">
+            </df>
+          </df>
+        </df>
+      </df>
+      <df name="Resources">
+        <df name="SQL">
+        </df>
+        <df name="WEB">
+          <df name="CSS">
+          </df>
+          <df name="Fonts">
+          </df>
+          <df name="Help">
+          </df>
+          <df name="Imgs">
+          </df>
+          <df name="JS">
+          </df>
+          <df name="Lib">
+            <df name="datatables">
+              <df name="images">
+              </df>
+              <df name="js">
+              </df>
+            </df>
+            <df name="dygraph">
+            </df>
+            <df name="jquery.lineProgressbar">
+            </df>
+            <df name="qtip2">
+            </df>
+            <df name="visjs">
+              <df name="img">
+                <df name="network">
+                </df>
+                <df name="timeline">
+                </df>
+              </df>
+            </df>
+          </df>
+          <df name="MiniViews">
+          </df>
+        </df>
+      </df>
+      <df name="Source">
+        <df name="Analyzers">
+          <df name="Remote">
+          </df>
+          <df name="Soft">
+          </df>
+        </df>
+        <df name="Devices">
+          <df name="Remote">
+          </df>
+          <df name="V1_00">
+          </df>
+          <df name="V1_01">
+          </df>
+          <df name="V2_00">
+          </df>
+          <df name="Virtual">
+          </df>
+        </df>
+        <df name="Tariffs">
+          <df name="ESIOS">
+          </df>
+          <df name="Spain">
+          </df>
+        </df>
+      </df>
+      <df name="Tmp">
+        <df name="Source">
+          <df name="Devices">
+          </df>
+        </df>
+      </df>
+    </df>
+    <df root="." name="15">
+      <df name="Package">
+        <df name="DEBIAN">
+        </df>
+        <df name="etc">
+        </df>
+        <df name="lib">
+          <df name="systemd">
+            <df name="system">
+            </df>
+          </df>
+        </df>
+        <df name="usr">
+          <df name="sbin">
+          </df>
+          <df name="share">
+            <df name="openZmeter">
+            </df>
+          </df>
+        </df>
+      </df>
+      <df name="Resources">
+        <df name="SQL">
+        </df>
+        <df name="WEB">
+          <df name="CSS">
+          </df>
+          <df name="Fonts">
+          </df>
+          <df name="Help">
+          </df>
+          <df name="Imgs">
+          </df>
+          <df name="JS">
+          </df>
+          <df name="Lib">
+            <df name="datatables">
+              <df name="images">
+              </df>
+              <df name="js">
+              </df>
+            </df>
+            <df name="dygraph">
+            </df>
+            <df name="jquery.lineProgressbar">
+            </df>
+            <df name="qtip2">
+            </df>
+            <df name="visjs">
+              <df name="img">
+                <df name="network">
+                </df>
+                <df name="timeline">
+                </df>
+              </df>
+            </df>
+          </df>
+          <df name="MiniViews">
+          </df>
+        </df>
+      </df>
+      <df name="Source">
+        <df name="Analyzers">
+          <df name="Remote">
+          </df>
+          <df name="Soft">
+          </df>
+        </df>
+        <df name="Devices">
+          <df name="Remote">
+          </df>
+          <df name="V1_00">
+          </df>
+          <df name="V1_01">
+          </df>
+          <df name="V2_00">
+          </df>
+          <df name="Virtual">
+          </df>
+        </df>
+        <df name="Tariffs">
+          <df name="ESIOS">
+          </df>
+          <df name="Spain">
+          </df>
+        </df>
+      </df>
+      <df name="Tmp">
+        <df name="Source">
+          <df name="Devices">
           </df>
         </df>
       </df>
@@ -915,6 +1571,8 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
+        <gdb_signals>
+        </gdb_signals>
         <gdb_options>
           <DebugOptions>
           </DebugOptions>

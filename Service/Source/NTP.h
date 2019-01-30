@@ -29,6 +29,6 @@ class NTP {
     static void *NTP_Thread(void *args);
   public:
     static bool Config(json_object *config);
-    static bool GetTimeSettingsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool SetTimeSettingsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetTimeSettingsCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool SetTimeSettingsCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
 };

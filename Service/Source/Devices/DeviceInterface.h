@@ -32,15 +32,16 @@ class DeviceInterface {
     static void AddDevice(DeviceInterface *device);
   public :
     static bool Config(json_object *config);
-    static bool GetSeriesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetSeriesAggregCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetAnalyzersCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetSeriesNowCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetSeriesRangeCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetEventsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetPricesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetDevicesCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetTariffsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool StartDeviceCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool StopDeviceCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetSeriesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetSeriesAggregCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetAnalyzersCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetSeriesNowCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetSeriesRangeCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetEventsCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetPricesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetDevicesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetTariffsCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool SetTariffsCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool StartDeviceCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool StopDeviceCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
 };

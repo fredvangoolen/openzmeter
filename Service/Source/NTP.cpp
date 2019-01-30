@@ -85,7 +85,7 @@ void *NTP::NTP_Thread(void *args) {
   }
   return NULL;
 }
-bool NTP::GetTimeSettingsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool NTP::GetTimeSettingsCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *writer = json_object_new_object();
   FILE *File = fopen("/usr/share/zoneinfo/zone.tab", "r");
   if(File != NULL) {
@@ -122,9 +122,9 @@ bool NTP::GetTimeSettingsCallback(char *user, json_object *reader, Database *db,
   *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
   return true;
 }
-bool NTP::SetTimeSettingsCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool NTP::SetTimeSettingsCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   bool Error = false;
-  if(strcmp(user, "admin") != 0) {
+  if(user == "admin") {
     *postdata  = (char*)"Only admin can change time settings";
     *resultLen = strlen(*postdata);
     return false;

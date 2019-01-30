@@ -17,7 +17,7 @@
 #include "NetworkManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon                     *HTTPServer::pDaemon         = NULL;
-const char                     *HTTPServer::pDefaultPage    = "";
+string                          HTTPServer::pDefaultPage;
 vector<HTTPServer::Callback_t>  HTTPServer::pCallbacks;
 vector<HTTPServer::Mapping_t>   HTTPServer::pMappings;
 //----------------------------------------------------------------------------------------------------------------------
@@ -39,14 +39,14 @@ bool HTTPServer::Config(json_object *config) {
 void HTTPServer::Stop() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
 }
-void HTTPServer::RegisterDefault(const char *def) {
+void HTTPServer::RegisterDefault(string def) {
   pDefaultPage = def;
 }
-void HTTPServer::RegisterCallback(const char *handleName, HTTPServer::Func_t function) {
+void HTTPServer::RegisterCallback(string handleName, HTTPServer::Func_t function) {
   Callback_t Item = {handleName, function};
   pCallbacks.push_back(Item);
 }
-void HTTPServer::RegisterMapping(const char *url, const char *file) {
+void HTTPServer::RegisterMapping(string url, string file) {
   Mapping_t Item = {url, file};
   pMappings.push_back(Item);
 }
@@ -83,21 +83,21 @@ void HTTPServer::RemoveExpiredSessions() {
   DB.BindSingleUInt64(Tools::GetTime() - 60000);      //1 minute
   DB.ExecSentence();
 }
-void HTTPServer::SetMimeType(struct MHD_Response *response, const char *url) {
-  int FileNameLen = strlen(url);
-  if((strlen(url) >= 3) && (strcmp(&url[FileNameLen - 3], ".js")) == 0) 
+void HTTPServer::SetMimeType(struct MHD_Response *response, string url) {
+  size_t FileNameLen = url.length();
+  if((FileNameLen >= 3) && (url.compare(FileNameLen - 3, 3, ".js")) == 0) 
     MHD_add_response_header(response, "Content-Type", "text/javascript");
-  else if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".css")) == 0) 
+  else if((FileNameLen >= 4) && (url.compare(FileNameLen - 4, 4, ".css")) == 0) 
     MHD_add_response_header(response, "Content-Type", "text/css");
-  else if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".ico")) == 0)
+  else if((FileNameLen >= 4) && (strcmp(&url[FileNameLen - 4], ".ico")) == 0)
     MHD_add_response_header(response, "Content-Type", "image/x-icon");
-  else if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".png")) == 0) 
+  else if((FileNameLen >= 4) && (strcmp(&url[FileNameLen - 4], ".png")) == 0) 
     MHD_add_response_header(response, "Content-Type", "image/png");
-  else if((strlen(url) >= 4) && (strcmp(&url[FileNameLen - 4], ".svg")) == 0) 
+  else if((FileNameLen >= 4) && (strcmp(&url[FileNameLen - 4], ".svg")) == 0) 
     MHD_add_response_header(response, "Content-Type", "image/svg+xml");
-  else if((strlen(url) >= 5) && (strcmp(&url[FileNameLen - 5], ".html")) == 0) 
+  else if((FileNameLen >= 5) && (strcmp(&url[FileNameLen - 5], ".html")) == 0) 
     MHD_add_response_header(response, "Content-Type", "text/html");
-  else if((strlen(url) >= 5) && (strcmp(&url[FileNameLen - 6], ".woff2")) == 0) 
+  else if((FileNameLen >= 5) && (strcmp(&url[FileNameLen - 6], ".woff2")) == 0) 
     MHD_add_response_header(response, "Content-Type", "font/woff2");
   else {
     MHD_add_response_header(response, "Content-Type", "application/octet-stream");
@@ -105,10 +105,10 @@ void HTTPServer::SetMimeType(struct MHD_Response *response, const char *url) {
   }
   MHD_add_response_header(response, "Cache-Control", "public, max-age=2592000");
 }
-int HTTPServer::SendRedirect(struct MHD_Connection *connection, const char *url) {
+int HTTPServer::SendRedirect(struct MHD_Connection *connection, string url) {
   Tools::LogMsg("DEBUG", "Redirecting client to '%s'\n", url);
   struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
-  MHD_add_response_header(response, "Location", url);
+  MHD_add_response_header(response, "Location", url.c_str());
   int Return = MHD_queue_response(connection, MHD_HTTP_SEE_OTHER, response);
   MHD_destroy_response(response);
   return Return;
@@ -154,7 +154,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
   Request_t *Request = (Request_t*)*ptr;
   if(Request == NULL) {
     Tools::LogMsg("DEBUG", "HTTP %s request '%s'\n", method, url);
-    char FilePath[256];
+    string FilePath;
     *ptr = (Request_t*)calloc(1, sizeof(Request_t));
     Request = (Request_t*)*ptr;
     OpenSession(connection, Request);
@@ -162,7 +162,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     Request->ResultCode = MHD_HTTP_OK;
     if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) return MHD_YES;
     if((strcmp(method, MHD_HTTP_METHOD_GET) == 0) || (strcmp(method, MHD_HTTP_METHOD_HEAD) == 0)) {
-      snprintf(FilePath, sizeof(FilePath), "WEB%s", url);
+      FilePath = string("WEB") + url;
       Request->PostData = (char*)Tools::GetFile(FilePath, &Request->PostDataLen);
     }
     if((Request->PostData == NULL) && (strcmp(method, MHD_HTTP_METHOD_GET) == 0)) {
@@ -172,21 +172,21 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         CloseSession(connection, Request);
         return SendRedirect(connection, "/Login");
       } else if((strcmp(url, "/Login") == 0) && (Request->UserName == NULL)) {
-        snprintf(FilePath, sizeof(FilePath), "WEB/Login.html");
+        FilePath = "WEB/Login.html";
         Request->PostData = (char*)Tools::GetFile(FilePath, &Request->PostDataLen);
       } else if(Request->UserName == NULL) {
         return SendRedirect(connection, "/Login");
       } else {
         for(vector<Mapping_t>::iterator it = pMappings.begin() ; it != pMappings.end(); ++it) {
-          if(strcmp(url, it->URL) == 0) {
-            snprintf(FilePath, sizeof(FilePath), "WEB%s", it->File);
+          if(it->URL.compare(url) == 0) {
+            FilePath = "WEB" + it->File;
             Request->PostData = (char*)Tools::GetFile(FilePath, &Request->PostDataLen);
           }
         }    
       }
     }
     if(Request->PostData == NULL) {
-      snprintf(FilePath, sizeof(FilePath), "Error404.html");
+      FilePath = "Error404.html";
       Request->PostData = (char*)Tools::GetFile(FilePath, &Request->PostDataLen);
     }
     if(Request->PostData != NULL) {
@@ -259,7 +259,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
           } else {
             bool Handled = false;
             for(vector<Callback_t>::iterator it = pCallbacks.begin() ; it != pCallbacks.end(); ++it) {
-              if(strcmp(url, it->HandleName) == 0) {
+              if(it->HandleName.compare(url) == 0) {
                 if(it->Function(Request->UserName, Request->JSONReader, Request->DB, &Request->JSONWriter, &Request->PostData, &Request->PostDataLen) == false) Request->ResultCode = MHD_HTTP_BAD_REQUEST;
                 Handled = true;
                 break;

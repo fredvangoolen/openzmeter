@@ -11,7 +11,7 @@
 pthread_mutex_t NetworkManager::pMutex = PTHREAD_MUTEX_INITIALIZER;
 const uint32_t  NetworkManager::NM_DEVICE_TYPE_WIFI = 2;
 //----------------------------------------------------------------------------------------------------------------------
-bool NetworkManager::GetNetworksCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+bool NetworkManager::GetNetworksCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   DBusConnection *DBus = CreateConnection();
   if(DBus == NULL) return NULL;  
   *writer = json_object_new_object();
