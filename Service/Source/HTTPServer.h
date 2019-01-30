@@ -5,7 +5,7 @@
 #pragma once
 #include <vector>
 #include <stdlib.h>
-//#include <json-c/json.h>
+#include <json-c/json.h>
 #include <zlib.h>
 #include <microhttpd.h>
 #include "Database.h"
@@ -18,8 +18,8 @@ class HTTPServer {
   typedef bool (*Func_t)(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
   private :
     typedef struct {
-      char           *UserName;
-      char           *SessionID;
+      string UserName;
+      string SessionID;
       char           *PostData;
       size_t          PostDataLen;
       int             ResultCode;

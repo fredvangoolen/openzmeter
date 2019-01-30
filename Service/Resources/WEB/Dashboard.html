@@ -184,7 +184,34 @@
         </div>
       </div>
     </div>
+    
+    
+    <script type="x-template" id="todo-component">
+    <div>
+        <h3>Example todo component</h3>
+        <div v-for="item in items" class="form-group" :class="{'has-success': item.completed}">
+            <div class="input-group">
+                <div class="input-group-addon">
+                    <input type="checkbox" v-model="item.completed">
+                </div>
+                <input type="text" v-model="item.title" class="form-control">
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="input-group">
+                <input type="text" v-model="newItem" class="form-control">
+                <div class="input-group-btn">
+                    <button class="btn" :class="{'btn-primary': newItem}" @click="addItem()">add!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+    
+    
+    
     <script src="JS/jquery.min.js"></script>
+    <script src="JS/vue.js"></script>
     <script src="JS/bootstrap.min.js"></script>
     <script src="JS/sidenav.min.js"></script>
     <script src="JS/spin.min.js"></script>

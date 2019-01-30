@@ -2,6 +2,13 @@
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="." name="0">
+      <df name="Resources">
+        <df name="WEB">
+          <df name="JS">
+            <in>openZmeter.Components.js</in>
+          </df>
+        </df>
+      </df>
       <df name="Source">
         <df name="Analyzers">
           <df name="Remote">
@@ -232,6 +239,11 @@
           <preBuildCommand></preBuildCommand>
         </preBuild>
       </makefileType>
+      <item path="Resources/WEB/JS/openZmeter.Components.js"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="Source/Analyzers/AnalyzerInterface.cpp"
             ex="false"
             tool="1"
@@ -423,7 +435,6 @@
             <pElem>Source/Tariffs/ESIOS</pElem>
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -650,6 +661,14 @@
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/V1_01</pElem>
+            <pElem>Tmp/Source/Devices/V1_00</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Tariffs</pElem>
+            <pElem>Tmp/Source/Tariffs/Spain</pElem>
+            <pElem>Tmp/Source/Tariffs/ESIOS</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>
@@ -959,7 +978,14 @@
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
             <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/V1_01</pElem>
+            <pElem>Tmp/Source/Devices/V1_00</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
             <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Tariffs</pElem>
+            <pElem>Tmp/Source/Tariffs/Spain</pElem>
+            <pElem>Tmp/Source/Tariffs/ESIOS</pElem>
             <pElem>Package</pElem>
             <pElem>Package/etc</pElem>
             <pElem>Package/lib</pElem>

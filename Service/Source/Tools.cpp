@@ -22,12 +22,12 @@
 #include "DeviceInterface.h"
 #include "NTP.h"
 //----------------------------------------------------------------------------------------------------------------------
-bool         Tools::Debug        = false;
-bool         Tools::pDaemonized  = false;
-FILE        *Tools::pLogFile     = NULL;
-json_object *Tools::pConfig      = NULL;
-string       Tools::pPidFile;
-string       Tools::pConfigFile;
+bool            Tools::Debug        = false;
+bool            Tools::pDaemonized  = false;
+FILE           *Tools::pLogFile     = NULL;
+json_object    *Tools::pConfig      = NULL;
+string          Tools::pPidFile;
+string          Tools::pConfigFile;
 pthread_mutex_t Tools::pLogMutex    = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t Tools::pConfigMutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -46,7 +46,7 @@ uint8_t *Tools::GetFile(string name, size_t* size) {
     Ptr = &Ptr[strlen(Ptr) + 1];
     for(uint32_t i = 0; i < FileCount; i++) {
       File_t File;
-      File.Name = strdup(Ptr);
+      File.Name = Ptr;
       Ptr = &Ptr[strlen(Ptr) + 1];
       File.Size = atoi(Ptr);
       Ptr = &Ptr[strlen(Ptr) + 1];

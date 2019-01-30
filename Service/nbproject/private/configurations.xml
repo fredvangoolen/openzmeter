@@ -35,6 +35,7 @@
           <df name="Imgs">
           </df>
           <df name="JS">
+            <in>openZmeter.Components.js</in>
           </df>
           <df name="Lib">
             <df name="datatables">
@@ -129,7 +130,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -224,7 +241,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -318,7 +351,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -412,7 +461,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -506,7 +571,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -600,7 +681,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -694,7 +791,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -788,7 +901,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -882,7 +1011,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -976,7 +1121,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -1070,7 +1231,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -1164,7 +1341,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -1258,7 +1451,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -1352,7 +1561,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -1446,7 +1671,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
@@ -1540,7 +1781,23 @@
       </df>
       <df name="Tmp">
         <df name="Source">
+          <df name="Analyzers">
+            <df name="Soft">
+            </df>
+          </df>
           <df name="Devices">
+            <df name="V1_00">
+            </df>
+            <df name="V1_01">
+            </df>
+            <df name="Virtual">
+            </df>
+          </df>
+          <df name="Tariffs">
+            <df name="ESIOS">
+            </df>
+            <df name="Spain">
+            </df>
           </df>
         </df>
       </df>
