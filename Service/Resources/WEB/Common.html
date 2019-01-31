@@ -1,6 +1,3 @@
-
-
-
 <div id="MaximizeDialog">
   <div class="modal" id="dlgMaximizeDialog" tabindex="1" role="dialog" data-backdrop='static'>
     <div class="modal-dialog" style="width: 100%; height: 100%; padding: 10px; margin: 0px">
@@ -149,48 +146,8 @@
       <span class="glyphicon glyphicon-menu-hamburger"></span>
     </button>
   </div>
-  <div class="indicator-bar hide">
-    <div class="container" id="vue-app"><todo-component></todo-component></div>
-    <div class="indicator-voltage">
-      <div>
-        <div id="IndicatorVoltageValues">
-          <span class="value">Offline</span>
-        </div>
-        <div>V</div>
-      </div>
-    </div>
-    <div class="indicator-current">
-      <div>
-        <div id="IndicatorCurrentValues">
-          <span class="value">Offline</span>
-        </div>
-        <div>A</div>
-      </div>
-    </div>
-    <div class="indicator-active-power">
-      <div>
-        <div id="IndicatorActivePowerValues">
-          <span class="value">Offline</span>
-        </div>
-        <div id="IndicatorActivePowerUnits">W</div>
-      </div>
-    </div>
-    <div class="indicator-frequency">
-      <div>
-        <div id="IndicatorFrequencyValues">
-          <span class="value">Offline</span>
-        </div>
-        <div>Hz</div>
-      </div>
-    </div>
-    <div class="indicator-active-energy">
-      <div>
-        <div id="IndicatorTodayEnergyValues">
-          <span class="value">Offline</span>
-        </div>
-        <div id="IndicatorActiveEnergyUnits">Wh</div>
-      </div>
-    </div>
+  <div id="app">
+    <navbar-indicators ref="indicator_bar" interval="5000"></navbar-indicators>
   </div>
   <nav class="sidenav" data-sidenav data-sidenav-toggle="#sidenav-toggle">
     <div class="sidenav-header">

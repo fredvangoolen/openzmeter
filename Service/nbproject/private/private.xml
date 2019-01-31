@@ -7,10 +7,17 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/JS/openZmeter.Settings.js</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Settings.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Common.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/JS/openZmeter.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Main.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Dashboard.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Analysis_Current.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/JS/openZmeter.Analysis_Power.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Tools.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Database.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Analysis_Power.html</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/JS/vue-http-loader.min.js</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Makefile</file>
         </group>
     </open-files>
 </project-private>

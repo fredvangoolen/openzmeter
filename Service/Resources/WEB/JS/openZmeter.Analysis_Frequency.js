@@ -21,7 +21,7 @@ var FrequencyChart   = null;
 var FrequencyData    = [];
 function Scrollable_OnSuccess(result, clear) {
   if(clear) FrequencyData = [];
-  FrequencyData = GraphDataAppend(result, 'freq', FrequencyData);
+  FrequencyData = GraphDataAppend(result, 'Frequency', FrequencyData);
   if(FrequencyChart == null) {
     FrequencyChart = new Dygraph(document.getElementById("FrequencyChart"), FrequencyData,
       { strokeWidth: 0.5, stepPlot: true, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4],
@@ -29,7 +29,7 @@ function Scrollable_OnSuccess(result, clear) {
         colors: [$('#FrequencyPanel').css('border-color')], plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], xAxisHeight: 24,
         zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },
         underlayCallback: function(canvas, area, g) {
-          var NF = Analyzers[Analyzer].NominalFreq, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
+          var NF = Analyzer.GetSelected().NominalFreq, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
           GraphHBackgroundRanges([[NF * 1.01, NF * 1.005, Yellow], [NF * 0.995, NF * 0.99, Yellow], [Infinity, NF * 1.01, Red], [NF * 0.99, -Infinity, Red]], g, canvas);
         },  
         axes: {
@@ -65,7 +65,7 @@ function Scrollable_UpdateCounters(times, renew) {
     $('#labelFrequencyAvgSecondary, #labelFrequencyMaxSecondary, #labelFrequencyMinSecondary').text(times.SecondaryText);
     $('#labelFrequencyAvgSecondaryValue, #labelFrequencyMaxSecondaryValue, #labelFrequencyMinSecondaryValue').text((times.SecondaryTo !== undefined) ? 'Calculating...' : '');
     if(times.SecondaryTo !== undefined) {
-      Ajax.GetSeriesAggreg(times.SecondaryPeriod, times.SecondaryTo, times.PreferedAggreg, 'avg(freq), max(freq), min(freq)', 
+      Analyzer.GetSeriesAggreg(times.SecondaryPeriod, times.SecondaryTo, times.PreferedAggreg, 'avg(freq), max(freq), min(freq)', 
         function(result) {
           if(result['Samples'] !== 0) {
             $('#labelFrequencyAvgSecondaryValue').html(Round2(result['avg_freq']) + '&nbsp;<em class="huge-small-unit">Hz</em>');
@@ -78,7 +78,7 @@ function Scrollable_UpdateCounters(times, renew) {
       );      
     }
   }
-  Ajax.GetSeriesAggreg(times.PrimaryPeriod, times.PrimaryTo, times.PreferedAggreg, 'avg(freq), max(freq), min(freq)', 
+  Analyzer.GetSeriesAggreg(times.PrimaryPeriod, times.PrimaryTo, times.PreferedAggreg, 'avg(freq), max(freq), min(freq)', 
     function FrequencyUpdateCountersCurrent(result) {
       $('#labelFrequencyAvgPrimaryValue').html(Array_Round2([result['avg_freq']], ColorArray($('#FrequencyPanel').css('border-color'), 1)) + '<em class="huge-small-unit">Hz</em>');
       $('#labelFrequencyMaxPrimaryValue').html(Array_Round2([result['max_freq']], ColorArray($('#FrequencyPanel').css('border-color'), 1)) + '<em class="huge-small-unit">Hz</em>');
@@ -89,5 +89,5 @@ function Scrollable_UpdateCounters(times, renew) {
 }
 var MainScrollable = null;
 function UpdatePage() {
-  MainScrollable = new Scrollable( {Spinners: ['#FrequencySpinner'], NowBtn: '#toolbarFrequency button[data-function="Update"]', Series: ['freq'], OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters} );
+  MainScrollable = new Scrollable( {Spinners: ['#FrequencySpinner'], NowBtn: '#toolbarFrequency button[data-function="Update"]', Series: ['FREQUENCY'], OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters} );
 }//426

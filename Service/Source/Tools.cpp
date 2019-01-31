@@ -39,6 +39,18 @@ extern char _binary_ResourceFiles_start[];
 extern char _binary_ResourceFiles_end[];
 vector<Tools::File_t> Tools::pFiles;
 uint8_t *Tools::GetFile(string name, size_t* size) {
+#ifdef OZM_DEBUG
+  string Path = "Resources/";
+  int File = -1;
+  struct stat FileStat;
+  Path += name;
+  if((stat(Path.c_str(), &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) File = open(Path.c_str(), O_RDONLY);
+  if(File == -1) return NULL;
+  uint8_t *Return = (uint8_t*)malloc(FileStat.st_size);
+  *size = read(File, Return, FileStat.st_size);
+  close(File);
+  return Return;
+#else
   if(pFiles.size() == 0) {
     char *Ptr   = _binary_ResourceFiles_start;
     uint32_t FileCount = atoi(Ptr);
@@ -62,6 +74,7 @@ uint8_t *Tools::GetFile(string name, size_t* size) {
     }
   }
   return NULL;
+#endif
 }
 void Tools::RegisterHandlers(void (*function)(int)) {
   signal(SIGINT, function);

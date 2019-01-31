@@ -19,7 +19,7 @@ var CurrentChart     = null;
 var CurrentData      = [];
 function Scrollable_OnSuccess(result, clear) {
   if(clear) CurrentData = [Array(Analyzer.GetSeriesNames('Current').length + 1).fill(0)];
-  CurrentData = GraphDataAppend(result, 'rms_i', CurrentData);
+  CurrentData = GraphDataAppend(result, 'Current', CurrentData);
   if(CurrentChart == null) {
     CurrentChart = new Dygraph(document.getElementById("CurrentChart"), CurrentData,
       { strokeWidth: 0.5, stepPlot: true, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4],
@@ -27,7 +27,7 @@ function Scrollable_OnSuccess(result, clear) {
         zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
         colors: ColorArray($('#CurrentPanel').css('border-color'), 4), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
         underlayCallback: function(canvas, area, g) {
-          var MC = Analyzers[Analyzer].MaxCurrent, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
+          var MC = Analyzer.GetSelected().MaxCurrent, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
           GraphHBackgroundRanges([[MC * 0.7, MC * 1, Yellow], [Infinity, MC, Red]], g, canvas);
         },
         axes: {
@@ -63,7 +63,7 @@ function Scrollable_UpdateCounters(times, renew) {
     $('#labelCurrentAvgSecondary, #labelCurrentMaxSecondary, #labelCurrentMinSecondary').text(times.SecondaryText);
     $('#labelCurrentAvgSecondaryValue, #labelCurrentMaxSecondaryValue, #labelCurrentMinSecondaryValue').text((times.SecondaryTo !== undefined) ? 'Calculating...' : '');
     if(times.SecondaryTo !== undefined) {
-      Ajax.GetSeriesAggreg(times.SecondaryPeriod, times.SecondaryTo, times.PreferedAggreg, 'avg(rms_i), max(rms_i), min(rms_i)',
+      Analyzer.GetSeriesAggreg(times.SecondaryPeriod, times.SecondaryTo, times.PreferedAggreg, 'avg(rms_i), max(rms_i), min(rms_i)',
         function(result) {
           if(result['Samples'] !== 0) {
             $('#labelCurrentAvgSecondaryValue').html(Array_Round2(result['avg_rms_i'], '&nbsp;') + '&nbsp;<em>A</em>');
@@ -77,7 +77,7 @@ function Scrollable_UpdateCounters(times, renew) {
       );
     }
   }
-  Ajax.GetSeriesAggreg(times.PrimaryPeriod, times.PrimaryTo, times.PreferedAggreg, 'avg(rms_i), max(rms_i), min(rms_i)', 
+  Analyzer.GetSeriesAggreg(times.PrimaryPeriod, times.PrimaryTo, times.PreferedAggreg, 'avg(rms_i), max(rms_i), min(rms_i)', 
     function(result) {
       $('#labelCurrentAvgPrimaryValue').html(Array_Round2(result['avg_rms_i'], '&nbsp;', ColorArray($('#CurrentPanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">A</em>');
       $('#labelCurrentMinPrimaryValue').html(Array_Round2(result['min_rms_i'], '&nbsp;', ColorArray($('#CurrentPanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">A</em>');
@@ -92,30 +92,30 @@ function Live_OnSuccess(result) {
   WaveformDataset = [];
   HarmonicsDataset = [];
   FFTDataset = [];
-  for(i = 0; i < result['wave_i'][0].length; i++) {
+  for(i = 0; i < result.Current_Samples[0].length; i++) {
     var Row = [i];
-    for(n = 0; n < result['wave_i'].length; n++) Row.push(result['wave_i'][n][i]);
-    for(n = 0; n < result['wave_v'].length; n++) Row.push(result['wave_v'][n][i]);
+    for(n = 0; n < result.Current_Samples.length; n++) Row.push(result.Current_Samples[n][i]);
+    for(n = 0; n < result.Voltage_Samples.length; n++) Row.push(result.Voltage_Samples[n][i]);
     WaveformDataset.push(Row);
   }
   for(i = 0; i < 50; i++) {
     var Row = [];
-    for(n = 0; n < result['harmonics_i'].length; n++) Row.push(result['harmonics_i'][n][i]);
-    for(n = 0; n < result['harmonics_v'].length; n++) Row.push(result['harmonics_v'][n][i]);
+    for(n = 0; n < result.Current_Harmonics.length; n++) Row.push(result.Current_Harmonics[n][i]);
+    for(n = 0; n < result.Voltage_Harmonics.length; n++) Row.push(result.Voltage_Harmonics[n][i]);
     HarmonicsDataset.push(Row);
   }  
-  for(i = 0; i < result['fft_i'][0].length; i++) {
+  for(i = 0; i < result.Current_FFT[0].length; i++) {
     var Row = [];
-    for(n = 0; n < result['harmonics_i'].length; n++) Row.push(result['fft_i'][n][i]);
-    for(n = 0; n < result['harmonics_v'].length; n++) Row.push(result['fft_v'][n][i]);
+    for(n = 0; n < result.Current_FFT.length; n++) Row.push(result.Current_FFT[n][i]);
+    for(n = 0; n < result.Voltage_FFT.length; n++) Row.push(result.Voltage_FFT[n][i]);
     FFTDataset.push(Row);
   }
   UpdateWaveformChart();
   UpdateHarmonicsChart();
   UpdateFFTChart();
-  SetCubismNowLabel(PowerFactorChart, result['power_factor']);
-  SetCubismNowLabel(THDChart, result['thd_i']);
-  SetCubismNowLabel(PHIChart, result['phi']);
+  SetCubismNowLabel(PowerFactorChart, result.Power_Factor);
+  SetCubismNowLabel(THDChart, result.Current_THD);
+  SetCubismNowLabel(PHIChart, result.Phi);
 }
 function DetailTabChange(index) {
   $('#groupDetailPhasesSingle, #groupDetailPhasesMulti, #btnShowDetail1Harmonic, #btnShowDetailLog, #btnShowDetailVoltage, #toolbarDetails button[data-function="Maximize"]').hide();
@@ -370,19 +370,19 @@ var HarmonicsCharts = [], HarmonicsData = [], PowerFactorChart = null, PowerFact
 function PeriodView_OnSuccess(result) {
   while(HarmonicsData.length !== 50) HarmonicsData.push([]);
   for(k = 0; k < 50; k++) {
-    for(i = 0; i < result['harmonics_i'].length; i++) {
-      var Row = [new Date(result['Sampletime'][i])];
-      for(j = 0; j < result['harmonics_i'][i].length; j++) Row.push(20 * Math.log10(result['harmonics_i'][i][j][k]));
+    for(i = 0; i < result.Current_Harmonics.length; i++) {
+      var Row = [new Date(result.Sampletime[i])];
+      for(j = 0; j < result.Current_Harmonics[i].length; j++) Row.push(20 * Math.log10(result.Current_Harmonics[i][j][k]));
       HarmonicsData[k].push(Row);
     }
-    ShiftArray(HarmonicsData[k], result['MaxSamples']);
+    ShiftArray(HarmonicsData[k], result.MaxSamples);
   }
-  PowerFactorData = GraphDataAppend(result, 'power_factor', PowerFactorData);
-  THDData = GraphDataAppend(result, 'thd_i', THDData);
-  PHIData = GraphDataAppend(result, 'phi', PHIData);
+  PowerFactorData = GraphDataAppend(result, 'Power_Factor', PowerFactorData);
+  THDData = GraphDataAppend(result, 'Current_THD', THDData);
+  PHIData = GraphDataAppend(result, 'Phi', PHIData);
   if(HarmonicsCharts.length === 0) {
     for(var i = 0; i < 50; i++) {
-      HarmonicsCharts[i] = AppendCubismGraph($('#EvolutionPanel'), HarmonicsData[i], SeriesNames.Harmonics[i] + ' harmonic', [result['From'], result['To']], function (x) { return Round2(x) + '<em>dB</em>' });
+      HarmonicsCharts[i] = AppendCubismGraph($('#EvolutionPanel'), HarmonicsData[i], Analyzer.GetSeriesNames('Harmonics')[i] + ' harmonic', [result['From'], result['To']], function (x) { return Round2(x) + '<em>dB</em>' });
     }
     Dygraph.synchronize(HarmonicsCharts, { range: false, zoom: false });
     PowerFactorChart = AppendCubismGraph($('#ParametersPanel'), PowerFactorData, "Power Factor", [result['From'], result['To']], function (x) { return (x === null) ? '~' : Round2(x); });
@@ -466,8 +466,8 @@ var DetailTabSelector = null;
 function UpdatePage() {
   DetailTabSelector = new TabSelector('CurrentDetailView', '#DetailTabs', '#DetailDivs', DetailTabChange);
   DetailsButtonUpdate();
-  MainScrollable = new Scrollable( {Spinners: ['#CurrentSpinner'], NowBtn: '#toolbarCurrent button[data-function="Update"]', Series: 'rms_i', OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
-  new Live( {NowBtn: '#toolbarDetails button[data-function="Update"]', RefreshInterval: 5000, Spinners: ['#DetailSpinner'], Series: 'wave_i, wave_v, harmonics_i, harmonics_v, fft_i, fft_v, power_factor, thd_i, phi, rms_i, rms_v', OnSuccess: Live_OnSuccess});
-  new PeriodView( {Spinners: [], Series: 'power_factor, thd_i, phi, harmonics_i', Period: 86400000, Aggreg: '1m', OnSuccess: PeriodView_OnSuccess} );
+  MainScrollable = new Scrollable( {Spinners: ['#CurrentSpinner'], NowBtn: '#toolbarCurrent button[data-function="Update"]', Series: ['CURRENT'], OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
+  new Live( {NowBtn: '#toolbarDetails button[data-function="Update"]', RefreshInterval: 5000, Spinners: ['#DetailSpinner'], Series: ['CURRENT_SAMPLES', 'VOLTAGE_SAMPLES', 'CURRENT_HARMONICS', 'VOLTAGE_HARMONICS', 'CURRENT_FFT', 'VOLTAGE_FFT', 'POWER_FACTOR', 'CURRENT_THD', 'PHI', 'CURRENT', 'VOLTAGE'], OnSuccess: Live_OnSuccess});
+  new PeriodView( {Spinners: [], Series: ['POWER_FACTOR', 'CURRENT_THD', 'PHI', 'CURRENT_HARMONICS'], Period: 86400000, Aggreg: '1M', OnSuccess: PeriodView_OnSuccess} );
   new GraphTools(function() { return ['Waveform', 'Harmonics', '', 'Advanced'][DetailTabSelector.GetSaved()]; }, function() { return [WaveformChart, HarmonicsChart, null, FFTChart][DetailTabSelector.GetSaved()]; }, '#toolbarDetails', undefined, ExportDetail);
 }//1485

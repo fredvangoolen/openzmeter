@@ -26,12 +26,12 @@ function Scrollable_OnSuccess(result, clear) {
     ActivePowerData    = [];
     ReactivePowerData  = [];
   }
-  ActivePowerData    = GraphDataAppend(result, 'active_power', ActivePowerData);
-  ReactivePowerData  = GraphDataAppend(result, 'reactive_power', ReactivePowerData);
+  ActivePowerData    = GraphDataAppend(result, 'Active_Power', ActivePowerData);
+  ReactivePowerData  = GraphDataAppend(result, 'Reactive_Power', ReactivePowerData);
   if(ActivePowerChart == null) {
     ActivePowerChart = new Dygraph(document.getElementById("ActivePowerChart"), ActivePowerData,
       { strokeWidth: 0.5, stackedGraph: true, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], xAxisHeight: 26, dateWindow: [result['From'], result['To']],
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.ActivePower()),
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(Analyzer.GetSeriesNames('Active_Power')),
         zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
         colors: ColorArray($('#ActivePowerPanel').css('border-color'), 3), plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
         underlayCallback: function(context, area, dygraph) { GraphHightlightWeekends("#EEE", context, area, dygraph); },
@@ -50,7 +50,7 @@ function Scrollable_OnSuccess(result, clear) {
   if(ReactivePowerChart == null) {
     ReactivePowerChart = new Dygraph(document.getElementById("ReactivePowerChart"), ReactivePowerData,
       { strokeWidth: 0.5, stackedGraph: true, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], xAxisHeight: 26, dateWindow: [result['From'], result['To']], 
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(SeriesNames.ReactivePower()),
+        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(Analyzer.GetSeriesNames('Reactive_Power')),
         zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
         colors: ColorArray($('#ReactivePowerPanel').css('border-color'), 3), plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
         axes: {
@@ -174,7 +174,7 @@ function EnergyUpdateCountersPrevs(result) {
 /* Secuencia de inicio para cargar la pagina */
 var MainScrollable = null;
 function UpdatePage() {
-  MainScrollable = new Scrollable( {Spinners: ['#ActivePowerSpinner'], Series: 'active_power, reactive_power', OnSuccess: Scrollable_OnSuccess} );
+  MainScrollable = new Scrollable( {Spinners: ['#ActivePowerSpinner'], Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], OnSuccess: Scrollable_OnSuccess} );
   Scrollable_UpdateCounters(true);
 }
 

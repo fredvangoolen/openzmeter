@@ -120,8 +120,7 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
   if(Request->JSONReader) json_object_put(Request->JSONReader);
   if(Request->JSONWriter) json_object_put(Request->JSONWriter);
   if(Request->Deflate) deflateEnd(&Request->DeflateObj);
-  //if(Request->UserName) free(Request->UserName);
-  //if(Request->SessionID) free(Request->SessionID);
+  if(Request->FreePostData) free(Request->PostData);
   free(Request);
 }
 ssize_t HTTPServer::WriteFunction(void *cls, uint64_t pos, char *buf, size_t max) {

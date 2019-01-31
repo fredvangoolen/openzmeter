@@ -9,7 +9,7 @@ CPPFLAGS = -Wall -no-pie -std=c++11
 LDFLAGS  = -lm -ljson-c -ldbus-1 -lcurl -lpthread -lz -lpq -lfftw3f -lstdc++ -lusb-1.0 -lmicrohttpd -lxml2
 
 #Specific options
-debug: CXXFLAGS += -O0 -g
+debug: CXXFLAGS += -O0 -g -DOZM_DEBUG
 release: CXXFLAGS += -Os -Wall
 
 #Source and targets files

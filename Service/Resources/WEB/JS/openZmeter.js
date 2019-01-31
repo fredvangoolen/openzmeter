@@ -1041,33 +1041,19 @@ function Analyzer_Manager() {
   Self.GetIndicators = function() {
     Self.GetSeriesNow(['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'], 
       function(result) {
+        vm.$refs.indicator_bar.setValue(result);
+//        vm.$refs.voltage_indicator.setValue(result['Voltage']);
+//        vm.$refs.current_indicator.setValue(result['Current']);
+//        vm.$refs.power_indicator.setValue(result['Active_Power']);
+//        vm.$refs.frequency_indicator.setValue([result['Frequency']]);
         var Time = new Date(result['Sampletime']);
         $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
-        $('#IndicatorVoltageValues').html("");
-        for(i = 0; i < result['Voltage'].length; i++) {
-          $('#IndicatorVoltageValues').append('<span class="value">' + Round2(result['Voltage'][i]) + '</span>');
-        }
-        $('#IndicatorCurrentValues').html("");
-        for(i = 0; i < result['Current'].length; i++) {
-          $('#IndicatorCurrentValues').append('<span class="value">' + Round2(result['Current'][i]) + '</span>');
-        }
-        $('#IndicatorActivePowerValues').html("");
-        var Units = GetBestUnits(ArrayMax(result['Active_Power']));
-        $('#IndicatorActivePowerUnits').text(Units + "W");
-        result['Active_Power'] = ScaleArrayToUnits(result['Active_Power'], Units);
-        for(i = 0; i < result['Active_Power'].length; i++) {
-          $('#IndicatorActivePowerValues').append('<span class="value">' + Round2(result['Active_Power'][i]) + '</span>');
-        }
-        $('#IndicatorFrequencyValues').html('<span class="value">' + Round2(result['Frequency']) + '</span>');
       },
       function() { 
         setTimeout(Self.GetIndicators, 5000); 
       }, 
       function() {
-        $('#IndicatorVoltageValues').html('<span class="value">Offline</span>');
-        $('#IndicatorCurrentValues').html('<span class="value">Offline</span>');
-        $('#IndicatorActivePowerValues').html('<span class="value">Offline</span>');
-        $('#IndicatorFrequencyValues').html('<span class="value">Offline</span>');
+        vm.$refs.indicator_bar.setValue(null);
         $('NodeTime').text('Offline');   
       }
     );
@@ -1186,50 +1172,16 @@ LoadNews();
 UpdatePage();
 
 
-Vue.component('todo-component', {
-    template: '#todo-component',
-    data: function () {
-        return {
-            items: [
-                {
-                    id: 'item-1',
-                    title: 'Checkout vue',
-                    completed: false
-                }, {
-                    id: 'item-2',
-                    title: 'Use this stuff!!',
-                    completed: false
-                }
-            ],
-            newItem: ''
 
-        };
-    },
-    methods: {
-        addItem: function () {
-            if (this.newItem) {
-                var item = {
-                    id: Math.random(0, 10000),
-                    title: this.newItem,
-                    completed: false
-                };
-
-                this.items.push(item);
-                this.newItem = '';
-            }
-        }
-    }
-});
-var app = new Vue({
-    el: '#vue-app'
-});
+httpVueLoader.register(Vue, 'Components/navbar-indicator.vue');
+httpVueLoader.register(Vue, 'Components/navbar-indicators.vue');
 
 
 
+      var vm = new Vue({
+        el: '#app'
 
-
-
-
+      });
 
 
 

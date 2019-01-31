@@ -26,6 +26,10 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+            <in>navbar-indicator.vue</in>
+            <in>navbar-indicators.vue</in>
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -35,7 +39,6 @@
           <df name="Imgs">
           </df>
           <df name="JS">
-            <in>openZmeter.Components.js</in>
           </df>
           <df name="Lib">
             <df name="datatables">
@@ -177,6 +180,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -287,6 +292,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -397,6 +404,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -507,6 +516,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -617,6 +628,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -727,6 +740,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -837,6 +852,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -947,6 +964,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -1057,6 +1076,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -1167,6 +1188,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -1277,6 +1300,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -1387,6 +1412,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -1497,6 +1524,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -1607,6 +1636,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">
@@ -1717,6 +1748,8 @@
         <df name="SQL">
         </df>
         <df name="WEB">
+          <df name="Components">
+          </df>
           <df name="CSS">
           </df>
           <df name="Fonts">

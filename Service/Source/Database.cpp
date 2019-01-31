@@ -79,10 +79,14 @@ bool Database::Config(json_object *config) {
   return DB.ExecResource("SQL/Database.sql");
 }
 bool Database::ExecResource(const char *file) {
+#ifndef OZM_DEBUG
   size_t Len;
   char *Script = (char*)Tools::GetFile(file, &Len);
   Script[Len - 1] = 0;
   return ExecSentence(Script);
+#else
+  return true;
+#endif
 }
 bool Database::ExecSentence(const char* sql) {
   if(pResult != NULL) PQclear(pResult);

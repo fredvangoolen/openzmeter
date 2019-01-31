@@ -22,6 +22,7 @@ class HTTPServer {
       string SessionID;
       char           *PostData;
       size_t          PostDataLen;
+      bool           *FreePostData;
       int             ResultCode;
       bool            Deflate;
       Database       *DB;
