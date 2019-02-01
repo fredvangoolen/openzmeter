@@ -89,7 +89,7 @@ function GetDayTimePeriod() {
 function Scrollable(opt) {
   this.LastSample = 0;
   this.Timer = null;
-  this.Opt = Object.assign({NowBtn: '#btnScrollableNow', AggregBtn: '#btnScrollableAggreg', PeriodBtn: '#btnScrollablePeriod', Spinners: [], Series: '', AggregVariable: 'GraphAggregation'}, opt);
+  this.Opt = Object.assign({NowBtn: '#btnScrollableNow', AggregBtn: '#btnScrollableAggreg', PeriodBtn: '#btnSearchAnalyzercrollablePeriod', Spinners: [], Series: '', AggregVariable: 'GraphAggregation'}, opt);
   this.Range = [0, 0];
   this.CountersTimes = null;
   var Self = this;
@@ -863,18 +863,18 @@ function Analyzer_Manager() {
     if(result.length === 0) return;
     $('#btnAnalyzerSearch').removeClass('disabled');
     Self.AvaliableAnalyzers = result;
-    for(var i = 0; i < Self.AvaliableAnalyzers.length; i++) {
-      var RowText = '<tr' + ((i === Self.CurrentAnalyzerIndex) ? ' class="info"' : '') + '>' +
-                    '<td>' + ((result[i].Online === true) ? 'ONLINE' : 'OFFLINE') + '</td>' +
-                    '<td>' + result[i].Name + '</td>' +
-                    '<td>' + result[i].Mode + '</td>' +
-                    '<td><div class="btn-group" data-analyzer="' + result[i].ID + '">' +
-                    '<button type="button" class="btn btn-success btn-xs' + ((i === Self.CurrentAnalyzerIndex) ? ' disabled' : '') + '">Select</button><button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>' +
-                    '<ul class="dropdown-menu pull-right"><li><a href="#">Configure</a></li><li><a href="#">ACL</a></li><li><a href="#">Tariff</a></li><li><a href="#">Alerts</a></li><li role="separator" class="divider"></li><li><a href="#">Maintenance</a></li></ul>' +
-                    '</div></td>' +
-                    '</tr>';
-      Self.TableAnalyzers.row.add($(RowText)).draw();
-    }
+//    for(var i = 0; i < Self.AvaliableAnalyzers.length; i++) {
+//      var RowText = '<tr' + ((i === Self.CurrentAnalyzerIndex) ? ' class="info"' : '') + '>' +
+//                    '<td>' + ((result[i].Online === true) ? 'ONLINE' : 'OFFLINE') + '</td>' +
+//                    '<td>' + result[i].Name + '</td>' +
+//                    '<td>' + result[i].Mode + '</td>' +
+//                    '<td><div class="btn-group" data-analyzer="' + result[i].ID + '">' +
+//                    '<button type="button" class="btn btn-success btn-xs' + ((i === Self.CurrentAnalyzerIndex) ? ' disabled' : '') + '">Select</button><button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>' +
+//                    '<ul class="dropdown-menu pull-right"><li><a href="#">Configure</a></li><li><a href="#">ACL</a></li><li><a href="#">Tariff</a></li><li><a href="#">Alerts</a></li><li role="separator" class="divider"></li><li><a href="#">Maintenance</a></li></ul>' +
+//                    '</div></td>' +
+//                    '</tr>';
+//      Self.TableAnalyzers.row.add($(RowText)).draw();
+//    }
     if(Self.AvaliableAnalyzers[Self.CurrentAnalyzerIndex] === undefined) {
       if(Self.AvaliableAnalyzers.length !== 0) $('#dlgAnalyzers').modal('show');
       $('#NodeTime').text('Not connected!');
@@ -1136,10 +1136,10 @@ function Analyzer_Manager() {
   };
   Self.AvaliableAnalyzers = [];
   Self.CurrentAnalyzerIndex = parseInt(localStorage.getItem("SelAnalyzer"));
-  Self.TableAnalyzers = $('#tblAnalyzers').DataTable({ responsive: false, paging: false, scrollCollapse: true, dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices" }, columnDefs: [ { targets: [0], orderable: false, searchable: false }, { targets: [3], orderable: false, searchable: false }, { targets: [0, 2], className: 'text-center' } ], order: [1, 'desc'] });
+//  Self.TableAnalyzers = $('#tblAnalyzers').DataTable({ responsive: false, paging: false, scrollCollapse: true, dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', language: { info: "_MAX_ avaliable devices", infoEmpty: "No avaliable devices" }, columnDefs: [ { targets: [0], orderable: false, searchable: false }, { targets: [3], orderable: false, searchable: false }, { targets: [0, 2], className: 'text-center' } ], order: [1, 'desc'] });
   Self.TableTariffs = $('#tblAnalyzersTariff').DataTable({ responsive: false, paging: false, scrollCollapse: true, dom: '<"top float-left"i><"top float-right"f><"clear">t<"clear">p', language: { info: "_MAX_ avaliable tarifs", infoEmpty: "No configured tariffs"}, columnDefs: [ { targets: 0, orderable: true, searchable: true }, { targets: [1, 2], orderable: true, className: 'text-center' }, { targets: 3, width: "80px", orderable: false, searchable: false }], order: [2, 'desc'] });
   $.ajax({ url: "getAnalyzers", timeout: 20000, async: false, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: this.AddAnalyzers });
-  $('#btnAnalyzerSearch').click(Self.Search);
+  $('#btnAnalyzerSearch').click(function() {vm_analyzer.$refs.AnalyzersDialog.Show(Self.AvaliableAnalyzers); /*Self.Search*/ });
   $('#tblAnalyzers').on('click', 'button:first-child', function() { Self.SetSelected(TableAnalyzers.row($(this).parents('tr')).node()._DT_RowIndex); } );
   $('#tblAnalyzers').on('click', 'li:nth-child(1) > a', function(event) { event.preventDefault(); Self.Configure($(this).parents('div').attr('data-analyzer')); } );
   $('#tblAnalyzers').on('click', 'li:nth-child(2) > a', function(event) { event.preventDefault(); Self.ACL($(this).parents('div').attr('data-analyzer')); } );
@@ -1172,10 +1172,9 @@ LoadNews();
 UpdatePage();
 
 
-
-httpVueLoader.register(Vue, 'Components/navbar-indicator.vue');
-httpVueLoader.register(Vue, 'Components/navbar-indicators.vue');
-
+httpVueLoader.register(Vue, 'Components/NavbarIndicatorsPanel.vue');
+httpVueLoader.register(Vue, 'Components/NavbarIndicators.vue');
+httpVueLoader.register(Vue, 'Components/AnalyzersDialog.vue');
 
 
       var vm = new Vue({
@@ -1183,17 +1182,10 @@ httpVueLoader.register(Vue, 'Components/navbar-indicators.vue');
 
       });
 
+      var vm_analyzer = new Vue({
+        el: '#analyzer-app'
 
-
-
-
-
-
-
-
-
-
-
+      });
 
 
 /* Obtiene fecha del inicio de una semana dando el numero y año */

@@ -27,8 +27,11 @@
         </df>
         <df name="WEB">
           <df name="Components">
-            <in>navbar-indicator.vue</in>
-            <in>navbar-indicators.vue</in>
+            <in>AnalyzersDialog.vue</in>
+            <in>NavbarIndicators.vue</in>
+            <in>NavbarIndicatorsPanel.vue</in>
+            <in>analyzer-dialog-tariffs-tariff</in>
+            <in>analyzer-dialog-tariffs.vue</in>
           </df>
           <df name="CSS">
           </df>
@@ -130,6 +133,7 @@
         <in>RingBuffer.h</in>
         <in>Tools.cpp</in>
         <in>Tools.h</in>
+        <in>json.hpp</in>
       </df>
       <df name="Tmp">
         <df name="Source">

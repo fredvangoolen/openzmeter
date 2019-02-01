@@ -6,6 +6,7 @@
 #include <vector>
 #include <pthread.h>
 #include "AnalyzerInterface.h"
+#include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 class DeviceInterface {
@@ -32,16 +33,16 @@ class DeviceInterface {
     static void AddDevice(DeviceInterface *device);
   public :
     static bool Config(json_object *config);
-    static bool GetSeriesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetSeriesAggregCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetAnalyzersCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetSeriesNowCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetSeriesRangeCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetEventsCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetPricesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetDevicesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool GetTariffsCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool SetTariffsCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool StartDeviceCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool StopDeviceCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static string GetSeriesCallback(HTTPRequest &req);
+    static string GetSeriesAggregCallback(HTTPRequest &req);
+    static string GetAnalyzersCallback(HTTPRequest &req);
+    static string GetSeriesNowCallback(HTTPRequest &req);
+    static string GetSeriesRangeCallback(HTTPRequest &req);
+    static string GetEventsCallback(HTTPRequest &req);
+    static string GetPricesCallback(HTTPRequest &req);
+    static string GetDevicesCallback(HTTPRequest &req);
+    static string GetTariffsCallback(HTTPRequest &req);
+    static string SetTariffsCallback(HTTPRequest &req);
+    static string StartDeviceCallback(HTTPRequest &req);
+    static string StopDeviceCallback(HTTPRequest &req);
 };

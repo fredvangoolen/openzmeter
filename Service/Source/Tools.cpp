@@ -39,18 +39,6 @@ extern char _binary_ResourceFiles_start[];
 extern char _binary_ResourceFiles_end[];
 vector<Tools::File_t> Tools::pFiles;
 uint8_t *Tools::GetFile(string name, size_t* size) {
-#ifdef OZM_DEBUG
-  string Path = "Resources/";
-  int File = -1;
-  struct stat FileStat;
-  Path += name;
-  if((stat(Path.c_str(), &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) File = open(Path.c_str(), O_RDONLY);
-  if(File == -1) return NULL;
-  uint8_t *Return = (uint8_t*)malloc(FileStat.st_size);
-  *size = read(File, Return, FileStat.st_size);
-  close(File);
-  return Return;
-#else
   if(pFiles.size() == 0) {
     char *Ptr   = _binary_ResourceFiles_start;
     uint32_t FileCount = atoi(Ptr);
@@ -74,7 +62,6 @@ uint8_t *Tools::GetFile(string name, size_t* size) {
     }
   }
   return NULL;
-#endif
 }
 void Tools::RegisterHandlers(void (*function)(int)) {
   signal(SIGINT, function);
@@ -270,39 +257,42 @@ bool Tools::GetMemory(uint64_t *total, uint64_t *available) {
   *available = ParseProcMem((char*)"MemFree:", Buffer) + ParseProcMem((char*)"Cached:", Buffer) + ParseProcMem((char*)"Buffers:", Buffer);
   return ((*total != 0) && (*available != 0));
 }
-bool Tools::GetSysInfo(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
-  struct sysinfo Info;
-  struct statvfs Disk;
-  if(sysinfo(&Info) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return NULL;
-  }
-  if(statvfs("/", &Disk) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return NULL;
-  }
-  uint64_t TotalRam, FreeRam;
-  if(GetMemory(&TotalRam, &FreeRam) == false) return false;
-  *writer = json_object_new_object();
-  json_object_object_add(*writer, "UpTime", json_object_new_int(Info.uptime));
-  json_object_object_add(*writer, "Swap_Total", json_object_new_int64(Info.totalswap * Info.mem_unit));
-  json_object_object_add(*writer, "Swap_Free", json_object_new_int64(Info.freeswap * Info.mem_unit));
-  json_object_object_add(*writer, "RAM_Total", json_object_new_int64(TotalRam));
-  json_object_object_add(*writer, "RAM_Free", json_object_new_int64(FreeRam));
-  json_object_object_add(*writer, "CPU_Usage", json_object_new_double(Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)));
-  json_object_object_add(*writer, "CPU_Count", json_object_new_int(get_nprocs()));
-  json_object_object_add(*writer, "Disk_Total", json_object_new_int64((uint64_t)Disk.f_blocks * Disk.f_frsize));
-  json_object_object_add(*writer, "Disk_Free", json_object_new_int64((uint64_t)Disk.f_bfree * Disk.f_frsize));
-  json_object_object_add(*writer, "Battery_Percent", json_object_new_int(pBatteryLevel));
-  json_object_object_add(*writer, "Battery_Charging", json_object_new_boolean(pBatteryCharging));
-  json_object_object_add(*writer, "External_Power", json_object_new_boolean(pExternalPower));
-  int TempFile = open("/sys/class/thermal/thermal_zone0/temp", O_RDONLY);
-  if(TempFile > 0) {
-    char Temp[16];
-    if(read(TempFile, Temp, sizeof(Temp)) > 0) json_object_object_add(*writer, "Temperature", json_object_new_int(atoi(Temp)));
-    close(TempFile);
-  }
-  *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
+bool Tools::GetSysInfo(HTTPRequest &req) {
+//  struct sysinfo Info;
+//  struct statvfs Disk;
+//  if(sysinfo(&Info) != 0) {
+//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//    return NULL;
+//  }
+//  if(statvfs("/", &Disk) != 0) {
+//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//    return NULL;
+//  }
+//  uint64_t TotalRam, FreeRam;
+//  if(GetMemory(&TotalRam, &FreeRam) == false) return false;
+//  writer["UpTime"] = Info.uptime;
+  //  *writer = json_object_new_object();
+//  json_object_object_add(*writer, "UpTime", json_object_new_int(Info.uptime));
+//  json_object_object_add(*writer, "Swap_Total", json_object_new_int64(Info.totalswap * Info.mem_unit));
+//  json_object_object_add(*writer, "Swap_Free", json_object_new_int64(Info.freeswap * Info.mem_unit));
+//  json_object_object_add(*writer, "RAM_Total", json_object_new_int64(TotalRam));
+//  json_object_object_add(*writer, "RAM_Free", json_object_new_int64(FreeRam));
+//  json_object_object_add(*writer, "CPU_Usage", json_object_new_double(Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)));
+//  json_object_object_add(*writer, "CPU_Count", json_object_new_int(get_nprocs()));
+//  json_object_object_add(*writer, "Disk_Total", json_object_new_int64((uint64_t)Disk.f_blocks * Disk.f_frsize));
+//  json_object_object_add(*writer, "Disk_Free", json_object_new_int64((uint64_t)Disk.f_bfree * Disk.f_frsize));
+//  json_object_object_add(*writer, "Battery_Percent", json_object_new_int(pBatteryLevel));
+//  json_object_object_add(*writer, "Battery_Charging", json_object_new_boolean(pBatteryCharging));
+//  json_object_object_add(*writer, "External_Power", json_object_new_boolean(pExternalPower));
+//  int TempFile = open("/sys/class/thermal/thermal_zone0/temp", O_RDONLY);
+//  if(TempFile > 0) {
+//    char Temp[16];
+//    if(read(TempFile, Temp, sizeof(Temp)) > 0) json_object_object_add(*writer, "Temperature", json_object_new_int(atoi(Temp)));
+//    close(TempFile);
+//  }
+//  *postdata = (char*)writer.dump().c_str();
+//  *resultLen = strlen(*postdata);
+  //*postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
   return true;
 }
 bool Tools::JSONString(const json_object *obj, const char *key, char **dst, bool copy) {

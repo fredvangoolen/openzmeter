@@ -1,9 +1,9 @@
 <template>
   <div class="indicator-bar">
-    <navbar-indicator units="V"  ref="voltage_indicator"   color="indicator-voltage"></navbar-indicator>
-    <navbar-indicator units="A"  ref="current_indicator"   color="indicator-current"></navbar-indicator>
-    <navbar-indicator units="W"  ref="power_indicator"     color="indicator-active-power"></navbar-indicator>
-    <navbar-indicator units="Hz" ref="frequency_indicator" color="indicator-frequency"></navbar-indicator>
+    <navbar-indicators-panel units="V"  ref="voltage_indicator"   color="indicator-voltage"></navbar-indicators-panel>
+    <navbar-indicators-panel units="A"  ref="current_indicator"   color="indicator-current"></navbar-indicators-panel>
+    <navbar-indicators-panel units="W"  ref="power_indicator"     color="indicator-active-power"></navbar-indicators-panel>
+    <navbar-indicators-panel units="Hz" ref="frequency_indicator" color="indicator-frequency"></navbar-indicators-panel>
         <div class="indicator-active-energy">
       <div>
         <div id="IndicatorTodayEnergyValues">

@@ -6,7 +6,11 @@
 #include <string>
 #include <vector>
 #include <json-c/json.h>
+#include <json.hpp>
 #include "Database.h"
+#include "HTTPServer.h"
+//----------------------------------------------------------------------------------------------------------------------
+using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 class Tools {
@@ -43,7 +47,7 @@ class Tools {
     static void         Daemonize();
     static bool         CreateLogFile(const char *name);
     static uint64_t     GetTime();
-    static bool         GetSysInfo(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool         GetSysInfo(HTTPRequest &req);
     static void         RegisterHandlers(void (*function)(int));
     static bool         JSONString(const json_object *obj, const char *key, char **dst, bool copy = false);
     static bool         JSONFloat(const json_object *obj, const char *key, float *dst);

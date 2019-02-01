@@ -16,17 +16,16 @@ static bool Terminate = false;
 void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
 }
-bool GetNewsCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
-  uint64_t LastLogin;
-  if(Tools::JSONUInt64(reader, "LastLogin", &LastLogin) == false) {
-    *postdata  = (char*)"'LastLogin' param is requiered";
-    *resultLen = strlen(*postdata);
-    return false;
+void GetNewsCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(Params["LastLogin"].is_number() == false) {
+    req.FromString("'LastLogin' param is requiered", MHD_HTTP_BAD_REQUEST);
+    return;
   }
-  char Query[1024];
-  sprintf(Query, "SELECT COALESCE((SELECT jsonb_build_object('Timestamp', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime >= %" PRIu64 " ORDER BY newstime ASC LIMIT 1), 'null')", LastLogin);
-  *postdata = db->ExecSentenceJSON(Query, resultLen);
-  return true;  
+  req.PrepareSentence("SELECT COALESCE((SELECT jsonb_build_object('Timestamp', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime >= ? ORDER BY newstime ASC LIMIT 1), 'null') AS result");
+  req.BindSingleUInt64(Params["LastLogin"]);
+  req.ExecSentence();
+  if(req.ResultRows() == 1) req.FromString(req.ResultValue(0, "result"), MHD_HTTP_OK);
 }
 bool GetCountriesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
   *postdata = db->ExecSentenceJSON("SELECT array_to_json(array_agg(row_to_json(t1))) FROM (  select country_code as \"CountryCode\", country as \"Name\", currency as \"Currency\", timezone as \"TimeZone\" from country) as t1;", resultLen);
@@ -61,10 +60,10 @@ int main(int argc, char** argv) {
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
   }
   Tools::RegisterHandlers(SignalHandler);
-  HTTPServer::RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
-  HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
+//  HTTPServer::RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
+//  HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
   HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
-  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);
+//  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);
 
   HTTPServer::RegisterDefault("/Dashboard");
   HTTPServer::RegisterMapping("/Dashboard",            "/Dashboard.html");

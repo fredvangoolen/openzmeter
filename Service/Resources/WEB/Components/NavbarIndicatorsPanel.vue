@@ -1,7 +1,9 @@
 <template>
   <div :class="color">
     <div>
-      <div v-html="value"></div>
+      <div>
+        <span class="value" v-for="val in value" v-html="val"></span>
+      </div>
       <div>{{ prefix }}{{ units }}</div>
     </div>
   </div>
@@ -12,20 +14,19 @@ module.exports = {
   props: ['color', 'units'],
   data: function() {
           return {
-            value: '<span class="value">Offline</span>',
+            value: ['Offline'],
             prefix: ''
           }
         },
   methods: {
     setValue: function(vals) {
       if(vals === null) {
-        value = '<span class="value">Offline</span>';
+        value = ['Offline'];
       } else {
         this.prefix = GetBestUnits(ArrayMax(vals));
         vals = ScaleArrayToUnits(vals, this.prefix);
-        var Contents = '';
-        for(var i = 0; i < vals.length; i++) Contents += '<span class="value">' + Round2(vals[i]) + '</span>';
-        this.value = Contents;
+        this.value = [];
+        for(var i = 0; i < vals.length; i++) this.value.push(Round2(vals[i]));
       }
     }
   }
