@@ -5,8 +5,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -14,8 +12,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -27,11 +23,6 @@
         </df>
         <df name="WEB">
           <df name="Components">
-            <in>AnalyzersDialog.vue</in>
-            <in>NavbarIndicators.vue</in>
-            <in>NavbarIndicatorsPanel.vue</in>
-            <in>analyzer-dialog-tariffs-tariff</in>
-            <in>analyzer-dialog-tariffs.vue</in>
           </df>
           <df name="CSS">
           </df>
@@ -163,8 +154,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -172,8 +161,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -275,8 +262,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -284,8 +269,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -387,8 +370,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -396,8 +377,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -499,8 +478,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -508,8 +485,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -611,8 +586,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -620,8 +593,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -723,8 +694,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -732,8 +701,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -835,8 +802,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -844,8 +809,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -947,8 +910,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -956,8 +917,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -1059,8 +1018,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -1068,8 +1025,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -1171,8 +1126,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -1180,8 +1133,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -1283,8 +1234,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -1292,8 +1241,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -1395,8 +1342,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -1404,8 +1349,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -1507,8 +1450,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -1516,8 +1457,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -1619,8 +1558,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -1628,8 +1565,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>
@@ -1731,8 +1666,6 @@
       <df name="Package">
         <df name="DEBIAN">
         </df>
-        <df name="etc">
-        </df>
         <df name="lib">
           <df name="systemd">
             <df name="system">
@@ -1740,8 +1673,6 @@
           </df>
         </df>
         <df name="usr">
-          <df name="sbin">
-          </df>
           <df name="share">
             <df name="openZmeter">
             </df>

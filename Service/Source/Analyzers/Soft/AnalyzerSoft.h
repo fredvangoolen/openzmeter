@@ -82,7 +82,7 @@ class AnalyzerSoft : public AnalyzerInterface {
   protected :
     //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
   public :
-    AnalyzerSoft(char *id, AnalyzerInterface::AnalyzerMode mode, float samplerate);
+    AnalyzerSoft(string id, AnalyzerInterface::AnalyzerMode mode, float samplerate);
     ~AnalyzerSoft();
     void GetParams(Params_t &params, ParamsType &copy);
 //    void ConfigRemote(json_object *config);

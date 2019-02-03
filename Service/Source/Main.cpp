@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
   }
   Tools::RegisterHandlers(SignalHandler);
-//  HTTPServer::RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
+  HTTPServer::RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
 //  HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
   HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
 //  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);

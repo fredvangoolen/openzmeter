@@ -31,7 +31,7 @@ DeviceInterface::DeviceInterface() {
 }
 void DeviceInterface::AddDevice(DeviceInterface* device) {
   if(pDevices.size() == 0) {
-//    HTTPServer::RegisterCallback("/getAnalyzers",        DeviceInterface::GetAnalyzersCallback);
+    HTTPServer::RegisterCallback("/getAnalyzers",        DeviceInterface::GetAnalyzersCallback);
 //    HTTPServer::RegisterCallback("/getSeries",           DeviceInterface::GetSeriesCallback);
 //    HTTPServer::RegisterCallback("/getSeriesAggreg",     DeviceInterface::GetSeriesAggregCallback);
 //    HTTPServer::RegisterCallback("/getSeriesNow",        DeviceInterface::GetSeriesNowCallback);
@@ -151,28 +151,26 @@ string DeviceInterface::StopDeviceCallback(HTTPRequest &req) {
 //  *resultLen = strlen(*postdata);
   return "";
 }
-string DeviceInterface::GetAnalyzersCallback(HTTPRequest &req) {
-//  *writer = json_object_new_array();
-//  db->PrepareSentence("SELECT serial, editable FROM (SELECT serial, false AS editable FROM permisions WHERE username = ? AND read = TRUE UNION SELECT serial, true FROM analyzers WHERE username = ? UNION SELECT serial, true FROM analyzers WHERE 'admin' = ?) AS Result ORDER BY serial ASC, editable DESC");
-//  db->BindSingleString(user.c_str());
-//  db->BindSingleString(user.c_str());
-//  db->BindSingleString(user.c_str());
-//  db->ExecSentence();
-//  for(uint32_t i = 0; i < db->ResultRows(); i++) {
-//    const char *Serial = db->ResultValue(i, "serial");
-//    AnalyzerInterface *Analyzer = NULL;
-//    for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
-//      Analyzer = (*it)->FindAnalyzer(Serial);
-//      if(Analyzer != NULL) {
-//        json_object *Device = Analyzer->GetJSONDescriptor();
-//        json_object_object_add(Device, "Editable", json_object_new_boolean(strcmp("f", db->ResultValue(i, "editable")) == 0));
-//        json_object_array_add(*writer, Device);
-//        break;
-//      }
-//    }
-//  }
-//  *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
-  return "";    
+void DeviceInterface::GetAnalyzersCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  json Response = json::array();
+  req.PrepareSentence("SELECT serial, editable FROM (SELECT serial, false AS editable FROM permisions WHERE username = ? AND read = TRUE UNION SELECT serial, true FROM analyzers WHERE username = ? UNION SELECT serial, true FROM analyzers WHERE 'admin' = ?) AS Result ORDER BY serial ASC, editable DESC");
+  req.BindSingleString(req.UserName().c_str());
+  req.BindSingleString(req.UserName().c_str());
+  req.BindSingleString(req.UserName().c_str());
+  req.ExecSentence();
+  for(uint32_t i = 0; i < req.ResultRows(); i++) {
+    const char *Serial = req.ResultValue(i, "serial");
+    AnalyzerInterface *Analyzer = NULL;
+    for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+      Analyzer = (*it)->FindAnalyzer(Serial);
+      if(Analyzer != NULL) {
+        Response.emplace_back(Analyzer->GetJSONDescriptor());
+        break;
+      }
+    }
+  }
+  req.FromJSON(Response);
 }
 string DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
 //  uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;

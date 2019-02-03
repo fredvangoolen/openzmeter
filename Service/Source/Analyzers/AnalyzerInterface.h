@@ -5,6 +5,8 @@
 #pragma once
 #include <vector>
 #include "Database.h"
+#include <json.hpp>
+using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 class AnalyzerInterface : protected Database {
@@ -73,7 +75,7 @@ class AnalyzerInterface : protected Database {
     uint64_t      pLastSave;
     float         pNominalVoltage;
     float         pNominalFrequency;
-    char         *pName;
+    string        pName;
     float         pMaxCurrent;
     float         pMinCurrent;
     float         pSamplerate;              //Velocidad de muestreo (NaN if unsuported)
@@ -89,13 +91,13 @@ class AnalyzerInterface : protected Database {
   public :
     virtual void GetParams(Params_t &params, ParamsType &copy) = 0;
   public :
-    AnalyzerInterface(char *id, AnalyzerMode mode);
+    AnalyzerInterface(string id, AnalyzerMode mode);
     virtual     ~AnalyzerInterface();
     float        GetMaxCurrent();
     float        GetNominalVoltage();
     float        GetNominalFrequency();
     AnalyzerMode GetMode();
-    const char  *GetID();
-    json_object *GetJSONDescriptor();
+    string       GetID();
+    json GetJSONDescriptor();
     json_object *GetJSONParams(json_object *series);
 };

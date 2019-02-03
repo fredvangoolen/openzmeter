@@ -83,7 +83,7 @@ bool DeviceV1_01::Init() {
 }
 AnalyzerInterface *DeviceV1_01::FindAnalyzer(const char *serial) {
   if(pAnalyzer == NULL) return NULL;
-  return (strcmp(serial, pAnalyzer->GetID()) == 0) ? pAnalyzer : NULL;
+  return (strcmp(serial, pAnalyzer->GetID().c_str()) == 0) ? pAnalyzer : NULL;
 }
 uint32_t DeviceV1_01::AnalyzersCount() {
   return (pAnalyzer == NULL) ? 0 : 1;

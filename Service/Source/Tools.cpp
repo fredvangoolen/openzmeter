@@ -257,20 +257,26 @@ bool Tools::GetMemory(uint64_t *total, uint64_t *available) {
   *available = ParseProcMem((char*)"MemFree:", Buffer) + ParseProcMem((char*)"Cached:", Buffer) + ParseProcMem((char*)"Buffers:", Buffer);
   return ((*total != 0) && (*available != 0));
 }
-bool Tools::GetSysInfo(HTTPRequest &req) {
-//  struct sysinfo Info;
-//  struct statvfs Disk;
-//  if(sysinfo(&Info) != 0) {
-//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    return NULL;
-//  }
-//  if(statvfs("/", &Disk) != 0) {
-//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    return NULL;
-//  }
-//  uint64_t TotalRam, FreeRam;
-//  if(GetMemory(&TotalRam, &FreeRam) == false) return false;
-//  writer["UpTime"] = Info.uptime;
+void Tools::GetSysInfo(HTTPRequest &req) {
+  struct sysinfo Info;
+  struct statvfs Disk;
+  if(sysinfo(&Info) != 0) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    req.FromString("'System error", MHD_HTTP_BAD_REQUEST);
+    return;
+  }
+  if(statvfs("/", &Disk) != 0) {
+    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    req.FromString("'System error", MHD_HTTP_BAD_REQUEST);
+    return;
+  }
+  uint64_t TotalRam, FreeRam;
+  if(GetMemory(&TotalRam, &FreeRam) == false) {
+    req.FromString("'System error", MHD_HTTP_BAD_REQUEST);  
+    return;
+  }
+  json Response;
+  Response["UpTime"] = Info.uptime;
   //  *writer = json_object_new_object();
 //  json_object_object_add(*writer, "UpTime", json_object_new_int(Info.uptime));
 //  json_object_object_add(*writer, "Swap_Total", json_object_new_int64(Info.totalswap * Info.mem_unit));
@@ -293,7 +299,7 @@ bool Tools::GetSysInfo(HTTPRequest &req) {
 //  *postdata = (char*)writer.dump().c_str();
 //  *resultLen = strlen(*postdata);
   //*postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
-  return true;
+  req.FromJSON(Response);
 }
 bool Tools::JSONString(const json_object *obj, const char *key, char **dst, bool copy) {
   json_object *Find;

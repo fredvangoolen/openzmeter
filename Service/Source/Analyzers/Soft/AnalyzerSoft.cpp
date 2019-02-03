@@ -13,7 +13,7 @@
 #include "AnalyzerSoft.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-AnalyzerSoft::AnalyzerSoft(char *id, AnalyzerInterface::AnalyzerMode mode, float samplerate) : AnalyzerInterface(id, mode) {
+AnalyzerSoft::AnalyzerSoft(string id, AnalyzerInterface::AnalyzerMode mode, float samplerate) : AnalyzerInterface(id.c_str(), mode) {
   float Q = 1.0;
   float K = tan(M_PI * (pNominalFrequency / samplerate));
   float Norm = 1 / (1 + K / Q + K * K);

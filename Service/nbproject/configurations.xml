@@ -240,66 +240,55 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
             <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
             <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
             <pElem>Resources/WEB/Lib/visjs/img</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
             <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
             <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
             <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/SQL</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/usr</pElem>
             <pElem>Package/usr/share</pElem>
             <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -325,66 +314,58 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
             <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
             <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
             <pElem>Resources/WEB/Lib/visjs/img</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
             <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
             <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
             <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/SQL</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/usr</pElem>
             <pElem>Package/usr/share</pElem>
             <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -396,66 +377,66 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/V1_01</pElem>
+            <pElem>Tmp/Source/Devices/V1_00</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Tariffs</pElem>
+            <pElem>Tmp/Source/Tariffs/Spain</pElem>
+            <pElem>Tmp/Source/Tariffs/ESIOS</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
             <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
             <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
             <pElem>Resources/WEB/Lib/visjs/img</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
             <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
             <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
             <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/SQL</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/usr</pElem>
             <pElem>Package/usr/share</pElem>
             <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -495,66 +476,58 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
             <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
             <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
             <pElem>Resources/WEB/Lib/visjs/img</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
             <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
             <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
             <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/SQL</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/usr</pElem>
             <pElem>Package/usr/share</pElem>
             <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -566,63 +539,60 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Tariffs</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
             <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
             <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
             <pElem>Resources/WEB/Lib/visjs/img</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
             <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
             <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
             <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/SQL</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/usr</pElem>
             <pElem>Package/usr/share</pElem>
             <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -634,66 +604,59 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
             <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
             <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
             <pElem>Resources/WEB/Lib/visjs/img</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
             <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
             <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
             <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/SQL</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/usr</pElem>
             <pElem>Package/usr/share</pElem>
             <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -705,74 +668,60 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Tariffs</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
             <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
             <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
             <pElem>Resources/WEB/Lib/visjs/img</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
             <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
             <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
             <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/SQL</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
-            <pElem>Tmp/Source/Devices/V1_01</pElem>
-            <pElem>Tmp/Source/Devices/V1_00</pElem>
-            <pElem>Tmp/Source/Devices/Virtual</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
-            <pElem>Tmp/Source/Analyzers/Soft</pElem>
-            <pElem>Tmp/Source/Tariffs</pElem>
-            <pElem>Tmp/Source/Tariffs/Spain</pElem>
-            <pElem>Tmp/Source/Tariffs/ESIOS</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/usr</pElem>
             <pElem>Package/usr/share</pElem>
             <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -784,66 +733,59 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
             <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
             <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
             <pElem>Resources/WEB/Lib/visjs/img</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
             <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
             <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
             <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/SQL</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/usr</pElem>
             <pElem>Package/usr/share</pElem>
             <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -855,66 +797,58 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
             <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
             <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
             <pElem>Resources/WEB/Lib/visjs/img</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
             <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
             <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
             <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/SQL</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/usr</pElem>
             <pElem>Package/usr/share</pElem>
             <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -928,30 +862,56 @@
       <item path="Source/Tariffs/PricesInterface.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="1">
           <incDir>
-            <pElem>Tmp/Source/Analyzers</pElem>
-            <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
-            <pElem>Package/lib</pElem>
-            <pElem>Package/lib/systemd</pElem>
-            <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
             <pElem>nbproject</pElem>
             <pElem>nbproject/private</pElem>
             <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
             <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
+            <pElem>Resources</pElem>
+            <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/WEB/Lib</pElem>
+            <pElem>Resources/WEB/Lib/visjs</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
+            <pElem>Resources/WEB/Imgs</pElem>
+            <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
+            <pElem>Resources/WEB/Components</pElem>
+            <pElem>Resources/SQL</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
+            <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Package</pElem>
+            <pElem>Package/DEBIAN</pElem>
+            <pElem>Package/lib</pElem>
+            <pElem>Package/lib/systemd</pElem>
+            <pElem>Package/lib/systemd/system</pElem>
+            <pElem>Package/usr</pElem>
+            <pElem>Package/usr/share</pElem>
+            <pElem>Package/usr/share/openZmeter</pElem>
           </incDir>
         </ccTool>
       </item>
@@ -967,67 +927,59 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
             <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
             <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
             <pElem>Resources/WEB/Lib/visjs/img</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
             <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
             <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
             <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/SQL</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/usr</pElem>
             <pElem>Package/usr/share</pElem>
             <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -1125,71 +1077,60 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Tariffs</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
             <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
             <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
             <pElem>Resources/WEB/Lib/visjs/img</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
             <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
             <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
             <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/SQL</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
-            <pElem>Tmp/Source/Devices/V1_01</pElem>
-            <pElem>Tmp/Source/Devices/V1_00</pElem>
-            <pElem>Tmp/Source/Devices/Virtual</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
-            <pElem>Tmp/Source/Tariffs</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/usr</pElem>
             <pElem>Package/usr/share</pElem>
             <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -1283,69 +1224,63 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/V1_01</pElem>
+            <pElem>Tmp/Source/Devices/V1_00</pElem>
+            <pElem>Tmp/Source/Tariffs</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
             <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
             <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
             <pElem>Resources/WEB/Lib/visjs/img</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
             <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
             <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
             <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/SQL</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
-            <pElem>Tmp/Source/Devices/V1_01</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
-            <pElem>Tmp/Source/Tariffs</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/usr</pElem>
             <pElem>Package/usr/share</pElem>
             <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -1357,68 +1292,62 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/V1_01</pElem>
+            <pElem>Tmp/Source/Tariffs</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
             <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
             <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
             <pElem>Resources/WEB/Lib/visjs/img</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
             <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
             <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
             <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/SQL</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
-            <pElem>Tmp/Source/Tariffs</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/usr</pElem>
             <pElem>Package/usr/share</pElem>
             <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -1430,70 +1359,64 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
+            <pElem>Tmp</pElem>
+            <pElem>Tmp/Source</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Devices/V1_01</pElem>
+            <pElem>Tmp/Source/Devices/V1_00</pElem>
+            <pElem>Tmp/Source/Devices/Virtual</pElem>
+            <pElem>Tmp/Source/Tariffs</pElem>
+            <pElem>nbproject</pElem>
+            <pElem>nbproject/private</pElem>
+            <pElem>nbproject/private/tools</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
+            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
             <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
             <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
             <pElem>Resources/WEB/Lib/visjs</pElem>
             <pElem>Resources/WEB/Lib/visjs/img</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
             <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
             <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
             <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
             <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/SQL</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>Tmp</pElem>
-            <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
-            <pElem>Tmp/Source/Devices/V1_01</pElem>
-            <pElem>Tmp/Source/Devices/V1_00</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
-            <pElem>Tmp/Source/Tariffs</pElem>
             <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
+            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/lib</pElem>
             <pElem>Package/lib/systemd</pElem>
             <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
             <pElem>Package/usr</pElem>
             <pElem>Package/usr/share</pElem>
             <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
-            <pElem>nbproject</pElem>
-            <pElem>nbproject/private</pElem>
-            <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -1505,43 +1428,9 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>.</pElem>
-            <pElem>Resources</pElem>
-            <pElem>Resources/SQL</pElem>
-            <pElem>Resources/WEB</pElem>
-            <pElem>Resources/WEB/Lib</pElem>
-            <pElem>Resources/WEB/Lib/datatables</pElem>
-            <pElem>Resources/WEB/Lib/datatables/js</pElem>
-            <pElem>Resources/WEB/Lib/datatables/images</pElem>
-            <pElem>Resources/WEB/Lib/qtip2</pElem>
-            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
-            <pElem>Resources/WEB/Lib/dygraph</pElem>
-            <pElem>Resources/WEB/Lib/visjs</pElem>
-            <pElem>Resources/WEB/Lib/visjs/img</pElem>
-            <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
-            <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
-            <pElem>Resources/WEB/Help</pElem>
-            <pElem>Resources/WEB/Fonts</pElem>
-            <pElem>Resources/WEB/Imgs</pElem>
-            <pElem>Resources/WEB/JS</pElem>
-            <pElem>Resources/WEB/CSS</pElem>
-            <pElem>Resources/WEB/Components</pElem>
-            <pElem>Resources/WEB/MiniViews</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/Spain</pElem>
-            <pElem>Source/Tariffs/ESIOS</pElem>
             <pElem>Tmp</pElem>
             <pElem>Tmp/Source</pElem>
-            <pElem>Tmp/Source/Devices</pElem>
+            <pElem>Tmp/Source/Analyzers</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
@@ -1551,71 +1440,123 @@
       <folder path="0/Source/Tariffs/ESIOS">
         <ccTool>
           <incDir>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
             <pElem>Tmp/Source/Devices/V1_01</pElem>
             <pElem>Tmp/Source/Devices/V1_00</pElem>
             <pElem>Tmp/Source/Devices/Virtual</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
-            <pElem>Tmp/Source/Analyzers/Soft</pElem>
             <pElem>Tmp/Source/Tariffs</pElem>
             <pElem>Tmp/Source/Tariffs/Spain</pElem>
-            <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
-            <pElem>Package/lib</pElem>
-            <pElem>Package/lib/systemd</pElem>
-            <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
             <pElem>nbproject</pElem>
             <pElem>nbproject/private</pElem>
             <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
             <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
+            <pElem>Resources</pElem>
+            <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/WEB/Lib</pElem>
+            <pElem>Resources/WEB/Lib/visjs</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
+            <pElem>Resources/WEB/Imgs</pElem>
+            <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
+            <pElem>Resources/WEB/Components</pElem>
+            <pElem>Resources/SQL</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
+            <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Package</pElem>
+            <pElem>Package/DEBIAN</pElem>
+            <pElem>Package/lib</pElem>
+            <pElem>Package/lib/systemd</pElem>
+            <pElem>Package/lib/systemd/system</pElem>
+            <pElem>Package/usr</pElem>
+            <pElem>Package/usr/share</pElem>
+            <pElem>Package/usr/share/openZmeter</pElem>
           </incDir>
         </ccTool>
       </folder>
       <folder path="0/Source/Tariffs/Spain">
         <ccTool>
           <incDir>
+            <pElem>Tmp/Source/Analyzers/Soft</pElem>
+            <pElem>Tmp/Source/Devices</pElem>
             <pElem>Tmp/Source/Devices/V1_01</pElem>
             <pElem>Tmp/Source/Devices/V1_00</pElem>
             <pElem>Tmp/Source/Devices/Virtual</pElem>
-            <pElem>Tmp/Source/Analyzers</pElem>
-            <pElem>Tmp/Source/Analyzers/Soft</pElem>
             <pElem>Tmp/Source/Tariffs</pElem>
-            <pElem>Package</pElem>
-            <pElem>Package/etc</pElem>
-            <pElem>Package/lib</pElem>
-            <pElem>Package/lib/systemd</pElem>
-            <pElem>Package/lib/systemd/system</pElem>
-            <pElem>Package/DEBIAN</pElem>
-            <pElem>Package/usr</pElem>
-            <pElem>Package/usr/share</pElem>
-            <pElem>Package/usr/share/openZmeter</pElem>
-            <pElem>Package/usr/sbin</pElem>
             <pElem>nbproject</pElem>
             <pElem>nbproject/private</pElem>
             <pElem>nbproject/private/tools</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.39_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22</pElem>
-            <pElem>nbproject/private/tools/root_10.8.0.131_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
-            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
             <pElem>nbproject/private/tools/root_10.8.0.115_22</pElem>
             <pElem>nbproject/private/tools/root_10.8.0.115_22/GNU</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22</pElem>
-            <pElem>nbproject/private/tools/root_10.42.0.83_22/GNU</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22</pElem>
+            <pElem>nbproject/private/tools/root_192.168.0.192_22/GNU</pElem>
+            <pElem>Resources</pElem>
+            <pElem>Resources/WEB</pElem>
+            <pElem>Resources/WEB/Fonts</pElem>
+            <pElem>Resources/WEB/MiniViews</pElem>
+            <pElem>Resources/WEB/Lib</pElem>
+            <pElem>Resources/WEB/Lib/visjs</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/network</pElem>
+            <pElem>Resources/WEB/Lib/visjs/img/timeline</pElem>
+            <pElem>Resources/WEB/Lib/dygraph</pElem>
+            <pElem>Resources/WEB/Lib/jquery.lineProgressbar</pElem>
+            <pElem>Resources/WEB/Lib/datatables</pElem>
+            <pElem>Resources/WEB/Lib/datatables/images</pElem>
+            <pElem>Resources/WEB/Lib/datatables/js</pElem>
+            <pElem>Resources/WEB/Lib/qtip2</pElem>
+            <pElem>Resources/WEB/Imgs</pElem>
+            <pElem>Resources/WEB/CSS</pElem>
+            <pElem>Resources/WEB/JS</pElem>
+            <pElem>Resources/WEB/Help</pElem>
+            <pElem>Resources/WEB/Components</pElem>
+            <pElem>Resources/SQL</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
+            <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Package</pElem>
+            <pElem>Package/DEBIAN</pElem>
+            <pElem>Package/lib</pElem>
+            <pElem>Package/lib/systemd</pElem>
+            <pElem>Package/lib/systemd/system</pElem>
+            <pElem>Package/usr</pElem>
+            <pElem>Package/usr/share</pElem>
+            <pElem>Package/usr/share/openZmeter</pElem>
           </incDir>
         </ccTool>
       </folder>

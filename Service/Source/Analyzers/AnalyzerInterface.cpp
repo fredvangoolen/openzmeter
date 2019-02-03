@@ -7,54 +7,14 @@
 #include "AnalyzerInterface.h"
 #include "Tools.h"
 //------------- ---------------------------------------------------------------------------------------------------------
-vector<float> AnalyzerInterface::FrequencyRanges;
+vector<float> AnalyzerInterface::FrequencyRanges = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
 vector<float> AnalyzerInterface::VoltageRanges;
 vector<float> AnalyzerInterface::THDRanges;
 vector<float> AnalyzerInterface::HarmonicsAllowed;
 //----------------------------------------------------------------------------------------------------------------------
-AnalyzerInterface::AnalyzerInterface(char *id, AnalyzerMode mode) : Database(id) {
+AnalyzerInterface::AnalyzerInterface(string id, AnalyzerMode mode) : Database(id.c_str()) {
   if(FrequencyRanges.empty()) {
-    FrequencyRanges.push_back(-INFINITY);
-    FrequencyRanges.push_back(-5);
-    FrequencyRanges.push_back(-4);
-    FrequencyRanges.push_back(-3);
-    FrequencyRanges.push_back(-2);
-    FrequencyRanges.push_back(-1);
-    FrequencyRanges.push_back(-0.9);
-    FrequencyRanges.push_back(-0.8);
-    FrequencyRanges.push_back(-0.7);
-    FrequencyRanges.push_back(-0.6);
-    FrequencyRanges.push_back(-0.5);
-    FrequencyRanges.push_back(-0.45);
-    FrequencyRanges.push_back(-0.40);
-    FrequencyRanges.push_back(-0.35);
-    FrequencyRanges.push_back(-0.30);
-    FrequencyRanges.push_back(-0.25);
-    FrequencyRanges.push_back(-0.20);
-    FrequencyRanges.push_back(-0.15);
-    FrequencyRanges.push_back(-0.10);
-    FrequencyRanges.push_back(-0.05);
-    FrequencyRanges.push_back(0.00);
-    FrequencyRanges.push_back(0.05);
-    FrequencyRanges.push_back(0.10);
-    FrequencyRanges.push_back(0.15);
-    FrequencyRanges.push_back(0.20);
-    FrequencyRanges.push_back(0.25);
-    FrequencyRanges.push_back(0.30);
-    FrequencyRanges.push_back(0.35);
-    FrequencyRanges.push_back(0.40);
-    FrequencyRanges.push_back(0.45);
-    FrequencyRanges.push_back(0.5);
-    FrequencyRanges.push_back(0.6);
-    FrequencyRanges.push_back(0.7);
-    FrequencyRanges.push_back(0.8);
-    FrequencyRanges.push_back(0.9);
-    FrequencyRanges.push_back(1);
-    FrequencyRanges.push_back(2);
-    FrequencyRanges.push_back(3);
-    FrequencyRanges.push_back(4);
-    FrequencyRanges.push_back(5);
-    FrequencyRanges.push_back(INFINITY);
+
   }
   if(VoltageRanges.empty()) {
     VoltageRanges.push_back(-INFINITY);
@@ -145,7 +105,7 @@ AnalyzerInterface::AnalyzerInterface(char *id, AnalyzerMode mode) : Database(id)
   pMode = mode;
   pLastSave = 0;
   PrepareSentence("SELECT frequency, voltage, name, max_current, min_current FROM analyzers WHERE serial = ?");
-  BindSingleString(id);
+  BindSingleString(id.c_str());
   if((ExecSentence() == false) || (ResultRows() != 1)) {
     pNominalVoltage = 230.0;
     pNominalFrequency = 50.0;
@@ -154,23 +114,23 @@ AnalyzerInterface::AnalyzerInterface(char *id, AnalyzerMode mode) : Database(id)
     pMinCurrent =  0.1;
     PrepareSentence("INSERT INTO analyzers(username, serial, contract, zipcode, frequency, voltage, name, geo, max_current, min_current) "
                     "VALUES('admin', ?, '', '', 50.0, 230.0, 'Unnamed input analyzer', POINT(0, 0), 50.0, 0.1)");
-    BindSingleString(id);
+    BindSingleString(id.c_str());
     ExecSentence();    
   } else {
     pNominalVoltage = atof(ResultValue(0, "voltage"));
     pNominalFrequency = atof(ResultValue(0, "frequency"));
-    pName = strdup(ResultValue(0, "name"));
+    pName = ResultValue(0, "name");
     pMaxCurrent = atof(ResultValue(0, "max_current"));
     pMinCurrent =  atof(ResultValue(0, "min_current"));
   }
 }
 AnalyzerInterface::~AnalyzerInterface() {
-  if(pName) free(pName);
+//  if(pName) free(pName);
 }
 float AnalyzerInterface::GetMaxCurrent() {
   return pMaxCurrent;
 }
-const char *AnalyzerInterface::GetID() {
+string AnalyzerInterface::GetID() {
   return GetSchema();
 }
 float AnalyzerInterface::GetNominalVoltage() {
@@ -301,18 +261,18 @@ void AnalyzerInterface::SaveAggreg(Params_t &params) {
   }
   pLastSave = Tools::GetTime();
 }
-json_object *AnalyzerInterface::GetJSONDescriptor() {
-  json_object *Device = json_object_new_object();
-  json_object_object_add(Device, "ID", json_object_new_string(GetID()));
-  json_object_object_add(Device, "NominalVoltage", json_object_new_double(pNominalVoltage));
-  json_object_object_add(Device, "NominalFreq", json_object_new_double(pNominalFrequency));
-  json_object_object_add(Device, "Name", json_object_new_string(pName));
-  json_object_object_add(Device, "MaxCurrent", json_object_new_double(pMaxCurrent));
-  json_object_object_add(Device, "MinCurrent", json_object_new_double(pMinCurrent));
-  json_object_object_add(Device, "Mode", json_object_new_string((pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N"));
-  json_object_object_add(Device, "SampleFreq", json_object_new_double(pSamplerate));
-  json_object_object_add(Device, "Online", json_object_new_boolean((Tools::GetTime() - pLastSave) < 20000));
-  return Device;
+json AnalyzerInterface::GetJSONDescriptor() {
+  json Response;
+  Response["ID"] = GetID();
+  Response["NominalVoltage"] = pNominalVoltage;
+  Response["NominalFreq"] = pNominalFrequency;
+  Response["Name"] = pName;
+  Response["MaxCurrent"] = pMaxCurrent;
+  Response["MinCurrent"] = pMinCurrent;
+  Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
+  Response["SampleFreq"] = pSamplerate;
+  Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
+  return Response;
 }
 json_object *AnalyzerInterface::GetJSONParams(json_object *series) {
   if((series == NULL) || (json_object_get_type(series) != json_type_array)) return NULL;

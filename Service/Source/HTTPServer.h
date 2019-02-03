@@ -22,8 +22,8 @@ class HTTPRequest : public Database {
     string      pSessionID;
     string      pUserName;
     string      pMimeType;
-    char       *pPostData;
-    size_t      pPostDataLen;
+    string      pPostData;
+//    size_t      pPostDataLen;
     bool        pFreePostData;    
     json        pJSONParams;
 //      json_object    *JSONWriter;

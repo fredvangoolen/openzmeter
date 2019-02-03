@@ -35,7 +35,7 @@ class DeviceInterface {
     static bool Config(json_object *config);
     static string GetSeriesCallback(HTTPRequest &req);
     static string GetSeriesAggregCallback(HTTPRequest &req);
-    static string GetAnalyzersCallback(HTTPRequest &req);
+    static void GetAnalyzersCallback(HTTPRequest &req);
     static string GetSeriesNowCallback(HTTPRequest &req);
     static string GetSeriesRangeCallback(HTTPRequest &req);
     static string GetEventsCallback(HTTPRequest &req);

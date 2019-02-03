@@ -151,6 +151,6 @@ DeviceVirtual::~DeviceVirtual() {
 }
 AnalyzerInterface *DeviceVirtual::FindAnalyzer(const char *serial) {
   if(pAnalyzer == NULL) return NULL;
-  return (strcmp(serial, pAnalyzer->GetID()) == 0) ? pAnalyzer : NULL;
+  return (strcmp(serial, pAnalyzer->GetID().c_str()) == 0) ? pAnalyzer : NULL;
 }
 //======================================================================================================================

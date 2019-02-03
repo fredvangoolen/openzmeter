@@ -3,7 +3,8 @@
  * Author:   Pedro Sanchez (3 de marzo de 2015)
  * Modified: Eduardo Viciana (20 de marzo de 2017)
  * ------------------------------------------------------------------------------------------------------------------ */
-#include <string.h>
+#include <string>
+#include <fstream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -23,9 +24,6 @@ vector<HTTPServer::Mapping_t>   HTTPServer::pMappings;
 //----------------------------------------------------------------------------------------------------------------------
 HTTPRequest::HTTPRequest(const char *cookie, bool deflate) : Database(NULL) {
   pDeflate = deflate;
-  pPostData = NULL;
-  pPostDataLen = 0;
-  pFreePostData = false;
   pResultCode = MHD_HTTP_OK;
   if(cookie != NULL) {
     PrepareSentence("SELECT id, username FROM sessions WHERE id = ?");
@@ -43,31 +41,33 @@ HTTPRequest::HTTPRequest(const char *cookie, bool deflate) : Database(NULL) {
   if(ResultRows() == 1) pSessionID = ResultValue(0, (char*)"id");
 }
 HTTPRequest::~HTTPRequest() {
-  if(pFreePostData) free(pPostData);
+//  if(pFreePostData) free(pPostData);
 }
 void HTTPRequest::FromFile(string name) {
 #ifdef OZM_DEBUG
-  string Path = "Resources/";
-  int File = -1;
-  struct stat FileStat;
-  Path += name;
-  if((stat(Path.c_str(), &FileStat) == 0) && (S_ISREG(FileStat.st_mode))) File = open(Path.c_str(), O_RDONLY);
-  if(File != -1) {
-    pPostData = (char*)malloc(FileStat.st_size);
-    pFreePostData = true;
-    pPostDataLen = read(File, pPostData, FileStat.st_size);
-    close(File);
+  string Path = "Resources/" + name;
+  std::ifstream File(Path, ios::binary);
+  pResultCode = MHD_HTTP_NOT_FOUND;
+  if(File) {
+    File.seekg (0, File.end);
+    int Size = File.tellg();
+    File.seekg (0, File.beg);
+    if(Size > 0) { 
+      pPostData = string(Size, 0);
+      File.seekg(0, ios::beg);
+      File.read(&pPostData[0], pPostData.size());
+      pResultCode = MHD_HTTP_OK;
+    }
   }
 #else
   pPostData = (char*)Tools::GetFile(name, &pPostDataLen);
 #endif
-  pResultCode = (pPostData == NULL) ? MHD_HTTP_NOT_FOUND : MHD_HTTP_OK;
   size_t FileNameLen = name.length();
-  if((FileNameLen >= 3) && (name.compare(FileNameLen - 3, 3, ".js")) == 0)       pMimeType = "text/javascript";
-  else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".css")) == 0) pMimeType = "text/css";
-  else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".ico")) == 0) pMimeType = "image/x-icon";
-  else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".png")) == 0) pMimeType = "image/png";
-  else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".svg")) == 0) pMimeType = "image/svg+xml";
+  if((FileNameLen >= 3) && (name.compare(FileNameLen - 3, 3, ".js")) == 0)        pMimeType = "text/javascript";
+  else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".css"))  == 0) pMimeType = "text/css";
+  else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".ico"))  == 0) pMimeType = "image/x-icon";
+  else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".png"))  == 0) pMimeType = "image/png";
+  else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".svg"))  == 0) pMimeType = "image/svg+xml";
   else if((FileNameLen >= 5) && (name.compare(FileNameLen - 5, 5, ".html")) == 0) pMimeType = "text/html";
 //  else if((FileNameLen >= 5) && (strcmp(&url[FileNameLen - 6], ".woff2")) == 0) 
 //    MHD_add_response_header(response, "Content-Type", "font/woff2");
@@ -77,14 +77,14 @@ void HTTPRequest::FromFile(string name) {
   }
 }
 void HTTPRequest::FromString(string obj, int resultCode) {
-  pPostData = strdup((char*)obj.c_str());
-  pFreePostData = true;
-  pPostDataLen = obj.size();
+  pPostData = obj;
   pResultCode = resultCode;
+  pMimeType = "text/plain";
 }
 void HTTPRequest::FromJSON(json obj) {
-//      MHD_add_response_header(Response, "Content-Type", "application/json");
-
+  pPostData = obj.dump();
+  pResultCode = MHD_HTTP_OK;
+  pMimeType = "application/json";
 }
 string HTTPRequest::SessionID() {
   return pSessionID;
@@ -127,8 +127,8 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
       Request->pDeflateObj.zalloc = Z_NULL;
       Request->pDeflateObj.zfree = Z_NULL;
       Request->pDeflateObj.opaque = Z_NULL;
-      Request->pDeflateObj.avail_in = Request->pPostDataLen;
-      Request->pDeflateObj.next_in = (uint8_t*)Request->pPostData;
+      Request->pDeflateObj.avail_in = Request->pPostData.size();
+      Request->pDeflateObj.next_in = (uint8_t*)Request->pPostData.c_str();
       if(deflateInit(&Request->pDeflateObj, Z_BEST_SPEED) != Z_OK) return MHD_CONTENT_READER_END_OF_STREAM;
     }
     Request->pDeflateObj.next_out = (uint8_t*)buf;
@@ -140,7 +140,7 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
       return MHD_CONTENT_READER_END_OF_STREAM;
     }
   } else {
-    if(max > (Request->pPostDataLen - pos)) max = Request->pPostDataLen - pos; 
+    if(max > (Request->pPostData.size() - pos)) max = Request->pPostData.size() - pos; 
     if(max == 0) return MHD_CONTENT_READER_END_OF_STREAM;
     memcpy(buf, &Request->pPostData[pos], max);
     return max;
