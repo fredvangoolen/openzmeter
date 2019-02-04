@@ -41,7 +41,7 @@ HTTPRequest::HTTPRequest(const char *cookie, bool deflate) : Database(NULL) {
   if(ResultRows() == 1) pSessionID = ResultValue(0, (char*)"id");
 }
 HTTPRequest::~HTTPRequest() {
-//  if(pFreePostData) free(pPostData);
+  if(pDeflate) deflateEnd(&pDeflateObj);
 }
 void HTTPRequest::FromFile(string name) {
 #ifdef OZM_DEBUG
@@ -257,8 +257,8 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
               Response["Result"] = false;
             } else {
               Response["Result"] = true;
-//              const char *LastLogin = Request->DB->ResultValue(0, "lastlogin");
-//              if(LastLogin) json_object_object_add(Request->JSONWriter, "LastLogin", json_object_new_int64(atol(LastLogin)));
+              Response["LastLogin"] = atoll(Request->ResultValue(0, "lastlogin"));
+         
 //              const char *Admin = Request->DB->ResultValue(0, "admin");
 //              if(Admin) json_object_object_add(Request->JSONWriter, "Admin", json_object_new_boolean((Admin[0] == 't') ? true : false));
 //              if(UpdateLastLogin) {

@@ -10,18 +10,12 @@
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Main.cpp</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Devices/DeviceInterface.cpp</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Devices/DeviceInterface.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Analyzers/AnalyzerInterface.cpp</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Tools.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Makefile</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Components/NavbarIndicatorsPanel.vue</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Analysis_Current.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Tools.h</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/NTP.cpp</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Database.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Analysis_Power.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Common.html</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Database.h</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Tools.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/Devices/Virtual/DeviceVirtual.cpp</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Service/Source/HTTPServer.cpp</file>
         </group>
     </open-files>
 </project-private>

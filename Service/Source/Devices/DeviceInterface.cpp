@@ -173,17 +173,7 @@ void DeviceInterface::GetAnalyzersCallback(HTTPRequest &req) {
 }
 void DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
   json Params = req.GetParams();
-  //  uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
-//  char    *Serial = NULL, *Aggreg = NULL;
   AnalyzerInterface *Analyzer = NULL;
-//  json_object *Series = NULL;
-//  json_object *Find;
-//  if((json_object_object_get_ex(reader, "Analyzer", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
-//  if((json_object_object_get_ex(reader, "Aggreg", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Aggreg = (char*)json_object_get_string(Find);
-//  if((json_object_object_get_ex(reader, "LastSample", &Find) == true) && (json_object_get_type(Find) == json_type_int)) LastSample = json_object_get_int64(Find);
-//  if((json_object_object_get_ex(reader, "Period", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Period = json_object_get_int64(Find);
-//  if((json_object_object_get_ex(reader, "To", &Find) == true) && (json_object_get_type(Find) == json_type_int)) To = json_object_get_int64(Find);
-//  if((json_object_object_get_ex(reader, "Series", &Find) == true) && (json_object_get_type(Find) == json_type_array)) Series = Find;
   if(!Params["Analyzer"].is_string()) {
     req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
     return;
@@ -204,7 +194,8 @@ void DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
     req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
     return;
   }
-  uint64_t To = Params.value("To", Tools::GetTime());
+  uint64_t To = Params.value("To", 0);
+  if(To == 0) To = Tools::GetTime();
   uint64_t From = To - Params.value("Period", 3600000);
   uint32_t PeriodSeconds = 3000;
   if(Params["Aggreg"] == "1M") PeriodSeconds = 60000;
@@ -220,13 +211,12 @@ void DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
   req.ExecSentence();
   stringstream Query;
   Query << "SELECT row_to_json(Result) AS result FROM ( SELECT ";
-  Query << From << " AS \"From\", " << To << " AS \"To\", " << (To - From) / PeriodSeconds << " AS \"MaxSamples\", '" << Params["Aggreg"] << "' AS \"Aggregation_Source\", ";
+  Query << From << " AS \"From\", " << To << " AS \"To\", " << (To - From) / PeriodSeconds << " AS \"MaxSamples\", '" << Params["Aggreg"].get<string>() << "' AS \"Aggregation_Source\", ";
   for(uint i = 0; i < Params["Series"].size(); i++) {
     if(!Params["Series"][i].is_string()) {
       req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
       return;
     }
-//    char *Serie = (char*)json_object_get_string(json_object_array_get_idx(Series, i));
     if((Params["Series"][i] == "FREQUENCY") && ((Params["Aggreg"] == "3S") || (Params["Aggreg"] == "1M") || (Params["Aggreg"] == "10M") || (Params["Aggreg"] == "1H"))) {      
       Query << "COALESCE(ARRAY_AGG(freq ORDER BY sampletime ASC), '{}') AS \"Frequency\", ";
     } else if((Params["Series"][i] == "FLAG") && ((Params["Aggreg"] == "3S") || (Params["Aggreg"] == "1M") || (Params["Aggreg"] == "10M") || (Params["Aggreg"] == "1H"))) {
@@ -269,14 +259,12 @@ void DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
 ////  } else if(strcmp(Aggreg, "1h") == 0) {
 ////    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1h NATURAL LEFT JOIN aggreg_stat_1h NATURAL FULL JOIN prices) AS Tmp");
   } else {
-    Query << "aggreg_" << Params["Aggreg"];
+    Query << "aggreg_" << Params["Aggreg"].get<string>();
   }
   Query << " WHERE sampletime > " << Params.value("LastSample", 0) << " AND sampletime >= " << From << " AND sampletime <= " << To << ") AS Result";
   size_t resultLen;
   char *Tmp = req.ExecSentenceJSON(Query.str().c_str(), &resultLen);
   req.FromString(Tmp == NULL ? "Failed query" : Tmp, MHD_HTTP_OK);
-  //req.
-  //  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
 }
 string DeviceInterface::GetSeriesAggregCallback(HTTPRequest &req) {
 //  uint64_t Period = 0, From = 0, To = 0;
@@ -353,28 +341,73 @@ string DeviceInterface::GetSeriesAggregCallback(HTTPRequest &req) {
   return "";
 }
 void DeviceInterface::GetSeriesNowCallback(HTTPRequest &req) {
-//  char *Serial = NULL;
-//  json_object *Series = NULL;
-//  json_object *Find;
-//  if((json_object_object_get_ex(reader, "Analyzer", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
-//  if((json_object_object_get_ex(reader, "Series", &Find) == true) && (json_object_get_type(Find) == json_type_array)) Series = Find;
-//  if(Serial == NULL) {
-//    *postdata  = (char*)"'Analyzer' param is requiered";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  if(Series == NULL) {
-//    *postdata  = (char*)"Series must be an array of valid serie names";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
-//    AnalyzerInterface *Analyzer = (*it)->FindAnalyzer(Serial);
-//    if(Analyzer == NULL) continue;
-//    *writer = Analyzer->GetJSONParams(Series);
-//    *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
-//    return true;
-//  }
+  json                          Params = req.GetParams();
+  AnalyzerInterface::Params_t   Aggreg = { AnalyzerInterface::UNINITIALIZED };
+  AnalyzerInterface::ParamsType Copy   = (AnalyzerInterface::ParamsType)0;
+  if(!Params["Analyzer"].is_string()) {
+    req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+    return;
+  }
+  if(!Params["Series"].is_array()) {
+    req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+    return;
+  }
+  for(uint i = 0; i < Params["Series"].size(); i++) {
+    if(!Params["Series"][i].is_string()) {
+      req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+      return;
+    }
+    if(Params["Series"][i] == "FREQUENCY")              Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::FREQUENCY);
+    else if(Params["Series"][i] == "FLAG")              Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::FLAG);
+    else if(Params["Series"][i] == "VOLTAGE")           Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::VOLTAGE);
+    else if(Params["Series"][i] == "CURRENT")           Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::CURRENT);
+    else if(Params["Series"][i] == "ACTIVE_POWER")      Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::ACTIVE_POWER);
+    else if(Params["Series"][i] == "REACTIVE_POWER")    Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::REACTIVE_POWER);
+    else if(Params["Series"][i] == "ACTIVE_ENERGY")     Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::ACTIVE_ENERGY);
+    else if(Params["Series"][i] == "REACTIVE_ENERGY")   Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::REACTIVE_ENERGY);
+    else if(Params["Series"][i] == "APPARENT_POWER")    Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::APPARENT_POWER);
+    else if(Params["Series"][i] == "POWER_FACTOR")      Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::POWER_FACTOR);
+    else if(Params["Series"][i] == "VOLTAGE_THD")       Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::VOLTAGE_THD);
+    else if(Params["Series"][i] == "CURRENT_THD")       Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::CURRENT_THD);
+    else if(Params["Series"][i] == "PHI")               Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::PHI);
+    else if(Params["Series"][i] == "VOLTAGE_PHASE")     Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::VOLTAGE_PHASE);
+    else if(Params["Series"][i] == "VOLTAGE_HARMONICS") Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::VOLTAGE_HARMONICS);
+    else if(Params["Series"][i] == "CURRENT_HARMONICS") Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::CURRENT_HARMONICS);
+    else if(Params["Series"][i] == "VOLTAGE_FFT")       Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::VOLTAGE_FFT);
+    else if(Params["Series"][i] == "CURRENT_FFT")       Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::CURRENT_FFT);
+    else if(Params["Series"][i] == "VOLTAGE_SAMPLES")   Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::VOLTAGE_SAMPLES);
+    else if(Params["Series"][i] == "CURRENT_SAMPLES")   Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::CURRENT_SAMPLES);
+  }
+  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+    AnalyzerInterface *Analyzer = (*it)->FindAnalyzer(Params["Analyzer"]);
+    if(Analyzer == NULL) continue;
+    Analyzer->GetParams(Aggreg, Copy);
+    json Result;
+    if(Copy & AnalyzerInterface::FREQUENCY) Result["Frequency"] = Aggreg.Frequency;
+    if(Copy & AnalyzerInterface::FLAG) Result["Flag"] = Aggreg.Flag;
+    if(Copy & AnalyzerInterface::VOLTAGE) Result["Voltage"] = Aggreg.Voltage;
+    if(Copy & AnalyzerInterface::CURRENT) Result["Current"] = Aggreg.Current;
+    if(Copy & AnalyzerInterface::ACTIVE_POWER) Result["Active_Power"] = Aggreg.Active_Power;
+    if(Copy & AnalyzerInterface::REACTIVE_POWER) Result["Reactive_Power"] = Aggreg.Reactive_Power;
+    if(Copy & AnalyzerInterface::ACTIVE_ENERGY)  Result["Active_Energy"] = Aggreg.Active_Energy;
+    if(Copy & AnalyzerInterface::REACTIVE_ENERGY) Result["Reactive_Energy"] = Aggreg.Reactive_Energy;
+    if(Copy & AnalyzerInterface::APPARENT_POWER) Result["Apparent_Power"] = Aggreg.Apparent_Power;
+    if(Copy & AnalyzerInterface::POWER_FACTOR) Result["Power_Factor"] = Aggreg.Power_Factor;
+    if(Copy & AnalyzerInterface::VOLTAGE_THD) Result["Voltage_THD"] = Aggreg.Voltage_THD;
+    if(Copy & AnalyzerInterface::CURRENT_THD) Result["Current_THD"] = Aggreg.Current_THD;
+    if(Copy & AnalyzerInterface::PHI) Result["Phi"] = Aggreg.Phi;
+    if(Copy & AnalyzerInterface::VOLTAGE_PHASE) Result["Voltage_Phase"] = Aggreg.Voltage_Phase;
+    if(Copy & AnalyzerInterface::VOLTAGE_HARMONICS) Result["Voltage_Harmonics"] = Aggreg.Voltage_Harmonics;
+    if(Copy & AnalyzerInterface::CURRENT_HARMONICS) Result["Current_Harmonics"] = Aggreg.Current_Harmonics;
+    if(Copy & AnalyzerInterface::VOLTAGE_SAMPLES) Result["Voltage_Samples"] = Aggreg.Voltage_Samples;
+    if(Copy & AnalyzerInterface::CURRENT_SAMPLES) Result["Current_Samples"] = Aggreg.Current_Samples;
+    if(Copy & AnalyzerInterface::VOLTAGE_FFT) Result["Voltage_FFT"] = Aggreg.Voltage_FFT;
+    if(Copy & AnalyzerInterface::CURRENT_FFT) Result["Current_FFT"] = Aggreg.Current_FFT;
+    Result["Sampletime"] = Aggreg.Timestamp;
+    req.FromJSON(Result);
+    return;
+  }
+  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
   return;
 }
 string DeviceInterface::GetSeriesRangeCallback(HTTPRequest &req) {
