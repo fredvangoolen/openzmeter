@@ -21,7 +21,7 @@ RESOURCES    = $(shell find ./Resources ! -type d -print | sort)
 RESTARGET    = $(BUILD_DIR)/ResourceFiles.o
 RESTMP       = $(BUILD_DIR)/ResourceFiles
 OBJS         = $(MAINSOURCES:%=$(BUILD_DIR)/%.o)
-INC_DIRS    += $(shell find $(SRC_DIRS) -type d)
+INC_DIRS    += $(shell find ./Source -type d)
 INC_FLAGS   += $(addprefix -I,$(INC_DIRS))
 LDFLAGS     += $(addprefix -L,$(LIB_DIRS))
 CPPFLAGS    += $(INC_FLAGS)

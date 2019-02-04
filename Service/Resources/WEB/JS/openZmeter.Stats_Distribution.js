@@ -37,7 +37,7 @@ function AjaxGetEnergy(selected_year) {
   $('#StatsSpinner').show();
   var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
   var From = new Date(selected_year, 0, 1, 0, 0, 0, 0).getTime();
-  Ajax.GetSeries(To - From, To, '1H', 0, ['ACTIVE_POWER'],
+  Analyzer.GetSeries(To - From, To, '1H', 0, ['ACTIVE_POWER'],
     function(result) {
       EnergyData = GraphDataAppend(result, 'Active_Power', []);
       $('#StatsSpinner').hide();
@@ -262,7 +262,7 @@ function EnergySeries(event) {
 }
 $('#groupEnergyPhases').on('click', 'button', EnergySeries);
 function UpdatePage() {
-  Ajax.GetSeriesRange('1h', 
+  Analyzer.GetSeriesRange('1H', 
     function(result) {
       for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) {
         $('#btnYear + ul').append('<li><a href="#">' + year + '</a></li>');
