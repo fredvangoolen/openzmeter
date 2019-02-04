@@ -25,7 +25,7 @@ function AjaxGetEnergy(selected_year) {
   $('#StatsSpinner').show();
   var To = new Date(selected_year, 11, 31, 23, 59, 59, 999).getTime();
   var From = new Date(selected_year, 0, 1, 0, 0, 0, 0).getTime();
-  Ajax.GetSeries(To - From, To, '10m', 0, 'active_energy',
+  Analyzer.GetSeries(To - From, To, '15M', 0, ['ACTIVE_POWER'],
     function(result) {
       EnergyData = GraphDataAppend(result, 'active_energy', []);
       $('#StatsSpinner').hide();
@@ -98,7 +98,7 @@ function UpdatePage() {
   $('#btnBlocks + ul > li:nth-child(' + (State + 1) + ')').addClass('active');
   $('#btnBlocks span:first').text($('#btnBlocks + ul > li:nth-child(' + (State + 1) + ') > a').text());
   localStorage.setItem('StatsBlock', State);
-  Ajax.GetSeriesRange('10m', 
+  Analyzer.GetSeriesRange('10M', 
     function(result) {
       for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) {
         $('#btnYear + ul').append('<li><a href="#">' + year + '</a></li>');

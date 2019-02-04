@@ -35,7 +35,7 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
     HTTPServer::RegisterCallback("/getSeries",           DeviceInterface::GetSeriesCallback);
     HTTPServer::RegisterCallback("/getSeriesNow",        DeviceInterface::GetSeriesNowCallback);
 //    HTTPServer::RegisterCallback("/getSeriesAggreg",     DeviceInterface::GetSeriesAggregCallback);
-//    HTTPServer::RegisterCallback("/getSeriesRange",      DeviceInterface::GetSeriesRangeCallback);
+    HTTPServer::RegisterCallback("/getSeriesRange",      DeviceInterface::GetSeriesRangeCallback);
 //    HTTPServer::RegisterCallback("/getEvents",           DeviceInterface::GetEventsCallback);
     HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
 //    HTTPServer::RegisterCallback("/getDevices",          DeviceInterface::GetDevicesCallback);
@@ -416,32 +416,25 @@ void DeviceInterface::GetSeriesNowCallback(HTTPRequest &req) {
   req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
   return;
 }
-string DeviceInterface::GetSeriesRangeCallback(HTTPRequest &req) {
-//  char *Analyzer = NULL, *Aggreg = NULL;
-//  json_object_object_foreach(reader, JSON_Key, JSON_Val) {
-//    enum json_type JSON_Type = json_object_get_type(JSON_Val);
-//    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Analyzer") == 0))
-//      Analyzer = (char*)json_object_get_string(JSON_Val);
-//    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Aggreg") == 0))
-//      Aggreg = (char*)json_object_get_string(JSON_Val);
-//  }
-//  if(Analyzer == NULL) {
-//    *postdata  = (char*)"'Analyzer' param is requiered";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0))) {
-//    *postdata  = (char*)"'Aggreg' need to be '3s', '1m', '10m' or '1h'";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  db->PrepareSentence("SET search_path TO ?");
-//  db->BindSingleString(Analyzer);
-//  db->ExecSentence();
-//  char QueryText[8192];
-//  snprintf(QueryText, sizeof(QueryText), "SELECT row_to_json(Result) AS result FROM ( SELECT max(sampletime) AS \"To\", min(sampletime) AS \"From\" FROM aggreg_%s) AS Result", Aggreg);
-//  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
-  return "";
+void DeviceInterface::GetSeriesRangeCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  AnalyzerInterface *Analyzer = NULL;
+  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+    Analyzer = (*it)->FindAnalyzer(Params["Analyzer"]);
+    if(Analyzer != NULL) break;
+  }
+  if(Analyzer == NULL) return req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) {
+    req.FromString("'Aggreg' need to be '3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+    return;
+  }
+  string Aggreg = Params["Aggreg"];
+  req.PrepareSentence("SET search_path TO ?");
+  req.BindSingleString(Analyzer->GetID().c_str());
+  req.ExecSentence();
+  string Query = "SELECT row_to_json(Result) AS result FROM ( SELECT max(sampletime) AS \"To\", min(sampletime) AS \"From\" FROM aggreg_" + Aggreg + ") AS Result";
+  return req.FromString(req.ExecSentenceJSON(Query.c_str(), NULL), MHD_HTTP_OK);
 }
 void DeviceInterface::GetEventsCallback(HTTPRequest &req) {
 //  uint64_t LastEvent = 0, From = 0, To = 0, Period = 0;

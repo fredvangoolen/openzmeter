@@ -37,7 +37,7 @@ class DeviceInterface {
     static string GetSeriesAggregCallback(HTTPRequest &req);
     static void GetAnalyzersCallback(HTTPRequest &req);
     static void GetSeriesNowCallback(HTTPRequest &req);
-    static string GetSeriesRangeCallback(HTTPRequest &req);
+    static void GetSeriesRangeCallback(HTTPRequest &req);
     static void GetEventsCallback(HTTPRequest &req);
     static void GetPricesCallback(HTTPRequest &req);
     static string GetDevicesCallback(HTTPRequest &req);
