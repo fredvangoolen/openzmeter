@@ -149,8 +149,8 @@ void  *DeviceVirtual::Capture_Thread(void *args) {
 DeviceVirtual::~DeviceVirtual() {
   Stop();
 }
-AnalyzerInterface *DeviceVirtual::FindAnalyzer(const char *serial) {
+AnalyzerInterface *DeviceVirtual::FindAnalyzer(string serial) {
   if(pAnalyzer == NULL) return NULL;
-  return (strcmp(serial, pAnalyzer->GetID().c_str()) == 0) ? pAnalyzer : NULL;
+  return (serial == pAnalyzer->GetID()) ? pAnalyzer : NULL;
 }
 //======================================================================================================================

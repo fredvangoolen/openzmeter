@@ -32,9 +32,9 @@ DeviceInterface::DeviceInterface() {
 void DeviceInterface::AddDevice(DeviceInterface* device) {
   if(pDevices.size() == 0) {
     HTTPServer::RegisterCallback("/getAnalyzers",        DeviceInterface::GetAnalyzersCallback);
-//    HTTPServer::RegisterCallback("/getSeries",           DeviceInterface::GetSeriesCallback);
+    HTTPServer::RegisterCallback("/getSeries",           DeviceInterface::GetSeriesCallback);
+    HTTPServer::RegisterCallback("/getSeriesNow",        DeviceInterface::GetSeriesNowCallback);
 //    HTTPServer::RegisterCallback("/getSeriesAggreg",     DeviceInterface::GetSeriesAggregCallback);
-//    HTTPServer::RegisterCallback("/getSeriesNow",        DeviceInterface::GetSeriesNowCallback);
 //    HTTPServer::RegisterCallback("/getSeriesRange",      DeviceInterface::GetSeriesRangeCallback);
 //    HTTPServer::RegisterCallback("/getEvents",           DeviceInterface::GetEventsCallback);
 //    HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
@@ -164,18 +164,18 @@ void DeviceInterface::GetAnalyzersCallback(HTTPRequest &req) {
     AnalyzerInterface *Analyzer = NULL;
     for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
       Analyzer = (*it)->FindAnalyzer(Serial);
-      if(Analyzer != NULL) {
-        Response.emplace_back(Analyzer->GetJSONDescriptor());
-        break;
-      }
+      if(Analyzer == NULL) continue;
+      Response.emplace_back(Analyzer->GetJSONDescriptor());
+      break;
     }
   }
   req.FromJSON(Response);
 }
-string DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
-//  uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
+void DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  //  uint64_t Period = 0, From = 0, To = 0, LastSample  = 0;
 //  char    *Serial = NULL, *Aggreg = NULL;
-//  AnalyzerInterface *Analyzer = NULL;
+  AnalyzerInterface *Analyzer = NULL;
 //  json_object *Series = NULL;
 //  json_object *Find;
 //  if((json_object_object_get_ex(reader, "Analyzer", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
@@ -184,88 +184,77 @@ string DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
 //  if((json_object_object_get_ex(reader, "Period", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Period = json_object_get_int64(Find);
 //  if((json_object_object_get_ex(reader, "To", &Find) == true) && (json_object_get_type(Find) == json_type_int)) To = json_object_get_int64(Find);
 //  if((json_object_object_get_ex(reader, "Series", &Find) == true) && (json_object_get_type(Find) == json_type_array)) Series = Find;
-//  if(Serial == NULL) {
-//    *postdata  = (char*)"'Analyzer' param is requiered";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  if(Series == NULL) {
-//    *postdata  = (char*)"Series must be an array of valid serie names";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  if((Aggreg == NULL) || ((strcmp(Aggreg, "3S") != 0) && (strcmp(Aggreg, "1M") != 0) && (strcmp(Aggreg, "10M") != 0) && (strcmp(Aggreg, "15M") != 0) && (strcmp(Aggreg, "1H") != 0))) {
-//    *postdata  = (char*)"'Aggreg' need to be '3S', '1M', '10M', '15M' or '1H'";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
-//    Analyzer = (*it)->FindAnalyzer(Serial);
-//    if(Analyzer != NULL) break;
-//  }
-//  if(Analyzer == NULL) {
-//    *postdata  = (char*)"Analyzer not found";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  if(To == 0) To = Tools::GetTime();
-//  From = To - Period;
-//  uint32_t PeriodSeconds = 3000;
-//  if(strcmp(Aggreg, "1M")  == 0) PeriodSeconds = 60000;
-//  if(strcmp(Aggreg, "10M") == 0) PeriodSeconds = 600000;
-//  if(strcmp(Aggreg, "15M") == 0) PeriodSeconds = 900000;
-//  if(strcmp(Aggreg, "1H")  == 0) PeriodSeconds = 3600000;
-//  if((Period / PeriodSeconds) > 100000) {
-//    *postdata  = (char*)"Returned period to large for this aggregation level";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }  
-//  char QueryText[8192];
-//  int  QueryLen = 0;
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\", ", To);
-//  db->PrepareSentence("SET search_path TO ?");
-//  db->BindSingleString(Serial);
-//  db->ExecSentence();
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"MaxSamples\", ", (To - From) / PeriodSeconds);
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "'%s' AS \"Aggregation_Source\", ", Aggreg);
-//  for(uint i = 0; i < json_object_array_length(Series); i++) {
-//    if(json_object_get_type(json_object_array_get_idx(Series, i)) != json_type_string) {
-//      *postdata  = (char*)"Series must be an array of valid serie names";
-//      *resultLen = strlen(*postdata);
-//      return false;
-//    }
+  if(!Params["Analyzer"].is_string()) {
+    req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+    return;
+  }
+  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+    Analyzer = (*it)->FindAnalyzer(Params["Analyzer"]);
+    if(Analyzer != NULL) break;
+  }
+  if(Analyzer == NULL) {
+    req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+    return;
+  }
+  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) {
+    req.FromString("'Aggreg' need to be '3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+    return;
+  }
+  if(!Params["Series"].is_array()) {
+    req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+    return;
+  }
+  uint64_t To = Params.value("To", Tools::GetTime());
+  uint64_t From = To - Params.value("Period", 3600000);
+  uint32_t PeriodSeconds = 3000;
+  if(Params["Aggreg"] == "1M") PeriodSeconds = 60000;
+  if(Params["Aggreg"] == "10M") PeriodSeconds = 600000;
+  if(Params["Aggreg"] == "15M") PeriodSeconds = 900000;
+  if(Params["Aggreg"] == "1H") PeriodSeconds = 3600000;
+  if((Params.value("Period", 3600000) / PeriodSeconds) > 100000) {
+    req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
+    return;
+  }  
+  req.PrepareSentence("SET search_path TO ?");
+  req.BindSingleString(Params.value("Analyzer", "").c_str());
+  req.ExecSentence();
+  stringstream Query;
+  Query << "SELECT row_to_json(Result) AS result FROM ( SELECT ";
+  Query << From << " AS \"From\", " << To << " AS \"To\", " << (To - From) / PeriodSeconds << " AS \"MaxSamples\", '" << Params["Aggreg"] << "' AS \"Aggregation_Source\", ";
+  for(uint i = 0; i < Params["Series"].size(); i++) {
+    if(!Params["Series"][i].is_string()) {
+      req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+      return;
+    }
 //    char *Serie = (char*)json_object_get_string(json_object_array_get_idx(Series, i));
-//    if((strcmp(Serie, "FREQUENCY") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "10M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(freq ORDER BY sampletime ASC), '{}') AS \"Frequency\", ");
-//    } else if((strcmp(Serie, "FLAG") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "10M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(flag ORDER BY sampletime ASC), '{}') AS \"Flag\", ");
-//    } else if((strcmp(Serie, "VOLTAGE") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "10M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(rms_v ORDER BY sampletime ASC), '{}') AS \"Voltage\", ");
-//    } else if((strcmp(Serie, "CURRENT") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "10M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(rms_i ORDER BY sampletime ASC), '{}') AS \"Current\", ");
-//    } else if((strcmp(Serie, "ACTIVE_POWER") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "15M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(active_power ORDER BY sampletime ASC), '{}') AS \"Active_Power\", ");
-//    } else if((strcmp(Serie, "REACTIVE_POWER") == 0) && ((strcmp(Aggreg, "3S") == 0) || (strcmp(Aggreg, "1M") == 0) || (strcmp(Aggreg, "15M") == 0) || (strcmp(Aggreg, "1H") == 0))) {      
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(reactive_power ORDER BY sampletime ASC), '{}') AS \"Reactive_Power\", ");
-//    } else if((strcmp(Serie, "POWER_FACTOR") == 0) && (strcmp(Aggreg, "1M") == 0)) {
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(power_factor ORDER BY sampletime ASC), '{}') AS \"Power_Factor\", ");
-//    } else if((strcmp(Serie, "VOLTAGE_THD") == 0) && (strcmp(Aggreg, "1M") == 0)) {
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(thd_v ORDER BY sampletime ASC), '{}') AS \"Voltage_THD\", ");
-//    } else if((strcmp(Serie, "CURRENT_THD") == 0) && (strcmp(Aggreg, "1M") == 0)) {
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(thd_i ORDER BY sampletime ASC), '{}') AS \"Current_THD\", ");
-//    } else if((strcmp(Serie, "PHI") == 0) && (strcmp(Aggreg, "1M") == 0)) {
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(phi ORDER BY sampletime ASC), '{}') AS \"Phi\", ");
-//    } else if((strcmp(Serie, "VOLTAGE_HARMONICS") == 0) && (strcmp(Aggreg, "1M") == 0)) {
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(harmonics_v ORDER BY sampletime ASC), '{}') AS \"Voltage_Harmonics\", ");
-//    } else if((strcmp(Serie, "CURRENT_HARMONICS") == 0) && (strcmp(Aggreg, "1M") == 0)) {
-//      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(harmonics_i ORDER BY sampletime ASC), '{}') AS \"Current_Harmonics\", ");
-//    } else {
-//      *postdata  = (char*)"Invalid serie in selected aggregation";
-//      *resultLen = strlen(*postdata);
-//      return false;
-//    }
+    if((Params["Series"][i] == "FREQUENCY") && ((Params["Aggreg"] == "3S") || (Params["Aggreg"] == "1M") || (Params["Aggreg"] == "10M") || (Params["Aggreg"] == "1H"))) {      
+      Query << "COALESCE(ARRAY_AGG(freq ORDER BY sampletime ASC), '{}') AS \"Frequency\", ";
+    } else if((Params["Series"][i] == "FLAG") && ((Params["Aggreg"] == "3S") || (Params["Aggreg"] == "1M") || (Params["Aggreg"] == "10M") || (Params["Aggreg"] == "1H"))) {
+      Query << "COALESCE(ARRAY_AGG(flag ORDER BY sampletime ASC), '{}') AS \"Flag\", ";
+    } else if((Params["Series"][i] == "VOLTAGE") && ((Params["Aggreg"] == "3S") || (Params["Aggreg"] == "1M") || (Params["Aggreg"] == "10M") || (Params["Aggreg"] == "1H"))) {      
+      Query << "COALESCE(ARRAY_AGG(rms_v ORDER BY sampletime ASC), '{}') AS \"Voltage\", ";
+    } else if((Params["Series"][i] == "CURRENT") && ((Params["Aggreg"] == "3S") || (Params["Aggreg"] == "1M") || (Params["Aggreg"] == "10M") || (Params["Aggreg"] == "1H"))) {      
+      Query << "COALESCE(ARRAY_AGG(rms_i ORDER BY sampletime ASC), '{}') AS \"Current\", ";
+    } else if((Params["Series"][i] == "ACTIVE_POWER") && ((Params["Aggreg"] == "3S") || (Params["Aggreg"] == "1M") || (Params["Aggreg"] == "15M") || (Params["Aggreg"] == "1H"))) {      
+      Query << "COALESCE(ARRAY_AGG(active_power ORDER BY sampletime ASC), '{}') AS \"Active_Power\", ";
+    } else if((Params["Series"][i] == "REACTIVE_POWER") && ((Params["Aggreg"] == "3S") || (Params["Aggreg"] == "1M") || (Params["Aggreg"] == "15M") || (Params["Aggreg"] == "1H"))) {      
+      Query << "COALESCE(ARRAY_AGG(reactive_power ORDER BY sampletime ASC), '{}') AS \"Reactive_Power\", ";
+    } else if((Params["Series"][i] == "POWER_FACTOR") && (Params["Aggreg"] == "1M")) {
+      Query << "COALESCE(ARRAY_AGG(power_factor ORDER BY sampletime ASC), '{}') AS \"Power_Factor\", ";
+    } else if((Params["Series"][i] == "VOLTAGE_THD") && (Params["Aggreg"] == "1M")) {
+      Query << "COALESCE(ARRAY_AGG(thd_v ORDER BY sampletime ASC), '{}') AS \"Voltage_THD\", ";
+    } else if((Params["Series"][i] == "CURRENT_THD") && (Params["Aggreg"] == "1M")) {
+      Query << "COALESCE(ARRAY_AGG(thd_i ORDER BY sampletime ASC), '{}') AS \"Current_THD\", ";
+    } else if((Params["Series"][i] == "PHI") && (Params["Aggreg"] == "1M")) {
+      Query << "COALESCE(ARRAY_AGG(phi ORDER BY sampletime ASC), '{}') AS \"Phi\", ";
+    } else if((Params["Series"][i] == "VOLTAGE_HARMONICS") && (Params["Aggreg"] == "1M")) {
+      Query << "COALESCE(ARRAY_AGG(harmonics_v ORDER BY sampletime ASC), '{}') AS \"Voltage_Harmonics\", ";
+    } else if((Params["Series"][i] == "CURRENT_HARMONICS") && (Params["Aggreg"] ==  "1M")) {
+      Query << "COALESCE(ARRAY_AGG(harmonics_i ORDER BY sampletime ASC), '{}') AS \"Current_Harmonics\", ";
+    } else {
+     req.FromString("Invalid serie in selected aggregation", MHD_HTTP_BAD_REQUEST);
+      return;
+    }
 ////    if((ArrayLenA != 0) && (ArrayLenB == 0)) {
 ////      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(CASE WHEN (%s IS NULL OR array_length(%s, 1) <> %d) THEN array_fill(NULL::real, array[%d]) ELSE %s END ORDER BY sampletime ASC), '{}') AS %s, ", Serie, Serie, ArrayLenA, ArrayLenA, Serie, Serie);
 ////    } else if((ArrayLenA != 0) && (ArrayLenB != 0)) {
@@ -273,18 +262,21 @@ string DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
 ////    } else {
 ////      QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(%s ORDER BY sampletime ASC), '{}') AS %s, ", Serie, Serie);
 ////    }
-//  }
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS \"Sampletime\" FROM ");
-//  if(strcmp(Aggreg, "1M") == 0) {
-//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m) AS Tmp");
+  }
+  Query << "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS \"Sampletime\" FROM ";
+  if(Params["Aggreg"] == "1M") {
+    Query << "(SELECT * FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m) AS Tmp";
 ////  } else if(strcmp(Aggreg, "1h") == 0) {
 ////    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1h NATURAL LEFT JOIN aggreg_stat_1h NATURAL FULL JOIN prices) AS Tmp");
-//  } else {
-//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "aggreg_%s", Aggreg);
-//  }
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, " WHERE sampletime > %" PRIu64 " AND sampletime >= %" PRIu64 " AND sampletime <= %" PRIu64 ") AS Result", LastSample, From, To);    
-//  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
-  return "";
+  } else {
+    Query << "aggreg_" << Params["Aggreg"];
+  }
+  Query << " WHERE sampletime > " << Params.value("LastSample", 0) << " AND sampletime >= " << From << " AND sampletime <= " << To << ") AS Result";
+  size_t resultLen;
+  char *Tmp = req.ExecSentenceJSON(Query.str().c_str(), &resultLen);
+  req.FromString(Tmp == NULL ? "Failed query" : Tmp, MHD_HTTP_OK);
+  //req.
+  //  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
 }
 string DeviceInterface::GetSeriesAggregCallback(HTTPRequest &req) {
 //  uint64_t Period = 0, From = 0, To = 0;
@@ -360,7 +352,7 @@ string DeviceInterface::GetSeriesAggregCallback(HTTPRequest &req) {
 //  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
   return "";
 }
-string DeviceInterface::GetSeriesNowCallback(HTTPRequest &req) {
+void DeviceInterface::GetSeriesNowCallback(HTTPRequest &req) {
 //  char *Serial = NULL;
 //  json_object *Series = NULL;
 //  json_object *Find;
@@ -383,7 +375,7 @@ string DeviceInterface::GetSeriesNowCallback(HTTPRequest &req) {
 //    *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
 //    return true;
 //  }
-  return "";
+  return;
 }
 string DeviceInterface::GetSeriesRangeCallback(HTTPRequest &req) {
 //  char *Analyzer = NULL, *Aggreg = NULL;

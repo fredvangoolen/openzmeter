@@ -245,19 +245,18 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
 //          if((json_object_object_get_ex(Request->JSONReader, "Username", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Name = (char*)json_object_get_string(Find);
 //          if((json_object_object_get_ex(Request->JSONReader, "Password", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Password = (char*)json_object_get_string(Find);
 //          if((json_object_object_get_ex(Request->JSONReader, "UpdateLastLogin", &Find) == true) && (json_object_get_type(Find) == json_type_boolean)) UpdateLastLogin = json_object_get_boolean(Find);
-          if((Params["Password"].is_string() == false) || (Params["UserName"].is_string() == false)) {
+          if((Params["Password"].is_string() == false) || (Params["Username"].is_string() == false)) {
             Request->FromString("'Password' and 'Username' params requiered", MHD_HTTP_BAD_REQUEST);
           } else {
-//            if(Request->DB == NULL) Request->DB = new Database(NULL);
-//            Request->DB->PrepareSentence("SELECT lastlogin FROM users WHERE username = ? AND password = ?");
-//            Request->DB->BindSingleString(Name);
-//            Request->DB->BindSingleString(Password);
-//            Request->DB->ExecSentence();
-//            Request->JSONWriter = json_object_new_object();
-//            if(Request->DB->ResultRows() != 1) {
-//              json_object_object_add(Request->JSONWriter, "Result", json_object_new_boolean(false));
-//            } else {
-//              json_object_object_add(Request->JSONWriter, "Result", json_object_new_boolean(true));
+            Request->PrepareSentence("SELECT lastlogin FROM users WHERE username = ? AND password = ?");
+            Request->BindSingleString(Params["Username"].get<string>().c_str());
+            Request->BindSingleString(Params["Password"].get<string>().c_str());
+            Request->ExecSentence();
+            json Response;
+            if(Request->ResultRows() != 1) {
+              Response["Result"] = false;
+            } else {
+              Response["Result"] = true;
 //              const char *LastLogin = Request->DB->ResultValue(0, "lastlogin");
 //              if(LastLogin) json_object_object_add(Request->JSONWriter, "LastLogin", json_object_new_int64(atol(LastLogin)));
 //              const char *Admin = Request->DB->ResultValue(0, "admin");
@@ -268,12 +267,12 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
 //                Request->DB->BindSingleString(Name);
 //                Request->DB->ExecSentence();
 //              }
-//              Request->DB->PrepareSentence("UPDATE sessions SET username = ? WHERE id = ?");
-//              Request->DB->BindSingleString(Name);
-//              Request->DB->BindSingleString(Request->SessionID.c_str());
-//              Request->DB->ExecSentence();
-//            }
-//            Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostDataLen);
+              Request->PrepareSentence("UPDATE sessions SET username = ? WHERE id = ?");
+              Request->BindSingleString(Params["Username"].get<string>().c_str());
+              Request->BindSingleString(Request->SessionID().c_str());
+              Request->ExecSentence();
+            }
+            Request->FromJSON(Response);
           }  
         } else {
           if(Request->UserName().empty()) {

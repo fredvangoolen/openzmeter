@@ -81,9 +81,9 @@ bool DeviceV1_01::Init() {
 	libusb_exit(Context);
   return true;
 }
-AnalyzerInterface *DeviceV1_01::FindAnalyzer(const char *serial) {
+AnalyzerInterface *DeviceV1_01::FindAnalyzer(string serial) {
   if(pAnalyzer == NULL) return NULL;
-  return (strcmp(serial, pAnalyzer->GetID().c_str()) == 0) ? pAnalyzer : NULL;
+  return (serial == pAnalyzer->GetID()) ? pAnalyzer : NULL;
 }
 uint32_t DeviceV1_01::AnalyzersCount() {
   return (pAnalyzer == NULL) ? 0 : 1;

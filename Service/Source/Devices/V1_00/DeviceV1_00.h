@@ -49,7 +49,7 @@ class DeviceV1_00 : public DeviceInterface {
     static int              PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
     bool               ConfigDev(json_object *config);
-    AnalyzerInterface *FindAnalyzer(const char *serial);
+    AnalyzerInterface *FindAnalyzer(string serial);
     uint32_t           AnalyzersCount();
     const char        *Serial();
     const char        *Driver();

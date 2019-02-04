@@ -20,7 +20,7 @@ class DeviceInterface {
     DeviceState pState;                   //Device state
   protected :
     virtual uint32_t           AnalyzersCount() = 0;
-    virtual AnalyzerInterface *FindAnalyzer(const char *serial) = 0;
+    virtual AnalyzerInterface *FindAnalyzer(string serial) = 0;
     virtual const char        *Serial() = 0;
     virtual const char        *Driver() = 0;
     virtual const char        *Name() = 0;
@@ -33,10 +33,10 @@ class DeviceInterface {
     static void AddDevice(DeviceInterface *device);
   public :
     static bool Config(json_object *config);
-    static string GetSeriesCallback(HTTPRequest &req);
+    static void GetSeriesCallback(HTTPRequest &req);
     static string GetSeriesAggregCallback(HTTPRequest &req);
     static void GetAnalyzersCallback(HTTPRequest &req);
-    static string GetSeriesNowCallback(HTTPRequest &req);
+    static void GetSeriesNowCallback(HTTPRequest &req);
     static string GetSeriesRangeCallback(HTTPRequest &req);
     static string GetEventsCallback(HTTPRequest &req);
     static string GetPricesCallback(HTTPRequest &req);

@@ -25,7 +25,7 @@ class DeviceVirtual : public DeviceInterface {
     static void *Capture_Thread(void *args);
   private :
     bool               ConfigDev(json_object *config);
-    AnalyzerInterface *FindAnalyzer(const char *serial);
+    AnalyzerInterface *FindAnalyzer(string serial);
     uint32_t           AnalyzersCount();
     const char        *Serial();
     const char        *Driver();
