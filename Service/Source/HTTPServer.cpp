@@ -239,12 +239,8 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
       } else {
         if(strcmp(url, "/LogIn") == 0) {
           json Params = Request->GetParams();
-//          char *Password = NULL, *Name = NULL;
-//          bool UpdateLastLogin = true;
-//          json_object *Find;
-//          if((json_object_object_get_ex(Request->JSONReader, "Username", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Name = (char*)json_object_get_string(Find);
-//          if((json_object_object_get_ex(Request->JSONReader, "Password", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Password = (char*)json_object_get_string(Find);
-//          if((json_object_object_get_ex(Request->JSONReader, "UpdateLastLogin", &Find) == true) && (json_object_get_type(Find) == json_type_boolean)) UpdateLastLogin = json_object_get_boolean(Find);
+          bool UpdateLastLogin = true;
+          if(Params["UpdateLastLogin"].is_boolean()) UpdateLastLogin = Params["UpdateLastLogin"];
           if((Params["Password"].is_string() == false) || (Params["Username"].is_string() == false)) {
             Request->FromString("'Password' and 'Username' params requiered", MHD_HTTP_BAD_REQUEST);
           } else {
@@ -258,15 +254,12 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
             } else {
               Response["Result"] = true;
               Response["LastLogin"] = atoll(Request->ResultValue(0, "lastlogin"));
-         
-//              const char *Admin = Request->DB->ResultValue(0, "admin");
-//              if(Admin) json_object_object_add(Request->JSONWriter, "Admin", json_object_new_boolean((Admin[0] == 't') ? true : false));
-//              if(UpdateLastLogin) {
-//                Request->DB->PrepareSentence("UPDATE users SET lastlogin = ? WHERE username = ?");
-//                Request->DB->BindSingleUInt64(Tools::GetTime());
-//                Request->DB->BindSingleString(Name);
-//                Request->DB->ExecSentence();
-//              }
+              if(UpdateLastLogin) {
+                Request->PrepareSentence("UPDATE users SET lastlogin = ? WHERE username = ?");
+                Request->BindSingleUInt64(Tools::GetTime());
+                Request->BindSingleString(Params["Username"].get<string>().c_str());
+                Request->ExecSentence();
+              }
               Request->PrepareSentence("UPDATE sessions SET username = ? WHERE id = ?");
               Request->BindSingleString(Params["Username"].get<string>().c_str());
               Request->BindSingleString(Request->SessionID().c_str());
@@ -282,7 +275,6 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
             for(vector<Callback_t>::iterator it = pCallbacks.begin() ; it != pCallbacks.end(); ++it) {
               if(it->HandleName.compare(url) == 0) {
                 it->Function(*Request);
-//                if(Result.empty() == false) Request->FromString(Result, MHD_HTTP_BAD_REQUEST);
                 Handled = true;
                 break;
               }

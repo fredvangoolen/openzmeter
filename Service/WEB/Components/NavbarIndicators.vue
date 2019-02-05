@@ -4,7 +4,7 @@
     <navbar-indicators-panel units="A"  ref="current_indicator"   color="indicator-current"></navbar-indicators-panel>
     <navbar-indicators-panel units="W"  ref="power_indicator"     color="indicator-active-power"></navbar-indicators-panel>
     <navbar-indicators-panel units="Hz" ref="frequency_indicator" color="indicator-frequency"></navbar-indicators-panel>
-        <div class="indicator-active-energy">
+    <div class="indicator-active-energy">
       <div>
         <div id="IndicatorTodayEnergyValues">
           <span class="value">Offline</span>
@@ -18,8 +18,6 @@
 <script>
 import NavbarIndicatorsPanel from './NavbarIndicatorsPanel.vue';
 export default {
-  name: 'NavbarIndicators',
-  props: ['interval'],
   methods: {
     setValue: function(vals) {
       if(vals === null) {
@@ -36,17 +34,38 @@ export default {
     }
   },
   data () {
-    return {
-      msg: 'Welcome to Your Vue.js App'
-    }
+    return { };
   },
-  components: {
-    'NavbarIndicatorsPanel': NavbarIndicatorsPanel
-  }
-  
+  components: { NavbarIndicatorsPanel }
 }
 </script>
  
 <style>
-
+.indicator-bar {
+  background-image: linear-gradient(to bottom,#f3f3f3,#e2e2e2);
+  text-align: center;
+  font-size: 14px;
+  color: #FFF;
+  font-weight: 700;
+  padding: 2px;
+  border-bottom: 1px solid #c9c9c9;
+  position: relative;
+  z-index: 95;
+  font-size: 18x;
+  top: 0px;
+}
+@media(min-width:768px) {
+  .indicator-bar {
+    background-image: none;
+    position: absolute;
+    right: 48px;
+    text-align: right;
+    border: none;
+  }
+}
+@media(min-width:1024px) {
+  .indicator-bar {
+    right: 2px;
+  }
+}  
 </style>

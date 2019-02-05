@@ -1,6 +1,6 @@
 <template>
   <div id="Dashboard">
-    Esto es el dashboard
+    Esto es el dashboard <b-button>I am a Button</b-button>
   </div>
 </template>
 

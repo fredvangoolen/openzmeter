@@ -1168,7 +1168,7 @@ var User = new User_Manager();
 var Analyzer = new Analyzer_Manager();
 
 
-LoadNews();
+//LoadNews();
 UpdatePage();
 
 
