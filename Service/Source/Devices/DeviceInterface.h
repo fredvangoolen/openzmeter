@@ -40,8 +40,8 @@ class DeviceInterface {
     static void GetSeriesRangeCallback(HTTPRequest &req);
     static void GetEventsCallback(HTTPRequest &req);
     static void GetPricesCallback(HTTPRequest &req);
-    static string GetDevicesCallback(HTTPRequest &req);
-    static string GetTariffsCallback(HTTPRequest &req);
+    static void GetDevicesCallback(HTTPRequest &req);
+    static void GetTariffsCallback(HTTPRequest &req);
     static string SetTariffsCallback(HTTPRequest &req);
     static string StartDeviceCallback(HTTPRequest &req);
     static string StopDeviceCallback(HTTPRequest &req);

@@ -153,6 +153,16 @@
         </df>
       </df>
       <df name="WEB">
+        <df name="Components">
+        </df>
+        <df name="CSS">
+        </df>
+        <df name="dist">
+        </df>
+        <df name="Fonts">
+        </df>
+        <df name="Imgs">
+        </df>
         <df name="node_modules">
           <df name=".bin">
           </df>
@@ -2766,6 +2776,34 @@
             <df name="examples">
             </df>
             <df name="test">
+            </df>
+          </df>
+          <df name="moment">
+            <df name="locale">
+            </df>
+            <df name="min">
+            </df>
+            <df name="src">
+              <df name="lib">
+                <df name="create">
+                </df>
+                <df name="duration">
+                </df>
+                <df name="format">
+                </df>
+                <df name="locale">
+                </df>
+                <df name="moment">
+                </df>
+                <df name="parse">
+                </df>
+                <df name="units">
+                </df>
+                <df name="utils">
+                </df>
+              </df>
+              <df name="locale">
+              </df>
             </df>
           </df>
           <df name="ms">
@@ -6169,10 +6207,6 @@
             </df>
           </df>
         </df>
-        <df name="src">
-          <df name="assets">
-          </df>
-        </df>
       </df>
       <in>Makefile</in>
     </df>
@@ -6202,8 +6236,6 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
-        <gdb_signals>
-        </gdb_signals>
         <gdb_options>
           <DebugOptions>
           </DebugOptions>
