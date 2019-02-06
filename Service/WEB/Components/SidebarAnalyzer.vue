@@ -33,4 +33,14 @@
   .sidenav-header td {
     text-align: right;
   }
+  .sidenav-header > table {
+    width: 100%;
+    font-size: 11px;
+    line-height: 12px;
+  }
+  .sidenav-header > table tr td:nth-child(2) {
+    width: 100%;
+    padding: 0px 0px 0px 10px;
+    text-align: center;
+  }
 </style>

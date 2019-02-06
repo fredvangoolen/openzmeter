@@ -1,70 +1,9 @@
 <template>
   <b-navbar-nav is-nav id="nav_collapse">
-    <user-header></user-header>
-    <analyzer-header></analyzer-header>
-    <ul class="sidenav-menu hide" id="AnalyzerMenu">
-      <li>
-        <a href="Dashboard">
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/dashboard.png"></span>
-          <span class="sidenav-link-title">Dashboard</span>
-        </a>
-      </li>
-      <li>
-        <a href="javascript:;" data-sidenav-dropdown-toggle>
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/draw_wave.png"></span>
-          <span class="sidenav-link-title">Analysis</span>
-          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_down.png"></span>
-          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_up.png"></span>          
-        </a>
-        <ul class="sidenav-dropdown" data-sidenav-dropdown>
-          <li><a href="Analysis/Voltage">Voltage</a></li>
-          <li><a href="Analysis/Current">Current</a></li>
-          <li><a href="Analysis/Power">Power</a></li>
-          <li><a href="Analysis/Energy">Energy</a></li>
-          <li><a href="Analysis/Frequency">Frequency</a></li>
-        </ul>
-      </li>
-      <li>
-        <a href="javascript:;" data-sidenav-dropdown-toggle>
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/warning.png"></span>
-          <span class="sidenav-link-title">Events</span>
-          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_down.png"></span>
-          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_up.png"></span>
-        </a>
-        <ul class="sidenav-dropdown" data-sidenav-dropdown>
-          <li><a href="Events/ITIC">ITIC</a></li>
-          <li><a href="Events/Disturbances">Disturbances</a></li>
-          <li><a href="Events/EN50160">EN50160</a></li>
-        </ul>
-      </li>
-      <li>
-        <a href="javascript:;" data-sidenav-dropdown-toggle>
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/table_money.png"></span>
-          <span class="sidenav-link-title">Energy Stats</span>
-          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_down.png"></span>
-          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_up.png"></span>
-        </a>
-        <ul class="sidenav-dropdown" data-sidenav-dropdown>
-          <li><a href="Stats/Costs">Costs</a></li>
-          <li><a href="Stats/Heatmap">Heatmap</a></li>
-          <li><a href="Stats/Distribution">Distribution</a></li>
-        </ul>
-      </li>
-    </ul>
-    <ul class="sidenav-menu">
-      <li class="hide" id="menuSettings">
-        <a href="Settings">
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/cog.png"></span>
-          <span class="sidenav-link-title">Settings</span>
-        </a>
-      </li>
-      <li>
-        <a href="Help">
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/help.png"></span>
-          <span class="sidenav-link-title">Help</span>
-        </a>
-      </li>
-    </ul>
+    <sidebar-user></sidebar-user>
+    <sidebar-analyzer></sidebar-analyzer>
+    <sidebar-menu></sidebar-menu>
+    
     <div class="sidenav-version"><span>Build 21-01-2018</span>
       <div class="btn-group pull-right">
         <button type="button" class="btn btn-default btn-xs navbar-btn" id="btnSearchAnalyzer">
@@ -76,18 +15,51 @@
 </template>
 
 <script>
-import UserHeader from './UserHeader.vue';
-import AnalyzerHeader from './AnalyzerHeader.vue';
+import SidebarUser from './SidebarUser.vue';
+import SidebarAnalyzer from './SidebarAnalyzer.vue';
+import SidebarMenu from './SidebarMenu.vue';
 export default {
-    data() { return {} },
-  components: {
-    UserHeader,
-    AnalyzerHeader
-  }
+  data() { return {} },
+  mounted: function() {
+    $('.sidenav-menu').on('click', '[data-sidenav-dropdown-toggle]', function (e) {
+      $(this).next('[data-sidenav-dropdown]').slideToggle('fast');
+      $(this).find('[data-sidenav-dropdown-icon]').toggleClass('show');
+      e.preventDefault();
+    });
+    $('.navbar-toggler').click(function (e) {
+      $('#nav_collapse').toggleClass('show');
+      if($('#nav_collapse').hasClass('show')) {
+        this.showOverlay();
+      } else {
+        this.hideOverlay();
+      }
+    }.bind(this));
+  },
+  methods: {
+    showOverlay: function () {
+      $('body').toggleClass('sidenav-no-scroll');
+      var overlay = $('[data-sidenav-overlay]');
+      if(overlay[0] === undefined) {
+        overlay = $('<div data-sidenav-overlay class="sidenav-overlay"/>');
+        $('body').append(overlay);
+        $('body').on('click', '[data-sidenav-overlay]', this.hideOverlay);
+      }
+      overlay.fadeToggle('fast');
+    },
+    hideOverlay: function () {
+      $('body').removeClass('sidenav-no-scroll');
+      $('#nav_collapse').removeClass('show');
+      $('[data-sidenav-overlay]').fadeOut('fast');
+    }
+  },
+  components: { SidebarUser, SidebarAnalyzer, SidebarMenu }
 }
 </script> 
 
 <style>
+  .navbar-nav.show {
+    transform: none !important;
+  }
   .navbar-nav {
     bottom: 0px;
     height: unset;
@@ -110,11 +82,10 @@ export default {
     .navbar-nav {
       transform: none;
       top: 56px;
-      box-shadow: none;
     }
   }
   .sidenav-header {
-    padding: 5px 10px;
+    padding: 3px 6px;
     color: #DDD;
     font-size: 16px;
     border-bottom: 1px solid #424242;
@@ -134,5 +105,19 @@ export default {
     padding: 1px 5px;
     background-color: transparent;
     border: 1px solid #333;
+  }
+  .sidenav-overlay {
+    background: #000;
+    opacity: 0.5;
+    display:none;
+    height:100%;
+    left:0;
+    position:fixed;
+    top:0;
+    width:100%;
+    z-index:99
+  }
+  .sidenav-no-scroll { 
+    overflow: hidden!important
   }
 </style>

@@ -37,7 +37,7 @@ class HTTPRequest : public Database {
     int    ResultCode();
     void   CloseSession();
     void   FromFile(string filename);
-    bool   SetParams(const char *input, bool local);
+    bool   SetParams(string input, bool local);
     json   GetParams();
     void   FromJSON(json obj);
     void   FromString(string obj, int resultCode);
