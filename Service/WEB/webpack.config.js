@@ -30,13 +30,16 @@ module.exports = {
         loader: 'babel-loader',
         exclude: /node_modules/
       },
-      {
-        test: /\.(png|jpg|gif|svg|woff2)$/,
-        loader: 'file-loader',
-        options: {
-          name: '[name].[ext]?[hash]'
-        }
-      }
+ {
+        test: /\.(png|svg|woff2)$/,  
+        use: [{
+            loader: 'url-loader',
+            options: {
+              limit: 80000, // Convert images < 8kb to base64 strings
+              name: 'images/[hash]-[name].[ext]'
+            }
+          }]
+      }, 
     ]
   },
   resolve: {
@@ -48,7 +51,10 @@ module.exports = {
   devServer: {
     historyApiFallback: true,
     noInfo: true,
-    overlay: true
+    overlay: true,
+    proxy: {
+      '/getSeriesNow': { target: 'http://localhost:8081'} 
+    }
   },
   performance: {
     hints: false

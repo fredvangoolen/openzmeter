@@ -1,40 +1,46 @@
 <template>
   <div id="app">
     <div id="DisableDiv" class="overlay"></div>
-    <navbar-title></navbar-title>    
-    <navbar-indicators ref="indicator_bar" interval="5000"></navbar-indicators>
+    <topbar ref="indicator_bar"></topbar>
     <sidebar></sidebar>
-    <aside class="sidebar">
-      <router-link active-class="is-active" class="link" :to="{ name: 'Dashboard' }"> Dashboard  </router-link>
-      <router-link active-class="is-active" class="link" :to="{ name: 'Dashboard' }"> Dashboard  </router-link>
-    </aside>
-    <div class="content" id="wrapper">
-      <router-view></router-view>
-    </div>
+    <router-view id="contents"></router-view>
   </div>
 </template>
 
 <script>
-import NavbarTitle from './NavbarTitle.vue';
-import NavbarIndicators from './NavbarIndicators.vue';
+import Topbar from './Topbar.vue';
 import Sidebar from './Sidebar.vue';
 export default {
   name: 'app',
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      Analyzer: null, UpdateIndicatorsTimer: null
+    };
+  },
+  methods: {
+    UpdateIndicators() {
+      $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'], Analyzer: 'VIRTUAL_1PHASE' }), 
+        success: function(result) {
+          this.$refs.indicator_bar.setValue(result);
+        }.bind(this),
+        complete: function() {
+          if(this.UpdateIndicatorsTimer !== null) clearTimeout(this.UpdateIndicatorsTimer);
+          this.UpdateIndicatorsTimer = setTimeout(this.UpdateIndicators, 5000);
+        }.bind(this), 
+        error: function() {
+          this.$refs.indicator_bar.setValue(null);
+        }.bind(this)
+      });
     }
   },
-  components: {
-    NavbarTitle,
-    NavbarIndicators,
-    Sidebar
-  }
+  beforeUpdate: function() { this.UpdateIndicators(); },
+  mounted: function() { this.UpdateIndicators(); },
+  components: { Topbar, Sidebar }
 }
 </script>
 
 <style>
-#wrapper {
+  #contents {
     position: fixed;
     z-index: 0;
     padding: 10px;
@@ -44,16 +50,15 @@ export default {
     top: 116px;
     bottom: 0px;
     right: 0px;
-}
-@media (min-width: 768px) {
-#wrapper {
-    top: 56px;
-}
-}
-
-@media (min-width: 1024px) {
-#wrapper {
-    left: 256px;
-}
-}
+  }
+  @media (min-width: 768px) {
+    #contents {
+      top: 56px;
+    }
+  }
+  @media (min-width: 1024px) {
+    #contents {
+      left: 256px;
+    }
+  }
 </style>

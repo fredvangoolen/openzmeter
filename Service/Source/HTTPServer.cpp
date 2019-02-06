@@ -92,7 +92,7 @@ string HTTPRequest::SessionID() {
 string HTTPRequest::UserName() {
   return pUserName;
 }
-bool HTTPRequest::SetParams(const char* input, bool local) {
+bool HTTPRequest::SetParams(string input, bool local) {
   pJSONParams = json::parse(input, NULL, false);
   if(!pJSONParams.is_discarded()) {
     if(local && pJSONParams["UserName"].is_string()) {
@@ -234,7 +234,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
   if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
     if(*upload_data_size != 0) {
       struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
-      if(Request->SetParams(upload_data, (((sockaddr_in*)Addr)->sin_addr.s_addr == 0x0100007F)) == false) {
+      if(Request->SetParams(string(upload_data, *upload_data_size), (((sockaddr_in*)Addr)->sin_addr.s_addr == 0x0100007F)) == false) {
         Request->FromString("No valid JSON request", MHD_HTTP_BAD_REQUEST);
       } else {
         if(strcmp(url, "/LogIn") == 0) {

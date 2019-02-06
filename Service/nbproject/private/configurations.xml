@@ -163,8 +163,20 @@
         </df>
         <df name="Imgs">
         </df>
+        <df name="JS">
+        </df>
         <df name="node_modules">
           <df name=".bin">
+          </df>
+          <df name="@sindresorhus">
+            <df name="is">
+              <df name="dist">
+                <df name="source">
+                  <df name="tests">
+                  </df>
+                </df>
+              </df>
+            </df>
           </df>
           <df name="accepts">
           </df>
@@ -212,6 +224,14 @@
               </df>
             </df>
             <df name="scripts">
+            </df>
+          </df>
+          <df name="ajv-errors">
+            <df name="lib">
+              <df name="dot">
+              </df>
+              <df name="dotjs">
+              </df>
             </df>
           </df>
           <df name="ajv-keywords">
@@ -1048,6 +1068,22 @@
           </df>
           <df name="cache-base">
           </df>
+          <df name="cacheable-request">
+            <df name="node_modules">
+              <df name="lowercase-keys">
+              </df>
+              <df name="normalize-url">
+              </df>
+              <df name="prepend-http">
+              </df>
+              <df name="query-string">
+              </df>
+              <df name="sort-keys">
+              </df>
+            </df>
+            <df name="src">
+            </df>
+          </df>
           <df name="camelcase">
           </df>
           <df name="camelcase-keys">
@@ -1119,6 +1155,10 @@
             </df>
           </df>
           <df name="clone">
+          </df>
+          <df name="clone-response">
+            <df name="src">
+            </df>
           </df>
           <df name="coa">
             <df name=".nyc_output">
@@ -1476,6 +1516,8 @@
           </df>
           <df name="decode-uri-component">
           </df>
+          <df name="decompress-response">
+          </df>
           <df name="deep-equal">
             <df name="example">
             </df>
@@ -1542,6 +1584,31 @@
           </df>
           <df name="domain-browser">
             <df name="source">
+            </df>
+          </df>
+          <df name="duplexer3">
+          </df>
+          <df name="dygraphs">
+            <df name="dist">
+            </df>
+            <df name="docs">
+              <in>TODO</in>
+            </df>
+            <df name="src">
+              <df name="datahandler">
+              </df>
+              <df name="extras">
+              </df>
+              <df name="plugins">
+              </df>
+            </df>
+            <df name="src-es5">
+              <df name="datahandler">
+              </df>
+              <df name="extras">
+              </df>
+              <df name="plugins">
+              </df>
             </df>
           </df>
           <df name="ee-first">
@@ -2154,6 +2221,8 @@
           </df>
           <df name="fresh">
           </df>
+          <df name="from2">
+          </df>
           <df name="fs.realpath">
           </df>
           <df name="function-bind">
@@ -2194,6 +2263,8 @@
               </df>
             </df>
           </df>
+          <df name="got">
+          </df>
           <df name="graceful-fs">
           </df>
           <df name="hammerjs">
@@ -2232,10 +2303,22 @@
           </df>
           <df name="has-flag">
           </df>
+          <df name="has-symbol-support-x">
+            <df name="lib">
+            </df>
+            <df name="tests">
+              <df name="spec">
+              </df>
+            </df>
+          </df>
           <df name="has-symbols">
             <df name="test">
               <df name="shams">
               </df>
+            </df>
+          </df>
+          <df name="has-to-string-tag-x">
+            <df name="lib">
             </df>
           </df>
           <df name="has-value">
@@ -2294,6 +2377,10 @@
           </df>
           <df name="html-entities">
             <df name="lib">
+            </df>
+          </df>
+          <df name="http-cache-semantics">
+            <df name="node4">
             </df>
           </df>
           <df name="http-deceiver">
@@ -2438,6 +2525,8 @@
           </df>
           <df name="interpret">
           </df>
+          <df name="into-stream">
+          </df>
           <df name="invariant">
           </df>
           <df name="invert-kv">
@@ -2496,6 +2585,10 @@
           </df>
           <df name="is-number">
           </df>
+          <df name="is-object">
+            <df name="test">
+            </df>
+          </df>
           <df name="is-path-cwd">
           </df>
           <df name="is-path-in-cwd">
@@ -2513,6 +2606,8 @@
           <df name="is-promise">
           </df>
           <df name="is-regex">
+          </df>
+          <df name="is-retry-allowed">
           </df>
           <df name="is-stream">
           </df>
@@ -2536,8 +2631,58 @@
           </df>
           <df name="isobject">
           </df>
+          <df name="isurl">
+          </df>
           <df name="javascript-detect-element-resize">
             <df name="tests">
+            </df>
+          </df>
+          <df name="jquery">
+            <df name="dist">
+            </df>
+            <df name="external">
+              <df name="sizzle">
+                <df name="dist">
+                </df>
+              </df>
+            </df>
+            <df name="src">
+              <df name="ajax">
+                <df name="var">
+                </df>
+              </df>
+              <df name="attributes">
+              </df>
+              <df name="core">
+                <df name="var">
+                </df>
+              </df>
+              <df name="css">
+                <df name="var">
+                </df>
+              </df>
+              <df name="data">
+                <df name="var">
+                </df>
+              </df>
+              <df name="effects">
+              </df>
+              <df name="event">
+              </df>
+              <df name="exports">
+              </df>
+              <df name="manipulation">
+                <df name="var">
+                </df>
+              </df>
+              <df name="queue">
+              </df>
+              <df name="traversing">
+                <df name="var">
+                </df>
+              </df>
+              <df name="var">
+              </df>
             </df>
           </df>
           <df name="js-base64">
@@ -2572,6 +2717,10 @@
             <df name="man">
             </df>
           </df>
+          <df name="json-buffer">
+            <df name="test">
+            </df>
+          </df>
           <df name="json-loader">
           </df>
           <df name="json-schema-traverse">
@@ -2586,6 +2735,10 @@
           </df>
           <df name="json5">
             <df name="lib">
+            </df>
+          </df>
+          <df name="keyv">
+            <df name="src">
             </df>
           </df>
           <df name="killable">
@@ -2659,6 +2812,8 @@
           <df name="loose-envify">
           </df>
           <df name="loud-rejection">
+          </df>
+          <df name="lowercase-keys">
           </df>
           <df name="lru-cache">
           </df>
@@ -2747,6 +2902,8 @@
           <df name="mime-types">
           </df>
           <df name="mimic-fn">
+          </df>
+          <df name="mimic-response">
           </df>
           <df name="minimalistic-assert">
           </df>
@@ -4682,13 +4839,19 @@
           </df>
           <df name="os-tmpdir">
           </df>
+          <df name="p-cancelable">
+          </df>
           <df name="p-finally">
+          </df>
+          <df name="p-is-promise">
           </df>
           <df name="p-limit">
           </df>
           <df name="p-locate">
           </df>
           <df name="p-map">
+          </df>
+          <df name="p-timeout">
           </df>
           <df name="p-try">
           </df>
@@ -5310,6 +5473,10 @@
             <df name="test">
             </df>
           </df>
+          <df name="responselike">
+            <df name="src">
+            </df>
+          </df>
           <df name="restore-cursor">
           </df>
           <df name="ret">
@@ -5640,6 +5807,8 @@
           </df>
           <df name="time-stamp">
           </df>
+          <df name="timed-out">
+          </df>
           <df name="timers-browserify">
           </df>
           <df name="tmp">
@@ -5748,9 +5917,39 @@
               </df>
             </df>
           </df>
+          <df name="url-loader">
+            <df name="dist">
+              <df name="utils">
+              </df>
+            </df>
+            <df name="node_modules">
+              <df name=".bin">
+              </df>
+              <df name="mime">
+                <df name=".github">
+                </df>
+                <df name="src">
+                </df>
+                <df name="types">
+                </df>
+              </df>
+              <df name="schema-utils">
+                <df name="src">
+                </df>
+              </df>
+            </df>
+          </df>
           <df name="url-parse">
             <df name="dist">
             </df>
+          </df>
+          <df name="url-parse-lax">
+            <df name="node_modules">
+              <df name="prepend-http">
+              </df>
+            </df>
+          </df>
+          <df name="url-to-options">
           </df>
           <df name="use">
           </df>
@@ -5890,6 +6089,16 @@
             <df name="test">
             </df>
           </df>
+          <df name="vue-dygraphs">
+            <df name="config">
+            </df>
+            <df name="dist">
+            </df>
+            <df name="src">
+              <df name="components">
+              </df>
+            </df>
+          </df>
           <df name="vue-functional-data-merge">
             <df name="__test__">
               <df name="__snapshots__">
@@ -5968,6 +6177,32 @@
             <df name="test">
             </df>
           </df>
+          <df name="vue-resource">
+            <df name=".circleci">
+            </df>
+            <df name=".github">
+            </df>
+            <df name="dist">
+            </df>
+            <df name="src">
+              <df name="http">
+                <df name="client">
+                </df>
+                <df name="interceptor">
+                </df>
+              </df>
+              <df name="lib">
+              </df>
+              <df name="url">
+              </df>
+            </df>
+            <df name="test">
+              <df name="data">
+              </df>
+            </df>
+            <df name="types">
+            </df>
+          </df>
           <df name="vue-router">
             <df name="dist">
             </df>
@@ -5984,6 +6219,18 @@
             <df name="src">
             </df>
             <df name="test">
+            </df>
+          </df>
+          <df name="vue-sidebar-menu">
+            <df name="dist">
+            </df>
+            <df name="src">
+              <df name="components">
+              </df>
+              <df name="scss">
+                <df name="themes">
+                </df>
+              </df>
             </df>
           </df>
           <df name="vue-style-loader">
@@ -6236,6 +6483,8 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
+        <gdb_signals>
+        </gdb_signals>
         <gdb_options>
           <DebugOptions>
           </DebugOptions>
