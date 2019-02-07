@@ -1,10 +1,10 @@
 <template>
   <div class="sidenav-header clearfix">
     <div>{{ userName }}</div>
-    <b-button-group>
-      <b-button data-toggle="tooltip" title="User edit" id="btnUserEdit"><img src="Imgs/user_edit.png"></b-button>
-      <b-button data-toggle="tooltip" title="User logout" id="btnUserLogout"><img src="Imgs/user_go.png"></b-button>
-    </b-button-group>
+    <div class="btn-group pull-right">
+      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User edit" id="btnUserEdit"><img src="Imgs/user_edit.png"></button>
+      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User logout" id="btnUserLogout"><img src="Imgs/user_go.png"></button>
+    </div>
   </div>
 </template>
 
@@ -22,5 +22,10 @@
 </script>
   
 <style>
-
+  .sidenav-header button {
+    padding: 6px;
+  }
+  .sidenav-header > div:first-child {
+    width: 180px;
+  }
 </style>

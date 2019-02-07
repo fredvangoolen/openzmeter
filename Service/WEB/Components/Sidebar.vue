@@ -1,17 +1,14 @@
 <template>
-  <b-navbar-nav is-nav id="nav_collapse">
+  <nav class="navbar-nav">
     <sidebar-user></sidebar-user>
     <sidebar-analyzer></sidebar-analyzer>
     <sidebar-menu></sidebar-menu>
-    
     <div class="sidenav-version"><span>Build 21-01-2018</span>
       <div class="btn-group pull-right">
-        <button type="button" class="btn btn-default btn-xs navbar-btn" id="btnSearchAnalyzer">
-          <img src="Imgs/newspaper.png">
-        </button>
+        <button type="button" class="btn btn-default btn-xs navbar-btn" id="btnSearchAnalyzer"><img src="Imgs/newspaper.png"></button>
       </div>
     </div>
-  </b-navbar-nav>
+  </nav>
 </template>
 
 <script>
@@ -26,9 +23,9 @@ export default {
       $(this).find('[data-sidenav-dropdown-icon]').toggleClass('show');
       e.preventDefault();
     });
-    $('.navbar-toggler').click(function (e) {
-      $('#nav_collapse').toggleClass('show');
-      if($('#nav_collapse').hasClass('show')) {
+    $('.navbar-toggle').click(function (e) {
+      $('.navbar-nav').toggleClass('show');
+      if($('.navbar-nav').hasClass('show')) {
         this.showOverlay();
       } else {
         this.hideOverlay();
@@ -48,7 +45,7 @@ export default {
     },
     hideOverlay: function () {
       $('body').removeClass('sidenav-no-scroll');
-      $('#nav_collapse').removeClass('show');
+      $('.navbar-nav').removeClass('show');
       $('[data-sidenav-overlay]').fadeOut('fast');
     }
   },

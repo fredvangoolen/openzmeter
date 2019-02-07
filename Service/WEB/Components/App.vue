@@ -33,7 +33,7 @@ export default {
       });
     }
   },
-  beforeUpdate: function() { this.UpdateIndicators(); },
+//  beforeUpdate: function() { this.UpdateIndicators(); },
   mounted: function() { this.UpdateIndicators(); },
   components: { Topbar, Sidebar }
 }

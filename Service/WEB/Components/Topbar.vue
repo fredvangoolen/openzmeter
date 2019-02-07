@@ -1,12 +1,12 @@
 <template>
   <div>
-    <b-navbar>
-      <b-navbar-brand>
+    <div class="navbar-header">
+      <div class="navbar-brand">
         <embed src="Imgs/Logo2.svg" type="image/svg+xml"/><br/>
         <div>Node time: {{ time }}</div>
-      </b-navbar-brand>
-      <b-navbar-toggle target="nav_collapse"><img src="Imgs/application_side_expand.png"></b-navbar-toggle>
-    </b-navbar>
+      </div>
+      <button type="button" class="navbar-toggle"><img src="Imgs/application_side_expand.png"></button>
+    </div>
     <div class="indicator-bar">
       <topbar-indicator units="V"  ref="voltage_indicator"   color="indicator-voltage"></topbar-indicator>
       <topbar-indicator units="A"  ref="current_indicator"   color="indicator-current"></topbar-indicator>
@@ -21,7 +21,6 @@
         </div>
       </div>
     </div>
-
   </div>
 </template>
  
@@ -54,10 +53,6 @@ export default {
 </script>
  
 <style>
-  .navbar {
-    background-color: #474544;
-    height: 56px;
-  }
   .navbar-brand > embed {
     width: 100%;
   }
@@ -69,12 +64,23 @@ export default {
   .navbar-brand {
     text-align: left;
     width: 260px;
-    padding: 0px;
+    padding: 6px;
     height: 50px;     
   }
-  .navbar-toggler {
+  .navbar-toggle {
     padding: 9px 5px;
-    right: 2px;
+    right: 0px;
     position: absolute;
+    margin: 3px;
+    color: #FFF;
+    border: 1px solid #333;
+    background-color: transparent;
+  }
+  .navbar-header {
+    position: relative;
+    background-color: #474544;
+    width: 100%;
+    z-index: 90;
+    height: 56px;
   }
 </style>
