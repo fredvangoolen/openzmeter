@@ -13,9 +13,9 @@
 //  return (aggreg === '1H') ? 3600000 : (aggreg === '15M') ? 900000 : (aggreg === '10M') ? 600000 : (aggreg === '1M') ? 60000 : 3000;
 //}
 ///* Return full text from aggregation short name */
-//function GetAggregLongName(shortText) {
-//  return (shortText === '1H') ? '1 hour' : (shortText === '15M') ? '15 minutes' : (shortText === '10M') ? '10 minutes' : (shortText === '1M') ? '1 minute' : (shortText === '3S') ? '3 seconds' : false;
-//}
+export function GetAggregLongName(shortText) {
+  return (shortText === '1H') ? '1 hour' : (shortText === '15M') ? '15 minutes' : (shortText === '10M') ? '10 minutes' : (shortText === '1M') ? '1 minute' : (shortText === '3S') ? '3 seconds' : false;
+}
 ///* Return short name from full aggregation text*/
 //function GetAggregShortName(longText) {
 //  return (longText === '1 hour') ? '1H' : (longText === '15 minutes') ? '15M' : (longText === '10 minutes') ? '10M' : (longText === '1 minute') ? '1M' : (longText === '3 seconds') ? '3S' : false;
@@ -367,26 +367,26 @@
 //  if(exportFunction !== undefined) $(Self.Toolbar + ' button[data-function="Export"]').click(exportFunction);
 //}
 ///* append samples of given series to array of graph data, and shift if needed */
-//function GraphDataAppend(result, serie, data) {
-//  if(result['Sampletime'] !== null && result['Sampletime'].length > 0) {
-//    if(data.length === 0 || data[data.length - 1][0] < result['Sampletime'][0]) {
-//      for(var i = 0; i < result['Sampletime'].length; i++) {
-//        data.push([new Date(result['Sampletime'][i])].concat(result[serie][i]));
-//      }
-//      ShiftArray(data, result['MaxSamples']);
-//    }
-//  }
-//  return data;
-//}
+export function GraphDataAppend(result, serie, data) {
+  if(result['Sampletime'] !== null && result['Sampletime'].length > 0) {
+    if(data.length === 0 || data[data.length - 1][0] < result['Sampletime'][0]) {
+      for(var i = 0; i < result['Sampletime'].length; i++) {
+        data.push([new Date(result['Sampletime'][i])].concat(result[serie][i]));
+      }
+      ShiftArray(data, result['MaxSamples']);
+    }
+  }
+  return data;
+}
 ///* remove old items from array*/
-//function ShiftArray(array, len) {
-//  while(array.length > len) array.shift();
-//}
+function ShiftArray(array, len) {
+  while(array.length > len) array.shift();
+}
 ///* return last timestamp from results obtained with GetSeries and others */
-//function LastSampletime(result, prev) {
-//  if(result['Sampletime'].length === 0) return prev;
-//  return Math.max(prev, result['Sampletime'][result['Sampletime'].length - 1]);
-//}
+export function LastSampletime(result, prev) {
+  if(result['Sampletime'].length === 0) return prev;
+  return Math.max(prev, result['Sampletime'][result['Sampletime'].length - 1]);
+}
 ///* higlight horizontal ranges in graph */
 //function GraphHBackgroundRanges(ranges, graph, canvas) {
 //  ranges.forEach(function(range) {
@@ -656,16 +656,16 @@ export function GetBestUnits(value) {
 //  return Array;
 //}
 ///* Manage legend in graphs */
-//function LegendFormatter_Follow(data) {
-//  if(data.x === undefined || data.x === null) return "";
-//  var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';
-//  for(var i = 0; i < data.series.length; i++)  {
-//    if(data.series[i].isVisible) {
-//      Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
-//    }
-//  }
-//  return Result;
-//}
+export function LegendFormatter_Follow(data) {
+  if(data.x === undefined || data.x === null) return "";
+  var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';
+  for(var i = 0; i < data.series.length; i++)  {
+    if(data.series[i].isVisible) {
+      Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
+    }
+  }
+  return Result;
+}
 //
 //
 //

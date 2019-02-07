@@ -8,6 +8,12 @@ module.exports = {
     publicPath: '/dist/',
     filename: 'build.js'
   },
+      plugins: [
+        new webpack.ProvidePlugin({
+           $: "jquery",
+           jQuery: "jquery"
+       })
+    ],
   module: {
     rules: [
       {
@@ -31,7 +37,7 @@ module.exports = {
         exclude: /node_modules/
       },
  {
-        test: /\.(png|svg|woff2)$/,  
+        test: /\.(png|svg|woff2|ttf|eot|woff)$/,  
         use: [{
             loader: 'url-loader',
             options: {
@@ -53,6 +59,7 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
+      '/getSeries': { target: 'http://localhost:8081'},
       '/getSeriesNow': { target: 'http://localhost:8081'} 
     }
   },

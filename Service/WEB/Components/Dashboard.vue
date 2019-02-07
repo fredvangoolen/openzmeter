@@ -1,5 +1,5 @@
 <template>
-  <div id="wrapper">
+  <div>
     <b-row>
       <b-col>
           <div class="panel panel-active-energy" id="EnergyPanel">
@@ -37,142 +37,49 @@
           </div>
       </b-col>
     </b-row>
-      <div class="row">
-        <div class="col-md-6">
-          <div class="panel panel-voltage" id="VoltagePanel">
-            <div id="VoltageSpinner" class="spinnerdiv"></div>
-            <div class="panel-heading">
-              <div class="huge header-text">Voltage</div>
-              <div class="header-buttons">
-                <div><span id="labelVoltage" class="huge-small">?</span><em class="huge-small-unit">V</em></div>
-                <div id="labelVoltageAggregation">Loading data...</div>
-              </div>
+    <b-row>
+      <b-col col="12" lg="6" class="box">
+        <dashboard-view type="VOLTAGE"></dashboard-view>
+      </b-col>
+      <b-col sm="12" lg="6">
+        <dashboard-view type="CURRENT"></dashboard-view>
+      </b-col>
+    </b-row>
+    <b-row>
+      <b-col lg="6">
+        <dashboard-view type="ACTIVE_POWER"></dashboard-view>
+      </b-col>
+      <b-col lg="6">
+        <dashboard-view type="FREQUENCY"></dashboard-view>
+      </b-col>
+    </b-row>
+    <b-row>
+      <b-col>
+        <div class="panel panel-other">
+          <div id="MainParametersSpinner" class="spinnerdiv"></div>
+          <div class="panel-heading">
+            <div class="huge header-text">Main variables</div>
+            <div class="header-buttons">
+              <div class="btn-group hide" id="groupParametersPhases" data-load-block="PhaseV_Block"></div>
+              <div id="labelParametersAggregation">Loading data...</div>
             </div>
-            <div class="panel-body">
-              <div id="VoltageChart" class="chart"></div>
-            </div>
-            <div class="panel-footer">
-              <a href="Analysis/Voltage">
-                <span class="pull-left">View Details</span>
-              </a>
-              <div class="pull-right" id="toolbarVoltage">
-                <div class="btn-group hide" id="groupVoltagePhases" data-load-block="PhaseV_Block"></div>
-                <span>&nbsp;</span>
-                <div class="btn-group" data-load-block="GraphTools_Block"></div>
-              </div>
-              <div class="clearfix"></div>
-            </div>
+            <span class="clearfix"></span>
           </div>
+          <div id="EvolutionPanel" class="panel-body"></div>
         </div>
-        <div class="col-md-6">
-          <div class="panel panel-current" id="CurrentPanel">
-            <div id="CurrentSpinner" class="spinnerdiv"></div>
-            <div class="panel-heading">
-              <div class="huge header-text">Current</div>
-              <div class="header-buttons">
-                <div><span id="labelCurrent" class="huge-small">?</span><em class="huge-small-unit">A</em></div>
-                <div id="CurrentAggregation">Loading data...</div>
-              </div>
-            </div>
-            <div class="panel-body">
-              <div id="CurrentChart" class="chart"></div>
-            </div>
-            <div class="panel-footer">
-              <a href="Analysis/Current">
-                <span class="pull-left">View Details</span>
-              </a>
-              <div class="pull-right" id="toolbarCurrent">
-                <div class="btn-group hide" id="groupCurrentPhases" data-load-block="PhaseI_Block"></div>
-                <span>&nbsp;</span>
-                <div class="btn-group" data-load-block="GraphTools_Block"></div>
-              </div>
-              <div class="clearfix"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-6">
-          <div class="panel panel-active-power" id="PowerPanel">
-            <div id="PowerSpinner" class="spinnerdiv"></div>
-            <div class="panel-heading">
-              <div class="huge header-text">Active&nbsp;power</div>
-              <div class="header-buttons">
-                <div><span id="labelPower" class="huge-small">?</span><em class="huge-small-unit" id="labelPowerUnits">W</em></div>
-                <div id="PowerAggregation">Loading data...</div>
-              </div>
-            </div>
-            <div class="panel-body">
-              <div id="PowerMaximizeDiv">
-                <div id="PowerChart" class="chart"></div>
-              </div>
-            </div>
-            <div class="panel-footer">
-              <a href="Analysis/EnergyPower">
-                <span class="pull-left">View Details</span>
-              </a>
-              <div class="pull-right" id="toolbarPower">
-                <div class="btn-group hide" id="groupPowerPhases" data-load-block="PhaseV_Block"></div>
-                <span>&nbsp;</span>
-                <div class="btn-group" data-load-block="GraphTools_Block"></div>
-              </div>
-              <div class="clearfix"></div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="panel panel-frequency" id="FrequencyPanel">
-            <div id="FrequencySpinner" class="spinnerdiv"></div>
-            <div class="panel-heading">
-              <div class="huge header-text">Frequency</div>
-              <div class="header-buttons">
-                <div><span id="labelFrequency" class="huge-small"></span><em class="huge-small-unit">Hz</em></div>
-                <div id="FrequencyAggregation">Loading data...</div>
-              </div>
-            </div>
-            <div class="panel-body">
-              <div id="FrequencyChart" class="chart"></div>
-            </div>
-            <div class="panel-footer">
-              <a href="Analysis/Frequency">
-                <span class="pull-left">View Details</span>
-              </a>
-              <div class="pull-right" id="toolbarFrequency">
-                <div class="btn-group" data-load-block="GraphTools_Block"></div>
-              </div>
-              <div class="clearfix"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-lg-12">
-          <div class="panel panel-other">
-            <div id="MainParametersSpinner" class="spinnerdiv"></div>
-            <div class="panel-heading">
-              <div class="huge header-text">Main variables</div>
-              <div class="header-buttons">
-                <div class="btn-group hide" id="groupParametersPhases" data-load-block="PhaseV_Block"></div>
-                <div id="labelParametersAggregation">Loading data...</div>
-              </div>
-              <span class="clearfix"></span>
-            </div>
-            <div id="EvolutionPanel" class="panel-body"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+      </b-col>
+    </b-row>
+  </div>
 </template>
 
 <script>
-export default {
-  name: 'Dashboard',
-  data () {
-    return {
-      msg: 'Welcome to Your Vue.js App'
-    }
+  import DashboardView from './DashboardView.vue'
+  export default {
+    data () {
+      return { }
+    },
+    components: { DashboardView }
   }
-}
 </script>
 
 <style>

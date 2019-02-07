@@ -1,17 +1,22 @@
 //Libs -----------------------------------------
-import Vue from 'vue'
-import BootstrapVue from 'bootstrap-vue'
-import 'bootstrap/dist/css/bootstrap.css';
-import 'bootstrap-vue/dist/bootstrap-vue.css';
-Vue.use(BootstrapVue);
+import Vue from './JS/vue.js';
+import jQuery from './JS/jquery.min.js';
+window.$ = window.jQuery = jQuery;
+import './JS/bootstrap.min.js';
+import './CSS/bootstrap.min.css'
+
+
+//import BootstrapVue from 'bootstrap-vue'
+//import 'bootstrap/dist/css/bootstrap.css';
+//import 'bootstrap-vue/dist/bootstrap-vue.css';
+//Vue.use(BootstrapVue);
 import Router from 'vue-router'
 Vue.use(Router);
 import VueTouch from 'vue-touch'
-import jQuery from "jquery";
-window.$ = window.jQuery = jQuery;
 
 //import VueDygraphs from 'vue-dygraphs'
-
+//import 'bootstrap3/dist/fonts/glyphicons-halflings-regular.ttf'
+//import 'bootstrap3/dist/css/bootstrap.css'
 
 import * as oZm from './JS/openZmeter.js'
 import './CSS/openZmeter.css';

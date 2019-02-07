@@ -157,8 +157,6 @@
         </df>
         <df name="CSS">
         </df>
-        <df name="dist">
-        </df>
         <df name="Fonts">
         </df>
         <df name="Imgs">
@@ -247,8 +245,6 @@
           <df name="alphanum-sort">
             <df name="lib">
             </df>
-          </df>
-          <df name="ansi-escapes">
           </df>
           <df name="ansi-html">
             <df name="bin">
@@ -578,18 +574,6 @@
             <df name="lib">
             </df>
           </df>
-          <df name="babel-polyfill">
-            <df name="dist">
-            </df>
-            <df name="lib">
-            </df>
-            <df name="node_modules">
-              <df name="regenerator-runtime">
-              </df>
-            </df>
-            <df name="scripts">
-            </df>
-          </df>
           <df name="babel-preset-env">
             <df name=".github">
             </df>
@@ -718,293 +702,39 @@
             <df name="test">
             </df>
           </df>
-          <df name="bootstrap">
+          <df name="bootstrap-sass-loader">
+            <df name=".idea">
+              <df name="inspectionProfiles">
+              </df>
+              <df name="scopes">
+              </df>
+              <df name="shelf">
+              </df>
+            </df>
+            <df name="jetbrains-inspection">
+            </df>
+            <df name="projectFilesBackup">
+              <df name=".idea">
+              </df>
+            </df>
+          </df>
+          <df name="bootstrap3">
             <df name="dist">
               <df name="css">
+              </df>
+              <df name="fonts">
               </df>
               <df name="js">
               </df>
             </df>
+            <df name="fonts">
+            </df>
+            <df name="grunt">
+            </df>
             <df name="js">
-              <df name="dist">
-              </df>
-              <df name="src">
-              </df>
             </df>
-            <df name="scss">
+            <df name="less">
               <df name="mixins">
-              </df>
-              <df name="utilities">
-              </df>
-            </df>
-          </df>
-          <df name="bootstrap-vue">
-            <df name="dist">
-            </df>
-            <df name="es">
-              <df name="components">
-                <df name="alert">
-                </df>
-                <df name="badge">
-                </df>
-                <df name="breadcrumb">
-                </df>
-                <df name="button">
-                </df>
-                <df name="button-group">
-                </df>
-                <df name="button-toolbar">
-                </df>
-                <df name="card">
-                </df>
-                <df name="carousel">
-                </df>
-                <df name="collapse">
-                </df>
-                <df name="dropdown">
-                </df>
-                <df name="embed">
-                </df>
-                <df name="form">
-                </df>
-                <df name="form-checkbox">
-                </df>
-                <df name="form-file">
-                </df>
-                <df name="form-group">
-                </df>
-                <df name="form-input">
-                </df>
-                <df name="form-radio">
-                </df>
-                <df name="form-select">
-                </df>
-                <df name="form-textarea">
-                </df>
-                <df name="image">
-                </df>
-                <df name="input-group">
-                </df>
-                <df name="jumbotron">
-                </df>
-                <df name="layout">
-                </df>
-                <df name="link">
-                </df>
-                <df name="list-group">
-                </df>
-                <df name="media">
-                </df>
-                <df name="modal">
-                </df>
-                <df name="nav">
-                </df>
-                <df name="navbar">
-                </df>
-                <df name="pagination">
-                </df>
-                <df name="pagination-nav">
-                </df>
-                <df name="popover">
-                </df>
-                <df name="progress">
-                </df>
-                <df name="table">
-                </df>
-                <df name="tabs">
-                </df>
-                <df name="tooltip">
-                </df>
-              </df>
-              <df name="components-extra">
-                <df name="dropdown-select">
-                </df>
-              </df>
-              <df name="directives">
-                <df name="modal">
-                </df>
-                <df name="popover">
-                </df>
-                <df name="scrollspy">
-                </df>
-                <df name="toggle">
-                </df>
-                <df name="tooltip">
-                </df>
-              </df>
-              <df name="mixins">
-              </df>
-              <df name="utils">
-              </df>
-            </df>
-            <df name="nuxt">
-            </df>
-            <df name="src">
-              <df name="components">
-                <df name="alert">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="badge">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="breadcrumb">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="button">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="button-group">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="button-toolbar">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="card">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="carousel">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="collapse">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="dropdown">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="embed">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="form">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="form-checkbox">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="form-file">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="form-group">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="form-input">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="form-radio">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="form-select">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="form-textarea">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="image">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="input-group">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="jumbotron">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="layout">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="link">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="list-group">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="media">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="modal">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="nav">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="navbar">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="pagination">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="pagination-nav">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="popover">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="progress">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="table">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="tabs">
-                  <df name="fixtures">
-                  </df>
-                </df>
-                <df name="tooltip">
-                  <df name="fixtures">
-                  </df>
-                </df>
-              </df>
-              <df name="components-extra">
-                <df name="dropdown-select">
-                </df>
-              </df>
-              <df name="directives">
-                <df name="modal">
-                </df>
-                <df name="popover">
-                </df>
-                <df name="scrollspy">
-                </df>
-                <df name="toggle">
-                </df>
-                <df name="tooltip">
-                </df>
-              </df>
-              <df name="mixins">
-              </df>
-              <df name="utils">
               </df>
             </df>
           </df>
@@ -1128,10 +858,6 @@
           </df>
           <df name="chalk">
           </df>
-          <df name="chardet">
-            <df name="encoding">
-            </df>
-          </df>
           <df name="chokidar">
             <df name="lib">
             </df>
@@ -1145,10 +871,6 @@
               <df name="define-property">
               </df>
             </df>
-          </df>
-          <df name="cli-cursor">
-          </df>
-          <df name="cli-width">
           </df>
           <df name="cliui">
             <df name="test">
@@ -1633,12 +1355,6 @@
           </df>
           <df name="encodeurl">
           </df>
-          <df name="encoding">
-            <df name="lib">
-            </df>
-            <df name="test">
-            </df>
-          </df>
           <df name="enhanced-resolve">
             <df name="lib">
             </df>
@@ -2113,6 +1829,8 @@
               </df>
             </df>
           </df>
+          <df name="expose-loader">
+          </df>
           <df name="express">
             <df name="lib">
               <df name="middleware">
@@ -2128,12 +1846,6 @@
           <df name="extend-shallow">
             <df name="node_modules">
               <df name="is-extendable">
-              </df>
-            </df>
-          </df>
-          <df name="external-editor">
-            <df name="main">
-              <df name="errors">
               </df>
             </df>
           </df>
@@ -2180,8 +1892,6 @@
                 </df>
               </df>
             </df>
-          </df>
-          <df name="figures">
           </df>
           <df name="file-loader">
             <df name="dist">
@@ -2509,18 +2219,6 @@
           </df>
           <df name="inherits">
           </df>
-          <df name="inquirer">
-            <df name="lib">
-              <df name="objects">
-              </df>
-              <df name="prompts">
-              </df>
-              <df name="ui">
-              </df>
-              <df name="utils">
-              </df>
-            </df>
-          </df>
           <df name="internal-ip">
           </df>
           <df name="interpret">
@@ -2603,8 +2301,6 @@
           </df>
           <df name="is-primitive">
           </df>
-          <df name="is-promise">
-          </df>
           <df name="is-regex">
           </df>
           <df name="is-retry-allowed">
@@ -2664,6 +2360,8 @@
               <df name="data">
                 <df name="var">
                 </df>
+              </df>
+              <df name="deferred">
               </df>
               <df name="effects">
               </df>
@@ -2789,11 +2487,7 @@
           </df>
           <df name="lodash.debounce">
           </df>
-          <df name="lodash.get">
-          </df>
           <df name="lodash.memoize">
-          </df>
-          <df name="lodash.startcase">
           </df>
           <df name="lodash.uniq">
           </df>
@@ -2969,18 +2663,6 @@
           </df>
           <df name="multicast-dns-service-types">
           </df>
-          <df name="mute-stream">
-            <df name=".nyc_output">
-            </df>
-            <df name="coverage">
-              <df name="lcov-report">
-                <df name="__root__">
-                </df>
-              </df>
-            </df>
-            <df name="test">
-            </df>
-          </df>
           <df name="nanomatch">
             <df name="lib">
             </df>
@@ -3001,12 +2683,6 @@
           </df>
           <df name="nice-try">
             <df name="src">
-            </df>
-          </df>
-          <df name="node-fetch">
-            <df name="lib">
-            </df>
-            <df name="test">
             </df>
           </df>
           <df name="node-forge">
@@ -4783,50 +4459,6 @@
           </df>
           <df name="once">
           </df>
-          <df name="onetime">
-          </df>
-          <df name="opencollective">
-            <df name=".vscode">
-            </df>
-            <df name="dist">
-              <df name="assets">
-              </df>
-              <df name="bin">
-              </df>
-              <df name="commands">
-              </df>
-              <df name="lib">
-              </df>
-            </df>
-            <df name="node_modules">
-              <df name="minimist">
-                <df name="example">
-                </df>
-                <df name="test">
-                </df>
-              </df>
-              <df name="opn">
-              </df>
-            </df>
-            <df name="src">
-              <df name="assets">
-              </df>
-              <df name="bin">
-              </df>
-              <df name="commands">
-              </df>
-              <df name="lib">
-              </df>
-            </df>
-            <df name="test">
-              <df name="package">
-              </df>
-              <df name="package_with_postinstall">
-              </df>
-              <df name="parentpackage">
-              </df>
-            </df>
-          </df>
           <df name="opn">
           </df>
           <df name="original">
@@ -4920,14 +4552,6 @@
           <df name="pinkie-promise">
           </df>
           <df name="pkg-dir">
-          </df>
-          <df name="popper.js">
-            <df name="dist">
-              <df name="esm">
-              </df>
-              <df name="umd">
-              </df>
-            </df>
           </df>
           <df name="portfinder">
             <df name="lib">
@@ -5477,8 +5101,6 @@
             <df name="src">
             </df>
           </df>
-          <df name="restore-cursor">
-          </df>
           <df name="ret">
             <df name="lib">
             </df>
@@ -5488,34 +5110,6 @@
           <df name="rimraf">
           </df>
           <df name="ripemd160">
-          </df>
-          <df name="run-async">
-          </df>
-          <df name="rx">
-            <df name="dist">
-            </df>
-            <df name="ts">
-              <df name="core">
-                <df name="backpressure">
-                </df>
-                <df name="concurrency">
-                </df>
-                <df name="disposables">
-                </df>
-                <df name="internal">
-                </df>
-                <df name="joins">
-                </df>
-                <df name="linq">
-                  <df name="observable">
-                  </df>
-                </df>
-                <df name="subjects">
-                </df>
-                <df name="testing">
-                </df>
-              </df>
-            </df>
           </df>
           <df name="safe-buffer">
           </df>
@@ -5799,10 +5393,6 @@
             <df name="lib">
             </df>
           </df>
-          <df name="through">
-            <df name="test">
-            </df>
-          </df>
           <df name="thunky">
           </df>
           <df name="time-stamp">
@@ -5810,10 +5400,6 @@
           <df name="timed-out">
           </df>
           <df name="timers-browserify">
-          </df>
-          <df name="tmp">
-            <df name="lib">
-            </df>
           </df>
           <df name="to-arraybuffer">
           </df>
@@ -6099,20 +5685,6 @@
               </df>
             </df>
           </df>
-          <df name="vue-functional-data-merge">
-            <df name="__test__">
-              <df name="__snapshots__">
-              </df>
-            </df>
-            <df name="benchmark">
-            </df>
-            <df name="dist">
-            </df>
-            <df name="scripts">
-            </df>
-            <df name="src">
-            </df>
-          </df>
           <df name="vue-hot-reload-api">
             <df name="dist">
             </df>
@@ -6219,18 +5791,6 @@
             <df name="src">
             </df>
             <df name="test">
-            </df>
-          </df>
-          <df name="vue-sidebar-menu">
-            <df name="dist">
-            </df>
-            <df name="src">
-              <df name="components">
-              </df>
-              <df name="scss">
-                <df name="themes">
-                </df>
-              </df>
             </df>
           </df>
           <df name="vue-style-loader">
@@ -6483,8 +6043,6 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
-        <gdb_signals>
-        </gdb_signals>
         <gdb_options>
           <DebugOptions>
           </DebugOptions>
