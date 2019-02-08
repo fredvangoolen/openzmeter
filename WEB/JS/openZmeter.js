@@ -1,4 +1,5 @@
-//var SpinnerOpts = { lines: 10, length: 10, width: 5, radius: 10 }; // default options for spinner
+//
+////var SpinnerOpts = { lines: 10, length: 10, width: 5, radius: 10 }; // default options for spinner
 ///* offline.js configuration and tools */
 //Offline.options = { requests: true };
 //Offline.on('confirmed-down', function() { $('#OfflineDiv').css('display', 'inherit'); });
@@ -584,62 +585,6 @@ export function GetBestUnits(value) {
 //    }
 //  }
 //  return Result;
-//}
-///* Set x axis label of graph (used in cubism to now value) */
-//function SetCubismNowLabel(graph, labels) {
-//  if(graph !== null) {
-//    var Index = 0;
-//    for(var i = 0; i < graph.user_attrs_.visibility.length; i++) {
-//      if(graph.user_attrs_.visibility[i] === true) Index = i;
-//    }
-//    var Labels = graph.user_attrs_.labels;
-//    Labels[0] = (labels === undefined) ? 'Time' : graph.axes_[Index].valueFormatter(labels[Index]);
-//    graph.updateOptions( { labels: Labels });
-//  }
-//}
-///* Add a cubism like graph to a div */
-//function AppendCubismGraph(div, initialData, label, datewindow, yvalueformatter ) {
-//  var Index = div.children().length;
-//  var Container = $('<div class="cubism-serie"></div>');
-//  var GraphContainer = $('<div class="graph" id="' + div[0].id + '_' + Index + '_Graph"></div>');
-//  var GraphLegend = $('<div class="legend" id="' + div[0].id + '_' + Index + '_Legend"></div>');
-//  Container.append(GraphContainer); 
-//  Container.append(GraphLegend);
-//  $(div).append(Container);
-//  var Graph = new Dygraph(GraphContainer[0], initialData, 
-//    { strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], highlightCircleSize: 0, legend: 'always', xAxisHeight: 0.1, xLabelHeight: 1, plotter: barChartPlotterCubism, interactionModel: { },
-//      labels: ["Time"].concat(Array(initialData[0].length - 1).fill(label)), colors: Array(initialData[0].length - 1).fill("#d9534f"), labelsDiv: div[0].id + '_' + Index + '_Legend', dateWindow: datewindow,
-//      plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
-//      legendFormatter: function(data) {
-//        if(data.x == null) {
-//          var Value = '<span style="font-size: 18px; font-weight: bold">' + data.series[0].label + '</span>';
-//          if(data.dygraph.user_attrs_.labels[0] !== 'Time') Value = Value + '<br/><span style="vertical-align:middle; font-size:14px"><i class="fa fa-angle-double-right" aria-hidden="true"></i><span style="font-size: 20px; font-weight: bold"> ' + data.dygraph.user_attrs_.labels[0] + '</span></span>';
-//          return  Value;
-//        } else {
-//          var Caption = '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' + data.xHTML;
-//          for(var i = 0; i < data.series.length; i++)  {
-//            if(data.series[i].yHTML !== undefined) return Caption + '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + data.series[i].yHTML + '</div>';
-//          }
-//          return Caption + '<div style="font-size: 14px; line-height: 18px; font-weight: bold">-</div>';
-//        }
-//      },
-//      axes: {
-//        y: { drawAxis: false, drawGrid:false, valueFormatter: yvalueformatter },
-//        x: { valueFormatter: function (x) { return '<div style="font-size: 10px; line-height: 10px">' + new Date(x).toLocaleTimeString() + '</div>'; },
-//             axisLabelFormatter: (Index !== 0) ? function() { return null; } : 
-//             function(x, i) {
-//               var date = new Date(x);
-//               if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
-//                 return '<div class="timeline-day">' + date.toLocaleDateString() + '</div>';
-//               } else {
-//                 return '<div class="timeline">' + date.toLocaleTimeString() + '</div>';                       
-//               }
-//             }
-//           }
-//      }
-//    }
-//  );
-//  return Graph;
 //}
 //function ShowColorScale(scale, outerdiv) {
 //  scale.out('hex');

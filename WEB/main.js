@@ -1,18 +1,18 @@
 //Libs -----------------------------------------
-import Vue from './JS/vue.js';
+import Vue from 'vue';
+import BlockUI from 'vue-blockui';
+import Router from 'vue-router'
+
 import jQuery from './JS/jquery.min.js';
 window.$ = window.jQuery = jQuery;
-import './JS/bootstrap.min.js';
+import 'bootstrap3';
 import './CSS/bootstrap.min.css'
 
 
-//import BootstrapVue from 'bootstrap-vue'
-//import 'bootstrap/dist/css/bootstrap.css';
-//import 'bootstrap-vue/dist/bootstrap-vue.css';
-//Vue.use(BootstrapVue);
-import Router from 'vue-router'
+
+Vue.use(BlockUI);
 Vue.use(Router);
-import VueTouch from 'vue-touch'
+//import VueTouch from 'vue-touch'
 
 //import VueDygraphs from 'vue-dygraphs'
 //import 'bootstrap3/dist/fonts/glyphicons-halflings-regular.ttf'
@@ -30,6 +30,7 @@ import AnalysisPower from './Components/AnalysisPower.vue'
 import AnalysisEnergy from './Components/AnalysisEnergy.vue'
 import AnalysisFrequency from './Components/AnalysisFrequency.vue'
 
+import StatsHeatmap from './Components/StatsHeatmap.vue'
 import Settings from './Components/Settings.vue'
 
 
@@ -48,6 +49,8 @@ const router = new Router({
     { path:'/Analysis/Power', component: AnalysisPower },
     { path:'/Analysis/Energy', component: AnalysisEnergy },
     { path:'/Analysis/Frequency', component: AnalysisFrequency },
+    
+    { path:'/Stats/Heatmap', component: StatsHeatmap },
     { path:'/Settings', component: Settings },
     ]})
 
