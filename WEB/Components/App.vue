@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <!--BlockUI :message="msg" :html="html"></BlockUI-->
     <div id="DisableDiv" class="overlay"></div>
     <topbar ref="indicator_bar"></topbar>
     <sidebar></sidebar>
@@ -14,7 +15,10 @@ export default {
   name: 'app',
   data () {
     return {
-      Analyzer: null, UpdateIndicatorsTimer: null
+      Analyzer: null, UpdateIndicatorsTimer: null,
+      
+      msg: 'Welcome to Your Vue.js App',
+      html: '<i class="fa fa-cog fa-spin fa-3x fa-fw"></i>'
     };
   },
   methods: {

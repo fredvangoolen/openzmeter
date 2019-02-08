@@ -8,16 +8,14 @@
       </div>
     </div>
     <div class="panel-body">
-      <div ref="Spinner" class="spinnerdiv" v-bind:class="{ 'd-none': !ShowSpinner }"></div>
+      <div ref="Spinner" class="spinnerdiv" v-bind:class="{ 'hide': !ShowSpinner }"></div>
       <div ref="Chart" class="chart"></div>
     </div>
     <div class="panel-footer">
       <router-link :to="Target"><span class="pull-left">View Details</span></router-link>
       <div class="pull-right" id="toolbarVoltage">
         <toolbar-phases></toolbar-phases>
-        <div class="btn-group hide" id="groupVoltagePhases" data-load-block="PhaseV_Block"></div>
-        <span>&nbsp;</span>
-        <div class="btn-group" data-load-block="GraphTools_Block"></div>
+        <toolbar-tools></toolbar-tools>
       </div>
       <div class="clearfix"></div>
     </div>
@@ -25,9 +23,10 @@
 </template>
 
 <script>
-  import Dygraph from 'dygraphs';
   import * as oZm from '../JS/openZmeter.js';
+  import Dygraph from 'dygraphs';
   import ToolbarPhases from './ToolbarPhases.vue';
+  import ToolbarTools from './ToolbarTools.vue';
   export default {
     props: ['type'],
     data() {
@@ -133,7 +132,7 @@
       );
       this.GetSeries();
     },
-    components: { ToolbarPhases }
+    components: { ToolbarPhases, ToolbarTools }
   }
 </script>
 

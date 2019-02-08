@@ -101,8 +101,13 @@ img {
 }
 
 
-
-
+.header-text {
+    display: inline-block;
+}
+.header-buttons {
+  float: right;
+  text-align: right;
+}
 
 
 

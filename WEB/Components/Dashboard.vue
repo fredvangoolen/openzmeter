@@ -1,7 +1,7 @@
 <template>
   <div>
-    <b-row>
-      <b-col>
+    <div class="row">
+      <div class="col-lg-12">
           <div class="panel panel-active-energy" id="EnergyPanel">
             <!--div id="EnergySpinner" class="spinnerdiv"></div-->
             <div class="panel-heading">
@@ -35,50 +35,28 @@
               </div>
             </div>
           </div>
-      </b-col>
-    </b-row>
-    <b-row>
-      <b-col col="12" lg="6" class="box">
-        <dashboard-view type="VOLTAGE"></dashboard-view>
-      </b-col>
-      <b-col sm="12" lg="6">
-        <dashboard-view type="CURRENT"></dashboard-view>
-      </b-col>
-    </b-row>
-    <b-row>
-      <b-col lg="6">
-        <dashboard-view type="ACTIVE_POWER"></dashboard-view>
-      </b-col>
-      <b-col lg="6">
-        <dashboard-view type="FREQUENCY"></dashboard-view>
-      </b-col>
-    </b-row>
-    <b-row>
-      <b-col>
-        <div class="panel panel-other">
-          <div id="MainParametersSpinner" class="spinnerdiv"></div>
-          <div class="panel-heading">
-            <div class="huge header-text">Main variables</div>
-            <div class="header-buttons">
-              <div class="btn-group hide" id="groupParametersPhases" data-load-block="PhaseV_Block"></div>
-              <div id="labelParametersAggregation">Loading data...</div>
-            </div>
-            <span class="clearfix"></span>
-          </div>
-          <div id="EvolutionPanel" class="panel-body"></div>
-        </div>
-      </b-col>
-    </b-row>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-6 col-md-12"><dashboard-view type="VOLTAGE"></dashboard-view></div>
+      <div class="col-lg-6 col-md-12"><dashboard-view type="CURRENT"></dashboard-view></div>
+      <div class="col-lg-6 col-md-12"><dashboard-view type="ACTIVE_POWER"></dashboard-view></div>
+      <div class="col-lg-6 col-md-12"><dashboard-view type="FREQUENCY"></dashboard-view></div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12"><dashboard-variables></dashboard-variables></div>
+    </div>
   </div>
 </template>
 
 <script>
-  import DashboardView from './DashboardView.vue'
+  import DashboardView from './DashboardView.vue';
+  import DashboardVariables from './DashboardVariables.vue';
   export default {
     data () {
       return { }
     },
-    components: { DashboardView }
+    components: { DashboardView, DashboardVariables }
   }
 </script>
 

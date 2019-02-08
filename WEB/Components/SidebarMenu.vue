@@ -44,7 +44,7 @@
         </a>
         <ul class="sidenav-dropdown" data-sidenav-dropdown>
           <li><a href="Stats/Costs">Costs</a></li>
-          <li><a href="Stats/Heatmap">Heatmap</a></li>
+          <li><router-link to="/Stats/Heatmap">Heatmap</router-link></li>
           <li><a href="Stats/Distribution">Distribution</a></li>
         </ul>
       </li>
