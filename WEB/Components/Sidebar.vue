@@ -55,11 +55,10 @@ export default {
 
 <style>
   .navbar-nav.show {
-    transform: none !important;
+    transform: translate(0, 0);
   }
   .navbar-nav {
     bottom: 0px;
-    height: unset;
     background: #212121;
     box-shadow: 2px 2px 6px rgba(0,0,0,.3);
     display: block;
