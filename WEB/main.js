@@ -22,15 +22,15 @@ import * as oZm from './JS/openZmeter.js'
 import './CSS/openZmeter.css';
 
 //Views ----------------------------------------
-import App from './Components/App.vue'
-import Dashboard from './Components/Dashboard.vue'
-import AnalysisVoltage from './Components/AnalysisVoltage.vue'
-import AnalysisCurrent from './Components/AnalysisCurrent.vue'
-import AnalysisPower from './Components/AnalysisPower.vue'
-import AnalysisEnergy from './Components/AnalysisEnergy.vue'
-import AnalysisFrequency from './Components/AnalysisFrequency.vue'
+import App from 'Components/App.vue'
+import Dashboard from 'Components/Views/Dashboard/View.vue'
+import AnalysisVoltage from 'Components/AnalysisVoltage.vue'
+import AnalysisCurrent from 'Components/AnalysisCurrent.vue'
+import AnalysisPower from 'Components/AnalysisPower.vue'
+import AnalysisEnergy from 'Components/AnalysisEnergy.vue'
+import AnalysisFrequency from 'Components/AnalysisFrequency.vue'
 
-import StatsHeatmap from './Components/StatsHeatmap.vue'
+import StatsHeatmap from 'Components/Views/Stats_Heatmap/View.vue'
 import Settings from './Components/Settings.vue'
 
 

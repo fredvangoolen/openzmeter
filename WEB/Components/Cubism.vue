@@ -29,10 +29,7 @@
             this.$emit('AggregationSet', result['Aggregation_Source']);
             if(result['Sampletime'] === null) return;
             if(result['Sampletime'].length === 0) return;
-            for(var i = 0; i < this.Series.length; i++) {
-              if(this.Series[i] === 'ACTIVE_POWER') this.Data[this.Series[i]] = oZm.GraphDataAppend(result, 'Active_Power', this.Data[this.Series[i]]);
-              if(this.Series[i] === 'REACTIVE_POWER') this.Data[this.Series[i]] = oZm.GraphDataAppend(result, 'Reactive_Power', this.Data[this.Series[i]]);
-            }
+            for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
             this.$emit('SeriesUpdate', this.Data, result['From'], result['To'], 0);
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
           }.bind(this),

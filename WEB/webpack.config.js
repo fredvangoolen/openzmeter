@@ -8,12 +8,12 @@ module.exports = {
     publicPath: '/dist/',
     filename: 'build.js'
   },
-      plugins: [
-        new webpack.ProvidePlugin({
+  plugins: [
+    new webpack.ProvidePlugin({
            $: "jquery",
            jQuery: "jquery"
-       })
-    ],
+    })
+  ],
   module: {
     rules: [
       {
@@ -50,6 +50,8 @@ module.exports = {
   },
   resolve: {
     alias: {
+      'Components': path.resolve(__dirname, 'Components'),
+      'JS': path.resolve(__dirname, 'JS'),
       'vue$': 'vue/dist/vue.esm.js'
     },
     extensions: ['*', '.js', '.vue', '.json']

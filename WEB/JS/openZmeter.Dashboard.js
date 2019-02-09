@@ -241,7 +241,6 @@ function Scrollable_UpdateCounters(times, renew) {
   );
 }
 /* Parameters */
-var ActiveChart = null, ReactiveChart = null, ActiveData = [], ReactiveData = [], PowerFactorChart = null, PowerFactorData = [], PhiChart = null, PhiData = [], THDVChart = null, THDVData = [], THDIChart = null, THDIData = [];
 function PeriodViewParams_OnSuccess(result) {
   $('#labelParametersAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
   ActiveData = GraphDataAppend(result, 'Active_Power', ActiveData);

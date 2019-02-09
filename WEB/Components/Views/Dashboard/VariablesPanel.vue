@@ -15,9 +15,9 @@
 </template>
 
 <script>
-  import Cubism from './Cubism.vue';
-  import * as oZm from '../JS/openZmeter.js';
-  import ToolbarPhases from './ToolbarPhases.vue'
+  import Cubism from 'Components/Cubism.vue';
+  import * as oZm from 'JS/openZmeter.js';
+  import ToolbarPhases from 'Components/ToolbarPhases.vue'
   export default {
     data() {
       return {
