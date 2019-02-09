@@ -52,9 +52,7 @@
   export default {
     props: ['serie', 'first'],
     data() {
-      return {
-        Graph: null, SerieName: ''
-      };
+      return { Graph: null, SerieProps: {} };
     },
     methods: {
       //function SetCubismNowLabel(graph, labels) {
@@ -77,11 +75,10 @@
     },
     created: function() {
       this.$parent.$on('SeriesUpdate', this.SetData);
-      if(this.serie === 'ACTIVE_POWER') this.SerieName = 'Active Power';
-      if(this.serie === 'REACTIVE_POWER') this.SerieName = 'Reactive Power';
+      this.SerieProps = oZm.Series[this.serie];
     },
     mounted: function() {
-      this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], { strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], highlightCircleSize: 0, legend: 'always', xAxisHeight: 0.1, xLabelHeight: 1, interactionModel: { }, plotter: barChartPlotterCubism, labels: ["Time", this.SerieName], colors: ["#d9534f"], labelsDiv: this.$refs.legend,
+      this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], { strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], highlightCircleSize: 0, legend: 'always', xAxisHeight: 0.1, xLabelHeight: 1, interactionModel: { }, plotter: barChartPlotterCubism, labels: ["Time", this.SerieProps.Title], colors: ["#d9534f"], labelsDiv: this.$refs.legend,
   //    plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
         legendFormatter: function(data) {
           if(data.x === null) {
@@ -97,7 +94,7 @@
           }
         },
         axes: {
-          y: { drawAxis: false, drawGrid: false, /*valueFormatter: yvalueformatter */},
+          y: { drawAxis: false, drawGrid: false, valueFormatter: this.SerieProps.FormatValue},
           x: { valueFormatter: function (x) { return '<div class="cubism-x-axis">' + new Date(x).toLocaleTimeString() + '</div>'; },
                axisLabelFormatter: (!this.first) ? function() { return null; } : function(x, i) {
                  var date = new Date(x);

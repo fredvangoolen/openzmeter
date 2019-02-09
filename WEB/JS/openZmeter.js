@@ -1,4 +1,20 @@
-//
+import chroma from 'chroma-js';
+export var Series = {
+  'VOLTAGE': { CSS_Class: 'panel-voltage', Title: 'Voltage', Serie: 'Voltage', Units: 'V', Link: '/Analysis/Voltage', 
+    FormatValue: function(val) { return {Units: '' + V, Value: Round2(val) }; } 
+  },
+  'CURRENT': { CSS_Class: 'panel-current', Title: 'Current', Serie: 'Current', Units: 'A', Link: '/Analysis/Current', 
+    FormatValue: function(val) { return Round2(val); } 
+  },
+  'ACTIVE_POWER': { CSS_Class: 'panel-active-power', Title: 'Active power', Serie: 'Active_Power', Units: 'w', Link: '/Analysis/Power', FormatValue: function(val) { return Round2(val); } },
+  'FREQUENCY': { CSS_Class: 'panel-frequency', Title: 'Frequency', Serie: 'Frequency', Units: 'Hz', Link: '/Analysis/Frequency', FormatValue: function(val) { return Round2(val); }, rangeFunc: function() {} },
+  'REACTIVE_POWER': { CSS_Class: '', Title: 'Reactive Power', Serie: 'Reactive_Power', Units: 'var', Link: '/Analysis/Power', FormatValue: function(val) { return Round2(val); }, rangeFunc: function() {} },
+  'POWER_FACTOR': { CSS_Class: '', Title: 'Power Factor', Serie: 'Power_Factor', Units: '', Link: '', FormatValue: function(val) { return Round2(val); } },
+  'PHI': { CSS_Class: '', Title: 'Phi', Serie: 'Phi', Units: '', Link: '', FormatValue: function(val) { return Round2(val); }},
+  'VOLTAGE_THD': { CSS_Class: '', Title: 'Voltage THD', Serie: 'Voltage_THD', Units: '%', Link:'', FormatValue: function(val) { return Round2(val); }},
+  'CURRENT_THD': { CSS_Class: '', Title: 'Current THD', Serie: 'Current_THD', Units: '%', Link:'', FormatValue: function(val) { return Round2(val); }}
+};
+
 ////var SpinnerOpts = { lines: 10, length: 10, width: 5, radius: 10 }; // default options for spinner
 ///* offline.js configuration and tools */
 //Offline.options = { requests: true };
@@ -592,14 +608,14 @@ export function GetBestUnits(value) {
 //  for(i = 0; i <= width; i++) outerdiv.append('<div style="width:1px; height:' + $(outerdiv).height() + 'px; display:inline; background:' + scale(i / width) + '"></div>');
 //}
 ///* Generate an array of colors from a base */
-//function ColorArray(base, items) {
-//  var Array = [];
-//  for(var i = 0; i < items; i++) {
-//   Array.push(base); 
-//   base = chroma(base).darken();
-//  }
-//  return Array;
-//}
+export function ColorArray(base, items) {
+  var Array = [];
+  for(var i = 0; i < items; i++) {
+   Array.push(base); 
+   base = chroma(base).darken();
+  }
+  return Array;
+}
 ///* Manage legend in graphs */
 export function LegendFormatter_Follow(data) {
   if(data.x === undefined || data.x === null) return "";
@@ -634,22 +650,23 @@ export function LegendFormatter_Follow(data) {
 //  graph.setAnnotations(Events);
 //}
 ///* Convierte un array de floats a cadena con dos decimales, separados por el caracter dado y usando los colores que se pongan (añadiendo cadena1 si es negativo y cadena2 si positivo)*/
-//export function Array_Round2(values, colors, cadena1, cadena2) {
-//  for(i = 0; i < values.length; i++) {
-//    if((colors !== undefined) && (colors[i] !== undefined)) {
-//     var Text = '<div style="padding: 3px 10px; margin: 0px 5px; border-radius: 3px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]);
-//     if((values[i] > 0) && (cadena2 !== undefined)) Text += cadena2;
-//     if((values[i] < 0) && (cadena1 !== undefined)) Text += cadena1;
-//     values[i] = Text + '</div>';
-//   } else {
-//     var Text = Round2(values[i]);
-//     if((values[i] > 0) && (cadena2 !== undefined)) Text += cadena2;
-//     if((values[i] < 0) && (cadena1 !== undefined)) Text += cadena1;
-//     values[i] = Text + '</div>';
-//   }
-//  }
-//  return values.join('');
-//}
+export function Array_Round2(values, colors, cadena1, cadena2) {
+  if(Array.isArray(values) === false) values = [values];
+  for(var i = 0; i < values.length; i++) {
+    if((colors !== undefined) && (colors[i] !== undefined)) {
+     var Text = '<div style="padding: 3px 10px; margin: 0px 5px; border-radius: 3px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]);
+     if((values[i] > 0) && (cadena2 !== undefined)) Text += cadena2;
+     if((values[i] < 0) && (cadena1 !== undefined)) Text += cadena1;
+     values[i] = Text + '</div>';
+   } else {
+     var Text = Round2(values[i]);
+     if((values[i] > 0) && (cadena2 !== undefined)) Text += cadena2;
+     if((values[i] < 0) && (cadena1 !== undefined)) Text += cadena1;
+     values[i] = Text + '</div>';
+   }
+  }
+  return values.join('');
+}
 //
 ///* Busca el mejor divisor y unidades para un valor de entrada, ya sea B, kB, MB o GB */
 //function GetBestUnits2(value) {

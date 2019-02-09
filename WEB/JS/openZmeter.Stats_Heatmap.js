@@ -1,3 +1,4 @@
+import * as oZm from './openZmeter.js';
 /*
  * Copyright (C) 2015 Pedro Sánchez Alguacil
  *               2017 Eduardo Viciana Gamez
@@ -91,7 +92,7 @@ function EnergySeries(event) {
   GroupButtons($('#groupEnergyPhases'), 'VisibleStatsPhases', 3, false, UpdateHeatMap, (event !== undefined) ? event.target : undefined);
 }
 $('#groupEnergyPhases').on('click', 'button', EnergySeries);
-function UpdatePage() {
+export function UpdateStatsHeatmap() {
   var State = parseInt(localStorage.getItem('StatsBlock'));
   var NumElements = $('#btnBlocks + ul').children().length;
   if(isNaN(State) || (State < 0) || (State > (NumElements - 1))) State = 0;
