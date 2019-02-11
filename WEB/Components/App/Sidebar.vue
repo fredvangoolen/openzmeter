@@ -12,17 +12,12 @@
 </template>
 
 <script>
-import SidebarUser from './SidebarUser.vue';
-import SidebarAnalyzer from './SidebarAnalyzer.vue';
-import SidebarMenu from './SidebarMenu.vue';
+import SidebarUser from 'Components/App/SidebarUser.vue';
+import SidebarAnalyzer from 'Components/App/SidebarAnalyzer.vue';
+import SidebarMenu from 'Components/App/SidebarMenu.vue';
 export default {
   data() { return {} },
   mounted: function() {
-    $('.sidenav-menu').on('click', '[data-sidenav-dropdown-toggle]', function (e) {
-      $(this).next('[data-sidenav-dropdown]').slideToggle('fast');
-      $(this).find('[data-sidenav-dropdown-icon]').toggleClass('show');
-      e.preventDefault();
-    });
     $('.navbar-toggle').click(function (e) {
       $('.navbar-nav').toggleClass('show');
       if($('.navbar-nav').hasClass('show')) {
@@ -88,7 +83,6 @@ export default {
   }
   .sidenav-header > div:first-child {
     float: left;
-    width: 154px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
