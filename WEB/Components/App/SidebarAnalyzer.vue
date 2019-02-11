@@ -1,8 +1,9 @@
 <template>
+  <div>
   <div class="sidenav-header">
     <div>{{ analyzerName }}</div>
     <div class="btn-group pull-right">
-      <button type="button" class="btn btn-default btn-xs disabled" id="btnAnalyzerSearch"><img src="Imgs/magnifier.png"></button>
+      <button type="button" class="btn btn-default btn-xs" v-bind:class="{disabled: !hasAnalyzers}" @click="showDialog = true"><img src="Imgs/magnifier.png"></button>
       <button type="button" class="btn btn-default btn-xs disabled"><img src="Imgs/exclamation.png"></button>
     </div>
     <div class="clearfix"></div>
@@ -12,16 +13,17 @@
       <tr><td>Usage:</td><td>{{ usage }}</td></tr>              
       <tr><td>Uptime:</td><td>{{ uptime }}</td></tr>
     </table>
-    <analyzer-no-analyzer ref="no_analyzer"></analyzer-no-analyzer>
+  </div>
+    <analyzer-dialog v-if="showDialog" @close="showDialog = false" :analyzers="AvaliableAnalyzers"></analyzer-dialog>
   </div> 
 </template> 
 
 <script>
   import ProgressBar from 'Components/ProgressBar.vue';
-  import AnalyzerNoAnalyzer from './AnalyzerNoAnalyzer.vue';
+  import AnalyzerDialog from './AnalyzerDialog.vue';
   export default {
     data() {
-      return { AvaliableAnalyzers: [], SelAnalyzer: null, analyzerName: 'test', disk: 10, battery: 10, usage: 'poco', uptime: 'mucho'};
+      return { showDialog: false, AvaliableAnalyzers: [], hasAnalyzers: false, SelAnalyzer: null, analyzerName: 'test', disk: 10, battery: 10, usage: 'poco', uptime: 'mucho'};
     },
     created: function() {
       this.GetAnalyzers();
@@ -35,24 +37,32 @@
           success: function(result) { this.AvaliableAnalyzers = result; }.bind(this)
         });
       },
+      ShowAnalyzers() {
+      this.showDialog = true;
+//      this.$refs.analyzer_dialog.show('AnalyzerTable', this.AvaliableAnalyzers);
+      },
       CheckSelected() {
         if(this.AvaliableAnalyzers.length === 0) {
-          alert("no analyzers!!!");
+          this.showDialog = true;
+          //this.$refs.no_analyzer.show('AnalyzerNotFound');
+          this.$emit('AnalyzerChanged', this.SelAnalyzer);
+          this.hasAnalyzers = false;
         } else {
+          this.hasAnalyzers = true;
           for(var i = 0; i < this.AvaliableAnalyzers.length; i++) {
             if(this.AvaliableAnalyzers[i].ID === localStorage.getItem("SelAnalyzer")) this.SelAnalyzer = this.AvaliableAnalyzers[i];
           }
           if(this.SelAnalyzer === null) {
-            alert("No selected analyzer!");
+            //this.$emit('AnalyzerChanged', this.SelAnalyzer);
+            this.ShowAnalyzers();
           } else {
-    this.$refs.no_analyzer.show();
-    alert("Seleccionado el analizador " + this.SelAnalyzer.ID);
+            alert("Seleccionado el analizador " + this.SelAnalyzer.ID);
             this.$emit('AnalyzerChanged', this.SelAnalyzer);
           }
         }
       }
     },
-    components: { ProgressBar, AnalyzerNoAnalyzer }
+    components: { ProgressBar, AnalyzerDialog }
   }
 </script>
 
