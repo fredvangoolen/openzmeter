@@ -9,10 +9,9 @@
 </template>
 
 <script>
-import Topbar from './Topbar.vue';
-import Sidebar from './Sidebar.vue';
+import Topbar from 'Components/App/Topbar.vue';
+import Sidebar from 'Components/App/Sidebar.vue';
 export default {
-  name: 'app',
   data () {
     return {
       Analyzer: null, UpdateIndicatorsTimer: null,

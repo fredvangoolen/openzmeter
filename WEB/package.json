@@ -10,6 +10,7 @@
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
   },
   "dependencies": {
+    "babel-preset-env": "^1.7.0",
     "bootstrap-sass-loader": "^1.0.10",
     "bootstrap3": "^3.3.5",
     "chroma-js": "^2.0.2",
@@ -20,7 +21,8 @@
     "npm": "^6.7.0",
     "vue": "^2.5.11",
     "vue-blockui": "^1.1.7",
-    "vue-resource": "^1.5.1"
+    "vue-resource": "^1.5.1",
+    "vue-transfer-dom": "^1.1.0"
   },
   "browserslist": [
     "> 1%",
@@ -30,12 +32,12 @@
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
-    "babel-preset-env": "^1.6.0",
     "babel-preset-stage-3": "^6.24.1",
     "cross-env": "^5.0.5",
     "css-loader": "^0.28.11",
     "file-loader": "^1.1.11",
     "style-loader": "^0.23.1",
+    "uglify-es": "github:mishoo/UglifyJS2#harmony",
     "url-loader": "^1.1.2",
     "vue-loader": "^13.0.5",
     "vue-router": "^3.0.2",

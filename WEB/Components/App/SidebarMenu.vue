@@ -70,7 +70,14 @@
   export default {
     data() {
       return { }
-    }   
+    }, 
+    mounted: function() {
+      $('.sidenav-menu').on('click', '[data-sidenav-dropdown-toggle]', function (e) {
+      $(this).next('[data-sidenav-dropdown]').slideToggle('fast');
+      $(this).find('[data-sidenav-dropdown-icon]').toggleClass('show');
+      e.preventDefault();
+    });
+    }
   }
 </script>
 

@@ -62,7 +62,8 @@ module.exports = {
     overlay: true,
     proxy: {
       '/getSeries': { target: 'http://localhost:8081'},
-      '/getSeriesNow': { target: 'http://localhost:8081'} 
+      '/getSeriesNow': { target: 'http://localhost:8081'},
+      '/getAnalyzers': { target: 'http://localhost:8081'}
     }
   },
   performance: {

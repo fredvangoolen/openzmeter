@@ -10,7 +10,7 @@
 </template>
  
 <script>
-  import * as oZm from '../JS/openZmeter.js'
+  import * as oZm from 'JS/openZmeter.js'
   export default {
     props: ['color', 'units'],
     data: function() {
