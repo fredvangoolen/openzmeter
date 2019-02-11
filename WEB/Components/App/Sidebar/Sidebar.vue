@@ -12,9 +12,9 @@
 </template>
 
 <script>
-import SidebarUser from 'Components/App/SidebarUser.vue';
-import SidebarAnalyzer from 'Components/App/SidebarAnalyzer.vue';
-import SidebarMenu from 'Components/App/SidebarMenu.vue';
+import SidebarUser from './SidebarUser.vue';
+import SidebarAnalyzer from './SidebarAnalyzer.vue';
+import SidebarMenu from './SidebarMenu.vue';
 export default {
   data() { return {} },
   mounted: function() {

@@ -9,7 +9,8 @@
       </div>
     </div>
     <div class="panel-body">
-      <cubism ref="cubism" v-on:AggregationSet="SetAggregation" :Series="Series"></cubism>
+      <div ref="Spinner" class="spinnerdiv" v-bind:class="{ 'hide': !ShowSpinner }"></div>
+      <cubism v-for="(serie, index) in Series" :serie="serie" :key="serie" :first="index == 0"></cubism>
     </div>
   </div>
 </template>
@@ -21,14 +22,46 @@
   export default {
     data() {
       return {
+        ShowSpinner: true,
         Series: ['ACTIVE_POWER', 'REACTIVE_POWER', 'POWER_FACTOR', 'PHI', 'VOLTAGE_THD', 'CURRENT_THD'],
-        Aggregation: 'Loading data...'
+        Aggregation: 'Loading data...',
+        LastSample: 0,
+        Data: {}
       };
     },
     methods: {
       SetAggregation(aggreg) {
         this.Aggregation = 'From ' + oZm.GetAggregLongName(aggreg) + ' aggregation';
+      },
+      UpdateBars() {
+        if(this.Analyzer === null) return;
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Series: this.Series, From: 0, Period: 86400000,LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+          success: function(result) {
+            this.ShowSpinner = false;
+            this.$emit('AggregationSet', result['Aggregation_Source']);
+            if(result['Sampletime'] === null) return;
+            if(result['Sampletime'].length === 0) return;
+            for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
+            this.$emit('SeriesUpdate', this.Data, result['From'], result['To'], 0);
+            this.LastSample = oZm.LastSampletime(result, this.LastSample);
+          }.bind(this),
+          complete: function() {
+            if(this.UpdateIndicatorsTimer !== null) clearTimeout(this.UpdateIndicatorsTimer);
+            this.UpdateIndicatorsTimer = setTimeout(this.GetSeries, 60000);
+          }.bind(this), 
+          error: function() {
+            this.ShowSpinner = true;
+          }.bind(this)
+        });
+      },
+      SetAnalyzer() {
+        this.LastSample = 0;
+        this.UpdateBars();  
       }
+    },
+    created: function() { 
+      for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = [];
+      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
     mounted: function() {
 //      this.$refs.cubism.AppendRow("ACTIVE_POWER");
@@ -65,7 +98,7 @@
             
 
 */      
-      
+      if(this.$root.SelectedAnalyzer !== null) this.UpdateBars();
     },
     components: { Cubism, ToolbarPhases }
   }   
