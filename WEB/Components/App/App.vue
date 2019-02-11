@@ -9,20 +9,18 @@
 </template>
 
 <script>
-import Topbar from 'Components/App/Topbar.vue';
-import Sidebar from 'Components/App/Sidebar.vue';
+import Topbar from './Topbar/Topbar.vue';
+import Sidebar from './Sidebar/Sidebar.vue';
 export default {
   data () {
     return {
-      Analyzer: null, UpdateIndicatorsTimer: null,
-      
-      msg: 'Welcome to Your Vue.js App',
-      html: '<i class="fa fa-cog fa-spin fa-3x fa-fw"></i>'
+      UpdateIndicatorsTimer: null
     };
   },
   methods: {
     UpdateIndicators() {
-      $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'], Analyzer: 'VIRTUAL_1PHASE' }), 
+      if(this.Analyzer === null) return;
+      $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
         success: function(result) {
           this.$refs.indicator_bar.setValue(result);
         }.bind(this),
@@ -34,10 +32,15 @@ export default {
           this.$refs.indicator_bar.setValue(null);
         }.bind(this)
       });
+    },
+    SetAnalyzer() {
+      this.UpdateIndicators();  
     }
   },
-//  beforeUpdate: function() { this.UpdateIndicators(); },
-  mounted: function() { this.UpdateIndicators(); },
+  created: function() {
+    this.$root.SelectedAnalyzer = null;
+    this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
+  },
   components: { Topbar, Sidebar }
 }
 </script>

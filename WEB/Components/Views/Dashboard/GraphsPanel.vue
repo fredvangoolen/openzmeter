@@ -42,8 +42,8 @@
       };
     },
     methods: {
-      GetSeries() {
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], From: 0, LastSample: this.LastSample, Analyzer: 'VIRTUAL_1PHASE' }), 
+      UpdateGraph() {
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], From: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
             this.ShowSpinner = false;
             if(result['Sampletime'] === null) return;
@@ -73,10 +73,15 @@
       },
       AdjustSeries(event) {
         GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'DashboardVoltageVisiblePhases', false, function(series) { return CalcRanges(VoltageData, series, false, true); }, (event !== undefined) ? event.target : undefined); 
+      },
+      SetAnalyzer() {
+        this.LastSample = 0;
+        this.UpdateGraph();
       }
     },
     created: function() {
       this.SerieProps = oZm.Series[this.type];
+      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
     mounted: function() {
       this.Graph = new Dygraph(this.$refs.Chart, [[0, 0]],
@@ -100,7 +105,7 @@
           }
         }
       );
-      this.GetSeries();
+      if(this.$root.SelectedAnalyzer !== null) this.UpdateGraph();
     },
     components: { ToolbarPhases, ToolbarTools }
   }
