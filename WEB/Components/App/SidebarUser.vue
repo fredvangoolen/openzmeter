@@ -22,9 +22,6 @@
 </script>
   
 <style>
-  .sidenav-header button {
-    padding: 6px;
-  }
   .sidenav-header > div:first-child {
     width: 180px;
   }

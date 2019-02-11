@@ -88,11 +88,8 @@ export default {
     text-overflow: ellipsis;
     line-height: 28px;
   }
-  .sidenav-header .btn-group {
-    float: right;
-  }
   .sidenav-header button {
-    padding: 1px 5px;
+    padding: 4px;
     background-color: transparent;
     border: 1px solid #333;
   }
