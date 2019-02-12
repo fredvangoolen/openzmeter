@@ -20,7 +20,11 @@
       return {};
     },
     methods: {
-      Select() {alert("bliu");},
+      Select() {
+        localStorage.setItem("SelAnalyzer", this.rowData.ID);
+        this.$root.SelectedAnalyzer = this.rowData;  
+        this.$root.$emit('AnalyzerChanged');
+      },
       Configure() {alert("Configure not yet implemented");},
       ACL() {alert("ACL not yet implemented");},
       Tariffs() { this.$parent.$parent.$parent.showTariffs(this.rowData.ID); },

@@ -1,10 +1,12 @@
 import chroma from 'chroma-js';
 export var Series = {
-  'VOLTAGE': { CSS_Class: 'panel-voltage', Title: 'Voltage', Serie: 'Voltage', Units: 'V', Link: '/Analysis/Voltage', 
-    FormatValue: function(val) { return {Units: '' + V, Value: Round2(val) }; } 
+  'VOLTAGE': { CSS_Class: 'panel-voltage', Title: 'Voltage', Serie: 'Voltage', Units: 'V', Link: '/Analysis/Voltage', Color: '#d9534f',
+    FormatValue: function(val) { return {Units: '' + V, Value: Round2(val) }; },
+    Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['V'] : ['V(R)', 'V(S)', 'V(T)']; }
   },
-  'CURRENT': { CSS_Class: 'panel-current', Title: 'Current', Serie: 'Current', Units: 'A', Link: '/Analysis/Current', 
-    FormatValue: function(val) { return Round2(val); } 
+  'CURRENT': { CSS_Class: 'panel-current', Title: 'Current', Serie: 'Current', Units: 'A', Link: '/Analysis/Current', Color: '#428bca',
+    FormatValue: function(val) { return Round2(val); },
+    Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['I'] : (analyzer.Mode === '3PHASE') ? ['I(R)', 'I(S)', 'I(T)'] : ['I(R)', 'I(S)', 'I(T)', 'I(N)'];}
   },
   'ACTIVE_POWER': { CSS_Class: 'panel-active-power', Title: 'Active power', Serie: 'Active_Power', Units: 'w', Link: '/Analysis/Power', FormatValue: function(val) { return Round2(val); } },
   'FREQUENCY': { CSS_Class: 'panel-frequency', Title: 'Frequency', Serie: 'Frequency', Units: 'Hz', Link: '/Analysis/Frequency', FormatValue: function(val) { return Round2(val); }, rangeFunc: function() {} },
@@ -13,7 +15,77 @@ export var Series = {
   'PHI': { CSS_Class: '', Title: 'Phi', Serie: 'Phi', Units: '', Link: '', FormatValue: function(val) { return Round2(val); }},
   'VOLTAGE_THD': { CSS_Class: '', Title: 'Voltage THD', Serie: 'Voltage_THD', Units: '%', Link:'', FormatValue: function(val) { return Round2(val); }},
   'CURRENT_THD': { CSS_Class: '', Title: 'Current THD', Serie: 'Current_THD', Units: '%', Link:'', FormatValue: function(val) { return Round2(val); }}
+//  Self.GetSeriesNames = function(varName) {
+//    if(varName === 'Harmonics') return ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
+//    if(varName === 'Active_Energy') return (Self.GetSelected().Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)'];
+//    if(varName === 'Reactive_Energy') return (Self.GetSelected().Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)'];
+//    if(varName === 'Active_Power') return (Self.GetSelected().Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)'];
+//    if(varName === 'Reactive_Power') return (Self.GetSelected().Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)'];
+//    if(varName === 'Power_Factor')  return (Self.GetSelected().Mode === '1PHASE') ? ['PF'] : ['PF(R)', 'PF(S)', 'PF(T)'];
+//    if(varName === 'Voltage_THD')  return (Self.GetSelected().Mode === '1PHASE') ? ['THDv'] : ['THDv(R)', 'THDv(S)', 'THDv(T)'];
+//    if(varName === 'Current_THD')  return (Self.GetSelected().Mode === '1PHASE') ? ['THDi'] : (Self.GetSelected().Mode) ? ['THDi(R)', 'THDi(S)', 'THDi(T)'] : ['THDi(R)', 'THDi(S)', 'THDi(T)', 'THDi(N)'];
+//    if(varName === 'Phi')  return (Self.GetSelected().Mode === '1PHASE') ? ['PHI']  : ['PHI(R)', 'PHI(S)', 'PHI(T)'];
+//  };
 };
+
+// dygraphs tools
+export function mouseDown(event, g, context) {
+  context.initializeMouseDown(event, g, context);
+  if (event.altKey || event.shiftKey) {
+    Dygraph.startZoom(event, g, context);
+  } else {
+    Dygraph.startPan(event, g, context);
+  }
+}
+export function mouseMove(event, g, context) {
+  context.is2DPan = false;
+  if (context.isPanning) {
+    Dygraph.movePan(event, g, context);
+  } else if (context.isZooming) {
+    Dygraph.moveZoom(event, g, context);
+  }
+}
+export function mouseUp(event, g, context) {
+  if (context.isPanning) {
+    Dygraph.endPan(event, g, context);
+  } else if (context.isZooming) {
+    Dygraph.endZoom(event, g, context);
+  }
+}
+export function dblClick(event, g, context) {
+  if (!(event.offsetX && event.offsetY)) {
+    event.offsetX = event.layerX - event.target.offsetLeft;
+  }
+  var xOffset = g.toDomCoords(g.xAxisRange()[0], null)[0];
+  var x =  event.offsetX - xOffset;
+  var w = g.toDomCoords(g.xAxisRange()[1], null)[0] - xOffset;
+  var xPct = (w === 0 ? 0 : (x / w)) || 0.5;
+  var axis = g.xAxisRange();
+  var zoomInPercentage = (event.ctrlKey) ? -0.25 : 0.2;
+  var delta = axis[1] - axis[0];
+  var increment = delta * zoomInPercentage;
+  var foo = [increment * xPct, increment * (1 - xPct)];
+  g.updateOptions({
+    dateWindow: [axis[0] + foo[0], axis[1] - foo[1]]
+  });
+}
+export function dblClick_Restore(event, g, context) {
+  restorePositioning(g);
+}
+export function LegendFormatter_Follow(data) {
+  if(data.x === undefined || data.x === null) return "";
+  var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';
+  for(var i = 0; i < data.series.length; i++)  {
+    if(data.series[i].isVisible) {
+      Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
+    }
+  }
+  return Result;
+}
+
+// Numbers tools
+
+
 
 ////var SpinnerOpts = { lines: 10, length: 10, width: 5, radius: 10 }; // default options for spinner
 ///* offline.js configuration and tools */
@@ -616,17 +688,7 @@ export function ColorArray(base, items) {
   }
   return Array;
 }
-///* Manage legend in graphs */
-export function LegendFormatter_Follow(data) {
-  if(data.x === undefined || data.x === null) return "";
-  var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';
-  for(var i = 0; i < data.series.length; i++)  {
-    if(data.series[i].isVisible) {
-      Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
-    }
-  }
-  return Result;
-}
+
 //
 //
 //
@@ -1000,26 +1062,6 @@ export function Round2(value) {
 //  Self.GetPrices = function(period, to, lastsample, onSuccess, onCompletion, onError) {
 //    return $.ajax({ url: "getPrices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify( { Period: period, To: to, LastSample: lastsample, Analyzer: Self.GetSelected().ID } ) }); 
 //  };
-//  Self.GetIndicators = function() {
-//    Self.GetSeriesNow(['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'], 
-//      function(result) {
-//        vm.$refs.indicator_bar.setValue(result);
-////        vm.$refs.voltage_indicator.setValue(result['Voltage']);
-////        vm.$refs.current_indicator.setValue(result['Current']);
-////        vm.$refs.power_indicator.setValue(result['Active_Power']);
-////        vm.$refs.frequency_indicator.setValue([result['Frequency']]);
-//        var Time = new Date(result['Sampletime']);
-//        $('#NodeTime').text(Time.toLocaleTimeString() + ' - ' + Time.toLocaleDateString());
-//      },
-//      function() { 
-//        setTimeout(Self.GetIndicators, 5000); 
-//      }, 
-//      function() {
-//        vm.$refs.indicator_bar.setValue(null);
-//        $('NodeTime').text('Offline');   
-//      }
-//    );
-//  };
 //  Self.GetIndicatorsB = function() {
 //    var Times = GetDayTimePeriod();
 //    Self.GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, "sum(active_energy)", 
@@ -1082,19 +1124,6 @@ export function Round2(value) {
 //        setTimeout(Self.GetSysStats, 5000);
 //      }
 //    });  
-//  };
-//  Self.GetSeriesNames = function(varName) {
-//    if(varName === 'Harmonics') return ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
-//    if(varName === 'Voltage')   return (Self.GetSelected().Mode === '1PHASE') ? ['V'] : ['V(R)', 'V(S)', 'V(T)'];
-//    if(varName === 'Current')   return (Self.GetSelected().Mode === '1PHASE') ? ['I'] : (Self.GetSelected().Mode === '3PHASE') ? ['I(R)', 'I(S)', 'I(T)'] : ['I(R)', 'I(S)', 'I(T)', 'I(N)'];
-//    if(varName === 'Active_Energy') return (Self.GetSelected().Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)'];
-//    if(varName === 'Reactive_Energy') return (Self.GetSelected().Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)'];
-//    if(varName === 'Active_Power') return (Self.GetSelected().Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)'];
-//    if(varName === 'Reactive_Power') return (Self.GetSelected().Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)'];
-//    if(varName === 'Power_Factor')  return (Self.GetSelected().Mode === '1PHASE') ? ['PF'] : ['PF(R)', 'PF(S)', 'PF(T)'];
-//    if(varName === 'Voltage_THD')  return (Self.GetSelected().Mode === '1PHASE') ? ['THDv'] : ['THDv(R)', 'THDv(S)', 'THDv(T)'];
-//    if(varName === 'Current_THD')  return (Self.GetSelected().Mode === '1PHASE') ? ['THDi'] : (Self.GetSelected().Mode) ? ['THDi(R)', 'THDi(S)', 'THDi(T)'] : ['THDi(R)', 'THDi(S)', 'THDi(T)', 'THDi(N)'];
-//    if(varName === 'Phi')  return (Self.GetSelected().Mode === '1PHASE') ? ['PHI']  : ['PHI(R)', 'PHI(S)', 'PHI(T)'];
 //  };
 //  Self.AvaliableAnalyzers = [];
 //  Self.CurrentAnalyzerIndex = parseInt(localStorage.getItem("SelAnalyzer"));

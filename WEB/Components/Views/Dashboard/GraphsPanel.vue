@@ -34,7 +34,7 @@
         Graph: null,
         Data: [],
         LastSample: 0,
-        Timer: null
+        UpdateGraphTimer: null
       };
     },
     methods: {
@@ -58,8 +58,8 @@
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
           }.bind(this),
           complete: function() {
-            if(this.UpdateIndicatorsTimer !== null) clearTimeout(this.UpdateIndicatorsTimer);
-            this.UpdateIndicatorsTimer = setTimeout(this.GetSeries, 5000);
+            if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
+            this.UpdateGraphTimer = setTimeout(this.GetSeries, 5000);
           }.bind(this), 
           error: function() {
             this.ShowSpinner = true;
@@ -72,12 +72,16 @@
       },
       SetAnalyzer() {
         this.LastSample = 0;
+        this.Data = [];
         this.UpdateGraph();
       }
     },
     created: function() {
       this.SerieProps = oZm.Series[this.type];
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
+    },
+    beforeDestroy: function() {
+      if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
     },
     mounted: function() {
       this.Graph = new Dygraph(this.$refs.Chart, [[0, 0]],
