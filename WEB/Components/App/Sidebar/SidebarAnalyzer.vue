@@ -48,7 +48,7 @@
           }
           if(this.SelAnalyzer === null) this.ShowAnalyzers();
           this.$root.SelectedAnalyzer = this.SelAnalyzer;  
-          this.$root.$emit('AnalyzerChanged');      
+          this.$root.$emit('AnalyzerChanged');
         }
       }
     },
