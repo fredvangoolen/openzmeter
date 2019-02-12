@@ -3,21 +3,17 @@
     <div class="panel-heading">
       <div class="huge header-text">{{ SerieProps.Title }}</div>
       <div class="header-buttons">
-        <div><span id="labelVoltage" class="huge-small" v-html="LastValue"></span><em class="huge-small-unit">{{ SerieProps.Units }}</em></div>
-        <div id="labelVoltageAggregation">{{ Aggregation }}</div>
+        <div><span class="huge-small" v-html="LastValue"></span><em class="huge-small-unit">{{ SerieProps.Units }}</em></div>
+        <div>{{ Aggregation }}</div>
       </div>
     </div>
     <div class="panel-body">
       <div ref="Spinner" class="spinnerdiv" v-bind:class="{ 'hide': !ShowSpinner }"></div>
       <div ref="Chart" class="chart"></div>
     </div>
-    <div class="panel-footer">
+    <div class="panel-footer clearfix">
       <router-link :to="SerieProps.Link"><span class="pull-left">View Details</span></router-link>
-      <div class="pull-right" id="toolbarVoltage">
-        <toolbar-phases></toolbar-phases>
-        <toolbar-tools></toolbar-tools>
-      </div>
-      <div class="clearfix"></div>
+      <toolbar class="pull-right" :options="ToolbarConf"></toolbar>
     </div>
   </div>
 </template>
@@ -25,12 +21,12 @@
 <script>
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'dygraphs';
-  import ToolbarPhases from 'Components/ToolbarPhases.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
+  import Toolbar from 'Components/Toolbar.vue';
   export default {
     props: ['type'],
     data() {
       return {
+        ToolbarConf: [ { mode: 'Phases', phases: 'VOLTAGE'}, { mode: 'Tools', options: ['Export', 'Maximize'] } ],
         ShowSpinner: true,
         SerieProps: {},
         Aggregation: 'Loading data...',
@@ -107,7 +103,7 @@
       );
       if(this.$root.SelectedAnalyzer !== null) this.UpdateGraph();
     },
-    components: { ToolbarPhases, ToolbarTools }
+    components: { Toolbar }
   }
 </script>
 

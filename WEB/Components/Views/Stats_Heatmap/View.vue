@@ -8,8 +8,8 @@
               <span class="huge header-text">Energy Heatmap</span>
               <div class="header-buttons">
                 <color-bar width="140px" height="10px"></color-bar>
-                <toolbar-aggregation></toolbar-aggregation>
-                <toolbar-years></toolbar-years>
+                <!--toolbar-aggregation></toolbar-aggregation>
+                <toolbar-years></toolbar-years-->
                 <div class="btn-group" data-load-block="Years_Block"></div>
                 <div class="btn-group" data-load-block="BlockSize_Block"></div>
                 <div class="btn-group" data-load-block="PhaseV_Block" id="groupEnergyPhases"></div>
@@ -29,7 +29,7 @@
   import * as oZm from 'JS/openZmeter.Stats_Heatmap.js';
   import HeatmapTable from './HeatmapTable.vue';
   import ColorBar from 'Components/ColorBar.vue';
-  import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
+  import Toolbar from 'Components/Toolbar.vue';
   import ToolbarYears from 'Components/ToolbarYears.vue';
   export default {
     data() {
@@ -38,7 +38,7 @@
     mounted: function() {
       oZm.UpdateStatsHeatmap();
     },
-    components: { ToolbarAggregation, ToolbarYears, HeatmapTable, ColorBar }
+    components: { Toolbar, ToolbarYears, HeatmapTable, ColorBar }
 }
 </script>
 
