@@ -1,14 +1,6 @@
 <template>
   <div>
-    <ul class="nav nav-tabs" id="DetailTabs">
-      <li><a data-toggle="tab" href="#">Waveform</a></li>
-      <li><a data-toggle="tab" href="#">Harmonics</a></li>
-      <li><a data-toggle="tab" href="#">Evolution</a></li>
-      <li><a data-toggle="tab" href="#">Advanced</a></li>
-      <li><a data-toggle="tab" href="#">Phasors</a></li>
-      <li><a data-toggle="tab" href="#">Parameters</a></li>
-      <li><a data-toggle="tab" href="#">Events</a></li>
-    </ul>
+    <detail-tabs :tabs="Tabs" variable="VoltageDetailTab" v-on:TabChange="TabChange"></detail-tabs>
     <div class="panel panel-other voltage-details">
           <!--div id="DetailSpinner" class="spinnerdiv"></div-->
       <div class="panel-heading clearfix">
@@ -25,13 +17,15 @@
         </div>
       </div>
       <div class="panel-body" id="DetailDivs">
-        <waveform ref="waveform"></waveform>
-        <harmonics ref="harmonics"></harmonics>
-        <evolution></evolution>
-        <!--advanced></advanced>
-        <phasors></phasors>            
-        <parameters></parameters>
-        <events></events-->
+        <keep-alive>
+          <waveform ref="waveform" v-if="ActiveTab == 'Waveform'"></waveform>
+          <harmonics ref="harmonics" v-if="ActiveTab == 'Harmonics'"></harmonics>
+          <evolution ref="evolution" v-if="ActiveTab == 'Evolution'"></evolution>
+          <advanced ref="advances" v-if="ActiveTab == 'Advanced'"></advanced>
+          <phasors ref="phasors" v-if="ActiveTab == 'Phasors'"></phasors>
+          <parameters ref="parameters" v-if="ActiveTab == 'parameters'"></parameters>
+          <events ref="events" v-if="ActiveTab == 'Events'"></events>
+        </keep-alive>
       </div>
     </div>
   </div>
@@ -41,16 +35,17 @@
   import moment from 'moment';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
-//  import Advanced from './Advanced.vue';
-//  import Events from './Events.vue';
+  import Advanced from './Advanced.vue';
+  import Events from './Events.vue';
   import Evolution from './Evolution.vue';
   import Harmonics from './Harmonics.vue';
-//  import Parameters from './Parameters.vue';
-//  import Phasors from './Phasors.vue';
+  import Parameters from './Parameters.vue';
+  import Phasors from './Phasors.vue';
   import Waveform from './Waveform.vue';
+  import DetailTabs from 'Components/Tabs.vue';
   export default {
     data () {
-      return { Time: 'Loading data...', LastSample: 0, UpdateGraphs1MTimer: null, UpdateGraphsNowTimer: null };
+      return { Tabs: ['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events'], ActiveTab: '', Time: 'Loading data...', LastSample: 0, UpdateGraphs1MTimer: null, UpdateGraphsNowTimer: null };
     },
     created: function() {
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
@@ -66,6 +61,50 @@
       if(this.UpdateGraphsNowTimer !== null) clearTimeout(this.UpdateGraphsNowTimer);
     },
     methods: {
+      TabChange(tab, name) {
+         this.ActiveTab = name;
+          $('#groupDetailPhasesSingle, #groupDetailPhasesMulti, #btnShowDetail1Harmonic, #btnShowDetailLog, #btnShowDetailCurrent, #toolbarDetails button[data-function="Maximize"]').hide();
+//  if((index === 0) || (index === 1) || (index === 3)) $('#groupDetailPhasesMulti').show();
+//  if((index === 0) || (index === 1) || (index === 3)) $('#btnShowDetailCurrent').show();
+//  if((index === 0) || (index === 1) || (index === 3)) $('#toolbarDetails button[data-function="Maximize"]').show();
+//  if((index === 2) || (index === 5)) $('#groupDetailPhasesSingle').show();
+//  if((index === 1) || (index === 3)) $('#btnShowDetailLog').show();
+//  if(index === 1) $('#btnShowDetail1Harmonic').show();
+//  if(WaveformChart !== null) {
+//    if(index === 0) $(WaveformChart.graphDiv).parent().removeAttr('style');
+//    UpdateWaveformChart();
+//  }
+//  if(HarmonicsChart !== null) {
+//    if(index === 1) $(HarmonicsChart.graphDiv).parent().removeAttr('style');
+//    UpdateHarmonicsChart();
+//  }
+//  if(FFTChart !== null) {
+//    if(index === 3) $(FFTChart.graphDiv).parent().removeAttr('style');
+//    UpdateFFTChart();
+//  }
+//  if(PhasorChart !== null) {
+//    if(index === 4) PhasorResizeEvent();
+//  }
+//  if(HarmonicsCharts.length !== 0) {
+//    if(index === 2) {
+//      for(i = 0; i < 50; i++) $(HarmonicsCharts[i].graphDiv).parent().removeAttr('style');
+//    }
+//  }
+//  if(PowerFactorChart !== null) {
+//    if(index === 5) {
+//      $(PowerFactorChart.graphDiv).parent().removeAttr('style');
+//      $(THDChart.graphDiv).parent().removeAttr('style');
+//      $(PHIChart.graphDiv).parent().removeAttr('style');
+//    }
+//  }
+//  if(EventChart !== null) {
+//    if(index === 6) {
+//      $(EventChart.graphDiv).parent().removeAttr('style');
+//      EventsTable.columns.adjust();
+//    }
+//  }
+
+      },
       SetAnalyzer() {
         this.LastSample = 0;
         this.UpdateGraphs1M();
@@ -75,6 +114,8 @@
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE_SAMPLES', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
+            this.$refs.harmonics.SetData(result);
+            this.$refs.parameters.SetData(result);
     //            this.$refs.indicator_bar.setValue(result);
           }.bind(this),
           complete: function() {
@@ -93,6 +134,10 @@
             this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
             this.$refs.waveform.SetData(result);
             this.$refs.harmonics.SetData(result);
+//              UpdatePhasorChart(result);
+//  SetCubismNowLabel(PowerFactorChart, result.Power_Factor);
+//  SetCubismNowLabel(THDChart, result.Voltage_THD); 
+//  SetCubismNowLabel(PHIChart, result.Phi); 
           }.bind(this),
           complete: function() {
             if(this.UpdateGraphsNowTimer !== null) clearTimeout(this.UpdateGraphsNowTimer);
@@ -104,7 +149,7 @@
         });
       }
     },
-    components: { Waveform, Harmonics, Evolution, ToolbarPhases, ToolbarTools }
+    components: { DetailTabs, Waveform, Harmonics, Evolution, Events, Parameters, Phasors, Advanced, ToolbarPhases, ToolbarTools }
   }
 </script>
 
@@ -114,62 +159,6 @@
     border-top-right-radius: 0px;
   }
 </style>
-
-
-      
-      
-//var WaveformDataset = [], HarmonicsDataset = [], FFTDataset = [];
-function Live_OnSuccess(result) {
-  
-
-
-  UpdatePhasorChart(result);
-  SetCubismNowLabel(PowerFactorChart, result.Power_Factor);
-  SetCubismNowLabel(THDChart, result.Voltage_THD); 
-  SetCubismNowLabel(PHIChart, result.Phi); 
-}
-function DetailTabChange(index) {
-  $('#groupDetailPhasesSingle, #groupDetailPhasesMulti, #btnShowDetail1Harmonic, #btnShowDetailLog, #btnShowDetailCurrent, #toolbarDetails button[data-function="Maximize"]').hide();
-  if((index === 0) || (index === 1) || (index === 3)) $('#groupDetailPhasesMulti').show();
-  if((index === 0) || (index === 1) || (index === 3)) $('#btnShowDetailCurrent').show();
-  if((index === 0) || (index === 1) || (index === 3)) $('#toolbarDetails button[data-function="Maximize"]').show();
-  if((index === 2) || (index === 5)) $('#groupDetailPhasesSingle').show();
-  if((index === 1) || (index === 3)) $('#btnShowDetailLog').show();
-  if(index === 1) $('#btnShowDetail1Harmonic').show();
-  if(WaveformChart !== null) {
-    if(index === 0) $(WaveformChart.graphDiv).parent().removeAttr('style');
-    UpdateWaveformChart();
-  }
-  if(HarmonicsChart !== null) {
-    if(index === 1) $(HarmonicsChart.graphDiv).parent().removeAttr('style');
-    UpdateHarmonicsChart();
-  }
-  if(FFTChart !== null) {
-    if(index === 3) $(FFTChart.graphDiv).parent().removeAttr('style');
-    UpdateFFTChart();
-  }
-  if(PhasorChart !== null) {
-    if(index === 4) PhasorResizeEvent();
-  }
-  if(HarmonicsCharts.length !== 0) {
-    if(index === 2) {
-      for(i = 0; i < 50; i++) $(HarmonicsCharts[i].graphDiv).parent().removeAttr('style');
-    }
-  }
-  if(PowerFactorChart !== null) {
-    if(index === 5) {
-      $(PowerFactorChart.graphDiv).parent().removeAttr('style');
-      $(THDChart.graphDiv).parent().removeAttr('style');
-      $(PHIChart.graphDiv).parent().removeAttr('style');
-    }
-  }
-  if(EventChart !== null) {
-    if(index === 6) {
-      $(EventChart.graphDiv).parent().removeAttr('style');
-      EventsTable.columns.adjust();
-    }
-  }
-}
 
 function DetailsButtonUpdate(event) {
   GroupButtons($('#groupDetailPhasesMulti'), 'DetailPhases', Math.max(Analyzer.GetSeriesNames('Current').length, Analyzer.GetSeriesNames('Voltage').length), false, undefined, undefined);
