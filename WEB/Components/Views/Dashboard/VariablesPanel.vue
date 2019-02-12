@@ -26,7 +26,8 @@
         Series: ['ACTIVE_POWER', 'REACTIVE_POWER', 'POWER_FACTOR', 'PHI', 'VOLTAGE_THD', 'CURRENT_THD'],
         Aggregation: 'Loading data...',
         LastSample: 0,
-        Data: {}
+        Data: {},
+        UpdateGraphTimer: null
       };
     },
     methods: {
@@ -34,7 +35,7 @@
         this.Aggregation = 'From ' + oZm.GetAggregLongName(aggreg) + ' aggregation';
       },
       UpdateBars() {
-        if(this.Analyzer === null) return;
+        if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Series: this.Series, From: 0, Period: 86400000,LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
             this.ShowSpinner = false;
@@ -46,8 +47,8 @@
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
           }.bind(this),
           complete: function() {
-            if(this.UpdateIndicatorsTimer !== null) clearTimeout(this.UpdateIndicatorsTimer);
-            this.UpdateIndicatorsTimer = setTimeout(this.GetSeries, 60000);
+            if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
+            this.UpdateGraphTimer = setTimeout(this.GetSeries, 30000);
           }.bind(this), 
           error: function() {
             this.ShowSpinner = true;
@@ -56,12 +57,16 @@
       },
       SetAnalyzer() {
         this.LastSample = 0;
+        for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = [];
         this.UpdateBars();  
       }
     },
     created: function() { 
       for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = [];
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
+    },
+    beforeDestroy: function() {
+      if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
     },
     mounted: function() {
 //      this.$refs.cubism.AppendRow("ACTIVE_POWER");
