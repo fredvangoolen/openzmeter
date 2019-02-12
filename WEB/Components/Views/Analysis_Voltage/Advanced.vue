@@ -7,17 +7,65 @@
 </template>
 
 <script>
-    FFTDataset = [];
+  import * as oZm from 'JS/openZmeter.js';
+  import Dygraph from 'dygraphs';
+  export default {
+    data() {
+      return { Graph: null, Data: [[0, 0]] };
+    },
+    methods: {
+      SetData(result) {
+        for(var i = 0; i < result.Voltage_FFT[0].length; i++) {
+          var Row = [];
+          for(n = 0; n < result.Voltage_FFT.length; n++) Row.push(result.Voltage_FFT[n][i]);
+          for(n = 0; n < result.Current_FFT.length; n++) Row.push(result.Current_FFT[n][i]);
+          FFTDataset.push(Row);
+        }
+      },
+      CalcOptions() {
+        return {
+          strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], fillGraph: true, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
+          legend: 'follow', legendFormatter: oZm.LegendFormatter_Follow, labels: ['Bin'].concat(Analyzer.GetSeriesNames('Voltage')).concat(Analyzer.GetSeriesNames('Current')), series: Series, plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
+          colors: ColorArray($('#VoltagePanel').css('border-color'), Analyzer.GetSeriesNames('Voltage').length).concat(ColorArray('#428bca', Analyzer.GetSeriesNames('Current').length)), visibility: VoltageVisibility.concat(CurrentVisibility),
+          axes: { 
+            y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: [Y1Range[0] + FFTVOffset, Y1Range[1] + FFTVOffset], 
+                 ticker: Log ? function(min, max) { return GraphDBTicks(min, max, FFTVOffset); } : Dygraph.numericTicks,
+                 valueFormatter: function(x) { return Round2(x - HarmonicsVOffset) + '<em class="x-small">' + (Log ? 'dB' : 'V') + '</em>'; },
+                 axisLabelFormatter: function (x) { return Round2(x); }
+               },
+            y2: { pixelsPerLabel: 15, axisLabelWidth: ShowCurrent ? 34 : 0, valueRange: [Y2Range[0] + FFTCOffset, Y2Range[1] + FFTCOffset],
+                  valueFormatter: function(x) { return Round2(x - FFTCOffset) + ' <em class="x-small">' + (Log ? 'dB' : 'A') + '</em>'; },
+                  ticker: (Log || ShowCurrent === false) ? function(min, max) { return (ShowCurrent === true) ? GraphDBTicks(min, max, FFTCOffset) : []; } : Dygraph.numericTicks,
+                  axisLabelFormatter: function (x) { return Round2(x); }
+                },
+            x: { drawGrid: true,  
+                 valueFormatter: function (y) { return Math.round(y / 10 * Analyzers[Analyzer].NominalFreq) + '<em class="small"> Hz</em>'; },
+                 axisLabelFormatter: function (y) {
+                   return;
+                   y = (y / 10 * Nodes['NominalFreq']);
+                   if(y >= 1000) {
+                     y = y / 1000;
+                     if((y % 1) != 0) return "";
+                     return y + '<em class="small"> kHz</em>';
+                   } else {
+                     if((y % 1) != 0) return "";
+                     return y + '<em class="small"> Hz</em>';
+                   }
+                 }
+               }
+          }
+        }
+      }
+    },
+    mounted: function() {
+      this.Graph = new Dygraph(document.getElementById("FFTChart"), this.Data, this.CalcOptions());
+    }
+  }
+</script>
 
- 
-  for(var i = 0; i < result.Voltage_FFT[0].length; i++) {
-    var Row = [];
-    for(n = 0; n < result.Voltage_FFT.length; n++) Row.push(result.Voltage_FFT[n][i]);
-    for(n = 0; n < result.Current_FFT.length; n++) Row.push(result.Current_FFT[n][i]);
-    FFTDataset.push(Row);
-  }  
+FFTDataset = [];
 
-  UpdateFFTChart();
+   UpdateFFTChart();
   
   
   /* Grafica de FFT */
@@ -50,40 +98,11 @@ function UpdateFFTChart() {
         ToShow[i] = Row;
       }
       Analyzer.GetSeriesNames('Current').map(function(val) {Series[val] = { axis: 'y2' }; });
-      var Options = { 
-        strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], fillGraph: true, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup  : mouseUpOZM, dblclick : dblClickOZM_Restore },
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Bin'].concat(Analyzer.GetSeriesNames('Voltage')).concat(Analyzer.GetSeriesNames('Current')), series: Series, plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
-        colors: ColorArray($('#VoltagePanel').css('border-color'), Analyzer.GetSeriesNames('Voltage').length).concat(ColorArray('#428bca', Analyzer.GetSeriesNames('Current').length)), visibility: VoltageVisibility.concat(CurrentVisibility),
-        axes: { 
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: [Y1Range[0] + FFTVOffset, Y1Range[1] + FFTVOffset], 
-               ticker: Log ? function(min, max) { return GraphDBTicks(min, max, FFTVOffset); } : Dygraph.numericTicks,
-               valueFormatter: function(x) { return Round2(x - HarmonicsVOffset) + '<em class="x-small">' + (Log ? 'dB' : 'V') + '</em>'; },
-               axisLabelFormatter: function (x) { return Round2(x); }
-             },
-          y2: { pixelsPerLabel: 15, axisLabelWidth: ShowCurrent ? 34 : 0, valueRange: [Y2Range[0] + FFTCOffset, Y2Range[1] + FFTCOffset],
-                valueFormatter: function(x) { return Round2(x - FFTCOffset) + ' <em class="x-small">' + (Log ? 'dB' : 'A') + '</em>'; },
-                ticker: (Log || ShowCurrent === false) ? function(min, max) { return (ShowCurrent === true) ? GraphDBTicks(min, max, FFTCOffset) : []; } : Dygraph.numericTicks,
-                axisLabelFormatter: function (x) { return Round2(x); }
-              },
-          x: { drawGrid: true,  
-               valueFormatter: function (y) { return Math.round(y / 10 * Analyzers[Analyzer].NominalFreq) + '<em class="small"> Hz</em>'; },
-               axisLabelFormatter: function (y) {
-                 return;
-             y = (y / 10 * Nodes['NominalFreq']);
-             if(y >= 1000) {
-               y = y / 1000;
-               if((y % 1) != 0) return "";
-               return y + '<em class="small"> kHz</em>';
-             } else {
-               if((y % 1) != 0) return "";
-               return y + '<em class="small"> Hz</em>';
-             }
-           }
-         }
+        
     }
   };
     if(FFTChart === null) {
-      FFTChart = new Dygraph(document.getElementById("FFTChart"), ToShow, Options);
+      
     } else {
       FFTChart.updateOptions(Options, true);
       FFTChart.updateOptions({ file: ToShow });

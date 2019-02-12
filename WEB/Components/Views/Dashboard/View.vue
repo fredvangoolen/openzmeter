@@ -19,6 +19,7 @@
   import Energy from './EnergyPanel.vue'
   import Graphs from './GraphsPanel.vue';
   import Variables from './VariablesPanel.vue';
+  import * as oZm from 'JS/openZmeter.js';
   export default {
     data () {
       return { };

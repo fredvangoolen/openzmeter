@@ -1,15 +1,22 @@
 import chroma from 'chroma-js';
+import Dygraph from 'dygraphs';
 export var Series = {
   'VOLTAGE': { CSS_Class: 'panel-voltage', Title: 'Voltage', Serie: 'Voltage', Units: 'V', Link: '/Analysis/Voltage', Color: '#d9534f',
-    FormatValue: function(val) { return {Units: '' + V, Value: Round2(val) }; },
+    FormatValue: function(val) { return {Units: '' + 'V', Value: Round2(val) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['V'] : ['V(R)', 'V(S)', 'V(T)']; }
   },
   'CURRENT': { CSS_Class: 'panel-current', Title: 'Current', Serie: 'Current', Units: 'A', Link: '/Analysis/Current', Color: '#428bca',
     FormatValue: function(val) { return Round2(val); },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['I'] : (analyzer.Mode === '3PHASE') ? ['I(R)', 'I(S)', 'I(T)'] : ['I(R)', 'I(S)', 'I(T)', 'I(N)'];}
   },
-  'ACTIVE_POWER': { CSS_Class: 'panel-active-power', Title: 'Active power', Serie: 'Active_Power', Units: 'w', Link: '/Analysis/Power', FormatValue: function(val) { return Round2(val); } },
-  'FREQUENCY': { CSS_Class: 'panel-frequency', Title: 'Frequency', Serie: 'Frequency', Units: 'Hz', Link: '/Analysis/Frequency', FormatValue: function(val) { return Round2(val); }, rangeFunc: function() {} },
+  'ACTIVE_POWER': { CSS_Class: 'panel-active-power', Title: 'Active power', Serie: 'Active_Power', Units: 'w', Link: '/Analysis/Power', Color: '#f0ad4e',
+    FormatValue: function(val) { return Round2(val); },
+    Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)']; }
+  },
+  'FREQUENCY': { CSS_Class: 'panel-frequency', Title: 'Frequency', Serie: 'Frequency', Units: 'Hz', Link: '/Analysis/Frequency', Color: '#5cb85c',
+    FormatValue: function(val) { return Round2(val); }, rangeFunc: function() {},
+    Names: function(analyzer) { return ['F']; }
+  },
   'REACTIVE_POWER': { CSS_Class: '', Title: 'Reactive Power', Serie: 'Reactive_Power', Units: 'var', Link: '/Analysis/Power', FormatValue: function(val) { return Round2(val); }, rangeFunc: function() {} },
   'POWER_FACTOR': { CSS_Class: '', Title: 'Power Factor', Serie: 'Power_Factor', Units: '', Link: '', FormatValue: function(val) { return Round2(val); } },
   'PHI': { CSS_Class: '', Title: 'Phi', Serie: 'Phi', Units: '', Link: '', FormatValue: function(val) { return Round2(val); }},
@@ -19,7 +26,6 @@ export var Series = {
 //    if(varName === 'Harmonics') return ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
 //    if(varName === 'Active_Energy') return (Self.GetSelected().Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)'];
 //    if(varName === 'Reactive_Energy') return (Self.GetSelected().Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)'];
-//    if(varName === 'Active_Power') return (Self.GetSelected().Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)'];
 //    if(varName === 'Reactive_Power') return (Self.GetSelected().Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)'];
 //    if(varName === 'Power_Factor')  return (Self.GetSelected().Mode === '1PHASE') ? ['PF'] : ['PF(R)', 'PF(S)', 'PF(T)'];
 //    if(varName === 'Voltage_THD')  return (Self.GetSelected().Mode === '1PHASE') ? ['THDv'] : ['THDv(R)', 'THDv(S)', 'THDv(T)'];
@@ -82,6 +88,66 @@ export function LegendFormatter_Follow(data) {
   }
   return Result;
 }
+
+/** Copyright 2015 Petr Shevtsov (petr.shevtsov@gmail.com) MIT-licensed (http://opensource.org/licenses/MIT) */
+Dygraph.Plugins.Crosshair = (function() {
+  "use strict";
+  var crosshair = function(opt_options) {
+    this.canvas_ = document.createElement("canvas");
+    opt_options = opt_options || {};
+    this.direction_ = opt_options.direction || null;
+  };
+  crosshair.prototype.toString = function() {
+    return "Crosshair Plugin";
+  };
+  crosshair.prototype.activate = function(g) {
+    g.graphDiv.appendChild(this.canvas_);
+    return {
+      select: this.select,
+      deselect: this.deselect
+    };
+  };
+  crosshair.prototype.select = function(e) {
+    if (this.direction_ === null) {
+      return;
+    }
+    var width = e.dygraph.width_;
+    var height = e.dygraph.height_;
+    this.canvas_.width = width;
+    this.canvas_.height = height;
+    this.canvas_.style.width = width + "px";    // for IE
+    this.canvas_.style.height = height + "px";  // for IE
+    var ctx = this.canvas_.getContext("2d");
+    ctx.clearRect(0, 0, width, height);
+    ctx.strokeStyle = "rgba(0, 0, 0,0.3)";
+    ctx.beginPath();
+    var canvasx = Math.floor(e.dygraph.selPoints_[0].canvasx) + 0.5; // crisper rendering
+    if (this.direction_ === "vertical" || this.direction_ === "both") {
+      ctx.moveTo(canvasx, 0);
+      ctx.lineTo(canvasx, height);
+    }
+    if (this.direction_ === "horizontal" || this.direction_ === "both") {
+      for (var i = 0; i < e.dygraph.selPoints_.length; i++) {
+        var canvasy = Math.floor(e.dygraph.selPoints_[i].canvasy) + 0.5; // crisper rendering
+        ctx.moveTo(0, canvasy);
+        ctx.lineTo(width, canvasy);
+      }
+    }
+    ctx.stroke();
+    ctx.closePath();
+  };
+  crosshair.prototype.deselect = function(e) {
+    var ctx = this.canvas_.getContext("2d");
+    ctx.clearRect(0, 0, this.canvas_.width, this.canvas_.height);
+  };
+  crosshair.prototype.destroy = function() {
+    this.canvas_ = null;
+  };
+  return crosshair;
+})();
+
+
+
 
 // Numbers tools
 

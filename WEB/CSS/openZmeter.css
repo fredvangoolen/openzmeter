@@ -251,6 +251,7 @@ img {
 }
 .panel-body {
   padding: 5px;
+  position: relative;
 }
 .float-center {
   position: absolute;
