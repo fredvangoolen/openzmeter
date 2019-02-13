@@ -299,24 +299,6 @@ div.scrtabs-tab-container + div.panel {
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
-.cubism-serie {
-  position: relative;  
-}
-.cubism-serie > .graph {
-  height: 50px;
-
-}
-.cubism-serie:first-child > .graph {
-  margin-top: 16px;
-  border-top: 1px solid #BBB;
-}
-.cubism-serie > .legend {
-  pointer-events: none;
-  position: absolute;
-  top: -2px; 
-  text-align: left; 
-  left: 2px;
-}
 .cubism-serie .timeline {
   margin-top: -63px;
 }
