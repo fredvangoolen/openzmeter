@@ -21,9 +21,13 @@ export var Series = {
   'POWER_FACTOR': { CSS_Class: '', Title: 'Power Factor', Serie: 'Power_Factor', Units: '', Link: '', FormatValue: function(val) { return Round2(val); } },
   'PHI': { CSS_Class: '', Title: 'Phi', Serie: 'Phi', Units: '', Link: '', FormatValue: function(val) { return Round2(val); }},
   'VOLTAGE_THD': { CSS_Class: '', Title: 'Voltage THD', Serie: 'Voltage_THD', Units: '%', Link:'', FormatValue: function(val) { return Round2(val); }},
-  'CURRENT_THD': { CSS_Class: '', Title: 'Current THD', Serie: 'Current_THD', Units: '%', Link:'', FormatValue: function(val) { return Round2(val); }}
+  'CURRENT_THD': { CSS_Class: '', Title: 'Current THD', Serie: 'Current_THD', Units: '%', Link:'', FormatValue: function(val) { return Round2(val); }},
+  'HARMONICS': {
+    FormatValue: function(val) { return Round2(val); },
+    Names: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th']
+  }
 //  Self.GetSeriesNames = function(varName) {
-//    if(varName === 'Harmonics') return ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
+
 //    if(varName === 'Active_Energy') return (Self.GetSelected().Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)'];
 //    if(varName === 'Reactive_Energy') return (Self.GetSelected().Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)'];
 //    if(varName === 'Reactive_Power') return (Self.GetSelected().Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)'];
@@ -35,6 +39,20 @@ export var Series = {
 };
 
 // dygraphs tools
+/* Generate db ticks (integers) */ 
+export function GraphDBTicks(min, max, offset) {
+  var ticks = [];
+  for(var i = Math.floor(min - offset); i < Math.ceil(max - offset); i++) {
+    if((i % 10) == 0) ticks.push({ v: i + offset, label: i });
+  }
+  return ticks;
+}
+/* Generate odd harmonic ticks */
+export function GraphOddHarmonics() {
+  var Ticks = [];
+  for(var i = 0; i < Series['HARMONICS'].Names.length; i = i + 2) Ticks.push({ v: i, label: Series['HARMONICS'].Names[i] });
+  return Ticks;
+}
 export function mouseDown(event, g, context) {
   context.initializeMouseDown(event, g, context);
   if (event.altKey || event.shiftKey) {
@@ -87,6 +105,32 @@ export function LegendFormatter_Follow(data) {
     }
   }
   return Result;
+}
+
+// Multiple column bar chart
+export function multiColumnBarPlotter(e) {
+  if(e.seriesIndex !== 0) return;
+  var g = e.dygraph;
+  var ctx = e.drawingContext;
+  var sets = e.allSeriesPoints;
+  var y_bottom = e.dygraph.toDomYCoord(0);
+
+  var min_sep = Infinity;
+  for(var j = 0; j < sets.length; j++) {
+    for(var i = 1; i < sets[j].length; i++) min_sep = Math.min(sets[j][i].canvasx - sets[j][i - 1].canvasx, min_sep);
+  }
+  var bar_width = Math.floor(2.5 / 3 * min_sep);
+  var subbar_width = bar_width / sets.length;
+  for(var j = 0; j < sets.length; j++) {
+    ctx.strokeStyle = g.getColors()[j];
+    ctx.fillStyle = g.getColors()[j];
+    for(var i = 0; i < sets[j].length; i++) {
+      var p = sets[j][i];
+      var x_left = p.canvasx - (subbar_width * sets.length / 2) + j * subbar_width;
+      ctx.fillRect(x_left, p.canvasy, bar_width / sets.length, y_bottom - p.canvasy);
+      ctx.strokeRect(x_left, p.canvasy, bar_width / sets.length, y_bottom - p.canvasy);
+    }
+  }
 }
 
 /** Copyright 2015 Petr Shevtsov (petr.shevtsov@gmail.com) MIT-licensed (http://opensource.org/licenses/MIT) */
@@ -613,27 +657,8 @@ export function LastSampletime(result, prev) {
 //function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, sender) {
 //  GroupButtons(buttongroup, variable, graph.attributes_.labels_.length, unique, function(VisibleSeries, Visibles) { graph.updateOptions({ visibility: VisibleSeries, valueRange: rangechecker(Visibles) }); }, sender);
 //}
-///* Generate db ticks (integers) */ 
-//function GraphDBTicks(min, max, offset) {
-//  var ticks = [];
-//  for(var i = Math.floor(min - offset); i < Math.ceil(max - offset); i++) {
-//    if((i % 10) == 0) ticks.push({ v: i + offset, label: i });
-//  }
-//  return ticks;
-//}
-///* Generate odd harmonic ticks */
-//function GraphOddHarmonics() {
-//  var Ticks = [];
-//  for(var i = 0; i < Analyzer.GetSeriesNames('Harmonics').length; i = i + 2) Ticks.push({ v: i, label: Analyzer.GetSeriesNames('Harmonics')[i] });
-//  return Ticks;
-//}
-//function GraphWaveTimeTicks(max) {
-//  var ticks = [];
-//  for(var i = 0; i <= Math.floor(max / Analyzer.GetSelected().SampleFreq * Analyzer.GetSelected().NominalFreq); i++) {
-//    ticks.push({ v: i * Analyzer.GetSelected().SampleFreq / Analyzer.GetSelected().NominalFreq, label: Round2(i / Analyzer.GetSelected().NominalFreq * 1000) });
-//  }
-//  return ticks;
-//}
+
+
 ///* find abs max value of array (maybe array of arrays) */
 export function ArrayAbsMax(array) {
   var Max = 0;

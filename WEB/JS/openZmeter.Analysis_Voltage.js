@@ -89,22 +89,6 @@ function Scrollable_UpdateCounters(times, renew) {
 }
 var WaveformDataset = [], HarmonicsDataset = [], FFTDataset = [];
 function Live_OnSuccess(result) {
-  $('#DetailTime').text('Last update at ' + new Date(result['Sampletime']).toLocaleTimeString() + '.' + new Date(result['Sampletime']).getMilliseconds());
-  WaveformDataset = [];
-  HarmonicsDataset = [];
-  FFTDataset = [];
-  for(var i = 0; i < result.Voltage_Samples[0].length; i++) {
-    var Row = [i];
-    for(n = 0; n < result.Voltage_Samples.length; n++) Row.push(result.Voltage_Samples[n][i]);
-    for(n = 0; n < result.Current_Samples.length; n++) Row.push(result.Current_Samples[n][i]);
-    WaveformDataset.push(Row);
-  }
-  for(var i = 0; i < 50; i++) {
-    var Row = [];
-    for(n = 0; n < result.Voltage_Harmonics.length; n++) Row.push(result.Voltage_Harmonics[n][i]);
-    for(n = 0; n < result.Current_Harmonics.length; n++) Row.push(result.Current_Harmonics[n][i]);
-    HarmonicsDataset.push(Row);
-  }  
   for(var i = 0; i < result.Voltage_FFT[0].length; i++) {
     var Row = [];
     for(n = 0; n < result.Voltage_FFT.length; n++) Row.push(result.Voltage_FFT[n][i]);

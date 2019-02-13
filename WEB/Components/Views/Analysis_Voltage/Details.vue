@@ -17,15 +17,13 @@
         </div>
       </div>
       <div class="panel-body" id="DetailDivs">
-        <keep-alive>
-          <waveform ref="waveform" v-if="ActiveTab == 'Waveform'"></waveform>
-          <harmonics ref="harmonics" v-if="ActiveTab == 'Harmonics'"></harmonics>
-          <evolution ref="evolution" v-if="ActiveTab == 'Evolution'"></evolution>
-          <advanced ref="advances" v-if="ActiveTab == 'Advanced'"></advanced>
-          <phasors ref="phasors" v-if="ActiveTab == 'Phasors'"></phasors>
-          <parameters ref="parameters" v-if="ActiveTab == 'parameters'"></parameters>
-          <events ref="events" v-if="ActiveTab == 'Events'"></events>
-        </keep-alive>
+        <waveform ref="waveform" :visible="(ActiveTab == 'Waveform')"></waveform>
+        <harmonics ref="harmonics" :visible="(ActiveTab == 'Harmonics')"></harmonics>
+        <evolution ref="evolution" v-bind:class="{ hide: (ActiveTab != 'Evolution') }"></evolution>
+        <advanced ref="advanced" :visible="(ActiveTab == 'Advanced')"></advanced>
+        <phasors ref="phasors" v-bind:class="{ hide: (ActiveTab != 'Phasors') }"></phasors>
+        <parameters ref="parameters" v-bind:class="{ hide: (ActiveTab != 'parameters') }"></parameters>
+        <events ref="events" v-bind:class="{ hide: (ActiveTab != 'Events') }"></events>
       </div>
     </div>
   </div>
@@ -62,15 +60,17 @@
     },
     methods: {
       TabChange(tab, name) {
-         this.ActiveTab = name;
-          $('#groupDetailPhasesSingle, #groupDetailPhasesMulti, #btnShowDetail1Harmonic, #btnShowDetailLog, #btnShowDetailCurrent, #toolbarDetails button[data-function="Maximize"]').hide();
+        this.ActiveTab = name;
+        
+      $('#groupDetailPhasesSingle, #groupDetailPhasesMulti, #btnShowDetail1Harmonic, #btnShowDetailLog, #btnShowDetailCurrent, #toolbarDetails button[data-function="Maximize"]').hide();
 //  if((index === 0) || (index === 1) || (index === 3)) $('#groupDetailPhasesMulti').show();
 //  if((index === 0) || (index === 1) || (index === 3)) $('#btnShowDetailCurrent').show();
 //  if((index === 0) || (index === 1) || (index === 3)) $('#toolbarDetails button[data-function="Maximize"]').show();
 //  if((index === 2) || (index === 5)) $('#groupDetailPhasesSingle').show();
 //  if((index === 1) || (index === 3)) $('#btnShowDetailLog').show();
 //  if(index === 1) $('#btnShowDetail1Harmonic').show();
-//  if(WaveformChart !== null) {
+//  if(name === 'Waveform') {
+//    this.$nextTick(this.$refs.waveform.Redraw);
 //    if(index === 0) $(WaveformChart.graphDiv).parent().removeAttr('style');
 //    UpdateWaveformChart();
 //  }
@@ -106,6 +106,7 @@
 
       },
       SetAnalyzer() {
+        this.Time = 'Loading data...';
         this.LastSample = 0;
         this.UpdateGraphs1M();
         this.UpdateGraphsNow();
@@ -114,8 +115,8 @@
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE_SAMPLES', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
-            this.$refs.harmonics.SetData(result);
-            this.$refs.parameters.SetData(result);
+//            this.$refs.evolution.SetData(result);
+//            this.$refs.parameters.SetData(result);
     //            this.$refs.indicator_bar.setValue(result);
           }.bind(this),
           complete: function() {
@@ -123,17 +124,19 @@
             this.UpdateGraphs1MTimer = setTimeout(this.UpdateGraphs1M, 30000);
           }.bind(this), 
           error: function() {
-//            this.$refs.indicator_bar.setValue(null);
+  //deshabilitar¿?
+    //            this.$refs.indicator_bar.setValue(null);
           }.bind(this)
         });
       },
       UpdateGraphsNow() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
             this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
             this.$refs.waveform.SetData(result);
             this.$refs.harmonics.SetData(result);
+            this.$refs.advanced.SetData(result);
 //              UpdatePhasorChart(result);
 //  SetCubismNowLabel(PowerFactorChart, result.Power_Factor);
 //  SetCubismNowLabel(THDChart, result.Voltage_THD); 
@@ -144,7 +147,8 @@
             this.UpdateGraphsNowTimer = setTimeout(this.UpdateGraphsNow, 1000);
           }.bind(this), 
           error: function() {
-//            this.$refs.indicator_bar.setValue(null);
+//deshabilitar¿?
+    //            this.$refs.indicator_bar.setValue(null);
           }.bind(this)
         });
       }

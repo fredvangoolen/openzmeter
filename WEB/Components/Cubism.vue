@@ -1,6 +1,6 @@
 <template>
   <div class="cubism-serie">
-    <div class="graph" ref="graph" v-bind:class="{'cubism-graph-first': first}"></div>
+    <div class="graph" ref="graph" v-bind:class="{'cubism-graph-first': (index == 0)}"></div>
     <div class="legend" ref="legend"></div>
   </div>
 </template>
@@ -50,7 +50,7 @@
     }
   }
   export default {
-    props: ['serie', 'first'],
+    props: ['serie', 'index'],
     data() {
       return { Graph: null, SerieProps: {} };
     },
@@ -77,7 +77,7 @@
       this.SerieProps = oZm.Series[this.serie];
     },
     mounted: function() {
-      this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], { strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], highlightCircleSize: 0, legend: 'always', xAxisHeight: 0.1, xLabelHeight: 1, interactionModel: { }, plotter: barChartPlotterCubism, labels: ["Time", this.SerieProps.Title], colors: ["#d9534f"], labelsDiv: this.$refs.legend,
+      this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], { strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], highlightCircleSize: 0, legend: 'always', xAxisHeight: 0.1, xLabelHeight: 1, interactionModel: { }, plotter: barChartPlotterCubism, labels: ["Time", ((this.SerieProps.Title === undefined) ? this.SerieProps.Names[this.index] : this.SerieProps.Title)], colors: ["#d9534f"], labelsDiv: this.$refs.legend,
   //    plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
         legendFormatter: function(data) {
           if(data.x === null) {
@@ -95,7 +95,7 @@
         axes: {
           y: { drawAxis: false, drawGrid: false, valueFormatter: this.SerieProps.FormatValue},
           x: { valueFormatter: function (x) { return '<div class="cubism-x-axis">' + new Date(x).toLocaleTimeString() + '</div>'; },
-               axisLabelFormatter: (!this.first) ? function() { return null; } : function(x, i) {
+               axisLabelFormatter: (this.index != 0) ? function() { return null; } : function(x, i) {
                  var date = new Date(x);
                  if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
                    return '<div class="timeline-day">' + date.toLocaleDateString() + '</div>';
@@ -127,4 +127,23 @@
     font-size: 20px; 
     font-weight: bold;
   }
+  .cubism-serie {
+    position: relative;  
+  }
+  .cubism-serie > .graph {
+    height: 50px !important;
+    width: 100% !important;
+  }
+  .cubism-serie:first-child > .graph {
+    margin-top: 16px;
+    border-top: 1px solid #BBB;
+  }
+  .cubism-serie > .legend {
+    pointer-events: none;
+    position: absolute;
+    top: -2px; 
+    text-align: left; 
+    left: 2px;
+  }
+  
 </style>

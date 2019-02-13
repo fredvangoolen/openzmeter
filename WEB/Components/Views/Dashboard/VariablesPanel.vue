@@ -10,7 +10,7 @@
     </div>
     <div class="panel-body">
       <div ref="Spinner" class="spinnerdiv" v-bind:class="{ 'hide': !ShowSpinner }"></div>
-      <cubism v-for="(serie, index) in Series" :serie="serie" :key="serie" :first="index == 0"></cubism>
+      <cubism v-for="(serie, index) in Series" :serie="serie" :key="serie" :index="index"></cubism>
     </div>
   </div>
 </template>
