@@ -22,6 +22,7 @@ import AnalysisPower from 'Components/Views/Analysis_Power/View.vue';
 import AnalysisEnergy from 'Components/Views/Analysis_Energy/View.vue';
 import AnalysisFrequency from 'Components/Views/Analysis_Frequency/View.vue';
 import StatsHeatmap from 'Components/Views/Stats_Heatmap/View.vue';
+import StatsDistribution from 'Components/Views/Stats_Distribution/View.vue';
 import Settings from './Components/Views/Settings/View.vue';
 
 new Vue({
@@ -38,6 +39,7 @@ new Vue({
       { path:'/Analysis/Energy', component: AnalysisEnergy },
       { path:'/Analysis/Frequency', component: AnalysisFrequency },
       { path:'/Stats/Heatmap', component: StatsHeatmap },
+      { path:'/Stats/Distribution', component: StatsDistribution },
       { path:'/Settings', component: Settings },
     ]})
 })
