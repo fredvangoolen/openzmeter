@@ -12,44 +12,46 @@
       <div ref="Chart" class="chart"></div>
     </div>
     <div class="panel-footer clearfix">
-      <router-link :to="SerieProps.Link"><span class="pull-left">View Details</span></router-link>
-      <toolbar class="pull-right" :options="ToolbarConf"></toolbar>
+      <router-link :to="SerieProps.Link" style="line-height: 22px"><span class="pull-left">View Details</span></router-link>
+      <toolbar-phases v-on:PhasesChanged="SetPhases" class="pull-right" v-if="type != 'FREQUENCY'" :variable="'Dashboard' + type" :mode="(type == 'CURRENT') ? 'CURRENT' : 'VOLTAGE'" :multi="true"></toolbar-phases>
     </div>
   </div>
 </template>
 
 <script>
-  import Spinner from 'Components/Spinner.vue';
   import * as oZm from 'JS/openZmeter.js';
+  import Spinner from 'Components/Spinner.vue';
   import Dygraph from 'dygraphs';
-  import Toolbar from 'Components/Toolbar.vue';
+  import ToolbarPhases from 'Components/ToolbarPhases.vue';
   export default {
     props: ['type'],
     data() {
       return {
-        ToolbarConf: [ { mode: 'Phases', phases: 'VOLTAGE', variable: 'PhasesMultiple'}, { mode: 'Tools', options: ['Export', 'Maximize'] } ],
         ShowSpinner: true,
         SerieProps: {},
         Aggregation: 'Loading data...',
         LastValue: [],
         Graph: null,
         Data: [],
+        DateWindow: [0, 0],
         LastSample: 0,
-        UpdateGraphTimer: null
+        UpdateGraphTimer: null,
+        Phases: [true]
       };
     },
     methods: {
       CalcOptions() {
-        if(this.$root.SelectedAnalyzer === null) return {};
+        if(this.$root.SelectedAnalyzer === null) return;
+        if(this.Data.length === 0) return;
         var Analyzer = this.$root.SelectedAnalyzer;
-        return {
+        var Options = {
           strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: false, rollPeriod: 0, legend: 'follow', interactionModel: {},
-          plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
+          plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data,
           legendFormatter: oZm.LegendFormatter_Follow, labels: ['Time'].concat(this.SerieProps.Names(Analyzer)), colors: oZm.ColorArray(this.SerieProps.Color, this.SerieProps.Names(Analyzer).length),
           underlayCallback: function(canvas, area, g) {
             if(this.type === 'VOLTAGE') {
               var NV = Analyzer.NominalVoltage, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
-//            GraphHBackgroundRanges([[NV * 1.1, NV * 1.07, Yellow], [NV * 0.93, NV * 0.9, Yellow], [Infinity, NV * 1.1, Red], [NV * 0.9, -Infinity, Red]], g, canvas);
+//              oZm.GraphHBackgroundRanges([[NV * 1.1, NV * 1.07, Yellow], [NV * 0.93, NV * 0.9, Yellow], [Infinity, NV * 1.1, Red], [NV * 0.9, -Infinity, Red]], g, canvas);
             }
           },
           axes: {
@@ -62,6 +64,8 @@
                }
           }
         };
+        this.Graph.updateOptions(Options);
+          //GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'DashboardVoltageVisiblePhases', false, function(series) { return CalcRanges(VoltageData, series, false, true); }, (event !== undefined) ? event.target : undefined); 
       },
       UpdateGraph() {
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], From: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID }), 
@@ -69,16 +73,14 @@
             this.ShowSpinner = false;
             if(result['Sampletime'] === null) return;
             if(result['Sampletime'].length === 0) return;
-              this.Data = oZm.GraphDataAppend(result, this.SerieProps.Serie, this.Data);
-              this.LastValue = oZm.Array_Round2(result[this.SerieProps.Serie].slice(-1)[0], oZm.ColorArray($(this.$refs.panel).css('border-color'), 4));
-              this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
-
-//    new GraphTools('Voltage', VoltageChart, '#toolbarVoltage', undefined, function() { exportToCsv('Voltage.csv', [['Time'].concat(Analyzer.GetSeriesNames('Voltage'))].concat(VoltageData)); });
-    
-    this.Graph.updateOptions(Object.assign(this.CalcOptions(), { file: this.Data, dateWindow: [result['From'], result['To']] }));
-//  for(var n = 0; n < Analyzer.GetSeriesNames('Voltage').length; n++) AddEvents(result, Analyzer.GetSeriesNames('Voltage')[n], VoltageChart);
-//  VoltageSeries();
+            this.Data = oZm.GraphDataAppend(result, this.SerieProps.Serie, this.Data);
+            this.LastValue = oZm.Array_Round2(result[this.SerieProps.Serie].slice(-1)[0], oZm.ColorArray($(this.$refs.panel).css('border-color'), 4));
+            this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
+            this.DateWindow = [result['From'], result['To']];
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
+            this.CalcOptions();
+//    new GraphTools('Voltage', VoltageChart, '#toolbarVoltage', undefined, function() { exportToCsv('Voltage.csv', [['Time'].concat(Analyzer.GetSeriesNames('Voltage'))].concat(VoltageData)); });
+//  for(var n = 0; n < Analyzer.GetSeriesNames('Voltage').length; n++) AddEvents(result, Analyzer.GetSeriesNames('Voltage')[n], VoltageChart);
           }.bind(this),
           complete: function() {
             if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
@@ -89,8 +91,9 @@
           }.bind(this)
         });
       },
-      AdjustSeries(event) {
-        GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'DashboardVoltageVisiblePhases', false, function(series) { return CalcRanges(VoltageData, series, false, true); }, (event !== undefined) ? event.target : undefined); 
+      SetPhases(phases) {
+        this.Phases = phases;
+        this.CalcOptions();
       },
       SetAnalyzer() {
         this.LastSample = 0;
@@ -106,13 +109,9 @@
       if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
     },
     mounted: function() {
-      this.Graph = new Dygraph(this.$refs.Chart, [[0, 0]], this.CalcOptions());
+      this.Graph = new Dygraph(this.$refs.Chart, [[0, 0]], {});
       if(this.$root.SelectedAnalyzer !== null) this.UpdateGraph();
     },
-    components: { Toolbar, Spinner }
+    components: { ToolbarPhases, Spinner }
   }
 </script>
-
-<style>
-  
-</style>

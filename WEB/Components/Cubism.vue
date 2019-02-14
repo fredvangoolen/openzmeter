@@ -66,10 +66,10 @@
 //    graph.updateOptions( { labels: Labels });
 //  }
       },
-      SetData: function(data, from, to, index) {
-        var Data = [];
-        for(var i = 0; i < data[this.serie].length; i++) Data.push([data[this.serie][i][0], data[this.serie][i][1 + index]]);
-        this.Graph.updateOptions({ file: Data, dateWindow: [from, to] });
+      SetData: function(data) {
+//        var Data = [];
+//        for(var i = 0; i < data[this.serie].length; i++) Data.push([data[this.serie][i][0], data[this.serie][i][1 + index]]);
+        this.Graph.updateOptions(data);
       }
     },
     created: function() {
