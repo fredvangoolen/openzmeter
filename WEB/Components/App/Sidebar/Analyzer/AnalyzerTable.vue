@@ -18,7 +18,7 @@
   import AnalyzerTableActions from './AnalyzerTableActions.vue';
   Vue.component('AnalyzerTableActions', AnalyzerTableActions);
   export default {
-    props: ['analyzers'],
+    props: { analyzers: [] },
     data() {
       return { 
         Columns: [

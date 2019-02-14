@@ -5,7 +5,7 @@
         <embed src="Imgs/Logo2.svg" type="image/svg+xml"/><br/>
         <div>Node time: {{ time }}</div>
       </div>
-      <button type="button" class="navbar-toggle"><img src="Imgs/application_side_expand.png"></button>
+      <button type="button" class="navbar-toggle"><img src="Imgs/application_menu.png"></button>
     </div>
     <div class="indicator-bar">
       <topbar-indicator units="V"  ref="voltage_indicator"   color="indicator-voltage"></topbar-indicator>

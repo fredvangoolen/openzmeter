@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var VoltageChart = null, VoltageData = [], CurrentChart = null, CurrentData = [], PowerChart = null, PowerData = [], PowerChartUnits = '', FrequencyChart = null, FrequencyData = [];
 function PeriodView_OnSuccess(result) {
   VoltageData = GraphDataAppend(result, 'Voltage', VoltageData);
   $('#labelVoltage').html(Array_Round2(result['Voltage'][result['Voltage'].length - 1], ColorArray($('#VoltagePanel').css('border-color'), 3)));
@@ -242,14 +241,6 @@ function Scrollable_UpdateCounters(times, renew) {
 }
 /* Parameters */
 function PeriodViewParams_OnSuccess(result) {
-  $('#labelParametersAggregation').text('From ' + GetAggregLongName(result['Aggregation_Source']) + ' aggregation');
-  ActiveData = GraphDataAppend(result, 'Active_Power', ActiveData);
-  ReactiveData = GraphDataAppend(result, 'Reactive_Power', ReactiveData);
-  PowerFactorData = GraphDataAppend(result, 'Power_Factor', PowerFactorData);
-  PhiData  = GraphDataAppend(result, 'Phi', PhiData);
-  THDVData = GraphDataAppend(result, 'Voltage_THD', THDVData);
-  THDIData = GraphDataAppend(result, 'Current_THD', THDIData);
-  if(ReactiveChart === null) {
     ActiveChart      = AppendCubismGraph($('#EvolutionPanel'), ActiveData,      "Active Power",   [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return (x === null) ? '~' : (Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'W</em>'); });
     ReactiveChart    = AppendCubismGraph($('#EvolutionPanel'), ReactiveData,    "Reactive Power", [result['From'], result['To']], function (x) { var Units = GetBestUnits(x); return (x === null) ? '~' : (Round2(ScaleToUnits(x, Units)) + '<em>' + Units + 'VAr</em>'); });
     PowerFactorChart = AppendCubismGraph($('#EvolutionPanel'), PowerFactorData, "Power Factor",   [result['From'], result['To']], function (x) { return (x === null) ? '~' : Round2(x); });
@@ -257,23 +248,6 @@ function PeriodViewParams_OnSuccess(result) {
     THDVChart        = AppendCubismGraph($('#EvolutionPanel'), THDVData,        "Voltage THD",    [result['From'], result['To']], function (x) { return (x === null) ? '~' : (Round2(x * 100.0) + '<em>%</em>'); });
     THDIChart        = AppendCubismGraph($('#EvolutionPanel'), THDIData,        "Current THD",    [result['From'], result['To']], function (x) { return (x === null) ? '~' : (Round2(x * 100.0) + '<em>%</em>'); });
     Dygraph.synchronize([ActiveChart, ReactiveChart, PowerFactorChart, PhiChart, THDVChart, THDIChart], { range: false, zoom: false });
-  } else {
-    ActiveChart.updateOptions({ file: ActiveData, dateWindow: [result['From'], result['To']] });
-    ReactiveChart.updateOptions({ file: ReactiveData, dateWindow: [result['From'], result['To']] });
-    PowerFactorChart.updateOptions({ file: PowerFactorData, dateWindow: [result['From'], result['To']] });
-    PhiChart.updateOptions({ file: PhiData, dateWindow: [result['From'], result['To']] });
-    THDVChart.updateOptions({ file: THDVData, dateWindow: [result['From'], result['To']] });
-    THDIChart.updateOptions({ file: THDIData, dateWindow: [result['From'], result['To']] });
-  }
-  ParametersSeries();
-}
-function ParametersSeries(event) {
-  GraphPhaseButtons(ActiveChart,      $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(ActiveData, series, false)); return [-Range, Range]; }, (event !== undefined) ? event.target : undefined); 
-  GraphPhaseButtons(ReactiveChart,    $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(ReactiveData, series, false)); return [-Range, Range]; }, (event !== undefined) ? event.target : undefined); 
-  GraphPhaseButtons(PowerFactorChart, $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PowerFactorData, series, false)); return [-Range, Range]; }, undefined); 
-  GraphPhaseButtons(PhiChart,         $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PhiData, series, false, false, false, true)); return [-Range, Range]; }, undefined); 
-  GraphPhaseButtons(THDVChart,        $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(THDVData, series, false, true, false, true)); return [-Range, Range]; }, undefined); 
-  GraphPhaseButtons(THDIChart,        $('#groupParametersPhases'), 'VisibleDashboardParametersPhases', true, function(series) { var Range = ArrayAbsMax(CalcRanges(THDIData, series, false, true, false, true)); return [-Range, Range]; }, undefined); 
 }
 function Live_OnSuccess(result) {
   SetCubismNowLabel(ActiveChart, result['Active_Power']);

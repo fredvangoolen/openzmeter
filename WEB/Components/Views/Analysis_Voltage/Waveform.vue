@@ -96,9 +96,6 @@
   }
 </script>
 
-<style>
-    
-</style>
 
     function UpdateWaveformChart() {
   var VoltageVisibility = [], CurrentVisibility = [], Y1Range = [], Y2Range = [], ;

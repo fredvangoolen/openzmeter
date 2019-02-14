@@ -4,10 +4,10 @@
     <div class="panel-heading">
       <div class="huge header-text">Energy consumption</div>
       <div class="header-buttons">
-        <!--toolbar-aggregation></toolbar-aggregation>
+        <toolbar-aggregation :options="['15M', '1H']"></toolbar-aggregation>
         <toolbar-time></toolbar-time>
         <toolbar-phases></toolbar-phases>
-        <toolbar-tools></toolbar-tools-->
+        <toolbar-tools></toolbar-tools>
       </div>
       <span class="clearfix"></span>
     </div>
@@ -27,7 +27,7 @@
           </div>
         </div>
         <div class="col-md-12 col-lg-8 col-xl-9">
-          <div id="EnergyChart" class="chart big_chart"></div>
+          <scrollable-graph></scrollable-graph>
         </div>
       </div>
     </div>
@@ -35,14 +35,16 @@
 </template>
 
 <script>
+  import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
   import ToolbarTime from 'Components/ToolbarTime.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
+  import ScrollableGraph from 'Components/ScrollableGraph.vue';
   export default {
       data() {
         return {};
       },
-      components: { ToolbarTime, ToolbarPhases, ToolbarTools }
+      components: { ToolbarAggregation, ToolbarTime, ToolbarPhases, ToolbarTools, ScrollableGraph }
   }
 </script>
   

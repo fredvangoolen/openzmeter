@@ -14,11 +14,8 @@
   import DetailsPanel from './Details.vue';  
   export default {
     data() {
-      return {};
+      return { };
     },
     components: { Voltage, DetailsPanel }
   }
 </script>
-
-<style>
-</style>
