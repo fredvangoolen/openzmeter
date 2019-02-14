@@ -61,7 +61,7 @@
 //                  axisLabelFormatter: function (x) { return Round2(x); }
 //                },
             x: { drawGrid: true,  
-                 valueFormatter: function (y) { return Math.round(y / 10 * Analyzers.NominalFreq) + '<em class="small"> Hz</em>'; },
+                 valueFormatter: function (y) { return Math.round(y / 10 * Analyzer.NominalFreq) + '<em class="small"> Hz</em>'; },
                  axisLabelFormatter: function (y) {
                    y = (y / 10 * Analyzer.NominalFreq);
                    if(y >= 1000) {

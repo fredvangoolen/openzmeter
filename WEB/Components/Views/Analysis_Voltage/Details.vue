@@ -1,22 +1,22 @@
 <template>
   <div>
     <detail-tabs :tabs="Tabs" variable="VoltageDetailTab" v-on:TabChange="TabChange"></detail-tabs>
-    <div class="panel panel-other voltage-details">
-          <!--div id="DetailSpinner" class="spinnerdiv"></div-->
+    <div class="panel panel-other">
       <div class="panel-heading clearfix">
         <div class="header-text">{{ Time }}</div>
         <div class="header-buttons">
           <toolbar-phases></toolbar-phases>
-          <toolbar-phases></toolbar-phases>
-          <div class="btn-group">
+          <toolbar-options :options="['1st Harmonic', 'Current', 'Log']"></toolbar-options>
+          <!--div class="btn-group">
             <button type="button" class="btn btn-default btn-xs" id="btnShowDetail1Harmonic" data-toggle="tooltip" title="Show/hide 1st harmonic">1st harmonic</button>
             <button type="button" class="btn btn-default btn-xs" id="btnShowDetailCurrent" data-toggle="tooltip" title="Show/hide current">Current</button>
             <button type="button" class="btn btn-default btn-xs" id="btnShowDetailLog" data-toggle="tooltip" title="Use logarithm scale">Log</button>
-          </div>
+          </div-->
           <toolbar-tools></toolbar-tools>
         </div>
       </div>
-      <div class="panel-body" id="DetailDivs">
+      <div class="panel-body">
+        <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
         <waveform ref="waveform" :visible="(ActiveTab == 'Waveform')"></waveform>
         <harmonics ref="harmonics" :visible="(ActiveTab == 'Harmonics')"></harmonics>
         <evolution ref="evolution" v-bind:class="{ hide: (ActiveTab != 'Evolution') }"></evolution>
@@ -31,7 +31,9 @@
 
 <script>
   import moment from 'moment';
+  import Spinner from 'Components/Spinner.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
+  import ToolbarOptions from 'Components/ToolbarOptions.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import Advanced from './Advanced.vue';
   import Events from './Events.vue';
@@ -43,7 +45,8 @@
   import DetailTabs from 'Components/Tabs.vue';
   export default {
     data () {
-      return { Tabs: ['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events'], ActiveTab: '', Time: 'Loading data...', LastSample: 0, UpdateGraphs1MTimer: null, UpdateGraphsNowTimer: null };
+      return { Tabs: ['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events'], ActiveTab: '', 
+               Time: 'Loading data...', LastSample: 0, UpdateGraphs1MTimer: null, UpdateGraphsNowTimer: null, ShowSpinner: true };
     },
     created: function() {
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
@@ -133,6 +136,7 @@
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
+            this.ShowSpinner = false;
             this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
             this.$refs.waveform.SetData(result);
             this.$refs.harmonics.SetData(result);
@@ -153,14 +157,14 @@
         });
       }
     },
-    components: { DetailTabs, Waveform, Harmonics, Evolution, Events, Parameters, Phasors, Advanced, ToolbarPhases, ToolbarTools }
+    components: { Spinner, DetailTabs, Waveform, Harmonics, Evolution, Events, Parameters, Phasors, Advanced, ToolbarPhases, ToolbarOptions, ToolbarTools }
   }
 </script>
 
 <style>
-  .voltage-details.panel-other {
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
+  .voltage-details {
+
+    
   }
 </style>
 

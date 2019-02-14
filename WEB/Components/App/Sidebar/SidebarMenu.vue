@@ -30,9 +30,9 @@
           <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_up.png"></span>
         </a>
         <ul class="sidenav-dropdown" data-sidenav-dropdown>
-          <li><a href="Events/ITIC">ITIC</a></li>
-          <li><a href="Events/Disturbances">Disturbances</a></li>
-          <li><a href="Events/EN50160">EN50160</a></li>
+          <li><router-link to="/Events/ITIC">ITIC</router-link></li>
+          <li><router-link to="/Events/Disturbances">Disturbances</router-link></li>
+          <li><router-link to="/Events/EN50160">EN50160</router-link></li>
         </ul>
       </li>
       <li>
@@ -45,7 +45,7 @@
         <ul class="sidenav-dropdown" data-sidenav-dropdown>
           <li><a href="Stats/Costs">Costs</a></li>
           <li><router-link to="/Stats/Heatmap">Heatmap</router-link></li>
-          <li><a href="Stats/Distribution">Distribution</a></li>
+          <li><router-link to="/Stats/Distribution">Distribution</router-link></li>
         </ul>
       </li>
     </ul>

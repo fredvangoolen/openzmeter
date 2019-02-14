@@ -35,7 +35,6 @@
 </template>
 
 <script>
-  import Toolbar from 'Components/Toolbar.vue';
   import ToolbarTime from 'Components/ToolbarTime.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
@@ -43,7 +42,7 @@
       data() {
         return {};
       },
-      components: { Toolbar, ToolbarTime, ToolbarPhases, ToolbarTools }
+      components: { ToolbarTime, ToolbarPhases, ToolbarTools }
   }
 </script>
   

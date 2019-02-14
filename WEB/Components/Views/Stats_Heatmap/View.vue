@@ -29,7 +29,7 @@
   import * as oZm from 'JS/openZmeter.Stats_Heatmap.js';
   import HeatmapTable from './HeatmapTable.vue';
   import ColorBar from 'Components/ColorBar.vue';
-  import Toolbar from 'Components/Toolbar.vue';
+  import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarYears from 'Components/ToolbarYears.vue';
   export default {
     data() {
@@ -38,7 +38,7 @@
     mounted: function() {
       oZm.UpdateStatsHeatmap();
     },
-    components: { Toolbar, ToolbarYears, HeatmapTable, ColorBar }
+    components: { ToolbarPhases, ToolbarYears, HeatmapTable, ColorBar }
 }
 </script>
 

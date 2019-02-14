@@ -24,6 +24,7 @@
         localStorage.setItem("SelAnalyzer", this.rowData.ID);
         this.$root.SelectedAnalyzer = this.rowData;  
         this.$root.$emit('AnalyzerChanged');
+        this.$parent.$parent.$emit('close');
       },
       Configure() {alert("Configure not yet implemented");},
       ACL() {alert("ACL not yet implemented");},
