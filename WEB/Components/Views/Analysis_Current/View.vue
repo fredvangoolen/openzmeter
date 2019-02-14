@@ -1,117 +1,21 @@
 <template>
-          <div id="wrapper">
-      <div class="row">
-        <div class="col-lg-12">
-          <div class="panel panel-current" id="CurrentPanel">
-            <div id="CurrentSpinner" class="spinnerdiv"></div>
-            <div class="panel-heading">
-              <div class="huge header-text">Current</div>
-              <div class="header-buttons"  id="toolbarCurrent">
-                <div class="btn-group" data-load-block="ScrollableAggreg_Block"></div>
-                <span>&nbsp;</span>
-                <div class="btn-group" data-load-block="ScrollableTime_Block"></div>
-                <span>&nbsp;</span>
-                <div class="btn-group" id="groupCurrentPhases" data-load-block="PhaseI_Block"></div>
-                <span>&nbsp;</span>
-                <div class="btn-group" data-load-block="GraphToolsPlay_Block"></div>
-              </div>
-              <span class="clearfix"></span>
-            </div>
-            <div class="panel-body">
-              <div class="row">
-                <div class="col-md-6 col-lg-4 col-xl-3">
-                  <div class="subpanel">
-                    <div class="huge-small" id="labelCurrentAvgPrimary">Loading data...</div>
-                    <div class="huge-small" id="labelCurrentAvgPrimaryValue">?</div>
-                    <div><span id="labelCurrentAvgSecondary">Loading data...</span>&nbsp;<span id="labelCurrentAvgSecondaryValue"></span></div>
-                  </div>
-                  <div class="subpanel">
-                    <div class="huge-small" id="labelCurrentMaxPrimary">Loading data...</div>
-                    <div class="huge-small" id="labelCurrentMaxPrimaryValue">?</div>
-                    <div><span id="labelCurrentMaxSecondary">Loading data...</span>&nbsp;<span id="labelCurrentMaxSecondaryValue"></span></div>
-                  </div>
-                  <div class="subpanel">
-                    <div class="huge-small" id="labelCurrentMinPrimary">Loading data...</div>
-                    <div class="huge-small" id="labelCurrentMinPrimaryValue">?</div>
-                    <div><span id="labelCurrentMinSecondary">Loading data...</span>&nbsp;<span id="labelCurrentMinSecondaryValue"></span></div>
-                  </div>
-                </div>
-                <div class="col-md-6 col-lg-8 col-xl-9">
-                  <div>
-                    <div id="CurrentChart" class="chart big_chart"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-lg-12">
-          <ul class="nav nav-tabs" id="DetailTabs">
-            <li><a data-toggle="tab" href="#">Waveform</a></li>
-            <li><a data-toggle="tab" href="#">Harmonics</a></li>
-            <li><a data-toggle="tab" href="#">Evolution</a></li>
-            <li><a data-toggle="tab" href="#">Advanced</a></li>
-            <li><a data-toggle="tab" href="#">Parameters</a></li>
-          </ul>
-          <div class="panel panel-other">
-            <div id="DetailSpinner" class="spinnerdiv"></div>
-            <div class="panel-heading">
-              <div class="header-text" id="DetailTime"></div>
-              <div id="LowWarning" class="title-warning hidden"><i class="fa fa-exclamation-triangle"></i> No current or current too low</div>
-              <div class="header-buttons" id="toolbarDetails">
-                <div class="btn-group" id="groupDetailPhasesSingle" data-load-block="PhaseI_Block"></div>
-                <span>&nbsp;</span>
-                <div class="btn-group" id="groupDetailPhasesMulti" data-load-block="PhaseI_Block"></div>
-                <span>&nbsp;</span>
-                <div class="btn-group">
-                  <button type="button" class="btn btn-default btn-xs" id="btnShowDetail1Harmonic" data-toggle="tooltip" title="Show/hide 1st harmonic">1st harmonic</button>
-                  <button type="button" class="btn btn-default btn-xs" id="btnShowDetailVoltage" data-toggle="tooltip" title="Show/hide voltage">Voltage</button>
-                  <button type="button" class="btn btn-default btn-xs" id="btnShowDetailLog" data-toggle="tooltip" title="Use logarithm scale">Log</button>
-                </div>
-                <span>&nbsp;</span>
-                <div class="btn-group" data-load-block="GraphToolsPlay_Block"></div>
-              </div>
-              <span class="clearfix"> </span>
-            </div>
-            <div class="panel-body" id="DetailDivs">
-              <div id="WaveformPanel">
-                <div id="WaveformMaximize">
-                  <div id="WaveformChart" class="chart big_chart"></div>
-                </div>
-              </div>
-              <div id="HarmonicsPanel">
-                <div id="HarmonicsMaximize">
-                  <div id="HarmonicsChart" class="chart big_chart"></div>
-                </div>
-              </div>
-              <div id="EvolutionPanel">
-              </div>
-              <div id="FFTPanel">
-                <div id="FFTMaximize">
-                  <div id="FFTChart" class="chart big_chart"></div>
-                </div>
-              </div>
-              <div id="ParametersPanel">
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  <div id="wrapper">
+    <div class="row">
+      <div class="col-lg-12"><current></current></div>
     </div>
+    <div class="row">
+      <div class="col-lg-12"><details-panel></details-panel></div>
+    </div>
+  </div>
 </template>
 
 <script>
-export default {
-  name: 'Dashboard',
-  data () {
-    return {
-      msg: 'Welcome to Your Vue.js App'
-    }
+  import Current from './Current.vue';
+  import DetailsPanel from './Details.vue';
+  export default {
+    data () {
+      return { };
+    },
+    components: { Current, DetailsPanel }
   }
-}
 </script>
-
-<style>
-</style>

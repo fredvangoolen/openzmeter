@@ -68,6 +68,7 @@ export default {
     top: 0;
     width: 256px;
     z-index: 100;
+    margin: 0px;
   }
   @media(min-width:1024px) {
     .navbar-nav {

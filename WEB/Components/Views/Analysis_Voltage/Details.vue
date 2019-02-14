@@ -1,17 +1,12 @@
 <template>
   <div>
-    <detail-tabs :tabs="Tabs" variable="VoltageDetailTab" v-on:TabChange="TabChange"></detail-tabs>
+    <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events']" variable="VoltageDetailTab" v-on:TabChange="TabChange"></detail-tabs>
     <div class="panel panel-other">
       <div class="panel-heading clearfix">
         <div class="header-text">{{ Time }}</div>
         <div class="header-buttons">
           <toolbar-phases></toolbar-phases>
           <toolbar-options :options="['1st Harmonic', 'Current', 'Log']"></toolbar-options>
-          <!--div class="btn-group">
-            <button type="button" class="btn btn-default btn-xs" id="btnShowDetail1Harmonic" data-toggle="tooltip" title="Show/hide 1st harmonic">1st harmonic</button>
-            <button type="button" class="btn btn-default btn-xs" id="btnShowDetailCurrent" data-toggle="tooltip" title="Show/hide current">Current</button>
-            <button type="button" class="btn btn-default btn-xs" id="btnShowDetailLog" data-toggle="tooltip" title="Use logarithm scale">Log</button>
-          </div-->
           <toolbar-tools></toolbar-tools>
         </div>
       </div>
@@ -45,8 +40,7 @@
   import DetailTabs from 'Components/Tabs.vue';
   export default {
     data () {
-      return { Tabs: ['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events'], ActiveTab: '', 
-               Time: 'Loading data...', LastSample: 0, UpdateGraphs1MTimer: null, UpdateGraphsNowTimer: null, ShowSpinner: true };
+      return { ActiveTab: '', Time: 'Loading data...', LastSample: 0, UpdateGraphs1MTimer: null, UpdateGraphsNowTimer: null, ShowSpinner: true };
     },
     created: function() {
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
@@ -65,7 +59,7 @@
       TabChange(tab, name) {
         this.ActiveTab = name;
         
-      $('#groupDetailPhasesSingle, #groupDetailPhasesMulti, #btnShowDetail1Harmonic, #btnShowDetailLog, #btnShowDetailCurrent, #toolbarDetails button[data-function="Maximize"]').hide();
+      //$('#groupDetailPhasesSingle, #groupDetailPhasesMulti, #btnShowDetail1Harmonic, #btnShowDetailLog, #btnShowDetailCurrent, #toolbarDetails button[data-function="Maximize"]').hide();
 //  if((index === 0) || (index === 1) || (index === 3)) $('#groupDetailPhasesMulti').show();
 //  if((index === 0) || (index === 1) || (index === 3)) $('#btnShowDetailCurrent').show();
 //  if((index === 0) || (index === 1) || (index === 3)) $('#toolbarDetails button[data-function="Maximize"]').show();

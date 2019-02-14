@@ -2,15 +2,12 @@
   <div class="panel panel-voltage" id="VoltagePanel">
     <!--div id="VoltageSpinner" class="spinnerdiv"></div-->
     <div class="panel-heading">
-      <div class="huge header-text">Voltage</div>
+      <div class="header-text" style="font-size: 24px; line-height: 16px;">Voltage</div>
       <div class="header-buttons" id="toolbarVoltage">
-        <div class="btn-group" data-load-block="ScrollableAggreg_Block"></div>
-        <span>&nbsp;</span>
-        <div class="btn-group" data-load-block="ScrollableTime_Block"></div>
-        <span>&nbsp;</span>
-        <div class="btn-group" id="groupVoltagePhases" data-load-block="PhaseV_Block"></div>
-        <span>&nbsp;</span>
-        <div class="btn-group" data-load-block="GraphToolsPlay_Block"></div>
+        <toolbar-aggregation :options="['3S', '1M', '10M', '1H']"></toolbar-aggregation>
+        <toolbar-time></toolbar-time>
+        <toolbar-phases></toolbar-phases>
+        <toolbar-tools></toolbar-tools>
       </div>
       <span class="clearfix"></span>
     </div>
@@ -35,7 +32,7 @@
         </div>
         <div class="col-md-6 col-lg-8 col-xl-9">
           <div>
-            <div id="VoltageChart" class="chart big_chart"></div>
+            <scrollable-graph></scrollable-graph>
           </div>
         </div>
       </div>
@@ -44,12 +41,18 @@
 </template>
 
 <script>
+  import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
+  import ToolbarTime from 'Components/ToolbarTime.vue';
+  import ToolbarPhases from 'Components/ToolbarPhases.vue';
+  import ToolbarTools from 'Components/ToolbarTools.vue';
+  import ScrollableGraph from 'Components/ScrollableGraph.vue';
   export default {
     data() {
       return {
         
       };
-    }
+    },
+    components: { ToolbarAggregation, ToolbarTime, ToolbarPhases, ToolbarTools, ScrollableGraph }
   }
 </script>
 

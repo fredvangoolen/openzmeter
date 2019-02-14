@@ -1,10 +1,10 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="huge header-text">Main variables</div>
+      <div class="header-text" style="font-size: 24px; line-height: 16px">Main variables</div>
       <div class="header-buttons">
+        <span>{{ Aggregation }}</span>
         <toolbar-phases v-on:PhasesChanged="SetPhases" variable="DashboardDetails" mode="VOLTAGE" :multi="false"></toolbar-phases>
-        <div>{{ Aggregation }}</div>
       </div>
     </div>
     <div class="panel-body">

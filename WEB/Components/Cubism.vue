@@ -55,20 +55,22 @@
       return { Graph: null, SerieProps: {} };
     },
     methods: {
-      SetNowLabel: function(labels) {
-//  if(graph !== null) {
+      SetNowLabel: function(label) {
+        if(this.Graph === null) return;
 //    var Index = 0;
 //    for(var i = 0; i < graph.user_attrs_.visibility.length; i++) {
 //      if(graph.user_attrs_.visibility[i] === true) Index = i;
 //    }
 //    var Labels = graph.user_attrs_.labels;
 //    Labels[0] = (labels === undefined) ? 'Time' : graph.axes_[Index].valueFormatter(labels[Index]);
-//    graph.updateOptions( { labels: Labels });
-//  }
+ //    graph.updateOptions( { labels: Labels });       
       },
       SetData: function(data) {
-//        var Data = [];
-//        for(var i = 0; i < data[this.serie].length; i++) Data.push([data[this.serie][i][0], data[this.serie][i][1 + index]]);
+        var Range = 0;
+        for(var n = 0; n < data.file.length; n++) {
+          if(Math.abs(data.file[n][1]) > Range) Range = Math.abs(data.file[n][1]);
+        }
+        data.valueRange = [-Range, +Range];
         this.Graph.updateOptions(data);
       }
     },
@@ -78,7 +80,7 @@
     },
     mounted: function() {
       this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], { strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], highlightCircleSize: 0, legend: 'always', xAxisHeight: 0.1, xLabelHeight: 1, interactionModel: { }, plotter: barChartPlotterCubism, labels: ["Time", ((this.SerieProps.Title === undefined) ? this.SerieProps.Names[this.index] : this.SerieProps.Title)], colors: ["#d9534f"], labelsDiv: this.$refs.legend,
-  //    plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
+        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
         legendFormatter: function(data) {
           if(data.x === null) {
             var Value = '<span class="cubism-legend-inactive-label">' + data.series[0].label + '</span>';
@@ -145,5 +147,4 @@
     text-align: left; 
     left: 2px;
   }
-  
 </style>
