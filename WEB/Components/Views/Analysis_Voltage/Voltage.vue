@@ -42,7 +42,7 @@
 
 <script>
   import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
-  import ToolbarTime from 'Components/ToolbarTime.vue';
+  import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import ScrollableGraph from 'Components/ScrollableGraph.vue';
@@ -52,7 +52,7 @@
         
       };
     },
-    components: { ToolbarAggregation, ToolbarTime, ToolbarPhases, ToolbarTools, ScrollableGraph }
+    components: { ToolbarAggregation, ToolbarPeriod, ToolbarPhases, ToolbarTools, ScrollableGraph }
   }
 </script>
 

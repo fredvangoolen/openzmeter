@@ -143,44 +143,9 @@ function PowerSeries(event) {
   PowerChart.setAnnotations(Annotations);
 }
 $('#groupPowerPhases').on('click', 'button', PowerSeries);
-/* Grafico de energia */
-var EnergyData = [], EnergyChart = null;
-function Scrollable_OnSuccess(result, clear) {
-  if(clear) EnergyData = [new Array(Analyzer.GetSeriesNames('Active_Energy').length + 1).fill(0)];
-  for(var i = 0; i < result['Active_Power'].length; i++) {
-    for(var n = 0; n < result['Active_Power'][i].length; n++) result['Active_Power'][i][n] = result['Active_Power'][i][n] * ((result['Aggregation_Source'] === '1H') ? 1.0 : 0.25);
-  }
-  EnergyData = GraphDataAppend(result, 'Active_Power', EnergyData);
-  if(EnergyChart === null) {
-    EnergyChart = new Dygraph(document.getElementById("EnergyChart"), EnergyData,
-      { strokeWidth: 0.5, stepPlot: true, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], plotter: barChartNoSpacedPlotter, stackedGraphNaNFill: 'none',
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(Analyzer.GetSeriesNames('Active_Energy')), dateWindow: [result['From'], result['To']],
-        zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },
-        underlayCallback: function(context, area, dygraph) { GraphHightlightWeekends("#EEE", context, area, dygraph); }, colors: ColorArray($('#EnergyPanel').css('border-color'), 3), xAxisHeight: 24,
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + ' <em class="x-small">' + Units + 'Wh</em>'; },
-               axisLabelFormatter: function (x) { return Round2(x); }
-             },
-          x: MainScrollable.XAxis
-          }
-        }
-    );
-    $(window).bind('resize', EnergyResizeEvent);
-    window.dispatchEvent(new Event('resize'));
-    new GraphTools('Active energy', EnergyChart, '#toolbarEnergy', EnergyResizeEvent, function() { exportToCsv('ActiveEnergy.csv', [['Time'].concat(SeriesNames.ActiveEnergy())].concat(EnergyData)); });
-  } else {
-    EnergyChart.updateOptions( { file: EnergyData, dateWindow: [result['From'], result['To']] } );
-  }
-  EnergySeries();
-}
 function EnergyResizeEvent() {
   if(EnergyChart !== null) EnergyChart.resize('100%', $('#EnergyPanel > .panel-body > .row > div:first-child').height());
 }
-function EnergySeries(event) {
-  GraphPhaseButtons(EnergyChart, $('#groupEnergyPhases'), 'VisibleDashboardEnergyPhases', false, function(series) { return CalcRanges(EnergyData, series, true, false, true); }, (event !== undefined) ? event.target : undefined); 
-}
-$('#groupEnergyPhases').on('click', 'button', EnergySeries);
 
 /* Contadores de consumo */
 function Scrollable_UpdateCounters(times, renew) {

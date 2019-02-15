@@ -5,9 +5,9 @@
       <div class="huge header-text">Energy consumption</div>
       <div class="header-buttons">
         <toolbar-aggregation :options="['15M', '1H']"></toolbar-aggregation>
-        <toolbar-time></toolbar-time>
-        <toolbar-phases></toolbar-phases>
-        <toolbar-tools></toolbar-tools>
+        <toolbar-period></toolbar-period>
+        <toolbar-phases v-on:PhasesChanged="PhasesChanged"></toolbar-phases>
+        <toolbar-tools :options="['EXPORT', 'MAXIMIZE', 'NOW']"></toolbar-tools>
       </div>
       <span class="clearfix"></span>
     </div>
@@ -27,7 +27,7 @@
           </div>
         </div>
         <div class="col-md-12 col-lg-8 col-xl-9">
-          <scrollable-graph></scrollable-graph>
+          <scrollable-graph ref="graph"></scrollable-graph>
         </div>
       </div>
     </div>
@@ -36,15 +36,26 @@
 
 <script>
   import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
-  import ToolbarTime from 'Components/ToolbarTime.vue';
+  import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import ScrollableGraph from 'Components/ScrollableGraph.vue';
   export default {
-      data() {
-        return {};
+    data() {
+      return {};
+    },
+    methods: {
+      PhasesChanged(phases) {
+        this.$refs.graph.SetPhases(phases);
       },
-      components: { ToolbarAggregation, ToolbarTime, ToolbarPhases, ToolbarTools, ScrollableGraph }
+      AggregationChanged(aggreg) {
+        this.$refs.graph.SetAggregation(aggreg);
+      },
+      PeriodChange(time) {
+        this.$refs.graph.SetPeriod(time);
+      }
+    },
+    components: { ToolbarAggregation, ToolbarPeriod, ToolbarPhases, ToolbarTools, ScrollableGraph }
   }
 </script>
   

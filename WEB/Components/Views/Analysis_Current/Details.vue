@@ -8,7 +8,7 @@
           <div class="header-buttons">
             <toolbar-phases></toolbar-phases>
             <toolbar-options :options="['1st Harmonic', 'Current', 'Log']"></toolbar-options>
-            <toolbar-tools></toolbar-tools>
+            <toolbar-tools variable="DetailOptions"></toolbar-tools>
           </div>
         </div>
         <div class="panel-body">

@@ -68,7 +68,7 @@
           //GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'DashboardVoltageVisiblePhases', false, function(series) { return CalcRanges(VoltageData, series, false, true); }, (event !== undefined) ? event.target : undefined); 
       },
       UpdateGraph() {
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], From: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], From: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: 7200000 }), 
           success: function(result) {
             this.ShowSpinner = false;
             if(result['Sampletime'] === null) return;
@@ -84,7 +84,7 @@
           }.bind(this),
           complete: function() {
             if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
-            this.UpdateGraphTimer = setTimeout(this.GetSeries, 5000);
+            this.UpdateGraphTimer = setTimeout(this.UpdateGraph, 5000);
           }.bind(this), 
           error: function() {
             this.ShowSpinner = true;
