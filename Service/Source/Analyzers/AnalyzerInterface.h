@@ -99,5 +99,4 @@ class AnalyzerInterface : protected Database {
     AnalyzerMode GetMode();
     string       GetID();
     json GetJSONDescriptor();
-    json_object *GetJSONParams(json_object *series);
 };

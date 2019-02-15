@@ -53,7 +53,7 @@ bool DeviceVirtual::ConfigDev(json_object *config) {
   if((json_object_object_get_ex(config, "SampleRate", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pSampleRate = json_object_get_double(Find);
   if((json_object_object_get_ex(config, "AutoStart", &Find) == true) && (json_object_get_type(Find) == json_type_boolean)) AutoStart = json_object_get_boolean(Find);
   if((json_object_object_get_ex(config, "Mode", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Mode = (char*)json_object_get_string(Find);
-  if((Mode == NULL) || (strcmp(Mode, "1PHASE") != 0) || (strcmp(Mode, "3PHASE") != 0) || (strcmp(Mode, "3PHASE+N") != 0)) Mode = "1PHASE";
+  if((Mode == NULL) || ((strcmp(Mode, "1PHASE") != 0) && (strcmp(Mode, "3PHASE") != 0) && (strcmp(Mode, "3PHASE+N") != 0))) Mode = "1PHASE";
   pMode = (strcmp(Mode, "1PHASE") == 0) ? AnalyzerInterface::PHASE1 : (strcmp(Mode, "3PHASE") == 0) ? AnalyzerInterface::PHASE3 : AnalyzerInterface::PHASE3N;
   if((pVoltage < 85) || (pVoltage > 300)) pVoltage = 230.0;
   if((pFrequency < 10) || (pFrequency > 80)) pFrequency = 50.0;

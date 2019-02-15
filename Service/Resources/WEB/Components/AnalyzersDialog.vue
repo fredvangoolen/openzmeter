@@ -22,7 +22,6 @@
 
 <script>
 module.exports = {
-  props: ['interval'],
   data: function() {
           return {
             Analyzers: [],

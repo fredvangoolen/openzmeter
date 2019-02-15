@@ -259,6 +259,29 @@ void AnalyzerInterface::SaveAggreg(Params_t &params) {
     BindSingleUInt64(params.Timestamp - 86400000);   //Delete 1 day old
     ExecSentence();
   }
+  //TEST
+  json Result;
+  if((params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M) || (params.Type == AGGREG_1H)) {
+    Result["Voltage"] = params.Voltage;
+    Result["Current"] = params.Current;
+    Result["Frequency"] = params.Frequency;
+    Result["Flag"] = params.Flag;
+  }
+  if((params.Type == AGGREG_3S) || (params.Type == AGGREG_15M) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_1H)) {
+    Result["Active_Power"] = params.Active_Power;
+    Result["Reactive_Power"] = params.Reactive_Power;
+  }
+  if(params.Type == AGGREG_1M) {
+    Result["Power_Factor"] = params.Power_Factor;
+    Result["Voltage_THD"] = params.Voltage_THD;
+    Result["Current_THD"] = params.Current_THD;
+    Result["Phi"] = params.Phi;
+    Result["Voltage_Harmonics"] = params.Voltage_Harmonics;
+    Result["Current_Harmonics"] = params.Current_Harmonics;
+  }
+  Result["Aggregation"] = (params.Type == AGGREG_3S) ? "3S" : (params.Type == AGGREG_1M) ? "1M" : (params.Type == AGGREG_10M) ? "10M" : (params.Type == AGGREG_15M) ? "15M": "1H";
+  Result["Sampletime"] = params.Timestamp;
+  Tools::SendUDP(Result);
   pLastSave = Tools::GetTime();
 }
 json AnalyzerInterface::GetJSONDescriptor() {
