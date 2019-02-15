@@ -1,25 +1,22 @@
 <template>
   <div class="btn-group">
-    <button type="button" class="btn btn-default btn-xs" v-for="(name, index) in options" @click="Toogle(index, name)">{{ name }}</button>
-    <!-- button type="button" @click="Toogle(0)" v-bind:class="{ active: PhasesR }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase R"><img src="Imgs/phase_r.png"></button>
-    <button type="button" @click="Toogle(1)" v-bind:class="{ active: PhasesS }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase S"><img src="Imgs/phase_s.png"></button>
-    <button type="button" @click="Toogle(2)" v-bind:class="{ active: PhasesT }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase T"><img src="Imgs/phase_t.png"></button>
-    <button type="button" @click="Toogle(3)" v-bind:class="{ active: PhasesN }" v-if="(Mode == '3PHASE+N') && (type == 'CURRENT')" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase N"><img src="Imgs/phase_n.png"></button-->
+    <button type="button" class="btn btn-default btn-xs" v-bind:class="{ active: Conf[name] }" v-for="(name, index) in options" @click="Toogle(index, name)">{{ name }}</button>
   </div>
 </template> 
 
 <script>
   export default {
-    props: { options: Array, multi: Boolean, type: String },
+    props: { options: Array, variable: String },
     data() {
-      return { Phases: [], PhasesR: false, PhasesS: false, PhasesT: false, PhasesN: false, Mode: '1PHASE' };
+      return { Conf: {} };
     },
     methods: {
-      Toogle(pos, name) {
-        $(this.$el).children()[pos].blur();
-        if(this.multi === false) this.Phases.fill(false);
-        this.Phases[pos] = !this.Phases[pos];
-        this.SelChanged();
+      Toogle(index, name) {
+        this.Conf[name] = !this.Conf[name];
+        this.Conf = Object.assign({}, this.Conf);
+        localStorage.setItem(this.variable, JSON.stringify(this.Conf));
+        this.$emit('OptionChanged', name, this.Conf[name]);
+        $(this.$el).children('button').blur();
       },
       AnalyzerChanged() {
         var Len = 0;
@@ -57,8 +54,16 @@
       }
     },
     created: function() {
-      this.SelChanged();
-      this.$root.$on('AnalyzerChanged', this.AnalyzerChanged);
+      var Conf = JSON.parse(localStorage.getItem(this.variable));
+      if(typeof(Conf) !== 'object') Conf = {};
+      for(var n = 0; n < this.options.length; n++) {
+        this.Conf[this.options[n]] = (Conf[this.options[n]] === true) ? true : false;
+      }
+    },
+    mounted: function() {
+      for(var n = 0; n < this.options.length; n++) {  
+        this.$emit('OptionChanged', name, this.Conf[name]);
+      }
     },
     mounted: function() {
       this.AnalyzerChanged();

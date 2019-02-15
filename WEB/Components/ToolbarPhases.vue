@@ -56,7 +56,6 @@
       }
     },
     created: function() {
-      this.SelChanged();
       this.$root.$on('AnalyzerChanged', this.AnalyzerChanged);
     },
     mounted: function() {
