@@ -10,5 +10,8 @@
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/JS/openZmeter.Dashboard.js</file>
             <file>file:/home/edu/Proyectos/zMeter/V2/Service/Resources/WEB/Common.html</file>
         </group>
+        <group>
+            <file>file:/home/edu/Proyectos/openZmeter/Service/Source/Devices/Virtual/DeviceVirtual.cpp</file>
+        </group>
     </open-files>
 </project-private>

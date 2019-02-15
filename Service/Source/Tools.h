@@ -57,5 +57,6 @@ class Tools {
     static uint8_t     *GetFile(string mame, size_t *size);
     static json_object *GetConfigObject();
     static char        *trim(char *str);
+    static void         SendUDP(json obj);
 };
 //----------------------------------------------------------------------------------------------------------------------
