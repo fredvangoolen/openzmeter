@@ -3,13 +3,12 @@
     <!--div id="VoltageSpinner" class="spinnerdiv"></div-->
     <div class="panel-heading">
       <div class="header-text" style="font-size: 24px; line-height: 16px;">Voltage</div>
-      <div class="header-buttons" id="toolbarVoltage">
-        <toolbar-aggregation :options="['3S', '1M', '10M', '1H']"></toolbar-aggregation>
-        <toolbar-time></toolbar-time>
+      <div class="header-buttons clearfix" id="toolbarVoltage">
+        <toolbar-aggregation :options="['3S', '1M', '10M', '1H']" variable="VoltageAggregation" v-on:AggregationChanged="SetAggregation"></toolbar-aggregation>
+        <toolbar-period variable="GraphPeriod" v-on:PeriodChanged="SetPeriod"></toolbar-period>
         <toolbar-phases></toolbar-phases>
-        <toolbar-tools></toolbar-tools>
+        <toolbar-tools :options="['EXPORT', 'MAXIMIZE', 'NOW']"></toolbar-tools>
       </div>
-      <span class="clearfix"></span>
     </div>
     <div class="panel-body">
       <div class="row">
@@ -31,9 +30,7 @@
           </div>
         </div>
         <div class="col-md-6 col-lg-8 col-xl-9">
-          <div>
-            <scrollable-graph></scrollable-graph>
-          </div>
+          <div class="chart" ref="graph"></div>
         </div>
       </div>
     </div>
@@ -45,14 +42,60 @@
   import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
-  import ScrollableGraph from 'Components/ScrollableGraph.vue';
+  import * as oZm from 'JS/openZmeter.js';
+  import Dygraph from 'dygraphs';
   export default {
     data() {
-      return {
-        
-      };
+      return { Graph: null, Data: [], ShowSpinner: true, LastSample: 0, Timer: null, Phases: [], Aggreg: '1H', Period: 0, DateWindow: [0, 0], Now: false };
     },
-    components: { ToolbarAggregation, ToolbarPeriod, ToolbarPhases, ToolbarTools, ScrollableGraph }
+    created: function() {
+      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
+    },
+    mounted: function() {
+      this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], {});
+//      if(this.$root.SelectedAnalyzer !== null) this.UpdateGraph();
+    },
+    methods: {
+      SetAnalyzer() {
+        this.Data = [];
+        this.LastSample = 0;
+//        this.UpdateGraph();
+      },
+      SetAutoUpdate(autoUpdate) {
+        //  $(Self.Opt.NowBtn).click(function() {
+//    var End = parseInt(localStorage.getItem('GraphEnd'));
+//    clearInterval(Self.Timer);
+//    if(End === 0) {
+//      $(Self.Opt.NowBtn).removeClass('active');
+//      localStorage.setItem('GraphEnd', Self.Range[1]);
+//    } else {
+//      $(Self.Opt.NowBtn).addClass('active');
+//      localStorage.setItem('GraphEnd', 0);
+//      Self.LastSample = 0;
+//      Self.GetSeries();
+//    }
+//  });
+      },
+      SetPhases(phases) {
+        this.Phases = phases;
+//        this.CalcOptions();
+      },
+      SetAggregation(aggreg) {
+        console.log(aggreg);
+        this.Aggreg = aggreg;
+        this.Data = [];
+        this.LastSample = 0;
+//        this.UpdateGraph();
+      },
+      SetPeriod(ms) {
+        console.log(ms);
+        this.Period = ms;
+        this.Data = [];
+        this.LastSample = 0;
+//        this.UpdateGraph();
+      }
+    },
+    components: { ToolbarAggregation, ToolbarPeriod, ToolbarPhases, ToolbarTools }
   }
 </script>
 
