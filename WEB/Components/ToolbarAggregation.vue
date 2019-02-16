@@ -28,10 +28,7 @@
         this.Selected = aggreg;
         this.SelectedText = $(event.target).text();
         localStorage.setItem(this.variable, aggreg);
-        //Self.LastSample = 0;
-        //Self.GetSeries();
         this.$emit('AggregationChanged', this.Selected);
-        console.log(aggreg);
       }
     },
     mounted: function() {
@@ -46,6 +43,9 @@
       } else if(this.Selected === '15M') {
         this.SelectedText = '15 minutes';
       } else if(this.Selected === '1H') {
+        this.SelectedText = '1 hour';
+      } else {
+        this.Selected = '1H';
         this.SelectedText = '1 hour';
       }
       this.$emit('AggregationChanged', this.Selected);
