@@ -205,25 +205,6 @@ file: this.Data
 //    }
 //  };
       }
-      
-      //  Self.ZoomEvt = function(minDate, maxDate, yRanges) {
-//    clearInterval(Self.Timer);
-//    $(Self.Opt.NowBtn).removeClass('active');
-//    localStorage.setItem('GraphEnd', maxDate);
-//    localStorage.setItem('GraphPeriod', maxDate - minDate);
-//    Self.Range = [minDate, maxDate];
-//    Self.LastSample = 0;
-//    Self.GetSeries();
-//  };
-//  Self.MouseUpEvt = function(event, g, contex) {
-//    mouseUpOZM(event, g, contex);
-//    if((contex.isPanning) && (contex.regionWidth > 0)) Self.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
-//  };
-//  Self.DoubleClickEvt = function(event, g, context) {
-//    dblClickOZM(event, g, context);
-//    Self.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
-//  };
-      
     }
   }
 </script>

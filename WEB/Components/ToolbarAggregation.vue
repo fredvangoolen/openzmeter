@@ -52,3 +52,9 @@
     }
   }
 </script>
+
+<style>
+  .dropdown-menu {
+    z-index: 10000;
+  }
+</style>

@@ -86,19 +86,6 @@ img {
 }
 /* Ajustes de la barra duperior de indicadores y logo */
 
-.sidenav-version {
-  position: absolute;
-  bottom: 0px;
-  color: white;
-  width: 100%;
-  padding: 10px;
-  font-size: 12px;
-}
-.sidenav-version > span {
-  vertical-align: middle;
-}
-
-
 .header-text {
     display: inline-block;
 }
