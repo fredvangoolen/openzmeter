@@ -1,6 +1,5 @@
 <template>
-            <div class="panel panel-current" id="CurrentPanel">
-            <div id="CurrentSpinner" class="spinnerdiv"></div>
+  <div class="panel panel-current" id="CurrentPanel">
             <div class="panel-heading">
               <div class="huge header-text">Current</div>
               <div class="header-buttons"  id="toolbarCurrent">
@@ -15,6 +14,7 @@
               <span class="clearfix"></span>
             </div>
             <div class="panel-body">
+              <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
               <div class="row">
                 <div class="col-md-6 col-lg-4 col-xl-3">
                   <div class="subpanel">

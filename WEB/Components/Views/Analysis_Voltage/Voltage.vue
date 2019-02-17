@@ -1,6 +1,5 @@
 <template>
   <div class="panel panel-voltage" id="VoltagePanel">
-    <!--div id="VoltageSpinner" class="spinnerdiv"></div-->
     <div class="panel-heading">
       <div class="header-text" style="font-size: 24px; line-height: 16px;">Voltage</div>
       <div class="header-buttons clearfix" id="toolbarVoltage">
@@ -11,6 +10,7 @@
       </div>
     </div>
     <div class="panel-body">
+      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
       <div class="row">
         <div class="col-md-6 col-lg-4 col-xl-3">
           <div class="subpanel">
@@ -43,7 +43,7 @@
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import * as oZm from 'JS/openZmeter.js';
-  import Dygraph from 'dygraphs';
+
   export default {
     data() {
       return { Graph: null, Data: [], ShowSpinner: true, LastSample: 0, Timer: null, Phases: [], Aggreg: '1H', Period: 0, DateWindow: [0, 0], Now: false };

@@ -47,9 +47,15 @@
     },
     mounted: function() {
       this.Selected = parseInt(localStorage.getItem(this.variable));
-      if(isNaN(this.Selected)) this.Selected(86400000);
+      if(isNaN(this.Selected)) this.Selected =86400000;
       this.SetPeriod(this.Selected);
       this.$emit('PeriodChanged', this.Selected);
     }
   }
 </script>
+
+<style>
+  .dropdown-menu {
+    z-index: 10000;
+  }
+</style>

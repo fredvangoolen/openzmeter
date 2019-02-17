@@ -42,10 +42,9 @@
     methods: {
       CalcOptions() {
         if(this.$root.SelectedAnalyzer === null) return;
-        if(this.Data.length === 0) return;
         var Analyzer = this.$root.SelectedAnalyzer;
         var Options = {
-          strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], animatedZooms: false, rollPeriod: 0, legend: 'follow', interactionModel: {},
+          strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', interactionModel: {},
           plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data,
           legendFormatter: oZm.LegendFormatter_Follow, labels: ['Time'].concat(this.SerieProps.Names(Analyzer)), colors: oZm.ColorArray(this.SerieProps.Color, this.SerieProps.Names(Analyzer).length),
           underlayCallback: function(canvas, area, g) {
@@ -68,6 +67,7 @@
           //GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'DashboardVoltageVisiblePhases', false, function(series) { return CalcRanges(VoltageData, series, false, true); }, (event !== undefined) ? event.target : undefined); 
       },
       UpdateGraph() {
+        if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], From: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: 7200000 }), 
           success: function(result) {
             this.ShowSpinner = false;
@@ -110,7 +110,7 @@
     },
     mounted: function() {
       this.Graph = new Dygraph(this.$refs.Chart, [[0, 0]], {});
-      if(this.$root.SelectedAnalyzer !== null) this.UpdateGraph();
+      this.UpdateGraph();
     },
     components: { ToolbarPhases, Spinner }
   }

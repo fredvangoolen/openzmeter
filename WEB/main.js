@@ -1,11 +1,11 @@
 //Libs -----------------------------------------
-import Vue from 'vue';
-import Router from 'vue-router'
-import jQuery from './JS/jquery.min.js';
+import Vue from './JS/vue.js';
+import Router from './JS/vue-router.js'
+import jQuery from './JS/jquery.js';
 window.$ = window.jQuery = jQuery;
-import 'bootstrap3';
-import './CSS/bootstrap.min.css'
-
+import './JS/bootstrap.min.js';
+import './CSS/bootstrap.min.css';
+import './JS/dygraph.js';
 
 Vue.use(Router);
 

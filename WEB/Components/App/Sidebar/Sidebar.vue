@@ -3,11 +3,7 @@
     <sidebar-user></sidebar-user>
     <sidebar-analyzer></sidebar-analyzer>
     <sidebar-menu></sidebar-menu>
-    <div class="sidenav-version"><span>Build 21-01-2018</span>
-      <div class="btn-group pull-right">
-        <button type="button" class="btn btn-default btn-xs navbar-btn" id="btnSearchAnalyzer"><img src="Imgs/newspaper.png"></button>
-      </div>
-    </div>
+    <sidebar-news></sidebar-news>
   </nav>
 </template>
 
@@ -15,6 +11,7 @@
 import SidebarUser from './SidebarUser.vue';
 import SidebarAnalyzer from './SidebarAnalyzer.vue';
 import SidebarMenu from './SidebarMenu.vue';
+import SidebarNews from './SidebarNews.vue';
 export default {
   data() { return {} },
   mounted: function() {
@@ -44,7 +41,7 @@ export default {
       $('[data-sidenav-overlay]').fadeOut('fast');
     }
   },
-  components: { SidebarUser, SidebarAnalyzer, SidebarMenu }
+  components: { SidebarUser, SidebarAnalyzer, SidebarMenu, SidebarNews }
 }
 </script> 
 
