@@ -33,8 +33,7 @@
     },
     methods: {
       YearChanged(year) {
-        
-//        var State = parseInt(localStorage.getItem('StatsBlock'));
+//  var State = parseInt(localStorage.getItem('StatsBlock'));
 //  var NumElements = $('#btnBlocks + ul').children().length;
 //  if(isNaN(State) || (State < 0) || (State > (NumElements - 1))) State = 0;
 //  $('#btnBlocks + ul > li:nth-child(' + (State + 1) + ')').addClass('active');
@@ -50,13 +49,13 @@
 //  $('#StatsSpinner').show();
       var To = new Date(year, 11, 31, 23, 59, 59, 999).getTime();
       var From = new Date(year, 0, 1, 0, 0, 0, 0).getTime();
-      $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Self.GetSelected().ID },
+      $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Self.GetSelected().ID } ),
         success: function(result) {
           EnergyData = GraphDataAppend(result, 'Active_Power', []);
           $('#StatsSpinner').hide();
           EnergySeries();
-      }
-  );
+        }
+      });
 
       AjaxGetEnergy(new Date(result['To']).getFullYear());
       
