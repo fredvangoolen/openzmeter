@@ -44,7 +44,7 @@
   import Dygraph from 'dygraphs';
   export default {
     data() {
-      return { Graph: null, Data: [], ShowSpinner: true, LastSample: 0, Timer: null, Phases: [], Aggreg: null, Period: null, DateWindow: [0, 0], Now: false };
+      return { Graph: null, Data: [], ShowSpinner: true, LastSample: 0, Timer: null, Phases: [], Aggreg: null, Period: null, DateWindow: [0, 0], AutoUpdate: null };
     },
     created: function() {
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
@@ -60,18 +60,11 @@
         this.UpdateGraph();
       },
       SetAutoUpdate(autoUpdate) {
-        this.Now = false;
-        clearInterval(Timer);
-//    var End = parseInt(localStorage.getItem('GraphEnd'));
-//    if(End === 0) {
-//      $(Self.Opt.NowBtn).removeClass('active');
-//      localStorage.setItem('GraphEnd', Self.Range[1]);
-//    } else {
-//      $(Self.Opt.NowBtn).addClass('active');
-//      localStorage.setItem('GraphEnd', 0);
-//      Self.LastSample = 0;
-//      Self.GetSeries();
-//    }
+        this.AutoUpdate = autoUpdate;
+        clearInterval(this.Timer);
+        this.LastSample = 0;
+        if(autoUpdate === false) this.$refs.tools.WriteTo(this.DateWindow[1]);
+        if((autoUpdate === true) || (this.Data === [])) this.UpdateGraph();
       },
       PhasesChanged(phases) {
         this.Phases = phases;

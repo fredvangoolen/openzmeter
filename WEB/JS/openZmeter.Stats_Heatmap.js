@@ -93,32 +93,5 @@ function EnergySeries(event) {
 }
 $('#groupEnergyPhases').on('click', 'button', EnergySeries);
 export function UpdateStatsHeatmap() {
-  var State = parseInt(localStorage.getItem('StatsBlock'));
-  var NumElements = $('#btnBlocks + ul').children().length;
-  if(isNaN(State) || (State < 0) || (State > (NumElements - 1))) State = 0;
-  $('#btnBlocks + ul > li:nth-child(' + (State + 1) + ')').addClass('active');
-  $('#btnBlocks span:first').text($('#btnBlocks + ul > li:nth-child(' + (State + 1) + ') > a').text());
-  localStorage.setItem('StatsBlock', State);
-  Analyzer.GetSeriesRange('10M', 
-    function(result) {
-      for(year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) {
-        $('#btnYear + ul').append('<li><a href="#">' + year + '</a></li>');
-      }
-      $('#btnYear + ul > li > a').click(function(evt) { 
-        evt.preventDefault();
-        AjaxGetEnergy(parseInt(this.text));
-      });
-      $('#btnBlocks + ul > li > a').click(function(evt) {
-        evt.preventDefault();
-        $('#btnBlocks').parent().find('li').removeClass('active');
-        $('#btnBlocks').parent().find('li > a:contains(' + this.text +')').parent().addClass('active');
-        $('#btnBlocks span:first').text(this.text);
-        localStorage.setItem('StatsBlock', $(this).parent().index());
-        EnergySeries();
-      });
-      AjaxGetEnergy(new Date(result['To']).getFullYear());
-      var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]);
-      ShowColorScale(ColorScale, $('#CalendarScale'));
-    }
-  );
+
 }

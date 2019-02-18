@@ -2,7 +2,7 @@
   <div class="btn-group">
     <button type="button" class="btn btn-default btn-xs" v-if="options.includes('EXPORT')" @click="$emit('ExportClick')" data-toggle="tooltip" title="Export data to CSV file"><img src="Imgs/table_export.png"></button>
     <button type="button" class="btn btn-default btn-xs" v-if="options.includes('MAXIMIZE')" @click="$emit('MaximizeClick')" data-toggle="tooltip" title="Maximize graph"><img src="Imgs/arrow_out.png"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('NOW')" v-bind:class="{ active: Now }" @click="NowClick" data-toggle="tooltip" title="Show most recent samples and update in real time"><img src="Imgs/time_go.png"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('NOW')" v-bind:class="{ active: Now, disabled: UpdateInProgress }" @click="NowClick" data-toggle="tooltip" title="Show most recent samples and update in real time"><img src="Imgs/time_go.png"></button>
     <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && !Pause" @click="PlayClick" data-toggle="tooltip" title="Resume live update"><img src="Imgs/play.png"></button>
     <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && Pause" @click="PauseClick" data-toggle="tooltip" title="Pause"><img src="Imgs/pause.png"></button>
   </div>
@@ -12,24 +12,31 @@
   export default {
     props: { options: Array, variable: String },
     data() {
-      return { Time: 0, Now: false, Pause: false };
+      return { UpdateInProgress: false, Now: false, Pause: false };
     },
     methods: {
       NowClick() {
         this.Now = !this.Now;
         $(this.$el).children('button').blur();
-        if(this.Now === true) this.WriteNow(0);
-        this.$emit('NowStatus', Time);
+        if(this.Now === true) this.WriteTo(0);
+        this.$emit('NowStatus', this.Now);
       },
-      ReadNow() {
-        this.Time = parseInt(localStorage.getItem(this.variable));
-        if(isNaN(this.Time) === true) this.Time = 0;
-        this.Now = (this.Time === 0);
+      ReadTo() {
+        var Time = parseInt(localStorage.getItem(this.variable));
+        if(isNaN(Time) === true) Time = 0;
+        this.Now = (Time === 0);
+        return Time;
       },
-      WriteNow(current) {
-        localStorage.setItem(this.variable, current);
-        this.Now = (current === 0);
-        this.Time = current;
+      WriteTo(time, force) {
+        if((this.Now === true) && (force !== true)) time = 0;
+        localStorage.setItem(this.variable, time);
+        this.Now = (time === 0);
+      },
+      BeginUpdate() {
+        this.UpdateInProgress = true;
+      },
+      EndUpdate() {
+        this.UpdateInProgress = false;
       },
       PlayClick() {
         Pause = false;
@@ -43,7 +50,8 @@
       }
     },
     created: function() {
-      this.ReadNow();
+      this.ReadTo();
+      if(this.options.includes('NOW')) this.$emit('NowStatus', this.Now);
     }
   }
 </script>
