@@ -41,7 +41,7 @@ export default {
         this.$refs.current_indicator.setValue(vals['Current']);
         this.$refs.power_indicator.setValue(vals['Active_Power']);
         this.$refs.frequency_indicator.setValue([vals['Frequency']]);
-        this.time = moment(vals.Sampletime).format('DD/MM/YYYY HH:mm:ss');  
+        this.time = moment(vals.Sampletime).format('DD/MM/YYYY - HH:mm:ss');  
       }
     }
   },

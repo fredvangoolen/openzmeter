@@ -1,9 +1,29 @@
 import chroma from 'chroma-js';
 import Dygraph from 'dygraphs';
 export var Series = {
-  'VOLTAGE': { CSS_Class: 'panel-voltage', Title: 'Voltage', Serie: 'Voltage', Units: 'V', Link: '/Analysis/Voltage', Color: '#d9534f',
+  'VOLTAGE': { 
+    CSS_Class: 'panel-voltage', 
+    Title: 'Voltage', 
+    Serie: 'Voltage', 
+    Units: 'V', 
+    Link: '/Analysis/Voltage', 
+    Color: '#d9534f',
     FormatValue: function(val) { return {Units: '' + 'V', Value: Round2(val) }; },
-    Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['V'] : ['V(R)', 'V(S)', 'V(T)']; }
+    Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['V'] : ['V(R)', 'V(S)', 'V(T)']; },
+    Range: function(values, phases) {
+      var UpperRange = -Infinity;
+      var LowerRange = +Infinity;
+      for(var i = 0; i < values.length; i++) {
+        for(var n = 0; n < phases.length; n++) {
+          if((values[i][n + 1] === null) || (phases[n] === false)) continue;
+          if(values[i][n + 1] > UpperRange) UpperRange = values[i][n + 1];
+          if(values[i][n + 1] < LowerRange) LowerRange = values[i][n + 1];
+        }
+      }
+      UpperRange = (UpperRange === -Infinity) ? UpperRange = 1 : UpperRange + 1;
+      LowerRange = (LowerRange === Infinity) ? LowerRange = 0 : LowerRange - 1;
+      return [LowerRange, UpperRange];  
+    }
   },
   'CURRENT': { CSS_Class: 'panel-current', Title: 'Current', Serie: 'Current', Units: 'A', Link: '/Analysis/Current', Color: '#428bca',
     FormatValue: function(val) { return Round2(val); },
