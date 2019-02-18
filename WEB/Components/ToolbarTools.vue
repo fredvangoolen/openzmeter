@@ -10,15 +10,26 @@
 
 <script>
   export default {
-    props: { options: Array },
+    props: { options: Array, variable: String },
     data() {
-      return { Now: true, Pause: false, Conf: {} };
+      return { Time: 0, Now: false, Pause: false };
     },
     methods: {
       NowClick() {
         this.Now = !this.Now;
         $(this.$el).children('button').blur();
-        localStorage.setItem('NowRefresh', JSON.stringify(this.Now));
+        if(this.Now === true) this.WriteNow(0);
+        this.$emit('NowStatus', Time);
+      },
+      ReadNow() {
+        this.Time = parseInt(localStorage.getItem(this.variable));
+        if(isNaN(this.Time) === true) this.Time = 0;
+        this.Now = (this.Time === 0);
+      },
+      WriteNow(current) {
+        localStorage.setItem(this.variable, current);
+        this.Now = (current === 0);
+        this.Time = current;
       },
       PlayClick() {
         Pause = false;
@@ -32,8 +43,7 @@
       }
     },
     created: function() {
-      this.Conf = JSON.parse(localStorage.getItem('NowRefresh'));
-      this.Now = (this.Conf === true) ? true : false;
+      this.ReadNow();
     }
   }
 </script>
