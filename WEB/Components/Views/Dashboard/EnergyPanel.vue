@@ -3,10 +3,10 @@
     <div class="panel-heading">
       <div class="huge header-text">Energy consumption</div>
       <div class="header-buttons">
-        <toolbar-aggregation v-on:AggregationChanged="AggregationChanged" :options="['15M', '1H']" variable="Aggregation"></toolbar-aggregation>
-        <toolbar-period v-on:PeriodChanged="PeriodChange" variable="Period"></toolbar-period>
-        <toolbar-phases v-on:PhasesChanged="PhasesChanged" variable="VoltagePhases" :multi="true" type="VOLTAGE"></toolbar-phases>
-        <toolbar-tools :options="['EXPORT', 'MAXIMIZE', 'NOW']"></toolbar-tools>
+        <toolbar-aggregation variable="AggregationEnergy" v-on:AggregationChanged="AggregationChanged" :options="['15M', '1H']"></toolbar-aggregation>
+        <toolbar-period variable="Period" v-on:PeriodChanged="PeriodChange"></toolbar-period>
+        <toolbar-phases variable="DashboardEnergyPhases" v-on:PhasesChanged="PhasesChanged" :multi="true" type="VOLTAGE"></toolbar-phases>
+        <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:PlayStatus="SetAutoUpdate"></toolbar-tools>
       </div>
       <span class="clearfix"></span>
     </div>
