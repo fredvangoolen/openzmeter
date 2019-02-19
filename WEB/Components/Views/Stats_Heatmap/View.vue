@@ -7,13 +7,14 @@
           <div class="panel-heading">
               <span class="huge header-text">Energy Heatmap</span>
               <div class="header-buttons clearfix">
-                <color-bar width="140px" height="10px"></color-bar>
+                <color-bar width="140px" height="10px" ref="colorbar"></color-bar>
                 <toolbar-aggregation variable="HeatmapPeriod" :options="['15M', '1H']"></toolbar-aggregation>
                 <toolbar-years @YearChanged="YearChanged"></toolbar-years>
               </div>
             </div>
-            <div class="panel-body">
-              <heatmap-table></heatmap-table>
+            <div class="panel-body" style="min-height: 300px">
+              <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
+              <heatmap-table ref="table" v-on:RangeChanged="RangeChanged"></heatmap-table>
             </div>
           </div>
         </div>
@@ -23,56 +24,37 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
+  import Spinner from 'Components/Spinner.vue';
   import HeatmapTable from './HeatmapTable.vue';
   import ColorBar from 'Components/ColorBar.vue';
   import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
   import ToolbarYears from 'Components/ToolbarYears.vue';
+  import moment from 'moment';
   export default {
     data() {
-      return { Year: 2019 };
+      return { ShowSpinner: true, Year: 2019 };
     },
     methods: {
+      AggregationChanged(aggreg) {
+        this.$refs.table.SetAggregation(aggreg);
+      },
+      RangeChanged(min, max, units) {
+        this.$refs.colorbar.SetRange(oZm.Round2(min), oZm.Round2(max), units + 'Wh');
+      },
       YearChanged(year) {
-//  var State = parseInt(localStorage.getItem('StatsBlock'));
-//  var NumElements = $('#btnBlocks + ul').children().length;
-//  if(isNaN(State) || (State < 0) || (State > (NumElements - 1))) State = 0;
-//  $('#btnBlocks + ul > li:nth-child(' + (State + 1) + ')').addClass('active');
-//  $('#btnBlocks span:first').text($('#btnBlocks + ul > li:nth-child(' + (State + 1) + ') > a').text());
-//  localStorage.setItem('StatsBlock', State);
-//  Analyzer.GetSeriesRange('10M', 
-//    function(result) {
-//  $('#StatsSpinner').show();
-//  $('#btnYear + ul > li').removeClass('active');
-//  $('#btnYear + ul > li > a:contains(' + selected_year +')').parent().addClass('active');
-//  $('#btnYear span:first').text(selected_year);
-//  SelectedYear = selected_year;
-//  $('#StatsSpinner').show();
-      var To = new Date(year, 11, 31, 23, 59, 59, 999).getTime();
-      var From = new Date(year, 0, 1, 0, 0, 0, 0).getTime();
-      $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Self.GetSelected().ID } ),
-        success: function(result) {
-          EnergyData = GraphDataAppend(result, 'Active_Power', []);
-          $('#StatsSpinner').hide();
-          EnergySeries();
-        }
-      });
-
-      AjaxGetEnergy(new Date(result['To']).getFullYear());
-      
-      var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]);
-      ShowColorScale(ColorScale, $('#CalendarScale'));
-//    }
-//  );
-        
-        
-        
-        
+        this.ShowSpinner = true;
+        if(this.$root.SelectedAnalyzer === null) return;
+        var Analyzer = this.$root.SelectedAnalyzer;
+        var Year = moment().year(year);
+        $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: Year.endOf('year').valueOf() - Year.startOf('year').valueOf(), To: Year.endOf('year').valueOf(), Aggreg: '15M', LastSample: 0, Series: ['ACTIVE_POWER'], Analyzer: Analyzer.ID } ),
+          success: function(result) {
+            this.ShowSpinner = false;
+            this.$refs.table.SetData(result);
+          }.bind(this)
+        });
       }
     },
-    mounted: function() {
-//      oZm.UpdateStatsHeatmap();
-    },
-    components: { ToolbarAggregation, ToolbarYears, HeatmapTable, ColorBar }
+    components: { Spinner, ToolbarAggregation, ToolbarYears, HeatmapTable, ColorBar }
 }
 </script>
 

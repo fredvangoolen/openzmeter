@@ -13,6 +13,7 @@
 </template> 
 
 <script>
+  import moment from 'moment';
   export default {
     data() {
       return { SelectedText: 'No data', Years: [] };
@@ -43,6 +44,9 @@
     },
     created: function() {
       this.$root.$on('AnalyzerChanged', this.AnalyzerChanged);
+    },
+    mounted: function() {
+      this.AnalyzerChanged();
     }
   }
 </script>
