@@ -630,11 +630,6 @@ export function GetBestUnits(value) {
 //  }
 //  return Result;
 //}
-//function ShowColorScale(scale, outerdiv) {
-//  scale.out('hex');
-//  var width = outerdiv.width() - 1;
-//  for(i = 0; i <= width; i++) outerdiv.append('<div style="width:1px; height:' + $(outerdiv).height() + 'px; display:inline; background:' + scale(i / width) + '"></div>');
-//}
 ///* Generate an array of colors from a base */
 export function ColorArray(base, items) {
   var Array = [];
@@ -739,20 +734,19 @@ export function Round2(value) {
     return ((value < 0) ? '-' : '') + Math.abs(Integer.toString()) + "<span style='font-size:80%'>." + Fraction + '</span>';
   }
 }
-//
-///* Retorna un numero como cadena con dos decimales pero sin formato html */
-//function Round2Plain(value) {
-//  if(value === null) {
-//    return '-';
-//  } else {
-//    value = Math.round(value * 100);
-//    var Integer = Math.trunc(value / 100);
-//    Fraction = Math.abs(value % 100);
-//    Fraction = Fraction.toString();
-//    while(Fraction.length < 2) Fraction = '0' + Fraction;
-//    return Integer.toString() + '.' + Fraction;
-//  }
-//}
+/* Retorna un numero como cadena con dos decimales pero sin formato html */
+export function Round2Plain(value) {
+  if(value === null) {
+    return '-';
+  } else {
+    value = Math.round(value * 100);
+    var Integer = Math.trunc(value / 100);
+    var Fraction = Math.abs(value % 100);
+    Fraction = Fraction.toString();
+    while(Fraction.length < 2) Fraction = '0' + Fraction;
+    return Integer.toString() + '.' + Fraction;
+  }
+}
 //
 ///* Guardar array como archivo CSV, incluyendo la cabecera */
 //function exportToCsv(filename, rows) {
