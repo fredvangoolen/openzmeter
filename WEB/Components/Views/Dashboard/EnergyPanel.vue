@@ -5,15 +5,14 @@
       <div class="header-buttons">
         <toolbar-aggregation variable="AggregationEnergy" v-on:AggregationChanged="AggregationChanged" :options="['15M', '1H']"></toolbar-aggregation>
         <toolbar-period variable="Period" v-on:PeriodChanged="PeriodChange"></toolbar-period>
-        <toolbar-phases variable="DashboardEnergyPhases" v-on:PhasesChanged="PhasesChanged" :multi="true" type="VOLTAGE"></toolbar-phases>
-        <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:PlayStatus="SetAutoUpdate"></toolbar-tools>
+        <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:NowStatus="SetAutoUpdate" ref="tools"></toolbar-tools>
       </div>
       <span class="clearfix"></span>
     </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
       <div class="row">
-        <div class="col-md-12 col-lg-4 col-xl-3">
+        <div class="col-md-12 col-lg-4 col-xl-3" ref="counters">
           <div class="subpanel">
             <div class="huge-small" id="labelEnergyPrimary">Loading data...</div>
             <div><span id="labelEnergyPrimaryValue" class="huge">?</span>&nbsp;<em class="huge-small-unit" id="labelEnergyPrimaryUnits"></em></div>
@@ -44,7 +43,7 @@
   import Dygraph from 'dygraphs';
   export default {
     data() {
-      return { Graph: null, Data: [], ShowSpinner: true, LastSample: 0, Timer: null, Phases: [], Aggreg: null, Period: null, DateWindow: [0, 0], AutoUpdate: null };
+      return { Periods: [], Graph: null, Data: [], ShowSpinner: true, LastSample: 0, Timer: null, Aggreg: null, Period: null, DateWindow: [0, 0], AutoUpdate: null };
     },
     created: function() {
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
@@ -55,7 +54,6 @@
     },
     methods: {
       SetAnalyzer() {
-        this.Data = [];
         this.LastSample = 0;
         this.UpdateGraph();
       },
@@ -66,74 +64,72 @@
         if(autoUpdate === false) this.$refs.tools.WriteTo(this.DateWindow[1]);
         if((autoUpdate === true) || (this.Data === [])) this.UpdateGraph();
       },
-      PhasesChanged(phases) {
-        this.Phases = phases;
-        this.CalcOptions();
-      },
       AggregationChanged(aggreg) {
         this.Aggreg = aggreg;
-        this.Data = [];
         this.LastSample = 0;
         this.UpdateGraph();
       },
       PeriodChange(time) {
         this.Period = time;
-        this.Data = [];
         this.LastSample = 0;
         this.UpdateGraph();
-        //  Self.GetCountersTimePeriod = function(name) {
-//    if(parseInt(localStorage.getItem('GraphEnd')) === 0) {
-//      if(name === 'Year')  return Object.assign(GetYearTimePeriod(),  { PreferedAggreg: localStorage.getItem(Self.Opt.AggregVariable) });
-//      if(name === 'Month') return Object.assign(GetMonthTimePeriod(), { PreferedAggreg: localStorage.getItem(Self.Opt.AggregVariable) });
-//      if(name === 'Week')  return Object.assign(GetWeekTimePeriod(),  { PreferedAggreg: localStorage.getItem(Self.Opt.AggregVariable) });
-//      if(name === 'Day')   return Object.assign(GetDayTimePeriod(),   { PreferedAggreg: localStorage.getItem(Self.Opt.AggregVariable) });
-//    }
-//    var Result = {};
-//    Result.PrimaryPeriod = parseInt(localStorage.getItem('GraphPeriod'));
-//    Result.PrimaryTo = parseInt(localStorage.getItem('GraphEnd'));
-//    Result.PreferedAggreg = localStorage.getItem(Self.Opt.AggregVariable);
-//    Result.PrimaryText = 'Displayed period';
-//    if(Result.PrimaryTo === 0) {
-//      Result.SecondaryText = 'Last ' + moment.duration(Result.PrimaryPeriod / 1000, "seconds").format("d [days] h [hours] m [minutes]");
-//    } else {
-//      var From = new Date(Result.PrimaryTo - Result.PrimaryPeriod);
-//      var To = new Date(Result.PrimaryTo);
-//      Result.SecondaryText = 'From ' + From.toLocaleDateString() + ' - ' + From.toLocaleTimeString() + ' to ' + To.toLocaleDateString() + ' - ' + To.toLocaleTimeString();
-//    }
-//    return Result;
-//  };
       },
       CalcOptions() {
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
-//  if(clear) EnergyData = [new Array(Analyzer.GetSeriesNames('Active_Energy').length + 1).fill(0)];
-//  for(var i = 0; i < result['Active_Power'].length; i++) {
-//    for(var n = 0; n < result['Active_Power'][i].length; n++) result['Active_Power'][i][n] = result['Active_Power'][i][n] * ((result['Aggregation_Source'] === '1H') ? 1.0 : 0.25);
-//  }
-//  EnergyData = GraphDataAppend(result, 'Active_Power', EnergyData);
-//  if(EnergyChart === null) {
+        var Range = oZm.Series['ACTIVE_ENERGY'].Range(this.Data, [true]);
         var Options = {
-          strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow',
-          legendFormatter: oZm.LegendFormatter_Follow, labels: ['Time'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), dateWindow: this.DateWindow, file: this.Data, visibility: this.Phases,
+          strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow',
+          legendFormatter: oZm.LegendFormatter_Follow, labels: ['Time'].concat(oZm.Series['ACTIVE_ENERGY'].Names(Analyzer)), dateWindow: this.DateWindow, file: this.Data, valueRange: Range,
           //zoomCallback: MainScrollable.ZoomEvt, 
           interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt, dblclick: this.DoubleClickEvt },
-//        underlayCallback: function(context, area, dygraph) { GraphHightlightWeekends("#EEE", context, area, dygraph); }, 
-        colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length), xAxisHeight: 24,
-//        axes: {
-//          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-//               valueFormatter: function (x) { var Units = GetBestUnits(x); return Round2(ScaleToUnits(x, Units)) + ' <em class="x-small">' + Units + 'Wh</em>'; },
-//               axisLabelFormatter: function (x) { return Round2(x); }
-//             },
+          underlayCallback: function(canvas, area, g) {
+            for(var i = 0; i < this.Periods.length; i++) {
+              var Left = g.toDomXCoord(this.Periods[i].From);
+              var Right = g.toDomXCoord(this.Periods[i].To);
+              canvas.fillStyle = (i % 2) ? '#FDD' : '#FBB';
+              canvas.fillRect(Left, area.y, Right, 13);
+              canvas.fillStyle = '#000';
+              canvas.font = "10px monospace";
+              canvas.fillText(this.Periods[i].Name, Left + 1, 10);
+              var Y = g.toDomYCoord(this.Periods[i].Power);
+              canvas.strokeStyle = '#d9534f';
+              canvas.lineWidth = 1;
+              canvas.beginPath();
+              if(i > 0) {
+                canvas.moveTo(Left, g.toDomYCoord(this.Periods[i -1 ].Power));
+                canvas.lineTo(Left, Y);
+              } else {
+                canvas.moveTo(Left, Y);
+              }
+              canvas.lineTo(Right, Y);
+              canvas.stroke();
+            }
+            area.y = 13;
+            area.h = area.h - 13;
+          }.bind(this),
+          colors: oZm.ColorArray(oZm.Series['ACTIVE_ENERGY'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length), xAxisHeight: 24,
+          axes: {
+            y: { pixelsPerLabel: 15, axisLabelWidth: 34,
+                 valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_ENERGY'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
+                 axisLabelFormatter: function (x) { var Units = oZm.GetBestUnits(Math.max(Math.abs(Range[0]), Math.abs(Range[1]))); return oZm.Round2(oZm.ScaleToUnits(x, Units)); }
+               },
 //          x: MainScrollable.XAxis
-//          }
+          }
           
         };
         this.Graph.updateOptions(Options);
 
 //    );
 //    $(window).bind('resize', EnergyResizeEvent);
-//    window.dispatchEvent(new Event('resize'));
-//    new GraphTools('Active energy', EnergyChart, '#toolbarEnergy', EnergyResizeEvent, function() { exportToCsv('ActiveEnergy.csv', [['Time'].concat(SeriesNames.ActiveEnergy())].concat(EnergyData)); });
+    var Height = $(this.$refs.counters).height();
+    this.Graph.resize('100%', Height);
+      
+      //counters
+      
+      //$(this.Graph.graphDiv).parent().removeAttr('style');
+    window.dispatchEvent(new Event('resize'));
+    ////    new GraphTools('Active energy', EnergyChart, '#toolbarEnergy', EnergyResizeEvent, function() { exportToCsv('ActiveEnergy.csv', [['Time'].concat(SeriesNames.ActiveEnergy())].concat(EnergyData)); });
 //  } else {
 //    EnergyChart.updateOptions( { file: EnergyData, dateWindow: [result['From'], result['To']] } );
 //  }
@@ -145,19 +141,50 @@
 //$('#groupEnergyPhases').on('click', 'button', EnergySeries);
 
       },
+      CalcPeriods(result) {
+        for(var i = 0; i < result.Sampletime.length; i++) {
+          var Period = { Name: result.Period_Name[i], From: result.Sampletime[i] - ((this.Aggreg === '15M') ? 899999 : 3599999), To: result.Sampletime[i], Power: result.Contracted_Power[i] };
+          if((Period.To < this.DateWindow[0]) || (Period.From > this.DateWindow[1])) continue;
+          var Added = false;
+          for(var n = 0; n < this.Periods.length; n++) {
+            if(this.Periods[n].Name !== Period.Name) continue;
+            if(Period.From === (this.Periods[n].To + 1)) {
+              this.Periods[n].To = Period.To;
+              Added = true;
+              break;
+            } else if(Period.To === (this.Periods[n].From - 1)) {
+              this.Periods[n].From = Period.From;
+              Added = true;
+              break;
+            } else if((Period.From >= this.Periods[n].From) && (Period.To <= this.Periods[n].To)) {
+              Added = true;
+              break;
+            }
+          }
+          if(Added === false) this.Periods.push(Period);
+        }
+        this.Periods = this.Periods.filter(period => (period.To > this.DateWindow[0]) || (period.From < this.DateWindow[1]) ).sort(function(a, b) { if(a.To < b.To) return -1; if(a.To > b.To) return 1; return 0; });
+//        var Periods = [];
+//        var Period = this.Periods[0];
+//        for(var i = 0; i < this.Periods.length; i++) {
+//              //if(this.Periods.To )  
+//        }
+        
+      },
       UpdateGraph() {
-        if((this.$root.SelectedAnalyzer === null) || (this.Aggreg === null) || (this.Period === null)) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: this.Aggreg, Series: ['VOLTAGE'], From: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: this.Period }), 
+        if((this.$root.SelectedAnalyzer === null) || (this.Aggreg === null) || (this.Period === null) || (this.AutoUpdate === null)) return;
+        $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: this.Aggreg, Series: ['ACTIVE_POWER'], To: this.$refs.tools.ReadTo(), LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: this.Period }), 
           success: function(result) {
             this.ShowSpinner = false;
             if(result['Sampletime'] === null) return;
             if(result['Sampletime'].length === 0) return;
-            this.Data = oZm.GraphDataAppend(result, 'Voltage', this.Data);
-            //EMIT señal de cambio de agregacion
+            this.Data = oZm.GraphDataAppend(result, 'Active_Energy', this.Data);
             this.DateWindow = [result['From'], result['To']];
+            this.$refs.tools.WriteTo(result['To']);
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
+            this.CalcPeriods(result);            
             this.CalcOptions();
-            }.bind(this),
+          }.bind(this),
           complete: function() {
             if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
             this.UpdateGraphTimer = setTimeout(this.UpdateGraph, 5000);
@@ -166,6 +193,15 @@
             this.ShowSpinner = true;
           }.bind(this)
         });
+        
+        //  if(clear) EnergyData = [new Array(Analyzer.GetSeriesNames('Active_Energy').length + 1).fill(0)];
+//  for(var i = 0; i < result['Active_Power'].length; i++) {
+//    for(var n = 0; n < result['Active_Power'][i].length; n++) result['Active_Power'][i][n] = result['Active_Power'][i][n] * ((result['Aggregation_Source'] === '1H') ? 1.0 : 0.25);
+//  }
+//  EnergyData = GraphDataAppend(result, 'Active_Power', EnergyData);
+//  if(EnergyChart === null) {
+
+        
 //    $(Self.Opt.AggregBtn + ' span:first').text(GetAggregLongName(result['Aggregation_Source']));
 //    $(Self.Opt.AggregBtn).next().children().removeClass('active');
 //    $(Self.Opt.AggregBtn).next().children(':contains(' + GetAggregLongName(result['Aggregation_Source']) + ')').addClass('active');
@@ -256,7 +292,10 @@
   //    Self.GetSeries();
       }
     },
-    components: { ToolbarAggregation, ToolbarPeriod, ToolbarPhases, ToolbarTools, Spinner }
+    beforeDestroy: function() {
+      if(this.Timer !== null) clearInterval(this.Timer);
+    },
+    components: { ToolbarAggregation, ToolbarPeriod, ToolbarTools, Spinner }
   }
 </script>
   
@@ -296,3 +335,26 @@
 
 
 //}
+
+
+        //  Self.GetCountersTimePeriod = function(name) {
+//    if(parseInt(localStorage.getItem('GraphEnd')) === 0) {
+//      if(name === 'Year')  return Object.assign(GetYearTimePeriod(),  { PreferedAggreg: localStorage.getItem(Self.Opt.AggregVariable) });
+//      if(name === 'Month') return Object.assign(GetMonthTimePeriod(), { PreferedAggreg: localStorage.getItem(Self.Opt.AggregVariable) });
+//      if(name === 'Week')  return Object.assign(GetWeekTimePeriod(),  { PreferedAggreg: localStorage.getItem(Self.Opt.AggregVariable) });
+//      if(name === 'Day')   return Object.assign(GetDayTimePeriod(),   { PreferedAggreg: localStorage.getItem(Self.Opt.AggregVariable) });
+//    }
+//    var Result = {};
+//    Result.PrimaryPeriod = parseInt(localStorage.getItem('GraphPeriod'));
+//    Result.PrimaryTo = parseInt(localStorage.getItem('GraphEnd'));
+//    Result.PreferedAggreg = localStorage.getItem(Self.Opt.AggregVariable);
+//    Result.PrimaryText = 'Displayed period';
+//    if(Result.PrimaryTo === 0) {
+//      Result.SecondaryText = 'Last ' + moment.duration(Result.PrimaryPeriod / 1000, "seconds").format("d [days] h [hours] m [minutes]");
+//    } else {
+//      var From = new Date(Result.PrimaryTo - Result.PrimaryPeriod);
+//      var To = new Date(Result.PrimaryTo);
+//      Result.SecondaryText = 'From ' + From.toLocaleDateString() + ' - ' + From.toLocaleTimeString() + ' to ' + To.toLocaleDateString() + ' - ' + To.toLocaleTimeString();
+//    }
+//    return Result;
+//  };

@@ -77,6 +77,9 @@
         this.LastSample = 0;
         for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = [];
         this.UpdateBars();  
+      },
+      SetNowValues() {
+        
       }
     },
     created: function() { 

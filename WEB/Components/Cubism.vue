@@ -1,6 +1,6 @@
 <template>
   <div class="cubism-serie">
-    <div class="graph" ref="graph" v-bind:class="{'cubism-graph-first': (index == 0)}"></div>
+    <div class="graph" ref="graph" v-bind:class="{'first': (index == 0)}"></div>
     <div class="legend" ref="legend"></div>
   </div>
 </template>
@@ -57,13 +57,9 @@
     methods: {
       SetNowLabel: function(label) {
         if(this.Graph === null) return;
-//    var Index = 0;
-//    for(var i = 0; i < graph.user_attrs_.visibility.length; i++) {
-//      if(graph.user_attrs_.visibility[i] === true) Index = i;
-//    }
-//    var Labels = graph.user_attrs_.labels;
-//    Labels[0] = (labels === undefined) ? 'Time' : graph.axes_[Index].valueFormatter(labels[Index]);
- //    graph.updateOptions( { labels: Labels });       
+        var Labels = graph.user_attrs_.labels;
+        Labels[0] = (label === undefined) ? 'Time' : label;
+        graph.updateOptions( { labels: Labels });       
       },
       SetData: function(data) {
         var Range = 0;
@@ -82,21 +78,21 @@
       this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], { strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], highlightCircleSize: 0, legend: 'always', xAxisHeight: 0.1, xLabelHeight: 1, interactionModel: { }, plotter: barChartPlotterCubism, labels: ["Time", ((this.SerieProps.Title === undefined) ? this.SerieProps.Names[this.index] : this.SerieProps.Title)], colors: ["#d9534f"], labelsDiv: this.$refs.legend,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
         legendFormatter: function(data) {
-          if(data.x === null) {
-            var Value = '<span class="cubism-legend-inactive-label">' + data.series[0].label + '</span>';
-            if(data.dygraph.user_attrs_.labels[0] !== 'Time') Value = Value + '<br/><span class="cubism-legend-inactive-value"> ' + data.dygraph.user_attrs_.labels[0] + '</span>';
+          if(data.x === undefined) {
+            var Value = '<span class="inactive-label">' + data.series[0].label + '</span>';
+            if(data.dygraph.user_attrs_.labels[0] !== 'Time') Value = Value + '<br/><span class="inactive-value"> ' + data.dygraph.user_attrs_.labels[0] + '</span>';
             return  Value;
           } else {
-            var Caption = '<span style="font-size: 15px; font-weight: bold">' + data.series[0].label + '</span><br/>' + data.xHTML;
+            var Caption = '<span class="active-label">' + data.series[0].label + '</span><br/>' + data.xHTML;
             for(var i = 0; i < data.series.length; i++)  {
-              if(data.series[i].yHTML !== undefined) return Caption + '<div style="font-size: 14px; line-height: 18px; font-weight: bold">' + data.series[i].yHTML + '</div>';
+              if(data.series[i].yHTML !== undefined) return Caption + '<div class="active-value">' + data.series[i].yHTML + '</div>';
             }
-            return Caption + '<div style="font-size: 14px; line-height: 18px; font-weight: bold">-</div>';
+            return Caption + '<div class="active-value">-</div>';
           }
         },
         axes: {
-          y: { drawAxis: false, drawGrid: false, valueFormatter: this.SerieProps.FormatValue},
-          x: { valueFormatter: function (x) { return '<div class="cubism-x-axis">' + new Date(x).toLocaleTimeString() + '</div>'; },
+          y: { drawAxis: false, drawGrid: false, valueFormatter: function(val) { var Result = this.SerieProps.FormatValue(val); return Result.Value + Result.Units; }.bind(this) },
+          x: { valueFormatter: function (x) { return '<div class="x-axis">' + new Date(x).toLocaleTimeString() + '</div>'; },
                axisLabelFormatter: (this.index != 0) ? function() { return null; } : function(x, i) {
                  var date = new Date(x);
                  if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
@@ -113,20 +109,29 @@
 </script>
 
 <style>
-  .cubism-graph-first {
+  .cubism-serie .first {
     margin-top: 16px;
     border-top: 1px solid #BBB;
   }
-  .cubism-x-axis {
+  .cubism-serie .x-axis {
     font-size: 10px;
     line-height: 10px
   }
-  .cubism-legend-inactive-label {
+  .cubism-serie .inactive-label {
     font-size: 18px;
     font-weight: bold;
   }
-  .cubism-legend-inactive-value {
+  .cubism-serie .inactive-value {
     font-size: 20px; 
+    font-weight: bold;
+  }
+  .cubism-serie .active-label {
+    font-size: 15px;
+    font-weight: bold;
+  }
+  .cubism-serie .active-value {
+    font-size: 14px;
+    line-height: 18px;
     font-weight: bold;
   }
   .cubism-serie {
@@ -146,5 +151,12 @@
     top: -2px; 
     text-align: left; 
     left: 2px;
+  }
+  .cubism-serie .timeline {
+    margin-top: -63px;
+  }
+  .cubism-serie .timeline-day {
+    margin-top: -63px;
+    font-weight: bold;
   }
 </style>

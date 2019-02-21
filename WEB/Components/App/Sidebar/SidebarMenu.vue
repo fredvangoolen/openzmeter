@@ -50,7 +50,7 @@
       </li>
     </ul>
     <ul class="sidenav-menu">
-      <li class="hide" id="menuSettings">
+      <li id="menuSettings">
         <router-link to="/Settings">
           <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/cog.png"></span>
           <span class="sidenav-link-title">Settings</span>

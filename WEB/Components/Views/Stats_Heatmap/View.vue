@@ -7,7 +7,7 @@
           <div class="panel-heading">
               <span class="huge header-text">Energy Heatmap</span>
               <div class="header-buttons clearfix">
-                <color-bar width="140px" height="10px" ref="colorbar"></color-bar>
+                <color-bar :width="140" :height="10" ref="colorbar"></color-bar>
                 <toolbar-aggregation variable="HeatmapPeriod" :options="['15M', '1H']"></toolbar-aggregation>
                 <toolbar-years @YearChanged="YearChanged"></toolbar-years>
               </div>

@@ -1,19 +1,19 @@
 <template>
   <div>
-  <div class="sidenav-header">
-    <div>{{ analyzerName }}</div>
-    <div class="btn-group pull-right">
-      <button type="button" class="btn btn-default btn-xs" v-bind:class="{disabled: !hasAnalyzers}" @click="showDialog = true"><img src="Imgs/magnifier.png"></button>
-      <button type="button" class="btn btn-default btn-xs disabled"><img src="Imgs/exclamation.png"></button>
+    <div class="sidenav-header">
+      <div>{{ analyzerName }}</div>
+      <div class="btn-group pull-right">
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{disabled: !hasAnalyzers}" @click="showDialog = true"><img src="Imgs/magnifier.png"></button>
+        <button type="button" class="btn btn-default btn-xs disabled"><img src="Imgs/exclamation.png"></button>
+      </div>
+      <div class="clearfix"></div>
+      <table>
+        <tr><td>Disk:</td><td><progress-bar :value="disk"></progress-bar></td></tr>
+        <tr><td>Battery:</td><td><progress-bar :value="battery"></progress-bar></td></tr>
+        <tr><td>Usage:</td><td>{{ usage }}</td></tr>              
+        <tr><td>Uptime:</td><td>{{ uptime }}</td></tr>
+      </table>
     </div>
-    <div class="clearfix"></div>
-    <table>
-      <tr><td>Disk:</td><td><progress-bar :value="disk"></progress-bar></td></tr>
-      <tr><td>Battery:</td><td><progress-bar :value="battery"></progress-bar></td></tr>
-      <tr><td>Usage:</td><td>{{ usage }}</td></tr>              
-      <tr><td>Uptime:</td><td>{{ uptime }}</td></tr>
-    </table>
-  </div>
     <analyzer-dialog v-if="showDialog" @close="showDialog = false" :analyzers="AvaliableAnalyzers"></analyzer-dialog>
   </div> 
 </template> 
