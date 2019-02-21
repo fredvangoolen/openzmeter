@@ -7,7 +7,16 @@
       </div>
     </div>
     <div class="modal-body">
-      <vuetable id="AnalyzerTable" ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive"></vuetable>
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
+                    <template slot="actions" slot-scope="props">
+                        <div class="table-button-container">
+                            <button class="ui button" @click="editRow(props.rowData)">
+                                <i class="fa fa-edit"></i> 
+                                View
+                            </button>
+                        </div>
+                    </template>
+      </vuetable>
     </div>
   </div>
 </template>
@@ -18,13 +27,14 @@
   import AnalyzerTableActions from './AnalyzerTableActions.vue';
   Vue.component('AnalyzerTableActions', AnalyzerTableActions);
   export default {
-    props: { analyzers: [] },
+    props: { analyzers: Array },
     data() {
       return { 
         Columns: [
           {name: 'Online', title: 'Online'},
           {name: 'Name', title: 'Description'}, 
-          {name: '__component:AnalyzerTableActions', title: ''}
+          {name: 'ID', title: 'Serial'},
+          {name: '__slot:actions', title: ''}
         ]
       };
     },
@@ -36,18 +46,18 @@
   }
 </script>
 
-<style>
-  #AnalyzerTable .vuetable-th-Online {
+<style scoped>
+  .vuetable-th-Online {
     width: 60px;
     text-align: center;
   }
-  #AnalyzerTable tr td:first-child {
+  tr td:first-child {
     text-align: center;
   }
-  #AnalyzerTable .vuetable-th-component-id {
+  .vuetable-th-component-id {
     width: 90px;
   }
-  #AnalyzerTable tr td:nth-child(3) {
+  tr td:nth-child(3) {
     text-align: center;
   }
 </style>

@@ -284,14 +284,6 @@ div.scrtabs-tab-container + div.panel {
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
-.cubism-serie .timeline {
-  margin-top: -63px;
-}
-.cubism-serie .timeline-day {
-  margin-top: -63px;
-  font-weight: bold;
-}
-/*--------------------------------------------------------------------------------------------------------------------*/
 .dygraph-axis-label {
   font-size: 10px;
   color: black;

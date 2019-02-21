@@ -13,6 +13,7 @@
     </div>
     <div class="panel-footer clearfix">
       <router-link :to="SerieProps.Link" style="line-height: 22px"><span class="pull-left">View Details</span></router-link>
+      <toolbar-tools :options="['EXPORT', 'MAXIMIZE']" class="pull-right"></toolbar-tools>
       <toolbar-phases v-on:PhasesChanged="SetPhases" class="pull-right" v-if="type != 'FREQUENCY'" :variable="'Dashboard' + type" :mode="(type == 'CURRENT') ? 'CURRENT' : 'VOLTAGE'" :multi="true"></toolbar-phases>
     </div>
   </div>
@@ -23,6 +24,7 @@
   import Spinner from 'Components/Spinner.vue';
   import Dygraph from 'dygraphs';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
+  import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     props: ['type'],
     data() {
@@ -43,9 +45,10 @@
       CalcOptions() {
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
+        var Range = this.SerieProps.Range(this.Data, this.Phases);
         var Options = {
           strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', interactionModel: {},
-          plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data,
+          plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data, xAxisHeight: 12, valueRange: Range,
           legendFormatter: oZm.LegendFormatter_Follow, labels: ['Time'].concat(this.SerieProps.Names(Analyzer)), colors: oZm.ColorArray(this.SerieProps.Color, this.SerieProps.Names(Analyzer).length),
           underlayCallback: function(canvas, area, g) {
             if(this.type === 'VOLTAGE') {
@@ -54,9 +57,9 @@
             }
           },
           axes: {
-            y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-                 valueFormatter: function (x) { return oZm.Round2(x) + ' <em class="x-small">' + this.SerieProps.Units + '</em>'; }.bind(this),
-                 axisLabelFormatter: function (x) { return oZm.Round2(x); }
+            y: { pixelsPerLabel: 15, axisLabelWidth: 30,
+                 valueFormatter: function (x) { var Result = this.SerieProps.FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; }.bind(this),
+                 axisLabelFormatter: function (x) { var Units = oZm.GetBestUnits(Math.max(Math.abs(Range[0]), Math.abs(Range[1]))); return oZm.Round2(oZm.ScaleToUnits(x, Units)); }
                },
             x: { valueFormatter: function (x) { return new Date(x).toLocaleTimeString(); },
                  axisLabelFormatter: function (x) { return x.toLocaleTimeString(); }
@@ -93,7 +96,7 @@
       },
       SetPhases(phases) {
         this.Phases = phases;
-        this.CalcOptions();
+        if(this.Data.length > 0) this.CalcOptions();
       },
       SetAnalyzer() {
         this.LastSample = 0;
@@ -112,6 +115,6 @@
       this.Graph = new Dygraph(this.$refs.Chart, [[0, 0]], {});
       this.UpdateGraph();
     },
-    components: { ToolbarPhases, Spinner }
+    components: { ToolbarPhases, ToolbarTools, Spinner }
   }
 </script>

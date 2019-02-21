@@ -89,21 +89,8 @@
             }
           };
         };
-    
-        
-    this.Days = Days;
-//      var Color = 
-//      Tmp.css('background-color', (Cell === undefined) ? '#555' : Color);
-//      Tmp.attr('title', (Cell === undefined) ? 'No data for this period' : (Round2Plain(ScaleToUnits(Cell, Units)) + Units + 'Wh'));
-//      Tmp.css('border', '1px solid #333');
-//      Row.append(Tmp);
-//    };
-//     Len = Len + 1;
-//    Body.append(Row);
-//  });
-
+        this.Days = Days;
       }
-      
     }
   }
 </script>

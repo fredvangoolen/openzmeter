@@ -500,91 +500,11 @@ function DropDownUpdateValue(event) {
 
 
 
-// Devices -------------------------------------------------------------------------------------------------------------
-var DeviceTable = null;
-function AjaxGetDevices() {
-$.ajax({ url: "getDevices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
-    function(result) {
-      DeviceTable = $('#DeviceTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [0, 1, 2, 3, 4, 5], orderable: false }, { targets: [2, 3, 4], className: 'text-center' } ], order: [0, 'desc']});
-      for(var i = 0; i < result.length; i++) {
-        var RowText = '<tr>' +
-          '<td>' + result[i]['Driver'] + '</td>' +
-          '<td>' + result[i]['Name'] + '</td>' +
-          '<td>' + result[i]['Serial'] + '</td>' +
-          '<td>' + result[i]['Analyzers'] + '</td>' +
-          '<td>' + result[i]['Status'] + '</td>' +
-          '<td><div class="btn-group" style="width:100%"><button class="btn btn-xs btn-' + ((result[i]['Status'] === 'RUNNING') ? 'danger' : 'success') + '" style="width:40%">' + ((result[i]['Status'] === 'RUNNING') ? 'Stop' : 'Start') + '</button><button class="btn btn-xs btn-default" style="width:60%">Configure</button></div></td>' +
-          '</tr>';
-        DeviceTable.row.add($(RowText)).draw();
-      }
-    }
-  });
-}
-function StartDevice() {
-  
-}
-function ConfigureDevice() {
-  
-}
 // NTP -----------------------------------------------------------------------------------------------------------------
-var NTP_DateTimePicker = null;
-$('#checkNTP').change(function() {
-  if($(this).prop('checked')) {
-    $('#inputCurrentTime > span').css("pointer-events", "none");
-    $('#inputCurrentTime > input').attr("disabled", "true");
-    $('#inputNTPServer').removeAttr("disabled");
-  } else {
-    $('#inputNTPServer').attr("disabled", "true");
-    $('#inputCurrentTime > input').removeAttr("disabled");
-    $('#inputCurrentTime > span').css("pointer-events", "inherit");
-  }
-});
-function AjaxGetTimeZones() {
-  $('#checkNTP').bootstrapToggle();
-  $.ajax({ url: "getTimeSettings", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
-    function(result) {
-      NTP_DateTimePicker = $('#inputCurrentTime').datetimepicker({ format: 'DD/MM/YYYY HH:mm:00', defaultDate: new Date(result.Time), sideBySide: true });
-      $('#inputCurrentTime > input').attr('value', moment(new Date(result.Time)).format('DD/MM/YYYY HH:mm:ss'));
-      $('#dropdownTimeZone span:first-child').text(result.TimeZone);
-      $('#inputNTPServer').val(result.NTP_Server);
-      if(result.NTP_Enabled === true) {
-        $('#checkNTP').bootstrapToggle('on');
-        $('#inputNTPServer').removeAttr("disabled");
-      } else {
-        $('#checkNTP').bootstrapToggle('off');
-        $('#inputNTPServer').attr("disabled", "true");
-      }
-      result.TimeZones.sort();
-      for(i = 0; i < result.TimeZones.length; i++) $('#dropdownListTimeZone').append('<li><a href="#">' + result.TimeZones[i] + '</a></li>');
-      
-      $("#dropdownListTimeZone li a").click(function(event) {
-        event.preventDefault();
-        $('#dropdownTimeZone span:first-child').text($(this).text());
-     });
-    }
-  });
-}
-$('#btnNTPSave').click(function() {
-  $('#btnNTPSave').attr("disabled");
-  $.ajax({ url: "setTimeSettings", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', 
-    data: JSON.stringify({ NTP_Enabled: $('#checkNTP').is(':checked'), NTP_Server: $('#inputNTPServer').val(), TimeZone: $('#dropdownTimeZone span:first-child').text(), Time: moment.tz($('#inputCurrentTime > input').val(), 'DD/MM/YYYY HH:mm:ss', $('#dropdownTimeZone span:first-child').text()).utc().valueOf() }), 
-    success: function(result) {
-      $('#dlgSave .modal-body > p').html("Settings changed correctly!");
-      $('#dlgSave').modal('show'); 
-    },
-    error: function(result) {
-      $('#dlgSave .modal-body > p').html("Failed to save settings!");
-      $('#dlgSave').modal('show'); 
-    },
-    complete: function(result) {
-      $('#btnNTPSave').removeAttr("disabled");    
-    }
-  });
-});
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {
   AjaxGetTimeZones();
-  AjaxGetDevices();
+  
   AjaxGetTariffs();
   AjaxGetNetworks();
 }

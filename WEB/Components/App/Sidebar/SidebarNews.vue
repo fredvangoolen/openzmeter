@@ -1,6 +1,6 @@
 <template>
   <div class="sidenav-version"><span>{{ BuildDate }}</span>
-    <button type="button" class="btn btn-default btn-xs pull-right"><img src="Imgs/newspaper.png"></button>
+    <button type="button" class="btn btn-default btn-xs pull-right" @click="ReadNews"><img src="Imgs/newspaper.png"></button>
   </div>
 </template>
 
@@ -8,6 +8,26 @@
   export default {
     data() {
       return { BuildDate: 'TestVersion'};
+    },
+    methods: {
+      ReadNews() {
+        ///* Load News and show dialog if any */
+//function LoadNews() {
+//  $('#btnNewsNext').click(LoadNews);
+//  $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ LastLogin: parseInt(localStorage.getItem('LastLogin')) }), success: 
+//    function(result) {
+//      if(result === null) {
+//        $('#dlgNews').modal('hide');
+//        return;
+//      }
+//      $('#dlgNews .modal-header h4').html(result.Header);
+//      $('#dlgNews .modal-body').html(result.Contents);
+//      $('#dlgNews').modal('show');
+//      localStorage.setItem('LastLogin', result.Timestamp + 1);
+//    }
+//  }); 
+//}
+      }
     }
   }
 </script>

@@ -121,7 +121,7 @@
             this.$refs.tools.WriteTo(result['To']);
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
             this.CalcOptions();
-            }.bind(this),
+          }.bind(this),
           complete: function() {
             this.$refs.tools.EndUpdate();
             if(this.Timer !== null) clearTimeout(this.Timer);
