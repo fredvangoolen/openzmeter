@@ -4,7 +4,7 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import Dygraph from 'dygraphs';
+  import Dygraph from 'JS/dygraph.js';
   export default {
     data() {
       return { Graph: null, Data: [], ShowSpinner: true, LastSample: 0, Timer: null, Phases: [], Aggreg: '1H', Period: 0, DateWindow: [0, 0], Now: false };

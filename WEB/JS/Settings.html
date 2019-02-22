@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <base href="/">
+    <link rel="shortcut icon" href="Imgs/favicon.ico"/>
+    <script src="JS/pace.min.js"></script>
+    <link rel="stylesheet" href="CSS/pace.min.css">    
+    <link rel="stylesheet" href="CSS/bootstrap.min.css"/>
+    <link rel="stylesheet" href="CSS/dataTables.min.css" />
+    <link rel="stylesheet" href="CSS/sidenav.min.css"/>
+    <!--link rel="stylesheet" href="Lib/jquery.lineProgressbar/jquery.lineProgressbar.css" type="text/css"/-->
+    <link rel="stylesheet" href="CSS/offline.min.css" type="text/css"/>
+    <link rel="stylesheet" href="CSS/bootstrap-toggle.min.css">
+    <link rel="stylesheet" href="CSS/bootstrap-datetimepicker.min.css">
+    <link rel="stylesheet" href="CSS/openZmeter.css"/>
+    <title>openZmeter - Stats</title>
+  </head>
+  <body>
+    <div id="OfflineDiv" class="overlay"></div>
+    <span data-load-block="Header_Block"></span>
+    <div class="modal fade" id="NetworkModal" tabindex="-1" role="dialog" data-backdrop='static'>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title"><i class="fa fa-wifi fa-fw"></i> Wifi settings</h3>
+          </div>
+          <div class="modal-body" id="NetworkDialogBody">
+            <fieldset>
+              <div class="row">
+                <div class="col-md-6">
+                  <label class="control-label">SSID</label>
+                  <input type="text" class="form-control" id="NetworkSSID">                             
+                </div>
+                <div class="col-md-6">
+                  <label class="control-label">BSSID</label>
+                  <input type="text" class="form-control" id="NetworkBSSID" placeholder="Blank for any BSSID">                             
+                </div>
+                <div class="col-md-6">
+                  <label class="control-label">Password</label>
+                  <input type="password" class="form-control" id="NetworkPassword">
+                </div>
+                <div class="col-md-3">
+                  <label class="control-label">Network type</label>
+                  <select id="NetworkKeyType" class="form-control">
+                    <option value="Open">Open</option>
+                    <option value="WEP">WEP</option>
+                    <option value="WPA">WPA</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label class="control-label">Network address</label>
+                  <select id="NetworkDHCP" class="form-control">
+                    <option value="DHCP">DHCP</option>
+                    <option value="Static">Static</option>
+                  </select>
+                </div>
+                <div class="col-md-12 col-lg-6">
+                  <label class="control-label">IP address</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="NetworkIP">
+                    <span class="input-group-addon">/<span  id="NetworkNetmask">24</span></span>
+                  </div>
+                </div>
+                <div class="col-md-12 col-lg-6">
+                  <label class="control-label">Gateway address</label>
+                  <input type="text" class="form-control" id="NetworkGateway">
+                </div>
+                <div class="col-md-12 col-lg-6">
+                  <label class="control-label">Primary DNS address</label>
+                  <input type="text" class="form-control" id="NetworkDNS0">
+                </div>
+                <div class="col-md-12 col-lg-6">
+                  <label class="control-label">Secondary DNS address</label>
+                  <input type="text" class="form-control" id="NetworkDNS1">
+                </div>
+              </div>
+            </fieldset>
+          </div>
+          <div class="alert alert-danger text-center" id="NetworkErrorBox" style="display:none; margin: 0px 15px 15px 15px;">
+            <i class="fa fa-times"></i> <span id="NetworkError"></span>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-success" id="NetworkConfigSave"><span class="glyphicon glyphicon-floppy-disk"></span>Save</button>
+            <button type="button" class="btn btn-default" id="NetworkConfigClose"><span class="glyphicon glyphicon-remove"></span>Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="dlgTariff" tabindex="-1" role="dialog" data-backdrop='static'>
+      <div class="modal-dialog">
+        <div class="modal-content" id="divTariffMain">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Tariffs template</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs disabled" id="btnTariffSave"><img src="Imgs/diskette.png" alt="New tariff"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffPeriods">Periods</button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffSeasons">Seasons</button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffHolidays">Holidays</button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffBack" data-dismiss="modal"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-danger text-center hide" id="divTariffError" style="margin-bottom: 5px; padding: 5px;"></div>
+            <div class="alert alert-success text-center" id="divTariffSuccess" style="margin-bottom: 5px; padding: 5px;"></div>
+            <div class="row">
+              <div class="col-xs-12 col-sm-6">
+                <label class="control-label">Name</label>
+                <input type="text" class="form-control" id="inputTariffName">
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <label class="control-label">Country/Zone</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" value="Spain" style="pointer-events: none" id="inputTariffCountry">
+                  <div class="input-group-btn-vertical">
+                    <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></button>
+                    <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <label class="control-label">Start date</label>
+                <div class='input-group date' id='inputTariffStartDate'>
+                  <input type='text' class="form-control" />
+                  <span class="input-group-addon">
+                    <span class="glyphicon-calendar"></span>
+                  </span>
+                </div>
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <label class="control-label">End date</label>
+                <div class='input-group date' id='inputTariffEndDate'>
+                  <input type='text' class="form-control" />
+                  <span class="input-group-addon">
+                    <span class="glyphicon-calendar"></span>
+                  </span>
+                </div>
+              </div>
+              <div class="col-xs-12">
+                <label class="control-label">Description</label>
+                <textarea class="form-control" rows="5" id="inputTariffComments" style="resize: none"></textarea>
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <div class="btn-group" style="margin-top:8px;width:100%;">
+                  <div class="input-group">
+                    <span class="input-group-addon" style="width: 100%"><strong>Weekends as</strong></span>
+                    <div class="input-group-btn">
+                      <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false" id="btnTariffWeekend"><span style="display: inline-block;width: 80px;"></span><span class="caret"></span></button>
+                      <ul class="dropdown-menu pull-right">
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <div class="btn-group" style="margin-top: 8px;width: 100%;">
+                  <div class="input-group">
+                    <span class="input-group-addon" style="width: 100%"><strong>Holidays as</strong></span>
+                    <div class="input-group-btn">
+                      <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false" id="btnTariffHoliday"><span style="display: inline-block;width: 80px;"></span><span class="caret"></span></button>
+                      <ul class="dropdown-menu pull-right">
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-content hide" id="divTariffPeriods">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Periods</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffPeriodsDel"><img src="Imgs/cross.png" alt="Delete period"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffPeriodsAdd"><img src="Imgs/plus.png" alt="New period"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffPeriodsBack"><img src="Imgs/arrow_undo.png" alt="Go back"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px;">Define the maximum periods of days and their pricing model</div>
+            <div class="row">
+              <div class="col-xs-12">
+                <table class="table small table-striped table-responsive" id="PeriodsTable">
+                  <thead><tr><th style="width: 20px">Name</th><th>Power model</th><th>Reactive model</th></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div> 
+        <div class="modal-content hide" id="divTariffSeasons">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Seasons</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffSeasonsAdd"><img src="Imgs/plus.png" alt="New season"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffSeasonsBack"><img src="Imgs/arrow_undo.png" alt="Go back"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px;">Define seasons of the year</div>
+            <div class="row">
+              <div class="col-xs-12">
+                <table id="SeasonsTable" class="table small table-striped table-responsive" style="width: 100%">
+                  <thead><tr><th>Name</th><th style="width:80px">From</th><th style="width:80px">To</th><th style="width:140px"></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-content hide" id="divTariffHolidays">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Holidays</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffHolidaysAdd"><img src="Imgs/plus.png" alt="New holiday"></button>
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffHolidaysBack"><img src="Imgs/arrow_undo.png" alt="Go back"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-xs-12">
+                <table class="table small table-striped table-responsive">
+                  <thead><tr><th style="width: 40px">Driver</th><th>Description</th><th style="width: 250px">Serial</th><th style="width: 20px">Analyzers</th><th style="width: 90px">Status</th><th style="width: 180px"></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div> 
+        <div class="modal-content hide" id="divTariffSeason">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Seasons &raquo; Season</h4></div>
+            <div class="pull-right btn-group">
+              <button type="button" class="btn btn-default btn-xs" id="btnTariffSeasonBack"><img src="Imgs/arrow_undo.png" alt="Go back"></button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-xs-12">
+                <label class="control-label">Name</label>
+                <input type="text" class="form-control" id="inputSeasonName">
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <label class="control-label">From</label>
+                <div class='input-group date' id='inputSeasonFrom'>
+                  <input type='text' class="form-control" style="pointer-events: none;"/>
+                  <span class="input-group-addon">
+                    <span class="glyphicon-calendar"></span>
+                  </span>
+                </div>
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <label class="control-label">To</label>
+                <div class='input-group date' id='inputSeasonTo'>
+                  <input type='text' class="form-control" style="pointer-events: none;"/>
+                  <span class="input-group-addon">
+                    <span class="glyphicon-calendar"></span>
+                  </span>
+                </div>
+              </div>
+              <div class="col-xs-12">
+                <label class="control-label">Hourly rates</label>
+                <div style=" display:flex;flex-flow: wrap; margin: -4px -4px" id="hourlyRates"></div>
+              </div>
+
+
+
+            </div>
+          </div>
+        </div> 
+
+
+
+
+      </div>
+    </div>
+    <div id="wrapper">
+      <div class="row">
+        <!-- NTP Time configuration -->
+        <div class="col-xs-12">
+          <div class="panel panel-other">
+            <div class="panel-heading">
+              <div class="huge-small header-text">System time</div>
+              <div class="header-buttons">
+                <div class="btn-group">
+                  <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" id="btnNTPSave" title="Save changes"><img src="Imgs/diskette.png"> Save</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-xs-12 col-sm-6">
+                  <label class="control-label">Current time/zone</label>
+                  <div class='input-group date' id='inputCurrentTime'>
+                    <div class="input-group-btn">
+                      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdownTimeZone"><span>UTC</span><span> &#9662;</span></button>
+                      <ul class="dropdown-menu scrollable-menu" id="dropdownListTimeZone">
+                      </ul>
+                    </div>
+                    <input type='text' class="form-control" />
+                    <span class="input-group-addon">
+                      <span class="glyphicon-calendar"></span>
+                    </span>
+                  </div>
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                  <label class="control-label">NTP Server</label>
+                  <div class="input-group">
+                    <span class="input-group-addon input-group-addon-toogle">
+                      <input type="checkbox" data-toggle="toggle" id="checkNTP" data-size="small" data-onstyle="success">
+                    </span>
+                    <input type="text" class="form-control" id="inputNTPServer">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Device configuration -->
+        <div class="col-xs-12">
+          <div class="panel panel-other">
+            <div class="panel-heading">
+              <div class="huge-small header-text">Input devices</div>
+            </div>
+            <div class="panel-body">
+              <table id="DeviceTable" class="table small table-striped table-responsive">
+                <thead><tr><th style="width: 40px">Driver</th><th>Description</th><th style="width: 250px">Serial</th><th style="width: 20px">Analyzers</th><th style="width: 90px">Status</th><th style="width: 180px"></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tariffs configuration -->
+        <div class="col-xs-12">
+          <div class="panel panel-other">
+            <div class="panel-heading">
+              <div class="huge-small header-text">Tariffs</div>
+              <div class="header-buttons">
+                <div class="btn-group">
+                  <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes" id="btnAddTariff"><img src="Imgs/plus.png"> Add</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <table id="TariffsTable" class="table small table-striped table-responsive">
+                <thead><tr><th style="width: 20px">Country</th><th>Name</th><th style="width: 120px">Start date</th><th style="width: 120px">End date</th><th style="width: 80px"></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wifi configuration -->
+        <div class="col-xs-12">
+          <div class="panel panel-other">
+            <div id="WifiSpinner" class="spinnerdiv"></div>
+            <div class="panel-heading">
+              <i class="fa fa-wifi fa-fw"></i> Wifi connection
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-sm-12">
+                  <table id="NetworksTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
+                    <thead><tr><th>Status</th><th>SSID</th><th>BSSID</th><th>Channel</th><th>Mode</th><th>Power</th><th></th></tr></thead>
+                    <tbody>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>        
+
+      <!--div class="row">
+        <div class="col-lg-12">
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <i class="fa fa-database fa-fw"></i> Database
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-lg-6 col-xs-12">
+                  <table id="NodesTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
+                    <thead>
+                      <tr>
+                        <th style="width: 60px">Node</th><th>Name</th><th style="width: 80px">Type</th><th style="width: 80px">First sample</th><th style="width: 100px">Last sample</th><th style="width: 100px">Total samples</th><td></td>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>0</td>
+                        <td>Entrada 1</td>
+                        <td>1phase</td>
+                        <td>01/01/2017</td>
+                        <td>02/03/2018</td>
+                        <td>150000</td>
+                        <td><button class="btn btn-xs btn-primary get_samples" style="width: 100%">Clear</button></td>
+                      </tr>
+                      <tr>
+                        <td>1</td>
+                        <td>Entrada 2</td>
+                        <td>1phase</td>
+                        <td>01/01/2017</td>
+                        <td>02/03/2018</td>
+                        <td>150000</td>
+                        <td><button class="btn btn-xs btn-primary get_samples" style="width: 100%">Clear</button></td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
+                        <td>Entrada 3</td>
+                        <td>1phase</td>
+                        <td>01/01/2017</td>
+                        <td>02/03/2018</td>
+                        <td>150000</td>
+                        <td><button class="btn btn-xs btn-primary get_samples" style="width: 100%">Clear</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+
+                  1.46Gb used for 360000 samples and 4.10Gb free (~800 days)<br/>First sample on 21/12/2017 and last on 19/03/2018
+                </div>
+                <div class="col-lg-6 col-xs-12">
+                  <div class="row">
+                    <div class="col-lg-6 col-xs-12">
+                      <button type="button" class="btn btn-sm btn-default" style="width: 100%">Full vacuum</button>
+                    </div>
+                    <div class="col-lg-6 col-xs-12">
+                      <button type="button" class="btn btn-sm btn-default" style="width: 100%">Clean</button>
+                    </div>
+                  </div>
+                  <div style="margin: 5px"></div>
+                  <div class="row">
+                    <div class="col-lg-6 col-xs-12">
+                      <button type="button" class="btn btn-sm btn-default" style="width: 100%">Backup</button>
+                    </div>
+                    <div class="col-lg-6 col-xs-12">
+                      <button type="button" class="btn btn-sm btn-default" style="width: 100%">Restore backup</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <i class="fa fa-bolt fa-fw"></i> Electrical parameters
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-lg-12">
+                  <fieldset>
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label class="control-label">Nominal voltage</label>
+                        <div class="input-group">
+                          <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>
+                          <span class="input-group-addon"><em>V</em></span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label class="control-label">Nominal frequency</label>
+                        <select id="id_certificadora" name="nominal_frequency" class="form-control" default="50">
+                          <option value="50">50 Hz</option>
+                          <option value="60">60 Hz</option>
+                          <option value="400">400 Hz</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label class="control-label">Max current</label>
+                        <div class="input-group">
+                          <input type="text" class="form-control" name="nominal_voltage" data-bv-numeric required>
+                          <span class="input-group-addon"><em>A</em></span>
+                        </div>
+                      </div>
+                    </div>
+                  </fieldset>
+                </div>
+                <div class="col-lg-12">
+                  <fieldset>
+                    <legend>Voltage inputs</legend>
+                    <div class="row">
+                      <div class="col-md-4">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="control-label">Scale</label>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="control-label">Offset</label>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-4">
+                        <label class="control-label">Input A</label>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="input-group">
+                          <input type="text" class="form-control" name="voltage_scale" data-bv-numeric required>
+                          <span class="input-group-addon"><em><small>V</small></em></span>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <input class="form-control" name="voltage_offset" data-bv-numeric required/>
+                      </div>
+                    </div>
+                    <div style="margin: 3px"></div>
+                    <div class="row">
+                      <div class="col-md-4">
+                        <label class="control-label">Input B</label>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="input-group">
+                          <input type="text" class="form-control" name="voltage_scale" data-bv-numeric required>
+                          <span class="input-group-addon"><em><small>V</small></em></span>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <input class="form-control" name="voltage_offset" data-bv-numeric required/>
+                      </div>
+                    </div>
+                    <div style="margin: 3px"></div>
+                    <div class="row">
+                      <div class="col-md-4">
+                        <label class="control-label">Input C</label>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="input-group">
+                          <input type="text" class="form-control" name="voltage_scale" data-bv-numeric required>
+                          <span class="input-group-addon"><em><small>V</small></em></span>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <input class="form-control" name="voltage_offset" data-bv-numeric required/>
+                      </div>
+                    </div>
+                  </fieldset>
+                </div>
+                <div class="col-lg-12">
+                  <fieldset>
+                    <legend>Current inputs</legend>
+                    <div class="row">
+                      <div class="col-md-4">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="control-label">Scale</label>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="control-label">Offset</label>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-4">
+                        <label class="control-label">Input A</label>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="input-group">
+                          <input type="text" class="form-control" name="current_scale" data-bv-numeric required>
+                          <span class="input-group-addon"><em>A</em></span>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <input class="form-control" name="current_offset" data-bv-numeric required/>
+                      </div>
+                    </div>
+                    <div style="margin: 3px"></div>
+                    <div class="row">
+                      <div class="col-md-4">
+                        <label class="control-label">Input B</label>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="input-group">
+                          <input type="text" class="form-control" name="current_scale" data-bv-numeric required>
+                          <span class="input-group-addon"><em>A</em></span>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <input class="form-control" name="current_offset" data-bv-numeric required/>
+                      </div>
+                    </div>
+                    <div style="margin: 3px"></div>
+                    <div class="row">
+                      <div class="col-md-4">
+                        <label class="control-label">Input C</label>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="input-group">
+                          <input type="text" class="form-control" name="current_scale" data-bv-numeric required>
+                          <span class="input-group-addon"><em>A</em></span>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <input class="form-control" name="current_offset" data-bv-numeric required/>
+                      </div>
+                    </div>
+                    <div style="margin: 3px"></div>
+                    <div class="row">
+                      <div class="col-md-4">
+                        <label class="control-label">Input D</label>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="input-group">
+                          <input type="text" class="form-control" name="current_scale" data-bv-numeric required>
+                          <span class="input-group-addon"><em>A</em></span>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <input class="form-control" name="current_offset" data-bv-numeric required/>
+                        </div>
+                      </div>
+                    </div>
+                  </fieldset>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <button type="button" class="btn btn-sm btn-primary" style="width: 100%">Apply and save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <i class="fa fa-random" aria-hidden="true"></i> Capture mode
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="form-group">
+                    <label class="control-label">Channel routing mode</label>
+                    <select id="id_certificadora" name="nominal_frequency" class="form-control">
+                      <option value="3Phase">Capture as 3Phase</option>
+                      <option value="1Phase_1">Capture as 1Phase x 1</option>
+                      <option value="1Phase_1">Capture as 1Phase x 2</option>
+                      <option value="1Phase_1">Capture as 1Phase x 3</option>
+                      <option value="1Phase_1">Capture as 1Phase x 4</option>
+                    </select>
+                  </div>
+                  <fieldset>
+                    <legend>Connection diagram</legend>
+                  </fieldset>
+                  <div style="margin: 0px 30px 10px 30px">
+                    <img src="Route_3Phase.svg" style="width:100%" />
+                  </div>
+                  <div style="margin: 10px" class="hidden">
+                    <img src="Route_1Phase_1.svg" style="width:100%" />
+                  </div>
+                  <div style="margin: 10px" class="hidden">
+                    <img src="Route_1Phase_2.svg" style="width:100%" />
+                  </div>
+                  <div style="margin: 10px" class="hidden">
+                    <img src="Route_1Phase_3.svg" style="width:100%" />
+                  </div>
+                  <div style="margin: 10px" class="hidden">
+                    <img src="Route_1Phase_4.svg" style="width:100%" />
+                  </div>
+
+
+
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <button type="button" class="btn btn-sm btn-primary" style="width: 100%">Apply and save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+
+        <div class="col-lg-4">
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <i class="fa fa-money fa-fw"></i> Budget
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-lg-12">
+                  <form id="budget">
+                    <fieldset>
+                      <legend>Calculation</legend>
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label class="control-label">Fixed price</label>
+                          <select name="fixed_price" class="form-control" default="true">
+                            <option value="true">Yes</option>
+                            <option value="">No (country legislation)</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group country_container" style="display:none">
+                          <label class="control-label">Country</label>
+                          <select id="id_certificadora" name="country" class="form-control" default="spain">
+                            <option value="spain">Spain</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group price_container" style="display:none">
+                          <label class="control-label">Price</label>
+                          <div class="input-group">
+                            <input type="text" class="form-control" name="price" data-bv-numeric required>
+                            <span class="input-group-addon"><em><small>€/kWh</small></em></span>
+                          </div>
+                        </div>
+                      </div>
+                    </fieldset>
+                  </form>
+                </div>
+                <div class="col-lg-12">
+                  <form id="budget-spain" style="display:none">
+                    <fieldset>
+                      <legend>Spain</legend>
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label class="control-label">Contracted power</label>
+                          <div class="input-group">
+                            <input type="text" class="form-control" name="contracted_power" data-bv-numeric required />
+                            <span class="input-group-addon"><em><small>kW</small></em></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label class="control-label">Rate</label>
+                          <select id="id_certificadora" name="rate_type" class="form-control" default="GEN">
+                            <option value="GEN">General (GEN)</option>
+                            <option value="NOC">Nocturna (NOC)</option>
+                            <option value="VHC">Vehículo eléctrico (VHC)</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label class="control-label">CPC</label>
+                          <div class="input-group">
+                            <input type="text" class="form-control" name="cpc" data-bv-numeric required />
+                            <span class="input-group-addon"><em><small>€/year/kW</small></em></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label class="control-label">Discount</label>
+                          <div class="input-group">
+                            <input type="text" class="form-control" name="discount_percentage" data-bv-numeric required />
+                            <span class="input-group-addon"><em>%</em></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label class="control-label">VAT</label>
+                          <div class="input-group">
+                            <input type="text" class="form-control" name="vat"data-bv-numeric required />
+                            <span class="input-group-addon"><em>%</em></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label class="control-label">Tax Percentage</label>
+                          <div class="input-group">
+                            <input type="text" class="form-control" name="electricity_tax_percentage" data-bv-numeric required />
+                            <span class="input-group-addon"><em>%</em></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label class="control-label">Meter rating</label>
+                          <div class="input-group">
+                            <input type="text" class="form-control" name="meter_rating" data-bv-numeric required />
+                            <span class="input-group-addon"><em><small>€/day</small></em></span>
+                          </div>
+                        </div>
+                      </div>
+                    </fieldset>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div-->
+
+    </div>
+    <script src="JS/jquery.min.js"></script>
+    <script src="JS/bootstrap.min.js"></script>
+    <script src="JS/sidenav.min.js"></script>
+    <script src="JS/spin.min.js"></script>
+    <script src="JS/offline.min.js"></script>
+    <script src="JS/dataTables.min.js"></script>
+    <script src="JS/moment.min.js"></script>
+    <script src="JS/moment-duration-format.min.js"></script>
+    <script src="JS/moment-timezone.min.js"></script>
+    <script src="JS/bootstrap-toggle.min.js"></script>
+    <script src="JS/bootstrap-datetimepicker.min.js"></script>
+    <script src="JS/bootstrap-suggest.min.js"></script>    
+    <script src="JS/openZmeter.Settings.js"></script>
+    <script src="JS/openZmeter.js"></script>
+  </body>
+</html>

@@ -20,8 +20,8 @@
 <script>
   import Vuetable from 'vuetable-2';
   export default {
-    data() {
-      return { Devices: [], Table: null, 
+    data: function() {
+      return { Devices: [], 
         Columns: [
           {name: 'Driver', title: 'Driver'},
           {name: 'Name', title: 'Name'},
@@ -35,15 +35,15 @@
     methods: {
       Stop: function(id, evt) {
         $(evt.target).blur();
-        //alert(id);
+        //enviar stop y esperar respuesta
       },
       Start: function(id, evt) {
         $(evt.target).blur();
-        //alert(id);        
+        //enviar start y esperar respuesta
       },
       Configure: function(id, evt) {
         $(evt.target).blur();
-        //alert(id);        
+        //abrir dialogo de configuracion segun driver
       }
     },
     mounted: function() {
@@ -58,39 +58,39 @@
   }
 </script>
 
-<style>
-  thead tr th:nth-child(1) {
+<style scoped>
+  .table >>> th:nth-child(1) {
     width: 60px;
     text-align: center;
   }
-  tr td:nth-child(1) {
+  .table >>> td:nth-child(1) {
     text-align: center;
   }
-  thead tr th:nth-child(3) {
+  .table >>> th:nth-child(3) {
     width: 250px;
     text-align: center;
   }
-  tr td:nth-child(3) {
+  .table >>> td:nth-child(3) {
     text-align: center;
   }
-  thead tr th:nth-child(4) {
+  .table >>> th:nth-child(4) {
     width: 20px;
     text-align: center;
   }
-  tr td:nth-child(4) {
+  .table >>> td:nth-child(4) {
     text-align: center;
   }
-  thead tr th:nth-child(5) {
+  .table >>> th:nth-child(5) {
     width: 90px;
     text-align: center;
   }
-  tr td:nth-child(5) {
+  .table >>> td:nth-child(5) {
     text-align: center;
   }
-  thead tr th:nth-child(6) {
+  .table >>> th:nth-child(6) {
     width: 120px;
   }
-  tr td:nth-child(6) {
-    text-align: center;
+  .table >>> td:nth-child(6) {
+    text-align: right;
   }
 </style>

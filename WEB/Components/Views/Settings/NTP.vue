@@ -4,7 +4,7 @@
       <div class="huge-small header-text">System time</div>
       <div class="header-buttons">
         <div class="btn-group">
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" id="btnNTPSave" title="Save changes"><img src="Imgs/diskette.png"> Save</button>
+          <button type="button" class="btn btn-default btn-xs disabled" data-toggle="tooltip" id="btnNTPSave" title="Save changes"><img src="Imgs/diskette.png"> Save</button>
         </div>
       </div>
     </div>
@@ -40,25 +40,24 @@
 
 <script>
   export default {
-      data() {
+    data: function() {
         return {};
-      },
-      mounted: function() {
-        AjaxGetTimeZones();
-      }
+    },
+    mounted: function() {
+      AjaxGetTimeZones();
+    }
   }
-  var NTP_DateTimePicker = null;
-$('#checkNTP').change(function() {
-  if($(this).prop('checked')) {
-    $('#inputCurrentTime > span').css("pointer-events", "none");
-    $('#inputCurrentTime > input').attr("disabled", "true");
-    $('#inputNTPServer').removeAttr("disabled");
-  } else {
-    $('#inputNTPServer').attr("disabled", "true");
-    $('#inputCurrentTime > input').removeAttr("disabled");
-    $('#inputCurrentTime > span').css("pointer-events", "inherit");
-  }
-});
+  $('#checkNTP').change(function() {
+    if($(this).prop('checked')) {
+      $('#inputCurrentTime > span').css("pointer-events", "none");
+      $('#inputCurrentTime > input').attr("disabled", "true");
+      $('#inputNTPServer').removeAttr("disabled");
+    } else {
+      $('#inputNTPServer').attr("disabled", "true");
+      $('#inputCurrentTime > input').removeAttr("disabled");
+      $('#inputCurrentTime > span').css("pointer-events", "inherit");
+    }
+  });
 function AjaxGetTimeZones() {
   $('#checkNTP').bootstrapToggle();
   $.ajax({ url: "getTimeSettings", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 

@@ -28,6 +28,3 @@
     components: { Ntp, Devices, Tariffs, Wifi }
   }
 </script>
-
-<style>
-</style>

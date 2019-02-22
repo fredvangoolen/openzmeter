@@ -22,7 +22,7 @@
 <script>
   import * as oZm from 'JS/openZmeter.js';
   import Spinner from 'Components/Spinner.vue';
-  import Dygraph from 'dygraphs';
+  import Dygraph from 'JS/dygraph.js';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
@@ -48,7 +48,8 @@
         var Range = this.SerieProps.Range(this.Data, this.Phases);
         var Options = {
           strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', interactionModel: {},
-          plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data, xAxisHeight: 12, valueRange: Range,
+          //plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], 
+          visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data, xAxisHeight: 12, valueRange: Range,
           legendFormatter: oZm.LegendFormatter_Follow, labels: ['Time'].concat(this.SerieProps.Names(Analyzer)), colors: oZm.ColorArray(this.SerieProps.Color, this.SerieProps.Names(Analyzer).length),
           underlayCallback: function(canvas, area, g) {
             if(this.type === 'VOLTAGE') {

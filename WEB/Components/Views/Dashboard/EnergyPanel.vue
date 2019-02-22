@@ -40,7 +40,7 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import Spinner from 'Components/Spinner.vue';
   import * as oZm from 'JS/openZmeter.js';
-  import Dygraph from 'dygraphs';
+  import Dygraph from 'JS/dygraph.js';
   export default {
     data() {
       return { Periods: [], Graph: null, Data: [], ShowSpinner: true, LastSample: 0, Timer: null, Aggreg: null, Period: null, DateWindow: [0, 0], AutoUpdate: null };

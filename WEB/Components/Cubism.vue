@@ -6,7 +6,7 @@
 </template>
 
 <script>
-  import Dygraph from 'dygraphs';
+  import Dygraph from 'JS/dygraph.js';
   import * as oZm from '../JS/openZmeter.js';
   function barChartPlotterCubism(e) {
     var ctx = e.drawingContext;
@@ -76,7 +76,7 @@
     },
     mounted: function() {
       this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], { strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], highlightCircleSize: 0, legend: 'always', xAxisHeight: 0.1, xLabelHeight: 1, interactionModel: { }, plotter: barChartPlotterCubism, labels: ["Time", ((this.SerieProps.Title === undefined) ? this.SerieProps.Names[this.index] : this.SerieProps.Title)], colors: ["#d9534f"], labelsDiv: this.$refs.legend,
-        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
+//        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
         legendFormatter: function(data) {
           if(data.x === undefined) {
             var Value = '<span class="inactive-label">' + data.series[0].label + '</span>';
