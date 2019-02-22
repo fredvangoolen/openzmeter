@@ -1,6 +1,6 @@
 var path = require('path')
 var webpack = require('webpack')
-
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 module.exports = {
   entry: './main.js',
   output: {
@@ -61,11 +61,14 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
+      '/Logout': { target: 'http://localhost:8081'},
       '/getSeries': { target: 'http://localhost:8081'},
       '/getSeriesNow': { target: 'http://localhost:8081'},
       '/getAnalyzers': { target: 'http://localhost:8081'},
       '/getPrices': { target: 'http://localhost:8081'},
-      '/getDevices': { target: 'http://localhost:8081'}
+      '/getDevices': { target: 'http://localhost:8081'},
+      '/getTariffs': { target: 'http://localhost:8081'},
+      '/setTariffs': { target: 'http://localhost:8081'}
     }
   },
   performance: {
@@ -83,10 +86,10 @@ if (process.env.NODE_ENV === 'production') {
         NODE_ENV: '"production"'
       }
     }),
-    new webpack.optimize.UglifyJsPlugin({
-      sourceMap: true,
-      compress: {
-        warnings: false
+    new UglifyJsPlugin({
+      'uglifyOptions': {
+          compress: { warnings: false },
+          sourceMap: true
       }
     }),
     new webpack.LoaderOptionsPlugin({

@@ -1,5 +1,5 @@
 import chroma from 'chroma-js';
-import Dygraph from 'dygraphs';
+import Dygraph from 'JS/dygraph.js';
 export var Series = {
   'VOLTAGE': { 
     CSS_Class: 'panel-voltage', 

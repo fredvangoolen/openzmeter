@@ -1,6 +1,6 @@
 //Libs -----------------------------------------
 import Vue from './JS/vue.js';
-import Router from './JS/vue-router.js'
+import Router from './JS/vue-router.js';
 import jQuery from './JS/jquery.js';
 window.$ = window.jQuery = jQuery;
 import './JS/bootstrap.min.js';
@@ -8,7 +8,6 @@ import './CSS/bootstrap.min.css';
 import './JS/dygraph.js';
 
 Vue.use(Router);
-
 
 //import * as oZm from './JS/openZmeter.js';
 import './CSS/openZmeter.css';

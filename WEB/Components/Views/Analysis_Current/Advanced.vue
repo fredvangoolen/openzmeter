@@ -8,7 +8,7 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import Dygraph from 'dygraphs';
+  import Dygraph from 'JS/dygraph.js';
   export default {
     props: ['visible'],
     data() {

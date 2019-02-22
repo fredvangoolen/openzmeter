@@ -45,7 +45,7 @@
   import Spinner from 'Components/Spinner.vue';
   import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
-  import Dygraph from 'dygraphs';
+  import Dygraph from 'JS/dygraph.js';
   export default {
     data() {
       return { Graph: null, Data: [], ShowSpinner: true, LastSample: 0, Timer: null, Phases: [], Aggreg: null, Period: null, DateWindow: [0, 0], AutoUpdate: null };

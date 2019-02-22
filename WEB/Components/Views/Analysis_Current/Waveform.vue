@@ -8,7 +8,7 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import Dygraph from 'dygraphs';
+  import Dygraph from 'JS/dygraph.js';
   function GraphWaveTimeTicks(max, analyzer) {
     var ticks = [];
     for(var i = 0; i <= Math.floor(max / analyzer.SampleFreq * analyzer.NominalFreq); i++) {

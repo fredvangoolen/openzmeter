@@ -93,7 +93,9 @@ img {
   float: right;
   text-align: right;
 }
-
+.modal-backdrop {
+  background-color: #FFF;
+}
 
 
 .subpanel {

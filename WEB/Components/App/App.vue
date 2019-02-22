@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    
     <!--BlockUI :message="msg" :html="html"></BlockUI-->
     <div id="DisableDiv" class="overlay"></div>
     <topbar ref="indicator_bar"></topbar>
@@ -12,10 +13,8 @@
 import Topbar from './Topbar/Topbar.vue';
 import Sidebar from './Sidebar/Sidebar.vue';
 export default {
-  data () {
-    return {
-      UpdateIndicatorsTimer: null
-    };
+  data: function() {
+    return { UpdateIndicatorsTimer: null };
   },
   methods: {
     UpdateIndicators() {
