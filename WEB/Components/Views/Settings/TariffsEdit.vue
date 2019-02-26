@@ -4,8 +4,8 @@
     <div class="modal-dialog">
       <edit-main ref="Main" v-on:Close="Close"></edit-main>
       <edit-periods ref="Periods"></edit-periods>
-      <edit-seasons ref="Periods"></edit-seasons>
-      <edit-holidays ref="Periods"></edit-holidays>
+      <edit-seasons ref="Seasons"></edit-seasons>
+      <edit-holidays ref="Holidays"></edit-holidays>
     </div>
   </div>
 </template>
