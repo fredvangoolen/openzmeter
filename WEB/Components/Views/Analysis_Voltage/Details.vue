@@ -4,10 +4,15 @@
     <div class="panel panel-other">
       <div class="panel-heading clearfix">
         <div class="header-text">{{ Time }}</div>
-        <div class="header-buttons">
-          <toolbar-phases></toolbar-phases>
-          <toolbar-options :options="['1st Harmonic', 'Current', 'Log']"></toolbar-options>
-          <toolbar-tools></toolbar-tools>
+        <div class="header-buttons" ref="Toolbar">
+          <toolbar-phases variable="DetailsPhaseSingle" v-if="(ActiveTab == 'Waveform') || (ActiveTab == 'Harmonics') || (ActiveTab == 'Advanced')"></toolbar-phases>
+          <toolbar-phases variable="DetailsPhaseMulti" v-if="(ActiveTab == 'Evolution') || (ActiveTab == 'parameters')"></toolbar-phases>
+          <toolbar-options variable="DetailOptions" v-if="(ActiveTab == 'Waveform')" :options="['Current']"></toolbar-options>
+          <toolbar-options variable="DetailOptions" v-if="(ActiveTab == 'Harmonics')" :options="['1st Harmonic', 'Current', 'Log']"></toolbar-options>
+          <toolbar-options variable="DetailOptions" v-if="(ActiveTab == 'Advanced')" :options="['Current', 'Log']"></toolbar-options>
+          <toolbar-tools variable="To" v-if="(ActiveTab == 'Waveform') || (ActiveTab == 'Harmonics') || (ActiveTab == 'Advanced')" ref="Tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']"></toolbar-tools>
+          <toolbar-tools variable="To" v-if="(ActiveTab == 'Phasors')" ref="Tools" :options="['EXPORT', 'PLAY']"></toolbar-tools>
+          <toolbar-tools variable="To" v-if="(ActiveTab == 'Evolution') || (ActiveTab == 'Parameters') || (ActiveTab == 'Events')" ref="Tools" :options="['EXPORT']"></toolbar-tools>
         </div>
       </div>
       <div class="panel-body">
