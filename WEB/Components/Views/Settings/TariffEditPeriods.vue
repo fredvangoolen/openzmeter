@@ -32,7 +32,7 @@
     },
     methods: {
       Format: function(val) {
-        return (val == null) ? 'NONE' : val; 
+        return (val === null) ? 'NONE' : val; 
       },
       FillTable: function() {
           var Rows = [];
@@ -47,7 +47,8 @@
         });
       },
       Delete: function() {
-        
+        this.Tariff.Details.Periods.splice(-1, 1);
+        this.FillTable();
       },
       Add: function() {
         this.Tariff.Details.Periods.push({PowerMode: null, ReactiveMode: null});

@@ -34,7 +34,9 @@
                 Description: 'Add tariff description here', 
                 Seasons: [], 
                 Periods: [ { "ReactiveMode": null, "PowerMode": null } ], 
-                Holidays: [] 
+                Holidays: [],
+                WeekendPeriod: null,
+                HolidayPeriod: null
               } 
             };
             this.$refs.Main.Load(this.Tariff);
