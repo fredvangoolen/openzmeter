@@ -238,7 +238,6 @@ var Tariffs = [];
 var TariffKey = null;
 var TariffDefinition = null;
 
-var PeriodsTable  = null;
 var SeasonsTable  = null;
 var HolidaysTable = null;
 
@@ -248,30 +247,6 @@ $('#inputTariffStartDate, inputTariffEndDate').on('dp.change', function(e) {
   CheckTariff();
 });
 
-$('#btnTariffPeriods').click(LoadPeriods);
-function LoadPeriods() {
-  $('#dlgTariff > div > div').addClass('hide');
-  $('#divTariffPeriods').removeClass('hide');
-  PeriodsTable.clear();
-  for(var i = 0; i < TariffDefinition.Details.Periods.length; i++) {
-    var RowText = '<tr>' +
-                  '<td>P' + (i + 1) + '</td>' +
-                  '<td>NONE</td>' +
-                  '<td>NONE</td>' +
-                  '</tr>';
-    PeriodsTable.row.add($(RowText)).draw();
-  }
-  $('#btnTariffPeriodsDel').toggleClass('disabled', (TariffDefinition.Details.Periods.length <= 1));
-  PeriodsTable.columns.adjust();  
-}
-$('#btnTariffPeriodsDel').click(function() {
-  TariffDefinition.Details.Periods.splice(-1, 1);
-  LoadPeriods();
-});
-$('#btnTariffPeriodsAdd').click(function() {
-  TariffDefinition.Details.Periods.push({ "ReactiveMode": null, "PowerMode": null });
-  LoadPeriods();
-});
 $('#btnTariffPeriodsBack, #btnTariffSeasonsBack, #btnTariffHolidaysBack').click(function() { 
   $('#dlgTariff > div > div').addClass('hide');
   $('#divTariffMain').removeClass('hide');
