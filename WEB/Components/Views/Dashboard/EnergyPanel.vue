@@ -2,12 +2,11 @@
   <div class="panel panel-active-energy dashboard-energy">
     <div class="panel-heading">
       <div class="huge header-text">Energy consumption</div>
-      <div class="header-buttons">
+      <div class="header-buttons clearfix" ref="Toolbar">
         <toolbar-aggregation variable="AggregationEnergy" v-on:AggregationChanged="AggregationChanged" :options="['15M', '1H']"></toolbar-aggregation>
         <toolbar-period variable="Period" v-on:PeriodChanged="PeriodChange"></toolbar-period>
-        <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:NowStatus="SetAutoUpdate" ref="tools"></toolbar-tools>
+        <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:NowStatus="SetAutoUpdate" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
       </div>
-      <span class="clearfix"></span>
     </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
@@ -74,6 +73,23 @@
         this.LastSample = 0;
         this.UpdateGraph();
       },
+      ResizeHandler: function() {
+        var Height = $(this.$refs.counters).height();
+        this.Graph.resize('100%', Height);
+      },
+      MaximizeClick() {
+        $(window).unbind('resize', this.ResizeHandler);
+        this.$refs.tools.Maximize('Energy consumption', this.Graph, this.$refs.Toolbar);
+      },
+      MinimizeClick() {
+        $(window).bind('resize', this.ResizeHandler);
+        //      $(Self.PrevContainer).append($(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph).graphDiv).parent().detach());
+//      $(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph).graphDiv).parent().removeAttr('style');
+//      if(Self.PrevHandler !== undefined) $(window).bind('resize', Self.PrevHandler);
+//      $(Self.Toolbar).append($('#MaximizeToolbar').children().detach());
+//      $('#dlgMaximizeDialog').modal('hide');
+
+      },
       CalcOptions() {
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
@@ -121,9 +137,8 @@
         this.Graph.updateOptions(Options);
 
 //    );
-//    $(window).bind('resize', EnergyResizeEvent);
-    var Height = $(this.$refs.counters).height();
-    this.Graph.resize('100%', Height);
+      $(window).bind('resize', this.ResizeHandler);
+
       
       //counters
       

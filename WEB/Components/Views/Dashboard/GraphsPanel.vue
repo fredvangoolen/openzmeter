@@ -13,8 +13,10 @@
     </div>
     <div class="panel-footer clearfix">
       <router-link :to="SerieProps.Link" style="line-height: 22px"><span class="pull-left">View Details</span></router-link>
-      <toolbar-tools :options="['EXPORT', 'MAXIMIZE']" class="pull-right"></toolbar-tools>
-      <toolbar-phases v-on:PhasesChanged="SetPhases" class="pull-right" v-if="type != 'FREQUENCY'" :variable="'Dashboard' + type" :mode="(type == 'CURRENT') ? 'CURRENT' : 'VOLTAGE'" :multi="true"></toolbar-phases>
+      <div class="pull-right" ref="Toolbar">
+        <toolbar-phases v-on:PhasesChanged="SetPhases" v-if="type != 'FREQUENCY'" :variable="'Dashboard' + type" :mode="(type == 'CURRENT') ? 'CURRENT' : 'VOLTAGE'" :multi="true"></toolbar-phases>
+        <toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
+      </div>
     </div>
   </div>
 </template>
@@ -98,6 +100,12 @@
       SetPhases(phases) {
         this.Phases = phases;
         if(this.Data.length > 0) this.CalcOptions();
+      },
+      MaximizeClick() {
+        this.$refs.tools.Maximize(this.SerieProps.Title, this.Graph, this.$refs.Toolbar);
+      },
+      MinimizeClick() {
+        $(this.Graph.graphDiv).parent().removeAttr('style');
       },
       SetAnalyzer() {
         this.LastSample = 0;

@@ -475,42 +475,6 @@ export function GetAggregLongName(shortText) {
 //  $(divs + ' > div:nth-child(' + (Self.GetSaved() + 1) + ')').show();
 //  Self.ChangeEvent(Self.GetSaved());
 //}
-///* Graph maximize and export */
-//function GraphTools(title, graph, toolbar, resizeHandler, exportFunction) {
-//  this.Graph = graph;
-//  this.Title = title;
-//  this.PrevHandler = resizeHandler;
-//  this.Graph = graph;
-//  this.Toolbar = toolbar;
-//  var Self = this;
-//  Self.DialogResizeHandler = function() {
-//    ((typeof(Self.Graph) === 'function') ? Self.Graph() : Self.Graph).resize($('#MaximizeDialogBody').width(), $('#MaximizeDialogContents').height() - 70);
-//  }
-//  $(Self.Toolbar + ' button[data-function="Maximize"]').click(function(evt) {
-//    if($('#dlgMaximizeDialog').hasClass('in')) {
-//      $('#MaximizeToolbar button[data-function="Maximize"] > img').attr('src', 'Imgs/arrow_out.png');
-//      $('#MaximizeToolbar button[data-function="Maximize"]').attr('title', 'Maximize graph');
-//      $(window).unbind('resize', Self.DialogResizeHandler);
-//      $(Self.PrevContainer).append($(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph).graphDiv).parent().detach());
-//      $(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph).graphDiv).parent().removeAttr('style');
-//      if(Self.PrevHandler !== undefined) $(window).bind('resize', Self.PrevHandler);
-//      $(Self.Toolbar).append($('#MaximizeToolbar').children().detach());
-//      $('#dlgMaximizeDialog').modal('hide');
-//    } else {
-//      $(Self.Toolbar + ' button[data-function="Maximize"] > img').attr('src', 'Imgs/arrow_in.png');
-//      $(Self.Toolbar + ' button[data-function="Maximize"]').attr('title', 'Minimize graph');
-//      Self.PrevContainer = $(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph).graphDiv).parent().parent();
-//      if(Self.PrevHandler !== undefined) $(window).unbind('resize', Self.PrevHandler);
-//      $('#dlgMaximizeDialog').modal('show');
-//      $('#MaximizeDialogTitle').text((typeof(Self.Title) === 'function') ? Self.Title() : Self.Title);
-//      $('#MaximizeToolbar').append($(Self.Toolbar).children().detach());
-//      $('#MaximizeDialogBody').append($(((typeof(Self.Graph) === 'function') ?  Self.Graph() : Self.Graph).graphDiv).parent().detach());
-//      $(window).bind('resize', Self.DialogResizeHandler);
-//    }
-//    window.dispatchEvent(new Event('resize'));
-//  });
-//  if(exportFunction !== undefined) $(Self.Toolbar + ' button[data-function="Export"]').click(exportFunction);
-//}
 ///* append samples of given series to array of graph data, and shift if needed */
 export function GraphDataAppend(result, serie, data) {
   if(result['Sampletime'] !== null && result['Sampletime'].length > 0) {
@@ -829,38 +793,6 @@ export function Round2Plain(value) {
   }
 }
 //
-///* Guardar array como archivo CSV, incluyendo la cabecera */
-//function exportToCsv(filename, rows) {
-//  var processRow = function (row) {
-//    var finalVal = '';
-//    for(var j = 0; j < row.length; j++) {
-//      var innerValue = row[j] === null ? '' : row[j].toString();
-//      if(row[j] instanceof Date) innerValue = row[j].toLocaleString();
-//      var result = innerValue.replace(/"/g, '""');
-//      if(result.search(/("|;|\n)/g) >= 0) result = '"' + result + '"';
-//      if(j > 0) finalVal += ';';
-//      finalVal += result;
-//    }
-//    return finalVal + '\n';
-//  };
-//  var csvFile = '';
-//  for (var i = 0; i < rows.length; i++) csvFile += processRow(rows[i]);
-//  var blob = new Blob([csvFile], {type: 'text/csv;charset=utf-8;'});
-//  if (navigator.msSaveBlob) { // IE 10+
-//    navigator.msSaveBlob(blob, filename);
-//  } else {
-//    var link = document.createElement("a");
-//    if(link.download !== undefined) { // feature detection
-//      var url = URL.createObjectURL(blob);
-//      link.setAttribute("href", url);
-//      link.setAttribute("download", filename);
-//      link.style.visibility = 'hidden';
-//      document.body.appendChild(link);
-//      link.click();
-//      document.body.removeChild(link);
-//    }
-//  }
-//}
 //function LoadAnalyzers() {
 //
 //  $('#btnAnalyzersConfigBack, #btnAnalyzersACLBack, #btnAnalyzersTariffsBack').click(function(event) {
