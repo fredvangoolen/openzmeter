@@ -57,9 +57,14 @@
     methods: {
       SetNowLabel: function(label) {
         if(this.Graph === null) return;
-        var Labels = graph.user_attrs_.labels;
-        Labels[0] = (label === undefined) ? 'Time' : label;
-        graph.updateOptions( { labels: Labels });       
+        var Labels = this.Graph.user_attrs_.labels;
+        if(label === undefined) {
+          Labels[0] = 'Time';
+        } else {
+          var Result = this.SerieProps.FormatValue(label); 
+          Labels[0] = Result.Value + Result.Units;
+        }
+        this.Graph.updateOptions( { labels: Labels });
       },
       SetData: function(data) {
         var Range = 0;
@@ -76,7 +81,7 @@
     },
     mounted: function() {
       this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], { strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], highlightCircleSize: 0, legend: 'always', xAxisHeight: 0.1, xLabelHeight: 1, interactionModel: { }, plotter: barChartPlotterCubism, labels: ["Time", ((this.SerieProps.Title === undefined) ? this.SerieProps.Names[this.index] : this.SerieProps.Title)], colors: ["#d9534f"], labelsDiv: this.$refs.legend,
-//        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
+        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
         legendFormatter: function(data) {
           if(data.x === undefined) {
             var Value = '<span class="inactive-label">' + data.series[0].label + '</span>';
