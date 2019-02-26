@@ -235,75 +235,19 @@ function NetworkForget(index) {
 // Tariffs -------------------------------------------------------------------------------------------------------------
 var TariffsTable = null;
 var Tariffs = [];
-function AjaxGetTariffs() {
-  $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
-    function(result) {
-      Tariffs = result;
-      if(TariffsTable === null) {
-        TariffsTable = $('#TariffsTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [0, 1, 2, 3], orderable: true }, { targets: [0, 2, 3], className: 'text-center' }, { targets: [4], orderable: false, searchable: false } ], order: [0, 'desc']});
-      } else {
-        TariffsTable.clear();    
-      }        
-      for(var i = 0; i < Tariffs.length; i++) {
-        var RowText = '<tr>' +
-          '<td>' + Tariffs[i].Country + '</td>' +
-          '<td>' + Tariffs[i].Name + '</td>' +
-          '<td>' + moment(Tariffs[i].StartDate).format('DD/MM/YYYY HH:mm:ss') + '</td>' +
-          '<td>' + moment(Tariffs[i].EndDate).format('DD/MM/YYYY HH:mm:ss') + '</td>' +
-          '<td data-tariff="' + Tariffs[i].RateID + '"><div class="btn-group"><button class="btn btn-xs btn-default">Edit</button><button class="btn btn-xs btn-danger">Delete</button></div></td>' +
-          '</tr>';
-        TariffsTable.row.add($(RowText)).draw();
-      }
-    }
-  });
-}
 var TariffKey = null;
 var TariffDefinition = null;
-$('#btnAddTariff').click(function() {
-  TariffKey = null;
-  LoadTariffDialog({ Country: null, StartDate: new Date(new Date().getFullYear(), 0, 1, 0, 0, 0, 0).getTime(), EndDate: new Date(new Date().getFullYear(), 11, 31, 23, 59, 59, 999).getTime(), Name: 'No nane', Details: {Description: 'Add tariff description here', Seasons: [], Periods: [ { "ReactiveMode": null, "PowerMode": null } ], Holidays: [] } });
-});
-$('#TariffsTable').on('click', 'button:nth-child(1)', function() {
-  TariffKey = parseInt($(this).parents('td').attr('data-tariff'));
-  $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: TariffKey }), success: LoadTariffDialog });
-});
-$('#TariffsTable').on('click', 'button:nth-child(2)', function() {
-  TariffKey = parseInt($(this).parents('td').attr('data-tariff'));
-  $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: TariffKey }), success: AjaxGetTariffs });
-});
+
 var PeriodsTable  = null;
 var SeasonsTable  = null;
 var HolidaysTable = null;
-function LoadTariffDialog(definition) {
-  TariffDefinition = definition;
-  $('#dlgTariff > div > div').addClass('hide');
-  $('#divTariffMain').removeClass('hide');
-  $('#dlgTariff').modal('show');
-  $('#inputTariffName').val(TariffDefinition.Name);
-  $('#inputTariffStartDate').datetimepicker({ format: 'DD/MM/YYYY', defaultDate: new Date(TariffDefinition.StartDate), viewMode: 'months' });
-  $('#inputTariffEndDate').datetimepicker({ format: 'DD/MM/YYYY', defaultDate: new Date(TariffDefinition.EndDate), viewMode: 'months' });
-  $('#inputTariffComments').val(TariffDefinition.Details.Description);
-  if(PeriodsTable === null) PeriodsTable = $('#PeriodsTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [0, 1, 2], orderable: false, className: 'text-center' } ] } );
-  if(SeasonsTable === null) SeasonsTable = $('#SeasonsTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [0, 1, 2], orderable: true }, { targets: [1, 2], className: 'text-center' }, { targets: [3], orderable: false } ], order: [1, 'asc']});
-  if(HolidaysTable === null) HolidaysTable = $('#HolidaysTable').DataTable({ responsive: false, paging: false, scrollCollapse: true, scrollY: '224px', dom: '<"clear">t<"clear">', columnDefs: [ { targets: [0, 1, 2], orderable: true }, { targets: [1, 2], className: 'text-center' }, { targets: [3], orderable: false } ], order: [1, 'asc']});
-  TariffDefinition.WeekendPeriod = PopulatePeriodDropdown($('#btnTariffWeekend'), TariffDefinition.Details.Periods.length, 'P', TariffDefinition.WeekendPeriod, "Don't apply");
-  TariffDefinition.HolidayPeriod = PopulatePeriodDropdown($('#btnTariffHoliday'), TariffDefinition.Details.Periods.length, 'P', TariffDefinition.HolidayPeriod, "Don't apply");
-  CheckTariff(TariffDefinition);
-}
+
 $('#inputTariffStartDate, inputTariffEndDate').on('dp.change', function(e) {
   if(this.id === 'inputTariffStartDate') TariffDefinition.StartDate = e.date.startOf('day').utc().valueOf();
   if(this.id === 'inputTariffEndDate') TariffDefinition.EndDate = e.date.endOf('day').utc().valueOf();
   CheckTariff();
 });
-$('#btnTariffSave').click(function() { 
-  TariffDefinition.Name = $('#inputTariffName').val();
-  TariffDefinition.Details.Description = $('#inputTariffComments').val();
-  if(TariffKey !== null) TariffDefinition.RateID = TariffKey;
-  $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(TariffDefinition), 
-    success: function() { $('#dlgTariff').modal('hide'); },
-    error: function() { $('#divTariffError').text('Failed to save tariff!').removeClass('hide'); $('#btnTariffSave').addClass('disabled'); setTimeout(CheckTariff, 2000); }
-  });
-});
+
 $('#btnTariffPeriods').click(LoadPeriods);
 function LoadPeriods() {
   $('#dlgTariff > div > div').addClass('hide');
@@ -413,37 +357,6 @@ $('#btnTariffHolidays').click(function() {
   $('#dlgTariff > div > div').addClass('hide');
   $('#divTariffHolidays').removeClass('hide');
 });
-function CheckTariff() {
-  $('#divTariffSuccess, #divTariffError').addClass('hide');
-  $('#btnTariffSave').addClass('disabled');
-  var FindSeason = function(date) {
-    for(var i = 0; i < TariffDefinition.Details.Seasons.length; i++) { if(TariffDefinition.Details.Seasons[i].StartDate === date) return i; }
-    return null;   
-  };
-  for(var i = 0; i < TariffDefinition.Details.Seasons.length; i++) {
-    for(var h = 0; h < 24; h++) {
-      if((TariffDefinition.Details.Seasons[i].DayPeriods[h] < 1) || (TariffDefinition.Details.Seasons[i].DayPeriods[h] > TariffDefinition.Details.Periods.length)) {
-        $('#divTariffError').text('Deriods in season "' + TariffDefinition.Details.Seasons[i].Name + '" out of range!').removeClass('hide');
-        return;
-      }
-    }
-  }
-  var Used = TariffDefinition.Details.Seasons.length;
-  var Date = TariffDefinition.StartDate;
-  while(Used > 0) {
-    var Find = FindSeason(Date);
-    if(Find === null) break;
-    Date = TariffDefinition.Details.Seasons[Find].EndDate;
-    Used = Used - 1;
-    if(Used > 0) Date = Date + 1;
-  }
-  if((Used > 0) || (Date !== TariffDefinition.EndDate)) {
-    $('#divTariffError').text('Defined tariff period is not correctly covered by defined seasons!').removeClass('hide');
-    return;
-  }
-  $('#divTariffSuccess').text('Tariff contains ' + TariffDefinition.Details.Seasons.length + ' seasons, a total of ' + TariffDefinition.Details.Periods.length + ' day periods and ' + TariffDefinition.Details.Holidays.length + ' holidays').removeClass('hide');
-  $('#btnTariffSave').removeClass('disabled');
-}
 function PopulatePeriodDropdown(dropdown, count, prefix, selection, nullText) {
   var List = dropdown.parent().children('ul');
   List.html('');

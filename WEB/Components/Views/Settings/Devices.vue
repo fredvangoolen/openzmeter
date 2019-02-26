@@ -35,7 +35,12 @@
     methods: {
       Stop: function(id, evt) {
         $(evt.target).blur();
-        //enviar stop y esperar respuesta
+        $.ajax({ url: "setDevices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ State: 'Stop' }), 
+          success: function(result) { 
+            var TableData = { data: result };
+            this.$refs.table.setData(TableData); 
+          }.bind(this)
+        });
       },
       Start: function(id, evt) {
         $(evt.target).blur();

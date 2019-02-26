@@ -1,20 +1,15 @@
 <template>
   <div id="app">
-    
-    <!--BlockUI :message="msg" :html="html"></BlockUI-->
     <div id="DisableDiv" class="overlay"></div>
     <topbar ref="indicator_bar"></topbar>
     <sidebar></sidebar>
     <router-view id="contents"></router-view>
-    <maximize-dialog></maximize-dialog>
-    <!--global-dialog></global-dialog-->
   </div>
 </template>
 
 <script>
 import Topbar from './Topbar/Topbar.vue';
 import Sidebar from './Sidebar/Sidebar.vue';
-import MaximizeDialog from './MaximizeDialog.vue';
 export default {
   data: function() {
     return { UpdateIndicatorsTimer: null };
@@ -43,7 +38,7 @@ export default {
     this.$root.SelectedAnalyzer = null;
     this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
   },
-  components: { Topbar, Sidebar, MaximizeDialog }
+  components: { Topbar, Sidebar }
 }
 </script>
 

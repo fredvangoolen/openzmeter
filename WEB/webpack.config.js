@@ -52,6 +52,7 @@ module.exports = {
     alias: {
       'Components': path.resolve(__dirname, 'Components'),
       'JS': path.resolve(__dirname, 'JS'),
+      'CSS': path.resolve(__dirname, 'CSS'),
       'vue$': 'vue/dist/vue.esm.js'
     },
     extensions: ['*', '.js', '.vue', '.json']
@@ -67,6 +68,7 @@ module.exports = {
       '/getAnalyzers': { target: 'http://localhost:8081'},
       '/getPrices': { target: 'http://localhost:8081'},
       '/getDevices': { target: 'http://localhost:8081'},
+      '/setDevices': { target: 'http://localhost:8081'},
       '/getTariffs': { target: 'http://localhost:8081'},
       '/setTariffs': { target: 'http://localhost:8081'}
     }
