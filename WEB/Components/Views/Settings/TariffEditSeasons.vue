@@ -12,6 +12,13 @@
       <div class="row">
         <div class="col-xs-12">
         <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
+          <template slot="actions" slot-scope="props">
+            <div class="btn-group" style="width:100%">
+              <button class="btn btn-xs btn-default" @click="Duplicate(props.rowIndex, $event)">Duplicate</button>
+              <button class="btn btn-xs btn-default" @click="Edit(props.rowIndex, $event)">Edit</button>
+              <button class="btn btn-xs btn-danger" @click="Delete(props.rowIndex, $event)">Delete</button>
+            </div>
+          </template>
         </vuetable>
         </div>
       </div>
@@ -21,17 +28,24 @@
 
 <script>
   import Vuetable from 'vuetable-2';
+  import moment from 'moment';
   export default {
     data() {
-      return { Show: false, Tariff: null, Columns: [] };
+      return { Show: false, Tariff: null, 
+        Columns: [
+          {name: 'Name', title: 'Name'},
+          {name: 'StartDate', title: 'Start date', callback: 'DateFormat'},
+          {name: 'EndDate', title: 'End date', callback: 'DateFormat'}, 
+          {name: '__slot:actions', title: ''}
+        ]
+      };
     },
     methods: {
+      DateFormat: function(val) {
+        return moment(val).format('DD/MM/YYYY');
+      },
       FillTable: function() {
-//                  <thead><tr><th>Name</th><th style="width:80px">From</th><th style="width:80px">To</th><th style="width:140px"></th></tr></thead>
-
-    var Rows = [];
-          for(var i = 0; i < this.Tariff.Details.Periods.length; i++) Rows.push( { Name: 'P' + (i + 1), PowerMode: this.Tariff.Details.Periods[i].PowerMode, ReactiveMode: this.Tariff.Details.Periods[i].ReactiveMode });
-          this.$refs.table.setData({ data: Rows });        
+        this.$refs.table.setData({ data: this.Tariff.Details.Seasons });        
       },
       Load: function(tariff) {
         this.Show = true;
@@ -40,13 +54,25 @@
           this.FillTable();
         });
       },
-//      Delete: function() {
-//        this.Tariff.Details.Periods.splice(-1, 1);
-//        this.FillTable();
-//      },
-      Add: function() {
-        this.Tariff.Details.Periods.push({PowerMode: null, ReactiveMode: null});
+      Duplicate: function(index) {
+        var Row = $.extend(true, {}, this.Tariff.Details.Seasons[index]);
+        Row.Name = Row.Name + "_Copy";
+        var Row = this.Tariff.Details.Seasons.push(Row);
+        this.Show = false;
+        this.$parent.$refs.Season.Load(this.Tariff, this.Tariff.Details.Seasons.length - 1);
+      },
+      Delete: function(index) {
+        this.Tariff.Details.Seasons.splice(index, 1);
         this.FillTable();
+      },
+      Add: function() {
+        this.Tariff.Details.Seasons.push({ StartDate: this.Tariff.StartDate, EndDate: this.Tariff.EndDate, DayPeriods: new Array(24).fill(0), Name: 'Unnamed season' });
+        this.Show = false;
+        this.$parent.$refs.Season.Load(this.Tariff, this.Tariff.Details.Seasons.length - 1);
+      },
+      Edit: function(index) {
+        this.Show = false;
+        this.$parent.$refs.Season.Load(this.Tariff, index);
       },
       Back: function() {
         this.Show = false;
@@ -56,3 +82,19 @@
     components: { Vuetable }
   }
 </script>
+
+<style scoped>
+  .table >>> th:nth-child(2), .table >>> th:nth-child(3)  {
+    width: 100px;
+    text-align: center;
+  }
+  .table >>> td:nth-child(2), .table >>> td:nth-child(3) {
+    text-align: center;
+  }
+  .table >>> th:nth-child(4) {
+    width: 150px;
+  }
+  .table >>> td:nth-child(4) {
+    text-align: right;
+  }
+</style>
