@@ -40,12 +40,62 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
     HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
     HTTPServer::RegisterCallback("/getDevices",          DeviceInterface::GetDevicesCallback);
     HTTPServer::RegisterCallback("/getTariffs",          DeviceInterface::GetTariffsCallback);
+    HTTPServer::RegisterCallback("/setTariffs",          DeviceInterface::SetTariffsCallback);
 //    HTTPServer::RegisterCallback("/StopDevice",          DeviceInterface::StopDeviceCallback);
 //    HTTPServer::RegisterCallback("/StartDevice",         DeviceInterface::StartDeviceCallback);
   }
   pDevices.push_back(device);
 }
+void DeviceInterface::GetDevicesCallback(HTTPRequest &req) {
+  ///TODO: Comprobar permisos
+  json Response = json::array();
+  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+    json Device;
+    Device["Driver"] = (*it)->Driver();
+    Device["Name"] = (*it)->Name();
+    Device["Serial"] = (*it)->Serial();
+    Device["Analyzers"] = (*it)->AnalyzersCount();
+    Device["Status"] = ((*it)->pState == UNCONFIGURED) ? "UNCONFIGURED" : ((*it)->pState == STOPPED) ? "STOPPED" : "RUNNING";
+    Response.push_back(Device);
+  }
+  req.FromJSON(Response);
+}
+void DeviceInterface::StartDeviceCallback(HTTPRequest &req) {
+  ///TODO: Comprobar permisos
+  json Params = req.GetParams();
+  string Serial;
+  if(!Params["Device"].is_string()) {
+    req.FromString("'Device' param is requiered", MHD_HTTP_BAD_REQUEST);
+    return;
+  }
+  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+    if((*it)->Serial() == Serial) {
+      json Response;
+      Response["Status"] = (*it)->Start();
+      return req.FromJSON(Response); 
+    }
+  }
+  req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
+}
+void DeviceInterface::StopDeviceCallback(HTTPRequest &req) {
+  ///TODO: Comprobar permisos
+  json Params = req.GetParams();
+  string Serial;
+  if(!Params["Device"].is_string()) {
+    req.FromString("'Device' param is requiered", MHD_HTTP_BAD_REQUEST);
+    return;
+  }
+  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+    if((*it)->Serial() == Serial) {
+      json Response;
+      Response["Status"] = (*it)->Stop();
+      return req.FromJSON(Response); 
+    }
+  }
+  req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
+}
 void DeviceInterface::GetTariffsCallback(HTTPRequest &req) {
+  ///TODO: Comprobar permisos  
   json Params = req.GetParams();
   stringstream Query;
   if(!Params["Analyzer"].is_string()) {
@@ -64,11 +114,42 @@ void DeviceInterface::GetTariffsCallback(HTTPRequest &req) {
   char *Tmp = req.ExecSentenceJSON(Query.str().c_str(), NULL);
   req.FromString(Tmp == NULL ? "Failed query" : Tmp, MHD_HTTP_OK);
 }
-string DeviceInterface::SetTariffsCallback(HTTPRequest &req) {
-//  char     QueryText[8192];
-//  char    *Serial = NULL;
-//  json_object *Find;
-//  if((json_object_object_get_ex(reader, "Analyzer", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
+void DeviceInterface::SetTariffsCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  stringstream Query;
+  if(!Params["Analyzer"].is_string()) {
+    Query << "INSERT INTO rates(rate, name, username, country_code, details, startdate, enddate) VALUES(";
+    if(Params["RateID"] == NULL) 
+      Query << "null, ";
+    else
+      Query << Params["RateID"] << ", ";
+    Query << "'" << Params["Name"].get<string>() << "', ";
+    Query << "'" << Params["Owner"].get<string>() << "', ";
+    Query << "'" << Params["CountryCode"].get<string>() << "', ";
+    Query << "'" << Params["Details"].dump() << "', ";
+    Query << Params["StartDate"].get<uint64_t>() << ", ";
+    Query << Params["EndDate"].get<uint64_t>() << ") ON CONFLICT(rate) DO UPDATE SET rate = EXCLUDED.rate, name = EXCLUDED.name, username = EXCLUDED.username, country_code = EXCLUDED.country_code, details = EXCLUDED.details, startdate = EXCLUDED.startdate, enddate = EXCLUDED.enddate";
+    
+
+            //    if(!Params["RateID"].is_number()) {
+//    Query << "SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username))), '[]') from rates";
+//    } else {
+//      Query << "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = " << Params["RateID"].get<uint32_t>();
+//    }  
+  } else {
+//    Query << "INSERT INTO SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') from analyzers_rates WHERE serial = " << Params["Analyzer"].get<string>();
+    
+    if(Params["RateID"].is_number()) {
+//      Query << "SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') from analyzers_rates WHERE serial = " << Params["Analyzer"].get<string>();
+    } else {
+//      Query << "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Details', details) from analyzers_rates where rate = " << Params["RateID"].get<uint32_t>();
+    }  
+  }
+  Tools::LogMsg("INFO", "%s\n", Query.str().c_str());
+  req.FromString("", (req.ExecSentence(Query.str().c_str()) == true) ? MHD_HTTP_OK : MHD_HTTP_NOT_ACCEPTABLE);
+
+  
+  //  if((json_object_object_get_ex(reader, "Analyzer", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
 //  if(Serial == NULL) {
 //    uint32_t Index = 0;
 //    if((json_object_object_get_ex(reader, "RateID", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Index = json_object_get_int(Find);
@@ -87,64 +168,11 @@ string DeviceInterface::SetTariffsCallback(HTTPRequest &req) {
 //    }  
 //  }
 //  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
-  return "";
 }
-void DeviceInterface::GetDevicesCallback(HTTPRequest &req) {
-  json Response = json::array();
-  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
-    json Device;
-    Device["Driver"] = (*it)->Driver();
-    Device["Name"] = (*it)->Name();
-    Device["Serial"] = (*it)->Serial();
-    Device["Analyzers"] = (*it)->AnalyzersCount();
-    Device["Status"] = ((*it)->pState == UNCONFIGURED) ? "UNCONFIGURED" : ((*it)->pState == STOPPED) ? "STOPPED" : "RUNNING";
-    Response.push_back(Device);
-  }
-  req.FromJSON(Response);
-}
-string DeviceInterface::StartDeviceCallback(HTTPRequest &req) {
-//  char        *Serial = NULL;
-//  json_object *Find;
-//  if((json_object_object_get_ex(reader, "Device", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
-//  if(Serial == NULL) {
-//    *postdata  = (char*)"'Analyzer' param is requiered";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
-//    if(strcmp((*it)->Serial(), Serial) == 0) {
-//      *writer = json_object_new_object();
-//      json_object_object_add(*writer, "Status", json_object_new_boolean((*it)->Start()));
-//      *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
-//      return true; 
-//    }
-//  }
-//  *postdata  = (char*)"Analyzer not found";
-//  *resultLen = strlen(*postdata);
-  return "";
-}
-string DeviceInterface::StopDeviceCallback(HTTPRequest &req) {
-//  char        *Serial = NULL;
-//  json_object *Find;
-//  if((json_object_object_get_ex(reader, "Device", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
-//  if(Serial == NULL) {
-//    *postdata  = (char*)"'Analyzer' param is requiered";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
-//    if(strcmp((*it)->Serial(), Serial) == 0) {
-//      *writer = json_object_new_object();
-//      json_object_object_add(*writer, "Status", json_object_new_boolean((*it)->Stop()));
-//      *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
-//      return true; 
-//    }
-//  }
-//  *postdata  = (char*)"Analyzer not found";
-//  *resultLen = strlen(*postdata);
-  return "";
-}
+
+
 void DeviceInterface::GetAnalyzersCallback(HTTPRequest &req) {
+  ///TODO: Comprobar permisos
   json Params = req.GetParams();
   json Response = json::array();
   req.PrepareSentence("SELECT serial, editable FROM (SELECT serial, false AS editable FROM permisions WHERE username = ? AND read = TRUE UNION SELECT serial, true FROM analyzers WHERE username = ? UNION SELECT serial, true FROM analyzers WHERE 'admin' = ?) AS Result ORDER BY serial ASC, editable DESC");
@@ -165,6 +193,7 @@ void DeviceInterface::GetAnalyzersCallback(HTTPRequest &req) {
   req.FromJSON(Response);
 }
 void DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
+  ///TODO: Comprobar permisos  
   json Params = req.GetParams();
   //Insert defaults
   if(!Params["To"].is_number())         Params["To"] = 0;
@@ -379,6 +408,7 @@ void DeviceInterface::GetSeriesNowCallback(HTTPRequest &req) {
     else if(Serie == "CURRENT_FFT")       Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::CURRENT_FFT);
     else if(Serie == "VOLTAGE_SAMPLES")   Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::VOLTAGE_SAMPLES);
     else if(Serie == "CURRENT_SAMPLES")   Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::CURRENT_SAMPLES);
+    else return req.FromString("Unknown serie name", MHD_HTTP_BAD_REQUEST);
   }
   for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
     AnalyzerInterface *Analyzer = (*it)->FindAnalyzer(Params["Analyzer"]);
@@ -499,7 +529,9 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   json Powers      = json::array();
   stringstream Query;
   Query << "SELECT to_json(array_agg(json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Details', details))) FROM analyzers_rates WHERE serial = '" << Analyzer << "'";
-  json Tariffs = json::parse(req.ExecSentenceJSON(Query.str().c_str(), NULL));
+  char *JSONText = req.ExecSentenceJSON(Query.str().c_str(), NULL);
+  json Tariffs;
+  if(JSONText != NULL) json::parse(JSONText);
   //CALCULO PERIODOS DE FACTURACION!
   uint64_t BillingFrom = From;
   Result["BillingFrom"] = BillingFrom;

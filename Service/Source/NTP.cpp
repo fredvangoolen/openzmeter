@@ -73,7 +73,7 @@ void *NTP::NTP_Thread(void *args) {
     Packet.txTm_f = ntohl(Packet.txTm_f); // Time-stamp fraction of a second.
     timeval TimeVal;
     TimeVal.tv_sec  = Packet.txTm_s - 2208988800ull;
-    TimeVal.tv_usec = 0xFFFFFFFF / (Packet.txTm_f / 1000);
+    if(Packet.txTm_f != 0) TimeVal.tv_usec = 0xFFFFFFFF / (Packet.txTm_f / 1000);
     if(settimeofday(&TimeVal, NULL) != 0) {
       Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
       goto Release;

@@ -23,7 +23,10 @@ vector<HTTPServer::Callback_t>  HTTPServer::pCallbacks;
 vector<HTTPServer::Mapping_t>   HTTPServer::pMappings;
 //----------------------------------------------------------------------------------------------------------------------
 HTTPRequest::HTTPRequest(const char *cookie, bool deflate) : Database(NULL) {
-  pDeflate = deflate;
+  if(deflate == true) {
+    memset(&pDeflateObj, 0, sizeof(pDeflateObj));
+    pDeflate = (deflateInit(&pDeflateObj, Z_BEST_SPEED) == Z_OK);
+  }
   pResultCode = MHD_HTTP_OK;
   if(cookie != NULL) {
     PrepareSentence("SELECT id, username FROM sessions WHERE id = ?");
@@ -124,12 +127,8 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
   HTTPRequest *Request = (HTTPRequest*)cls;
   if(Request->pDeflate) {
     if(pos == 0) {
-      Request->pDeflateObj.zalloc = Z_NULL;
-      Request->pDeflateObj.zfree = Z_NULL;
-      Request->pDeflateObj.opaque = Z_NULL;
       Request->pDeflateObj.avail_in = Request->pPostData.size();
       Request->pDeflateObj.next_in = (uint8_t*)Request->pPostData.c_str();
-      if(deflateInit(&Request->pDeflateObj, Z_BEST_SPEED) != Z_OK) return MHD_CONTENT_READER_END_OF_STREAM;
     }
     Request->pDeflateObj.next_out = (uint8_t*)buf;
     Request->pDeflateObj.avail_out = max;
