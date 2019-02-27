@@ -5,7 +5,9 @@
       <edit-main ref="Main" v-on:Close="Close"></edit-main>
       <edit-periods ref="Periods"></edit-periods>
       <edit-seasons ref="Seasons"></edit-seasons>
+      <edit-season ref="Season"></edit-season>
       <edit-holidays ref="Holidays"></edit-holidays>
+      <edit-holiday ref="Holiday"></edit-holiday>
     </div>
   </div>
 </template>
@@ -14,15 +16,17 @@
   import EditMain from './TariffsEditMain.vue';
   import EditPeriods from './TariffEditPeriods.vue';
   import EditSeasons from './TariffEditSeasons.vue';
+  import EditSeason from './TariffEditSeason.vue';
   import EditHolidays from './TariffEditHolidays.vue';
+  import EditHoliday from './TariffEditHoliday.vue';
   export default {
     data: function() {
-      return { ShowDialog: false, Tariff: {}, TariffID: null };
+      return { ShowDialog: false, Tariff: {}, RateID: null };
     },
     methods: {
       Show: function(id) {
         this.ShowDialog = true;
-        this.TariffID = id;  
+        this.RateID = id;  
         this.$nextTick(function() {  
           if(id === null) {
             this.Tariff = { 
@@ -53,15 +57,20 @@
         });
       },
       Save: function() {
-        alert("guardar no terminado!!");
+//        alert("guardar no terminado!!");
 //        TariffDefinition.Name = $('#inputTariffName').val();
 //  TariffDefinition.Details.Description = $('#inputTariffComments').val();
 //  if(TariffKey !== null) TariffDefinition.RateID = TariffKey;
-//  $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(TariffDefinition), 
-//    success: function() { $('#dlgTariff').modal('hide'); },
-//    error: function() { $('#divTariffError').text('Failed to save tariff!').removeClass('hide'); $('#btnTariffSave').addClass('disabled'); setTimeout(CheckTariff, 2000); }
-//  });
-        
+        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign(this.Tariff, { RateID: this.RateID }) ), 
+          success: function() {
+            this.Close();
+            this.$parent.GetTariffs();
+          }.bind(this),
+          error: function() {
+            this.$refs.Main.Error = 'Failed to save tariff!';
+            setTimeout(function() { this.$refs.Main.Error = ''; }.bind(this), 1000); 
+          }.bind(this)
+        });
       },
       Check: function(tariff) {
         $('#divTariffSuccess, #divTariffError').addClass('hide');
@@ -72,7 +81,7 @@
         };
         for(var i = 0; i < tariff.Details.Seasons.length; i++) {
           for(var h = 0; h < 24; h++) {
-            if((tariff.Details.Seasons[i].DayPeriods[h] < 1) || (tariff.Details.Seasons[i].DayPeriods[h] > tariff.Details.Periods.length)) return 'Periods in season "' + tariff.Details.Seasons[i].Name + '" out of range!';
+            if((tariff.Details.Seasons[i].DayPeriods[h] < 0) || (tariff.Details.Seasons[i].DayPeriods[h] >= tariff.Details.Periods.length)) return 'Periods in season "' + tariff.Details.Seasons[i].Name + '" out of range!';
           }
         }
         var Used = tariff.Details.Seasons.length;
@@ -99,7 +108,7 @@
     destroyed: function() {
       this.$root.$el.removeChild(this.$el);
     },
-    components: { EditMain, EditPeriods, EditSeasons, EditHolidays }
+    components: { EditMain, EditPeriods, EditSeasons, EditSeason, EditHolidays, EditHoliday }
   }
 </script>
 
