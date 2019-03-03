@@ -85,7 +85,7 @@
         this.UpdateGraph();
       },
       CalcOptions() {
-        if(this.$root.SelectedAnalyzer === null) return;
+        if((this.$root.SelectedAnalyzer === null) || (this.Graph === null)) return;
         var Analyzer = this.$root.SelectedAnalyzer;
         var Range = oZm.Series['VOLTAGE'].Range(this.Data, this.Phases);
         var Options = {

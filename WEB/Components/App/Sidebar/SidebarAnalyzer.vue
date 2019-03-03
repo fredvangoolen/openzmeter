@@ -3,8 +3,8 @@
     <div class="sidenav-header">
       <div>{{ analyzerName }}</div>
       <div class="btn-group pull-right">
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{disabled: !hasAnalyzers}" @click="showDialog = true"><img src="Imgs/magnifier.png"></button>
-        <button type="button" class="btn btn-default btn-xs disabled"><img src="Imgs/exclamation.png"></button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{disabled: !hasAnalyzers}" @click="showDialog = true"><img :src="require('Imgs/magnifier.png')"></button>
+        <button type="button" class="btn btn-default btn-xs disabled"><img :src="require('Imgs/exclamation.png')"></button>
       </div>
       <div class="clearfix"></div>
       <table>

@@ -18,6 +18,7 @@
 #define DEVICEV1_01_BUFFERSECONDS       10                          //Tamaño del buffer (10 segundos)
 #define DEVICEV1_01_TRANSFERS           32                          //Numero de transferencias a encolar
 //----------------------------------------------------------------------------------------------------------------------
+using namespace std;
 class DeviceV1_01 : public DeviceInterface {
   private :
     typedef struct {
@@ -28,7 +29,7 @@ class DeviceV1_01 : public DeviceInterface {
     AnalyzerSoft                *pAnalyzer;                //Analizador
     RingBuffer<Sample_t>         pBuffer;                  //Read buffer
     uint64_t                     pLastUpdate;              //Timestamp de la ultima vez que se actualizo el nombre del thread
-    char                        *pSerial;                  //Numero de serie del dispositivo de captura
+    string                       pSerial;                  //Numero de serie del dispositivo de captura
     float                        pVoltageGain;             //Ganancia de tension
     float                        pCurrentGain;             //Ganancia de corriente
     float                        pVoltageOffset;           //Offset de tension
@@ -39,6 +40,7 @@ class DeviceV1_01 : public DeviceInterface {
 //    bool                         pTerminateSignal;         //Flag to terminate signal thread
     pthread_mutex_t              pMutex;
     json_object                 *pConfig;
+    libusb_context              *pContext;                 //USB context
   private :
     static bool                  pClassRegistered;
   private : 
@@ -51,9 +53,9 @@ class DeviceV1_01 : public DeviceInterface {
     bool               ConfigDev(json_object *config);
     AnalyzerInterface *FindAnalyzer(string serial);
     uint32_t           AnalyzersCount();
-    const char        *Serial();
-    const char        *Driver();
-    const char        *Name();
+    string             Serial();
+    string             Driver();
+    string             Name();
     bool               Start();
     bool               Stop();
     bool               BuffersAppend(float voltageSample, float currentSample);

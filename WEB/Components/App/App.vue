@@ -16,7 +16,7 @@ export default {
   },
   methods: {
     UpdateIndicators() {
-      if(this.Analyzer === null) return;
+      if(this.$root.SelectedAnalyzer === null) return;
       $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
         success: function(result) {
           this.$refs.indicator_bar.setValue(result);

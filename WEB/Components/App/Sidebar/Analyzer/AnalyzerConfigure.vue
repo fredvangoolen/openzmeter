@@ -3,8 +3,8 @@
     <div class="modal-header">
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Configuration</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersConfigSave"><img src="Imgs/diskette.png" alt="Save"></button>
-        <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersConfigBack"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
+        <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersConfigSave"><img :src="require('Imgs/diskette.png')" alt="Save"></button>
+        <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersConfigBack"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </div>
     <div class="modal-body">
@@ -46,7 +46,7 @@
             <input type="text" class="form-control" id="inputAnalyzerLat">
             <span class="input-group-addon">Long</span>
             <input type="text" class="form-control" id="inputAnalyzerLong">
-            <span class="input-group-btn"><button class="btn btn-default"><img src="Imgs/globe_africa.png"></button></span>
+            <span class="input-group-btn"><button class="btn btn-default"><img :src="require('Imgs/globe_africa.png')"></button></span>
           </div>
         </div>
       </div>

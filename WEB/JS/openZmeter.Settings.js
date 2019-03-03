@@ -247,21 +247,6 @@ function NetworkForget(index) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // NTP -----------------------------------------------------------------------------------------------------------------
 /* Secuencia de inicio para cargar la pagina */
 function UpdatePage() {

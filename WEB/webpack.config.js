@@ -6,12 +6,12 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, './dist'),
     publicPath: '/dist/',
-    filename: 'build.js'
+    filename: 'openZmeter.js'
   },
   plugins: [
     new webpack.ProvidePlugin({
-           $: "jquery",
-           jQuery: "jquery"
+      $: "jquery",
+      jQuery: "jquery"
     })
   ],
   module: {
@@ -36,13 +36,13 @@ module.exports = {
         loader: 'babel-loader',
         exclude: /node_modules/
       },
- {
+      {
         test: /\.(png|svg|woff2|ttf|eot|woff)$/,  
         use: [{
             loader: 'url-loader',
             options: {
               limit: 80000, // Convert images < 8kb to base64 strings
-              name: 'images/[hash]-[name].[ext]'
+//              name: 'images/[hash]-[name].[ext]'
             }
           }]
       }, 
@@ -53,6 +53,7 @@ module.exports = {
       'Components': path.resolve(__dirname, 'Components'),
       'JS': path.resolve(__dirname, 'JS'),
       'CSS': path.resolve(__dirname, 'CSS'),
+      'Imgs': path.resolve(__dirname, 'Imgs'),
       'vue$': 'vue/dist/vue.esm.js'
     },
     extensions: ['*', '.js', '.vue', '.json']

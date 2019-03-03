@@ -294,7 +294,7 @@ void AnalyzerSoft::Analyze() {
     pthread_mutex_unlock(&pDataReadyMutex);
     ResetAggreg(pAggreg10C);
     pthread_mutex_lock(&pThreadMutex);
-    Tools::LogMsg("DEBUG", "Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", pName, Tools::GetTime() - Start, pSequence);
+    Tools::LogMsg("DEBUG", "Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", pName.c_str(), Tools::GetTime() - Start, pSequence);
     pWorking = false;
     pSequence++;
     pthread_mutex_unlock(&pThreadMutex);

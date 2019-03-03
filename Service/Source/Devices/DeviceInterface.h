@@ -21,9 +21,9 @@ class DeviceInterface {
   protected :
     virtual uint32_t           AnalyzersCount() = 0;
     virtual AnalyzerInterface *FindAnalyzer(string serial) = 0;
-    virtual const char        *Serial() = 0;
-    virtual const char        *Driver() = 0;
-    virtual const char        *Name() = 0;
+    virtual string             Serial() = 0;
+    virtual string             Driver() = 0;
+    virtual string             Name() = 0;
     virtual bool               ConfigDev(json_object *config) = 0;
     virtual bool               Start() = 0;
     virtual bool               Stop() = 0;

@@ -1,6 +1,6 @@
 <template>
   <div class="sidenav-version"><span>{{ BuildDate }}</span>
-    <button type="button" class="btn btn-default btn-xs pull-right" @click="ReadNews"><img src="Imgs/newspaper.png"></button>
+    <button type="button" class="btn btn-default btn-xs pull-right" @click="ReadNews"><img :src="require('Imgs/newspaper.png')"></button>
   </div>
 </template>
 

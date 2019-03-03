@@ -18,6 +18,7 @@
 #define DEVICEV1_00_BUFFERSECONDS       10                          //Tamaño del buffer (10 segundos)
 #define DEVICEV1_00_TRANSFERS           32                          //Numero de transferencias a encolar
 //----------------------------------------------------------------------------------------------------------------------
+using namespace std;
 class DeviceV1_00 : public DeviceInterface {
   private :
     typedef struct {
@@ -28,7 +29,7 @@ class DeviceV1_00 : public DeviceInterface {
     AnalyzerSoft                *pAnalyzer;                //Analizador
     RingBuffer<Sample_t>         pBuffer;                  //Read buffer
     uint64_t                     pLastUpdate;              //Timestamp de la ultima vez que se actualizo el nombre del thread
-    char                        *pSerial;                  //Numero de serie del dispositivo de captura
+    string                       pSerial;                  //Numero de serie del dispositivo de captura
     float                        pVoltageGain;             //Ganancia de tension
     float                        pCurrentGain;             //Ganancia de corriente
     float                        pVoltageOffset;           //Offset de tension
@@ -51,9 +52,9 @@ class DeviceV1_00 : public DeviceInterface {
     bool               ConfigDev(json_object *config);
     AnalyzerInterface *FindAnalyzer(string serial);
     uint32_t           AnalyzersCount();
-    const char        *Serial();
-    const char        *Driver();
-    const char        *Name();
+    string             Serial();
+    string             Driver();
+    string             Name();
     bool               Start();
     bool               Stop();
     bool               BuffersAppend(float voltageSample, float currentSample);
