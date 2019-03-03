@@ -68,7 +68,7 @@ bool DeviceV1_00::Init() {
     This->pLastUpdate    = 0;
     This->pDeviceHandle  = NULL;
     This->pNewDevice     = NULL;
-    This->pSerial        = strdup(String);
+    This->pSerial        = String;
     This->pVoltageGain   = 1;
     This->pCurrentGain   = 1;
     This->pVoltageOffset = 0;
@@ -88,16 +88,16 @@ AnalyzerInterface *DeviceV1_00::FindAnalyzer(string serial) {
 uint32_t DeviceV1_00::AnalyzersCount() {
   return (pAnalyzer == NULL) ? 0 : 1;
 }
-const char *DeviceV1_00::Serial() {
+string DeviceV1_00::Serial() {
   return pSerial;
 }
-const char *DeviceV1_00::Driver() {
-  return "V1";
+string DeviceV1_00::Driver() {
+  return "V1.00";
 }
-const char *DeviceV1_00::Name() {
+string DeviceV1_00::Name() {
   return "Capture device V1.00";
 }
-void  DeviceV1_00::ReadCallback(struct libusb_transfer *transfer) {
+void DeviceV1_00::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV1_00 *This = (DeviceV1_00*)transfer->user_data;
   for(int Block = 0; Block < (transfer->actual_length / 64); Block++) {
     int16_t *Pkg   = (int16_t*)&transfer->buffer[64 * Block];
@@ -113,7 +113,7 @@ void  DeviceV1_00::ReadCallback(struct libusb_transfer *transfer) {
   }
   if(This->pTerminate == false) libusb_submit_transfer(transfer);
 }
-int   DeviceV1_00::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
+int DeviceV1_00::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
   DeviceV1_00 *This = (DeviceV1_00*)user_data;
   if((event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) && (This->pDeviceHandle == NULL)) {
     This->pNewDevice = dev;
@@ -121,7 +121,7 @@ int   DeviceV1_00::PlugCallback(struct libusb_context *ctx, struct libusb_device
     if(This->pDeviceHandle != NULL) {
       libusb_device *CurrentDev = libusb_get_device(This->pDeviceHandle);	
       if(dev == CurrentDev) {
-        Tools::LogMsg("INFO", "DeviceV1 with serial '%s' disconnected\n", This->pSerial);
+        Tools::LogMsg("INFO", "DeviceV1.00 with serial '%s' disconnected\n", This->pSerial);
 //        This->pTerminateSignal = true;
         pthread_join(This->pSignalThread, NULL);
         libusb_close(This->pDeviceHandle);
@@ -194,7 +194,7 @@ void *DeviceV1_00::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       }
-      if(strcmp(This->pSerial, Serial) != 0) {
+      if(This->pSerial == Serial) {
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL; 
         This->pNewDevice = NULL;
@@ -383,7 +383,7 @@ DeviceV1_00::~DeviceV1_00() {
 //    pthread_join(AnalyzeThread, NULL);
 //    free(Buffer);
 //  }
-  if(pSerial) free(pSerial);
+//  if(pSerial) free(pSerial);
 }
 //uint32_t CaptureMono::SamplesCopy(float **dest, uint32_t offset, uint32_t len) {
 //  for(uint i = 0; i < len; i++) {

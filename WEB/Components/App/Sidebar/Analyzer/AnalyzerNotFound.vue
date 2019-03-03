@@ -3,7 +3,7 @@
     <div class="modal-header">
       <div class="pull-left"><h4 class="modal-title">Analyzers</h4></div>
       <div class="pull-right">
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img src="Imgs/arrow_undo.png"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
       </div>
     </div>
     <div class="modal-body">

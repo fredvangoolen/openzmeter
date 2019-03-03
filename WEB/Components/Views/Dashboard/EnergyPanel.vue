@@ -96,7 +96,7 @@
         var Range = oZm.Series['ACTIVE_ENERGY'].Range(this.Data, [true]);
         var Options = {
           strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow',
-          legendFormatter: oZm.LegendFormatter_Follow, labels: ['Time'].concat(oZm.Series['ACTIVE_ENERGY'].Names(Analyzer)), dateWindow: this.DateWindow, file: this.Data, valueRange: Range,
+          legendFormatter: oZm.LegendFormatter_Follow, labels: ['Time', 'Energy'], dateWindow: this.DateWindow, file: this.Data, valueRange: Range,
           //zoomCallback: MainScrollable.ZoomEvt, 
           interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt, dblclick: this.DoubleClickEvt },
           underlayCallback: function(canvas, area, g) {

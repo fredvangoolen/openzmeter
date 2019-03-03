@@ -3,16 +3,16 @@
     <ul class="sidenav-menu" id="AnalyzerMenu">
       <li>
         <router-link to="/Dashboard">
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/dashboard.png"></span>
+          <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/dashboard.png')"></span>
           <span class="sidenav-link-title">Dashboard</span>
         </router-link>
       </li>
       <li>
         <a href="javascript:;" data-sidenav-dropdown-toggle>
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/draw_wave.png"></span>
+          <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/draw_wave.png')"></span>
           <span class="sidenav-link-title">Analysis</span>
-          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_down.png"></span>
-          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_up.png"></span>          
+          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_down.png')"></span>
+          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>          
         </a>
         <ul class="sidenav-dropdown" data-sidenav-dropdown>
           <li><router-link to="/Analysis/Voltage">Voltage</router-link></li>
@@ -24,10 +24,10 @@
       </li>
       <li>
         <a href="javascript:;" data-sidenav-dropdown-toggle>
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/warning.png"></span>
+          <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/warning.png')"></span>
           <span class="sidenav-link-title">Events</span>
-          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_down.png"></span>
-          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_up.png"></span>
+          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_down.png')"></span>
+          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>
         </a>
         <ul class="sidenav-dropdown" data-sidenav-dropdown>
           <li><router-link to="/Events/ITIC">ITIC</router-link></li>
@@ -37,10 +37,10 @@
       </li>
       <li>
         <a href="javascript:;" data-sidenav-dropdown-toggle>
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/table_money.png"></span>
+          <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/table_money.png')"></span>
           <span class="sidenav-link-title">Energy Stats</span>
-          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_down.png"></span>
-          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img src="Imgs/bullet_arrow_up.png"></span>
+          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_down.png')"></span>
+          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>
         </a>
         <ul class="sidenav-dropdown" data-sidenav-dropdown>
           <li><a href="Stats/Costs">Costs</a></li>
@@ -52,13 +52,13 @@
     <ul class="sidenav-menu">
       <li id="menuSettings">
         <router-link to="/Settings">
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/cog.png"></span>
+          <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/cog.png')"></span>
           <span class="sidenav-link-title">Settings</span>
         </router-link>
       </li>
       <li>
         <a href="Help">
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" src="Imgs/help.png"></span>
+          <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/help.png')"></span>
           <span class="sidenav-link-title">Help</span>
         </a>
       </li>

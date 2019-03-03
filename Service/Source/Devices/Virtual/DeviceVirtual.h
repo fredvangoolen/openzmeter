@@ -9,6 +9,7 @@
 #define CAPTUREVIRTUAL_SAMPLEFREQ      6000.00        //Frequencia de muestreo
 #define CAPTUREVIRTUAL_BUFFERSIZE     60000           //Tamaño del buffer (10 segundos)
 //----------------------------------------------------------------------------------------------------------------------
+using namespace std;
 class DeviceVirtual : public DeviceInterface {
   private :
     static bool    pClassRegistered;
@@ -27,9 +28,9 @@ class DeviceVirtual : public DeviceInterface {
     bool               ConfigDev(json_object *config);
     AnalyzerInterface *FindAnalyzer(string serial);
     uint32_t           AnalyzersCount();
-    const char        *Serial();
-    const char        *Driver();
-    const char        *Name();
+    string             Serial();
+    string             Driver();
+    string             Name();
     bool               Start();
     bool               Stop();
 

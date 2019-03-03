@@ -18,9 +18,9 @@
 #include "NetworkManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 MHD_Daemon                     *HTTPServer::pDaemon = NULL;
-string                          HTTPServer::pDefaultPage;
+//string                          HTTPServer::pDefaultPage;
 vector<HTTPServer::Callback_t>  HTTPServer::pCallbacks;
-vector<HTTPServer::Mapping_t>   HTTPServer::pMappings;
+//vector<HTTPServer::Mapping_t>   HTTPServer::pMappings;
 //----------------------------------------------------------------------------------------------------------------------
 HTTPRequest::HTTPRequest(const char *cookie, bool deflate) : Database(NULL) {
   if(deflate == true) {
@@ -46,9 +46,13 @@ HTTPRequest::HTTPRequest(const char *cookie, bool deflate) : Database(NULL) {
 HTTPRequest::~HTTPRequest() {
   if(pDeflate) deflateEnd(&pDeflateObj);
 }
+uint32_t HTTPRequest::size() {
+  return pPostData.size();
+}
 void HTTPRequest::FromFile(string name) {
 #ifdef OZM_DEBUG
   string Path = "Resources/" + name;
+  Tools::LogMsg("INFO", "%s\n", Path.c_str());
   std::ifstream File(Path, ios::binary);
   pResultCode = MHD_HTTP_NOT_FOUND;
   if(File) {
@@ -65,18 +69,20 @@ void HTTPRequest::FromFile(string name) {
 #else
   pPostData = (char*)Tools::GetFile(name, &pPostDataLen);
 #endif
-  size_t FileNameLen = name.length();
-  if((FileNameLen >= 3) && (name.compare(FileNameLen - 3, 3, ".js")) == 0)        pMimeType = "text/javascript";
-  else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".css"))  == 0) pMimeType = "text/css";
-  else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".ico"))  == 0) pMimeType = "image/x-icon";
-  else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".png"))  == 0) pMimeType = "image/png";
-  else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".svg"))  == 0) pMimeType = "image/svg+xml";
-  else if((FileNameLen >= 5) && (name.compare(FileNameLen - 5, 5, ".html")) == 0) pMimeType = "text/html";
-//  else if((FileNameLen >= 5) && (strcmp(&url[FileNameLen - 6], ".woff2")) == 0) 
-//    MHD_add_response_header(response, "Content-Type", "font/woff2");
-  else {
-    pMimeType = "application/octet-stream";
-    Tools::LogMsg("DEBUG", "No mimetype defined for request '%s'\n", name);
+  if(pResultCode == MHD_HTTP_OK) {
+    size_t FileNameLen = name.length();
+    if((FileNameLen >= 3) && (name.compare(FileNameLen - 3, 3, ".js")) == 0)        pMimeType = "text/javascript";
+    else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".css"))  == 0) pMimeType = "text/css";
+    else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".ico"))  == 0) pMimeType = "image/x-icon";
+    else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".png"))  == 0) pMimeType = "image/png";
+    else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".svg"))  == 0) pMimeType = "image/svg+xml";
+    else if((FileNameLen >= 5) && (name.compare(FileNameLen - 5, 5, ".html")) == 0) pMimeType = "text/html";
+  //  else if((FileNameLen >= 5) && (strcmp(&url[FileNameLen - 6], ".woff2")) == 0) 
+  //    MHD_add_response_header(response, "Content-Type", "font/woff2");
+    else {
+      pMimeType = "application/octet-stream";
+      Tools::LogMsg("DEBUG", "No mimetype defined for request '%s'\n", name.c_str());
+    }
   }
 }
 void HTTPRequest::FromString(string obj, int resultCode) {
@@ -164,17 +170,17 @@ bool HTTPServer::Config(json_object *config) {
 void HTTPServer::Stop() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
 }
-void HTTPServer::RegisterDefault(string def) {
-  pDefaultPage = def;
-}
+//void HTTPServer::RegisterDefault(string def) {
+//  pDefaultPage = def;
+//}
 void HTTPServer::RegisterCallback(string handleName, HTTPServer::Func_t function) {
   Callback_t Item = {handleName, function};
   pCallbacks.push_back(Item);
 }
-void HTTPServer::RegisterMapping(string url, string file) {
-  Mapping_t Item = {url, file};
-  pMappings.push_back(Item);
-}
+//void HTTPServer::RegisterMapping(string url, string file) {
+//  Mapping_t Item = {url, file};
+//  pMappings.push_back(Item);
+//}
 void HTTPServer::RemoveExpiredSessions() {
   Database DB(NULL);
   DB.PrepareSentence("DELETE FROM sessions WHERE (timestamp < ? AND username IS NOT NULL) OR (timestamp < ? AND username IS NULL)");
@@ -207,9 +213,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) return MHD_YES;
     if((strcmp(method, MHD_HTTP_METHOD_GET) == 0) || (strcmp(method, MHD_HTTP_METHOD_HEAD) == 0)) Request->FromFile(string("WEB") + url);
     if((Request->ResultCode() != MHD_HTTP_OK) && (strcmp(method, MHD_HTTP_METHOD_GET) == 0)) {
-      if(((strcmp(url, "/Login") == 0) || (strcmp(url, "/") == 0)) && (!Request->UserName().empty())) {
-        return SendRedirect(connection, pDefaultPage);
-      } else if(strcmp(url, "/Logout") == 0) {
+      if(strcmp(url, "/Logout") == 0) {
         Request->CloseSession();
         return SendRedirect(connection, "/Login");
       } else if((strcmp(url, "/Login") == 0) && (Request->UserName().empty())) {
@@ -217,13 +221,14 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
       } else if(Request->UserName().empty()) {
         return SendRedirect(connection, "/Login");
       } else {
-        for(vector<Mapping_t>::iterator it = pMappings.begin() ; it != pMappings.end(); ++it) {
-          if(it->URL.compare(url) == 0) Request->FromFile("WEB" + it->File);
-        }    
+        Request->FromFile("WEB/index.html");
       }
     }
     MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &Request->WriteFunction, Request, NULL);
     MHD_add_response_header(Response, MHD_HTTP_HEADER_CACHE_CONTROL, "public, max-age=2592000");
+    char Size[16];
+    snprintf(Size, sizeof(Size), "%u", Request->size());
+    MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_LENGTH, Size);
     MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_TYPE, Request->MimeType().c_str());
     MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_ENCODING, Request->Deflate() ? "deflate" : "");
     int Return = MHD_queue_response(connection, Request->ResultCode(), Response);
@@ -243,7 +248,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
           if((Params["Password"].is_string() == false) || (Params["Username"].is_string() == false)) {
             Request->FromString("'Password' and 'Username' params requiered", MHD_HTTP_BAD_REQUEST);
           } else {
-            Request->PrepareSentence("SELECT lastlogin FROM users WHERE username = ? AND password = ?");
+            Request->PrepareSentence("SELECT lastlogin FROM users WHERE username = ? AND password = MD5(?)");
             Request->BindSingleString(Params["Username"].get<string>().c_str());
             Request->BindSingleString(Params["Password"].get<string>().c_str());
             Request->ExecSentence();

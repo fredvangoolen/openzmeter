@@ -3,8 +3,8 @@
     <div class="sidenav-header clearfix">
       <div>{{ UserName }}</div>
       <div class="btn-group pull-right">
-        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User edit" id="btnUserEdit"><img src="Imgs/user_edit.png"></button>
-        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User logout" @click="Logout"><img src="Imgs/user_go.png"></button>
+        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User edit" id="btnUserEdit"><img :src="require('Imgs/user_edit.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User logout" @click="Logout"><img :src="require('Imgs/user_go.png')"></button>
       </div>
     </div>
     <user-logout v-if="showLogout" @close="showLogout = false"></user-logout>

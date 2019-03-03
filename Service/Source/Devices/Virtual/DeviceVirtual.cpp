@@ -33,13 +33,13 @@ bool DeviceVirtual::Init() {
 uint32_t DeviceVirtual::AnalyzersCount() {
   return (pAnalyzer == NULL) ? 0 : 1;
 }
-const char *DeviceVirtual::Serial() {
+string DeviceVirtual::Serial() {
   return "VIRTUAL";
 }
-const char *DeviceVirtual::Driver() {
+string DeviceVirtual::Driver() {
   return "Virtual";
 }
-const char *DeviceVirtual::Name() {
+string DeviceVirtual::Name() {
   return "Emulate most of real capture device for testing";
 }
 bool DeviceVirtual::ConfigDev(json_object *config) {
