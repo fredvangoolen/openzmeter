@@ -168,7 +168,7 @@ void *DeviceV1_00::Capture_Thread(void *args) {
   for(int i = 0; i < DEVICEV1_00_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
   while(!This->pTerminate) {
     struct timeval tv = { 1, 0 };
-    int Result = libusb_handle_events_timeout_completed(NULL, &tv, NULL);
+    int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) Tools::LogMsg("ERROR", "libusb_handle_events_timeout_completed returns code %d\n", Result);
     if(This->pNewDevice != NULL) {
       struct libusb_device_descriptor Descriptor;
@@ -194,7 +194,7 @@ void *DeviceV1_00::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       }
-      if(This->pSerial == Serial) {
+      if(This->pSerial != Serial) {
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL; 
         This->pNewDevice = NULL;

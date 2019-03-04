@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS country(
   timezone      varchar NOT NULL
 ) WITH (OIDS=FALSE);
 INSERT INTO country(country_code, country, currency, timezone) VALUES('ESP', 'Spain', '€', 'Europe/Madrid') ON CONFLICT(country_code) DO NOTHING;
+INSERT INTO country(country_code, country, currency, timezone) VALUES('UTC', 'Universal', '', 'Etc/UTC') ON CONFLICT(country_code) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS users(
   username      character varying  NOT NULL PRIMARY KEY,
@@ -19,7 +20,8 @@ CREATE TABLE IF NOT EXISTS users(
 	company       character varying  NOT NULL,
 	photo         character varying  NULL,
 	email         character varying  NOT NULL,
-	telegram      character varying  NOT NULL
+	telegram      character varying  NOT NULL,
+  geo           point              NULL
 ) WITH (OIDS=FALSE);
 INSERT INTO users(username, password, lastlogin, country_code, name, surname, id_card, address, company, photo, email, telegram) VALUES('admin', MD5('admin'), 0, 'ESP', 'System administrator', '', '', '', '', '', '', '') ON CONFLICT (username) DO NOTHING;
 
@@ -31,16 +33,17 @@ CREATE TABLE IF NOT EXISTS sessions(
 CREATE INDEX IF NOT EXISTS sessions_timestamp_idx ON sessions USING btree (timestamp);
 
 CREATE TABLE IF NOT EXISTS analyzers(
-  serial      character varying NOT NULL PRIMARY KEY,
-  username    character varying NOT NULL REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE,
-  contract    character varying NOT NULL,
-  zipcode     character varying NOT NULL,
-  frequency   real              NOT NULL,
-  voltage     real              NOT NULL,
-	max_current real              NOT NULL,
-	min_current real              NOT NULL,
-  name        character varying NOT NULL,
-  geo         point
+  serial       character varying NOT NULL PRIMARY KEY,
+  username     character varying NOT NULL REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE,
+  country_code character varying  NOT NULL REFERENCES country(country_code) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,  
+  contract     character varying NOT NULL,
+  zipcode      character varying NOT NULL,
+  frequency    real              NOT NULL,
+  voltage      real              NOT NULL,
+	max_current  real              NOT NULL,
+	min_current  real              NOT NULL,
+  name         character varying NOT NULL,
+  geo          point             NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS rates(

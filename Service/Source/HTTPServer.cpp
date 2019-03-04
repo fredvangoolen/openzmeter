@@ -50,16 +50,16 @@ uint32_t HTTPRequest::size() {
   return pPostData.size();
 }
 void HTTPRequest::FromFile(string name) {
-#ifdef OZM_DEBUG
+#ifdef 1
   string Path = "Resources/" + name;
   Tools::LogMsg("INFO", "%s\n", Path.c_str());
   std::ifstream File(Path, ios::binary);
   pResultCode = MHD_HTTP_NOT_FOUND;
-  if(File) {
+  if(File.is_open()) {
     File.seekg (0, File.end);
     int Size = File.tellg();
-    File.seekg (0, File.beg);
-    if(Size > 0) { 
+    File.seekg(0, File.beg);
+    if((Size > 0) && (Size < INT_MAX)) {
       pPostData = string(Size, 0);
       File.seekg(0, ios::beg);
       File.read(&pPostData[0], pPostData.size());

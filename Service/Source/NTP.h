@@ -26,11 +26,11 @@ class NTP {
     static pthread_t       pThread;
     static pthread_mutex_t pMutex;
     static bool            pEnabled;
-    static char           *pServer;
+    static string          pServer;
   private :
     static void *NTP_Thread(void *args);
   public:
     static bool Config(json_object *config);
-    static bool GetTimeSettingsCallback(HTTPRequest &req);
-    static bool SetTimeSettingsCallback(HTTPRequest &req);
+    static void GetTimeSettingsCallback(HTTPRequest &req);
+    static void SetTimeSettingsCallback(HTTPRequest &req);
 };
