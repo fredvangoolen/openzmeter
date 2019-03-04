@@ -120,11 +120,37 @@ export var Series = {
       return [LowerRange, UpperRange];
     }
   },
-  'REACTIVE_POWER': { CSS_Class: '', Title: 'Reactive Power', Serie: 'Reactive_Power', Units: 'var', Link: '/Analysis/Power', FormatValue: function(val) { return Round2(val); }, rangeFunc: function() {} },
-  'POWER_FACTOR': { CSS_Class: '', Title: 'Power Factor', Serie: 'Power_Factor', Units: '', Link: '', FormatValue: function(val) { return Round2(val); } },
-  'PHI': { CSS_Class: '', Title: 'Phi', Serie: 'Phi', Units: '', Link: '', FormatValue: function(val) { return Round2(val); }},
-  'VOLTAGE_THD': { CSS_Class: '', Title: 'Voltage THD', Serie: 'Voltage_THD', Units: '%', Link:'', FormatValue: function(val) { return Round2(val); }},
-  'CURRENT_THD': { CSS_Class: '', Title: 'Current THD', Serie: 'Current_THD', Units: '%', Link:'', FormatValue: function(val) { return Round2(val); }},
+  'REACTIVE_POWER': { 
+    CSS_Class: '', 
+    Title: 'Reactive Power', 
+    Serie: 'Reactive_Power', 
+    Units: 'var', 
+    Link: '/Analysis/Power', 
+    FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'var', Value: Round2(ScaleToUnits(val, Units)) }; },
+    rangeFunc: function() {} 
+  },
+  'POWER_FACTOR': { CSS_Class: '', Title: 'Power Factor', Serie: 'Power_Factor', Units: '', Link: '', 
+    FormatValue: function(val) { return { Units: '', Value: Round2(val) }; } 
+  },
+  'PHI': { CSS_Class: '', Title: 'Phi', Serie: 'Phi', Units: '', Link: '', 
+    FormatValue: function(val) { return { Units: ((val < 0) ? 'º CAP' : (val > 0) ? 'º IND' : 'º'), Value: Round2(Math.abs(val)) }; } 
+  },
+  'VOLTAGE_THD': { 
+    CSS_Class: '', 
+    Title: 'Voltage THD', 
+    Serie: 'Voltage_THD', 
+    Units: '%', 
+    Link:'', 
+    FormatValue: function(val) { return { Units: '%', Value: Round2(val * 100) }; }
+  },
+  'CURRENT_THD': { 
+    CSS_Class: '', 
+    Title: 'Current THD', 
+    Serie: 'Current_THD', 
+    Units: '%', 
+    Link:'', 
+    FormatValue: function(val) { return { Units: '%', Value: Round2(val * 100) }; }
+  },
   'HARMONICS': {
     FormatValue: function(val) { return Round2(val); },
     Names: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th']

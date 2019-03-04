@@ -49,6 +49,7 @@
     },
     mounted: function() {
       this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], {});
+      $(window).bind('resize', this.ResizeHandler);
       this.UpdateGraph();
     },
     methods: {
@@ -137,7 +138,7 @@
         this.Graph.updateOptions(Options);
 
 //    );
-      $(window).bind('resize', this.ResizeHandler);
+      
 
       
       //counters

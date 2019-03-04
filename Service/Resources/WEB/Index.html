@@ -43,9 +43,11 @@
         margin-top: 5px;
         display: inline-table;
       }
-      img {
-        padding-left: 5px;
+      img.trademark {
         padding-top: 4px;
+      }
+      img.logo {
+        margin-bottom: 5px;
       }
       .progress {
         overflow: hidden;
@@ -60,12 +62,12 @@
         background-color: #e8701c;
         height: 100%;
         box-shadow: inset 0 -1px 0 rgba(0,0,0,.15);
-        background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
+        background-image: linear-gradient(-45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
         background-size: 40px 40px;
         animation: progress-bar 2s linear infinite;
       }
       @keyframes progress-bar {
-        from  { background-position: 40px 0; }
+        from  { background-position: -40px 0; }
         to    { background-position: 0 0; }
       }
     </style>
@@ -74,13 +76,13 @@
     <div class="container" id="Preloader">
       <div class="card">
         <div>
-          <embed src="Logo.svg" style="width:100%" type="image/svg+xml" />
+          <img src="Logo.png" class="logo">
         </div>
         <div class="panel-footer">
           <div class="progress">
             <div class="progress-bar"></div>
           </div>
-          <img src="zRed.png">
+          <img src="zRed.png" class="trademark">
         </div>
       </div>
     </div>

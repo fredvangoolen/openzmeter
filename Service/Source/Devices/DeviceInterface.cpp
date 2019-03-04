@@ -31,6 +31,12 @@ DeviceInterface::DeviceInterface() {
 }
 void DeviceInterface::AddDevice(DeviceInterface* device) {
   if(pDevices.size() == 0) {
+    HTTPServer::RegisterCallback("/getDevices",          DeviceInterface::GetDevicesCallback);
+    HTTPServer::RegisterCallback("/stopDevice",          DeviceInterface::StopDeviceCallback);
+    HTTPServer::RegisterCallback("/startDevice",         DeviceInterface::StartDeviceCallback);
+//    HTTPServer::RegisterCallback("/getDeviceSettings",   DeviceInterface::StartDeviceCallback);
+//    HTTPServer::RegisterCallback("/setDeviceSettings",   DeviceInterface::StartDeviceCallback);
+
     HTTPServer::RegisterCallback("/getAnalyzers",        DeviceInterface::GetAnalyzersCallback);
     HTTPServer::RegisterCallback("/getSeries",           DeviceInterface::GetSeriesCallback);
     HTTPServer::RegisterCallback("/getSeriesNow",        DeviceInterface::GetSeriesNowCallback);
@@ -38,16 +44,14 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
     HTTPServer::RegisterCallback("/getSeriesRange",      DeviceInterface::GetSeriesRangeCallback);
 //    HTTPServer::RegisterCallback("/getEvents",           DeviceInterface::GetEventsCallback);
     HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
-    HTTPServer::RegisterCallback("/getDevices",          DeviceInterface::GetDevicesCallback);
     HTTPServer::RegisterCallback("/getTariffs",          DeviceInterface::GetTariffsCallback);
     HTTPServer::RegisterCallback("/setTariffs",          DeviceInterface::SetTariffsCallback);
-//    HTTPServer::RegisterCallback("/StopDevice",          DeviceInterface::StopDeviceCallback);
-//    HTTPServer::RegisterCallback("/StartDevice",         DeviceInterface::StartDeviceCallback);
   }
   pDevices.push_back(device);
 }
 void DeviceInterface::GetDevicesCallback(HTTPRequest &req) {
-  ///TODO: Comprobar permisos
+  json Params = req.GetParams();
+  if(Params["UserName"] != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
   json Response = json::array();
   for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
     json Device;
@@ -61,13 +65,10 @@ void DeviceInterface::GetDevicesCallback(HTTPRequest &req) {
   req.FromJSON(Response);
 }
 void DeviceInterface::StartDeviceCallback(HTTPRequest &req) {
-  ///TODO: Comprobar permisos
   json Params = req.GetParams();
-  string Serial;
-  if(!Params["Device"].is_string()) {
-    req.FromString("'Device' param is requiered", MHD_HTTP_BAD_REQUEST);
-    return;
-  }
+  if(Params["UserName"] != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(!Params["Serial"].is_string()) return req.FromString("'Device' param is requiered", MHD_HTTP_BAD_REQUEST);
+  string Serial = Params["Serial"];
   for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
     if((*it)->Serial() == Serial) {
       json Response;
@@ -78,13 +79,10 @@ void DeviceInterface::StartDeviceCallback(HTTPRequest &req) {
   req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
 }
 void DeviceInterface::StopDeviceCallback(HTTPRequest &req) {
-  ///TODO: Comprobar permisos
   json Params = req.GetParams();
-  string Serial;
-  if(!Params["Device"].is_string()) {
-    req.FromString("'Device' param is requiered", MHD_HTTP_BAD_REQUEST);
-    return;
-  }
+  if(Params["UserName"] != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(!Params["Serial"].is_string()) return req.FromString("'Serial' param is requiered", MHD_HTTP_BAD_REQUEST);
+  string Serial = Params["Serial"];
   for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
     if((*it)->Serial() == Serial) {
       json Response;
