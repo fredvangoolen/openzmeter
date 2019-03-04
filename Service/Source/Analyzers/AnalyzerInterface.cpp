@@ -8,14 +8,11 @@
 #include "Tools.h"
 //------------- ---------------------------------------------------------------------------------------------------------
 vector<float> AnalyzerInterface::FrequencyRanges = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
-vector<float> AnalyzerInterface::VoltageRanges;
+vector<float> AnalyzerInterface::VoltageRanges ;
 vector<float> AnalyzerInterface::THDRanges;
-vector<float> AnalyzerInterface::HarmonicsAllowed;
+vector<float> AnalyzerInterface::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerInterface::AnalyzerInterface(string id, AnalyzerMode mode) : Database(id.c_str()) {
-  if(FrequencyRanges.empty()) {
-
-  }
   if(VoltageRanges.empty()) {
     VoltageRanges.push_back(-INFINITY);
     VoltageRanges.push_back(-20);
@@ -74,54 +71,23 @@ AnalyzerInterface::AnalyzerInterface(string id, AnalyzerMode mode) : Database(id
     THDRanges.push_back(15);
     THDRanges.push_back(INFINITY);
   }
-  if(HarmonicsAllowed.empty()) {
-    HarmonicsAllowed.push_back(2);
-    HarmonicsAllowed.push_back(5);
-    HarmonicsAllowed.push_back(1);
-    HarmonicsAllowed.push_back(6);
-    HarmonicsAllowed.push_back(0.5);
-    HarmonicsAllowed.push_back(5);
-    HarmonicsAllowed.push_back(0.5);
-    HarmonicsAllowed.push_back(1.5);
-    HarmonicsAllowed.push_back(0.5);
-    HarmonicsAllowed.push_back(3.5);
-    HarmonicsAllowed.push_back(0.5);
-    HarmonicsAllowed.push_back(3);
-    HarmonicsAllowed.push_back(0.5);
-    HarmonicsAllowed.push_back(0.5);
-    HarmonicsAllowed.push_back(0.5);
-    HarmonicsAllowed.push_back(2);
-    HarmonicsAllowed.push_back(0.5);
-    HarmonicsAllowed.push_back(1.5);
-    HarmonicsAllowed.push_back(0.5);
-    HarmonicsAllowed.push_back(0.5);
-    HarmonicsAllowed.push_back(0.5);
-    HarmonicsAllowed.push_back(1.5);
-    HarmonicsAllowed.push_back(0.5);
-    HarmonicsAllowed.push_back(1.5);
-  }
   Tools::LogMsg("DEBUG", "Creating analyzer database tables\n");
   ExecResource("SQL/Database_Analyzer.sql");
   pMode = mode;
   pLastSave = 0;
-  PrepareSentence("SELECT frequency, voltage, name, max_current, min_current FROM analyzers WHERE serial = ?");
+  PrepareSentence("INSERT INTO analyzers(username, serial, country_code, contract, zipcode, frequency, voltage, name, geo, max_current, min_current) "
+                  "VALUES('admin', ?, 'UTC', '', '', 50.0, 230.0, 'Unnamed input analyzer', POINT(0, 0), 50.0, 0.1) ON CONFLICT(serial) DO NOTHING; "
+                  "SELECT frequency, voltage, name, max_current, min_current FROM analyzers WHERE serial = ?");
   BindSingleString(id.c_str());
-  if((ExecSentence() == false) || (ResultRows() != 1)) {
-    pNominalVoltage = 230.0;
-    pNominalFrequency = 50.0;
-    pName = strdup("Unnamed input analyzer");
-    pMaxCurrent = 50.0;
-    pMinCurrent =  0.1;
-    PrepareSentence("INSERT INTO analyzers(username, serial, contract, zipcode, frequency, voltage, name, geo, max_current, min_current) "
-                    "VALUES('admin', ?, '', '', 50.0, 230.0, 'Unnamed input analyzer', POINT(0, 0), 50.0, 0.1)");
-    BindSingleString(id.c_str());
-    ExecSentence();    
-  } else {
+  BindSingleString(id.c_str());
+  if((ExecSentence() == true) && (ResultRows() == 1)) {
     pNominalVoltage = atof(ResultValue(0, "voltage"));
     pNominalFrequency = atof(ResultValue(0, "frequency"));
     pName = ResultValue(0, "name");
     pMaxCurrent = atof(ResultValue(0, "max_current"));
     pMinCurrent =  atof(ResultValue(0, "min_current"));
+  } else {
+    Tools::LogMsg("ERROR", "Can not create or read analyzer configuration\n");
   }
 }
 AnalyzerInterface::~AnalyzerInterface() {

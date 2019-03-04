@@ -8,7 +8,7 @@
 bool            NTP::pTerminate = false;
 pthread_t       NTP::pThread = 0;
 bool            NTP::pEnabled = false;
-char           *NTP::pServer = NULL;
+string          NTP::pServer;
 pthread_mutex_t NTP::pMutex = PTHREAD_MUTEX_INITIALIZER;
 //======================================================================================================================
 bool NTP::Config(json_object *config) {
@@ -21,8 +21,8 @@ bool NTP::Config(json_object *config) {
       pEnabled = json_object_get_boolean(JSON_Val);
     }
   }  
-//  HTTPServer::RegisterCallback("/getTimeSettings", GetTimeSettingsCallback);
-//  HTTPServer::RegisterCallback("/setTimeSettings", SetTimeSettingsCallback);
+  HTTPServer::RegisterCallback("/getTimeSettings", GetTimeSettingsCallback);
+  HTTPServer::RegisterCallback("/setTimeSettings", SetTimeSettingsCallback);
   if(pthread_create(&pThread, NULL, NTP_Thread, NULL) != 0) {
     Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return false;
@@ -51,7 +51,7 @@ void *NTP::NTP_Thread(void *args) {
     if(pEnabled == false) goto Release;
     memset(&Packet, 0, sizeof(NTP_Packet));
     Packet.li_vn_mode = 0x1B;
-    Server = gethostbyname((pServer == NULL) ? "" : pServer);
+    Server = gethostbyname(pServer.c_str());
     if(Server == NULL) {
       Tools::LogMsg("ERROR", "NTP server can not be resolved\n");
       goto Release;
@@ -85,8 +85,10 @@ void *NTP::NTP_Thread(void *args) {
   }
   return NULL;
 }
-bool NTP::GetTimeSettingsCallback(HTTPRequest &req) {
-//  *writer = json_object_new_object();
+void NTP::GetTimeSettingsCallback(HTTPRequest &req) {
+  json Result;
+
+  //  *writer = json_object_new_object();
 //  FILE *File = fopen("/usr/share/zoneinfo/zone.tab", "r");
 //  if(File != NULL) {
 //    json_object *Zones = json_object_new_array();
@@ -116,13 +118,12 @@ bool NTP::GetTimeSettingsCallback(HTTPRequest &req) {
 //    if(Line != NULL) free(Line);
 //    fclose(File);
 //  }
-//  json_object_object_add(*writer, "NTP_Enabled", json_object_new_boolean(pEnabled));
-//  json_object_object_add(*writer, "NTP_Server", json_object_new_string((pServer == NULL) ? "" : pServer));
-//  json_object_object_add(*writer, "Time", json_object_new_int64(Tools::GetTime()));
-//  *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
-  return true;
+  Result["NTP_Enabled"] = pEnabled;
+  Result["NTP_Server"] = pServer;
+  Result["Time"] = Tools::GetTime();
+  req.FromJSON(Result);
 }
-bool NTP::SetTimeSettingsCallback(HTTPRequest &req) {
+void NTP::SetTimeSettingsCallback(HTTPRequest &req) {
 //  bool Error = false;
 //  if(user == "admin") {
 //    *postdata  = (char*)"Only admin can change time settings";
@@ -181,5 +182,4 @@ bool NTP::SetTimeSettingsCallback(HTTPRequest &req) {
 //  *writer = json_object_new_object();
 //  json_object_object_add(*writer, "Result", json_object_new_boolean(true));
 //  *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
-  return true;
 }

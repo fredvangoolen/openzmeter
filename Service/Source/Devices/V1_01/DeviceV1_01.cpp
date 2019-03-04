@@ -132,6 +132,12 @@ int DeviceV1_01::PlugCallback(struct libusb_context *ctx, struct libusb_device *
   return 0;
 }
 bool DeviceV1_01::BuffersAppend(float voltageSample, float currentSample) {
+//  static int File = 0;
+//  if(File == 0) File = open("Samples.raw", O_CREAT | O_WRONLY);
+//  char Tmp[100];
+//  sprintf(Tmp, "%f, %f\n", voltageSample, currentSample);
+//  write(File, Tmp, strlen(Tmp));
+  
   if(pBuffer.Full()) return false;
   Sample_t Sample = { voltageSample, currentSample };
   pBuffer.Push(Sample);
@@ -168,7 +174,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
   for(int i = 0; i < DEVICEV1_01_TRANSFERS; i++) TransferIN[i] = libusb_alloc_transfer(0);
   while(!This->pTerminate) {
     struct timeval tv = { 1, 0 };
-    int Result = libusb_handle_events_timeout_completed(NULL, &tv, NULL);
+    int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) Tools::LogMsg("ERROR", "libusb_handle_events_timeout_completed returns code %d\n", Result);
     if(This->pNewDevice != NULL) {
       struct libusb_device_descriptor Descriptor;
@@ -194,7 +200,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       }
-      if(This->pSerial == Serial) {
+      if(This->pSerial != Serial) {
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL; 
         This->pNewDevice = NULL;
@@ -216,7 +222,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
           This->pNewDevice = NULL;
           continue;
         } else {
-          Tools::LogMsg("INFO", "Kernel driver dettached for DeviceV1.01 device with serial %s\n", This->pSerial);
+          Tools::LogMsg("INFO", "Kernel driver dettached for DeviceV1.01 device with serial %s\n", This->pSerial.c_str());
         }
       }
       Result = libusb_claim_interface(This->pDeviceHandle, 0);
@@ -227,7 +233,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       } else {
-        Tools::LogMsg("INFO", "Claimed interface 1 on 'V1.01' device with serial %s\n", This->pSerial);
+        Tools::LogMsg("INFO", "Claimed interface 1 on 'V1.01' device with serial %s\n", This->pSerial.c_str());
       }
       for(int i = 0; i < DEVICEV1_01_TRANSFERS; i++) {
         libusb_fill_bulk_transfer(TransferIN[i], This->pDeviceHandle, DEVICEV1_01_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, -1);
@@ -240,7 +246,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       }
-      Tools::LogMsg("INFO", "Capture started on device V1.01 with serial %s\n", This->pSerial);
+      Tools::LogMsg("INFO", "Capture started on device V1.01 with serial %s\n", This->pSerial.c_str());
 //      This->pTerminateSignal = false;
       if(pthread_create(&This->pSignalThread, NULL, Signal_Thread, This) != 0) {
         Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -333,7 +339,7 @@ bool DeviceV1_01::Start() {
     pthread_mutex_unlock(&pMutex);
     return false;
   }
-  Tools::LogMsg("INFO", "Starting 'V1.01' driver with serial '%s'...\n", pSerial);
+  Tools::LogMsg("INFO", "Starting 'V1.01' driver with serial '%s'...\n", pSerial.c_str());
   pBuffer.Reset(DEVICEV1_01_BUFFERSECONDS * DEVICEV1_01_SAMPLEFREQ);
   pTerminate    = false;
   pLastUpdate   = 0;
