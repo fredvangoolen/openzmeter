@@ -8,7 +8,7 @@
         <template slot="actions" slot-scope="props">
           <div class="btn-group" style="width:100%">
             <button class="btn btn-xs btn-danger" v-if="props.rowData.Status === 'RUNNING'" @click="Stop(props.rowData.Serial, $event)">Stop</button>
-            <button class="btn btn-xs btn-success" v-if="props.rowData.Status !== 'RUNNING'" @click="Start(props.rowData.Serial, $event)">Stop</button>
+            <button class="btn btn-xs btn-success" v-if="props.rowData.Status !== 'RUNNING'" @click="Start(props.rowData.Serial, $event)">Start</button>
             <button class="btn btn-xs btn-default" @click="Configure(props.rowData.Serial, $event)">Configure</button>
           </div>
         </template>
@@ -33,18 +33,29 @@
       };
     },
     methods: {
-      Stop: function(id, evt) {
-        $(evt.target).blur();
-        $.ajax({ url: "setDevices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ State: 'Stop' }), 
+      LoadTable: function() {
+        $.ajax({ url: "getDevices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
           success: function(result) { 
             var TableData = { data: result };
             this.$refs.table.setData(TableData); 
           }.bind(this)
         });
       },
+      Stop: function(id, evt) {
+        $(evt.target).blur();
+        $.ajax({ url: "stopDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Serial: id }), 
+          success: function(result) { 
+            this.LoadTable();
+          }.bind(this)
+        });
+      },
       Start: function(id, evt) {
         $(evt.target).blur();
-        //enviar start y esperar respuesta
+        $.ajax({ url: "startDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Serial: id }), 
+          success: function(result) { 
+            this.LoadTable();
+          }.bind(this)
+        });
       },
       Configure: function(id, evt) {
         $(evt.target).blur();
@@ -52,12 +63,7 @@
       }
     },
     mounted: function() {
-      $.ajax({ url: "getDevices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-        success: function(result) { 
-          var TableData = { data: result };
-          this.$refs.table.setData(TableData); 
-        }.bind(this)
-      });
+      this.LoadTable();
     },
     components: { Vuetable }
   }

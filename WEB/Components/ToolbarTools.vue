@@ -1,11 +1,11 @@
 <template>
   <div class="btn-group">
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('EXPORT')" @click="$emit('ExportClick')" data-toggle="tooltip" title="Export data to CSV file"><img src="Imgs/table_export.png"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('MAXIMIZE') && !ShowMaximized" @click="$emit('MaximizeClick')" data-toggle="tooltip" title="Maximize graph"><img src="Imgs/arrow_out.png"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('MAXIMIZE') && ShowMaximized" @click="MinimizeClick" data-toggle="tooltip" title="Minimize graph"><img src="Imgs/arrow_in.png"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('NOW')" v-bind:class="{ active: Now, disabled: UpdateInProgress }" @click="NowClick" data-toggle="tooltip" title="Show most recent samples and update in real time"><img src="Imgs/time_go.png"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && !Pause" @click="PlayClick" data-toggle="tooltip" title="Resume live update"><img src="Imgs/play.png"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && Pause" @click="PauseClick" data-toggle="tooltip" title="Pause"><img src="Imgs/pause.png"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('EXPORT')" @click="$emit('ExportClick')" data-toggle="tooltip" title="Export data to CSV file"><img :src="require('Imgs/table_export.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('MAXIMIZE') && !ShowMaximized" @click="$emit('MaximizeClick')" data-toggle="tooltip" title="Maximize graph"><img :src="require('Imgs/arrow_out.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('MAXIMIZE') && ShowMaximized" @click="MinimizeClick" data-toggle="tooltip" title="Minimize graph"><img :src="require('Imgs/arrow_in.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('NOW')" v-bind:class="{ active: Now, disabled: UpdateInProgress }" @click="NowClick" data-toggle="tooltip" title="Show most recent samples and update in real time"><img :src="require('Imgs/time_go.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && !Pause" @click="PlayClick" data-toggle="tooltip" title="Resume live update"><img :src="require('Imgs/play.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && Pause" @click="PauseClick" data-toggle="tooltip" title="Pause"><img :src="require('Imgs/pause.png')"></button>
     <div class="modal" v-if="ShowMaximized" tabindex="1" role="dialog" data-backdrop="static" ref="MaximizeDialog" data-keyboard="false">
       <div class="modal-dialog" style="width: 100%; height: 100%; padding: 10px; margin: 0px">
         <div class="modal-content" style="height: 100%">

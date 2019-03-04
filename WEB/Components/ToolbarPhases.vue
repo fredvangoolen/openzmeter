@@ -1,9 +1,9 @@
 <template>
   <div class="btn-group" v-if="Mode != '1PHASE'">
-    <button type="button" @click="Toogle(0)" v-bind:class="{ active: PhasesR }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase R"><img src="Imgs/phase_r.png"></button>
-    <button type="button" @click="Toogle(1)" v-bind:class="{ active: PhasesS }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase S"><img src="Imgs/phase_s.png"></button>
-    <button type="button" @click="Toogle(2)" v-bind:class="{ active: PhasesT }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase T"><img src="Imgs/phase_t.png"></button>
-    <button type="button" @click="Toogle(3)" v-bind:class="{ active: PhasesN }" v-if="(Mode == '3PHASE+N') && (type == 'CURRENT')" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase N"><img src="Imgs/phase_n.png"></button>
+    <button type="button" @click="Toogle(0)" v-bind:class="{ active: PhasesR }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase R"><img :src="require('Imgs/phase_r.png')"></button>
+    <button type="button" @click="Toogle(1)" v-bind:class="{ active: PhasesS }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase S"><img :src="require('Imgs/phase_s.png')"></button>
+    <button type="button" @click="Toogle(2)" v-bind:class="{ active: PhasesT }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase T"><img :src="require('Imgs/phase_t.png')"></button>
+    <button type="button" @click="Toogle(3)" v-bind:class="{ active: PhasesN }" v-if="(Mode == '3PHASE+N') && (type == 'CURRENT')" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase N"><img :src="require('Imgs/phase_n.png')"></button>
   </div>
 </template> 
 

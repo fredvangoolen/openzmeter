@@ -2,7 +2,7 @@
   <span>
     <div class="btn-group">
       <div class="input-group input-group-xs">
-        <span class="input-group-addon"><img src="Imgs/clock_15.png"></span>
+        <span class="input-group-addon"><img :src="require('Imgs/clock_15.png')"></span>
         <div class="input-group-btn">
           <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">{{ SelectedText }}<span class="caret"></span></button>
           <ul class="dropdown-menu pull-right">

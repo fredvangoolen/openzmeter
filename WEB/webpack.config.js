@@ -69,8 +69,9 @@ module.exports = {
       '/getAnalyzers': { target: 'http://localhost:8081'},
       '/getPrices': { target: 'http://localhost:8081'},
       '/getDevices': { target: 'http://localhost:8081'},
+      '/startDevice': { target: 'http://localhost:8081'},
+      '/stopDevice': { target: 'http://localhost:8081'},
       '/setDevices': { target: 'http://localhost:8081'},
-      '/getTariffs': { target: 'http://localhost:8081'},
       '/setTariffs': { target: 'http://localhost:8081'}
     }
   },

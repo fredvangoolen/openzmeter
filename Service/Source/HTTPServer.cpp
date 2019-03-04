@@ -50,7 +50,7 @@ uint32_t HTTPRequest::size() {
   return pPostData.size();
 }
 void HTTPRequest::FromFile(string name) {
-#ifdef 1
+#ifdef OZM_DEBUG
   string Path = "Resources/" + name;
   Tools::LogMsg("INFO", "%s\n", Path.c_str());
   std::ifstream File(Path, ios::binary);
@@ -221,7 +221,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
       } else if(Request->UserName().empty()) {
         return SendRedirect(connection, "/Login");
       } else {
-        Request->FromFile("WEB/index.html");
+        Request->FromFile("WEB/Index.html");
       }
     }
     MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &Request->WriteFunction, Request, NULL);
