@@ -5,11 +5,13 @@
       <div class="panel-heading clearfix">
         <div class="header-text">{{ Time }}</div>
         <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases variable="DetailsPhaseSingle" v-if="(ActiveTab == 'Waveform') || (ActiveTab == 'Harmonics') || (ActiveTab == 'Advanced')"></toolbar-phases>
-          <toolbar-phases variable="DetailsPhaseMulti" v-if="(ActiveTab == 'Evolution') || (ActiveTab == 'parameters')"></toolbar-phases>
-          <toolbar-options variable="DetailOptions" v-if="(ActiveTab == 'Waveform')" :options="['Current']"></toolbar-options>
-          <toolbar-options variable="DetailOptions" v-if="(ActiveTab == 'Harmonics')" :options="['1st Harmonic', 'Current', 'Log']"></toolbar-options>
-          <toolbar-options variable="DetailOptions" v-if="(ActiveTab == 'Advanced')" :options="['Current', 'Log']"></toolbar-options>
+          <toolbar-phases variable="DetailsPhaseMulti" :multi="true" v-if="(ActiveTab == 'Waveform') || (ActiveTab == 'Harmonics') || (ActiveTab == 'Advanced')" v-on:PhasesChanged="PhasesChangedMulti"></toolbar-phases>
+          <toolbar-phases variable="DetailsPhaseSingle" v-if="(ActiveTab == 'Evolution') || (ActiveTab == 'parameters')" v-on:PhasesChanged="PhasesChangedSingle"></toolbar-phases>
+          
+          <toolbar-options variable="DetailOptions" v-if="(ActiveTab == 'Waveform')" :options="['Current']" v-on:OptionChanged="$refs.waveform.SetOption"></toolbar-options>
+          <toolbar-options variable="DetailOptions" v-if="(ActiveTab == 'Harmonics')" :options="['1st Harmonic', 'Current', 'Log']" v-on:OptionChanged="$refs.harmonics.SetOption"></toolbar-options>
+          <toolbar-options variable="DetailOptions" v-if="(ActiveTab == 'Advanced')" :options="['Current', 'Log']" v-on:OptionChanged="$refs.advanced.SetOption"></toolbar-options>
+          
           <toolbar-tools variable="To" v-if="(ActiveTab == 'Waveform') || (ActiveTab == 'Harmonics') || (ActiveTab == 'Advanced')" ref="Tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']"></toolbar-tools>
           <toolbar-tools variable="To" v-if="(ActiveTab == 'Phasors')" ref="Tools" :options="['EXPORT', 'PLAY']"></toolbar-tools>
           <toolbar-tools variable="To" v-if="(ActiveTab == 'Evolution') || (ActiveTab == 'Parameters') || (ActiveTab == 'Events')" ref="Tools" :options="['EXPORT']"></toolbar-tools>
@@ -61,25 +63,14 @@
       if(this.UpdateGraphsNowTimer !== null) clearTimeout(this.UpdateGraphsNowTimer);
     },
     methods: {
+      Export() {
+//        this.$refs.tools.SaveCVS(this.SerieProps.Title + '.csv', [['Time'].concat(this.SerieProps.Names(Analyzer))].concat(this.Data));
+//        oZm.exportToCsv('Waveform.csv', [['Time'].concat(Analyzer.GetSeriesNames('Voltage')).concat(Analyzer.GetSeriesNames('Current'))].concat(WaveformDataset));
+      },
+
       TabChange(tab, name) {
         this.ActiveTab = name;
         
-      //$('#groupDetailPhasesSingle, #groupDetailPhasesMulti, #btnShowDetail1Harmonic, #btnShowDetailLog, #btnShowDetailCurrent, #toolbarDetails button[data-function="Maximize"]').hide();
-//  if((index === 0) || (index === 1) || (index === 3)) $('#groupDetailPhasesMulti').show();
-//  if((index === 0) || (index === 1) || (index === 3)) $('#btnShowDetailCurrent').show();
-//  if((index === 0) || (index === 1) || (index === 3)) $('#toolbarDetails button[data-function="Maximize"]').show();
-//  if((index === 2) || (index === 5)) $('#groupDetailPhasesSingle').show();
-//  if((index === 1) || (index === 3)) $('#btnShowDetailLog').show();
-//  if(index === 1) $('#btnShowDetail1Harmonic').show();
-//  if(name === 'Waveform') {
-//    this.$nextTick(this.$refs.waveform.Redraw);
-//    if(index === 0) $(WaveformChart.graphDiv).parent().removeAttr('style');
-//    UpdateWaveformChart();
-//  }
-//  if(HarmonicsChart !== null) {
-//    if(index === 1) $(HarmonicsChart.graphDiv).parent().removeAttr('style');
-//    UpdateHarmonicsChart();
-//  }
 //  if(FFTChart !== null) {
 //    if(index === 3) $(FFTChart.graphDiv).parent().removeAttr('style');
 //    UpdateFFTChart();
@@ -106,6 +97,11 @@
 //    }
 //  }
 
+      },
+      PhasesChangedMulti: function(phases) {
+        this.$refs.waveform.SetPhases(phases);
+        this.$refs.harmonics.SetPhases(phases);
+        this.$refs.advanced.SetPhases(phases);
       },
       SetAnalyzer() {
         this.Time = 'Loading data...';

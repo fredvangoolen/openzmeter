@@ -11,15 +11,22 @@
   export default {
     props: ['visible'],
     data() {
-      return { Graph: null, Data: [[0, 0]], VoltagePhases: [true], CurrentPhases: [true], First: true, Log: false, VOffset: 0, COffset: 0 };
+      return { Graph: null, Data: [[0, 0]], VoltagePhases: null, ShowCurrent: null, First: null, Log: null, VOffset: 0, COffset: 0 };
     },
     methods: {
-      SetOptions(log, first, voltage, current) {
-        this.VoltagePhases = voltage;
-        this.CurrentPhases = current;
-        this.First = first;
-        his.Log = log;
+      SetPhases: function(phases) {
+        this.VoltagePhases = phases;
         this.CalcOptions();
+      },
+      SetOption: function(option, val) {
+        if(option === 'Current') this.ShowCurrent = val;
+        if(option === '1st Harmonic') this.First = val;
+        if(option === 'Log') this.Log = val;
+        this.CalcOptions();
+        if(option === 'Current') {    
+          this.Graph.updateOptions({ showRangeSelector: true}); 
+          this.Graph.updateOptions({ showRangeSelector: false});
+        }
       },
       SetData(result) {
         this.Data = [];
@@ -32,23 +39,25 @@
         this.CalcOptions();
       },
       CalcOptions() {
-        if(this.$root.SelectedAnalyzer === null) return {};
-        var Analyzer = this.$root.SelectedAnalyzer, Series = {}, Visibility = [], Y1Range = [], Y2Range = [], ToShow = [];
-//        var ShowCurrent = (localStorage.getItem("VoltageDetailCurrent") === 'true');
-//        var ShowFirst   = (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true');
-//        var Log         = (localStorage.getItem('VoltageDetailLog') === 'true');
+        if((this.$root.SelectedAnalyzer === null) || (this.VoltagePhases === null) || (this.ShowCurrent === null) || (this.First === null) || (this.Log === null)) return;
+        var Analyzer = this.$root.SelectedAnalyzer, Series = {}, ToShow = [], CurrentPhases = [];
         for(var i = this.First ? 0 : 1; i < this.Data.length; i++) {
           var Row = [i];
           for(var n = 0; n < this.Data[i].length; n++) Row.push(this.Log ? 20.0 * Math.log10(Math.max(0.001, this.Data[i][n])) : this.Data[i][n]);
           ToShow.push(Row);
         }
-        for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length; n++) Visibility.push(this.VoltagePhases[n] === true);
-        for(var n = 0; n < oZm.Series['CURRENT'].Names(Analyzer).length; n++) {
-          Visibility.push(this.CurrentPhases[n] === true);
-          if(this.CurrentPhases[n] === true) Series[oZm.Series['CURRENT'].Names(Analyzer)[n]] = { axis: 'y2' };
+        for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length; n++) {
+          CurrentPhases.push((this.VoltagePhases[n] === true) && (this.ShowCurrent === true));
+          if((this.VoltagePhases[n] === true) && (this.ShowCurrent === true)) Series[oZm.Series['CURRENT'].Names(Analyzer)[n]] = { axis: 'y2' };
         }
-        var Options = { 
-          strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], interactionModel: { }, plotter: oZm.multiColumnBarPlotter, visibility: Visibility,
+        var Y1Range = oZm.Series['VOLTAGE_SAMPLES'].Range(this.Data, this.VoltagePhases);
+        var Y2Range = oZm.Series['CURRENT_SAMPLES'].Range(this.Data, Array(this.VoltagePhases.length).fill(false).concat(CurrentPhases));
+
+        this.VOffset = (Y1Range[0] < 0.0) ? -Y1Range[0] : 0.0;
+        this.COffset = (Y2Range[0] < 0.0) ? -Y2Range[0] : 0.0;
+
+        var Options = {
+          strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], interactionModel: { }, plotter: oZm.multiColumnBarPlotter, visibility: this.VoltagePhases.concat(CurrentPhases),
           dateWindow: [ToShow[0][0] - 0.5, ToShow[ToShow.length - 1][0] + 0.5], legend: 'follow', legendFormatter: oZm.LegendFormatter_Follow, 
           labels: ['Harmonic'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)).concat(oZm.Series['CURRENT'].Names(Analyzer)), series: Series,
           colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length)), 
@@ -58,7 +67,7 @@
 //                     valueFormatter: function(x) { return Round2(x - HarmonicsVOffset) + '<em class="x-small">' + (Log ? 'dB' : 'V') + '</em>'; },
                  axisLabelFormatter: function (x) { return oZm.Round2(x); }
                },
-            y2: { pixelsPerLabel: 15, axisLabelWidth: (Object.keys(Series).length > 0) ? 34 : 0, //valueRange: [Y2Range[0] + HarmonicsCOffset, Y2Range[1] + HarmonicsCOffset],
+            y2: { pixelsPerLabel: 15, axisLabelWidth: (this.ShowCurrent) ? 34 : 0, //valueRange: [Y2Range[0] + HarmonicsCOffset, Y2Range[1] + HarmonicsCOffset],
 //                      valueFormatter: function(x) { return Round2(x - HarmonicsCOffset) + ' <em class="x-small">' + (Log ? 'dB' : 'A') + '</em>'; },
 //                      ticker: (Log || ShowCurrent === false) ? function(min, max) { return (ShowCurrent === true) ? GraphDBTicks(min, max, HarmonicsCOffset) : []; } : Dygraph.numericTicks,
                   axisLabelFormatter: function (x) { return oZm.Round2(x); }

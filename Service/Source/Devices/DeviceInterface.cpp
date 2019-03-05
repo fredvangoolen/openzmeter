@@ -51,7 +51,7 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
 }
 void DeviceInterface::GetDevicesCallback(HTTPRequest &req) {
   json Params = req.GetParams();
-  if(Params["UserName"] != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
   json Response = json::array();
   for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
     json Device;
@@ -66,7 +66,7 @@ void DeviceInterface::GetDevicesCallback(HTTPRequest &req) {
 }
 void DeviceInterface::StartDeviceCallback(HTTPRequest &req) {
   json Params = req.GetParams();
-  if(Params["UserName"] != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
   if(!Params["Serial"].is_string()) return req.FromString("'Device' param is requiered", MHD_HTTP_BAD_REQUEST);
   string Serial = Params["Serial"];
   for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
@@ -80,7 +80,7 @@ void DeviceInterface::StartDeviceCallback(HTTPRequest &req) {
 }
 void DeviceInterface::StopDeviceCallback(HTTPRequest &req) {
   json Params = req.GetParams();
-  if(Params["UserName"] != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
   if(!Params["Serial"].is_string()) return req.FromString("'Serial' param is requiered", MHD_HTTP_BAD_REQUEST);
   string Serial = Params["Serial"];
   for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
