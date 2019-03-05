@@ -18,26 +18,6 @@
         this.$emit('OptionChanged', name, this.Conf[name]);
         $(this.$el).children('button').blur();
       },
-      AnalyzerChanged() {
-        var Len = 0;
-        if(this.$root.SelectedAnalyzer === null) return;
-        this.Mode = (this.$root.SelectedAnalyzer === null) ? '1PHASE' : this.$root.SelectedAnalyzer.Mode;
-        this.Phases = JSON.parse(localStorage.getItem(this.variable + '_' + this.Mode));
-        if(Array.isArray(this.Phases) === false) this.Phases = [];
-        if(this.Mode === '1PHASE') {
-          Len = 1;
-        } else if(this.Mode === '3PHASE') {
-          Len = 3;
-        } else if((this.Mode === '3PHASE+N') && (type === 'CURRENT')) {
-          Len = 4;
-        }
-        while(this.Phases.length < Len) this.Phases.push(false);
-        this.Phases = this.Phases.slice(0, Len);
-        for(var n = 0; n < this.Phases.length; n++) {
-          if(typeof this.Phases[n] !== "boolean") this.Phases[n] = false;
-        }
-        this.SelChanged();
-      },
       SelChanged() {
         var Set = 0;
         for(var n = 0; n < this.Phases.length; n++) {
@@ -61,12 +41,7 @@
       }
     },
     mounted: function() {
-      for(var n = 0; n < this.options.length; n++) {  
-        this.$emit('OptionChanged', name, this.Conf[name]);
-      }
-    },
-    mounted: function() {
-      this.AnalyzerChanged();
+      for(var n = 0; n < this.options.length; n++) this.$emit('OptionChanged', this.options[n], this.Conf[this.options[n]]); 
     }
   }
 </script>

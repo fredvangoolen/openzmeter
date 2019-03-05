@@ -154,8 +154,45 @@ export var Series = {
   'HARMONICS': {
     FormatValue: function(val) { return Round2(val); },
     Names: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th']
+  },
+  'VOLTAGE_SAMPLES': {
+    Range: function(values, phases) {
+      var UpperRange = -Infinity;
+      var LowerRange = +Infinity;
+      for(var i = 0; i < values.length; i++) {
+        for(var n = 0; n < phases.length; n++) {
+          if((values[i][n + 1] === null) || (phases[n] === false)) continue;
+          if(values[i][n + 1] > UpperRange) UpperRange = values[i][n + 1];
+          if(values[i][n + 1] < LowerRange) LowerRange = values[i][n + 1];
+        }
+      }
+      UpperRange = (UpperRange === -Infinity) ? 1 : UpperRange;
+      LowerRange = (LowerRange === Infinity) ? -1 : LowerRange;
+      var Diff = Math.max(10, (UpperRange - LowerRange) * 0.1);
+      UpperRange = UpperRange + Diff;
+      LowerRange = LowerRange - Diff;
+      return [LowerRange, UpperRange];  
+    }
+  },
+  'CURRENT_SAMPLES': {
+    Range: function(values, phases) {
+      var UpperRange = -Infinity;
+      var LowerRange = +Infinity;
+      for(var i = 0; i < values.length; i++) {
+        for(var n = 0; n < phases.length; n++) {
+          if((values[i][n + 1] === null) || (phases[n] === false)) continue;
+          if(values[i][n + 1] > UpperRange) UpperRange = values[i][n + 1];
+          if(values[i][n + 1] < LowerRange) LowerRange = values[i][n + 1];
+        }
+      }
+      UpperRange = (UpperRange === -Infinity) ? 1 : UpperRange;
+      LowerRange = (LowerRange === Infinity) ? -1 : LowerRange;
+      var Diff = Math.max(1, (UpperRange - LowerRange) * 0.1);
+      UpperRange = UpperRange + Diff;
+      LowerRange = LowerRange - Diff;
+      return [LowerRange, UpperRange];  
+    }
   }
-
 
 //    if(varName === 'Reactive_Energy') return (Self.GetSelected().Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)'];
 //    if(varName === 'Reactive_Power') return (Self.GetSelected().Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)'];
