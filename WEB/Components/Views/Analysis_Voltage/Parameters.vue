@@ -1,44 +1,74 @@
 <template>
-              <div id="ParametersPanel">
-            </div>
+  <div class="panel panel-other">
+    <div class="panel-heading clearfix">
+      <div class="header-text">{{ Aggregation }}</div>
+        <div class="header-buttons" ref="Toolbar">
+          <toolbar-phases variable="DetailsPhaseSingle" v-on:PhasesChanged="SetPhases"></toolbar-phases>
+          <toolbar-tools variable="To" ref="Tools" :options="['EXPORT']"></toolbar-tools>
+        </div>
+      </div>
+    <div class="panel-body">
+      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
+      <cubism v-for="(serie, index) in Series" :serie="serie" :key="serie" ref="rows" :index="index"></cubism>
+    </div>
+  </div>
 </template>
 
-
-/* Evolucion de parametros */
-var HarmonicsCharts = [], HarmonicsData = [], PowerFactorChart = null, PowerFactorData = [], THDChart = null, THDData = [], PHIChart = null, PHIData = [];
-function PeriodView_OnSuccess(result) {
-  while(HarmonicsData.length !== 50) HarmonicsData.push([]);
-  for(k = 0; k < 50; k++) {
-    for(i = 0; i < result.Voltage_Harmonics.length; i++) {
-      var Row = [new Date(result.Sampletime[i])];
-      for(j = 0; j < result.Voltage_Harmonics[i].length; j++) Row.push(20 * Math.log10(Math.max(0.000000001, result.Voltage_Harmonics[i][j][k])));
-      HarmonicsData[k].push(Row);
-    }
-    ShiftArray(HarmonicsData[k], result.MaxSamples);
+<script>
+  import Cubism from 'Components/Cubism.vue';
+  import * as oZm from 'JS/openZmeter.js';
+  import moment from 'moment';
+  import Spinner from 'Components/Spinner.vue';
+  import ToolbarPhases from 'Components/ToolbarPhases.vue';
+  import ToolbarTools from 'Components/ToolbarTools.vue';
+  import Dygraph from 'JS/dygraph.js';
+  export default {
+    data() {
+      return { ShowSpinner: true, Aggregation: 'Loading data...', Series: ['POWER_FACTOR', 'VOLTAGE_THD', 'PHI'], Phase: null, Data: {} };
+    },
+    methods: {
+      Redraw() {
+        this.$nextTick(function() {    
+          for(var n = 0; n < this.Series.length; n++) $(this.$refs.rows[n].Graph.graphDiv).parent().removeAttr('style');
+          window.dispatchEvent(new Event('resize'));
+        });
+      },
+      SetPhases: function(phase) {
+        this.Phase = phase;
+        this.CalcOptions();
+      },
+      SetData: function(result) {
+        if(result['Sampletime'] === null) return;
+        if(result['Sampletime'].length === 0) return;
+        if(this.Data === null) this.Data = [];
+        this.DateWindow = [result['From'], result['To']];
+        this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
+        this.LastSample = oZm.LastSampletime(result, this.LastSample);
+        for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
+        this.CalcOptions();
+        this.ShowSpinner = false; 
+      },
+      SetDataNow(result) {
+        for(var n = 0; n < this.Series.length; n++) this.$refs.rows[n].SetNowLabel(result[oZm.Series[this.Series[n]].Serie][this.Phase]);
+      },
+      CalcOptions() {
+        for(var n = 0; n < this.Series.length; n++) {
+          if(this.Data[this.Series[n]].length === 0) continue;
+          var Data = [];
+          for(var i = 0; i < this.Data[this.Series[n]].length; i++) Data.push([this.Data[this.Series[n]][i][0], this.Data[this.Series[n]][i][this.Phase + 1]]);
+          this.$refs.rows[n].SetData({ dateWindow: this.DateWindow, file: Data});
+        }
+      }
+    },
+    created: function() {
+      for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = [];
+    },
+    mounted: function() {
+      var Graphs = [];
+      for(var i = 0; i < this.Series.length; i++) Graphs.push(this.$refs.rows[i].Graph);
+      Dygraph.synchronize(Graphs, { range: false, zoom: false });
+    },
+    components: { Cubism, Spinner, ToolbarPhases, ToolbarTools }
   }
-  PowerFactorData = GraphDataAppend(result, 'Power_Factor', PowerFactorData);
-  THDData = GraphDataAppend(result, 'Voltage_THD', THDData);
-  PHIData = GraphDataAppend(result, 'Phi', PHIData);
-  if(HarmonicsCharts.length === 0) {
-    for(i = 0; i < 50; i++) {
-      HarmonicsCharts[i] = AppendCubismGraph($('#EvolutionPanel'), HarmonicsData[i], Analyzer.GetSeriesNames('Harmonics')[i] + ' harmonic', [result['From'], result['To']], function (x) { return (x === null) ? '~' : Round2(x) + '<em>dB</em>' });
-    }
-    Dygraph.synchronize(HarmonicsCharts, { range: false, zoom: false });
-    PowerFactorChart = AppendCubismGraph($('#ParametersPanel'), PowerFactorData, "Power Factor", [result['From'], result['To']], function (x) { return (x === null) ? '~' : Round2(x); });
-    THDChart         = AppendCubismGraph($('#ParametersPanel'), THDData, "Voltage THD", [result['From'], result['To']], function (x) { return (x === null) ? '~' : (Round2(x * 100.0) + '<em>%</em>'); });
-    PHIChart         = AppendCubismGraph($('#ParametersPanel'), PHIData, "Angle", [result['From'], result['To']], function (x) { return (x === null) ? '~' : (Round2(Math.abs(x)) + '<em>' + ((x < 0) ? 'º CAP' : (x > 0) ? 'º IND' : 'º') + '</em>'); });
-    Dygraph.synchronize([PowerFactorChart, THDChart, PHIChart], { range: false, zoom: false });
-  } else {
-    for(var i = 0; i < 50; i++) HarmonicsCharts[i].updateOptions({ file: HarmonicsData[i], dateWindow: [result['From'], result['To']] });
-    PowerFactorChart.updateOptions({ file: PowerFactorData, dateWindow: [result['From'], result['To']] });
-    THDChart.updateOptions({ file: THDData, dateWindow: [result['From'], result['To']] });
-    PHIChart.updateOptions({ file: PHIData, dateWindow: [result['From'], result['To']] });
-  }
-  ParametersSeries();
-}
-function ParametersSeries(event) {
-  GraphPhaseButtons(PowerFactorChart, $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PowerFactorData, series, false)); return [-Range, Range]; }, (event !== undefined) ? event.target : undefined); 
-  GraphPhaseButtons(PHIChart,         $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(PHIData, series, false, false, false, true)); return [-Range, Range]; }, undefined); 
-  GraphPhaseButtons(THDChart,         $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { var Range = ArrayAbsMax(CalcRanges(THDData, series, false, false, false, true)); return [-Range, Range]; }, undefined); 
-  for(var g = 0; g < 50; g++) GraphPhaseButtons(HarmonicsCharts[g], $('#groupDetailPhasesSingle'), 'VoltageDetailVisiblePhasesSingle', true, function(series) { return CalcRanges(HarmonicsData[g], series, false); }, undefined); 
-}
+  
+</script>

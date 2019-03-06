@@ -36,13 +36,8 @@
       };
     },
     methods: {
-      SetPhases(phases) {
-        this.Phase = 0;
-        for(var n = 0; n < phases.length; n++) {
-          if(phases[n] !== true) continue;
-          this.Phase = n;
-          break;
-        }
+      SetPhases(phase) {
+        this.Phase = phase;
         this.CalcOptions();
       },
       CalcOptions() {
@@ -60,12 +55,12 @@
           success: function(result) {
             if(result['Sampletime'] === null) return;
             if(result['Sampletime'].length === 0) return;
-            this.ShowSpinner = false;
             this.DateWindow = [result['From'], result['To']];
             this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
             this.LastSample = oZm.LastSampletime(result, this.LastSample);        
             for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
             this.CalcOptions();
+            this.ShowSpinner = false;
           }.bind(this),
           complete: function() {
             if(this.Timer !== null) clearTimeout(this.Timer);
