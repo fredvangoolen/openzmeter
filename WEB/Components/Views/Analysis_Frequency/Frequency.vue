@@ -10,7 +10,7 @@
     </div>
     <div class="panel-body">
       <div class="row">
-        <div class="col-md-6 col-lg-4 col-xl-3">
+        <div class="col-md-6 col-lg-4 col-xl-3" ref="counters">
                   <div class="subpanel">
                     <h4 class="huge-small" id="labelFrequencyAvgPrimary">Loading data...</h4>
                     <div class="huge-small" id="labelFrequencyAvgPrimaryValue">?</div>
@@ -54,8 +54,9 @@
     },
     mounted: function() {
       this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], {});
+      $(window).bind('resize', this.ResizeHandler);
       this.UpdateGraph();
-      this.Graph.resize('100%', $(this.$refs.indicators).height());
+      window.dispatchEvent(new Event('resize'));
     },
     methods: {
       SetAnalyzer() {
@@ -78,6 +79,10 @@
         this.Period = time;
         this.LastSample = 0;
         this.UpdateGraph();
+      },
+      ResizeHandler: function() {
+        var Height = $(this.$refs.counters).height();
+        this.Graph.resize('100%', Height);
       },
       CalcOptions() {
         if(this.$root.SelectedAnalyzer === null) return;

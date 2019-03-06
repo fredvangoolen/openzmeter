@@ -52,7 +52,16 @@
         this.PhasesT = (this.Phases[2] === true);
         this.PhasesN = (this.Phases[3] === true);
         localStorage.setItem(this.variable + '_' + this.Mode, JSON.stringify(this.Phases));
-        this.$emit('PhasesChanged', this.Phases);
+        if(this.multi === true) {
+          this.$emit('PhasesChanged', this.Phases);
+        } else {
+          for(var n = 0; n < this.Phases.length; n++) {
+            if(this.Phases[n] === true) {
+              this.$emit('PhasesChanged', n);
+              break;
+            }
+          }
+        }
       }
     },
     created: function() {

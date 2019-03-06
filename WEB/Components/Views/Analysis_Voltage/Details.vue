@@ -1,33 +1,32 @@
 <template>
   <div>
     <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events']" variable="VoltageDetailTab" v-on:TabChange="TabChange"></detail-tabs>
-    <div class="panel panel-other">
-      <div class="panel-heading clearfix">
+    <waveform ref="waveform" v-bind:class="{ hide: (ActiveTab != 'Waveform') }"></waveform>
+    <harmonics ref="harmonics" v-bind:class="{ hide: (ActiveTab != 'Harmonics') }"></harmonics>
+    <evolution ref="evolution" v-bind:class="{ hide: (ActiveTab != 'Evolution') }"></evolution>
+    <advanced ref="advanced" v-bind:class="{ hide: (ActiveTab != 'Advanced') }"></advanced>
+    <parameters ref="parameters" v-bind:class="{ hide: (ActiveTab != 'Parameters') }"></parameters>
+      
+      
+    <!--div class="panel-heading clearfix">
         <div class="header-text">{{ Time }}</div>
         <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases variable="DetailsPhaseMulti" :multi="true" v-if="(ActiveTab == 'Waveform') || (ActiveTab == 'Harmonics') || (ActiveTab == 'Advanced')" v-on:PhasesChanged="PhasesChangedMulti"></toolbar-phases>
-          <toolbar-phases variable="DetailsPhaseSingle" v-if="(ActiveTab == 'Evolution') || (ActiveTab == 'parameters')" v-on:PhasesChanged="PhasesChangedSingle"></toolbar-phases>
+          <toolbar-phases variable="DetailsPhaseSingle" v-if="(ActiveTab == 'Evolution') || (ActiveTab == 'parameters')"></toolbar-phases>
           
-          <toolbar-options variable="DetailOptions" v-if="(ActiveTab == 'Waveform')" :options="['Current']" v-on:OptionChanged="$refs.waveform.SetOption"></toolbar-options>
-          <toolbar-options variable="DetailOptions" v-if="(ActiveTab == 'Harmonics')" :options="['1st Harmonic', 'Current', 'Log']" v-on:OptionChanged="$refs.harmonics.SetOption"></toolbar-options>
-          <toolbar-options variable="DetailOptions" v-if="(ActiveTab == 'Advanced')" :options="['Current', 'Log']" v-on:OptionChanged="$refs.advanced.SetOption"></toolbar-options>
           
-          <toolbar-tools variable="To" v-if="(ActiveTab == 'Waveform') || (ActiveTab == 'Harmonics') || (ActiveTab == 'Advanced')" ref="Tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']"></toolbar-tools>
           <toolbar-tools variable="To" v-if="(ActiveTab == 'Phasors')" ref="Tools" :options="['EXPORT', 'PLAY']"></toolbar-tools>
           <toolbar-tools variable="To" v-if="(ActiveTab == 'Evolution') || (ActiveTab == 'Parameters') || (ActiveTab == 'Events')" ref="Tools" :options="['EXPORT']"></toolbar-tools>
         </div>
       </div>
       <div class="panel-body">
         <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-        <waveform ref="waveform" :visible="(ActiveTab == 'Waveform')"></waveform>
-        <harmonics ref="harmonics" :visible="(ActiveTab == 'Harmonics')"></harmonics>
-        <evolution ref="evolution" v-bind:class="{ hide: (ActiveTab != 'Evolution') }"></evolution>
-        <advanced ref="advanced" :visible="(ActiveTab == 'Advanced')"></advanced>
+        
+        
+        
         <phasors ref="phasors" v-bind:class="{ hide: (ActiveTab != 'Phasors') }"></phasors>
-        <parameters ref="parameters" v-bind:class="{ hide: (ActiveTab != 'parameters') }"></parameters>
+        
         <events ref="events" v-bind:class="{ hide: (ActiveTab != 'Events') }"></events>
-      </div>
-    </div>
+      </div-->
   </div>
 </template>
 
@@ -57,6 +56,7 @@
         this.UpdateGraphs1M();
         this.UpdateGraphsNow();
       }
+      this.TabChange();
     },
     beforeDestroy: function() {
       if(this.UpdateGraphs1MTimer !== null) clearTimeout(this.UpdateGraphs1MTimer);
@@ -69,12 +69,13 @@
       },
 
       TabChange(tab, name) {
-        this.ActiveTab = name;
+        if(name !== undefined) this.ActiveTab = name;
+        if(this.ActiveTab === 'Waveform') this.$refs.waveform.Redraw();
+        if(this.ActiveTab === 'Harmonics') this.$refs.harmonics.Redraw();
+        if(this.ActiveTab === 'Evolution') this.$refs.evolution.Redraw();
+        if(this.ActiveTab === 'Advanced') this.$refs.advanced.Redraw();
+        if(this.ActiveTab === 'Parameters') this.$refs.parameters.Redraw();
         
-//  if(FFTChart !== null) {
-//    if(index === 3) $(FFTChart.graphDiv).parent().removeAttr('style');
-//    UpdateFFTChart();
-//  }
 //  if(PhasorChart !== null) {
 //    if(index === 4) PhasorResizeEvent();
 //  }
@@ -83,13 +84,7 @@
 //      for(i = 0; i < 50; i++) $(HarmonicsCharts[i].graphDiv).parent().removeAttr('style');
 //    }
 //  }
-//  if(PowerFactorChart !== null) {
-//    if(index === 5) {
-//      $(PowerFactorChart.graphDiv).parent().removeAttr('style');
-//      $(THDChart.graphDiv).parent().removeAttr('style');
-//      $(PHIChart.graphDiv).parent().removeAttr('style');
-//    }
-//  }
+
 //  if(EventChart !== null) {
 //    if(index === 6) {
 //      $(EventChart.graphDiv).parent().removeAttr('style');
@@ -111,11 +106,10 @@
       },
       UpdateGraphs1M() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE_SAMPLES', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Period: 86400000, To: 0, LastSample: this.LastSample, Series: ['VOLTAGE_HARMONICS', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.ID }),
           success: function(result) {
-//            this.$refs.evolution.SetData(result);
-//            this.$refs.parameters.SetData(result);
-    //            this.$refs.indicator_bar.setValue(result);
+            this.$refs.evolution.SetData(result);
+            this.$refs.parameters.SetData(result);
           }.bind(this),
           complete: function() {
             if(this.UpdateGraphs1MTimer !== null) clearTimeout(this.UpdateGraphs1MTimer);
@@ -129,13 +123,16 @@
       },
       UpdateGraphsNow() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
             this.ShowSpinner = false;
             this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
             this.$refs.waveform.SetData(result);
             this.$refs.harmonics.SetData(result);
             this.$refs.advanced.SetData(result);
+            this.$refs.parameters.SetDataNow(result);
+            
+            
 //              UpdatePhasorChart(result);
 //  SetCubismNowLabel(PowerFactorChart, result.Power_Factor);
 //  SetCubismNowLabel(THDChart, result.Voltage_THD); 
