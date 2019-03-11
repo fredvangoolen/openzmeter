@@ -24,7 +24,7 @@
 <script>
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
-  import moment from 'JS/moment.min.js';
+  import moment from 'JS/moment.js';
   import 'JS/dygraph-crosshair.js';
   import Spinner from 'Components/Spinner.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
@@ -47,7 +47,7 @@
         var Range = this.SerieProps.Range(this.Data, this.Phases);
         var Options = {
           visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data, valueRange: Range,
-          labels: ['Time'].concat(this.SerieProps.Names(Analyzer)), colors: oZm.ColorArray(this.SerieProps.Color, this.SerieProps.Names(Analyzer).length),
+          labels: ['Time'].concat(this.SerieProps.Names(Analyzer)), colors: oZm.ColorArray(this.SerieProps.Color, this.SerieProps.Names(Analyzer).length)
         };
         this.$refs.Chart.SetOptions(Options);
       },

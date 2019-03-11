@@ -13,6 +13,9 @@
       <div class="row">
         <div class="col-xs-12">
           <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
+            <template slot="color" slot-scope="props">
+              <color-picker selected="#FFFFFF" :columns="2" :colors="['#fffff0', '#ffecd6', '#ffd8bc', '#ffc4a2', '#ffae88', '#ff986c', '#ff7f50', '#f0ffff', '#d4f2f1', '#b7e5e2', '#98d8d3', '#78ccc5', '#55bfb8', '#20b2aa']"></color-picker>
+            </template>
           </vuetable>
         </div>
       </div>
@@ -22,12 +25,14 @@
 
 <script>
   import Vuetable from 'vuetable-2';
+  import ColorPicker from 'Components/ColorPicker.vue';
   export default {
     data() {
       return { Show: false, Tariff: {}, Columns: [
           {name: 'Name', title: 'Name'},
           {name: 'PowerMode', title: 'Power mode', callback: 'Format'},
-          {name: 'ReactiveMode', title: 'Reactive mode', callback: 'Format'}
+          {name: 'ReactiveMode', title: 'Reactive mode', callback: 'Format'},
+          {name: '__slot:color', title: 'Color'}
         ] };
     },
     methods: {
@@ -59,6 +64,19 @@
         this.$parent.$refs.Main.Load(this.Tariff);
       }
     },
-    components: { Vuetable }
+    components: { Vuetable, ColorPicker }
   }
 </script>
+
+<style scoped>
+  .table >>> th:nth-child(1)  {
+    width: 50px;
+    text-align: center;
+  }
+  .table >>> td:nth-child(1) {
+    text-align: center;
+  }
+  .table >>> th:nth-child(4) {
+    width: 65px;
+  }
+</style>

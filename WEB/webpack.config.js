@@ -72,7 +72,9 @@ module.exports = {
       '/startDevice': { target: 'http://localhost:8081'},
       '/stopDevice': { target: 'http://localhost:8081'},
       '/setDevices': { target: 'http://localhost:8081'},
-      '/setTariffs': { target: 'http://localhost:8081'}
+      '/getTariffs': { target: 'http://localhost:8081'},
+      '/setTariffs': { target: 'http://localhost:8081'},
+      '/Login': { target: 'http://localhost:8081'}
     }
   },
   performance: {
