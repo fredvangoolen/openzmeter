@@ -2,10 +2,10 @@
   <div class="panel panel-frequency">
     <div class="panel-heading">
       <div class="huge header-text" style="font-size: 24px; line-height: 16px;">Frequency</div>
-      <div class="header-buttons clearfix" id="toolbarFrequency">
+      <div class="header-buttons clearfix" ref="Toolbar">
         <toolbar-aggregation variable="Aggregation" :options="['3S', '1M', '10M', '1H']" v-on:AggregationChanged="AggregationChanged" ref="aggregation"></toolbar-aggregation>
         <toolbar-period variable="Period" v-on:PeriodChanged="PeriodChange" ref="period"></toolbar-period>
-        <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:NowStatus="SetAutoUpdate" ref="tools"></toolbar-tools>
+        <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:NowStatus="SetAutoUpdate" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
       </div>
     </div>
     <div class="panel-body">
@@ -27,12 +27,10 @@
                     <div><span id="labelFrequencyMinSecondary">Loading data...</span>&nbsp;<span id="labelFrequencyMinSecondaryValue"></span></div>
                   </div>
                 </div>
-                <div class="col-md-6 col-lg-8 col-xl-9" id="FrequencyCol">
-                  <div id="FrequencyMaximizeDiv">
-                    <div class="chart" ref="graph"></div>
-                  </div>
-                </div>
-              </div>
+        <div class="col-md-6 col-lg-8 col-xl-9">
+          <graph ref="graph" :options="GraphOptions"></graph>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -42,21 +40,44 @@
   import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import Spinner from 'Components/Spinner.vue';
-  import moment from 'moment';
+  import Graph from 'Components/Graph.vue';
+  import moment from 'JS/moment.js';
   import * as oZm from 'JS/openZmeter.js';
-  import Dygraph from 'JS/dygraph.js';
   export default {
     data() {
-      return { Graph: null, Data: [], ShowSpinner: true, LastSample: 0, Timer: null, Aggreg: null, Period: null, DateWindow: [0, 0], AutoUpdate: null };
+      return { ShowSpinner: true };
     },
     created: function() {
+      this.Data = [];
+      this.LastSample = 0;
+      this.Timer = null;
+      this.Aggreg = null;
+      this.Period = null;
+      this.DateWindow = [0, 0];
+      this.AutoUpdate = null;
+      this.GraphOptions = {
+        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: oZm.LegendFormatter_Follow,
+        labels: ['Time', 'Frequency'], zoomCallback: this.ZoomEvt, interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt, dblclick: this.DoubleClickEvt }, colors: [oZm.Series['FREQUENCY'].Color], xAxisHeight: 24, 
+        axes: {
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
+               valueFormatter: function (x) { var Result = oZm.Series['FREQUENCY'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
+               axisLabelFormatter: function (x) { return oZm.Round2(x); }
+             },
+          x: { axisLabelFormatter: function(x) { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); },
+               valueFormatter: function (x) { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); }
+             }
+        }
+      };
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
     mounted: function() {
-      this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], {});
-      $(window).bind('resize', this.ResizeHandler);
-      this.UpdateGraph();
+      $(window).on('resize', this.ResizeHandler.bind(this));
       window.dispatchEvent(new Event('resize'));
+      this.UpdateGraph();
+    },
+    beforeDestroy: function() {
+      clearInterval(this.Timer);
+      $(window).off('resize', this.ResizeHandler);
     },
     methods: {
       SetAnalyzer() {
@@ -81,30 +102,14 @@
         this.UpdateGraph();
       },
       ResizeHandler: function() {
-        var Height = $(this.$refs.counters).height();
-        this.Graph.resize('100%', Height);
+        if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', $(this.$refs.counters).height());
       },
-      CalcOptions() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Range = oZm.Series['FREQUENCY'].Range(this.Data, this.Phases);
-        var Options = {
-          strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow',
-          legendFormatter: oZm.LegendFormatter_Follow, labels: ['Time', 'Frequency'], dateWindow: this.DateWindow, file: this.Data,
-          zoomCallback: this.ZoomEvt, interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt, dblclick: this.DoubleClickEvt },
-//        underlayCallback: function(context, area, dygraph) { GraphHightlightWeekends("#EEE", context, area, dygraph); }, 
-          colors: [oZm.Series['FREQUENCY'].Color], xAxisHeight: 24, valueRange: Range,
-          axes: {
-            y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-                 valueFormatter: function (x) { var Result = oZm.Series['FREQUENCY'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
-                 axisLabelFormatter: function (x) { return oZm.Round2(x); }
-               },
-            x: { axisLabelFormatter: function(x) { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); },
-                 valueFormatter: function (x) { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); }
-               }
-          }
-        };
-        this.Graph.updateOptions(Options);
-        window.dispatchEvent(new Event('resize'));
+      MaximizeClick() {
+        $(window).unbind('resize', this.ResizeHandler);
+        this.$refs.tools.Maximize('Energy consumption', this.$refs.graph.Graph, this.$refs.Toolbar);
+      },
+      MinimizeClick() {
+        $(window).bind('resize', this.ResizeHandler.bind(this));
       },
       UpdateGraph() {
         if((this.$root.SelectedAnalyzer === null) || (this.Aggreg === null) || (this.Period === null) || (this.AutoUpdate === null)) return;
@@ -119,12 +124,12 @@
             this.DateWindow = [result['From'], result['To']];
             this.$refs.tools.WriteTo(result['To']);
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
-            this.CalcOptions();
+            this.$refs.graph.SetOptions( { dateWindow: this.DateWindow, file: this.Data, valueRange: oZm.Series['FREQUENCY'].Range(this.Data, [true]) } );
           }.bind(this),
           complete: function() {
             this.$refs.tools.EndUpdate();
             if(this.Timer !== null) clearTimeout(this.Timer);
-            if(this.AutoUpdate === true) this.Timer = setTimeout(this.UpdateGraph, 5000);
+            if(this.AutoUpdate === true) this.Timer = setTimeout(this.UpdateGraph.bind(this), 5000);
           }.bind(this),
           error: function(response) {
             if(response.status === 400) this.$refs.aggregation.AggregationFail();
@@ -132,15 +137,15 @@
           }.bind(this)
         });
       },
-      MouseUpEvt(event, g, contex) {
+      MouseUpEvt: function(event, g, contex) {
         oZm.mouseUp(event, g, contex);
         if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
       },
-      DoubleClickEvt(event, g, context) {
+      DoubleClickEvt: function(event, g, context) {
         oZm.dblClick(event, g, context);
         this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
       },
-      ZoomEvt(minDate, maxDate, yRanges) {
+      ZoomEvt: function(minDate, maxDate, yRanges) {
         clearInterval(this.Timer);
         this.$refs.tools.WriteTo(maxDate, true);
         this.$refs.period.SetPeriod(maxDate - minDate);
@@ -149,7 +154,7 @@
         this.UpdateGraph();
       }
     },
-    components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarTools }
+    components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarTools, Graph }
   }
 </script>
 
