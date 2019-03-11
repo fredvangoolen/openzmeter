@@ -9,6 +9,7 @@
   import Dygraph from 'JS/dygraph.js';
   import 'JS/dygraph-crosshair.js';
   import * as oZm from 'JS/openZmeter.js';
+  import moment from 'JS/moment.js';
   function barChartPlotterCubism(e) {
     var ctx = e.drawingContext;
     var area = e.plotArea;
@@ -53,7 +54,7 @@
   export default {
     props: ['serie', 'index'],
     data() {
-      return { Graph: null, SerieProps: {} };
+      return { };
     },
     methods: {
       SetNowLabel: function(label) {
@@ -79,6 +80,7 @@
     created: function() {
       this.$parent.$on('SeriesUpdate', this.SetData);
       this.SerieProps = oZm.Series[this.serie];
+      this.Graph = null;
     },
     mounted: function() {
       this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], { strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], highlightCircleSize: 0, legend: 'always', xAxisHeight: 0.1, xLabelHeight: 1, interactionModel: { }, plotter: barChartPlotterCubism, labels: ["Time", ((this.SerieProps.Title === undefined) ? this.SerieProps.Names[this.index] : this.SerieProps.Title)], colors: ["#d9534f"], labelsDiv: this.$refs.legend,
@@ -99,17 +101,20 @@
         axes: {
           y: { drawAxis: false, drawGrid: false, valueFormatter: function(val) { var Result = this.SerieProps.FormatValue(val); return Result.Value + Result.Units; }.bind(this) },
           x: { valueFormatter: function (x) { return '<div class="x-axis">' + new Date(x).toLocaleTimeString() + '</div>'; },
-               axisLabelFormatter: (this.index != 0) ? function() { return null; } : function(x, i) {
+               axisLabelFormatter: (this.index !== 0) ? function() { return null; } : function(x, i) {
                  var date = new Date(x);
-                 if((date.getHours() == 0) && (date.getMinutes() == 0) && (date.getSeconds() == 0)) {
-                   return '<div class="timeline-day">' + date.toLocaleDateString() + '</div>';
+                 if((date.getHours() === 0) && (date.getMinutes() === 0) && (date.getSeconds() === 0)) {
+                   return '<div class="timeline-day">' + moment(x).format('DD/MM') + '</div>';
                  } else {
-                   return '<div class="timeline">' + date.toLocaleTimeString() + '</div>';                       
+                   return '<div class="timeline">' + moment(x).format('hh:mm') + '</div>';                       
                  }
                }
              }
         }
       });
+    },
+    beforeDestroy: function() {
+      this.Graph.destroy();
     }
   }
 </script>

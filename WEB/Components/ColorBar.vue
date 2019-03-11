@@ -12,9 +12,9 @@
 <script>
   import chroma from 'JS/chroma.js';
   export default {
-    props: {width: Number, height: Number},
+    props: { width: Number, height: Number },
     data() {
-      return { Units: 'kWh', Min: '1', Max: '100', ColorScale: chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]), Divs: [] };
+      return { Units: 'kWh', Min: '1', Max: '100', Divs: [] };
     },
     mounted: function() {
       var Divs = [];
@@ -27,6 +27,9 @@
         this.Min = min;
         this.Max = max;
       }
+    },
+    created: function() {
+      this.ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]);
     }
   }
 </script>

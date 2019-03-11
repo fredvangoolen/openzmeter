@@ -6,8 +6,7 @@
 <script>
   export default {
       data() {
-        return { value: 10
-      };
+        return { value: 10 };
     }
   }
 </script>
