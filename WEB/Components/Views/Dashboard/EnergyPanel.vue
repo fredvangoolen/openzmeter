@@ -4,7 +4,7 @@
       <div class="huge header-text">Energy consumption</div>
       <div class="header-buttons clearfix" ref="Toolbar">
         <toolbar-aggregation variable="AggregationEnergy" v-on:AggregationChanged="AggregationChanged" :options="['15M', '1H']"></toolbar-aggregation>
-        <toolbar-period variable="Period" v-on:PeriodChanged="PeriodChange"></toolbar-period>
+        <toolbar-period variable="Period" v-on:PeriodChanged="PeriodChange" ref="period"></toolbar-period>
         <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:NowStatus="SetAutoUpdate" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
       </div>
     </div>
@@ -100,9 +100,7 @@
         this.UpdateGraph();
       },
       ResizeHandler: function() {
-        var Height = $(this.$refs.counters).height();
-//        this.$refs.graph.Graph.resize();
-        this.$refs.graph.Redraw('100%', Height);
+        if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', $(this.$refs.counters).height());
       },
       MaximizeClick() {
         $(window).unbind('resize', this.ResizeHandler);
@@ -145,8 +143,8 @@
             this.ShowSpinner = false;
           }.bind(this),
           complete: function() {
-            if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
-            this.UpdateGraphTimer = setTimeout(this.UpdateGraph, 5000);
+            if(this.Timer !== null) clearTimeout(this.Timer);
+            if(this.AutoUpdate === true) this.Timer = setTimeout(this.UpdateGraph.bind(this), 5000);
           }.bind(this), 
           error: function() {
             this.ShowSpinner = true;
@@ -207,6 +205,7 @@
     },
     beforeDestroy: function() {
       if(this.Timer !== null) clearInterval(this.Timer);
+      $(window).off('resize', this.ResizeHandler);
     },
     components: { ToolbarAggregation, ToolbarPeriod, ToolbarTools, Spinner, Graph }
   }
