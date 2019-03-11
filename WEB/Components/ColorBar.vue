@@ -10,7 +10,7 @@
 </template>
 
 <script>
-  import chroma from 'JS/chroma.min.js';
+  import chroma from 'JS/chroma.js';
   export default {
     props: {width: Number, height: Number},
     data() {
