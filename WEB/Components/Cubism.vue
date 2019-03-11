@@ -7,7 +7,8 @@
 
 <script>
   import Dygraph from 'JS/dygraph.js';
-  import * as oZm from '../JS/openZmeter.js';
+  import 'JS/dygraph-crosshair.js';
+  import * as oZm from 'JS/openZmeter.js';
   function barChartPlotterCubism(e) {
     var ctx = e.drawingContext;
     var area = e.plotArea;

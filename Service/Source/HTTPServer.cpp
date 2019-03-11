@@ -170,17 +170,10 @@ bool HTTPServer::Config(json_object *config) {
 void HTTPServer::Stop() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
 }
-//void HTTPServer::RegisterDefault(string def) {
-//  pDefaultPage = def;
-//}
 void HTTPServer::RegisterCallback(string handleName, HTTPServer::Func_t function) {
   Callback_t Item = {handleName, function};
   pCallbacks.push_back(Item);
 }
-//void HTTPServer::RegisterMapping(string url, string file) {
-//  Mapping_t Item = {url, file};
-//  pMappings.push_back(Item);
-//}
 void HTTPServer::RemoveExpiredSessions() {
   Database DB(NULL);
   DB.PrepareSentence("DELETE FROM sessions WHERE (timestamp < ? AND username IS NOT NULL) OR (timestamp < ? AND username IS NULL)");

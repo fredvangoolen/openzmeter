@@ -9,7 +9,7 @@
     </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <div ref="Chart" class="chart"></div>
+      <graph ref="Chart" :options="GraphOptions"></graph>
     </div>
     <div class="panel-footer clearfix">
       <router-link :to="SerieProps.Link" style="line-height: 22px"><span class="pull-left">View Details</span></router-link>
@@ -23,10 +23,13 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import Spinner from 'Components/Spinner.vue';
   import Dygraph from 'JS/dygraph.js';
+  import moment from 'JS/moment.min.js';
+  import 'JS/dygraph-crosshair.js';
+  import Spinner from 'Components/Spinner.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
+  import Graph from 'Components/Graph.vue';
   export default {
     props: ['type'],
     data() {
@@ -34,13 +37,7 @@
         ShowSpinner: true,
         SerieProps: {},
         Aggregation: 'Loading data...',
-        LastValue: [],
-        Graph: null,
-        Data: [],
-        DateWindow: [0, 0],
-        LastSample: 0,
-        UpdateGraphTimer: null,
-        Phases: [true]
+        LastValue: []
       };
     },
     methods: {
@@ -49,44 +46,23 @@
         var Analyzer = this.$root.SelectedAnalyzer;
         var Range = this.SerieProps.Range(this.Data, this.Phases);
         var Options = {
-          strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', interactionModel: {},
-          //plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], 
-          visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data, xAxisHeight: 12, valueRange: Range,
-          legendFormatter: oZm.LegendFormatter_Follow, labels: ['Time'].concat(this.SerieProps.Names(Analyzer)), colors: oZm.ColorArray(this.SerieProps.Color, this.SerieProps.Names(Analyzer).length),
-          underlayCallback: function(canvas, area, g) {
-            if(this.type === 'VOLTAGE') {
-              var NV = Analyzer.NominalVoltage, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
-//              oZm.GraphHBackgroundRanges([[NV * 1.1, NV * 1.07, Yellow], [NV * 0.93, NV * 0.9, Yellow], [Infinity, NV * 1.1, Red], [NV * 0.9, -Infinity, Red]], g, canvas);
-            }
-          },
-          axes: {
-            y: { pixelsPerLabel: 15, axisLabelWidth: 30,
-                 valueFormatter: function (x) { var Result = this.SerieProps.FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; }.bind(this),
-                 axisLabelFormatter: function (x) { var Units = oZm.GetBestUnits(Math.max(Math.abs(Range[0]), Math.abs(Range[1]))); return oZm.Round2(oZm.ScaleToUnits(x, Units)); }
-               },
-            x: { valueFormatter: function (x) { return new Date(x).toLocaleTimeString(); },
-                 axisLabelFormatter: function (x) { return x.toLocaleTimeString(); }
-               }
-          }
+          visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data, valueRange: Range,
+          labels: ['Time'].concat(this.SerieProps.Names(Analyzer)), colors: oZm.ColorArray(this.SerieProps.Color, this.SerieProps.Names(Analyzer).length),
         };
-        this.Graph.updateOptions(Options);
-          //GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'DashboardVoltageVisiblePhases', false, function(series) { return CalcRanges(VoltageData, series, false, true); }, (event !== undefined) ? event.target : undefined); 
+        this.$refs.Chart.SetOptions(Options);
       },
       UpdateGraph() {
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], From: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: 7200000 }), 
           success: function(result) {
             this.ShowSpinner = false;
-            if(result['Sampletime'] === null) return;
-            if(result['Sampletime'].length === 0) return;
+            if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             this.Data = oZm.GraphDataAppend(result, this.SerieProps.Serie, this.Data);
             this.LastValue = oZm.Array_Round2(result[this.SerieProps.Serie].slice(-1)[0], oZm.ColorArray($(this.$refs.panel).css('border-color'), 4));
             this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
             this.DateWindow = [result['From'], result['To']];
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
-            this.CalcOptions();
-//    new GraphTools('Voltage', VoltageChart, '#toolbarVoltage', undefined, function() { exportToCsv('Voltage.csv', [['Time'].concat(Analyzer.GetSeriesNames('Voltage'))].concat(VoltageData)); });
-//  for(var n = 0; n < Analyzer.GetSeriesNames('Voltage').length; n++) AddEvents(result, Analyzer.GetSeriesNames('Voltage')[n], VoltageChart);
+            if(this.Data.length > 0) this.CalcOptions();
           }.bind(this),
           complete: function() {
             if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
@@ -102,10 +78,10 @@
         if(this.Data.length > 0) this.CalcOptions();
       },
       MaximizeClick() {
-        this.$refs.tools.Maximize(this.SerieProps.Title, this.Graph, this.$refs.Toolbar);
+        this.$refs.tools.Maximize(this.SerieProps.Title, this.$refs.Chart.Graph, this.$refs.Toolbar);
       },
       MinimizeClick() {
-        $(this.Graph.graphDiv).parent().removeAttr('style');
+        this.$refs.Chart.Redraw();
       },
       ExportClick() {
         if(this.$root.SelectedAnalyzer === null) return;
@@ -119,16 +95,32 @@
       }
     },
     created: function() {
+      //Non reactive properties  
+      this.Data = [];
+      this.DateWindow = [0, 0];
+      this.LastSample = 0;
+      this.UpdateGraphTimer = null;
+      this.Phases = null;
       this.SerieProps = oZm.Series[this.type];
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
+      this.GraphOptions = {
+        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', 
+        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], xAxisHeight: 12, legendFormatter: oZm.LegendFormatter_Follow, 
+        axes: {
+          y: { pixelsPerLabel: 15, axisLabelWidth: 30,
+               valueFormatter: function (x) { var Result = this.SerieProps.FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; }.bind(this),
+               axisLabelFormatter: function (x) { var Units = oZm.GetBestUnits(Math.max(Math.abs(Range[0]), Math.abs(Range[1]))); return oZm.Round2(oZm.ScaleToUnits(x, Units)); }
+             },
+          x: { valueFormatter: function (x) { return moment(x).format('hh:mm:ss'); }, axisLabelFormatter: function (x) { return moment(x).format('hh:mm'); } }
+        }
+      };
     },
     beforeDestroy: function() {
       if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
     },
     mounted: function() {
-      this.Graph = new Dygraph(this.$refs.Chart, [[0, 0]], {});
       this.UpdateGraph();
     },
-    components: { ToolbarPhases, ToolbarTools, Spinner }
+    components: { ToolbarPhases, ToolbarTools, Spinner, Graph }
   }
 </script>
