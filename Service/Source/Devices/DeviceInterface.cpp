@@ -524,6 +524,7 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   json Actives     = json::array();
   json Reactives   = json::array();
   json Periods     = json::array();
+  json Colors      = json::array();
   json Powers      = json::array();
   stringstream Query;
   Query << "SELECT to_json(array_agg(json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Details', details))) FROM analyzers_rates WHERE serial = '" << Analyzer << "'";
@@ -572,9 +573,11 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
     if(Period != UINT8_MAX) {
       string PeriodName = "P" + to_string(Period);
       Periods.push_back(PeriodName);
+      Colors.push_back("#ddd");
       Powers.push_back(Tariffs[Tariff]["Details"]["Periods"][Period - 1]["Contracted_Power"]);
     } else {
       Periods.push_back(NAN);
+      Colors.push_back("#ddd");
       Powers.push_back(NAN);
     }
 ////    if(Tariff != UINT32_MAX) Tools::LogMsg("INFO", "Tarifa encontrada para el rango\n");
@@ -605,6 +608,7 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   Result["Active_Energy"] = Actives;
   Result["Reactive_Energy"] = Reactives;
   Result["Period_Name"] = Periods;
+  Result["Period_Color"] = Colors;
   Result["Contracted_Power"] = Powers;
   req.FromJSON(Result);
   return;  

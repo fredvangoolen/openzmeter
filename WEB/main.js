@@ -31,6 +31,7 @@ new Vue({
     linkActiveClass: 'active',
     mode: 'history',
     routes: [
+      { path: '/', redirect: '/Dashboard' },
       { path:'/Dashboard', component: Dashboard },
       { path:'/Analysis/Voltage', component: AnalysisVoltage },
       { path:'/Analysis/Current', component: AnalysisCurrent },
@@ -39,6 +40,6 @@ new Vue({
       { path:'/Analysis/Frequency', component: AnalysisFrequency },
       { path:'/Stats/Heatmap', component: StatsHeatmap },
       { path:'/Stats/Distribution', component: StatsDistribution },
-      { path:'/Settings', component: Settings },
+      { path:'/Settings', component: Settings }
     ]})
 })
