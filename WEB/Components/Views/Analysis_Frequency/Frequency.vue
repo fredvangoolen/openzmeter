@@ -180,7 +180,10 @@
           AvgSamples++;
         }
         AvgValue = AvgValue / AvgSamples;
-        for(var x = 0; x < this.Data.length; x++) StdValue += Math.pow(this.Data[x][1] - AvgValue, 2.0);
+        for(var x = 0; x < this.Data.length; x++) {
+          if(this.Data[x][1] === null) continue;
+          StdValue += Math.pow(this.Data[x][1] - AvgValue, 2.0); 
+        }
         this.AvgSamples = AvgSamples;
         this.MinTime = moment(MinTime).format("hh:mm:ss - DD/MM/YYYY") + ((MinCount > 1) ? ' (and ' + MinCount + ' times more)' : '');
         this.MaxTime = moment(MaxTime).format("hh:mm:ss - DD/MM/YYYY") + ((MaxCount > 1) ? ' (and ' + MaxCount + ' times more)' : '');
