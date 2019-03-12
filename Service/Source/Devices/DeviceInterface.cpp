@@ -93,7 +93,7 @@ void DeviceInterface::StopDeviceCallback(HTTPRequest &req) {
   req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
 }
 void DeviceInterface::GetTariffsCallback(HTTPRequest &req) {
-  ///TODO: Comprobar permisos  
+  ///TODO: Comprobar permisos
   json Params = req.GetParams();
   stringstream Query;
   if(!Params["Analyzer"].is_string()) {
