@@ -3,8 +3,7 @@
     <div class="panel-heading" id="ReactivePowerPanel">
       <div class="header-text"><i class="fa fa-area-chart fa-fw"></i> Reactive power</div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" id="btnExportReactivePower"   data-toggle="tooltip" title="Export data to CSV file"><i class="fa fa-table fa-fw"></i></button>
-        <button type="button" class="btn btn-default btn-xs" id="btnMaximizeReactivePower" data-toggle="tooltip" title="Maximize graph"><i class="fa fa-expand"></i></button>
+        <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
       </div>
     </div>
     <div class="panel-body">

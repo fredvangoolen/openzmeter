@@ -270,7 +270,7 @@ void DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
     } else if((Serie == "CURRENT_HARMONICS") && (Aggreg ==  "1M")) {
       Query << "COALESCE(ARRAY_AGG(harmonics_i ORDER BY sampletime ASC), '{}') AS \"Current_Harmonics\", ";
     } else {
-     req.FromString("Invalid serie in selected aggregation", MHD_HTTP_BAD_REQUEST);
+      req.FromString("Invalid serie in selected aggregation", MHD_HTTP_BAD_REQUEST);
       return;
     }
 ////    if((ArrayLenA != 0) && (ArrayLenB == 0)) {
