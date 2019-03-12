@@ -28,7 +28,7 @@
 
 <script>
   import Vuetable from 'vuetable-2';
-  import moment from 'moment';
+  import moment from 'JS/moment.js';
   export default {
     data() {
       return { Show: false, Tariff: null, 

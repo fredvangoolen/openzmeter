@@ -43,7 +43,7 @@
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import Spinner from 'Components/Spinner.vue';
-  import moment from 'moment';
+  import moment from 'JS/moment.js';
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
