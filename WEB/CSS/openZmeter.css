@@ -198,15 +198,43 @@ img {
 .panel-active-power > .panel-heading, .indicator-active-power {
   border: 1px solid #f0ad4e;
   background-color: #f0ad4e;
-  color: #FFFF;
+  color: #FFF;
 }
+.panel-active-power .subpanel {
+  border: 1px solid #FAE7CC;
+  background-color: #FDF8F0;
+  color: #474544;
+  padding: 0px 5px;
+  margin: 5px;
+}
+
+.panel-reactive-power {
+  border: 1px solid #DF842A;
+}
+.panel-reactive-power > .panel-heading {
+  border: 1px solid #DF842A;
+  background-color: #DF842A;
+  color: #FFF;
+}
+.panel-reactive-power .subpanel {
+  border: 1px solid #F5DBC2;
+  background-color: #FAEDE0;
+  color: #474544;
+  padding: 0px 5px;
+  margin: 5px;
+}
+
+
+
+
+
 .panel-frequency {
   border: 1px solid #5cb85c;
 }
 .panel-frequency > .panel-heading, .indicator-frequency {
   border: 1px solid #5cb85c;
   background-color: #5cb85c;
-  color: #FFFF;
+  color: #FFF;
 }
 .panel-frequency .subpanel {
   border: 1px solid #b3e0b3;

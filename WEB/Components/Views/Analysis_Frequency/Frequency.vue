@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-frequency">
     <div class="panel-heading">
-      <div class="huge header-text" style="font-size: 24px; line-height: 16px;">Frequency</div>
+      <div class="huge header-text">Frequency</div>
       <div class="header-buttons clearfix" ref="Toolbar">
         <toolbar-aggregation variable="Aggregation" :options="['3S', '1M', '10M', '1H']" v-on:AggregationChanged="AggregationChanged" ref="aggregation"></toolbar-aggregation>
         <toolbar-period variable="Period" v-on:PeriodChanged="PeriodChange" ref="period"></toolbar-period>
@@ -9,6 +9,7 @@
       </div>
     </div>
     <div class="panel-body">
+      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
       <div class="row">
         <div class="col-md-6 col-lg-4 col-xl-3" ref="counters">
           <div class="subpanel">
@@ -98,10 +99,11 @@
       $(window).on('resize', this.ResizeHandler.bind(this));
       window.dispatchEvent(new Event('resize'));
       this.UpdateGraph();
+      this.NowValue();
     },
     beforeDestroy: function() {
-      clearInterval(this.Timer);
-      clearInterval(this.NowTimer);
+      if(this.Timer !== null) clearInterval(this.Timer);
+      if(this.NowTimer !== null) clearInterval(this.NowTimer);
       $(window).off('resize', this.ResizeHandler);
     },
     methods: {
@@ -145,11 +147,11 @@
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['FREQUENCY'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
-            this.CurrentValue = ((result['Frequency'] === null) ? 'No data' : oZm.Round3(result['Frequency']));
+            this.CurrentValue = ((result['Frequency'] === null) ? 'No data' : oZm.Round3(result['Frequency']) + '<em>Hz</em>');
           }.bind(this),
           complete: function() {
             if(this.NowTimer !== null) clearTimeout(this.NowTimer);
-            this.NowTimer = setTimeout(this.NowValue, 2000);
+            this.NowTimer = setTimeout(this.NowValue.bind(this), 2000);
           }.bind(this), 
           error: function() {
             this.CurrentValue = 'No data';
@@ -177,30 +179,28 @@
           }
           if((this.Data[x][1] > 49) && (this.Data[x][1] < 51)) StdPercent++;
           AvgValue += this.Data[x][1];
+          StdValue += Math.pow(this.Data[x][1], 2.0); 
           AvgSamples++;
         }
-        AvgValue = AvgValue / AvgSamples;
-        for(var x = 0; x < this.Data.length; x++) {
-          if(this.Data[x][1] === null) continue;
-          StdValue += Math.pow(this.Data[x][1] - AvgValue, 2.0); 
-        }
         this.AvgSamples = AvgSamples;
+        this.StdValue = oZm.Round3(Math.sqrt((StdValue / AvgSamples) - Math.pow(AvgValue / AvgSamples, 2))) + ' <em>Hz</em>';
         this.MinTime = moment(MinTime).format("hh:mm:ss - DD/MM/YYYY") + ((MinCount > 1) ? ' (and ' + MinCount + ' times more)' : '');
         this.MaxTime = moment(MaxTime).format("hh:mm:ss - DD/MM/YYYY") + ((MaxCount > 1) ? ' (and ' + MaxCount + ' times more)' : '');
         this.StdPercent = oZm.Round2(StdPercent / AvgSamples * 100) + '% within range';
-        this.StdValue = oZm.Round3(Math.sqrt(StdValue / AvgSamples)) + ' <em>Hz</em>';
         this.MinValue = oZm.Round3(MinValue) + ' <em>Hz</em>';
         this.MaxValue = oZm.Round3(MaxValue) + ' <em>Hz</em>';
-        this.AvgValue = oZm.Round3(AvgValue) + ' <em>Hz</em>';
+        this.AvgValue = oZm.Round3(AvgValue / AvgSamples) + ' <em>Hz</em>';
         window.dispatchEvent(new Event('resize'));
       },
       UpdateGraph: function() {
         if((this.$root.SelectedAnalyzer === null) || (this.Aggreg === null) || (this.Period === null) || (this.AutoUpdate === null)) return;
-        if(this.LastSample === 0) this.Data = [];
+        if(this.LastSample === 0) {
+          this.Data = [];
+          this.ShowSpinner = true;
+        }
         this.$refs.tools.BeginUpdate();
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: this.Aggreg, Series: ['FREQUENCY'], From: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: this.Period }), 
           success: function(result) {
-            this.ShowSpinner = false;
             if(result['Sampletime'] === null) return;
             if(result['Sampletime'].length === 0) return;
             this.Data = oZm.GraphDataAppend(result, 'Frequency', this.Data);
@@ -208,7 +208,8 @@
             this.$refs.tools.WriteTo(result['To']);
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
             this.$refs.graph.SetOptions( { dateWindow: this.DateWindow, file: this.Data, valueRange: oZm.Series['FREQUENCY'].Range(this.Data, [true]) } );
-            this.UpdateCounters(result['Aggregation_Source']);            
+            this.UpdateCounters(result['Aggregation_Source']);
+            this.ShowSpinner = false;
           }.bind(this),
           complete: function() {
             this.$refs.tools.EndUpdate();
@@ -243,6 +244,10 @@
 </script>
 
 <style scoped>
+  .header-text {
+    font-size: 24px;
+    line-height: 16px;
+  }
   .counters-title {
     float: left;
     text-align: left;

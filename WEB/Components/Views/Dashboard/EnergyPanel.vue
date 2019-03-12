@@ -123,7 +123,7 @@
             //Group periods
             var LastItem = (this.Periods.length > 0) ? this.Periods.slice(-1)[0] : null;
             for(var i = 0; i < result.Sampletime.length; i++) {
-              var Period = { Name: result.Period_Name[i], From: result.Sampletime[i] - ((this.Aggreg === '15M') ? 899999 : 3599999), To: result.Sampletime[i] };
+              var Period = { Name: result.Period_Name[i], From: result.Sampletime[i] - ((this.Aggreg === '15M') ? 899999 : 3599999), To: result.Sampletime[i], Color: result.Period_Color[i] };
               if(LastItem === null) {
                 this.Periods.push(Period);
                 LastItem = Period;
@@ -162,7 +162,7 @@
           var Left = g.toDomXCoord(this.Periods[i].From);
           var Right = g.toDomXCoord(this.Periods[i].To);
           if(Left < (area.x + 1)) Left = (area.x + 1);
-          canvas.fillStyle = (i % 2) ? '#FDD' : '#FBB';
+          canvas.fillStyle = this.Periods[i].Color;
           canvas.fillRect(Left, area.y, Right, 13);
           if(((Right - Left) > 20) && (this.Periods[i].Name !== null)) {
             canvas.fillStyle = '#000';
