@@ -23,7 +23,7 @@ export default {
         }.bind(this),
         complete: function() {
           if(this.UpdateIndicatorsTimer !== null) clearTimeout(this.UpdateIndicatorsTimer);
-          this.UpdateIndicatorsTimer = setTimeout(this.UpdateIndicators, 5000);
+          this.UpdateIndicatorsTimer = setTimeout(this.UpdateIndicators, 2000);
         }.bind(this), 
         error: function() {
           this.$refs.indicator_bar.setValue(null);

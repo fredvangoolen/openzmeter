@@ -5,28 +5,51 @@
       <div class="header-buttons clearfix" ref="Toolbar">
         <toolbar-aggregation variable="Aggregation" :options="['3S', '1M', '10M', '1H']" v-on:AggregationChanged="AggregationChanged" ref="aggregation"></toolbar-aggregation>
         <toolbar-period variable="Period" v-on:PeriodChanged="PeriodChange" ref="period"></toolbar-period>
-        <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:NowStatus="SetAutoUpdate" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
+        <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:NowStatus="SetAutoUpdate" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
       </div>
     </div>
     <div class="panel-body">
       <div class="row">
         <div class="col-md-6 col-lg-4 col-xl-3" ref="counters">
-                  <div class="subpanel">
-                    <h4 class="huge-small" id="labelFrequencyAvgPrimary">Loading data...</h4>
-                    <div class="huge-small" id="labelFrequencyAvgPrimaryValue">?</div>
-                    <div><span id="labelFrequencyAvgSecondary">Loading data...</span>&nbsp;<span id="labelFrequencyAvgSecondaryValue"></span></div>
-                  </div>
-                  <div class="subpanel">
-                    <h4 class="huge-small" id="labelFrequencyMaxPrimary">Loading data...</h4>
-                    <div class="huge-small" id="labelFrequencyMaxPrimaryValue">?</div>
-                    <div><span id="labelFrequencyMaxSecondary">Loading data...</span>&nbsp;<span id="labelFrequencyMaxSecondaryValue"></span></div>
-                  </div>
-                  <div class="subpanel">
-                    <h4 class="huge-small" id="labelFrequencyMinPrimary">Loading data...</h4>
-                    <div class="huge-small" id="labelFrequencyMinPrimaryValue">?</div>
-                    <div><span id="labelFrequencyMinSecondary">Loading data...</span>&nbsp;<span id="labelFrequencyMinSecondaryValue"></span></div>
-                  </div>
-                </div>
+          <div class="subpanel">
+            <div class="counters-title">Current value:</div>
+            <div class="counters-aggreg">From 3 seconds aggregation</div>
+            <div class="clearfix"></div>
+            <div class="current-value" v-html="CurrentValue"></div>
+          </div>
+          <div class="subpanel clearfix">
+            <div class="counters-title">Period stats:</div>
+            <div class="counters-aggreg">{{ CountersAggregation }}</div>
+            <div class="line">
+              <div class="float-left">
+                <div class="counters-stat-type">Min value:</div>
+                <div class="counters-stat-time">{{ MinTime }}</div>
+              </div>
+              <div class="counters-stat-val" v-html="MinValue"></div>
+            </div>
+            <div class="line line-border">
+              <div class="float-left">
+                <div class="counters-stat-type">Max value:</div>
+                <div class="counters-stat-time">{{ MaxTime }}</div>
+              </div>
+              <div class="counters-stat-val" v-html="MaxValue"></div>
+            </div>
+            <div class="line line-border">
+              <div class="float-left">
+                <div class="counters-stat-type">Average value:</div>
+                <div class="counters-stat-time">From {{ AvgSamples }} samples</div>
+              </div>
+              <div class="counters-stat-val" v-html="AvgValue"></div>
+            </div>
+            <div class="line line-border">
+              <div class="float-left">
+                <div class="counters-stat-type">Std deviation:</div>
+                <div class="counters-stat-time" v-html="StdPercent"></div>
+              </div>
+              <div class="counters-stat-val" v-html="StdValue"></div>
+            </div>
+          </div>
+        </div>
         <div class="col-md-6 col-lg-8 col-xl-9">
           <graph ref="graph" :options="GraphOptions"></graph>
         </div>
@@ -45,12 +68,13 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return { ShowSpinner: true };
+      return { CountersAggregation: 'Loading data...', CurrentValue: '?', MinTime: '?', MaxTime: '?', MinValue: '?', MaxValue: '?', AvgValue: '?', AvgSamples: '?', StdPercent: '?', StdValue: '?', ShowSpinner: true };
     },
     created: function() {
       this.Data = [];
       this.LastSample = 0;
       this.Timer = null;
+      this.NowTimer = null;
       this.Aggreg = null;
       this.Period = null;
       this.DateWindow = [0, 0];
@@ -60,8 +84,8 @@
         labels: ['Time', 'Frequency'], zoomCallback: this.ZoomEvt, interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt, dblclick: this.DoubleClickEvt }, colors: [oZm.Series['FREQUENCY'].Color], xAxisHeight: 24, 
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { var Result = oZm.Series['FREQUENCY'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
-               axisLabelFormatter: function (x) { return oZm.Round2(x); }
+               valueFormatter: function (x) { return oZm.Round3(x) + ' <em class="x-small">Hz</em>'; },
+               axisLabelFormatter: function (x) { return oZm.Round3(x); }
              },
           x: { axisLabelFormatter: function(x) { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); },
                valueFormatter: function (x) { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); }
@@ -77,26 +101,28 @@
     },
     beforeDestroy: function() {
       clearInterval(this.Timer);
+      clearInterval(this.NowTimer);
       $(window).off('resize', this.ResizeHandler);
     },
     methods: {
-      SetAnalyzer() {
+      SetAnalyzer: function() {
         this.LastSample = 0;
         this.UpdateGraph();
+        this.NowValue();
       },
-      SetAutoUpdate(autoUpdate) {
+      SetAutoUpdate: function(autoUpdate) {
         this.AutoUpdate = autoUpdate;
         clearInterval(this.Timer);
         this.LastSample = 0;
         if(autoUpdate === false) this.$refs.tools.WriteTo(this.DateWindow[1]);
         if((autoUpdate === true) || (this.Data === [])) this.UpdateGraph();
       },
-      AggregationChanged(aggreg) {
+      AggregationChanged: function(aggreg) {
         this.Aggreg = aggreg;
         this.LastSample = 0;
         this.UpdateGraph();
       },
-      PeriodChange(time) {
+      PeriodChange: function(time) {
         this.Period = time;
         this.LastSample = 0;
         this.UpdateGraph();
@@ -104,14 +130,68 @@
       ResizeHandler: function() {
         if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', $(this.$refs.counters).height());
       },
-      MaximizeClick() {
+      MaximizeClick: function() {
         $(window).unbind('resize', this.ResizeHandler);
         this.$refs.tools.Maximize('Energy consumption', this.$refs.graph.Graph, this.$refs.Toolbar);
       },
-      MinimizeClick() {
+      MinimizeClick: function() {
         $(window).bind('resize', this.ResizeHandler.bind(this));
       },
-      UpdateGraph() {
+      ExportClick: function() {
+        if(this.$root.SelectedAnalyzer === null) return;
+        this.$refs.tools.SaveCVS('Frequency.csv', [['Time', 'Frequency']].concat(this.Data));
+      },
+      NowValue: function() {
+        if(this.$root.SelectedAnalyzer === null) return;
+        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['FREQUENCY'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
+          success: function(result) {
+            this.CurrentValue = ((result['Frequency'] === null) ? 'No data' : oZm.Round3(result['Frequency']));
+          }.bind(this),
+          complete: function() {
+            if(this.NowTimer !== null) clearTimeout(this.NowTimer);
+            this.NowTimer = setTimeout(this.NowValue, 2000);
+          }.bind(this), 
+          error: function() {
+            this.CurrentValue = 'No data';
+          }.bind(this)
+        });
+      },
+      UpdateCounters: function(aggreg) {
+        this.CountersAggregation = 'From ' + oZm.GetAggregLongName(aggreg) + ' aggregation';        
+        var AvgSamples = 0, MinValue = +Infinity, MaxValue = -Infinity, AvgValue = 0, MinCount = 0, MaxCount = 0, StdPercent = 0, StdValue = 0, MinTime = null, MaxTime = null;
+        for(var x = 0; x < this.Data.length; x++) {
+          if(this.Data[x][1] === null) continue;
+          if(this.Data[x][1] < MinValue) {
+            MinValue = this.Data[x][1];
+            MinCount = 0;
+            MinTime = this.Data[x][0];
+          } else if(this.Data[x][1] === MinValue) {
+            MinCount++;
+          }
+          if(this.Data[x][1] > MaxValue) {
+            MaxValue = this.Data[x][1];
+            MaxCount = 0;
+            MaxTime = this.Data[x][0];
+          } else if(this.Data[x][1] === MaxValue) {
+            MaxCount++;
+          }
+          if((this.Data[x][1] > 49) && (this.Data[x][1] < 51)) StdPercent++;
+          AvgValue += this.Data[x][1];
+          AvgSamples++;
+        }
+        AvgValue = AvgValue / AvgSamples;
+        for(var x = 0; x < this.Data.length; x++) StdValue += Math.pow(this.Data[x][1] - AvgValue, 2.0);
+        this.AvgSamples = AvgSamples;
+        this.MinTime = moment(MinTime).format("hh:mm:ss - DD/MM/YYYY") + ((MinCount > 1) ? ' (and ' + MinCount + ' times more)' : '');
+        this.MaxTime = moment(MaxTime).format("hh:mm:ss - DD/MM/YYYY") + ((MaxCount > 1) ? ' (and ' + MaxCount + ' times more)' : '');
+        this.StdPercent = oZm.Round2(StdPercent / AvgSamples * 100) + '% within range';
+        this.StdValue = oZm.Round3(Math.sqrt(StdValue / AvgSamples)) + ' <em>Hz</em>';
+        this.MinValue = oZm.Round3(MinValue) + ' <em>Hz</em>';
+        this.MaxValue = oZm.Round3(MaxValue) + ' <em>Hz</em>';
+        this.AvgValue = oZm.Round3(AvgValue) + ' <em>Hz</em>';
+        window.dispatchEvent(new Event('resize'));
+      },
+      UpdateGraph: function() {
         if((this.$root.SelectedAnalyzer === null) || (this.Aggreg === null) || (this.Period === null) || (this.AutoUpdate === null)) return;
         if(this.LastSample === 0) this.Data = [];
         this.$refs.tools.BeginUpdate();
@@ -125,6 +205,7 @@
             this.$refs.tools.WriteTo(result['To']);
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
             this.$refs.graph.SetOptions( { dateWindow: this.DateWindow, file: this.Data, valueRange: oZm.Series['FREQUENCY'].Range(this.Data, [true]) } );
+            this.UpdateCounters(result['Aggregation_Source']);            
           }.bind(this),
           complete: function() {
             this.$refs.tools.EndUpdate();
@@ -158,4 +239,39 @@
   }
 </script>
 
-
+<style scoped>
+  .counters-title {
+    float: left;
+    text-align: left;
+    font-size: 16px;
+  }
+  .counters-aggreg {
+    float: right;
+    font-size: 12px;
+  }
+  .counters-main-val {
+    font-size: 36px
+  }
+  .counters-stat-type {
+    text-align: left;
+    font-weight: bold;
+  }
+  .counters-stat-time {
+    font-size: 12px;
+    text-align: left;
+  }
+  .counters-stat-val {
+    font-size: 28px;
+    line-height: 37px;
+    float: right;
+  }
+  .current-value {
+    font-size: 36px;
+  }
+  .line {
+    clear: both;
+  }
+  .line-border {
+    border-top: 1px solid #b3e0b3;
+  }
+</style>
