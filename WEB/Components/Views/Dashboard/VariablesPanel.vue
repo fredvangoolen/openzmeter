@@ -109,7 +109,3 @@
     components: { Cubism, Spinner, ToolbarPhases }
   }   
 </script>
-
-<style>
-    
-</style>

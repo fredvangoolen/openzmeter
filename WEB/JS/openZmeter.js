@@ -129,6 +129,14 @@ export var Series = {
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'var', Value: Round2(ScaleToUnits(val, Units)) }; },
     rangeFunc: function() {} 
   },
+  'APPARENT_POWER': { 
+    CSS_Class: '', 
+    Title: 'Apparent Power', 
+    Serie: 'Apparent_Power', 
+    Units: 'va',
+    FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'va', Value: Round2(ScaleToUnits(val, Units)) }; },
+    rangeFunc: function() {} 
+  },
   'POWER_FACTOR': { CSS_Class: '', Title: 'Power Factor', Serie: 'Power_Factor', Units: '', Link: '', 
     FormatValue: function(val) { return { Units: '', Value: Round2(val) }; } 
   },

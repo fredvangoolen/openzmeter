@@ -1,21 +1,21 @@
 <template>
   <div id="wrapper">
     <div class="row">
-      <div class="col-lg-12"><active></active></div>
-      <div class="col-lg-12"><reactive></reactive></div>
-      <div class="col-lg-12"><details></details></div>
+      <div class="col-lg-12"><active-power></active-power></div>
+      <div class="col-lg-12"><reactive-power></reactive-power></div>
+      <div class="col-lg-12"><details-power></details-power></div>
     </div>
   </div>
 </template>
 
 <script>
-  import Active from './ActivePower.vue';
-  import Reactive from './ReactivePower.vue';
-  import Details from './Details.vue';
+  import ActivePower from './ActivePower.vue';
+  import ReactivePower from './ReactivePower.vue';
+  import DetailsPower from './DetailsPower.vue';
   export default {
     data () {
       return { };
     },
-    components: { Active, Reactive, Details }
+    components: { ActivePower, ReactivePower, DetailsPower }
   }
 </script>
