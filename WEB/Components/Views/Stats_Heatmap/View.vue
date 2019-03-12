@@ -29,7 +29,7 @@
   import ColorBar from 'Components/ColorBar.vue';
   import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
   import ToolbarYears from 'Components/ToolbarYears.vue';
-  import moment from 'moment';
+  import moment from 'JS/moment.js';
   export default {
     data() {
       return { ShowSpinner: true, Year: 2019 };

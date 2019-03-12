@@ -17,7 +17,7 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'moment';
+  import moment from 'JS/moment.js';
   import Dygraph from 'JS/dygraph.js';
   import Spinner from 'Components/Spinner.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';

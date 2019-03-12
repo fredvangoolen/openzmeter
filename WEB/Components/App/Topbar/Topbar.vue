@@ -26,7 +26,7 @@
  
 <script>
 import TopbarIndicator from './TopbarIndicator.vue';
-import moment from 'moment';
+import moment from 'JS/moment.js';
 export default {
   methods: {
     setValue: function(vals) {

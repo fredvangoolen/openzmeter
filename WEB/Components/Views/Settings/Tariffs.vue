@@ -20,7 +20,7 @@
 
 <script>
   import Vuetable from 'vuetable-2';
-  import moment from 'moment';
+  import moment from 'JS/moment.js';
   import TariffsEdit from './TariffsEdit.vue';
   export default {
     data: function() {

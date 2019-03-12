@@ -37,8 +37,8 @@
 </template>
 
 <script>
-  import moment from 'moment';
-  import chroma from 'chroma-js';
+  import moment from 'JS/moment.js';
+  import chroma from 'JS/chroma.js';
   import * as oZm from 'JS/openZmeter.js';
   var DaysNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   export default {

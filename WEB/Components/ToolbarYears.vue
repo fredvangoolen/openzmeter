@@ -13,7 +13,7 @@
 </template> 
 
 <script>
-  import moment from 'moment';
+  import moment from 'JS/moment.js';
   export default {
     data() {
       return { SelectedText: 'No data', Years: [] };
