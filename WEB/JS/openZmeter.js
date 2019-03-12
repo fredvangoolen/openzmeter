@@ -783,6 +783,18 @@ export function Round2(value) {
     return ((value < 0) ? '-' : '') + Math.abs(Integer.toString()) + "<span style='font-size:80%'>." + Fraction + '</span>';
   }
 }
+export function Round3(value) {
+  if(value === null) {
+    return '~';
+  } else {
+    value = Math.round(value * 1000);
+    var Integer = Math.trunc(value / 1000);
+    var Fraction = Math.abs(value % 1000);
+    Fraction = Fraction.toString();
+    while(Fraction.length < 3) Fraction = '0' + Fraction;
+    return ((value < 0) ? '-' : '') + Math.abs(Integer.toString()) + "<span style='font-size:80%'>." + Fraction + '</span>';
+  }
+}
 /* Retorna un numero como cadena con dos decimales pero sin formato html */
 export function Round2Plain(value) {
   if(value === null) {
