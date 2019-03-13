@@ -130,7 +130,9 @@
     },
     created: function() {
       this.ReadTo();
-      if(this.options.includes('NOW')) this.$emit('NowStatus', this.Now, this.ReadTo());
+    },
+    mounted: function() {
+      if(this.options.includes('NOW')) this.$emit('NowStatus', this.Now, this.ReadTo());      
     }
   }
 </script>
