@@ -14,13 +14,13 @@
         <div class="col-md-6 col-lg-4 col-xl-3" ref="counters">
           <div class="subpanel">
             <div class="counters-title">Current value:</div>
-            <div class="counters-aggreg">From 3 seconds aggregation</div>
+            <div class="counters-aggreg">From 3 seconds aggregation<br>{{ Time3S }}</div>
             <div class="clearfix"></div>
             <div class="current-value" v-html="CurrentValue"></div>
           </div>
           <div class="subpanel clearfix">
             <div class="counters-title">Period stats:</div>
-            <div class="counters-aggreg">{{ CountersAggregation }}</div>
+            <div class="counters-aggreg">{{ CountersAggregation }}<br>{{ TimeStatsFrom }}<br>{{ TimeStatsTo }}</div>
             <div class="line">
               <div class="float-left">
                 <div class="counters-stat-type">Min value:</div>
@@ -69,7 +69,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return { CountersAggregation: 'Loading data...', CurrentValue: '?', MinTime: '?', MaxTime: '?', MinValue: '?', MaxValue: '?', AvgValue: '?', AvgSamples: '?', StdPercent: '?', StdValue: '?', ShowSpinner: true };
+      return { CountersAggregation: 'Loading data...', Time3S: '', TimeStatsFrom: '', TimeStatsTo: '', CurrentValue: '?', MinTime: '?', MaxTime: '?', MinValue: '?', MaxValue: '?', AvgValue: '?', AvgSamples: '?', StdPercent: '?', StdValue: '?', ShowSpinner: true };
     },
     created: function() {
       this.Data = [];
@@ -104,7 +104,7 @@
     },
     beforeDestroy: function() {
       clearInterval(this.Timer);
-       clearInterval(this.NowTimer);
+      clearInterval(this.NowTimer);
       $(window).off('resize', this.ResizeHandler);
     },
     methods: {
@@ -147,21 +147,32 @@
       },
       NowValue: function() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['FREQUENCY'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['FREQUENCY'], To: 0, Aggreg: '3S', Period: 5000, Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
-            this.CurrentValue = ((result['Frequency'] === null) ? 'No data' : oZm.Round3(result['Frequency']) + '<em>Hz</em>');
+            if(result['Sampletime'].length == 0) {
+              this.CurrentValue = 'No data';
+              this.Time3S = '';
+            } else {
+              var Pos = result['Sampletime'].length - 1;
+              this.Time3S = 'At ' + moment(result.Sampletime[Pos]).format('HH:mm:ss');
+              this.CurrentValue = ((result['Frequency'][Pos] === null) ? 'No data' : oZm.Round3(result['Frequency'][Pos]) + '<em>Hz</em>');
+            }
           }.bind(this),
           complete: function() {
             clearTimeout(this.NowTimer);
             this.NowTimer = setTimeout(this.NowValue.bind(this), 2000);
+            this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
           }.bind(this), 
           error: function() {
             this.CurrentValue = 'No data';
+            this.Time3S = '';
           }.bind(this)
         });
       },
       UpdateCounters: function(aggreg) {
         this.CountersAggregation = 'From ' + oZm.GetAggregLongName(aggreg) + ' aggregation';        
+        this.TimeStatsFrom = 'From ' + moment(this.DateWindow[0]).format('DD/MM/YYYY HH:mm:ss');
+        this.TimeStatsTo = ' To ' + moment(this.DateWindow[1]).format('DD/MM/YYYY HH:mm:ss');
         var AvgSamples = 0, MinValue = +Infinity, MaxValue = -Infinity, AvgValue = 0, MinCount = 0, MaxCount = 0, StdPercent = 0, StdValue = 0, MinTime = null, MaxTime = null;
         for(var x = 0; x < this.Data.length; x++) {
           if(this.Data[x][1] === null) continue;
@@ -192,7 +203,7 @@
         this.MinValue = oZm.Round3(MinValue) + ' <em>Hz</em>';
         this.MaxValue = oZm.Round3(MaxValue) + ' <em>Hz</em>';
         this.AvgValue = oZm.Round3(AvgValue / AvgSamples) + ' <em>Hz</em>';
-        window.dispatchEvent(new Event('resize'));
+        this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
       },
       UpdateGraph: function() {
         if((this.$root.SelectedAnalyzer === null) || (this.Aggreg === null) || (this.Period === null) || (this.AutoUpdate === null) || (this.To === null)) return;
@@ -258,6 +269,7 @@
   }
   .counters-aggreg {
     float: right;
+    text-align: right;
     font-size: 12px;
   }
   .counters-main-val {

@@ -53,7 +53,7 @@ export var Series = {
       return [LowerRange, UpperRange];  
     }
   },
-  'ACTIVE_POWER': { CSS_Class: 'panel-active-power', Title: 'Active power', Serie: 'Active_Power', Units: 'w', Link: '/Analysis/Power', Color: '#f0ad4e',
+  'ACTIVE_POWER': { CSS_Class: 'panel-active-power', Title: 'Active Power', Serie: 'Active_Power', Units: 'w', Link: '/Analysis/Power', Color: '#f0ad4e',
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'W', Value: Round2(ScaleToUnits(val, Units)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)']; },
     Range: function(values, phases) {
@@ -78,7 +78,7 @@ export var Series = {
   },
   'ACTIVE_ENERGY': {
     CSS_Class: 'panel-active-energy',
-    Title: 'Active energy',
+    Title: 'Active Energy',
     Serie: 'Active_Energy',
     Units: 'Wh',
     Color: '#3d3d8b',
@@ -122,7 +122,7 @@ export var Series = {
   },
   'REACTIVE_POWER': { 
     CSS_Class: '', 
-    Title: 'Reactive Power', 
+    Title: 'Fund. Reactive Power', 
     Serie: 'Reactive_Power', 
     Units: 'var', 
     Link: '/Analysis/Power', 
@@ -494,10 +494,15 @@ export function GraphDataAppend(result, serie, data) {
       for(var i = 0; i < result['Sampletime'].length; i++) {
         data.push([new Date(result['Sampletime'][i])].concat(result[serie][i]));
       }
-      ShiftArray(data, result['MaxSamples']);
+      var Out = [];
+      for(var n = 0; n < data.length; n++) {
+        if((data[n][0] >= result['From']) && (data[n][0] <= result['To'])) Out.push(data[n]);
+      }
+      
+     // ShiftArray(data, result['MaxSamples']);
     }
   }
-  return data;
+  return Out;
 }
 ///* remove old items from array*/
 function ShiftArray(array, len) {
