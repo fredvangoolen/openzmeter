@@ -82,7 +82,7 @@
       this.AutoUpdate = null;
       this.GraphOptions = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: oZm.LegendFormatter_Follow,
-        labels: ['Time', 'Frequency'], zoomCallback: this.ZoomEvt, interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt, dblclick: this.DoubleClickEvt }, colors: [oZm.Series['FREQUENCY'].Color], xAxisHeight: 24, 
+        labels: ['Time', 'Frequency'], zoomCallback: this.ZoomEvt.bind(this), interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt.bind(this), dblclick: this.DoubleClickEvt.bind(this) }, colors: [oZm.Series['FREQUENCY'].Color], xAxisHeight: 24, 
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { return oZm.Round3(x) + ' <em class="x-small">Hz</em>'; },
@@ -102,8 +102,8 @@
       this.NowValue();
     },
     beforeDestroy: function() {
-      if(this.Timer !== null) clearInterval(this.Timer);
-      if(this.NowTimer !== null) clearInterval(this.NowTimer);
+      clearInterval(this.Timer);
+       clearInterval(this.NowTimer);
       $(window).off('resize', this.ResizeHandler);
     },
     methods: {
@@ -150,7 +150,7 @@
             this.CurrentValue = ((result['Frequency'] === null) ? 'No data' : oZm.Round3(result['Frequency']) + '<em>Hz</em>');
           }.bind(this),
           complete: function() {
-            if(this.NowTimer !== null) clearTimeout(this.NowTimer);
+            clearTimeout(this.NowTimer);
             this.NowTimer = setTimeout(this.NowValue.bind(this), 2000);
           }.bind(this), 
           error: function() {

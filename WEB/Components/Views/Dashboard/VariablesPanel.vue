@@ -75,7 +75,6 @@
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: this.Series, Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
-            this.ShowSpinner = false;
             for(var n = 0; n < this.Series.length; n++) this.$refs.rows[n].SetNowLabel(result[oZm.Series[this.Series[n]].Serie][this.Phase]);
           }.bind(this),
           complete: function() {
