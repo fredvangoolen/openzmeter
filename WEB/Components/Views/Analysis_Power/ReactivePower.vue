@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-reactive-power" id="ReactivePowerPanel">
     <div class="panel-heading" id="ReactivePowerPanel">
-      <div class="header-text"><i class="fa fa-area-chart fa-fw"></i> Reactive power</div>
+      <div class="header-text">Fund. Reactive Power</div>
       <div class="pull-right btn-group">
         <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
       </div>
