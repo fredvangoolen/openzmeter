@@ -5,14 +5,14 @@
       <div class="header-buttons clearfix" ref="Toolbar">
         <toolbar-aggregation variable="Aggregation" :options="['3S', '1M', '10M', '1H']" v-on:AggregationChanged="AggregationChanged" ref="aggregation"></toolbar-aggregation>
         <toolbar-period variable="Period" v-on:PeriodChanged="PeriodChange" ref="period"></toolbar-period>
-        <toolbar-tools variable="ToFreq" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:NowStatus="SetAutoUpdate" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
+        <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:NowStatus="SetAutoUpdate" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
       </div>
     </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
       <div class="row">
         <div class="col-md-6 col-lg-4 col-xl-3" ref="counters">
-          <div class="subpanel">
+          <div class="subpanel clearfix">
             <div class="counters-title">Current value:</div>
             <div class="counters-aggreg">From 3 seconds aggregation<br>{{ Time3S }}</div>
             <div class="clearfix"></div>
@@ -20,7 +20,7 @@
           </div>
           <div class="subpanel clearfix">
             <div class="counters-title">Period stats:</div>
-            <div class="counters-aggreg">{{ CountersAggregation }}<br>{{ TimeStatsFrom }}<br>{{ TimeStatsTo }}</div>
+            <div class="counters-aggreg">{{ CountersAggregation }}<br>From {{ TimeStatsFrom }} to {{ TimeStatsTo }}</div>
             <div class="line">
               <div class="float-left">
                 <div class="counters-stat-type">Min value:</div>
@@ -69,7 +69,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return { CountersAggregation: 'Loading data...', Time3S: '', TimeStatsFrom: '', TimeStatsTo: '', CurrentValue: '?', MinTime: '?', MaxTime: '?', MinValue: '?', MaxValue: '?', AvgValue: '?', AvgSamples: '?', StdPercent: '?', StdValue: '?', ShowSpinner: true };
+      return { CountersAggregation: 'Loading data...', Time3S: '', TimeStatsFrom: '...', TimeStatsTo: '...', CurrentValue: '?', MinTime: '?', MaxTime: '?', MinValue: '?', MaxValue: '?', AvgValue: '?', AvgSamples: '?', StdPercent: '?', StdValue: '?', ShowSpinner: true };
     },
     created: function() {
       this.Data = [];
@@ -149,7 +149,7 @@
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['FREQUENCY'], To: 0, Aggreg: '3S', Period: 5000, Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
-            if(result['Sampletime'].length == 0) {
+            if(result['Sampletime'].length === 0) {
               this.CurrentValue = 'No data';
               this.Time3S = '';
             } else {
@@ -171,8 +171,8 @@
       },
       UpdateCounters: function(aggreg) {
         this.CountersAggregation = 'From ' + oZm.GetAggregLongName(aggreg) + ' aggregation';        
-        this.TimeStatsFrom = 'From ' + moment(this.DateWindow[0]).format('DD/MM/YYYY HH:mm:ss');
-        this.TimeStatsTo = ' To ' + moment(this.DateWindow[1]).format('DD/MM/YYYY HH:mm:ss');
+        this.TimeStatsFrom = moment(this.DateWindow[0]).format('DD/MM/YYYY HH:mm:ss');
+        this.TimeStatsTo = moment(this.DateWindow[1]).format('DD/MM/YYYY HH:mm:ss');
         var AvgSamples = 0, MinValue = +Infinity, MaxValue = -Infinity, AvgValue = 0, MinCount = 0, MaxCount = 0, StdPercent = 0, StdValue = 0, MinTime = null, MaxTime = null;
         for(var x = 0; x < this.Data.length; x++) {
           if(this.Data[x][1] === null) continue;
