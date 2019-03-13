@@ -40,9 +40,12 @@
         return Time;
       },
       WriteTo: function(time, force) {
+        time = Math.round(time);
         if((this.Now === true) && (force !== true)) time = 0;
-        localStorage.setItem(this.variable, time);
+        console.log(time);    
+    localStorage.setItem(this.variable, time);
         this.Now = (time === 0);
+        return time;
       },
       BeginUpdate: function() {
         this.UpdateInProgress = true;
@@ -127,7 +130,7 @@
     },
     created: function() {
       this.ReadTo();
-      if(this.options.includes('NOW')) this.$emit('NowStatus', this.Now);
+      if(this.options.includes('NOW')) this.$emit('NowStatus', this.Now, this.ReadTo());
     }
   }
 </script>

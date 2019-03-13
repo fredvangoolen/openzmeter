@@ -5,7 +5,7 @@
       <div class="header-buttons clearfix" ref="Toolbar">
         <toolbar-aggregation variable="Aggregation" :options="['3S', '1M', '10M', '1H']" v-on:AggregationChanged="AggregationChanged" ref="aggregation"></toolbar-aggregation>
         <toolbar-period variable="Period" v-on:PeriodChanged="PeriodChange" ref="period"></toolbar-period>
-        <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:NowStatus="SetAutoUpdate" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
+        <toolbar-tools variable="ToFreq" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:NowStatus="SetAutoUpdate" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
       </div>
     </div>
     <div class="panel-body">
@@ -80,6 +80,7 @@
       this.Period = null;
       this.DateWindow = [0, 0];
       this.AutoUpdate = null;
+      this.To = null;
       this.GraphOptions = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: oZm.LegendFormatter_Follow,
         labels: ['Time', 'Frequency'], zoomCallback: this.ZoomEvt.bind(this), interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt.bind(this), dblclick: this.DoubleClickEvt.bind(this) }, colors: [oZm.Series['FREQUENCY'].Color], xAxisHeight: 24, 
@@ -112,8 +113,9 @@
         this.UpdateGraph();
         this.NowValue();
       },
-      SetAutoUpdate: function(autoUpdate) {
+      SetAutoUpdate: function(autoUpdate, to) {
         this.AutoUpdate = autoUpdate;
+        this.To = to;    
         clearInterval(this.Timer);
         this.LastSample = 0;
         if(autoUpdate === false) this.$refs.tools.WriteTo(this.DateWindow[1]);
@@ -193,19 +195,19 @@
         window.dispatchEvent(new Event('resize'));
       },
       UpdateGraph: function() {
-        if((this.$root.SelectedAnalyzer === null) || (this.Aggreg === null) || (this.Period === null) || (this.AutoUpdate === null)) return;
+        if((this.$root.SelectedAnalyzer === null) || (this.Aggreg === null) || (this.Period === null) || (this.AutoUpdate === null) || (this.To === null)) return;
         if(this.LastSample === 0) {
           this.Data = [];
           this.ShowSpinner = true;
         }
         this.$refs.tools.BeginUpdate();
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: this.Aggreg, Series: ['FREQUENCY'], From: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: this.Period }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: this.Aggreg, Series: ['FREQUENCY'], To: this.To, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: this.Period }), 
           success: function(result) {
             if(result['Sampletime'] === null) return;
             if(result['Sampletime'].length === 0) return;
             this.Data = oZm.GraphDataAppend(result, 'Frequency', this.Data);
             this.DateWindow = [result['From'], result['To']];
-            this.$refs.tools.WriteTo(result['To']);
+            this.To = this.$refs.tools.WriteTo(result['To']);
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
             this.$refs.graph.SetOptions( { dateWindow: this.DateWindow, file: this.Data, valueRange: oZm.Series['FREQUENCY'].Range(this.Data, [true]) } );
             this.UpdateCounters(result['Aggregation_Source']);
@@ -232,9 +234,10 @@
       },
       ZoomEvt: function(minDate, maxDate, yRanges) {
         clearInterval(this.Timer);
-        this.$refs.tools.WriteTo(maxDate, true);
+        this.AutoUpdate = false;
+        this.To = this.$refs.tools.WriteTo(maxDate, true);
         this.$refs.period.SetPeriod(maxDate - minDate);
-        this.DateWindow = [minDate, maxDate];
+        this.Period = maxDate - minDate;
         this.LastSample = 0;
         this.UpdateGraph();
       }
