@@ -60,12 +60,8 @@
             this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
             this.LastSample = oZm.LastSampletime(result, this.LastSample);        
             result['Apparent_Power'] = [];        
-            for(var n = 0; n < result['Sampletime'].length; n++) {
-              result['Apparent_Power'].push(result['Voltage'][n].map( function(val, index) { return val * result['Current'][n][index]; }));
-            }
-            for(var i = 0; i < this.VisibleSeries.length; i++) {
-              this.Data[this.VisibleSeries[i]] = oZm.GraphDataAppend(result, oZm.Series[this.VisibleSeries[i]].Serie, this.Data[this.VisibleSeries[i]]);
-            }
+            for(var n = 0; n < result['Sampletime'].length; n++) result['Apparent_Power'].push(result['Voltage'][n].map( function(val, index) { return val * result['Current'][n][index]; }));
+            for(var i = 0; i < this.VisibleSeries.length; i++) this.Data[this.VisibleSeries[i]] = oZm.GraphDataAppend(result, oZm.Series[this.VisibleSeries[i]].Serie, this.Data[this.VisibleSeries[i]]);
             this.CalcOptions();
             this.ShowSpinner = false;
           }.bind(this),
@@ -82,18 +78,8 @@
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: this.Series, Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
-            this.ShowSpinner = false;
-            result['Apparent_Power'] = [];
-            for(var i = 0; i < result['Voltage'].length; i++) {
-              result['Apparent_Power'].push(result['Voltage'][i] * result['Current'][i]);
-            }
-            for(var n = 0; n < this.VisibleSeries.length; n++) {
-              if(this.VisibleSeries[n] === 'APPARENT_POWER') {
-                this.$refs.rows[n].SetNowLabel(result['Voltage'][this.Phase] * result['Current'][this.Phase]);
-              } else {
-                this.$refs.rows[n].SetNowLabel(result[oZm.Series[this.Series[n]].Serie][this.Phase]);
-              }
-            }
+            result['Apparent_Power'] = result['Voltage'].map( function(val, index) { return val * result['Current'][index]; });
+            for(var n = 0; n < this.VisibleSeries.length; n++) this.$refs.rows[n].SetNowLabel(result[oZm.Series[this.VisibleSeries[n]].Serie][this.Phase]);
           }.bind(this),
           complete: function() {
             if(this.TimerNow !== null) clearTimeout(this.TimerNow);

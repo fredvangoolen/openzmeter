@@ -73,7 +73,38 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data () {
-      return { };
+      return { ShowSpinner: true };
+    },
+    mounted: function() {
+      
+    },
+    beforeDestroy: function() {
+      $(window).off('resize', this.ResizeHandler);
+    },
+    methods: {
+      SetAutoUpdate: function(autoUpdate) {
+        this.$emit('SetAutoUpdate', autoUpdate);
+      },
+      AggregationChanged: function(aggreg) {
+        this.emit('AggregationChanged', aggreg);
+      },
+      PeriodChange: function(time) {
+        this.$emit('PeriodChange', time);
+      },
+      ResizeHandler: function() {
+        if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', $(this.$refs.counters).height());
+      },
+      MaximizeClick: function() {
+        $(window).unbind('resize', this.ResizeHandler);
+        this.$refs.tools.Maximize('Active Power', this.$refs.graph.Graph, this.$refs.Toolbar);
+      },
+      MinimizeClick: function() {
+        $(window).bind('resize', this.ResizeHandler.bind(this));
+      },
+      ExportClick: function() {
+        if(this.$root.SelectedAnalyzer === null) return;
+//        this.$refs.tools.SaveCVS('Frequency.csv', [['Time', 'Frequency']].concat(this.Data));
+      },
     },
     components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarTools, Graph }
   }
