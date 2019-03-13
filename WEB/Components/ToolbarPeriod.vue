@@ -18,19 +18,18 @@
 <script>
   export default {
     props: { variable: String },
-    data() {
+    data: function() {
       return { Selected: 86400000, SelectedText: 'Day' };
     },
     methods: {
-      PeriodClick(period, event) {
+      PeriodClick: function(period, event) {
         event.preventDefault();
         this.Selected = period;
         this.SelectedText = $(event.target).text();
         localStorage.setItem(this.variable, period);
         this.$emit('PeriodChanged', this.Selected);
-        console.log(period);
       },
-      SetPeriod(period) {
+      SetPeriod: function(period) {
         this.Selected = period;
         if(period === 86400000) {
           this.SelectedText = 'Day';
@@ -42,7 +41,8 @@
           this.SelectedText = 'Year';
         } else {
           this.SelectedText = 'Custom';
-        }  
+        }
+        return period;
       }
     },
     mounted: function() {
