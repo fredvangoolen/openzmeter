@@ -102,9 +102,9 @@ void TariffsInterface::GetPricesCallback(HTTPRequest &req) {
     req.FromString("'Aggreg' need to be '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
     return;
   }
-  uint64_t To         = Params.value("To", 0);
-  uint64_t Period     = Params.value("Period", 3600000);
-  uint64_t LastSample = Params.value("LastSample", 0);
+  uint64_t To         = Params.value<uint64_t>("To", 0);
+  uint64_t Period     = Params.value<uint64_t>("Period", 3600000);
+  uint64_t LastSample = Params.value<uint64_t>("LastSample", 0);
   string   Aggreg     = Params["Aggreg"];
   if(To == 0) To = Tools::GetTime();
   uint64_t From = To - Period;
@@ -118,6 +118,7 @@ void TariffsInterface::GetPricesCallback(HTTPRequest &req) {
   json Result;
   Result["To"]     = To;
   Result["From"]   = From;
+  Result["Aggregation_Source"] = Aggreg;
   json Sampletimes = json::array();
   json Actives     = json::array();
   json Reactives   = json::array();
@@ -125,6 +126,7 @@ void TariffsInterface::GetPricesCallback(HTTPRequest &req) {
   json Colors      = json::array();
   json Powers      = json::array();
   json Bills       = json::array();
+  json Expenses    = json::array();
 
   stringstream Query;
   Query << "SELECT to_json(array_agg(json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Details', details) ORDER BY startdate ASC)) FROM analyzers_rates WHERE serial = '" << Analyzer << "' AND enddate >= " << From << " AND startdate <= " << To;
@@ -132,19 +134,26 @@ void TariffsInterface::GetPricesCallback(HTTPRequest &req) {
   json Tariffs;
   if(JSONText != NULL) json::parse(JSONText);
 
-  uint64_t BillingFrom = BillStart(Tariffs, From);
-  Result["BillingFrom"] = BillingFrom;
-  uint64_t BillingTo = BillEnd(Tariffs, To);
-  Result["BillingTo"] = BillingTo;
+  uint64_t BillingFrom = BillStart(Tariffs, (From / PeriodSeconds) * PeriodSeconds);
+//  Result["BillingFrom"] = BillingFrom;
+  uint64_t BillingTo = BillEnd(Tariffs, (To / PeriodSeconds) * PeriodSeconds + PeriodSeconds - 1);
+//  Result["BillingTo"] = BillingTo;
 
   Query.str("");
-  Query << "SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power  FROM \"" << Analyzer << "\".aggreg_15m WHERE sampletime > " << LastSample << " AND sampletime >= " << From << " AND sampletime <= " << To;
+  Query << "SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power  FROM \"" << Analyzer << "\".aggreg_15m WHERE sampletime > " << BillingFrom << " AND sampletime <= " << BillingTo;
   req.ExecSentence(Query.str().c_str());
-  Tools::LogMsg("INFO", "Calculando desde: %" PRIu64 "\n", From);
 
   uint32_t Row = 0;
-  while(From < To) {
-    Sampletimes.push_back(From);
+  while(BillingFrom < BillingTo) {
+    uint32_t Tariff = FindTariff(Tariffs, BillingFrom);
+    if(IsBillDate(Tariffs[Tariff], BillingFrom) == true) {
+      Bills.push_back(BillingFrom);
+      //Reinicio contadores y llamo a modulesReset
+      //LLamo a modulesProcessBillDate
+    }
+    
+    
+    Sampletimes.push_back(BillingFrom);
     // Busco la potencia en el periodo que estoy procesando
     float Active = NAN;
     float Reactive = NAN;
@@ -177,10 +186,12 @@ void TariffsInterface::GetPricesCallback(HTTPRequest &req) {
       Periods.push_back(PeriodName);
       Colors.push_back("#ddd");
       Powers.push_back(Tariffs[Tariff]["Details"]["Periods"][Period - 1]["Contracted_Power"]);
+      Expenses.push_back(0.0);
     } else {
       Periods.push_back(NAN);
       Colors.push_back("#ddd");
       Powers.push_back(NAN);
+      Expenses.push_back(0.0);
     }
 ////    if(Tariff != UINT32_MAX) Tools::LogMsg("INFO", "Tarifa encontrada para el rango\n");
 //    //Busco en las tarifas en cual de ellas cae el periodo en el que estoy    
@@ -204,7 +215,7 @@ void TariffsInterface::GetPricesCallback(HTTPRequest &req) {
 //  //  Si he pedido agregacion de 15 minutos escupo datos y reinicio contadores, si es la de 1 hora y ha habido cambio de hora pues lo mismo
 //  //  
 //    
-  From += 900000;
+    BillingFrom += 900000;
   }
   Result["Sampletime"] = Sampletimes;
   Result["Active_Energy"] = Actives;
@@ -212,12 +223,49 @@ void TariffsInterface::GetPricesCallback(HTTPRequest &req) {
   Result["Period_Name"] = Periods;
   Result["Period_Color"] = Colors;
   Result["Contracted_Power"] = Powers;
+  Result["Expense"] = Expenses;
   req.FromJSON(Result);
   return;  
 }
 uint64_t TariffsInterface::BillStart(json tariffs, uint64_t timestamp) {
-  return timestamp;
+  uint32_t n = FindTariff(tariffs, timestamp);
+  uint64_t TariffStart = timestamp;
+  if(n != UINT32_MAX) {
+    TariffStart = tariffs[n]["StartDate"];
+    for(uint32_t i = 0; i < tariffs[n]["Details"]["BillindCycles"].size(); i++) {
+      uint64_t Date = tariffs[n]["Details"]["BillindCycles"][i];
+      if(Date > timestamp) {
+        return TariffStart;
+      } else {
+        TariffStart = Date;
+      }
+    }
+  }
+  return TariffStart;
 }
 uint64_t TariffsInterface::BillEnd(json tariffs, uint64_t timestamp) {
-  return timestamp;
+  uint32_t n = FindTariff(tariffs, timestamp);
+  uint64_t TariffEnd = timestamp;
+  if(n != UINT32_MAX) {
+    TariffEnd = tariffs[n]["EndDate"];
+    for(uint32_t i = tariffs[n]["Details"]["BillindCycles"].size() - 1; i >= 0; i--) {
+      uint64_t Date = tariffs[n]["Details"]["BillindCycles"][i];
+      if(Date < timestamp) {
+        return TariffEnd;
+      } else {
+        TariffEnd = Date;
+      }
+    }
+  }
+  return TariffEnd;
+}
+uint32_t TariffsInterface::FindTariff(json tariffs, uint64_t timestamp) {
+  for(uint32_t n = 0; n < tariffs.size(); n++) {
+    uint64_t StartDate = tariffs[n]["StartDate"];
+    if((StartDate >= timestamp) || (StartDate < timestamp)) continue;
+    return n;
+  }
+  return UINT32_MAX;
+}
+bool TariffsInterface::IsBillDate(json tariff, uint64_t timestamp) {
 }

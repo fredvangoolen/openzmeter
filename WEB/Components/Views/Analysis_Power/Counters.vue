@@ -48,22 +48,20 @@
   import moment from 'JS/moment.js';
   import * as oZm from 'JS/openZmeter.js';
   export default {
+    props: ['variable'],
     data () {
       return { CountersAggregation: 'Loading data...', MinTime: '', MinValue: '', MaxTime: '', MaxValue: '',
                Time3S: '', CurrentValue3S: '', CurrentValue3SPhases: '', 
                Time1M: '', CurrentValue1M: '', CurrentValue1MPhases: '', 
-               TimeStatsFrom: '...', TimeStatsTo: '...',
-               ShowSpinner: true };
-    },
-    beforeDestroy: function() {
-      $(window).off('resize', this.ResizeHandler);
+               TimeStatsFrom: '...', TimeStatsTo: '...'
+                };
     },
     methods: {
       FormatPhases: function(values) {
         var Return = '';
         if(values.length > 1) {
           for(var n = 0; n < values.length; n++) {
-            var Format = oZm.Series['ACTIVE_POWER'].FormatValue(values[n]);
+            var Format = oZm.Series[this.variable].FormatValue(values[n]);
             Return += Format.Value + '<em>' + Format.Units +'</em><br>';
           }
         }
@@ -82,9 +80,9 @@
         var Time = 'At ' + moment(result.Sampletime[Pos]).format('HH:mm:ss');
         var Value = 'No data';
         var Phases = '';
-        if(result['Active_Power'][Pos] !== null) {
-          Phases = this.FormatPhases(result['Active_Power'][Pos]);
-          var Format = oZm.Series['ACTIVE_POWER'].FormatValue(this.SumPhases(result['Active_Power'][Pos]));
+        if(result[oZm.Series[this.variable].Serie][Pos] !== null) {
+          Phases = this.FormatPhases(result[oZm.Series[this.variable].Serie][Pos]);
+          var Format = oZm.Series[this.variable].FormatValue(this.SumPhases(result[oZm.Series[this.variable].Serie][Pos]));
           Value = Format.Value + '<em>' + Format.Units +'</em>';
         }
         return [Time, Value, Phases];
@@ -95,34 +93,10 @@
       Set1MValues: function(result) {
           [this.Time1M, this.CurrentValue1M, this.CurrentValue1MPhases] = this.FormatAggregBlock(result);
       },
-      
-      
-      
-      
-      
-      ResizeHandler: function() {
-        if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', $(this.$refs.counters).height());
-      },
-      MaximizeClick: function() {
-        $(window).unbind('resize', this.ResizeHandler);
-        this.$refs.tools.Maximize('Energy consumption', this.$refs.graph.Graph, this.$refs.Toolbar);
-      },
-      MinimizeClick: function() {
-        $(window).bind('resize', this.ResizeHandler.bind(this));
-      },
-      MouseUpEvt: function(event, g, contex) {
-        oZm.mouseUp(event, g, contex);
-        if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
-      },
-      DoubleClickEvt: function(event, g, context) {
-        oZm.dblClick(event, g, context);
-        this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
-      },
-      ZoomEvt: function(minDate, maxDate, yRanges) {
-        this.$emit('ZoomEvt', minDate, maxDate);
+      SetStats: function(result) {
+        
       }
-    },
-    components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarTools, Graph }
+    }
   }
 
 </script>
