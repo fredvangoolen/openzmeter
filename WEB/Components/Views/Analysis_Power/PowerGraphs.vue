@@ -12,7 +12,7 @@
       <div class="panel-body">
         <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
         <div class="row">
-          <counters class="col-md-6 col-lg-4 col-xl-3" ref="activeCounters"></counters>
+          <counters class="col-md-6 col-lg-4 col-xl-3" ref="activeCounters" variable="ACTIVE_POWER"></counters>
           <div class="col-md-6 col-lg-8 col-xl-9">
             <graph ref="graphActive" :options="GraphOptionsActive"></graph>
           </div>
@@ -29,7 +29,7 @@
       <div class="panel-body">
         <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
         <div class="row">
-          <counters class="col-md-6 col-lg-4 col-xl-3" ref="reactiveCounters"></counters>
+          <counters class="col-md-6 col-lg-4 col-xl-3" ref="reactiveCounters" variable="REACTIVE_POWER"></counters>
           <div class="col-md-6 col-lg-8 col-xl-9">
             <graph ref="graphReactive" :options="GraphOptionsReactive"></graph>
           </div>
@@ -54,7 +54,7 @@
     },
     created: function() {
       this.ActiveData = [];
-      this.ReactiveDate = [];
+      this.ReactiveData = [];
       this.LastSample = 0;
       this.Timer = null;
       this.NowTimer = null;
@@ -148,7 +148,7 @@
       },
       NowValue: function() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER'], To: 0, Aggreg: '3S', Period: 6000, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '3S', Period: 6000, Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
             this.$refs.activeCounters.Set3SValues(result);
             this.$refs.reactiveCounters.Set3SValues(result);
@@ -163,7 +163,7 @@
             this.$refs.reactiveCcounters.Set3SValues(null);
           }.bind(this)
         });
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER'], To: 0, Aggreg: '1M', Period: 120000, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '1M', Period: 120000, Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
             this.$refs.activeCounters.Set1MValues(result);
             this.$refs.reactiveCounters.Set1MValues(result);
@@ -184,16 +184,31 @@
         this.$refs.tools.BeginUpdate();
         $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: this.Aggreg, To: this.To, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: this.Period }), 
           success: function(result) {
-            if(result['Sampletime'] === null) return;
-            if(result['Sampletime'].length === 0) return;
-//            this.ActiveData = oZm.GraphDataAppend(result, 'Active_Power', this.ActiveData);
-//            this.ActiveData = oZm.GraphDataAppend(result, 'Active_Power', this.ActiveData);
+            if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             this.DateWindow = [result['From'], result['To']];
             this.To = this.$refs.tools.WriteTo(result['To']);
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
-//            this.$refs.graph.SetOptions( { dateWindow: this.DateWindow, file: this.Data, valueRange: oZm.Series['FREQUENCY'].Range(this.Data, [true]) } );
+            var Multiplier = (result["Aggregation_Source"] === '1H') ? 1.0 : 0.25;
+            for(var i = 0; i < result['Sampletime'].length; i++) {
+              if((this.ActiveData.length === 0) || (this.ActiveData.slice(-1)[0][0] < result['Sampletime'][i])) {
+                this.ActiveData.push([result['Sampletime'][i], result['Active_Energy'][i] * Multiplier]);
+                this.ReactiveData.push([result['Sampletime'][i], result['Reactive_Energy'][i] * Multiplier]);
+              }
+            }
+              var OutActive = [];
+              var OutReactive = [];
+              for(var n = 0; n < this.ActiveData.length; n++) {
+                if((this.ActiveData[n][0] >= result['From']) && (this.ActiveData[n][0] <= result['To'])) {
+                  OutActive.push(this.ActiveData[n]);
+                  OutReactive.push(this.ReactiveData[n]);
+                }
+              }
+              this.ActiveData = OutActive;
+              this.ReactiveData = OutReactive;
+              this.$refs.graphReactive.SetOptions( { dateWindow: this.DateWindow, file: this.ReactiveData,/* valueRange: oZm.Series['FREQUENCY'].Range(this.Data, [true])*/ } );
 //            this.UpdateCounters(result['Aggregation_Source']);
-  //          this.ShowSpinner = false;
+            
+            this.ShowSpinner = false;
           }.bind(this),
           complete: function() {
             this.$refs.tools.EndUpdate();

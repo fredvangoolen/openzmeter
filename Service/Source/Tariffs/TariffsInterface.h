@@ -18,6 +18,9 @@ class TariffsInterface {
   private :
     static uint64_t BillStart(json tariffs, uint64_t timestamp);
     static uint64_t BillEnd(json tariffs, uint64_t timestamp);
+    static uint32_t FindTariff(json tariffs, uint64_t timestamp);
+    static bool     IsBillDate(json tariff, uint64_t timestamp);
+    
   public :
     static bool Register();
 

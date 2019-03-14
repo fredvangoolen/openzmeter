@@ -42,8 +42,7 @@
       WriteTo: function(time, force) {
         time = Math.round(time);
         if((this.Now === true) && (force !== true)) time = 0;
-        console.log(time);    
-    localStorage.setItem(this.variable, time);
+        localStorage.setItem(this.variable, time);
         this.Now = (time === 0);
         return time;
       },

@@ -23,6 +23,7 @@ vector<HTTPServer::Callback_t>  HTTPServer::pCallbacks;
 //vector<HTTPServer::Mapping_t>   HTTPServer::pMappings;
 //----------------------------------------------------------------------------------------------------------------------
 HTTPRequest::HTTPRequest(const char *cookie, bool deflate) : Database(NULL) {
+  pDeflate = deflate;
   if(deflate == true) {
     memset(&pDeflateObj, 0, sizeof(pDeflateObj));
     pDeflate = (deflateInit(&pDeflateObj, Z_BEST_SPEED) == Z_OK);

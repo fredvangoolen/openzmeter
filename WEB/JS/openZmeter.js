@@ -490,7 +490,7 @@ export function GetAggregLongName(shortText) {
 ///* append samples of given series to array of graph data, and shift if needed */
 export function GraphDataAppend(result, serie, data) {
   if(result['Sampletime'] !== null && result['Sampletime'].length > 0) {
-    if(data.length === 0 || data[data.length - 1][0] < result['Sampletime'][0]) {
+    if((data.length === 0) || data[data.length - 1][0] < result['Sampletime'][0]) {
       for(var i = 0; i < result['Sampletime'].length; i++) {
         data.push([new Date(result['Sampletime'][i])].concat(result[serie][i]));
       }
