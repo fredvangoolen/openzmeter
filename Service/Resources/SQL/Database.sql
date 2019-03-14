@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS rates(
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS analyzers_rates(
+  rate      int               NOT NULL PRIMARY KEY,  
   serial    character varying NOT NULL REFERENCES analyzers ON UPDATE CASCADE ON DELETE CASCADE,
   name      character varying NOT NULL,
   startdate bigint            NOT NULL,
@@ -64,7 +65,6 @@ CREATE TABLE IF NOT EXISTS analyzers_rates(
   config    jsonb             NOT NULL,
   details   jsonb             NOT NULL
 ) WITH (OIDS=FALSE);
-CREATE UNIQUE INDEX IF NOT EXISTS analyzers_rates_serial_startdate_idx ON analyzers_rates USING btree (serial, startdate);
 
 CREATE TABLE IF NOT EXISTS permisions(
   username   character varying NOT NULL REFERENCES users(username) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,

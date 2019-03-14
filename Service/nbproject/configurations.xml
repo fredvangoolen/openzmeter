@@ -28,13 +28,10 @@
           <in>DeviceInterface.cpp</in>
         </df>
         <df name="Tariffs">
-          <df name="ESIOS">
-            <in>ESIOS.cpp</in>
-          </df>
           <df name="Spain">
             <in>TariffSpain.cpp</in>
           </df>
-          <in>PricesInterface.cpp</in>
+          <in>TariffsInterface.cpp</in>
         </df>
         <in>Database.cpp</in>
         <in>Events.cpp</in>
@@ -355,15 +352,14 @@
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="Source/Tariffs/ESIOS/ESIOS.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
-        </ccTool>
-      </item>
-      <item path="Source/Tariffs/PricesInterface.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
-        </ccTool>
-      </item>
       <item path="Source/Tariffs/Spain/TariffSpain.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="1">
+        </ccTool>
+      </item>
+      <item path="Source/Tariffs/TariffsInterface.cpp"
             ex="false"
             tool="1"
             flavor2="8">
