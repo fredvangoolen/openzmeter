@@ -10,8 +10,24 @@
 //----------------------------------------------------------------------------------------------------------------------
 class TariffsInterface {
   private :
+    typedef struct {
+    
+    } Period_t;
+    typedef struct {
+    
+    } Season_t;
+    typedef struct {
+    
+    } Holiday_t;
+    string Owner;
+    string Country;
+    vector<Period_t>  Periods;
+    vector<Season_t>  Seasons;
+    vector<Holiday_t> Holidays;
+  private :
     static bool Registered;
   private :
+    static bool Register();
     static void GetPricesCallback(HTTPRequest &req);
     static void GetTariffsCallback(HTTPRequest &req);
     static void SetTariffsCallback(HTTPRequest &req);
@@ -19,11 +35,14 @@ class TariffsInterface {
     static uint64_t BillStart(json tariffs, uint64_t timestamp);
     static uint64_t BillEnd(json tariffs, uint64_t timestamp);
     static uint32_t FindTariff(json tariffs, uint64_t timestamp);
-    static uint8_t  FindPeriod(json tariff, uint64_t timestamp);
-    static bool     IsBillDate(json tariff, uint64_t timestamp);
-    
   public :
-    static bool Register();
+    static TariffsInterface *FromJSON(json details);
+    static TariffsInterface *FromJSON(json details, json config);
+  public :
+    uint8_t  FindPeriod(json tariff, uint64_t timestamp);    
+    bool     IsBillDate(json tariff, uint64_t timestamp);
+    
+    
 
 
 

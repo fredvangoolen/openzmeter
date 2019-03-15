@@ -219,7 +219,7 @@
           }.bind(this),
           error: function(response) {
             if(response.status === 400) this.$refs.aggregation.AggregationFail();
-//            this.ShowSpinner = true;
+            this.ShowSpinner = true;
           }.bind(this)
         });
       },

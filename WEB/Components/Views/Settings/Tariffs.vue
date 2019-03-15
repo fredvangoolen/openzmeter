@@ -2,7 +2,7 @@
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
       <div class="huge-small pull-left">Tariffs</div>
-      <button type="button" class="pull-right btn btn-default btn-xs" data-toggle="tooltip" title="Add tariff" @click="Add"><img src="Imgs/plus.png"> Add</button>
+      <button type="button" class="pull-right btn btn-default btn-xs" data-toggle="tooltip" title="Add tariff" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
     </div>
     <div class="panel-body">
       <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
