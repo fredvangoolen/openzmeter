@@ -28,7 +28,7 @@
         </div>
         <div class="counters-stat-val" v-html="MinValue"></div>
       </div>
-      <div class="line line-border">
+      <div class="line line-border" v-bind:class="{'line-border-reactive': (variable == 'REACTIVE_POWER')}">
         <div class="float-left">
           <div class="counters-stat-type">Max value:</div>
           <div class="counters-stat-time">{{ MaxTime }}</div>
@@ -93,10 +93,87 @@
       Set1MValues: function(result) {
           [this.Time1M, this.CurrentValue1M, this.CurrentValue1MPhases] = this.FormatAggregBlock(result);
       },
-      SetStats: function(result) {
-        
+      SetStats: function(window, data, aggreg) {
+        this.CountersAggregation = 'From ' + oZm.GetAggregLongName(aggreg) + ' aggregation';
+        this.TimeStatsFrom = moment(window[0]).format('DD/MM/YYYY HH:mm:ss');
+        this.TimeStatsTo = moment(window[1]).format('DD/MM/YYYY HH:mm:ss');
+        var MinValue = +Infinity, MaxValue = -Infinity, MinCount = 0, MaxCount = 0, MinTime = null, MaxTime = null;
+        for(var x = 0; x < data.length; x++) {
+          if(data[x][1] === null) continue;
+          if(data[x][1] < MinValue) {
+            MinValue = data[x][1];
+            MinCount = 0;
+            MinTime = data[x][0];
+          } else if(data[x][1] === MinValue) {
+            MinCount++;
+          }
+          if(data[x][1] > MaxValue) {
+            MaxValue = data[x][1];
+            MaxCount = 0;
+            MaxTime = data[x][0];
+          } else if(data[x][1] === MaxValue) {
+            MaxCount++;
+          }
+        }
+        this.MinTime = moment(MinTime).format("hh:mm:ss - DD/MM/YYYY") + ((MinCount > 1) ? ' (and ' + MinCount + ' times more)' : '');
+        this.MaxTime = moment(MaxTime).format("hh:mm:ss - DD/MM/YYYY") + ((MaxCount > 1) ? ' (and ' + MaxCount + ' times more)' : '');
+        var Format = oZm.Series[this.variable].FormatValue(MinValue);
+        this.MinValue = Format.Value + ' <em>' + Format.Units +'</em>';
+        var Format = oZm.Series[this.variable].FormatValue(MaxValue);
+        this.MaxValue = Format.Value + ' <em>' + Format.Units +'</em>';
       }
     }
   }
-
 </script>
+
+<style scoped>
+  .counters-phases {
+    text-align: left;
+    display: inline-block;
+    font-size: 12px;
+    line-height: 12px;
+    font-weight: bold;
+    padding-left: 2px;
+    border-left: 1px solid #f0ad4e;
+    margin-left: 5px;
+  }
+  .counters-title {
+    float: left;
+    text-align: left;
+    font-size: 16px;
+  }
+  .counters-aggreg {
+    float: right;
+    text-align: right;
+    font-size: 12px;
+  }
+  .counters-main-val {
+    font-size: 36px
+  }
+  .counters-stat-type {
+    text-align: left;
+    font-weight: bold;
+  }
+  .counters-stat-time {
+    font-size: 12px;
+    text-align: left;
+  }
+  .counters-stat-val {
+    font-size: 28px;
+    line-height: 37px;
+    float: right;
+  }
+  .current-value {
+    font-size: 36px;
+    display: inline-block;
+  }
+  .line {
+    clear: both;
+  }
+  .line-border {
+    border-top: 1px solid #FAE7CC;
+  }
+  .line-border-reactive {
+    border-top: 1px solid #F5DBC2
+  }
+</style>

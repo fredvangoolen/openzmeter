@@ -144,77 +144,49 @@ void TariffsInterface::GetPricesCallback(HTTPRequest &req) {
   req.ExecSentence(Query.str().c_str());
 
   uint32_t Row = 0;
+  float Active = NAN;
+  float Reactive = NAN;  
   while(BillingFrom < BillingTo) {
     uint32_t Tariff = FindTariff(Tariffs, BillingFrom);
-    if(IsBillDate(Tariffs[Tariff], BillingFrom) == true) {
-      Bills.push_back(BillingFrom);
-      //Reinicio contadores y llamo a modulesReset
-      //LLamo a modulesProcessBillDate
+    if(Tariff != UINT32_MAX) {
+      if(IsBillDate(Tariffs[Tariff], BillingFrom) == true) {
+        Bills.push_back(BillingFrom);
+        //Reinicio contadores y llamo a modulesReset
+        //LLamo a modulesProcessBillDate
+      }
     }
-    
-    
-    Sampletimes.push_back(BillingFrom);
-    // Busco la potencia en el periodo que estoy procesando
-    float Active = NAN;
-    float Reactive = NAN;
-    if((Row < req.ResultRows()) && (strtoull(req.ResultValue(Row, "sampletime"), NULL, 10) == From)) {
-      Active   = atof(req.ResultValue(Row, "active_power"));
-      Reactive = atof(req.ResultValue(Row, "reactive_power"));
+    if((Row < req.ResultRows()) && (strtoull(req.ResultValue(Row, "sampletime"), NULL, 10) == (BillingFrom + 899999))) {
+      float Tmp = atof(req.ResultValue(Row, "active_power"));
+      Active = isnan(Active) ? Tmp / 4.0 : isnan(Tmp) ? Active : Active + Tmp / 4.0;
+      Tmp = atof(req.ResultValue(Row, "reactive_power"));
+      Reactive = isnan(Reactive) ? Tmp / 4.0 : isnan(Tmp) ? Reactive : Reactive + Tmp / 4.0;
       Row++;
+    }
+    if(Tariff != UINT32_MAX) {
+
+    
+    }
+    if(((Aggreg == "15M") || ((BillingFrom % 3600000) == 3599999)) && (BillingFrom > LastSample)) {
+      Sampletimes.push_back(BillingFrom);
       Actives.push_back(Active);
       Reactives.push_back(Reactive);
-    } else {
-      Actives.push_back(NAN);
-      Reactives.push_back(NAN);
-    }
-    //Busco la tarifa que cubre el rango y el tipo de periodo
-    uint32_t Tariff = UINT32_MAX;
-    uint8_t Period = UINT8_MAX;
-    for(uint32_t n = 0; n < Tariffs.size(); n++) {
-      if((Tariffs[n]["StartDate"] >= From) || (Tariffs[n]["EndDate"] < From)) continue;
-      Tariff = n;
-      for(uint32_t m = 0; m < Tariffs[n]["Details"]["Seasons"].size(); m++) {
-        if((Tariffs[n]["Details"]["Seasons"][m]["StartDate"] >= From) || (Tariffs[n]["Details"]["Seasons"][m]["EndDate"] < From)) continue;
-        uint8_t Hour   = (From / 3600000) % 24;
-        Period = Tariffs[n]["Details"]["Seasons"][m]["DayPeriods"][Hour];
-        break;
+      Active = NAN;
+      Reactive = NAN;
+      if(Tariff != UINT32_MAX) {
+        uint8_t Period = FindPeriod(Tariffs[Tariff], BillingFrom);
+        if(Period != UINT8_MAX) {
+          Periods.push_back("P" + to_string(Period));
+          Colors.push_back("#EEE");
+          Powers.push_back(Tariffs[Tariff]["Details"]["Periods"][Period - 1]["Contracted_Power"]);
+          Expenses.push_back(0.0);
+        } else {
+          Periods.push_back(NAN);
+          Colors.push_back("#ddd");
+          Powers.push_back(NAN);
+          Expenses.push_back(0.0);
+        }
       }
-      break;
     }
-    if(Period != UINT8_MAX) {
-      string PeriodName = "P" + to_string(Period);
-      Periods.push_back(PeriodName);
-      Colors.push_back("#ddd");
-      Powers.push_back(Tariffs[Tariff]["Details"]["Periods"][Period - 1]["Contracted_Power"]);
-      Expenses.push_back(0.0);
-    } else {
-      Periods.push_back(NAN);
-      Colors.push_back("#ddd");
-      Powers.push_back(NAN);
-      Expenses.push_back(0.0);
-    }
-////    if(Tariff != UINT32_MAX) Tools::LogMsg("INFO", "Tarifa encontrada para el rango\n");
-//    //Busco en las tarifas en cual de ellas cae el periodo en el que estoy    
-//    
-//    
-//    
-//      
-//    
-//    
-//    //float Active   = atof(db->ResultValue(i, "active_power"));
-////    float Reactive = atof(db->ResultValue(i, "reactive_power"));
-////    uint64_t Time  = strtoull(db->ResultValue(i, "sampletime"), NULL, 10);
-////    Tools::LogMsg("INFO", "Sampletime: %" PRIu64 ", Activa: %f, Reactiva: %f\n", Time, Active, Reactive);
-//
-//    
-//  //  busco tarifa aplicable en el periodo
-//  //  busco periodo del dia en el que estoy
-//  //  Es festivo ? es fin de semana?
-//  //  calculo coste de energia y otros factores para el bloque de 15 minutos
-//  //  Aplico configuracion de modulos adicionales
-//  //  Si he pedido agregacion de 15 minutos escupo datos y reinicio contadores, si es la de 1 hora y ha habido cambio de hora pues lo mismo
-//  //  
-//    
     BillingFrom += 900000;
   }
   Result["Sampletime"] = Sampletimes;
@@ -267,5 +239,15 @@ uint32_t TariffsInterface::FindTariff(json tariffs, uint64_t timestamp) {
   }
   return UINT32_MAX;
 }
+uint8_t TariffsInterface::FindPeriod(json tariff, uint64_t timestamp) {
+  uint8_t Period = UINT8_MAX;
+  for(uint8_t m = 0; m < tariff["Details"]["Seasons"].size(); m++) {
+    if((tariff["Details"]["Seasons"][m]["StartDate"] >= timestamp) || (tariff["Details"]["Seasons"][m]["EndDate"] < timestamp)) continue;
+    uint8_t Hour = (timestamp / 3600000) % 24;
+    return tariff["Details"]["Seasons"][m]["DayPeriods"][Hour];
+  }
+  return Period;
+}
 bool TariffsInterface::IsBillDate(json tariff, uint64_t timestamp) {
+  return false;
 }
