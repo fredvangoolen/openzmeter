@@ -128,8 +128,8 @@
         this.UpdateGraph();
       },
       ResizeHandler: function() {
-        if(typeof this.$refs.graphActive !== 'undefined') this.$refs.graphActive.Redraw('100%', $(this.$refs.countersActive).height());
-        if(typeof this.$refs.graphReactive !== 'undefined') this.$refs.graphReactive.Redraw('100%', $(this.$refs.countersReative).height());
+        if(typeof this.$refs.graphActive !== 'undefined') this.$refs.graphActive.Redraw('100%', $(this.$refs.activeCounters.$el).height());
+        if(typeof this.$refs.graphReactive !== 'undefined') this.$refs.graphReactive.Redraw('100%', $(this.$refs.reactiveCounters.$el).height());
       },
       MaximizeActiveClick: function() {
         $(window).unbind('resize', this.ResizeHandler);
@@ -188,26 +188,28 @@
             this.DateWindow = [result['From'], result['To']];
             this.To = this.$refs.tools.WriteTo(result['To']);
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
-            var Multiplier = (result["Aggregation_Source"] === '1H') ? 1.0 : 0.25;
+            var Multiplier = (result["Aggregation_Source"] === '1H') ? 1.0 : 4.0;
             for(var i = 0; i < result['Sampletime'].length; i++) {
               if((this.ActiveData.length === 0) || (this.ActiveData.slice(-1)[0][0] < result['Sampletime'][i])) {
                 this.ActiveData.push([result['Sampletime'][i], result['Active_Energy'][i] * Multiplier]);
                 this.ReactiveData.push([result['Sampletime'][i], result['Reactive_Energy'][i] * Multiplier]);
               }
             }
-              var OutActive = [];
-              var OutReactive = [];
-              for(var n = 0; n < this.ActiveData.length; n++) {
-                if((this.ActiveData[n][0] >= result['From']) && (this.ActiveData[n][0] <= result['To'])) {
-                  OutActive.push(this.ActiveData[n]);
-                  OutReactive.push(this.ReactiveData[n]);
-                }
+            var OutActive = [];
+            var OutReactive = [];
+            for(var n = 0; n < this.ActiveData.length; n++) {
+              if((this.ActiveData[n][0] >= result['From']) && (this.ActiveData[n][0] <= result['To'])) {
+                OutActive.push(this.ActiveData[n]);
+                OutReactive.push(this.ReactiveData[n]);
               }
-              this.ActiveData = OutActive;
-              this.ReactiveData = OutReactive;
-              this.$refs.graphReactive.SetOptions( { dateWindow: this.DateWindow, file: this.ReactiveData,/* valueRange: oZm.Series['FREQUENCY'].Range(this.Data, [true])*/ } );
-//            this.UpdateCounters(result['Aggregation_Source']);
-            
+            }
+            this.ActiveData = OutActive;
+            this.ReactiveData = OutReactive;
+            this.$refs.graphActive.SetOptions( { dateWindow: this.DateWindow, file: this.ActiveData,/* valueRange: oZm.Series['FREQUENCY'].Range(this.Data, [true])*/ } );
+            this.$refs.graphReactive.SetOptions( { dateWindow: this.DateWindow, file: this.ReactiveData,/* valueRange: oZm.Series['FREQUENCY'].Range(this.Data, [true])*/ } );
+            this.$refs.activeCounters.SetStats(this.DateWindow, this.ActiveData, result["Aggregation_Source"]);
+            this.$refs.reactiveCounters.SetStats(this.DateWindow, this.ReactiveData, result["Aggregation_Source"]);
+            this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
             this.ShowSpinner = false;
           }.bind(this),
           complete: function() {
@@ -243,56 +245,10 @@
   }
 </script>
 
-<style>
+<style scoped>
   .header-text {
     font-size: 24px;
     line-height: 16px;
-  }
-  .counters-phases {
-    text-align: left;
-    display: inline-block;
-    font-size: 12px;
-    line-height: 12px;
-    font-weight: bold;
-    padding-left: 2px;
-    border-left: 1px solid #f0ad4e;
-    margin-left: 5px;
-  }
-  .counters-title {
-    float: left;
-    text-align: left;
-    font-size: 16px;
-  }
-  .counters-aggreg {
-    float: right;
-    text-align: right;
-    font-size: 12px;
-  }
-  .counters-main-val {
-    font-size: 36px
-  }
-  .counters-stat-type {
-    text-align: left;
-    font-weight: bold;
-  }
-  .counters-stat-time {
-    font-size: 12px;
-    text-align: left;
-  }
-  .counters-stat-val {
-    font-size: 28px;
-    line-height: 37px;
-    float: right;
-  }
-  .current-value {
-    font-size: 36px;
-    display: inline-block;
-  }
-  .line {
-    clear: both;
-  }
-  .line-border {
-    border-top: 1px solid #FAE7CC;
   }
 </style>
 
