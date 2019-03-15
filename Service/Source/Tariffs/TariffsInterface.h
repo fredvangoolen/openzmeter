@@ -19,11 +19,14 @@ class TariffsInterface {
     typedef struct {
     
     } Holiday_t;
-    string Owner;
-    string Country;
+    uint64_t StartDate;
+    uint64_t EndDate;
+    string   Owner;
+    string   Country;
     vector<Period_t>  Periods;
     vector<Season_t>  Seasons;
     vector<Holiday_t> Holidays;
+    vector<uint64_t>  BillingCycles;
   private :
     static bool Registered;
   private :
