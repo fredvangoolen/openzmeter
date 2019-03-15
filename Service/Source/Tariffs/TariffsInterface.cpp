@@ -92,6 +92,7 @@ void TariffsInterface::SetTariffsCallback(HTTPRequest &req) {
 //  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
 }
 void TariffsInterface::GetPricesCallback(HTTPRequest &req) {
+  //Parse, check params and prepare result struct
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) {
     req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
@@ -114,25 +115,30 @@ void TariffsInterface::GetPricesCallback(HTTPRequest &req) {
     req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
     return;
   }  
-
   json Result;
-  Result["To"]     = To;
-  Result["From"]   = From;
+  Result["To"]                 = To;
+  Result["From"]               = From;
   Result["Aggregation_Source"] = Aggreg;
-  json Sampletimes = json::array();
-  json Actives     = json::array();
-  json Reactives   = json::array();
-  json Periods     = json::array();
-  json Colors      = json::array();
-  json Powers      = json::array();
-  json Bills       = json::array();
-  json Expenses    = json::array();
+  Result["Sampletime"]         = json::array();
+  Result["Active_Energy"]      = json::array();;
+  Result["Reactive_Energy"]    = json::array();;
+  Result["Period_Name"]        = json::array();;
+  Result["Period_Color"]       = json::array();;
+  Result["Contracted_Power"]   = json::array();;
+  Result["Expense"]            = json::array();;
 
+  //Load involved tariffs
   stringstream Query;
   Query << "SELECT to_json(array_agg(json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Details', details) ORDER BY startdate ASC)) FROM analyzers_rates WHERE serial = '" << Analyzer << "' AND enddate >= " << From << " AND startdate <= " << To;
   char *JSONText = req.ExecSentenceJSON(Query.str().c_str(), NULL);
-  json Tariffs;
-  if(JSONText != NULL) json::parse(JSONText);
+  json TariffsJSON = (JSONText == NULL) ? json::array() : json::parse(JSONText);
+  vector<TariffsInterface*> Tariffs;
+  for(uint32_t n = 0; n < TariffsJSON.size(); n++) {
+    TariffsInterface *Interface = FromJSON(TariffsJSON[n]);
+    if(Interface != NULL) Tariffs.push_back(Interface);
+  }
+  //Find start and end date to retrieve data
+
 
   uint64_t BillingFrom = BillStart(Tariffs, (From / PeriodSeconds) * PeriodSeconds);
 //  Result["BillingFrom"] = BillingFrom;
@@ -189,13 +195,7 @@ void TariffsInterface::GetPricesCallback(HTTPRequest &req) {
     }
     BillingFrom += 900000;
   }
-  Result["Sampletime"] = Sampletimes;
-  Result["Active_Energy"] = Actives;
-  Result["Reactive_Energy"] = Reactives;
-  Result["Period_Name"] = Periods;
-  Result["Period_Color"] = Colors;
-  Result["Contracted_Power"] = Powers;
-  Result["Expense"] = Expenses;
+
   req.FromJSON(Result);
   return;  
 }

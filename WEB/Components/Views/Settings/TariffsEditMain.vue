@@ -3,11 +3,11 @@
     <div class="modal-header">
       <div class="pull-left"><h4 class="modal-title">Tariffs template</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="$parent.Save" v-bind:class="{disabled: (Error != '')}"><img src="Imgs/diskette.png"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$parent.Save" v-bind:class="{disabled: (Error != '')}"><img :src="require('Imgs/diskette.png')"></button>
         <button type="button" class="btn btn-default btn-xs" @click="Periods">Periods</button>
         <button type="button" class="btn btn-default btn-xs" @click="Seasons">Seasons</button>
         <button type="button" class="btn btn-default btn-xs" @click="Holidays">Holidays</button>
-        <button type="button" class="btn btn-default btn-xs" @click="$parent.Close"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$parent.Close"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </div>
     <div class="modal-body">
