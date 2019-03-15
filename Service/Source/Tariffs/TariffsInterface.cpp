@@ -137,18 +137,33 @@ void TariffsInterface::GetPricesCallback(HTTPRequest &req) {
     TariffsInterface *Interface = FromJSON(TariffsJSON[n]);
     if(Interface != NULL) Tariffs.push_back(Interface);
   }
-  //Find start and end date to retrieve data
-
-
-  uint64_t BillingFrom = BillStart(Tariffs, (From / PeriodSeconds) * PeriodSeconds);
-//  Result["BillingFrom"] = BillingFrom;
-  uint64_t BillingTo = BillEnd(Tariffs, (To / PeriodSeconds) * PeriodSeconds + PeriodSeconds - 1);
-//  Result["BillingTo"] = BillingTo;
-
+  //Find start and end date to retrieve data (Billing date or requested if no tariff asigned)
+  uint64_t BillingFrom = (From / PeriodSeconds) * PeriodSeconds;
+  for(vector<TariffsInterface*>::iterator it = Tariffs.begin(); it != Tariffs.end(); it++) {
+    if(((*it)->StartDate >= BillingFrom) || ((*it)->StartDate < BillingFrom)) continue;
+    BillingFrom = (*it)->StartDate;
+    for(vector<uint64_t>::iterator c = (*it)->BillingCycles.begin(); c < (*it)->BillingCycles.end(); c++) {
+      if(*c > BillingFrom) break;
+      BillingFrom = *c;
+    }
+    break;
+  }
+  uint64_t BillingTo = (To / PeriodSeconds) * PeriodSeconds + PeriodSeconds - 1;
+  for(vector<TariffsInterface*>::iterator it = Tariffs.begin(); it != Tariffs.end(); it++) {
+    if(((*it)->StartDate >= BillingFrom) || ((*it)->StartDate < BillingFrom)) continue;
+    BillingTo = (*it)->EndDate;
+    for(vector<uint64_t>::reverse_iterator c = (*it)->BillingCycles.rbegin(); c < (*it)->BillingCycles.rend(); c++) {
+      if(*c < BillingTo) break;
+      BillingTo = *c;
+    }
+    break;
+  }
+  //Retrieve active and reactive samples
   Query.str("");
   Query << "SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power  FROM \"" << Analyzer << "\".aggreg_15m WHERE sampletime > " << BillingFrom << " AND sampletime <= " << BillingTo;
   req.ExecSentence(Query.str().c_str());
 
+  
   uint32_t Row = 0;
   float Active = NAN;
   float Reactive = NAN;  
@@ -198,46 +213,6 @@ void TariffsInterface::GetPricesCallback(HTTPRequest &req) {
 
   req.FromJSON(Result);
   return;  
-}
-uint64_t TariffsInterface::BillStart(json tariffs, uint64_t timestamp) {
-  uint32_t n = FindTariff(tariffs, timestamp);
-  uint64_t TariffStart = timestamp;
-  if(n != UINT32_MAX) {
-    TariffStart = tariffs[n]["StartDate"];
-    for(uint32_t i = 0; i < tariffs[n]["Details"]["BillindCycles"].size(); i++) {
-      uint64_t Date = tariffs[n]["Details"]["BillindCycles"][i];
-      if(Date > timestamp) {
-        return TariffStart;
-      } else {
-        TariffStart = Date;
-      }
-    }
-  }
-  return TariffStart;
-}
-uint64_t TariffsInterface::BillEnd(json tariffs, uint64_t timestamp) {
-  uint32_t n = FindTariff(tariffs, timestamp);
-  uint64_t TariffEnd = timestamp;
-  if(n != UINT32_MAX) {
-    TariffEnd = tariffs[n]["EndDate"];
-    for(uint32_t i = tariffs[n]["Details"]["BillindCycles"].size() - 1; i >= 0; i--) {
-      uint64_t Date = tariffs[n]["Details"]["BillindCycles"][i];
-      if(Date < timestamp) {
-        return TariffEnd;
-      } else {
-        TariffEnd = Date;
-      }
-    }
-  }
-  return TariffEnd;
-}
-uint32_t TariffsInterface::FindTariff(json tariffs, uint64_t timestamp) {
-  for(uint32_t n = 0; n < tariffs.size(); n++) {
-    uint64_t StartDate = tariffs[n]["StartDate"];
-    if((StartDate >= timestamp) || (StartDate < timestamp)) continue;
-    return n;
-  }
-  return UINT32_MAX;
 }
 uint8_t TariffsInterface::FindPeriod(json tariff, uint64_t timestamp) {
   uint8_t Period = UINT8_MAX;
