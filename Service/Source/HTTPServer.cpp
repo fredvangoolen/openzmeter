@@ -23,6 +23,7 @@ vector<HTTPServer::Callback_t>  HTTPServer::pCallbacks;
 //vector<HTTPServer::Mapping_t>   HTTPServer::pMappings;
 //----------------------------------------------------------------------------------------------------------------------
 HTTPRequest::HTTPRequest(const char *cookie, bool deflate) : Database(NULL) {
+  pStartTime = Tools::GetTime();
   pDeflate = deflate;
   if(deflate == true) {
     memset(&pDeflateObj, 0, sizeof(pDeflateObj));
@@ -53,7 +54,6 @@ uint32_t HTTPRequest::size() {
 void HTTPRequest::FromFile(string name) {
 #ifdef OZM_DEBUG
   string Path = "Resources/" + name;
-  Tools::LogMsg("INFO", "%s\n", Path.c_str());
   std::ifstream File(Path, ios::binary);
   pResultCode = MHD_HTTP_NOT_FOUND;
   if(File.is_open()) {
@@ -115,6 +115,9 @@ bool HTTPRequest::SetParams(string input, bool local) {
 }
 json HTTPRequest::GetParams() {
   return pJSONParams;
+}
+uint64_t HTTPRequest::GetTime() {
+  return Tools::GetTime() - pStartTime;
 }
 bool HTTPRequest::Deflate() {
   return pDeflate;
@@ -281,14 +284,15 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
           }
         }
       }
-	    *upload_data_size = 0;
-  	  return MHD_YES;
-	  } else {
+      *upload_data_size = 0;
+      return MHD_YES;
+    } else {
       MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &Request->WriteFunction, Request, NULL);
       if(strcmp(url, "/LogIn") == 0) {
         string Cookie = "SESSION=" + Request->SessionID() +"; httponly; Path=/";
         MHD_add_response_header(Response, MHD_HTTP_HEADER_SET_COOKIE, Cookie.c_str());
       }
+      MHD_add_response_header(Response, "Process-Time", string(to_string(Request->GetTime()) + " ms").c_str());
       MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_TYPE, Request->MimeType().c_str());
       MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_ENCODING, Request->Deflate() ? "deflate" : "");
       int Return = MHD_queue_response(connection, Request->ResultCode(), Response);

@@ -8,7 +8,7 @@
 #include <json-c/json.h>
 #include "AnalyzerInterface.h"
 #include "FFT.h"
-#include "TariffsInterface.h"
+#include "Tariff.h"
 #include "RingBuffer.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define ZEROCROSSING_FILTERSTAGES          5

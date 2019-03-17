@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS analyzers_rates(
   startdate bigint            NOT NULL,
   enddate   bigint            NOT NULL,
   config    jsonb             NOT NULL,
-  details   jsonb             NOT NULL
+  template  jsonb             NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS permisions(
