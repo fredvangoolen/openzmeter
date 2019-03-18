@@ -56,10 +56,12 @@
         this.$parent.$refs.Tariff.Load(this.Serial, row.RateID);
       },
       Delete: function(row) {
-        
+        //Elimino
+        this.Load(this.Serial);        
       },
       Add: function() {
-        
+        this.Show = false;
+        this.$parent.$refs.Tariff.Load(this.Serial, null);
       },
       Back: function() {
         this.Show = false;

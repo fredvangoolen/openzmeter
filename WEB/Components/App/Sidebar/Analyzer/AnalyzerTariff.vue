@@ -42,7 +42,20 @@
     methods: {
       Load: function(serial, id) {
         this.Serial = serial;
+        this.RateID = id;
         this.Show = true;
+        var Data = [];
+        this.$nextTick(function() {
+          $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
+            success: function(result) {
+              this.BaseTariffs = result;
+              for(var i = 0; i < result.length; i++) Data.push({ id: result[i].RateID, name: result[i].Name, description: 'From ' + moment(result[i].StartDate).format('DD/MM/YYYY') + ' to ' + moment(result[i].EndDate).format('DD/MM/YYYY')}); 
+              $(this.$refs.Base).bsSuggest( { hideOnSelect: true, effectiveFields: ['name', 'description'], showHeader: false, ignorecase: true, indexId: 0, indexKey: 1, data: { value: Data } } );
+              $(this.$refs.Base).on('onSetSelectValue', this.SelectBase.bind(this));
+              $(this.$refs.Base).on('onUnsetSelectValue', this.DeselectBase.bind(this));
+            }.bind(this)
+          });
+        });
       },
       SetStartDate: function() {
         
@@ -58,12 +71,12 @@
         this.$parent.$refs.Tariffs.Load(this.Serial);
       },
       SelectBase: function(e, keywork) {
-        alert(keywork.id);
-        $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Serial, RateID: 1 }), 
+        $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: keywork.id }), 
           success: function(result) {
             this.BaseTariff = result;
             this.Description = this.BaseTariff.Details.Description;
-
+            this.$refs.StartDate.SetDate(moment(this.BaseTariff.StartDate));
+            this.$refs.EndDate.SetDate(moment(this.BaseTariff.EndDate));
           }.bind(this)
 //hago la consulta para obtener periodos, y fechas de inicio y fin
     //Cargo los datepickers con las fechas        
@@ -86,18 +99,6 @@
     },
     created: function() {
       this.Serial = null;
-    },
-    mounted: function() {
-      var Data = [];
-      $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-        success: function(result) {
-          this.BaseTariffs = result;
-          for(var i = 0; i < result.length; i++) Data.push({ id: result[i].RateID, name: result[i].Name, description: 'From ' + moment(result[i].StartDate).format('DD/MM/YYYY') + ' to ' + moment(result[i].EndDate).format('DD/MM/YYYY')}); 
-          $(this.$refs.Base).bsSuggest( { hideOnSelect: true, effectiveFields: ['name', 'description'], showHeader: false, ignorecase: true, indexId: 0, indexKey: 1, data: { value: Data } } );
-          $(this.$refs.Base).on('onSetSelectValue', this.SelectBase.bind(this));
-          $(this.$refs.Base).on('onUnsetSelectValue', this.DeselectBase.bind(this));
-        }.bind(this)
-      });
     },
     destroyed: function() {
       $(this.$refs.Base).off('onSetSelectValue', this.SelectBase.bind(this));
