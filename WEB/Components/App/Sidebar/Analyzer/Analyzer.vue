@@ -8,6 +8,9 @@
       <analyzer-tariffs ref="Tariffs"></analyzer-tariffs>
       <analyzer-tariff ref="Tariff"></analyzer-tariff>
       <analyzer-tariff-periods ref="Periods"></analyzer-tariff-periods>
+      <analyzer-tariff-taxs ref="Periods"></analyzer-tariff-taxs>
+      <analyzer-acls ref="ACLs"></analyzer-acls>
+      <analyzer-acl ref="ACL"></analyzer-acl>
     </div>
   </div>
 </template>
@@ -18,7 +21,11 @@
   import AnalyzerConfigure from './AnalyzerConfigure.vue';
   import AnalyzerTariffs from './AnalyzerTariffs';
   import AnalyzerTariff from './AnalyzerTariff.vue';
+  import AnalyzerAcls from './AnalyzerACLs.vue';
+  import AnalyzerAcl from './AnalyzerACL.vue';
   import AnalyzerTariffPeriods from './AnalyzerTariffPeriods.vue';
+  import AnalyzerTariffTaxs from './AnalyzerTariffTaxs.vue';
+
   export default {
     data() {
       return { ShowDialog: false };
@@ -47,7 +54,7 @@
     destroyed: function() {
       this.$root.$el.removeChild(this.$el);
     },
-    components: { AnalyzerNotFound, AnalyzerTariffs, AnalyzerConfigure, AnalyzerTable, AnalyzerTariff, AnalyzerTariffPeriods, AnalyzerConfigure }
+    components: { AnalyzerNotFound, AnalyzerTariffs, AnalyzerConfigure, AnalyzerTable, AnalyzerTariff, AnalyzerTariffPeriods, AnalyzerConfigure, AnalyzerTariffTaxs, AnalyzerAcls, AnalyzerAcl }
   }
 </script>
 

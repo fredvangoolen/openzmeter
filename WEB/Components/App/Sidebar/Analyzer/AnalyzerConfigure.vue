@@ -3,11 +3,12 @@
     <div class="modal-header">
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Configuration</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save"></button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner }" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save"></button>
         <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </div>
     <div class="modal-body">
+      <spinner v-if="ShowSpinner"></spinner>
       <div class="row" id="divAnalyzersConfig">
         <div class="col-xs-12">
           <label class="control-label">Serial number</label>
@@ -55,13 +56,15 @@
 </template>
 
 <script>
+  import Spinner from 'Components/Spinner.vue';
   export default {
     data() {
-      return { Show: false };
+      return { Show: false, ShowSpinner: true };
     },
     methods: {
       Load: function(id) {
         this.Show = true;
+        this.ShowSpinner = true;
         this.$nextTick(function() {
 //          this.GetAnalyzers();
         });
@@ -73,7 +76,8 @@
         this.Show = false;
         this.$parent.$refs.Table.Load(); 
       }
-    }
+    },
+    components: { Spinner }
   }
 </script>
   

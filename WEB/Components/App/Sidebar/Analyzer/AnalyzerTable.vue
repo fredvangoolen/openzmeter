@@ -7,6 +7,7 @@
       </div>
     </div>
     <div class="modal-body">
+      <spinner v-if="ShowSpinner"></spinner>
       <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
@@ -30,10 +31,11 @@
 <script>
   import Vue from 'vue';
   import Vuetable from 'vuetable-2';
+  import Spinner from 'Components/Spinner.vue';
   export default {
     data() {
       return {
-        Show: false,
+        Show: false, ShowSpinner: true,
         Columns: [
           {name: 'Online', title: 'Online', callback: 'OnlineStatus'},
           {name: 'Name', title: 'Description'}, 
@@ -47,7 +49,8 @@
         $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
           success: function(result) { 
             var TableData = { data: result };
-            this.$refs.table.setData(TableData);        
+            this.$refs.table.setData(TableData);
+            this.ShowSpinner = false;
           }.bind(this)
         });
       },
@@ -56,6 +59,7 @@
       },
       Load: function(analyzers) {
         this.Show = true;
+        this.ShowSpinner = true;
         this.$nextTick(function() {
           this.GetAnalyzers();
         });
@@ -91,7 +95,7 @@
         alert("Maintenance not yet implemented");
       }
     },
-    components: { Vuetable }
+    components: { Vuetable, Spinner }
   }
 </script>
 
