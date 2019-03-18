@@ -821,30 +821,6 @@ export function Round2Plain(value) {
     return Integer.toString() + '.' + Fraction;
   }
 }
-//
-//function LoadAnalyzers() {
-//
-//  $('#btnAnalyzersConfigBack, #btnAnalyzersACLBack, #btnAnalyzersTariffsBack').click(function(event) {
-//    $('#dlgAnalyzers > div > div').addClass('hide');
-//    $('#divAnalyzers').removeClass('hide');
-//  });
-//  $('#tblAnalyzers').on('click', 'a', function(event) {
-//    event.preventDefault();
-//    if($(event.target).is('a')) {
-//      $('#dlgAnalyzers > div > div').addClass('hide');
-//      if($(event.target).parent('li').index() === 0) {
-//        $('#divAnalyzersConfig').removeClass('hide');
-//      } else if($(event.target).parent('li').index() === 1) {
-//        $('#divAnalyzersACL').removeClass('hide');        
-//      } else if($(event.target).parent('li').index() === 2) {
-//
-//      } else if($(event.target).parent('li').index() === 4) {
-//        $('#divAnalyzersMaintenance').removeClass('hide');
-//      }
-//    }
-//  });
-//  
-//}
 
 //function User_Manager() {
 //  var Self = this;
@@ -854,48 +830,6 @@ export function Round2Plain(value) {
 //  $('#btnUserEdit').click(Self.Edit);
 //};
 //function Analyzer_Manager() {
-//  var Self = this;
-//  Self.AddAnalyzers = function(result) {
-//    if(result.length === 0) return;
-//    $('#btnAnalyzerSearch').removeClass('disabled');
-//    Self.AvaliableAnalyzers = result;
-////    for(var i = 0; i < Self.AvaliableAnalyzers.length; i++) {
-////      var RowText = '<tr' + ((i === Self.CurrentAnalyzerIndex) ? ' class="info"' : '') + '>' +
-////                    '<td>' + ((result[i].Online === true) ? 'ONLINE' : 'OFFLINE') + '</td>' +
-////                    '<td>' + result[i].Name + '</td>' +
-////                    '<td>' + result[i].Mode + '</td>' +
-////                    '<td><div class="btn-group" data-analyzer="' + result[i].ID + '">' +
-////                    '<button type="button" class="btn btn-success btn-xs' + ((i === Self.CurrentAnalyzerIndex) ? ' disabled' : '') + '">Select</button><button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>' +
-////                    '<ul class="dropdown-menu pull-right"><li><a href="#">Configure</a></li><li><a href="#">ACL</a></li><li><a href="#">Tariff</a></li><li><a href="#">Alerts</a></li><li role="separator" class="divider"></li><li><a href="#">Maintenance</a></li></ul>' +
-////                    '</div></td>' +
-////                    '</tr>';
-////      Self.TableAnalyzers.row.add($(RowText)).draw();
-////    }
-//    if(Self.AvaliableAnalyzers[Self.CurrentAnalyzerIndex] === undefined) {
-//      if(Self.AvaliableAnalyzers.length !== 0) $('#dlgAnalyzers').modal('show');
-//      $('#NodeTime').text('Not connected!');
-//    } else {
-//      $('#labelAnalyzerName').text(Self.AvaliableAnalyzers[Self.CurrentAnalyzerIndex].Name);
-//      $('#AnalyzerMenu').removeClass('hide');
-//      $('#AnalyzerNavHeader').removeClass('hide');
-//      $('.indicator-bar').removeClass('hide');
-//      Self.GetIndicators();
-//      Self.GetIndicatorsB();
-//      Self.GetSysStats();
-//    }
-//  };
-//  Self.Search = function() {
-//    $('#dlgAnalyzers > div > div').addClass('hide');
-//    $('#divAnalyzers').removeClass('hide');
-//    $('#dlgAnalyzers').modal('show');
-//    Self.TableAnalyzers.columns.adjust();
-//  };
-//  Self.Configure = function(serial) {
-//    alert("Coinfigure not yet implemented!");
-//  };
-//  Self.ACL = function(serial) {
-//    alert("ACL not yet implemented!");
-//  };
 //  Self.Tariffs = function(serial) {
 //    $('#dlgAnalyzers > div > div').addClass('hide');
 //    $('#divAnalyzersTariff').removeClass('hide');
@@ -983,38 +917,6 @@ export function Round2Plain(value) {
 //    $("#inputAnalyzerTariffBase").on('onUnsetSelectValue', function (e) { Self.TariffUnselect(); });
 //    $('#divAnalyzersTariffEditSpinner').addClass('hide');
 //    Self.TariffValidate();
-//  };
-//  Self.TariffValidate = function() {
-//    $('#divAnalyzersTariffSuccess, #divAnalyzersTariffError').addClass('hide');
-//    $('#btnAnalyzersTariffSave').addClass('disabled');
-//    if($('#inputAnalyzerTariffBase').attr('data-id') == '') {
-//      $('#divAnalyzersTariffError').text('Choose a tariff base!').removeClass('hide');
-//      return;
-//    }
-//    var Overlap = false;
-//    for(var i = 0; i < Self.AvaliableTariffs.length; i++) {
-//      if(Self.OnEditTariff.RateID === Self.AvaliableTariffs[i].RateID) continue;
-//      if((Self.OnEditTariff.StartDate < Self.AvaliableTariffs[i].EndDate) && (Self.AvaliableTariffs[i].StartDate < Self.OnEditTariff.EndDate)) Overlap = true
-//    }
-//    if(Overlap) {
-//      $('#divAnalyzersTariffError').text('Defined tariff period overlaps with other assigned tariffs').removeClass('hide');
-//      return;
-//    }
-//    $('#divAnalyzersTariffSuccess').text('Tariff is correctly configured').removeClass('hide');
-//    $('#btnAnalyzersTariffSave').removeClass('disabled');
-//  };
-//  Self.TariffSave = function() {
-//    
-//  };  
-//  Self.Maintenance = function(serial) {
-//    alert("Maintenance not yet implemented!");
-//  };
-//  Self.GetSelected = function() {
-//    return Self.AvaliableAnalyzers[Self.CurrentAnalyzerIndex];
-//  };
-//  Self.SetSelected = function(index) {
-//    localStorage.setItem('SelAnalyzer', index);
-//    location.reload();
 //  };
 //  Self.GetSeries = function(period, to, aggreg, lastsample, series, onSuccess, onCompletion, onError) {
 //    return $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, erro: onError, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Self.GetSelected().ID } ) }); 

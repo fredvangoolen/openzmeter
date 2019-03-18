@@ -38,7 +38,7 @@
 <script>
   export default {
     data: function() {
-      return { Show: true, Periods: [1,2,3] };
+      return { Show: false, Periods: [1,2,3] };
     },
     methods: {
       Load: function(periods) {
