@@ -1,10 +1,10 @@
 <template>
-  <div class="modal" tabindex="1" role="dialog" data-backdrop="false">
+  <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog">
     <div class="modal-backdrop in"></div>
     <div class="modal-dialog">
-      <AnalyzerTable v-if="Frame == 'Table'" :analyzers="analyzers"></AnalyzerTable>
-      <AnalyzerNotFound v-if="Frame == 'NotFound'" :analyzers="analyzers"></AnalyzerNotFound>
-      <AnalyzerTariffs v-if="Frame == 'Tariffs'" :analyzers="analyzers"></AnalyzerTariffs>
+      <analyzer-table ref="Table"></analyzer-table>
+      <analyzer-not-found ref="NotFound"></analyzer-not-found>
+      <analyzer-tariffs ref="Tariffs"></analyzer-tariffs>
     </div>
   </div>
 </template>
@@ -15,24 +15,32 @@
   import AnalyzerConfigure from './AnalyzerConfigure.vue';
   import AnalyzerTariffs from './AnalyzerTariffs';
   export default {
-    props: ['analyzers'],
     data() {
-      return { Frame: null, EditingAnalyzerID: null };
+      return { ShowDialog: false };
     },
     methods: {
-      showTariffs(analyzer) {
-        this.EditingAnalyzerID = analyzer;
-        this.Frame = 'Tariffs';
-        alert(analyzer);
+      Show: function(analyzers) {
+        this.ShowDialog = true;
+        this.Analyzers = analyzers;
+        this.$nextTick(function() {     
+          if(analyzers.length === 0) {
+            this.$refs.NotFound.Load();
+          } else {
+            this.$refs.Table.Load(this.Analyzers);
+          }
+          $(this.$el).modal('show');
+        });
+      },
+      Close: function() {
+        $(this.$el).modal('hide');
+        this.ShowDialog = false;
       }
     },
     mounted: function() {
-      $(this.$el).modal('show');
-      if(this.$parent.AvaliableAnalyzers.length === 0) {
-        this.Frame = 'NotFound';
-      } else {
-        this.Frame = 'Table';
-      }
+      this.$root.$el.append(this.$el);
+    },
+    destroyed: function() {
+      this.$root.$el.removeChild(this.$el);
     },
     components: { AnalyzerNotFound, AnalyzerTariffs, AnalyzerConfigure, AnalyzerTable }
   }
