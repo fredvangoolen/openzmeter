@@ -14,9 +14,9 @@
         <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
           <template slot="actions" slot-scope="props">
             <div class="btn-group" style="width:100%">
-              <button class="btn btn-xs btn-default" @click="Duplicate(props.rowIndex, $event)">Duplicate</button>
-              <button class="btn btn-xs btn-default" @click="Edit(props.rowIndex, $event)">Edit</button>
-              <button class="btn btn-xs btn-danger" @click="Delete(props.rowIndex, $event)">Delete</button>
+              <button class="btn btn-xs btn-default" @click="Duplicate(props.rowIndex)">Duplicate</button>
+              <button class="btn btn-xs btn-default" @click="Edit(props.rowIndex)">Edit</button>
+              <button class="btn btn-xs btn-danger" @click="Delete(props.rowIndex)">Delete</button>
             </div>
           </template>
         </vuetable>
