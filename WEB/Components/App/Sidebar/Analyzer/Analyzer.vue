@@ -4,7 +4,10 @@
     <div class="modal-dialog">
       <analyzer-table ref="Table"></analyzer-table>
       <analyzer-not-found ref="NotFound"></analyzer-not-found>
+      <analyzer-configure ref="Configure"></analyzer-configure>
       <analyzer-tariffs ref="Tariffs"></analyzer-tariffs>
+      <analyzer-tariff ref="Tariff"></analyzer-tariff>
+      <analyzer-tariff-periods ref="Periods"></analyzer-tariff-periods>
     </div>
   </div>
 </template>
@@ -14,6 +17,8 @@
   import AnalyzerTable from './AnalyzerTable.vue';
   import AnalyzerConfigure from './AnalyzerConfigure.vue';
   import AnalyzerTariffs from './AnalyzerTariffs';
+  import AnalyzerTariff from './AnalyzerTariff.vue';
+  import AnalyzerTariffPeriods from './AnalyzerTariffPeriods.vue';
   export default {
     data() {
       return { ShowDialog: false };
@@ -26,7 +31,7 @@
           if(analyzers.length === 0) {
             this.$refs.NotFound.Load();
           } else {
-            this.$refs.Table.Load(this.Analyzers);
+            this.$refs.Table.Load();
           }
           $(this.$el).modal('show');
         });
@@ -42,7 +47,7 @@
     destroyed: function() {
       this.$root.$el.removeChild(this.$el);
     },
-    components: { AnalyzerNotFound, AnalyzerTariffs, AnalyzerConfigure, AnalyzerTable }
+    components: { AnalyzerNotFound, AnalyzerTariffs, AnalyzerConfigure, AnalyzerTable, AnalyzerTariff, AnalyzerTariffPeriods, AnalyzerConfigure }
   }
 </script>
 

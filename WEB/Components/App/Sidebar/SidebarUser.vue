@@ -8,11 +8,13 @@
       </div>
     </div>
     <user-logout v-if="showLogout" @close="showLogout = false"></user-logout>
+    <user-edit ref="UserEdit"></user-edit>
   </div>
 </template>
 
 <script>
   import UserLogout from './User/LogoutDialog.vue';
+  import UserEdit from './User/User.vue';
   export default {
     data() {
       return { UserName: '', showLogout: false };
@@ -34,7 +36,7 @@
         }
       }.bind(this));
     },
-    components: { UserLogout }
+    components: { UserLogout, UserEdit }
   }
 </script>
   

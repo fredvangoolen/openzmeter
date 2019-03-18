@@ -35,7 +35,7 @@
       return {
         Show: false,
         Columns: [
-          {name: 'Online', title: 'Online'},
+          {name: 'Online', title: 'Online', callback: 'OnlineStatus'},
           {name: 'Name', title: 'Description'}, 
           {name: 'ID', title: 'Serial'},
           {name: '__slot:actions', title: ''}
@@ -43,16 +43,26 @@
       };
     },
     methods: {
+      GetAnalyzers() {
+        $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
+          success: function(result) { 
+            var TableData = { data: result };
+            this.$refs.table.setData(TableData);        
+          }.bind(this)
+        });
+      },
+      OnlineStatus: function(value) {
+        return (value === true) ? '&#9635;' : '&#9633;';
+      },
       Load: function(analyzers) {
         this.Show = true;
         this.$nextTick(function() {
-          var TableData = { data: analyzers };
-          this.$refs.table.setData(TableData);
+          this.GetAnalyzers();
         });
       },
       CurrentlySelected: function(id) {
-        if(this.$root.SelectedAnalyzer == null) return false;
-        if(id.ID == this.$root.SelectedAnalyzer.ID) return true;
+        if(this.$root.SelectedAnalyzer === null) return false;
+        if(id.ID === this.$root.SelectedAnalyzer.ID) return true;
         return false;
       },
       Select: function(id) {
@@ -64,14 +74,15 @@
         });
       },
       Configure: function(id) {
-        alert("Configure not yet implemented"); 
+        this.Show = false;
+        this.$parent.$refs.Configure.Load(id.ID); 
       },
       ACL: function(id) {
         alert("ACL not yet implemented"); 
       },
       Tariffs: function(id) { 
         this.Show = false;
-        this.$parent.$refs.Tariffs.Load(id); 
+        this.$parent.$refs.Tariffs.Load(id.ID); 
       },
       Alerts: function(id) {
         alert("Alerts not yet implemented");
@@ -91,6 +102,7 @@
   }
   .table >>> td:nth-child(1) {
     text-align: center;
+    font-size: 14px;
   }
   .table >>> th:nth-child(3) {
     width: 180px;

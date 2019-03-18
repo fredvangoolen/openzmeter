@@ -3,8 +3,8 @@
     <div class="modal-header">
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Tariffs</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersTariffsAdd"><img src="Imgs/plus.png" alt="New tariff"></button>
-        <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersTariffsBack"><img src="Imgs/arrow_undo.png" alt="Discard"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="Add"><img src="Imgs/plus.png" alt="Add tariff"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="Back"><img src="Imgs/arrow_undo.png" alt="Back"></button>
       </div>
     </div>
     <div class="modal-body">
@@ -12,7 +12,7 @@
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
             <button type="button" class="btn btn-default btn-xs" v-on:click="Edit(props.rowData)">Edit</button>
-            <button type="button" class="btn btn-danger btn-xs" v-on:click="Edit(props.rowData)">Delete</button>
+            <button type="button" class="btn btn-danger btn-xs" v-on:click="Delete(props.rowData)">Delete</button>
           </div>
         </template>
       </vuetable>                  
@@ -25,7 +25,7 @@
   import moment from 'JS/moment.js';
   export default {
     data() {
-      return { Show: true,
+      return { Show: false,
         Columns: [
           {name: 'Name', title: 'Name'},
           {name: 'StartDate', title: 'Start date', callback: 'DateFormat'},
@@ -34,24 +34,54 @@
         ]
       };
     },
+    created: function() {
+      this.Serial = null;
+    },
     methods: {
+      DateFormat: function(val) {
+        return moment(val).format('DD/MM/YYYY');
+      },
       Load(id) {
         this.Show = true;
-        $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: id.ID }), 
+        this.Serial = id;
+        $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: id }), 
           success: function(result) {
             var TableData = { data: result };
             this.$refs.table.setData(TableData);
           }.bind(this)
         });
       },
-      DateFormat: function(val) {
-        return moment(val).format('DD/MM/YYYY');
+      Edit: function(row) {
+        this.Show = false;
+        this.$parent.$refs.Tariff.Load(this.Serial, row.RateID);
       },
+      Delete: function(row) {
+        
+      },
+      Add: function() {
+        
+      },
+      Back: function() {
+        this.Show = false;
+        this.$parent.$refs.Table.Load();
+      }
     },
     components: { vuetable }
   }
 </script>
   
-<style>
-
+<style scoped>
+  .table >>> th:nth-child(2), .table >>> th:nth-child(3)  {
+    width: 100px;
+    text-align: center;
+  }
+  .table >>> td:nth-child(2), .table >>> td:nth-child(3) {
+    text-align: center;
+  }
+  .table >>> th:nth-child(4) {
+    width: 94px;
+  }
+  .table >>> td:nth-child(4) {
+    text-align: right;
+  }
 </style>

@@ -1,10 +1,10 @@
 <template>
-  <div class="modal-content">
+  <div class="modal-content" v-if="Show">
     <div class="modal-header">
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Configuration</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersConfigSave"><img :src="require('Imgs/diskette.png')" alt="Save"></button>
-        <button type="button" class="btn btn-default btn-xs" id="btnAnalyzersConfigBack"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </div>
     <div class="modal-body">
@@ -56,9 +56,24 @@
 
 <script>
   export default {
-      data() {
-        return {};
-      } 
+    data() {
+      return { Show: false };
+    },
+    methods: {
+      Load: function(id) {
+        this.Show = true;
+        this.$nextTick(function() {
+//          this.GetAnalyzers();
+        });
+      },
+      Save: function() {
+        
+      },
+      Back: function() {
+        this.Show = false;
+        this.$parent.$refs.Table.Load(); 
+      }
+    }
   }
 </script>
   
