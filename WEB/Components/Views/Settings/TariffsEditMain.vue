@@ -21,12 +21,11 @@
           <div class="input-group">
             <input type="text" class="form-control" value="Spain" style="pointer-events: none" id="inputTariffCountry">
             <div class="input-group-btn-vertical">
-                    <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></button>
-                    <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></button>
+              <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></button>
+              <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></button>
             </div>
           </div>
         </div>
-        
         <div class="col-xs-12 col-sm-6"><label class="control-label">Start date</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetStartDate"></date-picker></div>
         <div class="col-xs-12 col-sm-6"><label class="control-label">End date</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetEndDate"></date-picker></div>
         <div class="col-xs-12"><label class="control-label">Description</label><textarea class="form-control" rows="5" ref="Description" style="resize: none"></textarea></div>

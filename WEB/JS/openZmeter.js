@@ -127,7 +127,20 @@ export var Series = {
     Units: 'var', 
     Link: '/Analysis/Power', 
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'var', Value: Round2(ScaleToUnits(val, Units)) }; },
-    rangeFunc: function() {} 
+    Range: function(values, phases) {
+      var UpperRange = -Infinity;
+      var LowerRange = 0;
+      for(var i = 0; i < values.length; i++) {
+        for(var n = 0; n < phases.length; n++) {
+          if((values[i][n + 1] === null) || (phases[n] === false)) continue;
+          if(values[i][n + 1] > UpperRange) UpperRange = values[i][n + 1];
+          if(values[i][n + 1] < LowerRange) LowerRange = values[i][n + 1];
+        }
+      }
+      UpperRange = (UpperRange === -Infinity) ? 1 : UpperRange * 1.12;
+      LowerRange = (LowerRange === 0) ? 0 : LowerRange - 1;
+      return [LowerRange, UpperRange];
+    }
   },
   'APPARENT_POWER': { 
     CSS_Class: '', 

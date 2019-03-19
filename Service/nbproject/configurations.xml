@@ -155,17 +155,18 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
             <pElem>Source/Devices/V2_00</pElem>
             <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>

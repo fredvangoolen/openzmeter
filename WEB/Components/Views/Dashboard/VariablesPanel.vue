@@ -85,6 +85,7 @@
       },
       SetAnalyzer() {
         this.LastSample = 0;
+        this.ShowSpinner = true;
         for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = [];
         this.UpdateBars();  
         this.UpdateNow();

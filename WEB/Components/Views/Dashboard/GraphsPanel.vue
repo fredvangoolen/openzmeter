@@ -55,7 +55,6 @@
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], From: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: 7200000 }), 
           success: function(result) {
-            this.ShowSpinner = false;
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             this.Data = oZm.GraphDataAppend(result, this.SerieProps.Serie, this.Data);
             this.LastValue = oZm.Array_Round2(result[this.SerieProps.Serie].slice(-1)[0], oZm.ColorArray($(this.$refs.panel).css('border-color'), 4));
@@ -63,6 +62,7 @@
             this.DateWindow = [result['From'], result['To']];
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
             if(this.Data.length > 0) this.CalcOptions();
+            this.ShowSpinner = false;
           }.bind(this),
           complete: function() {
             if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
@@ -91,11 +91,11 @@
       SetAnalyzer() {
         this.LastSample = 0;
         this.Data = [];
+        this.ShowSpinner = true;
         this.UpdateGraph();
       }
     },
     created: function() {
-      //Non reactive properties  
       this.Data = [];
       this.DateWindow = [0, 0];
       this.LastSample = 0;

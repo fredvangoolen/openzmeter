@@ -1,5 +1,5 @@
 <template>
-  <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog">
+  <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog" data-keyboard="false">
     <div class="modal-backdrop in"></div>
     <div class="modal-dialog">
       <analyzer-table ref="Table"></analyzer-table>
@@ -8,9 +8,9 @@
       <analyzer-tariffs ref="Tariffs"></analyzer-tariffs>
       <analyzer-tariff ref="Tariff"></analyzer-tariff>
       <analyzer-tariff-periods ref="Periods"></analyzer-tariff-periods>
-      <analyzer-tariff-taxs ref="Periods"></analyzer-tariff-taxs>
-      <analyzer-acls ref="ACLs"></analyzer-acls>
-      <analyzer-acl ref="ACL"></analyzer-acl>
+      <analyzer-tariff-taxs ref="Taxs"></analyzer-tariff-taxs>
+      <!--analyzer-acls ref="ACLs"></analyzer-acls>
+      <analyzer-acl ref="ACL"></analyzer-acl-->
     </div>
   </div>
 </template>
