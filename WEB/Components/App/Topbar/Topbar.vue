@@ -2,7 +2,7 @@
   <div>
     <div class="navbar-header">
       <div class="navbar-brand">
-        <embed :src="require('Imgs/Logo2.svg')" type="image/svg+xml"/><br/>
+        <img :src="require('Imgs/Logo.png')">
         <div>Node time: {{ time }}</div>
       </div>
       <button type="button" class="navbar-toggle"><img :src="require('Imgs/application_menu.png')"></button>
@@ -52,7 +52,10 @@ export default {
 }
 </script>
  
-<style>
+<style scoped>
+  img {
+    margin: 0px 0px 4px 0px;
+  }
   .navbar-brand > embed {
     width: 100%;
   }
