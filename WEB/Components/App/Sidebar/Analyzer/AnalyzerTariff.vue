@@ -1,11 +1,11 @@
 <template>
-  <div class="modal-content" v-if="Show">
+  <div class="modal-content" v-bind:class="{ hide: !Show }">
     <div class="modal-header">
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Tariffs &raquo; Edit</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Tariff == null) }" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save tariff"></button>
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Tariff == null) }" @click="Save">Periods</button>
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Tariff == null) }" @click="Save">Taxs</button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save tariff"></button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" @click="Periods">Periods</button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" @click="Taxs">Taxs</button>
         <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </div>
@@ -44,15 +44,32 @@
       LoadCurrent: function() {
         $(this.$refs.Base).attr('data-id', 'CURRENT');
         $(this.$refs.Base).val(this.Tariffs[0].name);
-        this.Description = this.InitialTemplate.Description;
+        this.Tariff.Template = Object.assign({}, this.Initial.Template);
+        this.Tariff.Name = this.Initial.Name;
       },
       SetTariffs: function() {
         $(this.$refs.Base).bsSuggest( { hideOnSelect: true, effectiveFields: ['name', 'description'], showHeader: false, ignorecase: true, indexId: 0, indexKey: 1, data: { value: this.Tariffs } } );
         $(this.$refs.Base).on('onSetSelectValue', this.SelectBase.bind(this));
         $(this.$refs.Base).on('onUnsetSelectValue', this.DeselectBase.bind(this));
-        if(this.InitialTemplate !== null) this.LoadCurrent();
+        if(this.Initial !== null) this.LoadCurrent();
         this.Validate();
         this.ShowSpinner = false;
+      },
+      Save: function() {
+//        alert("guardar no terminado!!");
+//        TariffDefinition.Name = $('#inputTariffName').val();
+//  TariffDefinition.Details.Description = $('#inputTariffComments').val();
+//  if(TariffKey !== null) TariffDefinition.RateID = TariffKey;
+        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign(this.Tariff, { RateID: this.RateID, Analyzer: this.Serial }) ), 
+          success: function() {
+            this.Close();
+            this.$parent.GetTariffs();
+          }.bind(this),
+          error: function() {
+            this.Error = 'Failed to save tariff to analyzer!';
+            setTimeout(function() { this.Error = ''; }.bind(this), 1000); 
+          }.bind(this)
+        });
       },
       Load: function(serial, id) {
         this.Serial = serial;
@@ -66,15 +83,19 @@
               if(id !== null) {
                 $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Serial, RateID: id }), 
                   success: function(result) {
-                    this.InitialTemplate = result.Template;
-                    this.Tariff = result;
+                    this.Initial = result;
+                    this.Tariff = Object.assign({}, result);
+                    this.$refs.StartDate.SetDate(moment(this.Tariff.StartDate));
+                    this.$refs.EndDate.SetDate(moment(this.Tariff.EndDate));
                     this.Tariffs.unshift({ id: 'CURRENT', name: '(*) ' + result.Name, description: 'From ' + moment(result.StartDate).format('DD/MM/YYYY') + ' to ' + moment(result.EndDate).format('DD/MM/YYYY')});
                     this.SetTariffs();
                   }.bind(this)
                 });
               } else {
-                this.InitialTemplate = null;
+                this.Initial.Template = null;
                 this.Tariff = { Template: { Description: '' }};
+                this.$refs.StartDate.Disable();
+                this.$refs.EndDate.Disable();
                 this.SetTariffs();
               }
             }.bind(this)
@@ -82,74 +103,64 @@
         });
       },
       Validate: function() {
-//    $('#divAnalyzersTariffSuccess, #divAnalyzersTariffError').addClass('hide');
-//    $('#btnAnalyzersTariffSave').addClass('disabled');
-//    if($('#inputAnalyzerTariffBase').attr('data-id') == '') {
-//      $('#divAnalyzersTariffError').text('Choose a tariff base!').removeClass('hide');
-//      return;
-//    }
-//    var Overlap = false;
-//    for(var i = 0; i < Self.AvaliableTariffs.length; i++) {
-//      if(Self.OnEditTariff.RateID === Self.AvaliableTariffs[i].RateID) continue;
-//      if((Self.OnEditTariff.StartDate < Self.AvaliableTariffs[i].EndDate) && (Self.AvaliableTariffs[i].StartDate < Self.OnEditTariff.EndDate)) Overlap = true
-//    }
-//    if(Overlap) {
-//      $('#divAnalyzersTariffError').text('Defined tariff period overlaps with other assigned tariffs').removeClass('hide');
-//      return;
-//    }
-//    $('#divAnalyzersTariffSuccess').text('Tariff is correctly configured').removeClass('hide');
-//    $('#btnAnalyzersTariffSave').removeClass('disabled');
+        this.Error = '';
+        if(this.Tariff.StartDate < this.Tariff.Template.Seasons[0].StartDate) {
+          this.Error = 'Date ranges is outside selected tariff ranges';
+          return;
+        }
+        if(this.Tariff.EndDate > this.Tariff.Template.Seasons.slice(-1)[0].EndDate) {
+          this.Error = 'Date ranges is outside selected tariff ranges';
+          return;
+        }
       },
-      SetStartDate: function() {
-        
+      SetStartDate: function(date) {
+        this.Tariff.StartDate = date.startOf('day').valueOf();
+        this.Validate();
       },
-      SetEndDate: function() {
-        
-      },
-      Save: function() {
-        
+      SetEndDate: function(date) {
+        this.Tariff.EndDate = date.endOf('day').valueOf();
+        this.Validate();
       },
       Back: function() {
         this.Show = false;
         this.$parent.$refs.Tariffs.Load(this.Serial);
       },
       SelectBase: function(e, keywork) {
+        this.$refs.StartDate.Enable();
+        this.$refs.EndDate.Enable();
         if(keywork.id === 'CURRENT') {
           this.LoadCurrent();
+          this.Validate();
         } else {
           this.ShowSpinner = true;
           $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: keywork.id }), 
             success: function(result) {
               this.Tariff.Template = result.Details;
               this.Tariff.Name = result.Name;
-//              this.$refs.StartDate.SetDate(moment(this.BaseTariff.StartDate));
-//              this.$refs.EndDate.SetDate(moment(this.BaseTariff.EndDate));
+              this.Validate();
               this.ShowSpinner = false;
             }.bind(this)
-  //hago la consulta para obtener periodos, y fechas de inicio y fin
-      //Cargo los datepickers con las fechas        
-  //            Self.OnEditTariff = Self.OnEditTariffCurrent;
-  //    if(id !== 'CURRENT') $.ajax({ url: "getTariffs", timeout: 20000, async: false, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: parseInt(id) }), success: function(result) { Self.OnEditTariff = result; } });
-  //    Self.OnEditTariff.RateID = (Self.OnEditTariffCurrent !== null) ? Self.OnEditTariffCurrent.RateID : null;
-  //    $('#inputAnalyzerTariffStartDate').data("DateTimePicker").enable();
-  //    $('#inputAnalyzerTariffEndDate').data("DateTimePicker").enable();
-  //    $('#inputAnalyzerTariffStartDate').data("DateTimePicker").date(moment(Self.OnEditTariff.StartDate));
-  //    $('#inputAnalyzerTariffEndDate').data("DateTimePicker").date(moment(Self.OnEditTariff.EndDate));
-  //    
-
-  //    Self.TariffValidate();
           });
         }
-        this.Validate();
       },
       DeselectBase: function(e) {
-        alert("unselect");    
+        this.$refs.StartDate.Disable();
+        this.$refs.EndDate.Disable();
+        this.Error = 'Select a base tariff from list';
+      },
+      Periods: function() {
+        this.Show = false;
+        this.$parent.$refs.Periods.Load(this.Tariff);
+      },
+      Taxs: function() {
+        this.Show = false;
+        this.$parent.$refs.Taxs.Load(this.Tariff);
       }
     },
     created: function() {
       this.Serial = null;
       this.Tariffs = [];
-      this.InitialTemplate = null;
+      this.Initial = null;
     },
     destroyed: function() {
       $(this.$refs.Base).off('onSetSelectValue', this.SelectBase.bind(this));

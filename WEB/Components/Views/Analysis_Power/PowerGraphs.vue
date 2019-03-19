@@ -22,8 +22,8 @@
     <div class="panel panel-reactive-power" id="ReactivePowerPanel">
       <div class="panel-heading" id="ReactivePowerPanel">
         <div class="header-text">Fund. Reactive Power</div>
-        <div class="pull-right btn-group">
-          <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="$emit('ExportClick')" v-on:MaximizeClick="MaximizeReactiveClick" v-on:MinimizeClick="MinimizeClick"></toolbar-tools>
+        <div class="header-buttons clearfix" ref="ToolbarReactive">
+          <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="$emit('ExportClick')" v-on:MaximizeClick="MaximizeReactiveClick" v-on:MinimizeClick="MinimizeClick" ref="reactiveTools"></toolbar-tools>
         </div>
       </div>
       <div class="panel-body">
@@ -68,8 +68,8 @@
         labels: ['Time', 'Frequency'], zoomCallback: this.ZoomEvt.bind(this), interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt.bind(this), dblclick: this.DoubleClickEvt.bind(this) }, colors: [oZm.Series['FREQUENCY'].Color], xAxisHeight: 24, 
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { return oZm.Round3(x) + ' <em class="x-small">Hz</em>'; },
-               axisLabelFormatter: function (x) { return oZm.Round3(x); }
+               valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
+               axisLabelFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value; }
              },
           x: { axisLabelFormatter: function(x) { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); },
                valueFormatter: function (x) { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); }
@@ -81,8 +81,8 @@
         labels: ['Time', 'Frequency'], zoomCallback: this.ZoomEvt.bind(this), interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt.bind(this), dblclick: this.DoubleClickEvt.bind(this) }, colors: [oZm.Series['FREQUENCY'].Color], xAxisHeight: 24, 
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { return oZm.Round3(x) + ' <em class="x-small">Hz</em>'; },
-               axisLabelFormatter: function (x) { return oZm.Round3(x); }
+               valueFormatter: function (x) {  var Result = oZm.Series['REACTIVE_POWER'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
+               axisLabelFormatter: function (x) { var Result = oZm.Series['REACTIVE_POWER'].FormatValue(x); return Result.Value;  }
              },
           x: { axisLabelFormatter: function(x) { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); },
                valueFormatter: function (x) { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); }
@@ -137,7 +137,7 @@
       },
       MaximizeReactiveClick: function() {
         $(window).unbind('resize', this.ResizeHandler);
-        this.$refs.tools.Maximize('Fund. Reactive Power', this.$refs.graphReactive.Graph, this.$refs.ToolbarReactive);
+        this.$refs.reactiveTools.Maximize('Fund. Reactive Power', this.$refs.graphReactive.Graph, this.$refs.ToolbarReactive);
       },
       MinimizeClick: function() {
         $(window).bind('resize', this.ResizeHandler.bind(this));
@@ -205,8 +205,8 @@
             }
             this.ActiveData = OutActive;
             this.ReactiveData = OutReactive;
-            this.$refs.graphActive.SetOptions( { dateWindow: this.DateWindow, file: this.ActiveData,/* valueRange: oZm.Series['FREQUENCY'].Range(this.Data, [true])*/ } );
-            this.$refs.graphReactive.SetOptions( { dateWindow: this.DateWindow, file: this.ReactiveData,/* valueRange: oZm.Series['FREQUENCY'].Range(this.Data, [true])*/ } );
+            this.$refs.graphActive.SetOptions( { dateWindow: this.DateWindow, file: this.ActiveData, valueRange: oZm.Series['ACTIVE_POWER'].Range(this.ActiveData, [true]) } );
+            this.$refs.graphReactive.SetOptions( { dateWindow: this.DateWindow, file: this.ReactiveData, valueRange: oZm.Series['REACTIVE_POWER'].Range(this.ReactiveData, [true]) } );
             this.$refs.activeCounters.SetStats(this.DateWindow, this.ActiveData, result["Aggregation_Source"]);
             this.$refs.reactiveCounters.SetStats(this.DateWindow, this.ReactiveData, result["Aggregation_Source"]);
             this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });

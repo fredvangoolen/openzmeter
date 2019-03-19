@@ -11,41 +11,40 @@
         <div class="col-xs-12">
           <table>
             <tr><td></td><td><strong>Contracted power <em>(kW)</em></strong></td><td><strong>Power costs <em>(€/kW/day)</em></strong></td><td><strong>Power costs <em>(€/kWh/day)</em></strong></td></tr>
-            <tr v-for="(period, idx) in Periods">
+            <tr v-for="(period, idx) in Tariff.Config.Periods">
                 <td><strong>P{{idx + 1}}</strong></td>
-                <td><div class="input-group input-group-xs"><input type="text" class="form-control" value="0.0"></div></td>
-                <td><div class="input-group input-group-xs"><input type="text" class="form-control" value="0.0"></div></td>
-                <td><div class="input-group input-group-xs"><input type="text" class="form-control" value="0.0"></div></td>
+                <td><div class="input-group input-group-xs"><input type="text" class="form-control" @change="ItemChanged($event, 'Contracted_Power', idx)" :value="period.Contracted_Power"></div></td>
+                <td><div class="input-group input-group-xs"><input type="text" class="form-control" @change="ItemChanged($event, 'Power_Cost', idx)" :value="period.Power_Cost"></div></td>
+                <td><div class="input-group input-group-xs"><input type="text" class="form-control" @change="ItemChanged($event, 'Energy_Cost', idx)" :value="period.Energy_Cost"></div></td>
               </tr>
           </table>
         </div>
       </div>
     </div>
-            <div class="col-xs-12 hide">
-              <label class="control-label">IVA</label>
-              <div class="input-group">
-                <input type="text" class="form-control">
-                <span class="input-group-addon">%</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
   </div>
-  
 </template>
 
 <script>
   export default {
     data: function() {
-      return { Show: false, Periods: [1,2,3] };
+      return { Show: false, Tariff: {} };
     },
     methods: {
-      Load: function(periods) {
-        
+      Load: function(tariff) {
+        tariff.Config.Periods.length = tariff.Template.Periods.length;
+        for(var n = 0; n < tariff.Template.Periods.length; n++) tariff.Config.Periods[n] = Object.assign({ Contracted_Power: 0.0, Energy_Cost: 0.0, Power_Cost: 0.0 }, tariff.Config.Periods[n]);
+        this.Tariff = tariff;
+        this.Show = true;
       },
       Back: function() {
-        
+        this.Show = false;
+        this.$parent.$refs.Tariff.Show = true;
+      },
+      ItemChanged(value, type, idx) {
+        var Value = parseFloat(value.target.value);
+        if(isNaN(Value) === true) Value = 0.0;
+        this.Tariff.Config.Periods[idx][type] = Value;
+        this.Tariff = Object.assign({}, this.Tariff);
       }
     }
   }
@@ -57,5 +56,8 @@
   }
   table tr td {
     padding: 1px 3px;
+  }
+  input, td {
+    text-align: right;
   }
 </style>

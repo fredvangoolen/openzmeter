@@ -17,6 +17,12 @@
     methods: {
       SetDate(date) {
         $(this.$el).data("DateTimePicker").options({ defaultDate: date });
+      },
+      Disable() {
+        $(this.$el).data("DateTimePicker").disable();
+      },
+      Enable() {
+        $(this.$el).data("DateTimePicker").enable();
       }
     },
     mounted: function() {

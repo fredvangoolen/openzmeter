@@ -235,7 +235,7 @@ void DeviceInterface::GetTariffsCallback(HTTPRequest &req) {
     if(!Params["RateID"].is_number()) {
       Query << "SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') from analyzers_rates WHERE serial = '" << Params["Analyzer"].get<string>() << "'";
     } else {
-      Query << "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template) from analyzers_rates where rate = " << Params["RateID"].get<uint32_t>();
+      Query << "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) from analyzers_rates where rate = " << Params["RateID"].get<uint32_t>();
     }  
   }
   char *Tmp = req.ExecSentenceJSON(Query.str().c_str(), NULL);
