@@ -22,7 +22,7 @@
           <div class="modal-header">
             <h4 class="modal-title">Aggregation change</h4>
             <div class="pull-right">
-              <button type="button" class="btn btn-default btn-xs" @click="showDialog = false"><img src="Imgs/arrow_undo.png"></button>
+              <button type="button" class="btn btn-default btn-xs" @click="showDialog = false"><img :src="require('Imgs/arrow_undo.png')"></button>
             </div>
           </div>
           <div class="modal-body">

@@ -3,8 +3,8 @@
     <div class="modal-header">
       <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Holidays</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Add"><img src="Imgs/plus.png" alt="New holiday"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="Back"><img src="Imgs/arrow_undo.png" alt="Go back"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="New holiday"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
       </div>
     </div>
     <div class="modal-body">

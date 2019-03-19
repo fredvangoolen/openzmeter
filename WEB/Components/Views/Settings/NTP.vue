@@ -4,7 +4,7 @@
       <div class="huge-small header-text">System time</div>
       <div class="header-buttons">
         <div class="btn-group">
-          <button type="button" class="btn btn-default btn-xs disabled" data-toggle="tooltip" id="btnNTPSave" title="Save changes"><img src="Imgs/diskette.png"> Save</button>
+          <button type="button" class="btn btn-default btn-xs disabled" data-toggle="tooltip" id="btnNTPSave" title="Save changes"><img :src="require('Imgs/diskette.png')"> Save</button>
         </div>
       </div>
     </div>
