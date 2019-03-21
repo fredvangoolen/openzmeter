@@ -125,7 +125,8 @@ export var Series = {
     Title: 'Fund. Reactive Power', 
     Serie: 'Reactive_Power', 
     Units: 'var', 
-    Link: '/Analysis/Power', 
+    Link: '/Analysis/Power',
+    Color:  '#DF842A',
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'var', Value: Round2(ScaleToUnits(val, Units)) }; },
     Range: function(values, phases) {
       var UpperRange = -Infinity;
@@ -502,12 +503,13 @@ export function GetAggregLongName(shortText) {
 //}
 ///* append samples of given series to array of graph data, and shift if needed */
 export function GraphDataAppend(result, serie, data) {
+  var Out = data;
   if(result['Sampletime'] !== null && result['Sampletime'].length > 0) {
     if((data.length === 0) || data[data.length - 1][0] < result['Sampletime'][0]) {
       for(var i = 0; i < result['Sampletime'].length; i++) {
         data.push([new Date(result['Sampletime'][i])].concat(result[serie][i]));
       }
-      var Out = [];
+      Out = [];
       for(var n = 0; n < data.length; n++) {
         if((data[n][0] >= result['From']) && (data[n][0] <= result['To'])) Out.push(data[n]);
       }

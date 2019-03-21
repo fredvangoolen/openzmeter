@@ -229,13 +229,13 @@ void DeviceInterface::GetTariffsCallback(HTTPRequest &req) {
     if(!Params["RateID"].is_number()) {
       Query << "SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username))), '[]') from rates";
     } else {
-      Query << "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = " << Params["RateID"].get<uint32_t>();
+      Query << "SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = " << Params["RateID"].get<uint32_t>();
     }  
   } else {
     if(!Params["RateID"].is_number()) {
       Query << "SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') from analyzers_rates WHERE serial = '" << Params["Analyzer"].get<string>() << "'";
     } else {
-      Query << "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) from analyzers_rates where rate = " << Params["RateID"].get<uint32_t>();
+      Query << "SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) from analyzers_rates where rate = " << Params["RateID"].get<uint32_t>();
     }  
   }
   char *Tmp = req.ExecSentenceJSON(Query.str().c_str(), NULL);
@@ -243,13 +243,32 @@ void DeviceInterface::GetTariffsCallback(HTTPRequest &req) {
 }
 void DeviceInterface::SetTariffsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
+  if(Params["Analyzer"].is_string() && Params["RateID"].is_number_unsigned()) {
+    //Como solo estoy
+    //Quiero guardar la tarifa existente a un analyzador
+    //La tarifa se añade con el propietario que llama
+    //Hace falta pais, que debe de estar en la lista de paises
+    Tariff *T = Tariff::FromJSON(0, 100, Params["Details"]);
+    if(T != NULL) {
+      //req.PrepareSentence("INSERT INTO rates(rate, name, username, country_code, details, startdate, enddate) VALUES(";
+
+      delete T;
+    }
+  } else if(Params["Analyzer"].is_string() && Params["RateID"].is_null()) {
+    //Lo mismo de antes, pero creando un elemento nuevo a la tarifa
+  } else if(Params["Analyzer"].is_null() && Params["RateID"].is_number_unsigned()) {
+    //Necesito inicio, fin, usuario, pais, name
+  } else if(Params["Analyzer"].is_null() && Params["RateID"].is_null()) {
+    //
+  } else {}
   stringstream Query;
   if(!Params["Analyzer"].is_string()) {
     Query << "INSERT INTO rates(rate, name, username, country_code, details, startdate, enddate) VALUES(";
-    if(Params["RateID"] == NULL) 
+    if(Params["RateID"] == NULL) {
       Query << "null, ";
-    else
+    } else {
       Query << Params["RateID"] << ", ";
+    }
     Query << "'" << Params["Name"].get<string>() << "', ";
     Query << "'" << Params["Owner"].get<string>() << "', ";
     Query << "'" << Params["CountryCode"].get<string>() << "', ";

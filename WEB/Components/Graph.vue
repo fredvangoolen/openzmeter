@@ -12,7 +12,7 @@
     methods: {
       SetOptions: function(options) {
         this.Options = Object.assign({}, this.Options, options);
-        this.Graph.updateOptions(this.Options);
+        if(this.Graph !== null) this.Graph.updateOptions(this.Options);
       },
       SetData: function(data) {
         this.Options = Object.assign({}, this.Options, { file: data });

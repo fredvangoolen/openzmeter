@@ -2,7 +2,7 @@
   <div>
     <div class="subpanel clearfix">
       <div class="counters-title">Last value:</div>
-      <div class="counters-aggreg">From 3s seconds aggregation<br>{{ Time3S }}</div>
+      <div class="counters-aggreg">From 3 seconds aggregation<br>{{ Time3S }}</div>
       <div class="clearfix"></div>
       <div>
         <div class="current-value" v-html="CurrentValue3S"></div>
