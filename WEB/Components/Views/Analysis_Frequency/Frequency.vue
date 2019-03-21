@@ -110,6 +110,7 @@
     methods: {
       SetAnalyzer: function() {
         this.LastSample = 0;
+        this.$refs.graph.SetOptions( { file: [] } );
         this.UpdateGraph();
         this.NowValue();
       },
@@ -146,6 +147,7 @@
         this.$refs.tools.SaveCVS('Frequency.csv', [['Time', 'Frequency']].concat(this.Data));
       },
       NowValue: function() {
+        if(this.NowTimer !== null) clearInterval(this.NowTimer);    
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['FREQUENCY'], To: 0, Aggreg: '3S', Period: 5000, Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
@@ -214,8 +216,7 @@
         this.$refs.tools.BeginUpdate();
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: this.Aggreg, Series: ['FREQUENCY'], To: this.To, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: this.Period }), 
           success: function(result) {
-            if(result['Sampletime'] === null) return;
-            if(result['Sampletime'].length === 0) return;
+            if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             this.Data = oZm.GraphDataAppend(result, 'Frequency', this.Data);
             this.DateWindow = [result['From'], result['To']];
             this.To = this.$refs.tools.WriteTo(result['To']);

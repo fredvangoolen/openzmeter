@@ -16,10 +16,10 @@
       this.Index = parseInt(localStorage.getItem(this.variable));
       if((this.Index < 0) || (this.Index >= this.tabs.length) || (isNaN(this.Index) === true)) this.Index = 0;
       localStorage.setItem(this.variable, this.Index);
-      this.$emit('TabChange', this.Index, this.tabs[this.Index]);
     },
     mounted: function() {
       $(this.$el).scrollingTabs({ tabClickHandler: this.TabChange });
+      this.$emit('TabChange', this.Index, this.tabs[this.Index]);
     },
     methods: {
       TabChange: function(sender) {

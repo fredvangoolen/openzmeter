@@ -5,12 +5,12 @@
         <div class="header-buttons" ref="Toolbar">
           <toolbar-phases variable="DetailsPhaseMulti" :multi="true" v-on:PhasesChanged="SetPhases"></toolbar-phases>
           <toolbar-options variable="DetailOptions" :options="['Current']" v-on:OptionChanged="SetOption"></toolbar-options>
-          <toolbar-tools variable="To" ref="Tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']"></toolbar-tools>
+          <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools>
         </div>
       </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <div ref="Graph" class="chart big_chart"></div>
+      <graph ref="graph" :options="{}"></graph>
     </div>
   </div>
 </template>
@@ -20,6 +20,7 @@
   import moment from 'JS/moment.js';
   import Dygraph from 'JS/dygraph.js';
   import Spinner from 'Components/Spinner.vue';
+  import Graph from 'Components/Graph.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarOptions from 'Components/ToolbarOptions.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
@@ -35,10 +36,9 @@
       return { ShowSpinner: true, Time: 'Loading data...', Graph: null, Data: null, VoltagePhases: null, ShowCurrent: null };
     },
     methods: {
-      Redraw() {
-        this.$nextTick(function() {    
-          $(this.Graph.graphDiv).parent().removeAttr('style');
-          window.dispatchEvent(new Event('resize'));
+      Redraw: function() {
+        this.$nextTick(function() {
+          this.$refs.graph.Redraw('100%', '300');
         });
       },
       SetPhases: function(phases) {
@@ -49,7 +49,7 @@
         if(option === 'Current') this.ShowCurrent = val;
         this.CalcOptions();
       },
-      SetData(result) {
+      SetData: function(result) {
         this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
         this.Data = [];
         for(var i = 0; i < result.Voltage_Samples[0].length; i++) {
@@ -61,7 +61,7 @@
         this.CalcOptions();
         this.ShowSpinner = false;
       },
-      CalcOptions() {
+      CalcOptions: function() {
         if((this.$root.SelectedAnalyzer === null) || (this.VoltagePhases === null) || (this.ShowCurrent === null) || (this.Data === null)) return;
         var Analyzer = this.$root.SelectedAnalyzer, Series = {}, CurrentPhases = [];
         for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length; n++) {
@@ -91,13 +91,16 @@
           },
           file: this.Data
         };
-        this.Graph.updateOptions({ showRangeSelector: true}); 
-        this.Graph.updateOptions(Options);
+        this.$refs.graph.SetOptions({ showRangeSelector: true}); 
+        this.$refs.graph.SetOptions(Options);
+      },
+      ExportClick: function() {
+      
+      },
+      MaximizeClick: function() {
+        this.$refs.tools.Maximize('Waveform', this.$refs.graph.Graph, this.$refs.Toolbar);
       }
     },
-    mounted: function() {
-      this.Graph = new Dygraph(this.$refs.Graph, [[0, 0]], { });
-    },
-    components: { Spinner, ToolbarPhases, ToolbarOptions, ToolbarTools }
+    components: { Spinner, ToolbarPhases, ToolbarOptions, ToolbarTools, Graph }
   }
 </script>
