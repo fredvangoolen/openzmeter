@@ -8,79 +8,19 @@
 #include "Tools.h"
 //------------- ---------------------------------------------------------------------------------------------------------
 vector<float> AnalyzerInterface::FrequencyRanges = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
-vector<float> AnalyzerInterface::VoltageRanges ;
-vector<float> AnalyzerInterface::THDRanges;
+vector<float> AnalyzerInterface::VoltageRanges = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
+vector<float> AnalyzerInterface::THDRanges = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY };
 vector<float> AnalyzerInterface::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerInterface::AnalyzerInterface(string id, AnalyzerMode mode) : Database(id.c_str()) {
-  if(VoltageRanges.empty()) {
-    VoltageRanges.push_back(-INFINITY);
-    VoltageRanges.push_back(-20);
-    VoltageRanges.push_back(-15);
-    VoltageRanges.push_back(-10);
-    VoltageRanges.push_back(-9);
-    VoltageRanges.push_back(-8);
-    VoltageRanges.push_back(-7);
-    VoltageRanges.push_back(-6);
-    VoltageRanges.push_back(-5);
-    VoltageRanges.push_back(-4);
-    VoltageRanges.push_back(-3);
-    VoltageRanges.push_back(-2);
-    VoltageRanges.push_back(-1);
-    VoltageRanges.push_back(0);
-    VoltageRanges.push_back(1);
-    VoltageRanges.push_back(2);
-    VoltageRanges.push_back(3);
-    VoltageRanges.push_back(4);
-    VoltageRanges.push_back(5);
-    VoltageRanges.push_back(6);
-    VoltageRanges.push_back(7);
-    VoltageRanges.push_back(8);
-    VoltageRanges.push_back(9);
-    VoltageRanges.push_back(10);
-    VoltageRanges.push_back(15);
-    VoltageRanges.push_back(20);
-    VoltageRanges.push_back(INFINITY);
-  }
-  if(THDRanges.empty()) {
-    THDRanges.push_back(0);
-    THDRanges.push_back(0.5);
-    THDRanges.push_back(1);
-    THDRanges.push_back(1.5);
-    THDRanges.push_back(2);
-    THDRanges.push_back(2.5);
-    THDRanges.push_back(3);
-    THDRanges.push_back(3.5);
-    THDRanges.push_back(4);
-    THDRanges.push_back(4.5);
-    THDRanges.push_back(5);
-    THDRanges.push_back(5.5);
-    THDRanges.push_back(6);
-    THDRanges.push_back(6.5);
-    THDRanges.push_back(7);
-    THDRanges.push_back(7.5);
-    THDRanges.push_back(8);
-    THDRanges.push_back(8.5);
-    THDRanges.push_back(9);
-    THDRanges.push_back(9.5);
-    THDRanges.push_back(10);
-    THDRanges.push_back(11);
-    THDRanges.push_back(12);
-    THDRanges.push_back(13);
-    THDRanges.push_back(14);
-    THDRanges.push_back(15);
-    THDRanges.push_back(INFINITY);
-  }
   Tools::LogMsg("DEBUG", "Creating analyzer database tables\n");
   ExecResource("SQL/Database_Analyzer.sql");
   pMode = mode;
   pLastSave = 0;
-  PrepareSentence("INSERT INTO analyzers(username, serial, country_code, contract, zipcode, frequency, voltage, name, geo, max_current, min_current) "
-                  "VALUES('admin', ?, 'UTC', '', '', 50.0, 230.0, 'Unnamed input analyzer', POINT(0, 0), 50.0, 0.1) ON CONFLICT(serial) DO NOTHING; "
-                  "SELECT frequency, voltage, name, max_current, min_current FROM analyzers WHERE serial = ?");
-  BindSingleString(id.c_str());
-  BindSingleString(id.c_str());
-  if((ExecSentence() == true) && (ResultRows() == 1)) {
+  bool Result = ExecSentence("INSERT INTO analyzers(username, serial, country_code, contract, zipcode, frequency, voltage, name, geo, max_current, min_current) "
+               "VALUES('admin', " + Bind(id) + ", 'UTC', '', '', 50.0, 230.0, 'Unnamed input analyzer', POINT(0, 0), 50.0, 0.1) ON CONFLICT(serial) DO NOTHING; "
+               "SELECT frequency, voltage, name, max_current, min_current FROM analyzers WHERE serial = " + Bind(id));
+  if((Result == true) && (ResultRows() == 1)) {
     pNominalVoltage = atof(ResultValue(0, "voltage"));
     pNominalFrequency = atof(ResultValue(0, "frequency"));
     pName = ResultValue(0, "name");
@@ -183,48 +123,45 @@ void AnalyzerInterface::ResetAggreg(Params_t &params) {
   for(uint i = 0; i < params.Current_FFT.size(); i++) params.Current_FFT[i].resize(0);
 }
 void AnalyzerInterface::SaveAggreg(Params_t &params) {
+  string Query;
   if(params.Type == AGGREG_3S)
-    PrepareSentence("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(?, ?, ?, ?, ?, ?, ?)");
-  else if(params.Type == AGGREG_1M)  
-    PrepareSentence("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(?, ?, ?, ?, ?) RETURNING sampletime) "
-                    "INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) SELECT sampletime, ?, ?, ?, ?, ?, ?, ?, ? FROM Sample");
+    Query += "INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(?, ?, ?, ?, ?, ?, ?)";
+  else if(params.Type == AGGREG_1M)
+    Query += "WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(?, ?, ?, ?, ?) RETURNING sampletime) "  
+                    "INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) SELECT sampletime, ?, ?, ?, ?, ?, ?, ?, ? FROM Sample";
   else if(params.Type == AGGREG_10M)
-    PrepareSentence("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(?, ?, ?, ?, ?)");
+    Query += "INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(?, ?, ?, ?, ?)";
   else if(params.Type == AGGREG_15M)
-    PrepareSentence("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(?, ?, ?)");
+    Query += "INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(?, ?, ?)";
   else if(params.Type == AGGREG_1H)
-    PrepareSentence("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-  BindSingleUInt64(params.Timestamp);                                                 //sampletime
+    Query += "INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  Query += Bind(params.Timestamp);
   if((params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M) || (params.Type == AGGREG_1H)) {
-    BindArrayFloat(params.Voltage);                                                       //rms_v 
-    BindArrayFloat(params.Current);                                                       //rms_i
-    BindSingleFloat(params.Frequency);                                                  //frequency
-    BindSingleBool(params.Flag);                                                        //flaged
+    Bind(params.Voltage);                                                       //rms_v 
+    Bind(params.Current);                                                       //rms_i
+    Bind(params.Frequency);                                                  //frequency
+    Bind(params.Flag);                                                        //flaged
   }
   if((params.Type == AGGREG_3S) || (params.Type == AGGREG_15M) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_1H)) {
-    BindArrayFloat(params.Active_Power);                                                //active_power
-    BindArrayFloat(params.Reactive_Power);                                              //reactive_power
+    Bind(params.Active_Power);                                                //active_power
+    Bind(params.Reactive_Power);                                              //reactive_power
   }
   if(params.Type == AGGREG_1M) {
-    BindArrayFloat(params.Power_Factor);                                              //power_factor
-    BindArrayFloat(params.Voltage_THD);                                                     //thd_v
-    BindArrayFloat(params.Current_THD);                                                     //thd_i
-    BindArrayFloat(params.Phi);                                                       //phi
-    BindArrayArrayFloat(params.Voltage_Harmonics);                                     //harmonics_v
-    BindArrayArrayFloat(params.Current_Harmonics);                                     //harmonics_i
+    Bind(params.Power_Factor);                                              //power_factor
+    Bind(params.Voltage_THD);                                                     //thd_v
+    Bind(params.Current_THD);                                                     //thd_i
+    Bind(params.Phi);                                                       //phi
+    Bind(params.Voltage_Harmonics);                                     //harmonics_v
+    Bind(params.Current_Harmonics);                                     //harmonics_i
   }
   if(params.Type == AGGREG_1H) {
-    BindArrayUInt16(params.StatsVoltage);        //estadisticas de tension
-    BindArrayUInt16(params.StatsFrequency);      //estadisticas de frequencia
-    BindArrayUInt16(params.StatsTHD);            //estadisticas de distorsion harmonica
-    BindArrayUInt16(params.StatsHarmonics);      //estadisticas de harmonicos en rango
+    Bind(params.StatsVoltage);        //estadisticas de tension
+    Bind(params.StatsFrequency);      //estadisticas de frequencia
+    Bind(params.StatsTHD);            //estadisticas de distorsion harmonica
+    Bind(params.StatsHarmonics);      //estadisticas de harmonicos en rango
   }
-  ExecSentence();
-  if(params.Type == AGGREG_1M) {
-    PrepareSentence("DELETE FROM aggreg_ext_1m WHERE sampletime < ?");
-    BindSingleUInt64(params.Timestamp - 86400000);   //Delete 1 day old
-    ExecSentence();
-  }
+  ExecSentence(Query);
+  if(params.Type == AGGREG_1M) ExecSentence("DELETE FROM aggreg_ext_1m WHERE sampletime < " + Bind(params.Timestamp - 86400000));   //Delete 1 day old
   //TEST
   json Result;
   if((params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M) || (params.Type == AGGREG_1H)) {

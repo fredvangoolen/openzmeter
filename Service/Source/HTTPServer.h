@@ -27,7 +27,7 @@ class HTTPRequest : public Database {
     bool        pFreePostData;    
     json        pJSONParams;
   public :
-    HTTPRequest(const char *cookie, bool deflate);
+    HTTPRequest(char *cookie, bool deflate);
     ~HTTPRequest();
     string   SessionID();
     string   UserName();
