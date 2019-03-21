@@ -60,8 +60,7 @@
       </toolsSet>
       <flagsDictionary>
         <element flagsID="0" commonFlags="-g"/>
-        <element flagsID="1" commonFlags="-std=c++11"/>
-        <element flagsID="2" commonFlags="-std=c++11 -fno-exceptions"/>
+        <element flagsID="1" commonFlags="-std=c++11 -fno-exceptions"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -151,19 +150,19 @@
         </ccTool>
       </item>
       <item path="Source/Devices/DeviceInterface.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
             <pElem>.</pElem>
@@ -248,19 +247,19 @@
         </ccTool>
       </item>
       <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
             <pElem>.</pElem>
@@ -340,22 +339,21 @@
         </ccTool>
       </item>
       <item path="Source/Tariff.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>

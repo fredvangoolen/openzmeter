@@ -15,15 +15,13 @@ int   Database::pPort         = 5432;
 char *Database::pUser         = (char*)"openzmeter";
 char *Database::pPassword     = (char*)"";
 //----------------------------------------------------------------------------------------------------------------------
-Database::Database(const char *schema) {
-  pSchema    = (schema == NULL) ? NULL : strdup(schema);
-  pParams    = NULL;
-  pResult    = NULL;
-  pParamsLen = 0;
+Database::Database(string schema) {
+  pSchema    = schema;
   pDBConn    = NULL;
+  pResult    = NULL;
 }
-const char *Database::GetSchema() {
-  return (pSchema) ? pSchema : "public";
+string Database::GetSchema() {
+  return pSchema;
 }
 bool Database::Connect() {
   if((pDBConn != NULL) && (PQstatus(pDBConn) == CONNECTION_BAD)) {
@@ -44,18 +42,11 @@ bool Database::Connect() {
   }
   ExecSentence("SET synchronous_commit TO OFF");
   ExecSentence("SET client_min_messages = error");
-  if(pSchema) {
-    PrepareSentence("CREATE SCHEMA IF NOT EXISTS ?");
-    BindSingleString(pSchema, true);
-    ExecSentence();
-    PrepareSentence("SET search_path TO ?, public");
-    BindSingleString(pSchema);
-    ExecSentence();
-  }
+  ExecSentence("CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema));
+  ExecSentence("SET search_path TO " +  Bind(pSchema) + ", public");
   return true;
 }
 Database::~Database() {
-  if(pSchema) free((char*)pSchema);
   if(pResult != NULL) PQclear(pResult);
   PQfinish(pDBConn);
 }
@@ -74,20 +65,21 @@ bool Database::Config(json_object *config) {
       pPassword = (char*)json_object_get_string(JSON_Val);
     }
   }
-  Database DB(NULL);
+  Database DB;
   Tools::LogMsg("DEBUG", "Creating database tables\n");
   return DB.ExecResource("SQL/Database.sql");
 }
-bool Database::ExecResource(const char *file) {
+bool Database::ExecResource(string file) {
   size_t Len;
+  if(pResult != NULL) PQclear(pResult);
   char *Script = (char*)Tools::GetFile(file, &Len);
   Script[Len - 1] = 0;
   return ExecSentence(Script);
 }
-bool Database::ExecSentence(const char* sql) {
+bool Database::ExecSentence(string sql) {
   if(pResult != NULL) PQclear(pResult);
   if(Connect() == false) return false;
-  pResult = PQexec(pDBConn, sql);
+  pResult = PQexec(pDBConn, sql.c_str());
   if((PQresultStatus(pResult) != PGRES_COMMAND_OK) && (PQresultStatus(pResult) != PGRES_TUPLES_OK)) {
     char *Save;
     Tools::LogMsg("ERROR", "Error in SQL query \"%s\" (%s)\n", sql, strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
@@ -96,131 +88,75 @@ bool Database::ExecSentence(const char* sql) {
     return true;  
   }
 }
-char *Database::ExecSentenceJSON(const char* sql, size_t *len) {
-  if(pResult != NULL) PQclear(pResult);
-  if(Connect() == false) return NULL;
-  pResult = PQexec(pDBConn, sql);
-  if(PQresultStatus(pResult) != PGRES_TUPLES_OK) {
-    char *Save;
-    Tools::LogMsg("ERROR", "Error in SQL query \"%s\" (%s)\n", sql, strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
-    return NULL;
-  } else {
-    if(PQntuples(pResult) == 0) return NULL;
-    if(len) *len = PQgetlength(pResult, 0, 0);
-    return (PQgetisnull(pResult, 0, 0) == true) ? NULL : PQgetvalue(pResult, 0, 0);
-  }
+//char *Database::ExecSentenceJSON(const char* sql, size_t *len) {
+//  if(pResult != NULL) PQclear(pResult);
+//  if(Connect() == false) return NULL;
+//  pResult = PQexec(pDBConn, sql);
+//  if(PQresultStatus(pResult) != PGRES_TUPLES_OK) {
+//    char *Save;
+//    Tools::LogMsg("ERROR", "Error in SQL query \"%s\" (%s)\n", sql, strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+//    return NULL;
+//  } else {
+//    if(PQntuples(pResult) == 0) return NULL;
+//    if(len) *len = PQgetlength(pResult, 0, 0);
+//    return (PQgetisnull(pResult, 0, 0) == true) ? NULL : PQgetvalue(pResult, 0, 0);
+//  }
+//}
+//void Database::PrepareSentence(string sentence) {
+//  pSentence = sentence;
+//  pParams = queue<string>();
+//}
+string Database::Bind(uint32_t param) {
+  return to_string(param);
 }
-void Database::PrepareSentence(const char *sentence) {
-  pSentence = sentence;
-  if(pParamsAlloc != 0) {
-    for(int i = 0; i < pParamsLen; i++) free(pParams[i]);
-    free(pParams);
-  }
-  pParamsLen = 0;
-  pParamsAlloc = 0;
-  for(size_t i = 0; i < strlen(sentence); i++) {
-    if(sentence[i] == '?') pParamsAlloc++;
-  }
-  if(pParamsAlloc != 0) pParams = (char**)malloc(sizeof(char*) * pParamsAlloc);
+string Database::Bind(uint64_t param) {
+  return to_string(param);
 }
-void Database::BindSingleUInt32(uint32_t param) {
-  if(pParamsLen < pParamsAlloc) {
-    pParams[pParamsLen] = (char*)malloc(sizeof(char) * 11);
-    sprintf(pParams[pParamsLen], "%u", param);
-    pParamsLen++;
-  }
+string Database::Bind(float param) {
+  return isnan(param) ? string("NULL") : to_string(param);
 }
-void Database::BindSingleUInt64(uint64_t param) {
-  if(pParamsLen < pParamsAlloc) {
-    pParams[pParamsLen] = (char*)malloc(sizeof(char) * 20);
-    sprintf(pParams[pParamsLen], "%" PRIu64, param);
-    pParamsLen++;
-  }
-}
-void Database::BindSingleFloat(float param) {
-  if(pParamsLen < pParamsAlloc) {
-    if(isnan(param)) {
-      pParams[pParamsLen] = strdup("NULL");
-    } else {
-      pParams[pParamsLen] = (char*)malloc(sizeof(char) * 16);
-      sprintf(pParams[pParamsLen], "%g", param);
+string Database::Bind(const vector< vector<float> > &params) {
+  string Result = "'{";
+  for(uint32_t i = 0; i < params.size(); i++) {
+    Result.append("{");
+    for(uint32_t n = 0; n < params[i].size(); n++) {
+      Result.append(isnan(params[i][n]) ? string("NULL") : to_string(params[i][n]));
+      Result.append((n < (params[i].size() - 1)) ? ", " : "}");
     }
-    pParamsLen++;
+    if(i < (params.size() - 1)) Result.append(", ");
   }
+  Result.append("}'");
+  return Result;
 }
-void Database::BindArrayArrayFloat(const vector< vector<float> > &params) {
-  if(pParamsLen < pParamsAlloc) {
-    stringstream Stream;
-    Stream <<  "'{";
-    for(uint i = 0; i < params.size(); i++) {
-      Stream <<  "{";
-      for(uint n = 0; n < params[i].size(); n++) {
-        if(isnan(params[i][n])) 
-          Stream << "NULL";
-        else
-          Stream << params[i][n];
-        if(n < (params[i].size() - 1))
-          Stream << ", ";
-        else
-          Stream << "}";
-      }
-      if(i < (params.size() - 1)) Stream << ", ";
-    }
-    Stream <<  "}'";
-    //sprintf(&pParams[pParamsLen][Pos], "}'");
-    pParams[pParamsLen] = strdup(Stream.str().c_str());
-    pParamsLen++;   
+string Database::Bind(const vector<uint16_t> &params) {
+  string Result = "'{";
+  for(uint i = 0; i < params.size(); i++) {
+    Result.append(to_string(params[i]));
+    Result.append((i < (params.size() - 1)) ? ", " : "}'");
   }
+  return Result;
 }
-void Database::BindArrayUInt16(const vector<uint16_t> &params) {
-  if(pParamsLen < pParamsAlloc) {
-    pParams[pParamsLen] = (char*)malloc(4 + sizeof(char) * 5 * params.size());
-    int Pos = sprintf(pParams[pParamsLen], "'{");
-    for(uint i = 0; i < params.size(); i++) Pos += sprintf(&pParams[pParamsLen][Pos], "%u, ", params[i]);
-    if(params.size() > 0) Pos -= 2;
-    sprintf(&pParams[pParamsLen][Pos], "}'");
-    pParamsLen++;
+string Database::Bind(const vector<float> &params) {
+  string Result = "'{";
+  for(uint i = 0; i < params.size(); i++) {
+    Result.append(to_string(params[i]));
+    Result.append((i < (params.size() - 1)) ? ", " : "}'");
   }
+  return Result;
 }
-void Database::BindArrayFloat(const vector<float> &params) {
-  if(pParamsLen < pParamsAlloc) {
-    stringstream Stream;
-    Stream <<  "'{";
-    for(uint i = 0; i < params.size(); i++) {
-      if(isnan(params[i])) 
-        Stream << "NULL";
-      else
-        Stream << params[i];
-      if(i < (params.size() - 1)) Stream << ", ";
-    //    pParams[pParamsLen] = (char*)malloc(4 + sizeof(char) * 18 * len);
-//    int Pos = sprintf(pParams[pParamsLen], "'{");
-
-            
-//            for(int i = 0; i < len; i++) Pos += sprintf(&pParams[pParamsLen][Pos], isnan(params[i]) ? "NULL, " : "%g, ", params[i]);
-//    if(len > 0) Pos -= 2;
-    }
-    Stream <<  "}'";
-    
-//    sprintf(&pParams[pParamsLen][Pos], "}'");
-    pParams[pParamsLen] = strdup(Stream.str().c_str());
-    pParamsLen++;
-  }
+string Database::Bind(bool param) {
+  return (param == true) ? "true" : "false";
 }
-void Database::BindSingleBool(bool param) {
-  if(pParamsLen < pParamsAlloc) {
-    pParams[pParamsLen] = param ? strdup("true") : strdup("false");
-    pParamsLen++;
-  }
+string Database::Bind(string param) {
+  char *Scape = PQescapeLiteral(pDBConn, param.c_str(), param.length());
+  string Result = Scape;
+  PQfreemem(Scape);
+  return Result;
 }
-void Database::BindSingleString(const char *string, bool identifier) {
-  if(pParamsLen < pParamsAlloc) {
-    pParams[pParamsLen] = (char*)malloc(sizeof(char) * strlen(string) + 3);
-    if(identifier == false)
-      sprintf(pParams[pParamsLen], "'%s'", string);
-    else
-      sprintf(pParams[pParamsLen], "\"%s\"", string);
-    pParamsLen++;
-  }  
+string Database::BindID(string param) {
+//  char *Scape = PQescapeLiteral(pDBConn, param.c_str(), param.length());
+  return string("\"") + param + "\"";
+//  PQfreemem(Scape);  
 }
 uint32_t Database::ResultRows() {
   if(pResult == NULL) return 0;
@@ -234,37 +170,20 @@ const char *Database::ResultValue(uint32_t row, const char *name) {
   if(PQgetisnull(pResult, row, Col) == 1) return NULL;
   return PQgetvalue(pResult, row, Col);
 }
-bool Database::ExecSentence() {
-  bool Return = false;
-  if(pParamsAlloc == pParamsLen) {
-    int maxLenght = strlen(pSentence);
-    for(int i = 0; i < pParamsLen; i++) maxLenght = maxLenght + strlen(pParams[i]);
-    char *Buffer = (char*)malloc(sizeof(char) * maxLenght);
-    char *Read   = (char*)pSentence;
-    char *Write  = Buffer;
-    int   Param  = 0;
-    while(true) {
-      if(*Read == '?') {
-        int Len = strlen(pParams[Param]);
-        memcpy(Write, pParams[Param], Len);
-        Write = Write + Len;
-        Param++;
-      } else {
-        *Write++ = *Read;
-        if(*Read == 0) break;
-      }
-      Read++;
-    }
-    Return = ExecSentence(Buffer);
-    free(Buffer);
-  } else {
-    Tools::LogMsg("ERROR", "There are more placeholders than params!!\n");
-  }
-  if(pParamsAlloc != 0) {
-    for(int i = 0; i < pParamsLen; i++) free(pParams[i]);
-    free(pParams);
-    pParamsAlloc = 0;
-  }
-  return Return;
-}
+//bool Database::ExecSentence() {
+//  return ExecSentence(BuildQueryString().c_str());
+//}
+//string Database::BuildQueryString() {
+//  string Result;
+//  for(std::string::iterator it = pSentence.begin(); it != pSentence.end(); it++) {
+//    if(*it == '?') {
+//      Result.append(pParams.front());
+//      pParams.pop();
+//    } else {
+//      Result.push_back(*it);
+//    }
+//  }
+//  if(pParams.size() != 0) Tools::LogMsg("ERROR", "There are more placeholders than params!!\n");
+//  return Result;
+//}
 //======================================================================================================================
