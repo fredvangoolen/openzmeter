@@ -82,7 +82,7 @@ bool Database::ExecSentence(string sql) {
   pResult = PQexec(pDBConn, sql.c_str());
   if((PQresultStatus(pResult) != PGRES_COMMAND_OK) && (PQresultStatus(pResult) != PGRES_TUPLES_OK)) {
     char *Save;
-    Tools::LogMsg("ERROR", "Error in SQL query \"%s\" (%s)\n", sql, strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    Tools::LogMsg("ERROR", "Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     return false;
   } else {
     return true;  
@@ -148,6 +148,7 @@ string Database::Bind(bool param) {
   return (param == true) ? "true" : "false";
 }
 string Database::Bind(string param) {
+  if(Connect() == false) return "";
   char *Scape = PQescapeLiteral(pDBConn, param.c_str(), param.length());
   string Result = Scape;
   PQfreemem(Scape);
@@ -162,13 +163,29 @@ uint32_t Database::ResultRows() {
   if(pResult == NULL) return 0;
   return PQntuples(pResult);
 }
-const char *Database::ResultValue(uint32_t row, const char *name) {
-  if(pResult == NULL) return NULL;
-  if(PQntuples(pResult) < 1) return NULL;
-  int32_t Col = PQfnumber(pResult, name);
-  if(Col == -1) return NULL;
-  if(PQgetisnull(pResult, row, Col) == 1) return NULL;
+string Database::ResultString(uint32_t row, string name) {
+  if(pResult == NULL) return "";
+  if(PQntuples(pResult) < 1) return "";
+  int32_t Col = PQfnumber(pResult, name.c_str());
+  if(Col == -1) return "";
+  if(PQgetisnull(pResult, row, Col) == 1) return "";
   return PQgetvalue(pResult, row, Col);
+}
+float Database::ResultFloat(uint32_t row, string name) {
+  if(pResult == NULL) return NAN;
+  if(PQntuples(pResult) < 1) return NAN;
+  int32_t Col = PQfnumber(pResult, name.c_str());
+  if(Col == -1) return NAN;
+  if(PQgetisnull(pResult, row, Col) == 1) return NAN;
+  return atof(PQgetvalue(pResult, row, Col));
+}
+uint64_t Database::ResultUInt64(uint32_t row, string name) {
+  if(pResult == NULL) return 0;
+  if(PQntuples(pResult) < 1) return 0;
+  int32_t Col = PQfnumber(pResult, name.c_str());
+  if(Col == -1) return 0;
+  if(PQgetisnull(pResult, row, Col) == 1) return 0;
+  return strtoull(PQgetvalue(pResult, row, Col), NULL, 10);
 }
 //bool Database::ExecSentence() {
 //  return ExecSentence(BuildQueryString().c_str());

@@ -103,7 +103,7 @@ void DeviceInterface::GetAnalyzersCallback(HTTPRequest &req) {
   string Query = "SELECT serial, editable FROM (SELECT serial, false AS editable FROM permisions WHERE username = " + req.Bind(req.UserName()) + " AND read = TRUE UNION SELECT serial, true FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " UNION SELECT serial, true FROM analyzers WHERE 'admin' = " + req.Bind(req.UserName()) + ") AS Result ORDER BY serial ASC, editable DESC";
   req.ExecSentence(Query);
   for(uint32_t i = 0; i < req.ResultRows(); i++) {
-    const char *Serial = req.ResultValue(i, "serial");
+    string Serial = req.ResultString(i, "serial");
     AnalyzerInterface *Analyzer = NULL;
     for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
       Analyzer = (*it)->FindAnalyzer(Serial);
@@ -170,43 +170,41 @@ void DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
     if((Serie == "FREQUENCY") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {      
       Query += "COALESCE(ARRAY_AGG(freq ORDER BY sampletime ASC), '{}') AS " + req.BindID("Frequency") + ", ";
     } else if((Serie == "FLAG") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
-      Query += "COALESCE(ARRAY_AGG(flag ORDER BY sampletime ASC), '{}') AS \"Flag\", ";
+      Query += "COALESCE(ARRAY_AGG(flag ORDER BY sampletime ASC), '{}') AS " + req.BindID("Flag") + ", ";
     } else if((Serie == "VOLTAGE") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {      
-      Query += "COALESCE(ARRAY_AGG(rms_v ORDER BY sampletime ASC), '{}') AS \"Voltage\", ";
+      Query += "COALESCE(ARRAY_AGG(rms_v ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage") + ", ";
     } else if((Serie == "CURRENT") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {      
-      Query += "COALESCE(ARRAY_AGG(rms_i ORDER BY sampletime ASC), '{}') AS \"Current\", ";
+      Query += "COALESCE(ARRAY_AGG(rms_i ORDER BY sampletime ASC), '{}') AS " + req.BindID("Current") + ", ";
     } else if((Serie == "ACTIVE_POWER") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {      
-      Query += "COALESCE(ARRAY_AGG(active_power ORDER BY sampletime ASC), '{}') AS \"Active_Power\", ";
+      Query += "COALESCE(ARRAY_AGG(active_power ORDER BY sampletime ASC), '{}') AS " + req.BindID("Active_Power") + ", ";
     } else if((Serie == "REACTIVE_POWER") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {      
-      Query += "COALESCE(ARRAY_AGG(reactive_power ORDER BY sampletime ASC), '{}') AS \"Reactive_Power\", ";
+      Query += "COALESCE(ARRAY_AGG(reactive_power ORDER BY sampletime ASC), '{}') AS " + req.BindID("Reactive_Power") + ", ";
     } else if((Serie == "POWER_FACTOR") && (Aggreg == "1M")) {
-      Query += "COALESCE(ARRAY_AGG(power_factor ORDER BY sampletime ASC), '{}') AS \"Power_Factor\", ";
+      Query += "COALESCE(ARRAY_AGG(power_factor ORDER BY sampletime ASC), '{}') AS " + req.BindID("Power_Factor") + ", ";
     } else if((Serie == "VOLTAGE_THD") && (Aggreg == "1M")) {
-      Query += "COALESCE(ARRAY_AGG(thd_v ORDER BY sampletime ASC), '{}') AS \"Voltage_THD\", ";
+      Query += "COALESCE(ARRAY_AGG(thd_v ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_THD") + ", ";
     } else if((Serie == "CURRENT_THD") && (Aggreg == "1M")) {
-      Query += "COALESCE(ARRAY_AGG(thd_i ORDER BY sampletime ASC), '{}') AS \"Current_THD\", ";
+      Query += "COALESCE(ARRAY_AGG(thd_i ORDER BY sampletime ASC), '{}') AS " + req.BindID("Current_THD") + ", ";
     } else if((Serie == "PHI") && (Aggreg == "1M")) {
-      Query += "COALESCE(ARRAY_AGG(phi ORDER BY sampletime ASC), '{}') AS \"Phi\", ";
+      Query += "COALESCE(ARRAY_AGG(phi ORDER BY sampletime ASC), '{}') AS " + req.BindID("Phi") + ", ";
     } else if((Serie == "VOLTAGE_HARMONICS") && (Aggreg == "1M")) {
-      Query += "COALESCE(ARRAY_AGG(harmonics_v ORDER BY sampletime ASC), '{}') AS \"Voltage_Harmonics\", ";
+      Query += "COALESCE(ARRAY_AGG(harmonics_v ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Harmonics") + ", ";
     } else if((Serie == "CURRENT_HARMONICS") && (Aggreg ==  "1M")) {
-      Query += "COALESCE(ARRAY_AGG(harmonics_i ORDER BY sampletime ASC), '{}') AS \"Current_Harmonics\", ";
+      Query += "COALESCE(ARRAY_AGG(harmonics_i ORDER BY sampletime ASC), '{}') AS " + req.BindID("Current_Harmonics") + ", ";
     } else {
       req.FromString("Invalid serie in selected aggregation", MHD_HTTP_BAD_REQUEST);
       return;
     }
   }
-  Query += "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS \"Sampletime\" FROM ";
+  Query += "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS " + req.BindID("Sampletime") + " FROM ";
   if(Params["Aggreg"] == "1M") {
     Query += "(SELECT * FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m) AS Tmp";
-////  } else if(strcmp(Aggreg, "1h") == 0) {
-////    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT * FROM aggreg_1h NATURAL LEFT JOIN aggreg_stat_1h NATURAL FULL JOIN prices) AS Tmp");
   } else {
     Query += "aggreg_" + Aggreg;
   }
-  Query += " WHERE sampletime > " + req.Bind(LastSample) + " AND sampletime >= " + req.Bind(From) + " AND sampletime <= " + req.Bind(To) + ") AS Result";
-//  char *Tmp = req.ExecSentenceJSON(Query.str().c_str(), NULL);
-  req.FromString(req.ResultValue(0, "Result"), MHD_HTTP_OK);
+  Query += " WHERE sampletime > " + req.Bind(LastSample) + " AND sampletime >= " + req.Bind(From) + " AND sampletime <= " + req.Bind(To) + ") AS result";
+  req.ExecSentence(Query);
+  req.FromString(req.ResultString(0, "Result"), MHD_HTTP_OK);
 }
 void DeviceInterface::GetTariffsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
@@ -362,10 +360,10 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   float Reactive = NAN;  
   for(uint64_t time = BillingFrom + 899999; time < BillingTo; time = time + 900000) {
     Tariff *Tariff = Tariffs.Find(time);
-    if((Row < req.ResultRows()) && (strtoull(req.ResultValue(Row, "sampletime"), NULL, 10) == time)) {
-      float Tmp = atof(req.ResultValue(Row, "active_power"));
+    if((Row < req.ResultRows()) && (req.ResultUInt64(Row, "sampletime") == time)) {
+      float Tmp = req.ResultFloat(Row, "active_power");
       Active = isnan(Active) ? Tmp / 4.0 : isnan(Tmp) ? Active : Active + Tmp / 4.0;
-      Tmp = atof(req.ResultValue(Row, "reactive_power"));
+      Tmp = req.ResultFloat(Row, "reactive_power");
       Reactive = isnan(Reactive) ? Tmp / 4.0 : isnan(Tmp) ? Reactive : Reactive + Tmp / 4.0;
       Row++;
     }
@@ -611,7 +609,7 @@ void DeviceInterface::GetSeriesRangeCallback(HTTPRequest &req) {
 //  req.BindSingleString(Analyzer->GetID().c_str());
 //  req.ExecSentence();
 //  string Query = "SELECT row_to_json(Result) AS result FROM ( SELECT max(sampletime) AS \"To\", min(sampletime) AS \"From\" FROM aggreg_" + Aggreg + ") AS Result";
-  return req.FromString(req.ResultValue(0, "Result"), MHD_HTTP_OK);
+  return req.FromString(req.ResultString(0, "Result"), MHD_HTTP_OK);
 }
 void DeviceInterface::GetEventsCallback(HTTPRequest &req) {
 //  uint64_t LastEvent = 0, From = 0, To = 0, Period = 0;
