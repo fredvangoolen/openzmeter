@@ -31,8 +31,6 @@
     },
     methods: {
       Load: function(tariff) {
-        tariff.Config.Periods.length = tariff.Template.Periods.length;
-        for(var n = 0; n < tariff.Template.Periods.length; n++) tariff.Config.Periods[n] = Object.assign({ Contracted_Power: 0.0, Energy_Cost: 0.0, Power_Cost: 0.0 }, tariff.Config.Periods[n]);
         this.Tariff = tariff;
         this.Show = true;
       },

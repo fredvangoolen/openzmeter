@@ -182,7 +182,7 @@ bool Tariff::SetConfig(json t) {
     Tax_t Tax;
     if(!t["Taxs"][n]["Name"].is_string()) return false;
     Tax.Name = t["Taxs"][n]["Name"];
-    if(!t["Taxs"][n]["Value"].is_number_float()) return false;
+    if(!t["Taxs"][n]["Value"].is_number()) return false;
     Tax.Value = t["Taxs"][n]["Value"];
     if(!t["Taxs"][n]["Type"].is_string()) return false;
     Tax.Type = t["Taxs"][n]["Type"];
@@ -193,17 +193,17 @@ bool Tariff::SetConfig(json t) {
   //This requiere a previous template is loaded with same periods number
   if(pPeriods.size() != t["Periods"].size()) return false;
   for(uint32_t n = 0; n < t["Periods"].size(); n++) {
-    if(!t["Periods"][n]["Power_Cost"].is_number_float()) return false;
-    pPeriods[n].PowerCost = t["Taxs"][n]["Power_Cost"];
-    if(!t["Periods"][n]["Energy_Cost"].is_number_float()) return false;
-    pPeriods[n].EnergyCost = t["Taxs"][n]["Energy_Cost"];
-    if(!t["Periods"][n]["Contracted_Power"].is_number_float()) return false;
-    pPeriods[n].ContractedPower = t["Taxs"][n]["Contracted_Power"];
+    if(!t["Periods"][n]["Power_Cost"].is_number()) return false;
+    pPeriods[n].PowerCost = t["Periods"][n]["Power_Cost"];
+    if(!t["Periods"][n]["Energy_Cost"].is_number()) return false;
+    pPeriods[n].EnergyCost = t["Periods"][n]["Energy_Cost"];
+    if(!t["Periods"][n]["Contracted_Power"].is_number()) return false;
+    pPeriods[n].ContractedPower = t["Periods"][n]["Contracted_Power"];
   }
-  if(!t["BillSampletime"].is_array()) return false;
+  if(!t["Billing"].is_array()) return false;
   for(uint32_t n = 0; n < t["BillSampletime"].size(); n++) {
-    if(!t["BillSampletime"][n].is_number_unsigned()) return false;
-    uint64_t Time = t["BillSampletime"][n];
+    if(!t["Billing"][n].is_number_unsigned()) return false;
+    uint64_t Time = t["Billing"][n];
     if((Time % 900000) != 0) return false;
     pBillingCycle.push_back(Time);
   }
@@ -227,34 +227,9 @@ json Tariff::GetConfig() {
     Period["Contracted_Power"] = pPeriods[n].ContractedPower;
     T["Periods"].push_back(Period);
   }
-  T["BillSampletime"] = pBillingCycle;
+  T["Billing"] = pBillingCycle;
   return T;
 }
-
-
-
-
-//Tariff *Tariff::FromJSON(uint64_t start, uint64_t end, json t) {
-//  Tariff *T = new Tariff(start, end);
-//  if(T->LoadTemplate(t) == false) {
-//    delete T;
-//    return NULL;
-//  }
-//  return T;
-//}
-//Tariff *Tariff::FromJSON(uint64_t start, uint64_t end, json temp, json conf) {
-//  Tariff *T = new Tariff(start, end);
-//  if(T->LoadTemplate(temp) == false) {
-//    delete T;
-//    return NULL;
-//  }
-//  if(T->LoadConfig(conf) == false) {
-//    delete T;
-//    return NULL;
-//  }
-//  return T;
-//}
-
 
 
 //uint8_t Tariff::FindPeriod(json tariff, uint64_t timestamp) {

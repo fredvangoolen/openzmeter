@@ -60,8 +60,7 @@
         this.$parent.$refs.Tariff.Load(this.Serial, row.RateID);
       },
       Delete: function(row) {
-        //Elimino
-        this.Load(this.Serial);        
+        $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: row.RateID, Analyzer: this.Serial }), success: function() { this.Load(this.Serial); }.bind(this) });
       },
       Add: function() {
         this.Show = false;

@@ -19,6 +19,7 @@
   import EditSeason from './TariffEditSeason.vue';
   import EditHolidays from './TariffEditHolidays.vue';
   import EditHoliday from './TariffEditHoliday.vue';
+  import moment from 'JS/moment.js';
   export default {
     data: function() {
       return { ShowDialog: false, Tariff: {}, RateID: null };
@@ -31,13 +32,13 @@
           if(id === null) {
             this.Tariff = { 
               Country: null, 
-              StartDate: moment.startOf('year').valueOf(), 
-              EndDate: moment.endOf('year').valueOf(), 
+              StartDate: moment().startOf('year').valueOf(), 
+              EndDate: moment().endOf('year').valueOf(), 
               Name: 'No nane', 
               Template: {
-                Description: 'Add tariff description here', 
+                Description: 'Add tariff description here',
                 Seasons: [], 
-                Periods: [ { ReactiveMode: 'NONE', PowerMode: 'NONE' } ], 
+                Periods: [ { ReactiveMode: 'NONE', PowerMode: 'NONE', Color: '#fffff0' } ], 
                 Holidays: [],
                 WeekendPeriod: null,
                 HolidayPeriod: null

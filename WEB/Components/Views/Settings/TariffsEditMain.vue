@@ -33,7 +33,7 @@
         </div>
         <div class="col-xs-12 col-sm-6"><label class="control-label">Start date</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetStartDate"></date-picker></div>
         <div class="col-xs-12 col-sm-6"><label class="control-label">End date</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetEndDate"></date-picker></div>
-        <div class="col-xs-12"><label class="control-label">Description</label><textarea class="form-control" rows="5" ref="Description" style="resize: none"></textarea></div>
+        <div class="col-xs-12"><label class="control-label">Description</label><textarea class="form-control" rows="5" ref="Description" @change="DescriptionChanged($event)" style="resize: none"></textarea></div>
         <div class="col-xs-12 col-sm-6">
           <div class="btn-group period-dropdown-group">
             <div class="input-group">
@@ -93,6 +93,9 @@
       },
       SetHolidayPeriod: function(period) {
         this.Tariff.Template.HolidayPeriod = period;
+      },
+      DescriptionChanged: function(value) {
+        this.Tariff.Template.Description = value.target.value;      
       },
       Load: function(tariff) {
         this.Show = true;

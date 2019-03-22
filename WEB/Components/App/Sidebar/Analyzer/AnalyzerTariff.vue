@@ -45,6 +45,7 @@
         $(this.$refs.Base).attr('data-id', 'CURRENT');
         $(this.$refs.Base).val(this.Tariffs[0].name);
         this.Tariff.Template = Object.assign({}, this.Initial.Template);
+        this.FillPeriods();
         this.Tariff.Name = this.Initial.Name;
       },
       SetTariffs: function() {
@@ -52,6 +53,8 @@
         $(this.$refs.Base).on('onSetSelectValue', this.SelectBase.bind(this));
         $(this.$refs.Base).on('onUnsetSelectValue', this.DeselectBase.bind(this));
         if(this.Initial !== null) this.LoadCurrent();
+        this.$refs.StartDate.SetDate(moment(this.Tariff.StartDate));
+        this.$refs.EndDate.SetDate(moment(this.Tariff.EndDate));   
         this.Validate();
         this.ShowSpinner = false;
       },
@@ -89,13 +92,11 @@
                 this.Initial = null;
                 $(this.$refs.Base).attr('data-id', '');
                 $(this.$refs.Base).val('');
-                this.Tariff = { StartDate: moment().startOf('year').valueOf(), EndDate: moment().endOf('year').valueOf(), Template: null, Config: {Periods: [], Taxs: []} };
+                this.Tariff = { StartDate: moment().startOf('year').valueOf(), EndDate: moment().endOf('year').valueOf(), Template: null, Config: {Periods: [], Taxs: [], Billing: []} };
                 this.$refs.StartDate.Disable();
                 this.$refs.EndDate.Disable();
                 this.SetTariffs();
               }
-              this.$refs.StartDate.SetDate(moment(this.Tariff.StartDate));
-              this.$refs.EndDate.SetDate(moment(this.Tariff.EndDate));
             }.bind(this)
           });
         });
@@ -127,6 +128,10 @@
         this.Show = false;
         this.$parent.$refs.Tariffs.Load(this.Serial);
       },
+      FillPeriods: function() {
+        this.Tariff.Config.Periods.length = this.Tariff.Template.Periods.length;
+        for(var n = 0; n < this.Tariff.Template.Periods.length; n++) this.Tariff.Config.Periods[n] = Object.assign({ Contracted_Power: 0.0, Energy_Cost: 0.0, Power_Cost: 0.0 }, this.Tariff.Config.Periods[n]);
+      },
       SelectBase: function(e, keywork) {
         this.$refs.StartDate.Enable();
         this.$refs.EndDate.Enable();
@@ -139,6 +144,7 @@
             success: function(result) {
               this.Tariff.Template = result.Template;
               this.Tariff.Name = result.Name;
+              this.FillPeriods();
               this.Validate();
               this.ShowSpinner = false;
             }.bind(this)

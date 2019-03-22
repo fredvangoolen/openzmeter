@@ -47,6 +47,7 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
     HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
     HTTPServer::RegisterCallback("/getTariffs",          DeviceInterface::GetTariffsCallback);
     HTTPServer::RegisterCallback("/setTariffs",          DeviceInterface::SetTariffsCallback);
+    HTTPServer::RegisterCallback("/delTariffs",          DeviceInterface::DelTariffsCallback);
   }
   pDevices.push_back(device);
 }
@@ -246,10 +247,23 @@ void DeviceInterface::SetTariffsCallback(HTTPRequest &req) {
       bool Result = req.ExecSentence("INSERT INTO analyzers_rates(serial, startdate, enddate, config, template, name) VALUES (" + req.Bind(Analyzer) + ", " + req.Bind(Start) + ", " + req.Bind(End) + ", " + req.Bind(T.GetConfig().dump()) + ", " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Name) + ")");
       req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
     } else {
-//      uint32_t RateID = Params["RateID"];
-//      bool Result = req.ExecSentence("UPDATE rates SET name = " + req.Bind(Name) + ", country_code = 'UTC', template = " + req.Bind(T.GetTemplate().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE username = " + req.Bind(req.UserName()) + " AND rate = " + req.Bind(RateID));
-//      req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
+      uint32_t RateID = Params["RateID"];
+      bool Result = req.ExecSentence("UPDATE analyzers_rates SET name = " + req.Bind(Name) + ", template = " + req.Bind(T.GetTemplate().dump()) + ", config = " + req.Bind(T.GetConfig().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE rate = " + req.Bind(RateID) + " AND serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ")");
+      req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
     }
+  }
+}
+void DeviceInterface::DelTariffsCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["RateID"].is_number_unsigned()) return req.FromString("'RateID' params required", MHD_HTTP_BAD_REQUEST);
+  uint32_t RateID = Params["RateID"];
+  if(!Params["Analyzer"].is_string()) {
+    bool Result = req.ExecSentence("DELETE FROM rates WHERE rate = " + req.Bind(RateID) + " AND username = " + req.Bind(req.UserName()));
+    req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
+  } else {
+    string Analyzer = Params["Analyzer"];
+    bool Result = req.ExecSentence("DELETE FROM analyzers_rates WHERE rate = " + req.Bind(RateID) + " AND serial IN (SELECT serial from analyzers WHERE serial = " + req.Bind(Analyzer) + " AND username = " + req.Bind(req.UserName()) + ")");
+    req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
   }
 }
 void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
@@ -394,7 +408,7 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
 
 
 
-string DeviceInterface::GetSeriesAggregCallback(HTTPRequest &req) {
+//string DeviceInterface::GetSeriesAggregCallback(HTTPRequest &req) {
 //  uint64_t Period = 0, From = 0, To = 0;
 //  char    *Analyzer = NULL, *Aggreg = NULL, *Series = NULL;
 //  json_object_object_foreach(reader, JSON_Key, JSON_Val) {
@@ -466,8 +480,8 @@ string DeviceInterface::GetSeriesAggregCallback(HTTPRequest &req) {
 //  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
 //  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\") AS Result", To); 
 //  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
-  return "";
-}
+//  return "";
+//}
 void DeviceInterface::GetSeriesNowCallback(HTTPRequest &req) {
   ///TODO : CHECK PERMISIONS
   json                          Params = req.GetParams();
