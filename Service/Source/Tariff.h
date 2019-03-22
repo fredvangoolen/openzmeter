@@ -28,12 +28,18 @@ class Tariff {
       uint64_t StartDate;
       uint64_t EndDate;    
     } Holiday_t;
+    typedef struct {
+      string  Type;
+      float   Value;
+      string  Name;
+    } Tax_t;
   private :
     uint64_t          pStartDate;
     uint64_t          pEndDate;
     vector<Period_t>  pPeriods;
     vector<Season_t>  pSeasons;
     vector<Holiday_t> pHolidays;
+    vector<Tax_t>     pTaxs;
     string            pDescription;
     uint8_t           pHolidayPeriod;
     uint8_t           pWeekendPeriod;
