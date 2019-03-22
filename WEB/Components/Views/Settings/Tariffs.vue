@@ -55,7 +55,7 @@
       },
       Delete: function(id, evt) {
         $(evt.target).blur();
-        $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: id }), success: GetTariffs });
+        $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: id }), success: this.GetTariffs.bind(this) });
       }
     },
     mounted: function() {

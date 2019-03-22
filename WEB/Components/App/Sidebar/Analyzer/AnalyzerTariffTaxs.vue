@@ -14,16 +14,16 @@
             <tr><td><strong>Description</strong></td><td class="text-right"><strong>Value</strong></td></tr>
             <tr v-for="(tax, idx) in Tariff.Config.Taxs">
                 <td><div class="input-group input-group-xs">
-                    <span class="input-group-btn"><button class="btn btn-default" type="button" @click="Delete(idx)"><img :src="require('Imgs/cross.png')"></button></span>
-                  <input type="text" class="form-control" :value="tax.Name">
+                  <span class="input-group-btn"><button class="btn btn-default" type="button" @click="Delete(idx)"><img :src="require('Imgs/cross.png')"></button></span>
+                  <input type="text" class="form-control" @change="NameChanged($event, idx)" :value="tax.Name">
                 </div></td>
                 <td><div class="input-group input-group-xs">
-                  <input type="text" class="form-control text-right" @change="ItemChanged($event, idx)" :value="tax.Value"> 
+                  <input type="text" class="form-control text-right" @change="ValueChanged($event, idx)" :value="tax.Value"> 
                   <span class="input-group-addon">{{ Types[tax.Type].Units }}</span>
                   <div class="input-group-btn">
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">{{ Types[tax.Type].Text }} <span class="caret"></span></button>
                     <ul class="dropdown-menu dropdown-menu-right">
-                      <li v-for="(item, index) in Types"><a @click="SetType(idx, index)">{{ item.Text }}</a></li>
+                      <li v-for="(item, index) in Types"><a @click="TypeChanged(idx, index)">{{ item.Text }}</a></li>
                     </ul>
                   </div>
                   
@@ -56,16 +56,21 @@
       Delete: function(idx) {
         this.Tariff.Config.Taxs.splice(idx, 1);
       },
-      SetType: function(idx, index) {
+      TypeChanged: function(idx, index) {
         this.Tariff.Config.Taxs[idx].Type = index;
         this.Tariff = Object.assign({}, this.Tariff);
       },
-      ItemChanged(value, idx) {
+      ValueChanged(value, idx) {
         var Value = parseFloat(value.target.value);
         if(isNaN(Value) === true) Value = 0.0;
         this.Tariff.Config.Taxs[idx].Value = Value;
         this.Tariff = Object.assign({}, this.Tariff);
+      },
+      NameChanged(value, idx) {
+        this.Tariff.Config.Taxs[idx].Name = value.target.value;
+        this.Tariff = Object.assign({}, this.Tariff);
       }
+
     },
     created: function() {
       this.Types = {

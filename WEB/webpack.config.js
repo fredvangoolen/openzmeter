@@ -74,6 +74,7 @@ module.exports = {
       '/setDevices': { target: 'http://localhost:8081'},
       '/getTariffs': { target: 'http://localhost:8081'},
       '/setTariffs': { target: 'http://localhost:8081'},
+      '/delTariffs': { target: 'http://localhost:8081'},
       '/Login': { target: 'http://localhost:8081'}
     }
   },

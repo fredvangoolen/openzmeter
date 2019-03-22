@@ -50,10 +50,10 @@ CREATE TABLE IF NOT EXISTS rates(
   rate         serial            NOT NULL PRIMARY KEY,
   name         character varying NOT NULL,
   username     varchar           NOT NULL REFERENCES users(username) ON UPDATE CASCADE ON DELETE CASCADE,
-	country_code varchar           NOT NULL REFERENCES country(country_code) ON UPDATE CASCADE ON DELETE CASCADE,
-	details      jsonb             NOT NULL,
-	startdate    bigint            NOT NULL,
-	enddate      bigint            NOT NULL
+  country_code varchar           NOT NULL REFERENCES country(country_code) ON UPDATE CASCADE ON DELETE CASCADE,
+  template     jsonb             NOT NULL,
+  startdate    bigint            NOT NULL,
+  enddate      bigint            NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS analyzers_rates(
