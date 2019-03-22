@@ -169,6 +169,57 @@ json Tariff::GetTemplate() {
   return T;
 }
 bool Tariff::SetConfig(json t) {
+  if(!t["Taxs"].is_array()) return false;
+  for(uint32_t n = 0; n < t["Taxs"].size(); n++) {
+    Tax_t Tax;
+    if(!t["Taxs"][n]["Name"].is_string()) return false;
+    Tax.Name = t["Taxs"][n]["Name"];
+    if(!t["Taxs"][n]["Value"].is_number_float()) return false;
+    Tax.Value = t["Taxs"][n]["Value"];
+    if(!t["Taxs"][n]["Type"].is_string()) return false;
+    Tax.Type = t["Taxs"][n]["Type"];
+    if((Tax.Type != "PERCENT_TOTAL") && (Tax.Type != "PERCENT_ENERGY") && (Tax.Type != "PERCENT_POWER") && (Tax.Type != "PERCENT_ENERGY_POWER") && (Tax.Type != "FIXED_QUANTITY")) return false;
+    pTaxs.push_back(Tax);
+  }
+  if(!t["Periods"].is_array()) return false;
+  for(uint32_t n = 0; n < t["Periods"].size(); n++) {
+    
+  }
+//  {
+//  "Periods": [
+//    {
+//      "Power_Cost": 44,
+//      "Energy_Cost": 0.1,
+//      "Contracted_Power": 20000
+//    },
+//    {
+//      "Power_Cost": 44,
+//      "Energy_Cost": 0.1,
+//      "Contracted_Power": 10000
+//    },
+//    {
+//      "Power_Cost": 44,
+//      "Energy_Cost": 0.1,
+//      "Contracted_Power": 8000
+//    }
+//  ],
+//  "BillSampletime": [
+//    1547420400000,
+//    1550098800000,
+//    1552518000000,
+//    1555192800000,
+//    1557784800000,
+//    1560463200000,
+//    1563055200000,
+//    1565733600000,
+//    1568412000000,
+//    1571004000000,
+//    1573686000000,
+//    1576278000000
+//  ]
+//}
+//  
+  
   //Leo impuestos potencias contratadas, ...
   
 //      if(!t["Periods"][n]["Contracted_Power"].is_number()) return false;
