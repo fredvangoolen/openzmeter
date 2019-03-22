@@ -12,7 +12,9 @@ class Tariff {
   friend class TariffList;
   private :
     typedef struct {
-      float  Contracted_Power;
+      float  ContractedPower;
+      float  PowerCost;
+      float  EnergyCost;
       string PowerMode;
       string ReactiveMode;
       string Color;
@@ -40,6 +42,7 @@ class Tariff {
     vector<Season_t>  pSeasons;
     vector<Holiday_t> pHolidays;
     vector<Tax_t>     pTaxs;
+    vector<uint64_t>  pBillingCycle;
     string            pDescription;
     uint8_t           pHolidayPeriod;
     uint8_t           pWeekendPeriod;

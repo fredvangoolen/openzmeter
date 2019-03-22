@@ -60,10 +60,14 @@ Tariff::Tariff(uint64_t start, uint64_t end) {
   pEndDate = end;
 }
 bool Tariff::SetTemplate(json t) {
+  if((pStartDate % 900000) != 0) return false;
+  if((pEndDate % 900000) != 899999) return false;
   if(!t["Periods"].is_array()) return false;
   for(uint32_t n = 0; n < t["Periods"].size(); n++) {
     Period_t Period;
-    Period.Contracted_Power = 0;
+    Period.ContractedPower = 0;
+    Period.EnergyCost = 0;
+    Period.PowerCost = 0;
     if(!t["Periods"][n]["PowerMode"].is_string()) return false;
     Period.PowerMode = t["Periods"][n]["PowerMode"];
     if(!t["Periods"][n]["ReactiveMode"].is_string()) return false;
@@ -87,6 +91,8 @@ bool Tariff::SetTemplate(json t) {
     if((pSeasons.size() != 0) && (Season.StartDate != (pSeasons.back().EndDate + 1))) return false;
     if(!t["Seasons"][n]["EndDate"].is_number_unsigned()) return false;
     Season.EndDate = t["Seasons"][n]["EndDate"];
+    if((Season.StartDate % 900000) != 0) return false;
+    if((Season.EndDate % 900000) != 899999) return false;
     if(Season.EndDate <= Season.StartDate) return false;
     if(!t["Seasons"][n]["DayPeriods"].is_array()) return false;
     if(t["Seasons"][n]["DayPeriods"].size() != 24) return false;
@@ -110,6 +116,8 @@ bool Tariff::SetTemplate(json t) {
     if(Holiday.StartDate < pStartDate) return false;
     if(!t["Holidays"][n]["EndDate"].is_number_unsigned()) return false;
     Holiday.EndDate = t["Holidays"][n]["EndDate"];
+    if((Holiday.StartDate % 900000) != 0) return false;
+    if((Holiday.EndDate % 900000) != 899999) return false;
     if((Holiday.EndDate <= Holiday.StartDate) || (Holiday.EndDate > pEndDate)) return false;
     pHolidays.push_back(Holiday);    
   }
@@ -182,56 +190,44 @@ bool Tariff::SetConfig(json t) {
     pTaxs.push_back(Tax);
   }
   if(!t["Periods"].is_array()) return false;
+  //This requiere a previous template is loaded with same periods number
+  if(pPeriods.size() != t["Periods"].size()) return false;
   for(uint32_t n = 0; n < t["Periods"].size(); n++) {
-    
+    if(!t["Periods"][n]["Power_Cost"].is_number_float()) return false;
+    pPeriods[n].PowerCost = t["Taxs"][n]["Power_Cost"];
+    if(!t["Periods"][n]["Energy_Cost"].is_number_float()) return false;
+    pPeriods[n].EnergyCost = t["Taxs"][n]["Energy_Cost"];
+    if(!t["Periods"][n]["Contracted_Power"].is_number_float()) return false;
+    pPeriods[n].ContractedPower = t["Taxs"][n]["Contracted_Power"];
   }
-//  {
-//  "Periods": [
-//    {
-//      "Power_Cost": 44,
-//      "Energy_Cost": 0.1,
-//      "Contracted_Power": 20000
-//    },
-//    {
-//      "Power_Cost": 44,
-//      "Energy_Cost": 0.1,
-//      "Contracted_Power": 10000
-//    },
-//    {
-//      "Power_Cost": 44,
-//      "Energy_Cost": 0.1,
-//      "Contracted_Power": 8000
-//    }
-//  ],
-//  "BillSampletime": [
-//    1547420400000,
-//    1550098800000,
-//    1552518000000,
-//    1555192800000,
-//    1557784800000,
-//    1560463200000,
-//    1563055200000,
-//    1565733600000,
-//    1568412000000,
-//    1571004000000,
-//    1573686000000,
-//    1576278000000
-//  ]
-//}
-//  
-  
-  //Leo impuestos potencias contratadas, ...
-  
-//      if(!t["Periods"][n]["Contracted_Power"].is_number()) return false;
-//    Period.Contracted_Power = t["Periods"][n]["Contracted_Power"];
-
+  if(!t["BillSampletime"].is_array()) return false;
+  for(uint32_t n = 0; n < t["BillSampletime"].size(); n++) {
+    if(!t["BillSampletime"][n].is_number_unsigned()) return false;
+    uint64_t Time = t["BillSampletime"][n];
+    if((Time % 900000) != 0) return false;
+    pBillingCycle.push_back(Time);
+  }
   return true;
 }
 json Tariff::GetConfig() {
-  json T = R"(
-          {"Taxs": [{"Name": "IVA", "Type": "PERCENT_TOTAL", "Value": "21.0"}, {"Name": "Tasas energia", "Type": "PERCENT_ENERGY_POWER", "Value": " 5.11269632"}, {"Name": "Alquiler contador", "Type": "FIXED_QUANTITY", "Value": "2.30"}, {"Name": "Energy Discount", "Type": "PERCENT_ENERGY", "Value": "5"}, {"Name": "Bono social", "Type": "PERCENT_ENERGY_POWER", "Value": "-10"}], "Periods": [{"Power_Cost": 44, "Energy_Cost": 0.1, "Contracted_Power": 20000}, {"Power_Cost": 44, "Energy_Cost": 0.1, "Contracted_Power": 10000}, {"Power_Cost": 44, "Energy_Cost": 0.1, "Contracted_Power": 8000}], "BillSampletime": [1547420400000, 1550098800000, 1552518000000, 1555192800000, 1557784800000, 1560463200000, 1563055200000, 1565733600000, 1568412000000, 1571004000000, 1573686000000, 1576278000000]}
-          
-          )"_json;
+  json T;
+  T["Taxs"] = json::array();
+  for(uint32_t n = 0; n < pTaxs.size(); n++) {
+    json Tax;
+    Tax["Name"] = pTaxs[n].Name;
+    Tax["Value"] = pTaxs[n].Value;
+    Tax["Type"] = pTaxs[n].Type;
+    T["Taxs"].push_back(Tax);
+  }
+  T["Periods"] = json::array();
+  for(uint32_t n = 0; n < pPeriods.size(); n++) {
+    json Period;
+    Period["Power_Cost"] = pPeriods[n].PowerCost;
+    Period["Energy_Cost"] = pPeriods[n].EnergyCost;
+    Period["Contracted_Power"] = pPeriods[n].ContractedPower;
+    T["Periods"].push_back(Period);
+  }
+  T["BillSampletime"] = pBillingCycle;
   return T;
 }
 
