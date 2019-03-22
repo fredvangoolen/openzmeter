@@ -13,8 +13,12 @@ TariffList::TariffList(json array) {
     if(!array[n]["EndDate"].is_number()) return;
     if(!array[n]["Template"].is_object()) return;
     if(!array[n]["Config"].is_object()) return;
-    Tariff *Tmp = Tariff::FromJSON(array[n]["StartDate"], array[n]["EndDate"], array[n]["Template"], array[n]["Config"]);
-    if(Tmp != NULL) pList.push_back(Tmp);
+    Tariff *Tmp = new Tariff(array[n]["StartDate"], array[n]["EndDate"]);
+    if((Tmp->SetTemplate(array[n]["Template"]) == false) || (Tmp->SetConfig(array[n]["Config"]) == false)) {
+      delete Tmp;
+    } else {
+      pList.push_back(Tmp);
+    }
   }
 }
 uint64_t TariffList::BillFrom(uint64_t from) {
@@ -51,40 +55,21 @@ TariffList::~TariffList() {
   for(vector<Tariff*>::iterator it = pList.begin(); it < pList.end(); it++) delete *it;
 }
 //----------------------------------------------------------------------------------------------------------------------
-Tariff *Tariff::FromJSON(uint64_t start, uint64_t end, json t) {
-  Tariff *T = new Tariff(start, end);
-  if(T->LoadTemplate(t) == false) {
-    delete T;
-    return NULL;
-  }
-  return T;
-}
-Tariff *Tariff::FromJSON(uint64_t start, uint64_t end, json temp, json conf) {
-  Tariff *T = new Tariff(start, end);
-  if(T->LoadTemplate(temp) == false) {
-    delete T;
-    return NULL;
-  }
-  if(T->LoadConfig(conf) == false) {
-    delete T;
-    return NULL;
-  }
-  return T;
-}
 Tariff::Tariff(uint64_t start, uint64_t end) {
   pStartDate = start;
   pEndDate = end;
 }
-bool Tariff::LoadTemplate(json t) {
+bool Tariff::SetTemplate(json t) {
   if(!t["Periods"].is_array()) return false;
   for(uint32_t n = 0; n < t["Periods"].size(); n++) {
     Period_t Period;
-    if(!t["Periods"][n]["Contracted_Power"].is_number()) return false;
-    Period.Contracted_Power = t["Periods"][n]["Contracted_Power"];
+    Period.Contracted_Power = 0;
     if(!t["Periods"][n]["PowerMode"].is_string()) return false;
     Period.PowerMode = t["Periods"][n]["PowerMode"];
     if(!t["Periods"][n]["ReactiveMode"].is_string()) return false;
     Period.ReactiveMode = t["Periods"][n]["ReactiveMode"];
+    if(!t["Periods"][n]["Color"].is_string()) return false;
+    Period.Color = t["Periods"][n]["Color"];
     
     if((Period.PowerMode != "NONE")) return false;
     
@@ -98,7 +83,7 @@ bool Tariff::LoadTemplate(json t) {
     if(Season.Name.size() == 0) return false;
     if(!t["Seasons"][n]["StartDate"].is_number_unsigned()) return false;
     Season.StartDate = t["Seasons"][n]["StartDate"];
-    if((pSeasons.size() == 0) && (Season.StartDate != pStartDate)) return false;
+    if((pSeasons.size() == 0) && (Season.StartDate > pStartDate)) return false;
     if((pSeasons.size() != 0) && (Season.StartDate != (pSeasons.back().EndDate + 1))) return false;
     if(!t["Seasons"][n]["EndDate"].is_number_unsigned()) return false;
     Season.EndDate = t["Seasons"][n]["EndDate"];
@@ -114,7 +99,7 @@ bool Tariff::LoadTemplate(json t) {
     pSeasons.push_back(Season);
   }
   if(pSeasons.size() == 0) return false;
-  if(pSeasons.back().EndDate != pEndDate) return false;
+  if(pSeasons.back().EndDate < pEndDate) return false;
   if(!t["Holidays"].is_array()) return false;
   for(uint32_t n = 0; n < t["Holidays"].size(); n++) {
     Holiday_t Holiday;
@@ -148,10 +133,82 @@ bool Tariff::LoadTemplate(json t) {
   }
   return true;
 }
-bool Tariff::LoadConfig(json t) {
+json Tariff::GetTemplate() {
+  json T;
+  T["Periods"] = json::array();
+  for(uint32_t n = 0; n < pPeriods.size(); n++) {
+    json Period;
+    Period["PowerMode"] = pPeriods[n].PowerMode;
+    Period["ReactiveMode"] = pPeriods[n].ReactiveMode;
+    Period["Color"] = pPeriods[n].Color;
+    T["Periods"].push_back(Period);
+  }
+  T["Seasons"] = json::array();
+  for(uint32_t n = 0; n < pSeasons.size(); n++) {
+    json Season;
+    Season["Name"] = pSeasons[n].Name;
+    Season["StartDate"] = pSeasons[n].StartDate;
+    Season["EndDate"] = pSeasons[n].EndDate;
+    Season["DayPeriods"] = json::array();
+    for(uint8_t p = 0; p < 24; p++) Season["DayPeriods"].push_back(pSeasons[n].DayPeriods[p]);
+    T["Seasons"].push_back(Season);
+  }
+  T["Holidays"] = json::array();
+  for(uint32_t n = 0; n < pHolidays.size(); n++) {
+    json Holiday;
+    Holiday["Name"] = pHolidays[n].Name;
+    Holiday["StartDate"] = pHolidays[n].StartDate;
+    Holiday["EndDate"] = pHolidays[n].EndDate;
+    T["Holidays"].push_back(Holiday);    
+  }
+  T["Description"] = pDescription;
+  T["HolidayPeriod"] = nullptr;
+  if(pHolidayPeriod != UINT8_MAX) T["HolidayPeriod"] = pHolidayPeriod;
+  T["WeekendPeriod"] = nullptr;
+  if(pWeekendPeriod != UINT8_MAX) T["WeekendPeriod"] = pWeekendPeriod;
+  return T;
+}
+bool Tariff::SetConfig(json t) {
   //Leo impuestos potencias contratadas, ...
+  
+//      if(!t["Periods"][n]["Contracted_Power"].is_number()) return false;
+//    Period.Contracted_Power = t["Periods"][n]["Contracted_Power"];
+
   return true;
 }
+json Tariff::GetConfig() {
+  json T = R"(
+          {"Taxs": [{"Name": "IVA", "Type": "PERCENT_TOTAL", "Value": "21.0"}, {"Name": "Tasas energia", "Type": "PERCENT_ENERGY_POWER", "Value": " 5.11269632"}, {"Name": "Alquiler contador", "Type": "FIXED_QUANTITY", "Value": "2.30"}, {"Name": "Energy Discount", "Type": "PERCENT_ENERGY", "Value": "5"}, {"Name": "Bono social", "Type": "PERCENT_ENERGY_POWER", "Value": "-10"}], "Periods": [{"Power_Cost": 44, "Energy_Cost": 0.1, "Contracted_Power": 20000}, {"Power_Cost": 44, "Energy_Cost": 0.1, "Contracted_Power": 10000}, {"Power_Cost": 44, "Energy_Cost": 0.1, "Contracted_Power": 8000}], "BillSampletime": [1547420400000, 1550098800000, 1552518000000, 1555192800000, 1557784800000, 1560463200000, 1563055200000, 1565733600000, 1568412000000, 1571004000000, 1573686000000, 1576278000000]}
+          
+          )"_json;
+  return T;
+}
+
+
+
+
+//Tariff *Tariff::FromJSON(uint64_t start, uint64_t end, json t) {
+//  Tariff *T = new Tariff(start, end);
+//  if(T->LoadTemplate(t) == false) {
+//    delete T;
+//    return NULL;
+//  }
+//  return T;
+//}
+//Tariff *Tariff::FromJSON(uint64_t start, uint64_t end, json temp, json conf) {
+//  Tariff *T = new Tariff(start, end);
+//  if(T->LoadTemplate(temp) == false) {
+//    delete T;
+//    return NULL;
+//  }
+//  if(T->LoadConfig(conf) == false) {
+//    delete T;
+//    return NULL;
+//  }
+//  return T;
+//}
+
+
 
 //uint8_t Tariff::FindPeriod(json tariff, uint64_t timestamp) {
 //  uint8_t Period = UINT8_MAX;

@@ -31,19 +31,19 @@
         this.Tariff = tariff;
         this.Show = true;
         this.$nextTick(function() {
-          $(this.$refs.Name).val(tariff.Details.Holidays[index].Name);
-          this.$refs.StartDate.SetDate(moment(tariff.Details.Holidays[index].StartDate));
-          this.$refs.EndDate.SetDate(moment(tariff.Details.Holidays[index].EndDate));
+          $(this.$refs.Name).val(tariff.Template.Holidays[index].Name);
+          this.$refs.StartDate.SetDate(moment(tariff.Template.Holidays[index].StartDate));
+          this.$refs.EndDate.SetDate(moment(tariff.Template.Holidays[index].EndDate));
         });
       },
       SetName: function(evt) {
-        this.Tariff.Details.Holidays[this.Index].Name = evt.target.value;
+        this.Tariff.Template.Holidays[this.Index].Name = evt.target.value;
       },
       SetStartDate: function(date) {
-        this.Tariff.Details.Holidays[this.Index].StartDate = date.startOf('day').valueOf();
+        this.Tariff.Template.Holidays[this.Index].StartDate = date.startOf('day').valueOf();
       },
       SetEndDate: function(date) {
-        this.Tariff.Details.Holidays[this.Index].EndDate = date.endOf('day').valueOf();
+        this.Tariff.Template.Holidays[this.Index].EndDate = date.endOf('day').valueOf();
       },
       Back: function() {
         this.Show = false;

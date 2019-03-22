@@ -43,7 +43,7 @@
         return moment(val).format('DD/MM/YYYY');
       },
       FillTable: function() {
-        this.$refs.table.setData({ data: this.Tariff.Details.Holidays });        
+        this.$refs.table.setData({ data: this.Tariff.Template.Holidays });        
       },
       Load: function(tariff) {
         this.Show = true;
@@ -53,13 +53,13 @@
         });
       },
       Delete: function(index) {
-        this.Tariff.Details.Holidays.splice(index, 1);
+        this.Tariff.Template.Holidays.splice(index, 1);
         this.FillTable();
       },
       Add: function() {
-        this.Tariff.Details.Holidays.push({ StartDate: this.Tariff.StartDate, EndDate: this.Tariff.EndDate, Name: 'Unnamed holiday' });
+        this.Tariff.Template.Holidays.push({ StartDate: this.Tariff.StartDate, EndDate: this.Tariff.EndDate, Name: 'Unnamed holiday' });
         this.Show = false;
-        this.$parent.$refs.Holiday.Load(this.Tariff, this.Tariff.Details.Holidays.length - 1);
+        this.$parent.$refs.Holiday.Load(this.Tariff, this.Tariff.Template.Holidays.length - 1);
       },
       Edit: function(index) {
         this.Show = false;

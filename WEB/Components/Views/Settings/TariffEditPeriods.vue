@@ -3,7 +3,7 @@
     <div class="modal-header">
       <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Periods</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Delete" v-bind:class="{ disabled: Tariff.Details.Periods.length == 1 }"><img :src="require('Imgs/cross.png')" alt="Delete period"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="Delete" v-bind:class="{ disabled: Tariff.Template.Periods.length == 1 }"><img :src="require('Imgs/cross.png')" alt="Delete period"></button>
         <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="New period"></button>
         <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
       </div>
@@ -14,7 +14,7 @@
         <div class="col-xs-12">
           <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
             <template slot="color" slot-scope="props">
-              <color-picker selected="#FFFFFF" :columns="2" :colors="['#fffff0', '#ffecd6', '#ffd8bc', '#ffc4a2', '#ffae88', '#ff986c', '#ff7f50', '#f0ffff', '#d4f2f1', '#b7e5e2', '#98d8d3', '#78ccc5', '#55bfb8', '#20b2aa']"></color-picker>
+              <color-picker :selected="props.rowData.Color" :columns="2" v-on:ColorChanged="ColorChanged(props.rowIndex, $event)" :colors="['#fffff0', '#ffecd6', '#ffd8bc', '#ffc4a2', '#ffae88', '#ff986c', '#ff7f50', '#f0ffff', '#d4f2f1', '#b7e5e2', '#98d8d3', '#78ccc5', '#55bfb8', '#20b2aa']"></color-picker>
             </template>
           </vuetable>
         </div>
@@ -36,12 +36,15 @@
         ] };
     },
     methods: {
+      ColorChanged: function(index, color) {
+        this.Tariff.Template.Periods[index].Color = color;
+      },
       Format: function(val) {
         return (val === null) ? 'NONE' : val; 
       },
       FillTable: function() {
           var Rows = [];
-          for(var i = 0; i < this.Tariff.Details.Periods.length; i++) Rows.push( { Name: 'P' + (i + 1), PowerMode: this.Tariff.Details.Periods[i].PowerMode, ReactiveMode: this.Tariff.Details.Periods[i].ReactiveMode });
+          for(var i = 0; i < this.Tariff.Template.Periods.length; i++) Rows.push( { Name: 'P' + (i + 1), PowerMode: this.Tariff.Template.Periods[i].PowerMode, ReactiveMode: this.Tariff.Template.Periods[i].ReactiveMode, Color: this.Tariff.Template.Periods[i].Color });
           this.$refs.table.setData({ data: Rows });        
       },
       Load: function(tariff) {
@@ -52,11 +55,11 @@
         });
       },
       Delete: function() {
-        this.Tariff.Details.Periods.splice(-1, 1);
+        this.Tariff.Template.Periods.splice(-1, 1);
         this.FillTable();
       },
       Add: function() {
-        this.Tariff.Details.Periods.push({PowerMode: null, ReactiveMode: null});
+        this.Tariff.Template.Periods.push({PowerMode: 'NONE', ReactiveMode: 'NONE', Color: '#fffff0'});
         this.FillTable();
       },
       Back: function() {

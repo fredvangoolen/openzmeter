@@ -56,14 +56,10 @@
         this.ShowSpinner = false;
       },
       Save: function() {
-//        alert("guardar no terminado!!");
-//        TariffDefinition.Name = $('#inputTariffName').val();
-//  TariffDefinition.Details.Description = $('#inputTariffComments').val();
-//  if(TariffKey !== null) TariffDefinition.RateID = TariffKey;
-        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( this.Tariff), 
+        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Serial }, this.Tariff) ), 
           success: function() {
-            this.Close();
-            this.$parent.GetTariffs();
+            this.Show = false;
+            this.$parent.$refs.Tariffs.Load(this.Serial);
           }.bind(this),
           error: function() {
             this.Error = 'Failed to save tariff to analyzer!';
@@ -85,25 +81,31 @@
                   success: function(result) {
                     this.Initial = result;
                     this.Tariff = Object.assign({}, result);
-                    this.$refs.StartDate.SetDate(moment(this.Tariff.StartDate));
-                    this.$refs.EndDate.SetDate(moment(this.Tariff.EndDate));
                     this.Tariffs.unshift({ id: 'CURRENT', name: '(*) ' + result.Name, description: 'From ' + moment(result.StartDate).format('DD/MM/YYYY') + ' to ' + moment(result.EndDate).format('DD/MM/YYYY')});
                     this.SetTariffs();
                   }.bind(this)
                 });
               } else {
-                this.Initial.Template = null;
-                this.Tariff = { Template: { Description: '' }};
+                this.Initial = null;
+                $(this.$refs.Base).attr('data-id', '');
+                $(this.$refs.Base).val('');
+                this.Tariff = { StartDate: moment().startOf('year').valueOf(), EndDate: moment().endOf('year').valueOf(), Template: null, Config: {Periods: [], Taxs: []} };
                 this.$refs.StartDate.Disable();
                 this.$refs.EndDate.Disable();
                 this.SetTariffs();
               }
+              this.$refs.StartDate.SetDate(moment(this.Tariff.StartDate));
+              this.$refs.EndDate.SetDate(moment(this.Tariff.EndDate));
             }.bind(this)
           });
         });
       },
       Validate: function() {
         this.Error = '';
+        if(this.Tariff.Template === null) {
+          this.Error = 'Select a base tariff first';
+          return; 
+        }
         if(this.Tariff.StartDate < this.Tariff.Template.Seasons[0].StartDate) {
           this.Error = 'Date ranges is outside selected tariff ranges';
           return;
@@ -135,7 +137,7 @@
           this.ShowSpinner = true;
           $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: keywork.id }), 
             success: function(result) {
-              this.Tariff.Template = result.Details;
+              this.Tariff.Template = result.Template;
               this.Tariff.Name = result.Name;
               this.Validate();
               this.ShowSpinner = false;

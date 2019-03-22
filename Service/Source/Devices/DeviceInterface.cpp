@@ -116,25 +116,17 @@ void DeviceInterface::GetAnalyzersCallback(HTTPRequest &req) {
 }
 void DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
   //Only owner or auth users can get access
-  ///TODO: Comprobar permisos  
+  ///TODO: Comprobar permisos
   json Params = req.GetParams();
   //Insert defaults
   if(!Params["To"].is_number())         Params["To"] = 0;
   if(!Params["Period"].is_number())     Params["Period"] = 3600000;
   if(!Params["LastSample"].is_number()) Params["LastSample"] = 0;
-  AnalyzerInterface *Analyzer = NULL;
   if(!Params["Analyzer"].is_string()) {
     req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
     return;
   }
-  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
-    Analyzer = (*it)->FindAnalyzer(Params["Analyzer"]);
-    if(Analyzer != NULL) break;
-  }
-  if(Analyzer == NULL) {
-    req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-    return;
-  }
+  string Analyzer = Params["Analyzer"];
   if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) {
     req.FromString("'Aggreg' need to be '3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
     return;
@@ -158,7 +150,7 @@ void DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
     req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
     return;
   }  
-  string Query = "SET search_path TO " + req.Bind(Analyzer->GetID()) + "; ";
+  string Query = "SET search_path TO " + req.Bind(Analyzer) + "; ";
   Query += "SELECT row_to_json(Result) AS result FROM ( SELECT " + req.Bind(From) + " AS " + req.BindID("From") + ", " + req.Bind(To) +" AS " + req.BindID("To") + ", ";
   Query += req.Bind((To - From) / PeriodSeconds) + " AS " + req.BindID("MaxSamples") + ", " + req.Bind(Aggreg) + " AS " + req.BindID("Aggregation_Source") + ", ";
   for(uint i = 0; i < Params["Series"].size(); i++) {
@@ -208,98 +200,57 @@ void DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
 }
 void DeviceInterface::GetTariffsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
-  stringstream Query;
   if(!Params["Analyzer"].is_string()) {
     if(!Params["RateID"].is_number_unsigned()) {
-      Query << "SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username))), '[]') FROM rates WHERE username = 'admin' OR username = '" << req.UserName() << "'";
+      req.ExecSentence("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username))), '[]') as result FROM rates WHERE username = 'admin' OR username = " + req.Bind(req.UserName()));
     } else {
       uint32_t RateID = Params["RateID"];
-      Query << "SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) FROM rates WHERE (username = 'admin' OR username = '" << req.UserName() << "') AND rate = " << RateID;
+      req.ExecSentence("SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Template', template) as result FROM rates WHERE (username = 'admin' OR username = " + req.Bind(req.UserName()) + ") AND rate = " + req.Bind(RateID));
     }  
   } else {
+    string Analyzer = Params["Analyzer"];
     if(!Params["RateID"].is_number_unsigned()) {
-      Query << "SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') FROM analyzers_rates NATURAL LEFT JOIN analyzers WHERE username = '" << req.UserName() << "' AND serial = '" << Params["Analyzer"].get<string>() << "'";
+      req.ExecSentence("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', analyzers_rates.name, 'StartDate', startdate, 'EndDate', enddate))), '[]') as result FROM analyzers_rates LEFT JOIN analyzers USING(serial) WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer));
     } else {
       uint32_t RateID = Params["RateID"];
-      Query << "SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) FROM analyzers_rates where rate = " << Params["RateID"].get<uint32_t>();
-    }  
+      req.ExecSentence("SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) as result FROM analyzers_rates where rate = " + req.Bind(RateID));
+    }
   }
-//  char *Tmp = req.ExecSentenceJSON(Query.str().c_str(), NULL);
-//  req.FromString(Tmp == NULL ? "Failed query" : Tmp, MHD_HTTP_OK);
+  req.FromString(req.ResultString(0, "result"), MHD_HTTP_OK);
 }
 void DeviceInterface::SetTariffsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
-  if(Params["Analyzer"].is_string() && Params["RateID"].is_number_unsigned()) {
-    //Como solo estoy
-    //Quiero guardar la tarifa existente a un analyzador
-    //La tarifa se añade con el propietario que llama
-    //Hace falta pais, que debe de estar en la lista de paises
-    Tariff *T = Tariff::FromJSON(0, 100, Params["Details"]);
-    if(T != NULL) {
-      //req.PrepareSentence("INSERT INTO rates(rate, name, username, country_code, details, startdate, enddate) VALUES(";
-
-      delete T;
-    }
-  } else if(Params["Analyzer"].is_string() && Params["RateID"].is_null()) {
-    //Lo mismo de antes, pero creando un elemento nuevo a la tarifa
-  } else if(Params["Analyzer"].is_null() && Params["RateID"].is_number_unsigned()) {
-    //Necesito inicio, fin, usuario, pais, name
-  } else if(Params["Analyzer"].is_null() && Params["RateID"].is_null()) {
-    //
-  } else {}
-  stringstream Query;
+  if(!Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string()) return req.FromString("'StartDate', 'EndDate' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  uint64_t Start = Params["StartDate"];
+  uint64_t End   = Params["EndDate"];
+  string   Name  = Params["Name"];
+  if(!Params["Template"].is_object()) return req.FromString("'Template' param required", MHD_HTTP_BAD_REQUEST);
+  Tariff T(Start, End);
+  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
   if(!Params["Analyzer"].is_string()) {
-    Query << "INSERT INTO rates(rate, name, username, country_code, details, startdate, enddate) VALUES(";
-    if(Params["RateID"] == NULL) {
-      Query << "null, ";
+    //System tariff
+    if(!Params["RateID"].is_number_unsigned()) {
+      bool Result = req.ExecSentence("INSERT INTO rates(name, username, country_code, template, startdate, enddate) VALUES (" + req.Bind(Name) + ", " + req.Bind(req.UserName()) + ", 'UTC', " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Start) + ", " + req.Bind(End) + ")");
+      req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
     } else {
-      Query << Params["RateID"] << ", ";
+      uint32_t RateID = Params["RateID"];
+      bool Result = req.ExecSentence("UPDATE rates SET name = " + req.Bind(Name) + ", country_code = 'UTC', template = " + req.Bind(T.GetTemplate().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE username = " + req.Bind(req.UserName()) + " AND rate = " + req.Bind(RateID));
+      req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
     }
-    Query << "'" << Params["Name"].get<string>() << "', ";
-    Query << "'" << Params["Owner"].get<string>() << "', ";
-    Query << "'" << Params["CountryCode"].get<string>() << "', ";
-    Query << "'" << Params["Details"].dump() << "', ";
-    Query << Params["StartDate"].get<uint64_t>() << ", ";
-    Query << Params["EndDate"].get<uint64_t>() << ") ON CONFLICT(rate) DO UPDATE SET rate = EXCLUDED.rate, name = EXCLUDED.name, username = EXCLUDED.username, country_code = EXCLUDED.country_code, details = EXCLUDED.details, startdate = EXCLUDED.startdate, enddate = EXCLUDED.enddate";
-    
-
-            //    if(!Params["RateID"].is_number()) {
-//    Query << "SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username))), '[]') from rates";
-//    } else {
-//      Query << "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = " << Params["RateID"].get<uint32_t>();
-//    }  
   } else {
-//    Query << "INSERT INTO SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') from analyzers_rates WHERE serial = " << Params["Analyzer"].get<string>();
-    
-    if(Params["RateID"].is_number()) {
-//      Query << "SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') from analyzers_rates WHERE serial = " << Params["Analyzer"].get<string>();
+    //Analyzer tariff
+    string Analyzer = Params["Analyzer"];
+    if(!Params["Config"].is_object()) return req.FromString("'Config' param required", MHD_HTTP_BAD_REQUEST);    
+    if(T.SetConfig(Params["Config"]) == false) return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
+    if(!Params["RateID"].is_number_unsigned()) {
+      bool Result = req.ExecSentence("INSERT INTO analyzers_rates(serial, startdate, enddate, config, template, name) VALUES (" + req.Bind(Analyzer) + ", " + req.Bind(Start) + ", " + req.Bind(End) + ", " + req.Bind(T.GetConfig().dump()) + ", " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Name) + ")");
+      req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
     } else {
-//      Query << "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Details', details) from analyzers_rates where rate = " << Params["RateID"].get<uint32_t>();
-    }  
+//      uint32_t RateID = Params["RateID"];
+//      bool Result = req.ExecSentence("UPDATE rates SET name = " + req.Bind(Name) + ", country_code = 'UTC', template = " + req.Bind(T.GetTemplate().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE username = " + req.Bind(req.UserName()) + " AND rate = " + req.Bind(RateID));
+//      req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
+    }
   }
-  Tools::LogMsg("INFO", "%s\n", Query.str().c_str());
-  req.FromString("", (req.ExecSentence(Query.str().c_str()) == true) ? MHD_HTTP_OK : MHD_HTTP_NOT_ACCEPTABLE);
-
-  
-  //  if((json_object_object_get_ex(reader, "Analyzer", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Serial = (char*)json_object_get_string(Find);
-//  if(Serial == NULL) {
-//    uint32_t Index = 0;
-//    if((json_object_object_get_ex(reader, "RateID", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Index = json_object_get_int(Find);
-//    if(Index == 0) {
-////      snprintf(QueryText, sizeof(QueryText), "insert into rates(\"name\", username, country_code, details, startdate, enddate) select \"Name\", 'admin', \"Country\", \"Details\", \"StartDate\", \"EndDate\" from json_to_record(?) as x(\"Name\" text, \"Country\" text, \"Details\" jsonb, \"StartDate\" bigint, \"EndDate\" bigint)", );
-//    } else {
-//      snprintf(QueryText, sizeof(QueryText), "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Details', details) from rates where rate = %u", Index);
-//    }  
-//  } else {
-//    uint32_t Index = 0;
-//    if((json_object_object_get_ex(reader, "RateID", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Index = json_object_get_int64(Find);
-//    if(Index == 0) {
-//      snprintf(QueryText, sizeof(QueryText), "SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') from analyzers_rates WHERE serial = '%s'", Serial);
-//    } else {
-//      snprintf(QueryText, sizeof(QueryText), "SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Details', details) from analyzers_rates where rate = %u", Index);
-//    }  
-//  }
-//  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
 }
 void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   ///TODO Comprobar permisos
