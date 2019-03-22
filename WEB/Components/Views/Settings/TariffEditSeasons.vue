@@ -45,7 +45,7 @@
         return moment(val).format('DD/MM/YYYY');
       },
       FillTable: function() {
-        this.$refs.table.setData({ data: this.Tariff.Details.Seasons });        
+        this.$refs.table.setData({ data: this.Tariff.Template.Seasons });        
       },
       Load: function(tariff) {
         this.Show = true;
@@ -55,20 +55,20 @@
         });
       },
       Duplicate: function(index) {
-        var Row = $.extend(true, {}, this.Tariff.Details.Seasons[index]);
+        var Row = $.extend(true, {}, this.Tariff.Template.Seasons[index]);
         Row.Name = Row.Name + "_Copy";
-        var Row = this.Tariff.Details.Seasons.push(Row);
+        var Row = this.Tariff.Template.Seasons.push(Row);
         this.Show = false;
-        this.$parent.$refs.Season.Load(this.Tariff, this.Tariff.Details.Seasons.length - 1);
+        this.$parent.$refs.Season.Load(this.Tariff, this.Tariff.Template.Seasons.length - 1);
       },
       Delete: function(index) {
-        this.Tariff.Details.Seasons.splice(index, 1);
+        this.Tariff.Template.Seasons.splice(index, 1);
         this.FillTable();
       },
       Add: function() {
-        this.Tariff.Details.Seasons.push({ StartDate: this.Tariff.StartDate, EndDate: this.Tariff.EndDate, DayPeriods: new Array(24).fill(0), Name: 'Unnamed season' });
+        this.Tariff.Template.Seasons.push({ StartDate: this.Tariff.StartDate, EndDate: this.Tariff.EndDate, DayPeriods: new Array(24).fill(0), Name: 'Unnamed season' });
         this.Show = false;
-        this.$parent.$refs.Season.Load(this.Tariff, this.Tariff.Details.Seasons.length - 1);
+        this.$parent.$refs.Season.Load(this.Tariff, this.Tariff.Template.Seasons.length - 1);
       },
       Edit: function(index) {
         this.Show = false;

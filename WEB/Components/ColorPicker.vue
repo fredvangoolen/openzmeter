@@ -5,7 +5,7 @@
         <div class="input-group-btn">
           <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><span class="caret"></span></button>
           <ul class="dropdown-menu pull-right" v-bind:style="{ columns: columns }">
-            <li v-for="color in colors"><a href="#"><div class="colorli" v-bind:style="{backgroundColor: color}" @click="ColorClick(color, $event)"></div></a></li>
+            <li v-for="color in colors"><a @click="ColorClick(color, $event)"><div class="colorli" v-bind:style="{backgroundColor: color}"></div></a></li>
           </ul>
         </div>
       </div>

@@ -15,6 +15,7 @@ class Tariff {
       float  Contracted_Power;
       string PowerMode;
       string ReactiveMode;
+      string Color;
     } Period_t;
     typedef struct {
       string   Name;
@@ -36,20 +37,26 @@ class Tariff {
     string            pDescription;
     uint8_t           pHolidayPeriod;
     uint8_t           pWeekendPeriod;
-
+    
     vector<uint64_t>  BillingCycles;
   private :
     static uint64_t BillStart(json tariffs, uint64_t timestamp);
     static uint64_t BillEnd(json tariffs, uint64_t timestamp);
     static uint32_t FindTariff(json tariffs, uint64_t timestamp);
   private :
+//    bool  LoadTemplate(json t);
+//    bool  LoadConfig(json t);    
+  public :
+//    static Tariff *FromJSON(uint64_t start, uint64_t end, json t);
+//    static Tariff *FromJSON(uint64_t start, uint64_t end, json temp, json conf);
+  public :
     Tariff(uint64_t start, uint64_t end);
-    bool  LoadTemplate(json t);
-    bool  LoadConfig(json t);    
-  public :
-    static Tariff *FromJSON(uint64_t start, uint64_t end, json t);
-    static Tariff *FromJSON(uint64_t start, uint64_t end, json temp, json conf);
-  public :
+    bool SetTemplate(json t);
+    bool SetConfig(json t);
+    json GetTemplate();
+    json GetConfig();
+//    static Tariff *FromJSON(uint64_t start, uint64_t end, json temp, json conf);
+
     //    uint8_t  FindPeriod(json tariff, uint64_t timestamp);    
 //    bool     IsBillDate(json tariff, uint64_t timestamp);
     bool     PushSample(uint64_t time, float active, float reactive);

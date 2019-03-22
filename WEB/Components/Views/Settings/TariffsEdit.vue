@@ -1,5 +1,5 @@
 <template>
-  <div class="modal" tabindex="-1" role="dialog" data-backdrop='false' v-if="ShowDialog">
+  <div class="modal" tabindex="-1" role="dialog" data-backdrop="false" data-keyboard="false" v-if="ShowDialog">
     <div class="modal-backdrop in"></div>
     <div class="modal-dialog">
       <edit-main ref="Main" v-on:Close="Close"></edit-main>
@@ -31,13 +31,13 @@
           if(id === null) {
             this.Tariff = { 
               Country: null, 
-              StartDate: new Date(new Date().getFullYear(), 0, 1, 0, 0, 0, 0).getTime(), 
-              EndDate: new Date(new Date().getFullYear(), 11, 31, 23, 59, 59, 999).getTime(), 
+              StartDate: moment.startOf('year').valueOf(), 
+              EndDate: moment.endOf('year').valueOf(), 
               Name: 'No nane', 
-              Details: {
+              Template: {
                 Description: 'Add tariff description here', 
                 Seasons: [], 
-                Periods: [ { "ReactiveMode": null, "PowerMode": null } ], 
+                Periods: [ { ReactiveMode: 'NONE', PowerMode: 'NONE' } ], 
                 Holidays: [],
                 WeekendPeriod: null,
                 HolidayPeriod: null
@@ -59,7 +59,7 @@
       Save: function() {
 //        alert("guardar no terminado!!");
 //        TariffDefinition.Name = $('#inputTariffName').val();
-//  TariffDefinition.Details.Description = $('#inputTariffComments').val();
+//  TariffDefinition.Template.Description = $('#inputTariffComments').val();
 //  if(TariffKey !== null) TariffDefinition.RateID = TariffKey;
         $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign(this.Tariff, { RateID: this.RateID }) ), 
           success: function() {
@@ -76,20 +76,20 @@
         $('#divTariffSuccess, #divTariffError').addClass('hide');
         $('#btnTariffSave').addClass('disabled');
         var FindSeason = function(date) {
-          for(var i = 0; i < tariff.Details.Seasons.length; i++) { if(tariff.Details.Seasons[i].StartDate === date) return i; }
+          for(var i = 0; i < tariff.Template.Seasons.length; i++) { if(tariff.Template.Seasons[i].StartDate === date) return i; }
           return null;
         };
-        for(var i = 0; i < tariff.Details.Seasons.length; i++) {
+        for(var i = 0; i < tariff.Template.Seasons.length; i++) {
           for(var h = 0; h < 24; h++) {
-            if((tariff.Details.Seasons[i].DayPeriods[h] < 0) || (tariff.Details.Seasons[i].DayPeriods[h] >= tariff.Details.Periods.length)) return 'Periods in season "' + tariff.Details.Seasons[i].Name + '" out of range!';
+            if((tariff.Template.Seasons[i].DayPeriods[h] < 0) || (tariff.Template.Seasons[i].DayPeriods[h] >= tariff.Template.Periods.length)) return 'Periods in season "' + tariff.Template.Seasons[i].Name + '" out of range!';
           }
         }
-        var Used = tariff.Details.Seasons.length;
+        var Used = tariff.Template.Seasons.length;
         var Date = tariff.StartDate;
         while(Used > 0) {
           var Find = FindSeason(Date);
           if(Find === null) break;
-          Date = tariff.Details.Seasons[Find].EndDate;
+          Date = tariff.Template.Seasons[Find].EndDate;
           Used = Used - 1;
           if(Used > 0) Date = Date + 1;
         }
