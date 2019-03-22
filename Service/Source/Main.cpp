@@ -23,18 +23,16 @@ void GetNewsCallback(HTTPRequest &req) {
   if(!Params["Action"].is_string()) {
     req.ExecSentence("SELECT COALESCE((SELECT jsonb_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime = " + req.Bind(Time) + "), 'null') AS result");
   } else if(Params["Action"] == "Before") {
-//    req.PrepareSentence("SELECT COALESCE((SELECT jsonb_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime < ? ORDER BY newstime DESC LIMIT 1), 'null') AS result");    
+    req.ExecSentence("SELECT COALESCE((SELECT jsonb_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime < " + req.Bind(Time) + " ORDER BY newstime DESC LIMIT 1), 'null') AS result");    
   } else if(Params["Action"] == "After") {
-//    req.PrepareSentence("SELECT COALESCE((SELECT jsonb_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime > ? ORDER BY newstime ASC LIMIT 1), 'null') AS result");    
+    req.ExecSentence("SELECT COALESCE((SELECT jsonb_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime > " + req.Bind(Time) + " ORDER BY newstime ASC LIMIT 1), 'null') AS result");
   } else {
     return req.FromString("'Action' must be 'After' or 'Before'", MHD_HTTP_BAD_REQUEST);
   }
-//  req.BindSingleUInt64(Params["NewsTime"]);
-//  req.ExecSentence();
-//  if(req.ResultRows() == 1) req.FromString(req.ResultValue(0, "result"), MHD_HTTP_OK);
+  req.FromString(req.ResultString(0, "result"), MHD_HTTP_OK);
 }
 bool GetCountriesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
-//  *postdata = db->ExecSentenceJSON("SELECT array_to_json(array_agg(row_to_json(t1))) FROM (  select country_code as \"CountryCode\", country as \"Name\", currency as \"Currency\", timezone as \"TimeZone\" from country) as t1;", resultLen);
+  //  *postdata = db->ExecSentenceJSON("SELECT array_to_json(array_agg(row_to_json(t1))) FROM (  select country_code as \"CountryCode\", country as \"Name\", currency as \"Currency\", timezone as \"TimeZone\" from country) as t1;", resultLen);
   return true;
 }
 int main(int argc, char** argv) {

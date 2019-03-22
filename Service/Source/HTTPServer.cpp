@@ -31,15 +31,15 @@ HTTPRequest::HTTPRequest(char *cookie, bool deflate) : Database() {
   }
   pResultCode = MHD_HTTP_OK;
   if(cookie != NULL) {
-    ExecSentence("SELECT id, username FROM sessions WHERE id = " + Bind(cookie));
+    ExecSentence("SELECT id, username FROM sessions WHERE id = " + Bind(string(cookie)));
     if(ResultRows() == 1) {
-      pUserName = (ResultValue(0, "username") != NULL) ? ResultValue(0, "username") : "";
-      pSessionID = ResultValue(0, "id");
+      pUserName = ResultString(0, "username");
+      pSessionID = ResultString(0, "id");
       return;
     }
   }
   ExecSentence("INSERT INTO sessions(username, timestamp) VALUES (NULL, " + Bind(Tools::GetTime()) + ") RETURNING id");
-  if(ResultRows() == 1) pSessionID = ResultValue(0, (char*)"id");
+  if(ResultRows() == 1) pSessionID = ResultString(0, "id");
 }
 HTTPRequest::~HTTPRequest() {
   if(pDeflate) deflateEnd(&pDeflateObj);
@@ -244,7 +244,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
               Response["Result"] = false;
             } else {
               Response["Result"] = true;
-              Response["LastLogin"] = atoll(Request->ResultValue(0, "lastlogin"));
+              Response["LastLogin"] = Request->ResultUInt64(0, "lastlogin");
               if(UpdateLastLogin) Request->ExecSentence("UPDATE users SET lastlogin = " + Request->Bind(Tools::GetTime()) + " WHERE username = " + Request->Bind(User) );
               Request->ExecSentence("UPDATE sessions SET username = " + Request->Bind(User) + " WHERE id = " + Request->Bind(Request->SessionID()));
             }
