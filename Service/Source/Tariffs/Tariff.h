@@ -8,6 +8,23 @@
 #include "Tools.h"
 #include "AnalyzerInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
+class TariffPlugin {
+  public :
+    enum Type { POWER, REACTIVE };
+  private :
+    static vector<string> pPowerPlugins;
+    static vector<string> pReactivePlugins;
+  public :
+    static bool RegisterPower(string name);
+    static bool RegisterReactive(string name);
+    static bool ContainsPower(string name);
+    static bool ContainsReactive(string name);
+  public :
+    Type pType;
+  public :
+    TariffPlugin(Type type);
+    virtual void Reset() = 0;
+};
 class Tariff {
   friend class TariffList;
   private :
@@ -46,7 +63,6 @@ class Tariff {
     string            pDescription;
     uint8_t           pHolidayPeriod;
     uint8_t           pWeekendPeriod;
-    
     vector<uint64_t>  BillingCycles;
   private :
     static uint64_t BillStart(json tariffs, uint64_t timestamp);

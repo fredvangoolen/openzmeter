@@ -16,6 +16,12 @@
             <template slot="color" slot-scope="props">
               <color-picker :selected="props.rowData.Color" :columns="2" v-on:ColorChanged="ColorChanged(props.rowIndex, $event)" :colors="['#fffff0', '#ffecd6', '#ffd8bc', '#ffc4a2', '#ffae88', '#ff986c', '#ff7f50', '#f0ffff', '#d4f2f1', '#b7e5e2', '#98d8d3', '#78ccc5', '#55bfb8', '#20b2aa']"></color-picker>
             </template>
+            <template slot="power" slot-scope="props">
+              <option-picker :selected="props.rowData.PowerMode" v-on:OptionChanged="PowerChanged(props.rowIndex, $event)" :options="['NONE', 'ESP_3.x', 'ESP_6.x']"></option-picker>
+            </template>
+            <template slot="reactive" slot-scope="props">
+              <option-picker :selected="props.rowData.ReactiveMode" v-on:OptionChanged="ReactiveChanged(props.rowIndex, $event)" :options="['NONE', 'ESP']"></option-picker>
+            </template>
           </vuetable>
         </div>
       </div>
@@ -26,18 +32,25 @@
 <script>
   import Vuetable from 'vuetable-2';
   import ColorPicker from 'Components/ColorPicker.vue';
+  import OptionPicker from 'Components/OptionPicker.vue';
   export default {
     data() {
       return { Show: false, Tariff: {}, Columns: [
           {name: 'Name', title: 'Name'},
-          {name: 'PowerMode', title: 'Power mode', callback: 'Format'},
-          {name: 'ReactiveMode', title: 'Reactive mode', callback: 'Format'},
+          {name: '__slot:power', title: 'Power mode'},
+          {name: '__slot:reactive', title: 'Reactive mode'},
           {name: '__slot:color', title: 'Color'}
         ] };
     },
     methods: {
       ColorChanged: function(index, color) {
         this.Tariff.Template.Periods[index].Color = color;
+      },
+      PowerChanged: function(index, option) {
+        this.Tariff.Template.Periods[index].PowerMode = option;
+      },
+      ReactiveChanged: function(index, option) {
+        this.Tariff.Template.Periods[index].ReactiveMode = option;
       },
       Format: function(val) {
         return (val === null) ? 'NONE' : val; 
@@ -67,7 +80,7 @@
         this.$parent.$refs.Main.Load(this.Tariff);
       }
     },
-    components: { Vuetable, ColorPicker }
+    components: { Vuetable, ColorPicker, OptionPicker }
   }
 </script>
 

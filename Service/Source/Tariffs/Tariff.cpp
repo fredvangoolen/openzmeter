@@ -7,6 +7,26 @@
 #include <unistd.h>
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
+vector<string> TariffPlugin::pPowerPlugins = { "ESP_3.x", "ESP_6.x" };
+vector<string> TariffPlugin::pReactivePlugins = { "ESP" };
+TariffPlugin::TariffPlugin(Type type) {
+  pType = type;
+}
+bool TariffPlugin::ContainsPower(string name) {
+  if(name == "NONE") return true;
+  for(vector<string>::iterator it = pPowerPlugins.begin() ; it != pPowerPlugins.end(); ++it) {
+    if(*it == name) return true;
+  }
+  return false;
+}
+bool TariffPlugin::ContainsReactive(string name) {
+  if(name == "NONE") return true;
+  for(vector<string>::iterator it = pReactivePlugins.begin() ; it != pReactivePlugins.end(); ++it) {
+    if(*it == name) return true;
+  }
+  return false;
+}
+//----------------------------------------------------------------------------------------------------------------------
 TariffList::TariffList(json array) {
   for(uint32_t n = 0; n < array.size(); n++) {
     if(!array[n]["StartDate"].is_number()) return;
@@ -75,7 +95,9 @@ bool Tariff::SetTemplate(json t) {
     if(!t["Periods"][n]["Color"].is_string()) return false;
     Period.Color = t["Periods"][n]["Color"];
     
-    if((Period.PowerMode != "NONE")) return false;
+    if(TariffPlugin::ContainsPower(Period.PowerMode) == false) return false;
+    if(TariffPlugin::ContainsReactive(Period.ReactiveMode) == false) return false;
+//    if((Period.PowerMode != "NONE")) return false;
     
     pPeriods.push_back(Period);
   }
