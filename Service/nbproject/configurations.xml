@@ -27,6 +27,12 @@
           </df>
           <in>DeviceInterface.cpp</in>
         </df>
+        <df name="Tariffs">
+          <df name="Spain">
+            <in>Spain.cpp</in>
+          </df>
+          <in>Tariff.cpp</in>
+        </df>
         <in>Database.cpp</in>
         <in>Events.cpp</in>
         <in>FFT.cpp</in>
@@ -34,7 +40,6 @@
         <in>Main.cpp</in>
         <in>NTP.cpp</in>
         <in>NetworkManager.cpp</in>
-        <in>Tariff.cpp</in>
         <in>Tools.cpp</in>
       </df>
     </df>
@@ -338,27 +343,12 @@
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="Source/Tariff.cpp" ex="false" tool="1" flavor2="8">
+      <item path="Source/Tariffs/Spain/Spain.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="1">
-          <incDir>
-            <pElem>/usr/include/nlohmann</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESIOS</pElem>
-            <pElem>.</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>OZM_DEBUG</Elem>
-          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="Source/Tariffs/Tariff.cpp" ex="false" tool="1" flavor2="8">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="8">
@@ -636,6 +626,30 @@
             <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>OZM_DEBUG</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Tariffs">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
             <pElem>.</pElem>
           </incDir>
