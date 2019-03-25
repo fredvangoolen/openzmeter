@@ -43,7 +43,7 @@
           <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>
         </a>
         <ul class="sidenav-dropdown" data-sidenav-dropdown>
-          <li><a href="Stats/Costs">Costs</a></li>
+          <li><router-link to="/Stats/Costs">Costs</router-link></li>
           <li><router-link to="/Stats/Heatmap">Heatmap</router-link></li>
           <li><router-link to="/Stats/Distribution">Distribution</router-link></li>
         </ul>
