@@ -1,69 +1,65 @@
 <template>
-  <div>
-    <ul class="sidenav-menu" id="AnalyzerMenu">
-      <li>
-        <router-link to="/Dashboard">
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/dashboard.png')"></span>
-          <span class="sidenav-link-title">Dashboard</span>
-        </router-link>
-      </li>
-      <li>
-        <a href="javascript:;" data-sidenav-dropdown-toggle>
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/draw_wave.png')"></span>
-          <span class="sidenav-link-title">Analysis</span>
-          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_down.png')"></span>
-          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>          
-        </a>
-        <ul class="sidenav-dropdown" data-sidenav-dropdown>
-          <li><router-link to="/Analysis/Voltage">Voltage</router-link></li>
-          <li><router-link to="/Analysis/Current">Current</router-link></li>
-          <li><router-link to="/Analysis/Power">Power</router-link></li>
-          <li><router-link to="/Analysis/Energy">Energy</router-link></li>
-          <li><router-link to="/Analysis/Frequency">Frequency</router-link></li>
-        </ul>
-      </li>
-      <li>
-        <a href="javascript:;" data-sidenav-dropdown-toggle>
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/warning.png')"></span>
-          <span class="sidenav-link-title">Events</span>
-          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_down.png')"></span>
-          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>
-        </a>
-        <ul class="sidenav-dropdown" data-sidenav-dropdown>
-          <li><router-link to="/Events/ITIC">ITIC</router-link></li>
-          <li><router-link to="/Events/Disturbances">Disturbances</router-link></li>
-          <li><router-link to="/Events/EN50160">EN50160</router-link></li>
-        </ul>
-      </li>
-      <li>
-        <a href="javascript:;" data-sidenav-dropdown-toggle>
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/table_money.png')"></span>
-          <span class="sidenav-link-title">Energy Stats</span>
-          <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_down.png')"></span>
-          <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>
-        </a>
-        <ul class="sidenav-dropdown" data-sidenav-dropdown>
-          <li><router-link to="/Stats/Costs">Costs</router-link></li>
-          <li><router-link to="/Stats/Heatmap">Heatmap</router-link></li>
-          <li><router-link to="/Stats/Distribution">Distribution</router-link></li>
-        </ul>
-      </li>
-    </ul>
-    <ul class="sidenav-menu">
-      <li id="menuSettings">
-        <router-link to="/Settings">
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/cog.png')"></span>
-          <span class="sidenav-link-title">Settings</span>
-        </router-link>
-      </li>
-      <li>
-        <a href="Help">
-          <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/help.png')"></span>
-          <span class="sidenav-link-title">Help</span>
-        </a>
-      </li>
-    </ul>
-  </div>
+  <ul class="sidenav-menu">
+    <li>
+      <router-link to="/Dashboard">
+        <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/dashboard.png')"></span>
+        <span class="sidenav-link-title">Dashboard</span>
+      </router-link>
+    </li>
+    <li>
+      <a href="javascript:;" data-sidenav-dropdown-toggle>
+        <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/draw_wave.png')"></span>
+        <span class="sidenav-link-title">Analysis</span>
+        <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_down.png')"></span>
+        <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>          
+      </a>
+      <ul class="sidenav-dropdown" data-sidenav-dropdown>
+        <li><router-link to="/Analysis/Voltage">Voltage</router-link></li>
+        <li><router-link to="/Analysis/Current">Current</router-link></li>
+        <li><router-link to="/Analysis/Power">Power</router-link></li>
+        <li><router-link to="/Analysis/Energy">Energy</router-link></li>
+        <li><router-link to="/Analysis/Frequency">Frequency</router-link></li>
+      </ul>
+    </li>
+    <li>
+      <a href="javascript:;" data-sidenav-dropdown-toggle>
+        <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/warning.png')"></span>
+        <span class="sidenav-link-title">Events</span>
+        <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_down.png')"></span>
+        <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>
+      </a>
+      <ul class="sidenav-dropdown" data-sidenav-dropdown>
+        <li><router-link to="/Events/ITIC">ITIC</router-link></li>
+        <li><router-link to="/Events/Disturbances">Disturbances</router-link></li>
+        <li><router-link to="/Events/EN50160">EN50160</router-link></li>
+      </ul>
+    </li>
+    <li>
+      <a href="javascript:;" data-sidenav-dropdown-toggle>
+        <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/table_money.png')"></span>
+        <span class="sidenav-link-title">Energy Stats</span>
+        <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_down.png')"></span>
+        <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>
+      </a>
+      <ul class="sidenav-dropdown" data-sidenav-dropdown>
+        <li><router-link to="/Stats/Costs">Costs</router-link></li>
+        <li><router-link to="/Stats/Heatmap">Heatmap</router-link></li>
+        <li><router-link to="/Stats/Distribution">Distribution</router-link></li>
+      </ul>
+    </li>
+    <li>
+      <router-link to="/Settings">
+        <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/cog.png')"></span>
+        <span class="sidenav-link-title">Settings</span>
+      </router-link>
+    </li>
+    <li>
+      <a href="Help">
+        <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/help.png')"></span>
+        <span class="sidenav-link-title">Help</span>
+      </a>
+    </li>
+  </ul>
 </template>
 
 <script>
@@ -81,7 +77,7 @@
   }
 </script>
 
-<style>
+<style scoped>
   .sidenav-menu {
     padding: 0px;
   }
@@ -102,6 +98,9 @@
     line-height: 24px;
     padding: 10px 32px;
     text-decoration: none
+  }
+  li ul li a {
+    padding: 5px 32px !important;
   }
   .sidenav-menu a:hover {
     background: #616161;
@@ -152,5 +151,5 @@
   }
   .sidenav-dropdown-icon.show {
     display: block
-  } 
+  }
 </style>

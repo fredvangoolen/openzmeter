@@ -33,7 +33,7 @@
   }
   export default {
     data() {
-      return { ShowSpinner: true, Time: 'Loading data...', Graph: null, Data: null, VoltagePhases: null, ShowCurrent: null };
+      return { ShowSpinner: true, Time: 'Loading data...' };
     },
     methods: {
       Redraw: function() {
@@ -62,7 +62,7 @@
         this.ShowSpinner = false;
       },
       CalcOptions: function() {
-        if((this.$root.SelectedAnalyzer === null) || (this.VoltagePhases === null) || (this.ShowCurrent === null) || (this.Data === null)) return;
+        if((this.$root.SelectedAnalyzer === null) || (this.VoltagePhases === null) || (this.ShowCurrent === null) || (Array.isArray(this.Data) === false)) return;
         var Analyzer = this.$root.SelectedAnalyzer, Series = {}, CurrentPhases = [];
         for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length; n++) {
           CurrentPhases.push((this.VoltagePhases[n] === true) && (this.ShowCurrent === true));
@@ -71,7 +71,7 @@
         var Y1Range = oZm.Series['VOLTAGE_SAMPLES'].Range(this.Data, this.VoltagePhases);
         var Y2Range = oZm.Series['CURRENT_SAMPLES'].Range(this.Data, Array(this.VoltagePhases.length).fill(false).concat(CurrentPhases));
         var Options = {
-          strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: oZm.mouseUp, dblclick: oZm.dblClick_Restore },
+          interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: oZm.mouseUp, dblclick: oZm.dblClick_Restore },
           legend: 'follow', legendFormatter: oZm.LegendFormatter_Follow, series: Series, visibility: this.VoltagePhases.concat(CurrentPhases),
           labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)).concat(oZm.Series['CURRENT'].Names(Analyzer)), 
           colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length)), 
@@ -95,10 +95,17 @@
         this.$refs.graph.SetOptions(Options);
       },
       ExportClick: function() {
-      
+        if(this.$root.SelectedAnalyzer === null) return;
+        var Analyzer = this.$root.SelectedAnalyzer;
+        this.$refs.tools.SaveCVS('Waveform.csv', [['Time'].concat(oZm.Series['VOLTAGE'].Names(Analyzer).concat(oZm.Series['CURRENT'].Names(Analyzer)))].concat(this.Data));
       },
       MaximizeClick: function() {
         this.$refs.tools.Maximize('Waveform', this.$refs.graph.Graph, this.$refs.Toolbar);
+      },
+      created: function() {
+        this.Data = null;
+        this.VoltagePhases = null;
+        this.ShowCurrent = null;
       }
     },
     components: { Spinner, ToolbarPhases, ToolbarOptions, ToolbarTools, Graph }
