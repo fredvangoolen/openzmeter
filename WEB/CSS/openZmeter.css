@@ -88,6 +88,7 @@ img {
 
 .header-text {
     display: inline-block;
+    padding-bottom: 0px;
 }
 .header-buttons {
   float: right;
@@ -96,8 +97,6 @@ img {
 .modal-backdrop {
   background-color: #FFF;
 }
-
-
 .subpanel {
   color: #474544;
   padding: 0px 5px;
@@ -116,9 +115,10 @@ img {
   .header-text {
     text-align: center;
     display: block;
+    padding-bottom: 10px;
   }
   .header-buttons {
-    border-top: 1px solid rgba(255,255,255,0.3);
+    border-top: 1px solid rgba(255,255,255,0.5);
     float: none;
     text-align: center;
     padding-top: 2px;

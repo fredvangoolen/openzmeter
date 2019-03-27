@@ -1,75 +1,4 @@
-var VoltageChart     = null;
-var VoltageData      = [];
-function Scrollable_OnSuccess(result, clear) {
-  if(clear) VoltageData = [];
-  AjaxGetEvents(result['From'], result['To'], clear);
-  VoltageData = GraphDataAppend(result, 'Voltage', VoltageData);
-  if(VoltageChart === null) {
-    VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
-      { strokeWidth: 0.5, stepPlot: true, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4],
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(Analyzer.GetSeriesNames('Voltage')), dateWindow: [result['From'], result['To']],
-        zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
-        colors: ColorArray($('#VoltagePanel').css('border-color'), 3), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], xAxisHeight: 24,
-        underlayCallback: function(canvas, area, g) {
-          var NV = Analyzer.GetSelected().NominalVoltage, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
-          GraphHBackgroundRanges([[NV * 1.1, NV * 1.07, Yellow], [NV * 0.93, NV * 0.9, Yellow], [Infinity, NV * 1.1, Red], [NV * 0.9, -Infinity, Red]], g, canvas);
-        },
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">V</em>'; },
-               axisLabelFormatter: function (x) { return Round2(x); }
-             },
-          x: MainScrollable.XAxis
-          }
-        }  
-    );
-    $(window).bind('resize', VoltageResizeEvent);
-    window.dispatchEvent(new Event('resize'));
-    new GraphTools('Voltage', VoltageChart, '#toolbarVoltage', VoltageResizeEvent, function() { exportToCsv('Voltage.csv', [['Time'].concat(Analyzer.GetSeriesNames('Voltage'))].concat(VoltageData)); });
-  } else {
-    VoltageChart.updateOptions({file: VoltageData, dateWindow: [result['From'], result['To']]});
-  }
-  VoltageSeries();
-}
-function VoltageResizeEvent() { 
-  if(VoltageChart !== null) VoltageChart.resize('100%', $('#VoltagePanel > .panel-body > .row > div:first-child').height());
-}
-function VoltageSeries(event) {
-  GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'VisibleVoltageMainPhases', false, function(series) { return CalcRanges(VoltageData, series, false); }, (event !== undefined) ? event.target : undefined); 
-}
-$('#groupVoltagePhases').on('click', 'button', VoltageSeries);
-function Scrollable_UpdateCounters(times, renew) {
-  if(renew === true) {
-    $('#labelVoltageAvgPrimary').text(times.PrimaryText + ' average');
-    $('#labelVoltageMaxPrimary').text(times.PrimaryText + ' maximun');
-    $('#labelVoltageMinPrimary').text(times.PrimaryText + ' minimun');
-    $('#labelVoltageAvgPrimaryValue, #labelVoltageMaxPrimaryValue, #labelVoltageMinPrimaryValue').text('Calculating...');
-    $('#labelVoltageAvgSecondary, #labelVoltageMaxSecondary, #labelVoltageMinSecondary').text(times.SecondaryText);
-    $('#labelVoltageAvgSecondaryValue, #labelVoltageMaxSecondaryValue, #labelVoltageMinSecondaryValue').text((times.SecondaryTo !== undefined) ? 'Calculating...' : '');
-    if(times.SecondaryTo !== undefined) {
-      Analyzer.GetSeriesAggreg(times.SecondaryPeriod, times.SecondaryTo, times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)',
-        function(result) {
-          if(result['Samples'] !== 0) {
-            $('#labelVoltageAvgSecondaryValue').html(Array_Round2(result['avg_rms_v']) + '&nbsp;<em>V</em>');
-            $('#labelVoltageMinSecondaryValue').html(Array_Round2(result['min_rms_v']) + '&nbsp;<em>V</em>');
-            $('#labelVoltageMaxSecondaryValue').html(Array_Round2(result['max_rms_v']) + '&nbsp;<em>V</em>');
-          } else {
-            $('#labelVoltageAvgSecondaryValue, #labelVoltageMaxSecondaryValue, #labelVoltageMinSecondaryValue').text('No data'); 
-          }
-          window.dispatchEvent(new Event('resize'));
-        }
-      );
-    }
-  }
-  Analyzer.GetSeriesAggreg(times.PrimaryPeriod, times.PrimaryTo, times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)', 
-    function(result) {
-      $('#labelVoltageAvgPrimaryValue').html(Array_Round2(result['avg_rms_v'], ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
-      $('#labelVoltageMinPrimaryValue').html(Array_Round2(result['min_rms_v'], ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
-      $('#labelVoltageMaxPrimaryValue').html(Array_Round2(result['max_rms_v'], ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
-      window.dispatchEvent(new Event('resize'));
-    }
-  );
-}
+
 function Live_OnSuccess(result) {
   UpdatePhasorChart(result);
   SetCubismNowLabel(PowerFactorChart, result.Power_Factor);
@@ -430,44 +359,6 @@ function AjaxSamples(result) {
 function ExportDetail() {
   var Data = [];
   var Filename;
-  if(DetailTabSelector.GetSaved() === 0) {
-    exportToCsv('Waveform.csv', [['Time'].concat(Analyzer.GetSeriesNames('Voltage')).concat(Analyzer.GetSeriesNames('Current'))].concat(WaveformDataset));
-  } else if(DetailTabSelector.GetSaved() === 3) {
-    var Header = ['Index'];
-    for(var i = 0; i < Analyzer.GetSeriesNames('Voltage').length; i++) { Header.push(Analyzer.GetSeriesNames('Voltage')[i]); Header.push(Analyzer.GetSeriesNames('Voltage')[i] + ' (dB)'); }
-    for(var i = 0; i < Analyzer.GetSeriesNames('Current').length; i++) { Header.push(Analyzer.GetSeriesNames('Current')[i]); Header.push(Analyzer.GetSeriesNames('Current')[i] + ' (dB)'); }
-    Data.push(Header);
-    for(var i = 0; i < FFTDataset.length; i++) {
-      var Row = [i];
-      for(var n = 0; n < Analyzer.GetSeriesNames('Voltage').length + Analyzer.GetSeriesNames('Current').length; n++) { Row.push(FFTDataset[i][n]); Row.push(20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][n]))); }
-      Data.push(Row);
-    }
-    exportToCsv('FFT.csv', Data);
-  } else if(DetailTabSelector.GetSaved() === 1) {
-    var Header = ['Harmonic'];
-    for(var i = 0; i < Analyzer.GetSeriesNames('Voltage').length; i++) { Header.push(Analyzer.GetSeriesNames('Voltage')[i]); Header.push(Analyzer.GetSeriesNames('Voltage')[i] + ' (dB)'); }
-    for(var i = 0; i < Analyzer.GetSeriesNames('Current').length; i++) { Header.push(Analyzer.GetSeriesNames('Current')[i]); Header.push(Analyzer.GetSeriesNames('Current')[i] + ' (dB)'); }
-    Data.push(Header);
-    for(i = 0; i < HarmonicsDataset.length; i++) {
-      var Row = [SeriesNames.Harmonics[i]];
-      for(var n = 0; n < Analyzer.GetSeriesNames('Voltage').length + Analyzer.GetSeriesNames('Current').length; n++) { Row.push(HarmonicsDataset[i][n]); Row.push(20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][n]))); }
-      Data.push(Row);
-    }
-    exportToCsv('Harmonics.csv', Data);
-  } else if(DetailTabSelector.GetSaved() === 2) {
-    var Header = ['Date/Time'];
-    for(var i = 0; i < SeriesNames.Harmonics.length; i++) {
-      for(var n = 0; n < Analyzer.GetSeriesNames('Voltage').length; n++) Header.push( SeriesNames.Harmonics[i] + '(' + Analyzer.GetSeriesNames('Voltage')[n] + ')');
-    }
-    Data.push(Header);
-    for(var i = 0; i < HarmonicsData[0].length; i++) {
-      var Row = [new Date(HarmonicsData[0][i][0]).toLocaleTimeString()];
-      for(var j = 0; j < SeriesNames.Harmonics.length; j++) {
-        for(var k = 0; k < Analyzer.GetSeriesNames('Voltage').length; k++) Row.push(HarmonicsData[j][i][k + 1]);
-      }
-      Data.push(Row);
-    }
-    exportToCsv('Voltage_Harmonics_Evolution.csv', Data);
   } else if(DetailTabSelector.GetSaved() === 5) {
     var Header = ['Date/Time'].concat(SeriesNames.PowerFactor()).concat(SeriesNames.THDv()).concat(SeriesNames.PHI());
     Data.push(Header);
@@ -481,14 +372,4 @@ function ExportDetail() {
     exportToCsv('PF_THDv_PHI.csv', Data);
   }
 }
-var MainScrollable = null;
-var DetailTabSelector = null;
-function UpdatePage() {
-  DetailTabSelector = new TabSelector('VoltageDetailView', '#DetailTabs', '#DetailDivs', DetailTabChange);
-  DetailsButtonUpdate();
-  MainScrollable = new Scrollable( {Spinners: ['#VoltageSpinner'], NowBtn: '#toolbarVoltage button[data-function="Update"]', Series: ['VOLTAGE'], OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
-  new Live( {NowBtn: '#toolbarDetails button[data-function="Update"]', RefreshInterval: 5000, Spinners: ['#DetailSpinner'], Series: ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI', 'VOLTAGE', 'CURRENT'], OnSuccess: Live_OnSuccess});
-  new PeriodView( {Spinners: [], Series: ['POWER_FACTOR', 'VOLTAGE_THD', 'PHI', 'VOLTAGE_HARMONICS'], Period: 86400000, Aggreg: '1M', OnSuccess: PeriodView_OnSuccess} );
-  new GraphTools(function() { return ['Waveform', 'Harmonics', '', 'Advanced'][DetailTabSelector.GetSaved()]; }, function() { return [WaveformChart, HarmonicsChart, null, FFTChart][DetailTabSelector.GetSaved()]; }, '#toolbarDetails', undefined, ExportDetail);
-}
-//1752
+

@@ -46,9 +46,12 @@
   import DetailTabs from 'Components/Tabs.vue';
   export default {
     data () {
-      return { ActiveTab: '', Time: 'Loading data...', LastSample: 0, UpdateGraphs1MTimer: null, UpdateGraphsNowTimer: null, ShowSpinner: true };
+      return { ActiveTab: '', ShowSpinner: true };
     },
     created: function() {
+      this.LastSample = 0;
+      this.UpdateGraphs1MTimer = null;
+      this.UpdateGraphsNowTimer = null;
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
     mounted: function() {
@@ -152,124 +155,3 @@
     components: { Spinner, DetailTabs, Waveform, Harmonics, Evolution, Events, Parameters, Phasors, Advanced, ToolbarPhases, ToolbarOptions, ToolbarTools }
   }
 </script>
-
-<style>
-  .voltage-details {
-
-    
-  }
-</style>
-
-function DetailsButtonUpdate(event) {
-  GroupButtons($('#groupDetailPhasesMulti'), 'DetailPhases', Math.max(Analyzer.GetSeriesNames('Current').length, Analyzer.GetSeriesNames('Voltage').length), false, undefined, undefined);
-  if(localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') {
-    $('#btnShowDetail1Harmonic').addClass('active');
-  } else {
-    $('#btnShowDetail1Harmonic').removeClass('active');
-  }
-  if(localStorage.getItem('VoltageDetailCurrent') === 'true') {
-    $('#btnShowDetailCurrent').addClass('active');
-  } else {
-    $('#btnShowDetailCurrent').removeClass('active');
-  }
-  if(localStorage.getItem('VoltageDetailLog') === 'true') {
-    $('#btnShowDetailLog').addClass('active');
-  } else {
-    $('#btnShowDetailLog').removeClass('active');
-  }
-}
-$('#groupDetailPhasesMulti').on('click', 'button', function(evt) {
-  GroupButtons($('#groupDetailPhasesMulti'), 'VoltageDetailVisiblePhasesMulti', Math.max(Analyzer.GetSeriesNames('Current').length, Analyzer.GetSeriesNames('Voltage').length), false,
-    function() { UpdateWaveformChart(); UpdateHarmonicsChart(); }, evt.target);
-});
-$('#btnShowDetailCurrent').click(function() {
-  localStorage.setItem('VoltageDetailCurrent', (localStorage.getItem('VoltageDetailCurrent') === 'true') ? 'false' : 'true');
-  DetailsButtonUpdate();
-  UpdateWaveformChart();
-  UpdateHarmonicsChart();
-  UpdateFFTChart();
-  if(WaveformChart !== null) { WaveformChart.updateOptions({ showRangeSelector: true}); WaveformChart.updateOptions({ showRangeSelector: false}); }
-  if(HarmonicsChart !== null) { HarmonicsChart.updateOptions({ showRangeSelector: true}); HarmonicsChart.updateOptions({ showRangeSelector: false}); }
-  if(FFTChart !== null) { FFTChart.updateOptions({ showRangeSelector: true}); FFTChart.updateOptions({ showRangeSelector: false}); }
-});
-$('#btnShowDetail1Harmonic').click(function() {
-  localStorage.setItem('VoltageDetailFirstHarmonic', (localStorage.getItem('VoltageDetailFirstHarmonic') === 'true') ? 'false' : 'true');
-  DetailsButtonUpdate();
-  UpdateWaveformChart();
-  UpdateHarmonicsChart();
-});
-$('#btnShowDetailLog').click(function() {
-  localStorage.setItem('VoltageDetailLog', (localStorage.getItem('VoltageDetailLog') === 'true') ? 'false' : 'true');
-  DetailsButtonUpdate();
-  UpdateWaveformChart();
-  UpdateHarmonicsChart();
-  UpdateFFTChart();
-});
-$('#groupDetailPhasesSingle').on('click', 'button', ParametersSeries);
-
-
-function ExportDetail() {
-  var Data = [];
-  var Filename;
-  if(DetailTabSelector.GetSaved() === 0) {
-    exportToCsv('Waveform.csv', [['Time'].concat(Analyzer.GetSeriesNames('Voltage')).concat(Analyzer.GetSeriesNames('Current'))].concat(WaveformDataset));
-  } else if(DetailTabSelector.GetSaved() === 3) {
-    var Header = ['Index'];
-    for(var i = 0; i < Analyzer.GetSeriesNames('Voltage').length; i++) { Header.push(Analyzer.GetSeriesNames('Voltage')[i]); Header.push(Analyzer.GetSeriesNames('Voltage')[i] + ' (dB)'); }
-    for(var i = 0; i < Analyzer.GetSeriesNames('Current').length; i++) { Header.push(Analyzer.GetSeriesNames('Current')[i]); Header.push(Analyzer.GetSeriesNames('Current')[i] + ' (dB)'); }
-    Data.push(Header);
-    for(var i = 0; i < FFTDataset.length; i++) {
-      var Row = [i];
-      for(var n = 0; n < Analyzer.GetSeriesNames('Voltage').length + Analyzer.GetSeriesNames('Current').length; n++) { Row.push(FFTDataset[i][n]); Row.push(20.0 * Math.log10(Math.max(0.000000001, FFTDataset[i][n]))); }
-      Data.push(Row);
-    }
-    exportToCsv('FFT.csv', Data);
-  } else if(DetailTabSelector.GetSaved() === 1) {
-    var Header = ['Harmonic'];
-    for(var i = 0; i < Analyzer.GetSeriesNames('Voltage').length; i++) { Header.push(Analyzer.GetSeriesNames('Voltage')[i]); Header.push(Analyzer.GetSeriesNames('Voltage')[i] + ' (dB)'); }
-    for(var i = 0; i < Analyzer.GetSeriesNames('Current').length; i++) { Header.push(Analyzer.GetSeriesNames('Current')[i]); Header.push(Analyzer.GetSeriesNames('Current')[i] + ' (dB)'); }
-    Data.push(Header);
-    for(i = 0; i < HarmonicsDataset.length; i++) {
-      var Row = [SeriesNames.Harmonics[i]];
-      for(var n = 0; n < Analyzer.GetSeriesNames('Voltage').length + Analyzer.GetSeriesNames('Current').length; n++) { Row.push(HarmonicsDataset[i][n]); Row.push(20.0 * Math.log10(Math.max(0.000000001, HarmonicsDataset[i][n]))); }
-      Data.push(Row);
-    }
-    exportToCsv('Harmonics.csv', Data);
-  } else if(DetailTabSelector.GetSaved() === 2) {
-    var Header = ['Date/Time'];
-    for(var i = 0; i < SeriesNames.Harmonics.length; i++) {
-      for(var n = 0; n < Analyzer.GetSeriesNames('Voltage').length; n++) Header.push( SeriesNames.Harmonics[i] + '(' + Analyzer.GetSeriesNames('Voltage')[n] + ')');
-    }
-    Data.push(Header);
-    for(var i = 0; i < HarmonicsData[0].length; i++) {
-      var Row = [new Date(HarmonicsData[0][i][0]).toLocaleTimeString()];
-      for(var j = 0; j < SeriesNames.Harmonics.length; j++) {
-        for(var k = 0; k < Analyzer.GetSeriesNames('Voltage').length; k++) Row.push(HarmonicsData[j][i][k + 1]);
-      }
-      Data.push(Row);
-    }
-    exportToCsv('Voltage_Harmonics_Evolution.csv', Data);
-  } else if(DetailTabSelector.GetSaved() === 5) {
-    var Header = ['Date/Time'].concat(SeriesNames.PowerFactor()).concat(SeriesNames.THDv()).concat(SeriesNames.PHI());
-    Data.push(Header);
-    for(var i = 0; i < PowerFactorData.length; i++) {
-      var Row = [new Date(PowerFactorData[i][0]).toLocaleTimeString()];
-      for(var k = 0; k < SeriesNames.PowerFactor().length; k++) Row.push(PowerFactorData[i][k + 1]);
-      for(var k = 0; k < SeriesNames.THDv().length; k++) Row.push(THDData[i][k + 1]);
-      for(var k = 0; k < SeriesNames.PHI().length; k++) Row.push(PHIData[i][k + 1]);
-      Data.push(Row);
-    }
-    exportToCsv('PF_THDv_PHI.csv', Data);
-  }
-}
-var MainScrollable = null;
-var DetailTabSelector = null;
-function UpdatePage() {
-  DetailTabSelector = new TabSelector('VoltageDetailView', '#DetailTabs', '#DetailDivs', DetailTabChange);
-  DetailsButtonUpdate();
-  MainScrollable = new Scrollable( {Spinners: ['#VoltageSpinner'], NowBtn: '#toolbarVoltage button[data-function="Update"]', Series: ['VOLTAGE'], OnSuccess: Scrollable_OnSuccess, Counters: Scrollable_UpdateCounters } );
-  new Live( {NowBtn: '#toolbarDetails button[data-function="Update"]', RefreshInterval: 5000, Spinners: ['#DetailSpinner'], Series: ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI', 'VOLTAGE', 'CURRENT'], OnSuccess: Live_OnSuccess});
-  new PeriodView( {Spinners: [], Series: ['POWER_FACTOR', 'VOLTAGE_THD', 'PHI', 'VOLTAGE_HARMONICS'], Period: 86400000, Aggreg: '1M', OnSuccess: PeriodView_OnSuccess} );
-  new GraphTools(function() { return ['Waveform', 'Harmonics', '', 'Advanced'][DetailTabSelector.GetSaved()]; }, function() { return [WaveformChart, HarmonicsChart, null, FFTChart][DetailTabSelector.GetSaved()]; }, '#toolbarDetails', undefined, ExportDetail);
-}
-      

@@ -5,12 +5,12 @@
         <div class="header-buttons" ref="Toolbar">
           <toolbar-phases variable="DetailsPhaseMulti" :multi="true" v-on:PhasesChanged="SetPhases"></toolbar-phases>
           <toolbar-options variable="DetailOptions" :options="['1st Harmonic', 'Current', 'Log']" v-on:OptionChanged="SetOption"></toolbar-options>
-          <toolbar-tools variable="To" ref="Tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']"></toolbar-tools>
+          <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools>
         </div>
       </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <div ref="Graph" class="chart big_chart"></div>
+      <graph ref="graph" :options="{}"></graph>
     </div>
   </div>
 </template>
@@ -18,6 +18,7 @@
   import * as oZm from 'JS/openZmeter.js';
   import moment from 'JS/moment.js';
   import Dygraph from 'JS/dygraph.js';
+  import Graph from 'Components/Graph.vue';
   import Spinner from 'Components/Spinner.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarOptions from 'Components/ToolbarOptions.vue';
@@ -25,13 +26,12 @@
   export default {
     props: ['visible'],
     data() {
-      return { ShowSpinner: true, Time: 'Loading data...', Graph: null, Data: null, VoltagePhases: null, ShowCurrent: null, First: null, Log: null, VOffset: 0, COffset: 0 };
+      return { ShowSpinner: true, Time: 'Loading data...' };
     },
     methods: {
-      Redraw() {
-        this.$nextTick(function() {    
-          $(this.Graph.graphDiv).parent().removeAttr('style');
-          window.dispatchEvent(new Event('resize'));
+      Redraw: function() {
+        this.$nextTick(function() {
+          this.$refs.graph.Redraw('100%', '300');
         });
       },
       SetPhases: function(phases) {
@@ -100,13 +100,46 @@
           },
           file: ToShow
         };
-        this.Graph.updateOptions({ showRangeSelector: true}); 
-        this.Graph.updateOptions(Options);
+        this.$refs.graph.SetOptions({ showRangeSelector: true}); 
+        this.$refs.graph.SetOptions(Options);
+      },
+      ExportClick: function() {
+        if(this.$root.SelectedAnalyzer === null) return;
+        var Analyzer = this.$root.SelectedAnalyzer;
+        var Data = [];
+        var Header = ['Harmonic'];
+        for(var i = 0; i < oZm.Series['VOLTAGE'].Names(Analyzer).length; i++) { 
+          Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i]); 
+          Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i] + ' (dB)');
+        }
+        for(var i = 0; i < oZm.Series['CURRENT'].Names(Analyzer).length; i++) {
+          Header.push(oZm.Series['CURRENT'].Names(Analyzer)[i]);
+          Header.push(oZm.Series['CURRENT'].Names(Analyzer)[i] + ' (dB)'); 
+        }
+        Data.push(Header);
+        for(i = 0; i < oZm.Series['HARMONICS'].Names.length; i++) {
+          var Row = [oZm.Series['HARMONICS'].Names[i]];
+          for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length + oZm.Series['CURRENT'].Names(Analyzer).length; n++) {
+            Row.push(this.Data[i][n]);
+            Row.push(20.0 * Math.log10(Math.max(0.000000001, this.Data[i][n])));
+          }
+          Data.push(Row);
+        }
+        this.$refs.tools.SaveCVS('Harmonics.csv', Data);
+      },
+      MaximizeClick: function() {
+        this.$refs.tools.Maximize('Harmonics', this.$refs.graph.Graph, this.$refs.Toolbar);
       }
     },
-    mounted: function() {
-      this.Graph = new Dygraph(this.$refs.Graph, [[0, 0]], { });
+    created: function() {
+      this.Data = null;
+      this.VoltagePhases = null;
+      this.ShowCurrent = null;
+      this.First = null;
+      this.Log = null;
+      this.VOffset = 0;
+      this.COffset = 0;
     },
-    components: { Spinner, ToolbarPhases, ToolbarOptions, ToolbarTools }
+    components: { Spinner, ToolbarPhases, ToolbarOptions, ToolbarTools, Graph }
   }
 </script>

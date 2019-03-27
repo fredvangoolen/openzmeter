@@ -54,7 +54,7 @@ export default {
  
 <style scoped>
   img {
-    margin: 0px 0px 4px 0px;
+    margin: 4px 0px;
   }
   .navbar-brand > embed {
     width: 100%;
@@ -71,7 +71,7 @@ export default {
     height: 50px;     
   }
   .navbar-toggle {
-    padding: 9px 5px;
+    padding: 5px 5px;
     right: 0px;
     position: absolute;
     margin: 3px;

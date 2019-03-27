@@ -4,7 +4,7 @@
       <div class="header-text">{{ Aggregation }}</div>
         <div class="header-buttons" ref="Toolbar">
           <toolbar-phases variable="DetailsPhaseSingle" v-on:PhasesChanged="SetPhases"></toolbar-phases>
-          <toolbar-tools variable="To" ref="Tools" :options="['EXPORT']"></toolbar-tools>
+          <toolbar-tools variable="To" ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
         </div>
       </div>
     <div class="panel-body">
@@ -24,7 +24,7 @@
   import Dygraph from 'JS/dygraph.js';
   export default {
     data() {
-      return { Aggregation: 'Loading data...', DateWindow: [0, 0], ShowSpinner: true, Time: 'Loading data...', Series: oZm.Series['HARMONICS'].Names, Data: null, Phase: null };
+      return { Aggregation: 'Loading data...', ShowSpinner: true, Time: 'Loading data...', Series: oZm.Series['HARMONICS'].Names, Phase: null };
     },
     methods: {
       Redraw() {
@@ -55,7 +55,29 @@
       SetPhases: function(phase) {
         this.Phase = phase;
         this.CalcOptions();
+      },
+      ExportClick: function() {
+        if(this.$root.SelectedAnalyzer === null) return;
+        var Analyzer = this.$root.SelectedAnalyzer;
+        var Header = ['Date/Time'];
+        var Data = [];
+        for(var i = 0; i < oZm.Series['HARMONICS'].Names.length; i++) {
+          for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length; n++) Header.push( oZm.Series['HARMONICS'].Names[i] + '(' + oZm.Series['VOLTAGE'].Names(Analyzer)[n] + ')');
+        }
+        Data.push(Header);
+        for(var i = 0; i < this.Data.length; i++) {
+          var Row = [moment(this.Data[i][0]).format('HH:mm:ss.SSS')];
+          for(var j = 0; j < oZm.Series['HARMONICS'].Names.length; j++) {
+            for(var k = 0; k < oZm.Series['VOLTAGE'].Names(Analyzer).length; k++) Row.push(this.Data[i][k + 1][j]);
+          }
+          Data.push(Row);
+        }
+        this.$refs.tools.SaveCVS('VoltageHarmonicsEvolution.csv', Data);
       }
+    },
+    created: function() {
+      this.DateWindow = [0, 0];
+      this.Data = null;
     },
     mounted: function() {
       var Graphs = [];
