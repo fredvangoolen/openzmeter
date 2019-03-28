@@ -6,6 +6,7 @@
     <evolution ref="evolution" v-bind:class="{ hide: (ActiveTab != 'Evolution') }"></evolution>
     <advanced ref="advanced" v-bind:class="{ hide: (ActiveTab != 'Advanced') }"></advanced>
     <parameters ref="parameters" v-bind:class="{ hide: (ActiveTab != 'Parameters') }"></parameters>
+    <phasors ref="phasors" v-bind:class="{ hide: (ActiveTab != 'Phasors') }"></phasors>
       
       
     <!--div class="panel-heading clearfix">
@@ -23,7 +24,6 @@
         
         
         
-        <phasors ref="phasors" v-bind:class="{ hide: (ActiveTab != 'Phasors') }"></phasors>
         
         <events ref="events" v-bind:class="{ hide: (ActiveTab != 'Events') }"></events>
       </div-->
@@ -66,11 +66,6 @@
       if(this.UpdateGraphsNowTimer !== null) clearTimeout(this.UpdateGraphsNowTimer);
     },
     methods: {
-      Export() {
-//        this.$refs.tools.SaveCVS(this.SerieProps.Title + '.csv', [['Time'].concat(this.SerieProps.Names(Analyzer))].concat(this.Data));
-//        oZm.exportToCsv('Waveform.csv', [['Time'].concat(Analyzer.GetSeriesNames('Voltage')).concat(Analyzer.GetSeriesNames('Current'))].concat(WaveformDataset));
-      },
-
       TabChange(tab, name) {
         if(name !== undefined) this.ActiveTab = name;
         if(this.ActiveTab === 'Waveform') this.$refs.waveform.Redraw();
@@ -78,16 +73,8 @@
         if(this.ActiveTab === 'Evolution') this.$refs.evolution.Redraw();
         if(this.ActiveTab === 'Advanced') this.$refs.advanced.Redraw();
         if(this.ActiveTab === 'Parameters') this.$refs.parameters.Redraw();
+        if(this.ActiveTab === 'Phasors') this.$refs.phasors.Redraw();
         
-//  if(PhasorChart !== null) {
-//    if(index === 4) PhasorResizeEvent();
-//  }
-//  if(HarmonicsCharts.length !== 0) {
-//    if(index === 2) {
-//      for(i = 0; i < 50; i++) $(HarmonicsCharts[i].graphDiv).parent().removeAttr('style');
-//    }
-//  }
-
 //  if(EventChart !== null) {
 //    if(index === 6) {
 //      $(EventChart.graphDiv).parent().removeAttr('style');
@@ -126,7 +113,7 @@
       },
       UpdateGraphsNow() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
             this.ShowSpinner = false;
             this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
@@ -134,12 +121,7 @@
             this.$refs.harmonics.SetData(result);
             this.$refs.advanced.SetData(result);
             this.$refs.parameters.SetDataNow(result);
-            
-            
-//              UpdatePhasorChart(result);
-//  SetCubismNowLabel(PowerFactorChart, result.Power_Factor);
-//  SetCubismNowLabel(THDChart, result.Voltage_THD); 
-//  SetCubismNowLabel(PHIChart, result.Phi); 
+            this.$refs.phasors.SetData(result);
           }.bind(this),
           complete: function() {
             if(this.UpdateGraphsNowTimer !== null) clearTimeout(this.UpdateGraphsNowTimer);

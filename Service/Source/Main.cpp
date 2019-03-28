@@ -11,6 +11,7 @@
 #include "DeviceInterface.h"
 #include "NetworkManager.h"
 #include "NTP.h"
+#include "HTTPServer/ServerHTTP.h"
 
 static bool Terminate = false;
 void SignalHandler(int signal) {
@@ -69,7 +70,7 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
 //  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
- 
+  ServerHTTP *Server = new ServerHTTP();
   
   int Iter = 0;
   while(!Terminate) {
