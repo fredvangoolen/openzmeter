@@ -3,9 +3,9 @@
     <div class="panel-heading clearfix">
       <div class="header-text">{{ Time }}</div>
         <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases variable="DetailsPhaseMulti" :multi="true" v-on:PhasesChanged="SetPhases"></toolbar-phases>
+          <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedMulti"></toolbar-phases>
           <toolbar-options variable="DetailOptions" :options="['Current']" v-on:OptionChanged="SetOption"></toolbar-options>
-          <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools>
+          <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools>
         </div>
       </div>
     <div class="panel-body">
@@ -42,6 +42,7 @@
         });
       },
       SetPhases: function(phases) {
+        this.$refs.phases.SetPhases(phases);
         this.VoltagePhases = phases;
         this.CalcOptions();
       },

@@ -3,7 +3,7 @@
     <div class="panel-heading clearfix">
       <div class="header-text">{{ Aggregation }}</div>
         <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases variable="DetailsPhaseSingle" v-on:PhasesChanged="SetPhases"></toolbar-phases>
+          <toolbar-phases variable="DetailsPhaseSingle" ref="phases" v-on:PhasesChanged="$parent.PhasesChangedSingle"></toolbar-phases>
           <toolbar-tools variable="To" ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
         </div>
       </div>
@@ -39,7 +39,6 @@
         if(this.Data === null) this.Data = [];
         this.DateWindow = [result['From'], result['To']];
         this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
-        this.LastSample = oZm.LastSampletime(result, this.LastSample);  
         this.Data = oZm.GraphDataAppend(result, 'Voltage_Harmonics', this.Data);
         this.CalcOptions();
         this.ShowSpinner = false; 
@@ -53,6 +52,7 @@
         }
       },
       SetPhases: function(phase) {
+        this.$refs.phases.SetPhases(phase);
         this.Phase = phase;
         this.CalcOptions();
       },
@@ -66,7 +66,7 @@
         }
         Data.push(Header);
         for(var i = 0; i < this.Data.length; i++) {
-          var Row = [moment(this.Data[i][0]).format('HH:mm:ss.SSS')];
+          var Row = [moment(this.Data[i][0]).format('HH:mm:ss')];
           for(var j = 0; j < oZm.Series['HARMONICS'].Names.length; j++) {
             for(var k = 0; k < oZm.Series['VOLTAGE'].Names(Analyzer).length; k++) Row.push(this.Data[i][k + 1][j]);
           }

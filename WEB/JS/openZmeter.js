@@ -152,10 +152,12 @@ export var Series = {
     rangeFunc: function() {} 
   },
   'POWER_FACTOR': { CSS_Class: '', Title: 'Power Factor', Serie: 'Power_Factor', Units: '', Link: '', 
-    FormatValue: function(val) { return { Units: '', Value: Round2(val) }; } 
+    FormatValue: function(val) { return { Units: '', Value: Round2(val) }; },
+    Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['PF'] : ['PF(R)', 'PF(S)', 'PF(T)']; },
   },
   'PHI': { CSS_Class: '', Title: 'Phi', Serie: 'Phi', Units: '', Link: '', 
-    FormatValue: function(val) { return { Units: ((val < 0) ? 'º CAP' : (val > 0) ? 'º IND' : 'º'), Value: Round2(Math.abs(val)) }; } 
+    FormatValue: function(val) { return { Units: ((val < 0) ? 'º CAP' : (val > 0) ? 'º IND' : 'º'), Value: Round2(Math.abs(val)) }; },
+    Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['Phi'] : ['Phi(R)', 'Phi(S)', 'Phi(T)']; },
   },
   'VOLTAGE_THD': { 
     CSS_Class: '', 
@@ -163,7 +165,8 @@ export var Series = {
     Serie: 'Voltage_THD', 
     Units: '%', 
     Link:'', 
-    FormatValue: function(val) { return { Units: '%', Value: Round2(val * 100) }; }
+    FormatValue: function(val) { return { Units: '%', Value: Round2(val * 100) }; },
+    Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['THDv'] : ['THDv(R)', 'THDv(S)', 'THDv(T)']; },
   },
   'CURRENT_THD': { 
     CSS_Class: '', 

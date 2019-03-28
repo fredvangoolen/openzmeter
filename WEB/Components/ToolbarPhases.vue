@@ -40,6 +40,18 @@
         }
         this.SelChanged();
       },
+      SetPhases: function(phases) {
+        if(Array.isArray(phases) === false) {
+          this.Phases.fill(false);
+          this.Phases[phases] = true;
+        } else {  
+          this.Phases = phases;
+        }
+        if(this.Phases.length > 0) this.PhasesR = this.Phases[0];
+        if(this.Phases.length > 1) this.PhasesS = this.Phases[1];
+        if(this.Phases.length > 2) this.PhasesT = this.Phases[2];
+        if(this.Phases.length > 3) this.PhasesN = this.Phases[3];
+      },
       SelChanged() {
         var Set = 0;
         for(var n = 0; n < this.Phases.length; n++) {

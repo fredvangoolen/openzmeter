@@ -4,8 +4,8 @@
     <button type="button" class="btn btn-default btn-xs" v-if="options.includes('MAXIMIZE') && !ShowMaximized" @click="$emit('MaximizeClick')" data-toggle="tooltip" title="Maximize graph"><img :src="require('Imgs/arrow_out.png')"></button>
     <button type="button" class="btn btn-default btn-xs" v-if="options.includes('MAXIMIZE') && ShowMaximized" @click="MinimizeClick" data-toggle="tooltip" title="Minimize graph"><img :src="require('Imgs/arrow_in.png')"></button>
     <button type="button" class="btn btn-default btn-xs" v-if="options.includes('NOW')" v-bind:class="{ active: Now, disabled: UpdateInProgress }" @click="NowClick" data-toggle="tooltip" title="Show most recent samples and update in real time"><img :src="require('Imgs/time_go.png')"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && !Pause" @click="PlayClick" data-toggle="tooltip" title="Resume live update"><img :src="require('Imgs/play.png')"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && Pause" @click="PauseClick" data-toggle="tooltip" title="Pause"><img :src="require('Imgs/pause.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && (Pause == true)" @click="PlayClick" data-toggle="tooltip" title="Resume live update"><img :src="require('Imgs/play.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && (Pause == false)" @click="PauseClick" data-toggle="tooltip" title="Pause"><img :src="require('Imgs/pause.png')"></button>
     <div class="modal" v-if="ShowMaximized" tabindex="1" role="dialog" data-backdrop="static" ref="MaximizeDialog" data-keyboard="false">
       <div class="modal-dialog" style="width: 100%; height: 100%; padding: 10px; margin: 0px">
         <div class="modal-content" style="height: 100%">
@@ -24,7 +24,7 @@
   export default {
     props: { options: Array, variable: String },
     data() {
-      return { UpdateInProgress: false, Now: false, Pause: false, ShowMaximized: false, Graph: null, Toolbar: null, PrevToolbar: null, PrevGraph: null };
+      return { UpdateInProgress: false, Now: false, ShowMaximized: false, Pause: false };
     },
     methods: {
       NowClick: function() {
@@ -53,14 +53,17 @@
         this.UpdateInProgress = false;
       },
       PlayClick: function() {
-        Pause = false;
+        this.Pause = false;
         $(this.$el).children('button').blur();
         this.$emit('PlayStatus', false);
       },
+      SetPlayStatus(stat) {
+        this.Pause = stat;
+      },
       PauseClick: function() {
-        Pause = true;
+        this.Pause = true;
         $(this.$el).children('button').blur();
-        this.$emit('PlayStatus', false);
+        this.$emit('PlayStatus', true);
       },
       ResizeHandler: function() {
         $(this.Graph.graphDiv).parent().removeAttr('style');
@@ -128,6 +131,11 @@
       if(this.ShowMaximized) $(this.$root).removeChild(this.$refs.MaximizeDialog);
     },
     created: function() {
+      this.Paused = this.paused;
+      this.Graph = null;
+      this.Toolbar = null;
+      this.PrevToolbar = null;
+      this.PrevGraph = null;
       this.ReadTo();
     },
     mounted: function() {
@@ -135,7 +143,3 @@
     }
   }
 </script>
-  
-<style>
-
-</style>
