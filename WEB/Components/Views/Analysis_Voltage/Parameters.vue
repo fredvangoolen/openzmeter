@@ -3,8 +3,8 @@
     <div class="panel-heading clearfix">
       <div class="header-text">{{ Aggregation }}</div>
         <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases variable="DetailsPhaseSingle" v-on:PhasesChanged="SetPhases"></toolbar-phases>
-          <toolbar-tools variable="To" ref="Tools" :options="['EXPORT']"></toolbar-tools>
+          <toolbar-phases variable="DetailsPhaseSingle" ref="phases" v-on:PhasesChanged="$parent.PhasesChangedSingle"></toolbar-phases>
+          <toolbar-tools variable="To" ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
         </div>
       </div>
     <div class="panel-body">
@@ -24,7 +24,7 @@
   import Dygraph from 'JS/dygraph.js';
   export default {
     data() {
-      return { ShowSpinner: true, Aggregation: 'Loading data...', Series: ['POWER_FACTOR', 'VOLTAGE_THD', 'PHI'], Phase: null, Data: {} };
+      return { ShowSpinner: true, Aggregation: 'Loading data...', Series: ['POWER_FACTOR', 'VOLTAGE_THD', 'PHI'], Phase: null };
     },
     methods: {
       Redraw() {
@@ -33,7 +33,25 @@
           window.dispatchEvent(new Event('resize'));
         });
       },
+      ExportClick: function() {
+        if(this.$root.SelectedAnalyzer === null) return;
+        var Analyzer = this.$root.SelectedAnalyzer;
+        var Header = ['Date/Time'];
+        for(var i = 0; i < this.Series.length; i++) {
+          for(var n = 0; n < oZm.Series[this.Series[i]].Names(Analyzer).length; n++) Header.push(oZm.Series[this.Series[i]].Names(Analyzer)[n]);
+        }
+        var Data = [];
+        for(var j = 0; j < this.Data[this.Series[0]].length; j++) {
+          var Row = [moment(this.Data[this.Series[0]][j][0]).format('HH:mm:ss')];
+          for(var i = 0; i < this.Series.length; i++) {
+            for(var n = 0; n < oZm.Series[this.Series[i]].Names(Analyzer).length; n++) Row.push(this.Data[this.Series[i]][j][n + 1]);
+          }
+          Data.push(Row);
+        }
+        this.$refs.tools.SaveCVS('VoltageParameters.csv', [Header].concat(Data));
+      },
       SetPhases: function(phase) {
+        this.$refs.phases.SetPhases(phase);
         this.Phase = phase;
         this.CalcOptions();
       },
@@ -43,7 +61,6 @@
         if(this.Data === null) this.Data = [];
         this.DateWindow = [result['From'], result['To']];
         this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
-        this.LastSample = oZm.LastSampletime(result, this.LastSample);
         for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
         this.CalcOptions();
         this.ShowSpinner = false; 
@@ -61,6 +78,7 @@
       }
     },
     created: function() {
+      this.Data = {};
       for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = [];
     },
     mounted: function() {

@@ -3,16 +3,16 @@
     <div class="panel-heading clearfix">
       <div class="header-text">{{ Time }}</div>
       <div class="header-buttons" ref="Toolbar">
-        <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'PLAY']"></toolbar-tools>
+        <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick"></toolbar-tools>
       </div>
     </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
       <div class="row">
-        <div class="col-md-4 col-lg-6 col-xl-8" ref="graphContainer">
+        <div class="col-sm-3 col-md-6 col-lg-4" ref="graphContainer">
           <graph ref="graph" class="graph" :options="GraphOptions"></graph>
         </div>
-        <div class="col-md-8 col-lg-6 col-xl-4">
+        <div class="col-sm-9 col-md-6 col-lg-8">
           <h4>Voltage and current phase angle</h4>
           <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive"></vuetable>
         </div>
@@ -41,6 +41,7 @@
       };
     },
     created: function() {
+      this.Data = [];
       this.GraphOptions = {
         highlightCircleSize: 0,  interactionModel: { }, legend: 'never', valueRange: [-130, 130], dateWindow: [-130, 130], plotter: this.Plotter, xAxisHeight: 0.1, xLabelHeight: 0.1
       };
@@ -127,16 +128,28 @@
           this.$refs.graph.Redraw(Width, Width);
         });
       },
+      beforeDestroy: function() {
+        $(window).off('resize', this.Redraw);
+      },
+      ExportClick: function() {
+        this.$refs.tools.SaveCVS('Phasors.csv', [['Phase', 'Channel', 'Angle', 'Value']].concat(this.Data));
+      },
       SetData(result) {
         var Analyzer = this.$root.SelectedAnalyzer;
         this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
         var Phases = (oZm.Series['VOLTAGE'].Names(Analyzer).length === 1) ? ['L'] : ['R', 'S', 'T'];
+        this.Data = [];
+        var Table = [];
         var Vectors = [];
         var MaxCurrent = 0;
         var MaxVoltage = 0;
         for(var i = 0; i < result['Voltage'].length; i++) {
           Vectors.push([i * 2, 120 * i, result.Voltage[i]]);
           Vectors.push([i * 2 + 1, 120 * i - result.Phi[i], result.Current[i]]);
+          this.Data.push([Phases[i], "Voltage", i * 120, result['Voltage'][i]]);
+          this.Data.push([Phases[i], "Current", i * 120 - result.Phi[i], result['Current'][i]]);
+          Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(i * 120) + 'º', Value: oZm.Round2(result['Voltage'][i]) + '<em> V</em>' } );
+          Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(i * 120 - result.Phi[i]) + 'º', Value: oZm.Round2(result.Current[i]) + '<em> A</em>'} );
           MaxVoltage = Math.max(MaxVoltage, result.Voltage[i]);
           MaxCurrent = Math.max(MaxCurrent, result.Current[i]);
         }
@@ -153,11 +166,6 @@
           file: Vectors
         };
         this.$refs.graph.SetOptions(Options);
-        var Table = [];
-        for(var i = 0; i < result.Voltage.length; i++) {
-          Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(i * 120) + 'º', Value: oZm.Round2(result['Voltage'][i]) + '<em> V</em>' } );
-          Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(i * 120 - result.Phi[i]) + 'º', Value: oZm.Round2(result.Current[i]) + '<em> A</em>'} );
-        }
         this.$refs.table.setData( { data: Table });
         this.ShowSpinner = false;
       }
@@ -179,7 +187,7 @@
     text-align: right;
   }
   .table >>> td {
-    font-size: 20px
+    font-size: 16px
   }
   .table >>> td:nth-child(1), .table >>> td:nth-child(1) {
     text-align: center;

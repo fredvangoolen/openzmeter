@@ -7,31 +7,13 @@
     <advanced ref="advanced" v-bind:class="{ hide: (ActiveTab != 'Advanced') }"></advanced>
     <parameters ref="parameters" v-bind:class="{ hide: (ActiveTab != 'Parameters') }"></parameters>
     <phasors ref="phasors" v-bind:class="{ hide: (ActiveTab != 'Phasors') }"></phasors>
-      
-      
-    <!--div class="panel-heading clearfix">
-        <div class="header-text">{{ Time }}</div>
-        <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases variable="DetailsPhaseSingle" v-if="(ActiveTab == 'Evolution') || (ActiveTab == 'parameters')"></toolbar-phases>
-          
-          
-          <toolbar-tools variable="To" v-if="(ActiveTab == 'Phasors')" ref="Tools" :options="['EXPORT', 'PLAY']"></toolbar-tools>
-          <toolbar-tools variable="To" v-if="(ActiveTab == 'Evolution') || (ActiveTab == 'Parameters') || (ActiveTab == 'Events')" ref="Tools" :options="['EXPORT']"></toolbar-tools>
-        </div>
-      </div>
-      <div class="panel-body">
-        <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-        
-        
-        
-        
-        <events ref="events" v-bind:class="{ hide: (ActiveTab != 'Events') }"></events>
-      </div-->
+    <events ref="events" v-bind:class="{ hide: (ActiveTab != 'Events') }"></events>
   </div>
 </template>
 
 <script>
   import moment from 'JS/moment.js';
+  import * as oZm from 'JS/openZmeter.js';
   import Spinner from 'Components/Spinner.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarOptions from 'Components/ToolbarOptions.vue';
@@ -46,7 +28,7 @@
   import DetailTabs from 'Components/Tabs.vue';
   export default {
     data () {
-      return { ActiveTab: '', ShowSpinner: true };
+      return { ActiveTab: '', ShowSpinner: true, Paused: false };
     },
     created: function() {
       this.LastSample = 0;
@@ -66,6 +48,17 @@
       if(this.UpdateGraphsNowTimer !== null) clearTimeout(this.UpdateGraphsNowTimer);
     },
     methods: {
+      PlayStatusChanged: function(stat) {
+        this.Paused = stat;
+        if(this.Paused === true) 
+          clearInterval(this.UpdateGraphsNowTimer);
+        else
+          this.UpdateGraphsNow();
+        this.$refs.waveform.$refs.tools.SetPlayStatus(stat);
+        this.$refs.harmonics.$refs.tools.SetPlayStatus(stat);
+        this.$refs.advanced.$refs.tools.SetPlayStatus(stat);
+        this.$refs.phasors.$refs.tools.SetPlayStatus(stat);
+      },
       TabChange(tab, name) {
         if(name !== undefined) this.ActiveTab = name;
         if(this.ActiveTab === 'Waveform') this.$refs.waveform.Redraw();
@@ -74,19 +67,16 @@
         if(this.ActiveTab === 'Advanced') this.$refs.advanced.Redraw();
         if(this.ActiveTab === 'Parameters') this.$refs.parameters.Redraw();
         if(this.ActiveTab === 'Phasors') this.$refs.phasors.Redraw();
-        
-//  if(EventChart !== null) {
-//    if(index === 6) {
-//      $(EventChart.graphDiv).parent().removeAttr('style');
-//      EventsTable.columns.adjust();
-//    }
-//  }
-
+        if(this.ActiveTab === 'Events') this.$refs.events.Redraw();
       },
       PhasesChangedMulti: function(phases) {
         this.$refs.waveform.SetPhases(phases);
         this.$refs.harmonics.SetPhases(phases);
         this.$refs.advanced.SetPhases(phases);
+      },
+      PhasesChangedSingle: function(phase) {
+        this.$refs.evolution.SetPhases(phase);
+        this.$refs.parameters.SetPhases(phase);
       },
       SetAnalyzer() {
         this.Time = 'Loading data...';
@@ -100,14 +90,11 @@
           success: function(result) {
             this.$refs.evolution.SetData(result);
             this.$refs.parameters.SetData(result);
+            this.LastSample = oZm.LastSampletime(result, this.LastSample);  
           }.bind(this),
           complete: function() {
             if(this.UpdateGraphs1MTimer !== null) clearTimeout(this.UpdateGraphs1MTimer);
             this.UpdateGraphs1MTimer = setTimeout(this.UpdateGraphs1M, 30000);
-          }.bind(this), 
-          error: function() {
-  //deshabilitar¿?
-    //            this.$refs.indicator_bar.setValue(null);
           }.bind(this)
         });
       },
@@ -126,10 +113,6 @@
           complete: function() {
             if(this.UpdateGraphsNowTimer !== null) clearTimeout(this.UpdateGraphsNowTimer);
             this.UpdateGraphsNowTimer = setTimeout(this.UpdateGraphsNow, 1000);
-          }.bind(this), 
-          error: function() {
-//deshabilitar¿?
-    //            this.$refs.indicator_bar.setValue(null);
           }.bind(this)
         });
       }
