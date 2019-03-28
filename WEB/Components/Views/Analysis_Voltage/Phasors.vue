@@ -1,97 +1,190 @@
 <template>
-              <div id="PhasorPanel">
-              <div class="row">
-                <div class="col-md-4 col-lg-3 col-xl-2">
-                  <div id="PhasorChart" class="chart big_chart"></div>
-                </div>
-                <div class="col-md-8 col-lg-9 col-xl-10">
-                  <h4>Voltage and current phase angle</h4>
-                  <table id="PhasorsTable" class="table small table-striped table-responsive">
-                    <thead>
-                      <tr>
-                        <th>Phase</th><th>Channel</th><th>Angle</th><th>Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+  <div class="panel panel-other">
+    <div class="panel-heading clearfix">
+      <div class="header-text">{{ Time }}</div>
+      <div class="header-buttons" ref="Toolbar">
+        <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'PLAY']"></toolbar-tools>
+      </div>
+    </div>
+    <div class="panel-body">
+      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
+      <div class="row">
+        <div class="col-md-4 col-lg-6 col-xl-8" ref="graphContainer">
+          <graph ref="graph" class="graph" :options="GraphOptions"></graph>
+        </div>
+        <div class="col-md-8 col-lg-6 col-xl-4">
+          <h4>Voltage and current phase angle</h4>
+          <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive"></vuetable>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
-function PhasorResizeEvent() {
-  var Width = $('#PhasorChart').parent().width();
-  if(PhasorChart !== null) PhasorChart.resize(Width, Width);
-}
-
-
-
-
-/* Grafico de fasores */
-var PhasorChart = null;
-var PhasorTable = null;
-function UpdatePhasorChart(result) {
-  var Vectors = [];
-  var MaxCurrent = 0;
-  var MaxVoltage = 0;
-  for(i = 0; i < result['Voltage'].length; i++) {
-    Vectors.push([2 * i, 120 * i, result.Voltage[i]]);
-    Vectors.push([2 * i + 1, 120 * i - result.Phi[i], result.Current[i]]);
-    MaxVoltage = Math.max(MaxVoltage, result.Voltage[i]);
-    MaxCurrent = Math.max(MaxCurrent, result.Current[i]);
-  }
-  for(i = 0; i < Vectors.length; i += 2) {
-    Vectors[i][2] = Vectors[i][2] / MaxVoltage;
-    Vectors[i + 1][2] = Vectors[i + 1][2] / MaxCurrent;
-  }
-  var Options = { 
-    strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], highlightCircleSize: 0,  interactionModel: { }, legend: 'never', valueRange: [-115, 115], dateWindow: [-115, 115], plotter: polarLinePlotter,
-    labels: ['Index', 'Phase', 'Magnitude'], colors: ['#d9534f', '#428bca'], xAxisHeight: 0.1, xLabelHeight: 0.1, plugins: [ new Dygraph.Plugins.PolarCrosshair( { } ) ],
-    axes: {
-      y: { drawAxis: true, drawGrid: false, axisLabelWidth: 0.0, axisLineColor: "#FFF",
-           ticker: function(min, max, pixels, opts, dygraph, vals) {
-             var ticks = [];
-             var Width = document.getElementById("PhasorChart").clientWidth / 2 - 1;
-             for(var i = 1; i <= 4; i++) {
-               ticks.push({ v: i * 25, label: '<div style="font-size: 11px; background: rgba(255, 255, 255, 0.8); margin-left: ' + Width + 'px; text-align: left; width: 44px; line-height: 12px">' + Round2(i / 4 * MaxVoltage) + '<em>V</em></div>' });
-             }
-             return ticks;
-           },            
-         },
-      x: { drawAxis: true, drawGrid: false, axisLabelWidth: 0, axisLineColor: "#FFF",
-           ticker: function(min, max, pixels, opts, dygraph, vals) {
-             var ticks = [];
-             var Height = document.getElementById("PhasorChart").clientHeight / 2 + 2;
-             for(var i = 1; i <= 4; i++) {
-               ticks.push({ v: -i * 25, label: '<div style="font-size: 11px; background: rgba(255, 255, 255, 0.8); margin-left: -20px; margin-top: ' + -Height + 'px; text-align: center; width: 40px; line-height: 12px">' + Round2(i / 4 * MaxCurrent) + '<em>A</em></div>' });
-             }
-             return ticks;
-           }
-         }
+<script>
+  import * as oZm from 'JS/openZmeter.js';
+  import moment from 'JS/moment.js';
+  import Dygraph from 'JS/dygraph.js';
+  import Spinner from 'Components/Spinner.vue';
+  import Graph from 'Components/Graph.vue';
+  import ToolbarTools from 'Components/ToolbarTools.vue';
+  import vuetable from 'vuetable-2';
+  export default {
+    data() {
+      return { ShowSpinner: true, Time: 'Loading data...',
+      Columns: [
+          {name: 'Phase', title: 'Phase'},
+          {name: 'Channel', title: 'Channel'},
+          {name: 'Angle', title: 'Angle'}, 
+          {name: 'Value', title: 'Value'}
+        ]
+      };
+    },
+    created: function() {
+      this.GraphOptions = {
+        highlightCircleSize: 0,  interactionModel: { }, legend: 'never', valueRange: [-130, 130], dateWindow: [-130, 130], plotter: this.Plotter, xAxisHeight: 0.1, xLabelHeight: 0.1
+      };
+      $(window).on('resize', this.Redraw.bind(this));
+    },
+    methods: {
+      Plotter: function(e) {
+        if((e.seriesIndex !== 0) || (e.plotArea.h < 0) || (e.plotArea.w < 0)) return;
+        var ctx = e.drawingContext;
+        ctx.lineWidth = 0.5;
+        ctx.strokeStyle = e.dygraph.attrs_.axisLineColor;
+        ctx.beginPath();
+        ctx.moveTo(e.dygraph.toDomXCoord(-100), e.dygraph.toDomYCoord(0));
+        ctx.lineTo(e.dygraph.toDomXCoord(100), e.dygraph.toDomYCoord(0));
+        ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(-100));
+        ctx.lineTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(100));
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.setLineDash(e.dygraph.user_attrs_.gridLinePattern);
+        ctx.strokeStyle = e.dygraph.user_attrs_.gridLineColor;
+        ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(100) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(75) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(50) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(25) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.fillStyle = '#000';
+        ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), 5, 0, 2 * Math.PI, false);
+        ctx.fill();
+        ctx.setLineDash([]);
+        if((e.dygraph.file_.length === 0) || (e.dygraph.file_[0].length !== 3)) return;
+        for(var i = 0; i < e.points.length; i++) {
+          if(isNaN(e.allSeriesPoints[1][i].yval)) continue;
+          var X = e.dygraph.toDomXCoord((100.0 * e.allSeriesPoints[1][i].yval - 5) * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0));
+          var Y = e.dygraph.toDomYCoord((100.0 * e.allSeriesPoints[1][i].yval - 5) * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0));
+          if(i % 2) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.beginPath();
+            ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
+            if(e.dygraph.file_[i - 1][1] < e.dygraph.file_[i][1]) {
+              ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(100) - e.dygraph.toDomXCoord(0), e.dygraph.file_[i - 1][1] * Math.PI / -180.0, e.dygraph.file_[i][1] * Math.PI / -180.0, true);
+            } else {
+              ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(100) - e.dygraph.toDomXCoord(0), e.dygraph.file_[i][1] * Math.PI / -180.0, e.dygraph.file_[i - 1][1] * Math.PI / -180.0, true);
+            }
+            ctx.lineTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
+            ctx.fill();
+          }
+          e.points[i].canvasx = X;
+          e.points[i].canvasy = Y;
+          ctx.strokeStyle = e.dygraph.getColors()[i % 2];
+          ctx.fillStyle = e.dygraph.getColors()[i % 2];
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
+          ctx.lineTo(X, Y);
+          ctx.stroke();
+          ctx.save();
+          ctx.beginPath();
+          ctx.translate(X, Y);
+          ctx.rotate(e.dygraph.file_[i][1] * Math.PI / -180.0);
+          ctx.moveTo(-5, 4);
+          ctx.lineTo(10, 0);
+          ctx.lineTo(-5, -4);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(21, 0, 10, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.font = "bold 12px sans";
+          ctx.fillStyle = "#FFF";
+          ctx.fillText((i % 2) ? "A" : "V", 17, 4);
+          ctx.fill();
+          ctx.restore();
+        }
+      },
+      Redraw: function() {
+        this.$nextTick(function() {
+          var Width = this.$refs.graphContainer.clientWidth;
+          this.$refs.graph.Redraw(Width, Width);
+        });
+      },
+      SetData(result) {
+        var Analyzer = this.$root.SelectedAnalyzer;
+        this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
+        var Phases = (oZm.Series['VOLTAGE'].Names(Analyzer).length === 1) ? ['L'] : ['R', 'S', 'T'];
+        var Vectors = [];
+        var MaxCurrent = 0;
+        var MaxVoltage = 0;
+        for(var i = 0; i < result['Voltage'].length; i++) {
+          Vectors.push([i * 2, 120 * i, result.Voltage[i]]);
+          Vectors.push([i * 2 + 1, 120 * i - result.Phi[i], result.Current[i]]);
+          MaxVoltage = Math.max(MaxVoltage, result.Voltage[i]);
+          MaxCurrent = Math.max(MaxCurrent, result.Current[i]);
+        }
+        for(var i = 0; i < Vectors.length; i += 2) {
+          Vectors[i][2] = Vectors[i][2] / MaxVoltage;
+          Vectors[i + 1][2] = Vectors[i + 1][2] / MaxCurrent;
+        }
+        var Options = {
+          labels: ['Index', 'Phase', 'Magnitude'], colors: ['#d9534f', '#428bca'], 
+          axes: {
+            y: { drawAxis: false, drawGrid: false, axisLabelWidth: 0.0, axisLineColor: "#FFF" },
+            x: { drawAxis: false, drawGrid: false, axisLabelWidth: 0, axisLineColor: "#FFF" }
+          },
+          file: Vectors
+        };
+        this.$refs.graph.SetOptions(Options);
+        var Table = [];
+        for(var i = 0; i < result.Voltage.length; i++) {
+          Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(i * 120) + 'º', Value: oZm.Round2(result['Voltage'][i]) + '<em> V</em>' } );
+          Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(i * 120 - result.Phi[i]) + 'º', Value: oZm.Round2(result.Current[i]) + '<em> A</em>'} );
+        }
+        this.$refs.table.setData( { data: Table });
+        this.ShowSpinner = false;
       }
-    };
-  if(PhasorChart === null) {
-    PhasorChart = new Dygraph(document.getElementById("PhasorChart"), Vectors, Options);
-    $(window).bind('resize', PhasorResizeEvent);
-    PhasorChart.updateOptions({ file: Vectors });
-    PhasorChart.updateOptions(Options);
+    },
+    components: { Spinner, ToolbarTools, Graph, vuetable }
   }
-  if(PhasorTable === null) {
-    PhasorTable = $('#PhasorsTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
-                                                 columnDefs: [ { targets: [0, 1, 2, 3], searchable: false } ],                            
-    });
+</script>
+
+<style scoped>
+  .table >>> th:nth-child(1)  {
+    width: 20px;
+    text-align: center;
+  }  
+  .table >>> th:nth-child(2)  {
+    width: 50px;
+    text-align: center;
   }
-  PhasorTable.clear();
-  for(i = 0; i < result.Voltage.length; i++) {
-    var PhaseName = "L";
-    if(result.Voltage.length > 1) {
-      if(i === 0) PhaseName = "R";
-      if(i === 1) PhaseName = "S";
-      if(i === 2) PhaseName = "T";
-    }
-    PhasorTable.row.add( [PhaseName, "Voltage", Round2(i * 120) + 'º', Round2(result.Voltage[i]) + '<em> V</em>'] ).draw(false);
-    PhasorTable.row.add( [PhaseName, "Current", Round2(i * 120 + -result.Phi[i]) + 'º', Round2(result.Current[i]) + '<em> A</em>'] ).draw();
+  .table >>> th:nth-child(3), .table >>> th:nth-child(4)  {
+    text-align: right;
   }
-  PhasorResizeEvent();
-}
+  .table >>> td {
+    font-size: 20px
+  }
+  .table >>> td:nth-child(1), .table >>> td:nth-child(1) {
+    text-align: center;
+  }
+  .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
+    text-align: right;
+  }
+</style>
