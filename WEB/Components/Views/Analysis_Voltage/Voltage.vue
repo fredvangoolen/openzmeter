@@ -1,7 +1,7 @@
 <template>
-  <div class="panel panel-voltage" id="VoltagePanel">
+  <div class="panel panel-voltage">
     <div class="panel-heading">
-      <div class="header-text" style="font-size: 24px; line-height: 16px;">Voltage</div>
+      <div class="header-text">Voltage</div>
       <div class="header-buttons clearfix" ref="Toolbar">
         <toolbar-aggregation variable="Aggregation" :options="['3S', '1M', '10M', '1H']" v-on:AggregationChanged="AggregationChanged" ref="aggregation"></toolbar-aggregation>
         <toolbar-period variable="Period" v-on:PeriodChanged="PeriodChange" ref="period"></toolbar-period>
@@ -48,7 +48,7 @@
       this.To = null;
       this.GraphOptions = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: oZm.LegendFormatter_Follow,
-        labels: ['Time', 'Voltage'], zoomCallback: this.ZoomEvt.bind(this), interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt.bind(this), dblclick: this.DoubleClickEvt.bind(this) }, colors: [oZm.Series['FREQUENCY'].Color], xAxisHeight: 24, 
+        zoomCallback: this.ZoomEvt.bind(this), interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt.bind(this), dblclick: this.DoubleClickEvt.bind(this) }, xAxisHeight: 24, 
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { var Result = oZm.Series['VOLTAGE'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
@@ -116,7 +116,8 @@
       },
       ExportClick: function() {
         if(this.$root.SelectedAnalyzer === null) return;
-//        this.$refs.tools.SaveCVS('Frequency.csv', [['Time', 'Frequency']].concat(this.Data));
+        var Analyzer = this.$root.SelectedAnalyzer;
+        this.$refs.tools.SaveCVS('Voltage.csv', [['Time'].concat(oZm.Series['VOLTAGE'].Names(Analyzer))].concat(this.Data));
       },
       UpdateGraph() {
         if((this.$root.SelectedAnalyzer === null) || (this.Aggreg === null) || (this.Period === null) || (this.AutoUpdate === null) || (this.Phases === null) || (this.To === null)) return;
@@ -168,74 +169,9 @@
   }
 </script>
 
-
-function Scrollable_OnSuccess(result, clear) {
-  if(clear) VoltageData = [];
-  AjaxGetEvents(result['From'], result['To'], clear);
-  VoltageData = GraphDataAppend(result, 'Voltage', VoltageData);
-  if(VoltageChart === null) {
-    VoltageChart = new Dygraph(document.getElementById("VoltageChart"), VoltageData,
-      { strokeWidth: 0.5, stepPlot: true, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4],
-        legend: 'follow', legendFormatter: LegendFormatter_Follow, labels: ['Time'].concat(Analyzer.GetSeriesNames('Voltage')), dateWindow: [result['From'], result['To']],
-        zoomCallback: MainScrollable.ZoomEvt, interactionModel: { mousedown: mouseDownOZM, mousemove: mouseMoveOZM, mouseup: MainScrollable.MouseUpEvt, dblclick: MainScrollable.DoubleClickEvt },  
-        colors: ColorArray($('#VoltagePanel').css('border-color'), 3), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], xAxisHeight: 24,
-        underlayCallback: function(canvas, area, g) {
-          var NV = Analyzer.GetSelected().NominalVoltage, Yellow = "rgba(255, 255, 0, 0.05)", Red = "rgba(255, 0, 0, 0.1)"; 
-          GraphHBackgroundRanges([[NV * 1.1, NV * 1.07, Yellow], [NV * 0.93, NV * 0.9, Yellow], [Infinity, NV * 1.1, Red], [NV * 0.9, -Infinity, Red]], g, canvas);
-        },
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { return Round2(x) + ' <em class="x-small">V</em>'; },
-               axisLabelFormatter: function (x) { return Round2(x); }
-             },
-          x: MainScrollable.XAxis
-          }
-        }  
-    );
-    $(window).bind('resize', VoltageResizeEvent);
-    window.dispatchEvent(new Event('resize'));
-    new GraphTools('Voltage', VoltageChart, '#toolbarVoltage', VoltageResizeEvent, function() { exportToCsv('Voltage.csv', [['Time'].concat(Analyzer.GetSeriesNames('Voltage'))].concat(VoltageData)); });
-  } else {
-    VoltageChart.updateOptions({file: VoltageData, dateWindow: [result['From'], result['To']]});
+<style scoped>
+  .header-text {
+    font-size: 24px;
+    line-height: 16px;
   }
-  VoltageSeries();
-}
-function VoltageResizeEvent() { 
-  if(VoltageChart !== null) VoltageChart.resize('100%', $('#VoltagePanel > .panel-body > .row > div:first-child').height());
-}
-function VoltageSeries(event) {
-  GraphPhaseButtons(VoltageChart, $('#groupVoltagePhases'), 'VisibleVoltageMainPhases', false, function(series) { return CalcRanges(VoltageData, series, false); }, (event !== undefined) ? event.target : undefined); 
-}
-$('#groupVoltagePhases').on('click', 'button', VoltageSeries);
-function Scrollable_UpdateCounters(times, renew) {
-  if(renew === true) {
-    $('#labelVoltageAvgPrimary').text(times.PrimaryText + ' average');
-    $('#labelVoltageMaxPrimary').text(times.PrimaryText + ' maximun');
-    $('#labelVoltageMinPrimary').text(times.PrimaryText + ' minimun');
-    $('#labelVoltageAvgPrimaryValue, #labelVoltageMaxPrimaryValue, #labelVoltageMinPrimaryValue').text('Calculating...');
-    $('#labelVoltageAvgSecondary, #labelVoltageMaxSecondary, #labelVoltageMinSecondary').text(times.SecondaryText);
-    $('#labelVoltageAvgSecondaryValue, #labelVoltageMaxSecondaryValue, #labelVoltageMinSecondaryValue').text((times.SecondaryTo !== undefined) ? 'Calculating...' : '');
-    if(times.SecondaryTo !== undefined) {
-      Analyzer.GetSeriesAggreg(times.SecondaryPeriod, times.SecondaryTo, times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)',
-        function(result) {
-          if(result['Samples'] !== 0) {
-            $('#labelVoltageAvgSecondaryValue').html(Array_Round2(result['avg_rms_v']) + '&nbsp;<em>V</em>');
-            $('#labelVoltageMinSecondaryValue').html(Array_Round2(result['min_rms_v']) + '&nbsp;<em>V</em>');
-            $('#labelVoltageMaxSecondaryValue').html(Array_Round2(result['max_rms_v']) + '&nbsp;<em>V</em>');
-          } else {
-            $('#labelVoltageAvgSecondaryValue, #labelVoltageMaxSecondaryValue, #labelVoltageMinSecondaryValue').text('No data'); 
-          }
-          window.dispatchEvent(new Event('resize'));
-        }
-      );
-    }
-  }
-  Analyzer.GetSeriesAggreg(times.PrimaryPeriod, times.PrimaryTo, times.PreferedAggreg, 'avg(rms_v), max(rms_v), min(rms_v)', 
-    function(result) {
-      $('#labelVoltageAvgPrimaryValue').html(Array_Round2(result['avg_rms_v'], ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
-      $('#labelVoltageMinPrimaryValue').html(Array_Round2(result['min_rms_v'], ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
-      $('#labelVoltageMaxPrimaryValue').html(Array_Round2(result['max_rms_v'], ColorArray($('#VoltagePanel').css('border-color'), 3)) + '&nbsp;<em class="huge-small-unit">V</em>');
-      window.dispatchEvent(new Event('resize'));
-    }
-  );
-}
+</style>

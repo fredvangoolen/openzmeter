@@ -28,7 +28,7 @@
   import DetailTabs from 'Components/Tabs.vue';
   export default {
     data () {
-      return { ActiveTab: '', ShowSpinner: true, Paused: false };
+      return { ActiveTab: '', Paused: false };
     },
     created: function() {
       this.LastSample = 0;
@@ -102,8 +102,6 @@
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
-            this.ShowSpinner = false;
-            this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
             this.$refs.waveform.SetData(result);
             this.$refs.harmonics.SetData(result);
             this.$refs.advanced.SetData(result);

@@ -61,17 +61,21 @@
               };
     },
     created: function() {
+      this.NowTimer = null;
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
     mounted: function() {
       this.NowValue();
     },
+    beforeDestroy: function() {
+      clearInterval(this.NowTimer);
+    },
     methods: {
       SetAnalyzer: function() {
+        clearInterval(this.NowTimer);
         this.NowValue();
       },
       NowValue: function() {
-        if(this.NowTimer !== null) clearInterval(this.NowTimer);
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE'], To: 0, Aggreg: '10M', Period: 1200000, Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
@@ -94,8 +98,8 @@
             this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
           }.bind(this), 
           error: function() {
-            this.CurrentValue = 'No data';
-            this.Time3S = '';
+            this.CurrentValue10M = ['No data'];
+            this.Time10M = '';
           }.bind(this)
         });
       },
