@@ -88,5 +88,4 @@
     },
     components: { Cubism, Spinner, ToolbarPhases, ToolbarTools }
   }
-  
 </script>

@@ -60,7 +60,7 @@
     },
     mounted: function() {
       this.NowValue3S();
-      this.NowValues1M();
+      this.NowValue1M();
     },
     beforeDestroy: function() {
       clearInterval(this.NowTimer3S);

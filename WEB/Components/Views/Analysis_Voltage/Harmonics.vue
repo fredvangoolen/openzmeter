@@ -24,7 +24,6 @@
   import ToolbarOptions from 'Components/ToolbarOptions.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
-    props: ['visible'],
     data() {
       return { ShowSpinner: true, Time: 'Loading data...' };
     },
