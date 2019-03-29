@@ -45,7 +45,12 @@
       this.GraphOptions = {
         highlightCircleSize: 0,  interactionModel: { }, legend: 'never', valueRange: [-130, 130], dateWindow: [-130, 130], plotter: this.Plotter, xAxisHeight: 0.1, xLabelHeight: 0.1
       };
+    },
+    mounted: function() {
       $(window).on('resize', this.Redraw.bind(this));
+    },
+    beforeDestroy: function() {
+      $(window).off('resize', this.Redraw);
     },
     methods: {
       Plotter: function(e) {
@@ -124,12 +129,10 @@
       },
       Redraw: function() {
         this.$nextTick(function() {
+          if((this.$refs === undefined) || (this.$refs.graphContainer === undefined)) return;
           var Width = this.$refs.graphContainer.clientWidth;
           this.$refs.graph.Redraw(Width, Width);
         });
-      },
-      beforeDestroy: function() {
-        $(window).off('resize', this.Redraw);
       },
       ExportClick: function() {
         this.$refs.tools.SaveCVS('Phasors.csv', [['Phase', 'Channel', 'Angle', 'Value']].concat(this.Data));

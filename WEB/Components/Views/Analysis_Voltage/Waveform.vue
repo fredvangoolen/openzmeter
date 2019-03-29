@@ -2,12 +2,12 @@
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
       <div class="header-text">{{ Time }}</div>
-        <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedMulti"></toolbar-phases>
-          <toolbar-options variable="DetailOptions" :options="['Current']" v-on:OptionChanged="SetOption"></toolbar-options>
-          <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools>
-        </div>
+      <div class="header-buttons" ref="Toolbar">
+        <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedMulti"></toolbar-phases>
+        <toolbar-options variable="DetailOptions" :options="['Current']" v-on:OptionChanged="SetOption"></toolbar-options>
+        <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools>
       </div>
+    </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
       <graph ref="graph" :options="{}"></graph>
@@ -78,7 +78,7 @@
           colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length)), 
           plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], showRangeSelector: false,
           axes: {
-            y: { pixelsPerLabel: 15, axisLabelWidth: 34, //valueRange: Y1Range, 
+            y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: Y1Range, 
                  valueFormatter: function (x) { return oZm.Round2(x) + ' <em class="x-small">V</em>'; },
                  axisLabelFormatter: function (x) { return oZm.Round2(x); }
             },
@@ -102,12 +102,12 @@
       },
       MaximizeClick: function() {
         this.$refs.tools.Maximize('Waveform', this.$refs.graph.Graph, this.$refs.Toolbar);
-      },
-      created: function() {
-        this.Data = null;
-        this.VoltagePhases = null;
-        this.ShowCurrent = null;
       }
+    },
+    created: function() {
+      this.Data = null;
+      this.VoltagePhases = null;
+      this.ShowCurrent = null;
     },
     components: { Spinner, ToolbarPhases, ToolbarOptions, ToolbarTools, Graph }
   }

@@ -1,13 +1,9 @@
 <template>
     <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ Time }}</div>
-        <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedMulti"></toolbar-phases>
-          <toolbar-options variable="DetailOptions" :options="['Current', 'Log']" v-on:OptionChanged="SetOption"></toolbar-options>
-          <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools>
-        </div>
-      </div>
+
+
+    </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
             <div class="row">
@@ -39,7 +35,16 @@
 </template>
 
 <script>
-  
+  import Spinner from 'Components/Spinner.vue';
+  export default {
+    data: function() {
+      return { ShowSpinner: true };
+    },
+    methods: {
+      Redraw: function() {}
+    },
+    components: { Spinner }
+  }
 </script>
 
 /* Tabla de eventos */
