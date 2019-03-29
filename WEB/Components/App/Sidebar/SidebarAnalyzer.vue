@@ -56,7 +56,7 @@
   }
 </script>
 
-<style>
+<style scoped>
   .sidenav-header .progress {
     height: 12px;
     background-color: #474544;
