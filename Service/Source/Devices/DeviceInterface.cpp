@@ -557,24 +557,18 @@ void DeviceInterface::GetSeriesNowCallback(HTTPRequest &req) {
 }
 void DeviceInterface::GetSeriesRangeCallback(HTTPRequest &req) {
   json Params = req.GetParams();
-  AnalyzerInterface *Analyzer = NULL;
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  for(vector<DeviceInterface*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
-    Analyzer = (*it)->FindAnalyzer(Params["Analyzer"]);
-    if(Analyzer != NULL) break;
-  }
-  if(Analyzer == NULL) return req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
   if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) {
     req.FromString("'Aggreg' need to be '3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
     return;
   }
   string Aggreg = Params["Aggreg"];
-  string Query = "SET search_path TO " + req.Bind(Analyzer->GetID()) + "; SELECT row_to_json(Result) AS result FROM ( SELECT max(sampletime) AS \"To\", min(sampletime) AS \"From\" FROM aggreg_" + Aggreg + ") AS Result";
-//  req.PrepareSentence("SET search_path TO ?");
-//  req.BindSingleString(Analyzer->GetID().c_str());
-//  req.ExecSentence();
-//  string Query = "SELECT row_to_json(Result) AS result FROM ( SELECT max(sampletime) AS \"To\", min(sampletime) AS \"From\" FROM aggreg_" + Aggreg + ") AS Result";
-  return req.FromString(req.ResultString(0, "Result"), MHD_HTTP_OK);
+  string Analyzer = Params["Analyzer"];
+  string Query = "SET search_path TO " + req.Bind(Analyzer) + ", 'public';";
+  Query += "SELECT ranges FROM analyzers, (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM aggreg_" + Aggreg + ") AS t1) AS t2 ";
+  Query += "WHERE username = " + req.Bind(req.UserName()) + " OR serial IN (SELECT serial from permisions WHERE username = " + req.Bind(req.UserName()) + ")";
+  req.ExecSentence(Query);
+  return req.FromString(req.ResultString(0, "ranges"), (req.ResultRows() == 1) ? MHD_HTTP_OK : MHD_HTTP_UNAUTHORIZED);
 }
 void DeviceInterface::GetEventsCallback(HTTPRequest &req) {
 //  uint64_t LastEvent = 0, From = 0, To = 0, Period = 0;

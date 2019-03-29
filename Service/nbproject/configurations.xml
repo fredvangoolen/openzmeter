@@ -36,6 +36,9 @@
           </df>
           <in>Tariff.cpp</in>
         </df>
+        <df name="Telegram">
+          <in>TelegramBOT.cpp</in>
+        </df>
         <in>Database.cpp</in>
         <in>Events.cpp</in>
         <in>FFT.cpp</in>
@@ -44,9 +47,6 @@
         <in>NTP.cpp</in>
         <in>NetworkManager.cpp</in>
         <in>Tools.cpp</in>
-      </df>
-      <df name="Telegram">
-        <in>TelegramBOT.cpp</in>
       </df>
     </df>
     <logicalFolder name="ExternalFiles"
@@ -115,7 +115,10 @@
             <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -152,7 +155,10 @@
             <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -165,19 +171,20 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -228,7 +235,10 @@
             <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -251,7 +261,10 @@
             <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -274,7 +287,10 @@
             <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -291,19 +307,20 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -326,7 +343,10 @@
             <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -349,7 +369,10 @@
             <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -362,6 +385,10 @@
         </ccTool>
       </item>
       <item path="Source/Tariffs/Tariff.cpp" ex="false" tool="1" flavor2="8">
+        <ccTool flags="1">
+        </ccTool>
+      </item>
+      <item path="Source/Telegram/TelegramBOT.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="1">
         </ccTool>
       </item>
@@ -380,15 +407,16 @@
             <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
             <Elem>OZM_DEBUG</Elem>
           </preprocessorList>
         </ccTool>
-      </item>
-      <item path="Telegram/TelegramBOT.cpp" ex="false" tool="1" flavor2="9">
       </item>
       <folder path="0/Source/Analyzers/Remote">
         <ccTool>
@@ -491,7 +519,10 @@
             <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -596,7 +627,10 @@
             <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -619,7 +653,10 @@
             <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -642,7 +679,10 @@
             <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -655,19 +695,20 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -680,19 +721,46 @@
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/Spain</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>OZM_DEBUG</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Telegram">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/Spain</pElem>
+            <pElem>Source/Tariffs/ESIOS</pElem>
+            <pElem>Source/HTTPServer</pElem>
+            <pElem>Source/Telegram</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
