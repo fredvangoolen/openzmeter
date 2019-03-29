@@ -78,7 +78,7 @@
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['CURRENT'], To: 0, Aggreg: '3S', Period: 6000, Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
             if(result['Sampletime'].length === 0) {
-              this.CurrentValue3M = ['No data'];
+              this.CurrentValue3S = ['No data'];
               this.Time3S = '';
             } else {
               var Pos = result['Sampletime'].length - 1;
@@ -95,7 +95,7 @@
             this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
           }.bind(this), 
           error: function() {
-            this.CurrentValue3S = 'No data';
+            this.CurrentValue3S = ['No data'];
             this.Time3S = '';
           }.bind(this)
         });
