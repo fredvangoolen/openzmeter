@@ -106,8 +106,8 @@
     },
     created: function() {
       this.Data = null;
-      this.VoltagePhases = null;
-      this.ShowCurrent = null;
+      this.CurrentPhases = null;
+      this.ShowVoltage = null;
     },
     components: { Spinner, ToolbarPhases, ToolbarOptions, ToolbarTools, Graph }
   }
