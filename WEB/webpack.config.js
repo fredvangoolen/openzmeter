@@ -4,8 +4,8 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 module.exports = {
   entry: './main.js',
   output: {
-    path: path.resolve(__dirname, '../Service/Resources/WEB'),
-    publicPath: '/',
+    path: path.resolve(__dirname, './dist'),
+    publicPath: '/dist/',
     filename: 'openZmeter.js'
   },
   plugins: [
@@ -75,6 +75,7 @@ module.exports = {
       '/getTariffs': { target: 'http://localhost:8081'},
       '/setTariffs': { target: 'http://localhost:8081'},
       '/delTariffs': { target: 'http://localhost:8081'},
+      '/getEvents': { target: 'http://localhost:8081'},
       '/Login': { target: 'http://localhost:8081'}
     }
   },

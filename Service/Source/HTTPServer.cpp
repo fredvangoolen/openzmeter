@@ -119,7 +119,7 @@ bool HTTPRequest::Deflate() {
   return pDeflate;
 }
 void HTTPRequest::CloseSession() {
-  ExecSentence("DELETE FROM sessions WHERE id = ?" + Bind(pSessionID));
+  ExecSentence("DELETE FROM sessions WHERE id = " + Bind(pSessionID));
 }
 int  HTTPRequest::ResultCode() {
   return pResultCode;

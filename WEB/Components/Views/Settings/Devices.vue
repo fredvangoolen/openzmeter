@@ -9,16 +9,18 @@
           <div class="btn-group" style="width:100%">
             <button class="btn btn-xs btn-danger" v-if="props.rowData.Status === 'RUNNING'" @click="Stop(props.rowData.Serial, $event)">Stop</button>
             <button class="btn btn-xs btn-success" v-if="props.rowData.Status !== 'RUNNING'" @click="Start(props.rowData.Serial, $event)">Start</button>
-            <button class="btn btn-xs btn-default" @click="Configure(props.rowData.Serial, $event)">Configure</button>
+            <button class="btn btn-xs btn-default" @click="Configure(props.rowData, $event)">Configure</button>
           </div>
         </template>
       </vuetable>
     </div>
+    <devices-configure ref="Dialog"></devices-configure>
   </div>
 </template>
 
 <script>
   import Vuetable from 'vuetable-2';
+  import DevicesConfigure from './DevicesConfigure.vue';
   export default {
     data: function() {
       return { Devices: [], 
@@ -59,13 +61,13 @@
       },
       Configure: function(id, evt) {
         $(evt.target).blur();
-        //abrir dialogo de configuracion segun driver
+        this.$refs.Dialog.Show(id);
       }
     },
     mounted: function() {
       this.LoadTable();
     },
-    components: { Vuetable }
+    components: { Vuetable, DevicesConfigure }
   }
 </script>
 

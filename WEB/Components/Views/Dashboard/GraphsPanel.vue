@@ -119,7 +119,7 @@
       if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
     },
     mounted: function() {
-      this.UpdateGraph();
+      this.SetAnalyzer();
     },
     components: { ToolbarPhases, ToolbarTools, Spinner, Graph }
   }
