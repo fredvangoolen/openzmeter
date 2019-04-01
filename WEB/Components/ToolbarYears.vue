@@ -15,6 +15,7 @@
 <script>
   import moment from 'JS/moment.js';
   export default {
+    props: { 'aggreg': String },
     data() {
       return { SelectedText: 'No data', Years: [] };
     },
@@ -27,7 +28,7 @@
       AnalyzerChanged: function() {
         if(this.$root.SelectedAnalyzer === null) return;
         var Years = [];
-        $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Aggreg: '3S', Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Aggreg: this.aggreg, Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
             for(var year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) Years.push(year);
             this.Years = Years;

@@ -17,3 +17,6 @@
                       </div>
                     </div>
 </template>
+
+
+//              $('#GridNominalFreq').text(Analyzers[Analyzer].NominalFreq);

@@ -43,7 +43,7 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
     HTTPServer::RegisterCallback("/getSeriesNow",        DeviceInterface::GetSeriesNowCallback);
 //    HTTPServer::RegisterCallback("/getSeriesAggreg",     DeviceInterface::GetSeriesAggregCallback);
     HTTPServer::RegisterCallback("/getSeriesRange",      DeviceInterface::GetSeriesRangeCallback);
-//    HTTPServer::RegisterCallback("/getEvents",           DeviceInterface::GetEventsCallback);
+    HTTPServer::RegisterCallback("/getEvents",           DeviceInterface::GetEventsCallback);
     HTTPServer::RegisterCallback("/getPrices",           DeviceInterface::GetPricesCallback);
     HTTPServer::RegisterCallback("/getTariffs",          DeviceInterface::GetTariffsCallback);
     HTTPServer::RegisterCallback("/setTariffs",          DeviceInterface::SetTariffsCallback);
@@ -123,19 +123,10 @@ void DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
   if(!Params["To"].is_number())         Params["To"] = 0;
   if(!Params["Period"].is_number())     Params["Period"] = 3600000;
   if(!Params["LastSample"].is_number()) Params["LastSample"] = 0;
-  if(!Params["Analyzer"].is_string()) {
-    req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-    return;
-  }
+  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
   string Analyzer = Params["Analyzer"];
-  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) {
-    req.FromString("'Aggreg' need to be '3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
-    return;
-  }
-  if(!Params["Series"].is_array()) {
-    req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
-    return;
-  }
+  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+  if(!Params["Series"].is_array()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
   uint64_t To = Params["To"];
   uint64_t Period = Params["Period"];
   uint64_t LastSample = Params["LastSample"];
@@ -147,18 +138,12 @@ void DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
   if(Aggreg == "10M") PeriodSeconds = 600000;
   if(Aggreg == "15M") PeriodSeconds = 900000;
   if(Aggreg == "1H") PeriodSeconds = 3600000;
-  if((Period / PeriodSeconds) > 100000) {
-    req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
-    return;
-  }  
+  if((Period / PeriodSeconds) > 100000) return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
   string Query = "SET search_path TO " + req.Bind(Analyzer) + "; ";
   Query += "SELECT row_to_json(Result) AS result FROM ( SELECT " + req.Bind(From) + " AS " + req.BindID("From") + ", " + req.Bind(To) +" AS " + req.BindID("To") + ", ";
   Query += req.Bind((To - From) / PeriodSeconds) + " AS " + req.BindID("MaxSamples") + ", " + req.Bind(Aggreg) + " AS " + req.BindID("Aggregation_Source") + ", ";
   for(uint i = 0; i < Params["Series"].size(); i++) {
-    if(!Params["Series"][i].is_string()) {
-      req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
-      return;
-    }
+    if(!Params["Series"][i].is_string()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
     string Serie = Params["Series"][i];
     if((Serie == "FREQUENCY") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {      
       Query += "COALESCE(ARRAY_AGG(freq ORDER BY sampletime ASC), '{}') AS " + req.BindID("Frequency") + ", ";
@@ -184,9 +169,16 @@ void DeviceInterface::GetSeriesCallback(HTTPRequest &req) {
       Query += "COALESCE(ARRAY_AGG(harmonics_v ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Harmonics") + ", ";
     } else if((Serie == "CURRENT_HARMONICS") && (Aggreg ==  "1M")) {
       Query += "COALESCE(ARRAY_AGG(harmonics_i ORDER BY sampletime ASC), '{}') AS " + req.BindID("Current_Harmonics") + ", ";
+    } else if((Serie == "VOLTAGE_STATS") && (Aggreg ==  "1H")) {
+      Query += "COALESCE(ARRAY_AGG(stat_voltage ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Stats") + ", ";
+    } else if((Serie == "FREQUENCY_STATS") && (Aggreg ==  "1H")) {
+      Query += "COALESCE(ARRAY_AGG(stat_frequency ORDER BY sampletime ASC), '{}') AS " + req.BindID("Frequency_Stats") + ", ";
+    } else if((Serie == "VOLTAGE_THD_STATS") && (Aggreg ==  "1H")) {
+      Query += "COALESCE(ARRAY_AGG(stat_thd ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_THD_Stats") + ", ";
+    } else if((Serie == "VOLTAGE_HARMONICS_STATS") && (Aggreg ==  "1H")) {
+      Query += "COALESCE(ARRAY_AGG(stat_harmonics ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Harmonics_Stats") + ", ";
     } else {
-      req.FromString("Invalid serie in selected aggregation", MHD_HTTP_BAD_REQUEST);
-      return;
+      return req.FromString("Invalid serie in selected aggregation", MHD_HTTP_BAD_REQUEST);
     }
   }
   Query += "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS " + req.BindID("Sampletime") + " FROM ";
@@ -571,33 +563,23 @@ void DeviceInterface::GetSeriesRangeCallback(HTTPRequest &req) {
   return req.FromString(req.ResultString(0, "ranges"), (req.ResultRows() == 1) ? MHD_HTTP_OK : MHD_HTTP_UNAUTHORIZED);
 }
 void DeviceInterface::GetEventsCallback(HTTPRequest &req) {
-//  uint64_t LastEvent = 0, From = 0, To = 0, Period = 0;
-//  char    *Analyzer = NULL;
-//  if(Tools::JSONString(reader, "Analyzer", &Analyzer, false) == false) {
-//    *postdata  = (char*)"'Analyzer' param is requiered";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  Tools::JSONUInt64(reader, "LastEvent", &LastEvent);
-//  Tools::JSONUInt64(reader, "To", &To);
-//  Tools::JSONUInt64(reader, "Period", &Period);
-//  if(To == 0) To = Tools::GetTime();
-//  From = To - Period;
-//  char QueryText[8192];
-//  int  QueryLen = 0;
-//  db->PrepareSentence("SET search_path TO ?");
-//  db->BindSingleString(Analyzer);
-//  db->ExecSentence();
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\", ", To); 
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}') AS \"StartTime\", ");
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}') AS \"Duration\", ");
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}') AS \"SampleRate\", ");
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(type ORDER BY starttime ASC), '{}') AS \"Type\", ");
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(voltage ORDER BY starttime ASC), '{}') AS \"Voltage\", ");
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "COALESCE(ARRAY_AGG(percent ORDER BY starttime ASC), '{}') AS \"Percentage\" ");
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE starttime > %" PRIu64 " AND starttime >= %" PRIu64 " AND starttime <= %" PRIu64 ") AS Result", LastEvent, From, To);
-//  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
-  return;
+  json Params = req.GetParams();
+  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+  if(!Params["To"].is_number())         Params["To"] = 0;
+  if(!Params["Period"].is_number())     Params["Period"] = 3600000;
+  if(!Params["LastSample"].is_number()) Params["LastSample"] = 0;
+  string Analyzer = Params["Analyzer"];
+  uint64_t To = Params["To"];
+  uint64_t Period = Params["Period"];
+  uint64_t LastSample = Params["LastSample"];
+  if(To == 0) To = Tools::GetTime();
+  uint64_t From = To - Period;
+  string Query = "SET search_path TO " + req.Bind(Analyzer) + ", 'public';";
+  Query += "SELECT evt FROM analyzers, (SELECT json_build_object('From', 1546297200000, 'To', 1577833199999, 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), ";
+  Query += "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'Samplerate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), ";
+  Query += "'Type', COALESCE(ARRAY_AGG(type ORDER BY starttime ASC), '{}'), 'Voltage', COALESCE(ARRAY_AGG(voltage ORDER BY starttime ASC), '{}'), 'Percent', COALESCE(ARRAY_AGG(percent ORDER BY starttime ASC), '{}')) AS evt ";
+  Query += "FROM events WHERE starttime > " + req.Bind(LastSample) + " AND starttime >= " + req.Bind(From) + " AND starttime <= " + req.Bind(To) + ") AS t1 ";
+  Query += "WHERE username = " + req.Bind(req.UserName()) + " OR serial IN (SELECT serial from permisions WHERE username = " + req.Bind(req.UserName()) + ")";
+  req.ExecSentence(Query);
+  return req.FromString(req.ResultString(0, "evt"), (req.ResultRows() == 1) ? MHD_HTTP_OK : MHD_HTTP_UNAUTHORIZED);
 }
