@@ -16,7 +16,7 @@
   export default {
     props: ['options', 'selected'],
     data() {
-      return { Selected: '#FFFFFF' };
+      return { Selected: 'NONE' };
     },
     methods: {
       OptionClick(option, evt) {
