@@ -163,6 +163,9 @@ uint32_t Database::ResultRows() {
   if(pResult == NULL) return 0;
   return PQntuples(pResult);
 }
+json Database::ResultJSON(uint32_t row, string name) {
+  return json.parse(ResultString(row, name));
+}
 string Database::ResultString(uint32_t row, string name) {
   if(pResult == NULL) return "";
   if(PQntuples(pResult) < 1) return "";

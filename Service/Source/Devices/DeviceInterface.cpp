@@ -37,7 +37,6 @@ void DeviceInterface::AddDevice(DeviceInterface* device) {
     HTTPServer::RegisterCallback("/startDevice",         DeviceInterface::StartDeviceCallback);
 //    HTTPServer::RegisterCallback("/getDeviceSettings",   DeviceInterface::StartDeviceCallback);
 //    HTTPServer::RegisterCallback("/setDeviceSettings",   DeviceInterface::StartDeviceCallback);
-
     HTTPServer::RegisterCallback("/getAnalyzers",        DeviceInterface::GetAnalyzersCallback);
     HTTPServer::RegisterCallback("/getSeries",           DeviceInterface::GetSeriesCallback);
     HTTPServer::RegisterCallback("/getSeriesNow",        DeviceInterface::GetSeriesNowCallback);
@@ -294,11 +293,12 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   Result["Period_Color"]       = json::array();;
   Result["Contracted_Power"]   = json::array();;
   Result["Expense"]            = json::array();;
-
   //Load involved tariffs
-  req.ExecSentence("SELECT to_json(array_agg(json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) ORDER BY startdate ASC)) FROM analyzers_rates WHERE serial = " + req.Bind(Analyzer) + " AND enddate >= " + req.Bind(From) + " AND startdate <= " + req.Bind(To));
-  
-  char *JSONText = NULL;//req.ExecSentenceJSON(Query.str().c_str(), NULL);
+  req.ExecSentence("SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) FROM analyzers_rates WHERE serial = " + req.Bind(Analyzer) + " AND enddate >= " + req.Bind(From) + " AND startdate <= " + req.Bind(To) + " ORDER BY startdate ASC");
+  for(uint32_t n = 0; n < req.ResultRows(); n++) {
+    
+  }
+  char *JSONText = req.ExecSentenceJSON(Query.str().c_str(), NULL);
   json TariffsJSON = (JSONText == NULL) ? json::array() : json::parse(JSONText);
   TariffList Tariffs(TariffsJSON);
   //Find start and end date to retrieve data
@@ -558,7 +558,7 @@ void DeviceInterface::GetSeriesRangeCallback(HTTPRequest &req) {
   string Analyzer = Params["Analyzer"];
   string Query = "SET search_path TO " + req.Bind(Analyzer) + ", 'public';";
   Query += "SELECT ranges FROM analyzers, (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM aggreg_" + Aggreg + ") AS t1) AS t2 ";
-  Query += "WHERE username = " + req.Bind(req.UserName()) + " OR serial IN (SELECT serial from permisions WHERE username = " + req.Bind(req.UserName()) + ")";
+  Query += "WHERE username = " + req.Bind(req.UserName()) + " OR serial IN (SELECT serial from permisions WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ") LIMIT 1";
   req.ExecSentence(Query);
   return req.FromString(req.ResultString(0, "ranges"), (req.ResultRows() == 1) ? MHD_HTTP_OK : MHD_HTTP_UNAUTHORIZED);
 }
@@ -579,7 +579,7 @@ void DeviceInterface::GetEventsCallback(HTTPRequest &req) {
   Query += "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), ";
   Query += "'Type', COALESCE(ARRAY_AGG(type ORDER BY starttime ASC), '{}'), 'Voltage', COALESCE(ARRAY_AGG(voltage ORDER BY starttime ASC), '{}'), 'Percent', COALESCE(ARRAY_AGG(percent ORDER BY starttime ASC), '{}')) AS evt ";
   Query += "FROM events WHERE starttime > " + req.Bind(LastSample) + " AND starttime >= " + req.Bind(From) + " AND starttime <= " + req.Bind(To) + ") AS t1 ";
-  Query += "WHERE username = " + req.Bind(req.UserName()) + " OR serial IN (SELECT serial from permisions WHERE username = " + req.Bind(req.UserName()) + ")";
+  Query += "WHERE username = " + req.Bind(req.UserName()) + " OR serial IN (SELECT serial from permisions WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ") LIMIT 1";
   req.ExecSentence(Query);
   return req.FromString(req.ResultString(0, "evt"), (req.ResultRows() == 1) ? MHD_HTTP_OK : MHD_HTTP_UNAUTHORIZED);
 }
