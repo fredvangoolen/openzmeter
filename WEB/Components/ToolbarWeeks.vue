@@ -3,50 +3,35 @@
     <div class="input-group input-group-xs">
       <span class="input-group-addon"><img :src="require('Imgs/calendar_view_day.png')"></span>
       <div class="input-group-btn">
-        <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><span>{{ SelectedText }}</span><span class="caret"></span></button>
+        <button class="btn btn-default dropdown-toggle" v-bind:class="{disabled: (weeks.length == 0)}" type="button" data-toggle="dropdown"><span>{{ SelectedText }}</span><span class="caret"></span></button>
         <ul class="dropdown-menu pull-right">
-          <li v-for="year in Years" v-bind:class="{ active: (year == SelectedText) }"><a @click="YearClick(year, $event)">{{ year }}</a></li>
+          <li v-for="(week, id) in weeks" v-bind:class="{ active: (week == SelectedText) }" v-if="week != undefined"><a @click="WeekClick(id, $event)">{{ week.Name }}</a></li>
         </ul>
       </div>
     </div>
   </div>
-</template> 
+</template>
 
 <script>
   import moment from 'JS/moment.js';
   export default {
+    props: { weeks: Array },
     data() {
-      return { SelectedText: 'No data', Years: [] };
+      return { SelectedText: 'All year' };
     },
     methods: {
-      YearClick: function(year, event) {
+      WeekClick: function(week, event) {
         event.preventDefault();
-        this.SelectedText = year;
-        this.$emit('YearChanged', year);
-      },
-      AnalyzerChanged: function() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Years = [];
-        $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Aggreg: '3S', Analyzer: this.$root.SelectedAnalyzer.ID }), 
-          success: function(result) {
-            for(var year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) Years.push(year);
-            this.Years = Years;
-            if(Years.length > 0) {
-              this.SelectedText = Years[0];
-              this.$emit('YearChanged', Years[0]);
-            } else {
-              this.SelectedText = 'No data';
-              this.$emit('YearChanged', null);
-            }
-          }.bind(this)
-        }); 
+        this.SelectedText = this.weeks[week].Name;
+        this.$emit('WeekChanged', week);
       }
     },
-    created: function() {
-      this.$root.$on('AnalyzerChanged', this.AnalyzerChanged);
-    },
-    mounted: function() {
-      this.AnalyzerChanged();
+    watch: {
+      weeks: function(val) {
+        if(val.length === 0) return;
+        this.SelectedText = val[0].Name;
+        this.$emit('WeekChanged', 0);
+      }
     }
   }
 </script>

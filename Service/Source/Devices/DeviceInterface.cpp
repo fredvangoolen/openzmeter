@@ -576,7 +576,7 @@ void DeviceInterface::GetEventsCallback(HTTPRequest &req) {
   uint64_t From = To - Period;
   string Query = "SET search_path TO " + req.Bind(Analyzer) + ", 'public';";
   Query += "SELECT evt FROM analyzers, (SELECT json_build_object('From', 1546297200000, 'To', 1577833199999, 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), ";
-  Query += "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'Samplerate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), ";
+  Query += "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), ";
   Query += "'Type', COALESCE(ARRAY_AGG(type ORDER BY starttime ASC), '{}'), 'Voltage', COALESCE(ARRAY_AGG(voltage ORDER BY starttime ASC), '{}'), 'Percent', COALESCE(ARRAY_AGG(percent ORDER BY starttime ASC), '{}')) AS evt ";
   Query += "FROM events WHERE starttime > " + req.Bind(LastSample) + " AND starttime >= " + req.Bind(From) + " AND starttime <= " + req.Bind(To) + ") AS t1 ";
   Query += "WHERE username = " + req.Bind(req.UserName()) + " OR serial IN (SELECT serial from permisions WHERE username = " + req.Bind(req.UserName()) + ")";

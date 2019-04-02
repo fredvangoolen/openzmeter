@@ -9,7 +9,7 @@
               <div class="header-buttons clearfix">
                 <color-bar :width="140" :height="10" ref="colorbar"></color-bar>
                 <toolbar-aggregation variable="HeatmapPeriod" :options="['15M', '1H']"></toolbar-aggregation>
-                <toolbar-years @YearChanged="YearChanged"></toolbar-years>
+                <toolbar-years @YearChanged="YearChanged" aggreg="15M"></toolbar-years>
               </div>
             </div>
             <div class="panel-body" style="min-height: 300px">
