@@ -41,6 +41,7 @@ class Database {
     string      ResultString(uint32_t row, string name);
     float       ResultFloat(uint32_t row, string name);
     uint64_t    ResultUInt64(uint32_t row, string name);
+    json        ResultJSON(uint32_t row, string name);
     string      GetSchema();
     Database(string schema = "public");
     ~Database();

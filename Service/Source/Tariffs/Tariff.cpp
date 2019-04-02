@@ -28,18 +28,19 @@ bool TariffPlugin::ContainsReactive(string name) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 TariffList::TariffList(json array) {
-  for(uint32_t n = 0; n < array.size(); n++) {
-    if(!array[n]["StartDate"].is_number()) return;
-    if(!array[n]["EndDate"].is_number()) return;
-    if(!array[n]["Template"].is_object()) return;
-    if(!array[n]["Config"].is_object()) return;
-    Tariff *Tmp = new Tariff(array[n]["StartDate"], array[n]["EndDate"]);
-    if((Tmp->SetTemplate(array[n]["Template"]) == false) || (Tmp->SetConfig(array[n]["Config"]) == false)) {
-      delete Tmp;
-    } else {
-      pList.push_back(Tmp);
-    }
-  }
+}
+bool TariffList::PushTariff(json tariff) {
+  if(!tariff["StartDate"].is_number()) return;
+  if(!tariff["EndDate"].is_number()) return;
+  if(!tariff["Template"].is_object()) return;
+  if(!tariff["Config"].is_object()) return;
+  Tariff *Tmp = new Tariff(tariff["StartDate"], tariff["EndDate"]);
+  if((Tmp->SetTemplate(tariff["Template"]) == false) || (Tmp->SetConfig(tariff["Config"]) == false)) {
+    delete Tmp;
+    return false;
+  } 
+  pList.push_back(Tmp);
+  return true;
 }
 uint64_t TariffList::BillFrom(uint64_t from) {
   uint64_t BillingFrom = (from / 3600000) * 3600000;

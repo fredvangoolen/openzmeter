@@ -53,7 +53,7 @@
   import ProgressBar from 'Components/ProgressBar.vue';
   export default {
     data: function() {
-      return { Dips: 50, DipsText: '', DipsWarning: true, Short: 0, ShortText: '', ShortWarning: true, Long: 0, LongText: '', LongWarning: true, Harmonics: 0, HarmonicsText: '', HarmonicsWarning: true, ShowSpinner: true, Warning: true };
+      return { Dips: 0, DipsText: '', DipsWarning: true, Short: 0, ShortText: '', ShortWarning: true, Long: 0, LongText: '', LongWarning: true, Harmonics: 0, HarmonicsText: '', HarmonicsWarning: true, ShowSpinner: true, Warning: true };
     },
     created: function() {
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);  

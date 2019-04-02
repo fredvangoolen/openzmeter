@@ -98,8 +98,9 @@ class TariffList {
   private :
     vector<Tariff*> pList;
   public :
-    TariffList(json array);
+    TariffList();
     ~TariffList();
+    bool      PushTariff(json tariff);
     Tariff   *Find(uint64_t time);
     void      AppendSample(uint64_t time, float active, float reactive);
     uint64_t  BillFrom(uint64_t);

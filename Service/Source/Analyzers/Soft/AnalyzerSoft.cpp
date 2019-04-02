@@ -252,7 +252,7 @@ void AnalyzerSoft::Analyze() {
           }
           bool HarmonicsInRange = true;
           for(uint n = 0; n < HarmonicsAllowed.size(); n++) {
-            float Variation = PercentChange(pAggreg10M.Voltage_Harmonics[i][n], pNominalVoltage);
+            float Variation = PercentChange(pAggreg10M.Voltage_Harmonics[i][n + 1], pNominalVoltage);
             if(Variation > HarmonicsAllowed[n]) {
               HarmonicsInRange = false;
               break;
