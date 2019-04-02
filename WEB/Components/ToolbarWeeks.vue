@@ -5,7 +5,10 @@
       <div class="input-group-btn">
         <button class="btn btn-default dropdown-toggle" v-bind:class="{disabled: (weeks.length == 0)}" type="button" data-toggle="dropdown"><span>{{ SelectedText }}</span><span class="caret"></span></button>
         <ul class="dropdown-menu pull-right">
-          <li v-for="(week, id) in weeks" v-bind:class="{ active: (week == SelectedText) }" v-if="week != undefined"><a @click="WeekClick(id, $event)">{{ week.Name }}</a></li>
+          <li v-for="(week, id) in weeks" v-bind:class="{ active: (week == SelectedText) }" v-if="week != undefined"><a @click="WeekClick(id, $event)">
+              <img v-if="week.Warning===true" :src="require('Imgs/warning16.png')" data-toggle="tooltip" title="Limit exceded">
+              <div v-if="week.Warning!==true"></div>
+              {{ week.Name }}</a></li>
         </ul>
       </div>
     </div>
@@ -36,5 +39,15 @@
   }
 </script>
 
-<style>
+<style scoped>
+  li > a > img {
+    height: 12px;
+    width: 12px;
+    margin-right: 2px;
+    vertical-align: baseline;
+  }
+  li > a > div {
+    width: 16px;
+    display: inline-block;
+  }
 </style>

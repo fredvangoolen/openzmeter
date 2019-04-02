@@ -10,11 +10,11 @@
       <graph :options="GraphOptions" ref="graph"></graph>
     </div>
     <div class="panel-footer">
-      <div class="text-center">99.5% of the year between {{ Nominal }}±1%Hz with no events allowed outside {{ Nominal * 0.94 }} to {{ Nominal * 1.04 }}Hz</div>
+      <div class="text-center">99.5% of the year between {{ Math.round(Nominal) }}Hz±1% with no events allowed outside {{ Math.round(Nominal * 0.94) }} to {{ Math.round(Nominal * 1.04) }}Hz</div>
         <progress-bar :value="Frequency" :text="FrequencyText"></progress-bar>
         <div style="float: left; font-size: 10px">90%</div>
         <div style="float:right; font-size: 10px">100%</div>
-        <div class="clearfix"></div>
+        <div class="clearfix text-center">{{ FrequencyText }}</div>
     </div>
   </div>
 </template>
@@ -30,6 +30,7 @@
     },
     created: function() {
       this.GraphOptions = { strokeWidth: 1, labels: ["Variation", "Time"], stepPlot: true, plotter: Graph.multiColumnBarPlotter, colors: [oZm.Series['FREQUENCY'].Color], interactionModel: {}, legend: 'follow' };
+      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);  
     },
     mounted: function() {
       this.SetAnalyzer();
@@ -40,11 +41,11 @@
         var ToShow = [];
         var Analyzer = this.$root.SelectedAnalyzer;  
         for(var i = 0; i < data.Frequency.length; i++) ToShow.push([i, data.Frequency[i]]);
-        this.Warning = (In >= 99.5);
+        this.Warning = (In < 99.5);
         this.Frequency = (In - 90) * 10;
         this.FrequencyText = oZm.Round2Plain(In) + '% of time in range';
         var Options = {
-          dateWindow: [-0.5, data.Frequency.length - 1.5],
+          dateWindow: [-0.5, frequencies.length - 1.5],
           axes: {
             y: { pixelsPerLabel: 24, axisLabelWidth: 24,
                  valueFormatter: function (x) { return oZm.Round2(x * 100.0 / data.FrequencySamples) + ' %'; },
@@ -55,23 +56,23 @@
                    if((x < 0) || (x >= frequencies.length - 1)) return "";
                    if(x === 0) {
                      return "Less than " + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x + 1] / 100.0)) + ' Hz';
-                  } else if(x === (frequencies.length - 2)) {
-                    return "More than " + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x] / 100.0)) + ' Hz';
-                  } else {
-                    return "From " + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x] / 100.0)) + " to " + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x + 1] / 100.0)) + ' Hz';
-                  }
-                },
-                axisLabelFormatter: function (x) {
-                  if((x < 0) || (x >= frequencies.length - 1)) return "";
-                  if(x === 0) {
-                    return '≤' + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x + 1] / 100.0));
-                  } else if(x === (frequencies.length - 2)) {
-                    return '≥' + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x] / 100.0));
-                  } else {
-                    return oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x] / 100.0)) + "<br/>" + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x + 1] / 100.0));
-                  }
-                }
-            }
+                   } else if(x === (frequencies.length - 2)) {
+                     return "More than " + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x] / 100.0)) + ' Hz';
+                   } else {
+                     return "From " + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x] / 100.0)) + " to " + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x + 1] / 100.0)) + ' Hz';
+                   }
+                 },
+                 axisLabelFormatter: function (x) {
+                   if((x < 0) || (x >= frequencies.length - 1)) return "";
+                   if(x === 0) {
+                     return '≤' + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x + 1] / 100.0));
+                   } else if(x === (frequencies.length - 2)) {
+                     return '≥' + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x] / 100.0));
+                   } else {
+                     return oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x] / 100.0)) + "<br/>" + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x + 1] / 100.0));
+                   }
+                 }
+               }
           }, 
           file: ToShow
         };      
@@ -100,6 +101,6 @@
     margin-bottom: 0px;
   }
   .panel-footer .progress >>> div {
-    background-color: #616161;
+    background-color: #337ab7;
   }
 </style>
