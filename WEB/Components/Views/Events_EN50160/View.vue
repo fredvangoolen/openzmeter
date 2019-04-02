@@ -10,55 +10,9 @@
               <toolbar-years v-on:YearChanged="YearChanged" aggreg="1H"></toolbar-years>
             </div>
           </div>
-          <div class="panel-body">
-            <spinner v-if="ShowSpinner"></spinner>
-            <div class="row">
-              <div class="col col-lg-3 col-md-6 col-xs-12">
-                <div class="panel panel-lightblue-info text-center" style="position: relative">
-                  <p><span class="huge-small">Voltage swell or dips</span><br/>Less than 1 min and -15%/+10% nominal voltage</p>
-                      <div class="progress" style="margin-bottom:0px; position: relative">
-                        <div class="progress-bar" id="DipEvents" role="progressbar" style="width:0%; background-color: #5cb85c; position: absolute"></div>
-                        <span id="DipEventsText" style="color: #333; position: absolute; left: 0px; width: 100%; text-align: center"></span>
-                      </div>
-                      <div style="font-size: 10px">10 to 1000 allowed per year</div>
-                </div>
-              </div>
-              <div class="col col-lg-3 col-md-6 col-xs-12">
-                    <div class="panel panel-lightblue-info text-center">
-                      <p><span class="huge-small">Short interruptions</span><br/>Less than 3 min and under 1% nominal voltage</p>
-                      <div class="progress" style="margin-bottom:0px; position: relative">
-                        <div class="progress-bar" id="ShortEvents" role="progressbar" style="width:0%; background-color: #5cb85c; position: absolute"></div>
-                        <span id="ShortEventsText" style="color: #333; position: absolute; left: 0px; width: 100%; text-align: center"></span>
-                      </div>
-                      <div style="font-size: 10px">10 to 100 allowed per year</div>
-                    </div>
-              </div>                  
-                  <div class="col col-lg-3 col-md-6 col-xs-12">
-                    <div class="panel panel-lightblue-info text-center">
-                      <p><span class="huge-small">Long interruptions</span><br/>More than 3 min and under 1% nominal voltage</p>
-                      <div class="progress" style="margin-bottom:0px; position: relative">
-                        <div class="progress-bar" id="LongEvents" role="progressbar" style="width:0%; background-color: #5cb85c; position: absolute"></div>
-                        <span id="LongEventsText" style="color: #333; position: absolute; left: 0px; width: 100%; text-align: center"></span>
-                      </div>
-                      <div style="font-size: 10px">10 to 50 allowed per year</div>
-                    </div>
-                  </div>
-                  <div class="col col-lg-3 col-md-6 col-xs-12">
-                    <div class="panel panel-lightblue-info text-center">
-                      <p><span class="huge-small">Harmonics</span><br/>Harmonics in valid ranges as detailed in EN50160</p>
-                      <div class="progress" style="margin-bottom:0px; position: relative">
-                        <div class="progress-bar" id="HarmonicsInRange" role="progressbar" style="width:0%; background-color: #5cb85c; position: absolute"></div>
-                        <span id="HarmonicsInRangeText" style="color: #333; position: absolute; left: 0px; width: 100%; text-align: center"></span>
-                      </div>
-                      <div style="float: left; font-size: 10px">90%</div><div style="float:right; font-size: 10px">100%</div>
-                      <div class="clearfix"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
+          <counters ref="counters"></counters>
+        </div>
+      </div>
     </div>
     <div class="row">
       <div class="col col-lg-4 col-md-12"><frequency ref="frequency"></frequency></div>
@@ -76,6 +30,7 @@
   import moment from 'JS/moment.js';
   import Frequency from './Frequency.vue';
   import Voltage from './Voltage.vue';
+  import Counters from './Counters.vue';
   import Thd from './THD.vue';
   export default {
     data: function() {
@@ -171,19 +126,18 @@
           }
           this.Weeks[Week].HarmonicsSamples = this.Weeks[Week].HarmonicsSamples + this.Data['Voltage_Harmonics_Stats'][i][0] + this.Data['Voltage_Harmonics_Stats'][i][1];
           this.Weeks[0].HarmonicsSamples = this.Weeks[0].HarmonicsSamples + this.Data['Voltage_Harmonics_Stats'][i][0] + this.Data['Voltage_Harmonics_Stats'][i][1];
-          this.Weeks[0].HarmonicsIN = this.Weeks[0].HarmonicsIN + this.Data['Voltage_Harmonics_Stats'][i][1];
-          this.Weeks[Week].HarmonicsIN = this.Weeks[Week].HarmonicsIN + this.Data['Voltage_Harmonics_Stats'][i][1];
+          this.Weeks[0].HarmonicsIN = this.Weeks[0].HarmonicsIN + this.Data['Voltage_Harmonics_Stats'][i][0];
+          this.Weeks[Week].HarmonicsIN = this.Weeks[Week].HarmonicsIN + this.Data['Voltage_Harmonics_Stats'][i][0];
         }
         this.Data = null;
         this.Events = null;
-        var Weeks = [];
         for(var Week in this.Weeks) {
           if((this.Weeks[Week].FrequencySamples == 0) || (this.Weeks[Week].VoltageSamples == 0) || (this.Weeks[Week].THDSamples == 0) || (this.Weeks[Week].HarmonicsSamples == 0)) continue;
             var InRange = (((this.Weeks[Week].FrequencyIN / this.Weeks[Week].FrequencySamples) * 100.0 >= 99.5) && 
                             ((this.Weeks[Week].VoltageIN / this.Weeks[Week].VoltageSamples) * 100.0 >= 95.0) && 
                             ((this.Weeks[Week].THDIN / this.Weeks[Week].VoltageSamples) * 100.0 >= 100.0) &&
-                            ((this.Weeks[Week].HarmonicsIN / this.Weeks[Week].HarmonicsSamples) * 100.0 >= 100.0));
-            Weeks.push( { Warning: !InRange } );                    
+                            ((this.Weeks[Week].HarmonicsIN / this.Weeks[Week].HarmonicsSamples) * 100.0 >= 95.0));
+            this.Weeks[Week].Warning = !InRange;
         }
         this.ShowSpinner = false;
       },
@@ -211,13 +165,12 @@
       },
       WeekChange: function(week) {
         this.$refs.frequency.SetData(this.Weeks[week], this.Frequencies);
-//        GenerateVoltGraph(this.Weeks[week]);
-//        GenerateTHDGraph(this.Weeks[week]);
-//        GenerateHarmonicsGraph(this.Weeks[week]);
-//        GenerateEventsGraph(this.Weeks[week]);
+        this.$refs.voltage.SetData(this.Weeks[week], this.Voltages);
+        this.$refs.thd.SetData(this.Weeks[week], this.THDs);
+        this.$refs.counters.SetData(this.Weeks[week]);
       }
     },
-    components: { ToolbarYears, ProgressBar, ToolbarWeeks, Spinner, Frequency, Voltage, Thd }
+    components: { ToolbarYears, ProgressBar, ToolbarWeeks, Spinner, Frequency, Voltage, Thd, Counters }
 }
 </script>
 
