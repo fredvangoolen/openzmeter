@@ -1,5 +1,5 @@
 /* ================================== zMeter ===========================================================================
- * File:     PricesInterface.h
+ * File:     Tariff.h
  * Author:   Eduardo Viciana (septiembre 2018)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
@@ -8,55 +8,8 @@
 #include "HTTPServer.h"
 #include "Tools.h"
 #include "AnalyzerInterface.h"
+#include "TariffPlugin.h"
 //----------------------------------------------------------------------------------------------------------------------
-class TariffPowerPlugin {
-  private :
-    typedef TariffPowerPlugin* (*Func_t)();
-    typedef struct {
-      string Name;
-      Func_t Instance;
-    } Type_t;
-  private :
-    static vector<Type_t> pPlugins;
-    static bool           pRegistered;
-  private :
-    static TariffPowerPlugin *Instance();
-  public :
-    static bool Register(string name, Func_t instance);
-    static bool Contains(string name);
-    static TariffPowerPlugin *Instance(string name);
-  public :
-    virtual ~TariffPowerPlugin();
-    virtual void Reset();
-    virtual void PushSample(float);
-};
-class TariffReactivePlugin {
-  private :
-    typedef TariffReactivePlugin* (*Func_t)();
-    typedef struct {
-      string Name;
-      Func_t Instance;
-    } Type_t;
-  private :
-    static vector<Type_t> pPlugins;
-    static bool           pRegistered;
-  private :
-    static TariffReactivePlugin *Instance();
-  public :
-    static bool Register(string name, Func_t instance);
-    static bool Contains(string name);
-    static TariffReactivePlugin *Instance(string name);
-  public :
-    virtual ~TariffReactivePlugin();
-    virtual void Reset();
-    virtual void PushSample(float);
-};
-class TariffPowerPluginNONE {
-  private :
-    static TariffPowerPlugin *Instance();
-  public :
-    void Reset();
-};
 class Tariff {
   friend class TariffList;
   public :
@@ -73,7 +26,9 @@ class Tariff {
       string                PowerMode;
       string                ReactiveMode;
       string                Color;
-      TariffPowerPlugin    *PowerModule;
+      float                 Active;
+      float                 Reactive;
+      TariffPowerPlugin   *ActiveModule;
       TariffReactivePlugin *ReactiveModule;
     } Period_t;
     typedef struct {
@@ -107,17 +62,12 @@ class Tariff {
     vector<Season_t>  pSeasons;
     vector<Holiday_t> pHolidays;
     vector<Tax_t>     pTaxs;
-    vector<uint64_t>  pBillingCycle;
-
     queue<Sample_t>   pSamples;
     vector<uint64_t>  pBillingCycles;
     vector<Bill_t>    pBillConcepts;
   private :
     float   CalcTaxs();
     uint8_t FindPeriod(uint64_t time);
-//    static uint64_t BillStart(json tariffs, uint64_t timestamp);
-//    static uint64_t BillEnd(json tariffs, uint64_t timestamp);
-//    static uint32_t FindTariff(json tariffs, uint64_t timestamp);
   public :
     Tariff(uint64_t start, uint64_t end);
     ~Tariff();
@@ -126,7 +76,7 @@ class Tariff {
     json GetTemplate();
     json GetConfig();
     bool     PushSample(uint64_t time, float active, float reactive);
-    bool     PopSample(Sample_t &sample);
+    bool     PopSample(Sample_t &sample, float &cost);
     uint32_t Samples();
 };
 class TariffList {
