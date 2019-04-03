@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include "AnalyzerInterface.h"
 #include "HTTPServer.h"
+#include <json.hpp>
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 class DeviceInterface {

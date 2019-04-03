@@ -4,13 +4,15 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <vector>
-#include <queue>
 #include <sstream>
 #include <inttypes.h>
 #include <libpq-fe.h>
 #include <json-c/json.h>
+#include <json.hpp>
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
+using json = nlohmann::json;
+//----------------------------------------------------------------------------------------------------------------------
 class Database {
   private :
     static char *pDatabaseName;

@@ -3,38 +3,78 @@
  * Author:   Eduardo Viciana (septiembre 2018)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
+#include <queue>
 #include "Database.h"
 #include "HTTPServer.h"
 #include "Tools.h"
 #include "AnalyzerInterface.h"
 //----------------------------------------------------------------------------------------------------------------------
-class TariffPlugin {
-  public :
-    enum Type { POWER, REACTIVE };
+class TariffPowerPlugin {
   private :
-    static vector<string> pPowerPlugins;
-    static vector<string> pReactivePlugins;
+    typedef TariffPowerPlugin* (*Func_t)();
+    typedef struct {
+      string Name;
+      Func_t Instance;
+    } Type_t;
+  private :
+    static vector<Type_t> pPlugins;
+    static bool           pRegistered;
+  private :
+    static TariffPowerPlugin *Instance();
   public :
-    static bool RegisterPower(string name);
-    static bool RegisterReactive(string name);
-    static bool ContainsPower(string name);
-    static bool ContainsReactive(string name);
+    static bool Register(string name, Func_t instance);
+    static bool Contains(string name);
+    static TariffPowerPlugin *Instance(string name);
   public :
-    Type pType;
+    virtual ~TariffPowerPlugin();
+    virtual void Reset();
+    virtual void PushSample(float);
+};
+class TariffReactivePlugin {
+  private :
+    typedef TariffReactivePlugin* (*Func_t)();
+    typedef struct {
+      string Name;
+      Func_t Instance;
+    } Type_t;
+  private :
+    static vector<Type_t> pPlugins;
+    static bool           pRegistered;
+  private :
+    static TariffReactivePlugin *Instance();
   public :
-    TariffPlugin(Type type);
-    virtual void Reset() = 0;
+    static bool Register(string name, Func_t instance);
+    static bool Contains(string name);
+    static TariffReactivePlugin *Instance(string name);
+  public :
+    virtual ~TariffReactivePlugin();
+    virtual void Reset();
+    virtual void PushSample(float);
+};
+class TariffPowerPluginNONE {
+  private :
+    static TariffPowerPlugin *Instance();
+  public :
+    void Reset();
 };
 class Tariff {
   friend class TariffList;
+  public :
+    typedef struct {
+      uint64_t Time;
+      float    Active;
+      float    Reactive;
+    } Sample_t;
   private :
     typedef struct {
-      float  ContractedPower;
-      float  PowerCost;
-      float  EnergyCost;
-      string PowerMode;
-      string ReactiveMode;
-      string Color;
+      float                 ContractedPower;
+      float                 PowerCost;
+      float                 EnergyCost;
+      string                PowerMode;
+      string                ReactiveMode;
+      string                Color;
+      TariffPowerPlugin    *PowerModule;
+      TariffReactivePlugin *ReactiveModule;
     } Period_t;
     typedef struct {
       string   Name;
@@ -60,6 +100,7 @@ class Tariff {
     vector<Holiday_t> pHolidays;
     vector<Tax_t>     pTaxs;
     vector<uint64_t>  pBillingCycle;
+    queue<Sample_t>   pSamples;
     string            pDescription;
     uint8_t           pHolidayPeriod;
     uint8_t           pWeekendPeriod;
@@ -68,37 +109,21 @@ class Tariff {
     static uint64_t BillStart(json tariffs, uint64_t timestamp);
     static uint64_t BillEnd(json tariffs, uint64_t timestamp);
     static uint32_t FindTariff(json tariffs, uint64_t timestamp);
-  private :
-//    bool  LoadTemplate(json t);
-//    bool  LoadConfig(json t);    
-  public :
-//    static Tariff *FromJSON(uint64_t start, uint64_t end, json t);
-//    static Tariff *FromJSON(uint64_t start, uint64_t end, json temp, json conf);
   public :
     Tariff(uint64_t start, uint64_t end);
+    ~Tariff();
     bool SetTemplate(json t);
     bool SetConfig(json t);
     json GetTemplate();
     json GetConfig();
-//    static Tariff *FromJSON(uint64_t start, uint64_t end, json temp, json conf);
-
-    //    uint8_t  FindPeriod(json tariff, uint64_t timestamp);    
-//    bool     IsBillDate(json tariff, uint64_t timestamp);
     bool     PushSample(uint64_t time, float active, float reactive);
-    
-    
-
-
-
-
-
-
+    bool     PopSample(Sample_t &sample);
+    uint32_t Samples();
 };
 class TariffList {
   private :
     vector<Tariff*> pList;
   public :
-    TariffList();
     ~TariffList();
     bool      PushTariff(json tariff);
     Tariff   *Find(uint64_t time);

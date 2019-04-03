@@ -7,33 +7,66 @@
 #include <unistd.h>
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
-vector<string> TariffPlugin::pPowerPlugins = { "ESP_3.x", "ESP_6.x" };
-vector<string> TariffPlugin::pReactivePlugins = { "ESP" };
-TariffPlugin::TariffPlugin(Type type) {
-  pType = type;
+vector<TariffPowerPlugin::Type_t> TariffPowerPlugin::pPlugins;// = { "ESP_3.x", "ESP_6.x" };
+bool TariffPowerPlugin::pRegistered = TariffPowerPlugin::Register("NONE", TariffPowerPlugin::Instance);
+bool TariffPowerPlugin::Register(string name, Func_t instance) {
+  Type_t Type;
+  Type.Name = name;
+  Type.Instance = instance;
+  pPlugins.push_back(Type);
+  return true;
 }
-bool TariffPlugin::ContainsPower(string name) {
-  if(name == "NONE") return true;
-  for(vector<string>::iterator it = pPowerPlugins.begin() ; it != pPowerPlugins.end(); ++it) {
-    if(*it == name) return true;
+bool TariffPowerPlugin::Contains(string name) {
+  for(vector<Type_t>::iterator it = pPlugins.begin() ; it != pPlugins.end(); ++it) {
+    if((*it).Name == name) return true;
   }
   return false;
 }
-bool TariffPlugin::ContainsReactive(string name) {
-  if(name == "NONE") return true;
-  for(vector<string>::iterator it = pReactivePlugins.begin() ; it != pReactivePlugins.end(); ++it) {
-    if(*it == name) return true;
+TariffPowerPlugin *TariffPowerPlugin::Instance(string name) {
+  for(vector<Type_t>::iterator it = pPlugins.begin() ; it != pPlugins.end(); ++it) {
+    if((*it).Name == name) return (*it).Instance();
   }
-  return false;
+  return NULL;
 }
+TariffPowerPlugin *TariffPowerPlugin::Instance() {
+  return new TariffPowerPlugin;
+}
+void TariffPowerPlugin::Reset() {}
+TariffPowerPlugin::~TariffPowerPlugin() {}
 //----------------------------------------------------------------------------------------------------------------------
-TariffList::TariffList(json array) {
+vector<TariffReactivePlugin::Type_t> TariffReactivePlugin::pPlugins; // = { "ESP" };
+bool TariffReactivePlugin::pRegistered = TariffReactivePlugin::Register("NONE", TariffReactivePlugin::Instance);
+bool TariffReactivePlugin::Register(string name, Func_t instance) {
+  Type_t Type;
+  Type.Name = name;
+  Type.Instance = instance;
+  pPlugins.push_back(Type);
+  return true;
 }
+bool TariffReactivePlugin::Contains(string name) {
+  for(vector<Type_t>::iterator it = pPlugins.begin() ; it != pPlugins.end(); ++it) {
+    if((*it).Name == name) return true;
+  }
+  return false;
+}
+TariffReactivePlugin *TariffReactivePlugin::Instance(string name) {
+  for(vector<Type_t>::iterator it = pPlugins.begin() ; it != pPlugins.end(); ++it) {
+    if((*it).Name == name) return (*it).Instance();
+  }
+  return NULL;
+}
+TariffReactivePlugin *TariffReactivePlugin::Instance() {
+  return new TariffReactivePlugin;
+}
+void TariffReactivePlugin::Reset() {}
+TariffReactivePlugin::~TariffReactivePlugin() {}
+//----------------------------------------------------------------------------------------------------------------------
 bool TariffList::PushTariff(json tariff) {
-  if(!tariff["StartDate"].is_number()) return;
-  if(!tariff["EndDate"].is_number()) return;
-  if(!tariff["Template"].is_object()) return;
-  if(!tariff["Config"].is_object()) return;
+  if(!tariff["StartDate"].is_number()) return false;
+  if(!tariff["EndDate"].is_number()) return false;
+  if(!tariff["Template"].is_object()) return false;
+  if(!tariff["Config"].is_object()) return false;
+  Tools::LogMsg("ERROR", "Template: %s\nConfig: %s\n", tariff["Template"].dump().c_str(), tariff["Config"].dump().c_str());
   Tariff *Tmp = new Tariff(tariff["StartDate"], tariff["EndDate"]);
   if((Tmp->SetTemplate(tariff["Template"]) == false) || (Tmp->SetConfig(tariff["Config"]) == false)) {
     delete Tmp;
@@ -80,6 +113,12 @@ Tariff::Tariff(uint64_t start, uint64_t end) {
   pStartDate = start;
   pEndDate = end;
 }
+Tariff::~Tariff() {
+  for(uint32_t n = 0; n < pPeriods.size(); n++) {
+    delete pPeriods[n].PowerModule;
+    delete pPeriods[n].ReactiveModule;
+  }
+}
 bool Tariff::SetTemplate(json t) {
   if((pStartDate % 900000) != 0) return false;
   if((pEndDate % 900000) != 899999) return false;
@@ -95,11 +134,10 @@ bool Tariff::SetTemplate(json t) {
     Period.ReactiveMode = t["Periods"][n]["ReactiveMode"];
     if(!t["Periods"][n]["Color"].is_string()) return false;
     Period.Color = t["Periods"][n]["Color"];
-    
-    if(TariffPlugin::ContainsPower(Period.PowerMode) == false) return false;
-    if(TariffPlugin::ContainsReactive(Period.ReactiveMode) == false) return false;
-//    if((Period.PowerMode != "NONE")) return false;
-    
+    if(TariffPowerPlugin::Contains(Period.PowerMode) == false) return false;
+    if(TariffReactivePlugin::Contains(Period.ReactiveMode) == false) return false;
+    Period.PowerModule = TariffPowerPlugin::Instance(Period.PowerMode);
+    Period.ReactiveModule = TariffReactivePlugin::Instance(Period.ReactiveMode);
     pPeriods.push_back(Period);
   }
   if(!t["Seasons"].is_array()) return false;
@@ -268,6 +306,24 @@ json Tariff::GetConfig() {
 //  return false;
 //}
 bool Tariff::PushSample(uint64_t time, float active, float reactive) {
+  if(pSamples.size() == 0) {
+    for(uint32_t n = 0; n < pPeriods.size(); n++) {
+      pPeriods[n].PowerModule->Reset();
+      pPeriods[n].ReactiveModule->Reset();
+    }
+    //Reinicio los consumos
+  }
+  Sample_t Sample;
+  Sample.Time = time;
+  Sample.Active = active;
+  Sample.Reactive = reactive;
+  pSamples.push(Sample);
+  //Search for period
+  uint8_t Period = 0;
+  pPeriods[Period].PowerModule->PushSample(active);
+  pPeriods[Period].ReactiveModule->PushSample(reactive);
+  
+  
   //Si time es el primero de la tarifa, o bien de alguno de los periodos reinicio contadores a 0 de todo
   //añado a donde corresponda
   //
@@ -275,5 +331,9 @@ bool Tariff::PushSample(uint64_t time, float active, float reactive) {
   //Si el time + 1 es el de facturacion o time == fin tarifa devuelvo true, si no devuelvo false
   return true;
 }
-//bool Tariff::PopSample() {
-//}
+bool Tariff::PopSample(Sample_t &sample) {
+  if(pSamples.size() == 0) return false;
+  sample = pSamples.front();
+  pSamples.pop();
+  return true;
+}
