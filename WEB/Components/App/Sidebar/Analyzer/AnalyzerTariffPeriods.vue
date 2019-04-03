@@ -10,7 +10,7 @@
       <div class="row">
         <div class="col-xs-12">
           <table>
-            <tr><td></td><td><strong>Contracted power <em>(kW)</em></strong></td><td><strong>Power costs <em>(€/kW/day)</em></strong></td><td><strong>Power costs <em>(€/kWh/day)</em></strong></td></tr>
+            <tr><td></td><td><strong>Contracted power <em>(kW)</em></strong></td><td><strong>Power costs <em>(€/kW/day)</em></strong></td><td><strong>Energy costs <em>(€/kWh)</em></strong></td></tr>
             <tr v-for="(period, idx) in Tariff.Config.Periods">
                 <td><strong>P{{idx + 1}}</strong></td>
                 <td><div class="input-group input-group-xs"><input type="text" class="form-control" @change="ItemChanged($event, 'Contracted_Power', idx)" :value="period.Contracted_Power"></div></td>

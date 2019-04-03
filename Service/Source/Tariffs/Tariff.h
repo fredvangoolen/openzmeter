@@ -91,8 +91,16 @@ class Tariff {
       string  Type;
       float   Value;
       string  Name;
+      float   Accum;
     } Tax_t;
+    typedef struct {
+      string Name;
+      float  Value;
+    } Bill_t;
   private :
+    string            pDescription;
+    uint8_t           pHolidayPeriod;
+    uint8_t           pWeekendPeriod;
     uint64_t          pStartDate;
     uint64_t          pEndDate;
     vector<Period_t>  pPeriods;
@@ -100,15 +108,16 @@ class Tariff {
     vector<Holiday_t> pHolidays;
     vector<Tax_t>     pTaxs;
     vector<uint64_t>  pBillingCycle;
+
     queue<Sample_t>   pSamples;
-    string            pDescription;
-    uint8_t           pHolidayPeriod;
-    uint8_t           pWeekendPeriod;
-    vector<uint64_t>  BillingCycles;
+    vector<uint64_t>  pBillingCycles;
+    vector<Bill_t>    pBillConcepts;
   private :
-    static uint64_t BillStart(json tariffs, uint64_t timestamp);
-    static uint64_t BillEnd(json tariffs, uint64_t timestamp);
-    static uint32_t FindTariff(json tariffs, uint64_t timestamp);
+    float   CalcTaxs();
+    uint8_t FindPeriod(uint64_t time);
+//    static uint64_t BillStart(json tariffs, uint64_t timestamp);
+//    static uint64_t BillEnd(json tariffs, uint64_t timestamp);
+//    static uint32_t FindTariff(json tariffs, uint64_t timestamp);
   public :
     Tariff(uint64_t start, uint64_t end);
     ~Tariff();

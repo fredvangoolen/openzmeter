@@ -80,7 +80,7 @@ uint64_t TariffList::BillFrom(uint64_t from) {
   Tariff *Tariff = Find(BillingFrom);
   if(Tariff != NULL) {
     BillingFrom = Tariff->pStartDate;
-    for(vector<uint64_t>::iterator c = Tariff->BillingCycles.begin(); c < Tariff->BillingCycles.end(); c++) {
+    for(vector<uint64_t>::iterator c = Tariff->pBillingCycles.begin(); c < Tariff->pBillingCycles.end(); c++) {
       if(*c > BillingFrom) break;
       BillingFrom = *c;
     }
@@ -92,7 +92,7 @@ uint64_t TariffList::BillTo(uint64_t to) {
   Tariff *Tariff = Find(BillingTo);
   if(Tariff != NULL) {
     BillingTo = Tariff->pEndDate;
-    for(vector<uint64_t>::reverse_iterator c = Tariff->BillingCycles.rbegin(); c < Tariff->BillingCycles.rend(); c++) {
+    for(vector<uint64_t>::reverse_iterator c = Tariff->pBillingCycles.rbegin(); c < Tariff->pBillingCycles.rend(); c++) {
       if(*c < BillingTo) break;
       BillingTo = *c;
     }
@@ -118,6 +118,15 @@ Tariff::~Tariff() {
     delete pPeriods[n].PowerModule;
     delete pPeriods[n].ReactiveModule;
   }
+}
+uint8_t Tariff::FindPeriod(uint64_t timestamp) {
+  uint8_t Period = UINT8_MAX;
+  for(uint8_t m = 0; m < pSeasons.size(); m++) {
+    if((pSeasons[m].StartDate >= timestamp) || (pSeasons[m].EndDate < timestamp)) continue;
+    uint8_t Hour = (timestamp / 3600000) % 24;
+    return pSeasons[m].DayPeriods[Hour];
+  }
+  return Period;
 }
 bool Tariff::SetTemplate(json t) {
   if((pStartDate % 900000) != 0) return false;
@@ -291,27 +300,11 @@ json Tariff::GetConfig() {
   T["Billing"] = pBillingCycle;
   return T;
 }
-
-
-//uint8_t Tariff::FindPeriod(json tariff, uint64_t timestamp) {
-//  uint8_t Period = UINT8_MAX;
-//  for(uint8_t m = 0; m < tariff["Details"]["Seasons"].size(); m++) {
-//    if((tariff["Details"]["Seasons"][m]["StartDate"] >= timestamp) || (tariff["Details"]["Seasons"][m]["EndDate"] < timestamp)) continue;
-//    uint8_t Hour = (timestamp / 3600000) % 24;
-//    return tariff["Details"]["Seasons"][m]["DayPeriods"][Hour];
-//  }
-//  return Period;
-//}
-//bool Tariff::IsBillDate(json tariff, uint64_t timestamp) {
-//  return false;
-//}
 bool Tariff::PushSample(uint64_t time, float active, float reactive) {
   if(pSamples.size() == 0) {
-    for(uint32_t n = 0; n < pPeriods.size(); n++) {
-      pPeriods[n].PowerModule->Reset();
-      pPeriods[n].ReactiveModule->Reset();
-    }
-    //Reinicio los consumos
+    for(uint32_t n = 0; n < pPeriods.size(); n++) pPeriods[n].PowerModule->Reset();
+    for(uint32_t n = 0; n < pPeriods.size(); n++) pPeriods[n].ReactiveModule->Reset();
+    for(uint32_t n = 0; n < pTaxs.size(); n++) pTaxs[n].Accum = 0;
   }
   Sample_t Sample;
   Sample.Time = time;
