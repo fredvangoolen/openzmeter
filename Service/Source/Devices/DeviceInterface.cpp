@@ -261,15 +261,9 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   ///TODO Comprobar permisos
   //Parse, check params and prepare result struct
   json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) {
-    req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-    return;
-  }
+  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
   string Analyzer = Params["Analyzer"];
-  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) {
-    req.FromString("'Aggreg' need to be '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
-    return;
-  }
+  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
   uint64_t To         = Params.value<uint64_t>("To", 0);
   uint64_t Period     = Params.value<uint64_t>("Period", 3600000);
   uint64_t LastSample = Params.value<uint64_t>("LastSample", 0);
@@ -278,71 +272,74 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   uint64_t From = To - Period;
   uint32_t PeriodSeconds = 900000;
   if(Aggreg == "1H") PeriodSeconds = 3600000;
-  if((Period / PeriodSeconds) > 100000) {
-    req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
-    return;
-  }  
+  if((Period / PeriodSeconds) > 100000) return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
   json Result;
   Result["To"]                 = To;
   Result["From"]               = From;
   Result["Aggregation_Source"] = Aggreg;
   Result["Sampletime"]         = json::array();
-  Result["Active_Energy"]      = json::array();;
-  Result["Reactive_Energy"]    = json::array();;
-  Result["Period_Name"]        = json::array();;
-  Result["Period_Color"]       = json::array();;
-  Result["Contracted_Power"]   = json::array();;
-  Result["Expense"]            = json::array();;
+  Result["Active_Energy"]      = json::array();
+  Result["Reactive_Energy"]    = json::array();
+  Result["Period_Name"]        = json::array();
+  Result["Period_Color"]       = json::array();
+  Result["Contracted_Power"]   = json::array();
+  Result["Expense"]            = json::array();
+  Result["Bills"]              = json::array();
   //Load involved tariffs
-  req.ExecSentence("SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) FROM analyzers_rates WHERE serial = " + req.Bind(Analyzer) + " AND enddate >= " + req.Bind(From) + " AND startdate <= " + req.Bind(To) + " ORDER BY startdate ASC");
+  req.ExecSentence("SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) AS tariff FROM analyzers_rates WHERE serial = " + req.Bind(Analyzer) + " AND enddate >= " + req.Bind(From) + " AND startdate <= " + req.Bind(To) + " ORDER BY startdate ASC");
+  TariffList Tariffs;
   for(uint32_t n = 0; n < req.ResultRows(); n++) {
-    
+    if(Tariffs.PushTariff(req.ResultJSON(n, "tariff")) == false) return req.FromString("", MHD_HTTP_BAD_REQUEST);
   }
-  char *JSONText = req.ExecSentenceJSON(Query.str().c_str(), NULL);
-  json TariffsJSON = (JSONText == NULL) ? json::array() : json::parse(JSONText);
-  TariffList Tariffs(TariffsJSON);
   //Find start and end date to retrieve data
   uint64_t BillingFrom = Tariffs.BillFrom(From);
   uint64_t BillingTo = Tariffs.BillTo(To);
   //Retrieve active and reactive samples
-
-  
-  
-  //  Query.str("");
-//  Query << "SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power  FROM \"" << Analyzer << "\".aggreg_15m WHERE sampletime > " << BillingFrom << " AND sampletime <= " << BillingTo;
-//  req.ExecSentence(Query.str().c_str());
+  string Query = "SET search_path TO " + req.Bind(Analyzer) + "; ";
+  Query += "SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime > " + req.Bind(BillingFrom) + " AND sampletime <= " + req.Bind(BillingTo);
+  req.ExecSentence(Query);
 
   uint32_t Row = 0;
-  float Active = NAN;
-  float Reactive = NAN;  
+  float AccActive = NAN;
+  float AccReactive = NAN;
   for(uint64_t time = BillingFrom + 899999; time < BillingTo; time = time + 900000) {
-    Tariff *Tariff = Tariffs.Find(time);
+    float Active = NAN;
+    float Reactive = NAN;
     if((Row < req.ResultRows()) && (req.ResultUInt64(Row, "sampletime") == time)) {
-      float Tmp = req.ResultFloat(Row, "active_power");
-      Active = isnan(Active) ? Tmp / 4.0 : isnan(Tmp) ? Active : Active + Tmp / 4.0;
-      Tmp = req.ResultFloat(Row, "reactive_power");
-      Reactive = isnan(Reactive) ? Tmp / 4.0 : isnan(Tmp) ? Reactive : Reactive + Tmp / 4.0;
+      Active = req.ResultFloat(Row, "active_power");
+      Reactive = req.ResultFloat(Row, "reactive_power");
       Row++;
     }
-    if(Tariff == NULL) {
-      //Hours not under tariff are copied to output directly
-      if((Aggreg == "1H") && ((time % 3600000) != 3599999)) continue;
-      if((time > LastSample) && (time >= From) && (time <= To)) {
-        Result["Sampletime"].push_back(time);
-        Result["Active_Energy"].push_back(Active);
-        Result["Reactive_Energy"].push_back(Reactive);
-      }
-    } else {
-      //If under a tariff push samples until bill cycle ends
-      if(Tariff->PushSample(time, Active, Reactive) == true) {
-        
-        //        Result["Sampletime"].push_back(time);
-        //Result["Active_Energy"].push_back(Active);
-        //Result["Reactive_Energy"].push_back(Reactive);
+    Tariff *Tariff = Tariffs.Find(time);
+    if((Tariff != NULL) && (Tariff->PushSample(time, Active, Reactive) == true)) continue;  //If under a tariff push samples until bill cycle ends
+    //Recover/group values
+    do {
+      uint64_t Time = time;
+      if(Tariff != NULL) {
+        Tariff::Sample_t Sample;
+        if(Tariff->PopSample(Sample) == false) {
+                  //Result["Bill"].push_back(EL RESUMEN DEL CICLO);
         //Ademas añado estadisticas de perido o lo que sea que devuelve el modulo de tarifas!
         //He alcanzado un ciclo de facturacion, recupero todos los samples y los paso a la salida
+          break;
+        }
+        Time = Sample.Time;
+        Active = Sample.Active;
+        Reactive = Sample.Reactive;
       }
-    }
+      AccActive  = isnan(AccActive) ? Active / 4.0 : isnan(Active) ? AccActive : AccActive + Active / 4.0;
+      AccReactive = isnan(AccReactive) ? Reactive / 4.0 : isnan(Reactive) ? AccReactive : AccReactive + Reactive / 4.0;
+      if((Aggreg == "1H") && ((Time % 3600000) != 3599999)) continue;
+      if((Time > LastSample) && (Time >= From) && (Time <= To)) {
+        Result["Sampletime"].push_back(Time);
+        Result["Active_Energy"].push_back(AccActive);
+        Result["Reactive_Energy"].push_back(AccReactive);
+        Result["Expense"].push_back(nullptr);
+      }
+      AccActive = NAN;
+      AccReactive = NAN;
+    } while(Tariff != NULL);
+
     
 //  //Iterate over billing time
 //  uint32_t Row = 0;
@@ -390,10 +387,9 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
 //      }
 //    }
 //    BillingFrom += 900000;
-    Active = NAN;
-    Reactive = NAN;
+//    Active = NAN;
+//    Reactive = NAN;
   }
-
   req.FromJSON(Result);
   return;  
 }
