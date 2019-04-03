@@ -318,7 +318,7 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
       if(Tariff != NULL) {
         Tariff::Sample_t Sample;
         if(Tariff->PopSample(Sample) == false) {
-                  //Result["Bill"].push_back(EL RESUMEN DEL CICLO);
+        //Result["Bill"].push_back(EL RESUMEN DEL CICLO);
         //Ademas añado estadisticas de perido o lo que sea que devuelve el modulo de tarifas!
         //He alcanzado un ciclo de facturacion, recupero todos los samples y los paso a la salida
           break;
