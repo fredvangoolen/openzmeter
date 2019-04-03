@@ -7,60 +7,6 @@
 #include <unistd.h>
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
-vector<TariffPowerPlugin::Type_t> TariffPowerPlugin::pPlugins;// = { "ESP_3.x", "ESP_6.x" };
-bool TariffPowerPlugin::pRegistered = TariffPowerPlugin::Register("NONE", TariffPowerPlugin::Instance);
-bool TariffPowerPlugin::Register(string name, Func_t instance) {
-  Type_t Type;
-  Type.Name = name;
-  Type.Instance = instance;
-  pPlugins.push_back(Type);
-  return true;
-}
-bool TariffPowerPlugin::Contains(string name) {
-  for(vector<Type_t>::iterator it = pPlugins.begin() ; it != pPlugins.end(); ++it) {
-    if((*it).Name == name) return true;
-  }
-  return false;
-}
-TariffPowerPlugin *TariffPowerPlugin::Instance(string name) {
-  for(vector<Type_t>::iterator it = pPlugins.begin() ; it != pPlugins.end(); ++it) {
-    if((*it).Name == name) return (*it).Instance();
-  }
-  return NULL;
-}
-TariffPowerPlugin *TariffPowerPlugin::Instance() {
-  return new TariffPowerPlugin;
-}
-void TariffPowerPlugin::Reset() {}
-TariffPowerPlugin::~TariffPowerPlugin() {}
-//----------------------------------------------------------------------------------------------------------------------
-vector<TariffReactivePlugin::Type_t> TariffReactivePlugin::pPlugins; // = { "ESP" };
-bool TariffReactivePlugin::pRegistered = TariffReactivePlugin::Register("NONE", TariffReactivePlugin::Instance);
-bool TariffReactivePlugin::Register(string name, Func_t instance) {
-  Type_t Type;
-  Type.Name = name;
-  Type.Instance = instance;
-  pPlugins.push_back(Type);
-  return true;
-}
-bool TariffReactivePlugin::Contains(string name) {
-  for(vector<Type_t>::iterator it = pPlugins.begin() ; it != pPlugins.end(); ++it) {
-    if((*it).Name == name) return true;
-  }
-  return false;
-}
-TariffReactivePlugin *TariffReactivePlugin::Instance(string name) {
-  for(vector<Type_t>::iterator it = pPlugins.begin() ; it != pPlugins.end(); ++it) {
-    if((*it).Name == name) return (*it).Instance();
-  }
-  return NULL;
-}
-TariffReactivePlugin *TariffReactivePlugin::Instance() {
-  return new TariffReactivePlugin;
-}
-void TariffReactivePlugin::Reset() {}
-TariffReactivePlugin::~TariffReactivePlugin() {}
-//----------------------------------------------------------------------------------------------------------------------
 bool TariffList::PushTariff(json tariff) {
   if(!tariff["StartDate"].is_number()) return false;
   if(!tariff["EndDate"].is_number()) return false;
@@ -115,7 +61,7 @@ Tariff::Tariff(uint64_t start, uint64_t end) {
 }
 Tariff::~Tariff() {
   for(uint32_t n = 0; n < pPeriods.size(); n++) {
-    delete pPeriods[n].PowerModule;
+    delete pPeriods[n].ActiveModule;
     delete pPeriods[n].ReactiveModule;
   }
 }
@@ -145,7 +91,7 @@ bool Tariff::SetTemplate(json t) {
     Period.Color = t["Periods"][n]["Color"];
     if(TariffPowerPlugin::Contains(Period.PowerMode) == false) return false;
     if(TariffReactivePlugin::Contains(Period.ReactiveMode) == false) return false;
-    Period.PowerModule = TariffPowerPlugin::Instance(Period.PowerMode);
+    Period.ActiveModule = TariffPowerPlugin::Instance(Period.PowerMode, Period.ContractedPower, Period.PowerCost);
     Period.ReactiveModule = TariffReactivePlugin::Instance(Period.ReactiveMode);
     pPeriods.push_back(Period);
   }
@@ -275,7 +221,7 @@ bool Tariff::SetConfig(json t) {
     if(!t["Billing"][n].is_number_unsigned()) return false;
     uint64_t Time = t["Billing"][n];
     if((Time % 900000) != 0) return false;
-    pBillingCycle.push_back(Time);
+    pBillingCycles.push_back(Time);
   }
   return true;
 }
@@ -297,13 +243,17 @@ json Tariff::GetConfig() {
     Period["Contracted_Power"] = pPeriods[n].ContractedPower;
     T["Periods"].push_back(Period);
   }
-  T["Billing"] = pBillingCycle;
+  T["Billing"] = pBillingCycles;
   return T;
 }
 bool Tariff::PushSample(uint64_t time, float active, float reactive) {
   if(pSamples.size() == 0) {
-    for(uint32_t n = 0; n < pPeriods.size(); n++) pPeriods[n].PowerModule->Reset();
-    for(uint32_t n = 0; n < pPeriods.size(); n++) pPeriods[n].ReactiveModule->Reset();
+    for(uint32_t n = 0; n < pPeriods.size(); n++) {
+      pPeriods[n].Active = 0.0;
+      pPeriods[n].ActiveModule->Reset();
+      pPeriods[n].Reactive = 0.0;
+      pPeriods[n].ReactiveModule->Reset();
+    }
     for(uint32_t n = 0; n < pTaxs.size(); n++) pTaxs[n].Accum = 0;
   }
   Sample_t Sample;
@@ -313,19 +263,31 @@ bool Tariff::PushSample(uint64_t time, float active, float reactive) {
   pSamples.push(Sample);
   //Search for period
   uint8_t Period = 0;
-  pPeriods[Period].PowerModule->PushSample(active);
+  pPeriods[Period].ActiveModule->PushSample(active);
   pPeriods[Period].ReactiveModule->PushSample(reactive);
-  
-  
-  //Si time es el primero de la tarifa, o bien de alguno de los periodos reinicio contadores a 0 de todo
-  //añado a donde corresponda
-  //
-  
-  //Si el time + 1 es el de facturacion o time == fin tarifa devuelvo true, si no devuelvo false
+  if(time == pEndDate) return false;
+  for(vector<uint64_t>::iterator it = pBillingCycles.begin(); it != pBillingCycles.end(); it++) {
+    if(time == *it) return false;
+  }
   return true;
 }
-bool Tariff::PopSample(Sample_t &sample) {
+bool Tariff::PopSample(Sample_t &sample, float &cost) {
+  cost = 0.0;
   if(pSamples.size() == 0) return false;
+  Sample_t Sample = pSamples.front();
+  pSamples.pop();
+  //float EnergyCost = Energia del periodo * coste energia
+  //float PowerCost = Potencia del periodo * poste potencia
+  EnergyCost += PluginActive.popSample();
+  PowerCost  += PluginPower.popSample();
+
+  
+  //Coste del periodo es Sample.Active / 4 * energy cost;
+  // + 
+  // + PluginReactive.PopSample
+  
+
+
   sample = pSamples.front();
   pSamples.pop();
   return true;
