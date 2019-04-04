@@ -37,9 +37,9 @@ bool TariffEnergyPlugin::Contains(string name) {
   }
   return false;
 }
-TariffEnergyPlugin *TariffEnergyPlugin::Instance(string name) {
+TariffEnergyPlugin *TariffEnergyPlugin::Instance(string name, float cost) {
   for(vector<Type_t>::iterator it = pPlugins.begin() ; it != pPlugins.end(); ++it) {
-    if((*it).Name == name) return (*it).Instance();
+    if((*it).Name == name) return (*it).Instance(cost);
   }
   return NULL;
 }

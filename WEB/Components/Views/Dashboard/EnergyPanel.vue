@@ -116,7 +116,10 @@
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             if(this.LastSample === 0) this.Data = [];
             if(this.LastSample === 0) this.Periods = [];
-            this.Data = oZm.GraphDataAppend(result, 'Active_Energy', this.Data);
+            if(this.Aggreg === '15M') {
+              for(var n = 0; n < result['Active_Power'].length; n++) result['Active_Power'][n] = result['Active_Power'][n] / 4.0;
+            }
+            this.Data = oZm.GraphDataAppend(result, 'Active_Power', this.Data);
             this.DateWindow = [result['From'], result['To']];
             this.$refs.tools.WriteTo(result['To']);
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
@@ -165,7 +168,7 @@
           canvas.fillStyle = this.Periods[i].Color;
           canvas.fillRect(Left, area.y, Right, 13);
           if(((Right - Left) > 20) && (this.Periods[i].Name !== null)) {
-            canvas.fillStyle = '#000';
+            canvas.fillStyle = this.Periods[i].Color;
             canvas.font = "10px monospace";
             canvas.fillText(this.Periods[i].Name, Left + 1, 10);
           }

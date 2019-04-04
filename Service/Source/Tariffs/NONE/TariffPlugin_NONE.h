@@ -4,30 +4,32 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include "../TariffPlugin.h"
-class TariffActive_NONE : public TariffPowerPlugin {
+class TariffPower_NONE : public TariffPowerPlugin {
   private :
     static bool pRegistered;
   private :
     float pContracted;
     float pCost;
   private :
-    static TariffPowerPlugin *Instance(float contracted, float cost);
+    static TariffPowerPlugin *Instance(const float contracted, const float cost);
   public :
-    ~TariffActive_NONE();
+    ~TariffPower_NONE();
     void  Reset();
-    void  PushSample(float);
-    float PopSample();
+    void  PushSample(const float active, const float reactive);
+    float PopSample(const float active, const float reactive);
 };
 //----------------------------------------------------------------------------------------------------------------------
-class TariffReactive_NONE : public TariffEnergyPlugin {
+class TariffEnergy_NONE : public TariffEnergyPlugin {
   private :
     static bool pRegistered;
   private :
-    static TariffEnergyPlugin *Instance();
+    static TariffEnergyPlugin *Instance(const float cost);
+  private :
+    float pCost;
   public :
-    ~TariffReactive_NONE();
+    ~TariffEnergy_NONE();
     void  Reset();
-    void  PushSample(float);
-    float PopSample();
+    void  PushSample(const float active, const float reactive);
+    float PopSample(const float active, const float reactive);
 };
 //----------------------------------------------------------------------------------------------------------------------

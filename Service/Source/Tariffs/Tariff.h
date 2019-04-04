@@ -8,8 +8,9 @@
 #include "HTTPServer.h"
 #include "Tools.h"
 #include "AnalyzerInterface.h"
-#include "TariffPlugin.h"
 //----------------------------------------------------------------------------------------------------------------------
+class TariffPowerPlugin;
+class TariffEnergyPlugin;
 class Tariff {
   friend class TariffList;
   public :
@@ -18,7 +19,6 @@ class Tariff {
       float    Active;
       float    Reactive;
       uint8_t  Period;
-      string   Color;
     } Sample_t;
   private :
     typedef struct {
@@ -28,10 +28,10 @@ class Tariff {
       string                PowerMode;
       string                ReactiveMode;
       string                Color;
-      float                 Active;
-      float                 Reactive;
-      TariffPowerPlugin   *PowerModule;
-      TariffEnergyPlugin *EnergyModule;
+      float                 SumPowerCost;
+      float                 SumEnergyCost;
+      TariffPowerPlugin    *PowerModule;
+      TariffEnergyPlugin   *EnergyModule;
     } Period_t;
     typedef struct {
       string   Name;
@@ -77,19 +77,17 @@ class Tariff {
     bool SetConfig(json t);
     json GetTemplate();
     json GetConfig();
-    bool     PushSample(uint64_t time, float active, float reactive);
-    bool     PopSample(Sample_t &sample, float &cost);
-    uint32_t Samples();
+    bool     PushSample(const uint64_t time, const float active, const float reactive);
+    bool     PopSample(uint64_t &time, float &active, float &reactive, string &period, string &color, float &cost, float &contractedPower);
 };
 class TariffList {
   private :
     vector<Tariff*> pList;
   public :
     ~TariffList();
-    bool      PushTariff(json tariff);
-    Tariff   *Find(uint64_t time);
-    void      AppendSample(uint64_t time, float active, float reactive);
-    uint64_t  BillFrom(uint64_t);
-    uint64_t  BillEnd(uint64_t);
-    uint64_t  BillTo(uint64_t to);
+    bool      PushTariff(const json tariff);
+    Tariff   *Find(const uint64_t time);
+    uint64_t  BillFrom(const uint64_t);
+    uint64_t  BillEnd(const uint64_t);
+    uint64_t  BillTo(const uint64_t to);
 };

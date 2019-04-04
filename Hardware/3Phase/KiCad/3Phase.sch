@@ -92,7 +92,7 @@ F 3 "" H 5425 8200 60  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R8
+L 3Phase-rescue:R-3Phase-rescue R8
 U 1 1 5BD04895
 P 4650 2825
 F 0 "R8" V 4730 2825 50  0000 C CNN
@@ -103,7 +103,7 @@ F 3 "https://es.aliexpress.com/store/product/300pcs-1-0603-SMD-resistor-0R-10M-1
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R11
+L 3Phase-rescue:R-3Phase-rescue R11
 U 1 1 5BD0490E
 P 5850 6700
 F 0 "R11" V 5930 6700 50  0000 C CNN
@@ -114,7 +114,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R14
+L 3Phase-rescue:R-3Phase-rescue R14
 U 1 1 5BD04949
 P 4675 7250
 F 0 "R14" V 4755 7250 50  0000 C CNN
@@ -125,7 +125,7 @@ F 3 "https://es.aliexpress.com/store/product/300pcs-1-0603-SMD-resistor-0R-10M-1
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R15
+L 3Phase-rescue:R-3Phase-rescue R15
 U 1 1 5BD04974
 P 4875 7475
 F 0 "R15" V 4955 7475 50  0000 C CNN
@@ -136,7 +136,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	1    0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:R R10
+L 3Phase-rescue:R-3Phase-rescue R10
 U 1 1 5BD049A1
 P 4875 6100
 F 0 "R10" V 4955 6100 50  0000 C CNN
@@ -147,7 +147,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R7
+L 3Phase-rescue:R-3Phase-rescue R7
 U 1 1 5BD049D0
 P 4675 5850
 F 0 "R7" V 4755 5850 50  0000 C CNN
@@ -158,7 +158,7 @@ F 3 "https://es.aliexpress.com/store/product/300pcs-1-0603-SMD-resistor-0R-10M-1
 	0    1    -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R13
+L 3Phase-rescue:R-3Phase-rescue R13
 U 1 1 5BD04A47
 P 5650 6125
 F 0 "R13" V 5730 6125 50  0000 C CNN
@@ -169,7 +169,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R17
+L 3Phase-rescue:R-3Phase-rescue R17
 U 1 1 5BD04A80
 P 6450 6700
 F 0 "R17" V 6530 6700 50  0000 C CNN
@@ -180,7 +180,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R16
+L 3Phase-rescue:R-3Phase-rescue R16
 U 1 1 5BD04AB5
 P 6450 5275
 F 0 "R16" V 6530 5275 50  0000 C CNN
@@ -191,7 +191,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R12
+L 3Phase-rescue:R-3Phase-rescue R12
 U 1 1 5BD04AEC
 P 4875 4700
 F 0 "R12" V 4955 4700 50  0000 C CNN
@@ -202,7 +202,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	1    0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:R R9
+L 3Phase-rescue:R-3Phase-rescue R9
 U 1 1 5BD04B25
 P 5650 4700
 F 0 "R9" V 5730 4700 50  0000 C CNN
@@ -213,7 +213,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R6
+L 3Phase-rescue:R-3Phase-rescue R6
 U 1 1 5BD04B60
 P 5850 5275
 F 0 "R6" V 5930 5275 50  0000 C CNN
@@ -224,7 +224,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R3
+L 3Phase-rescue:R-3Phase-rescue R3
 U 1 1 5BD04C05
 P 4650 4425
 F 0 "R3" V 4730 4425 50  0000 C CNN
@@ -235,7 +235,7 @@ F 3 "https://es.aliexpress.com/store/product/300pcs-1-0603-SMD-resistor-0R-10M-1
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R5
+L 3Phase-rescue:R-3Phase-rescue R5
 U 1 1 5BD04C4A
 P 6450 3675
 F 0 "R5" V 6530 3675 50  0000 C CNN
@@ -246,7 +246,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R4
+L 3Phase-rescue:R-3Phase-rescue R4
 U 1 1 5BD04C8B
 P 4875 3050
 F 0 "R4" V 4955 3050 50  0000 C CNN
@@ -257,7 +257,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	1    0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:R R1
+L 3Phase-rescue:R-3Phase-rescue R1
 U 1 1 5BD04CCE
 P 5650 3100
 F 0 "R1" V 5730 3100 50  0000 C CNN
@@ -268,7 +268,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R2
+L 3Phase-rescue:R-3Phase-rescue R2
 U 1 1 5BD04D27
 P 5850 3675
 F 0 "R2" V 5930 3675 50  0000 C CNN
@@ -279,7 +279,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R19
+L 3Phase-rescue:R-3Phase-rescue R19
 U 1 1 5BD04D6E
 P 5850 8150
 F 0 "R19" V 5930 8150 50  0000 C CNN
@@ -290,7 +290,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R22
+L 3Phase-rescue:R-3Phase-rescue R22
 U 1 1 5BD04DB7
 P 6450 8150
 F 0 "R22" V 6530 8150 50  0000 C CNN
@@ -301,7 +301,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R24
+L 3Phase-rescue:R-3Phase-rescue R24
 U 1 1 5BD04E02
 P 1025 9400
 F 0 "R24" V 1105 9400 50  0000 C CNN
@@ -312,7 +312,7 @@ F 3 "https://es.aliexpress.com/store/product/200pcs-1206-1-SMD-Resistor-200K-ohm
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R29
+L 3Phase-rescue:R-3Phase-rescue R29
 U 1 1 5BD04E4F
 P 1725 9400
 F 0 "R29" V 1805 9400 50  0000 C CNN
@@ -323,7 +323,7 @@ F 3 "https://es.aliexpress.com/store/product/200pcs-1206-1-SMD-Resistor-200K-ohm
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R18
+L 3Phase-rescue:R-3Phase-rescue R18
 U 1 1 5BD04E9E
 P 1025 10000
 F 0 "R18" V 1105 10000 50  0000 C CNN
@@ -334,7 +334,7 @@ F 3 "https://es.aliexpress.com/store/product/200pcs-1206-1-SMD-Resistor-200K-ohm
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R21
+L 3Phase-rescue:R-3Phase-rescue R21
 U 1 1 5BD04EEF
 P 1025 10600
 F 0 "R21" V 1105 10600 50  0000 C CNN
@@ -345,7 +345,7 @@ F 3 "https://es.aliexpress.com/store/product/200pcs-1206-1-SMD-Resistor-200K-ohm
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R25
+L 3Phase-rescue:R-3Phase-rescue R25
 U 1 1 5BD04F42
 P 1375 9400
 F 0 "R25" V 1455 9400 50  0000 C CNN
@@ -356,7 +356,7 @@ F 3 "https://es.aliexpress.com/store/product/200pcs-1206-1-SMD-Resistor-200K-ohm
 	0    -1   -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R27
+L 3Phase-rescue:R-3Phase-rescue R27
 U 1 1 5BD04F97
 P 1375 10000
 F 0 "R27" V 1455 10000 50  0000 C CNN
@@ -367,7 +367,7 @@ F 3 "https://es.aliexpress.com/store/product/200pcs-1206-1-SMD-Resistor-200K-ohm
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R20
+L 3Phase-rescue:R-3Phase-rescue R20
 U 1 1 5BD04FEE
 P 5650 7525
 F 0 "R20" V 5730 7525 50  0000 C CNN
@@ -378,7 +378,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R23
+L 3Phase-rescue:R-3Phase-rescue R23
 U 1 1 5BD05047
 P 6500 1650
 F 0 "R23" V 6580 1650 50  0000 C CNN
@@ -389,7 +389,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R26
+L 3Phase-rescue:R-3Phase-rescue R26
 U 1 1 5BD050A2
 P 1725 10600
 F 0 "R26" V 1805 10600 50  0000 C CNN
@@ -400,7 +400,7 @@ F 3 "https://es.aliexpress.com/store/product/200pcs-1206-1-SMD-Resistor-200K-ohm
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R28
+L 3Phase-rescue:R-3Phase-rescue R28
 U 1 1 5BD050FF
 P 1375 10600
 F 0 "R28" V 1455 10600 50  0000 C CNN
@@ -411,7 +411,7 @@ F 3 "https://es.aliexpress.com/store/product/200pcs-1206-1-SMD-Resistor-200K-ohm
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R30
+L 3Phase-rescue:R-3Phase-rescue R30
 U 1 1 5BD0515E
 P 1725 10000
 F 0 "R30" V 1805 10000 50  0000 C CNN
@@ -422,7 +422,7 @@ F 3 "https://es.aliexpress.com/store/product/200pcs-1206-1-SMD-Resistor-200K-ohm
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R31
+L 3Phase-rescue:R-3Phase-rescue R31
 U 1 1 5BD051BF
 P 1725 9225
 F 0 "R31" V 1805 9225 50  0000 C CNN
@@ -433,7 +433,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R32
+L 3Phase-rescue:R-3Phase-rescue R32
 U 1 1 5BD05222
 P 1725 9825
 F 0 "R32" V 1805 9825 50  0000 C CNN
@@ -444,7 +444,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R34
+L 3Phase-rescue:R-3Phase-rescue R34
 U 1 1 5BD05287
 P 1725 10425
 F 0 "R34" V 1805 10425 50  0000 C CNN
@@ -455,7 +455,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R35
+L 3Phase-rescue:R-3Phase-rescue R35
 U 1 1 5BD052EE
 P 1950 8225
 F 0 "R35" V 2030 8225 50  0000 C CNN
@@ -466,7 +466,7 @@ F 3 "" H 1950 8225 50  0001 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R33
+L 3Phase-rescue:R-3Phase-rescue R33
 U 1 1 5BD0542F
 P 4850 1650
 F 0 "R33" V 4930 1650 50  0000 C CNN
@@ -477,7 +477,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-5-1-10W-1608-
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:R R36
+L 3Phase-rescue:R-3Phase-rescue R36
 U 1 1 5BD0550F
 P 5350 1450
 F 0 "R36" V 5430 1450 50  0000 C CNN
@@ -488,7 +488,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C6
+L 3Phase-rescue:C_Small-3Phase-rescue C6
 U 1 1 5BD060D2
 P 4475 3025
 F 0 "C6" H 4485 3095 50  0000 L CNN
@@ -499,7 +499,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10u
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C4
+L 3Phase-rescue:C_Small-3Phase-rescue C4
 U 1 1 5BD0621D
 P 4450 4650
 F 0 "C4" H 4460 4720 50  0000 L CNN
@@ -510,7 +510,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10u
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C2
+L 3Phase-rescue:C_Small-3Phase-rescue C2
 U 1 1 5BD06296
 P 4475 6025
 F 0 "C2" H 4485 6095 50  0000 L CNN
@@ -521,7 +521,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10u
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C3
+L 3Phase-rescue:C_Small-3Phase-rescue C3
 U 1 1 5BD06311
 P 5700 1700
 F 0 "C3" H 5710 1770 50  0000 L CNN
@@ -532,7 +532,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10u
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C5
+L 3Phase-rescue:C_Small-3Phase-rescue C5
 U 1 1 5BD0638E
 P 4650 1150
 F 0 "C5" H 4660 1220 50  0000 L CNN
@@ -543,7 +543,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10u
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C7
+L 3Phase-rescue:C_Small-3Phase-rescue C7
 U 1 1 5BD06419
 P 4500 7425
 F 0 "C7" H 4510 7495 50  0000 L CNN
@@ -851,7 +851,7 @@ F 3 "" H 6975 7700 50  0000 C CNN
 	0    1    -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R46
+L 3Phase-rescue:R-3Phase-rescue R46
 U 1 1 5BD9FCD3
 P 6625 6425
 F 0 "R46" V 6705 6425 50  0000 C CNN
@@ -862,7 +862,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R45
+L 3Phase-rescue:R-3Phase-rescue R45
 U 1 1 5BD9FD98
 P 6775 6425
 F 0 "R45" V 6855 6425 50  0000 C CNN
@@ -873,7 +873,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R48
+L 3Phase-rescue:R-3Phase-rescue R48
 U 1 1 5BDAF4B1
 P 6625 7775
 F 0 "R48" V 6705 7775 50  0000 C CNN
@@ -884,7 +884,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R47
+L 3Phase-rescue:R-3Phase-rescue R47
 U 1 1 5BDAF58A
 P 6775 7775
 F 0 "R47" V 6855 7775 50  0000 C CNN
@@ -895,7 +895,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:CP C9
+L 3Phase-rescue:CP-3Phase-rescue C9
 U 1 1 5BDB6F21
 P 2450 1550
 F 0 "C9" H 2475 1650 50  0000 L CNN
@@ -906,7 +906,7 @@ F 3 "https://es.aliexpress.com/store/product/ELECYINGFO-100pcs-3-3uF-450V-RUBYCO
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:CP C8
+L 3Phase-rescue:CP-3Phase-rescue C8
 U 1 1 5BDB7050
 P 2050 1550
 F 0 "C8" H 2075 1650 50  0000 L CNN
@@ -917,7 +917,7 @@ F 3 "https://es.aliexpress.com/store/product/ELECYINGFO-100pcs-3-3uF-450V-RUBYCO
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:VIPer22 U6
+L 3Phase-rescue:VIPer22-3Phase-rescue U6
 U 1 1 5BDB6955
 P 3000 1450
 F 0 "U6" H 2850 1675 50  0000 R CNN
@@ -928,7 +928,7 @@ F 3 "https://es.aliexpress.com/store/product/VIPer22A-viper22-VIPER22A-DIP8-100p
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:L L1
+L 3Phase-rescue:L-3Phase-rescue L1
 U 1 1 5BDB7C0C
 P 2250 1300
 F 0 "L1" V 2200 1300 50  0000 C CNN
@@ -939,7 +939,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-LOT-1W-color-ring-inductance
 	0    -1   -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:Thermistor_NTC TH1
+L 3Phase-rescue:Thermistor_NTC-3Phase-rescue TH1
 U 1 1 5BDB864F
 P 1850 1150
 F 0 "TH1" V 1675 1150 50  0000 C CNN
@@ -950,7 +950,7 @@ F 3 "https://es.aliexpress.com/store/product/100pcs-Thermistor-NTC10D-5-10D-5-10
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:Varistor RV1
+L 3Phase-rescue:Varistor-3Phase-rescue RV1
 U 1 1 5BDB8784
 P 1800 1550
 F 0 "RV1" V 1925 1550 50  0000 C CNN
@@ -972,18 +972,18 @@ F 3 "" H 3350 1900 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:L L2
+L 3Phase-rescue:L-3Phase-rescue L2
 U 1 1 5BDBAA07
 P 3800 1550
 F 0 "L2" V 3750 1550 50  0000 C CNN
 F 1 "1mH 300mA" V 3875 1550 50  0001 C CNN
-F 2 "Inductor_THT:L_Radial_D12.0mm_P5.00mm_Fastron_11P" H 3800 1550 50  0001 C CNN
+F 2 "Inductor_THT:L_Radial_D10.5mm_P5.00mm_Abacron_AISR-01" H 3800 1550 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/50pcs-150uH-220uH-330uH-470uH-1mH-2-2mH-3-3mH-4-7mH-10mH-9-12-dip/1126207_32821675313.html" H 3800 1550 50  0001 C CNN
 	1    3800 1550
 	0    -1   -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C10
+L 3Phase-rescue:C_Small-3Phase-rescue C10
 U 1 1 5BDBB3A5
 P 3600 1400
 F 0 "C10" H 3610 1470 50  0000 L CNN
@@ -994,7 +994,7 @@ F 3 "https://es.aliexpress.com/store/product/Free-shipping-100PCS-capacitance-04
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C11
+L 3Phase-rescue:C_Small-3Phase-rescue C11
 U 1 1 5BDBB5F6
 P 3450 1450
 F 0 "C11" H 3460 1520 50  0000 L CNN
@@ -1005,7 +1005,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-LOT-SMD-ceramic-capacitor-08
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:D_Zener_Small_ALT D2
+L 3Phase-rescue:D_Zener_Small_ALT-3Phase-rescue D2
 U 1 1 5BDBB72B
 P 3750 1250
 F 0 "D2" H 3750 1340 50  0000 C CNN
@@ -1016,7 +1016,7 @@ F 3 "https://es.aliexpress.com/store/product/100-PCS-LOT-BZT52C15S-BZT52C15-SOD-
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:D_Small_ALT D1
+L 3Phase-rescue:D_Small_ALT-3Phase-rescue D1
 U 1 1 5BDBDB31
 P 3350 1700
 F 0 "D1" H 3300 1780 50  0000 L CNN
@@ -1027,7 +1027,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-SS14-In5819-1n5819-SS16-SS24
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:CP_Small C12
+L 3Phase-rescue:CP_Small-3Phase-rescue C12
 U 1 1 5BDBE803
 P 4000 1700
 F 0 "C12" H 4010 1770 50  0000 L CNN
@@ -1040,7 +1040,7 @@ $EndComp
 Text GLabel 4150 1300 1    60   Input ~ 0
 15v
 $Comp
-L 3Phase-rescue:D_Small_ALT D7
+L 3Phase-rescue:D_Small_ALT-3Phase-rescue D7
 U 1 1 5BDC68E2
 P 3750 1150
 F 0 "D7" H 3700 1230 50  0000 L CNN
@@ -1051,7 +1051,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-Diode-1N4001-M1-1N4005-M5-1N
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:D_Small_ALT D3
+L 3Phase-rescue:D_Small_ALT-3Phase-rescue D3
 U 1 1 5BDBD504
 P 4000 1400
 F 0 "D3" H 3950 1480 50  0000 L CNN
@@ -1062,7 +1062,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-SS14-In5819-1n5819-SS16-SS24
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:SY8113 U10
+L 3Phase-rescue:SY8113-3Phase-rescue U10
 U 1 1 5BDCEBDA
 P 4500 1450
 F 0 "U10" H 4350 1675 50  0000 R CNN
@@ -1073,7 +1073,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-SY8113ADC-SY8113A-SY8113-SOT
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C17
+L 3Phase-rescue:C_Small-3Phase-rescue C17
 U 1 1 5BDCF00F
 P 4150 1700
 F 0 "C17" H 4160 1770 50  0000 L CNN
@@ -1084,7 +1084,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10u
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:L L4
+L 3Phase-rescue:L-3Phase-rescue L4
 U 1 1 5BDD2082
 P 5050 1350
 F 0 "L4" V 5000 1350 50  0000 C CNN
@@ -1097,7 +1097,7 @@ $EndComp
 Text GLabel 825  10600 0    60   Input ~ 0
 IN_T
 $Comp
-L 3Phase-rescue:D_ALT D6
+L 3Phase-rescue:D_ALT-3Phase-rescue D6
 U 1 1 5BDDF7B6
 P 1450 1750
 F 0 "D6" H 1550 1800 50  0000 C CNN
@@ -1108,7 +1108,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-Diode-1N4001-M1-1N4005-M5-1N
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:D_ALT D4
+L 3Phase-rescue:D_ALT-3Phase-rescue D4
 U 1 1 5BDDF9F7
 P 1450 1150
 F 0 "D4" H 1550 1200 50  0000 C CNN
@@ -1119,7 +1119,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-Diode-1N4001-M1-1N4005-M5-1N
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:D_ALT D5
+L 3Phase-rescue:D_ALT-3Phase-rescue D5
 U 1 1 5BDDFAD0
 P 1450 1450
 F 0 "D5" H 1550 1500 50  0000 C CNN
@@ -1136,7 +1136,7 @@ IN_S
 Text GLabel 1300 1600 2    60   Input ~ 0
 IN_R
 $Comp
-L 3Phase-rescue:CP_Small C18
+L 3Phase-rescue:CP_Small-3Phase-rescue C18
 U 1 1 5BDECD27
 P 5525 1700
 F 0 "C18" H 5535 1770 50  0000 L CNN
@@ -1147,7 +1147,7 @@ F 3 "https://es.aliexpress.com/store/product/50pcs-Electrolytic-Capacitor-100uF-
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:LTC4054 U12
+L 3Phase-rescue:LTC4054-3Phase-rescue U12
 U 1 1 5BDEE248
 P 6050 1450
 F 0 "U12" H 5900 1675 50  0000 R CNN
@@ -1158,7 +1158,7 @@ F 3 "https://es.aliexpress.com/store/product/50PCS-LTC4054ES5-4-2-SOT23-5-LTC405
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:Battery_Cell BT1
+L 3Phase-rescue:Battery_Cell-3Phase-rescue BT1
 U 1 1 5BDEE828
 P 6700 1700
 F 0 "BT1" H 6800 1800 50  0000 L CNN
@@ -1169,7 +1169,7 @@ F 3 "https://es.aliexpress.com/store/product/100-Sets-Micro-JST-2-0-PH-2-Pin-Con
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:Q_PMOS_GSD Q1
+L 3Phase-rescue:Q_PMOS_GSD-3Phase-rescue Q1
 U 1 1 5BDF3EC9
 P 6600 1100
 F 0 "Q1" H 6800 1150 50  0000 L CNN
@@ -1180,7 +1180,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-SI2300DS-SI2301DS-SI2302DS-S
 	1    0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:D_Schottky_Small_ALT D8
+L 3Phase-rescue:D_Schottky_Small_ALT-3Phase-rescue D8
 U 1 1 5BDF4375
 P 6525 850
 F 0 "D8" H 6475 930 50  0000 L CNN
@@ -1193,7 +1193,7 @@ $EndComp
 Text GLabel 5900 1975 0    60   Input ~ 0
 CHRG
 $Comp
-L 3Phase-rescue:PS7516 U7
+L 3Phase-rescue:PS7516-3Phase-rescue U7
 U 1 1 5BE18D52
 P 4625 9000
 F 0 "U7" H 4825 8750 50  0000 C CNN
@@ -1204,7 +1204,7 @@ F 3 "https://es.aliexpress.com/store/product/MP1470GJ-LF-Z-SY8008CAAC-CL6808-BCP
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:CONN_01X04 P1
+L 3Phase-rescue:CONN_01X04-3Phase-rescue P1
 U 1 1 5BE1F723
 P 850 1700
 F 0 "P1" H 850 1950 50  0000 C CNN
@@ -1215,7 +1215,7 @@ F 3 "https://es.aliexpress.com/store/product/20pair-3-81-4pin-Right-angle-Termin
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:R R57
+L 3Phase-rescue:R-3Phase-rescue R57
 U 1 1 5BEA6C0B
 P 7100 1600
 F 0 "R57" V 7180 1600 50  0000 C CNN
@@ -1226,7 +1226,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R56
+L 3Phase-rescue:R-3Phase-rescue R56
 U 1 1 5BEA6F94
 P 6900 1350
 F 0 "R56" V 6980 1350 50  0000 C CNN
@@ -1245,7 +1245,7 @@ POWER
 Text GLabel 4125 9450 0    60   Input ~ 0
 POWER
 $Comp
-L 3Phase-rescue:C_Small C13
+L 3Phase-rescue:C_Small-3Phase-rescue C13
 U 1 1 5BEB8358
 P 4175 9650
 F 0 "C13" H 4185 9720 50  0000 L CNN
@@ -1269,7 +1269,7 @@ $EndComp
 Text GLabel 4150 9000 0    60   Input ~ 0
 POWER_EN
 $Comp
-L 3Phase-rescue:L L3
+L 3Phase-rescue:L-3Phase-rescue L3
 U 1 1 5BEC97FD
 P 4525 8650
 F 0 "L3" V 4475 8650 50  0000 C CNN
@@ -1280,7 +1280,7 @@ F 3 "https://es.aliexpress.com/store/product/CD43-10UH-100-1A-winding-chip-power
 	0    -1   -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R50
+L 3Phase-rescue:R-3Phase-rescue R50
 U 1 1 5BEC99BD
 P 5200 9275
 F 0 "R50" V 5280 9275 50  0000 C CNN
@@ -1291,7 +1291,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R49
+L 3Phase-rescue:R-3Phase-rescue R49
 U 1 1 5BEC9B5A
 P 5200 8850
 F 0 "R49" V 5280 8850 50  0000 C CNN
@@ -1302,7 +1302,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C14
+L 3Phase-rescue:C_Small-3Phase-rescue C14
 U 1 1 5BEC9CD0
 P 5425 9575
 F 0 "C14" H 5435 9645 50  0000 L CNN
@@ -1313,7 +1313,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10u
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:CP_Small C15
+L 3Phase-rescue:CP_Small-3Phase-rescue C15
 U 1 1 5BEC9E75
 P 5325 9025
 F 0 "C15" H 5335 9095 50  0000 L CNN
@@ -1346,7 +1346,7 @@ F 3 "https://es.aliexpress.com/store/product/Free-Shipping-100pcs-lots-MCP6004-I
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R51
+L 3Phase-rescue:R-3Phase-rescue R51
 U 1 1 5BEE0E5D
 P 6625 9050
 F 0 "R51" V 6705 9050 50  0000 C CNN
@@ -1357,7 +1357,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:R R52
+L 3Phase-rescue:R-3Phase-rescue R52
 U 1 1 5BEE103D
 P 6500 9600
 F 0 "R52" V 6580 9600 50  0000 C CNN
@@ -1368,7 +1368,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C16
+L 3Phase-rescue:C_Small-3Phase-rescue C16
 U 1 1 5BEE335C
 P 6625 9400
 F 0 "C16" H 6635 9470 50  0000 L CNN
@@ -1424,7 +1424,7 @@ TI_ADC
 Text GLabel 4450 7250 0    60   Input ~ 0
 NI_ADC
 $Comp
-L 3Phase-rescue:R R58
+L 3Phase-rescue:R-3Phase-rescue R58
 U 1 1 5BF32CC5
 P 5475 3675
 F 0 "R58" V 5555 3675 50  0000 C CNN
@@ -1437,7 +1437,7 @@ $EndComp
 Text GLabel 4600 3775 0    60   Input ~ 0
 R_GAIN
 $Comp
-L 3Phase-rescue:R R59
+L 3Phase-rescue:R-3Phase-rescue R59
 U 1 1 5BF44E5F
 P 5100 5275
 F 0 "R59" V 5180 5275 50  0000 C CNN
@@ -1450,7 +1450,7 @@ $EndComp
 Text GLabel 4600 5375 0    60   Input ~ 0
 S_GAIN
 $Comp
-L 3Phase-rescue:R R60
+L 3Phase-rescue:R-3Phase-rescue R60
 U 1 1 5BFA4892
 P 5450 6700
 F 0 "R60" V 5530 6700 50  0000 C CNN
@@ -1461,7 +1461,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R61
+L 3Phase-rescue:R-3Phase-rescue R61
 U 1 1 5BFA574E
 P 5075 8150
 F 0 "R61" V 5155 8150 50  0000 C CNN
@@ -1505,7 +1505,7 @@ F 3 "https://es.aliexpress.com/store/product/100pcs-LED-3mm-Round-Diffused-Red-G
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:LED_ALT D11
+L 3Phase-rescue:LED_ALT-3Phase-rescue D11
 U 1 1 5BFADFE9
 P 2375 6425
 F 0 "D11" H 2375 6525 50  0000 C CNN
@@ -1516,7 +1516,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-x-Long-Leg-3mm-5mm-White-Dif
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:Buzzer BZ1
+L 3Phase-rescue:Buzzer-3Phase-rescue BZ1
 U 1 1 5BFAE180
 P 2175 3050
 F 0 "BZ1" V 2050 2975 50  0000 L CNN
@@ -1527,7 +1527,7 @@ F 3 "" V 2150 3150 50  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:SW_Push SW1
+L 3Phase-rescue:SW_Push-3Phase-rescue SW1
 U 1 1 5BFAF92F
 P 1950 8100
 F 0 "SW1" H 2000 8200 50  0000 L CNN
@@ -1588,7 +1588,7 @@ F 3 "https://es.aliexpress.com/store/product/Free-Shipping-100pcs-lots-MCP6004-I
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R62
+L 3Phase-rescue:R-3Phase-rescue R62
 U 1 1 5BFFA9B0
 P 2725 9500
 F 0 "R62" V 2805 9500 50  0000 C CNN
@@ -1599,7 +1599,7 @@ F 3 "https://es.aliexpress.com/store/product/300pcs-1-0603-SMD-resistor-0R-10M-1
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C19
+L 3Phase-rescue:C_Small-3Phase-rescue C19
 U 1 1 5BFFE182
 P 2900 9625
 F 0 "C19" H 2910 9695 50  0000 L CNN
@@ -1645,7 +1645,7 @@ F 3 "" H 1550 9825 50  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R63
+L 3Phase-rescue:R-3Phase-rescue R63
 U 1 1 5C018829
 P 2725 10100
 F 0 "R63" V 2805 10100 50  0000 C CNN
@@ -1658,7 +1658,7 @@ $EndComp
 Text GLabel 3000 10100 2    60   Input ~ 0
 SV_ADC
 $Comp
-L 3Phase-rescue:C_Small C20
+L 3Phase-rescue:C_Small-3Phase-rescue C20
 U 1 1 5C018F55
 P 2900 10225
 F 0 "C20" H 2910 10295 50  0000 L CNN
@@ -1691,7 +1691,7 @@ F 3 "" H 1550 10425 50  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R64
+L 3Phase-rescue:R-3Phase-rescue R64
 U 1 1 5C01E49B
 P 2725 10700
 F 0 "R64" V 2805 10700 50  0000 C CNN
@@ -1702,7 +1702,7 @@ F 3 "https://es.aliexpress.com/store/product/300pcs-1-0603-SMD-resistor-0R-10M-1
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C21
+L 3Phase-rescue:C_Small-3Phase-rescue C21
 U 1 1 5C01E678
 P 2900 10825
 F 0 "C21" H 2910 10895 50  0000 L CNN
@@ -1730,7 +1730,7 @@ L Components:STM32F042 U13
 U 1 1 5C0F1416
 P 1300 8325
 F 0 "U13" H 1300 7925 60  0000 C CNN
-F 1 "STM32F042" H 1300 10225 60  0000 C CNN
+F 1 "STM32F042" H 1250 7800 60  0000 C CNN
 F 2 "Housings_QFP:LQFP-32_7x7mm_Pitch0.8mm" H 1300 8325 60  0001 C CNN
 F 3 "" H 1300 8325 60  0001 C CNN
 	1    1300 8325
@@ -1759,7 +1759,7 @@ F 3 "" H 2325 8525 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C22
+L 3Phase-rescue:C_Small-3Phase-rescue C22
 U 1 1 5C10FD29
 P 1800 8675
 F 0 "C22" H 1810 8745 50  0000 L CNN
@@ -1770,7 +1770,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10u
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C23
+L 3Phase-rescue:C_Small-3Phase-rescue C23
 U 1 1 5C10FF28
 P 2000 8675
 F 0 "C23" H 2010 8745 50  0000 L CNN
@@ -1781,7 +1781,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10u
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small C24
+L 3Phase-rescue:C_Small-3Phase-rescue C24
 U 1 1 5C110430
 P 2200 8675
 F 0 "C24" H 2210 8745 50  0000 L CNN
@@ -2390,7 +2390,7 @@ Wire Wire Line
 Wire Wire Line
 	1650 7825 2300 7825
 $Comp
-L 3Phase-rescue:SW_Push SW2
+L 3Phase-rescue:SW_Push-3Phase-rescue SW2
 U 1 1 5C13FA35
 P 2225 4650
 F 0 "SW2" H 2275 4750 50  0000 L CNN
@@ -2674,17 +2674,6 @@ Wire Wire Line
 	4875 7675 4875 8150
 Wire Wire Line
 	1650 8525 1800 8525
-$Comp
-L 3Phase-rescue:XC6206 U9
-U 1 1 5BDFA69E
-P 5875 8950
-F 0 "U9" H 5975 8750 50  0000 C CNN
-F 1 "XC6206" H 5875 9250 50  0001 C CNN
-F 2 "Package_TO_SOT_SMD:SOT-23" H 5875 9050 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100pcs-XC6206P332MR-SOT23-3-XC6206P332-SOT23-XC6206-SMD-662K-3-3V-0-5A-Positive-Fixed-LDO/1969251_32947788534.html" H 5875 9050 50  0001 C CNN
-	1    5875 8950
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	5200 1350 5525 1350
 Wire Wire Line
@@ -2731,7 +2720,7 @@ Connection ~ 4175 8900
 Wire Wire Line
 	4175 8900 4175 9450
 $Comp
-L 3Phase-rescue:C_Small C1
+L 3Phase-rescue:C_Small-3Phase-rescue C1
 U 1 1 5C21A3EA
 P 6400 9025
 F 0 "C1" H 6410 9095 50  0000 L CNN
@@ -2784,7 +2773,7 @@ F 3 "" H 5125 3925 50  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R R38
+L 3Phase-rescue:R-3Phase-rescue R38
 U 1 1 5C1EE790
 P 1925 5025
 F 0 "R38" V 2005 5025 50  0000 C CNN
@@ -2795,7 +2784,7 @@ F 3 "https://es.aliexpress.com/store/product/300pcs-1-0603-SMD-resistor-0R-10M-1
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R55
+L 3Phase-rescue:R-3Phase-rescue R55
 U 1 1 5C1EFC16
 P 1825 6425
 F 0 "R55" V 1905 6425 50  0000 C CNN
@@ -2808,7 +2797,7 @@ $EndComp
 Wire Wire Line
 	1975 6425 2225 6425
 $Comp
-L 3Phase-rescue:R R65
+L 3Phase-rescue:R-3Phase-rescue R65
 U 1 1 5C207DDF
 P 6625 3425
 F 0 "R65" V 6705 3425 50  0000 C CNN
@@ -2819,7 +2808,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	1    0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:R R66
+L 3Phase-rescue:R-3Phase-rescue R66
 U 1 1 5C207F21
 P 6775 3425
 F 0 "R66" V 6855 3425 50  0000 C CNN
@@ -2844,7 +2833,7 @@ Wire Wire Line
 Wire Wire Line
 	7000 4575 6975 4575
 $Comp
-L 3Phase-rescue:R R41
+L 3Phase-rescue:R-3Phase-rescue R41
 U 1 1 5C1A194C
 P 6625 5000
 F 0 "R41" V 6550 5000 50  0000 C CNN
@@ -2855,7 +2844,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	1    0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:R R42
+L 3Phase-rescue:R-3Phase-rescue R42
 U 1 1 5C1A1A90
 P 6775 5000
 F 0 "R42" V 6700 5000 50  0000 C CNN
@@ -2916,7 +2905,7 @@ Connection ~ 6775 8150
 Wire Wire Line
 	6775 8150 7000 8150
 $Comp
-L 3Phase-rescue:C_Small C26
+L 3Phase-rescue:C_Small-3Phase-rescue C26
 U 1 1 5BF092ED
 P 6225 5975
 F 0 "C26" H 6235 6045 50  0000 L CNN
@@ -2945,7 +2934,7 @@ $EndComp
 Wire Wire Line
 	6375 5975 6325 5975
 $Comp
-L 3Phase-rescue:C_Small C25
+L 3Phase-rescue:C_Small-3Phase-rescue C25
 U 1 1 5BFF8F92
 P 6200 2950
 F 0 "C25" H 6210 3020 50  0000 L CNN
@@ -3008,7 +2997,7 @@ Wire Wire Line
 Wire Wire Line
 	4875 5275 4950 5275
 $Comp
-L 3Phase-rescue:C_Small C27
+L 3Phase-rescue:C_Small-3Phase-rescue C27
 U 1 1 5C351266
 P 5000 3525
 F 0 "C27" H 5010 3595 50  0000 L CNN
@@ -3085,7 +3074,7 @@ Wire Wire Line
 Wire Wire Line
 	1675 6425 1650 6425
 $Comp
-L 3Phase-rescue:C_Small C28
+L 3Phase-rescue:C_Small-3Phase-rescue C28
 U 1 1 5C17FA70
 P 2150 4775
 F 0 "C28" H 2160 4845 50  0000 L CNN
@@ -3096,7 +3085,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10u
 	0    1    -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R R43
+L 3Phase-rescue:R-3Phase-rescue R43
 U 1 1 5C18137A
 P 1925 4875
 F 0 "R43" V 2005 4875 50  0000 C CNN
@@ -3134,7 +3123,7 @@ R_GAIN
 Text GLabel 1775 4375 2    60   Input ~ 0
 N_GAIN
 $Comp
-L 3Phase-rescue:R R44
+L 3Phase-rescue:R-3Phase-rescue R44
 U 1 1 5BF49798
 P 2025 4000
 F 0 "R44" V 2105 4000 50  0000 C CNN
@@ -3179,7 +3168,7 @@ POWER_EN
 Wire Wire Line
 	1750 3775 1700 3775
 $Comp
-L 3Phase-rescue:R R37
+L 3Phase-rescue:R-3Phase-rescue R37
 U 1 1 5C1A62AF
 P 2000 3600
 F 0 "R37" V 2080 3600 50  0000 C CNN
@@ -3278,15 +3267,9 @@ Wire Wire Line
 	5425 9800 5875 9800
 Wire Wire Line
 	5425 8650 5550 8650
-Wire Wire Line
-	5575 8850 5550 8850
-Wire Wire Line
-	5550 8850 5550 8650
 Connection ~ 5550 8650
 Wire Wire Line
 	5550 8650 7300 8650
-Wire Wire Line
-	6175 8850 6400 8850
 Wire Wire Line
 	5875 9750 5875 9800
 Wire Wire Line
@@ -3296,18 +3279,9 @@ Wire Wire Line
 Wire Wire Line
 	6625 8900 6625 8850
 Connection ~ 5875 9800
-Wire Wire Line
-	5875 9150 5875 9175
-Wire Wire Line
-	5875 9175 6400 9175
-Wire Wire Line
-	6400 9175 6400 9800
 Connection ~ 6400 9800
 Wire Wire Line
 	6400 9800 6500 9800
-Wire Wire Line
-	6400 9125 6400 9175
-Connection ~ 6400 9175
 $Comp
 L power:+3.3V #PWR0113
 U 1 1 5DD49C09
@@ -3320,9 +3294,9 @@ F 3 "" H 6225 9450 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 Wire Wire Line
-	6225 9450 6175 9450
+	6225 9450 6200 9450
 $Comp
-L 3Phase-rescue:D_Small_ALT D13
+L 3Phase-rescue:D_Small_ALT-3Phase-rescue D13
 U 1 1 5DFFCEE7
 P 5550 9250
 F 0 "D13" H 5500 9330 50  0000 L CNN
@@ -3382,7 +3356,7 @@ $EndComp
 Wire Wire Line
 	2300 2875 2000 2875
 $Comp
-L 3Phase-rescue:R R39
+L 3Phase-rescue:R-3Phase-rescue R39
 U 1 1 5E8C6875
 P 1850 4650
 F 0 "R39" V 1930 4650 50  0000 C CNN
@@ -3401,7 +3375,7 @@ Wire Wire Line
 Wire Wire Line
 	2200 8225 2200 8325
 $Comp
-L 3Phase-rescue:XC6206 U4
+L 3Phase-rescue:XC6206-3Phase-rescue U4
 U 1 1 5D1E085F
 P 5875 9550
 F 0 "U4" H 5975 9350 50  0000 C CNN
@@ -3414,7 +3388,7 @@ $EndComp
 Wire Wire Line
 	4275 9800 5050 9800
 $Comp
-L 3Phase-rescue:D_Small_ALT D14
+L 3Phase-rescue:D_Small_ALT-3Phase-rescue D14
 U 1 1 5C0D8D38
 P 4475 9450
 F 0 "D14" H 4425 9530 50  0000 L CNN
@@ -3427,10 +3401,7 @@ $EndComp
 Wire Wire Line
 	4175 9450 4375 9450
 Wire Wire Line
-	5550 9150 5550 8850
-Wire Wire Line
 	4575 9450 5050 9450
-Connection ~ 5550 8850
 Wire Wire Line
 	5550 9350 5550 9450
 Connection ~ 5550 9450
@@ -3438,7 +3409,7 @@ Wire Wire Line
 	5550 9450 5575 9450
 Connection ~ 2200 8325
 $Comp
-L 3Phase-rescue:C_Small C29
+L 3Phase-rescue:C_Small-3Phase-rescue C29
 U 1 1 5C6260A8
 P 5050 9625
 F 0 "C29" H 5060 9695 50  0000 L CNN
@@ -3471,4 +3442,28 @@ F 3 "" H 2225 4875 50  0000 C CNN
 $EndComp
 Text GLabel 2175 4275 2    60   Input ~ 0
 T_GAIN
+Wire Wire Line
+	5550 8650 5550 9150
+Wire Wire Line
+	6400 9125 6400 9800
+$Comp
+L Device:L_Core_Ferrite_Small L5
+U 1 1 5CC07481
+P 6200 9000
+F 0 "L5" H 6159 9000 50  0000 R CNN
+F 1 "10uH" H 6159 9045 50  0001 R CNN
+F 2 "Inductor_SMD:L_0603_1608Metric" H 6200 9000 50  0001 C CNN
+F 3 "~" H 6200 9000 50  0001 C CNN
+	1    6200 9000
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	6200 8850 6400 8850
+Wire Wire Line
+	6200 9450 6200 9100
+Connection ~ 6200 9450
+Wire Wire Line
+	6200 9450 6175 9450
+Wire Wire Line
+	6200 8900 6200 8850
 $EndSCHEMATC

@@ -6,13 +6,13 @@
 #include <errno.h>
 #include <unistd.h>
 #include "Tariff.h"
+#include "TariffPlugin.h"
 //----------------------------------------------------------------------------------------------------------------------
 bool TariffList::PushTariff(json tariff) {
   if(!tariff["StartDate"].is_number()) return false;
   if(!tariff["EndDate"].is_number()) return false;
   if(!tariff["Template"].is_object()) return false;
   if(!tariff["Config"].is_object()) return false;
-  Tools::LogMsg("ERROR", "Template: %s\nConfig: %s\n", tariff["Template"].dump().c_str(), tariff["Config"].dump().c_str());
   Tariff *Tmp = new Tariff(tariff["StartDate"], tariff["EndDate"]);
   if((Tmp->SetTemplate(tariff["Template"]) == false) || (Tmp->SetConfig(tariff["Config"]) == false)) {
     delete Tmp;
@@ -246,47 +246,54 @@ json Tariff::GetConfig() {
   T["Billing"] = pBillingCycles;
   return T;
 }
-bool Tariff::PushSample(uint64_t time, float active, float reactive) {
+bool Tariff::PushSample(const uint64_t time, const float active, const float reactive) {
   if(pSamples.size() == 0) {
     for(uint32_t n = 0; n < pPeriods.size(); n++) {
-      pPeriods[n].Active = 0.0;
+      pPeriods[n].SumPowerCost = 0.0;
       pPeriods[n].PowerModule->Reset();
-      pPeriods[n].Reactive = 0.0;
+      pPeriods[n].SumEnergyCost = 0.0;
       pPeriods[n].EnergyModule->Reset();
     }
     for(uint32_t n = 0; n < pTaxs.size(); n++) pTaxs[n].Accum = 0;
+    pBillConcepts.clear();
   }
   //Search for period
   Sample_t Sample;
-  Sample.Period = 0;
-  Sample.Time = time;
-  Sample.Active = active;
+  Sample.Time     = time;
+  Sample.Active   = active;
   Sample.Reactive = reactive;
+  Sample.Period   = 0;
   pSamples.push(Sample);
-  pPeriods[Period].PowerModule->PushSample(active, reactive);
-  pPeriods[Period].EnergyModule->PushSample(reactive, reactive);
-  if(time == pEndDate) return false;
+  pPeriods[Sample.Period].PowerModule->PushSample(Sample.Active, Sample.Reactive);
+  pPeriods[Sample.Period].EnergyModule->PushSample(Sample.Active, Sample.Reactive);
+  if(Sample.Time == pEndDate) return false;
   for(vector<uint64_t>::iterator it = pBillingCycles.begin(); it != pBillingCycles.end(); it++) {
-    if(time == *it) return false;
+    if(Sample.Time == *it) return false;
   }
   return true;
 }
-bool Tariff::PopSample(Sample_t &sample, float &cost) {
-  cost = 0.0;
+bool Tariff::PopSample(uint64_t &time, float &active, float &reactive, string &period, string &color, float &cost, float &contractedPower) {
   if(pSamples.size() == 0) return false;
   Sample_t Sample = pSamples.front();
   pSamples.pop();
-  float EnergyCost = sample.Active / 4.0 * pPeriods[sample.Period] + pPeriods[sample.Period].EnergyModule->PopSample();
-  float PowerCost  = pPeriods[sample.Period].ContractedPower * pPeriods[sample.Period].PowerCost +  pPeriods[sample.Period].EnergyModule->PopSample();
-
-  
-  //Coste del periodo es Sample.Active / 4 * energy cost;
-  // + 
-  // + PluginReactive.PopSample
-  
-
-
-  sample = pSamples.front();
-  pSamples.pop();
+  time             = Sample.Time;
+  active           = Sample.Active;
+  reactive         = Sample.Reactive;
+  period           = "P" + to_string(Sample.Period);
+  color            = pPeriods[Sample.Period].Color;
+  contractedPower  = pPeriods[Sample.Period].ContractedPower * 1000.0;
+  float EnergyCost = pPeriods[Sample.Period].EnergyModule->PopSample(Sample.Active, Sample.Reactive);
+  float PowerCost  = pPeriods[Sample.Period].PowerModule->PopSample(Sample.Active, Sample.Reactive);
+  float Cost = EnergyCost + PowerCost;
+  for(vector<Tax_t>::iterator it = pTaxs.begin(); it != pTaxs.end(); it++) {
+    if(it->Type == "PERCENT_ENERGY") Cost += EnergyCost * (it->Value / 100.0);
+    if(it->Type == "PERCENT_POWER") Cost += PowerCost * (it->Value / 100.0);
+    if(it->Type == "PERCENT_ENERGY_POWER") Cost += (EnergyCost + PowerCost) * (it->Value / 100.0);
+    if(it->Type == "FIXED_QUANTITY") Cost += it->Value / 96.0;
+  }
+  for(vector<Tax_t>::iterator it = pTaxs.begin(); it != pTaxs.end(); it++) {
+    if(it->Type == "PERCENT_TOTAL") Cost = Cost * (it->Value / 100.0);
+  }
+  cost += Cost;
   return true;
 }

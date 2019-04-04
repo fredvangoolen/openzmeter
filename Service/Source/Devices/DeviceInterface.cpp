@@ -280,7 +280,7 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   Result["Sampletime"]         = json::array();
   Result["Active_Power"]       = json::array();
   Result["Reactive_Power"]     = json::array();
-  Result["Period_Number"]      = json::array();
+  Result["Period_Name"]      = json::array();
   Result["Period_Color"]       = json::array();
   Result["Contracted_Power"]   = json::array();
   Result["Expense"]            = json::array();
@@ -302,38 +302,55 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   uint32_t Row = 0;
   float AccActive = NAN;
   float AccReactive = NAN;
-  for(uint64_t time = BillingFrom + 899999; time < BillingTo; time = time + 900000) {
-    Tariff::Sample_t Sample;
-    Sample.Active = NAN;
-    Sample.Reactive = NAN;
-    Sample.Color = "";
-    Sample.Time = time;
-    Sample.Period = UINT8_MAX;
-    Sample.Cost = 0.0;
+  for(uint64_t time = BillingFrom + 899999; time != BillingTo; time = time + 900000) {
+//    Tariff::Sample_t Sample;
+//    Sample.Active = NAN;
+//    Sample.Reactive = NAN;
+//    Sample.Color = "";
+//    Sample.Time = time;
+//    Sample.Period = UINT8_MAX;
+//    Sample.Cost = NAN;
+    float Active, Reactive;
     if((Row < req.ResultRows()) && (req.ResultUInt64(Row, "sampletime") == time)) {
-      Sample.Active = req.ResultFloat(Row, "active_power");
-      Sample.Reactive = req.ResultFloat(Row, "reactive_power");
+      Active = req.ResultFloat(Row, "active_power");
+      Reactive = req.ResultFloat(Row, "reactive_power");
       Row++;
     }
     Tariff *Tariff = Tariffs.Find(time);
-    if((Tariff != NULL) && (Tariff->PushSample(Sample) == true)) continue;  //If under a tariff push samples until bill cycle ends
+    if((Tariff != NULL) && (Tariff->PushSample(time, Active, Reactive) == true) && ((time + 900000) != BillingTo)) continue;  //If under a tariff push samples until bill cycle ends or no more data!
     //Recover/group values
     do {
-      if((Tariff != NULL) && (Tariff->PopSample(&Sample) == false)) {
+      string   Color      = "";
+      string   Period     = "";
+      uint64_t Time       = time;
+      float    Cost       = NAN;
+      float    Contracted = NAN;
+      if((Tariff != NULL) && (Tariff->PopSample(Time, Active, Reactive, Period, Color, Cost, Contracted) == false)) {
         //Result["Bill"].push_back(EL RESUMEN DEL CICLO);
         //Ademas añado estadisticas de perido o lo que sea que devuelve el modulo de tarifas!
-        //He alcanzado un ciclo de facturacion, recupero todos los samples y los paso a la salida
         break;
       }
-      AccActive  = isnan(AccActive) ? Sample.Active / 4.0 : isnan(Sample.Active) ? AccActive : AccActive + Sample.Active / 4.0;
-      AccReactive = isnan(AccReactive) ? Sample.Reactive / 4.0 : isnan(Sample.Reactive) ? AccReactive : AccReactive + Sample.Reactive / 4.0;
-      if((Aggreg == "1H") && ((Sample.Time % 3600000) != 3599999)) continue;
-      if((Sample.Time > LastSample) && (Sample.Time >= From) && (Sample.Time <= To)) {
-        Result["Sampletime"].push_back(Sample.Time);
+      AccActive  = isnan(AccActive) ? Active : isnan(Active) ? AccActive : AccActive + Active;
+      AccReactive = isnan(AccReactive) ? Reactive : isnan(Reactive) ? AccReactive : AccReactive + Reactive;
+      if(Aggreg == "1H") {
+        if((Time % 3600000) != 3599999) continue;
+        AccActive = AccActive / 4.0;
+        AccReactive = AccReactive / 4.0;
+      }
+      if((Time > LastSample) && (Time >= From) && (Time <= To)) {
+        Result["Sampletime"].push_back(Time);
         Result["Active_Power"].push_back(AccActive);
         Result["Reactive_Power"].push_back(AccReactive);
-        Result["Color"].push_back(Sample.Color);        
-        Result["Expense"].push_back(nullptr);
+        Result["Contracted_Power"].push_back(Contracted);
+        if(Color.empty() == true)
+          Result["Color"].push_back(nullptr);
+        else 
+          Result["Color"].push_back(Color);
+        if(Period.empty() == true)
+          Result["Period_Name"].push_back(nullptr);
+        else 
+          Result["Period"].push_back(Period);
+        Result["Expense"].push_back(Cost);
       }
       AccActive = NAN;
       AccReactive = NAN;
