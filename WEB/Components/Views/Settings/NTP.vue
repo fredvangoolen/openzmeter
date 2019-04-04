@@ -62,8 +62,8 @@ function AjaxGetTimeZones() {
   $('#checkNTP').bootstrapToggle();
   $.ajax({ url: "getTimeSettings", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
     function(result) {
-      NTP_DateTimePicker = $('#inputCurrentTime').datetimepicker({ format: 'DD/MM/YYYY HH:mm:00', defaultDate: new Date(result.Time), sideBySide: true });
-      $('#inputCurrentTime > input').attr('value', moment(new Date(result.Time)).format('DD/MM/YYYY HH:mm:ss'));
+      NTP_DateTimePicker = $('#inputCurrentTime').datetimepicker({ format: 'DD/MM/YYYY HH:mm:00', defaultDate: moment(result.Time), sideBySide: true });
+      $('#inputCurrentTime > input').attr('value', moment(moment(result.Time)).format('DD/MM/YYYY HH:mm:ss'));
       $('#dropdownTimeZone span:first-child').text(result.TimeZone);
       $('#inputNTPServer').val(result.NTP_Server);
       if(result.NTP_Enabled === true) {

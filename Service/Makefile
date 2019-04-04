@@ -6,7 +6,7 @@ LIB_DIRS = /usr/local/pgsql/lib
 #General options
 CC       = gcc
 CPPFLAGS = -Wall -no-pie -std=c++11
-LDFLAGS  = -lm -ljson-c -ldbus-1 -lcurl -lpthread -lz -lpq -lfftw3f -lstdc++ -lusb-1.0 -lmicrohttpd -lxml2
+LDFLAGS  = -lm -ljson-c -ldbus-1 -lcurl -lpthread -lz -lpq -lfftw3f -lstdc++ -lusb-1.0 -lmicrohttpd -lxml2 -lcctz
 
 #Specific options
 debug: CXXFLAGS += -O0 -g -DOZM_DEBUG -fno-exceptions
