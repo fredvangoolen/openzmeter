@@ -61,8 +61,8 @@ Tariff::Tariff(uint64_t start, uint64_t end) {
 }
 Tariff::~Tariff() {
   for(uint32_t n = 0; n < pPeriods.size(); n++) {
-    delete pPeriods[n].ActiveModule;
-    delete pPeriods[n].ReactiveModule;
+    delete pPeriods[n].PowerModule;
+    delete pPeriods[n].EnergyModule;
   }
 }
 uint8_t Tariff::FindPeriod(uint64_t timestamp) {
@@ -90,9 +90,9 @@ bool Tariff::SetTemplate(json t) {
     if(!t["Periods"][n]["Color"].is_string()) return false;
     Period.Color = t["Periods"][n]["Color"];
     if(TariffPowerPlugin::Contains(Period.PowerMode) == false) return false;
-    if(TariffReactivePlugin::Contains(Period.ReactiveMode) == false) return false;
-    Period.ActiveModule = TariffPowerPlugin::Instance(Period.PowerMode, Period.ContractedPower, Period.PowerCost);
-    Period.ReactiveModule = TariffReactivePlugin::Instance(Period.ReactiveMode);
+    if(TariffEnergyPlugin::Contains(Period.ReactiveMode) == false) return false;
+    Period.PowerModule  = TariffPowerPlugin::Instance(Period.PowerMode, Period.ContractedPower, Period.PowerCost);
+    Period.EnergyModule = TariffEnergyPlugin::Instance(Period.ReactiveMode, Period.EnergyCost);
     pPeriods.push_back(Period);
   }
   if(!t["Seasons"].is_array()) return false;
@@ -250,21 +250,21 @@ bool Tariff::PushSample(uint64_t time, float active, float reactive) {
   if(pSamples.size() == 0) {
     for(uint32_t n = 0; n < pPeriods.size(); n++) {
       pPeriods[n].Active = 0.0;
-      pPeriods[n].ActiveModule->Reset();
+      pPeriods[n].PowerModule->Reset();
       pPeriods[n].Reactive = 0.0;
-      pPeriods[n].ReactiveModule->Reset();
+      pPeriods[n].EnergyModule->Reset();
     }
     for(uint32_t n = 0; n < pTaxs.size(); n++) pTaxs[n].Accum = 0;
   }
+  //Search for period
   Sample_t Sample;
+  Sample.Period = 0;
   Sample.Time = time;
   Sample.Active = active;
   Sample.Reactive = reactive;
   pSamples.push(Sample);
-  //Search for period
-  uint8_t Period = 0;
-  pPeriods[Period].ActiveModule->PushSample(active);
-  pPeriods[Period].ReactiveModule->PushSample(reactive);
+  pPeriods[Period].PowerModule->PushSample(active, reactive);
+  pPeriods[Period].EnergyModule->PushSample(reactive, reactive);
   if(time == pEndDate) return false;
   for(vector<uint64_t>::iterator it = pBillingCycles.begin(); it != pBillingCycles.end(); it++) {
     if(time == *it) return false;
@@ -276,10 +276,8 @@ bool Tariff::PopSample(Sample_t &sample, float &cost) {
   if(pSamples.size() == 0) return false;
   Sample_t Sample = pSamples.front();
   pSamples.pop();
-  //float EnergyCost = Energia del periodo * coste energia
-  //float PowerCost = Potencia del periodo * poste potencia
-  EnergyCost += PluginActive.popSample();
-  PowerCost  += PluginPower.popSample();
+  float EnergyCost = sample.Active / 4.0 * pPeriods[sample.Period] + pPeriods[sample.Period].EnergyModule->PopSample();
+  float PowerCost  = pPeriods[sample.Period].ContractedPower * pPeriods[sample.Period].PowerCost +  pPeriods[sample.Period].EnergyModule->PopSample();
 
   
   //Coste del periodo es Sample.Active / 4 * energy cost;

@@ -23,25 +23,26 @@ TariffPowerPlugin *TariffPowerPlugin::Instance(string name, float contracted, fl
 TariffPowerPlugin::~TariffPowerPlugin() {
 }
 //----------------------------------------------------------------------------------------------------------------------
-vector<TariffReactivePlugin::Type_t> TariffReactivePlugin::pPlugins;
-bool TariffReactivePlugin::Register(string name, Func_t instance) {
+vector<TariffEnergyPlugin::Type_t> TariffEnergyPlugin::pPlugins;
+bool TariffEnergyPlugin::Register(string name, Func_t instance) {
   Type_t Type;
   Type.Name = name;
   Type.Instance = instance;
   pPlugins.push_back(Type);
   return true;
 }
-bool TariffReactivePlugin::Contains(string name) {
+bool TariffEnergyPlugin::Contains(string name) {
   for(vector<Type_t>::iterator it = pPlugins.begin() ; it != pPlugins.end(); ++it) {
     if((*it).Name == name) return true;
   }
   return false;
 }
-TariffReactivePlugin *TariffReactivePlugin::Instance(string name) {
+TariffEnergyPlugin *TariffEnergyPlugin::Instance(string name) {
   for(vector<Type_t>::iterator it = pPlugins.begin() ; it != pPlugins.end(); ++it) {
     if((*it).Name == name) return (*it).Instance();
   }
   return NULL;
 }
-TariffReactivePlugin::~TariffReactivePlugin() {
+TariffEnergyPlugin::~TariffEnergyPlugin() {
 }
+//----------------------------------------------------------------------------------------------------------------------

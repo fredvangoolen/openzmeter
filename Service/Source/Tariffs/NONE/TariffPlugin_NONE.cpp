@@ -21,7 +21,7 @@ float TariffActive_NONE::PopSample() {
 }
 //----------------------------------------------------------------------------------------------------------------------
 bool TariffReactive_NONE::pRegistered = TariffReactive_NONE::Register("NONE", TariffReactive_NONE::Instance);
-TariffReactivePlugin *TariffReactive_NONE::Instance() {
+TariffEnergyPlugin *TariffReactive_NONE::Instance() {
   return new TariffReactive_NONE;
 }
 TariffReactive_NONE::~TariffReactive_NONE() {

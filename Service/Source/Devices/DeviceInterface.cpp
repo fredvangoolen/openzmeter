@@ -278,9 +278,9 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   Result["From"]               = From;
   Result["Aggregation_Source"] = Aggreg;
   Result["Sampletime"]         = json::array();
-  Result["Active_Energy"]      = json::array();
-  Result["Reactive_Energy"]    = json::array();
-  Result["Period_Name"]        = json::array();
+  Result["Active_Power"]       = json::array();
+  Result["Reactive_Power"]     = json::array();
+  Result["Period_Number"]      = json::array();
   Result["Period_Color"]       = json::array();
   Result["Contracted_Power"]   = json::array();
   Result["Expense"]            = json::array();
@@ -298,42 +298,41 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   string Query = "SET search_path TO " + req.Bind(Analyzer) + "; ";
   Query += "SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime > " + req.Bind(BillingFrom) + " AND sampletime <= " + req.Bind(BillingTo);
   req.ExecSentence(Query);
-
+  //Traverse all samples
   uint32_t Row = 0;
   float AccActive = NAN;
   float AccReactive = NAN;
   for(uint64_t time = BillingFrom + 899999; time < BillingTo; time = time + 900000) {
-    float Active = NAN;
-    float Reactive = NAN;
+    Tariff::Sample_t Sample;
+    Sample.Active = NAN;
+    Sample.Reactive = NAN;
+    Sample.Color = "";
+    Sample.Time = time;
+    Sample.Period = UINT8_MAX;
+    Sample.Cost = 0.0;
     if((Row < req.ResultRows()) && (req.ResultUInt64(Row, "sampletime") == time)) {
-      Active = req.ResultFloat(Row, "active_power");
-      Reactive = req.ResultFloat(Row, "reactive_power");
+      Sample.Active = req.ResultFloat(Row, "active_power");
+      Sample.Reactive = req.ResultFloat(Row, "reactive_power");
       Row++;
     }
     Tariff *Tariff = Tariffs.Find(time);
-    if((Tariff != NULL) && (Tariff->PushSample(time, Active, Reactive) == true)) continue;  //If under a tariff push samples until bill cycle ends
+    if((Tariff != NULL) && (Tariff->PushSample(Sample) == true)) continue;  //If under a tariff push samples until bill cycle ends
     //Recover/group values
     do {
-      uint64_t Time = time;
-      if(Tariff != NULL) {
-        Tariff::Sample_t Sample;
-        if(Tariff->PopSample(Sample) == false) {
+      if((Tariff != NULL) && (Tariff->PopSample(&Sample) == false)) {
         //Result["Bill"].push_back(EL RESUMEN DEL CICLO);
         //Ademas añado estadisticas de perido o lo que sea que devuelve el modulo de tarifas!
         //He alcanzado un ciclo de facturacion, recupero todos los samples y los paso a la salida
-          break;
-        }
-        Time = Sample.Time;
-        Active = Sample.Active;
-        Reactive = Sample.Reactive;
+        break;
       }
-      AccActive  = isnan(AccActive) ? Active / 4.0 : isnan(Active) ? AccActive : AccActive + Active / 4.0;
-      AccReactive = isnan(AccReactive) ? Reactive / 4.0 : isnan(Reactive) ? AccReactive : AccReactive + Reactive / 4.0;
-      if((Aggreg == "1H") && ((Time % 3600000) != 3599999)) continue;
-      if((Time > LastSample) && (Time >= From) && (Time <= To)) {
-        Result["Sampletime"].push_back(Time);
-        Result["Active_Energy"].push_back(AccActive);
-        Result["Reactive_Energy"].push_back(AccReactive);
+      AccActive  = isnan(AccActive) ? Sample.Active / 4.0 : isnan(Sample.Active) ? AccActive : AccActive + Sample.Active / 4.0;
+      AccReactive = isnan(AccReactive) ? Sample.Reactive / 4.0 : isnan(Sample.Reactive) ? AccReactive : AccReactive + Sample.Reactive / 4.0;
+      if((Aggreg == "1H") && ((Sample.Time % 3600000) != 3599999)) continue;
+      if((Sample.Time > LastSample) && (Sample.Time >= From) && (Sample.Time <= To)) {
+        Result["Sampletime"].push_back(Sample.Time);
+        Result["Active_Power"].push_back(AccActive);
+        Result["Reactive_Power"].push_back(AccReactive);
+        Result["Color"].push_back(Sample.Color);        
         Result["Expense"].push_back(nullptr);
       }
       AccActive = NAN;

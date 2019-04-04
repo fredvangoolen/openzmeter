@@ -29,9 +29,9 @@ class TariffPowerPlugin {
     virtual float PopSample() = 0;
 };
 //----------------------------------------------------------------------------------------------------------------------
-class TariffReactivePlugin {
+class TariffEnergyPlugin {
   private :
-    typedef TariffReactivePlugin* (*Func_t)();
+    typedef TariffEnergyPlugin* (*Func_t)();
     typedef struct {
       string Name;
       Func_t Instance;
@@ -42,11 +42,11 @@ class TariffReactivePlugin {
     static bool Register(string name, Func_t instance);
   public :
     static bool Contains(string name);
-    static TariffReactivePlugin *Instance(string name);
+    static TariffEnergyPlugin *Instance(string name, float cost);
   public :
-    virtual ~TariffReactivePlugin();
+    virtual ~TariffEnergyPlugin();
     virtual void  Reset() = 0;
-    virtual void  PushSample(float) = 0;
+    virtual void  PushSample(float active, float reactive) = 0;
     virtual float PopSample() = 0;
 };
 //----------------------------------------------------------------------------------------------------------------------

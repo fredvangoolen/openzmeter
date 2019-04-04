@@ -17,6 +17,8 @@ class Tariff {
       uint64_t Time;
       float    Active;
       float    Reactive;
+      uint8_t  Period;
+      string   Color;
     } Sample_t;
   private :
     typedef struct {
@@ -28,8 +30,8 @@ class Tariff {
       string                Color;
       float                 Active;
       float                 Reactive;
-      TariffPowerPlugin   *ActiveModule;
-      TariffReactivePlugin *ReactiveModule;
+      TariffPowerPlugin   *PowerModule;
+      TariffEnergyPlugin *EnergyModule;
     } Period_t;
     typedef struct {
       string   Name;

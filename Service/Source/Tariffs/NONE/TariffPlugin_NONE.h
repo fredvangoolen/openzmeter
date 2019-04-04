@@ -19,11 +19,11 @@ class TariffActive_NONE : public TariffPowerPlugin {
     float PopSample();
 };
 //----------------------------------------------------------------------------------------------------------------------
-class TariffReactive_NONE : public TariffReactivePlugin {
+class TariffReactive_NONE : public TariffEnergyPlugin {
   private :
     static bool pRegistered;
   private :
-    static TariffReactivePlugin *Instance();
+    static TariffEnergyPlugin *Instance();
   public :
     ~TariffReactive_NONE();
     void  Reset();
