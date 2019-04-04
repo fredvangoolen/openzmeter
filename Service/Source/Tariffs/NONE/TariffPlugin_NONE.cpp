@@ -3,35 +3,37 @@
  * Author:   Eduardo Viciana (septiembre 2018)
  * -------------------------------------------------------------------------------------------------------------------*/
 #include "TariffPlugin_NONE.h"
-bool TariffActive_NONE::pRegistered = TariffActive_NONE::Register("NONE", TariffActive_NONE::Instance);
-TariffPowerPlugin *TariffActive_NONE::Instance(float contracted, float cost) {
-  TariffActive_NONE *Instance = new TariffActive_NONE;
+bool TariffPower_NONE::pRegistered = TariffPower_NONE::Register("NONE", TariffPower_NONE::Instance);
+TariffPowerPlugin *TariffPower_NONE::Instance(float contracted, float cost) {
+  TariffPower_NONE *Instance = new TariffPower_NONE;
   Instance->pContracted = contracted;
   Instance->pCost = cost;
-  return new TariffActive_NONE;
+  return Instance;
 }
-TariffActive_NONE::~TariffActive_NONE() {
+TariffPower_NONE::~TariffPower_NONE() {
 }
-void TariffActive_NONE::Reset() {
+void TariffPower_NONE::Reset() {
 }
-void TariffActive_NONE::PushSample(float val) {
+void TariffPower_NONE::PushSample(const float active, const float reactive) {
 }
-float TariffActive_NONE::PopSample() {
+float TariffPower_NONE::PopSample(const float active, const float reactive) { 
   return (pContracted * pCost) / 96.0;
 }
 //----------------------------------------------------------------------------------------------------------------------
-bool TariffReactive_NONE::pRegistered = TariffReactive_NONE::Register("NONE", TariffReactive_NONE::Instance);
-TariffEnergyPlugin *TariffReactive_NONE::Instance() {
-  return new TariffReactive_NONE;
+bool TariffEnergy_NONE::pRegistered = TariffEnergy_NONE::Register("NONE", TariffEnergy_NONE::Instance);
+TariffEnergyPlugin *TariffEnergy_NONE::Instance(const float cost) {
+  TariffEnergy_NONE *Instance = new TariffEnergy_NONE;
+  Instance->pCost = cost;
+  return Instance;
 }
-TariffReactive_NONE::~TariffReactive_NONE() {
+TariffEnergy_NONE::~TariffEnergy_NONE() {
 }
-void TariffReactive_NONE::Reset() {
+void TariffEnergy_NONE::Reset() {
 }
-void TariffReactive_NONE::PushSample(float val) {
+void TariffEnergy_NONE::PushSample(const float active, const float reactive) {
 }
-float TariffReactive_NONE::PopSample() {
-  return 0.0;
+float TariffEnergy_NONE::PopSample(const float active, const float reactive) {
+  return (active / 4.0) * pCost;
 }
 //----------------------------------------------------------------------------------------------------------------------
 
