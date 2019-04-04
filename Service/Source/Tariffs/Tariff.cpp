@@ -4,16 +4,21 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #include <string.h>
 #include <errno.h>
-#include <unistd.h>
+//#include <cctz/civil_time.h>
 #include "Tariff.h"
 #include "TariffPlugin.h"
 //----------------------------------------------------------------------------------------------------------------------
+TariffList::TariffList(const json list, const string timezone) {
+  cctz::load_time_zone(timezone, &pTimeZone);
+  if(list.is_array() == false) return;
+  for(uint32_t n = 0; n < list.size(); n++) PushTariff(list[n]);
+}
 bool TariffList::PushTariff(json tariff) {
   if(!tariff["StartDate"].is_number()) return false;
   if(!tariff["EndDate"].is_number()) return false;
   if(!tariff["Template"].is_object()) return false;
   if(!tariff["Config"].is_object()) return false;
-  Tariff *Tmp = new Tariff(tariff["StartDate"], tariff["EndDate"]);
+  Tariff *Tmp = new Tariff(tariff["StartDate"], tariff["EndDate"], pTimeZone.name());
   if((Tmp->SetTemplate(tariff["Template"]) == false) || (Tmp->SetConfig(tariff["Config"]) == false)) {
     delete Tmp;
     return false;
@@ -55,7 +60,8 @@ TariffList::~TariffList() {
   for(vector<Tariff*>::iterator it = pList.begin(); it < pList.end(); it++) delete *it;
 }
 //----------------------------------------------------------------------------------------------------------------------
-Tariff::Tariff(uint64_t start, uint64_t end) {
+Tariff::Tariff(uint64_t start, uint64_t end, string tz) {
+  cctz::load_time_zone(tz, &pTimeZone);
   pStartDate = start;
   pEndDate = end;
 }
@@ -67,10 +73,17 @@ Tariff::~Tariff() {
 }
 uint8_t Tariff::FindPeriod(uint64_t timestamp) {
   uint8_t Period = UINT8_MAX;
+  if(pHolidayPeriod != UINT8_MAX) {
+    for(vector<Holiday_t>::iterator it = pHolidays.begin(); it != pHolidays.end(); it++) {
+      if((timestamp >= it->StartDate) && (timestamp <= it->EndDate)) return pHolidayPeriod;
+    }
+  }
   for(uint8_t m = 0; m < pSeasons.size(); m++) {
     if((pSeasons[m].StartDate >= timestamp) || (pSeasons[m].EndDate < timestamp)) continue;
-    uint8_t Hour = (timestamp / 3600000) % 24;
-    return pSeasons[m].DayPeriods[Hour];
+    cctz::civil_second Time = cctz::convert(chrono::system_clock::from_time_t(timestamp / 1000), pTimeZone);
+    Tools::LogMsg("ERROR", "Fecha: %02d/%02d/%04d %02d:%02d:%02d - WeekDay %d\n", Time.day(), Time.month(), Time.year(), Time.hour(), Time.minute(), Time.second(), get_weekday(civil_day(Time)));
+    if((pWeekendPeriod != UINT8_MAX) && ((get_weekday(civil_day(Time)) == weekday::saturday) || (get_weekday(civil_day(Time)) == weekday::sunday))) return pWeekendPeriod;
+    return pSeasons[m].DayPeriods[Time.hour()];
   }
   return Period;
 }
@@ -262,7 +275,7 @@ bool Tariff::PushSample(const uint64_t time, const float active, const float rea
   Sample.Time     = time;
   Sample.Active   = active;
   Sample.Reactive = reactive;
-  Sample.Period   = 0;
+  Sample.Period   = FindPeriod(time);
   pSamples.push(Sample);
   pPeriods[Sample.Period].PowerModule->PushSample(Sample.Active, Sample.Reactive);
   pPeriods[Sample.Period].EnergyModule->PushSample(Sample.Active, Sample.Reactive);
@@ -279,7 +292,7 @@ bool Tariff::PopSample(uint64_t &time, float &active, float &reactive, string &p
   time             = Sample.Time;
   active           = Sample.Active;
   reactive         = Sample.Reactive;
-  period           = "P" + to_string(Sample.Period);
+  period           = "P" + to_string(Sample.Period + 1);
   color            = pPeriods[Sample.Period].Color;
   contractedPower  = pPeriods[Sample.Period].ContractedPower * 1000.0;
   float EnergyCost = pPeriods[Sample.Period].EnergyModule->PopSample(Sample.Active, Sample.Reactive);

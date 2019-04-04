@@ -111,11 +111,14 @@
       },
       UpdateGraph() {
         if((this.$root.SelectedAnalyzer === null) || (this.Aggreg === null) || (this.Period === null) || (this.AutoUpdate === null)) return;
+        if(this.LastSample === 0) {
+          this.Data = [];
+          this.Periods = [];
+          this.ShowSpinner = true;
+        }
         $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: this.Aggreg, Series: ['ACTIVE_POWER'], To: this.$refs.tools.ReadTo(), LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: this.Period }), 
           success: function(result) {
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
-            if(this.LastSample === 0) this.Data = [];
-            if(this.LastSample === 0) this.Periods = [];
             if(this.Aggreg === '15M') {
               for(var n = 0; n < result['Active_Power'].length; n++) result['Active_Power'][n] = result['Active_Power'][n] / 4.0;
             }
@@ -168,7 +171,7 @@
           canvas.fillStyle = this.Periods[i].Color;
           canvas.fillRect(Left, area.y, Right, 13);
           if(((Right - Left) > 20) && (this.Periods[i].Name !== null)) {
-            canvas.fillStyle = this.Periods[i].Color;
+            canvas.fillStyle = '#000000';
             canvas.font = "10px monospace";
             canvas.fillText(this.Periods[i].Name, Left + 1, 10);
           }
@@ -185,8 +188,8 @@
 //              canvas.lineTo(Right, Y);
 //              canvas.stroke();
         }
-        area.y = 13;
-        area.h = area.h - 13;
+//        area.y = 13;
+//        area.h = area.h - 13;
       },
       MouseUpEvt: function(event, g, contex) {
         oZm.mouseUp(event, g, contex);

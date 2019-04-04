@@ -30,7 +30,7 @@
         var Years = [];
         $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Aggreg: this.aggreg, Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
-            for(var year = new Date(result['From']).getFullYear(); year <= new Date(result['To']).getFullYear(); year++) Years.push(year);
+            for(var year = moment(result['From']).year(); year <= moment(result['To']).year(); year++) Years.push(year);
             this.Years = Years;
             if(Years.length > 0) {
               this.SelectedText = Years[0];

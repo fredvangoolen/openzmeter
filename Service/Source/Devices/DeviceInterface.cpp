@@ -212,12 +212,15 @@ void DeviceInterface::GetTariffsCallback(HTTPRequest &req) {
 }
 void DeviceInterface::SetTariffsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
-  if(!Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string()) return req.FromString("'StartDate', 'EndDate' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
-  uint64_t Start = Params["StartDate"];
-  uint64_t End   = Params["EndDate"];
-  string   Name  = Params["Name"];
+  if(!Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["CountryCode"].is_string()) return req.FromString("'StartDate', 'EndDate', 'CountryCode' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  uint64_t Start    = Params["StartDate"];
+  uint64_t End      = Params["EndDate"];
+  string   Name     = Params["Name"];
+  string   TimeZone = Params["CountryCode"];
+  req.ExecSentence("SELECT timezone FROM country WHERE country_code = " + req.Bind(TimeZone));
+  if(req.ResultRows() != 1) return req.FromString("Invalid 'CountryCode'", MHD_HTTP_BAD_REQUEST);
   if(!Params["Template"].is_object()) return req.FromString("'Template' param required", MHD_HTTP_BAD_REQUEST);
-  Tariff T(Start, End);
+  Tariff T(Start, End, req.ResultString(0, "timezone"));
   if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
   if(!Params["Analyzer"].is_string()) {
     //System tariff
@@ -271,6 +274,7 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   if(To == 0) To = Tools::GetTime();
   uint64_t From = To - Period;
   uint32_t PeriodSeconds = 900000;
+  string TimeZone = "Etc/UTC";
   if(Aggreg == "1H") PeriodSeconds = 3600000;
   if((Period / PeriodSeconds) > 100000) return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
   json Result;
@@ -280,17 +284,21 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   Result["Sampletime"]         = json::array();
   Result["Active_Power"]       = json::array();
   Result["Reactive_Power"]     = json::array();
-  Result["Period_Name"]      = json::array();
+  Result["Period_Name"]        = json::array();
   Result["Period_Color"]       = json::array();
   Result["Contracted_Power"]   = json::array();
   Result["Expense"]            = json::array();
   Result["Bills"]              = json::array();
-  //Load involved tariffs
-  req.ExecSentence("SELECT json_build_object('Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) AS tariff FROM analyzers_rates WHERE serial = " + req.Bind(Analyzer) + " AND enddate >= " + req.Bind(From) + " AND startdate <= " + req.Bind(To) + " ORDER BY startdate ASC");
-  TariffList Tariffs;
-  for(uint32_t n = 0; n < req.ResultRows(); n++) {
-    if(Tariffs.PushTariff(req.ResultJSON(n, "tariff")) == false) return req.FromString("", MHD_HTTP_BAD_REQUEST);
+  //Load involved tariffs, currency and timezone
+  req.ExecSentence("SELECT currency, timezone, to_json(array_agg(json_build_object('Name', analyzers_rates.name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) ORDER BY startdate ASC)) as tariff " 
+                   "FROM analyzers, analyzers_rates, country WHERE country.country_code = analyzers.country_code AND analyzers_rates.serial = analyzers.serial AND analyzers.serial = " + req.Bind(Analyzer) + " AND enddate >= " + req.Bind(From) + " AND startdate <= " + req.Bind(To) + 
+                   " AND analyzers.serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " UNION SELECT serial FROM permisions WHERE username = " + req.Bind(req.UserName()) + ") GROUP BY currency, timezone");
+  if(req.ResultRows() == 1) {
+    Result["Currency"] = req.ResultString(0, "currency");
+    TimeZone = req.ResultString(0, "timezone");
   }
+  TariffList Tariffs((req.ResultRows() == 1) ? req.ResultJSON(0, "tariff") : json::array(), TimeZone);
+
   //Find start and end date to retrieve data
   uint64_t BillingFrom = Tariffs.BillFrom(From);
   uint64_t BillingTo = Tariffs.BillTo(To);
@@ -303,14 +311,7 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
   float AccActive = NAN;
   float AccReactive = NAN;
   for(uint64_t time = BillingFrom + 899999; time != BillingTo; time = time + 900000) {
-//    Tariff::Sample_t Sample;
-//    Sample.Active = NAN;
-//    Sample.Reactive = NAN;
-//    Sample.Color = "";
-//    Sample.Time = time;
-//    Sample.Period = UINT8_MAX;
-//    Sample.Cost = NAN;
-    float Active, Reactive;
+    float Active = NAN, Reactive = NAN;
     if((Row < req.ResultRows()) && (req.ResultUInt64(Row, "sampletime") == time)) {
       Active = req.ResultFloat(Row, "active_power");
       Reactive = req.ResultFloat(Row, "reactive_power");
@@ -343,68 +344,18 @@ void DeviceInterface::GetPricesCallback(HTTPRequest &req) {
         Result["Reactive_Power"].push_back(AccReactive);
         Result["Contracted_Power"].push_back(Contracted);
         if(Color.empty() == true)
-          Result["Color"].push_back(nullptr);
+          Result["Period_Color"].push_back(nullptr);
         else 
-          Result["Color"].push_back(Color);
+          Result["Period_Color"].push_back(Color);
         if(Period.empty() == true)
           Result["Period_Name"].push_back(nullptr);
         else 
-          Result["Period"].push_back(Period);
+          Result["Period_Name"].push_back(Period);
         Result["Expense"].push_back(Cost);
       }
       AccActive = NAN;
       AccReactive = NAN;
     } while(Tariff != NULL);
-
-    
-//  //Iterate over billing time
-//  uint32_t Row = 0;
-//  float Active = NAN;
-//  float Reactive = NAN;  
-//  while(BillingFrom < BillingTo) {
-//    Tariff *Tariff = Tariffs.Find(BillingFrom);
-//    if(Tariff != NULL) {
-//      if(Tariff.IsBillDate(BillingFrom) == true) {
-////        Bills.push_back(BillingFrom);
-//        //Reinicio contadores y llamo a modulesReset
-//        //LLamo a modulesProcessBillDate
-////      }
-//    }
-//    if((Row < req.ResultRows()) && (strtoull(req.ResultValue(Row, "sampletime"), NULL, 10) == (BillingFrom + 899999))) {
-//      float Tmp = atof(req.ResultValue(Row, "active_power"));
-//      Active = isnan(Active) ? Tmp / 4.0 : isnan(Tmp) ? Active : Active + Tmp / 4.0;
-//      Tmp = atof(req.ResultValue(Row, "reactive_power"));
-//      Reactive = isnan(Reactive) ? Tmp / 4.0 : isnan(Tmp) ? Reactive : Reactive + Tmp / 4.0;
-//      Row++;
-//    }
-//    if(Tariff != NULL) {
-//
-//    
-//    }
-//    if(((Aggreg == "15M") || ((BillingFrom % 3600000) == 3599999)) && (BillingFrom > LastSample)) {
-//      Result["Sampletime"].push_back(BillingFrom);
-//      Result["Active_Energy"].push_back(Active);
-//      Result["Reactive_Energy"].push_back(Reactive);
-//      Active = NAN;
-//      Reactive = NAN;
-//      if(Tariff != UINT32_MAX) {
-//        uint8_t Period = FindPeriod(Tariffs[Tariff], BillingFrom);
-//        if(Period != UINT8_MAX) {
-//          Periods.push_back("P" + to_string(Period));
-//          Colors.push_back("#EEE");
-//          Powers.push_back(Tariffs[Tariff]["Details"]["Periods"][Period - 1]["Contracted_Power"]);
-//          Expenses.push_back(0.0);
-//        } else {
-//          Periods.push_back(NAN);
-//          Colors.push_back("#ddd");
-//          Powers.push_back(NAN);
-//          Expenses.push_back(0.0);
-//        }
-//      }
-//    }
-//    BillingFrom += 900000;
-//    Active = NAN;
-//    Reactive = NAN;
   }
   req.FromJSON(Result);
   return;  

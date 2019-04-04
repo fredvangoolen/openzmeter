@@ -100,10 +100,10 @@
         },
         axes: {
           y: { drawAxis: false, drawGrid: false, valueFormatter: function(val) { var Result = this.SerieProps.FormatValue(val); return Result.Value + Result.Units; }.bind(this) },
-          x: { valueFormatter: function (x) { return '<div class="x-axis">' + new Date(x).toLocaleTimeString() + '</div>'; },
+          x: { valueFormatter: function (x) { return '<div class="x-axis">' + moment(x).format('DD/MM/YYYY') + '</div>'; },
                axisLabelFormatter: (this.index !== 0) ? function() { return null; } : function(x, i) {
-                 var date = new Date(x);
-                 if((date.getHours() === 0) && (date.getMinutes() === 0) && (date.getSeconds() === 0)) {
+                 var date = moment(x);
+                 if((date.hours() === 0) && (date.minutes() === 0) && (date.seconds() === 0)) {
                    return '<div class="timeline-day">' + moment(x).format('DD/MM') + '</div>';
                  } else {
                    return '<div class="timeline">' + moment(x).format('hh:mm') + '</div>';                       

@@ -4,10 +4,13 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <queue>
+#include <cctz/time_zone.h>
 #include "Database.h"
 #include "HTTPServer.h"
 #include "Tools.h"
 #include "AnalyzerInterface.h"
+//----------------------------------------------------------------------------------------------------------------------
+using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
 class TariffPowerPlugin;
 class TariffEnergyPlugin;
@@ -55,6 +58,7 @@ class Tariff {
       float  Value;
     } Bill_t;
   private :
+    time_zone         pTimeZone;
     string            pDescription;
     uint8_t           pHolidayPeriod;
     uint8_t           pWeekendPeriod;
@@ -68,24 +72,27 @@ class Tariff {
     vector<uint64_t>  pBillingCycles;
     vector<Bill_t>    pBillConcepts;
   private :
-    float   CalcTaxs();
+//    float   CalcTaxs();
     uint8_t FindPeriod(uint64_t time);
   public :
-    Tariff(uint64_t start, uint64_t end);
+    Tariff(uint64_t start, uint64_t end, string tz);
     ~Tariff();
     bool SetTemplate(json t);
     bool SetConfig(json t);
     json GetTemplate();
     json GetConfig();
-    bool     PushSample(const uint64_t time, const float active, const float reactive);
-    bool     PopSample(uint64_t &time, float &active, float &reactive, string &period, string &color, float &cost, float &contractedPower);
+    bool PushSample(const uint64_t time, const float active, const float reactive);
+    bool PopSample(uint64_t &time, float &active, float &reactive, string &period, string &color, float &cost, float &contractedPower);
 };
 class TariffList {
   private :
     vector<Tariff*> pList;
+    time_zone       pTimeZone;
+  private :
+    bool PushTariff(const json tariff);
   public :
+    TariffList(const json list, const string timezone);
     ~TariffList();
-    bool      PushTariff(const json tariff);
     Tariff   *Find(const uint64_t time);
     uint64_t  BillFrom(const uint64_t);
     uint64_t  BillEnd(const uint64_t);
