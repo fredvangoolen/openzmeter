@@ -81,7 +81,6 @@ uint8_t Tariff::FindPeriod(uint64_t timestamp) {
   for(uint8_t m = 0; m < pSeasons.size(); m++) {
     if((pSeasons[m].StartDate >= timestamp) || (pSeasons[m].EndDate < timestamp)) continue;
     cctz::civil_second Time = cctz::convert(chrono::system_clock::from_time_t(timestamp / 1000), pTimeZone);
-    Tools::LogMsg("ERROR", "Fecha: %02d/%02d/%04d %02d:%02d:%02d - WeekDay %d\n", Time.day(), Time.month(), Time.year(), Time.hour(), Time.minute(), Time.second(), get_weekday(civil_day(Time)));
     if((pWeekendPeriod != UINT8_MAX) && ((get_weekday(civil_day(Time)) == weekday::saturday) || (get_weekday(civil_day(Time)) == weekday::sunday))) return pWeekendPeriod;
     return pSeasons[m].DayPeriods[Time.hour()];
   }

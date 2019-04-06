@@ -3,22 +3,21 @@
     <div class="row">
       <div class="col-lg-12">
         <div class="panel panel-active-energy stats-headmap">
-          <!--div id="StatsSpinner" class="spinnerdiv"></div-->
           <div class="panel-heading">
-              <span class="huge header-text">Energy Heatmap</span>
-              <div class="header-buttons clearfix">
-                <color-bar :width="140" :height="10" ref="colorbar"></color-bar>
-                <toolbar-aggregation variable="HeatmapPeriod" :options="['15M', '1H']"></toolbar-aggregation>
-                <toolbar-years @YearChanged="YearChanged" aggreg="15M"></toolbar-years>
-              </div>
+            <span class="header-text">Energy Heatmap</span>
+            <div class="header-buttons clearfix">
+              <color-bar :width="140" :height="10" ref="colorbar"></color-bar>
+              <toolbar-aggregation variable="HeatmapPeriod" :options="['15M', '1H']" v-on:AggregationChanged="AggregationChanged"></toolbar-aggregation>
+              <toolbar-years @YearChanged="YearChanged" aggreg="15M"></toolbar-years>
             </div>
-            <div class="panel-body" style="min-height: 300px">
-              <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-              <heatmap-table ref="table" v-on:RangeChanged="RangeChanged"></heatmap-table>
-            </div>
+          </div>
+          <div class="panel-body" style="min-height: 300px">
+            <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
+            <heatmap-table ref="table" v-on:RangeChanged="RangeChanged"></heatmap-table>
           </div>
         </div>
       </div>
+    </div>
   </div>
 </template>
 
@@ -32,7 +31,7 @@
   import moment from 'JS/moment.js';
   export default {
     data() {
-      return { ShowSpinner: true, Year: 2019 };
+      return { ShowSpinner: true };
     },
     methods: {
       AggregationChanged(aggreg) {

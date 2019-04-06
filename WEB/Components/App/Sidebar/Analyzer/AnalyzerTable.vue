@@ -84,9 +84,9 @@
       ACL: function(id) {
         alert("ACL not yet implemented"); 
       },
-      Tariffs: function(id) { 
+      Tariffs: function(analizer) { 
         this.Show = false;
-        this.$parent.$refs.Tariffs.Load(id.ID); 
+        this.$parent.$refs.Tariffs.Load(analizer); 
       },
       Alerts: function(id) {
         alert("Alerts not yet implemented");
