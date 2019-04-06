@@ -134,7 +134,7 @@
     <script>
       function addClass(el, className) {
         if(el.classList)
-          el.classList.add(className)
+          el.classList.add(className);
         else if (!hasClass(el, className))
           el.className += " " + className;
       }
@@ -177,6 +177,9 @@
         Request.send(JSON.stringify({ Username: document.getElementById('username').value, Password: document.getElementById('password').value }));
       }
       document.getElementById('button').onclick = SendLogin;
+      window.addEventListener("keyup", function(event) {
+        if(event.keyCode === 13) SendLogin();
+      });
     </script>
   </body>
 </html>

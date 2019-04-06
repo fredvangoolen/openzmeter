@@ -59,10 +59,10 @@
         this.ShowSpinner = false;
       },
       Save: function() {
-        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Serial }, this.Tariff) ), 
+        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.ID, CountryCode: this.Analyzer.CountryCode }, this.Tariff) ), 
           success: function() {
             this.Show = false;
-            this.$parent.$refs.Tariffs.Load(this.Serial);
+            this.$parent.$refs.Tariffs.Load(this.Analyzer);
           }.bind(this),
           error: function() {
             this.Error = 'Failed to save tariff to analyzer!';
@@ -70,8 +70,8 @@
           }.bind(this)
         });
       },
-      Load: function(serial, id) {
-        this.Serial = serial;
+      Load: function(analyzer, id) {
+        this.Analyzer = analyzer;
         this.Show = true;
         this.ShowSpinner = true;
         this.Tariffs = [];
@@ -80,7 +80,7 @@
             success: function(result) {
               for(var i = 0; i < result.length; i++) this.Tariffs.push({ id: result[i].RateID, name: result[i].Name, description: 'From ' + moment(result[i].StartDate).format('DD/MM/YYYY') + ' to ' + moment(result[i].EndDate).format('DD/MM/YYYY')}); 
               if(id !== null) {
-                $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Serial, RateID: id }), 
+                $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.ID, RateID: id }), 
                   success: function(result) {
                     this.Initial = result;
                     this.Tariff = Object.assign({}, result);
@@ -126,7 +126,7 @@
       },
       Back: function() {
         this.Show = false;
-        this.$parent.$refs.Tariffs.Load(this.Serial);
+        this.$parent.$refs.Tariffs.Load(this.Analyzer);
       },
       FillPeriods: function() {
         this.Tariff.Config.Periods.length = this.Tariff.Template.Periods.length;
@@ -166,7 +166,7 @@
       }
     },
     created: function() {
-      this.Serial = null;
+      this.Analyzer = null;
       this.Tariffs = [];
       this.Initial = null;
     },

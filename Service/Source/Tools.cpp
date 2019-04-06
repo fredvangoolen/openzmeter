@@ -23,12 +23,12 @@
 #include "NTP.h"
 
 //añadido para probar el envio
-  #include <arpa/inet.h>
-      #include <netinet/in.h>
-      #include <stdio.h>
-      #include <sys/types.h>
-      #include <sys/socket.h>
-      #include <unistd.h>
+//  #include <arpa/inet.h>
+//      #include <netinet/in.h>
+//      #include <stdio.h>
+//      #include <sys/types.h>
+//      #include <sys/socket.h>
+//      #include <unistd.h>
 
 //----------------------------------------------------------------------------------------------------------------------
 bool            Tools::Debug        = false;
@@ -352,24 +352,24 @@ char *Tools::trim(char *str) {
   str[0] = 0;
   return Start;
 }
-void Tools::SendUDP(json obj) {
-  struct sockaddr_in Client;
-  int Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-  if(Socket == -1) {
-    Tools::LogMsg("ERROR", "cant open socket\n");
-    return;
-  }
-  memset((char *)&Client, 0, sizeof(Client));
-  Client.sin_family = AF_INET;
-  Client.sin_port = htons(8888);
-  if(inet_aton("127.0.0.1", &Client.sin_addr) == 0) {
-    Tools::LogMsg("ERROR", "inet_aton() failed\n");
-    close(Socket);
-    return;
-  }
-  string Data = obj.dump();
-  if(sendto(Socket, Data.c_str(), Data.size(), 0, (sockaddr*)&Client, sizeof(Client)) == -1) {
-    Tools::LogMsg("ERROR", "sendto()\n");
-  }
-  close(Socket);
-}
+//void Tools::SendUDP(json obj) {
+//  struct sockaddr_in Client;
+//  int Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+//  if(Socket == -1) {
+//    Tools::LogMsg("ERROR", "cant open socket\n");
+//    return;
+//  }
+//  memset((char *)&Client, 0, sizeof(Client));
+//  Client.sin_family = AF_INET;
+//  Client.sin_port = htons(8888);
+//  if(inet_aton("127.0.0.1", &Client.sin_addr) == 0) {
+//    Tools::LogMsg("ERROR", "inet_aton() failed\n");
+//    close(Socket);
+//    return;
+//  }
+//  string Data = obj.dump();
+//  if(sendto(Socket, Data.c_str(), Data.size(), 0, (sockaddr*)&Client, sizeof(Client)) == -1) {
+//    Tools::LogMsg("ERROR", "sendto()\n");
+//  }
+//  close(Socket);
+//}

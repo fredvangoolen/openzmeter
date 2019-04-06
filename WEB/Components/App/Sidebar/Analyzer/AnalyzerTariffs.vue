@@ -37,17 +37,17 @@
       };
     },
     created: function() {
-      this.Serial = null;
+      this.Analizer = null;
     },
     methods: {
       DateFormat: function(val) {
         return moment(val).format('DD/MM/YYYY');
       },
-      Load(id) {
+      Load(analizer) {
         this.Show = true;
         this.ShowSpinner = true;
-        this.Serial = id;
-        $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: id }), 
+        this.Analyzer = analizer;
+        $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analizer.ID }),
           success: function(result) {
             var TableData = { data: result };
             this.$refs.table.setData(TableData);
@@ -57,14 +57,14 @@
       },
       Edit: function(row) {
         this.Show = false;
-        this.$parent.$refs.Tariff.Load(this.Serial, row.RateID);
+        this.$parent.$refs.Tariff.Load(this.Analyzer, row.RateID);
       },
       Delete: function(row) {
-        $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: row.RateID, Analyzer: this.Serial }), success: function() { this.Load(this.Serial); }.bind(this) });
+        $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: row.RateID, Analyzer: this.Analizer.ID }), success: function() { this.Load(this.Analyzer); }.bind(this) });
       },
       Add: function() {
         this.Show = false;
-        this.$parent.$refs.Tariff.Load(this.Serial, null);
+        this.$parent.$refs.Tariff.Load(this.Analyzer, null);
       },
       Back: function() {
         this.Show = false;

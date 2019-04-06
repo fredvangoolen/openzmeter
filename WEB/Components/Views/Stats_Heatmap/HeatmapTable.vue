@@ -42,8 +42,11 @@
   import * as oZm from 'JS/openZmeter.js';
   var DaysNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   export default {
-    data() {
-      return { Data: [], Days: {}, Aggregation: '1H' };
+    data: function() {
+      return { Days: {}, Aggregation: '1H' };
+    },
+    created: function() {
+      this.Data = null;
     },
     methods: {
       SetAggregation: function(aggreg) {
@@ -55,12 +58,13 @@
         this.CalcOptions();
       },
       CalcOptions: function() {
+        if(this.Data === null) return;
         var Days = {};
         for(var i = 0; i < this.Data.Sampletime.length; i++) {
           var Day = moment(this.Data.Sampletime[i]).dayOfYear();
           if(Days[Day] === undefined) Days[Day] = {DayOfWeek: DaysNames[moment(this.Data.Sampletime[i]).day()], Date: moment(this.Data.Sampletime[i]).format('DD/MM/YYYY'), Cells: Array((this.Aggregation === '1H') ? 24 : 96).fill({ Value: undefined })};
           var Cell = moment(this.Data.Sampletime[i]).hour();
-          if(this.Aggregation === '15M') Cell = Cell * 4 + (moment(this.Data.Sampletime[i]).quarter() - 1);
+          if(this.Aggregation === '15M') Cell = Cell * 4 + Math.trunc(moment(this.Data.Sampletime[i]).minute() / 15);
           if(Days[Day].Cells[Cell].Value === undefined) Days[Day].Cells[Cell] = { Value: 0 };
           Days[Day].Cells[Cell].Value = Days[Day].Cells[Cell].Value + this.Data.Active_Power[i][0] / 4.0;
         }
@@ -78,7 +82,8 @@
             }
           };
         };
-        this.$emit('RangeChanged', Min, Max, oZm.GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max))));
+        var Units = oZm.GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
+        this.$emit('RangeChanged', oZm.ScaleToUnits(Min, Units), oZm.ScaleToUnits(Max, Units), Units);
         var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]);
         for(var Day in Days) {    
           for(var Cell in Days[Day].Cells) {
