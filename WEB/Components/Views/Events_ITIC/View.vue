@@ -87,11 +87,8 @@
 
 <script>
 export default {
-  name: 'Dashboard',
-  data () {
-    return {
-     
-    }
+  data: function() {
+    return { ShowSpinner: true };
   }
 }
 </script>

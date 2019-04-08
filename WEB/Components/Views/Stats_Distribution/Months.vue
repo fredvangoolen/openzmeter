@@ -2,31 +2,21 @@
   <div class="panel panel-other">
     <div class="panel-heading">By month<div class="pull-right">{{ Units }}Wh</div></div>
     <div class="panel-body">
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
-        <template slot="period" slot-scope="props">
-          <div class="period-color">{{props.rowData}}</div>
-          
-        </template>
-      </vuetable>
+    <spinner v-if="ShowSpinner"></spinner>
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive"></vuetable>
     </div>
   </div>
 </template>
 
 <script>
-  
   import vuetable from 'vuetable-2';
   import moment from 'JS/moment.js';
+  import * as oZm from 'JS/openZmeter.js';
+  import Spinner from 'Components/Spinner.vue';
   var Names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   export default {
     data: function() {
-      return { ShowSpinner: false, Units: '', 
-        Columns: [
-          {name: 'Month', title: 'User Name'},
-          {name: '__slot:period', title: '-'},
-          {name: '__slot:period', title: 'P1'}, 
-          {name: '__slot:period', title: 'P2'}
-        ]
-      };
+      return { ShowSpinner: true, Units: '', Columns: [] };
     },
     methods: {
       SetData: function(result) {
@@ -52,6 +42,7 @@
     
         
         this.$refs.table.setData({ data: Months });
+        this.ShowSpinner = false;
  return;   
     
         for(var i = 0; i < result[EnergyData].length; i++) {
