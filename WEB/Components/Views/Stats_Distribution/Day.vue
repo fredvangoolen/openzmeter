@@ -1,25 +1,22 @@
 <template>
-  <div class="panel panel-other">
-                    <div class="panel-heading">
-                      <i class="fa fa-ellipsis-h" aria-hidden="true"></i> By week day
-                      <div style="float: right" id="WeekDayUnits"></div>
-                    </div>
-                    <div class="panel-body">
-                      <table id="WeekDayTable" class="table small table-striped table-responsive">
-                        <thead>
-                          <tr>
-                            <th style="width: 30px">Day</th><th style="width: 100%"></th><th>Average</th><th>Accumulated</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-  
+  <div class="panel-other">
+    <div class="panel panel-heading">By week day<div class="float-right">{{ Units }}</div></div>
+    <div class="panel-body">
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive"></vuetable>
+    </div>
+  </div>
 </template>
 
-function UpdateWeekDays(visibleSeries) {
+<script>
+  import moment from 'JS/moment.js';
+  import vuetable from 'vuetable-2';
+  export default {
+    data: function() {
+      return { ShowSpinner: true, Columns: [] };
+    },
+    methods: {
+      SetData(result) {
+        return;
   var WeekDay = Array(7).fill(0), WeekDayCount = Array(7).fill(0);
   if(WeekDayTable !== null) {
     WeekDayTable.clear();
@@ -56,4 +53,8 @@ function UpdateWeekDays(visibleSeries) {
                                                 columnDefs: [ { targets: [1], sortable: false }, { targets: [2, 3], sortable: true, className: "text-right" }, { targets: [0], sortable: true, className: "text-center" } ],
                                                 order: [0, 'asc']
   });
-}
+
+
+      }
+    }
+  }

@@ -1,3 +1,12 @@
+<template>
+  <div class="panel-other">
+    <div class="panel panel-heading">By week day<div class="float-right">{{ Units }}</div></div>
+    <div class="panel-body">
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive"></vuetable>
+    </div>
+  </div>
+</template>
+
 function UpdateWeeks(visibleSeries) {
   var WeekDay = [], WeekEnd = [];
   if(WeekTable !== null) {

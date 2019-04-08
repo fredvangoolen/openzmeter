@@ -1,3 +1,5 @@
+
+
 function UpdateHours(visibleSeries) {
   var Hours = Array(24).fill(0), HoursCount = Array(24).fill(0);
   if(HourTable !== null) {
