@@ -1,7 +1,8 @@
 <template>
-  <div class="panel-other">
-    <div class="panel panel-heading">By week day<div class="float-right">{{ Units }}</div></div>
+  <div class="panel panel-other">
+    <div class="panel-heading">By week day<div class="float-right">{{ Units }}Wh</div></div>
     <div class="panel-body">
+      <spinner v-if="ShowSpinner"></spinner>
       <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive"></vuetable>
     </div>
   </div>
@@ -10,51 +11,52 @@
 <script>
   import moment from 'JS/moment.js';
   import vuetable from 'vuetable-2';
+  import * as oZm from 'JS/openZmeter.js';
+  import Spinner from 'Components/Spinner.vue';
+  var Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   export default {
-    data: function() {
-      return { ShowSpinner: true, Columns: [] };
+    data() {
+      return { ShowSpinner: true, Columns: [], Units: '' };
     },
     methods: {
       SetData(result) {
-        return;
-  var WeekDay = Array(7).fill(0), WeekDayCount = Array(7).fill(0);
-  if(WeekDayTable !== null) {
-    WeekDayTable.clear();
-    WeekDayTable.destroy();
-  }
-  for(i = 0; i < EnergyData.length; i++) {
-    var DayOfWeek = new Date(EnergyData[i][0]).getDay();
-    WeekDay[DayOfWeek] = WeekDay[DayOfWeek] + SumPhases(EnergyData[i], visibleSeries);
-    WeekDayCount[DayOfWeek] = WeekDayCount[DayOfWeek] + 1;
-  }
-  var Max = -Infinity;
-  var Min =  Infinity;
-  for(i in WeekDay) {
-    if(WeekDayCount[i] === 0) continue;
-    Max = Math.max(Max, WeekDay[i] / WeekDayCount[i]);
-    Min = Math.min(Min, WeekDay[i] / WeekDayCount[i]);
-  }
-  var Units = GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
-  $('#WeekDayUnits').html('<em>' + Units + 'Wh</em>');
-  var Contents = $('#WeekDayTable tbody');
-  for(i = 0; i < 7; i++) {
-    var Energy = WeekDay[i];
-    var Count  = WeekDayCount[i];
-    Contents.append('<tr>' +
-      '<td data-sort="' + ((i === 0) ? 7 : i) + '">' + $.fn.calendar.dates['custom']['daysShort'][i] + '</td>' + 
-      '<td data-sort="' + Energy + '"><div class="progress" style="margin-bottom:0px; position:relative; height: 16px">' +
-      '<div class="progress-bar" role="progressbar" style="width:' + (100 * (Energy / Count) / Max) + '%"></div>' +
-      '</div></td>' + 
-      '<td data-sort="' + (Energy / Count) + '">' + ((WeekDayCount[i] === 0) ? '-' : Round2(ScaleToUnits(Energy / Count, Units))) + '</td>' +
-      '<td data-sort="' + Energy + '">' + ((WeekDayCount[i] === 0) ? '-' : Round2(ScaleToUnits(Energy, Units))) + '</td>' +
-      '</tr>');
-  }
-  WeekDayTable = $('#WeekDayTable').DataTable({ responsive: true, paging: false, info: false, searching: false,
-                                                columnDefs: [ { targets: [1], sortable: false }, { targets: [2, 3], sortable: true, className: "text-right" }, { targets: [0], sortable: true, className: "text-center" } ],
-                                                order: [0, 'asc']
-  });
-
-
+        var Days = [];
+        var Periods = [];
+        var Max = 0.0;
+        for(var i = 0; i < result['Active_Power'].length; i++) {
+          var Day = moment(result.Sampletime[i]).day();
+          if(Days[Day] === undefined) Days[Day] = {};
+          var Period = (result.Period_Name[i] === null) ? 'NONE' : result.Period_Name[i];
+          if(Periods.includes(Period) === false) Periods.push(Period);
+          if(Days[Day][Period] === undefined) Days[Day][Period] = null;
+          if(result['Active_Power'][i] !== null) Days[Day][Period] = (Days[Day][Period] === null) ? result['Active_Power'][i] : Days[Day][Period] + result['Active_Power'][i];
+          Max = Math.max(Max, Math.abs(Days[Day][Period]));
+        }
+        this.Units = oZm.GetBestUnits(Max);
+        Periods = Periods.sort();
+        this.Columns = [ { name: 'Day', title: 'Day' } ]; 
+        for(var Period in Periods) this.Columns.push({ name: Periods[Period], title: Periods[Period] });
+        this.$nextTick(function() {    
+          this.$refs.table.normalizeFields();
+        });
+        for(var Day in Days) {
+          for(var Period in Days[Day]) Days[Day][Period] = (Days[Day][Period] === null) ? '-' : oZm.Round2Plain(oZm.ScaleToUnits(Days[Day][Period], this.Units));
+           Days[Day].Day = Names[Day];          
+        }
+        this.$refs.table.setData({ data: Days });
+        this.ShowSpinner = false;
       }
-    }
+    },
+    components: { vuetable, Spinner }
   }
+</script>
+
+<style scoped>
+  .table >>> th:not(:first-child) {
+    text-align: right;
+    width: 80px;
+  }
+  .table >>> td:not(:first-child) {
+    text-align: right;
+  }
+</style>
