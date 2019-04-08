@@ -1,32 +1,60 @@
 <template>
-          <div class="panel panel-other">
-                    <div class="panel-heading">
-                      <i class="fa fa-calendar-o" aria-hidden="true"></i> By month
-                      <div class="pull-right" id="MonthUnits"></div>
-                    </div>
-                    <div class="panel-body">
-                      <table id="MonthTable" class="table small table-striped table-responsive">
-                        <thead>
-                          <tr>
-                            <th style="width: 30px">Month</th><th style="width: 100%"></th><th>Weekday</th><th>Weekend</th><th>Total</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-  
-  
+  <div class="panel panel-other">
+    <div class="panel-heading">By month<div class="pull-right">{{ Units }}Wh</div></div>
+    <div class="panel-body">
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
+        <template slot="period" slot-scope="props">
+          <div class="period-color">{{props.rowData}}</div>
+          
+        </template>
+      </vuetable>
+    </div>
+  </div>
 </template>
-function UpdateMonths(visibleSeries) {
-  var WeekDay = [], WeekEnd = [];
-  if(MonthTable !== null) {
-    MonthTable.clear();
-    MonthTable.destroy();
-  }
-  for(i = 0; i < EnergyData.length; i++) {
+
+<script>
+  
+  import vuetable from 'vuetable-2';
+  import moment from 'JS/moment.js';
+  var Names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  export default {
+    data: function() {
+      return { ShowSpinner: false, Units: '', 
+        Columns: [
+          {name: 'Month', title: 'User Name'},
+          {name: '__slot:period', title: '-'},
+          {name: '__slot:period', title: 'P1'}, 
+          {name: '__slot:period', title: 'P2'}
+        ]
+      };
+    },
+    methods: {
+      SetData: function(result) {
+        var Months = [];
+        for(var i = 0; i < result['Active_Power'].length; i++) {
+          var Month = moment(result.Sampletime[i]).month();
+          if(Months[Month] === undefined) Months[Month] = { };
+          var Period = (result.Period_Name[i] === null) ? 'NONE' : result.Period_Name[i];
+          if(Months[Month][Period] === undefined) Months[Month][Period] = null;
+          if(result['Active_Power'][i] !== null) Months[Month][Period] = (Months[Month][Period] === null) ? result['Active_Power'][i] : Months[Month][Period] + result['Active_Power'][i];
+        }
+        var Periods = [];
+        for(var Month in Months) {
+          for(var Period in Months[Month]) {
+            if(Periods.includes(Period) === false) Periods.push(Period);
+          }
+        }
+        Periods = Periods.sort();
+        this.Columns = [ {name: 'Month', title: 'Month'} ]; 
+        for(var Period in Periods) {
+          this.Columns.push({name: Period, title: Period});
+        }
+    
+        
+        this.$refs.table.setData({ data: Months });
+ return;   
+    
+        for(var i = 0; i < result[EnergyData].length; i++) {
     var Month     = new Date(EnergyData[i][0]).getMonth();
     var DayOfWeek =  new Date(EnergyData[i][0]).getDay();
     var Energy = 0;
@@ -65,4 +93,13 @@ function UpdateMonths(visibleSeries) {
                                             columnDefs: [ { targets: [1], sortable: false }, { targets: [0, 2, 3, 4], sortable: true, className: "text-center" } ],
                                             order: [0, 'asc']
   });
-}  
+        
+      }
+    },
+    components: { vuetable }
+  }
+</script>
+
+<style scoped>
+
+</style>
