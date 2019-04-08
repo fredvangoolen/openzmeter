@@ -114,6 +114,7 @@
     
     
             this.$refs.months.SetData(result);
+            this.$refs.day.SetData(result);
             this.$refs.calendar.SetData(result);
             this.ShowSpinner = false;
           }.bind(this)
