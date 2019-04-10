@@ -2,14 +2,9 @@
   <div id="wrapper">
     <div class="row">
       <div class="col-lg-12"><ntp></ntp></div>
-    </div>
-    <div class="row">
       <div class="col-lg-12"><devices></devices></div>
-    </div>
-    <div class="row">
       <div class="col-lg-12"><tariffs></tariffs></div>
-    </div>
-    <div class="row">
+      <div class="col-lg-12"><bluetooth></bluetooth></div>
       <div class="col-lg-12"><wifi></wifi></div>
     </div>
   </div>
@@ -20,11 +15,12 @@
   import Devices from './Devices.vue';
   import Tariffs from './Tariffs.vue';
   import Wifi from './Wifi.vue';
+  import Bluetooth from './Bluetooth.vue';
   export default {
     name: 'Dashboard',
     data () {
       return {  };
     },
-    components: { Ntp, Devices, Tariffs, Wifi }
+    components: { Ntp, Devices, Tariffs, Wifi, Bluetooth }
   }
 </script>

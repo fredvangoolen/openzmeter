@@ -46,8 +46,6 @@
         <in>NetworkManager.cpp</in>
         <in>Tools.cpp</in>
       </df>
-      <in>DBUS.cpp</in>
-      <in>DBUS.h</in>
     </df>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -97,10 +95,6 @@
           <preBuildCommand></preBuildCommand>
         </preBuild>
       </makefileType>
-      <item path="DBUS.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="DBUS.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="Source/Analyzers/AnalyzerInterface.cpp"
             ex="false"
             tool="1"
