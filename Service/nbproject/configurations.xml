@@ -46,6 +46,8 @@
         <in>NetworkManager.cpp</in>
         <in>Tools.cpp</in>
       </df>
+      <in>DBUS.cpp</in>
+      <in>DBUS.h</in>
     </df>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -95,6 +97,10 @@
           <preBuildCommand></preBuildCommand>
         </preBuild>
       </makefileType>
+      <item path="DBUS.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="DBUS.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="Source/Analyzers/AnalyzerInterface.cpp"
             ex="false"
             tool="1"
@@ -104,18 +110,18 @@
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -170,18 +176,18 @@
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -304,20 +310,18 @@
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Tariffs/ESIOS</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/Spain</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -358,20 +362,18 @@
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Tariffs/ESIOS</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/Spain</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -393,18 +395,8 @@
       <item path="Source/Tariffs/Tariff.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="1">
           <incDir>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
@@ -412,16 +404,6 @@
       <item path="Source/Tariffs/TariffPlugin.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="1">
           <incDir>
-            <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESIOS</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
@@ -436,18 +418,18 @@
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/Remote</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
@@ -737,15 +719,6 @@
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Devices</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>OZM_DEBUG</Elem>
-          </preprocessorList>
-        </ccTool>
-      </folder>
-      <folder path="0/Source/Tariffs/ESP">
-        <ccTool>
-          <incDir>
             <pElem>Source/Devices/V1_00</pElem>
             <pElem>Source/Devices/V2_00</pElem>
             <pElem>Source/Devices/Virtual</pElem>
@@ -756,6 +729,15 @@
             <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>Source/Tariffs/NONE</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>OZM_DEBUG</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Tariffs/ESP">
+        <ccTool>
+          <incDir>
             <pElem>Source/Tariffs/ESIOS</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
@@ -767,20 +749,8 @@
       <folder path="0/Source/Tariffs/NONE">
         <ccTool>
           <incDir>
-            <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Tariffs/ESIOS</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/Spain</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>

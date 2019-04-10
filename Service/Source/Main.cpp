@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
   }
   Tools::RegisterHandlers(SignalHandler);
   HTTPServer::RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
-//  HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
+  HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
   HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
 //  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);
   if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
