@@ -1,6 +1,6 @@
 <template>
   <div class="btn-group">
-    <div class="input-group input-group-xs">
+    <div class="input-group" v-bind:class="{ 'input-group-xs': (big != true) }">
       <span class="form-control">{{ Selected }}</span>
       <div class="input-group-btn">
         <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><span class="caret"></span></button>
@@ -14,7 +14,7 @@
 
 <script>
   export default {
-    props: ['options', 'selected'],
+    props: ['options', 'selected', 'big'],
     data() {
       return { Selected: 'NONE' };
     },

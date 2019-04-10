@@ -21,6 +21,9 @@
       $(this.$el).scrollingTabs({ tabClickHandler: this.TabChange });
       this.$emit('TabChange', this.Index, this.tabs[this.Index]);
     },
+    beforeDestroy: function() {
+      $(this.$el).scrollingTabs('destroy');
+    },
     methods: {
       TabChange: function(sender) {
         this.Index = $(sender['target']).parent().index();

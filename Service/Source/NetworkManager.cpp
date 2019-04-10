@@ -16,12 +16,8 @@ void NetworkManager::GetNetworksCallback(HTTPRequest &req) {
   if(DBus == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);  
   json Response;
   SendGetDevices(DBus, Response);
-//  json_object *ActiveConnections = json_object_new_array();
-//  SendGetActiveConnections(DBus, ActiveConnections);
-//  json_object_object_add(*writer, "ActiveConnections", ActiveConnections);
-//  json_object *Settings = json_object_new_array();
-//  SendGetSettingsPaths(DBus, Settings);
-//  json_object_object_add(*writer, "Settings", Settings);
+  SendGetActiveConnections(DBus, Response);
+  SendGetSettingsPaths(DBus, Response);
 //  dbus_connection_unref(DBus);
 //  *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
   return req.FromJSON(Response);
@@ -251,419 +247,421 @@ bool NetworkManager::SendGetAPProperties(DBusConnection *dbus, json &resp, char 
   dbus_message_unref(Msg);
   return IsAP;
 }
-//void NetworkManager::SendGetActiveConnections(DBusConnection *dbus, json &json) {
-//  DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager", "org.freedesktop.DBus.Properties", "Get");
-//  const char *ParamInterface = "org.freedesktop.NetworkManager";
-//  const char *ParamDeviceType = "ActiveConnections";
-//  DBusMessageIter ArgsIter;
-//  dbus_message_iter_init_append(Msg, &ArgsIter);
-//  dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &ParamInterface);
-//  dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &ParamDeviceType);
-//  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
-//  if(Reply) {
-//    DBusMessageIter Struct, Variant;
-//    if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_VARIANT)) {
-//      dbus_message_iter_recurse(&Struct, &Variant);
-//      if(dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_ARRAY) {
-//        DBusMessageIter Array;
-//        dbus_message_iter_recurse(&Variant, &Array);
-//        do {
-//          if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_OBJECT_PATH) {
-//            char *DevicePath;        
-//            dbus_message_iter_get_basic(&Array, &DevicePath);
-//            if(DevicePath) {
-//              json_object *Connection = json_object_new_object();  
-//              if(SendGetConnectionProperties(dbus, Connection, DevicePath)) {
-//                json_object_array_add(json, Connection);      
-//              } else {
-//                json_object_put(Connection);
-//              }
-//            }    
-//          }
-//        } while(dbus_message_iter_next(&Array));
-//      }
-//    }
-//    dbus_message_unref(Reply);
-//  }
-//  dbus_message_unref(Msg);
-//}
-//bool NetworkManager::SendGetConnectionProperties(DBusConnection *dbus, json_object *json, char *path) {
-//  bool IsWifi = true;
-//  DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", path, "org.freedesktop.DBus.Properties", "GetAll");
-//  const char *ParamInterface = "org.freedesktop.NetworkManager.Connection.Active";
-//  DBusMessageIter ArgsIter;
-//  dbus_message_iter_init_append(Msg, &ArgsIter);
-//  dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &ParamInterface);
-//  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
-//  if(Reply) {
-//    DBusMessageIter Struct;
-//    if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
-//      DBusMessageIter Array;
-//      dbus_message_iter_recurse(&Struct, &Array);
-//      do {
-//        if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_DICT_ENTRY) {
-//          DBusMessageIter Dict;
-//          dbus_message_iter_recurse(&Array, &Dict);
-//          do {
-//            if(dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_STRING) {
-//              const char *Key;
-//              dbus_message_iter_get_basic(&Dict, &Key);
-//              dbus_message_iter_next(&Dict);
-//              if(Key && (dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_VARIANT)) {
-//                DBusMessageIter Variant;
-//                dbus_message_iter_recurse(&Dict, &Variant);
-//                if((strcmp(Key, "Type") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_STRING)) {
-//                  char *Type;
-//                  dbus_message_iter_get_basic(&Variant, &Type);
-//                  if(Type && (strcmp(Type, "802-11-wireless") != 0)) IsWifi = false;
-//                  break;
-//                }
-//                if((strcmp(Key, "SpecificObject") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_OBJECT_PATH)) {
-//                  char *AccessPoint;
-//                  dbus_message_iter_get_basic(&Variant, &AccessPoint);
-//                  if(AccessPoint && (SendGetAPProperties(dbus, json, AccessPoint) == false)) IsWifi = false;
-//                  break;
-//                }
-//                if((strcmp(Key, "Ip4Config") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_OBJECT_PATH)) {
-//                  char *IP4Config;
-//                  dbus_message_iter_get_basic(&Variant, &IP4Config);
-//                  if(IP4Config) SendGetIP4Properties(dbus, json, IP4Config);
-//                  break;
-//                }
-//                if((strcmp(Key, "Dhcp4Config") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_OBJECT_PATH)) {
-//                  char *DHCP4Config;
-//                  dbus_message_iter_get_basic(&Variant, &DHCP4Config);
-//                  if(DHCP4Config && (strcmp(DHCP4Config, "/") == 0)) {
-//                    json_object_object_add(json, "DHCP", json_object_new_boolean(false));
-//                  } else {
-//                    json_object_object_add(json, "DHCP", json_object_new_boolean(true));
-//                  }
-//                  break;
-//                }
-//              }
-//            }
-//          } while (dbus_message_iter_next(&Dict));
-//        }
-//      } while(dbus_message_iter_next(&Array));
-//    }
-//    dbus_message_unref(Reply);
-//  }
-//  dbus_message_unref(Msg);
-//  return IsWifi;
-//}
-//void NetworkManager::SendGetIP4Properties(DBusConnection *dbus, json_object *json, char *path) {
-//  DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", path, "org.freedesktop.DBus.Properties", "GetAll");
-//  const char *ParamInterface = "org.freedesktop.NetworkManager.IP4Config";
-//  DBusMessageIter ArgsIter;
-//  dbus_message_iter_init_append(Msg, &ArgsIter);
-//  dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &ParamInterface);
-//  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
-//  if(Reply) {
-//    DBusMessageIter Struct;
-//    if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
-//      DBusMessageIter Array;
-//      dbus_message_iter_recurse(&Struct, &Array);
-//      do {
-//        if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_DICT_ENTRY) {
-//          DBusMessageIter Dict;
-//          dbus_message_iter_recurse(&Array, &Dict);
-//          do {
-//            if(dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_STRING) {
-//              const char *Key;
-//              dbus_message_iter_get_basic(&Dict, &Key);
-//              dbus_message_iter_next(&Dict);
-//              if(Key && (dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_VARIANT)) {
-//                DBusMessageIter Variant;
-//                dbus_message_iter_recurse(&Dict, &Variant);
-//                if((strcmp(Key, "Nameservers") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_ARRAY)) {
-//                  DBusMessageIter VariantMember;
-//                  dbus_message_iter_recurse(&Variant, &VariantMember);
-//                  uint32_t i = 0;
-//                  do {
-//                    if(dbus_message_iter_get_arg_type(&VariantMember) == DBUS_TYPE_UINT32) {
-//                      struct in_addr DNS;
-//                      dbus_message_iter_get_basic(&VariantMember, &DNS);
-//                      char DNSName[16];
-//                      sprintf(DNSName, "DNS%d", i++);
-//                      json_object_object_add(json, DNSName, json_object_new_string(inet_ntoa(DNS)));
-//                    }
-//                  } while(dbus_message_iter_next(&VariantMember));
-//                  break;
-//                }
-//                if((strcmp(Key, "Addresses") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_ARRAY)) {
-//                  DBusMessageIter Array;
-//                  dbus_message_iter_recurse(&Variant, &Array);
-//                  if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_ARRAY) {
-//                    DBusMessageIter SubArray;
-//                    dbus_message_iter_recurse(&Array, &SubArray);
-//                    if(dbus_message_iter_get_arg_type(&SubArray) == DBUS_TYPE_UINT32) {
-//                      struct in_addr IP;
-//                      dbus_message_iter_get_basic(&SubArray, &IP);
-//                      json_object_object_add(json, "IP", json_object_new_string(inet_ntoa(IP)));
-//                    }
-//                    dbus_message_iter_next(&SubArray);
-//                    if(dbus_message_iter_get_arg_type(&SubArray) == DBUS_TYPE_UINT32) {
-//                      uint32_t Mask;
-//                      dbus_message_iter_get_basic(&SubArray, &Mask);
-//                      json_object_object_add(json, "Mask", json_object_new_int(Mask));
-//                    }
-//                    dbus_message_iter_next(&SubArray);
-//                    if(dbus_message_iter_get_arg_type(&SubArray) == DBUS_TYPE_UINT32) {
-//                      struct in_addr Gateway;
-//                      dbus_message_iter_get_basic(&SubArray, &Gateway);
-//                      json_object_object_add(json, "Gateway", json_object_new_string(inet_ntoa(Gateway)));
-//                    }
-//                  }
-//                  break;
-//                }
-//              }
-//            }
-//          } while (dbus_message_iter_next(&Dict));
-//        }
-//      } while(dbus_message_iter_next(&Array));
-//    }
-//    dbus_message_unref(Reply);
-//  }
-//  dbus_message_unref(Msg);
-//}
-//void NetworkManager::SendGetSettingsPaths(DBusConnection *dbus, json_object *json) {
-//  DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager/Settings", "org.freedesktop.NetworkManager.Settings", "ListConnections");
-//  if(Msg) {
-//    DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
-//    if(Reply) {
-//      DBusMessageIter Struct;
-//      if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
-//        DBusMessageIter Array;
-//        dbus_message_iter_recurse(&Struct, &Array);
-//        do {
-//          if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_OBJECT_PATH) {
-//            char *Path;
-//            dbus_message_iter_get_basic(&Array, &Path);
-//            if(Path) {
-//              json_object *Setting = json_object_new_object();
-//              if(SendGetSettings(dbus, Setting, Path)) {
-//                json_object_array_add(json, Setting);
-//              } else {
-//                json_object_put(Setting);
-//              }
-//            }
-//          }
-//        } while(dbus_message_iter_next(&Array));
-//      }
-//      dbus_message_unref(Reply);
-//    }
-//    dbus_message_unref(Msg);
-//  }
-//}
-//bool NetworkManager::SendGetSettings(DBusConnection *dbus, json_object *json, char *path) {
-//  bool IsWifi = false, ValidAuth = true, IsAP = true;
-//  DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", path, "org.freedesktop.NetworkManager.Settings.Connection", "GetSettings");
-//  if(Msg) {
-//    DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
-//    if(Reply) {
-//      json_object_object_add(json, "ConfigPath", json_object_new_string(path));
-//      DBusMessageIter Struct;
-//      if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
-//        DBusMessageIter Array;
-//        dbus_message_iter_recurse(&Struct, &Array);
-//        do {
-//          if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_DICT_ENTRY) {
-//            DBusMessageIter Dict;
-//            dbus_message_iter_recurse(&Array, &Dict);
-//            do {
-//              if(dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_STRING) {
-//                const char *Key;
-//                dbus_message_iter_get_basic(&Dict, &Key);
-//                dbus_message_iter_next(&Dict);
-//                if(Key && (dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_ARRAY)) {
-//                  DBusMessageIter Array;
-//                  dbus_message_iter_recurse(&Dict, &Array);
-//                  if(strcmp(Key, "802-11-wireless") == 0) {
-//                    IsWifi = true;
-//                    do {
-//                      if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_DICT_ENTRY) {
-//                        DBusMessageIter Dict;
-//                        dbus_message_iter_recurse(&Array, &Dict);
-//                        do {
-//                          if(dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_STRING) {
-//                            const char *Key;
-//                            dbus_message_iter_get_basic(&Dict, &Key);
-//                            dbus_message_iter_next(&Dict);
-//                            if(Key && dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_VARIANT) {
-//                              DBusMessageIter Variant;
-//                              dbus_message_iter_recurse(&Dict, &Variant);
-//                              if((strcmp(Key, "mode") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_STRING)) {
-//                                char *Mode;
-//                                dbus_message_iter_get_basic(&Variant, &Mode);
-//                                if((Mode) && (strcmp(Mode, "infrastructure") != 0)) IsAP = false;
-//                                break;
-//                              }
-//                              if((strcmp(Key, "ssid") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_ARRAY)) {
-//                                DBusMessageIter VariantMember;
-//                                dbus_message_iter_recurse(&Variant, &VariantMember);
-//                                char Name[32] = { 0 };
-//                                uint32_t i = 0;
-//                                do {
-//                                  if(dbus_message_iter_get_arg_type(&VariantMember) == DBUS_TYPE_BYTE) dbus_message_iter_get_basic(&VariantMember, &Name[i++]);
-//                                } while(dbus_message_iter_next(&VariantMember) && (i < sizeof(Name)));
-//                                if(i) json_object_object_add(json, "SSID", json_object_new_string(Name));
-//                                break;
-//                              }
-//                              if((strcmp(Key, "bssid") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_ARRAY)) {
-//                                DBusMessageIter VariantMember;
-//                                dbus_message_iter_recurse(&Variant, &VariantMember);
-//                                char MAC[32];
-//                                uint32_t i = 0;
-//                                do {
-//                                  if(dbus_message_iter_get_arg_type(&VariantMember) == DBUS_TYPE_BYTE) {
-//                                    uint8_t Byte;
-//                                    dbus_message_iter_get_basic(&VariantMember, &Byte);
-//                                    sprintf(&MAC[(i++) * 3], "%02X:", Byte);
-//                                  }
-//                                } while(dbus_message_iter_next(&VariantMember) && (i < 7));
-//                                MAC[17] = 0;
-//                                json_object_object_add(json, "MAC", json_object_new_string(MAC));
-//                                break;
-//                              }
-//                            }
-//                          }
-//                        } while (dbus_message_iter_next(&Dict));
-//                      }
-//                    } while (dbus_message_iter_next(&Array));
-//                    break;
-//                  }
-//                  if(!strcmp(Key, "connection")) {
-//                    do {
-//                      if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_DICT_ENTRY) {
-//                        DBusMessageIter Dict;
-//                        dbus_message_iter_recurse(&Array, &Dict);
-//                        do {
-//                          const char *Key;
-//                          dbus_message_iter_get_basic(&Dict, &Key);
-//                          dbus_message_iter_next(&Dict);
-//                          if(Key && dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_VARIANT) {
-//                            DBusMessageIter Variant;
-//                            dbus_message_iter_recurse(&Dict, &Variant);
-//                            if((strcmp(Key, "uuid") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_STRING)) {
-//                              char *UUID;
-//                              dbus_message_iter_get_basic(&Variant, &UUID);
-//                              json_object_object_add(json, "UUID", json_object_new_string(UUID));
-//                              break;
-//                            }
-//                          }
-//                        } while (dbus_message_iter_next(&Dict));
-//                      }
-//                    } while (dbus_message_iter_next(&Array));
-//                    break;
-//                  }                  
-//                  if(!strcmp(Key, "802-11-wireless-security")) {
-//                    do {
-//                      if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_DICT_ENTRY) {
-//                        DBusMessageIter Dict;
-//                        dbus_message_iter_recurse(&Array, &Dict);
-//                        do {
-//                          const char *Key;
-//                          dbus_message_iter_get_basic(&Dict, &Key);
-//                          dbus_message_iter_next(&Dict);
-//                          if(Key && dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_VARIANT) {
-//                            DBusMessageIter Variant;
-//                            dbus_message_iter_recurse(&Dict, &Variant);
-//                            if((strcmp(Key, "key-mgmt") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_STRING)) {
-//                              char *Key;
-//                              dbus_message_iter_get_basic(&Variant, &Key);
-//                              if(Key) {
-//                                if(strcmp(Key, "none") == 0)
-//                                  json_object_object_add(json, "Mode", json_object_new_string("WEP"));
-//                                else if(strcmp(Key, "wpa-psk") == 0)
-//                                  json_object_object_add(json, "Mode", json_object_new_string("WPA"));
-//                                else
-//                                  ValidAuth = false;
-//                              }
-//                              break;
-//                            }
-//                          }
-//                        } while (dbus_message_iter_next(&Dict));
-//                      }
-//                    } while (dbus_message_iter_next(&Array));
-//                    break;
-//                  }
-//                  if(!strcmp(Key, "ipv4")) {
-//                    do {
-//                      if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_DICT_ENTRY) {
-//                        DBusMessageIter Dict;
-//                        dbus_message_iter_recurse(&Array, &Dict);
-//                        do {
-//                          const char *Key;
-//                          dbus_message_iter_get_basic(&Dict, &Key);
-//                          dbus_message_iter_next(&Dict);
-//                          if(Key && dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_VARIANT) {
-//                            DBusMessageIter Variant;
-//                            dbus_message_iter_recurse(&Dict, &Variant);
-//                            if((strcmp(Key, "method") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_STRING)) {
-//                              char *DHCP;
-//                              dbus_message_iter_get_basic(&Variant, &DHCP);
-//                              if(DHCP) json_object_object_add(json, "DHCP", json_object_new_boolean(strcmp(DHCP, "auto") == 0));
-//                              break;
-//                            }
-//                            if((strcmp(Key, "dns") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_ARRAY)) {
-//                              DBusMessageIter VariantMember;
-//                              dbus_message_iter_recurse(&Variant, &VariantMember);
-//                              uint32_t i = 0;
-//                              do {
-//                                if(dbus_message_iter_get_arg_type(&VariantMember) == DBUS_TYPE_UINT32) {
-//                                  struct in_addr DNS;
-//                                  dbus_message_iter_get_basic(&VariantMember, &DNS);
-//                                  char DNSName[16];
-//                                  sprintf(DNSName, "DNS%d", i++);
-//                                  json_object_object_add(json, DNSName, json_object_new_string(inet_ntoa(DNS)));
-//                                }
-//                              } while(dbus_message_iter_next(&VariantMember));
-//                              break;
-//                            }
-//                            if((strcmp(Key, "addresses") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_ARRAY)) {
-//                              DBusMessageIter Array;
-//                              dbus_message_iter_recurse(&Variant, &Array);
-//                              if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_ARRAY) {
-//                                DBusMessageIter SubArray;
-//                                dbus_message_iter_recurse(&Array, &SubArray);
-//                                if(dbus_message_iter_get_arg_type(&SubArray) == DBUS_TYPE_UINT32) {
-//                                  struct in_addr IP;
-//                                  dbus_message_iter_get_basic(&SubArray, &IP);
-//                                  json_object_object_add(json, "IP", json_object_new_string(inet_ntoa(IP)));
-//                                }
-//                                dbus_message_iter_next(&SubArray);
-//                                if(dbus_message_iter_get_arg_type(&SubArray) == DBUS_TYPE_UINT32) {
-//                                  uint32_t Mask;
-//                                  dbus_message_iter_get_basic(&SubArray, &Mask);
-//                                  json_object_object_add(json, "Mask", json_object_new_int(Mask));
-//                                }
-//                                dbus_message_iter_next(&SubArray);
-//                                if(dbus_message_iter_get_arg_type(&SubArray) == DBUS_TYPE_UINT32) {
-//                                  struct in_addr Gateway;
-//                                  dbus_message_iter_get_basic(&SubArray, &Gateway);
-//                                  json_object_object_add(json, "Gateway", json_object_new_string(inet_ntoa(Gateway)));
-//                                }
-//                              }
-//                              break;
-//                            }
-//                          }
-//                        } while (dbus_message_iter_next(&Dict));
-//                      }
-//                    } while (dbus_message_iter_next(&Array));
-//                    break;
-//                  }
-//                }
-//              }
-//            } while (dbus_message_iter_next(&Dict));
-//          }
-//        } while(dbus_message_iter_next(&Array));
-//      }
-//      dbus_message_unref(Reply);
-//    }
-//    dbus_message_unref(Msg);
-//  }
-//  return (IsWifi && ValidAuth && IsAP);
-//}
+void NetworkManager::SendGetActiveConnections(DBusConnection *dbus, json &resp) {
+  json Response = json::array();
+  DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager", "org.freedesktop.DBus.Properties", "Get");
+  const char *ParamInterface = "org.freedesktop.NetworkManager";
+  const char *ParamDeviceType = "ActiveConnections";
+  DBusMessageIter ArgsIter;
+  dbus_message_iter_init_append(Msg, &ArgsIter);
+  dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &ParamInterface);
+  dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &ParamDeviceType);
+  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  if(Reply) {
+    DBusMessageIter Struct, Variant;
+    if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_VARIANT)) {
+      dbus_message_iter_recurse(&Struct, &Variant);
+      if(dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_ARRAY) {
+        DBusMessageIter Array;
+        dbus_message_iter_recurse(&Variant, &Array);
+        do {
+          if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_OBJECT_PATH) {
+            char *DevicePath;        
+            dbus_message_iter_get_basic(&Array, &DevicePath);
+            if(DevicePath) {
+              json Connection;
+              if(SendGetConnectionProperties(dbus, Connection, DevicePath)) Response.push_back(Connection);
+            }    
+          }
+        } while(dbus_message_iter_next(&Array));
+      }
+    }
+    dbus_message_unref(Reply);
+  }
+  dbus_message_unref(Msg);
+  resp["ActiveConnections"] = Response;
+}
+bool NetworkManager::SendGetConnectionProperties(DBusConnection *dbus, json &resp, char *path) {
+  bool IsWifi = true;
+  DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", path, "org.freedesktop.DBus.Properties", "GetAll");
+  const char *ParamInterface = "org.freedesktop.NetworkManager.Connection.Active";
+  DBusMessageIter ArgsIter;
+  dbus_message_iter_init_append(Msg, &ArgsIter);
+  dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &ParamInterface);
+  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  if(Reply) {
+    DBusMessageIter Struct;
+    if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
+      DBusMessageIter Array;
+      dbus_message_iter_recurse(&Struct, &Array);
+      do {
+        if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_DICT_ENTRY) {
+          DBusMessageIter Dict;
+          dbus_message_iter_recurse(&Array, &Dict);
+          do {
+            if(dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_STRING) {
+              const char *Key;
+              dbus_message_iter_get_basic(&Dict, &Key);
+              dbus_message_iter_next(&Dict);
+              if(Key && (dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_VARIANT)) {
+                DBusMessageIter Variant;
+                dbus_message_iter_recurse(&Dict, &Variant);
+                if((strcmp(Key, "Type") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_STRING)) {
+                  char *Type;
+                  dbus_message_iter_get_basic(&Variant, &Type);
+                  if(Type && (strcmp(Type, "802-11-wireless") != 0)) IsWifi = false;
+                  break;
+                }
+                if((strcmp(Key, "SpecificObject") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_OBJECT_PATH)) {
+                  char *AccessPoint;
+                  dbus_message_iter_get_basic(&Variant, &AccessPoint);
+                  if(AccessPoint && (SendGetAPProperties(dbus, resp, AccessPoint) == false)) IsWifi = false;
+                  break;
+                }
+                if((strcmp(Key, "Ip4Config") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_OBJECT_PATH)) {
+                  char *IP4Config;
+                  dbus_message_iter_get_basic(&Variant, &IP4Config);
+                  if(IP4Config) SendGetIP4Properties(dbus, resp, IP4Config);
+                  break;
+                }
+                if((strcmp(Key, "Dhcp4Config") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_OBJECT_PATH)) {
+                  char *DHCP4Config;
+                  dbus_message_iter_get_basic(&Variant, &DHCP4Config);
+                  if(DHCP4Config && (strcmp(DHCP4Config, "/") == 0)) {
+                    resp["DHCP"] = false;
+                  } else {
+                    resp["DHCP"] = true;
+                  }
+                  break;
+                }
+              }
+            }
+          } while (dbus_message_iter_next(&Dict));
+        }
+      } while(dbus_message_iter_next(&Array));
+    }
+    dbus_message_unref(Reply);
+  }
+  dbus_message_unref(Msg);
+  return IsWifi;
+}
+void NetworkManager::SendGetIP4Properties(DBusConnection *dbus, json &resp, char *path) {
+  DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", path, "org.freedesktop.DBus.Properties", "GetAll");
+  const char *ParamInterface = "org.freedesktop.NetworkManager.IP4Config";
+  DBusMessageIter ArgsIter;
+  dbus_message_iter_init_append(Msg, &ArgsIter);
+  dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &ParamInterface);
+  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  if(Reply) {
+    DBusMessageIter Struct;
+    if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
+      DBusMessageIter Array;
+      dbus_message_iter_recurse(&Struct, &Array);
+      do {
+        if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_DICT_ENTRY) {
+          DBusMessageIter Dict;
+          dbus_message_iter_recurse(&Array, &Dict);
+          do {
+            if(dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_STRING) {
+              const char *Key;
+              dbus_message_iter_get_basic(&Dict, &Key);
+              dbus_message_iter_next(&Dict);
+              if(Key && (dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_VARIANT)) {
+                DBusMessageIter Variant;
+                dbus_message_iter_recurse(&Dict, &Variant);
+                if((strcmp(Key, "Nameservers") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_ARRAY)) {
+                  DBusMessageIter VariantMember;
+                  dbus_message_iter_recurse(&Variant, &VariantMember);
+                  uint32_t i = 0;
+                  do {
+                    if(dbus_message_iter_get_arg_type(&VariantMember) == DBUS_TYPE_UINT32) {
+                      struct in_addr DNS;
+                      dbus_message_iter_get_basic(&VariantMember, &DNS);
+                      char DNSName[16];
+                      snprintf(DNSName, sizeof(DNSName), "DNS%d", i++);
+                      resp[DNSName] = inet_ntoa(DNS);
+                    }
+                  } while(dbus_message_iter_next(&VariantMember));
+                  break;
+                }
+                if((strcmp(Key, "Addresses") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_ARRAY)) {
+                  DBusMessageIter Array;
+                  dbus_message_iter_recurse(&Variant, &Array);
+                  if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_ARRAY) {
+                    DBusMessageIter SubArray;
+                    dbus_message_iter_recurse(&Array, &SubArray);
+                    if(dbus_message_iter_get_arg_type(&SubArray) == DBUS_TYPE_UINT32) {
+                      struct in_addr IP;
+                      dbus_message_iter_get_basic(&SubArray, &IP);
+                      resp["IP"] = inet_ntoa(IP);
+                    }
+                    dbus_message_iter_next(&SubArray);
+                    if(dbus_message_iter_get_arg_type(&SubArray) == DBUS_TYPE_UINT32) {
+                      uint32_t Mask;
+                      dbus_message_iter_get_basic(&SubArray, &Mask);
+                      Mask = 0xFFFFFFFF ^ ((1 << (32 - Mask)) - 1);
+                      char IPMask[16];
+                      snprintf(IPMask, sizeof(IPMask), "%d.%d.%d.%d", (Mask >> 24) & 0xFF, (Mask >> 16) & 0xFF, (Mask >> 8) & 0xFF, Mask & 0xFF);
+                      resp["Mask"] = IPMask;
+                    }
+                    dbus_message_iter_next(&SubArray);
+                    if(dbus_message_iter_get_arg_type(&SubArray) == DBUS_TYPE_UINT32) {
+                      struct in_addr Gateway;
+                      dbus_message_iter_get_basic(&SubArray, &Gateway);
+                      resp["Gateway"] = inet_ntoa(Gateway);
+                    }
+                  }
+                  break;
+                }
+              }
+            }
+          } while (dbus_message_iter_next(&Dict));
+        }
+      } while(dbus_message_iter_next(&Array));
+    }
+    dbus_message_unref(Reply);
+  }
+  dbus_message_unref(Msg);
+}
+void NetworkManager::SendGetSettingsPaths(DBusConnection *dbus, json &resp) {
+  json Response = json::array();
+  DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager/Settings", "org.freedesktop.NetworkManager.Settings", "ListConnections");
+  if(Msg) {
+    DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+    if(Reply) {
+      DBusMessageIter Struct;
+      if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
+        DBusMessageIter Array;
+        dbus_message_iter_recurse(&Struct, &Array);
+        do {
+          if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_OBJECT_PATH) {
+            char *Path;
+            dbus_message_iter_get_basic(&Array, &Path);
+            if(Path) {
+              json Setting;
+              if(SendGetSettings(dbus, Setting, Path)) Response.push_back(Setting);
+            }
+          }
+        } while(dbus_message_iter_next(&Array));
+      }
+      dbus_message_unref(Reply);
+    }
+    dbus_message_unref(Msg);
+  }
+  resp["Settings"] = Response;
+}
+bool NetworkManager::SendGetSettings(DBusConnection *dbus, json &resp, char *path) {
+  bool IsWifi = false, ValidAuth = true, IsAP = true;
+  DBusMessage *Msg = dbus_message_new_method_call("org.freedesktop.NetworkManager", path, "org.freedesktop.NetworkManager.Settings.Connection", "GetSettings");
+  if(Msg) {
+    DBusMessage *Reply = dbus_connection_send_with_reply_and_block(dbus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+    if(Reply) {
+      resp["ConfigPath"] = path;
+      DBusMessageIter Struct;
+      if(dbus_message_iter_init(Reply, &Struct) && (dbus_message_iter_get_arg_type(&Struct) == DBUS_TYPE_ARRAY)) {
+        DBusMessageIter Array;
+        dbus_message_iter_recurse(&Struct, &Array);
+        do {
+          if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_DICT_ENTRY) {
+            DBusMessageIter Dict;
+            dbus_message_iter_recurse(&Array, &Dict);
+            do {
+              if(dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_STRING) {
+                const char *Key;
+                dbus_message_iter_get_basic(&Dict, &Key);
+                dbus_message_iter_next(&Dict);
+                if(Key && (dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_ARRAY)) {
+                  DBusMessageIter Array;
+                  dbus_message_iter_recurse(&Dict, &Array);
+                  if(strcmp(Key, "802-11-wireless") == 0) {
+                    IsWifi = true;
+                    do {
+                      if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_DICT_ENTRY) {
+                        DBusMessageIter Dict;
+                        dbus_message_iter_recurse(&Array, &Dict);
+                        do {
+                          if(dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_STRING) {
+                            const char *Key;
+                            dbus_message_iter_get_basic(&Dict, &Key);
+                            dbus_message_iter_next(&Dict);
+                            if(Key && dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_VARIANT) {
+                              DBusMessageIter Variant;
+                              dbus_message_iter_recurse(&Dict, &Variant);
+                              if((strcmp(Key, "mode") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_STRING)) {
+                                char *Mode;
+                                dbus_message_iter_get_basic(&Variant, &Mode);
+                                if((Mode) && (strcmp(Mode, "infrastructure") != 0)) IsAP = false;
+                                break;
+                              }
+                              if((strcmp(Key, "ssid") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_ARRAY)) {
+                                DBusMessageIter VariantMember;
+                                dbus_message_iter_recurse(&Variant, &VariantMember);
+                                char Name[32] = { 0 };
+                                uint32_t i = 0;
+                                do {
+                                  if(dbus_message_iter_get_arg_type(&VariantMember) == DBUS_TYPE_BYTE) dbus_message_iter_get_basic(&VariantMember, &Name[i++]);
+                                } while(dbus_message_iter_next(&VariantMember) && (i < sizeof(Name)));
+                                if(i) resp["SSID"] = Name;
+                                break;
+                              }
+                              if((strcmp(Key, "bssid") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_ARRAY)) {
+                                DBusMessageIter VariantMember;
+                                dbus_message_iter_recurse(&Variant, &VariantMember);
+                                char MAC[32];
+                                uint32_t i = 0;
+                                do {
+                                  if(dbus_message_iter_get_arg_type(&VariantMember) == DBUS_TYPE_BYTE) {
+                                    uint8_t Byte;
+                                    dbus_message_iter_get_basic(&VariantMember, &Byte);
+                                    sprintf(&MAC[(i++) * 3], "%02X:", Byte);
+                                  }
+                                } while(dbus_message_iter_next(&VariantMember) && (i < 7));
+                                MAC[17] = 0;
+                                resp["MAC"] = MAC;
+                                break;
+                              }
+                            }
+                          }
+                        } while (dbus_message_iter_next(&Dict));
+                      }
+                    } while (dbus_message_iter_next(&Array));
+                    break;
+                  }
+                  if(!strcmp(Key, "connection")) {
+                    do {
+                      if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_DICT_ENTRY) {
+                        DBusMessageIter Dict;
+                        dbus_message_iter_recurse(&Array, &Dict);
+                        do {
+                          const char *Key;
+                          dbus_message_iter_get_basic(&Dict, &Key);
+                          dbus_message_iter_next(&Dict);
+                          if(Key && dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_VARIANT) {
+                            DBusMessageIter Variant;
+                            dbus_message_iter_recurse(&Dict, &Variant);
+                            if((strcmp(Key, "uuid") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_STRING)) {
+                              char *UUID;
+                              dbus_message_iter_get_basic(&Variant, &UUID);
+                              resp["UUID"] = UUID;
+                              break;
+                            }
+                          }
+                        } while (dbus_message_iter_next(&Dict));
+                      }
+                    } while (dbus_message_iter_next(&Array));
+                    break;
+                  }                  
+                  if(!strcmp(Key, "802-11-wireless-security")) {
+                    do {
+                      if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_DICT_ENTRY) {
+                        DBusMessageIter Dict;
+                        dbus_message_iter_recurse(&Array, &Dict);
+                        do {
+                          const char *Key;
+                          dbus_message_iter_get_basic(&Dict, &Key);
+                          dbus_message_iter_next(&Dict);
+                          if(Key && dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_VARIANT) {
+                            DBusMessageIter Variant;
+                            dbus_message_iter_recurse(&Dict, &Variant);
+                            if((strcmp(Key, "key-mgmt") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_STRING)) {
+                              char *Key;
+                              dbus_message_iter_get_basic(&Variant, &Key);
+                              if(Key) {
+                                if(strcmp(Key, "none") == 0)
+                                  resp["Mode"] = "WEP";
+                                else if(strcmp(Key, "wpa-psk") == 0)
+                                  resp["Mode"] = "WPA";
+                                else
+                                  ValidAuth = false;
+                              }
+                              break;
+                            }
+                          }
+                        } while (dbus_message_iter_next(&Dict));
+                      }
+                    } while (dbus_message_iter_next(&Array));
+                    break;
+                  }
+                  if(!strcmp(Key, "ipv4")) {
+                    do {
+                      if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_DICT_ENTRY) {
+                        DBusMessageIter Dict;
+                        dbus_message_iter_recurse(&Array, &Dict);
+                        do {
+                          const char *Key;
+                          dbus_message_iter_get_basic(&Dict, &Key);
+                          dbus_message_iter_next(&Dict);
+                          if(Key && dbus_message_iter_get_arg_type(&Dict) == DBUS_TYPE_VARIANT) {
+                            DBusMessageIter Variant;
+                            dbus_message_iter_recurse(&Dict, &Variant);
+                            if((strcmp(Key, "method") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_STRING)) {
+                              char *DHCP;
+                              dbus_message_iter_get_basic(&Variant, &DHCP);
+                              if(DHCP) resp["DHCP"] = (strcmp(DHCP, "auto") == 0);
+                              break;
+                            }
+                            if((strcmp(Key, "dns") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_ARRAY)) {
+                              DBusMessageIter VariantMember;
+                              dbus_message_iter_recurse(&Variant, &VariantMember);
+                              uint32_t i = 0;
+                              do {
+                                if(dbus_message_iter_get_arg_type(&VariantMember) == DBUS_TYPE_UINT32) {
+                                  struct in_addr DNS;
+                                  dbus_message_iter_get_basic(&VariantMember, &DNS);
+                                  char DNSName[16];
+                                  sprintf(DNSName, "DNS%d", i++);
+                                  resp[DNSName] = inet_ntoa(DNS);
+                                }
+                              } while(dbus_message_iter_next(&VariantMember));
+                              break;
+                            }
+                            if((strcmp(Key, "addresses") == 0) && (dbus_message_iter_get_arg_type(&Variant) == DBUS_TYPE_ARRAY)) {
+                              DBusMessageIter Array;
+                              dbus_message_iter_recurse(&Variant, &Array);
+                              if(dbus_message_iter_get_arg_type(&Array) == DBUS_TYPE_ARRAY) {
+                                DBusMessageIter SubArray;
+                                dbus_message_iter_recurse(&Array, &SubArray);
+                                if(dbus_message_iter_get_arg_type(&SubArray) == DBUS_TYPE_UINT32) {
+                                  struct in_addr IP;
+                                  dbus_message_iter_get_basic(&SubArray, &IP);
+                                  resp["IP"] = inet_ntoa(IP);
+                                }
+                                dbus_message_iter_next(&SubArray);
+                                if(dbus_message_iter_get_arg_type(&SubArray) == DBUS_TYPE_UINT32) {
+                                  uint32_t Mask;
+                                  dbus_message_iter_get_basic(&SubArray, &Mask);
+                                  Mask = 0xFFFFFFFF ^ ((1 << (32 - Mask)) - 1);
+                                  char IPMask[16];
+                                  snprintf(IPMask, sizeof(IPMask), "%d.%d.%d.%d", (Mask >> 24) & 0xFF, (Mask >> 16) & 0xFF, (Mask >> 8) & 0xFF, Mask & 0xFF);
+                                  resp["Mask"] = IPMask;
+                                }
+                                dbus_message_iter_next(&SubArray);
+                                if(dbus_message_iter_get_arg_type(&SubArray) == DBUS_TYPE_UINT32) {
+                                  struct in_addr Gateway;
+                                  dbus_message_iter_get_basic(&SubArray, &Gateway);
+                                  resp["Gateway"] = inet_ntoa(Gateway);
+                                }
+                              }
+                              break;
+                            }
+                          }
+                        } while (dbus_message_iter_next(&Dict));
+                      }
+                    } while (dbus_message_iter_next(&Array));
+                    break;
+                  }
+                }
+              }
+            } while (dbus_message_iter_next(&Dict));
+          }
+        } while(dbus_message_iter_next(&Array));
+      }
+      dbus_message_unref(Reply);
+    }
+    dbus_message_unref(Msg);
+  }
+  return (IsWifi && ValidAuth && IsAP);
+}
 //bool NetworkManager::SendSaveSettings(DBusConnection *dbus, json_object *json) {
 //  char     *SSID  = NULL;
 //  char     *BSSID = NULL;
