@@ -53,17 +53,21 @@ class HTTPServer {
       string HandleName;
       Func_t Function;
     } Callback_t;
-  private:
-    static MHD_Daemon         *pDaemon;
-    static vector<Callback_t>  pCallbacks;
   private :
-    static int     HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
-    static void    HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe);
-    static void    ExpireSessions();
-    static int     SendRedirect(struct MHD_Connection *connection, string url);
+    static HTTPServer        *pInstance;
+    static vector<Callback_t> pCallbacks;
+  private:
+    MHD_Daemon         *pDaemon;
+  private :
+    static int  HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
+    static void HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe);
+    static int  SendRedirect(struct MHD_Connection *connection, string url);
   public :
-    static bool Config(json_object *config);
     static void RegisterCallback(string handleName, Func_t function);
-    static void Stop();
-    static void RemoveExpiredSessions();
+  public :
+    HTTPServer(json config);
+    void ExpireSessions();
+    virtual ~HTTPServer();
+    HTTPServer *Instance();
+    void RemoveExpiredSessions();
 };

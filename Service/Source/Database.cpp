@@ -42,11 +42,18 @@ bool Database::Connect() {
                "SET client_min_messages = error;"
                "CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema) + ";"
                "SET search_path TO " +  Bind(pSchema) + ", public");
+  ClearResult();
   return true;
 }
 Database::~Database() {
-  if(pResult != NULL) PQclear(pResult);
+  ClearResult();
   PQfinish(pDBConn);
+}
+void Database::ClearResult() {
+  if(pResult != NULL) {
+    PQclear(pResult);
+    pResult = NULL;
+  }
 }
 bool Database::Config(json config) {
   string Hostname = "localhost";
@@ -55,7 +62,7 @@ bool Database::Config(json config) {
   string Username = "openzmeter";
   string Password = "openzmeter";
   if(config["Hostname"].is_string()) Hostname = config["Hostname"];
-  if(config["Port"].is_string()) Port = config["Port"];
+  if(config["Port"].is_number_unsigned()) Port = config["Port"];
   if(config["Database"].is_string()) DataBase = config["Database"];
   if(config["Username"].is_string()) Username = config["Username"];
   if(config["Password"].is_string()) Password = config["Password"];
@@ -66,15 +73,14 @@ bool Database::Config(json config) {
 }
 bool Database::ExecResource(string file) {
   size_t Len;
-  if(pResult != NULL) PQclear(pResult);
+  ClearResult();
   char *Script = (char*)ResourceLoader::Instance()->GetFile(file, &Len);
   Script[Len - 1] = 0;
   return ExecSentence(Script);
 }
 bool Database::ExecSentence(string sql) {
-  if(pResult != NULL) PQclear(pResult);
+  ClearResult();
   if(Connect() == false) return false;
-  if(pResult != NULL) PQclear(pResult);
   pResult = PQexec(pDBConn, sql.c_str());
   if((PQresultStatus(pResult) != PGRES_COMMAND_OK) && (PQresultStatus(pResult) != PGRES_TUPLES_OK)) {
     char *Save;

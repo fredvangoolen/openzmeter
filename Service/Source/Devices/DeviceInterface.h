@@ -10,44 +10,47 @@
 #include <json.hpp>
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
-class DeviceInterface {
-  protected :
+class Device {
+  public :
     enum DeviceState { UNCONFIGURED, STOPPED, RUNNING };
-  private :
-    static vector<DeviceInterface*> pDevices;
   protected :
     pthread_t   pCaptureThread;           //Descriptor del hilo de captura
     bool        pTerminate;               //Marca que deben detenerse los trabajos pendientes
     DeviceState pState;                   //Device state
-  protected :
+  public :
     virtual uint32_t           AnalyzersCount() = 0;
     virtual AnalyzerInterface *FindAnalyzer(string serial) = 0;
     virtual string             Serial() = 0;
     virtual string             Driver() = 0;
     virtual string             Name() = 0;
-    virtual bool               ConfigDev(json_object *config) = 0;
+    virtual bool               Config(json config) = 0;
     virtual bool               Start() = 0;
     virtual bool               Stop() = 0;
-  protected :
-    DeviceInterface();
-  protected :
-    static void AddDevice(DeviceInterface *device);
   public :
-//    static bool Config(json_object *config);
-//    static void GetDevicesCallback(HTTPRequest &req);
-//    static void StartDeviceCallback(HTTPRequest &req);
-//    static void StopDeviceCallback(HTTPRequest &req);
-//    static void GetAnalyzersCallback(HTTPRequest &req);
-//    static void GetSeriesCallback(HTTPRequest &req);
-//    static string GetSeriesAggregCallback(HTTPRequest &req);
-//    static void GetSeriesNowCallback(HTTPRequest &req);
-//    static void GetSeriesRangeCallback(HTTPRequest &req);
-
-//    static void GetEventsCallback(HTTPRequest &req);
-//        static void GetPricesCallback(HTTPRequest &req);
-    
-//    static void GetTariffsCallback(HTTPRequest &req);
-//    static void SetTariffsCallback(HTTPRequest &req);
-//    static void DelTariffsCallback(HTTPRequest &req);    
-
+    Device();
+    virtual ~Device();
+    DeviceState State();
+};
+class DeviceManager {
+  private :  
+    static DeviceManager *pInstance;
+    static vector<Device*> pDevices;
+  private :
+    static void GetDevicesCallback(HTTPRequest &req);
+    static void StartDeviceCallback(HTTPRequest &req);
+    static void StopDeviceCallback(HTTPRequest &req);
+    static void GetAnalyzersCallback(HTTPRequest &req);
+    static void GetSeriesCallback(HTTPRequest &req);
+    static void GetSeriesNowCallback(HTTPRequest &req);
+    static void GetSeriesRangeCallback(HTTPRequest &req);
+    static void GetEventsCallback(HTTPRequest &req);
+    static void GetPricesCallback(HTTPRequest &req);
+    static void GetTariffsCallback(HTTPRequest &req);
+    static void SetTariffsCallback(HTTPRequest &req);
+    static void DelTariffsCallback(HTTPRequest &req);    
+  public :
+    static void AddDevice(Device *device);
+  public :
+    DeviceManager(json config);
+    ~DeviceManager();    
 };

@@ -60,36 +60,47 @@ int main(int argc, char** argv) {
   /* Create config manager */
   ConfigManager ConfigManager(ConfigFileName);
   json Config = ConfigManager.ReadConfig();
+  
   /* Create PID File */
   string PIDFileName = "/var/run/openZmeter.pid";
   if(Config["PidFile"].is_string()) PIDFileName = Config["PidFile"];
   PIDFile PIDFile(PIDFileName);
+  
   /* Create LOG file */
   string LOGFileName = "/var/log/openZmeter.log";
   if(Config["LogFile"].is_string()) LOGFileName = Config["LogFile"];
   LOGFile LOGFile(LOGFileName, Debug);
+  
   /* Create resource loader */
   ResourceLoader ResourceLoader;
+  
   /* Create database */
   json DBConfig = json::object();
-  if(Config["Database"].is_string()) DBConfig = Config["Database"];
+  if(Config["Database"].is_object()) DBConfig = Config["Database"];
   Database::Config(DBConfig);
   
-  
-  
   /* Create WEB service */
-  //  if((json_object_object_get_ex(pConfig, "HTTPServer", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (HTTPServer::Config(Find) == false)) {
-//    pthread_mutex_unlock(&pConfigMutex);
-//    LogMsg("ERROR", "Can not create HTTP server\n");
-//    return false;
-//  }
+  json WEBConfig = json::object();
+  if(Config["HTTPServer"].is_object()) WEBConfig = Config["HTTPServer"];
+  HTTPServer HTTPServer(WEBConfig);
+  HTTPServer.RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
+  HTTPServer.RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
+  HTTPServer.RegisterCallback("/getNews",             GetNewsCallback);
+//  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);
+  
+  /* Create embedded NTP client */
 //  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(pConfig, "NTP", json_object_new_object());
 //  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (NTP::Config(Find) == false)) {
 //    pthread_mutex_unlock(&pConfigMutex);
 //    LogMsg("ERROR", "Can not create NTP client\n");
 //    return false;
 //  }
-//  if((json_object_object_get_ex(pConfig, "Devices", &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(pConfig, "Devices", json_object_new_object());
+ /* Create devices interface */
+  json DeviceConfig = json::object();
+  if(Config["Devices"].is_object()) DeviceConfig = Config["Devices"];
+  DeviceManager DeviceManager(DeviceConfig);
+  
+  //  if((json_object_object_get_ex(pConfig, "Devices", &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(pConfig, "Devices", json_object_new_object());
 //  if((json_object_object_get_ex(pConfig, "Devices", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (DeviceInterface::Config(Find) == false)) {
 //    pthread_mutex_unlock(&pConfigMutex);
 //    LogMsg("ERROR", "Can not create device manager\n");
@@ -99,7 +110,7 @@ int main(int argc, char** argv) {
   
   
     if(Daemonize == true) Tools::Daemonize();
-  
+  Tools::RegisterHandlers(SignalHandler);
   /*
           
           
@@ -113,12 +124,7 @@ int main(int argc, char** argv) {
     sched_param Param {.sched_priority = Prio };
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Instance()->Warning("Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
   }
-  Tools::RegisterHandlers(SignalHandler);
-  HTTPServer::RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
-  HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
-  HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
-//  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);
-//  if(Tools::ReadConfig(ConfigFileName) == false) return EXIT_FAILURE;
+  
   
   */
   int Iter = 0;

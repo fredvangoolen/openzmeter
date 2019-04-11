@@ -19,7 +19,7 @@
 #define DEVICEV1_00_TRANSFERS           32                          //Numero de transferencias a encolar
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
-class DeviceV1_00 : public DeviceInterface {
+class DeviceV1_00 : public Device {
   private :
     typedef struct {
       float Voltage;
@@ -38,7 +38,7 @@ class DeviceV1_00 : public DeviceInterface {
     struct libusb_device        *pNewDevice;               //Dispositivo que se conecta    
     pthread_t                    pSignalThread;            //Thread to handle LED and sounds
     pthread_mutex_t              pMutex;                   //Start/Stop mutex
-    json_object                 *pConfig;                  //Configuration section
+    json                         pConfig;                  //Configuration section
     libusb_context              *pContext;                 //USB context
   private :
     static bool                  pClassRegistered;
@@ -49,7 +49,7 @@ class DeviceV1_00 : public DeviceInterface {
     static void             ReadCallback(struct libusb_transfer *transfer);
     static int              PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
-    bool               ConfigDev(json_object *config);
+    bool               Config(json config);
     AnalyzerInterface *FindAnalyzer(string serial);
     uint32_t           AnalyzersCount();
     string             Serial();
@@ -59,6 +59,7 @@ class DeviceV1_00 : public DeviceInterface {
     bool               Stop();
     bool               BuffersAppend(float voltageSample, float currentSample);
   public :
+    DeviceV1_00(string serial);
     ~DeviceV1_00();
 };
 //----------------------------------------------------------------------------------------------------------------------

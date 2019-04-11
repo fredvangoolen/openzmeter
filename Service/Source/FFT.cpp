@@ -2,17 +2,18 @@
  * File:     FFT.cpp
  * Author:   Eduardo Viciana (30 de mayo de 2018)
  * ------------------------------------------------------------------------------------------------------------------ */
+#include <fftw3.h>
+#include "FFT.h"
 #include <errno.h>
 #include <string.h>
 #include <math.h>
-#include <fftw3.h>
-#include "FFT.h"
+
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t FFT::pPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
 FFT::FFT(char *name) {
   pTerminate = false;
-  pInput = NULL;
+  pRunning = false;
   pthread_cond_init(&pThreadCond, NULL);
   pthread_mutex_init(&pThreadMutex, NULL);
   pThread = 0;
@@ -28,17 +29,16 @@ FFT::~FFT() {
   pthread_cond_signal(&pThreadCond);
   if(pthread_join(pThread, NULL) != 0) LOGFile::Instance()->Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
 }
-bool FFT::Start(vector<float> *in) {
+void FFT::Start(vector<float> &in) {
   pthread_mutex_lock(&pThreadMutex);
-  if(pInput != NULL) {
+  if(pRunning == true) {
     pthread_mutex_unlock(&pThreadMutex);
-    return false;
+    return;
   }
-//  pLen = len;
   pInput = in;
+  pRunning = true;
   pthread_mutex_unlock(&pThreadMutex);
   pthread_cond_signal(&pThreadCond);
-  return true;
 }
 void *FFT::FFT_Thread(void *args) {
   ((FFT*)args)->Process();
@@ -47,33 +47,33 @@ void *FFT::FFT_Thread(void *args) {
 void FFT::Process() {
   while(true) {
     pthread_mutex_lock(&pThreadMutex);
-    while(pInput == NULL) {
+    while(pRunning == false) {
       if(pTerminate == true) return;
       pthread_cond_wait(&pThreadCond, &pThreadMutex);
     }
     pthread_mutex_unlock(&pThreadMutex);
     pthread_mutex_lock(&pPlannerMutex);
-    Output.reserve((pInput->size() / 2) + 1);
-    fftwf_plan Plan = fftwf_plan_dft_r2c_1d(pInput->size(), &(*pInput)[0], (fftwf_complex*)&Output[0], FFTW_ESTIMATE);
+    Output.reserve((pInput.size() / 2) + 1);
+    fftwf_plan Plan = fftwf_plan_dft_r2c_1d(pInput.size(), &(pInput)[0], (fftwf_complex*)&Output[0], FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
     pthread_mutex_unlock(&pPlannerMutex);
-    fftwf_execute_dft_r2c(Plan, &(*pInput)[0], (fftwf_complex*)&Output[0]);
-    Output.resize((pInput->size() / 2) + 1);
+    fftwf_execute_dft_r2c(Plan, &(pInput)[0], (fftwf_complex*)&Output[0]);
+    Output.resize((pInput.size() / 2) + 1);
     for(uint i = 0; i < Output.size(); i++) {
-      Output[i].Real = Output[i].Real / pInput->size();
-      Output[i].Imag = Output[i].Imag / pInput->size();
+      Output[i].Real = Output[i].Real / pInput.size();
+      Output[i].Imag = Output[i].Imag / pInput.size();
     }
     pthread_mutex_lock(&pPlannerMutex);
     fftwf_destroy_plan(Plan);
     pthread_mutex_unlock(&pPlannerMutex);
     pthread_mutex_lock(&pThreadMutex);
-    pInput = NULL;
+    pRunning = false;
     pthread_mutex_unlock(&pThreadMutex);
     pthread_cond_signal(&pThreadCond);
   }
 }
 void FFT::Wait() {
   pthread_mutex_lock(&pThreadMutex);
-  while(pInput != NULL) {
+  while(pRunning == true) {
     if(pTerminate == true) return;
     pthread_cond_wait(&pThreadCond, &pThreadMutex);
   } 

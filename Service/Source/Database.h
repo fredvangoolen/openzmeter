@@ -27,7 +27,8 @@ class Database {
     PGresult    *pResult;
   private :
     bool   Connect();
-    string BuildQueryString();
+    void   ClearResult();
+//    string BuildQueryString();
   public :
     string      Bind(uint32_t param);
     string      Bind(uint64_t param);

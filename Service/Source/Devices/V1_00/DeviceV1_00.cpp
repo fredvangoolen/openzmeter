@@ -17,7 +17,7 @@
 #include "DeviceV1_00.h"
 #include "Tools.h"
 //======================================================================================================================
-bool DeviceV1_00::pClassRegistered = true;//DeviceV1_01::Init();
+bool DeviceV1_00::pClassRegistered = DeviceV1_00::Init();
 // Funciones ===========================================================================================================
 bool DeviceV1_00::Init() {
   libusb_context *Context;
@@ -63,23 +63,39 @@ bool DeviceV1_00::Init() {
       continue;
     }
     libusb_close(Dev_Handle);
-    DeviceV1_00 *This = new DeviceV1_00();
-    This->pBuffer.Reset(DEVICEV1_00_BUFFERSECONDS * DEVICEV1_00_SAMPLEFREQ);
-    This->pLastUpdate    = 0;
-    This->pDeviceHandle  = NULL;
-    This->pNewDevice     = NULL;
-    This->pSerial        = String;
-    This->pVoltageGain   = 1;
-    This->pCurrentGain   = 1;
-    This->pVoltageOffset = 0;
-    This->pCurrentOffset = 0;
-    This->pAnalyzer      = NULL;
     LOGFile::Instance()->Info("Adding 'V1.00' device driver instance for USB with serial '%s'\n", String);
-    AddDevice(This);
+    DeviceManager::AddDevice(new DeviceV1_00(String));
   }
   libusb_free_device_list(Devs, Count);
 	libusb_exit(Context);
   return true;
+}
+DeviceV1_00::DeviceV1_00(string serial) {
+  pBuffer.Reset(DEVICEV1_00_BUFFERSECONDS * DEVICEV1_00_SAMPLEFREQ);
+  pLastUpdate    = 0;
+  pDeviceHandle  = NULL;
+  pNewDevice     = NULL;
+  pSerial        = serial;
+  pVoltageGain   = 1;
+  pCurrentGain   = 1;
+  pVoltageOffset = 0;
+  pCurrentOffset = 0;
+  pAnalyzer      = NULL;
+}
+DeviceV1_00::~DeviceV1_00() {
+//  if(pVoltageSamples) free(pVoltageSamples);
+//  if(pCurrentSamples) free(pCurrentSamples);
+  if(pAnalyzer) delete pAnalyzer;
+  //  if(Buffer) {
+//    pthread_cond_signal(&WriteWait);
+//    pthread_cond_signal(&ReadWait);
+//    pTerminate = true;
+//    Tools::LogMsg("INFO", "Waiting for adquisition thread ends...\n");
+//    pthread_join(CaptureThread, NULL);
+//    pthread_join(AnalyzeThread, NULL);
+//    free(Buffer);
+//  }
+//  if(pSerial) free(pSerial);
 }
 AnalyzerInterface *DeviceV1_00::FindAnalyzer(string serial) {
   if(pAnalyzer == NULL) return NULL;
@@ -306,26 +322,25 @@ void *DeviceV1_00::Signal_Thread(void* args) {
  */
   return NULL;
 }
-bool  DeviceV1_00::ConfigDev(json_object *config) {
-  if((pState == RUNNING) || (config == NULL) || (json_object_get_type(config) != json_type_object)) return false;
+bool  DeviceV1_00::Config(json config) {
+  if(pState == RUNNING) return false;
   LOGFile::Instance()->Info("Configuring 'V1.00' driver with serial '%s'...\n", pSerial.c_str());
   bool AutoStart = false;
-  json_object *Find;
-  if((json_object_object_get_ex(config, "VoltageGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pVoltageGain = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "VoltageOffset", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pVoltageOffset = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "CurrentGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pCurrentGain = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "CurrentOffset", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pCurrentOffset = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "AutoStart", &Find) == true) && (json_object_get_type(Find) == json_type_boolean)) AutoStart = json_object_get_boolean(Find);
+  if(config["VoltageGain"].is_number()) pVoltageGain = config["VoltageGain"];
+  if(config["VoltageOffset"].is_number()) pVoltageOffset = config["VoltageOffset"];
+  if(config["CurrentGain"].is_number()) pCurrentGain = config["CurrentGain"];
+  if(config["CurrentOffset"].is_number()) pCurrentOffset = config["CurrentOffset"];
+  if(config["AutoStart"].is_boolean()) AutoStart = config["AutoStart"];  
   if(pState == UNCONFIGURED) {
     pState = STOPPED;
     pConfig = config;
     if((AutoStart == true) && (Start() == false)) return false;
   }
-  json_object_object_add(pConfig, "VoltageGain", json_object_new_double(pVoltageGain));
-  json_object_object_add(pConfig, "VoltageOffset", json_object_new_double(pVoltageOffset));
-  json_object_object_add(pConfig, "CurrentGain", json_object_new_double(pCurrentGain));
-  json_object_object_add(pConfig, "CurrentOffset", json_object_new_double(pCurrentOffset));
-  json_object_object_add(pConfig, "AutoStart", json_object_new_boolean(AutoStart));
+  pConfig["VoltageGain"] = pVoltageGain;
+  pConfig["VoltageOffset"] =pVoltageOffset;
+  pConfig["CurrentGain"] = pCurrentGain;
+  pConfig["CurrentOffset"] = pCurrentOffset;
+  pConfig["AutoStart"] = AutoStart;
   if(ConfigManager::Instance()->SaveConfig() == false) return false;
   return true;
 }
@@ -370,21 +385,7 @@ bool DeviceV1_00::Start() {
 bool DeviceV1_00::Stop() {
   return true;
 }
-DeviceV1_00::~DeviceV1_00() {
-//  if(pVoltageSamples) free(pVoltageSamples);
-//  if(pCurrentSamples) free(pCurrentSamples);
-  if(pAnalyzer) delete pAnalyzer;
-  //  if(Buffer) {
-//    pthread_cond_signal(&WriteWait);
-//    pthread_cond_signal(&ReadWait);
-//    pTerminate = true;
-//    Tools::LogMsg("INFO", "Waiting for adquisition thread ends...\n");
-//    pthread_join(CaptureThread, NULL);
-//    pthread_join(AnalyzeThread, NULL);
-//    free(Buffer);
-//  }
-//  if(pSerial) free(pSerial);
-}
+
 //uint32_t CaptureMono::SamplesCopy(float **dest, uint32_t offset, uint32_t len) {
 //  for(uint i = 0; i < len; i++) {
 //    uint32_t Pos = ((ReadPos + CAPTUREMONO_BUFFERSIZE) - offset + i) % CAPTUREMONO_BUFFERSIZE;
