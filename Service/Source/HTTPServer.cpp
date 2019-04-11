@@ -17,11 +17,6 @@
 #include "Tools.h"
 #include "NetworkManager.h"
 //----------------------------------------------------------------------------------------------------------------------
-MHD_Daemon                     *HTTPServer::pDaemon = NULL;
-//string                          HTTPServer::pDefaultPage;
-vector<HTTPServer::Callback_t>  HTTPServer::pCallbacks;
-//vector<HTTPServer::Mapping_t>   HTTPServer::pMappings;
-//----------------------------------------------------------------------------------------------------------------------
 HTTPRequest::HTTPRequest(char *cookie, bool deflate) : Database() {
   pStartTime = Tools::GetTime();
   pDeflate = deflate;
@@ -150,23 +145,24 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
   }
 }
 //----------------------------------------------------------------------------------------------------------------------
-bool HTTPServer::Config(json_object *config) {
-  Database DB;
+HTTPServer *HTTPServer::pInstance = NULL;
+vector<HTTPServer::Callback_t> HTTPServer::pCallbacks;
+//----------------------------------------------------------------------------------------------------------------------
+HTTPServer::HTTPServer(json config) {
+  if(pInstance != NULL) return;
+  pDaemon = NULL;
   uint16_t Port = 8080;
-  json_object_object_foreach(config, JSON_Key, JSON_Val) {
-    enum json_type JSON_Type = json_object_get_type(JSON_Val);
-    if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) Port = json_object_get_int(JSON_Val);
-  }
+  if(config["Port"].is_number_unsigned()) Port = config["Port"];
   pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, Port, NULL, NULL, 
                              &HandleClient, NULL,
                              MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int) 15,
                              MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
                              MHD_OPTION_END);
-  if(pDaemon == NULL) return false;
-  return true;
+  pInstance = this;
 }
-void HTTPServer::Stop() {
+HTTPServer::~HTTPServer() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
+  pInstance = NULL;
 }
 void HTTPServer::RegisterCallback(string handleName, HTTPServer::Func_t function) {
   Callback_t Item = {handleName, function};
@@ -255,7 +251,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
             Request->FromString("Unauthorided access to API", MHD_HTTP_UNAUTHORIZED);
           } else {
             bool Handled = false;
-            for(vector<Callback_t>::iterator it = pCallbacks.begin() ; it != pCallbacks.end(); ++it) {
+            for(vector<Callback_t>::iterator it = pInstance->pCallbacks.begin() ; it != pInstance->pCallbacks.end(); ++it) {
               if(it->HandleName.compare(url) == 0) {
                 it->Function(*Request);
                 Handled = true;

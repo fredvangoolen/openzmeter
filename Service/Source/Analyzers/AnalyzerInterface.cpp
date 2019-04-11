@@ -48,11 +48,11 @@ void AnalyzerInterface::InitAggreg(Params_t &params, AggregType type) {
   params.Type = type;
   params.Timestamp = 0;
   params.Frequency = NAN;
+  params.Voltage_Inputs = 0;
+  params.Frequency_Inputs = 0;
+  params.Flag = false;
   params.Current_Inputs.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, 0);
   if((params.Type == AGGREG_10C) || (params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M) || (params.Type == AGGREG_1H)) {
-    params.Flag = false;
-    params.Voltage_Inputs = 0;
-    params.Frequency_Inputs = 0;
     params.Voltage.resize((pMode == PHASE1) ? 1 : 3, NAN);
     params.Current.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, NAN);
   }

@@ -25,7 +25,7 @@ class LOGFile {
   private :
     static LOGFile *pInstance;
   private :
-    void Msg(Type type, const char *msg, ...);
+    void Msg(Type type, const char *msg, va_list params);
   private :
     FILE            *pFile;
     pthread_mutex_t  pMutex;

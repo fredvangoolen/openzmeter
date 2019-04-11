@@ -10,7 +10,7 @@
 #define CAPTUREVIRTUAL_BUFFERSIZE     60000           //Tamaño del buffer (10 segundos)
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
-class DeviceVirtual : public DeviceInterface {
+class DeviceVirtual : public Device {
   private :
     static bool    pClassRegistered;
   private :
@@ -20,12 +20,12 @@ class DeviceVirtual : public DeviceInterface {
     float                           pVoltage;
     float                           pFrequency;
     pthread_mutex_t                 pMutex;
-    json_object                    *pConfig;
+    json                            pConfig;
   private : 
     static bool  Init();
     static void *Capture_Thread(void *args);
   private :
-    bool               ConfigDev(json_object *config);
+    bool               Config(json config);
     AnalyzerInterface *FindAnalyzer(string serial);
     uint32_t           AnalyzersCount();
     string             Serial();
@@ -33,8 +33,8 @@ class DeviceVirtual : public DeviceInterface {
     string             Name();
     bool               Start();
     bool               Stop();
-
   public :
+    DeviceVirtual();
     ~DeviceVirtual();
 };
 //----------------------------------------------------------------------------------------------------------------------

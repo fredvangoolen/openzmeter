@@ -147,8 +147,8 @@ void AnalyzerSoft::Analyze() {
     uint64_t Start = Tools::GetTime();
     pthread_mutex_unlock(&pThreadMutex);
     //Inicia FFTs
-    for(uint i = 0; i < pVoltageFFT.size(); i++) pVoltageFFT[i]->Start(&pAggreg10C.Voltage_Samples[i]);
-    for(uint i = 0; i < pCurrentFFT.size(); i++) pCurrentFFT[i]->Start(&pAggreg10C.Current_Samples[i]);
+    for(uint i = 0; i < pVoltageFFT.size(); i++) pVoltageFFT[i]->Start(pAggreg10C.Voltage_Samples[i]);
+    for(uint i = 0; i < pCurrentFFT.size(); i++) pCurrentFFT[i]->Start(pAggreg10C.Current_Samples[i]);
     pAggreg10C.Frequency = CalcFrequency();
     if(!isnan(pAggreg10C.Frequency)) pAggreg10C.Frequency_Inputs = 1;
     bool Valid = false;

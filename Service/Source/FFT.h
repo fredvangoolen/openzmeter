@@ -17,7 +17,8 @@ class FFT {
   public :
     vector<Complex_t>  Output;                //Datos de salida
   private :
-    vector<float>     *pInput;                //Muestras de entrada
+    bool               pRunning;              //FFT runing
+    vector<float>      pInput;                //Muestras de entrada
     pthread_t          pThread;               //Hilo de ejecucion
     pthread_mutex_t    pThreadMutex;          //Mutex para la variable de condicion
     pthread_cond_t     pThreadCond;           //Variable de condicion para esperar
@@ -32,7 +33,7 @@ class FFT {
     static float CalcAngle(Complex_t a, Complex_t b);
   public :
     FFT(char *name);
-    bool  Start(vector<float> *in);
+    void  Start(vector<float> &in);
     void  Wait();
     bool  IsFinished();
     float BinPower(uint32_t bin);

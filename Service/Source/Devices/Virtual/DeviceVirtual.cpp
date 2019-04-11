@@ -17,18 +17,19 @@
 #include "DeviceVirtual.h"
 #include "Tools.h"
 // Register ============================================================================================================
-bool DeviceVirtual::pClassRegistered = true;//DeviceV1_01::Init();DeviceVirtual::Init();
+bool DeviceVirtual::pClassRegistered = DeviceVirtual::Init();
 // Funciones ===========================================================================================================
 bool DeviceVirtual::Init() {
-  DeviceVirtual *This = new DeviceVirtual();
-  This->pAnalyzer   = NULL;
-  This->pSampleRate = 10000;
-  This->pVoltage    = 230.0;
-  This->pFrequency  = 50.0;
-  pthread_mutex_init(&This->pMutex, NULL);
   LOGFile::Instance()->Info("Adding 'Virtual' device driver instance with serial 'VIRTUAL'\n");
-  AddDevice(This);
+  DeviceManager::AddDevice(new DeviceVirtual());
   return true;
+}
+DeviceVirtual::DeviceVirtual() {
+  pAnalyzer   = NULL;
+  pSampleRate = 10000;
+  pVoltage    = 230.0;
+  pFrequency  = 50.0;
+  pthread_mutex_init(&pMutex, NULL);
 }
 uint32_t DeviceVirtual::AnalyzersCount() {
   return (pAnalyzer == NULL) ? 0 : 1;
@@ -42,19 +43,18 @@ string DeviceVirtual::Driver() {
 string DeviceVirtual::Name() {
   return "Emulate most of real capture device for testing";
 }
-bool DeviceVirtual::ConfigDev(json_object *config) {
-  if((pState == RUNNING) || (config == NULL) || (json_object_get_type(config) != json_type_object)) return false;
+bool DeviceVirtual::Config(json config) {
+  if(pState == RUNNING) return false;
   LOGFile::Instance()->Info("Configuring 'Virtual' driver...\n");
   bool AutoStart = false;
-  json_object *Find;
-  const char *Mode = NULL;
-  if((json_object_object_get_ex(config, "Voltage", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pVoltage = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "Frequency", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pFrequency = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "SampleRate", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pSampleRate = json_object_get_double(Find);
-  if((json_object_object_get_ex(config, "AutoStart", &Find) == true) && (json_object_get_type(Find) == json_type_boolean)) AutoStart = json_object_get_boolean(Find);
-  if((json_object_object_get_ex(config, "Mode", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Mode = (char*)json_object_get_string(Find);
-  if((Mode == NULL) || ((strcmp(Mode, "1PHASE") != 0) && (strcmp(Mode, "3PHASE") != 0) && (strcmp(Mode, "3PHASE+N") != 0))) Mode = "1PHASE";
-  pMode = (strcmp(Mode, "1PHASE") == 0) ? AnalyzerInterface::PHASE1 : (strcmp(Mode, "3PHASE") == 0) ? AnalyzerInterface::PHASE3 : AnalyzerInterface::PHASE3N;
+  string Mode;
+  if(config["Voltage"].is_number()) pVoltage = config["Voltage"];
+  if(config["Frequency"].is_number()) pFrequency = config["Frequency"];
+  if(config["SampleRate"].is_number()) pSampleRate = config["SampleRate"];
+  if(config["AutoStart"].is_boolean()) AutoStart = config["AutoStart"];
+  if(config["Mode"].is_string()) Mode = config["Mode"];
+  if((Mode != "1PHASE") && (Mode != "3PHASE") && (Mode != "3PHASE+N")) Mode = "1PHASE";
+  pMode = (Mode == "1PHASE") ? AnalyzerInterface::PHASE1 : (Mode == "3PHASE") ? AnalyzerInterface::PHASE3 : AnalyzerInterface::PHASE3N;
   if((pVoltage < 85) || (pVoltage > 300)) pVoltage = 230.0;
   if((pFrequency < 10) || (pFrequency > 80)) pFrequency = 50.0;
   if((pSampleRate < (pFrequency * 100))) pSampleRate = (pFrequency * 100);
@@ -63,11 +63,11 @@ bool DeviceVirtual::ConfigDev(json_object *config) {
     pConfig = config;
     if((AutoStart == true) && (Start() == false)) return false;
   }
-  json_object_object_add(pConfig, "Voltage", json_object_new_double(pVoltage));
-  json_object_object_add(pConfig, "Frequency", json_object_new_double(pFrequency));
-  json_object_object_add(pConfig, "SampleRate", json_object_new_double(pSampleRate));
-  json_object_object_add(pConfig, "Mode", json_object_new_string(Mode));
-  json_object_object_add(pConfig, "AutoStart", json_object_new_boolean(AutoStart));
+  pConfig["Voltage"] = pVoltage;
+  pConfig["Frequency"] = pFrequency;
+  pConfig["SampleRate"] = pSampleRate;
+  pConfig["Mode"] = Mode;
+  pConfig["AutoStart"] = AutoStart;
   if(ConfigManager::Instance()->SaveConfig() == false) return false;
   return true;
 }

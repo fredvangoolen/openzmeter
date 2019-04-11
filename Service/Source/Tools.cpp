@@ -92,9 +92,7 @@ void LOGFile::Error(const char* msg, ...) {
   Msg(ERROR, msg, args);
   va_end(args);
 }
-void LOGFile::Msg(Type type, const char *msg, ...) {
-  va_list args;
-  va_start(args, msg);
+void LOGFile::Msg(Type type, const char *msg, va_list params) {
   time_t Now;
   struct tm *TimeStamp;
   char DateStr[80];
@@ -114,16 +112,14 @@ void LOGFile::Msg(Type type, const char *msg, ...) {
     } else {
       return;
     }
-    vprintf(msg, args);
+    vprintf(msg, params);
     fflush(stdout);
   }
   if(pFile != NULL) {
-    va_start(args, msg);
     fprintf(pFile, "%s", DateStr);
-    vfprintf(pFile, msg, args);
+    vfprintf(pFile, msg, params);
   }
   pthread_mutex_unlock(&pMutex);
-  va_end(args);
 }
 //----------------------------------------------------------------------------------------------------------------------
 extern char _binary_ResourceFiles_start[];
