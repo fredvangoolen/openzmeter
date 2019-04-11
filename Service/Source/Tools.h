@@ -5,7 +5,6 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <json-c/json.h>
 #include <json.hpp>
 #include "Database.h"
 #include "HTTPServer.h"
@@ -13,39 +12,95 @@
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
-class Tools {
+class PIDFile {
+  string pFile;
+  public :
+    PIDFile(string name);
+    virtual ~PIDFile();
+};
+//----------------------------------------------------------------------------------------------------------------------
+class LOGFile {
+  private :
+    enum Type {WARNING, ERROR, DEBUG, INFO};
+  private :
+    static LOGFile *pInstance;
+  private :
+    void Msg(Type type, const char *msg, ...);
+  private :
+    FILE            *pFile;
+    pthread_mutex_t  pMutex;
+    bool             pDebug;
+    bool             pConsole;
+  public :
+    static LOGFile *Instance();
+  public :
+    void ConsoloeOutput(bool enabled);
+    void Info(const char *msg, ...);
+    void Warning(const char *msg, ...);
+    void Error(const char *msg, ...);
+    void Debug(const char *msg, ...);
+  public :
+    LOGFile(string name, bool debug);
+    virtual ~LOGFile();
+};
+//----------------------------------------------------------------------------------------------------------------------
+class ResourceLoader {
   private :
     typedef struct {
       string   Name;
       uint32_t Size;
       uint8_t *Ptr;
     } File_t;
+  private :
+    static ResourceLoader *pInstance;
+  private :
+    vector<File_t> pFiles;
+  public :
+    static ResourceLoader *Instance();
+  public :
+    ResourceLoader();
+    virtual ~ResourceLoader();
+    uint8_t *GetFile(string name, size_t *size);
+};
+//----------------------------------------------------------------------------------------------------------------------
+class ConfigManager {
+  private :
+    static ConfigManager *pInstance;
+  private :
+    string          pFile;
+    pthread_mutex_t pMutex;
+  public :
+    static ConfigManager *Instance();
+  public :
+    ConfigManager(string name);
+    virtual ~ConfigManager();
+    json ReadConfig();
+    bool SaveConfig();
+};
+//----------------------------------------------------------------------------------------------------------------------
+class Tools {
+
   public :
     static uint8_t pBatteryLevel;
     static bool    pBatteryCharging;
     static bool    pExternalPower;
   private :      
     static bool            pDaemonized;
-    static FILE           *pLogFile;
-    static string          pConfigFile;
-    static pthread_mutex_t pLogMutex;
-    static pthread_mutex_t pConfigMutex;
-    static json_object    *pConfig;
-    static string          pPidFile;
-    static vector<File_t>  pFiles;
+
+    
+
+    static json           *pConfig;
+
+    
   public :
     static bool          Debug;
   private :
     static uint64_t ParseProcMem(char *name, char *buff);
     static bool     GetMemory(uint64_t *total, uint64_t *available);
-    static bool     CreatePidFile(const char *name);
-    static bool     RemovePidFile();
+
   public :
-    static bool         ReadConfig(string file);
-    static bool         SaveConfig();
-    static void         LogMsg(const char *level, const char *msg, ...);
+
     static void         Daemonize();
-    static bool         CreateLogFile(const char *name);
     static uint64_t     GetTime();
     static void         GetSysInfo(HTTPRequest &req);
     static void         RegisterHandlers(void (*function)(int));
@@ -54,7 +109,7 @@ class Tools {
     static bool         JSONUInt64(const json_object *obj, const char *key, uint64_t *dst);
     static bool         JSONUInt32(const json_object *obj, const char *key, uint32_t *dst);
     static bool         JSONArrayFloat(const json_object *obj, const char *key, float *dst, uint len);
-    static uint8_t     *GetFile(string mame, size_t *size);
+
     static json_object *GetConfigObject();
     static char        *trim(char *str);
 //    static void         SendUDP(json obj);

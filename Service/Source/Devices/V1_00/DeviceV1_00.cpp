@@ -22,19 +22,19 @@ bool DeviceV1_00::pClassRegistered = DeviceV1_00::Init();
 bool DeviceV1_00::Init() {
   libusb_context *Context;
   if(libusb_init(&Context) < 0) {
-    Tools::LogMsg("ERROR", "Can not open libUSB...\n");
+    LOGFile::Instance()->Error("Can not open libUSB...\n");
     return false;
   }
   libusb_device **Devs;
   int Count = libusb_get_device_list(NULL, &Devs);
   if(Count < 0) {
-    Tools::LogMsg("ERROR", "Can not enumerate USB devices...\n");
+    LOGFile::Instance()->Error("Can not enumerate USB devices...\n");
     return false;
   }
   for(int i = 0; i < Count; ++i) {
     libusb_device_descriptor Descriptor;
     if(libusb_get_device_descriptor(Devs[i], &Descriptor) < 0) {
-      Tools::LogMsg("ERROR", "Can not load USB descriptor...\n");
+      LOGFile::Instance()->Error("Can not load USB descriptor...\n");
       return false;
     }
     if(Descriptor.idVendor != DEVICEV1_00_VID) continue;
@@ -42,23 +42,23 @@ bool DeviceV1_00::Init() {
     if(Descriptor.bcdDevice != DEVICEV1_00_VERSION) continue;
     libusb_device_handle *Dev_Handle = NULL;
     if(libusb_open(Devs[i], &Dev_Handle) != LIBUSB_SUCCESS) {
-      Tools::LogMsg("ERROR", "Can not open USB device...\n");
+      LOGFile::Instance()->Error("Can not open USB device...\n");
     }
     char String[256];
     if(libusb_get_string_descriptor_ascii(Dev_Handle, Descriptor.iManufacturer, (unsigned char*)String, sizeof(String)) < 0) {
-      Tools::LogMsg("ERROR", "Can not load USB string...\n");
+      LOGFile::Instance()->Error("Can not load USB string...\n");
       libusb_close(Dev_Handle);
       continue;
     }
     if(strcmp(String, DEVICEV1_00_MANSTRING) != 0) continue;
     if(libusb_get_string_descriptor_ascii(Dev_Handle, Descriptor.iProduct, (unsigned char*)String, sizeof(String)) < 0) {
-      Tools::LogMsg("ERROR", "Can not load USB string...\n");
+      LOGFile::Instance()->Error("Can not load USB string...\n");
       libusb_close(Dev_Handle);
       continue;
     }
     if(strcmp(String, DEVICEV1_00_PRODSTRING) != 0) continue;    
     if(libusb_get_string_descriptor_ascii(Dev_Handle, Descriptor.iSerialNumber, (unsigned char*)String, sizeof(String)) < 0) {
-      Tools::LogMsg("ERROR", "Can not load USB string...\n");
+      LOGFile::Instance()->Error("Can not load USB string...\n");
       libusb_close(Dev_Handle);
       continue;
     }
@@ -106,7 +106,7 @@ void DeviceV1_00::ReadCallback(struct libusb_transfer *transfer) {
       float Voltage = (Pkg[Count * 2 + 0] - This->pVoltageOffset) * This->pVoltageGain;
       float Current = (Pkg[Count * 2 + 1] - This->pCurrentOffset) * This->pCurrentGain;
       if(This->BuffersAppend(Voltage, Current) == false) {
-        Tools::LogMsg("ERROR", "Capture buffer overflow! Posible lost of samples\n");
+        LOGFile::Instance()->Error("Capture buffer overflow! Posible lost of samples\n");
         break;
       }
     }
@@ -156,11 +156,11 @@ bool  DeviceV1_00::BuffersAppend(float voltageSample, float currentSample) {
 void *DeviceV1_00::Capture_Thread(void *args) {
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   } else {
     struct sched_param Param;
     Param.sched_priority = Prio - 5;
-    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise thread priority -> %s\n", __func__, __LINE__, strerror(errno));
+    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Instance()->Warning("Cant raise thread priority -> %s\n", __func__, __LINE__, strerror(errno));
   }
   DeviceV1_00 *This = (DeviceV1_00*)args;
   uint8_t BufferIN[DEVICEV1_00_TRANSFERS][8192];
@@ -169,18 +169,18 @@ void *DeviceV1_00::Capture_Thread(void *args) {
   while(!This->pTerminate) {
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
-    if(Result < LIBUSB_SUCCESS) Tools::LogMsg("ERROR", "libusb_handle_events_timeout_completed returns code %d\n", Result);
+    if(Result < LIBUSB_SUCCESS) LOGFile::Instance()->Error("libusb_handle_events_timeout_completed returns code %d\n", Result);
     if(This->pNewDevice != NULL) {
       struct libusb_device_descriptor Descriptor;
       Result = libusb_get_device_descriptor(This->pNewDevice, &Descriptor);
       if(Result < LIBUSB_SUCCESS) {
-        Tools::LogMsg("ERROR", "libusb_get_device_descriptor return code %d\n", Result);
+        LOGFile::Instance()->Error("libusb_get_device_descriptor return code %d\n", Result);
         This->pNewDevice = NULL;
         continue;
       }
       Result = libusb_open(This->pNewDevice, &This->pDeviceHandle);
       if(Result != LIBUSB_SUCCESS) {
-        Tools::LogMsg("ERROR", "libusb_open return %d\n", Result);
+        LOGFile::Instance()->Error("libusb_open return %d\n", Result);
         This->pDeviceHandle = NULL;
         This->pNewDevice = NULL;
         continue;
@@ -188,7 +188,7 @@ void *DeviceV1_00::Capture_Thread(void *args) {
       char Serial[256];
       Result = libusb_get_string_descriptor_ascii(This->pDeviceHandle, Descriptor.iSerialNumber, (unsigned char*)Serial, sizeof(Serial));
       if(Result < 0) {
-        Tools::LogMsg("ERROR", "libusb_get_string_descriptor_ascii returns %d\n", Result);
+        LOGFile::Instance()->Error("libusb_get_string_descriptor_ascii returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL; 
         This->pNewDevice = NULL;
@@ -202,7 +202,7 @@ void *DeviceV1_00::Capture_Thread(void *args) {
       }        
       Result = libusb_kernel_driver_active(This->pDeviceHandle, 0);
       if(Result < LIBUSB_SUCCESS) {
-        Tools::LogMsg("ERROR", "libusb_kernel_driver_active returns %d\n", Result);
+        LOGFile::Instance()->Error("libusb_kernel_driver_active returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL; 
         This->pNewDevice = NULL;
@@ -210,7 +210,7 @@ void *DeviceV1_00::Capture_Thread(void *args) {
       } else if(Result == 1) { 
         Result = libusb_detach_kernel_driver(This->pDeviceHandle, 0);
         if(Result < LIBUSB_SUCCESS) {
-          Tools::LogMsg("ERROR", "libusb_detach_kernel_driver returns %d\n", Result);
+          LOGFile::Instance()->Error("libusb_detach_kernel_driver returns %d\n", Result);
           libusb_close(This->pDeviceHandle);
           This->pDeviceHandle = NULL; 
           This->pNewDevice = NULL;
@@ -221,7 +221,7 @@ void *DeviceV1_00::Capture_Thread(void *args) {
       }
       Result = libusb_claim_interface(This->pDeviceHandle, 0);
       if(Result != LIBUSB_SUCCESS) {
-        Tools::LogMsg("ERROR", "libusb_claim_interface returns %d\n", Result);
+        LOGFile::Instance()->Error("libusb_claim_interface returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL; 
         This->pNewDevice = NULL;
@@ -234,7 +234,7 @@ void *DeviceV1_00::Capture_Thread(void *args) {
         Result |= libusb_submit_transfer(TransferIN[i]);
       }
       if(Result != LIBUSB_SUCCESS) {
-        Tools::LogMsg("ERROR", "libusb_submit_transfer returns %d\n", Result);
+        LOGFile::Instance()->Error("libusb_submit_transfer returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL; 
         This->pNewDevice = NULL;
@@ -243,7 +243,7 @@ void *DeviceV1_00::Capture_Thread(void *args) {
       Tools::LogMsg("INFO", "Capture started on device 'V1.00' with serial '%s'\n", This->pSerial);
 //      This->pTerminateSignal = false;
       if(pthread_create(&This->pSignalThread, NULL, Signal_Thread, This) != 0) {
-        Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+        LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
       }
       This->pNewDevice = NULL;
     }
@@ -345,18 +345,18 @@ bool DeviceV1_00::Start() {
 //  if((json_object_object_get_ex(config, "Remote", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigRemote(Find);
 //  if((json_object_object_get_ex(config, "Prices", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigPrices(Find);
   if(libusb_init(&pContext) < 0) {
-    Tools::LogMsg("ERROR", "Can not open libUSB...\n");
+    LOGFile::Instance()->Error("Can not open libUSB...\n");
     pthread_mutex_unlock(&pMutex);
     return false;
   }
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(pContext);
     pthread_mutex_unlock(&pMutex);
     return false;
   }
   if(libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV1_00_VID, DEVICEV1_00_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL) < 0) {
-    Tools::LogMsg("ERROR", "Failed to register libUSB calback...\n");
+    LOGFile::Instance()->Error("Failed to register libUSB calback...\n");
     pTerminate = true;
     pthread_join(pCaptureThread, NULL);
     libusb_exit(pContext);

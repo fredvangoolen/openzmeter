@@ -17,7 +17,7 @@ FFT::FFT(char *name) {
   pthread_mutex_init(&pThreadMutex, NULL);
   pThread = 0;
   if(pthread_create(&pThread, NULL, FFT_Thread, (void*)this) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;
   }
   pthread_setname_np(pThread, name);
@@ -26,7 +26,7 @@ FFT::~FFT() {
   if(pThread == 0) return;
   pTerminate = true;
   pthread_cond_signal(&pThreadCond);
-  if(pthread_join(pThread, NULL) != 0) Tools::LogMsg("ERROR", "%s:%d -> (Unknown)\n", __func__, __LINE__);
+  if(pthread_join(pThread, NULL) != 0) LOGFile::Instance()->Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
 }
 bool FFT::Start(vector<float> *in) {
   pthread_mutex_lock(&pThreadMutex);

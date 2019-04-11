@@ -78,7 +78,7 @@ void HTTPRequest::FromFile(string name) {
   //    MHD_add_response_header(response, "Content-Type", "font/woff2");
     else {
       pMimeType = "application/octet-stream";
-      Tools::LogMsg("DEBUG", "No mimetype defined for request '%s'\n", name.c_str());
+      LOGFile::Instance()->Debug("No mimetype defined for request '%s'\n", name.c_str());
     }
   }
 }
@@ -177,7 +177,7 @@ void HTTPServer::RemoveExpiredSessions() {
   DB.ExecSentence("DELETE FROM sessions WHERE (timestamp < " + DB.Bind(Tools::GetTime() - 1296000000) + " AND username IS NOT NULL) OR (timestamp < " + DB.Bind(Tools::GetTime() - 60000) + " AND username IS NULL)");
 }
 int HTTPServer::SendRedirect(struct MHD_Connection *connection, string url) {
-  Tools::LogMsg("DEBUG", "Redirecting client to '%s'\n", url);
+  LOGFile::Instance()->Debug("Redirecting client to '%s'\n", url);
   struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
   MHD_add_response_header(response, "Location", url.c_str());
   int Return = MHD_queue_response(connection, MHD_HTTP_SEE_OTHER, response);
@@ -190,7 +190,7 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
 int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
   HTTPRequest *Request = (HTTPRequest*)*ptr;
   if(Request == NULL) {
-    Tools::LogMsg("DEBUG", "HTTP %s request '%s'\n", method, url);
+    LOGFile::Instance()->Debug("HTTP %s request '%s'\n", method, url);
     string FilePath;
     char *AcceptEncoding = (char*)MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT_ENCODING);
     char *Cookie         = (char*)MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");

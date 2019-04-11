@@ -11,7 +11,10 @@
 #include "DeviceInterface.h"
 #include "NetworkManager.h"
 #include "NTP.h"
+//---------------------------------------------------------------------------------------------------------------------
 static bool Terminate = false;
+
+//---------------------------------------------------------------------------------------------------------------------
 void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
 }
@@ -36,7 +39,7 @@ bool GetCountriesCallback(string user, json_object *reader, Database *db, json_o
 }
 int main(int argc, char** argv) {
   string ConfigFile = "/etc/openZmeter.conf";
-  bool  Daemonize  = false;
+  bool   Daemonize  = false;
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
       ConfigFile = &argv[i][9];
@@ -54,13 +57,22 @@ int main(int argc, char** argv) {
       printf("Option %s not recogniced. Use --help to show valid options.", argv[i]);
     }
   }
+  ResourceLoader ResourceLoader();
+  ConfigManager  ConfigManager(ConfigFile)
+  //Creo el PID
+          //Creo el log
+          
+          
+          
+          
+
   if(Daemonize == true) Tools::Daemonize();
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   } else {
     sched_param Param {.sched_priority = Prio };
-    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
+    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Instance()->Warning("Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
   }
   Tools::RegisterHandlers(SignalHandler);
   HTTPServer::RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
@@ -100,6 +112,7 @@ int main(int argc, char** argv) {
 //    End = Time.tv_sec * 1000000 + Time.tv_nsec / 1000;
 //    LogMsg("DEBUG", "Processing block took %.1f mSec\n", (End - Start) / 1000.0);
   }
+  
 //Stop:
 //  HTTPServer::stop();
   //  Prices_Stop();

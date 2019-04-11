@@ -67,11 +67,11 @@ void ESIOS::CheckPrices(uint64_t from) {
   CURLcode Result = curl_easy_perform(pCurl);
   curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &HTTPCode);
   if(Result != CURLE_OK) {
-    Tools::LogMsg("ERROR", "curl_easy_perform() failed: %s\n", curl_easy_strerror(Result));
+    LOGFile::Instance()->Error("curl_easy_perform() failed: %s\n", curl_easy_strerror(Result));
     return;
   } 
   if(HTTPCode != 200) {
-    Tools::LogMsg("ERROR", "Query '%s' return code %d\n", Tmp, HTTPCode);
+    LOGFile::Instance()->Error("Query '%s' return code %d\n", Tmp, HTTPCode);
     return;    
   }
   xmlDoc *Doc = xmlReadMemory(pCurlBuff.Buffer, pCurlBuff.Size, Tmp, NULL, 0);
@@ -91,13 +91,13 @@ void ESIOS::CheckPrices(uint64_t from) {
         Tools::LogMsg("INFO", "Price information downloaded from ESIOS for day %d/%d/%d\n", Time.tm_mday, Time.tm_mon + 1, Time.tm_year + 1900);
         xmlXPathFreeObject(Result);
       } else {
-        Tools::LogMsg("ERROR", "No data found in response\n");
+        LOGFile::Instance()->Error("No data found in response\n");
       }
     } else {
-      Tools::LogMsg("ERROR", "Invalid XML context\n");
+      LOGFile::Instance()->Error("Invalid XML context\n");
     }
     xmlFreeDoc(Doc);
   } else {
-    Tools::LogMsg("DEBUG", "No data for requested day (Invalid XML response)\n");
+    LOGFile::Instance()->Debug("No data for requested day (Invalid XML response)\n");
   }
 }

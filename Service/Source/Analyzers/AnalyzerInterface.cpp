@@ -13,7 +13,7 @@ vector<float> AnalyzerInterface::THDRanges = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4
 vector<float> AnalyzerInterface::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerInterface::AnalyzerInterface(string id, AnalyzerMode mode) : Database(id.c_str()) {
-  Tools::LogMsg("DEBUG", "Creating analyzer database tables\n");
+  LOGFile::Instance()->Debug("Creating analyzer database tables\n");
   ExecResource("SQL/Database_Analyzer.sql");
   pMode = mode;
   pLastSave = 0;
@@ -27,7 +27,7 @@ AnalyzerInterface::AnalyzerInterface(string id, AnalyzerMode mode) : Database(id
     pMaxCurrent = ResultFloat(0, "max_current");
     pMinCurrent =  ResultFloat(0, "min_current");
   } else {
-    Tools::LogMsg("ERROR", "Can not create or read analyzer configuration\n");
+    LOGFile::Instance()->Error("Can not create or read analyzer configuration\n");
   }
 }
 AnalyzerInterface::~AnalyzerInterface() {
@@ -45,12 +45,11 @@ float AnalyzerInterface::GetNominalFrequency() {
   return pNominalFrequency;
 }
 void AnalyzerInterface::InitAggreg(Params_t &params, AggregType type) {
-//  if(params.Type != UNINITIALIZED) return;
   params.Type = type;
   params.Timestamp = 0;
+  params.Frequency = NAN;
   params.Current_Inputs.resize((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, 0);
   if((params.Type == AGGREG_10C) || (params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M) || (params.Type == AGGREG_1H)) {
-    params.Frequency = NAN;
     params.Flag = false;
     params.Voltage_Inputs = 0;
     params.Frequency_Inputs = 0;

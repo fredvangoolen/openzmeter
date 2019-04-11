@@ -27,7 +27,7 @@ DBusConnection *NetworkManager::CreateConnection() {
   dbus_error_init(&Error);
   DBusConnection *DBus = dbus_bus_get(DBUS_BUS_SYSTEM, &Error);
   if(dbus_error_is_set(&Error)) {
-    Tools::LogMsg("ERROR", "Can not open DBus connection (%s)\n", Error.message);
+    LOGFile::Instance()->Error("Can not open DBus connection (%s)\n", Error.message);
     dbus_error_free(&Error);
     return NULL;
   }
