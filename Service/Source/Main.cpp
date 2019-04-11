@@ -13,7 +13,6 @@
 #include "NTP.h"
 //---------------------------------------------------------------------------------------------------------------------
 static bool Terminate = false;
-
 //---------------------------------------------------------------------------------------------------------------------
 void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
@@ -38,15 +37,16 @@ bool GetCountriesCallback(string user, json_object *reader, Database *db, json_o
   return true;
 }
 int main(int argc, char** argv) {
-  string ConfigFile = "/etc/openZmeter.conf";
-  bool   Daemonize  = false;
+  string ConfigFileName = "/etc/openZmeter.conf";
+  bool   Daemonize      = false;
+  bool   Debug          = false;
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
-      ConfigFile = &argv[i][9];
+      ConfigFileName = &argv[i][9];
     } else if(strcmp(argv[i], "--debug") == 0) {
-      Tools::Debug = true;
+      Debug = true;
     } else if(strcmp(argv[i], "--daemon") == 0) {
-      Daemonize  = true;
+      Daemonize = true;
     } else if(strcmp(argv[i], "--help") == 0) {
       printf("--help           - Shows this screen");
       printf("--config=<file>  - Set config file\n");
@@ -57,16 +57,55 @@ int main(int argc, char** argv) {
       printf("Option %s not recogniced. Use --help to show valid options.", argv[i]);
     }
   }
-  ResourceLoader ResourceLoader();
-  ConfigManager  ConfigManager(ConfigFile)
-  //Creo el PID
-          //Creo el log
-          
+  /* Create config manager */
+  ConfigManager ConfigManager(ConfigFileName);
+  json Config = ConfigManager.ReadConfig();
+  /* Create PID File */
+  string PIDFileName = "/var/run/openZmeter.pid";
+  if(Config["PidFile"].is_string()) PIDFileName = Config["PidFile"];
+  PIDFile PIDFile(PIDFileName);
+  /* Create LOG file */
+  string LOGFileName = "/var/log/openZmeter.log";
+  if(Config["LogFile"].is_string()) LOGFileName = Config["LogFile"];
+  LOGFile LOGFile(LOGFileName, Debug);
+  /* Create resource loader */
+  ResourceLoader ResourceLoader;
+  /* Create database */
+  json DBConfig = json::object();
+  if(Config["Database"].is_string()) DBConfig = Config["Database"];
+  Database::Config(DBConfig);
+  
+  
+  
+  /* Create WEB service */
+  //  if((json_object_object_get_ex(pConfig, "HTTPServer", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (HTTPServer::Config(Find) == false)) {
+//    pthread_mutex_unlock(&pConfigMutex);
+//    LogMsg("ERROR", "Can not create HTTP server\n");
+//    return false;
+//  }
+//  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(pConfig, "NTP", json_object_new_object());
+//  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (NTP::Config(Find) == false)) {
+//    pthread_mutex_unlock(&pConfigMutex);
+//    LogMsg("ERROR", "Can not create NTP client\n");
+//    return false;
+//  }
+//  if((json_object_object_get_ex(pConfig, "Devices", &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(pConfig, "Devices", json_object_new_object());
+//  if((json_object_object_get_ex(pConfig, "Devices", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (DeviceInterface::Config(Find) == false)) {
+//    pthread_mutex_unlock(&pConfigMutex);
+//    LogMsg("ERROR", "Can not create device manager\n");
+//    return false;
+//  }
+
+  
+  
+    if(Daemonize == true) Tools::Daemonize();
+  
+  /*
           
           
           
 
-  if(Daemonize == true) Tools::Daemonize();
+
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {
     LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -79,17 +118,17 @@ int main(int argc, char** argv) {
   HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
   HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
 //  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);
-  if(Tools::ReadConfig(ConfigFile) == false) return EXIT_FAILURE;
+//  if(Tools::ReadConfig(ConfigFileName) == false) return EXIT_FAILURE;
   
-  
+  */
   int Iter = 0;
   while(!Terminate) {
     usleep(1000000);
     if((Iter % 10) == 0) {
-      if(NetworkManager::GetConnectivityStatus() < 2) NetworkManager::Reset();
+//      if(NetworkManager::GetConnectivityStatus() < 2) NetworkManager::Reset();
     }
     if((Iter % 100) == 0) {
-      HTTPServer::RemoveExpiredSessions();
+//      HTTPServer::RemoveExpiredSessions();
     
     }
     Iter++;

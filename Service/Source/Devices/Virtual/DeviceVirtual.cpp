@@ -17,7 +17,7 @@
 #include "DeviceVirtual.h"
 #include "Tools.h"
 // Register ============================================================================================================
-bool DeviceVirtual::pClassRegistered = DeviceVirtual::Init();
+bool DeviceVirtual::pClassRegistered = true;//DeviceV1_01::Init();DeviceVirtual::Init();
 // Funciones ===========================================================================================================
 bool DeviceVirtual::Init() {
   DeviceVirtual *This = new DeviceVirtual();
@@ -26,7 +26,7 @@ bool DeviceVirtual::Init() {
   This->pVoltage    = 230.0;
   This->pFrequency  = 50.0;
   pthread_mutex_init(&This->pMutex, NULL);
-  Tools::LogMsg("INFO", "Adding 'Virtual' device driver instance with serial 'VIRTUAL'\n");
+  LOGFile::Instance()->Info("Adding 'Virtual' device driver instance with serial 'VIRTUAL'\n");
   AddDevice(This);
   return true;
 }
@@ -44,7 +44,7 @@ string DeviceVirtual::Name() {
 }
 bool DeviceVirtual::ConfigDev(json_object *config) {
   if((pState == RUNNING) || (config == NULL) || (json_object_get_type(config) != json_type_object)) return false;
-  Tools::LogMsg("INFO", "Configuring 'Virtual' driver...\n");
+  LOGFile::Instance()->Info("Configuring 'Virtual' driver...\n");
   bool AutoStart = false;
   json_object *Find;
   const char *Mode = NULL;
@@ -68,7 +68,7 @@ bool DeviceVirtual::ConfigDev(json_object *config) {
   json_object_object_add(pConfig, "SampleRate", json_object_new_double(pSampleRate));
   json_object_object_add(pConfig, "Mode", json_object_new_string(Mode));
   json_object_object_add(pConfig, "AutoStart", json_object_new_boolean(AutoStart));
-  if(Tools::SaveConfig() == false) return false;
+  if(ConfigManager::Instance()->SaveConfig() == false) return false;
   return true;
 }
 bool DeviceVirtual::Start() {
@@ -77,7 +77,7 @@ bool DeviceVirtual::Start() {
     pthread_mutex_unlock(&pMutex);
     return false;
   }
-  Tools::LogMsg("INFO", "Starting 'Virtual' driver...\n");
+  LOGFile::Instance()->Info("Starting 'Virtual' driver...\n");
   pTerminate = false;
   char Name[128];
   snprintf(Name, sizeof(Name), "VIRTUAL_%s", (pMode == AnalyzerInterface::PHASE1) ? "1PHASE" : (pMode == AnalyzerInterface::PHASE3) ? "3PHASE" : "3PHASE+N");
@@ -98,7 +98,7 @@ bool DeviceVirtual::Stop() {
     pthread_mutex_unlock(&pMutex);
     return false;
   }
-  Tools::LogMsg("INFO", "Stopping 'Virtual' driver...\n");
+  LOGFile::Instance()->Info("Stopping 'Virtual' driver...\n");
   pTerminate = true;
   pthread_join(pCaptureThread, NULL);
   if(pAnalyzer) delete pAnalyzer;

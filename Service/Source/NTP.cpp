@@ -21,8 +21,8 @@ bool NTP::Config(json_object *config) {
       pEnabled = json_object_get_boolean(JSON_Val);
     }
   }  
-  HTTPServer::RegisterCallback("/getTimeSettings", GetTimeSettingsCallback);
-  HTTPServer::RegisterCallback("/setTimeSettings", SetTimeSettingsCallback);
+//  HTTPServer::RegisterCallback("/getTimeSettings", GetTimeSettingsCallback);
+//  HTTPServer::RegisterCallback("/setTimeSettings", SetTimeSettingsCallback);
   if(pthread_create(&pThread, NULL, NTP_Thread, NULL) != 0) {
     LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return false;

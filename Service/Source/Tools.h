@@ -68,14 +68,15 @@ class ConfigManager {
     static ConfigManager *pInstance;
   private :
     string          pFile;
+    json            pConfig;
     pthread_mutex_t pMutex;
   public :
     static ConfigManager *Instance();
   public :
     ConfigManager(string name);
     virtual ~ConfigManager();
-    json ReadConfig();
-    bool SaveConfig();
+    json &ReadConfig();
+    bool  SaveConfig();
 };
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {

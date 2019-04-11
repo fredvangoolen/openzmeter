@@ -2,6 +2,7 @@
  * File:     Tools.cpp
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
+#include <fstream>
 #include <string.h>
 #include <signal.h>
 #include <time.h>
@@ -38,14 +39,20 @@ PIDFile::~PIDFile() {
 //----------------------------------------------------------------------------------------------------------------------
 LOGFile *LOGFile::pInstance = NULL;
 LOGFile::LOGFile(string name, bool debug) {
-  if(pInstance != NULL) return;
+  if(pInstance != NULL) {
+    delete pInstance;
+    pInstance = NULL;    
+  }
+  pConsole  = true;
+  pDebug    = debug;
+  pInstance = this;
   pthread_mutex_init(&pMutex, NULL);
-  pFile = fopen(name.c_str(), "at");
-  if(!pFile) pFile = fopen(name.c_str(), "wt");
-  if(pFile == NULL) LOGFile::Instance()->Warning("Can not create or open log file (%d)\n", errno);
-  pDebug = debug;
-  pConsole = true;
-  pInstance = this;  
+  pFile = NULL;
+  if(name.empty() == false) {
+    pFile = fopen(name.c_str(), "at");
+    if(!pFile) pFile = fopen(name.c_str(), "wt");
+    if(pFile == NULL) LOGFile::Instance()->Warning("Can not create or open log file (%s)\n", strerror(errno));
+  }
 }
 LOGFile::~LOGFile() {
   pthread_mutex_lock(&pMutex);
@@ -54,6 +61,7 @@ LOGFile::~LOGFile() {
   pthread_mutex_destroy(&pMutex);
 }
 LOGFile *LOGFile::Instance() {
+  if(pInstance == NULL) pInstance = new LOGFile("", true);
   return pInstance;
 }
 void LOGFile::ConsoloeOutput(bool enabled) {
@@ -139,6 +147,9 @@ ResourceLoader::ResourceLoader() {
     pFiles.push_back(File);
   }
 }
+ResourceLoader::~ResourceLoader() {
+  pInstance = NULL;
+}
 ResourceLoader *ResourceLoader::Instance() {
   return pInstance;
 }
@@ -157,84 +168,70 @@ ConfigManager::ConfigManager(string name) {
   if(pInstance != NULL) return;
   pInstance = this;
   pFile = name;
-
-  if(file.empty()) {
-//    LogMsg("ERROR", "No config file!\n");
-    return false;
-  }
-  LogMsg("INFO", "Loading config file...\n");
-  pthread_mutex_lock(&pConfigMutex);
-  int File = open(file.c_str(), O_RDONLY);
-  if(File == -1) {
-    LogMsg("ERROR", "Can not open config file (%s)\n", strerror(errno));
-    pthread_mutex_unlock(&pConfigMutex);
-    return false;
-  }
-  struct stat FileStatus;
-  if(fstat(File, &FileStatus) != 0) {
-    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    close(File);
-    pthread_mutex_unlock(&pConfigMutex);
-    return false;
-  }
-  char *ConfigText = (char*)mmap(NULL, FileStatus.st_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, File, 0);
-  if(ConfigText == NULL) {
-    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    close(File);
-    pthread_mutex_unlock(&pConfigMutex);
-    return false;
-  }
-  pConfig = json_tokener_parse(ConfigText);
-  munmap(ConfigText, FileStatus.st_size);
-  close(File);
-  if(pConfig == NULL) {
-    LogMsg("ERROR", "Can not open config file (Invalid JSON format)\n");
-    pthread_mutex_unlock(&pConfigMutex);
-    return false;
-  }
-  json_object *Find;
-  if((json_object_object_get_ex(pConfig, "LogFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreateLogFile((char*)json_object_get_string(Find));
-  if((json_object_object_get_ex(pConfig, "PidFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreatePidFile((char*)json_object_get_string(Find));
-  if((json_object_object_get_ex(pConfig, "Database", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (Database::Config(Find) == false)) {
-    pthread_mutex_unlock(&pConfigMutex);
-    LogMsg("ERROR", "Can not connect to database\n");
-    return false;
-  }
-  if((json_object_object_get_ex(pConfig, "HTTPServer", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (HTTPServer::Config(Find) == false)) {
-    pthread_mutex_unlock(&pConfigMutex);
-    LogMsg("ERROR", "Can not create HTTP server\n");
-    return false;
-  }
-  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(pConfig, "NTP", json_object_new_object());
-  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (NTP::Config(Find) == false)) {
-    pthread_mutex_unlock(&pConfigMutex);
-    LogMsg("ERROR", "Can not create NTP client\n");
-    return false;
-  }
-  if((json_object_object_get_ex(pConfig, "Devices", &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(pConfig, "Devices", json_object_new_object());
-  if((json_object_object_get_ex(pConfig, "Devices", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (DeviceInterface::Config(Find) == false)) {
-    pthread_mutex_unlock(&pConfigMutex);
-    LogMsg("ERROR", "Can not create device manager\n");
-    return false;
-  }
-  pthread_mutex_unlock(&pConfigMutex);
-  return true;
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  pFile = name;
-    pthread_mutex_t pMutex;
-    
+  pthread_mutex_init(&pMutex, NULL);
+  pthread_mutex_lock(&pMutex);
+  ifstream File(pFile);
+  pConfig = json::parse(File);
+//  
+//  
+//  int File = open(pFile.c_str(), O_RDONLY);
+//  if(File == -1) {
+//    LogMsg("ERROR", "Can not open config file (%s)\n", strerror(errno));
+//    pthread_mutex_unlock(&pConfigMutex);
+//    return false;
+//  }
+//  struct stat FileStatus;
+//  if(fstat(File, &FileStatus) != 0) {
+//    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//    close(File);
+//    pthread_mutex_unlock(&pConfigMutex);
+//    return false;
+//  }
+//  char *ConfigText = (char*)mmap(NULL, FileStatus.st_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, File, 0);
+//  if(ConfigText == NULL) {
+//    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//    close(File);
+//    pthread_mutex_unlock(&pConfigMutex);
+//    return false;
+//  }
+//  pConfig = json_tokener_parse(ConfigText);
+//  munmap(ConfigText, FileStatus.st_size);
+//  close(File);
+//  if(pConfig == NULL) {
+//    LogMsg("ERROR", "Can not open config file (Invalid JSON format)\n");
+//    pthread_mutex_unlock(&pConfigMutex);
+//    return false;
+//  }
+//  json_object *Find;
+//  if((json_object_object_get_ex(pConfig, "LogFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreateLogFile((char*)json_object_get_string(Find));
+//  if((json_object_object_get_ex(pConfig, "PidFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreatePidFile((char*)json_object_get_string(Find));
+  pthread_mutex_unlock(&pMutex);
 }
+ConfigManager::~ConfigManager() {
+  pthread_mutex_destroy(&pMutex);
+}
+ConfigManager *ConfigManager::Instance() {
+  return pInstance;
+}
+bool ConfigManager::SaveConfig() {
+//  int File = open(pConfigFile.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+//  if(File < 0) {
+//    LogMsg("ERROR", "Can not write configuration to file (%d)\n", errno);
+//    return false;
+//  }
+//  size_t Len = 0;
+//  char *ConfigText = (char*)json_object_to_json_string_length(pConfig, JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_SPACED, &Len);
+//  if(write(File, ConfigText, Len) <= 0) {
+//    LogMsg("ERROR", "Can not write configuration to file (%d)\n", errno);
+//    return false;
+//  }
+//  close(File);
+  return true;
+}
+json &ConfigManager::ReadConfig() {
+  return pConfig;
+}
+
 
 
 //class ConfigManager {
@@ -295,33 +292,14 @@ void Tools::Daemonize() {
 //    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     exit(1);
   }
-  pDaemonized = true;
   close(STDIN_FILENO);
   close(STDOUT_FILENO);
   close(STDERR_FILENO);
 }
-bool Tools::SaveConfig() {
-  int File = open(pConfigFile.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
-  if(File < 0) {
-    LogMsg("ERROR", "Can not write configuration to file (%d)\n", errno);
-    return false;
-  }
-  size_t Len = 0;
-  char *ConfigText = (char*)json_object_to_json_string_length(pConfig, JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_SPACED, &Len);
-  if(write(File, ConfigText, Len) <= 0) {
-    LogMsg("ERROR", "Can not write configuration to file (%d)\n", errno);
-    return false;
-  }
-  close(File);
-  return true;
-}
-json_object *Tools::GetConfigObject() {
-  return pConfig;
-}
 uint64_t Tools::GetTime() {
   struct timeval Time;
   if(gettimeofday(&Time, NULL) != 0) {
-    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return 0;
   }
   return (uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000;
