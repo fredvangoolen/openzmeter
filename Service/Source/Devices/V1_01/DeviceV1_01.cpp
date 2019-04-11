@@ -17,7 +17,7 @@
 #include "DeviceV1_01.h"
 #include "Tools.h"
 //======================================================================================================================
-bool DeviceV1_01::pClassRegistered = DeviceV1_01::Init();
+bool DeviceV1_01::pClassRegistered = true;//DeviceV1_01::Init();
 // Funciones ===========================================================================================================
 bool DeviceV1_01::Init() {
   libusb_context *Context;
@@ -74,7 +74,7 @@ bool DeviceV1_01::Init() {
     This->pVoltageOffset = 0;
     This->pCurrentOffset = 0;
     This->pAnalyzer      = NULL;
-    Tools::LogMsg("INFO", "Registering 'V1.01' device driver instance for USB with serial '%s'\n", String);
+    LOGFile::Instance()->Info("Registering 'V1.01' device driver instance for USB with serial '%s'\n", String);
     AddDevice(This);
   }
   libusb_free_device_list(Devs, Count);
@@ -121,7 +121,7 @@ int DeviceV1_01::PlugCallback(struct libusb_context *ctx, struct libusb_device *
     if(This->pDeviceHandle != NULL) {
       libusb_device *CurrentDev = libusb_get_device(This->pDeviceHandle);	
       if(dev == CurrentDev) {
-        Tools::LogMsg("INFO", "DeviceV1.01 with serial '%s' disconnected\n", This->pSerial);
+        LOGFile::Instance()->Info("DeviceV1.01 with serial '%s' disconnected\n", This->pSerial.c_str());
 //        This->pTerminateSignal = true;
         pthread_join(This->pSignalThread, NULL);
         libusb_close(This->pDeviceHandle);
@@ -222,7 +222,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
           This->pNewDevice = NULL;
           continue;
         } else {
-          Tools::LogMsg("INFO", "Kernel driver dettached for DeviceV1.01 device with serial %s\n", This->pSerial.c_str());
+          LOGFile::Instance()->Info("Kernel driver dettached for DeviceV1.01 device with serial %s\n", This->pSerial.c_str());
         }
       }
       Result = libusb_claim_interface(This->pDeviceHandle, 0);
@@ -233,7 +233,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       } else {
-        Tools::LogMsg("INFO", "Claimed interface 1 on 'V1.01' device with serial %s\n", This->pSerial.c_str());
+        LOGFile::Instance()->Info("Claimed interface 1 on 'V1.01' device with serial %s\n", This->pSerial.c_str());
       }
       for(int i = 0; i < DEVICEV1_01_TRANSFERS; i++) {
         libusb_fill_bulk_transfer(TransferIN[i], This->pDeviceHandle, DEVICEV1_01_ENDPOINT_IN, BufferIN[i], sizeof(BufferIN[i]), ReadCallback, This, -1);
@@ -246,7 +246,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       }
-      Tools::LogMsg("INFO", "Capture started on device V1.01 with serial %s\n", This->pSerial.c_str());
+      LOGFile::Instance()->Info("Capture started on device V1.01 with serial %s\n", This->pSerial.c_str());
 //      This->pTerminateSignal = false;
       if(pthread_create(&This->pSignalThread, NULL, Signal_Thread, This) != 0) {
         LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -312,7 +312,7 @@ void *DeviceV1_01::Signal_Thread(void* args) {
 }
 bool DeviceV1_01::ConfigDev(json_object *config) {
   if((pState == RUNNING) || (config == NULL) || (json_object_get_type(config) != json_type_object)) return false;
-  Tools::LogMsg("INFO", "Configuring 'V1.01' driver with serial '%s'...\n", pSerial.c_str());
+  LOGFile::Instance()->Info("Configuring 'V1.01' driver with serial '%s'...\n", pSerial.c_str());
   bool AutoStart = false;
   json_object *Find;
   if((json_object_object_get_ex(config, "VoltageGain", &Find) == true) && (json_object_get_type(Find) == json_type_double)) pVoltageGain = json_object_get_double(Find);
@@ -330,7 +330,7 @@ bool DeviceV1_01::ConfigDev(json_object *config) {
   json_object_object_add(pConfig, "CurrentGain", json_object_new_double(pCurrentGain));
   json_object_object_add(pConfig, "CurrentOffset", json_object_new_double(pCurrentOffset));
   json_object_object_add(pConfig, "AutoStart", json_object_new_boolean(AutoStart));
-  if(Tools::SaveConfig() == false) return false;
+  if(ConfigManager::Instance()->SaveConfig() == false) return false;
   return true;
 }  
 bool DeviceV1_01::Start() {
@@ -339,7 +339,7 @@ bool DeviceV1_01::Start() {
     pthread_mutex_unlock(&pMutex);
     return false;
   }
-  Tools::LogMsg("INFO", "Starting 'V1.01' driver with serial '%s'...\n", pSerial.c_str());
+  LOGFile::Instance()->Info("Starting 'V1.01' driver with serial '%s'...\n", pSerial.c_str());
   pBuffer.Reset(DEVICEV1_01_BUFFERSECONDS * DEVICEV1_01_SAMPLEFREQ);
   pTerminate    = false;
   pLastUpdate   = 0;

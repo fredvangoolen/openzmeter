@@ -33,21 +33,21 @@ class DeviceInterface {
   protected :
     static void AddDevice(DeviceInterface *device);
   public :
-    static bool Config(json_object *config);
-    static void GetDevicesCallback(HTTPRequest &req);
-    static void StartDeviceCallback(HTTPRequest &req);
-    static void StopDeviceCallback(HTTPRequest &req);
-    static void GetAnalyzersCallback(HTTPRequest &req);
-    static void GetSeriesCallback(HTTPRequest &req);
+//    static bool Config(json_object *config);
+//    static void GetDevicesCallback(HTTPRequest &req);
+//    static void StartDeviceCallback(HTTPRequest &req);
+//    static void StopDeviceCallback(HTTPRequest &req);
+//    static void GetAnalyzersCallback(HTTPRequest &req);
+//    static void GetSeriesCallback(HTTPRequest &req);
 //    static string GetSeriesAggregCallback(HTTPRequest &req);
-    static void GetSeriesNowCallback(HTTPRequest &req);
-    static void GetSeriesRangeCallback(HTTPRequest &req);
+//    static void GetSeriesNowCallback(HTTPRequest &req);
+//    static void GetSeriesRangeCallback(HTTPRequest &req);
 
-    static void GetEventsCallback(HTTPRequest &req);
-        static void GetPricesCallback(HTTPRequest &req);
+//    static void GetEventsCallback(HTTPRequest &req);
+//        static void GetPricesCallback(HTTPRequest &req);
     
-    static void GetTariffsCallback(HTTPRequest &req);
-    static void SetTariffsCallback(HTTPRequest &req);
-    static void DelTariffsCallback(HTTPRequest &req);    
+//    static void GetTariffsCallback(HTTPRequest &req);
+//    static void SetTariffsCallback(HTTPRequest &req);
+//    static void DelTariffsCallback(HTTPRequest &req);    
 
 };

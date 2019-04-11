@@ -9,11 +9,12 @@
 #include "Database.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-char *Database::pDatabaseName = (char*)"openzmeter";
-char *Database::pHost         = (char*)"127.0.0.1";
-int   Database::pPort         = 5432;
-char *Database::pUser         = (char*)"openzmeter";
-char *Database::pPassword     = (char*)"";
+//char *Database::pDatabaseName = (char*)"openzmeter";
+//char *Database::pHost         = (char*)"127.0.0.1";
+//int   Database::pPort         = 5432;
+//char *Database::pUser         = (char*)"openzmeter";
+//char *Database::pPassword     = (char*)"";
+string Database::pConnectionString;
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(string schema) {
   pSchema    = schema;
@@ -24,50 +25,42 @@ string Database::GetSchema() {
   return pSchema;
 }
 bool Database::Connect() {
+  if((pDBConn != NULL) && (PQstatus(pDBConn) == CONNECTION_OK)) return true;
   if((pDBConn != NULL) && (PQstatus(pDBConn) == CONNECTION_BAD)) {
     PQfinish(pDBConn);
     pDBConn = NULL;
-  } else if((pDBConn != NULL) && (PQstatus(pDBConn) == CONNECTION_OK)) {
-    return true;
-  } else if(pDBConn == NULL) {
-    char ConnectionString[512];
-    sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", pHost, pPort, pUser, pPassword, pDatabaseName);
-    pDBConn = PQconnectdb(ConnectionString);
-    if(PQstatus(pDBConn) == CONNECTION_BAD) {
-      char *Save;
-      LOGFile::Instance()->Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
-      PQfinish(pDBConn);
-      pDBConn = NULL;
-      return false;
-    }
-    ExecSentence("SET synchronous_commit TO OFF");
-    ExecSentence("SET client_min_messages = error");
-    ExecSentence("CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema));
-    ExecSentence("SET search_path TO " +  Bind(pSchema) + ", public");
-    return true;
+  } 
+  pDBConn = PQconnectdb(pConnectionString.c_str());
+  if(PQstatus(pDBConn) != CONNECTION_OK) {
+    char *Save;
+    LOGFile::Instance()->Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    PQfinish(pDBConn);
+    pDBConn = NULL;
+    return false;
   }
-  return false;
+  ExecSentence("SET synchronous_commit TO OFF;"
+               "SET client_min_messages = error;"
+               "CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema) + ";"
+               "SET search_path TO " +  Bind(pSchema) + ", public");
+  return true;
 }
 Database::~Database() {
   if(pResult != NULL) PQclear(pResult);
   PQfinish(pDBConn);
 }
-bool Database::Config(json_object *config) {
-  json_object_object_foreach(config, JSON_Key, JSON_Val) {
-    enum json_type JSON_Type = json_object_get_type(JSON_Val);
-    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "HostName") == 0)) {
-      pHost = (char*)json_object_get_string(JSON_Val);
-    } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Port") == 0)) {
-      pPort = json_object_get_int(JSON_Val);
-    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Database") == 0)) {
-      pDatabaseName = (char*)json_object_get_string(JSON_Val);
-    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "UserName") == 0)) {
-      pUser = (char*)json_object_get_string(JSON_Val);
-    } else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Password") == 0)) {
-      pPassword = (char*)json_object_get_string(JSON_Val);
-    }
-  }
-  Database DB;
+bool Database::Config(json config) {
+  string Hostname = "localhost";
+  uint16_t Port = 5432;
+  string DataBase = "openzmeter";
+  string Username = "openzmeter";
+  string Password = "openzmeter";
+  if(config["Hostname"].is_string()) Hostname = config["Hostname"];
+  if(config["Port"].is_string()) Port = config["Port"];
+  if(config["Database"].is_string()) DataBase = config["Database"];
+  if(config["Username"].is_string()) Username = config["Username"];
+  if(config["Password"].is_string()) Password = config["Password"];
+  pConnectionString = "host=" + Hostname + " port=" + to_string(Port) + " user=" + Username + " password=" + Password + " dbname=" + DataBase;
+  Database DB("public");
   LOGFile::Instance()->Debug("Creating database tables\n");
   return DB.ExecResource("SQL/Database.sql");
 }
@@ -81,6 +74,7 @@ bool Database::ExecResource(string file) {
 bool Database::ExecSentence(string sql) {
   if(pResult != NULL) PQclear(pResult);
   if(Connect() == false) return false;
+  if(pResult != NULL) PQclear(pResult);
   pResult = PQexec(pDBConn, sql.c_str());
   if((PQresultStatus(pResult) != PGRES_COMMAND_OK) && (PQresultStatus(pResult) != PGRES_TUPLES_OK)) {
     char *Save;
