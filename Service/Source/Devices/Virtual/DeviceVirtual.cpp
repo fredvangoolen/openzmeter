@@ -83,7 +83,7 @@ bool DeviceVirtual::Start() {
   snprintf(Name, sizeof(Name), "VIRTUAL_%s", (pMode == AnalyzerInterface::PHASE1) ? "1PHASE" : (pMode == AnalyzerInterface::PHASE3) ? "3PHASE" : "3PHASE+N");
   pAnalyzer = new AnalyzerSoft(Name, pMode, pSampleRate);
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     delete pAnalyzer;
     pthread_mutex_unlock(&pMutex);
     return false;
@@ -110,11 +110,11 @@ bool DeviceVirtual::Stop() {
 void  *DeviceVirtual::Capture_Thread(void *args) {
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   } else {
     struct sched_param Param;
     Param.sched_priority = Prio - 20;
-    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise thread priority -> %s\n", __func__, __LINE__, strerror(errno));
+    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Instance()->Warning("Cant raise thread priority -> %s\n", __func__, __LINE__, strerror(errno));
   }
   DeviceVirtual *This = (DeviceVirtual*)args;
   pthread_setname_np(This->pCaptureThread, "DeviceVirtual");

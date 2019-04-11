@@ -29,22 +29,24 @@ bool Database::Connect() {
     pDBConn = NULL;
   } else if((pDBConn != NULL) && (PQstatus(pDBConn) == CONNECTION_OK)) {
     return true;
+  } else if(pDBConn == NULL) {
+    char ConnectionString[512];
+    sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", pHost, pPort, pUser, pPassword, pDatabaseName);
+    pDBConn = PQconnectdb(ConnectionString);
+    if(PQstatus(pDBConn) == CONNECTION_BAD) {
+      char *Save;
+      LOGFile::Instance()->Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+      PQfinish(pDBConn);
+      pDBConn = NULL;
+      return false;
+    }
+    ExecSentence("SET synchronous_commit TO OFF");
+    ExecSentence("SET client_min_messages = error");
+    ExecSentence("CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema));
+    ExecSentence("SET search_path TO " +  Bind(pSchema) + ", public");
+    return true;
   }
-  char ConnectionString[512];
-  sprintf(ConnectionString, "host=%s port=%d user=%s password=%s dbname=%s", pHost, pPort, pUser, pPassword, pDatabaseName);
-  pDBConn = PQconnectdb(ConnectionString);
-  if(PQstatus(pDBConn) == CONNECTION_BAD) {
-    char *Save;
-    Tools::LogMsg("ERROR", "Cant open database (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
-    PQfinish(pDBConn);
-    pDBConn = NULL;
-    return false;
-  }
-  ExecSentence("SET synchronous_commit TO OFF");
-  ExecSentence("SET client_min_messages = error");
-  ExecSentence("CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema));
-  ExecSentence("SET search_path TO " +  Bind(pSchema) + ", public");
-  return true;
+  return false;
 }
 Database::~Database() {
   if(pResult != NULL) PQclear(pResult);
@@ -66,13 +68,13 @@ bool Database::Config(json_object *config) {
     }
   }
   Database DB;
-  Tools::LogMsg("DEBUG", "Creating database tables\n");
+  LOGFile::Instance()->Debug("Creating database tables\n");
   return DB.ExecResource("SQL/Database.sql");
 }
 bool Database::ExecResource(string file) {
   size_t Len;
   if(pResult != NULL) PQclear(pResult);
-  char *Script = (char*)Tools::GetFile(file, &Len);
+  char *Script = (char*)ResourceLoader::Instance()->GetFile(file, &Len);
   Script[Len - 1] = 0;
   return ExecSentence(Script);
 }
@@ -82,7 +84,7 @@ bool Database::ExecSentence(string sql) {
   pResult = PQexec(pDBConn, sql.c_str());
   if((PQresultStatus(pResult) != PGRES_COMMAND_OK) && (PQresultStatus(pResult) != PGRES_TUPLES_OK)) {
     char *Save;
-    Tools::LogMsg("ERROR", "Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    LOGFile::Instance()->Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     return false;
   } else {
     return true;  
@@ -94,7 +96,7 @@ bool Database::ExecSentence(string sql) {
 //  pResult = PQexec(pDBConn, sql);
 //  if(PQresultStatus(pResult) != PGRES_TUPLES_OK) {
 //    char *Save;
-//    Tools::LogMsg("ERROR", "Error in SQL query \"%s\" (%s)\n", sql, strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+//    LOGFile::Instance()->Error("Error in SQL query \"%s\" (%s)\n", sql, strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
 //    return NULL;
 //  } else {
 //    if(PQntuples(pResult) == 0) return NULL;
@@ -203,7 +205,7 @@ uint64_t Database::ResultUInt64(uint32_t row, string name) {
 //      Result.push_back(*it);
 //    }
 //  }
-//  if(pParams.size() != 0) Tools::LogMsg("ERROR", "There are more placeholders than params!!\n");
+//  if(pParams.size() != 0) LOGFile::Instance()->Error("There are more placeholders than params!!\n");
 //  return Result;
 //}
 //======================================================================================================================

@@ -24,7 +24,7 @@ bool NTP::Config(json_object *config) {
   HTTPServer::RegisterCallback("/getTimeSettings", GetTimeSettingsCallback);
   HTTPServer::RegisterCallback("/setTimeSettings", SetTimeSettingsCallback);
   if(pthread_create(&pThread, NULL, NTP_Thread, NULL) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return false;
   }
   pthread_setname_np(pThread, "NTP_Client");
@@ -34,7 +34,7 @@ void *NTP::NTP_Thread(void *args) {
   NTP *This = (NTP*)args;
   int Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if(Socket < 0) {
-    Tools::LogMsg("ERROR", "NTP Client can not open socket\n");
+    LOGFile::Instance()->Error("NTP Client can not open socket\n");
     return NULL;
   }
   NTP_Packet Packet;
@@ -42,7 +42,7 @@ void *NTP::NTP_Thread(void *args) {
   Timeout.tv_sec  = 0;
   Timeout.tv_usec = 100000;
   if(setsockopt(Socket, SOL_SOCKET, SO_RCVTIMEO, &Timeout, sizeof(Timeout)) < 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL;
   }
   while(!This->pTerminate) {
@@ -53,7 +53,7 @@ void *NTP::NTP_Thread(void *args) {
     Packet.li_vn_mode = 0x1B;
     Server = gethostbyname(pServer.c_str());
     if(Server == NULL) {
-      Tools::LogMsg("ERROR", "NTP server can not be resolved\n");
+      LOGFile::Instance()->Error("NTP server can not be resolved\n");
       goto Release;
     }
     sockaddr_in ServerAddr;
@@ -62,11 +62,11 @@ void *NTP::NTP_Thread(void *args) {
     ServerAddr.sin_addr.s_addr = *((unsigned long*) Server->h_addr);
     ServerAddr.sin_port = htons(123);
     if(sendto(Socket, &Packet, sizeof(NTP_Packet), 0, (sockaddr *)&ServerAddr, sizeof(ServerAddr)) < 0) {
-      Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
       goto Release;
     }
     if(read(Socket, &Packet, sizeof(NTP_Packet)) != sizeof(NTP_Packet)) {
-      Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
       goto Release;
     }
     Packet.txTm_s = ntohl(Packet.txTm_s); // Time-stamp seconds.
@@ -75,7 +75,7 @@ void *NTP::NTP_Thread(void *args) {
     TimeVal.tv_sec  = Packet.txTm_s - 2208988800ull;
     if(Packet.txTm_f != 0) TimeVal.tv_usec = 0xFFFFFFFF / (Packet.txTm_f / 1000);
     if(settimeofday(&TimeVal, NULL) != 0) {
-      Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
       goto Release;
     }
     fflush(stdout);
@@ -145,18 +145,18 @@ void NTP::SetTimeSettingsCallback(HTTPRequest &req) {
 //        fclose(File);
 //      } else {
 //        Error = true;
-//        Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//        LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
 //      }
 //      if(unlink("/etc/localtime") != 0) {
 //        char Zone[256];
 //        snprintf(Zone, sizeof(Zone), "/usr/share/zoneinfo/%s", (char*)json_object_get_string(JSON_Val));
 //        if(symlink(Zone, "/etc/localtime") != 0) {
 //          Error = true;
-//          Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//          LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
 //        }
 //      } else {
 //        Error = true;
-//        Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//        LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
 //      }
 //    } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Time") == 0)) {
 //      uint64_t Time = json_object_get_int64(JSON_Val);
@@ -165,7 +165,7 @@ void NTP::SetTimeSettingsCallback(HTTPRequest &req) {
 //      TimeVal.tv_usec = Time % 1000;
 //      if(settimeofday(&TimeVal, NULL) != 0) {
 //        Error = true;
-//        Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//        LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
 //      }
 //    }
 //  }

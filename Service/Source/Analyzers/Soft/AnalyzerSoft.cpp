@@ -70,7 +70,7 @@ AnalyzerSoft::AnalyzerSoft(string id, AnalyzerInterface::AnalyzerMode mode, floa
   pthread_cond_init (&pWaitingThreadsCond, NULL);
   pthread_cond_init (&pDataReadyCond, NULL);
   if(pthread_create(&pThread, NULL, Analyzer_Thread, (void*)this) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;
   }
   pthread_setname_np(pThread, (pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N");
@@ -217,7 +217,7 @@ void AnalyzerSoft::Analyze() {
     pthread_mutex_unlock(&pDataReadyMutex);
     pthread_cond_broadcast(&pDataReadyCond);
     if(((pSequence % 15) == 0) && (pPrevTimestamp != 0)) {
-      Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
+      LOGFile::Instance()->Debug("Storing 3S aggregation\n");
       NormalizeAggreg(pAggreg3S);
       if(pAggreg3S.Flag == false) {
         float Variation = PercentChange(pAggreg3S.Frequency, pNominalFrequency);
@@ -230,7 +230,7 @@ void AnalyzerSoft::Analyze() {
     }
     AccumulateAggreg(pAggreg3S, pAggreg10C);
     if(((pAggreg10C.Timestamp / 60000) > (pPrevTimestamp / 60000)) && (pPrevTimestamp != 0)) {
-      Tools::LogMsg("DEBUG", "Storing 1M aggregation\n");
+      LOGFile::Instance()->Debug("Storing 1M aggregation\n");
       pAggreg1M.Timestamp = pAggreg1M.Timestamp / 60000 * 60000 + 59999;
       NormalizeAggreg(pAggreg1M);
       SaveAggreg(pAggreg1M);
@@ -238,7 +238,7 @@ void AnalyzerSoft::Analyze() {
     }
     AccumulateAggreg(pAggreg1M, pAggreg10C);
     if(((pAggreg10C.Timestamp / 600000) > (pPrevTimestamp / 600000)) && (pPrevTimestamp != 0)) {
-      Tools::LogMsg("DEBUG", "Storing 10M aggregation\n");
+      LOGFile::Instance()->Debug("Storing 10M aggregation\n");
       pAggreg10M.Timestamp = pAggreg10M.Timestamp / 600000 * 600000 + 599999;
       NormalizeAggreg(pAggreg10M);
       if(pAggreg10M.Flag == false) {
@@ -270,7 +270,7 @@ void AnalyzerSoft::Analyze() {
     }
     AccumulateAggreg(pAggreg10M, pAggreg10C);
     if(((pAggreg10C.Timestamp / 900000) > (pPrevTimestamp / 900000)) && (pPrevTimestamp != 0)) {
-      Tools::LogMsg("DEBUG", "Storing 15M aggregation\n");
+      LOGFile::Instance()->Debug("Storing 15M aggregation\n");
       pAggreg15M.Timestamp = pAggreg15M.Timestamp / 900000 * 900000 + 899999;
       NormalizeAggreg(pAggreg15M);
       SaveAggreg(pAggreg15M);
@@ -278,7 +278,7 @@ void AnalyzerSoft::Analyze() {
     }
     AccumulateAggreg(pAggreg15M, pAggreg10C);
     if(((pAggreg10C.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
-      Tools::LogMsg("DEBUG", "Storing 1H aggregation\n");
+      LOGFile::Instance()->Debug("Storing 1H aggregation\n");
       pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
       NormalizeAggreg(pAggreg1H);
       SaveAggreg(pAggreg1H);
@@ -294,7 +294,7 @@ void AnalyzerSoft::Analyze() {
     pthread_mutex_unlock(&pDataReadyMutex);
     ResetAggreg(pAggreg10C);
     pthread_mutex_lock(&pThreadMutex);
-    Tools::LogMsg("DEBUG", "Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", pName.c_str(), Tools::GetTime() - Start, pSequence);
+    LOGFile::Instance()->Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", pName.c_str(), Tools::GetTime() - Start, pSequence);
     pWorking = false;
     pSequence++;
     pthread_mutex_unlock(&pThreadMutex);
@@ -373,15 +373,15 @@ bool AnalyzerSoft::IsFinished() {
 //  if((json_object_object_get_ex(config, "Password", &Find) == true) && (json_object_get_type(Find) == json_type_string)) pSyncPassword = (char*)json_object_get_string(Find);
 //  if((json_object_object_get_ex(config, "RemoteHost", &Find) == true) && (json_object_get_type(Find) == json_type_string)) pSyncServer = (char*)json_object_get_string(Find);
 //  if((pSyncName == NULL) || (pSyncPassword == NULL) || (pSyncServer == NULL)) {
-//    Tools::LogMsg("ERROR", "AnayzerSoft: Remote functionality mode need 'Username', 'Password' and 'RemoteServer' params\n");
+//    LOGFile::Instance()->Error("AnayzerSoft: Remote functionality mode need 'Username', 'Password' and 'RemoteServer' params\n");
 //    return;
 //  }
 //  if(curl_global_init(CURL_GLOBAL_DEFAULT) != 0) {
-//    Tools::LogMsg("ERROR", "AnayzerSoft: Failed to load libcurl\n");
+//    LOGFile::Instance()->Error("AnayzerSoft: Failed to load libcurl\n");
 //    return;  
 //  }
 //  if(pthread_create(&pSyncThread, NULL, Sync_Thread, this) != 0) {
-//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
 //    return;
 //  }
 //}
@@ -406,11 +406,11 @@ bool AnalyzerSoft::IsFinished() {
 //void *AnalyzerSoft::Sync_Thread(void *args) {
 //  int Prio = sched_get_priority_min(SCHED_RR);
 //  if(Prio == -1) {
-//    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
 //  } else {
 //    struct sched_param Param;
 //    Param.sched_priority = Prio;
-//    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) Tools::LogMsg("WARN", "Cant raise thread priority -> %s\n", __func__);
+//    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Instance()->Warning("Cant raise thread priority -> %s\n", __func__);
 //  }
 //  AnalyzerSoft *This = (AnalyzerSoft*)args;
 //  pthread_setname_np(This->pSyncThread, "Sync");
@@ -456,7 +456,7 @@ bool AnalyzerSoft::IsFinished() {
 //      CURLcode Code = curl_easy_perform(Curl);
 //      curl_easy_getinfo(Curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
 //      if((Code != CURLE_OK) || (HTTPCode != 200)) {
-//        Tools::LogMsg("WARN", "AnalyzerRemote: failed to register on remote server\n");
+//        LOGFile::Instance()->Warning("AnalyzerRemote: failed to register on remote server\n");
 //      } else {
 //        json_object *JSONReader = json_tokener_parse(CurlBuff.Buffer);
 //        if((JSONReader != NULL) && (json_object_get_type(JSONReader) == json_type_object)) {
@@ -479,7 +479,7 @@ bool AnalyzerSoft::IsFinished() {
 //      CURLcode Code = curl_easy_perform(Curl);
 //      curl_easy_getinfo(Curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
 //      if((Code != CURLE_OK) || (HTTPCode != 200)) {
-//        Tools::LogMsg("WARN", "AnalyzerRemote: failed to config on remote server\n");
+//        LOGFile::Instance()->Warning("AnalyzerRemote: failed to config on remote server\n");
 //      } else {
 //        json_object *JSONReader = json_tokener_parse(CurlBuff.Buffer);
 //        if((JSONReader != NULL) && (json_object_get_type(JSONReader) == json_type_object)) {
@@ -528,13 +528,13 @@ bool AnalyzerSoft::IsFinished() {
 //        CURLcode Code = curl_easy_perform(Curl);
 //        curl_easy_getinfo(Curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
 //        if((Code != CURLE_OK) || (HTTPCode != 200)) {
-//          Tools::LogMsg("WARN", "AnalyzerRemote: failed send data to server\n");
+//          LOGFile::Instance()->Warning("AnalyzerRemote: failed send data to server\n");
 //        } else {
 //          json_object *JSONReader = json_tokener_parse(CurlBuff.Buffer);
 //          if((JSONReader != NULL) && (json_object_get_type(JSONReader) == json_type_object)) {
 //            *Time = atol(DB.ResultValue(0, (char*)"sampletime"));
 //            if((json_object_object_get_ex(JSONReader, "Live", &Find) == true) && (json_object_get_type(Find) == json_type_boolean)) Live = json_object_get_int64(Find);
-//            Tools::LogMsg("DEBUG", "AnalyzerRemote: sampletime %" PRIu64 " saved in remote '%s' (Live: %s)\n", *Time, Table, (Live ? "true" : "false"));
+//            LOGFile::Instance()->Debug("AnalyzerRemote: sampletime %" PRIu64 " saved in remote '%s' (Live: %s)\n", *Time, Table, (Live ? "true" : "false"));
 //          }
 //        }
 //      } else {

@@ -73,7 +73,7 @@ bool AnalyzerRemote::SaveJSON(json_object *json, Database *db) {
 //      return true;
 //    }
     SaveAggreg(Params);
-    Tools::LogMsg("DEBUG", "Storing 3S aggregation\n");
+    LOGFile::Instance()->Debug("Storing 3S aggregation\n");
   } 
   
   
@@ -93,7 +93,7 @@ bool AnalyzerRemote::SaveJSON(json_object *json, Database *db) {
 //  
 //  if((json_object_object_get_ex(config, "aggreg", &Find) == true) && (json_object_get_type(Find) == json_type_string)) {
 //    if(ReadJSONFloatArray(Find, pVoltageGain, 3) == false) {
-//      Tools::LogMsg("ERROR", "CaptureV2: Voltage gain must have 3 double values\n");
+//      LOGFile::Instance()->Error("CaptureV2: Voltage gain must have 3 double values\n");
 //      return;
 //    }
 //  }

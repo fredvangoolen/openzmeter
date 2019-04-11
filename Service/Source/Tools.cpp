@@ -21,49 +21,128 @@
 #include "HTTPServer.h"
 #include "DeviceInterface.h"
 #include "NTP.h"
-
-//añadido para probar el envio
-//  #include <arpa/inet.h>
-//      #include <netinet/in.h>
-//      #include <stdio.h>
-//      #include <sys/types.h>
-//      #include <sys/socket.h>
-//      #include <unistd.h>
-
 //----------------------------------------------------------------------------------------------------------------------
-bool            Tools::Debug        = false;
-bool            Tools::pDaemonized  = false;
-FILE           *Tools::pLogFile     = NULL;
-json_object    *Tools::pConfig      = NULL;
-string          Tools::pPidFile;
-string          Tools::pConfigFile;
-pthread_mutex_t Tools::pLogMutex    = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t Tools::pConfigMutex = PTHREAD_MUTEX_INITIALIZER;
-
-uint8_t Tools::pBatteryLevel = 0;
-bool Tools::pBatteryCharging = false;
-bool Tools::pExternalPower = false;
+PIDFile::PIDFile(string name) {
+  pFile = name;
+  char PID_Number[16];
+  int Len = sprintf(PID_Number, "%d", getpid());
+  if(!pFile.empty()) remove(pFile.c_str());
+  int File = open(pFile.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+  if(File < 0) LOGFile::Instance()->Warning("Can not create PID file (%d)\n", errno);
+  if(write(File, PID_Number, Len) <= 0) LOGFile::Instance()->Warning("Can not create PID file (%d)\n", errno);
+  if(File > 0) close(File);
+}
+PIDFile::~PIDFile() {
+  if(!pFile.empty()) remove(pFile.c_str());
+}
+//----------------------------------------------------------------------------------------------------------------------
+LOGFile *LOGFile::pInstance = NULL;
+LOGFile::LOGFile(string name, bool debug) {
+  if(pInstance != NULL) return;
+  pthread_mutex_init(&pMutex, NULL);
+  pFile = fopen(name.c_str(), "at");
+  if(!pFile) pFile = fopen(name.c_str(), "wt");
+  if(pFile == NULL) LOGFile::Instance()->Warning("Can not create or open log file (%d)\n", errno);
+  pDebug = debug;
+  pConsole = true;
+  pInstance = this;  
+}
+LOGFile::~LOGFile() {
+  pthread_mutex_lock(&pMutex);
+  pInstance = NULL;
+  if(pFile) fclose(pFile);
+  pthread_mutex_destroy(&pMutex);
+}
+LOGFile *LOGFile::Instance() {
+  return pInstance;
+}
+void LOGFile::ConsoloeOutput(bool enabled) {
+  pConsole = enabled;
+}
+void LOGFile::Debug(const char* msg, ...) {
+  if(pDebug == false) return;
+  va_list args;
+  va_start(args, msg);
+  Msg(DEBUG, msg, args);
+  va_end(args);
+}
+void LOGFile::Info(const char* msg, ...) {
+  va_list args;
+  va_start(args, msg);
+  Msg(INFO, msg, args);
+  va_end(args);
+}
+void LOGFile::Warning(const char* msg, ...) {
+  va_list args;
+  va_start(args, msg);
+  Msg(WARNING, msg, args);
+  va_end(args);
+}
+void LOGFile::Error(const char* msg, ...) {
+  va_list args;
+  va_start(args, msg);
+  Msg(ERROR, msg, args);
+  va_end(args);
+}
+void LOGFile::Msg(Type type, const char *msg, ...) {
+  va_list args;
+  va_start(args, msg);
+  time_t Now;
+  struct tm *TimeStamp;
+  char DateStr[80];
+  pthread_mutex_lock(&pMutex);
+  time(&Now);
+  TimeStamp = localtime(&Now);
+  strftime(DateStr, 80, "[%d/%m/%Y - %X] ", TimeStamp);
+  if(pConsole == true) {
+    if(type == ERROR) {
+      printf("\033[1;31m%s\033[0m", DateStr);
+    } else if(type == WARNING) {
+      printf("\033[1;33m%s\033[0m", DateStr);
+    } else if(type == DEBUG) {
+      printf("\033[1;37m%s\033[0m", DateStr);
+    } else if(type == INFO) {
+      printf("\033[1;34m%s\033[0m", DateStr);
+    } else {
+      return;
+    }
+    vprintf(msg, args);
+    fflush(stdout);
+  }
+  if(pFile != NULL) {
+    va_start(args, msg);
+    fprintf(pFile, "%s", DateStr);
+    vfprintf(pFile, msg, args);
+  }
+  pthread_mutex_unlock(&pMutex);
+  va_end(args);
+}
 //----------------------------------------------------------------------------------------------------------------------
 extern char _binary_ResourceFiles_start[];
 extern char _binary_ResourceFiles_end[];
-vector<Tools::File_t> Tools::pFiles;
-uint8_t *Tools::GetFile(string name, size_t* size) {
-  if(pFiles.size() == 0) {
-    char *Ptr   = _binary_ResourceFiles_start;
-    uint32_t FileCount = atoi(Ptr);
-    pFiles.reserve(FileCount);
+ResourceLoader *ResourceLoader::pInstance = NULL;
+ResourceLoader::ResourceLoader() {
+  if(pInstance != NULL) return;
+  pInstance = this;
+  char *Ptr = _binary_ResourceFiles_start;
+  uint32_t FileCount = atoi(Ptr);
+  pFiles.reserve(FileCount);
+  Ptr = &Ptr[strlen(Ptr) + 1];
+  for(uint32_t i = 0; i < FileCount; i++) {
+    File_t File;
+    File.Name = Ptr;
     Ptr = &Ptr[strlen(Ptr) + 1];
-    for(uint32_t i = 0; i < FileCount; i++) {
-      File_t File;
-      File.Name = Ptr;
-      Ptr = &Ptr[strlen(Ptr) + 1];
-      File.Size = atoi(Ptr);
-      Ptr = &Ptr[strlen(Ptr) + 1];
-      File.Ptr = (uint8_t*)Ptr;
-      Ptr = &Ptr[File.Size];
-      pFiles.push_back(File);
-    }
+    File.Size = atoi(Ptr);
+    Ptr = &Ptr[strlen(Ptr) + 1];
+    File.Ptr = (uint8_t*)Ptr;
+    Ptr = &Ptr[File.Size];
+    pFiles.push_back(File);
   }
+}
+ResourceLoader *ResourceLoader::Instance() {
+  return pInstance;
+}
+uint8_t *ResourceLoader::GetFile(string name, size_t *size) {
   for(uint32_t i = 0; i < pFiles.size(); i++) {
     if(pFiles[i].Name.compare(name) == 0) {
       *size = pFiles[i].Size;
@@ -72,94 +151,15 @@ uint8_t *Tools::GetFile(string name, size_t* size) {
   }
   return NULL;
 }
-void Tools::RegisterHandlers(void (*function)(int)) {
-  signal(SIGINT, function);
-  signal(SIGTERM, function);
-}
-void Tools::LogMsg(const char *level, const char *msg, ...) {
-  if((Debug == false) && (strcmp(level, "DEBUG") == 0)) return;
-  va_list args;
-  va_start(args, msg);
-  time_t Now;
-  struct tm *TimeStamp;
-  char DateStr[80];
-  pthread_mutex_lock(&pLogMutex);
-  time(&Now);
-  TimeStamp = localtime(&Now);
-  strftime(DateStr, 80, "[%d/%m/%Y - %X] ", TimeStamp);
-  if(pDaemonized == false) {
-    if(strcmp(level, "ERROR") == 0) {
-      printf("\033[1;31m%s\033[0m", DateStr);
-    } else if(strcmp(level, "WARN") == 0) {
-      printf("\033[1;33m%s\033[0m", DateStr);
-    } else if(strcmp(level, "DEBUG") == 0) {
-      printf("\033[1;37m%s\033[0m", DateStr);
-    } else if(strcmp(level, "INFO") == 0) {
-      printf("\033[1;34m%s\033[0m", DateStr);
-    } else {
-      return;
-    }
-    vprintf(msg, args);
-    fflush(stdout);
-  }
-  if(pLogFile) {
-    va_start(args, msg);
-    fprintf(pLogFile, "%s", DateStr);
-    vfprintf(pLogFile, msg, args);
-  }
-  pthread_mutex_unlock(&pLogMutex);
-  va_end(args);
-}
-bool Tools::CreateLogFile(const char *name) {
-  pLogFile = fopen(name, "at");
-  if(!pLogFile) pLogFile = fopen(name, "wt");
-  if(pLogFile < 0) {
-    Tools::LogMsg("WARN", "Can not create or open log file (%d)\n", errno);
-    return true;
-  }
-  return true;
-}
-bool Tools::CreatePidFile(const char *name) {
-  pPidFile = name;
-  char PID_Number[64];
-  int Len = sprintf(PID_Number, "%d", getpid());
-  if(!pPidFile.empty()) remove(pPidFile.c_str());
-  int File = open(pPidFile.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
-  if(File < 0) {
-    LogMsg("WARN", "Can not create PID file (%d)\n", errno);
-    return true;
-  }
-  if(write(File, PID_Number, Len) <= 0) LogMsg("WARN", "Can not create PID file (%d)\n", errno);
-  close(File);
-  return true;
-}
-bool Tools::RemovePidFile() {
-  if(!pPidFile.empty()) return remove(pPidFile.c_str());
-  return true;
-}
-void Tools::Daemonize() {
-  Tools::LogMsg("INFO", "Move to background task\n");
-  pid_t ProcID = fork();
-  if(ProcID < 0) {
-    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    exit(1);
-  }
-  if(ProcID > 0) exit(0);
-  umask(0);
-  pid_t SID = setsid();
-  if(SID < 0) {
-    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    exit(1);
-  }
-  pDaemonized = true;
-  close(STDIN_FILENO);
-  close(STDOUT_FILENO);
-  close(STDERR_FILENO);
-}
-bool Tools::ReadConfig(string file) {
-  pConfigFile = file;
+//----------------------------------------------------------------------------------------------------------------------
+ConfigManager *ConfigManager::pInstance = NULL;
+ConfigManager::ConfigManager(string name) {
+  if(pInstance != NULL) return;
+  pInstance = this;
+  pFile = name;
+
   if(file.empty()) {
-    LogMsg("ERROR", "No config file!\n");
+//    LogMsg("ERROR", "No config file!\n");
     return false;
   }
   LogMsg("INFO", "Loading config file...\n");
@@ -172,14 +172,14 @@ bool Tools::ReadConfig(string file) {
   }
   struct stat FileStatus;
   if(fstat(File, &FileStatus) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     close(File);
     pthread_mutex_unlock(&pConfigMutex);
     return false;
   }
   char *ConfigText = (char*)mmap(NULL, FileStatus.st_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, File, 0);
   if(ConfigText == NULL) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     close(File);
     pthread_mutex_unlock(&pConfigMutex);
     return false;
@@ -219,6 +219,86 @@ bool Tools::ReadConfig(string file) {
   }
   pthread_mutex_unlock(&pConfigMutex);
   return true;
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  pFile = name;
+    pthread_mutex_t pMutex;
+    
+}
+
+
+//class ConfigManager {
+//  private :
+//    static ConfigManager *pInstance;
+//  private :
+//    string          pFile;
+//    pthread_mutex_t pMutex;
+//  public :
+//    ConfigManager(string name);
+//    json ReadConfig();
+//    bool SaveConfig();
+//};
+//
+
+
+
+//añadido para probar el envio
+//  #include <arpa/inet.h>
+//      #include <netinet/in.h>
+//      #include <stdio.h>
+//      #include <sys/types.h>
+//      #include <sys/socket.h>
+//      #include <unistd.h>
+
+//----------------------------------------------------------------------------------------------------------------------
+//bool            Tools::Debug        = false;
+//bool            Tools::pDaemonized  = false;
+//FILE           *Tools::pLogFile     = NULL;
+//json            Tools::pConfig      = NULL;
+//string          Tools::pPidFile;
+//string          Tools::pConfigFile;
+//pthread_mutex_t Tools::pLogMutex    = PTHREAD_MUTEX_INITIALIZER;
+//pthread_mutex_t Tools::pConfigMutex = PTHREAD_MUTEX_INITIALIZER;
+//
+//uint8_t Tools::pBatteryLevel = 0;
+//bool Tools::pBatteryCharging = false;
+//bool Tools::pExternalPower = false;
+//----------------------------------------------------------------------------------------------------------------------
+
+
+void Tools::RegisterHandlers(void (*function)(int)) {
+  signal(SIGINT, function);
+  signal(SIGTERM, function);
+}
+
+void Tools::Daemonize() {
+//  Tools::LogMsg("INFO", "Move to background task\n");
+  pid_t ProcID = fork();
+  if(ProcID < 0) {
+//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    exit(1);
+  }
+  if(ProcID > 0) exit(0);
+  umask(0);
+  pid_t SID = setsid();
+  if(SID < 0) {
+//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    exit(1);
+  }
+  pDaemonized = true;
+  close(STDIN_FILENO);
+  close(STDOUT_FILENO);
+  close(STDERR_FILENO);
 }
 bool Tools::SaveConfig() {
   int File = open(pConfigFile.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
@@ -270,12 +350,12 @@ void Tools::GetSysInfo(HTTPRequest &req) {
   struct sysinfo Info;
   struct statvfs Disk;
   if(sysinfo(&Info) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     req.FromString("'System error", MHD_HTTP_BAD_REQUEST);
     return;
   }
   if(statvfs("/", &Disk) != 0) {
-    Tools::LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     req.FromString("'System error", MHD_HTTP_BAD_REQUEST);
     return;
   }
@@ -356,20 +436,20 @@ char *Tools::trim(char *str) {
 //  struct sockaddr_in Client;
 //  int Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 //  if(Socket == -1) {
-//    Tools::LogMsg("ERROR", "cant open socket\n");
+//    LOGFile::Instance()->Error("cant open socket\n");
 //    return;
 //  }
 //  memset((char *)&Client, 0, sizeof(Client));
 //  Client.sin_family = AF_INET;
 //  Client.sin_port = htons(8888);
 //  if(inet_aton("127.0.0.1", &Client.sin_addr) == 0) {
-//    Tools::LogMsg("ERROR", "inet_aton() failed\n");
+//    LOGFile::Instance()->Error("inet_aton() failed\n");
 //    close(Socket);
 //    return;
 //  }
 //  string Data = obj.dump();
 //  if(sendto(Socket, Data.c_str(), Data.size(), 0, (sockaddr*)&Client, sizeof(Client)) == -1) {
-//    Tools::LogMsg("ERROR", "sendto()\n");
+//    LOGFile::Instance()->Error("sendto()\n");
 //  }
 //  close(Socket);
 //}

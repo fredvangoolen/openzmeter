@@ -20,7 +20,7 @@ bool DeviceInterface::Config(json_object *config) {
     json_object *Find;
     if((json_object_object_get_ex(config, Serial.c_str(), &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(config, Serial.c_str(), json_object_new_object());
     if((json_object_object_get_ex(config, Serial.c_str(), &Find) != true) || (json_object_get_type(Find) != json_type_object) || ((*it)->ConfigDev(Find) != true)) {
-      Tools::LogMsg("WARN", "Invalid configuration for driver with serial '%s'\n", Serial);
+      LOGFile::Instance()->Warning("Invalid configuration for driver with serial '%s'\n", Serial);
     }
   }
   return true;
