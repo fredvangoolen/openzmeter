@@ -5,12 +5,10 @@
       <div class="modal-content">
         <div class="modal-header">
           <div class="pull-left"><h4 class="modal-title">User</h4></div>
-          <div class="pull-right">
-            <button type="button" class="btn btn-default btn-xs" @click="close"><img :src="require('Imgs/arrow_undo.png')"></button>
-          </div>
         </div>
         <div class="modal-body">
-          <p>The current session has expired due to inactivity. Please re-login.</p>
+          <p>The current session has expired due to inactivity. Please re-login</p>
+          <p><a href="/Login">Login</a></p>
         </div>
       </div>
     </div>
@@ -38,5 +36,11 @@
     z-index: 1100;
     color: #333;
     font-size: 14px;
+  }
+  .modal-dialog p {
+    text-align: center;
+  }
+  .modal-dialog a {
+    font-size: 24px;
   }
 </style>

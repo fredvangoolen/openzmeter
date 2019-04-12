@@ -49,6 +49,7 @@
         this.Tariff.Name = this.Initial.Name;
       },
       SetTariffs: function() {
+        $(this.$refs.Base).bsSuggest("destroy");
         $(this.$refs.Base).bsSuggest( { hideOnSelect: true, effectiveFields: ['name', 'description'], showHeader: false, ignorecase: true, indexId: 0, indexKey: 1, data: { value: this.Tariffs } } );
         $(this.$refs.Base).on('onSetSelectValue', this.SelectBase.bind(this));
         $(this.$refs.Base).on('onUnsetSelectValue', this.DeselectBase.bind(this));
@@ -170,7 +171,7 @@
       this.Tariffs = [];
       this.Initial = null;
     },
-    destroyed: function() {
+    beforeDestroy: function() {
       $(this.$refs.Base).off('onSetSelectValue', this.SelectBase.bind(this));
       $(this.$refs.Base).off('onUnsetSelectValue', this.DeselectBase.bind(this));
       $(this.$refs.Base).bsSuggest("destroy");
