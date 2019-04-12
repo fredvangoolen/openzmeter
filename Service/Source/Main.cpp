@@ -45,11 +45,13 @@ void SignalHandler(int signal) {
 }
 void RunDaemon() {
   LOGFile::Instance()->Info("Move to background task\n");
+//  signal(SIGHUP, SIG_IGN);
   pid_t ProcID = fork();
   if(ProcID < 0) {
     LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     exit(1);
   }
+
   if(ProcID > 0) exit(0);
   umask(0);
   pid_t SID = setsid();
@@ -83,6 +85,8 @@ int main(int argc, char** argv) {
       printf("Option %s not recogniced. Use --help to show valid options.", argv[i]);
     }
   }
+  if(Daemonize == true) RunDaemon();
+  
   /* Create config manager */
   ConfigManager ConfigManager(ConfigFileName);
   json Config = ConfigManager.ReadConfig();
@@ -95,7 +99,7 @@ int main(int argc, char** argv) {
   /* Create LOG file */
   string LOGFileName = "/var/log/openZmeter.log";
   if(Config["LogFile"].is_string()) LOGFileName = Config["LogFile"];
-  LOGFile LOGFile(LOGFileName, Debug);
+  LOGFile LOGFile(LOGFileName, Debug, !Daemonize);
   
   /* Create resource loader */
   ResourceLoader ResourceLoader;
@@ -105,18 +109,9 @@ int main(int argc, char** argv) {
   if(Config["Database"].is_object()) DBConfig = Config["Database"];
   Database::Config(DBConfig);
   
-  /* Create WEB service */
-  json WEBConfig = json::object();
-  if(Config["HTTPServer"].is_object()) WEBConfig = Config["HTTPServer"];
-  HTTPServer HTTPServer(WEBConfig);
-  HTTPServer.RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
-  HTTPServer.RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
-  HTTPServer.RegisterCallback("/getNews",             GetNewsCallback);
-//  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);
-  
   /* Create embedded NTP client */
   json NTPConfig = json::object();
-  if(Config["HTTPServer"].is_object()) WEBConfig = Config["HTTPServer"];
+  if(Config["HTTPServer"].is_object()) NTPConfig = Config["HTTPServer"];
   //  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(pConfig, "NTP", json_object_new_object());
 //  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (NTP::Config(Find) == false)) {
 //    pthread_mutex_unlock(&pConfigMutex);
@@ -135,12 +130,16 @@ int main(int argc, char** argv) {
 //    return false;
 //  }
 
+  /* Create WEB service */
+  json WEBConfig = json::object();
+  if(Config["HTTPServer"].is_object()) WEBConfig = Config["HTTPServer"];
+  HTTPServer HTTPServer(WEBConfig);
+  HTTPServer.RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
+  HTTPServer.RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
+  HTTPServer.RegisterCallback("/getNews",             GetNewsCallback);
+//  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);  
   
-  
-  if(Daemonize == true) {
-    RunDaemon();
-    LOGFile.ConsoloeOutput(false);
-  }
+
   
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);

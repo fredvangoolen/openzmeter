@@ -36,12 +36,12 @@ PIDFile::~PIDFile() {
 }
 //----------------------------------------------------------------------------------------------------------------------
 LOGFile *LOGFile::pInstance = NULL;
-LOGFile::LOGFile(string name, bool debug) {
+LOGFile::LOGFile(string name, bool debug, bool console) {
   if(pInstance != NULL) {
     delete pInstance;
     pInstance = NULL;    
   }
-  pConsole  = true;
+  pConsole  = console;
   pDebug    = debug;
   pInstance = this;
   pthread_mutex_init(&pMutex, NULL);
@@ -59,11 +59,8 @@ LOGFile::~LOGFile() {
   pthread_mutex_destroy(&pMutex);
 }
 LOGFile *LOGFile::Instance() {
-  if(pInstance == NULL) pInstance = new LOGFile("", true);
+  if(pInstance == NULL) pInstance = new LOGFile("", true, true);
   return pInstance;
-}
-void LOGFile::ConsoloeOutput(bool enabled) {
-  pConsole = enabled;
 }
 void LOGFile::Debug(const char* msg, ...) {
   if(pDebug == false) return;
