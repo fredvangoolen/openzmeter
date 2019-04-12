@@ -4,34 +4,40 @@
 #include <unistd.h>
 #include "NTP.h"
 #include "HTTPServer.h"
-//======================================================================================================================
-bool            NTP::pTerminate = false;
-pthread_t       NTP::pThread = 0;
-bool            NTP::pEnabled = false;
-string          NTP::pServer;
-pthread_mutex_t NTP::pMutex = PTHREAD_MUTEX_INITIALIZER;
-//======================================================================================================================
-bool NTP::Config(json_object *config) {
-  if(config == NULL) return false;
-  json_object_object_foreach(config, JSON_Key, JSON_Val) {
-    enum json_type JSON_Type = json_object_get_type(JSON_Val);
-    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Server") == 0)) {
-      pServer = strdup((char*)json_object_get_string(JSON_Val));
-    } else if((JSON_Type == json_type_boolean) && (strcmp(JSON_Key, "Enabled") == 0)) {
-      pEnabled = json_object_get_boolean(JSON_Val);
-    }
-  }  
-//  HTTPServer::RegisterCallback("/getTimeSettings", GetTimeSettingsCallback);
-//  HTTPServer::RegisterCallback("/setTimeSettings", SetTimeSettingsCallback);
+//----------------------------------------------------------------------------------------------------------------------
+NTP *NTP::pInstance = NULL;
+//----------------------------------------------------------------------------------------------------------------------
+NTP::NTP(json &config) {
+  if(pInstance != NULL) return;
+  pConfig = config;
+  pInstance = this;
+  pTerminate = false;
+  pThread = 0;
+  pEnabled = false;
+  pthread_mutex_init(&pMutex, NULL);
+  if(config["Server"].is_string()) pServer = config["Server"];
+  if(config["Enabled"].is_boolean()) pEnabled = config["Enabled"];
+  HTTPServer::RegisterCallback("/getTimeSettings", GetTimeSettingsCallback);
+  HTTPServer::RegisterCallback("/setTimeSettings", SetTimeSettingsCallback);
+  if(pEnabled == true) Start();
+}
+NTP::~NTP() {
+  Stop();
+}
+void NTP::Stop() {
+  if(pThread == 0) return;
+  pthread_join(pThread, NULL);
+  pThread = 0;
+}
+void NTP::Start() {
+  if(pThread != 0) return;
   if(pthread_create(&pThread, NULL, NTP_Thread, NULL) != 0) {
     LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return false;
+    pThread = 0;
   }
-  pthread_setname_np(pThread, "NTP_Client");
-  return true;
 }
 void *NTP::NTP_Thread(void *args) {
-  NTP *This = (NTP*)args;
+  pthread_setname_np(pInstance->pThread, "NTP_Client");
   int Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if(Socket < 0) {
     LOGFile::Instance()->Error("NTP Client can not open socket\n");
@@ -45,16 +51,14 @@ void *NTP::NTP_Thread(void *args) {
     LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL;
   }
-  while(!This->pTerminate) {
-    hostent *Server = NULL;
-    pthread_mutex_lock(&pMutex);
-    if(pEnabled == false) goto Release;
+  while(!pInstance->pTerminate) {
     memset(&Packet, 0, sizeof(NTP_Packet));
     Packet.li_vn_mode = 0x1B;
-    Server = gethostbyname(pServer.c_str());
+    hostent *Server = gethostbyname(pInstance->pServer.c_str());
     if(Server == NULL) {
       LOGFile::Instance()->Error("NTP server can not be resolved\n");
-      goto Release;
+      sleep(10);
+      continue;
     }
     sockaddr_in ServerAddr;
     memset(&ServerAddr, 0, sizeof(ServerAddr));
@@ -63,26 +67,23 @@ void *NTP::NTP_Thread(void *args) {
     ServerAddr.sin_port = htons(123);
     if(sendto(Socket, &Packet, sizeof(NTP_Packet), 0, (sockaddr *)&ServerAddr, sizeof(ServerAddr)) < 0) {
       LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-      goto Release;
+      sleep(10);
+      continue;
     }
     if(read(Socket, &Packet, sizeof(NTP_Packet)) != sizeof(NTP_Packet)) {
       LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-      goto Release;
+      sleep(10);
+      continue;
     }
     Packet.txTm_s = ntohl(Packet.txTm_s); // Time-stamp seconds.
     Packet.txTm_f = ntohl(Packet.txTm_f); // Time-stamp fraction of a second.
     timeval TimeVal;
     TimeVal.tv_sec  = Packet.txTm_s - 2208988800ull;
     if(Packet.txTm_f != 0) TimeVal.tv_usec = 0xFFFFFFFF / (Packet.txTm_f / 1000);
-    if(settimeofday(&TimeVal, NULL) != 0) {
-      LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-      goto Release;
-    }
-    fflush(stdout);
-  Release :
-    pthread_mutex_unlock(&pMutex);
+    if(settimeofday(&TimeVal, NULL) != 0) LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     sleep(10);
   }
+  close(Socket);
   return NULL;
 }
 void NTP::GetTimeSettingsCallback(HTTPRequest &req) {
@@ -118,8 +119,8 @@ void NTP::GetTimeSettingsCallback(HTTPRequest &req) {
 //    if(Line != NULL) free(Line);
 //    fclose(File);
 //  }
-  Result["NTP_Enabled"] = pEnabled;
-  Result["NTP_Server"] = pServer;
+  Result["NTP_Enabled"] = pInstance->pEnabled;
+  Result["NTP_Server"] = pInstance->pServer;
   Result["Time"] = Tools::GetTime();
   req.FromJSON(Result);
 }

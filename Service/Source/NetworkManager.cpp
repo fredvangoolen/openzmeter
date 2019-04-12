@@ -33,7 +33,7 @@ DBusConnection *NetworkManager::CreateConnection() {
   }
   return DBus;
 }
-bool NetworkManager::SetJSONNetworkConfig(json_object *json) {
+bool NetworkManager::SetJSONNetworkConfig(json json) {
 //  DBusConnection *DBus = CreateConnection();
 //  if(DBus == NULL) return false;  
 //  if(SendSaveSettings(DBus, json)) {

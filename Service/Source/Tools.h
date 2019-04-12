@@ -80,7 +80,6 @@ class ConfigManager {
 };
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
-
   public :
     static uint8_t pBatteryLevel;
     static bool    pBatteryCharging;
@@ -90,29 +89,19 @@ class Tools {
 
     
 
-    static json           *pConfig;
+//    static json           *pConfig;
 
     
   public :
-    static bool          Debug;
+//    static bool          Debug;
   private :
     static uint64_t ParseProcMem(char *name, char *buff);
     static bool     GetMemory(uint64_t *total, uint64_t *available);
 
   public :
 
-    static void         Daemonize();
     static uint64_t     GetTime();
     static void         GetSysInfo(HTTPRequest &req);
-    static void         RegisterHandlers(void (*function)(int));
-    static bool         JSONString(const json_object *obj, const char *key, char **dst, bool copy = false);
-    static bool         JSONFloat(const json_object *obj, const char *key, float *dst);
-    static bool         JSONUInt64(const json_object *obj, const char *key, uint64_t *dst);
-    static bool         JSONUInt32(const json_object *obj, const char *key, uint32_t *dst);
-    static bool         JSONArrayFloat(const json_object *obj, const char *key, float *dst, uint len);
-
-    static json_object *GetConfigObject();
-    static char        *trim(char *str);
 //    static void         SendUDP(json obj);
 };
 //----------------------------------------------------------------------------------------------------------------------

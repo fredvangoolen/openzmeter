@@ -3,18 +3,16 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #include <fstream>
-#include <string.h>
-#include <signal.h>
+//#include <string.h>
+//#include <signal.h>
 #include <time.h>
-#include <errno.h>
+//#include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <ctype.h>
 #include <sys/mman.h>
 #include <sys/time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
 #include "Tools.h"
@@ -268,30 +266,6 @@ json &ConfigManager::ReadConfig() {
 //bool Tools::pExternalPower = false;
 //----------------------------------------------------------------------------------------------------------------------
 
-
-void Tools::RegisterHandlers(void (*function)(int)) {
-  signal(SIGINT, function);
-  signal(SIGTERM, function);
-}
-
-void Tools::Daemonize() {
-//  Tools::LogMsg("INFO", "Move to background task\n");
-  pid_t ProcID = fork();
-  if(ProcID < 0) {
-//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    exit(1);
-  }
-  if(ProcID > 0) exit(0);
-  umask(0);
-  pid_t SID = setsid();
-  if(SID < 0) {
-//    LogMsg("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    exit(1);
-  }
-  close(STDIN_FILENO);
-  close(STDOUT_FILENO);
-  close(STDERR_FILENO);
-}
 uint64_t Tools::GetTime() {
   struct timeval Time;
   if(gettimeofday(&Time, NULL) != 0) {
@@ -364,48 +338,8 @@ void Tools::GetSysInfo(HTTPRequest &req) {
   //*postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
   req.FromJSON(Response);
 }
-bool Tools::JSONString(const json_object *obj, const char *key, char **dst, bool copy) {
-  json_object *Find;
-  if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_string)) *dst = (copy ? strdup((char*)json_object_get_string(Find)) : (char*)json_object_get_string(Find));
-  return (Find != NULL);
-}
-bool Tools::JSONFloat(const json_object *obj, const char *key, float *dst) {
-  json_object *Find;
-  if((json_object_object_get_ex(obj, key, &Find) == true) && ((json_object_get_type(Find) == json_type_double) || (json_object_get_type(Find) == json_type_int))) *dst = json_object_get_double(Find);
-  return (Find != NULL);
-}
-bool Tools::JSONUInt64(const json_object *obj, const char *key, uint64_t *dst) {
-  json_object *Find;
-  if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_int)) *dst = json_object_get_int64(Find);
-  return (Find != NULL);
-}
-bool Tools::JSONUInt32(const json_object *obj, const char *key, uint32_t *dst) {
-  json_object *Find;
-  if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_int)) *dst = json_object_get_int(Find);
-  return (Find != NULL);
-}
-bool Tools::JSONArrayFloat(const json_object* obj, const char* key, float* dst, uint len) {
-  json_object *Find;
-  if((json_object_object_get_ex(obj, key, &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
-    if(json_object_array_length(Find) != len) return false;
-    for(uint i = 0; i < len; i++) {
-      json_object *Item = json_object_array_get_idx(Find, i);
-      json_type Type = json_object_get_type(Item);
-      if((Type != json_type_double) && (Type != json_type_int)) return false;
-      dst[i] = json_object_get_double(json_object_array_get_idx(Find, i));
-    }
-    return true;
-  }
-  return false;
-}
-char *Tools::trim(char *str) {
-  if(str == NULL) return NULL;
-  while((str[0] == 0) && (str[0] == ' ')) str++;
-  char *Start = str;
-  while((str[0] != 0) && (str[0] != ' ')) str++;
-  str[0] = 0;
-  return Start;
-}
+
+
 //void Tools::SendUDP(json obj) {
 //  struct sockaddr_in Client;
 //  int Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);

@@ -6,11 +6,11 @@ LIB_DIRS = /usr/local/pgsql/lib
 #General options
 CC       = gcc
 CPPFLAGS = -Wall -no-pie -std=c++11
-LDFLAGS  = -Wl,-Bdynamic -lgcrypt -lgnutls -lm -ljson-c -ldbus-1 -lcurl -lpthread -lpq -lusb-1.0 -lxml2 -ldbus-1 -lz -lfftw3f -lstdc++ -lmicrohttpd -lcctz -Wl,-Bstatic  -Wl,-Bdynamic
+LDFLAGS  = -ldbus-1 -lstdc++ -lcurl -lpthread -lpq -lusb-1.0 -lxml2 -ldbus-1 -lz -lfftw3f -lstdc++ -lmicrohttpd -lm -lcctz
 
 #Specific options
 debug: CXXFLAGS += -O0 -g -DOZM_DEBUG -fno-exceptions
-release: CXXFLAGS += -Os -Wall -flto -DOZM_DEBUG
+release: CXXFLAGS += -O2 -Wall -flto -DOZM_DEBUG
 
 #Source and targets files
 TARGET_EXEC  = openZmeter
@@ -27,11 +27,11 @@ LDFLAGS     += $(addprefix -L,$(LIB_DIRS))
 CPPFLAGS    += $(INC_FLAGS)
 debug: $(OBJS) $(RESTARGET)
 	@echo "Linking debug target" $(TARGET_EXEC)
-	@$(CC) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(RESTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
+	$(CC) $(CPPFLAGS) $(CXXFLAGS)  $(OBJS) $(RESTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
 	
 release: $(OBJS) $(RESTARGET)
 	@echo "Linking release target" $(TARGET_EXEC)
-	@$(CC) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(RESTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
+	@$(CC) $(CPPFLAGS) $(CXXFLAGS) $(OBJS) $(RESTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
 
 clean:
 	@rm -rf $(BUILD_DIR)
@@ -45,7 +45,7 @@ package: $(BUILD_DIR)/$(TARGET_EXEC)
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo "Bulding" $@
-	@$(CC) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 $(RESTARGET): $(RESOURCES)
 	@echo  "Building resource file"
