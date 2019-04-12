@@ -18,7 +18,7 @@ void NetworkManager::GetNetworksCallback(HTTPRequest &req) {
   SendGetDevices(DBus, Response);
   SendGetActiveConnections(DBus, Response);
   SendGetSettingsPaths(DBus, Response);
-//  dbus_connection_unref(DBus);
+  dbus_connection_unref(DBus);
 //  *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);  
   return req.FromJSON(Response);
 }

@@ -34,13 +34,12 @@ class LOGFile {
   public :
     static LOGFile *Instance();
   public :
-    void ConsoloeOutput(bool enabled);
     void Info(const char *msg, ...);
     void Warning(const char *msg, ...);
     void Error(const char *msg, ...);
     void Debug(const char *msg, ...);
   public :
-    LOGFile(string name, bool debug);
+    LOGFile(string name, bool debug, bool console);
     virtual ~LOGFile();
 };
 //----------------------------------------------------------------------------------------------------------------------
