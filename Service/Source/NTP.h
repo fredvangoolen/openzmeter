@@ -21,16 +21,23 @@ class NTP {
       uint32_t txTm_s;         // 32 bits and the most important field the client cares about. Transmit time-stamp seconds.
       uint32_t txTm_f;         // 32 bits. Transmit time-stamp fraction of a second.
     } NTP_Packet;              // Total: 384 bits or 48 bytes.
+  private :  
+    static NTP *pInstance;
   private :
-    static bool            pTerminate;
-    static pthread_t       pThread;
-    static pthread_mutex_t pMutex;
-    static bool            pEnabled;
-    static string          pServer;
+    bool            pTerminate;
+    pthread_t       pThread;
+    pthread_mutex_t pMutex;
+    bool            pEnabled;
+    string          pServer;
+    json            pConfig;
   private :
     static void *NTP_Thread(void *args);
-  public:
-    static bool Config(json_object *config);
     static void GetTimeSettingsCallback(HTTPRequest &req);
     static void SetTimeSettingsCallback(HTTPRequest &req);
+  public :
+    NTP(json &config);
+    virtual ~NTP();
+    NTP *Instance();
+    void Stop();
+    void Start();
 };

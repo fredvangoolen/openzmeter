@@ -5,7 +5,6 @@
 #pragma once
 #include <pthread.h>
 #include <inttypes.h>
-#include <json-c/json.h>
 #include "AnalyzerInterface.h"
 #include "FFT.h"
 #include "Tariff.h"

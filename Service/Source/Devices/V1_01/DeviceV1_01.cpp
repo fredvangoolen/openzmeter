@@ -17,7 +17,7 @@
 #include "DeviceV1_01.h"
 #include "Tools.h"
 //======================================================================================================================
-bool DeviceV1_01::pClassRegistered = DeviceV1_01::Init();
+bool DeviceV1_01::pClassRegistered = DeviceV1_01::Init(); 
 // Funciones ===========================================================================================================
 bool DeviceV1_01::Init() {
   libusb_context *Context;
@@ -224,7 +224,7 @@ bool DeviceV1_01::BuffersAppend(float voltageSample, float currentSample) {
   uint64_t Sampletime = Tools::GetTime();
   if(pLastUpdate < (Sampletime - 500)) {
     char ThreadName[16];
-    sprintf(ThreadName, "DeviceV1_%02d", pBuffer.Size() * 100 / pBuffer.Capacity());
+    sprintf(ThreadName, "DeviceV1_00_%02d", pBuffer.Size() * 100 / pBuffer.Capacity());
     pthread_setname_np(pCaptureThread, ThreadName);
     pLastUpdate = Sampletime;
   }

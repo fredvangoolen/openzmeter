@@ -115,10 +115,10 @@ void AnalyzerInterface::ResetAggreg(Params_t &params) {
   for(uint i = 0; i < params.Current_Harmonics.size(); i++) {
     for(uint n = 0; n < params.Current_Harmonics[i].size(); n++) params.Current_Harmonics[i][n] = NAN;
   }
-  for(uint i = 0; i < params.Voltage_Samples.size(); i++) params.Voltage_Samples[i].resize(0);
-  for(uint i = 0; i < params.Current_Samples.size(); i++) params.Current_Samples[i].resize(0);
-  for(uint i = 0; i < params.Voltage_FFT.size(); i++) params.Voltage_FFT[i].resize(0);
-  for(uint i = 0; i < params.Current_FFT.size(); i++) params.Current_FFT[i].resize(0);
+  for(uint i = 0; i < params.Voltage_Samples.size(); i++) params.Voltage_Samples[i].clear();
+  for(uint i = 0; i < params.Current_Samples.size(); i++) params.Current_Samples[i].clear();
+  for(uint i = 0; i < params.Voltage_FFT.size(); i++) params.Voltage_FFT[i].clear();
+  for(uint i = 0; i < params.Current_FFT.size(); i++) params.Current_FFT[i].clear();
 }
 void AnalyzerInterface::SaveAggreg(Params_t &params) {
   if(params.Type == AGGREG_3S)

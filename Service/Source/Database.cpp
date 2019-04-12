@@ -9,11 +9,6 @@
 #include "Database.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-//char *Database::pDatabaseName = (char*)"openzmeter";
-//char *Database::pHost         = (char*)"127.0.0.1";
-//int   Database::pPort         = 5432;
-//char *Database::pUser         = (char*)"openzmeter";
-//char *Database::pPassword     = (char*)"";
 string Database::pConnectionString;
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(string schema) {
@@ -66,7 +61,7 @@ bool Database::Config(json config) {
   if(config["Database"].is_string()) DataBase = config["Database"];
   if(config["Username"].is_string()) Username = config["Username"];
   if(config["Password"].is_string()) Password = config["Password"];
-  pConnectionString = "host=" + Hostname + " port=" + to_string(Port) + " user=" + Username + " password=" + Password + " dbname=" + DataBase;
+  pConnectionString = "host=" + Hostname + " port=" + to_string(Port) + " user=" + Username + " password=" + Password + " dbname=" + DataBase + " sslmode=allow";
   Database DB("public");
   LOGFile::Instance()->Debug("Creating database tables\n");
   return DB.ExecResource("SQL/Database.sql");

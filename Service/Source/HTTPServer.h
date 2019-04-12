@@ -24,7 +24,6 @@ class HTTPRequest : public Database {
     string      pUserName;
     string      pMimeType;
     string      pPostData;
-    bool        pFreePostData;    
     json        pJSONParams;
   public :
     HTTPRequest(char *cookie, bool deflate);

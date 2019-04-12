@@ -7,7 +7,6 @@
 #include <sstream>
 #include <inttypes.h>
 #include <libpq-fe.h>
-#include <json-c/json.h>
 #include <json.hpp>
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;

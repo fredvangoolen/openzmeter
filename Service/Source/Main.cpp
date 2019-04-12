@@ -6,17 +6,14 @@
 #include <signal.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "Tools.h"
 #include "HTTPServer.h"
 #include "DeviceInterface.h"
 #include "NetworkManager.h"
 #include "NTP.h"
 //---------------------------------------------------------------------------------------------------------------------
-static bool Terminate = false;
-//---------------------------------------------------------------------------------------------------------------------
-void SignalHandler(int signal) {
-  if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
-}
 void GetNewsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   uint64_t Time = 0;
@@ -32,11 +29,40 @@ void GetNewsCallback(HTTPRequest &req) {
   }
   req.FromString(req.ResultString(0, "result"), MHD_HTTP_OK);
 }
-bool GetCountriesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
-  //  *postdata = db->ExecSentenceJSON("SELECT array_to_json(array_agg(row_to_json(t1))) FROM (  select country_code as \"CountryCode\", country as \"Name\", currency as \"Currency\", timezone as \"TimeZone\" from country) as t1;", resultLen);
-  return true;
+//bool GetCountriesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
+//  //  *postdata = db->ExecSentenceJSON("SELECT array_to_json(array_agg(row_to_json(t1))) FROM (  select country_code as \"CountryCode\", country as \"Name\", currency as \"Currency\", timezone as \"TimeZone\" from country) as t1;", resultLen);
+//  return true;
+//}
+
+
+
+
+//---------------------------------------------------------------------------------------------------------------------
+static bool Terminate = false;
+//---------------------------------------------------------------------------------------------------------------------
+void SignalHandler(int signal) {
+  if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
+}
+void RunDaemon() {
+  LOGFile::Instance()->Info("Move to background task\n");
+  pid_t ProcID = fork();
+  if(ProcID < 0) {
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    exit(1);
+  }
+  if(ProcID > 0) exit(0);
+  umask(0);
+  pid_t SID = setsid();
+  if(SID < 0) {
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    exit(1);
+  }
+  close(STDIN_FILENO);
+  close(STDOUT_FILENO);
+  close(STDERR_FILENO);
 }
 int main(int argc, char** argv) {
+  signal(SIGILL, SIG_IGN);
   string ConfigFileName = "/etc/openZmeter.conf";
   bool   Daemonize      = false;
   bool   Debug          = false;
@@ -89,7 +115,9 @@ int main(int argc, char** argv) {
 //  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);
   
   /* Create embedded NTP client */
-//  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(pConfig, "NTP", json_object_new_object());
+  json NTPConfig = json::object();
+  if(Config["HTTPServer"].is_object()) WEBConfig = Config["HTTPServer"];
+  //  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(pConfig, "NTP", json_object_new_object());
 //  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (NTP::Config(Find) == false)) {
 //    pthread_mutex_unlock(&pConfigMutex);
 //    LogMsg("ERROR", "Can not create NTP client\n");
@@ -109,8 +137,14 @@ int main(int argc, char** argv) {
 
   
   
-    if(Daemonize == true) Tools::Daemonize();
-  Tools::RegisterHandlers(SignalHandler);
+  if(Daemonize == true) {
+    RunDaemon();
+    LOGFile.ConsoloeOutput(false);
+  }
+  
+  signal(SIGINT, SignalHandler);
+  signal(SIGTERM, SignalHandler);
+
   /*
           
           

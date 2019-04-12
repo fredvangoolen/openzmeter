@@ -155,7 +155,7 @@ HTTPServer::HTTPServer(json config) {
   if(config["Port"].is_number_unsigned()) Port = config["Port"];
   pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL, Port, NULL, NULL, 
                              &HandleClient, NULL,
-                             MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int) 15,
+                             MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int)180,
                              MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
                              MHD_OPTION_END);
   pInstance = this;
