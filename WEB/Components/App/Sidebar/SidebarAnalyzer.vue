@@ -39,14 +39,14 @@
       },
       CheckSelected() {
         if(this.AvaliableAnalyzers.length === 0) {
-          this.ShowAnalyzers();
+          this.ShowDialog();
           this.hasAnalyzers = false;
         } else {
           this.hasAnalyzers = true;
           for(var i = 0; i < this.AvaliableAnalyzers.length; i++) {
             if(this.AvaliableAnalyzers[i].ID === localStorage.getItem("SelAnalyzer")) this.SelAnalyzer = this.AvaliableAnalyzers[i];
           }
-          if(this.SelAnalyzer === null) this.ShowAnalyzers();
+          if(this.SelAnalyzer === null) this.ShowDialog();
           this.$root.SelectedAnalyzer = this.SelAnalyzer;  
           this.$root.$emit('AnalyzerChanged');
         }

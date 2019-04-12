@@ -25,7 +25,6 @@
   import AnalyzerAcl from './AnalyzerACL.vue';
   import AnalyzerTariffPeriods from './AnalyzerTariffPeriods.vue';
   import AnalyzerTariffTaxs from './AnalyzerTariffTaxs.vue';
-
   export default {
     data() {
       return { ShowDialog: false };

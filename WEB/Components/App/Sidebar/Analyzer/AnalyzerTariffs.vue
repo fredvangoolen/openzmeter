@@ -9,6 +9,7 @@
     </div>
     <div class="modal-body">
       <spinner v-if="ShowSpinner"></spinner>
+      <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != '' && !ShowSpinner">{{ Error }}</div>
       <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
@@ -27,7 +28,7 @@
   import Spinner from 'Components/Spinner.vue';
   export default {
     data() {
-      return { Show: false, ShowSpinner: true,
+      return { Show: false, ShowSpinner: true, Error: '',
         Columns: [
           {name: 'Name', title: 'Name'},
           {name: 'StartDate', title: 'Start date', callback: 'DateFormat'},
@@ -52,6 +53,13 @@
             var TableData = { data: result };
             this.$refs.table.setData(TableData);
             this.ShowSpinner = false;
+            this.Error = '';
+            for(var n = 1; n < result.length; n++) {
+              if(result[n].StartDate <= result[n - 1].EndDate) {
+                this.Error = 'Assigned tariffs overlaps, please check date ranges';
+                return;
+              }
+            }
           }.bind(this)
         });
       },
@@ -60,7 +68,8 @@
         this.$parent.$refs.Tariff.Load(this.Analyzer, row.RateID);
       },
       Delete: function(row) {
-        $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: row.RateID, Analyzer: this.Analizer.ID }), success: function() { this.Load(this.Analyzer); }.bind(this) });
+        this.ShowSpinner = true;
+        $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: row.RateID, Analyzer: this.Analyzer.ID }), success: function() { this.Load(this.Analyzer); }.bind(this) });
       },
       Add: function() {
         this.Show = false;

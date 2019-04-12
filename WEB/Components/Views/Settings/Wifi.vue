@@ -77,7 +77,7 @@
               var Found = 0;
               for(var n = 0; n < this.Networks.length; n++) {
                 if((this.Networks[n]['SSID'] === result['Settings'][i]['SSID']) && ((this.Networks[n]['MAC'] === result['Settings'][i]['MAC']) || (result['Settings'][i]['MAC'] === undefined))) {
-                  this.Networks[n] = Object.assign(this.NetworksDataset[n], { Status: 'Configured' }, result['Settings'][i]);
+                  this.Networks[n] = Object.assign(this.Networks[n], { Status: 'Configured' }, result['Settings'][i]);
                   Found++;
                 }
               }
