@@ -29,10 +29,10 @@ void GetNewsCallback(HTTPRequest &req) {
   }
   req.FromString(req.ResultString(0, "result"), MHD_HTTP_OK);
 }
-//bool GetCountriesCallback(string user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
-//  //  *postdata = db->ExecSentenceJSON("SELECT array_to_json(array_agg(row_to_json(t1))) FROM (  select country_code as \"CountryCode\", country as \"Name\", currency as \"Currency\", timezone as \"TimeZone\" from country) as t1;", resultLen);
-//  return true;
-//}
+void GetCountriesCallback(HTTPRequest &req) {
+  req.ExecSentence("SELECT COALESCE(to_json(array_agg(json_build_object('Country_Code', country_code, 'Name', country, 'Currency', currency, 'TimeZone', timezone))), '[]') as result FROM country");
+  req.FromString(req.ResultString(0, "result"), (req.ResultRows() < 1) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
+}
 
 
 
@@ -45,7 +45,6 @@ void SignalHandler(int signal) {
 }
 void RunDaemon() {
   LOGFile::Instance()->Info("Move to background task\n");
-//  signal(SIGHUP, SIG_IGN);
   pid_t ProcID = fork();
   if(ProcID < 0) {
     LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -123,13 +122,6 @@ int main(int argc, char** argv) {
   if(Config["Devices"].is_object()) DeviceConfig = Config["Devices"];
   DeviceManager DeviceManager(DeviceConfig);
   
-  //  if((json_object_object_get_ex(pConfig, "Devices", &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(pConfig, "Devices", json_object_new_object());
-//  if((json_object_object_get_ex(pConfig, "Devices", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (DeviceInterface::Config(Find) == false)) {
-//    pthread_mutex_unlock(&pConfigMutex);
-//    LogMsg("ERROR", "Can not create device manager\n");
-//    return false;
-//  }
-
   /* Create WEB service */
   json WEBConfig = json::object();
   if(Config["HTTPServer"].is_object()) WEBConfig = Config["HTTPServer"];
@@ -137,7 +129,7 @@ int main(int argc, char** argv) {
   HTTPServer.RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
   HTTPServer.RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
   HTTPServer.RegisterCallback("/getNews",             GetNewsCallback);
-//  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);  
+  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);  
   
 
   

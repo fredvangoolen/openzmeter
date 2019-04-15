@@ -95,8 +95,7 @@ void DeviceManager::GetAnalyzersCallback(HTTPRequest &req) {
   //All users can do this action, for admin all analyzers are returned and can be edited, for other users only own analyzers or authorized ones are returned and only owner can edit. In all cases only present ones are returned
   json Params = req.GetParams();
   json Response = json::array();
-//  string Query = "SELECT serial, editable FROM (SELECT serial, false AS editable FROM permisions WHERE username = " + req.Bind(req.UserName()) + " AND read = TRUE UNION SELECT serial, true FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " UNION SELECT serial, true FROM analyzers WHERE 'admin' = " + req.Bind(req.UserName()) + ") AS Result ORDER BY serial ASC, editable DESC";
-  req.ExecSentence("SELECT serial, username, timezone FROM analyzers NATURAL LEFT JOIN country WHERE serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " UNION SELECT username FROM permisions WHERE username = " + req.Bind(req.UserName()) + ")");
+  req.ExecSentence("SELECT serial, username, timezone, country_code FROM analyzers NATURAL LEFT JOIN country WHERE serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " UNION SELECT username FROM permisions WHERE username = " + req.Bind(req.UserName()) + ")");
   for(uint32_t i = 0; i < req.ResultRows(); i++) {
     string Serial = req.ResultString(i, "serial");
     AnalyzerInterface *Analyzer = NULL;
