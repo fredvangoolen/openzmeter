@@ -561,6 +561,7 @@ F 0 "J1" H 7550 3525 50  0000 C CNN
 F 1 "95001-6P6C" H 7200 3525 50  0001 C CNN
 F 2 "Footprints:RJ11_4P4C" H 7400 3175 50  0001 C CNN
 F 3 "" H 7400 3175 50  0000 C CNN
+F 4 "L1" H 7400 2900 50  0000 C CNN "Name"
 	1    7400 3175
 	-1   0    0    -1  
 $EndComp
@@ -572,6 +573,7 @@ F 0 "J3" H 7550 6550 50  0000 C CNN
 F 1 "95001-6P6C" H 7200 6550 50  0001 C CNN
 F 2 "Footprints:RJ11_4P4C" H 7400 6200 50  0001 C CNN
 F 3 "" H 7400 6200 50  0000 C CNN
+F 4 "L3" H 7400 5900 50  0000 C CNN "Name"
 	1    7400 6200
 	-1   0    0    -1  
 $EndComp
@@ -583,6 +585,7 @@ F 0 "J4" H 7550 7950 50  0000 C CNN
 F 1 "95001-6P6C" H 7200 7950 50  0001 C CNN
 F 2 "Footprints:RJ11_4P4C" H 7400 7600 50  0001 C CNN
 F 3 "" H 7400 7600 50  0000 C CNN
+F 4 "N" H 7400 7300 50  0000 C CNN "Name"
 	1    7400 7600
 	-1   0    0    -1  
 $EndComp
@@ -594,6 +597,7 @@ F 0 "J2" H 7550 5125 50  0000 C CNN
 F 1 "95001-6P6C" H 7200 5125 50  0001 C CNN
 F 2 "Footprints:RJ11_4P4C" H 7400 4775 50  0001 C CNN
 F 3 "" H 7400 4775 50  0000 C CNN
+F 4 "L2" H 7400 4500 50  0000 C CNN "Name"
 	1    7400 4775
 	-1   0    0    -1  
 $EndComp
@@ -1095,7 +1099,7 @@ F 3 "https://es.aliexpress.com/store/product/100Pcs-CD32-Chip-Power-Inductance-3
 	0    -1   -1   0   
 $EndComp
 Text GLabel 825  10600 0    60   Input ~ 0
-IN_T
+IN_L3
 $Comp
 L 3Phase-rescue:D_ALT-3Phase-rescue D6
 U 1 1 5BDDF7B6
@@ -1130,11 +1134,11 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-Diode-1N4001-M1-1N4005-M5-1N
 	-1   0    0    1   
 $EndComp
 Text GLabel 1300 1000 2    60   Input ~ 0
-IN_T
+IN_L3
 Text GLabel 1300 1300 2    60   Input ~ 0
-IN_S
+IN_L2
 Text GLabel 1300 1600 2    60   Input ~ 0
-IN_R
+IN_L1
 $Comp
 L 3Phase-rescue:CP_Small-3Phase-rescue C18
 U 1 1 5BDECD27
@@ -1412,15 +1416,15 @@ F 3 "" H 7300 8650 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 Text GLabel 825  10000 0    60   Input ~ 0
-IN_S
+IN_L2
 Text GLabel 825  9400 0    60   Input ~ 0
-IN_R
+IN_L1
 Text GLabel 4375 2825 0    60   Input ~ 0
-RI_ADC
+L1I_ADC
 Text GLabel 4400 4425 0    60   Input ~ 0
-SI_ADC
+L2I_ADC
 Text GLabel 4400 5850 0    60   Input ~ 0
-TI_ADC
+L3I_ADC
 Text GLabel 4450 7250 0    60   Input ~ 0
 NI_ADC
 $Comp
@@ -1435,7 +1439,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    -1   1    0   
 $EndComp
 Text GLabel 4600 3775 0    60   Input ~ 0
-R_GAIN
+L1_GAIN
 $Comp
 L 3Phase-rescue:R-3Phase-rescue R59
 U 1 1 5BF44E5F
@@ -1448,7 +1452,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	0    -1   1    0   
 $EndComp
 Text GLabel 4600 5375 0    60   Input ~ 0
-S_GAIN
+L2_GAIN
 $Comp
 L 3Phase-rescue:R-3Phase-rescue R60
 U 1 1 5BFA4892
@@ -1549,11 +1553,11 @@ F 3 "" H 2350 7675 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Text GLabel 2200 7175 2    60   Input ~ 0
-RI_ADC
+L1I_ADC
 Text GLabel 1800 7075 2    60   Input ~ 0
-SI_ADC
+L2I_ADC
 Text GLabel 1800 6875 2    60   Input ~ 0
-TI_ADC
+L3I_ADC
 $Comp
 L Components:MCP6004 U11
 U 2 1 5BFE63CA
@@ -1610,7 +1614,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10u
 	1    0    0    -1  
 $EndComp
 Text GLabel 3000 9500 2    60   Input ~ 0
-RV_ADC
+L1V_ADC
 $Comp
 L power:GND #PWR08
 U 1 1 5C00A67E
@@ -1656,7 +1660,7 @@ F 3 "https://es.aliexpress.com/store/product/300pcs-1-0603-SMD-resistor-0R-10M-1
 	0    1    1    0   
 $EndComp
 Text GLabel 3000 10100 2    60   Input ~ 0
-SV_ADC
+L2V_ADC
 $Comp
 L 3Phase-rescue:C_Small-3Phase-rescue C20
 U 1 1 5C018F55
@@ -1713,7 +1717,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10u
 	1    0    0    -1  
 $EndComp
 Text GLabel 3000 10700 2    60   Input ~ 0
-TV_ADC
+L3V_ADC
 $Comp
 L power:GND #PWR010
 U 1 1 5C020156
@@ -2416,11 +2420,11 @@ Wire Wire Line
 Text GLabel 2200 6975 2    60   Input ~ 0
 NI_ADC
 Text GLabel 1800 7475 2    60   Input ~ 0
-RV_ADC
+L1V_ADC
 Text GLabel 2200 7375 2    60   Input ~ 0
-SV_ADC
+L2V_ADC
 Text GLabel 1800 7275 2    60   Input ~ 0
-TV_ADC
+L3V_ADC
 Wire Wire Line
 	5650 4525 5650 4550
 Wire Wire Line
@@ -2453,7 +2457,7 @@ Wire Wire Line
 	4875 8150 4925 8150
 Connection ~ 4875 7675
 Text GLabel 4600 6800 0    60   Input ~ 0
-T_GAIN
+L3_GAIN
 Wire Wire Line
 	4925 6800 4600 6800
 Text GLabel 4600 8250 0    60   Input ~ 0
@@ -3117,9 +3121,9 @@ Connection ~ 2450 4775
 Wire Wire Line
 	2450 4775 2250 4775
 Text GLabel 1775 4175 2    60   Input ~ 0
-S_GAIN
+L2_GAIN
 Text GLabel 2175 4475 2    60   Input ~ 0
-R_GAIN
+L1_GAIN
 Text GLabel 1775 4375 2    60   Input ~ 0
 N_GAIN
 $Comp
@@ -3441,7 +3445,7 @@ F 3 "" H 2225 4875 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 Text GLabel 2175 4275 2    60   Input ~ 0
-T_GAIN
+L3_GAIN
 Wire Wire Line
 	5550 8650 5550 9150
 Wire Wire Line
