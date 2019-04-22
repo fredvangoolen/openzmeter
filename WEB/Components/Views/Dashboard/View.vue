@@ -21,11 +21,16 @@
   import 'JS/dygraph-synchronizer.js';
   import Variables from './VariablesPanel.vue';
   import * as oZm from 'JS/openZmeter.js';
+  import Dygraph from 'JS/dygraph.js';
   export default {
     data () {
       return { };
     },
     mounted: function() {
+      var Graphs = [this.$refs.voltage.$refs.Chart.Graph, this.$refs.current.$refs.Chart.Graph, this.$refs.active_power.$refs.Chart.Graph, this.$refs.frequency.$refs.Chart.Graph];
+      Dygraph.synchronize(Graphs, { range: false, zoom: false });
+      
+      
       //var Graphs = [ this.$refs.voltage.$refs.Chart.Graph ];
       
     },

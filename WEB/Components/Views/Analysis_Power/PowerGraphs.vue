@@ -2,7 +2,7 @@
   <div>
     <div class="panel panel-active-power">
       <div class="panel-heading">
-        <div class="huge header-text">Active power</div>
+        <div class="huge header-text">Active Power</div>
         <div class="header-buttons clearfix" ref="ToolbarActive">
           <toolbar-aggregation variable="AggregationEnergy" :options="['15M', '1H']" v-on:AggregationChanged="AggregationChanged" ref="aggregation"></toolbar-aggregation>
           <toolbar-period variable="Period" v-on:PeriodChanged="PeriodChange" ref="period"></toolbar-period>
@@ -53,6 +53,8 @@
       return { ShowSpinner: true };
     },
     created: function() {
+      this.Periods = [];
+      this.Bills = [];
       this.ActiveData = [];
       this.ReactiveData = [];
       this.LastSample = 0;
@@ -64,7 +66,7 @@
       this.AutoUpdate = null;
       this.To = null;
       this.GraphOptionsActive = {
-        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: oZm.LegendFormatter_Follow,
+        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: oZm.LegendFormatter_Follow, underlayCallback: this.DrawPeriods,
         labels: ['Time', 'Active Power'], zoomCallback: this.ZoomEvt.bind(this), interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt.bind(this), dblclick: this.DoubleClickEvt.bind(this) }, colors: [oZm.Series['ACTIVE_POWER'].Color], xAxisHeight: 24, 
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
@@ -89,7 +91,6 @@
              }
         }
       };
-
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
     mounted: function() {
@@ -104,6 +105,49 @@
       clearInterval(this.NowTimer);
     },
     methods: {
+      DrawPeriods: function(canvas, area, g) {
+        canvas.strokeStyle = '#777';
+        canvas.lineWidth = 2;
+        canvas.beginPath();
+        canvas.moveTo(area.x, 0);
+        canvas.lineTo(area.x, 13);
+        canvas.stroke();  
+        for(var i = 0; i < this.Periods.length; i++) {
+          var Left = g.toDomXCoord(this.Periods[i].From);
+          var Right = g.toDomXCoord(this.Periods[i].To);
+          if(Left < (area.x + 1)) Left = (area.x + 1);
+          canvas.fillStyle = (this.Periods[i].Color === null) ? "#EEEEEE" : this.Periods[i].Color;
+          canvas.fillRect(Left, area.y, Right, 13);
+          if(((Right - Left) > 20) && (this.Periods[i].Name !== null)) {
+            canvas.fillStyle = '#000000';
+            canvas.font = "10px monospace";
+            canvas.fillText(this.Periods[i].Name, Left + 1, 10);
+          }
+          var Y = g.toDomYCoord(this.Periods[i].Power);
+          canvas.strokeStyle = '#d9534f';
+          canvas.lineWidth = 2;
+          canvas.beginPath();
+          if(i > 0) {
+            canvas.moveTo(Left, g.toDomYCoord(this.Periods[i -1 ].Power));
+            canvas.lineTo(Left, Y);
+          } else {
+            canvas.moveTo(Left, Y);
+          }
+          canvas.lineTo(Right, Y);
+          canvas.stroke();
+        }
+        for(var i = 0; i < this.Bills.length; i++) {
+          canvas.strokeStyle = '#d9534f';
+          canvas.lineWidth = 1;
+          canvas.beginPath();
+          var X = g.toDomXCoord(this.Bills[i].Sampletime);
+          canvas.moveTo(X, 13);
+          canvas.lineTo(X, area.h);
+          canvas.stroke();
+        }
+        canvas.rect(area.x, area.y + 13, area.w, area.h);
+        canvas.clip();
+      },
       SetAnalyzer: function() {
         this.LastSample = 0;
         this.UpdateGraph();
@@ -144,7 +188,7 @@
       },
       ExportClick: function() {
         if(this.$root.SelectedAnalyzer === null) return;
-        this.$refs.tools.SaveCVS('Frequency.csv', [['Time', 'Frequency']].concat(this.Data));
+        this.$refs.tools.SaveCVS('Power.csv', [['Time', 'Frequency']].concat(this.Data));
       },
       NowValue: function() {
         if(this.$root.SelectedAnalyzer === null) return;
@@ -188,23 +232,29 @@
             this.DateWindow = [result['From'], result['To']];
             this.To = this.$refs.tools.WriteTo(result['To']);
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
-            var Multiplier = (result["Aggregation_Source"] === '1H') ? 1.0 : 4.0;
-            for(var i = 0; i < result['Sampletime'].length; i++) {
-              if((this.ActiveData.length === 0) || (this.ActiveData.slice(-1)[0][0] < result['Sampletime'][i])) {
-                this.ActiveData.push([result['Sampletime'][i], result['Active_Energy'][i] * Multiplier]);
-                this.ReactiveData.push([result['Sampletime'][i], result['Reactive_Energy'][i] * Multiplier]);
+            this.ActiveData = oZm.GraphDataAppend(result, 'Active_Power', this.ActiveData);
+            this.ReactiveData = oZm.GraphDataAppend(result, 'Reactive_Power', this.ReactiveData);
+            
+            this.Bills = result["Bills"];
+            //Group periods
+            var LastItem = (this.Periods.length > 0) ? this.Periods.slice(-1)[0] : null;
+            for(var i = 0; i < result.Sampletime.length; i++) {
+              var Period = { Name: result.Period_Name[i], From: result.Sampletime[i] - ((this.Aggreg === '15M') ? 899999 : 3599999), To: result.Sampletime[i], Color: result.Period_Color[i] };
+              if(LastItem === null) {
+                this.Periods.push(Period);
+                LastItem = Period;
+              } else if(Period.From === (LastItem.To + 1)) {
+                if(Period.Name === LastItem.Name) {
+                  LastItem.To = Period.To;
+                  this.Periods.pop();
+                  this.Periods.push(LastItem);
+                } else {
+                  this.Periods.push(Period);
+                  LastItem = Period;
+                }
               }
+              this.Periods = this.Periods.filter(period => (period.To > this.DateWindow[0]) || (period.From < this.DateWindow[1]) ).sort(function(a, b) { if(a.To < b.To) return -1; if(a.To > b.To) return 1; return 0; });
             }
-            var OutActive = [];
-            var OutReactive = [];
-            for(var n = 0; n < this.ActiveData.length; n++) {
-              if((this.ActiveData[n][0] >= result['From']) && (this.ActiveData[n][0] <= result['To'])) {
-                OutActive.push(this.ActiveData[n]);
-                OutReactive.push(this.ReactiveData[n]);
-              }
-            }
-            this.ActiveData = OutActive;
-            this.ReactiveData = OutReactive;
             this.$refs.graphActive.SetOptions( { dateWindow: this.DateWindow, file: this.ActiveData, valueRange: oZm.Series['ACTIVE_POWER'].Range(this.ActiveData, [true]) } );
             this.$refs.graphReactive.SetOptions( { dateWindow: this.DateWindow, file: this.ReactiveData, valueRange: oZm.Series['REACTIVE_POWER'].Range(this.ReactiveData, [true]) } );
             this.$refs.activeCounters.SetStats(this.DateWindow, this.ActiveData, result["Aggregation_Source"]);
@@ -223,7 +273,6 @@
           }.bind(this)
         });
       },
-
       MouseUpEvt: function(event, g, contex) {
         oZm.mouseUp(event, g, contex);
         if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);

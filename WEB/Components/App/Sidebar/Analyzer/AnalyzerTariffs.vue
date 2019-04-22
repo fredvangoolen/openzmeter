@@ -60,6 +60,9 @@
                 return;
               }
             }
+          }.bind(this),
+          complete: function() {
+            this.ShowSpinner = false;
           }.bind(this)
         });
       },
