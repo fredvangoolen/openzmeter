@@ -12,7 +12,7 @@
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager *DeviceManager::pInstance = NULL;
-vector<Device*> DeviceManager::pDevices;
+vector<Device*> __attribute__((init_priority(200))) DeviceManager::pDevices;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager(json config) {
   if(pInstance != NULL) return;
@@ -32,6 +32,7 @@ DeviceManager::DeviceManager(json config) {
   HTTPServer::RegisterCallback("/getTariffs",          DeviceManager::GetTariffsCallback);
   HTTPServer::RegisterCallback("/setTariffs",          DeviceManager::SetTariffsCallback);
   HTTPServer::RegisterCallback("/delTariffs",          DeviceManager::DelTariffsCallback);
+  LOGFile::Instance()->Info("Loading device config...\n");
   for(vector<Device*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
     string Serial = (*it)->Serial();
     if(config[Serial].is_object() == false) config[Serial] = json::object();
@@ -307,6 +308,7 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
   uint32_t Row = 0;
   float AccActive = NAN;
   float AccReactive = NAN;
+  float AccCost = NAN;
   for(uint64_t time = BillingFrom + 899999; time != BillingTo; time = time + 900000) {
     float Active = NAN, Reactive = NAN;
     if((Row < req.ResultRows()) && (req.ResultUInt64(Row, "sampletime") == time)) {
@@ -324,12 +326,12 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
       float    Cost       = NAN;
       float    Contracted = NAN;
       if((Tariff != NULL) && (Tariff->PopSample(Time, Active, Reactive, Period, Color, Cost, Contracted) == false)) {
-        //Result["Bill"].push_back(EL RESUMEN DEL CICLO);
-        //Ademas añado estadisticas de perido o lo que sea que devuelve el modulo de tarifas!
+        Result["Bills"].push_back(Tariff->GetResume());
         break;
       }
       AccActive  = isnan(AccActive) ? Active : isnan(Active) ? AccActive : AccActive + Active;
       AccReactive = isnan(AccReactive) ? Reactive : isnan(Reactive) ? AccReactive : AccReactive + Reactive;
+      AccCost = isnan(AccCost) ? Cost : isnan(Cost) ? AccCost : AccCost + Cost;
       if(Aggreg == "1H") {
         if((Time % 3600000) != 3599999) continue;
         AccActive = AccActive / 4.0;
@@ -352,6 +354,7 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
       }
       AccActive = NAN;
       AccReactive = NAN;
+      AccCost = NAN;
     } while(Tariff != NULL);
   }
   req.FromJSON(Result);

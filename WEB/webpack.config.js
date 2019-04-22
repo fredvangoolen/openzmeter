@@ -1,6 +1,6 @@
-var path = require('path')
-var webpack = require('webpack')
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+var path = require('path');
+var webpack = require('webpack');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 module.exports = {
   entry: './main.js',
   output: {
@@ -22,7 +22,7 @@ module.exports = {
         use: [
           'vue-style-loader',
           'css-loader'
-        ],
+        ]
       },      {
         test: /\.vue$/,
         loader: 'vue-loader',
@@ -42,11 +42,10 @@ module.exports = {
         use: [{
             loader: 'url-loader',
             options: {
-              limit: 80000, // Convert images < 8kb to base64 strings
-//              name: 'images/[hash]-[name].[ext]'
+              limit: 80000 // Convert images < 80kb to base64 strings
             }
           }]
-      }, 
+      }
     ]
   },
   resolve: {
@@ -64,32 +63,32 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
-      '/Login': { target: 'http://10.8.0.135:80'},
-      '/LogIn': { target: 'http://10.8.0.135:80'},
-      '/Logout': { target: 'http://10.8.0.135:80'},
-      '/getSeries': { target: 'http://10.8.0.135:80'},
-      '/getSeriesNow': { target: 'http://10.8.0.135:80'},
-      '/getAnalyzers': { target: 'http://10.8.0.135:80'},
-      '/getPrices': { target: 'http://10.8.0.135:80'},
-      '/getDevices': { target: 'http://10.8.0.135:80'},
-      '/startDevice': { target: 'http://10.8.0.135:80'},
-      '/stopDevice': { target: 'http://10.8.0.135:80'},
-      '/setDevices': { target: 'http://10.8.0.135:80'},
-      '/getTariffs': { target: 'http://10.8.0.135:80'},
-      '/setTariffs': { target: 'http://10.8.0.135:80'},
-      '/delTariffs': { target: 'http://10.8.0.135:80'},
-      '/getEvents': { target: 'http://10.8.0.135:80'},
-      '/getNetworks': { target: 'http://10.8.0.135:80'}
+      '/Login':        { target: 'http://192.168.8.101:80'},
+      '/LogIn':        { target: 'http://192.168.8.101:80'},
+      '/Logout':       { target: 'http://192.168.8.101:80'},
+      '/getSeries':    { target: 'http://192.168.8.101:80'},
+      '/getSeriesNow': { target: 'http://192.168.8.101:80'},
+      '/getAnalyzers': { target: 'http://192.168.8.101:80'},
+      '/getPrices':    { target: 'http://192.168.8.101:80'},
+      '/getDevices':   { target: 'http://192.168.8.101:80'},
+      '/startDevice':  { target: 'http://192.168.8.101:80'},
+      '/stopDevice':   { target: 'http://192.168.8.101:80'},
+      '/setDevices':   { target: 'http://192.168.8.101:80'},
+      '/getTariffs':   { target: 'http://192.168.8.101:80'},
+      '/setTariffs':   { target: 'http://192.168.8.101:80'},
+      '/delTariffs':   { target: 'http://192.168.8.101:80'},
+      '/getEvents':    { target: 'http://192.168.8.101:80'},
+      '/getNetworks':  { target: 'http://192.168.8.101:80'}
     }
   },
   performance: {
     hints: false
   },
   devtool: '#eval-source-map'
-}
+};
 
 if (process.env.NODE_ENV === 'production') {
-  module.exports.devtool = '#source-map'
+  module.exports.devtool = '#source-map';
   // http://vue-loader.vuejs.org/en/workflow/production.html
   module.exports.plugins = (module.exports.plugins || []).concat([
     new webpack.DefinePlugin({
@@ -106,5 +105,5 @@ if (process.env.NODE_ENV === 'production') {
     new webpack.LoaderOptionsPlugin({
       minimize: true
     })
-  ])
+  ]);
 }

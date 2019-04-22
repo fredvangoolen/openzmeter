@@ -106,8 +106,8 @@ int main(int argc, char** argv) {
   /* Create database */
   json DBConfig = json::object();
   if(Config["Database"].is_object()) DBConfig = Config["Database"];
-  Database::Config(DBConfig);
-  
+  if(Database::Config(DBConfig) == false) return EXIT_FAILURE;
+
   /* Create embedded NTP client */
   json NTPConfig = json::object();
   if(Config["HTTPServer"].is_object()) NTPConfig = Config["HTTPServer"];

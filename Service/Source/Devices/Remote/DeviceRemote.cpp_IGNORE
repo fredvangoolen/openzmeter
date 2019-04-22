@@ -10,7 +10,7 @@
 #include "DeviceRemote.h"
 #include "HTTPServer.h"
 //======================================================================================================================
-DeviceRemote              *DeviceRemote::pInstance = NULL;
+DeviceRemote     __attribute__((init_priority(500)))         *DeviceRemote::pInstance = NULL;
 uint32_t                   DeviceRemote::pAnalyzersCount = 0;
 DeviceRemote::Analyzer_t  *DeviceRemote::pAnalyzers = NULL;
 pthread_mutex_t            DeviceRemote::pListMutex = PTHREAD_MUTEX_INITIALIZER;

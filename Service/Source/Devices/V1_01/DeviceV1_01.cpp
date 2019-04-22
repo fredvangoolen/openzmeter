@@ -161,6 +161,7 @@ bool DeviceV1_01::Stop() {
   return true;
 }
 DeviceV1_01::~DeviceV1_01() {
+  Stop();
 //  if(pVoltageSamples) free(pVoltageSamples);
 //  if(pCurrentSamples) free(pCurrentSamples);
   if(pAnalyzer) delete pAnalyzer;

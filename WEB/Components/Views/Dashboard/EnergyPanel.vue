@@ -48,6 +48,7 @@
     },
     created: function() {
       this.Periods = [];
+      this.Bills = [];
       this.Graph = null;
       this.Data = [];
       this.LastSample = 0;
@@ -126,6 +127,7 @@
             this.DateWindow = [result['From'], result['To']];
             this.$refs.tools.WriteTo(result['To']);
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
+            this.Bills = result["Bills"];
             //Group periods
             var LastItem = (this.Periods.length > 0) ? this.Periods.slice(-1)[0] : null;
             for(var i = 0; i < result.Sampletime.length; i++) {
@@ -168,7 +170,7 @@
           var Left = g.toDomXCoord(this.Periods[i].From);
           var Right = g.toDomXCoord(this.Periods[i].To);
           if(Left < (area.x + 1)) Left = (area.x + 1);
-          canvas.fillStyle = this.Periods[i].Color;
+          canvas.fillStyle = (this.Periods[i].Color === null) ? "#EEEEEE" : this.Periods[i].Color;
           canvas.fillRect(Left, area.y, Right, 13);
           if(((Right - Left) > 20) && (this.Periods[i].Name !== null)) {
             canvas.fillStyle = '#000000';
@@ -188,8 +190,17 @@
 //              canvas.lineTo(Right, Y);
 //              canvas.stroke();
         }
-//        area.y = 13;
-//        area.h = area.h - 13;
+        for(var i = 0; i < this.Bills.length; i++) {
+          canvas.strokeStyle = '#d9534f';
+          canvas.lineWidth = 1;
+          canvas.beginPath();
+          var X = g.toDomXCoord(this.Bills[i].Sampletime);
+          canvas.moveTo(X, 13);
+          canvas.lineTo(X, area.h);
+          canvas.stroke();
+        }
+        canvas.rect(area.x, area.y + 13, area.w, area.h);
+        canvas.clip();
       },
       MouseUpEvt: function(event, g, contex) {
         oZm.mouseUp(event, g, contex);

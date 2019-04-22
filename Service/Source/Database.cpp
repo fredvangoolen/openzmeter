@@ -77,6 +77,7 @@ bool Database::ExecSentence(string sql) {
   ClearResult();
   if(Connect() == false) return false;
   pResult = PQexec(pDBConn, sql.c_str());
+  LOGFile::Instance()->Info("Exec: %s\n", sql.c_str());
   if((PQresultStatus(pResult) != PGRES_COMMAND_OK) && (PQresultStatus(pResult) != PGRES_TUPLES_OK)) {
     char *Save;
     LOGFile::Instance()->Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
@@ -136,7 +137,7 @@ string Database::Bind(const vector<uint16_t> &params) {
 string Database::Bind(const vector<float> &params) {
   string Result = "'{";
   for(uint i = 0; i < params.size(); i++) {
-    Result.append(to_string(params[i]));
+    Result.append(isnan(params[i]) ? string("NULL") : to_string(params[i]));
     Result.append((i < (params.size() - 1)) ? ", " : "}'");
   }
   return Result;

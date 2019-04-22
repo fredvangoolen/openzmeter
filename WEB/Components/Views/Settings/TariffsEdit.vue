@@ -62,7 +62,7 @@
 //        TariffDefinition.Name = $('#inputTariffName').val();
 //  TariffDefinition.Template.Description = $('#inputTariffComments').val();
 //  if(TariffKey !== null) TariffDefinition.RateID = TariffKey;
-        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign(this.Tariff, { RateID: this.RateID }) ), 
+        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign(this.Tariff, { CountryCode: 'ESP', RateID: this.RateID }) ), 
           success: function() {
             this.Close();
             this.$parent.GetTariffs();

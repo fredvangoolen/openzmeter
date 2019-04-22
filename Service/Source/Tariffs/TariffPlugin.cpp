@@ -14,13 +14,20 @@ bool TariffPowerPlugin::Contains(string name) {
   }
   return false;
 }
-TariffPowerPlugin *TariffPowerPlugin::Instance(string name, float contracted, float cost) {
+TariffPowerPlugin *TariffPowerPlugin::Instance(string name) {
   for(vector<Type_t>::iterator it = pPlugins.begin() ; it != pPlugins.end(); ++it) {
-    if((*it).Name == name) return (*it).Instance(contracted, cost);
+    if((*it).Name == name) {
+      TariffPowerPlugin *Instance = (*it).Instance();
+      Instance->pName = name;
+      return Instance;
+    }
   }
   return NULL;
 }
 TariffPowerPlugin::~TariffPowerPlugin() {
+}
+string TariffPowerPlugin::Name() {
+  return pName;
 }
 //----------------------------------------------------------------------------------------------------------------------
 vector<TariffEnergyPlugin::Type_t> TariffEnergyPlugin::pPlugins;
@@ -37,12 +44,19 @@ bool TariffEnergyPlugin::Contains(string name) {
   }
   return false;
 }
-TariffEnergyPlugin *TariffEnergyPlugin::Instance(string name, float cost) {
+TariffEnergyPlugin *TariffEnergyPlugin::Instance(string name) {
   for(vector<Type_t>::iterator it = pPlugins.begin() ; it != pPlugins.end(); ++it) {
-    if((*it).Name == name) return (*it).Instance(cost);
+    if((*it).Name == name) {
+      TariffEnergyPlugin *Instance = (*it).Instance();
+      Instance->pName = name;
+      return Instance;
+    }
   }
   return NULL;
 }
 TariffEnergyPlugin::~TariffEnergyPlugin() {
+}
+string TariffEnergyPlugin::Name() {
+  return pName;
 }
 //----------------------------------------------------------------------------------------------------------------------
