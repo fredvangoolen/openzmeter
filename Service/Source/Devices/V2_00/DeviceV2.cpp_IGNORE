@@ -17,7 +17,7 @@
 #include "DeviceV2.h"
 #include "Tools.h"
 //======================================================================================================================
-bool DeviceV2::pClassRegistered = DeviceInterface::RegisterType("V2", DeviceV2::CreateInstance);
+bool __attribute__((init_priority(500))) DeviceV2::pClassRegistered = DeviceInterface::RegisterType("V2", DeviceV2::CreateInstance);
 // Funciones ===========================================================================================================
 void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV2 *This = (DeviceV2*)transfer->user_data;

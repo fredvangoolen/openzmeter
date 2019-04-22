@@ -5,29 +5,30 @@ LIB_DIRS = /usr/local/pgsql/lib
 
 #General options
 CC       = gcc
-CPPFLAGS = -Wall -no-pie -std=c++11
-LDFLAGS  = -ldbus-1 -lstdc++ -lcurl -lpthread -lpq -lusb-1.0 -lxml2 -ldbus-1 -lz -lfftw3f -lstdc++ -lmicrohttpd -lm -lcctz
+LD       = ld
+CPPFLAGS += -Wall -std=c++11
+LDFLAGS  += -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic -lmicrohttpd -lusb-1.0 -ldbus-1 -lpthread -lpq -ldbus-1 -lz -lm -lfftw3f
 
 #Specific options
-debug: CXXFLAGS += -O0 -g -DOZM_DEBUG -fno-exceptions
-release: CXXFLAGS += -O2 -Wall -flto -DOZM_DEBUG
+debug: CXXFLAGS += -O0 -g -DOZM_DEBUG
+release: CXXFLAGS += -Os -s -Wall -flto
 
 #Source and targets files
 TARGET_EXEC  = openZmeter
 BUILD_DIR    = Tmp
-MAINSOURCES  = $(shell find ./Source -maxdepth 2 -name "*.cpp" ! -type d -print)
+MAINSOURCES  = $(shell find ./Source -maxdepth 2 -name "*.cpp" ! -type d -print) $(shell find ./Libs -name "*.cpp" -o -name "*.cc" ! -type d -print)
 MAINSOURCES += $(shell find ./Source -mindepth 3 -name "*.cpp" ! -type d -print)
 RESOURCES    = $(shell find ./Resources ! -type d -print | sort)
 RESTARGET    = $(BUILD_DIR)/ResourceFiles.o
 RESTMP       = $(BUILD_DIR)/ResourceFiles
 OBJS         = $(MAINSOURCES:%=$(BUILD_DIR)/%.o)
-INC_DIRS    += $(shell find ./Source -type d)
+INC_DIRS    += $(shell find ./Source -type d) $(shell find ./Libs -type d)
 INC_FLAGS   += $(addprefix -I,$(INC_DIRS))
 LDFLAGS     += $(addprefix -L,$(LIB_DIRS))
 CPPFLAGS    += $(INC_FLAGS)
 debug: $(OBJS) $(RESTARGET)
 	@echo "Linking debug target" $(TARGET_EXEC)
-	$(CC) $(CPPFLAGS) $(CXXFLAGS)  $(OBJS) $(RESTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
+	$(CC) $(CPPFLAGS) $(CXXFLAGS) $(OBJS) $(RESTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
 	
 release: $(OBJS) $(RESTARGET)
 	@echo "Linking release target" $(TARGET_EXEC)
@@ -47,6 +48,11 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 	@echo "Bulding" $@
 	$(CC) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/%.cc.o: %.cc
+	@mkdir -p $(dir $@)
+	@echo "Bulding" $@
+	$(CC) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
 $(RESTARGET): $(RESOURCES)
 	@echo  "Building resource file"
 	@mkdir -p $(BUILD_DIR)
@@ -58,5 +64,5 @@ $(RESTARGET): $(RESOURCES)
 		printf '%s\000%d\000' `echo $$FILE | cut -d'/' -f3-` `stat --printf="%s" $$FILE` >> $(RESTMP) ; \
 		cat $$FILE >> $(RESTMP) ; \
 	done
-	@cd $(BUILD_DIR); ld -r -b binary -o ResourceFiles.o ResourceFiles; cd ..
+	@cd $(BUILD_DIR); $(LD) -r -b binary -o ResourceFiles.o ResourceFiles; cd ..
 	@rm $(RESTMP)

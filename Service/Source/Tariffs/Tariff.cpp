@@ -32,8 +32,8 @@ uint64_t TariffList::BillFrom(uint64_t from) {
   if(Tariff != NULL) {
     BillingFrom = Tariff->pStartDate;
     for(vector<uint64_t>::iterator c = Tariff->pBillingCycles.begin(); c < Tariff->pBillingCycles.end(); c++) {
-      if(*c > BillingFrom) break;
-      BillingFrom = *c;
+      if(*c > from) break;
+      BillingFrom = *c + 1;
     }
   }
   return BillingFrom;
@@ -44,7 +44,7 @@ uint64_t TariffList::BillTo(uint64_t to) {
   if(Tariff != NULL) {
     BillingTo = Tariff->pEndDate;
     for(vector<uint64_t>::reverse_iterator c = Tariff->pBillingCycles.rbegin(); c < Tariff->pBillingCycles.rend(); c++) {
-      if(*c < BillingTo) break;
+      if(*c < to) break;
       BillingTo = *c;
     }
   }
@@ -96,15 +96,15 @@ bool Tariff::SetTemplate(json t) {
     Period.EnergyCost = 0;
     Period.PowerCost = 0;
     if(!t["Periods"][n]["PowerMode"].is_string()) return false;
-    Period.PowerMode = t["Periods"][n]["PowerMode"];
+    string Tmp = t["Periods"][n]["PowerMode"];
+    if(TariffPowerPlugin::Contains(Tmp) == false) return false;
+    Period.PowerModule  = TariffPowerPlugin::Instance(Tmp);        
     if(!t["Periods"][n]["ReactiveMode"].is_string()) return false;
-    Period.ReactiveMode = t["Periods"][n]["ReactiveMode"];
+    Tmp = t["Periods"][n]["ReactiveMode"];
+    if(TariffEnergyPlugin::Contains(Tmp) == false) return false;
+    Period.EnergyModule = TariffEnergyPlugin::Instance(Tmp);
     if(!t["Periods"][n]["Color"].is_string()) return false;
     Period.Color = t["Periods"][n]["Color"];
-    if(TariffPowerPlugin::Contains(Period.PowerMode) == false) return false;
-    if(TariffEnergyPlugin::Contains(Period.ReactiveMode) == false) return false;
-    Period.PowerModule  = TariffPowerPlugin::Instance(Period.PowerMode, Period.ContractedPower, Period.PowerCost);
-    Period.EnergyModule = TariffEnergyPlugin::Instance(Period.ReactiveMode, Period.EnergyCost);
     pPeriods.push_back(Period);
   }
   if(!t["Seasons"].is_array()) return false;
@@ -174,8 +174,8 @@ json Tariff::GetTemplate() {
   T["Periods"] = json::array();
   for(uint32_t n = 0; n < pPeriods.size(); n++) {
     json Period;
-    Period["PowerMode"] = pPeriods[n].PowerMode;
-    Period["ReactiveMode"] = pPeriods[n].ReactiveMode;
+    Period["PowerMode"] = pPeriods[n].PowerModule->Name();
+    Period["ReactiveMode"] = pPeriods[n].EnergyModule->Name();
     Period["Color"] = pPeriods[n].Color;
     T["Periods"].push_back(Period);
   }
@@ -227,12 +227,14 @@ bool Tariff::SetConfig(json t) {
     pPeriods[n].EnergyCost = t["Periods"][n]["Energy_Cost"];
     if(!t["Periods"][n]["Contracted_Power"].is_number()) return false;
     pPeriods[n].ContractedPower = t["Periods"][n]["Contracted_Power"];
+    pPeriods[n].PowerModule->Config(pPeriods[n].ContractedPower, pPeriods[n].PowerCost);
+    pPeriods[n].EnergyModule->Config(pPeriods[n].EnergyCost);
   }
   if(!t["Billing"].is_array()) return false;
-  for(uint32_t n = 0; n < t["BillSampletime"].size(); n++) {
+  for(uint32_t n = 0; n < t["Billing"].size(); n++) {
     if(!t["Billing"][n].is_number_unsigned()) return false;
     uint64_t Time = t["Billing"][n];
-    if((Time % 900000) != 0) return false;
+    if((Time % 900000) != 899999) return false;
     pBillingCycles.push_back(Time);
   }
   return true;
@@ -258,29 +260,33 @@ json Tariff::GetConfig() {
   T["Billing"] = pBillingCycles;
   return T;
 }
+json Tariff::GetResume() {
+  json Result;
+  Result["Sampletime"] = pSampletime;
+  
+  
+  return Result;
+}
 bool Tariff::PushSample(const uint64_t time, const float active, const float reactive) {
   if(pSamples.size() == 0) {
-    for(uint32_t n = 0; n < pPeriods.size(); n++) {
-      pPeriods[n].SumPowerCost = 0.0;
-      pPeriods[n].PowerModule->Reset();
-      pPeriods[n].SumEnergyCost = 0.0;
-      pPeriods[n].EnergyModule->Reset();
-    }
-    for(uint32_t n = 0; n < pTaxs.size(); n++) pTaxs[n].Accum = 0;
-    pBillConcepts.clear();
+    pSumEnergyCost = 0.0;
+    pSumPowerCost  = 0.0;
   }
-  //Search for period
   Sample_t Sample;
-  Sample.Time     = time;
   Sample.Active   = active;
   Sample.Reactive = reactive;
   Sample.Period   = FindPeriod(time);
   pSamples.push(Sample);
   pPeriods[Sample.Period].PowerModule->PushSample(Sample.Active, Sample.Reactive);
   pPeriods[Sample.Period].EnergyModule->PushSample(Sample.Active, Sample.Reactive);
-  if(Sample.Time == pEndDate) return false;
+  pSampletime = time;
+    if(isnan(active) == false) {
+    printf("PUSH %" PRIu64 " -  %f\n", time, active);
+    fflush(stdout);
+    }
+  if(time == pEndDate) return false;
   for(vector<uint64_t>::iterator it = pBillingCycles.begin(); it != pBillingCycles.end(); it++) {
-    if(Sample.Time == *it) return false;
+    if(time == *it) return false;
   }
   return true;
 }
@@ -288,12 +294,18 @@ bool Tariff::PopSample(uint64_t &time, float &active, float &reactive, string &p
   if(pSamples.size() == 0) return false;
   Sample_t Sample = pSamples.front();
   pSamples.pop();
-  time             = Sample.Time;
+  time             = pSampletime - pSamples.size() * 900000;
   active           = Sample.Active;
   reactive         = Sample.Reactive;
   period           = "P" + to_string(Sample.Period + 1);
   color            = pPeriods[Sample.Period].Color;
-  contractedPower  = pPeriods[Sample.Period].ContractedPower * 1000.0;
+  contractedPower  = pPeriods[Sample.Period].ContractedPower;
+
+  if(isnan(active) == false) {
+    printf("POP %" PRIu64 " -  %f\n", time, active);
+    fflush(stdout);
+  }
+
   float EnergyCost = pPeriods[Sample.Period].EnergyModule->PopSample(Sample.Active, Sample.Reactive);
   float PowerCost  = pPeriods[Sample.Period].PowerModule->PopSample(Sample.Active, Sample.Reactive);
   float Cost = EnergyCost + PowerCost;
@@ -306,6 +318,6 @@ bool Tariff::PopSample(uint64_t &time, float &active, float &reactive, string &p
   for(vector<Tax_t>::iterator it = pTaxs.begin(); it != pTaxs.end(); it++) {
     if(it->Type == "PERCENT_TOTAL") Cost = Cost * (it->Value / 100.0);
   }
-  cost += Cost;
+  cost = Cost;
   return true;
 }

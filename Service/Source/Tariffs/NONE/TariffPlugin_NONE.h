@@ -11,10 +11,10 @@ class TariffPower_NONE : public TariffPowerPlugin {
     float pContracted;
     float pCost;
   private :
-    static TariffPowerPlugin *Instance(const float contracted, const float cost);
+    static TariffPowerPlugin *Instance();
   public :
     ~TariffPower_NONE();
-    void  Reset();
+    void  Config(const float contracted, const float cost);
     void  PushSample(const float active, const float reactive);
     float PopSample(const float active, const float reactive);
 };
@@ -23,12 +23,12 @@ class TariffEnergy_NONE : public TariffEnergyPlugin {
   private :
     static bool pRegistered;
   private :
-    static TariffEnergyPlugin *Instance(const float cost);
+    static TariffEnergyPlugin *Instance();
   private :
     float pCost;
   public :
     ~TariffEnergy_NONE();
-    void  Reset();
+    void  Config(const float cost);
     void  PushSample(const float active, const float reactive);
     float PopSample(const float active, const float reactive);
 };

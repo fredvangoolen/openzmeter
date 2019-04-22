@@ -9,7 +9,7 @@
 #include <sys/time.h>
 #include <sys/param.h>
 #include <unistd.h>
-#include <curl/curl.h>
+//#include <curl/curl.h>
 #include "AnalyzerSoft.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------

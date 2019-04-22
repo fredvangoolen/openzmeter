@@ -101,6 +101,6 @@ class Tools {
 
     static uint64_t     GetTime();
     static void         GetSysInfo(HTTPRequest &req);
-//    static void         SendUDP(json obj);
+    static void         SendUDP(json obj);
 };
 //----------------------------------------------------------------------------------------------------------------------

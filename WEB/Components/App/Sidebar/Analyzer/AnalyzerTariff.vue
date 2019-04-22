@@ -5,7 +5,7 @@
       <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save tariff"></button>
         <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" @click="Periods">Periods</button>
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" @click="Taxs">Taxs</button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" @click="Billing">Billing</button>
         <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </div>
@@ -60,7 +60,7 @@
         this.ShowSpinner = false;
       },
       Save: function() {
-        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.ID, CountryCode: this.Analyzer.CountryCode }, this.Tariff) ), 
+        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.ID, CountryCode: 'ESP' /*this.Analyzer.CountryCode*/ }, this.Tariff) ), 
           success: function() {
             this.Show = false;
             this.$parent.$refs.Tariffs.Load(this.Analyzer);
@@ -161,9 +161,9 @@
         this.Show = false;
         this.$parent.$refs.Periods.Load(this.Tariff);
       },
-      Taxs: function() {
+      Billing: function() {
         this.Show = false;
-        this.$parent.$refs.Taxs.Load(this.Tariff);
+        this.$parent.$refs.Billing.Load(this.Tariff);
       }
     },
     created: function() {

@@ -36,4 +36,8 @@
     width: 100%;
     text-align: left;
   }
+  .btn-group ul {
+    max-height: 142px;
+    overflow-y: auto;
+  }
 </style>

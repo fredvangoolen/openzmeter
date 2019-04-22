@@ -133,28 +133,28 @@ void AnalyzerInterface::SaveAggreg(Params_t &params) {
     ExecSentence("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.StatsVoltage) + ", " + Bind(params.StatsFrequency) + ", " + Bind(params.StatsTHD) + ", " + Bind(params.StatsHarmonics) + ")");
   if(params.Type == AGGREG_1M) ExecSentence("DELETE FROM aggreg_ext_1m WHERE sampletime < " + Bind(params.Timestamp - 86400000));   //Delete 1 day old
   //TEST
-//  json Result;
-//  if((params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M) || (params.Type == AGGREG_1H)) {
-//    Result["Voltage"] = params.Voltage;
-//    Result["Current"] = params.Current;
-//    Result["Frequency"] = params.Frequency;
-//    Result["Flag"] = params.Flag;
-//  }
-//  if((params.Type == AGGREG_3S) || (params.Type == AGGREG_15M) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_1H)) {
-//    Result["Active_Power"] = params.Active_Power;
-//    Result["Reactive_Power"] = params.Reactive_Power;
-//  }
-//  if(params.Type == AGGREG_1M) {
-//    Result["Power_Factor"] = params.Power_Factor;
-//    Result["Voltage_THD"] = params.Voltage_THD;
-//    Result["Current_THD"] = params.Current_THD;
-//    Result["Phi"] = params.Phi;
-//    Result["Voltage_Harmonics"] = params.Voltage_Harmonics;
-//    Result["Current_Harmonics"] = params.Current_Harmonics;
-//  }
-//  Result["Aggregation"] = (params.Type == AGGREG_3S) ? "3S" : (params.Type == AGGREG_1M) ? "1M" : (params.Type == AGGREG_10M) ? "10M" : (params.Type == AGGREG_15M) ? "15M": "1H";
-//  Result["Sampletime"] = params.Timestamp;
-//  Tools::SendUDP(Result);
+  json Result;
+  if((params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M) || (params.Type == AGGREG_1H)) {
+    Result["Voltage"] = params.Voltage;
+    Result["Current"] = params.Current;
+    Result["Frequency"] = params.Frequency;
+    Result["Flag"] = params.Flag;
+  }
+  if((params.Type == AGGREG_3S) || (params.Type == AGGREG_15M) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_1H)) {
+    Result["Active_Power"] = params.Active_Power;
+    Result["Reactive_Power"] = params.Reactive_Power;
+  }
+  if(params.Type == AGGREG_1M) {
+    Result["Power_Factor"] = params.Power_Factor;
+    Result["Voltage_THD"] = params.Voltage_THD;
+    Result["Current_THD"] = params.Current_THD;
+    Result["Phi"] = params.Phi;
+    Result["Voltage_Harmonics"] = params.Voltage_Harmonics;
+    Result["Current_Harmonics"] = params.Current_Harmonics;
+  }
+  Result["Aggregation"] = (params.Type == AGGREG_3S) ? "3S" : (params.Type == AGGREG_1M) ? "1M" : (params.Type == AGGREG_10M) ? "10M" : (params.Type == AGGREG_15M) ? "15M": "1H";
+  Result["Sampletime"] = params.Timestamp;
+  Tools::SendUDP(Result);
   pLastSave = Tools::GetTime();
 }
 json AnalyzerInterface::GetJSONDescriptor() {

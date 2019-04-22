@@ -18,7 +18,7 @@ class Tariff {
   friend class TariffList;
   public :
     typedef struct {
-      uint64_t Time;
+      //uint64_t Time;
       float    Active;
       float    Reactive;
       uint8_t  Period;
@@ -28,11 +28,9 @@ class Tariff {
       float                 ContractedPower;
       float                 PowerCost;
       float                 EnergyCost;
-      string                PowerMode;
-      string                ReactiveMode;
+//      string                PowerMode;
+//      string                ReactiveMode;
       string                Color;
-      float                 SumPowerCost;
-      float                 SumEnergyCost;
       TariffPowerPlugin    *PowerModule;
       TariffEnergyPlugin   *EnergyModule;
     } Period_t;
@@ -51,12 +49,7 @@ class Tariff {
       string  Type;
       float   Value;
       string  Name;
-      float   Accum;
     } Tax_t;
-    typedef struct {
-      string Name;
-      float  Value;
-    } Bill_t;
   private :
     time_zone         pTimeZone;
     string            pDescription;
@@ -70,7 +63,9 @@ class Tariff {
     vector<Tax_t>     pTaxs;
     queue<Sample_t>   pSamples;
     vector<uint64_t>  pBillingCycles;
-    vector<Bill_t>    pBillConcepts;
+    uint64_t          pSampletime;
+    float             pSumPowerCost;
+    float             pSumEnergyCost;
   private :
 //    float   CalcTaxs();
     uint8_t FindPeriod(uint64_t time);
@@ -81,6 +76,7 @@ class Tariff {
     bool SetConfig(json t);
     json GetTemplate();
     json GetConfig();
+    json GetResume();
     bool PushSample(const uint64_t time, const float active, const float reactive);
     bool PopSample(uint64_t &time, float &active, float &reactive, string &period, string &color, float &cost, float &contractedPower);
 };

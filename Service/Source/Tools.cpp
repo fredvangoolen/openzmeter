@@ -3,10 +3,7 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #include <fstream>
-//#include <string.h>
-//#include <signal.h>
 #include <time.h>
-//#include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -15,11 +12,20 @@
 #include <sys/time.h>
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "Tools.h"
 #include "NetworkManager.h"
 #include "HTTPServer.h"
 #include "DeviceInterface.h"
 #include "NTP.h"
+//añadido para probar el envio
+  #include <arpa/inet.h>
+      #include <netinet/in.h>
+      #include <stdio.h>
+      #include <sys/types.h>
+      #include <sys/socket.h>
+      #include <unistd.h>
 //----------------------------------------------------------------------------------------------------------------------
 PIDFile::PIDFile(string name) {
   pFile = name;
@@ -146,10 +152,9 @@ ResourceLoader *ResourceLoader::Instance() {
 }
 uint8_t *ResourceLoader::GetFile(string name, size_t *size) {
   for(uint32_t i = 0; i < pFiles.size(); i++) {
-    if(pFiles[i].Name.compare(name) == 0) {
-      *size = pFiles[i].Size;
-      return pFiles[i].Ptr;
-    }
+    if(pFiles[i].Name != name) continue;
+    *size = pFiles[i].Size;
+    return pFiles[i].Ptr;
   }
   return NULL;
 }
@@ -160,43 +165,26 @@ ConfigManager::ConfigManager(string name) {
   pInstance = this;
   pFile = name;
   pthread_mutex_init(&pMutex, NULL);
-  pthread_mutex_lock(&pMutex);
-  ifstream File(pFile);
-  pConfig = json::parse(File);
-//  
-//  
-//  int File = open(pFile.c_str(), O_RDONLY);
-//  if(File == -1) {
-//    LogMsg("ERROR", "Can not open config file (%s)\n", strerror(errno));
-//    pthread_mutex_unlock(&pConfigMutex);
-//    return false;
-//  }
-//  struct stat FileStatus;
-//  if(fstat(File, &FileStatus) != 0) {
-//    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    close(File);
-//    pthread_mutex_unlock(&pConfigMutex);
-//    return false;
-//  }
-//  char *ConfigText = (char*)mmap(NULL, FileStatus.st_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, File, 0);
-//  if(ConfigText == NULL) {
-//    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    close(File);
-//    pthread_mutex_unlock(&pConfigMutex);
-//    return false;
-//  }
-//  pConfig = json_tokener_parse(ConfigText);
-//  munmap(ConfigText, FileStatus.st_size);
-//  close(File);
-//  if(pConfig == NULL) {
-//    LogMsg("ERROR", "Can not open config file (Invalid JSON format)\n");
-//    pthread_mutex_unlock(&pConfigMutex);
-//    return false;
-//  }
-//  json_object *Find;
-//  if((json_object_object_get_ex(pConfig, "LogFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreateLogFile((char*)json_object_get_string(Find));
-//  if((json_object_object_get_ex(pConfig, "PidFile", &Find) == true) && (json_object_get_type(Find) == json_type_string)) CreatePidFile((char*)json_object_get_string(Find));
-  pthread_mutex_unlock(&pMutex);
+  int File = open(pFile.c_str(), O_RDONLY);
+  if(File == -1) {
+    LOGFile::Instance()->Error("Can not open config file (%s)\n", strerror(errno));
+    return;
+  }
+  struct stat FileStatus;
+  if(fstat(File, &FileStatus) != 0) {
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    close(File);
+    return;
+  }
+  char *ConfigText = (char*)mmap(NULL, FileStatus.st_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, File, 0);
+  if(ConfigText == NULL) {
+    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    close(File);
+    return;
+  }
+  pConfig = json::parse(ConfigText, NULL, false);
+  munmap(ConfigText, FileStatus.st_size);
+  close(File);
 }
 ConfigManager::~ConfigManager() {
   pthread_mutex_destroy(&pMutex);
@@ -337,24 +325,24 @@ void Tools::GetSysInfo(HTTPRequest &req) {
 }
 
 
-//void Tools::SendUDP(json obj) {
-//  struct sockaddr_in Client;
-//  int Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-//  if(Socket == -1) {
-//    LOGFile::Instance()->Error("cant open socket\n");
-//    return;
-//  }
-//  memset((char *)&Client, 0, sizeof(Client));
-//  Client.sin_family = AF_INET;
-//  Client.sin_port = htons(8888);
-//  if(inet_aton("127.0.0.1", &Client.sin_addr) == 0) {
-//    LOGFile::Instance()->Error("inet_aton() failed\n");
-//    close(Socket);
-//    return;
-//  }
-//  string Data = obj.dump();
-//  if(sendto(Socket, Data.c_str(), Data.size(), 0, (sockaddr*)&Client, sizeof(Client)) == -1) {
-//    LOGFile::Instance()->Error("sendto()\n");
-//  }
-//  close(Socket);
-//}
+void Tools::SendUDP(json obj) {
+  struct sockaddr_in Client;
+  int Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  if(Socket == -1) {
+    LOGFile::Instance()->Error("cant open socket\n");
+    return;
+  }
+  memset((char *)&Client, 0, sizeof(Client));
+  Client.sin_family = AF_INET;
+  Client.sin_port = htons(8888);
+  if(inet_aton("127.0.0.1", &Client.sin_addr) == 0) {
+    LOGFile::Instance()->Error("inet_aton() failed\n");
+    close(Socket);
+    return;
+  }
+  string Data = obj.dump();
+  if(sendto(Socket, Data.c_str(), Data.size(), 0, (sockaddr*)&Client, sizeof(Client)) == -1) {
+    LOGFile::Instance()->Error("sendto()\n");
+  }
+  close(Socket);
+}

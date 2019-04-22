@@ -59,7 +59,10 @@ void HTTPRequest::FromFile(string name) {
     }
   }
 #else
-  pPostData = (char*)Tools::GetFile(name, &pPostDataLen);
+  size_t Size = 0;
+  char *Tmp = (char*)ResourceLoader::Instance()->GetFile(name, &Size);
+  pResultCode = (Size == 0) ? MHD_HTTP_NOT_FOUND : MHD_HTTP_OK;
+  pPostData = string(Tmp, Size);
 #endif
   if(pResultCode == MHD_HTTP_OK) {
     size_t FileNameLen = name.length();
@@ -155,7 +158,7 @@ HTTPServer::HTTPServer(json config) {
   if(config["Port"].is_number_unsigned()) Port = config["Port"];
   pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL | MHD_USE_PIPE_FOR_SHUTDOWN , Port, NULL, NULL, 
                              &HandleClient, NULL,
-                             MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int)15,
+                             MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int)60,
                              MHD_OPTION_CONNECTION_LIMIT, (unsigned int)255, 
                              MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
                              MHD_OPTION_END);
@@ -211,11 +214,10 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     }
     MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &Request->WriteFunction, Request, NULL);
     MHD_add_response_header(Response, MHD_HTTP_HEADER_CACHE_CONTROL, "public, max-age=2592000");
-    char Size[16];
-    snprintf(Size, sizeof(Size), "%u", Request->size());
-    MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_LENGTH, Size);
+    MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_LENGTH, to_string(Request->size()).c_str());
     MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_TYPE, Request->MimeType().c_str());
     MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_ENCODING, Request->Deflate() ? "deflate" : "");
+    MHD_add_response_header(Response, MHD_HTTP_HEADER_CONNECTION, "close");
     int Return = MHD_queue_response(connection, Request->ResultCode(), Response);
     MHD_destroy_response(Response);
     return Return;
@@ -272,8 +274,10 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         MHD_add_response_header(Response, MHD_HTTP_HEADER_SET_COOKIE, Cookie.c_str());
       }
       MHD_add_response_header(Response, "Process-Time", string(to_string(Request->GetTime()) + " ms").c_str());
+      MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_LENGTH, to_string(Request->size()).c_str());
       MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_TYPE, Request->MimeType().c_str());
       MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_ENCODING, Request->Deflate() ? "deflate" : "");
+      MHD_add_response_header(Response, MHD_HTTP_HEADER_CONNECTION, "close");
       int Return = MHD_queue_response(connection, Request->ResultCode(), Response);
       MHD_destroy_response(Response);        
       return Return;
