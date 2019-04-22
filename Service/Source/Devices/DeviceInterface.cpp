@@ -350,7 +350,7 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
           Result["Period_Name"].push_back(nullptr);
         else 
           Result["Period_Name"].push_back(Period);
-        Result["Expense"].push_back(Cost);
+        Result["Expense"].push_back(AccCost);
       }
       AccActive = NAN;
       AccReactive = NAN;

@@ -280,10 +280,6 @@ bool Tariff::PushSample(const uint64_t time, const float active, const float rea
   pPeriods[Sample.Period].PowerModule->PushSample(Sample.Active, Sample.Reactive);
   pPeriods[Sample.Period].EnergyModule->PushSample(Sample.Active, Sample.Reactive);
   pSampletime = time;
-    if(isnan(active) == false) {
-    printf("PUSH %" PRIu64 " -  %f\n", time, active);
-    fflush(stdout);
-    }
   if(time == pEndDate) return false;
   for(vector<uint64_t>::iterator it = pBillingCycles.begin(); it != pBillingCycles.end(); it++) {
     if(time == *it) return false;
@@ -294,18 +290,12 @@ bool Tariff::PopSample(uint64_t &time, float &active, float &reactive, string &p
   if(pSamples.size() == 0) return false;
   Sample_t Sample = pSamples.front();
   pSamples.pop();
-  time             = pSampletime - pSamples.size() * 900000;
+  time             = pSampletime - (900000ULL * pSamples.size());
   active           = Sample.Active;
   reactive         = Sample.Reactive;
   period           = "P" + to_string(Sample.Period + 1);
   color            = pPeriods[Sample.Period].Color;
   contractedPower  = pPeriods[Sample.Period].ContractedPower;
-
-  if(isnan(active) == false) {
-    printf("POP %" PRIu64 " -  %f\n", time, active);
-    fflush(stdout);
-  }
-
   float EnergyCost = pPeriods[Sample.Period].EnergyModule->PopSample(Sample.Active, Sample.Reactive);
   float PowerCost  = pPeriods[Sample.Period].PowerModule->PopSample(Sample.Active, Sample.Reactive);
   float Cost = EnergyCost + PowerCost;

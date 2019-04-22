@@ -11,17 +11,29 @@
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
       <div class="row">
-        <div class="col-md-12 col-lg-4 col-xl-3" ref="counters">
-          <div class="subpanel">
-            <div class="huge-small" id="labelEnergyPrimary">Loading data...</div>
-            <div><span id="labelEnergyPrimaryValue" class="huge">?</span>&nbsp;<em class="huge-small-unit" id="labelEnergyPrimaryUnits"></em></div>
-            <div id="labelEnergyPrimaryPhases"></div>
-            <div><span id="labelEnergySecondary">Loading data...</span>&nbsp;<span id="labelEnergySecondaryValue"></span></div>
+        <div class="col-md-6 col-lg-4 col-xl-3" ref="counters">
+          <div class="subpanel clearfix">
+            <div class="counters-title">Period stats:</div>
+            <div class="counters-aggreg">{{ CountersAggregation }}<br>From {{ TimeStatsFrom }} to {{ TimeStatsTo }}</div>
+            <div class="line line-border">
+              <div class="float-left">
+                <div class="counters-stat-type">Max value:</div>
+                <div class="counters-stat-time">{{ MaxTime }}</div>
+              </div>
+              <div class="counters-stat-val" v-html="MaxValue"></div>
+            </div>
+            <div class="line line-border">
+              <div class="float-left">
+                <div class="counters-stat-type">Total in period:</div>
+                <div class="counters-stat-time">From {{ AccumSamples }} samples</div>
+              </div>
+              <div class="counters-stat-val" v-html="AccumValue"></div>
+            </div>
           </div>
-          <div class="subpanel">
-            <div class="huge-small" id="labelBudgetPrimary">Loading data...</div>
-            <span id="labelBudgetPrimaryValue" class="huge">?</span>&nbsp;<em class="huge-small-unit" id="labelBudgetUnits"></em>
-            <div><span id="labelBudgetSecondary">Loading data...</span>&nbsp;<span id="labelBudgetSecondaryValue"></span></div>
+          <div class="subpanel clearfix">
+            <div class="counters-title">Peiod costs:</div>
+            <div class="clearfix"></div>
+            <div class="current-value" v-html="BudgetValue"></div>
           </div>
         </div>
         <div class="col-md-12 col-lg-8 col-xl-9">
@@ -44,11 +56,12 @@
   import Dygraph from 'JS/dygraph.js';
   export default {
     data() {
-      return { ShowSpinner: true };
+      return { ShowSpinner: true, CountersAggregation: 'Loading data...', TimeStatsFrom: '...', TimeStatsTo: '...', MaxTime: '?', MaxValue: '?', AccumSamples: '?', AccumValue: '?', BudgetValue: '?'};
     },
     created: function() {
       this.Periods = [];
       this.Bills = [];
+      this.Costs = [];
       this.Graph = null;
       this.Data = [];
       this.LastSample = 0;
@@ -58,7 +71,7 @@
       this.DateWindow = [0, 0];
       this.AutoUpdate = null;
       this.GraphOptions = {
-        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow',
+        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', plotter: Graph.multiColumnBarPlotter,
         labels: ['Time', 'Energy'], interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt, dblclick: this.DoubleClickEvt },
         colors: [oZm.Series['ACTIVE_ENERGY'].Color], xAxisHeight: 24, legendFormatter: oZm.LegendFormatter_Follow, underlayCallback: this.DrawPeriods,
         axes: {
@@ -115,6 +128,7 @@
         if(this.LastSample === 0) {
           this.Data = [];
           this.Periods = [];
+          this.Costs = [];
           this.ShowSpinner = true;
         }
         $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: this.Aggreg, Series: ['ACTIVE_POWER'], To: this.$refs.tools.ReadTo(), LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: this.Period }), 
@@ -124,6 +138,7 @@
               for(var n = 0; n < result['Active_Power'].length; n++) result['Active_Power'][n] = result['Active_Power'][n] / 4.0;
             }
             this.Data = oZm.GraphDataAppend(result, 'Active_Power', this.Data);
+            this.Costs = oZm.GraphDataAppend(result, 'Expense', this.Costs);
             this.DateWindow = [result['From'], result['To']];
             this.$refs.tools.WriteTo(result['To']);
             this.LastSample = oZm.LastSampletime(result, this.LastSample);
@@ -148,6 +163,7 @@
               this.Periods = this.Periods.filter(period => (period.To > this.DateWindow[0]) || (period.From < this.DateWindow[1]) ).sort(function(a, b) { if(a.To < b.To) return -1; if(a.To > b.To) return 1; return 0; });
             }
             this.$refs.graph.SetOptions( { dateWindow: this.DateWindow, file: this.Data, valueRange: oZm.Series['ACTIVE_ENERGY'].Range(this.Data, [true]) } );
+            this.UpdateCounters(result['Aggregation_Source']);        
             this.ShowSpinner = false;
           }.bind(this),
           complete: function() {
@@ -177,18 +193,6 @@
             canvas.font = "10px monospace";
             canvas.fillText(this.Periods[i].Name, Left + 1, 10);
           }
-//              var Y = g.toDomYCoord(this.Periods[i].Power);
-//              canvas.strokeStyle = '#d9534f';
-//              canvas.lineWidth = 1;
-//              canvas.beginPath();
-//              if(i > 0) {
-//                canvas.moveTo(Left, g.toDomYCoord(this.Periods[i -1 ].Power));
-//                canvas.lineTo(Left, Y);
-//              } else {
-//                canvas.moveTo(Left, Y);
-//              }
-//              canvas.lineTo(Right, Y);
-//              canvas.stroke();
         }
         for(var i = 0; i < this.Bills.length; i++) {
           canvas.strokeStyle = '#d9534f';
@@ -218,7 +222,36 @@
   //    Self.Range = [minDate, maxDate];
         this.LastSample = 0;
   //    Self.GetSeries();
-      }
+      },
+      UpdateCounters: function(aggreg) {
+        this.CountersAggregation = 'From ' + oZm.GetAggregLongName(aggreg) + ' aggregation';        
+        this.TimeStatsFrom = moment(this.DateWindow[0]).format('DD/MM/YYYY HH:mm:ss');
+        this.TimeStatsTo = moment(this.DateWindow[1]).format('DD/MM/YYYY HH:mm:ss');
+        var AccumSamples = 0, AccumValue = 0.0, MaxValue = -Infinity, MaxCount = 0, MaxTime = null, Cost = 0.0;
+        for(var x = 0; x < this.Data.length; x++) {
+          if(this.Data[x][1] === null) continue;
+          if(this.Data[x][1] > MaxValue) {
+            MaxValue = this.Data[x][1];
+            MaxCount = 0;
+            MaxTime = this.Data[x][0];
+          } else if(this.Data[x][1] === MaxValue) {
+            MaxCount++;
+          }
+          if(this.Costs[x][1] !== null) Cost += this.Costs[x][1];
+          AccumValue += this.Data[x][1];
+          AccumSamples++;
+        }
+        this.AccumSamples = AccumSamples;
+        this.MaxTime = moment(MaxTime).format("hh:mm:ss - DD/MM/YYYY") + ((MaxCount > 1) ? ' (and ' + MaxCount + ' times more)' : '');
+        var UnitsMax = oZm.Series['ACTIVE_ENERGY'].FormatValue(MaxValue);    
+        this.MaxValue = UnitsMax.Value + ' <em>' + UnitsMax.Units + '</em>';
+        var UnitsAccum = oZm.Series['ACTIVE_ENERGY'].FormatValue(AccumValue);    
+        this.AccumValue = UnitsAccum.Value + '<em>' + UnitsAccum.Units + '</em>';
+        this.BudgetValue = oZm.Round2(Cost) + ' <em>€</em>';
+        
+//        this.AvgValue = oZm.Round3(AvgValue / AvgSamples) + ' <em>Hz</em>';
+        this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
+      },
     },
     beforeDestroy: function() {
       if(this.Timer !== null) clearInterval(this.Timer);
@@ -228,13 +261,51 @@
   }
 </script>
   
-<style>
+  <style scoped>
   .dashboard-energy .header-text {
     font-size: 24px;
     line-height: 16px;
   }
+  .header-text {
+    font-size: 24px;
+    line-height: 16px;
+  }
+  .counters-title {
+    float: left;
+    text-align: left;
+    font-size: 16px;
+  }
+  .counters-aggreg {
+    float: right;
+    text-align: right;
+    font-size: 12px;
+  }
+  .counters-main-val {
+    font-size: 36px
+  }
+  .counters-stat-type {
+    text-align: left;
+    font-weight: bold;
+  }
+  .counters-stat-time {
+    font-size: 12px;
+    text-align: left;
+  }
+  .counters-stat-val {
+    font-size: 28px;
+    line-height: 37px;
+    float: right;
+  }
+  .current-value {
+    font-size: 36px;
+  }
+  .line {
+    clear: both;
+  }
+  .line-border {
+    border-top: 1px solid #c7c7e6;
+  }
 </style>
-
 
 //function Scrollable(opt) {
 

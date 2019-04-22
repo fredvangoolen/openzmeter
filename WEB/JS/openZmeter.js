@@ -99,6 +99,29 @@ export var Series = {
       return [LowerRange, UpperRange];
     }
   },
+  'REACTIVE_ENERGY': {
+    CSS_Class: 'panel-reactive-energy',
+    Title: 'Reactive Energy',
+    Serie: 'Reactive_Energy',
+    Units: 'varh',
+    Color: '#643d8b',
+    FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'varh', Value: Round2(ScaleToUnits(val, Units)) }; },
+    Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
+    Range: function(values, phases) {
+      var UpperRange = -Infinity;
+      var LowerRange = 0;
+      for(var i = 0; i < values.length; i++) {
+        for(var n = 0; n < phases.length; n++) {
+          if((values[i][n + 1] === null) || (phases[n] === false)) continue;
+          if(values[i][n + 1] > UpperRange) UpperRange = values[i][n + 1];
+          if(values[i][n + 1] < LowerRange) LowerRange = values[i][n + 1];
+        }
+      }
+      UpperRange = (UpperRange === -Infinity) ? 1 : UpperRange * 1.12;
+      LowerRange = (LowerRange === 0) ? 0 : LowerRange - 1;
+      return [LowerRange, UpperRange];
+    }
+  },
   'FREQUENCY': { CSS_Class: 'panel-frequency', Title: 'Frequency', Serie: 'Frequency', Units: 'Hz', Link: '/Analysis/Frequency', Color: '#5cb85c',
     FormatValue: function(val) { return {Units: 'Hz', Value: Round2(val) }; },
     Names: function(analyzer) { return ['F']; },
