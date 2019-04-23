@@ -96,9 +96,8 @@ void DeviceManager::GetAnalyzersCallback(HTTPRequest &req) {
   //All users can do this action, for admin all analyzers are returned and can be edited, for other users only own analyzers or authorized ones are returned and only owner can edit. In all cases only present ones are returned
   json Params = req.GetParams();
   json Response = json::array();
-  req.ExecSentence("SELECT serial, username, timezone, country_code FROM analyzers NATURAL LEFT JOIN country WHERE serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " UNION SELECT username FROM permisions WHERE username = " + req.Bind(req.UserName()) + ")");
+  req.ExecSentenceAsyncResult("SELECT serial, username, timezone, country_code FROM analyzers NATURAL LEFT JOIN country WHERE serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " UNION SELECT username FROM permisions WHERE username = " + req.Bind(req.UserName()) + ")");
   while(req.FecthRow()) {
-//  for(uint32_t i = 0; i < req.ResultRows(); i++) {
     string Serial = req.ResultString("serial");
     AnalyzerInterface *Analyzer = NULL;
     for(vector<Device*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
@@ -137,8 +136,8 @@ void DeviceManager::GetSeriesCallback(HTTPRequest &req) {
   if(Aggreg == "15M") PeriodSeconds = 900000;
   if(Aggreg == "1H") PeriodSeconds = 3600000;
   if((Period / PeriodSeconds) > 100000) return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
-  string Query = "SET search_path TO " + req.Bind(Analyzer) + "; ";
-  Query += "SELECT row_to_json(Result) AS result FROM ( SELECT " + req.Bind(From) + " AS " + req.BindID("From") + ", " + req.Bind(To) +" AS " + req.BindID("To") + ", ";
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(Analyzer));
+  string Query = "SELECT row_to_json(Result) AS result FROM ( SELECT " + req.Bind(From) + " AS " + req.BindID("From") + ", " + req.Bind(To) +" AS " + req.BindID("To") + ", ";
   Query += req.Bind((To - From) / PeriodSeconds) + " AS " + req.BindID("MaxSamples") + ", " + req.Bind(Aggreg) + " AS " + req.BindID("Aggregation_Source") + ", ";
   for(uint i = 0; i < Params["Series"].size(); i++) {
     if(!Params["Series"][i].is_string()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
@@ -186,7 +185,7 @@ void DeviceManager::GetSeriesCallback(HTTPRequest &req) {
     Query += "aggreg_" + Aggreg;
   }
   Query += " WHERE sampletime > " + req.Bind(LastSample) + " AND sampletime >= " + req.Bind(From) + " AND sampletime <= " + req.Bind(To) + ") AS result";
-  req.ExecSentence(Query);
+  req.ExecSentenceAsyncResult(Query);
   if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
 }
@@ -194,18 +193,18 @@ void DeviceManager::GetTariffsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) {
     if(!Params["RateID"].is_number_unsigned()) {
-      req.ExecSentence("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username))), '[]') as result FROM rates WHERE username = 'admin' OR username = " + req.Bind(req.UserName()));
+      req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username))), '[]') as result FROM rates WHERE username = 'admin' OR username = " + req.Bind(req.UserName()));
     } else {
       uint32_t RateID = Params["RateID"];
-      req.ExecSentence("SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Template', template) as result FROM rates WHERE (username = 'admin' OR username = " + req.Bind(req.UserName()) + ") AND rate = " + req.Bind(RateID));
+      req.ExecSentenceAsyncResult("SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code, 'Owner', username, 'Template', template) as result FROM rates WHERE (username = 'admin' OR username = " + req.Bind(req.UserName()) + ") AND rate = " + req.Bind(RateID));
     }  
   } else {
     string Analyzer = Params["Analyzer"];
     if(!Params["RateID"].is_number_unsigned()) {
-      req.ExecSentence("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', analyzers_rates.name, 'StartDate', startdate, 'EndDate', enddate))), '[]') as result FROM analyzers_rates LEFT JOIN analyzers USING(serial) WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer));
+      req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', analyzers_rates.name, 'StartDate', startdate, 'EndDate', enddate))), '[]') as result FROM analyzers_rates LEFT JOIN analyzers USING(serial) WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer));
     } else {
       uint32_t RateID = Params["RateID"];
-      req.ExecSentence("SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) as result FROM analyzers_rates where rate = " + req.Bind(RateID));
+      req.ExecSentenceAsyncResult("SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) as result FROM analyzers_rates where rate = " + req.Bind(RateID));
     }
   }
   if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
@@ -218,7 +217,7 @@ void DeviceManager::SetTariffsCallback(HTTPRequest &req) {
   uint64_t End      = Params["EndDate"];
   string   Name     = Params["Name"];
   string   TimeZone = Params["CountryCode"];
-  req.ExecSentence("SELECT timezone FROM country WHERE country_code = " + req.Bind(TimeZone));
+  req.ExecSentenceAsyncResult("SELECT timezone FROM country WHERE country_code = " + req.Bind(TimeZone));
   if(req.FecthRow() == false) return req.FromString("Invalid 'CountryCode'", MHD_HTTP_BAD_REQUEST);
   if(!Params["Template"].is_object()) return req.FromString("'Template' param required", MHD_HTTP_BAD_REQUEST);
   Tariff T(Start, End, req.ResultString("timezone"));
@@ -226,12 +225,10 @@ void DeviceManager::SetTariffsCallback(HTTPRequest &req) {
   if(!Params["Analyzer"].is_string()) {
     //System tariff
     if(!Params["RateID"].is_number_unsigned()) {
-      bool Result = req.ExecSentence("INSERT INTO rates(name, username, country_code, template, startdate, enddate) VALUES (" + req.Bind(Name) + ", " + req.Bind(req.UserName()) + ", 'UTC', " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Start) + ", " + req.Bind(End) + ")");
-      req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
+      req.FromString("", (req.ExecSentenceNoResult("INSERT INTO rates(name, username, country_code, template, startdate, enddate) VALUES (" + req.Bind(Name) + ", " + req.Bind(req.UserName()) + ", 'UTC', " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Start) + ", " + req.Bind(End) + ")") == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
     } else {
       uint32_t RateID = Params["RateID"];
-      bool Result = req.ExecSentence("UPDATE rates SET name = " + req.Bind(Name) + ", country_code = 'UTC', template = " + req.Bind(T.GetTemplate().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE username = " + req.Bind(req.UserName()) + " AND rate = " + req.Bind(RateID));
-      req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
+      req.FromString("", (req.ExecSentenceNoResult("UPDATE rates SET name = " + req.Bind(Name) + ", country_code = 'UTC', template = " + req.Bind(T.GetTemplate().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE username = " + req.Bind(req.UserName()) + " AND rate = " + req.Bind(RateID)) == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
     }
   } else {
     //Analyzer tariff
@@ -239,12 +236,10 @@ void DeviceManager::SetTariffsCallback(HTTPRequest &req) {
     if(!Params["Config"].is_object()) return req.FromString("'Config' param required", MHD_HTTP_BAD_REQUEST);    
     if(T.SetConfig(Params["Config"]) == false) return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
     if(!Params["RateID"].is_number_unsigned()) {
-      bool Result = req.ExecSentence("INSERT INTO analyzers_rates(serial, startdate, enddate, config, template, name) VALUES (" + req.Bind(Analyzer) + ", " + req.Bind(Start) + ", " + req.Bind(End) + ", " + req.Bind(T.GetConfig().dump()) + ", " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Name) + ")");
-      req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
+      req.FromString("", (req.ExecSentenceNoResult("INSERT INTO analyzers_rates(serial, startdate, enddate, config, template, name) VALUES (" + req.Bind(Analyzer) + ", " + req.Bind(Start) + ", " + req.Bind(End) + ", " + req.Bind(T.GetConfig().dump()) + ", " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Name) + ")") == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
     } else {
       uint32_t RateID = Params["RateID"];
-      bool Result = req.ExecSentence("UPDATE analyzers_rates SET name = " + req.Bind(Name) + ", template = " + req.Bind(T.GetTemplate().dump()) + ", config = " + req.Bind(T.GetConfig().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE rate = " + req.Bind(RateID) + " AND serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ")");
-      req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
+      req.FromString("", (req.ExecSentenceNoResult("UPDATE analyzers_rates SET name = " + req.Bind(Name) + ", template = " + req.Bind(T.GetTemplate().dump()) + ", config = " + req.Bind(T.GetConfig().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE rate = " + req.Bind(RateID) + " AND serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ")") == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
     }
   }
 }
@@ -253,12 +248,10 @@ void DeviceManager::DelTariffsCallback(HTTPRequest &req) {
   if(!Params["RateID"].is_number_unsigned()) return req.FromString("'RateID' params required", MHD_HTTP_BAD_REQUEST);
   uint32_t RateID = Params["RateID"];
   if(!Params["Analyzer"].is_string()) {
-    bool Result = req.ExecSentence("DELETE FROM rates WHERE rate = " + req.Bind(RateID) + " AND username = " + req.Bind(req.UserName()));
-    req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
+    req.FromString("", (req.ExecSentenceNoResult("DELETE FROM rates WHERE rate = " + req.Bind(RateID) + " AND username = " + req.Bind(req.UserName())) == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
   } else {
     string Analyzer = Params["Analyzer"];
-    bool Result = req.ExecSentence("DELETE FROM analyzers_rates WHERE rate = " + req.Bind(RateID) + " AND serial IN (SELECT serial from analyzers WHERE serial = " + req.Bind(Analyzer) + " AND username = " + req.Bind(req.UserName()) + ")");
-    req.FromString("{}", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
+    req.FromString("", (req.ExecSentenceNoResult("DELETE FROM analyzers_rates WHERE rate = " + req.Bind(RateID) + " AND serial IN (SELECT serial from analyzers WHERE serial = " + req.Bind(Analyzer) + " AND username = " + req.Bind(req.UserName()) + ")") == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
   }
 }
 void DeviceManager::GetPricesCallback(HTTPRequest &req) {
@@ -291,7 +284,7 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
   Result["Expense"]            = json::array();
   Result["Bills"]              = json::array();
   //Load involved tariffs, currency and timezone
-  req.ExecSentence("SELECT currency, timezone, to_json(array_agg(json_build_object('Name', analyzers_rates.name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) ORDER BY startdate ASC)) as tariff " 
+  req.ExecSentenceAsyncResult("SELECT currency, timezone, to_json(array_agg(json_build_object('Name', analyzers_rates.name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) ORDER BY startdate ASC)) as tariff " 
                    "FROM analyzers, analyzers_rates, country WHERE country.country_code = analyzers.country_code AND analyzers_rates.serial = analyzers.serial AND analyzers.serial = " + req.Bind(Analyzer) + " AND enddate >= " + req.Bind(From) + " AND startdate <= " + req.Bind(To) + 
                    " AND analyzers.serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " UNION SELECT serial FROM permisions WHERE username = " + req.Bind(req.UserName()) + ") GROUP BY currency, timezone");
   json DBTariffs = json::array();
@@ -306,12 +299,10 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
   uint64_t BillingFrom = Tariffs.BillFrom((LastSample > From) ? LastSample : From);
   uint64_t BillingTo = Tariffs.BillTo(To);
   //Retrieve active and reactive samples
-  string Query = "SET search_path TO " + req.Bind(Analyzer) + "; ";
-  Query += "SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime > " + req.Bind(BillingFrom) + " AND sampletime <= " + req.Bind(BillingTo) + " ORDER BY sampletime ASC";
-  req.ExecSentence(Query);
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(Analyzer));
+  req.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime > " + req.Bind(BillingFrom) + " AND sampletime <= " + req.Bind(BillingTo) + " ORDER BY sampletime ASC");
   req.FecthRow();
   //Traverse all samples
-//  uint32_t Row = 0;
   float AccActive = NAN;
   float AccReactive = NAN;
   float AccCost = NAN;
@@ -320,8 +311,6 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
     if(req.ResultUInt64("sampletime") == time) {
       Active = req.ResultFloat("active_power");
       Reactive = req.ResultFloat("reactive_power");
-//      if(time == 1549684799999) printf("%f - %f\n", Active, Reactive);
-      //Row++;
       req.FecthRow();
     }
     Tariff *Tariff = Tariffs.Find(time);
@@ -527,10 +516,10 @@ void DeviceManager::GetSeriesRangeCallback(HTTPRequest &req) {
   }
   string Aggreg = Params["Aggreg"];
   string Analyzer = Params["Analyzer"];
-  string Query = "SET search_path TO " + req.Bind(Analyzer) + ", 'public';";
-  Query += "SELECT ranges FROM analyzers, (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM aggreg_" + Aggreg + ") AS t1) AS t2 ";
-  Query += "WHERE username = " + req.Bind(req.UserName()) + " OR serial IN (SELECT serial from permisions WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ") LIMIT 1";
-  req.ExecSentence(Query);
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(Analyzer) + ", 'public'");
+  req.ExecSentenceAsyncResult("SELECT ranges FROM analyzers, (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM aggreg_" + Aggreg + ") AS t1) AS t2 "
+                              "WHERE username = " + req.Bind(req.UserName()) + " OR serial IN (SELECT serial from permisions WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ") LIMIT 1"  
+  );
   if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("ranges"), MHD_HTTP_OK);
 }
@@ -546,13 +535,13 @@ void DeviceManager::GetEventsCallback(HTTPRequest &req) {
   uint64_t LastSample = Params["LastSample"];
   if(To == 0) To = Tools::GetTime();
   uint64_t From = To - Period;
-  string Query = "SET search_path TO " + req.Bind(Analyzer) + ", 'public';";
-  Query += "SELECT evt FROM analyzers, (SELECT json_build_object('From', 1546297200000, 'To', 1577833199999, 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), ";
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(Analyzer) + ", 'public'");
+  string Query = "SELECT evt FROM analyzers, (SELECT json_build_object('From', 1546297200000, 'To', 1577833199999, 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), ";
   Query += "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), ";
   Query += "'Type', COALESCE(ARRAY_AGG(type ORDER BY starttime ASC), '{}'), 'Voltage', COALESCE(ARRAY_AGG(voltage ORDER BY starttime ASC), '{}'), 'Percent', COALESCE(ARRAY_AGG(percent ORDER BY starttime ASC), '{}')) AS evt ";
   Query += "FROM events WHERE starttime > " + req.Bind(LastSample) + " AND starttime >= " + req.Bind(From) + " AND starttime <= " + req.Bind(To) + ") AS t1 ";
   Query += "WHERE username = " + req.Bind(req.UserName()) + " OR serial IN (SELECT serial from permisions WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ") LIMIT 1";
-  req.ExecSentence(Query);
+  req.ExecSentenceAsyncResult(Query);
   if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("evt"), MHD_HTTP_OK);
 }

@@ -19,11 +19,11 @@ void GetNewsCallback(HTTPRequest &req) {
   uint64_t Time = 0;
   if(Params["NewsTime"].is_number()) Time = Params["NewsTime"];
   if(!Params["Action"].is_string()) {
-    req.ExecSentence("SELECT COALESCE((SELECT jsonb_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime = " + req.Bind(Time) + "), 'null') AS result");
+    req.ExecSentenceAsyncResult("SELECT COALESCE((SELECT jsonb_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime = " + req.Bind(Time) + "), 'null') AS result");
   } else if(Params["Action"] == "Before") {
-    req.ExecSentence("SELECT COALESCE((SELECT jsonb_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime < " + req.Bind(Time) + " ORDER BY newstime DESC LIMIT 1), 'null') AS result");    
+    req.ExecSentenceAsyncResult("SELECT COALESCE((SELECT jsonb_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime < " + req.Bind(Time) + " ORDER BY newstime DESC LIMIT 1), 'null') AS result");    
   } else if(Params["Action"] == "After") {
-    req.ExecSentence("SELECT COALESCE((SELECT jsonb_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime > " + req.Bind(Time) + " ORDER BY newstime ASC LIMIT 1), 'null') AS result");
+    req.ExecSentenceAsyncResult("SELECT COALESCE((SELECT jsonb_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime > " + req.Bind(Time) + " ORDER BY newstime ASC LIMIT 1), 'null') AS result");
   } else {
     return req.FromString("'Action' must be 'After' or 'Before'", MHD_HTTP_BAD_REQUEST);
   }
@@ -31,7 +31,7 @@ void GetNewsCallback(HTTPRequest &req) {
   req.FromString(req.ResultString("result"), MHD_HTTP_OK);
 }
 void GetCountriesCallback(HTTPRequest &req) {
-  req.ExecSentence("SELECT COALESCE(to_json(array_agg(json_build_object('Country_Code', country_code, 'Name', country, 'Currency', currency, 'TimeZone', timezone))), '[]') as result FROM country");
+  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('Country_Code', country_code, 'Name', country, 'Currency', currency, 'TimeZone', timezone))), '[]') as result FROM country");
   if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("result"), MHD_HTTP_OK);
 }

@@ -20,8 +20,8 @@ class Database {
     string       pSchema;
     PGresult    *pResult;
   private :
-    bool   Connect();
-    void   ClearResult();
+//    void   ClearResult();
+    void   ClearAsync();
   public :
     string      Bind(uint32_t param);
     string      Bind(uint64_t param);
