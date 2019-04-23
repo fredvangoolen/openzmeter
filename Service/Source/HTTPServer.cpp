@@ -26,14 +26,14 @@ HTTPRequest::HTTPRequest(char *cookie, bool deflate) : Database() {
   }
   pResultCode = MHD_HTTP_OK;
   if(cookie != NULL) {
-    ExecSentence("SELECT id, username FROM sessions WHERE id = " + Bind(string(cookie)));
+    ExecSentenceAsyncResult("SELECT id, username FROM sessions WHERE id = " + Bind(string(cookie)));
     if(FecthRow()) {
       pUserName = ResultString("username");
       pSessionID = ResultString("id");
       return;
     }
   }
-  ExecSentence("INSERT INTO sessions(username, timestamp) VALUES (NULL, " + Bind(Tools::GetTime()) + ") RETURNING id");
+  ExecSentenceAsyncResult("INSERT INTO sessions(username, timestamp) VALUES (NULL, " + Bind(Tools::GetTime()) + ") RETURNING id");
   if(FecthRow()) pSessionID = ResultString("id");
 }
 HTTPRequest::~HTTPRequest() {
@@ -117,7 +117,7 @@ bool HTTPRequest::Deflate() {
   return pDeflate;
 }
 void HTTPRequest::CloseSession() {
-  ExecSentence("DELETE FROM sessions WHERE id = " + Bind(pSessionID));
+  ExecSentenceNoResult("DELETE FROM sessions WHERE id = " + Bind(pSessionID));
 }
 int  HTTPRequest::ResultCode() {
   return pResultCode;
@@ -174,7 +174,7 @@ void HTTPServer::RegisterCallback(string handleName, HTTPServer::Func_t function
 }
 void HTTPServer::RemoveExpiredSessions() {
   Database DB;
-  DB.ExecSentence("DELETE FROM sessions WHERE (timestamp < " + DB.Bind(Tools::GetTime() - 1296000000) + " AND username IS NOT NULL) OR (timestamp < " + DB.Bind(Tools::GetTime() - 60000) + " AND username IS NULL)");
+  DB.ExecSentenceNoResult("DELETE FROM sessions WHERE (timestamp < " + DB.Bind(Tools::GetTime() - 1296000000) + " AND username IS NOT NULL) OR (timestamp < " + DB.Bind(Tools::GetTime() - 60000) + " AND username IS NULL)");
 }
 int HTTPServer::SendRedirect(struct MHD_Connection *connection, string url) {
   LOGFile::Instance()->Debug("Redirecting client to '%s'\n", url);
@@ -236,15 +236,15 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
           } else {
             string User = Params["Username"];
             string Pass = Params["Password"];
-            Request->ExecSentence("SELECT lastlogin FROM users WHERE username = " + Request->Bind(User) + " AND password = MD5(" + Request->Bind(Pass) + ")");
+            Request->ExecSentenceAsyncResult("SELECT lastlogin FROM users WHERE username = " + Request->Bind(User) + " AND password = MD5(" + Request->Bind(Pass) + ")");
             json Response;
-            if(Request->FecthRow() == false) {
-              Response["Result"] = false;
-            } else {
+            if(Request->FecthRow()) {
               Response["Result"] = true;
               Response["LastLogin"] = Request->ResultUInt64("lastlogin");
-              if(UpdateLastLogin) Request->ExecSentence("UPDATE users SET lastlogin = " + Request->Bind(Tools::GetTime()) + " WHERE username = " + Request->Bind(User) );
-              Request->ExecSentence("UPDATE sessions SET username = " + Request->Bind(User) + " WHERE id = " + Request->Bind(Request->SessionID()));
+              Request->ExecSentenceNoResult("UPDATE sessions SET username = " + Request->Bind(User) + " WHERE id = " + Request->Bind(Request->SessionID()) + "; " +
+                         (UpdateLastLogin ? "UPDATE users SET lastlogin = " + Request->Bind(Tools::GetTime()) + " WHERE username = " + Request->Bind(User) : string("")));
+            } else {
+              Response["Result"] = false;
             }
             Request->FromJSON(Response);
           }  

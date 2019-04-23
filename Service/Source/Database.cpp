@@ -13,43 +13,54 @@ string Database::pConnectionString;
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(string schema) {
   pSchema    = schema;
-  pDBConn    = NULL;
   pResult    = NULL;
-}
-string Database::GetSchema() {
-  return pSchema;
-}
-bool Database::Connect() {
-  if((pDBConn != NULL) && (PQstatus(pDBConn) == CONNECTION_OK)) return true;
-  if((pDBConn != NULL) && (PQstatus(pDBConn) == CONNECTION_BAD)) {
-    PQfinish(pDBConn);
-    pDBConn = NULL;
-  } 
-  pDBConn = PQconnectdb(pConnectionString.c_str());
+  pDBConn    = PQconnectdb(pConnectionString.c_str());
   if(PQstatus(pDBConn) != CONNECTION_OK) {
     char *Save;
     LOGFile::Instance()->Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     PQfinish(pDBConn);
     pDBConn = NULL;
-    return false;
+    return;
   }
-  ExecSentence("SET synchronous_commit TO OFF;"
-               "SET client_min_messages = error;"
-               "CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema) + ";"
-               "SET search_path TO " +  Bind(pSchema) + ", public");
-  ClearResult();
-  return true;
+  if(ExecSentenceNoResult("SET synchronous_commit TO OFF; SET client_min_messages = error; CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema) + "; SET search_path TO " +  Bind(pSchema) + ", public") == false) {
+    PQfinish(pDBConn);
+    pDBConn = NULL;
+  }
 }
+string Database::GetSchema() {
+  return pSchema;
+}
+//bool Database::Connect() {
+//  if((pDBConn != NULL) && (PQstatus(pDBConn) == CONNECTION_OK)) return true;
+//  if((pDBConn != NULL) && (PQstatus(pDBConn) == CONNECTION_BAD)) {
+//    PQfinish(pDBConn);
+//    pDBConn = NULL;
+//  } 
+//  pDBConn = PQconnectdb(pConnectionString.c_str());
+//  if(PQstatus(pDBConn) != CONNECTION_OK) {
+//    char *Save;
+//    LOGFile::Instance()->Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+//    PQfinish(pDBConn);
+//    pDBConn = NULL;
+//    return false;
+//  }
+//  ExecSentenceNoResult("SET synchronous_commit TO OFF;"
+//                       "SET client_min_messages = error;"
+//                       "CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema) + ";"
+//                       "SET search_path TO " +  Bind(pSchema) + ", public");
+//  ClearResult();
+//  return true;
+//}
 Database::~Database() {
-  ClearResult();
-  PQfinish(pDBConn);
+  ClearAsync();
+  if(pDBConn) PQfinish(pDBConn);
 }
-void Database::ClearResult() {
-  if(pResult != NULL) {
-    PQclear(pResult);
-    pResult = NULL;
-  }
-}
+//void Database::ClearResult() {
+//  if(pResult != NULL) {
+//    PQclear(pResult);
+//    pResult = NULL;
+//  }
+//}
 bool Database::Config(json config) {
   string Hostname = "localhost";
   uint16_t Port = 5432;
@@ -67,47 +78,53 @@ bool Database::Config(json config) {
   return DB.ExecResource("SQL/Database.sql");
 }
 bool Database::FecthRow() {
-  ClearResult();
+  if(pResult != NULL) PQclear(pResult);  
   pResult = PQgetResult(pDBConn);
-  return (pResult != NULL);
+  return (PQresultStatus(pResult) == PGRES_SINGLE_TUPLE);
 }
 bool Database::ExecResource(string file) {
   size_t Len;
-  ClearResult();
+  ClearAsync();
   char *Script = (char*)ResourceLoader::Instance()->GetFile(file, &Len);
   Script[Len - 1] = 0;
-  return ExecSentence(Script);
+  return ExecSentenceNoResult(Script);
 }
-bool Database::ExecSentence(string sql) {
-  ClearResult();
-  if(Connect() == false) return false;
-  pResult = PQexec(pDBConn, sql.c_str());
-  if((PQresultStatus(pResult) != PGRES_COMMAND_OK) && (PQresultStatus(pResult) != PGRES_TUPLES_OK)) {
+bool Database::ExecSentenceNoResult(string sql) {
+  if(pDBConn == NULL) return false;
+  ClearAsync();
+  PGresult *Result = PQexec(pDBConn, sql.c_str());
+  if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
     char *Save;
     LOGFile::Instance()->Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    PQclear(Result);
     return false;
   } else {
+    PQclear(Result);
     return true;  
   }
 }
-//char *Database::ExecSentenceJSON(const char* sql, size_t *len) {
-//  if(pResult != NULL) PQclear(pResult);
-//  if(Connect() == false) return NULL;
-//  pResult = PQexec(pDBConn, sql);
-//  if(PQresultStatus(pResult) != PGRES_TUPLES_OK) {
-//    char *Save;
-//    LOGFile::Instance()->Error("Error in SQL query \"%s\" (%s)\n", sql, strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
-//    return NULL;
-//  } else {
-//    if(PQntuples(pResult) == 0) return NULL;
-//    if(len) *len = PQgetlength(pResult, 0, 0);
-//    return (PQgetisnull(pResult, 0, 0) == true) ? NULL : PQgetvalue(pResult, 0, 0);
-//  }
-//}
-//void Database::PrepareSentence(string sentence) {
-//  pSentence = sentence;
-//  pParams = queue<string>();
-//}
+bool Database::ExecSentenceAsyncResult(string sql) {
+  if(pDBConn == NULL) return false;
+  ClearAsync();
+  if(PQsendQuery(pDBConn, sql.c_str()) == 0) {
+    char *Save;
+    LOGFile::Instance()->Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    return false;
+  }
+  if(PQsetSingleRowMode(pDBConn) == 0) {
+    char *Save;
+    LOGFile::Instance()->Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    return false;
+  }
+  return true;
+}
+void Database::ClearAsync() {
+  if(pResult == NULL) return;
+  do {
+    PQclear(pResult);  
+    pResult = PQgetResult(pDBConn);
+  } while(pResult != NULL);
+}
 string Database::Bind(uint32_t param) {
   return to_string(param);
 }
@@ -150,29 +167,24 @@ string Database::Bind(bool param) {
   return (param == true) ? "true" : "false";
 }
 string Database::Bind(string param) {
-  if(Connect() == false) return "";
+  if(pDBConn == NULL) return "";
   char *Scape = PQescapeLiteral(pDBConn, param.c_str(), param.length());
   string Result = Scape;
   PQfreemem(Scape);
   return Result;
 }
 string Database::BindID(string param) {
-  if(Connect() == false) return "";
+  if(pDBConn == NULL) return "";
   char *Scape = PQescapeIdentifier(pDBConn, param.c_str(), param.length());
   string Result = Scape;
   PQfreemem(Scape);
   return Result;
 }
-//uint32_t Database::ResultRows() {
-//  if(pResult == NULL) return 0;
-//  return PQntuples(pResult);
-//}
 json Database::ResultJSON(string name) {
   return json::parse(ResultString(name));
 }
 string Database::ResultString(string name) {
   if(pResult == NULL) return "";
-//  if(PQntuples(pResult) < 1) return "";
   int32_t Col = PQfnumber(pResult, name.c_str());
   if(Col == -1) return "";
   if(PQgetisnull(pResult, 0, Col) == 1) return "";
@@ -180,7 +192,6 @@ string Database::ResultString(string name) {
 }
 float Database::ResultFloat(string name) {
   if(pResult == NULL) return NAN;
-//  if(PQntuples(pResult) < 1) return NAN;
   int32_t Col = PQfnumber(pResult, name.c_str());
   if(Col == -1) return NAN;
   if(PQgetisnull(pResult, 0, Col) == 1) return NAN;
@@ -188,26 +199,9 @@ float Database::ResultFloat(string name) {
 }
 uint64_t Database::ResultUInt64(string name) {
   if(pResult == NULL) return 0;
-//  if(PQntuples(pResult) < 1) return 0;
   int32_t Col = PQfnumber(pResult, name.c_str());
   if(Col == -1) return 0;
   if(PQgetisnull(pResult, 0, Col) == 1) return 0;
   return strtoull(PQgetvalue(pResult, 0, Col), NULL, 10);
 }
-//bool Database::ExecSentence() {
-//  return ExecSentence(BuildQueryString().c_str());
-//}
-//string Database::BuildQueryString() {
-//  string Result;
-//  for(std::string::iterator it = pSentence.begin(); it != pSentence.end(); it++) {
-//    if(*it == '?') {
-//      Result.append(pParams.front());
-//      pParams.pop();
-//    } else {
-//      Result.push_back(*it);
-//    }
-//  }
-//  if(pParams.size() != 0) LOGFile::Instance()->Error("There are more placeholders than params!!\n");
-//  return Result;
-//}
 //======================================================================================================================

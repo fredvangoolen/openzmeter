@@ -17,15 +17,15 @@ AnalyzerInterface::AnalyzerInterface(string id, AnalyzerMode mode) : Database(id
   ExecResource("SQL/Database_Analyzer.sql");
   pMode = mode;
   pLastSave = 0;
-  bool Result = ExecSentence("INSERT INTO analyzers(username, serial, country_code, contract, zipcode, frequency, voltage, name, geo, max_current, min_current) "
-               "VALUES('admin', " + Bind(id) + ", 'UTC', '', '', 50.0, 230.0, 'Unnamed input analyzer', POINT(0, 0), 50.0, 0.1) ON CONFLICT(serial) DO NOTHING; "
-               "SELECT frequency, voltage, name, max_current, min_current FROM analyzers WHERE serial = " + Bind(id));
-  if((Result == true) && (ResultRows() == 1)) {
-    pNominalVoltage = ResultFloat(0, "voltage");
-    pNominalFrequency = ResultFloat(0, "frequency");
-    pName = ResultString(0, "name");
-    pMaxCurrent = ResultFloat(0, "max_current");
-    pMinCurrent =  ResultFloat(0, "min_current");
+  ExecSentenceNoResult("INSERT INTO analyzers(username, serial, country_code, contract, zipcode, frequency, voltage, name, geo, max_current, min_current) "
+                       "VALUES('admin', " + Bind(id) + ", 'UTC', '', '', 50.0, 230.0, 'Unnamed input analyzer', POINT(0, 0), 50.0, 0.1) ON CONFLICT(serial) DO NOTHING");
+  ExecSentenceAsyncResult("SELECT frequency, voltage, name, max_current, min_current FROM analyzers WHERE serial = " + Bind(id));
+  if(FecthRow()) {
+    pNominalVoltage = ResultFloat("voltage");
+    pNominalFrequency = ResultFloat("frequency");
+    pName = ResultString("name");
+    pMaxCurrent = ResultFloat("max_current");
+    pMinCurrent =  ResultFloat("min_current");
   } else {
     LOGFile::Instance()->Error("Can not create or read analyzer configuration\n");
   }
@@ -122,39 +122,39 @@ void AnalyzerInterface::ResetAggreg(Params_t &params) {
 }
 void AnalyzerInterface::SaveAggreg(Params_t &params) {
   if(params.Type == AGGREG_3S)
-    ExecSentence("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ")");
+    ExecSentenceNoResult("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ")");
   else if(params.Type == AGGREG_1M)
-    ExecSentence("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ") RETURNING sampletime) INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) SELECT sampletime, " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.Power_Factor) + ", " + Bind(params.Voltage_THD) + ", " + Bind(params.Current_THD) + ", " + Bind(params.Phi) + ", " + Bind(params.Voltage_Harmonics) + ", " + Bind(params.Current_Harmonics) + " FROM Sample");
+    ExecSentenceNoResult("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ") RETURNING sampletime) INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) SELECT sampletime, " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.Power_Factor) + ", " + Bind(params.Voltage_THD) + ", " + Bind(params.Current_THD) + ", " + Bind(params.Phi) + ", " + Bind(params.Voltage_Harmonics) + ", " + Bind(params.Current_Harmonics) + " FROM Sample");
   else if(params.Type == AGGREG_10M)
-    ExecSentence("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ")");
+    ExecSentenceNoResult("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ")");
   else if(params.Type == AGGREG_15M)
-    ExecSentence("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ")");
+    ExecSentenceNoResult("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ")");
   else if(params.Type == AGGREG_1H)
-    ExecSentence("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.StatsVoltage) + ", " + Bind(params.StatsFrequency) + ", " + Bind(params.StatsTHD) + ", " + Bind(params.StatsHarmonics) + ")");
-  if(params.Type == AGGREG_1M) ExecSentence("DELETE FROM aggreg_ext_1m WHERE sampletime < " + Bind(params.Timestamp - 86400000));   //Delete 1 day old
+    ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.StatsVoltage) + ", " + Bind(params.StatsFrequency) + ", " + Bind(params.StatsTHD) + ", " + Bind(params.StatsHarmonics) + ")");
+  if(params.Type == AGGREG_1M) ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + Bind(params.Timestamp - 86400000));   //Delete 1 day old
   //TEST
-  json Result;
-  if((params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M) || (params.Type == AGGREG_1H)) {
-    Result["Voltage"] = params.Voltage;
-    Result["Current"] = params.Current;
-    Result["Frequency"] = params.Frequency;
-    Result["Flag"] = params.Flag;
-  }
-  if((params.Type == AGGREG_3S) || (params.Type == AGGREG_15M) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_1H)) {
-    Result["Active_Power"] = params.Active_Power;
-    Result["Reactive_Power"] = params.Reactive_Power;
-  }
-  if(params.Type == AGGREG_1M) {
-    Result["Power_Factor"] = params.Power_Factor;
-    Result["Voltage_THD"] = params.Voltage_THD;
-    Result["Current_THD"] = params.Current_THD;
-    Result["Phi"] = params.Phi;
-    Result["Voltage_Harmonics"] = params.Voltage_Harmonics;
-    Result["Current_Harmonics"] = params.Current_Harmonics;
-  }
-  Result["Aggregation"] = (params.Type == AGGREG_3S) ? "3S" : (params.Type == AGGREG_1M) ? "1M" : (params.Type == AGGREG_10M) ? "10M" : (params.Type == AGGREG_15M) ? "15M": "1H";
-  Result["Sampletime"] = params.Timestamp;
-  Tools::SendUDP(Result);
+//  json Result;
+//  if((params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M) || (params.Type == AGGREG_1H)) {
+//    Result["Voltage"] = params.Voltage;
+//    Result["Current"] = params.Current;
+//    Result["Frequency"] = params.Frequency;
+//    Result["Flag"] = params.Flag;
+//  }
+//  if((params.Type == AGGREG_3S) || (params.Type == AGGREG_15M) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_1H)) {
+//    Result["Active_Power"] = params.Active_Power;
+//    Result["Reactive_Power"] = params.Reactive_Power;
+//  }
+//  if(params.Type == AGGREG_1M) {
+//    Result["Power_Factor"] = params.Power_Factor;
+//    Result["Voltage_THD"] = params.Voltage_THD;
+//    Result["Current_THD"] = params.Current_THD;
+//    Result["Phi"] = params.Phi;
+//    Result["Voltage_Harmonics"] = params.Voltage_Harmonics;
+//    Result["Current_Harmonics"] = params.Current_Harmonics;
+//  }
+//  Result["Aggregation"] = (params.Type == AGGREG_3S) ? "3S" : (params.Type == AGGREG_1M) ? "1M" : (params.Type == AGGREG_10M) ? "10M" : (params.Type == AGGREG_15M) ? "15M": "1H";
+//  Result["Sampletime"] = params.Timestamp;
+//  Tools::SendUDP(Result);
   pLastSave = Tools::GetTime();
 }
 json AnalyzerInterface::GetJSONDescriptor() {
