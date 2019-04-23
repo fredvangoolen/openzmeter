@@ -27,14 +27,14 @@ HTTPRequest::HTTPRequest(char *cookie, bool deflate) : Database() {
   pResultCode = MHD_HTTP_OK;
   if(cookie != NULL) {
     ExecSentence("SELECT id, username FROM sessions WHERE id = " + Bind(string(cookie)));
-    if(ResultRows() == 1) {
-      pUserName = ResultString(0, "username");
-      pSessionID = ResultString(0, "id");
+    if(FecthRow()) {
+      pUserName = ResultString("username");
+      pSessionID = ResultString("id");
       return;
     }
   }
   ExecSentence("INSERT INTO sessions(username, timestamp) VALUES (NULL, " + Bind(Tools::GetTime()) + ") RETURNING id");
-  if(ResultRows() == 1) pSessionID = ResultString(0, "id");
+  if(FecthRow()) pSessionID = ResultString("id");
 }
 HTTPRequest::~HTTPRequest() {
   if(pDeflate) deflateEnd(&pDeflateObj);
@@ -217,7 +217,6 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_LENGTH, to_string(Request->size()).c_str());
     MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_TYPE, Request->MimeType().c_str());
     MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_ENCODING, Request->Deflate() ? "deflate" : "");
-    MHD_add_response_header(Response, MHD_HTTP_HEADER_CONNECTION, "close");
     int Return = MHD_queue_response(connection, Request->ResultCode(), Response);
     MHD_destroy_response(Response);
     return Return;
@@ -239,11 +238,11 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
             string Pass = Params["Password"];
             Request->ExecSentence("SELECT lastlogin FROM users WHERE username = " + Request->Bind(User) + " AND password = MD5(" + Request->Bind(Pass) + ")");
             json Response;
-            if(Request->ResultRows() != 1) {
+            if(Request->FecthRow() == false) {
               Response["Result"] = false;
             } else {
               Response["Result"] = true;
-              Response["LastLogin"] = Request->ResultUInt64(0, "lastlogin");
+              Response["LastLogin"] = Request->ResultUInt64("lastlogin");
               if(UpdateLastLogin) Request->ExecSentence("UPDATE users SET lastlogin = " + Request->Bind(Tools::GetTime()) + " WHERE username = " + Request->Bind(User) );
               Request->ExecSentence("UPDATE sessions SET username = " + Request->Bind(User) + " WHERE id = " + Request->Bind(Request->SessionID()));
             }
@@ -277,7 +276,6 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
       MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_LENGTH, to_string(Request->size()).c_str());
       MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_TYPE, Request->MimeType().c_str());
       MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_ENCODING, Request->Deflate() ? "deflate" : "");
-      MHD_add_response_header(Response, MHD_HTTP_HEADER_CONNECTION, "close");
       int Return = MHD_queue_response(connection, Request->ResultCode(), Response);
       MHD_destroy_response(Response);        
       return Return;

@@ -97,15 +97,16 @@ void DeviceManager::GetAnalyzersCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   json Response = json::array();
   req.ExecSentence("SELECT serial, username, timezone, country_code FROM analyzers NATURAL LEFT JOIN country WHERE serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " UNION SELECT username FROM permisions WHERE username = " + req.Bind(req.UserName()) + ")");
-  for(uint32_t i = 0; i < req.ResultRows(); i++) {
-    string Serial = req.ResultString(i, "serial");
+  while(req.FecthRow()) {
+//  for(uint32_t i = 0; i < req.ResultRows(); i++) {
+    string Serial = req.ResultString("serial");
     AnalyzerInterface *Analyzer = NULL;
     for(vector<Device*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
       Analyzer = (*it)->FindAnalyzer(Serial);
       if(Analyzer == NULL) continue;
       json Row = Analyzer->GetJSONDescriptor();
-      Row["Owner"] = req.ResultString(i, "username");
-      Row["TimeZone"] = req.ResultString(i, "timezone");
+      Row["Owner"] = req.ResultString("username");
+      Row["TimeZone"] = req.ResultString("timezone");
       Response.push_back(Row);
       break;
     }
@@ -186,7 +187,8 @@ void DeviceManager::GetSeriesCallback(HTTPRequest &req) {
   }
   Query += " WHERE sampletime > " + req.Bind(LastSample) + " AND sampletime >= " + req.Bind(From) + " AND sampletime <= " + req.Bind(To) + ") AS result";
   req.ExecSentence(Query);
-  req.FromString(req.ResultString(0, "Result"), MHD_HTTP_OK);
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
 }
 void DeviceManager::GetTariffsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
@@ -206,7 +208,8 @@ void DeviceManager::GetTariffsCallback(HTTPRequest &req) {
       req.ExecSentence("SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) as result FROM analyzers_rates where rate = " + req.Bind(RateID));
     }
   }
-  req.FromString(req.ResultString(0, "result"), MHD_HTTP_OK);
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
 }
 void DeviceManager::SetTariffsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
@@ -216,9 +219,9 @@ void DeviceManager::SetTariffsCallback(HTTPRequest &req) {
   string   Name     = Params["Name"];
   string   TimeZone = Params["CountryCode"];
   req.ExecSentence("SELECT timezone FROM country WHERE country_code = " + req.Bind(TimeZone));
-  if(req.ResultRows() != 1) return req.FromString("Invalid 'CountryCode'", MHD_HTTP_BAD_REQUEST);
+  if(req.FecthRow() == false) return req.FromString("Invalid 'CountryCode'", MHD_HTTP_BAD_REQUEST);
   if(!Params["Template"].is_object()) return req.FromString("'Template' param required", MHD_HTTP_BAD_REQUEST);
-  Tariff T(Start, End, req.ResultString(0, "timezone"));
+  Tariff T(Start, End, req.ResultString("timezone"));
   if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
   if(!Params["Analyzer"].is_string()) {
     //System tariff
@@ -291,30 +294,35 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
   req.ExecSentence("SELECT currency, timezone, to_json(array_agg(json_build_object('Name', analyzers_rates.name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) ORDER BY startdate ASC)) as tariff " 
                    "FROM analyzers, analyzers_rates, country WHERE country.country_code = analyzers.country_code AND analyzers_rates.serial = analyzers.serial AND analyzers.serial = " + req.Bind(Analyzer) + " AND enddate >= " + req.Bind(From) + " AND startdate <= " + req.Bind(To) + 
                    " AND analyzers.serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " UNION SELECT serial FROM permisions WHERE username = " + req.Bind(req.UserName()) + ") GROUP BY currency, timezone");
-  if(req.ResultRows() == 1) {
-    Result["Currency"] = req.ResultString(0, "currency");
-    TimeZone = req.ResultString(0, "timezone");
+  json DBTariffs = json::array();
+  if(req.FecthRow()) {
+    Result["Currency"] = req.ResultString("currency");
+    TimeZone = req.ResultString("timezone");
+    DBTariffs = req.ResultJSON("tariff");
   }
-  TariffList Tariffs((req.ResultRows() == 1) ? req.ResultJSON(0, "tariff") : json::array(), TimeZone);
+  TariffList Tariffs(DBTariffs, TimeZone);
 
   //Find start and end date to retrieve data
-  uint64_t BillingFrom = Tariffs.BillFrom(From);
+  uint64_t BillingFrom = Tariffs.BillFrom((LastSample > From) ? LastSample : From);
   uint64_t BillingTo = Tariffs.BillTo(To);
   //Retrieve active and reactive samples
   string Query = "SET search_path TO " + req.Bind(Analyzer) + "; ";
-  Query += "SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime > " + req.Bind(BillingFrom) + " AND sampletime <= " + req.Bind(BillingTo);
+  Query += "SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime > " + req.Bind(BillingFrom) + " AND sampletime <= " + req.Bind(BillingTo) + " ORDER BY sampletime ASC";
   req.ExecSentence(Query);
+  req.FecthRow();
   //Traverse all samples
-  uint32_t Row = 0;
+//  uint32_t Row = 0;
   float AccActive = NAN;
   float AccReactive = NAN;
   float AccCost = NAN;
   for(uint64_t time = BillingFrom + 899999; time != BillingTo; time = time + 900000) {
     float Active = NAN, Reactive = NAN;
-    if((Row < req.ResultRows()) && (req.ResultUInt64(Row, "sampletime") == time)) {
-      Active = req.ResultFloat(Row, "active_power");
-      Reactive = req.ResultFloat(Row, "reactive_power");
-      Row++;
+    if(req.ResultUInt64("sampletime") == time) {
+      Active = req.ResultFloat("active_power");
+      Reactive = req.ResultFloat("reactive_power");
+//      if(time == 1549684799999) printf("%f - %f\n", Active, Reactive);
+      //Row++;
+      req.FecthRow();
     }
     Tariff *Tariff = Tariffs.Find(time);
     if((Tariff != NULL) && (Tariff->PushSample(time, Active, Reactive) == true) && ((time + 900000) != BillingTo)) continue;  //If under a tariff push samples until bill cycle ends or no more data!
@@ -523,7 +531,8 @@ void DeviceManager::GetSeriesRangeCallback(HTTPRequest &req) {
   Query += "SELECT ranges FROM analyzers, (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM aggreg_" + Aggreg + ") AS t1) AS t2 ";
   Query += "WHERE username = " + req.Bind(req.UserName()) + " OR serial IN (SELECT serial from permisions WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ") LIMIT 1";
   req.ExecSentence(Query);
-  return req.FromString(req.ResultString(0, "ranges"), (req.ResultRows() == 1) ? MHD_HTTP_OK : MHD_HTTP_UNAUTHORIZED);
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  req.FromString(req.ResultString("ranges"), MHD_HTTP_OK);
 }
 void DeviceManager::GetEventsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
@@ -544,7 +553,8 @@ void DeviceManager::GetEventsCallback(HTTPRequest &req) {
   Query += "FROM events WHERE starttime > " + req.Bind(LastSample) + " AND starttime >= " + req.Bind(From) + " AND starttime <= " + req.Bind(To) + ") AS t1 ";
   Query += "WHERE username = " + req.Bind(req.UserName()) + " OR serial IN (SELECT serial from permisions WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ") LIMIT 1";
   req.ExecSentence(Query);
-  return req.FromString(req.ResultString(0, "evt"), (req.ResultRows() == 1) ? MHD_HTTP_OK : MHD_HTTP_UNAUTHORIZED);
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  req.FromString(req.ResultString("evt"), MHD_HTTP_OK);
 }
 //----------------------------------------------------------------------------------------------------------------------
 Device::Device() {

@@ -10,6 +10,10 @@
           <li v-bind:class="{active: (Selected == 2592000000)}"><a @click="PeriodClick(2592000000, $event)" href="#">Month</a></li>
           <li v-bind:class="{active: (Selected == 31536000000)}"><a @click="PeriodClick(31536000000, $event)" href="#">Year</a></li>
         </ul>
+        <button class="btn btn-default narrow disabled" type="button"><img :src="require('Imgs/resultset_first.png')"></button>
+        <button class="btn btn-default narrow disabled" type="button"><img :src="require('Imgs/resultset_previous.png')"></button>
+        <button class="btn btn-default narrow disabled" type="button"><img :src="require('Imgs/resultset_next.png')"></button>
+        <button class="btn btn-default narrow disabled" type="button"><img :src="require('Imgs/resultset_last.png')"></button>
       </div>
     </div>
   </div>
@@ -54,8 +58,14 @@
   }
 </script>
 
-<style>
+<style scoped>
   .dropdown-menu {
     z-index: 10000;
+  }
+  .dropdown-toggle {
+    border-radius: 0px;
+  }
+  .input-group-btn .narrow {
+    padding: 1px 0px;
   }
 </style>

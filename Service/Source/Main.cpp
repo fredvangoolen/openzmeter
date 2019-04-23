@@ -27,16 +27,18 @@ void GetNewsCallback(HTTPRequest &req) {
   } else {
     return req.FromString("'Action' must be 'After' or 'Before'", MHD_HTTP_BAD_REQUEST);
   }
-  req.FromString(req.ResultString(0, "result"), MHD_HTTP_OK);
+  if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  req.FromString(req.ResultString("result"), MHD_HTTP_OK);
 }
 void GetCountriesCallback(HTTPRequest &req) {
   req.ExecSentence("SELECT COALESCE(to_json(array_agg(json_build_object('Country_Code', country_code, 'Name', country, 'Currency', currency, 'TimeZone', timezone))), '[]') as result FROM country");
-  req.FromString(req.ResultString(0, "result"), (req.ResultRows() < 1) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
+  if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  req.FromString(req.ResultString("result"), MHD_HTTP_OK);
 }
-
-
-
-
+void GetUserProfile(HTTPRequest &req) {
+}
+void SetUserProfile(HTTPRequest &req) {
+}
 //---------------------------------------------------------------------------------------------------------------------
 static bool Terminate = false;
 //---------------------------------------------------------------------------------------------------------------------

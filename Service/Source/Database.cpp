@@ -66,6 +66,11 @@ bool Database::Config(json config) {
   LOGFile::Instance()->Debug("Creating database tables\n");
   return DB.ExecResource("SQL/Database.sql");
 }
+bool Database::FecthRow() {
+  ClearResult();
+  pResult = PQgetResult(pDBConn);
+  return (pResult != NULL);
+}
 bool Database::ExecResource(string file) {
   size_t Len;
   ClearResult();
@@ -77,7 +82,6 @@ bool Database::ExecSentence(string sql) {
   ClearResult();
   if(Connect() == false) return false;
   pResult = PQexec(pDBConn, sql.c_str());
-  LOGFile::Instance()->Info("Exec: %s\n", sql.c_str());
   if((PQresultStatus(pResult) != PGRES_COMMAND_OK) && (PQresultStatus(pResult) != PGRES_TUPLES_OK)) {
     char *Save;
     LOGFile::Instance()->Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
@@ -153,40 +157,42 @@ string Database::Bind(string param) {
   return Result;
 }
 string Database::BindID(string param) {
-//  char *Scape = PQescapeLiteral(pDBConn, param.c_str(), param.length());
-  return string("\"") + param + "\"";
-//  PQfreemem(Scape);  
+  if(Connect() == false) return "";
+  char *Scape = PQescapeIdentifier(pDBConn, param.c_str(), param.length());
+  string Result = Scape;
+  PQfreemem(Scape);
+  return Result;
 }
-uint32_t Database::ResultRows() {
-  if(pResult == NULL) return 0;
-  return PQntuples(pResult);
+//uint32_t Database::ResultRows() {
+//  if(pResult == NULL) return 0;
+//  return PQntuples(pResult);
+//}
+json Database::ResultJSON(string name) {
+  return json::parse(ResultString(name));
 }
-json Database::ResultJSON(uint32_t row, string name) {
-  return json::parse(ResultString(row, name));
-}
-string Database::ResultString(uint32_t row, string name) {
+string Database::ResultString(string name) {
   if(pResult == NULL) return "";
-  if(PQntuples(pResult) < 1) return "";
+//  if(PQntuples(pResult) < 1) return "";
   int32_t Col = PQfnumber(pResult, name.c_str());
   if(Col == -1) return "";
-  if(PQgetisnull(pResult, row, Col) == 1) return "";
-  return PQgetvalue(pResult, row, Col);
+  if(PQgetisnull(pResult, 0, Col) == 1) return "";
+  return PQgetvalue(pResult, 0, Col);
 }
-float Database::ResultFloat(uint32_t row, string name) {
+float Database::ResultFloat(string name) {
   if(pResult == NULL) return NAN;
-  if(PQntuples(pResult) < 1) return NAN;
+//  if(PQntuples(pResult) < 1) return NAN;
   int32_t Col = PQfnumber(pResult, name.c_str());
   if(Col == -1) return NAN;
-  if(PQgetisnull(pResult, row, Col) == 1) return NAN;
-  return atof(PQgetvalue(pResult, row, Col));
+  if(PQgetisnull(pResult, 0, Col) == 1) return NAN;
+  return atof(PQgetvalue(pResult, 0, Col));
 }
-uint64_t Database::ResultUInt64(uint32_t row, string name) {
+uint64_t Database::ResultUInt64(string name) {
   if(pResult == NULL) return 0;
-  if(PQntuples(pResult) < 1) return 0;
+//  if(PQntuples(pResult) < 1) return 0;
   int32_t Col = PQfnumber(pResult, name.c_str());
   if(Col == -1) return 0;
-  if(PQgetisnull(pResult, row, Col) == 1) return 0;
-  return strtoull(PQgetvalue(pResult, row, Col), NULL, 10);
+  if(PQgetisnull(pResult, 0, Col) == 1) return 0;
+  return strtoull(PQgetvalue(pResult, 0, Col), NULL, 10);
 }
 //bool Database::ExecSentence() {
 //  return ExecSentence(BuildQueryString().c_str());
