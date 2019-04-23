@@ -1,5 +1,5 @@
 <template>
-  <div class="modal" tabindex="1" role="dialog" data-backdrop="false" data-keyboard="false">
+  <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog" data-keyboard="false">
     <div class="modal-backdrop in"></div>
     <div class="modal-dialog">
       <div class="modal-content">
@@ -18,15 +18,21 @@
 <script>
   export default {
     data() {
-      return {};
+      return { ShowDialog: false };
     },
     methods: {
-      close() {
-        window.location.href = 'Logout';
+      show: function() {
+        this.ShowDialog = true;
+        this.$nextTick(function() {
+          $(this.$el).modal('show');
+        });
       }
     },
     mounted: function() {
-      $(this.$el).modal('show');
+      this.$root.$el.append(this.$el);
+    },
+    destroyed: function() {
+      this.$root.$el.removeChild(this.$el);
     }
   }
 </script>

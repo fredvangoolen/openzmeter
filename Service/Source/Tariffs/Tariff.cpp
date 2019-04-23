@@ -273,8 +273,8 @@ bool Tariff::PushSample(const uint64_t time, const float active, const float rea
     pSumPowerCost  = 0.0;
   }
   Sample_t Sample;
-  Sample.Active   = active;
-  Sample.Reactive = reactive;
+  Sample.Active   = isnan(active) ? 0.0 : active;
+  Sample.Reactive = isnan(reactive) ? 0.0 : reactive;
   Sample.Period   = FindPeriod(time);
   pSamples.push(Sample);
   pPeriods[Sample.Period].PowerModule->PushSample(Sample.Active, Sample.Reactive);
@@ -306,7 +306,7 @@ bool Tariff::PopSample(uint64_t &time, float &active, float &reactive, string &p
     if(it->Type == "FIXED_QUANTITY") Cost += it->Value / 96.0;
   }
   for(vector<Tax_t>::iterator it = pTaxs.begin(); it != pTaxs.end(); it++) {
-    if(it->Type == "PERCENT_TOTAL") Cost = Cost * (it->Value / 100.0);
+    if(it->Type == "PERCENT_TOTAL") Cost += Cost * (it->Value / 100.0);
   }
   cost = Cost;
   return true;

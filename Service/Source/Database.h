@@ -15,11 +15,6 @@ using json = nlohmann::json;
 class Database {
   private :
     static string pConnectionString;
-//    static char *pDatabaseName;
-//    static char *pHost;
-//    static int   pPort;
-//    static char *pUser;
-//    static char *pPassword;
   private :
     PGconn      *pDBConn;
     string       pSchema;
@@ -27,7 +22,6 @@ class Database {
   private :
     bool   Connect();
     void   ClearResult();
-//    string BuildQueryString();
   public :
     string      Bind(uint32_t param);
     string      Bind(uint64_t param);
@@ -38,13 +32,14 @@ class Database {
     string      Bind(bool param);
     string      BindID(string string);
     string      Bind(string string);
-    bool        ExecSentence(string sql);
+    bool        ExecSentenceNoResult(string sql);
+    bool        ExecSentenceAsyncResult(string sql);
     bool        ExecResource(string file);
-    uint32_t    ResultRows();
-    string      ResultString(uint32_t row, string name);
-    float       ResultFloat(uint32_t row, string name);
-    uint64_t    ResultUInt64(uint32_t row, string name);
-    json        ResultJSON(uint32_t row, string name);
+    bool        FecthRow();
+    string      ResultString(string name);
+    float       ResultFloat(string name);
+    uint64_t    ResultUInt64(string name);
+    json        ResultJSON(string name);
     string      GetSchema();
     Database(string schema = "public");
     virtual ~Database();

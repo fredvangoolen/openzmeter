@@ -168,7 +168,7 @@
           }.bind(this),
           complete: function() {
             if(this.Timer !== null) clearTimeout(this.Timer);
-            if(this.AutoUpdate === true) this.Timer = setTimeout(this.UpdateGraph.bind(this), 5000);
+            if(this.AutoUpdate === true) this.Timer = setTimeout(this.UpdateGraph.bind(this), 450000);
           }.bind(this), 
           error: function() {
             this.ShowSpinner = true;

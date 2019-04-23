@@ -1,12 +1,13 @@
 <template>
-  <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog">
+  <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog" data-keyboard="false">
     <div class="modal-backdrop in"></div>
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
           <div class="pull-left"><h4 class="modal-title">User</h4></div>
-          <div class="pull-right">
-            <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes"><img :src="require('Imgs/diskette.png')"> Save</button>
+          <div class="pull-right btn-group">
+            <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes"><img :src="require('Imgs/diskette.png')"></button>
+            <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
           </div>
         </div>
         <div class="modal-body">
@@ -15,10 +16,13 @@
               <div class="row">
                 <div class="col-xs-12">
                   <div class="rounded-panel">
-                    <h3 class="popover-title"><strong>Profile image</strong>
-                      <button type="button" id="close-preview" style="font-size: initial;" class="close pull-right">Remove</button>
-                      <button type="button" id="close-preview" style="font-size: initial;" class="close pull-right">Change</button>
-                    </h3>
+                    <div class="popover-title"><strong>Profile image</strong>
+                      <div class="pull-right btn-group">
+                        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Browse image"><img :src="require('Imgs/folder_explorer.png')"></button>
+                        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Remove image"><img :src="require('Imgs/cross.png')"></button>
+                      </div>
+                      <div class="clearfix"
+                    </div>
                     <div class="popover-content" style="text-align: center">
                       <img id="dynamic" width="186" height="186" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYxIDY0LjE0MDk0OSwgMjAxMC8xMi8wNy0xMDo1NzowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNS4xIFdpbmRvd3MiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NkRGM0FBNENBNzUwMTFFMTg3RUVENDc3MzNDODRBOEYiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NkRGM0FBNERBNzUwMTFFMTg3RUVENDc3MzNDODRBOEYiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo2REYzQUE0QUE3NTAxMUUxODdFRUQ0NzczM0M4NEE4RiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo2REYzQUE0QkE3NTAxMUUxODdFRUQ0NzczM0M4NEE4RiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqVW+oIAAAIeSURBVHjazJfNLgRBEMereoasIOGyibj4OnoTDp6AFxDPIXEiTuKyXgCJfRNHHycXFw5cxHarmhmy3VNj/sRuVNK7melfddVUVX8xEeVHvauLwLzhvScKNFphIucccQj9vZ3NLX01e3jWD+MWtam2c/npBF9+9s3DM2kIeEQfH6oQrC3OUWWzow6wSNG1tDDXFr3WDCEMlUaLP3VAcsJ0cHpJ74OBra15EwXlvHjuQ6hzCFNxeZbRVGfy61X3sIfVwP7J+Z8wRQ30ihroFhEovBW5vnukKjJR5rR7faVLA42QySFMzH3azMv35UOWOQljkaAhHQ1nHMUahzApFzlQieaQRSvyWfOajJ5yCNPExQ5kXFQnJ1Mn8PA0qnMIk3K2A1yFLRGfrAwWhzAWFzsgGpZSOp1MDmEMrlYDDlgGEQ4dK3Ig05yxvbq1cQhjcfUi/C5qoZlDGCMDxjQElCwOYVodkMKFdkKEQ8eq1QAiCIeOlUeLh8OUEK6NCU01ADkAcO4nEfg/DowxBQ1F6HTHNhYPpjYOYSwunoayeFjHKE7CaXEIY3G1GgjUrmRxCPP/Hcj0RBvaK9riEMbi8uEdSvu+XcEY4Bgb67PHlTuXg6bMRJ7/CTNsUx3pHp/1b+UwPeMHvukuUZ5w5FKpF1i9eIRfMF+cGM+IXna3N1b1We9jy9LmiUZ2LbS2gidp92pwQtq0tEkar7xJe/0QYAAFQ5kvEpljPQAAAABJRU5ErkJggg==" style="width: 192px; height: 192px;"></div></div>
                 </div>
@@ -79,8 +83,11 @@
       return { ShowDialog: false };
     },
     methods: {
-      Show: function() {
-        $(this.$el).modal('show');
+      show: function() {
+        this.ShowDialog = true;
+        this.$nextTick(function() {
+          $(this.$el).modal('show');
+        });
       }
     },
     mounted: function() {
@@ -97,5 +104,8 @@
     z-index: 1100;
     color: #333;
     font-size: 14px;
+  }
+  .popover-title {
+    padding: 6px;
   }
 </style>
