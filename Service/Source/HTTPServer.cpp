@@ -96,8 +96,14 @@ string HTTPRequest::SessionID() {
 string HTTPRequest::UserName() {
   return pUserName;
 }
-bool HTTPRequest::SetParams(string input, bool local) {
-  pJSONParams = json::parse(input, NULL, false);
+void HTTPRequest::AppendParams(const char *input, size_t* len) {
+  pPostData += string(input, *len);
+  *len = 0;
+  return;
+}
+bool HTTPRequest::ProcessParams(bool local) {
+  pJSONParams = json::parse(pPostData, NULL, false);
+  pPostData = "";
   if(!pJSONParams.is_discarded()) {
     if(local && pJSONParams["UserName"].is_string()) {
      pUserName = pJSONParams["UserName"];
@@ -223,50 +229,49 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
   }
   if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
     if(*upload_data_size != 0) {
-      struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
-      if(Request->SetParams(string(upload_data, *upload_data_size), (((sockaddr_in*)Addr)->sin_addr.s_addr == 0x0100007F)) == false) {
-        Request->FromString("No valid JSON request", MHD_HTTP_BAD_REQUEST);
-      } else {
-        if(strcmp(url, "/LogIn") == 0) {
-          json Params = Request->GetParams();
-          bool UpdateLastLogin = true;
-          if(Params["UpdateLastLogin"].is_boolean()) UpdateLastLogin = Params["UpdateLastLogin"];
-          if((Params["Password"].is_string() == false) || (Params["Username"].is_string() == false)) {
-            Request->FromString("'Password' and 'Username' params requiered", MHD_HTTP_BAD_REQUEST);
-          } else {
-            string User = Params["Username"];
-            string Pass = Params["Password"];
-            Request->ExecSentenceAsyncResult("SELECT lastlogin FROM users WHERE username = " + Request->Bind(User) + " AND password = MD5(" + Request->Bind(Pass) + ")");
-            json Response;
-            if(Request->FecthRow()) {
-              Response["Result"] = true;
-              Response["LastLogin"] = Request->ResultUInt64("lastlogin");
-              Request->ExecSentenceNoResult("UPDATE sessions SET username = " + Request->Bind(User) + " WHERE id = " + Request->Bind(Request->SessionID()) + "; " +
-                         (UpdateLastLogin ? "UPDATE users SET lastlogin = " + Request->Bind(Tools::GetTime()) + " WHERE username = " + Request->Bind(User) : string("")));
-            } else {
-              Response["Result"] = false;
-            }
-            Request->FromJSON(Response);
-          }  
+      Request->AppendParams(upload_data, upload_data_size);
+      return MHD_YES;
+    }
+    struct sockaddr *Addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
+    if(Request->ProcessParams((((sockaddr_in*)Addr)->sin_addr.s_addr == 0x0100007F)) == false) {
+      Request->FromString("No valid JSON request", MHD_HTTP_BAD_REQUEST);
+    } else {
+      if(strcmp(url, "/LogIn") == 0) {
+        json Params = Request->GetParams();
+        bool UpdateLastLogin = true;
+        if(Params["UpdateLastLogin"].is_boolean()) UpdateLastLogin = Params["UpdateLastLogin"];
+        if((Params["Password"].is_string() == false) || (Params["Username"].is_string() == false)) {
+          Request->FromString("'Password' and 'Username' params requiered", MHD_HTTP_BAD_REQUEST);
         } else {
-          if(Request->UserName().empty()) {
-            Request->FromString("Unauthorided access to API", MHD_HTTP_UNAUTHORIZED);
+          string User = Params["Username"];
+          string Pass = Params["Password"];
+          Request->ExecSentenceAsyncResult("SELECT lastlogin FROM users WHERE username = " + Request->Bind(User) + " AND password = MD5(" + Request->Bind(Pass) + ")");
+          json Response;
+          if(Request->FecthRow()) {
+            Response["Result"] = true;
+            Response["LastLogin"] = Request->ResultUInt64("lastlogin");
+            Request->ExecSentenceNoResult("UPDATE sessions SET username = " + Request->Bind(User) + " WHERE id = " + Request->Bind(Request->SessionID()) + "; " +
+                       (UpdateLastLogin ? "UPDATE users SET lastlogin = " + Request->Bind(Tools::GetTime()) + " WHERE username = " + Request->Bind(User) : string("")));
           } else {
-            bool Handled = false;
-            for(vector<Callback_t>::iterator it = pInstance->pCallbacks.begin() ; it != pInstance->pCallbacks.end(); ++it) {
-              if(it->HandleName.compare(url) == 0) {
-                it->Function(*Request);
-                Handled = true;
-                break;
-              }
-            }
-            if(Handled == false) Request->FromString("Method not found", MHD_HTTP_METHOD_NOT_ALLOWED);
+            Response["Result"] = false;
           }
+          Request->FromJSON(Response);
+        }  
+      } else {
+        if(Request->UserName().empty()) {
+          Request->FromString("Unauthorided access to API", MHD_HTTP_UNAUTHORIZED);
+        } else {
+          bool Handled = false;
+          for(vector<Callback_t>::iterator it = pInstance->pCallbacks.begin() ; it != pInstance->pCallbacks.end(); ++it) {
+            if(it->HandleName.compare(url) == 0) {
+              it->Function(*Request);
+              Handled = true;
+              break;
+            }
+          }
+          if(Handled == false) Request->FromString("Method not found", MHD_HTTP_METHOD_NOT_ALLOWED);
         }
       }
-      *upload_data_size = 0;
-      return MHD_YES;
-    } else {
       MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &Request->WriteFunction, Request, NULL);
       if(strcmp(url, "/LogIn") == 0) {
         string Cookie = "SESSION=" + Request->SessionID() +"; httponly; Path=/";

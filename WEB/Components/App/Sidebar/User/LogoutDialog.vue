@@ -37,7 +37,7 @@
   }
 </script>
 
-<style>
+<style scoped>
   .modal-dialog {
     z-index: 1100;
     color: #333;

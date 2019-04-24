@@ -65,6 +65,7 @@ void RunDaemon() {
   close(STDERR_FILENO);
 }
 int main(int argc, char** argv) {
+  setbuf(stdout, NULL);
   signal(SIGILL, SIG_IGN);
   string ConfigFileName = "/etc/openZmeter.conf";
   bool   Daemonize      = false;

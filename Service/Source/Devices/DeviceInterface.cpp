@@ -294,24 +294,23 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
     DBTariffs = req.ResultJSON("tariff");
   }
   TariffList Tariffs(DBTariffs, TimeZone);
-
   //Find start and end date to retrieve data
   uint64_t BillingFrom = Tariffs.BillFrom((LastSample > From) ? LastSample : From);
   uint64_t BillingTo = Tariffs.BillTo(To);
   //Retrieve active and reactive samples
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(Analyzer));
   req.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime > " + req.Bind(BillingFrom) + " AND sampletime <= " + req.Bind(BillingTo) + " ORDER BY sampletime ASC");
-  req.FecthRow();
+  bool MoreData = req.FecthRow();
   //Traverse all samples
   float AccActive = NAN;
   float AccReactive = NAN;
   float AccCost = NAN;
   for(uint64_t time = BillingFrom + 899999; time != BillingTo; time = time + 900000) {
     float Active = NAN, Reactive = NAN;
-    if(req.ResultUInt64("sampletime") == time) {
+    if((MoreData == true) && (req.ResultUInt64("sampletime") == time)) {
       Active = req.ResultFloat("active_power");
       Reactive = req.ResultFloat("reactive_power");
-      req.FecthRow();
+      MoreData = req.FecthRow();
     }
     Tariff *Tariff = Tariffs.Find(time);
     if((Tariff != NULL) && (Tariff->PushSample(time, Active, Reactive) == true) && ((time + 900000) != BillingTo)) continue;  //If under a tariff push samples until bill cycle ends or no more data!
