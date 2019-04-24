@@ -36,7 +36,8 @@ class HTTPRequest : public Database {
     int      ResultCode();
     void     CloseSession();
     void     FromFile(string filename);
-    bool     SetParams(string input, bool local);
+    void     AppendParams(const char *input, size_t *len);
+    bool     ProcessParams(bool local);
     json     GetParams();
     uint64_t GetTime();
     void     FromJSON(json obj);
