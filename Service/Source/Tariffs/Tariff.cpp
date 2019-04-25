@@ -263,8 +263,38 @@ json Tariff::GetConfig() {
 json Tariff::GetResume() {
   json Result;
   Result["Sampletime"] = pSampletime;
-  
-  
+  Result["Taxes"] = json::array();
+  float Total = pSumEnergyCost + pSumPowerCost;
+  for(vector<Tax_t>::iterator it = pTaxs.begin(); it != pTaxs.end(); it++) {
+    json Tax;
+    float Value = NAN;
+    if((it->Type == "PERCENT_ENERGY") || (it->Type == "PERCENT_POWER") || (it->Type == "PERCENT_ENERGY_POWER") || (it->Type == "FIXED_QUANTITY")) {
+      Tax["Name"]  = it->Name;
+      Tax["Type"]  = it->Type;
+      Tax["Value"] = it->Value;
+    }
+    if(it->Type == "PERCENT_ENERGY") Value = pSumEnergyCost * (it->Value / 100.0);
+    if(it->Type == "PERCENT_POWER") Value = pSumPowerCost * (it->Value / 100.0);
+    if(it->Type == "PERCENT_ENERGY_POWER") Value = (pSumEnergyCost + pSumPowerCost) * (it->Value / 100.0);
+    if(it->Type == "FIXED_QUANTITY") Value = it->Value / 96.0;
+    if(isnan(Value) == false) {
+      Tax["Total"] = Value;
+      Total += Value;
+      Result["Taxes"].push_back(Tax);
+    }
+  }
+  float Tmp = 0.0;
+  for(vector<Tax_t>::iterator it = pTaxs.begin(); it != pTaxs.end(); it++) {
+    if(it->Type == "PERCENT_TOTAL") {
+      json Tax;
+      Tax["Name"]  = it->Name;
+      Tax["Type"]  = it->Type;
+      Tax["Value"] = it->Value;
+      Tax["Total"] = Total * (it->Value / 100.0);
+      Tmp += Total * (it->Value / 100.0);
+    }
+  }
+  Result["Total"] = Total + Tmp;
   return Result;
 }
 bool Tariff::PushSample(const uint64_t time, const float active, const float reactive) {
@@ -298,6 +328,8 @@ bool Tariff::PopSample(uint64_t &time, float &active, float &reactive, string &p
   contractedPower  = pPeriods[Sample.Period].ContractedPower;
   float EnergyCost = pPeriods[Sample.Period].EnergyModule->PopSample(Sample.Active, Sample.Reactive);
   float PowerCost  = pPeriods[Sample.Period].PowerModule->PopSample(Sample.Active, Sample.Reactive);
+  pSumEnergyCost += EnergyCost;
+  pSumPowerCost  += PowerCost;
   float Cost = EnergyCost + PowerCost;
   for(vector<Tax_t>::iterator it = pTaxs.begin(); it != pTaxs.end(); it++) {
     if(it->Type == "PERCENT_ENERGY") Cost += EnergyCost * (it->Value / 100.0);
@@ -305,9 +337,10 @@ bool Tariff::PopSample(uint64_t &time, float &active, float &reactive, string &p
     if(it->Type == "PERCENT_ENERGY_POWER") Cost += (EnergyCost + PowerCost) * (it->Value / 100.0);
     if(it->Type == "FIXED_QUANTITY") Cost += it->Value / 96.0;
   }
+  float Tmp = 0.0;
   for(vector<Tax_t>::iterator it = pTaxs.begin(); it != pTaxs.end(); it++) {
-    if(it->Type == "PERCENT_TOTAL") Cost += Cost * (it->Value / 100.0);
+    if(it->Type == "PERCENT_TOTAL") Tmp += Cost * (it->Value / 100.0);
   }
-  cost = Cost;
+  cost = Cost + Tmp;
   return true;
 }

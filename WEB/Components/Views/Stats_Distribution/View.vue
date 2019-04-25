@@ -106,13 +106,6 @@
         var Year = moment().year(year);
         $.ajax({ url: "getPrices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: Year.endOf('year').valueOf() - Year.startOf('year').valueOf(), To: Year.endOf('year').valueOf(), Aggreg: '1H', LastSample: 0, Analyzer: Analyzer.ID } ),
           success: function(result) {
-//            UpdateWeeks(visibleSeries);
-//    UpdateMonths(visibleSeries);
-//    UpdateWeekDays(visibleSeries);
-//    UpdateHours(visibleSeries);
-    
-    
-    
             this.$refs.months.SetData(result);
             this.$refs.day.SetData(result);
             this.$refs.calendar.SetData(result);

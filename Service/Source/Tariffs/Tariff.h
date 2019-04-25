@@ -18,7 +18,6 @@ class Tariff {
   friend class TariffList;
   public :
     typedef struct {
-      //uint64_t Time;
       float    Active;
       float    Reactive;
       uint8_t  Period;
@@ -28,8 +27,6 @@ class Tariff {
       float                 ContractedPower;
       float                 PowerCost;
       float                 EnergyCost;
-//      string                PowerMode;
-//      string                ReactiveMode;
       string                Color;
       TariffPowerPlugin    *PowerModule;
       TariffEnergyPlugin   *EnergyModule;
