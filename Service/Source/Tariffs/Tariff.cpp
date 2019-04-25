@@ -263,6 +263,27 @@ json Tariff::GetConfig() {
 json Tariff::GetResume() {
   json Result;
   Result["Sampletime"] = pSampletime;
+  Result["Periods"] = json::array();
+  for(vector<Period_t>::iterator it = pPeriods.begin(); it != pPeriods.end(); it++) {
+    json Period, Energy, Power;
+    TariffEnergyPlugin::CycleStats_t EnergyStats = it->EnergyModule->CycleStats();
+    Energy["Consumed"]   = EnergyStats.Consumed;
+    Energy["Price"]      = EnergyStats.Price;
+    Energy["Other"]      = EnergyStats.Other;
+    Energy["OtherCosts"] = EnergyStats.OtherCosts;
+    Energy["Total"]      = EnergyStats.Total;
+    Period["Energy"]     = Energy;
+    TariffPowerPlugin::CycleStats_t PowerStats = it->PowerModule->CycleStats();
+    Power["Consumed"]        = PowerStats.Contracted;
+    Power["Days"]            = PowerStats.Days;
+    Power["Cost"]            = PowerStats.Cost;
+    Power["ContractedCosts"] = PowerStats.ContractedCosts;
+    Power["Other"]           = PowerStats.Other;
+    Power["OtherCosts"]      = PowerStats.OtherCosts;
+    Power["Total"]           = PowerStats.Total;
+    Period["Power"]          = Power;
+    Result["Periods"].push_back(Period);
+  }
   Result["Taxes"] = json::array();
   float Total = pSumEnergyCost + pSumPowerCost;
   for(vector<Tax_t>::iterator it = pTaxs.begin(); it != pTaxs.end(); it++) {
