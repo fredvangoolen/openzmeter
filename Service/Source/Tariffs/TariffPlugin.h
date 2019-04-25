@@ -15,10 +15,8 @@ class TariffPowerPlugin {
       float    Contracted;
       uint32_t Days;
       float    Cost;
-      float    ContractedCosts;
       string   Other;
       float    OtherCosts;
-      float    Total;      
     } CycleStats_t;
   private :
     typedef TariffPowerPlugin* (*Func_t)();
@@ -51,10 +49,8 @@ class TariffEnergyPlugin {
     typedef struct {
       float    Consumed;
       float    Cost;
-      float    ConsumedCosts;
       string   Other;
       float    OtherCosts;
-      float    Total;
     } CycleStats_t;
   private :
     typedef TariffEnergyPlugin* (*Func_t)();

@@ -10,9 +10,9 @@
             </div>
           </div>
           <div class="panel-body">
-            <!--spinner v-if="ShowSpinner"></spinner-->
+            <spinner v-if="ShowSpinner"></spinner>
             <summary-graph ref="summary"></summary-graph>
-            <bill></bill>
+            <bill v-for="bill in Bills" :bill="bill"></bill>
           </div>
         </div>
       </div>
@@ -29,7 +29,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data () {
-      return { ShowSpinner: true };
+      return { ShowSpinner: true, Bills: [] };
     },
     methods: {
       YearChanged: function(year) {
@@ -39,14 +39,10 @@
         var Year = moment().year(year);
         $.ajax({ url: "getPrices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: Year.endOf('year').valueOf() - Year.startOf('year').valueOf(), To: Year.endOf('year').valueOf(), Aggreg: '1H', LastSample: 0, Analyzer: Analyzer.ID } ),
           success: function(result) {
-            
-//            var Bills = [];
-//            for()
-            
-    //Agrupo por periodos de facturacion
-    
-    this.$refs.table.SetData(result);
-    
+            this.Bills = result.Bills;
+            var Summary = [];
+            for(var i = 0; i < result.Bills.length; i++) Summary.push([i, result.Bills[i].Total]); //result.Bills[i].Sampletime, 
+            this.$refs.summary.SetData(Summary);
             this.ShowSpinner = false;
           }.bind(this)
         });
