@@ -112,3 +112,9 @@
     components: { Spinner, ToolbarPhases, ToolbarOptions, ToolbarTools, Graph }
   }
 </script>
+
+<style scoped>  
+  .header-text {
+    font-size: 14px;
+  }
+</style>

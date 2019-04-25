@@ -25,8 +25,6 @@ TariffPower_NONE::CycleStats_t TariffPower_NONE::CycleStats() {
   pStats.Other = "";
   pStats.OtherCosts = 0.0;
   pStats.Days = pLen / 96;
-  pStats.ContractedCosts = pStats.Cost * pStats.Contracted * pStats.Days;
-  pStats.Total = pStats.ContractedCosts + pStats.OtherCosts;
   pLen = 0;
   return pStats;
 }
@@ -40,14 +38,20 @@ TariffEnergyPlugin *TariffEnergy_NONE::Instance() {
 TariffEnergy_NONE::~TariffEnergy_NONE() {
 }
 void TariffEnergy_NONE::Config(const float cost) {
-  pCost = cost;
+  pStats.Cost = cost;
 }
 void TariffEnergy_NONE::PushSample(const float active, const float reactive) {
+  if(pLen == 0) pStats.Consumed = 0.0;
+  pLen++;
+  pStats.Consumed += active;
 }
 float TariffEnergy_NONE::PopSample(const float active, const float reactive) {
-  return (active / 4.0) * pCost;
+  return (active / 4.0) * pStats.Cost;
 }
 TariffEnergy_NONE::CycleStats_t TariffEnergy_NONE::CycleStats() {
+  pStats.Other = "";
+  pStats.OtherCosts = 0.0;
+  pLen = 0;
   return pStats;
 }
 //----------------------------------------------------------------------------------------------------------------------
