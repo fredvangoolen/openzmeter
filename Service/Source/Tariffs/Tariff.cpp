@@ -273,7 +273,7 @@ json Tariff::GetResume() {
     Energy["OtherCosts"] = EnergyStats.OtherCosts;
     Period["Energy"]     = Energy;
     TariffPowerPlugin::CycleStats_t PowerStats = it->PowerModule->CycleStats();
-    Power["Consumed"]        = PowerStats.Contracted;
+    Power["Contracted"]      = PowerStats.Contracted;
     Power["Days"]            = PowerStats.Days;
     Power["Cost"]            = PowerStats.Cost;
     Power["Other"]           = PowerStats.Other;

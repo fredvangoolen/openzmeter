@@ -862,6 +862,17 @@ export function Round2Plain(value) {
     return Integer.toString() + '.' + Fraction;
   }
 }
+export function Round6Plain(value) {
+  if(isNaN(parseFloat(value)) || !isFinite(value)) return "0.000000";
+  value = Math.round(value * 1000000);
+  var Integer = Math.trunc(value / 1000000);
+  var Fraction = Math.abs(value % 1000000);
+  Fraction = Fraction.toString();
+  while(Fraction.length < 6) Fraction = '0' + Fraction;
+  return Integer.toString() + '.' + Fraction;
+}
+
+
 
 //function User_Manager() {
 //  var Self = this;

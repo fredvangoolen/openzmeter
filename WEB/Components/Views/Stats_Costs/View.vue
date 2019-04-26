@@ -12,7 +12,7 @@
           <div class="panel-body">
             <spinner v-if="ShowSpinner"></spinner>
             <summary-graph ref="summary"></summary-graph>
-            <bill v-for="bill in Bills" :bill="bill"></bill>
+            <bill v-for="bill in Bills" :bill="bill" :currency="Currency"></bill>
           </div>
         </div>
       </div>
@@ -29,7 +29,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data () {
-      return { ShowSpinner: true, Bills: [] };
+      return { ShowSpinner: true, Bills: [], Currency: '€' };
     },
     methods: {
       YearChanged: function(year) {
@@ -40,9 +40,8 @@
         $.ajax({ url: "getPrices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: Year.endOf('year').valueOf() - Year.startOf('year').valueOf(), To: Year.endOf('year').valueOf(), Aggreg: '1H', LastSample: 0, Analyzer: Analyzer.ID } ),
           success: function(result) {
             this.Bills = result.Bills;
-            var Summary = [];
-            for(var i = 0; i < result.Bills.length; i++) Summary.push([i, result.Bills[i].Total]); //result.Bills[i].Sampletime, 
-            this.$refs.summary.SetData(Summary);
+//            this.Currency = result.Currency;
+            this.$refs.summary.SetData(result.Bills);
             this.ShowSpinner = false;
           }.bind(this)
         });
