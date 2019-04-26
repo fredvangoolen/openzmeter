@@ -43,7 +43,7 @@ void TariffEnergy_NONE::Config(const float cost) {
 void TariffEnergy_NONE::PushSample(const float active, const float reactive) {
   if(pLen == 0) pStats.Consumed = 0.0;
   pLen++;
-  pStats.Consumed += active;
+  pStats.Consumed += active / 4.0;
 }
 float TariffEnergy_NONE::PopSample(const float active, const float reactive) {
   return (active / 4.0) * pStats.Cost;

@@ -329,7 +329,10 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
       AccReactive = isnan(AccReactive) ? Reactive : isnan(Reactive) ? AccReactive : AccReactive + Reactive;
       AccCost = isnan(AccCost) ? Cost : isnan(Cost) ? AccCost : AccCost + Cost;
       if(Aggreg == "1H") {
-        if((Time % 3600000) != 3599999) continue;
+        if((Time % 3600000) != 3599999) {
+          if(Tariff != NULL) continue;
+          break;
+        }
         AccActive = AccActive / 4.0;
         AccReactive = AccReactive / 4.0;
       }

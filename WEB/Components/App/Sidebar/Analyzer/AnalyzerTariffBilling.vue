@@ -43,6 +43,7 @@
 <script>
   import OptionPicker from 'Components/OptionPicker.vue';
   import moment from 'JS/moment.js';
+  import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
       return { Show: false, Day: 0, Period: 0, TypeNames: ['Total', 'Energy', 'Power', 'Energy+Power', 'Fixed'],
@@ -51,15 +52,7 @@
               };
     },
     methods: {
-      Round6: function(value) {
-        if(isNaN(parseFloat(value)) || !isFinite(value)) return "0.000000";
-        value = Math.round(value * 1000000);
-        var Integer = Math.trunc(value / 1000000);
-        var Fraction = Math.abs(value % 1000000);
-        Fraction = Fraction.toString();
-        while(Fraction.length < 6) Fraction = '0' + Fraction;
-        return Integer.toString() + '.' + Fraction;
-      },
+      Round6: oZm.Round6Plain,
       Load: function(tariff) {
         if(tariff.Config.Billing.length < 1) {
           this.Day = moment(tariff.StartDate).date() - 1;

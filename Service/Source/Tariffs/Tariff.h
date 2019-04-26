@@ -64,7 +64,6 @@ class Tariff {
     float             pSumPowerCost;
     float             pSumEnergyCost;
   private :
-//    float   CalcTaxs();
     uint8_t FindPeriod(uint64_t time);
   public :
     Tariff(uint64_t start, uint64_t end, string tz);

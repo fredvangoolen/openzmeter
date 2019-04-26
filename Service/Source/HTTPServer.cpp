@@ -220,7 +220,6 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     }
     MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &Request->WriteFunction, Request, NULL);
     MHD_add_response_header(Response, MHD_HTTP_HEADER_CACHE_CONTROL, "public, max-age=2592000");
-    MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_LENGTH, to_string(Request->size()).c_str());
     MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_TYPE, Request->MimeType().c_str());
     MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_ENCODING, Request->Deflate() ? "deflate" : "");
     int Return = MHD_queue_response(connection, Request->ResultCode(), Response);
@@ -278,7 +277,6 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         MHD_add_response_header(Response, MHD_HTTP_HEADER_SET_COOKIE, Cookie.c_str());
       }
       MHD_add_response_header(Response, "Process-Time", string(to_string(Request->GetTime()) + " ms").c_str());
-      MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_LENGTH, to_string(Request->size()).c_str());
       MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_TYPE, Request->MimeType().c_str());
       MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_ENCODING, Request->Deflate() ? "deflate" : "");
       int Return = MHD_queue_response(connection, Request->ResultCode(), Response);
