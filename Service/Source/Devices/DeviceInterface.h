@@ -24,6 +24,7 @@ class Device {
     virtual string             Driver() = 0;
     virtual string             Name() = 0;
     virtual bool               Config(json config) = 0;
+    virtual json               Config() = 0;
     virtual bool               Start() = 0;
     virtual bool               Stop() = 0;
   public :
@@ -37,8 +38,11 @@ class DeviceManager {
     static vector<Device*> pDevices;
   private :
     static void GetDevicesCallback(HTTPRequest &req);
+    static void GetDeviceCallback(HTTPRequest &req);
     static void StartDeviceCallback(HTTPRequest &req);
     static void StopDeviceCallback(HTTPRequest &req);
+    static void SetDeviceCallback(HTTPRequest &req);
+    
     static void GetAnalyzersCallback(HTTPRequest &req);
     static void GetSeriesCallback(HTTPRequest &req);
     static void GetSeriesNowCallback(HTTPRequest &req);

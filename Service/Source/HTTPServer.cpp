@@ -76,7 +76,7 @@ void HTTPRequest::FromFile(string name) {
   //    MHD_add_response_header(response, "Content-Type", "font/woff2");
     else {
       pMimeType = "application/octet-stream";
-      LOGFile::Instance()->Debug("No mimetype defined for request '%s'\n", name.c_str());
+      LOGFile::Debug("No mimetype defined for request '%s'\n", name.c_str());
     }
   }
 }
@@ -154,25 +154,29 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
   }
 }
 //----------------------------------------------------------------------------------------------------------------------
-HTTPServer *HTTPServer::pInstance = NULL;
+
 vector<HTTPServer::Callback_t> HTTPServer::pCallbacks;
 //----------------------------------------------------------------------------------------------------------------------
-HTTPServer::HTTPServer(json config) {
-  if(pInstance != NULL) return;
+HTTPServer::HTTPServer() {
   pDaemon = NULL;
+}
+bool HTTPServer::Config() {
   uint16_t Port = 8080;
-  if(config["Port"].is_number_unsigned()) Port = config["Port"];
+  json Config = ConfigManager::ReadConfig("/HTTPServer");
+  if(!Config.is_object()) {
+    LOGFile::Error("No http server configuration found\n");
+    return false;
+  }
+  if(Config["Port"].is_number_unsigned()) Port = Config["Port"];
   pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL | MHD_USE_PIPE_FOR_SHUTDOWN , Port, NULL, NULL, 
                              &HandleClient, NULL,
                              MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int)60,
-                             MHD_OPTION_CONNECTION_LIMIT, (unsigned int)255, 
                              MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
                              MHD_OPTION_END);
-  pInstance = this;
+  return (pDaemon != NULL);
 }
 HTTPServer::~HTTPServer() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
-  pInstance = NULL;
 }
 void HTTPServer::RegisterCallback(string handleName, HTTPServer::Func_t function) {
   Callback_t Item = {handleName, function};
@@ -183,7 +187,7 @@ void HTTPServer::RemoveExpiredSessions() {
   DB.ExecSentenceNoResult("DELETE FROM sessions WHERE (timestamp < " + DB.Bind(Tools::GetTime() - 1296000000) + " AND username IS NOT NULL) OR (timestamp < " + DB.Bind(Tools::GetTime() - 60000) + " AND username IS NULL)");
 }
 int HTTPServer::SendRedirect(struct MHD_Connection *connection, string url) {
-  LOGFile::Instance()->Debug("Redirecting client to '%s'\n", url);
+  LOGFile::Debug("Redirecting client to '%s'\n", url);
   struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
   MHD_add_response_header(response, "Location", url.c_str());
   int Return = MHD_queue_response(connection, MHD_HTTP_SEE_OTHER, response);
@@ -196,7 +200,7 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
 int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
   HTTPRequest *Request = (HTTPRequest*)*ptr;
   if(Request == NULL) {
-    LOGFile::Instance()->Debug("HTTP %s request '%s'\n", method, url);
+    LOGFile::Debug("HTTP %s request '%s'\n", method, url);
     string FilePath;
     char *AcceptEncoding = (char*)MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT_ENCODING);
     char *Cookie         = (char*)MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");
@@ -261,7 +265,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
           Request->FromString("Unauthorided access to API", MHD_HTTP_UNAUTHORIZED);
         } else {
           bool Handled = false;
-          for(vector<Callback_t>::iterator it = pInstance->pCallbacks.begin() ; it != pInstance->pCallbacks.end(); ++it) {
+          for(vector<Callback_t>::iterator it = pCallbacks.begin() ; it != pCallbacks.end(); ++it) {
             if(it->HandleName.compare(url) == 0) {
               it->Function(*Request);
               Handled = true;

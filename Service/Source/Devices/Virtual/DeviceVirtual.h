@@ -26,6 +26,7 @@ class DeviceVirtual : public Device {
     static void *Capture_Thread(void *args);
   private :
     bool               Config(json config);
+    json               Config();
     AnalyzerInterface *FindAnalyzer(string serial);
     uint32_t           AnalyzersCount();
     string             Serial();

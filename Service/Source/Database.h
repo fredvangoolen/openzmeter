@@ -44,5 +44,5 @@ class Database {
     Database(string schema = "public");
     virtual ~Database();
   public :
-    static bool Config(json config);
+    static bool Config();
 };

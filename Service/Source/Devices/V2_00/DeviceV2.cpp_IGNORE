@@ -28,7 +28,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
     if(This->pUSBState == USB_RESET) continue;
     //Si es un bloque de inicio de secuencia reinicio los contadores
     if(Pkg[0] == -32768) {
-      if(This->pUSBState == USB_SYNC) LOGFile::Instance()->Warning("DeviceV2 lost sync. Try reduce capture speed\n");
+      if(This->pUSBState == USB_SYNC) LOGFile::Warning("DeviceV2 lost sync. Try reduce capture speed\n");
       This->pUSBState = USB_SYNC;
       This->pChannel = 0;
       Count++;
@@ -42,7 +42,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
       if(This->pChannel != This->pChannelCount) continue;
       if(This->BuffersAppend() == false) {
         //NO HAY SITIO!!! que hago?
-        LOGFile::Instance()->Error("Capture buffer overflow! Posible lost of samples\n");
+        LOGFile::Error("Capture buffer overflow! Posible lost of samples\n");
       }
       This->pChannel = 0;
     }
@@ -104,11 +104,11 @@ bool DeviceV2::BuffersAppend() {
 void *DeviceV2::Capture_Thread(void *args) {
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {
-    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   } else {
     struct sched_param Param;
     Param.sched_priority = Prio - 5;
-    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   }
   DeviceV2 *This = (DeviceV2*)args;
   uint8_t BufferIN[DEVICEV2_TRANSFERS][8192];
@@ -117,18 +117,18 @@ void *DeviceV2::Capture_Thread(void *args) {
   while(!This->pTerminate) {
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(NULL, &tv, NULL);
-    if(Result < LIBUSB_SUCCESS) LOGFile::Instance()->Error("libusb_handle_events_timeout_completed returns code %d\n", Result);
+    if(Result < LIBUSB_SUCCESS) LOGFile::Error("libusb_handle_events_timeout_completed returns code %d\n", Result);
     if(This->pNewDevice != NULL) {
       struct libusb_device_descriptor Descriptor;
       Result = libusb_get_device_descriptor(This->pNewDevice, &Descriptor);
       if(Result < LIBUSB_SUCCESS) {
-        LOGFile::Instance()->Error("libusb_get_device_descriptor return code %d\n", Result);
+        LOGFile::Error("libusb_get_device_descriptor return code %d\n", Result);
         This->pNewDevice = NULL;
         continue;
       }
       Result = libusb_open(This->pNewDevice, &This->pDeviceHandle);
       if(Result != LIBUSB_SUCCESS) {
-        LOGFile::Instance()->Error("libusb_open return %d\n", Result);
+        LOGFile::Error("libusb_open return %d\n", Result);
         This->pDeviceHandle = NULL;
         This->pNewDevice = NULL;
         continue;
@@ -136,7 +136,7 @@ void *DeviceV2::Capture_Thread(void *args) {
       char Serial[256];
       Result = libusb_get_string_descriptor_ascii(This->pDeviceHandle, Descriptor.iSerialNumber, (unsigned char*)Serial, sizeof(Serial));
       if(Result < 0) {
-        LOGFile::Instance()->Error("libusb_get_string_descriptor_ascii returns %d\n", Result);
+        LOGFile::Error("libusb_get_string_descriptor_ascii returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL; 
         This->pNewDevice = NULL;
@@ -150,7 +150,7 @@ void *DeviceV2::Capture_Thread(void *args) {
       }        
       Result = libusb_kernel_driver_active(This->pDeviceHandle, 0);
       if(Result < LIBUSB_SUCCESS) {
-        LOGFile::Instance()->Error("libusb_kernel_driver_active returns %d\n", Result);
+        LOGFile::Error("libusb_kernel_driver_active returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL; 
         This->pNewDevice = NULL;
@@ -158,7 +158,7 @@ void *DeviceV2::Capture_Thread(void *args) {
       } else if(Result == 1) { 
         Result = libusb_detach_kernel_driver(This->pDeviceHandle, 0);
         if(Result < LIBUSB_SUCCESS) {
-          LOGFile::Instance()->Error("libusb_detach_kernel_driver returns %d\n", Result);
+          LOGFile::Error("libusb_detach_kernel_driver returns %d\n", Result);
           libusb_close(This->pDeviceHandle);
           This->pDeviceHandle = NULL; 
           This->pNewDevice = NULL;
@@ -169,7 +169,7 @@ void *DeviceV2::Capture_Thread(void *args) {
       }
       Result = libusb_claim_interface(This->pDeviceHandle, 0);
       if(Result != LIBUSB_SUCCESS) {
-        LOGFile::Instance()->Error("libusb_claim_interface returns %d\n", Result);
+        LOGFile::Error("libusb_claim_interface returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL; 
         This->pNewDevice = NULL;
@@ -183,7 +183,7 @@ void *DeviceV2::Capture_Thread(void *args) {
         Result |= libusb_submit_transfer(TransferIN[i]);
       }
       if(Result != LIBUSB_SUCCESS) {
-        LOGFile::Instance()->Error("libusb_submit_transfer returns %d\n", Result);
+        LOGFile::Error("libusb_submit_transfer returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL; 
         This->pNewDevice = NULL;
@@ -193,12 +193,12 @@ void *DeviceV2::Capture_Thread(void *args) {
       This->pNewDevice = NULL;
       This->pUSBState = USB_RESET;
       int Error = libusb_control_transfer(This->pDeviceHandle, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0x01, 0x0000, 0x0000, NULL, 0, 0);
-      if(Error < 0) LOGFile::Instance()->Error("Can not stop device with serial %s (%d)\n", This->pSerial, Error);
+      if(Error < 0) LOGFile::Error("Can not stop device with serial %s (%d)\n", This->pSerial, Error);
       usleep(1000000);
       This->pUSBState = USB_WAIT;
       float Conf[7] = {This->pVoltageOffset[0], This->pCurrentOffset[0], This->pVoltageOffset[1], This->pCurrentOffset[1], This->pVoltageOffset[2], This->pCurrentOffset[2], This->pCurrentOffset[3]};
       Error = libusb_control_transfer(This->pDeviceHandle, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0x00, (This->pChannelMask << 8) | 0x0E, 0x0000, (uint8_t*)Conf, sizeof(Conf), 0);
-      if(Error < 0) LOGFile::Instance()->Error("Can not setup device with serial %s (%d)\n", This->pSerial, Error);
+      if(Error < 0) LOGFile::Error("Can not setup device with serial %s (%d)\n", This->pSerial, Error);
     }
   }
   return NULL;
@@ -242,19 +242,19 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
   if((json_object_object_get_ex(config, "NominalVoltage", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalVoltage = json_object_get_double(Find);
   if((json_object_object_get_ex(config, "NominalFrequency", &Find) == true) && (json_object_get_type(Find) == json_type_double)) NominalFrequency = json_object_get_double(Find);
   if(Tools::JSONArrayFloat(config, (char*)"VoltageGain", This->pVoltageGain, 3) == false) {
-    LOGFile::Instance()->Error("CaptureV2: Voltage gain must have 3 double values\n");
+    LOGFile::Error("CaptureV2: Voltage gain must have 3 double values\n");
     return NULL;
   }
   if(Tools::JSONArrayFloat(config, "VoltageOffset", This->pVoltageOffset, 3) == false) {
-    LOGFile::Instance()->Error("DeviceV2: Voltage offset must have 3 double values\n");
+    LOGFile::Error("DeviceV2: Voltage offset must have 3 double values\n");
     return NULL;
   }
   if(Tools::JSONArrayFloat(config, "CurrentGain", This->pCurrentGain, 4) == false) {
-    LOGFile::Instance()->Error("DeviceV2: current gain must have 4 double values\n");
+    LOGFile::Error("DeviceV2: current gain must have 4 double values\n");
     return NULL;
   }
   if(Tools::JSONArrayFloat(config, "CurrentOffset", This->pCurrentOffset, 4) == false) {
-    LOGFile::Instance()->Error("DeviceV2: current offset must have 4 double values\n");
+    LOGFile::Error("DeviceV2: current offset must have 4 double values\n");
     return NULL;
   }
   This->pBuffer.Reset(DEVICEV2_BUFFERSECONDS * This->pADCSamplerate / This->pOversample);
@@ -262,7 +262,7 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
 //  This->pVoltageSamples = (float*)malloc(sizeof(float) * This->pBuffLen);
 //  This->pCurrentSamples = (float*)malloc(sizeof(float) * This->pBuffLen);
 //  if((This->pVoltageSamples == NULL) || (This->pCurrentSamples == NULL)) {
-//    LOGFile::Instance()->Error("CaptureV2: Can not allocate memory for capture buffers\n");
+//    LOGFile::Error("CaptureV2: Can not allocate memory for capture buffers\n");
 //    return NULL;
 //  }  
   if((json_object_object_get_ex(config, "Outputs", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
@@ -277,7 +277,7 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
         bool UseNeutral = true;
         if((json_object_object_get_ex(Output, "NeutralCurrent", &Find2) == true) && (json_object_get_type(Find2) == json_type_boolean)) UseNeutral = json_object_get_boolean(Find2);
         if(((UseNeutral == true) && (This->pChannelMask != 0)) || ((UseNeutral == false) && ((This->pChannelMask & 0x2A) != 0))) {
-          LOGFile::Instance()->Error("CaptureV2: Invalid output config, same current channel can not be used twice\n");
+          LOGFile::Error("CaptureV2: Invalid output config, same current channel can not be used twice\n");
           return NULL;  
         }
         This->pChannelMask = This->pChannelMask | ((UseNeutral == true) ? 0x7F : 0x7E);
@@ -307,7 +307,7 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
             VoltageMask = 0x04;
             Analyzer.OffsetV = 2;
           } else {
-            LOGFile::Instance()->Error("CaptureV2: Invalid channel, try 'R', 'S' or 'T'\n");
+            LOGFile::Error("CaptureV2: Invalid channel, try 'R', 'S' or 'T'\n");
             return NULL;
           }
         }
@@ -327,12 +327,12 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
             CurrentMask = 0x01;
             Analyzer.OffsetC = 3;
           } else {
-            LOGFile::Instance()->Error("CaptureV2: Invalid channel, try 'R', 'S', 'T' or 'N'\n");
+            LOGFile::Error("CaptureV2: Invalid channel, try 'R', 'S', 'T' or 'N'\n");
             return NULL;
           }
         }
         if((This->pChannelMask & CurrentMask) != 0) {
-          LOGFile::Instance()->Error("CaptureV2: Invalid output config, same current channel can not be used twice\n");
+          LOGFile::Error("CaptureV2: Invalid output config, same current channel can not be used twice\n");
           return NULL;
         }
         This->pChannelMask = This->pChannelMask | CurrentMask | VoltageMask;
@@ -341,7 +341,7 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
         Analyzer.Analyzer = new AnalyzerSoft(This->pADCSamplerate / This->pOversample, Analyzer.ID, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
         This->pAnalyzers.push_back(Analyzer);
       } else {
-        LOGFile::Instance()->Error("CaptureV2: Invalid output config, Mode must be one '1Phase' or '3Phase'\n");
+        LOGFile::Error("CaptureV2: Invalid output config, Mode must be one '1Phase' or '3Phase'\n");
         return NULL;
       }
     }
@@ -365,17 +365,17 @@ DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
   }
   int Error = libusb_init(NULL);
   if(Error < 0) {
-    LOGFile::Instance()->Error("Can not open libUSB...\n");
+    LOGFile::Error("Can not open libUSB...\n");
     return NULL;
   }
   if(pthread_create(&This->pCaptureThread, NULL, Capture_Thread, This) != 0) {
-    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(NULL);
     return NULL;
   }
   Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV2_VID, DEVICEV2_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, This, NULL);
   if(Error < 0) {
-    LOGFile::Instance()->Error("Failed to register libUSB callback\n");
+    LOGFile::Error("Failed to register libUSB callback\n");
     This->pTerminate = true;
     pthread_join(This->pCaptureThread, NULL);
     return NULL;

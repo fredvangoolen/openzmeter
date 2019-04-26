@@ -32,7 +32,7 @@ void NTP::Stop() {
 void NTP::Start() {
   if(pThread != 0) return;
   if(pthread_create(&pThread, NULL, NTP_Thread, NULL) != 0) {
-    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pThread = 0;
   }
 }
@@ -40,7 +40,7 @@ void *NTP::NTP_Thread(void *args) {
   pthread_setname_np(pInstance->pThread, "NTP_Client");
   int Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if(Socket < 0) {
-    LOGFile::Instance()->Error("NTP Client can not open socket\n");
+    LOGFile::Error("NTP Client can not open socket\n");
     return NULL;
   }
   NTP_Packet Packet;
@@ -48,7 +48,7 @@ void *NTP::NTP_Thread(void *args) {
   Timeout.tv_sec  = 0;
   Timeout.tv_usec = 100000;
   if(setsockopt(Socket, SOL_SOCKET, SO_RCVTIMEO, &Timeout, sizeof(Timeout)) < 0) {
-    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL;
   }
   while(!pInstance->pTerminate) {
@@ -56,7 +56,7 @@ void *NTP::NTP_Thread(void *args) {
     Packet.li_vn_mode = 0x1B;
     hostent *Server = gethostbyname(pInstance->pServer.c_str());
     if(Server == NULL) {
-      LOGFile::Instance()->Error("NTP server can not be resolved\n");
+      LOGFile::Error("NTP server can not be resolved\n");
       sleep(10);
       continue;
     }
@@ -66,12 +66,12 @@ void *NTP::NTP_Thread(void *args) {
     ServerAddr.sin_addr.s_addr = *((unsigned long*) Server->h_addr);
     ServerAddr.sin_port = htons(123);
     if(sendto(Socket, &Packet, sizeof(NTP_Packet), 0, (sockaddr *)&ServerAddr, sizeof(ServerAddr)) < 0) {
-      LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
       sleep(10);
       continue;
     }
     if(read(Socket, &Packet, sizeof(NTP_Packet)) != sizeof(NTP_Packet)) {
-      LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
       sleep(10);
       continue;
     }
@@ -80,7 +80,7 @@ void *NTP::NTP_Thread(void *args) {
     timeval TimeVal;
     TimeVal.tv_sec  = Packet.txTm_s - 2208988800ull;
     if(Packet.txTm_f != 0) TimeVal.tv_usec = 0xFFFFFFFF / (Packet.txTm_f / 1000);
-    if(settimeofday(&TimeVal, NULL) != 0) LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    if(settimeofday(&TimeVal, NULL) != 0) LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     sleep(10);
   }
   close(Socket);
@@ -146,18 +146,18 @@ void NTP::SetTimeSettingsCallback(HTTPRequest &req) {
 //        fclose(File);
 //      } else {
 //        Error = true;
-//        LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//        LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
 //      }
 //      if(unlink("/etc/localtime") != 0) {
 //        char Zone[256];
 //        snprintf(Zone, sizeof(Zone), "/usr/share/zoneinfo/%s", (char*)json_object_get_string(JSON_Val));
 //        if(symlink(Zone, "/etc/localtime") != 0) {
 //          Error = true;
-//          LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//          LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
 //        }
 //      } else {
 //        Error = true;
-//        LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//        LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
 //      }
 //    } else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Time") == 0)) {
 //      uint64_t Time = json_object_get_int64(JSON_Val);
@@ -166,7 +166,7 @@ void NTP::SetTimeSettingsCallback(HTTPRequest &req) {
 //      TimeVal.tv_usec = Time % 1000;
 //      if(settimeofday(&TimeVal, NULL) != 0) {
 //        Error = true;
-//        LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//        LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
 //      }
 //    }
 //  }
