@@ -13,7 +13,7 @@ vector<float> AnalyzerInterface::THDRanges = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4
 vector<float> AnalyzerInterface::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerInterface::AnalyzerInterface(string id, AnalyzerMode mode) : Database(id.c_str()) {
-  LOGFile::Instance()->Debug("Creating analyzer database tables\n");
+  LOGFile::Debug("Creating analyzer database tables\n");
   ExecResource("SQL/Database_Analyzer.sql");
   pMode = mode;
   pLastSave = 0;
@@ -27,7 +27,7 @@ AnalyzerInterface::AnalyzerInterface(string id, AnalyzerMode mode) : Database(id
     pMaxCurrent = ResultFloat("max_current");
     pMinCurrent =  ResultFloat("min_current");
   } else {
-    LOGFile::Instance()->Error("Can not create or read analyzer configuration\n");
+    LOGFile::Error("Can not create or read analyzer configuration\n");
   }
 }
 AnalyzerInterface::~AnalyzerInterface() {

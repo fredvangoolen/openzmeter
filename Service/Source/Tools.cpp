@@ -33,40 +33,40 @@ PIDFile::PIDFile(string name) {
   int Len = sprintf(PID_Number, "%d", getpid());
   if(!pFile.empty()) remove(pFile.c_str());
   int File = open(pFile.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
-  if(File < 0) LOGFile::Instance()->Warning("Can not create PID file (%d)\n", errno);
-  if(write(File, PID_Number, Len) <= 0) LOGFile::Instance()->Warning("Can not create PID file (%d)\n", errno);
+  if(File < 0) LOGFile::Warning("Can not create PID file (%s)\n", strerror(errno));
+  if(write(File, PID_Number, Len) <= 0) LOGFile::Warning("Can not create PID file (%s)\n", strerror(errno));
   if(File > 0) close(File);
 }
 PIDFile::~PIDFile() {
   if(!pFile.empty()) remove(pFile.c_str());
 }
 //----------------------------------------------------------------------------------------------------------------------
-LOGFile *LOGFile::pInstance = NULL;
-LOGFile::LOGFile(string name, bool debug, bool console) {
+LOGFile        *LOGFile::pInstance = NULL;
+bool            LOGFile::pConsole = true;
+bool            LOGFile::pDebug = true;
+pthread_mutex_t LOGFile::pMutex = PTHREAD_MUTEX_INITIALIZER;
+LOGFile::LOGFile(string name) {
   if(pInstance != NULL) {
     delete pInstance;
-    pInstance = NULL;    
+    pInstance = NULL;
   }
-  pConsole  = console;
-  pDebug    = debug;
-  pInstance = this;
-  pthread_mutex_init(&pMutex, NULL);
   pFile = NULL;
   if(name.empty() == false) {
     pFile = fopen(name.c_str(), "at");
     if(!pFile) pFile = fopen(name.c_str(), "wt");
-    if(pFile == NULL) LOGFile::Instance()->Warning("Can not create or open log file (%s)\n", strerror(errno));
+    if(pFile == NULL) LOGFile::Warning("Can not create or open log file (%s)\n", strerror(errno));
   }
+  pInstance = this;
 }
 LOGFile::~LOGFile() {
   pthread_mutex_lock(&pMutex);
   pInstance = NULL;
+  pthread_mutex_unlock(&pMutex);
   if(pFile) fclose(pFile);
-  pthread_mutex_destroy(&pMutex);
 }
-LOGFile *LOGFile::Instance() {
-  if(pInstance == NULL) pInstance = new LOGFile("", true, true);
-  return pInstance;
+void LOGFile::SetMode(bool debug, bool console) {
+  pConsole = console;
+  pDebug   = debug;
 }
 void LOGFile::Debug(const char* msg, ...) {
   if(pDebug == false) return;
@@ -116,9 +116,9 @@ void LOGFile::Msg(Type type, const char *msg, va_list params) {
     vprintf(msg, params);
     fflush(stdout);
   }
-  if(pFile != NULL) {
-    fprintf(pFile, "%s", DateStr);
-    vfprintf(pFile, msg, params);
+  if((pInstance != NULL) && (pInstance->pFile != NULL)) {
+    fprintf(pInstance->pFile, "%s", DateStr);
+    vfprintf(pInstance->pFile, msg, params);
   }
   pthread_mutex_unlock(&pMutex);
 }
@@ -147,68 +147,77 @@ ResourceLoader::ResourceLoader() {
 ResourceLoader::~ResourceLoader() {
   pInstance = NULL;
 }
-ResourceLoader *ResourceLoader::Instance() {
-  return pInstance;
-}
 uint8_t *ResourceLoader::GetFile(string name, size_t *size) {
-  for(uint32_t i = 0; i < pFiles.size(); i++) {
-    if(pFiles[i].Name != name) continue;
-    *size = pFiles[i].Size;
-    return pFiles[i].Ptr;
+  if(pInstance == NULL) return NULL;
+  for(uint32_t i = 0; i < pInstance->pFiles.size(); i++) {
+    if(pInstance->pFiles[i].Name != name) continue;
+    *size = pInstance->pFiles[i].Size;
+    return pInstance->pFiles[i].Ptr;
   }
   return NULL;
 }
 //----------------------------------------------------------------------------------------------------------------------
-ConfigManager *ConfigManager::pInstance = NULL;
+ConfigManager   *ConfigManager::pInstance = NULL;
+pthread_mutex_t  ConfigManager::pMutex = PTHREAD_MUTEX_INITIALIZER;
 ConfigManager::ConfigManager(string name) {
-  if(pInstance != NULL) return;
+  if(pInstance != NULL) {
+    delete pInstance;
+    pInstance = NULL;
+  }
+  pthread_mutex_lock(&pMutex);
+  pFile = open(name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+  if(pFile < 0) {
+    LOGFile::Error("Can not open config file (%s)\n", strerror(errno));
+    return;
+  }
+  string Read;
+  char Buff[256];
+  ssize_t Len;
+  do {
+    Len = read(pFile, Buff, sizeof(Buff));
+    Read += string(Buff, Len);
+  } while(Len > 0);
+  pConfig = json::parse(Read, NULL, false);
   pInstance = this;
-  pFile = name;
-  pthread_mutex_init(&pMutex, NULL);
-  int File = open(pFile.c_str(), O_RDONLY);
-  if(File == -1) {
-    LOGFile::Instance()->Error("Can not open config file (%s)\n", strerror(errno));
-    return;
-  }
-  struct stat FileStatus;
-  if(fstat(File, &FileStatus) != 0) {
-    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    close(File);
-    return;
-  }
-  char *ConfigText = (char*)mmap(NULL, FileStatus.st_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, File, 0);
-  if(ConfigText == NULL) {
-    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    close(File);
-    return;
-  }
-  pConfig = json::parse(ConfigText, NULL, false);
-  munmap(ConfigText, FileStatus.st_size);
-  close(File);
+  pthread_mutex_unlock(&pMutex);
 }
 ConfigManager::~ConfigManager() {
-  pthread_mutex_destroy(&pMutex);
+  pthread_mutex_lock(&pMutex);
+  close(pFile);
+  pInstance = NULL;
+  pthread_mutex_unlock(&pMutex);
 }
-ConfigManager *ConfigManager::Instance() {
-  return pInstance;
-}
-bool ConfigManager::SaveConfig() {
-//  int File = open(pConfigFile.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
-//  if(File < 0) {
-//    LogMsg("ERROR", "Can not write configuration to file (%d)\n", errno);
-//    return false;
-//  }
-//  size_t Len = 0;
-//  char *ConfigText = (char*)json_object_to_json_string_length(pConfig, JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_SPACED, &Len);
-//  if(write(File, ConfigText, Len) <= 0) {
-//    LogMsg("ERROR", "Can not write configuration to file (%d)\n", errno);
-//    return false;
-//  }
-//  close(File);
+bool ConfigManager::SaveConfig(string path, json val) {
+  pthread_mutex_lock(&pMutex);
+  if(pInstance == NULL) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+//HAGO EL MERGE
+  if(pInstance->pFile < 0) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  lseek(pInstance->pFile, 0, SEEK_SET);
+  string Write = pInstance->pConfig.dump(2);
+  if(write(pInstance->pFile, Write.c_str(), Write.size()) < 0) {
+    LOGFile::Error("Can not write configuration to file (%s)\n", strerror(errno));
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  if(ftruncate(pInstance->pFile, Write.size()) < 0 ) {
+    LOGFile::Error("Can not write configuration to file (%s)\n", strerror(errno));
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  pthread_mutex_unlock(&pMutex);
   return true;
 }
-json &ConfigManager::ReadConfig() {
-  return pConfig;
+json ConfigManager::ReadConfig(string path) {
+  if(pInstance == NULL) return nullptr;
+  printf("Config Path %s -> %s\n", path.c_str(), pInstance->pConfig[json::json_pointer(path)].dump().c_str());
+  fflush(stdout);
+  return pInstance->pConfig[json::json_pointer(path)];
 }
 
 
@@ -283,12 +292,12 @@ void Tools::GetSysInfo(HTTPRequest &req) {
   struct sysinfo Info;
   struct statvfs Disk;
   if(sysinfo(&Info) != 0) {
-    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     req.FromString("'System error", MHD_HTTP_BAD_REQUEST);
     return;
   }
   if(statvfs("/", &Disk) != 0) {
-    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     req.FromString("'System error", MHD_HTTP_BAD_REQUEST);
     return;
   }
@@ -329,20 +338,20 @@ void Tools::SendUDP(json obj) {
   struct sockaddr_in Client;
   int Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if(Socket == -1) {
-    LOGFile::Instance()->Error("cant open socket\n");
+    LOGFile::Error("cant open socket\n");
     return;
   }
   memset((char *)&Client, 0, sizeof(Client));
   Client.sin_family = AF_INET;
   Client.sin_port = htons(8888);
   if(inet_aton("127.0.0.1", &Client.sin_addr) == 0) {
-    LOGFile::Instance()->Error("inet_aton() failed\n");
+    LOGFile::Error("inet_aton() failed\n");
     close(Socket);
     return;
   }
   string Data = obj.dump();
   if(sendto(Socket, Data.c_str(), Data.size(), 0, (sockaddr*)&Client, sizeof(Client)) == -1) {
-    LOGFile::Instance()->Error("sendto()\n");
+    LOGFile::Error("sendto()\n");
   }
   close(Socket);
 }

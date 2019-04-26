@@ -20,7 +20,7 @@
 bool DeviceVirtual::pClassRegistered = DeviceVirtual::Init();
 // Funciones ===========================================================================================================
 bool DeviceVirtual::Init() {
-  LOGFile::Instance()->Info("Adding 'Virtual' device driver instance with serial 'VIRTUAL'\n");
+  LOGFile::Info("Adding 'Virtual' device driver instance with serial 'VIRTUAL'\n");
   DeviceManager::AddDevice(new DeviceVirtual());
   return true;
 }
@@ -45,7 +45,7 @@ string DeviceVirtual::Name() {
 }
 bool DeviceVirtual::Config(json config) {
   if(pState == RUNNING) return false;
-  LOGFile::Instance()->Info("Configuring 'Virtual' driver...\n");
+  LOGFile::Info("Configuring 'Virtual' driver...\n");
   bool AutoStart = false;
   string Mode;
   if(config["Voltage"].is_number()) pVoltage = config["Voltage"];
@@ -68,8 +68,11 @@ bool DeviceVirtual::Config(json config) {
   pConfig["SampleRate"] = pSampleRate;
   pConfig["Mode"] = Mode;
   pConfig["AutoStart"] = AutoStart;
-  if(ConfigManager::Instance()->SaveConfig() == false) return false;
+//  if(ConfigManager::Instance()->SaveConfig() == false) return false;
   return true;
+}
+json DeviceVirtual::Config() {
+  return json::object();
 }
 bool DeviceVirtual::Start() {
   pthread_mutex_lock(&pMutex);
@@ -77,13 +80,13 @@ bool DeviceVirtual::Start() {
     pthread_mutex_unlock(&pMutex);
     return false;
   }
-  LOGFile::Instance()->Info("Starting 'Virtual' driver...\n");
+  LOGFile::Info("Starting 'Virtual' driver...\n");
   pTerminate = false;
   char Name[128];
   snprintf(Name, sizeof(Name), "VIRTUAL_%s", (pMode == AnalyzerInterface::PHASE1) ? "1PHASE" : (pMode == AnalyzerInterface::PHASE3) ? "3PHASE" : "3PHASE+N");
   pAnalyzer = new AnalyzerSoft(Name, pMode, pSampleRate);
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
-    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     delete pAnalyzer;
     pthread_mutex_unlock(&pMutex);
     return false;
@@ -98,7 +101,7 @@ bool DeviceVirtual::Stop() {
     pthread_mutex_unlock(&pMutex);
     return false;
   }
-  LOGFile::Instance()->Info("Stopping 'Virtual' driver...\n");
+  LOGFile::Info("Stopping 'Virtual' driver...\n");
   pTerminate = true;
   pthread_join(pCaptureThread, NULL);
   if(pAnalyzer) delete pAnalyzer;
@@ -110,11 +113,11 @@ bool DeviceVirtual::Stop() {
 void  *DeviceVirtual::Capture_Thread(void *args) {
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {
-    LOGFile::Instance()->Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   } else {
     struct sched_param Param;
     Param.sched_priority = Prio - 20;
-    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Instance()->Warning("Cant raise thread priority -> %s\n", __func__, __LINE__, strerror(errno));
+    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Warning("Cant raise thread priority -> %s\n", __func__, __LINE__, strerror(errno));
   }
   DeviceVirtual *This = (DeviceVirtual*)args;
   pthread_setname_np(This->pCaptureThread, "DeviceVirtual");

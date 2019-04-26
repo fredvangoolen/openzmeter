@@ -17,7 +17,7 @@ Database::Database(string schema) {
   pDBConn    = PQconnectdb(pConnectionString.c_str());
   if(PQstatus(pDBConn) != CONNECTION_OK) {
     char *Save;
-    LOGFile::Instance()->Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    LOGFile::Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     PQfinish(pDBConn);
     pDBConn = NULL;
     return;
@@ -30,51 +30,29 @@ Database::Database(string schema) {
 string Database::GetSchema() {
   return pSchema;
 }
-//bool Database::Connect() {
-//  if((pDBConn != NULL) && (PQstatus(pDBConn) == CONNECTION_OK)) return true;
-//  if((pDBConn != NULL) && (PQstatus(pDBConn) == CONNECTION_BAD)) {
-//    PQfinish(pDBConn);
-//    pDBConn = NULL;
-//  } 
-//  pDBConn = PQconnectdb(pConnectionString.c_str());
-//  if(PQstatus(pDBConn) != CONNECTION_OK) {
-//    char *Save;
-//    LOGFile::Instance()->Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
-//    PQfinish(pDBConn);
-//    pDBConn = NULL;
-//    return false;
-//  }
-//  ExecSentenceNoResult("SET synchronous_commit TO OFF;"
-//                       "SET client_min_messages = error;"
-//                       "CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema) + ";"
-//                       "SET search_path TO " +  Bind(pSchema) + ", public");
-//  ClearResult();
-//  return true;
-//}
 Database::~Database() {
   ClearAsync();
   if(pDBConn) PQfinish(pDBConn);
 }
-//void Database::ClearResult() {
-//  if(pResult != NULL) {
-//    PQclear(pResult);
-//    pResult = NULL;
-//  }
-//}
-bool Database::Config(json config) {
-  string Hostname = "localhost";
-  uint16_t Port = 5432;
-  string DataBase = "openzmeter";
-  string Username = "openzmeter";
-  string Password = "openzmeter";
-  if(config["Hostname"].is_string()) Hostname = config["Hostname"];
-  if(config["Port"].is_number_unsigned()) Port = config["Port"];
-  if(config["Database"].is_string()) DataBase = config["Database"];
-  if(config["Username"].is_string()) Username = config["Username"];
-  if(config["Password"].is_string()) Password = config["Password"];
+bool Database::Config() {
+  json Config = ConfigManager::ReadConfig("/Database");
+  if(!Config.is_object()) {
+    LOGFile::Error("No database configuration found\n");
+    return false;
+  }
+  uint16_t Port     = 5432;
+  string   Hostname = "localhost";
+  string   DataBase = "openzmeter";
+  string   Username = "openzmeter";
+  string   Password = "openzmeter";
+  if(Config["Hostname"].is_string())      Hostname = Config["Hostname"];
+  if(Config["Port"].is_number_unsigned()) Port     = Config["Port"];
+  if(Config["Database"].is_string())      DataBase = Config["Database"];
+  if(Config["Username"].is_string())      Username = Config["Username"];
+  if(Config["Password"].is_string())      Password = Config["Password"];
   pConnectionString = "host=" + Hostname + " port=" + to_string(Port) + " user=" + Username + " password=" + Password + " dbname=" + DataBase + " sslmode=allow";
   Database DB("public");
-  LOGFile::Instance()->Debug("Creating database tables\n");
+  LOGFile::Debug("Creating database tables\n");
   return DB.ExecResource("SQL/Database.sql");
 }
 bool Database::FecthRow() {
@@ -85,7 +63,7 @@ bool Database::FecthRow() {
 bool Database::ExecResource(string file) {
   size_t Len;
   ClearAsync();
-  char *Script = (char*)ResourceLoader::Instance()->GetFile(file, &Len);
+  char *Script = (char*)ResourceLoader::GetFile(file, &Len);
   Script[Len - 1] = 0;
   return ExecSentenceNoResult(Script);
 }
@@ -95,7 +73,7 @@ bool Database::ExecSentenceNoResult(string sql) {
   PGresult *Result = PQexec(pDBConn, sql.c_str());
   if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
     char *Save;
-    LOGFile::Instance()->Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    LOGFile::Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     PQclear(Result);
     return false;
   } else {
@@ -108,12 +86,12 @@ bool Database::ExecSentenceAsyncResult(string sql) {
   ClearAsync();
   if(PQsendQuery(pDBConn, sql.c_str()) == 0) {
     char *Save;
-    LOGFile::Instance()->Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    LOGFile::Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     return false;
   }
   if(PQsetSingleRowMode(pDBConn) == 0) {
     char *Save;
-    LOGFile::Instance()->Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    LOGFile::Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     return false;
   }
   return true;

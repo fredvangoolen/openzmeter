@@ -54,10 +54,9 @@ class HTTPServer {
       Func_t Function;
     } Callback_t;
   private :
-    static HTTPServer        *pInstance;
     static vector<Callback_t> pCallbacks;
   private:
-    MHD_Daemon         *pDaemon;
+    MHD_Daemon  *pDaemon;
   private :
     static int  HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
     static void HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe);
@@ -65,9 +64,9 @@ class HTTPServer {
   public :
     static void RegisterCallback(string handleName, Func_t function);
   public :
-    HTTPServer(json config);
+    HTTPServer();
+    bool Config();
     void ExpireSessions();
     virtual ~HTTPServer();
-    HTTPServer *Instance();
     void RemoveExpiredSessions();
 };

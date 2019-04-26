@@ -17,7 +17,7 @@ pthread_mutex_t            DeviceRemote::pListMutex = PTHREAD_MUTEX_INITIALIZER;
 // Funciones ===========================================================================================================
 DeviceRemote::DeviceRemote(json_object* config) : DeviceInterface()  {
   if(pInstance != NULL) {
-    LOGFile::Instance()->Warning("Only one DeviceRemote driver allowed...\n");
+    LOGFile::Warning("Only one DeviceRemote driver allowed...\n");
     return;
   }
   Tools::LogMsg("INFO", "Starting DeviceRemote driver...\n");

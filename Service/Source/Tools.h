@@ -23,23 +23,23 @@ class LOGFile {
   private :
     enum Type {WARNING, ERROR, DEBUG, INFO};
   private :
-    static LOGFile *pInstance;
+    static LOGFile         *pInstance;
+    static pthread_mutex_t  pMutex;
+    static bool             pDebug;
+    static bool             pConsole;
   private :
-    void Msg(Type type, const char *msg, va_list params);
+    static void Msg(Type type, const char *msg, va_list params);
   private :
-    FILE            *pFile;
-    pthread_mutex_t  pMutex;
-    bool             pDebug;
-    bool             pConsole;
+    FILE *pFile;
+    void  WriteFile();
   public :
-    static LOGFile *Instance();
+    static void Info(const char *msg, ...);
+    static void Warning(const char *msg, ...);
+    static void Error(const char *msg, ...);
+    static void Debug(const char *msg, ...);
+    static void SetMode(bool debug, bool console);
   public :
-    void Info(const char *msg, ...);
-    void Warning(const char *msg, ...);
-    void Error(const char *msg, ...);
-    void Debug(const char *msg, ...);
-  public :
-    LOGFile(string name, bool debug, bool console);
+    LOGFile(string name);
     virtual ~LOGFile();
 };
 //----------------------------------------------------------------------------------------------------------------------
@@ -55,27 +55,25 @@ class ResourceLoader {
   private :
     vector<File_t> pFiles;
   public :
-    static ResourceLoader *Instance();
+    static uint8_t *GetFile(string name, size_t *size);
   public :
     ResourceLoader();
     virtual ~ResourceLoader();
-    uint8_t *GetFile(string name, size_t *size);
 };
 //----------------------------------------------------------------------------------------------------------------------
 class ConfigManager {
   private :
-    static ConfigManager *pInstance;
+    static ConfigManager  *pInstance;
+    static pthread_mutex_t pMutex;
   private :
-    string          pFile;
-    json            pConfig;
-    pthread_mutex_t pMutex;
-  public :
-    static ConfigManager *Instance();
+    int   pFile;
+    json  pConfig;
   public :
     ConfigManager(string name);
     virtual ~ConfigManager();
-    json &ReadConfig();
-    bool  SaveConfig();
+  public :
+    static json  ReadConfig(string path);
+    static bool  SaveConfig(string path, json val);
 };
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {

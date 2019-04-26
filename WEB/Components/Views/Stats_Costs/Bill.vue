@@ -4,26 +4,35 @@
       <div class="float-right" v-html="TotalBill(bill)"></div>
     </div>
     <div class="panel-body">
-      <table v-for="(period, idx) in bill.Periods">
+      <table>
         <tr class="period-name">
-          <td>P{{ idx + 1}}</td>
-          <td class="total" colspan="2" v-html="TotalPeriod(period)"></td>
+          <td colspan="2">Periods</td>
         </tr>
-        <tr>
-          <td>Energy consumed ({{ Round2(period.Energy.Consumed / 1000.0) }}kWh x {{ Round6(period.Energy.Cost * 1000) }} {{ currency }})</td>
-          <td class="total">{{ Round2(period.Energy.Consumed * period.Energy.Cost)}} {{ currency }}</td>
-        </tr>
-        <tr v-if="period.Energy.Other != ''">
-          <td>{{ period.Energy.Other }}</td>
-          <td class="total">{{ Round2(period.Energy.OtherCost) }} {{ currency }}</td>
-        </tr>
-        <tr>
-          <td>Power contracted ({{ Round2(period.Power.Contracted / 1000.0) }}kW x {{ Round6(period.Power.Cost * 1000) }} {{ currency }} x {{ period.Power.Days }} days)</td>
-          <td class="total">{{ Round2(period.Power.Contracted * period.Power.Cost * period.Power.Days) }} {{ currency }}</td>
-        </tr>
-        <tr v-if="period.Power.Other != ''">
-          <td>{{ period.Power.Other }}</td>
-          <td class="total">{{ Round2(period.Power.OtherCost) }} {{ currency }}</td>
+        <tr v-for="(period, idx) in bill.Periods">
+          <td class="padding-table">
+            <table>
+              <tr class="period-name2">
+                <td>P{{ idx + 1}}</td>
+                <td class="total" colspan="2" v-html="TotalPeriod(period)"></td>
+              </tr>
+              <tr>
+                <td>Energy consumed ({{ Round2(period.Energy.Consumed / 1000.0) }}kWh x {{ Round6(period.Energy.Cost * 1000) }} {{ currency }})</td>
+                <td class="total">{{ Round2(period.Energy.Consumed * period.Energy.Cost)}} {{ currency }}</td>
+              </tr>
+              <tr v-if="period.Energy.Other != ''">
+                <td>{{ period.Energy.Other }}</td>
+                <td class="total">{{ Round2(period.Energy.OtherCost) }} {{ currency }}</td>
+              </tr>
+              <tr>
+                <td>Power contracted ({{ Round2(period.Power.Contracted / 1000.0) }}kW x {{ Round6(period.Power.Cost * 1000) }} {{ currency }} x {{ period.Power.Days }} days)</td>
+                <td class="total">{{ Round2(period.Power.Contracted * period.Power.Cost * period.Power.Days) }} {{ currency }}</td>
+              </tr>
+              <tr v-if="period.Power.Other != ''">
+                <td>{{ period.Power.Other }}</td>
+                <td class="total">{{ Round2(period.Power.OtherCost) }} {{ currency }}</td>
+              </tr>
+            </table>
+          </td>
         </tr>
       </table>
       <table v-if="bill.Taxes.length > 0">
@@ -81,6 +90,15 @@
     font-weight: bold;
     font-size: 14px;
     border-bottom: 1px solid #bbb;
+  }
+  .period-name2 {
+    font-weight: bold;
+    font-size: 12px;
+    border-bottom: 1px solid #ddd;
+  }
+  .padding-table {
+    padding-left: 20px;
+    font-size: 12px;
   }
   .total {
     text-align: right;

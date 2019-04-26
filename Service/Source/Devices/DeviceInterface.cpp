@@ -17,10 +17,13 @@ vector<Device*> __attribute__((init_priority(200))) DeviceManager::pDevices;
 DeviceManager::DeviceManager(json config) {
   if(pInstance != NULL) return;
   pInstance = this;
-  HTTPServer::RegisterCallback("/getDevices",          DeviceManager::GetDevicesCallback);
-  HTTPServer::RegisterCallback("/stopDevice",          DeviceManager::StopDeviceCallback);
-  HTTPServer::RegisterCallback("/startDevice",         DeviceManager::StartDeviceCallback);
-//    HTTPServer::RegisterCallback("/getDeviceSettings",   DeviceInterface::StartDeviceCallback);
+  HTTPServer::RegisterCallback("/getDevices",          GetDevicesCallback);
+  HTTPServer::RegisterCallback("/getDevice",           GetDeviceCallback);
+  HTTPServer::RegisterCallback("/stopDevice",          StopDeviceCallback);
+  HTTPServer::RegisterCallback("/startDevice",         StartDeviceCallback);
+  HTTPServer::RegisterCallback("/configDevice",        SetDeviceCallback);
+  
+  //    HTTPServer::RegisterCallback("/getDeviceSettings",   DeviceInterface::StartDeviceCallback);
 //    HTTPServer::RegisterCallback("/setDeviceSettings",   DeviceInterface::StartDeviceCallback);
   HTTPServer::RegisterCallback("/getAnalyzers",        DeviceManager::GetAnalyzersCallback);
   HTTPServer::RegisterCallback("/getSeries",           DeviceManager::GetSeriesCallback);
@@ -32,11 +35,11 @@ DeviceManager::DeviceManager(json config) {
   HTTPServer::RegisterCallback("/getTariffs",          DeviceManager::GetTariffsCallback);
   HTTPServer::RegisterCallback("/setTariffs",          DeviceManager::SetTariffsCallback);
   HTTPServer::RegisterCallback("/delTariffs",          DeviceManager::DelTariffsCallback);
-  LOGFile::Instance()->Info("Loading device config...\n");
+  LOGFile::Info("Loading device config...\n");
   for(vector<Device*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
     string Serial = (*it)->Serial();
     if(config[Serial].is_object() == false) config[Serial] = json::object();
-    if((*it)->Config(config[Serial]) == false) LOGFile::Instance()->Warning("Invalid configuration for driver with serial '%s'\n", Serial);
+    if((*it)->Config(config[Serial]) == false) LOGFile::Warning("Invalid configuration for driver with serial '%s'\n", Serial);
   }
 }
 DeviceManager::~DeviceManager() {
@@ -62,11 +65,22 @@ void DeviceManager::GetDevicesCallback(HTTPRequest &req) {
   }
   req.FromJSON(Response);
 }
+void DeviceManager::GetDeviceCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  //only 'admin' user can get this information
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(Params["Serial"].is_string() == false) return req.FromString("'Serial' param is requiered", MHD_HTTP_BAD_REQUEST);
+  string Serial = Params["Serial"];
+  for(vector<Device*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+    if((*it)->Serial() == Serial) return req.FromJSON((*it)->Config());
+  }
+  return req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
+}
 void DeviceManager::StartDeviceCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   //only 'admin' user can do this action
   if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
-  if(!Params["Serial"].is_string()) return req.FromString("'Device' param is requiered", MHD_HTTP_BAD_REQUEST);
+  if(!Params["Serial"].is_string()) return req.FromString("'Serial' param is requiered", MHD_HTTP_BAD_REQUEST);
   string Serial = Params["Serial"];
   for(vector<Device*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
     if((*it)->Serial() == Serial) {
@@ -92,6 +106,22 @@ void DeviceManager::StopDeviceCallback(HTTPRequest &req) {
   }
   req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
 }
+void DeviceManager::SetDeviceCallback(HTTPRequest& req) {
+  json Params = req.GetParams();
+  //only 'admin' user can do this action
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(!Params["Serial"].is_string()) return req.FromString("'Serial' param is requiered", MHD_HTTP_BAD_REQUEST);
+  string Serial = Params["Serial"];
+  for(vector<Device*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+    if((*it)->Serial() == Serial) {
+      json Response;
+      Response["Status"] = (*it)->Config(Params);
+      return req.FromJSON(Response); 
+    }
+  }
+  req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
+}
+
 void DeviceManager::GetAnalyzersCallback(HTTPRequest &req) {
   //All users can do this action, for admin all analyzers are returned and can be edited, for other users only own analyzers or authorized ones are returned and only owner can edit. In all cases only present ones are returned
   json Params = req.GetParams();

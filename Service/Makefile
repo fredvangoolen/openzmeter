@@ -6,7 +6,7 @@ LIB_DIRS = /usr/local/pgsql/lib
 #General options
 CC       = gcc
 LD       = ld
-CPPFLAGS += -Wall -std=c++11
+CPPFLAGS += -Wall -std=c++11 -march=native
 LDFLAGS  += -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic -lmicrohttpd -lusb-1.0 -ldbus-1 -lpthread -lpq -ldbus-1 -lz -lm -lfftw3f
 
 #Specific options
