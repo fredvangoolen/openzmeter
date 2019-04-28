@@ -1,21 +1,24 @@
 <template>
-  <div class="modal-content" v-if="Show">
-    <div class="modal-header">
-      <div class="pull-left"><h4 class="modal-title">Analyzers</h4></div>
-      <div class="pull-right">
-        <button type="button" class="btn btn-default btn-xs" @click="$parent.Close"><img :src="require('Imgs/arrow_undo.png')"></button>
-      </div>
+  <div class="row">
+    <div class="col-xs-12 col-sm-6 col-lg-4">
+      <label class="control-label">Name</label>
+      <input type="text" class="form-control" id="inputName">
     </div>
-    <div class="modal-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <!-- 
-      modo
-      tension
-      corriente
-      autostart
-      
-      -->
-      
+    <div class="col-xs-12 col-sm-6 col-lg-4">
+      <label class="control-label">Surname</label>
+      <input type="text" class="form-control" id="inputSurname">
+    </div>
+    <div class="col-xs-12 col-sm-6 col-lg-4">
+      <label class="control-label">Country</label>
+      <input type="text" class="form-control" id="inputIDCard">
+    </div>
+    <div class="col-xs-12 col-sm-6 col-lg-6">
+      <label class="control-label">Company</label>
+      <input type="text" class="form-control" id="inputCompany">
+    </div>
+    <div class="col-xs-12 col-lg-6">
+      <label class="control-label">Address</label>
+      <input type="text" class="form-control" id="inputAddress">
     </div>
   </div>
 </template>

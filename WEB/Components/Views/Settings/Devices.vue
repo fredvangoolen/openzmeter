@@ -60,8 +60,7 @@
         });
       },
       Configure: function(id, evt) {
-        $(evt.target).blur();
-        this.$refs.Dialog.Show(id);
+        this.$refs.Dialog.Load(id);
       }
     },
     mounted: function() {

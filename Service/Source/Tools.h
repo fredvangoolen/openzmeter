@@ -15,7 +15,7 @@ using namespace std;
 class PIDFile {
   string pFile;
   public :
-    PIDFile(string name);
+    PIDFile();
     virtual ~PIDFile();
 };
 //----------------------------------------------------------------------------------------------------------------------
@@ -37,9 +37,8 @@ class LOGFile {
     static void Warning(const char *msg, ...);
     static void Error(const char *msg, ...);
     static void Debug(const char *msg, ...);
-    static void SetMode(bool debug, bool console);
   public :
-    LOGFile(string name);
+    LOGFile(bool debug, bool console);
     virtual ~LOGFile();
 };
 //----------------------------------------------------------------------------------------------------------------------

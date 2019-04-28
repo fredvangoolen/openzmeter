@@ -23,18 +23,18 @@ class Device {
     virtual string             Serial() = 0;
     virtual string             Driver() = 0;
     virtual string             Name() = 0;
-    virtual bool               Config(json config) = 0;
-    virtual json               Config() = 0;
+    virtual bool               SetConfig(json config) = 0;
     virtual bool               Start() = 0;
     virtual bool               Stop() = 0;
   public :
     Device();
     virtual ~Device();
     DeviceState State();
+    json        GetConfig();
 };
 class DeviceManager {
   private :  
-    static DeviceManager *pInstance;
+//    static DeviceManager *pInstance;
     static vector<Device*> pDevices;
   private :
     static void GetDevicesCallback(HTTPRequest &req);
@@ -55,6 +55,6 @@ class DeviceManager {
   public :
     static void AddDevice(Device *device);
   public :
-    DeviceManager(json config);
+    DeviceManager();
     ~DeviceManager();    
 };

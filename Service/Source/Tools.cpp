@@ -27,8 +27,10 @@
       #include <sys/socket.h>
       #include <unistd.h>
 //----------------------------------------------------------------------------------------------------------------------
-PIDFile::PIDFile(string name) {
-  pFile = name;
+PIDFile::PIDFile() {
+  pFile = "/var/run/openZmeter.pid";
+  json Config = ConfigManager::ReadConfig("/PidFile");
+  if(Config.is_string()) pFile = Config;
   char PID_Number[16];
   int Len = sprintf(PID_Number, "%d", getpid());
   if(!pFile.empty()) remove(pFile.c_str());
@@ -45,15 +47,20 @@ LOGFile        *LOGFile::pInstance = NULL;
 bool            LOGFile::pConsole = true;
 bool            LOGFile::pDebug = true;
 pthread_mutex_t LOGFile::pMutex = PTHREAD_MUTEX_INITIALIZER;
-LOGFile::LOGFile(string name) {
+LOGFile::LOGFile(bool debug, bool console) {
+  string Name = "/var/log/openZmeter.log";
+  json Config = ConfigManager::ReadConfig("/LogFile");
+  if(Config.is_string()) Name = Config;
+  pConsole = console;
+  pDebug   = debug;
+  pFile = NULL;
   if(pInstance != NULL) {
     delete pInstance;
     pInstance = NULL;
   }
-  pFile = NULL;
-  if(name.empty() == false) {
-    pFile = fopen(name.c_str(), "at");
-    if(!pFile) pFile = fopen(name.c_str(), "wt");
+  if(Name.empty() == false) {
+    pFile = fopen(Name.c_str(), "at");
+    if(!pFile) pFile = fopen(Name.c_str(), "wt");
     if(pFile == NULL) LOGFile::Warning("Can not create or open log file (%s)\n", strerror(errno));
   }
   pInstance = this;
@@ -63,10 +70,6 @@ LOGFile::~LOGFile() {
   pInstance = NULL;
   pthread_mutex_unlock(&pMutex);
   if(pFile) fclose(pFile);
-}
-void LOGFile::SetMode(bool debug, bool console) {
-  pConsole = console;
-  pDebug   = debug;
 }
 void LOGFile::Debug(const char* msg, ...) {
   if(pDebug == false) return;

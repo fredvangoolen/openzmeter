@@ -226,7 +226,7 @@ void AnalyzerSoft::Analyze() {
         }
       }
       SaveAggreg(pAggreg3S);
-      ResetAggreg(pAggreg3S);
+      InitAggreg(pAggreg3S, AGGREG_3S);
     }
     AccumulateAggreg(pAggreg3S, pAggreg10C);
     if(((pAggreg10C.Timestamp / 60000) > (pPrevTimestamp / 60000)) && (pPrevTimestamp != 0)) {
@@ -234,7 +234,7 @@ void AnalyzerSoft::Analyze() {
       pAggreg1M.Timestamp = pAggreg1M.Timestamp / 60000 * 60000 + 59999;
       NormalizeAggreg(pAggreg1M);
       SaveAggreg(pAggreg1M);
-      ResetAggreg(pAggreg1M);
+      InitAggreg(pAggreg1M, AGGREG_1M);
     }
     AccumulateAggreg(pAggreg1M, pAggreg10C);
     if(((pAggreg10C.Timestamp / 600000) > (pPrevTimestamp / 600000)) && (pPrevTimestamp != 0)) {
@@ -266,7 +266,7 @@ void AnalyzerSoft::Analyze() {
         }
       }
       SaveAggreg(pAggreg10M);
-      ResetAggreg(pAggreg10M);
+      InitAggreg(pAggreg10M, AGGREG_10M);
     }
     AccumulateAggreg(pAggreg10M, pAggreg10C);
     if(((pAggreg10C.Timestamp / 900000) > (pPrevTimestamp / 900000)) && (pPrevTimestamp != 0)) {
@@ -274,7 +274,7 @@ void AnalyzerSoft::Analyze() {
       pAggreg15M.Timestamp = pAggreg15M.Timestamp / 900000 * 900000 + 899999;
       NormalizeAggreg(pAggreg15M);
       SaveAggreg(pAggreg15M);
-      ResetAggreg(pAggreg15M);
+      InitAggreg(pAggreg15M, AGGREG_15M);
     }
     AccumulateAggreg(pAggreg15M, pAggreg10C);
     if(((pAggreg10C.Timestamp / 3600000) > (pPrevTimestamp / 3600000)) && (pPrevTimestamp != 0)) {
@@ -282,7 +282,7 @@ void AnalyzerSoft::Analyze() {
       pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
       NormalizeAggreg(pAggreg1H);
       SaveAggreg(pAggreg1H);
-      ResetAggreg(pAggreg1H);
+      InitAggreg(pAggreg1H, AGGREG_1H);
     }
     AccumulateAggreg(pAggreg1H, pAggreg10C);
     pPrevTimestamp = pAggreg10C.Timestamp;
@@ -292,7 +292,7 @@ void AnalyzerSoft::Analyze() {
     pthread_mutex_lock(&pDataReadyMutex);
     pDataReady = false;
     pthread_mutex_unlock(&pDataReadyMutex);
-    ResetAggreg(pAggreg10C);
+    InitAggreg(pAggreg10C, AGGREG_10C);
     pthread_mutex_lock(&pThreadMutex);
     LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", pName.c_str(), Tools::GetTime() - Start, pSequence);
     pWorking = false;

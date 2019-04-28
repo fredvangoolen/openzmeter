@@ -98,7 +98,7 @@ string DeviceV1_01::Driver() {
 string DeviceV1_01::Name() {
   return "Capture device V1.01";
 }
-bool DeviceV1_01::Config(json config) {
+bool DeviceV1_01::SetConfig(json config) {
   if(pState == RUNNING) return false;
   LOGFile::Info("Configuring 'V1.01' driver with serial '%s'...\n", pSerial.c_str());
   bool AutoStart = false;
@@ -119,9 +119,6 @@ bool DeviceV1_01::Config(json config) {
   pConfig["AutoStart"] = AutoStart;
 //  if(ConfigManager::Instance()->SaveConfig() == false) return false;
   return true;
-}
-json DeviceV1_01::Config() {
-  return json::object();
 }
 bool DeviceV1_01::Start() {
   pthread_mutex_lock(&pMutex);
