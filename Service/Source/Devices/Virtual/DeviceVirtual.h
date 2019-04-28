@@ -6,9 +6,6 @@
 #include "DeviceInterface.h"
 #include "AnalyzerSoft.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define CAPTUREVIRTUAL_SAMPLEFREQ      6000.00        //Frequencia de muestreo
-#define CAPTUREVIRTUAL_BUFFERSIZE     60000           //Tamaño del buffer (10 segundos)
-//----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 class DeviceVirtual : public Device {
   private :
@@ -25,8 +22,7 @@ class DeviceVirtual : public Device {
     static bool  Init();
     static void *Capture_Thread(void *args);
   private :
-    bool               Config(json config);
-    json               Config();
+    bool               SetConfig(json config);
     AnalyzerInterface *FindAnalyzer(string serial);
     uint32_t           AnalyzersCount();
     string             Serial();

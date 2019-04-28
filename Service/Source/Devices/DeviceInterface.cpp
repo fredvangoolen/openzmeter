@@ -11,20 +11,16 @@
 #include <json.hpp>
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
-DeviceManager *DeviceManager::pInstance = NULL;
 vector<Device*> __attribute__((init_priority(200))) DeviceManager::pDevices;
 //----------------------------------------------------------------------------------------------------------------------
-DeviceManager::DeviceManager(json config) {
-  if(pInstance != NULL) return;
-  pInstance = this;
+DeviceManager::DeviceManager() {
+//  if(pInstance != NULL) return;
   HTTPServer::RegisterCallback("/getDevices",          GetDevicesCallback);
   HTTPServer::RegisterCallback("/getDevice",           GetDeviceCallback);
   HTTPServer::RegisterCallback("/stopDevice",          StopDeviceCallback);
   HTTPServer::RegisterCallback("/startDevice",         StartDeviceCallback);
   HTTPServer::RegisterCallback("/configDevice",        SetDeviceCallback);
   
-  //    HTTPServer::RegisterCallback("/getDeviceSettings",   DeviceInterface::StartDeviceCallback);
-//    HTTPServer::RegisterCallback("/setDeviceSettings",   DeviceInterface::StartDeviceCallback);
   HTTPServer::RegisterCallback("/getAnalyzers",        DeviceManager::GetAnalyzersCallback);
   HTTPServer::RegisterCallback("/getSeries",           DeviceManager::GetSeriesCallback);
   HTTPServer::RegisterCallback("/getSeriesNow",        DeviceManager::GetSeriesNowCallback);
@@ -36,15 +32,11 @@ DeviceManager::DeviceManager(json config) {
   HTTPServer::RegisterCallback("/setTariffs",          DeviceManager::SetTariffsCallback);
   HTTPServer::RegisterCallback("/delTariffs",          DeviceManager::DelTariffsCallback);
   LOGFile::Info("Loading device config...\n");
-  for(vector<Device*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
-    string Serial = (*it)->Serial();
-    if(config[Serial].is_object() == false) config[Serial] = json::object();
-    if((*it)->Config(config[Serial]) == false) LOGFile::Warning("Invalid configuration for driver with serial '%s'\n", Serial);
-  }
+  for(uint32_t i = 0; i < pDevices.size(); i++) pDevices[i]->SetConfig(pDevices[i]->GetConfig());
 }
 DeviceManager::~DeviceManager() {
-  for(vector<Device*>::iterator it = pDevices.begin(); it != pDevices.end(); it++) delete *it;
-  pInstance = NULL;
+  for(uint32_t i = 0; i < pDevices.size(); i++) delete pDevices[i];
+//  pInstance = NULL;
 }
 void DeviceManager::AddDevice(Device *device) {
   pDevices.push_back(device);
@@ -54,13 +46,14 @@ void DeviceManager::GetDevicesCallback(HTTPRequest &req) {
   //only 'admin' user can get this information
   if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
   json Response = json::array();
-  for(vector<Device*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
+  for(uint32_t i = 0; i < pDevices.size(); i++) {
+    Device *Dev = pDevices[i];
     json Device;
-    Device["Driver"] = (*it)->Driver();
-    Device["Name"] = (*it)->Name();
-    Device["Serial"] = (*it)->Serial();
-    Device["Analyzers"] = (*it)->AnalyzersCount();
-    Device["Status"] = ((*it)->State() == Device::UNCONFIGURED) ? "UNCONFIGURED" : ((*it)->State() == Device::STOPPED) ? "STOPPED" : "RUNNING";
+    Device["Driver"] = Dev->Driver();
+    Device["Name"] = Dev->Name();
+    Device["Serial"] = Dev->Serial();
+    Device["Analyzers"] = Dev->AnalyzersCount();
+    Device["Status"] = (Dev->State() == Device::UNCONFIGURED) ? "UNCONFIGURED" : (Dev->State() == Device::STOPPED) ? "STOPPED" : "RUNNING";
     Response.push_back(Device);
   }
   req.FromJSON(Response);
@@ -72,7 +65,7 @@ void DeviceManager::GetDeviceCallback(HTTPRequest &req) {
   if(Params["Serial"].is_string() == false) return req.FromString("'Serial' param is requiered", MHD_HTTP_BAD_REQUEST);
   string Serial = Params["Serial"];
   for(vector<Device*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
-    if((*it)->Serial() == Serial) return req.FromJSON((*it)->Config());
+    if((*it)->Serial() == Serial) return req.FromJSON((*it)->GetConfig());
   }
   return req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
 }
@@ -115,7 +108,7 @@ void DeviceManager::SetDeviceCallback(HTTPRequest& req) {
   for(vector<Device*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
     if((*it)->Serial() == Serial) {
       json Response;
-      Response["Status"] = (*it)->Config(Params);
+      Response["Status"] = (*it)->SetConfig(Params);
       return req.FromJSON(Response); 
     }
   }
@@ -587,4 +580,9 @@ Device::DeviceState Device::State() {
   return pState;
 }
 Device::~Device() {
+}
+json Device::GetConfig() {
+  json Config = ConfigManager::ReadConfig("/Devices/" + Serial());
+  if(!Config.is_object()) Config = json::object();
+  return Config;
 }

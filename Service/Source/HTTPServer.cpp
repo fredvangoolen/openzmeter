@@ -60,7 +60,7 @@ void HTTPRequest::FromFile(string name) {
   }
 #else
   size_t Size = 0;
-  char *Tmp = (char*)ResourceLoader::Instance()->GetFile(name, &Size);
+  char *Tmp = (char*)ResourceLoader::GetFile(name, &Size);
   pResultCode = (Size == 0) ? MHD_HTTP_NOT_FOUND : MHD_HTTP_OK;
   pPostData = string(Tmp, Size);
 #endif

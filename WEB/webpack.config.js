@@ -78,7 +78,8 @@ module.exports = {
       '/setTariffs':   { target: 'http://10.8.0.135:80'},
       '/delTariffs':   { target: 'http://10.8.0.135:80'},
       '/getEvents':    { target: 'http://10.8.0.135:80'},
-      '/getNetworks':  { target: 'http://10.8.0.135:80'}
+      '/getNetworks':  { target: 'http://10.8.0.135:80'},
+      '/getDevice':    { target: 'http://10.8.0.135:80'}
     }
   },
   performance: {

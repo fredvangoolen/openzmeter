@@ -51,13 +51,13 @@ uint64_t TariffList::BillTo(uint64_t to) {
   return BillingTo;
 }
 Tariff *TariffList::Find(uint64_t time) {
-  for(vector<Tariff*>::iterator it = pList.begin(); it != pList.end(); it++) {
-    if(((*it)->pStartDate <= time) && ((*it)->pEndDate >= time)) return *it;
+  for(uint32_t i = 0; i < pList.size(); i++) {
+    if((pList[i]->pStartDate <= time) && (pList[i]->pEndDate >= time)) return pList[i];
   }
   return NULL;
 }
 TariffList::~TariffList() {
-  for(vector<Tariff*>::iterator it = pList.begin(); it < pList.end(); it++) delete *it;
+  for(uint32_t i = 0; i < pList.size(); i++) delete pList[i];
 }
 //----------------------------------------------------------------------------------------------------------------------
 Tariff::Tariff(uint64_t start, uint64_t end, string tz) {

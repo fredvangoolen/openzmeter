@@ -43,7 +43,7 @@ string DeviceVirtual::Driver() {
 string DeviceVirtual::Name() {
   return "Emulate most of real capture device for testing";
 }
-bool DeviceVirtual::Config(json config) {
+bool DeviceVirtual::SetConfig(json config) {
   if(pState == RUNNING) return false;
   LOGFile::Info("Configuring 'Virtual' driver...\n");
   bool AutoStart = false;
@@ -70,9 +70,6 @@ bool DeviceVirtual::Config(json config) {
   pConfig["AutoStart"] = AutoStart;
 //  if(ConfigManager::Instance()->SaveConfig() == false) return false;
   return true;
-}
-json DeviceVirtual::Config() {
-  return json::object();
 }
 bool DeviceVirtual::Start() {
   pthread_mutex_lock(&pMutex);

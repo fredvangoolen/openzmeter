@@ -322,7 +322,7 @@ void *DeviceV1_00::Signal_Thread(void* args) {
  */
   return NULL;
 }
-bool  DeviceV1_00::Config(json config) {
+bool  DeviceV1_00::SetConfig(json config) {
   if(pState == RUNNING) return false;
   LOGFile::Info("Configuring 'V1.00' driver with serial '%s'...\n", pSerial.c_str());
   bool AutoStart = false;
@@ -343,9 +343,6 @@ bool  DeviceV1_00::Config(json config) {
   pConfig["AutoStart"] = AutoStart;
 //  if(ConfigManager::Instance()->SaveConfig() == false) return false;
   return true;
-}
-json DeviceV1_00::Config() {
-  return json::object();
 }
 bool DeviceV1_00::Start() {
   pthread_mutex_lock(&pMutex);

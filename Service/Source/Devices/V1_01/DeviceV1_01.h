@@ -50,8 +50,7 @@ class DeviceV1_01 : public Device {
     static void             ReadCallback(struct libusb_transfer *transfer);
     static int              PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
-    bool               Config(json config);
-    json               Config();
+    bool               SetConfig(json config);
     AnalyzerInterface *FindAnalyzer(string serial);
     uint32_t           AnalyzersCount();
     string             Serial();

@@ -31,7 +31,7 @@
             </div>
           </div>
           <div class="subpanel clearfix">
-            <div class="counters-title">Peiod costs:</div>
+            <div class="counters-title">Period costs:</div>
             <div class="clearfix"></div>
             <div class="current-value" v-html="BudgetValue"></div>
           </div>

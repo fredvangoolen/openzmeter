@@ -87,27 +87,15 @@ int main(int argc, char** argv) {
       printf("Option %s not recogniced. Use --help to show valid options.", argv[i]);
     }
   }
-  
+  if(Daemonize == true) RunDaemon();
   /* Create resource loader */
   ResourceLoader ResourceLoader;
-
   /* Create config manager */
   ConfigManager ConfigManager(ConfigFileName);
-  json Config;
-  
   /* Create PID File */
-  string PIDFileName = "/var/run/openZmeter.pid";
-  Config = ConfigManager::ReadConfig("/PidFile");
-  if(Config.is_string()) PIDFileName = Config;
-  PIDFile PIDFile(PIDFileName);
-  
+  PIDFile PIDFile;
   /* Create LOG file */
-  string LOGFileName = "/var/log/openZmeter.log";
-  Config = ConfigManager::ReadConfig("/LogFile");
-  if(Config.is_string()) LOGFileName = Config;
-  LOGFile LOGFile(LOGFileName);
-  LOGFile::SetMode(Debug, !Daemonize);
-  
+  LOGFile LOGFile(Debug, !Daemonize);
   /* Create database */
   if(Database::Config() == false) return EXIT_FAILURE;
 
@@ -143,7 +131,7 @@ int main(int argc, char** argv) {
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Warning("Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
   }
 
-  if(Daemonize == true) RunDaemon();
+
   
   int Iter = 0;
   while(!Terminate) {
