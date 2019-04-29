@@ -104,7 +104,7 @@
       this.SerieProps = oZm.Series[this.type];
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
       this.GraphOptions = {
-        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', 
+        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, legend: 'follow', 
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], xAxisHeight: 12, legendFormatter: oZm.LegendFormatter_Follow, 
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 30,

@@ -1,8 +1,8 @@
 <template>
-  <div class="panel panel-default"> 
+  <div class="panel panel-other"> 
     <div class="panel-heading">By duration</div>
     <div class="panel-body">
-      <graph :options="GraphOptions"></graph>
+      <graph ref="graph" :options="GraphOptions"></graph>
     </div>
   </div>
 </template>
@@ -14,8 +14,35 @@
       return {};
     },
     created: function() {
-      this.Durations = [[0, '20ms'], [20, '50ms'], [50, '100ms'], [100, '200ms'], [200, '500ms'], [500, '1s'], [1000, '2s'], [2000, '5s'], [5000, '10s' ], [10000, '20s' ], [20000, '50s'], [50000, '100s'], [Infinity, 'Others']];
-      this.GraphOptions = {};
+      this.Durations = [[0, '20ms'], [0.020, '50ms'], [0.050, '100ms'], [0.100, '200ms'], [0.200, '500ms'], [0.500, '1s'], [1, '2s'], [2, '5s'], [5, '10s' ], [10, '20s' ], [20, '50s'], [50, '100s'], [Infinity, 'Others']];
+      this.GraphOptions = { strokeWidth: 0.5, labels: ["Date", "Events"], legend: 'follow', plotter: Graph.multiColumnBarPlotter, colors: ["#DF842A"], dateWindow: [-1, this.Durations.length], interactionModel: {},
+        axes: {
+          y: { pixelsPerLabel: 15, axisLabelWidth: 14,
+               valueFormatter: function (x) { return x; },
+               axisLabelFormatter: function (x) { return ((x % 1) !== 0) ? "" : x; }
+             },
+          x: {  pixelsPerLabel: 40, axisLabelWidth: 40,
+                valueFormatter: function (x) { return ((x < 0) || (x >= this.Durations.length)) ? "" : this.Durations[x][1]; }.bind(this),
+                axisLabelFormatter: function (x) { return ((x < 0) || (x >= this.Durations.length)) ? "" : this.Durations[x][1]; }.bind(this)
+             }
+        }
+      };
+    },
+    methods: {
+      SetData: function(start, end, events) {
+        var ByDuration = [];
+        for(var i = 0; i < this.Durations.length; i++) ByDuration.push([i, 0]);
+        for(var i = 0; i < events.StartTime.length; i++) {
+          if((events.StartTime < start) || (events.StartTime > end)) continue;
+          for(var j = 0; j < this.Durations.length; j++) {
+            if(((events.Duration[i] / events.SampleRate[i]) >= this.Durations[j][0]) && ((events.Duration[i] / events.SampleRate[i]) < this.Durations[j + 1][0])) {
+              ByDuration[j][1] = ByDuration[j][1] + 1;
+              break;
+            }
+          }
+        }
+        this.$refs.graph.SetOptions({ file: ByDuration });
+      }
     },
     components: { Graph }
   };

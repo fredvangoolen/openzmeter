@@ -2010,6 +2010,8 @@ var DEFAULT_ATTRS = {
   rangeSelectorAlpha: 0.6,
   showInRangeSelector: null,
 
+  selectMode: 'closest-x',
+  
   // The ordering here ensures that central lines always appear above any
   // fill bars/error bars.
   plotter: [_dygraphCanvas2['default']._fillPlotter, _dygraphCanvas2['default']._errorPlotter, _dygraphCanvas2['default']._linePlotter],
@@ -4004,6 +4006,12 @@ if (typeof process !== 'undefined') {
         "labels": ["Data"],
         "type": "Dygraph.DataHandler",
         "description": "Custom DataHandler. This is an advanced customization. See http://bit.ly/151E7Aq."
+      },
+      "selectMode": {
+        "default": "closest-x",
+        "labels": ["Interactive Elements"],
+        "type": "string",
+        "description": "Defines how points are selected. Valid values are 'closest-x' and 'euclidian'. 'closest-x' selects the nearest point along the X axis, while 'euclidian' selects the closest point in any direction. If highlightSeriesOpts is set, this has no effect."
       }
     }; // </JSON>
     // NOTE: in addition to parsing as JS, this snippet is expected to be valid
@@ -6896,9 +6904,10 @@ if(!animatedZooms){this.dateWindow_ = null;this.axes_.forEach(function(axis){if(
  */Dygraph.prototype.eventToDomCoords = function(event){if(event.offsetX && event.offsetY){return [event.offsetX,event.offsetY];}else {var eventElementPos=utils.findPos(this.mouseEventElement_);var canvasx=utils.pageX(event) - eventElementPos.x;var canvasy=utils.pageY(event) - eventElementPos.y;return [canvasx,canvasy];}}; /**
  * Given a canvas X coordinate, find the closest row.
  * @param {number} domX graph-relative DOM X coordinate
+ * @param {seriesName} optional Restrict the search to the named series
  * Returns {number} row number.
  * @private
- */Dygraph.prototype.findClosestRow = function(domX){var minDistX=Infinity;var closestRow=-1;var sets=this.layout_.points;for(var i=0;i < sets.length;i++) {var points=sets[i];var len=points.length;for(var j=0;j < len;j++) {var point=points[j];if(!utils.isValidPoint(point,true))continue;var dist=Math.abs(point.canvasx - domX);if(dist < minDistX){minDistX = dist;closestRow = point.idx;}}}return closestRow;}; /**
+ */Dygraph.prototype.findClosestRow = function(domX, seriesName){var minDistX=Infinity;var closestRow=-1;var sets=this.layout_.points;for(var i=0;i < sets.length;i++) { if (seriesName !== undefined && this.layout_.setNames[i] != seriesName) continue; var points=sets[i];var len=points.length;for(var j=0;j < len;j++) {var point=points[j];if(!utils.isValidPoint(point,true))continue;var dist=Math.abs(point.canvasx - domX);if(dist < minDistX){minDistX = dist;closestRow = point.idx;}}}return closestRow;}; /**
  * Given canvas X,Y coordinates, find the closest point.
  *
  * This finds the individual data point across all visible series
@@ -6907,9 +6916,10 @@ if(!animatedZooms){this.dateWindow_ = null;this.axes_.forEach(function(axis){if(
  *
  * @param {number} domX graph-relative DOM X coordinate
  * @param {number} domY graph-relative DOM Y coordinate
+ * @param {seriesName} optional Restrict the search to the named series
  * Returns: {row, seriesName, point}
  * @private
- */Dygraph.prototype.findClosestPoint = function(domX,domY){var minDist=Infinity;var dist,dx,dy,point,closestPoint,closestSeries,closestRow;for(var setIdx=this.layout_.points.length - 1;setIdx >= 0;--setIdx) {var points=this.layout_.points[setIdx];for(var i=0;i < points.length;++i) {point = points[i];if(!utils.isValidPoint(point))continue;dx = point.canvasx - domX;dy = point.canvasy - domY;dist = dx * dx + dy * dy;if(dist < minDist){minDist = dist;closestPoint = point;closestSeries = setIdx;closestRow = point.idx;}}}var name=this.layout_.setNames[closestSeries];return {row:closestRow,seriesName:name,point:closestPoint};}; /**
+ */Dygraph.prototype.findClosestPoint = function(domX,domY, seriesName){var minDist=Infinity;var dist,dx,dy,point,closestPoint,closestSeries,closestRow;for(var setIdx=this.layout_.points.length - 1;setIdx >= 0;--setIdx) { if (seriesName !== undefined && this.layout_.setNames[setIdx] != seriesName) continue; var points=this.layout_.points[setIdx];for(var i=0;i < points.length;++i) {point = points[i];if(!utils.isValidPoint(point))continue;dx = point.canvasx - domX;dy = point.canvasy - domY;dist = dx * dx + dy * dy;if(dist < minDist){minDist = dist;closestPoint = point;closestSeries = setIdx;closestRow = point.idx;}}}var name=this.layout_.setNames[closestSeries];return {row:closestRow,seriesName:name,point:closestPoint};}; /**
  * Given canvas X,Y coordinates, find the touched area in a stacked graph.
  *
  * This first finds the X data point closest to the supplied DOM X coordinate,
@@ -6930,7 +6940,55 @@ if(setIdx === 0 || py < domY){closestPoint = p1;closestSeries = setIdx;}}var nam
  * @param {Object} event The mousemove event from the browser.
  * @private
  */Dygraph.prototype.mouseMove_ = function(event){ // This prevents JS errors when mousing over the canvas before data loads.
-var points=this.layout_.points;if(points === undefined || points === null)return;var canvasCoords=this.eventToDomCoords(event);var canvasx=canvasCoords[0];var canvasy=canvasCoords[1];var highlightSeriesOpts=this.getOption("highlightSeriesOpts");var selectionChanged=false;if(highlightSeriesOpts && !this.isSeriesLocked()){var closest;if(this.getBooleanOption("stackedGraph")){closest = this.findStackedPoint(canvasx,canvasy);}else {closest = this.findClosestPoint(canvasx,canvasy);}selectionChanged = this.setSelection(closest.row,closest.seriesName);}else {var idx=this.findClosestRow(canvasx);selectionChanged = this.setSelection(idx);}var callback=this.getFunctionOption("highlightCallback");if(callback && selectionChanged){callback.call(this,event,this.lastx_,this.selPoints_,this.lastRow_,this.highlightSet_);}}; /**
+var points=this.layout_.points;if(points === undefined || points === null)return;var canvasCoords=this.eventToDomCoords(event);var canvasx=canvasCoords[0];var canvasy=canvasCoords[1];var selectionChanged=false;
+  var searchMode = this.getOption("selectMode");
+  var searchSeries = undefined;
+  var highlightSeries = undefined;
+
+  // If the series is locked, we can only search and highlight
+  // that series
+  if (this.isSeriesLocked()) {
+    searchSeries = this.highlightSet_;
+    if (this.getOption("highlightSeriesOpts")) {
+      highlightSeries = searchSeries;
+    }
+
+  // If the graph is stacked AND we want to highlight the
+  // series, the selection will be based on the area
+  // of the graph under each series. Otherwise
+  // stacked graphs behave the same as non-stacked
+  } else if (this.getBooleanOption("stackedGraph") &&
+             this.getOption("highlightSeriesOpts")) {
+
+    searchSeries = this.findStackedPoint(canvasx, canvasy).seriesName;
+    highlightSeries = searchSeries;
+
+  // If series highlight is set on its own, we switch to
+  // euclidian mode since we want to highlight the closest
+  // series to the mouse
+  } else if (this.getOption("highlightSeriesOpts")) {
+    searchMode = 'euclidian';
+  }
+
+  if (searchMode == 'euclidian') {
+    var closestPoint = this.findClosestPoint(canvasx, canvasy, searchSeries);
+    if (this.getOption("highlightSeriesOpts")) {
+      highlightSeries = closestPoint.seriesName;
+    }
+
+    selectionChanged = this.setSelection(closestPoint.row, highlightSeries);
+
+
+
+
+
+}else {
+      selectionChanged = this.setSelection(
+      this.findClosestRow(canvasx, searchSeries),
+      highlightSeries
+      );
+   
+   }var callback=this.getFunctionOption("highlightCallback");if(callback && selectionChanged){callback.call(this,event,this.lastx_,this.selPoints_,this.lastRow_,this.highlightSet_);}}; /**
  * Fetch left offset from the specified set index or if not passed, the
  * first defined boundaryIds record (see bug #236).
  * @private
@@ -6982,7 +7040,8 @@ if(this.fadeLevel){this.animateSelection_(-1);return;}this.canvas_ctx_.clearRect
  * Returns the number of the currently selected row. To get data for this row,
  * you can use the getValue method.
  * @return {number} row number, or -1 if nothing is selected
- */Dygraph.prototype.getSelection = function(){if(!this.selPoints_ || this.selPoints_.length < 1){return -1;}for(var setIdx=0;setIdx < this.layout_.points.length;setIdx++) {var points=this.layout_.points[setIdx];for(var row=0;row < points.length;row++) {if(points[row].x == this.selPoints_[0].x){return points[row].idx;}}}return -1;}; /**
+ */Dygraph.prototype.getSelection = function(){if(!this.selPoints_ || this.selPoints_.length < 1){return -1;} else {
+    return this.selPoints_[0].idx;} }; /**
  * Returns the name of the currently-highlighted series.
  * Only available when the highlightSeriesOpts option is in use.
  */Dygraph.prototype.getHighlightSeries = function(){return this.highlightSet_;}; /**
