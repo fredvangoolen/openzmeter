@@ -34,11 +34,9 @@
 
 <style>
   .sidenav-version {
-    position: absolute;
-    bottom: 0px;
     color: white;
     width: 100%;
-    padding: 10px;
+    padding: 0px 10px;
     font-size: 12px;
   }
   .sidenav-version > div {
@@ -51,11 +49,6 @@
     padding: 4px;
     background-color: transparent;
     border: 1px solid #333;
-  }
-  @media(min-width:1024px) {
-    .sidenav-version  {
-      bottom: 56px;
-    }
   }
   .sidenav-version > span {
     vertical-align: middle;

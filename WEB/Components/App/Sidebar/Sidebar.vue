@@ -1,8 +1,10 @@
 <template>
   <nav class="navbar-nav">
-    <sidebar-user></sidebar-user>
-    <sidebar-analyzer></sidebar-analyzer>
-    <sidebar-menu></sidebar-menu>
+    <div class="menu-wrapper">
+      <sidebar-user></sidebar-user>
+      <sidebar-analyzer></sidebar-analyzer>
+      <sidebar-menu></sidebar-menu>
+    </div>
     <sidebar-news></sidebar-news>
   </nav>
 </template>
@@ -49,14 +51,18 @@ export default {
   .navbar-nav.show {
     transform: translate(0, 0);
   }
+  .menu-wrapper {
+    min-height: calc(100vh - 48px);
+  }
   .navbar-nav {
+    overflow: hidden;
     bottom: 0px;
     background: #212121;
     box-shadow: 2px 2px 6px rgba(0,0,0,.3);
     display: block;
     font-size: 16px;
     font-weight: 400;
-    height: 100%;
+    min-height: 100%;
     left: 0;
     position: fixed;
     overflow: auto;
@@ -69,8 +75,12 @@ export default {
   }
   @media(min-width:1024px) {
     .navbar-nav {
+      min-height: calc(100vh - 56px);
       transform: none;
       top: 56px;
+    }
+    .menu-wrapper {
+      min-height: calc(100vh - 48px - 56px);
     }
   }
   .sidenav-header {
