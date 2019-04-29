@@ -1,24 +1,20 @@
 <template>
   <div class="row">
-    <div class="col-xs-12 col-sm-6 col-lg-4">
-      <label class="control-label">Name</label>
-      <input type="text" class="form-control" id="inputName">
+    <div class="col-xs-12 col-sm-6">
+      <label class="control-label">Nominal Voltage</label>
+      <input type="text" class="form-control">
     </div>
-    <div class="col-xs-12 col-sm-6 col-lg-4">
-      <label class="control-label">Surname</label>
+    <div class="col-xs-12 col-sm-6">
+      <label class="control-label">Nominal Frequency</label>
       <input type="text" class="form-control" id="inputSurname">
     </div>
-    <div class="col-xs-12 col-sm-6 col-lg-4">
-      <label class="control-label">Country</label>
-      <input type="text" class="form-control" id="inputIDCard">
+    <div class="col-xs-12 col-sm-6">
+      <label class="control-label">Mode</label>
+      <option-picker :options="['1PHASE', '3PHASE', '3PHASEN']" :selected="'1PHASE'" v-on:OptionChanged="ModeChanged" :big="true"></option-picker>
     </div>
-    <div class="col-xs-12 col-sm-6 col-lg-6">
-      <label class="control-label">Company</label>
+    <div class="col-xs-12 col-sm-6">
+      <label class="control-label">Samplerate</label>
       <input type="text" class="form-control" id="inputCompany">
-    </div>
-    <div class="col-xs-12 col-lg-6">
-      <label class="control-label">Address</label>
-      <input type="text" class="form-control" id="inputAddress">
     </div>
   </div>
 </template>
@@ -27,6 +23,7 @@
   import Vue from 'vue';
   import Vuetable from 'vuetable-2';
   import Spinner from 'Components/Spinner.vue';
+  import OptionPicker from 'Components/OptionPicker.vue';
   export default {
     data() {
       return {
@@ -40,6 +37,9 @@
       };
     },
     methods: {
+      ModeChanged: function() {
+        
+      },
       GetAnalyzers() {
         $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
           success: function(result) { 
@@ -90,7 +90,7 @@
         alert("Maintenance not yet implemented");
       }
     },
-    components: { Vuetable, Spinner }
+    components: { Vuetable, Spinner, OptionPicker }
   }
 </script>
 
