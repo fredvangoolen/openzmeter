@@ -5,11 +5,12 @@
 <script>
   import Toggle from 'JS/bootstrap-toggle.js';  
   export default {
+    props: ['onText', 'off', 'onstyle', 'offstyle'],
     data: function() { 
       return {};
     },
     mounted: function(){
-      $(this.$el).bootstrapToggle();
+      $(this.$el).bootstrapToggle({on: this.onText, off: this.off, onstyle: this.onstyle, offstyle: this.offstyle});
     },
     components: { Toggle }
   }
@@ -37,4 +38,5 @@
 .toggle.btn-xs{min-width:35px;min-height:22px}
 .toggle-on.btn-xs{padding-right:12px}
 .toggle-off.btn-xs{padding-left:12px}
+.active{ background-color: red};
 </style>
