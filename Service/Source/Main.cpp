@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
   /* Create WEB service */
   HTTPServer HTTPServer;
   if(HTTPServer.Config() == false) return EXIT_FAILURE;
-  HTTPServer.RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
+//  HTTPServer.RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
   HTTPServer.RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
   HTTPServer.RegisterCallback("/getNews",             GetNewsCallback);
   HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);  

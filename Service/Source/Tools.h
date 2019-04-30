@@ -80,24 +80,12 @@ class Tools {
     static uint8_t pBatteryLevel;
     static bool    pBatteryCharging;
     static bool    pExternalPower;
-  private :      
-    static bool            pDaemonized;
-
-    
-
-//    static json           *pConfig;
-
-    
-  public :
-//    static bool          Debug;
   private :
     static uint64_t ParseProcMem(char *name, char *buff);
     static bool     GetMemory(uint64_t *total, uint64_t *available);
-
   public :
-
     static uint64_t     GetTime();
-    static void         GetSysInfo(HTTPRequest &req);
+    static json         GetSysInfo();
     static void         SendUDP(json obj);
 };
 //----------------------------------------------------------------------------------------------------------------------

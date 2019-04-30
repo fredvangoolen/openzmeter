@@ -291,49 +291,51 @@ bool Tools::GetMemory(uint64_t *total, uint64_t *available) {
   *available = ParseProcMem((char*)"MemFree:", Buffer) + ParseProcMem((char*)"Cached:", Buffer) + ParseProcMem((char*)"Buffers:", Buffer);
   return ((*total != 0) && (*available != 0));
 }
-void Tools::GetSysInfo(HTTPRequest &req) {
+json Tools::GetSysInfo() {
   struct sysinfo Info;
   struct statvfs Disk;
+  json Result;
   if(sysinfo(&Info) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    req.FromString("'System error", MHD_HTTP_BAD_REQUEST);
-    return;
+    return Result;
   }
+  Result["UpTime"] = Info.uptime;
+  Result["Swap_Total"] = (uint64_t)Info.totalswap * Info.mem_unit;
+  Result["Swap_Usage"] = ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap;
+  Result["CPU_Usage"] = (Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs();
   if(statvfs("/", &Disk) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    req.FromString("'System error", MHD_HTTP_BAD_REQUEST);
-    return;
+    return Result;
   }
-  uint64_t TotalRam, FreeRam;
-  if(GetMemory(&TotalRam, &FreeRam) == false) {
-    req.FromString("'System error", MHD_HTTP_BAD_REQUEST);  
-    return;
+  Result["Disk_Total"] = (uint64_t)Disk.f_blocks * Disk.f_frsize;
+  Result["Disk_Usage"] = ((Disk.f_blocks - Disk.f_bfree) * 100.0) / Disk.f_blocks;
+  char Buffer[8192];
+  int TmpFile = open("/proc/meminfo", O_RDONLY);
+  if(TmpFile > 0) {
+    size_t Len = read(TmpFile, Buffer, sizeof(Buffer));
+    close(TmpFile);
+    if(Len == 0) return Result;
+    Buffer[Len] = 0;
+    Result["RAM_Total"] = ParseProcMem((char*)"MemTotal:", Buffer);
+    Result["RAM_Usage"] = ((ParseProcMem((char*)"MemTotal:", Buffer) - ParseProcMem((char*)"MemAvailable:", Buffer)) * 100.0) / + ParseProcMem((char*)"MemTotal:", Buffer);
   }
-  json Response;
-  Response["UpTime"] = Info.uptime;
-  //  *writer = json_object_new_object();
-//  json_object_object_add(*writer, "UpTime", json_object_new_int(Info.uptime));
-//  json_object_object_add(*writer, "Swap_Total", json_object_new_int64(Info.totalswap * Info.mem_unit));
-//  json_object_object_add(*writer, "Swap_Free", json_object_new_int64(Info.freeswap * Info.mem_unit));
-//  json_object_object_add(*writer, "RAM_Total", json_object_new_int64(TotalRam));
-//  json_object_object_add(*writer, "RAM_Free", json_object_new_int64(FreeRam));
-//  json_object_object_add(*writer, "CPU_Usage", json_object_new_double(Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)));
-//  json_object_object_add(*writer, "CPU_Count", json_object_new_int(get_nprocs()));
-//  json_object_object_add(*writer, "Disk_Total", json_object_new_int64((uint64_t)Disk.f_blocks * Disk.f_frsize));
-//  json_object_object_add(*writer, "Disk_Free", json_object_new_int64((uint64_t)Disk.f_bfree * Disk.f_frsize));
-//  json_object_object_add(*writer, "Battery_Percent", json_object_new_int(pBatteryLevel));
+  TmpFile = open("/sys/class/thermal/thermal_zone0/temp", O_RDONLY);
+  if(TmpFile > 0) {
+    size_t Len = read(TmpFile, Buffer, sizeof(Buffer));
+    close(TmpFile);
+    Buffer[Len] = 0;
+    Result["Temperature"] = atoi(Buffer) / 1000.0;
+  }
+
+  
+  //  json_object_object_add(*writer, "Battery_Percent", json_object_new_int(pBatteryLevel));
 //  json_object_object_add(*writer, "Battery_Charging", json_object_new_boolean(pBatteryCharging));
 //  json_object_object_add(*writer, "External_Power", json_object_new_boolean(pExternalPower));
-//  int TempFile = open("/sys/class/thermal/thermal_zone0/temp", O_RDONLY);
-//  if(TempFile > 0) {
-//    char Temp[16];
-//    if(read(TempFile, Temp, sizeof(Temp)) > 0) json_object_object_add(*writer, "Temperature", json_object_new_int(atoi(Temp)));
-//    close(TempFile);
-//  }
+
 //  *postdata = (char*)writer.dump().c_str();
 //  *resultLen = strlen(*postdata);
   //*postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
-  req.FromJSON(Response);
+  return Result;
 }
 
 

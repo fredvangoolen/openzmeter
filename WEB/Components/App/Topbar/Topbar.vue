@@ -3,7 +3,13 @@
     <div class="navbar-header">
       <div class="navbar-brand">
         <img :src="require('Imgs/Logo.png')">
-        <div>Node time: {{ time }}</div>
+          <div><img :src="require('Imgs/system_monitor.png')">{{ Time }}</div>
+          <div><img :src="require('Imgs/sd_memory_adapter.png')">90%</div>
+          <div><img :src="require('Imgs/ddr_memory.png')">50%</div>
+          <div><img :src="require('Imgs/chip.png')">20%</div>
+          <div><img :src="require('Imgs/network_wireless.png')">45%</div>
+          <div><img :src="require('Imgs/battery.png')">100%</div>
+          <div><img :src="require('Imgs/temperature_normal.png')">45º</div>
       </div>
       <button type="button" class="navbar-toggle"><img :src="require('Imgs/application_menu.png')"></button>
     </div>
@@ -29,41 +35,55 @@ export default {
         this.$refs.power_indicator.setValue(null);
         this.$refs.frequency_indicator.setValue(null);
         this.$refs.energy_indicator.setValue(null);
-        this.time = 'No analyzer selected';  
+        this.Time = 'Offline';
       } else {
         if(vals['Voltage'] !== undefined) this.$refs.voltage_indicator.setValue(vals['Voltage']);
         if(vals['Current'] !== undefined) this.$refs.current_indicator.setValue(vals['Current']);
         if(vals['Active_Power'] !== undefined) this.$refs.power_indicator.setValue(vals['Active_Power']);
         if(vals['Frequency'] !== undefined) this.$refs.frequency_indicator.setValue([vals['Frequency']]);
         if(vals['Active_Energy'] !== undefined) this.$refs.energy_indicator.setValue(vals['Active_Energy']);
-        if(vals.Sampletime !== undefined) this.time = moment(vals.Sampletime).format('DD/MM/YYYY - HH:mm:ss');  
+        if(vals['Sampletime'] !== undefined)  this.Time = moment(vals['Sampletime']).format('HH:mm:ss');  
       }
     }
   },
   data () {
-    return {time: 'No analyzer selected' };
+    return {Time: 'Offline' };
   },
   components: { TopbarIndicator }
 }
 </script>
  
 <style scoped>
-  img {
-    margin: 4px 0px;
-  }
-  .navbar-brand > embed {
-    width: 100%;
+  .navbar-brand > img {
+    margin-top: 4px;
   }
   .navbar-brand > div {
-    font-size: 12px; 
-    color: #FFF; 
-    margin-top: -5px;
+    font-size: 10px;
+    text-align: center;
+    color: #FFF;
+    line-height: 16px;
+    margin-right: 2px;
+    display: inline-block;
+  }
+  .navbar-brand > div > img {
+    margin: 0px 2px;
+  }
+  .sys-stats {
+    font-size: 10px;
+    text-align: center;
+    color: #FFF;
+    width: 100%;
+    line-height: 16px;
+  }
+  .sys-stats img {
+    margin-right: 1px;
   }
   .navbar-brand {
     text-align: left;
-    width: 260px;
-    padding: 6px;
-    height: 50px;     
+    padding: 0px 6px;
+  }
+  .navbar-toggle img {
+    margin: 2px 0px;
   }
   .navbar-toggle {
     padding: 5px 5px;

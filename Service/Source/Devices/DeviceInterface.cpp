@@ -501,6 +501,7 @@ void DeviceManager::GetSeriesNowCallback(HTTPRequest &req) {
     else if(Serie == "CURRENT_FFT")       Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::CURRENT_FFT);
     else if(Serie == "VOLTAGE_SAMPLES")   Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::VOLTAGE_SAMPLES);
     else if(Serie == "CURRENT_SAMPLES")   Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::CURRENT_SAMPLES);
+    else if(Serie == "SYS_STATS")         Copy = (AnalyzerInterface::ParamsType)(Copy | AnalyzerInterface::SYS_STATS);
     else return req.FromString("Unknown serie name", MHD_HTTP_BAD_REQUEST);
   }
   for(vector<Device*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
@@ -528,6 +529,7 @@ void DeviceManager::GetSeriesNowCallback(HTTPRequest &req) {
     if(Copy & AnalyzerInterface::CURRENT_SAMPLES) Result["Current_Samples"] = Aggreg.Current_Samples;
     if(Copy & AnalyzerInterface::VOLTAGE_FFT) Result["Voltage_FFT"] = Aggreg.Voltage_FFT;
     if(Copy & AnalyzerInterface::CURRENT_FFT) Result["Current_FFT"] = Aggreg.Current_FFT;
+    if(Copy & AnalyzerInterface::SYS_STATS) Result["Sys_Stats"] = Aggreg.Sys_Stats;
     Result["Sampletime"] = Aggreg.Timestamp;
     req.FromJSON(Result);
     return;

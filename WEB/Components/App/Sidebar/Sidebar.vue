@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar-nav">
     <div class="menu-wrapper">
-      <sidebar-analyzer></sidebar-analyzer>
+      <sidebar-analyzer ref="analyzer"></sidebar-analyzer>
       <sidebar-user></sidebar-user>
       <sidebar-menu></sidebar-menu>
     </div>

@@ -32,7 +32,8 @@ class AnalyzerInterface : protected Database {
                       VOLTAGE_FFT       = 0x00010000,
                       CURRENT_FFT       = 0x00020000,
                       VOLTAGE_SAMPLES   = 0x00040000,
-                      CURRENT_SAMPLES   = 0x00080000
+                      CURRENT_SAMPLES   = 0x00080000,
+                      SYS_STATS         = 0x00100000
     };
   protected :
     static vector<float>  FrequencyRanges;   //Rangos de frecuencias para estadisticas
@@ -70,6 +71,7 @@ class AnalyzerInterface : protected Database {
       vector< vector<float> > Current_FFT;                //Resultados de la FFT en corriente
       vector< vector<float> > Voltage_Samples;            //Voltage samples
       vector< vector<float> > Current_Samples;            //Current samples
+      json                    Sys_Stats;                  //System status for NOW(10C) aggreg
     } Params_t;
   protected :
     uint64_t      pLastSave;

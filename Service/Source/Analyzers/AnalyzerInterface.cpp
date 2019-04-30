@@ -86,40 +86,8 @@ void AnalyzerInterface::InitAggreg(Params_t &params, AggregType type) {
     params.Current_FFT = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(0));
     params.Voltage_FFT = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(0));
   }
+  params.Sys_Stats = json::object();
 }
-//void AnalyzerInterface::ResetAggreg(Params_t &params) {
-//  params.Frequency = NAN;
-//  params.Flag = false;
-//  params.Timestamp = 0;
-//  params.Voltage_Inputs = 0;
-//  params.Frequency_Inputs = 0;
-//  for(uint i = 0; i < params.StatsFrequency.size(); i++) params.StatsFrequency[i] = 0;
-//  for(uint i = 0; i < params.StatsVoltage.size(); i++) params.StatsVoltage[i] = 0;
-//  for(uint i = 0; i < params.StatsTHD.size(); i++) params.StatsTHD[i] = 0;
-//  for(uint i = 0; i < params.StatsHarmonics.size(); i++) params.StatsHarmonics[i] = 0;
-//  for(uint i = 0; i < params.Current_Inputs.size(); i++) params.Current_Inputs[i] = 0;
-//  for(uint i = 0; i < params.Voltage.size(); i++) params.Voltage[i] = NAN;
-//  for(uint i = 0; i < params.Current.size(); i++) params.Current[i] = NAN;
-//  for(uint i = 0; i < params.Active_Power.size(); i++) params.Active_Power[i] = NAN;
-//  for(uint i = 0; i < params.Reactive_Power.size(); i++) params.Reactive_Power[i] = NAN;
-//  for(uint i = 0; i < params.Active_Energy.size(); i++) params.Active_Energy[i] = NAN;
-//  for(uint i = 0; i < params.Reactive_Energy.size(); i++) params.Reactive_Energy[i] = NAN;
-//  for(uint i = 0; i < params.Apparent_Power.size(); i++) params.Apparent_Power[i] = NAN;
-//  for(uint i = 0; i < params.Power_Factor.size(); i++) params.Power_Factor[i] = NAN;
-//  for(uint i = 0; i < params.Voltage_THD.size(); i++) params.Voltage_THD[i] = NAN;
-//  for(uint i = 0; i < params.Current_THD.size(); i++) params.Current_THD[i] = NAN;
-//  for(uint i = 0; i < params.Phi.size(); i++) params.Phi[i] = NAN;
-//  for(uint i = 0; i < params.Voltage_Harmonics.size(); i++) {
-//    for(uint n = 0; n < params.Voltage_Harmonics[i].size(); n++) params.Voltage_Harmonics[i][n] = NAN;
-//  }
-//  for(uint i = 0; i < params.Current_Harmonics.size(); i++) {
-//    for(uint n = 0; n < params.Current_Harmonics[i].size(); n++) params.Current_Harmonics[i][n] = NAN;
-//  }
-//  for(uint i = 0; i < params.Voltage_Samples.size(); i++) params.Voltage_Samples[i].clear();
-//  for(uint i = 0; i < params.Current_Samples.size(); i++) params.Current_Samples[i].clear();
-//  for(uint i = 0; i < params.Voltage_FFT.size(); i++) params.Voltage_FFT[i].clear();
-//  for(uint i = 0; i < params.Current_FFT.size(); i++) params.Current_FFT[i].clear();
-//}
 void AnalyzerInterface::SaveAggreg(Params_t &params) {
   if(params.Type == AGGREG_3S)
     ExecSentenceNoResult("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ")");
