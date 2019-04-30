@@ -1,18 +1,32 @@
 <template>
   <div>
     <div class="sidenav-header">
+      <table>
+        <tr>
+          <td><img :src="require('Imgs/system_monitor.png')">00:00:00</td>
+          <td><img :src="require('Imgs/sd_memory_adapter.png')">90%</td>
+      <td><img :src="require('Imgs/ddr_memory.png')">50%</td>
+      <td><img :src="require('Imgs/chip.png')">20%</td>
+      <td><img :src="require('Imgs/network_wireless.png')">45%</td>
+      <td><img :src="require('Imgs/battery.png')">100%</td>
+        </tr>
+      </table>
       <div>{{ analyzerName }}</div>
       <div class="btn-group pull-right">
         <button type="button" class="btn btn-default btn-xs" v-bind:class="{disabled: !hasAnalyzers}" @click="ShowDialog"><img :src="require('Imgs/magnifier.png')"></button>
         <button type="button" class="btn btn-default btn-xs disabled"><img :src="require('Imgs/exclamation.png')"></button>
       </div>
       <div class="clearfix"></div>
-      <table>
+      
+
+      
+      
+      <!--table>
         <tr><td>Disk:</td><td><progress-bar :value="disk"></progress-bar></td></tr>
         <tr><td>Battery:</td><td><progress-bar :value="battery"></progress-bar></td></tr>
         <tr><td>Usage:</td><td>{{ usage }}</td></tr>              
         <tr><td>Uptime:</td><td>{{ uptime }}</td></tr>
-      </table>
+      </table-->
     </div>
     <analyzer-dialog ref="Dialog"></analyzer-dialog>
   </div> 
@@ -57,27 +71,24 @@
 </script>
 
 <style scoped>
-  .sidenav-header .progress {
-    height: 12px;
+  .sidenav-header {
     background-color: #474544;
-    margin-bottom: 2px;
-  }
-  .sidenav-header .progress > div {
-    background-color: #337ab7;
   }
   .sidenav-header td {
-    text-align: right;
+    text-align: center;
   }
   .sidenav-header > table {
     width: 100%;
-    font-size: 11px;
+    font-size: 10px;
     line-height: 12px;
     margin-top: 4px;
     margin-bottom: 4px;
   }
-  .sidenav-header > table tr td:nth-child(2) {
-    width: 100%;
-    padding: 0px 0px 0px 10px;
-    text-align: center;
+  .sidenav-header > table img {
+    margin-right: 1px;
   }
+  .sidenav-header > div:nth-child(2) {
+    width: 186px;
+    display: inline-block;
+}
 </style>

@@ -45,4 +45,7 @@
   .sidenav-header > div:first-child {
     width: 180px;
   }
+  .sidenav-header {
+    background-color: #474544;
+  }
 </style>

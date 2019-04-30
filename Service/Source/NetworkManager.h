@@ -35,7 +35,6 @@ class NetworkManager {
     static void     Reset();
     static uint8_t  GetConnectivityStatus();
     static void     GetNetworksCallback(HTTPRequest &req);
-    static bool     SetJSONNetworkConfig(json json);
-
+    static bool     SetJSONNetworkConfig(json json);    
 };
 
