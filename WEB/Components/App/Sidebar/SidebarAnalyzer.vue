@@ -1,32 +1,12 @@
 <template>
   <div>
     <div class="sidenav-header">
-      <table>
-        <tr>
-          <td><img :src="require('Imgs/system_monitor.png')">00:00:00</td>
-          <td><img :src="require('Imgs/sd_memory_adapter.png')">90%</td>
-      <td><img :src="require('Imgs/ddr_memory.png')">50%</td>
-      <td><img :src="require('Imgs/chip.png')">20%</td>
-      <td><img :src="require('Imgs/network_wireless.png')">45%</td>
-      <td><img :src="require('Imgs/battery.png')">100%</td>
-        </tr>
-      </table>
       <div>{{ analyzerName }}</div>
       <div class="btn-group pull-right">
         <button type="button" class="btn btn-default btn-xs" v-bind:class="{disabled: !hasAnalyzers}" @click="ShowDialog"><img :src="require('Imgs/magnifier.png')"></button>
         <button type="button" class="btn btn-default btn-xs disabled"><img :src="require('Imgs/exclamation.png')"></button>
       </div>
       <div class="clearfix"></div>
-      
-
-      
-      
-      <!--table>
-        <tr><td>Disk:</td><td><progress-bar :value="disk"></progress-bar></td></tr>
-        <tr><td>Battery:</td><td><progress-bar :value="battery"></progress-bar></td></tr>
-        <tr><td>Usage:</td><td>{{ usage }}</td></tr>              
-        <tr><td>Uptime:</td><td>{{ uptime }}</td></tr>
-      </table-->
     </div>
     <analyzer-dialog ref="Dialog"></analyzer-dialog>
   </div> 
@@ -35,9 +15,10 @@
 <script>
   import ProgressBar from 'Components/ProgressBar.vue';
   import AnalyzerDialog from './Analyzer/Analyzer.vue';
+  import moment from 'JS/moment.js';
   export default {
     data() {
-      return { AvaliableAnalyzers: [], hasAnalyzers: false, SelAnalyzer: null, analyzerName: 'test', disk: 10, battery: 10, usage: 'poco', uptime: 'mucho'};
+      return { AvaliableAnalyzers: [], hasAnalyzers: false, SelAnalyzer: null, analyzerName: 'test'};
     },
     mounted: function() {
       this.GetAnalyzers();
@@ -87,7 +68,7 @@
   .sidenav-header > table img {
     margin-right: 1px;
   }
-  .sidenav-header > div:nth-child(2) {
+  .sidenav-header > div:first-child {
     width: 186px;
     display: inline-block;
 }

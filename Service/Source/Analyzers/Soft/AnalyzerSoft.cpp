@@ -320,24 +320,22 @@ void AnalyzerSoft::GetParams(Params_t &params, ParamsType &copy) {
     params.Timestamp = pAggreg10C.Timestamp;
     if(copy & FREQUENCY) params.Frequency = pAggreg10C.Frequency;
     if(copy & FLAG) params.Flag = pAggreg10C.Flag;
-    if(copy & VOLTAGE) params.Voltage.assign(pAggreg10C.Voltage.begin(), pAggreg10C.Voltage.end());
-    if(copy & CURRENT) params.Current.assign(pAggreg10C.Current.begin(), pAggreg10C.Current.end());
-    if(copy & ACTIVE_POWER) params.Active_Power.assign(pAggreg10C.Active_Power.begin(), pAggreg10C.Active_Power.end());
-    if(copy & REACTIVE_POWER) params.Reactive_Power.assign(pAggreg10C.Reactive_Power.begin(), pAggreg10C.Reactive_Power.end());
-    if(copy & ACTIVE_ENERGY) params.Active_Energy.assign(pAggreg10C.Active_Energy.begin(), pAggreg10C.Active_Energy.end());
-    if(copy & REACTIVE_ENERGY) params.Reactive_Energy.assign(pAggreg10C.Reactive_Energy.begin(), pAggreg10C.Reactive_Energy.end());
-    if(copy & APPARENT_POWER) params.Apparent_Power.assign(pAggreg10C.Apparent_Power.begin(), pAggreg10C.Apparent_Power.end());
-    if(copy & POWER_FACTOR) params.Power_Factor.assign(pAggreg10C.Power_Factor.begin(), pAggreg10C.Power_Factor.end());
-    if(copy & VOLTAGE_THD) params.Voltage_THD.assign(pAggreg10C.Voltage_THD.begin(), pAggreg10C.Voltage_THD.end());
+    if(copy & VOLTAGE) params.Voltage = pAggreg10C.Voltage;
+    if(copy & CURRENT) params.Current = pAggreg10C.Current;
+    if(copy & ACTIVE_POWER) params.Active_Power = pAggreg10C.Active_Power;
+    if(copy & REACTIVE_POWER) params.Reactive_Power = pAggreg10C.Reactive_Power;
+    if(copy & ACTIVE_ENERGY) params.Active_Energy = pAggreg10C.Active_Energy;
+    if(copy & REACTIVE_ENERGY) params.Reactive_Energy = pAggreg10C.Reactive_Energy;
+    if(copy & APPARENT_POWER) params.Apparent_Power = pAggreg10C.Apparent_Power;
+    if(copy & POWER_FACTOR) params.Power_Factor = pAggreg10C.Power_Factor;
+    if(copy & VOLTAGE_THD) params.Voltage_THD = pAggreg10C.Voltage_THD;
     if(copy & CURRENT_THD) params.Current_THD.assign(pAggreg10C.Current_THD.begin(), pAggreg10C.Current_THD.end());
     if(copy & VOLTAGE_PHASE) params.Voltage_Phase.assign(pAggreg10C.Voltage_Phase.begin(), pAggreg10C.Voltage_Phase.end());
     if(copy & PHI) params.Phi.assign(pAggreg10C.Phi.begin(), pAggreg10C.Phi.end());
-    if(copy & VOLTAGE_HARMONICS) {
-      for(uint i = 0; i < params.Voltage_Harmonics.size(); i++) params.Voltage_Harmonics[i].assign(pAggreg10C.Voltage_Harmonics[i].begin(), pAggreg10C.Voltage_Harmonics[i].end());
-    }
-    if(copy & CURRENT_HARMONICS) {
-      for(uint i = 0; i < params.Current_Harmonics.size(); i++) params.Current_Harmonics[i].assign(pAggreg10C.Current_Harmonics[i].begin(), pAggreg10C.Current_Harmonics[i].end());
-    }
+    if(copy & VOLTAGE_HARMONICS) params.Voltage_Harmonics = pAggreg10C.Voltage_Harmonics;
+    if(copy & CURRENT_HARMONICS) params.Current_Harmonics = pAggreg10C.Current_Harmonics;
+    if(copy & VOLTAGE_SAMPLES) params.Voltage_Samples = pAggreg10C.Voltage_Samples;
+    if(copy & CURRENT_SAMPLES) params.Current_Samples = pAggreg10C.Current_Samples;
     if(copy & VOLTAGE_FFT) {
       for(uint i = 0; i < params.Voltage_FFT.size(); i++) {
         for(uint n = 0; n < pVoltageFFT[i]->Output.size(); n++) params.Voltage_FFT[i].push_back(pVoltageFFT[i]->BinPower(n));
@@ -348,17 +346,12 @@ void AnalyzerSoft::GetParams(Params_t &params, ParamsType &copy) {
         for(uint n = 0; n < pCurrentFFT[i]->Output.size(); n++) params.Current_FFT[i].push_back(pCurrentFFT[i]->BinPower(n));
       }
     }
-    if(copy & VOLTAGE_SAMPLES) {
-      for(uint i = 0; i < params.Voltage_Samples.size(); i++) params.Voltage_Samples[i].assign(pAggreg10C.Voltage_Samples[i].begin(), pAggreg10C.Voltage_Samples[i].end());
-    }
-    if(copy & CURRENT_SAMPLES) {
-      for(uint i = 0; i < params.Current_Samples.size(); i++) params.Current_Samples[i].assign(pAggreg10C.Current_Samples[i].begin(), pAggreg10C.Current_Samples[i].end());
-    }
   }
   pthread_mutex_lock(&pWaitingThreadsMutex);
   pWaitingThreads--;
   pthread_cond_signal(&pWaitingThreadsCond);
-  pthread_mutex_unlock(&pWaitingThreadsMutex);  
+  pthread_mutex_unlock(&pWaitingThreadsMutex);
+  if(copy & SYS_STATS) params.Sys_Stats = Tools::GetSysInfo();
 }
 bool AnalyzerSoft::IsFinished() {
   bool Result;

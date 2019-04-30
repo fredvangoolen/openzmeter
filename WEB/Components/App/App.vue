@@ -2,7 +2,7 @@
   <div id="app">
     <div id="DisableDiv" class="overlay"></div>
     <topbar ref="indicator_bar"></topbar>
-    <sidebar></sidebar>
+    <sidebar ref="sidebar"></sidebar>
     <router-view id="contents"></router-view>
   </div>
 </template>
@@ -19,7 +19,7 @@ export default {
     UpdateIndicators1() {
       if(this.UpdateIndicatorsTimer1) clearInterval(this.UpdateIndicatorsTimer1);
       if(this.$root.SelectedAnalyzer === null) return;
-      $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
+      $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY', 'SYS_STATS'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
         success: function(result) {
           this.$refs.indicator_bar.setValue(result);
         }.bind(this),
