@@ -1,8 +1,8 @@
 <template>
   <nav class="navbar-nav">
     <div class="menu-wrapper">
-      <sidebar-user></sidebar-user>
       <sidebar-analyzer></sidebar-analyzer>
+      <sidebar-user></sidebar-user>
       <sidebar-menu></sidebar-menu>
     </div>
     <sidebar-news></sidebar-news>
@@ -58,7 +58,7 @@ export default {
     overflow: hidden;
     bottom: 0px;
     background: #212121;
-    box-shadow: 2px 2px 6px rgba(0,0,0,.3);
+/*    box-shadow: 2px 2px 6px rgba(0,0,0,.3);*/
     display: block;
     font-size: 16px;
     font-weight: 400;
@@ -87,7 +87,7 @@ export default {
     padding: 3px 6px;
     color: #DDD;
     font-size: 16px;
-    border-bottom: 1px solid #424242;
+    border-bottom: 1px solid #333;
   }
   .sidenav-header > div:first-child {
     float: left;
