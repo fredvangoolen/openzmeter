@@ -81,6 +81,7 @@ DeviceV1_01::DeviceV1_01(string serial) {
   pVoltageOffset = 0;
   pCurrentOffset = 0;
   pAnalyzer      = NULL;
+  pMutex         = PTHREAD_MUTEX_INITIALIZER;
 }
 AnalyzerInterface *DeviceV1_01::FindAnalyzer(string serial) {
   if(pAnalyzer == NULL) return NULL;
