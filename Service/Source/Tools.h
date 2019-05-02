@@ -81,8 +81,8 @@ class Tools {
     static bool    pBatteryCharging;
     static bool    pExternalPower;
   private :
-    static uint64_t ParseProcMem(char *name, char *buff);
-    static bool     GetMemory(uint64_t *total, uint64_t *available);
+    static uint64_t ParseProcMem(const char *name, const char *buff);
+//    static bool     GetMemory(uint64_t *total, uint64_t *available);
   public :
     static uint64_t     GetTime();
     static json         GetSysInfo();

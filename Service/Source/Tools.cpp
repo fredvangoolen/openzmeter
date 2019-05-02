@@ -271,25 +271,13 @@ uint64_t Tools::GetTime() {
   }
   return (uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000;
 }
-uint64_t Tools::ParseProcMem(char *name, char *buff) {
-  char *hit = strstr(buff, name);
+uint64_t Tools::ParseProcMem(const char *name, const char *buff) {
+  const char *hit = strstr(buff, name);
   if(hit == NULL) return 0;
   errno = 0;
   long Val = strtol(hit + strlen(name), NULL, 10);
   if(errno != 0) return 0;
   return Val * 1024;
-}
-bool Tools::GetMemory(uint64_t *total, uint64_t *available) {
-  char Buffer[8192];
-  FILE *FD = fopen("/proc/meminfo", "r");
-  if(FD == NULL) return false;
-  size_t Len = fread(Buffer, 1, sizeof(Buffer), FD);
-  fclose(FD);
-  if(Len == 0) return false;
-  Buffer[Len] = 0;
-  *total = ParseProcMem((char*)"MemTotal:", Buffer);
-  *available = ParseProcMem((char*)"MemFree:", Buffer) + ParseProcMem((char*)"Cached:", Buffer) + ParseProcMem((char*)"Buffers:", Buffer);
-  return ((*total != 0) && (*available != 0));
 }
 json Tools::GetSysInfo() {
   struct sysinfo Info;
@@ -302,7 +290,7 @@ json Tools::GetSysInfo() {
   Result["UpTime"] = Info.uptime;
   Result["Swap_Total"] = (uint64_t)Info.totalswap * Info.mem_unit;
   Result["Swap_Usage"] = ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap;
-  Result["CPU_Usage"] = (Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs();
+  Result["CPU_Usage"] = ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0;
   if(statvfs("/", &Disk) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return Result;
@@ -316,8 +304,8 @@ json Tools::GetSysInfo() {
     close(TmpFile);
     if(Len == 0) return Result;
     Buffer[Len] = 0;
-    Result["RAM_Total"] = ParseProcMem((char*)"MemTotal:", Buffer);
-    Result["RAM_Usage"] = ((ParseProcMem((char*)"MemTotal:", Buffer) - ParseProcMem((char*)"MemAvailable:", Buffer)) * 100.0) / + ParseProcMem((char*)"MemTotal:", Buffer);
+    Result["RAM_Total"] = ParseProcMem("MemTotal:", Buffer);
+    Result["RAM_Usage"] = ((ParseProcMem("MemTotal:", Buffer) -  ParseProcMem("MemFree:", Buffer) - ParseProcMem("Cached:", Buffer) - ParseProcMem("Buffers:", Buffer)) * 100.0) / + ParseProcMem("MemTotal:", Buffer);
   }
   TmpFile = open("/sys/class/thermal/thermal_zone0/temp", O_RDONLY);
   if(TmpFile > 0) {
@@ -331,10 +319,6 @@ json Tools::GetSysInfo() {
   //  json_object_object_add(*writer, "Battery_Percent", json_object_new_int(pBatteryLevel));
 //  json_object_object_add(*writer, "Battery_Charging", json_object_new_boolean(pBatteryCharging));
 //  json_object_object_add(*writer, "External_Power", json_object_new_boolean(pExternalPower));
-
-//  *postdata = (char*)writer.dump().c_str();
-//  *resultLen = strlen(*postdata);
-  //*postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
   return Result;
 }
 

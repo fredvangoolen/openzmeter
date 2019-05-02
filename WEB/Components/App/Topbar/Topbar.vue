@@ -3,13 +3,13 @@
     <div class="navbar-header">
       <div class="navbar-brand">
         <img :src="require('Imgs/Logo.png')">
-          <div><img :src="require('Imgs/system_monitor.png')">{{ Time }}</div>
-          <div><img :src="require('Imgs/sd_memory_adapter.png')">90%</div>
-          <div><img :src="require('Imgs/ddr_memory.png')">50%</div>
-          <div><img :src="require('Imgs/chip.png')">20%</div>
+          <div data-toggle="tooltip" :title="'Uptime: ' + Uptime"><img :src="require('Imgs/system_monitor.png')">{{ Time }}</div>
+          <div data-toggle="tooltip" :title="'Disk usage: ' + SDTip"><img :src="require('Imgs/sd_memory_adapter.png')">{{ SDUse }}</div>
+          <div data-toggle="tooltip" :title="'RAM usage: ' + RAMTip"><img :src="require('Imgs/ddr_memory.png')">{{ RAMUse }}</div>
+          <div><img :src="require('Imgs/chip.png')">{{ CPUUse }}</div>
           <div><img :src="require('Imgs/network_wireless.png')">45%</div>
           <div><img :src="require('Imgs/battery.png')">100%</div>
-          <div><img :src="require('Imgs/temperature_normal.png')">45º</div>
+          <div><img :src="require('Imgs/temperature_normal.png')">{{ Temp }}</div>
       </div>
       <button type="button" class="navbar-toggle"><img :src="require('Imgs/application_menu.png')"></button>
     </div>
@@ -26,6 +26,7 @@
 <script>
 import TopbarIndicator from './TopbarIndicator.vue';
 import moment from 'JS/moment.js';
+import * as oZm from 'JS/openZmeter.js';
 export default {
   methods: {
     setValue: function(vals) {
@@ -36,18 +37,42 @@ export default {
         this.$refs.frequency_indicator.setValue(null);
         this.$refs.energy_indicator.setValue(null);
         this.Time = 'Offline';
+        this.Uptime = '';
+        this.SDUse = '-';
+        this.SDTip = '';
+        this.RAMUse = '-';
+        this.RAMTip = '';
+        this.CPUUse = '-';
+        this.WIFIPower = '-';
+        this.WIFINetwork = '';
+        this.BatteryLevel = '-';
+        this.BatteryStatus = '';
+        this.Temp = '-';
       } else {
         if(vals['Voltage'] !== undefined) this.$refs.voltage_indicator.setValue(vals['Voltage']);
         if(vals['Current'] !== undefined) this.$refs.current_indicator.setValue(vals['Current']);
         if(vals['Active_Power'] !== undefined) this.$refs.power_indicator.setValue(vals['Active_Power']);
         if(vals['Frequency'] !== undefined) this.$refs.frequency_indicator.setValue([vals['Frequency']]);
         if(vals['Active_Energy'] !== undefined) this.$refs.energy_indicator.setValue(vals['Active_Energy']);
-        if(vals['Sampletime'] !== undefined)  this.Time = moment(vals['Sampletime']).format('HH:mm:ss');  
+        if(vals['Sampletime'] !== undefined)  this.Time = moment(vals['Sampletime']).format('HH:mm:ss');
+        if(vals['Sys_Stats'] !== undefined) {
+          this.Uptime = moment.duration(vals['Sys_Stats'].UpTime, "seconds").humanize();
+          this.SDUse = Math.round(vals['Sys_Stats'].Disk_Usage) + '%';
+          this.SDTip = oZm.GetBestUnitsBin(vals['Sys_Stats'].Disk_Total * vals['Sys_Stats'].Disk_Usage / 100.0) + ' of ' + oZm.GetBestUnitsBin(vals['Sys_Stats'].Disk_Total);
+          this.RAMUse = Math.round(vals['Sys_Stats'].RAM_Usage) + '%';
+          this.RAMTip = oZm.GetBestUnitsBin(vals['Sys_Stats'].RAM_Total * vals['Sys_Stats'].RAM_Usage / 100.0) + ' of ' + oZm.GetBestUnitsBin(vals['Sys_Stats'].RAM_Total);
+          this.CPUUse = Math.round(vals['Sys_Stats'].CPU_Usage) + '%';
+          this.WIFIPower = '-';
+          this.WIFINetwork = '';
+          this.BatteryLevel = '-';
+          this.BatteryStatus = '';
+          this.Temp = Math.round(vals['Sys_Stats'].Temperature*1000) + 'º';;
+        }
       }
     }
   },
   data () {
-    return {Time: 'Offline' };
+    return {Time: 'Offline', Uptime: '', SDUse: '-', SDTip: '', RAMUse: '-', RAMTip: '', CPUUse: '-', WIFIPower: '-', WIFINetwork: '', BatteryLevel: '-', BatteryStatus: '', Temp: '-' };
   },
   components: { TopbarIndicator }
 }

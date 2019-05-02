@@ -18,12 +18,22 @@
   import moment from 'JS/moment.js';
   export default {
     data() {
-      return { AvaliableAnalyzers: [], hasAnalyzers: false, SelAnalyzer: null, analyzerName: 'test'};
+      return { AvaliableAnalyzers: [], hasAnalyzers: false, SelAnalyzer: null, analyzerName: 'None selected'};
+    },
+    created: function() {
+      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
     mounted: function() {
       this.GetAnalyzers();
     },
     methods: {
+      SetAnalyzer: function() {
+        if(this.$root.SelectedAnalyzer === null) {
+          this.analyzerName = 'None selected';
+        } else {
+          this.analyzerName = this.$root.SelectedAnalyzer.Name;
+        }
+      },
       GetAnalyzers() {
         $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
           success: function(result) { this.AvaliableAnalyzers = result; this.CheckSelected(); }.bind(this)

@@ -783,19 +783,20 @@ export function Array_Round2(values, colors, cadena1, cadena2) {
   }
   return values.join('');
 }
+///* Format memory size with best units */
+export function GetBestUnitsBin(value) {
+  if(value > 1024 * 1024 * 1024) {
+    return Round2Plain(value / (1024 * 1024 * 1024)) + 'GB';
+  } else if(value > 1024 * 1024) {
+    return Round2Plain(value / (1024 * 1024)) + 'MB';
+  } else if(value > 1024) {
+    return Round2Plain(value / 1024) + 'kB';
+  } else {
+    return value + 'B';
+  }
+}
 //
-///* Busca el mejor divisor y unidades para un valor de entrada, ya sea B, kB, MB o GB */
-//function GetBestUnits2(value) {
-//  if(value > 1024 * 1024 * 1024) {
-//    return [1024 * 1024 * 1024, 'GB'];
-//  } else if(value > 1024 * 1024) {
-//    return [1024 * 1024, 'MB'];
-//  } else if(value > 1024) {
-//    return [1024, 'kB'];
-//  } else {
-//    return [1, 'B'];
-//  }
-//}
+
 //
 //
 //
@@ -1042,7 +1043,7 @@ export function Round6Plain(value) {
 //  //      Units = GetBestUnits(result['Disk_Total']);
 //        $('#DiskPercent').css('width', (result['Disk_Total'] - result['Disk_Free']) / result['Disk_Total'] * 100 + '%');
 //  //      $('#DiskText').html(Round2((result['Disk_Total'] - result['Disk_Free']) / Units[0]) + '/' + Round2(result['Disk_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
-//        $('#UptimeText').html(moment.duration(result['UpTime'], "seconds").format("d [days] h [hours] m [minutes]"));
+//        
 //        $('#BatteryPercent').css('width', result['Battery_Percent'] + '%');
 //  //      $('#BatteryText').html(Round2(result['Battery_Percent']) + '%');
 //      },
