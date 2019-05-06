@@ -13,6 +13,7 @@
 #include "DeviceInterface.h"
 #include "NetworkManager.h"
 #include "NTP.h"
+#include "Bluetooth.h"
 //---------------------------------------------------------------------------------------------------------------------
 void GetNewsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
@@ -92,6 +93,8 @@ int main(int argc, char** argv) {
   ResourceLoader ResourceLoader;
   /* Create config manager */
   ConfigManager ConfigManager(ConfigFileName);
+  /* Create bluetooth manager */
+  Bluetooth BluetoothManager;
   /* Create PID File */
   PIDFile PIDFile;
   /* Create LOG file */

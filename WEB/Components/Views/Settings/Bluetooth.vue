@@ -10,13 +10,18 @@
     </div>
     <div class="panel-body">
       <div class="row">
-        <div class="col-xs-12">
+        <div class="col-xs-12 col-sm-6">
+          <label class="control-label">Device name</label>
           <div class="input-group">
             <span class="input-group-addon input-group-addon-toogle">
               <input type="checkbox" data-toggle="toggle" id="checkNTP" data-size="small" data-onstyle="success">
             </span>
             <input type="text" class="form-control" id="inputNTPServer">
           </div>
+        </div>
+        <div class="col-xs-12 col-sm-6">
+          <label class="control-label">IP range</label>
+          <input type="text" class="form-control" id="inputNTPServer">
         </div>
       </div>
     </div>
