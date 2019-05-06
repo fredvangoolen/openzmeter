@@ -3,13 +3,13 @@
     <div class="navbar-header">
       <div class="navbar-brand">
         <img :src="require('Imgs/Logo.png')">
-          <div data-toggle="tooltip" :title="'Uptime: ' + Uptime"><img :src="require('Imgs/system_monitor.png')">{{ Time }}</div>
-          <div data-toggle="tooltip" :title="'Disk usage: ' + SDTip"><img :src="require('Imgs/sd_memory_adapter.png')">{{ SDUse }}</div>
-          <div data-toggle="tooltip" :title="'RAM usage: ' + RAMTip"><img :src="require('Imgs/ddr_memory.png')">{{ RAMUse }}</div>
-          <div><img :src="require('Imgs/chip.png')">{{ CPUUse }}</div>
-          <div><img :src="require('Imgs/network_wireless.png')">45%</div>
-          <div><img :src="require('Imgs/battery.png')">100%</div>
-          <div><img :src="require('Imgs/temperature_normal.png')">{{ Temp }}</div>
+          <div data-toggle="tooltip" :title="'Uptime: ' + Uptime" v-if="Time != null"><img :src="require('Imgs/system_monitor.png')">{{ Time }}</div>
+          <div data-toggle="tooltip" :title="'Disk usage: ' + SDTip" v-if="SDUse != null"><img :src="require('Imgs/sd_memory_adapter.png')">{{ SDUse }}</div>
+          <div data-toggle="tooltip" :title="'RAM usage: ' + RAMTip" v-if="RAMUse != null"><img :src="require('Imgs/ddr_memory.png')">{{ RAMUse }}</div>
+          <div><img :src="require('Imgs/chip.png')" v-if="CPUUse != null">{{ CPUUse }}</div>
+          <div data-toggle="tooltip" :title="'WiFi network: ' + WIFINetwork" v-if="WIFIPower != null"><img :src="require('Imgs/network_wireless.png')">{{ WIFIPower }}</div>
+          <div data-status="tooltip" :title="'Battery status: ' + BatteryStatus" v-if="BatteryLevel != null"><img :src="require('Imgs/battery.png')">{{ BatteryLevel }}</div>
+          <div v-if="Temp != null"><img :src="require('Imgs/temperature_normal.png')">{{ Temp }}</div>
       </div>
       <button type="button" class="navbar-toggle"><img :src="require('Imgs/application_menu.png')"></button>
     </div>
@@ -28,6 +28,9 @@ import TopbarIndicator from './TopbarIndicator.vue';
 import moment from 'JS/moment.js';
 import * as oZm from 'JS/openZmeter.js';
 export default {
+  data () {
+    return {Time: null, Uptime: null, SDUse: null, SDTip: null, RAMUse: null, RAMTip: null, CPUUse: null, WIFIPower: null, WIFINetwork: null, BatteryLevel: null, BatteryStatus: null, Temp: null };
+  },
   methods: {
     setValue: function(vals) {
       if(vals === null) {
@@ -36,18 +39,13 @@ export default {
         this.$refs.power_indicator.setValue(null);
         this.$refs.frequency_indicator.setValue(null);
         this.$refs.energy_indicator.setValue(null);
-        this.Time = 'Offline';
-        this.Uptime = '';
-        this.SDUse = '-';
-        this.SDTip = '';
-        this.RAMUse = '-';
-        this.RAMTip = '';
-        this.CPUUse = '-';
-        this.WIFIPower = '-';
-        this.WIFINetwork = '';
-        this.BatteryLevel = '-';
-        this.BatteryStatus = '';
-        this.Temp = '-';
+        this.Time = null;
+        this.SDUse = null;
+        this.RAMUse = null;
+        this.CPUUse = null;
+        this.WIFIPower = null;
+        this.BatteryLevel = null;
+        this.Temp = null;
       } else {
         if(vals['Voltage'] !== undefined) this.$refs.voltage_indicator.setValue(vals['Voltage']);
         if(vals['Current'] !== undefined) this.$refs.current_indicator.setValue(vals['Current']);
@@ -57,22 +55,43 @@ export default {
         if(vals['Sampletime'] !== undefined)  this.Time = moment(vals['Sampletime']).format('HH:mm:ss');
         if(vals['Sys_Stats'] !== undefined) {
           this.Uptime = moment.duration(vals['Sys_Stats'].UpTime, "seconds").humanize();
-          this.SDUse = Math.round(vals['Sys_Stats'].Disk_Usage) + '%';
-          this.SDTip = oZm.GetBestUnitsBin(vals['Sys_Stats'].Disk_Total * vals['Sys_Stats'].Disk_Usage / 100.0) + ' of ' + oZm.GetBestUnitsBin(vals['Sys_Stats'].Disk_Total);
-          this.RAMUse = Math.round(vals['Sys_Stats'].RAM_Usage) + '%';
-          this.RAMTip = oZm.GetBestUnitsBin(vals['Sys_Stats'].RAM_Total * vals['Sys_Stats'].RAM_Usage / 100.0) + ' of ' + oZm.GetBestUnitsBin(vals['Sys_Stats'].RAM_Total);
-          this.CPUUse = Math.round(vals['Sys_Stats'].CPU_Usage) + '%';
-          this.WIFIPower = '-';
-          this.WIFINetwork = '';
-          this.BatteryLevel = '-';
-          this.BatteryStatus = '';
-          this.Temp = Math.round(vals['Sys_Stats'].Temperature*1000) + 'º';;
+          if(vals['Sys_Stats'].Disk_Usage != undefined) {
+            this.SDUse = Math.round(vals['Sys_Stats'].Disk_Usage) + '%';
+            this.SDTip = oZm.GetBestUnitsBin(vals['Sys_Stats'].Disk_Total * vals['Sys_Stats'].Disk_Usage / 100.0) + ' of ' + oZm.GetBestUnitsBin(vals['Sys_Stats'].Disk_Total);
+          } else {
+            this.SDUse = null;
+          }
+          if(vals['Sys_Stats'].RAM_Usage != undefined) {
+            this.RAMUse = Math.round(vals['Sys_Stats'].RAM_Usage) + '%';
+            this.RAMTip = oZm.GetBestUnitsBin(vals['Sys_Stats'].RAM_Total * vals['Sys_Stats'].RAM_Usage / 100.0) + ' of ' + oZm.GetBestUnitsBin(vals['Sys_Stats'].RAM_Total);
+          } else {
+            this.RAMUse = null;
+          }
+          if(vals['Sys_Stats'].CPU_Usage != undefined) {
+            this.CPUUse = Math.round(vals['Sys_Stats'].CPU_Usage) + '%';
+          } else {
+            this.CPUUse = null;
+          }
+          if(vals['Sys_Stats'].WIFI_Power != undefined) {
+            this.WIFIPower = Math.round(vals['Sys_Stats'].WIFI_Power) + '%';
+            this.WIFINetwork = vals['Sys_Stats'].WIFI_Network;
+          } else {
+            this.WIFIPower = null;
+          }
+          if(vals['Sys_Stats'].Battery_Level != undefined) {  
+            this.BatteryLevel = Math.round(vals['Sys_Stats'].Battery_Level) + '%';
+            this.BatteryStatus = vals['Sys_Stats'].Battery_Status;
+          } else {
+            this.BatteryLevel = null;
+          }
+          if(vals['Sys_Stats'].Temperature != undefined) {
+            this.Temp = Math.round(vals['Sys_Stats'].Temperature*1000) + 'º';
+          } else {
+            this.Temp = null;
+          }
         }
       }
     }
-  },
-  data () {
-    return {Time: 'Offline', Uptime: '', SDUse: '-', SDTip: '', RAMUse: '-', RAMTip: '', CPUUse: '-', WIFIPower: '-', WIFINetwork: '', BatteryLevel: '-', BatteryStatus: '', Temp: '-' };
   },
   components: { TopbarIndicator }
 }
