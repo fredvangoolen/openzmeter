@@ -1,5 +1,5 @@
 <template>
-  <div class="panel panel-other">
+  <div class="panel panel-other" v-if="WIFI_Support">
     <div class="panel-heading clearfix">
       <div class="huge-small pull-left">Wifi</div>
       <div class="btn-group pull-right">
@@ -37,7 +37,7 @@
   import WifiDialog from './WiFiEdit.vue';
   export default {
     data: function() {
-      return { ShowSpinner: true,
+      return { ShowSpinner: true, WIFI_Support: false,
         Columns: [
           { name: 'Status', title: 'Status'}, 
           { name: 'SSID', title: 'SSID'}, 
@@ -71,44 +71,34 @@
       UpdateNetworks: function() {
         $.ajax({ url: "getNetworks", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({}), 
           success: function(result) {
-            this.Networks = [];
-            for(var i = 0; i < result['AccessPoints'].length; i++) this.Networks.push( { MAC: result['AccessPoints'][i]['MAC'], Mode: result['AccessPoints'][i]['Mode'], SSID: result['AccessPoints'][i]['SSID'], Channel: (result['AccessPoints'][i]['Freq'] - 2412) / 5 + 1, Power: result['AccessPoints'][i]['Power'], Status: '' } );
-            for(var i = 0; i < result['Settings'].length; i++) {
-              var Found = 0;
-              for(var n = 0; n < this.Networks.length; n++) {
-                if((this.Networks[n]['SSID'] === result['Settings'][i]['SSID']) && ((this.Networks[n]['MAC'] === result['Settings'][i]['MAC']) || (result['Settings'][i]['MAC'] === undefined))) {
-                  this.Networks[n] = Object.assign(this.Networks[n], { Status: 'Configured' }, result['Settings'][i]);
-                  Found++;
+            this.WIFI_Support = true;
+            this.$nextTick(function() {
+              this.Networks = [];
+              for(var i = 0; i < result['AccessPoints'].length; i++) this.Networks.push( { MAC: result['AccessPoints'][i]['MAC'], Mode: result['AccessPoints'][i]['Mode'], SSID: result['AccessPoints'][i]['SSID'], Channel: (result['AccessPoints'][i]['Freq'] - 2412) / 5 + 1, Power: result['AccessPoints'][i]['Power'], Status: '' } );
+              for(var i = 0; i < result['Settings'].length; i++) {
+                var Found = 0;
+                for(var n = 0; n < this.Networks.length; n++) {
+                  if((this.Networks[n]['SSID'] === result['Settings'][i]['SSID']) && ((this.Networks[n]['MAC'] === result['Settings'][i]['MAC']) || (result['Settings'][i]['MAC'] === undefined))) {
+                    this.Networks[n] = Object.assign(this.Networks[n], { Status: 'Configured' }, result['Settings'][i]);
+                    Found++;
+                  }
+                }
+                if(Found === 0) this.Networks.push( Object.assign({ MAC: (result['Settings'][i]['MAC'] === undefined) ? 'ANY' : result['Settings'][i]['MAC'], Mode: result['Settings'][i]['Mode'], SSID: result['Settings'][i]['SSID'], Channel: '', Power: 0, Status: 'Out of range' }, result['Settings'][i]));
+              }
+              for(var i = 0; i < result['ActiveConnections'].length; i++) {
+                for(var n = 0; n < this.Networks.length; n++) {
+                  if((this.Networks[n]['SSID'] === result['ActiveConnections'][i]['SSID']) && (this.Networks[n]['MAC'] === result['ActiveConnections'][i]['MAC'])) this.Networks[n] = Object.assign(this.Networks[n], { Status: 'Connected' }, result['ActiveConnections'][i]);
                 }
               }
-              if(Found === 0) this.Networks.push( Object.assign({ MAC: (result['Settings'][i]['MAC'] === undefined) ? 'ANY' : result['Settings'][i]['MAC'], Mode: result['Settings'][i]['Mode'], SSID: result['Settings'][i]['SSID'], Channel: '', Power: 0, Status: 'Out of range' }, result['Settings'][i]));
-            }
-            for(var i = 0; i < result['ActiveConnections'].length; i++) {
-              for(var n = 0; n < this.Networks.length; n++) {
-                if((this.Networks[n]['SSID'] === result['ActiveConnections'][i]['SSID']) && (this.Networks[n]['MAC'] === result['ActiveConnections'][i]['MAC'])) this.Networks[n] = Object.assign(this.Networks[n], { Status: 'Connected' }, result['ActiveConnections'][i]);
-              }
-            }
-            this.$refs.table.setData( { data: this.Networks } );
+              this.$refs.table.setData( { data: this.Networks } );
+              this.ShowSpinner = false;
+            });
+          }.bind(this),
+          complete: function() {
             this.ShowSpinner = false;
-
-return;
-    for(n = 0; n < NetworksDataset.length; n++) {
-    var Buttons = '';
-
-      Contents.append('<tr class="' + ((NetworksDataset[n].Status === 'Connected') ? 'info' : '') + '">' +
-      '<td data-sort="' + NetworksDataset[n].Power + '"><div class="progress" style="margin-bottom:0px">' +
-      '  <div class="progress-bar" role="progressbar" style="width:' + NetworksDataset[n].Power + '%"></div>' +
-      '</div></td>' +
-      '<td><div class="btn-group" style="width: 100%">' + Buttons + '</div></td></tr>');
-  }
-             
-           }.bind(this),
-           complete: function() {
-             this.ShowSpinner = false;
-           }.bind(this)
+          }.bind(this)
         });
       }
-      
     },
     components: { vuetable, Spinner, ProgressBar, WifiDialog }
   }
