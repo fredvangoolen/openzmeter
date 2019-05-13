@@ -60,7 +60,8 @@ class Tariff {
     vector<Tax_t>     pTaxs;
     queue<Sample_t>   pSamples;
     vector<uint64_t>  pBillingCycles;
-    uint64_t          pSampletime;
+    uint64_t          pFirstSampleTime;
+    uint64_t          pLastSampletime;
     float             pSumPowerCost;
     float             pSumEnergyCost;
   private :

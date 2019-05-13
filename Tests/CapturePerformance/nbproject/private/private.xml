@@ -12,9 +12,6 @@
         <group name="ServiceV2">
             <file>file:/home/edu/Proyectos/zMeter/V2/Tests/CapturePerformance/Main.cpp</file>
         </group>
-        <group>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Tests/CapturePerformance/Biquad.cpp</file>
-            <file>file:/home/edu/Proyectos/zMeter/V2/Tests/CapturePerformance/Main.cpp</file>
-        </group>
+        <group/>
     </open-files>
 </project-private>

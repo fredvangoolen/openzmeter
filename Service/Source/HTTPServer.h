@@ -65,8 +65,8 @@ class HTTPServer {
     static void RegisterCallback(string handleName, Func_t function);
   public :
     HTTPServer();
-    bool Config();
-    void ExpireSessions();
+    bool     Config();
+    void     ExpireSessions();
     virtual ~HTTPServer();
-    void RemoveExpiredSessions();
+    void     RemoveExpiredSessions();
 };

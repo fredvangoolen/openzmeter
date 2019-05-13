@@ -196,7 +196,7 @@ bool ConfigManager::SaveConfig(string path, json val) {
     pthread_mutex_unlock(&pMutex);
     return false;
   }
-//HAGO EL MERGE
+  pInstance->pConfig[json::json_pointer(path)].merge_patch(val);
   if(pInstance->pFile < 0) {
     pthread_mutex_unlock(&pMutex);
     return false;
