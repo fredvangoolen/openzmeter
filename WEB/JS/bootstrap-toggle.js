@@ -25,7 +25,7 @@
 		on: 'On',
 		off: 'Off',
 		onstyle: 'primary',
-		offstyle: 'default',
+		offstyle: 'danger',
 		size: 'normal',
 		style: '',
 		width: null,
@@ -55,7 +55,7 @@
 		var $toggleOn = $('<label class="btn">').html(this.options.on)
 			.addClass(this._onstyle + ' ' + size)
 		var $toggleOff = $('<label class="btn">').html(this.options.off)
-			.addClass(this._offstyle + ' ' + size + ' active')
+			.addClass(this._offstyle + ' ' + size)
 		var $toggleHandle = $('<span class="toggle-handle btn btn-default">')
 			.addClass(size)
 		var $toggleGroup = $('<div class="toggle-group">')
