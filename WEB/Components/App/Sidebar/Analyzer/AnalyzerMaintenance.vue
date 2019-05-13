@@ -1,0 +1,168 @@
+<template>
+  <div class="modal-content" v-bind:class="{ hide: !Show }">
+    <div class="modal-header">
+      <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Maintenance</h4></div>
+      <div class="pull-right btn-group">
+        <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <spinner v-if="ShowSpinner"></spinner>
+      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Only stored samples are affected by this next actions.</div>
+      <div class="row">
+        <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetStartDate"></date-picker></div>
+        <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetEndDate"></date-picker></div>
+      </div>
+      <div class="row" style="margin-top:5px; margin-bottom: 5px">
+        <div class="col-xs-6"><button type="button" class="btn btn-default btn-block btn-xs" @click="BackupRange">Backup range</button></div>
+        <div class="col-xs-6"><button type="button" class="btn btn-default btn-block btn-danger btn-xs" @click="ClearRange">Clear range</button></div>
+      </div>
+      <hr style="margin-top: 10px; margin-bottom: 10px;"/>
+      <div class="row" style="margin-top:5px; margin-bottom: 5px">
+        <div class="col-xs-4"><button type="button" class="btn btn-default btn-block btn-xs" @click="Restore">Restore backup</button></div>
+        <div class="col-xs-4"><button type="button" class="btn btn-default btn-block btn-xs" @click="BackupAll">Backup all</button></div>
+        <div class="col-xs-4"><button type="button" class="btn btn-default btn-block btn-danger btn-xs" @click="ClearAll">Clear all</button></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import bsSuggest from 'JS/bootstrap-suggest.js';
+  import moment from 'JS/moment.js';
+  import DatePicker from 'Components/DatePicker.vue';
+  import Spinner from 'Components/Spinner.vue';
+  export default {
+    data() {
+      return { Show: false, ShowSpinner: false };
+    },
+    methods: {
+      BackupRange: function() {},
+      ClearRange: function() {},
+      Restore: function() {},
+      BackupAll: function() {},
+      ClearAll: function() {},
+        Save: function() {
+        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.ID, CountryCode: 'ESP' /*this.Analyzer.CountryCode*/ }, this.Tariff) ), 
+          success: function() {
+            this.Show = false;
+            this.$parent.$refs.Tariffs.Load(this.Analyzer);
+          }.bind(this),
+          error: function() {
+            this.Error = 'Failed to save tariff to analyzer!';
+            setTimeout(function() { this.Error = ''; }.bind(this), 1000); 
+          }.bind(this)
+        });
+      },
+      Load: function(analyzer, id) {
+        this.Analyzer = analyzer;
+        this.Show = true;
+//        this.ShowSpinner = true;
+//        this.Tariffs = [];
+        this.$nextTick(function() {
+//          $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
+//            success: function(result) {
+//              for(var i = 0; i < result.length; i++) this.Tariffs.push({ id: result[i].RateID, name: result[i].Name, description: 'From ' + moment(result[i].StartDate).format('DD/MM/YYYY') + ' to ' + moment(result[i].EndDate).format('DD/MM/YYYY')}); 
+//              if(id !== null) {
+//                $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.ID, RateID: id }), 
+//                  success: function(result) {
+//                    this.Initial = result;
+//                    this.Tariff = Object.assign({}, result);
+//                    this.Tariffs.unshift({ id: 'CURRENT', name: '(*) ' + result.Name, description: 'From ' + moment(result.StartDate).format('DD/MM/YYYY') + ' to ' + moment(result.EndDate).format('DD/MM/YYYY')});
+//                    this.SetTariffs();
+//                  }.bind(this)
+//                });
+//              } else {
+//                this.Initial = null;
+//                $(this.$refs.Base).attr('data-id', '');
+//                $(this.$refs.Base).val('');
+//                this.Tariff = { StartDate: moment().startOf('year').valueOf(), EndDate: moment().endOf('year').valueOf(), Template: null, Config: {Periods: [], Taxs: [], Billing: []} };
+//                this.$refs.StartDate.Disable();
+//                this.$refs.EndDate.Disable();
+//                this.SetTariffs();
+//              }
+//            }.bind(this)
+//          });
+        });
+      },
+      Validate: function() {
+        this.Error = '';
+        if(this.Tariff.Template === null) {
+          this.Error = 'Select a base tariff first';
+          return; 
+        }
+        if(this.Tariff.StartDate < this.Tariff.Template.Seasons[0].StartDate) {
+          this.Error = 'Date ranges is outside selected tariff ranges';
+          return;
+        }
+        if(this.Tariff.EndDate > this.Tariff.Template.Seasons.slice(-1)[0].EndDate) {
+          this.Error = 'Date ranges is outside selected tariff ranges';
+          return;
+        }
+      },
+      SetStartDate: function(date) {
+        this.Tariff.StartDate = date.startOf('day').valueOf();
+        this.Validate();
+      },
+      SetEndDate: function(date) {
+        this.Tariff.EndDate = date.endOf('day').valueOf();
+        this.Validate();
+      },
+      Back: function() {
+        this.Show = false;
+        this.$parent.$refs.Tariffs.Load(this.Analyzer);
+      },
+      FillPeriods: function() {
+        this.Tariff.Config.Periods.length = this.Tariff.Template.Periods.length;
+        for(var n = 0; n < this.Tariff.Template.Periods.length; n++) this.Tariff.Config.Periods[n] = Object.assign({ Contracted_Power: 0.0, Energy_Cost: 0.0, Power_Cost: 0.0 }, this.Tariff.Config.Periods[n]);
+      },
+      SelectBase: function(e, keywork) {
+        this.$refs.StartDate.Enable();
+        this.$refs.EndDate.Enable();
+        if(keywork.id === 'CURRENT') {
+          this.LoadCurrent();
+          this.Validate();
+        } else {
+          this.ShowSpinner = true;
+          $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: keywork.id }), 
+            success: function(result) {
+              this.Tariff.Template = result.Template;
+              this.Tariff.Name = result.Name;
+              this.FillPeriods();
+              this.Validate();
+              this.ShowSpinner = false;
+            }.bind(this)
+          });
+        }
+      },
+      DeselectBase: function(e) {
+        this.$refs.StartDate.Disable();
+        this.$refs.EndDate.Disable();
+        this.Error = 'Select a base tariff from list';
+      },
+      Periods: function() {
+        this.Show = false;
+        this.$parent.$refs.Periods.Load(this.Tariff);
+      },
+      Billing: function() {
+        this.Show = false;
+        this.$parent.$refs.Billing.Load(this.Tariff);
+      }
+    },
+    created: function() {
+      this.Analyzer = null;
+      this.Tariffs = [];
+      this.Initial = null;
+    },
+    beforeDestroy: function() {
+      $(this.$refs.Base).off('onSetSelectValue', this.SelectBase.bind(this));
+      $(this.$refs.Base).off('onUnsetSelectValue', this.DeselectBase.bind(this));
+      $(this.$refs.Base).bsSuggest("destroy");
+    },
+    components: { DatePicker, Spinner }
+  }
+</script>
+
+<style scoped>
+
+</style>
