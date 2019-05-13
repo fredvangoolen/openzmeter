@@ -69,17 +69,17 @@
         if(id.ID === this.$root.SelectedAnalyzer.ID) return true;
         return false;
       },
-      Select: function(id) {
-        localStorage.setItem("SelAnalyzer", id.ID);
-        this.$root.SelectedAnalyzer = id;
+      Select: function(analyzer) {
+        localStorage.setItem("SelAnalyzer", analyzer.ID);
+        this.$root.SelectedAnalyzer = analyzer;
         this.$nextTick(function() {
           this.$root.$emit('AnalyzerChanged');
           this.$parent.Close();
         });
       },
-      Configure: function(id) {
+      Configure: function(analyzer) {
         this.Show = false;
-        this.$parent.$refs.Configure.Load(id.ID); 
+        this.$parent.$refs.Configure.Load(analyzer.ID); 
       },
       ACL: function(id) {
         alert("ACL not yet implemented"); 
@@ -91,8 +91,9 @@
       Alerts: function(id) {
         alert("Alerts not yet implemented");
       },
-      Maintenance: function(id) {
-        alert("Maintenance not yet implemented");
+      Maintenance: function(analyzer) {
+        this.Show = false;
+        this.$parent.$refs.Maintenance.Load(analyzer);
       }
     },
     components: { Vuetable, Spinner }

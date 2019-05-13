@@ -31,14 +31,22 @@ void GetNewsCallback(HTTPRequest &req) {
   if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("result"), MHD_HTTP_OK);
 }
+void GetUserCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  req.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'TelegramID', telegram, 'Country_Code', country_code) AS result FROM users WHERE username = " + req.Bind(req.UserName()));
+  if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  req.FromString(req.ResultString("result"), MHD_HTTP_OK);
+}
+void SetUserCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  //req.ExecSentenceAsyncResult("UPDATE users SET name = ", 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'TelegramID', telegram, 'Country_Code', country_code) AS result FROM users WHERE username = " + req.Bind(req.UserName()));
+  if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  req.FromString(req.ResultString("result"), MHD_HTTP_OK);
+}
 void GetCountriesCallback(HTTPRequest &req) {
   req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('Country_Code', country_code, 'Name', country, 'Currency', currency, 'TimeZone', timezone))), '[]') as result FROM country");
   if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("result"), MHD_HTTP_OK);
-}
-void GetUserProfile(HTTPRequest &req) {
-}
-void SetUserProfile(HTTPRequest &req) {
 }
 //---------------------------------------------------------------------------------------------------------------------
 static bool Terminate = false;
@@ -53,7 +61,6 @@ void RunDaemon() {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     exit(1);
   }
-
   if(ProcID > 0) exit(0);
   umask(0);
   pid_t SID = setsid();
@@ -119,10 +126,11 @@ int main(int argc, char** argv) {
   HTTPServer HTTPServer;
   if(HTTPServer.Config() == false) return EXIT_FAILURE;
 //  HTTPServer.RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
-  HTTPServer.RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
-  HTTPServer.RegisterCallback("/getNews",             GetNewsCallback);
-  HTTPServer::RegisterCallback("/getCountries",             GetCountriesCallback);  
-  
+  HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
+  HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
+  HTTPServer::RegisterCallback("/getCountries",        GetCountriesCallback);  
+  HTTPServer::RegisterCallback("/getUser",             GetUserCallback);
+  HTTPServer::RegisterCallback("/setUser",             SetUserCallback);
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
 
@@ -134,8 +142,6 @@ int main(int argc, char** argv) {
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Warning("Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
   }
 
-
-  
   int Iter = 0;
   while(!Terminate) {
     usleep(1000000);
