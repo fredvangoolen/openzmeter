@@ -7,23 +7,10 @@
             <span class="header-text">ITIC Curve (CBEMA)</span>
             <div class="header-buttons">
               <toolbar-years v-on:YearChanged="YearChanged" aggreg="1H"></toolbar-years>
-              <span class="small">Time scale:</span><br>
-              <div class="btn-group">
-                <button type="button" class="btn btn-default btn-xs" id="btnShowEventYear"  data-toggle="tooltip" title="Select exactly a year period from current time">Year</button>
-                <button type="button" class="btn btn-default btn-xs" id="btnShowEventMonth" data-toggle="tooltip" title="Select exactly a month period from current time">Month</button>
-                <button type="button" class="btn btn-default btn-xs" id="btnShowEventWeek"  data-toggle="tooltip" title="Select exactly a week period from current time">Week</button>
-                <button type="button" class="btn btn-default btn-xs" id="btnShowEventDay"   data-toggle="tooltip" title="Select exactly a day period from current time">Day</button>
-              </div>
-            </div>
-            <div class="pull-right">
-              <span class="huge-small-unit" id="EventsSelection"></span><br>
             </div>
           </div>
           <div class="panel-body">
             <spinner v-if="ShowSpinner"></spinner>
-            <div class="panel-info panel-heading">
-              <graph  class="chart" style="height: 50px"></graph>
-            </div>
             <div class="row">
               <div class="col-md-12 col-lg-6"><curve ref="itic"></curve></div> 
               <div class="col-md-12 col-lg-6">

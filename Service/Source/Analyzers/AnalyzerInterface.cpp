@@ -57,9 +57,9 @@ void AnalyzerInterface::InitAggreg(Params_t &params, AggregType type) {
     params.Current = vector<float>((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, NAN);
   }
   if(params.Type == AGGREG_1H) {
-    params.StatsFrequency = vector<uint16_t>(FrequencyRanges.size(), 0);
-    params.StatsVoltage = vector<uint16_t>(VoltageRanges.size(), 0);
-    params.StatsTHD = vector<uint16_t>(THDRanges.size(), 0);
+    params.StatsFrequency = vector<uint16_t>(FrequencyRanges.size() - 1, 0);
+    params.StatsVoltage = vector<uint16_t>(VoltageRanges.size() - 1, 0);
+    params.StatsTHD = vector<uint16_t>(THDRanges.size() - 1, 0);
     params.StatsHarmonics = vector<uint16_t>(2, 0);
   }
   if((params.Type == AGGREG_10C) || (params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_15M) || (params.Type == AGGREG_1H)) {

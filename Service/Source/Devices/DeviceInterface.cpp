@@ -291,7 +291,8 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
   uint64_t Period     = Params.value<uint64_t>("Period", 3600000);
   uint64_t LastSample = Params.value<uint64_t>("LastSample", 0);
   string   Aggreg     = Params["Aggreg"];
-  if(To == 0) To = Tools::GetTime();
+  uint64_t Now        = Tools::GetTime();
+  if(To == 0) To = Now;
   uint64_t From = To - Period;
   uint32_t PeriodSeconds = 900000;
   string TimeZone = "Etc/UTC";
@@ -348,12 +349,12 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
       float    Cost       = NAN;
       float    Contracted = NAN;
       if((Tariff != NULL) && (Tariff->PopSample(Time, Active, Reactive, Period, Color, Cost, Contracted) == false)) {
-        Result["Bills"].push_back(Tariff->GetResume());
+        Result["Bills"].push_back(Tariff->GetResume(Now));
         break;
       }
-      AccActive  = isnan(AccActive) ? Active : isnan(Active) ? AccActive : AccActive + Active;
-      AccReactive = isnan(AccReactive) ? Reactive : isnan(Reactive) ? AccReactive : AccReactive + Reactive;
-      AccCost = isnan(AccCost) ? Cost : isnan(Cost) ? AccCost : AccCost + Cost;
+      if(Time <= Now) AccActive  = isnan(AccActive) ? Active : isnan(Active) ? AccActive : AccActive + Active;
+      if(Time <= Now) AccReactive = isnan(AccReactive) ? Reactive : isnan(Reactive) ? AccReactive : AccReactive + Reactive;
+      if(Time <= Now) AccCost = isnan(AccCost) ? Cost : isnan(Cost) ? AccCost : AccCost + Cost;
       if(Aggreg == "1H") {
         if((Time % 3600000) != 3599999) {
           if(Tariff != NULL) continue;
