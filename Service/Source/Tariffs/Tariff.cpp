@@ -260,11 +260,12 @@ json Tariff::GetConfig() {
   T["Billing"] = pBillingCycles;
   return T;
 }
-json Tariff::GetResume() {
+json Tariff::GetResume(uint64_t now) {
   json Result;
   Result["From"] = pFirstSampleTime;
   Result["To"] = pLastSampletime;
   Result["Periods"] = json::array();
+  Result["Complete"] = (now > pLastSampletime);
   for(vector<Period_t>::iterator it = pPeriods.begin(); it != pPeriods.end(); it++) {
     json Period, Energy, Power;
     TariffEnergyPlugin::CycleStats_t EnergyStats = it->EnergyModule->CycleStats();

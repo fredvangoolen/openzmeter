@@ -41,7 +41,7 @@
         var Year = moment().year(year);
         $.ajax({ url: "getPrices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: Year.endOf('year').valueOf() - Year.startOf('year').valueOf(), To: Year.endOf('year').valueOf(), Aggreg: '1H', LastSample: 0, Analyzer: Analyzer.ID } ),
           success: function(result) {
-            this.Bills = result.Bills;
+            this.Bills = result.Bills.filter(function(value) { return value.Complete === true; });
             this.$refs.summary.SetData(result.Bills);
             this.ShowSpinner = false;
           }.bind(this)
@@ -54,7 +54,7 @@
           Data.push([]);
           Data.push([]);
         }
-        this.$refs.tools.SaveCVS('Costs.csv', Data);
+        this.$refs.tools.SaveCVS('Cost.csv', Data);
       }
     },
     components: { ToolbarYears, ToolbarTools, Spinner, SummaryGraph, Bill }
