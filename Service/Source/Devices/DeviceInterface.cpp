@@ -115,7 +115,6 @@ void DeviceManager::SetDeviceCallback(HTTPRequest& req) {
   }
   req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
 }
-
 void DeviceManager::GetAnalyzersCallback(HTTPRequest &req) {
   //All users can do this action, for admin all analyzers are returned and can be edited, for other users only own analyzers or authorized ones are returned and only owner can edit. In all cases only present ones are returned
   json Params = req.GetParams();
@@ -210,8 +209,8 @@ void DeviceManager::GetSeriesCallback(HTTPRequest &req) {
   }
   Query += " WHERE sampletime > " + req.Bind(LastSample) + " AND sampletime >= " + req.Bind(From) + " AND sampletime <= " + req.Bind(To) + ") AS result";
   req.ExecSentenceAsyncResult(Query);
-  printf("%s\n", Query.c_str());
-  fflush(stdout);
+//  printf("%s\n", Query.c_str());
+//  fflush(stdout);
   if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
 }

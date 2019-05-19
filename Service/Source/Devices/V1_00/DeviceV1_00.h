@@ -4,9 +4,9 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <libusb-1.0/libusb.h>
+#include <deque>
 #include "DeviceInterface.h"
 #include "AnalyzerSoft.h"
-#include "RingBuffer.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define DEVICEV1_00_VID             0x0483                          //Product ID
 #define DEVICEV1_00_PID             0x7270                          //Device ID
@@ -27,7 +27,7 @@ class DeviceV1_00 : public Device {
     } Sample_t;
   private :
     AnalyzerSoft                *pAnalyzer;                //Analizador
-    RingBuffer<Sample_t>         pBuffer;                  //Read buffer
+    deque<Sample_t>              pBuffer;                  //Read buffer
     uint64_t                     pLastUpdate;              //Timestamp de la ultima vez que se actualizo el nombre del thread
     string                       pSerial;                  //Numero de serie del dispositivo de captura
     float                        pVoltageGain;             //Ganancia de tension

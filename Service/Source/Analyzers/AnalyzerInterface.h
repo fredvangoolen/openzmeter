@@ -98,7 +98,7 @@ class AnalyzerInterface : protected Database {
     float        GetMaxCurrent();
     float        GetNominalVoltage();
     float        GetNominalFrequency();
-    AnalyzerMode GetMode();
-    string       GetID();
+    AnalyzerMode Mode();
+    string       Serial();
     json GetJSONDescriptor();
 };

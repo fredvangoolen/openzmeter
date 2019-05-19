@@ -35,7 +35,7 @@ AnalyzerInterface::~AnalyzerInterface() {
 float AnalyzerInterface::GetMaxCurrent() {
   return pMaxCurrent;
 }
-string AnalyzerInterface::GetID() {
+string AnalyzerInterface::Serial() {
   return GetSchema();
 }
 float AnalyzerInterface::GetNominalVoltage() {
@@ -127,7 +127,7 @@ void AnalyzerInterface::SaveAggreg(Params_t &params) {
 }
 json AnalyzerInterface::GetJSONDescriptor() {
   json Response;
-  Response["ID"] = GetID();
+  Response["ID"] = Serial();
   Response["NominalVoltage"] = pNominalVoltage;
   Response["NominalFreq"] = pNominalFrequency;
   Response["Name"] = pName;
@@ -138,7 +138,7 @@ json AnalyzerInterface::GetJSONDescriptor() {
   Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
   return Response;
 }
-AnalyzerInterface::AnalyzerMode AnalyzerInterface::GetMode() {
+AnalyzerInterface::AnalyzerMode AnalyzerInterface::Mode() {
   return pMode;
 }
 void AnalyzerInterface::AccumulateAggreg(Params_t &dst, Params_t &src) {
