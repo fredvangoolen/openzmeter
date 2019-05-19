@@ -71,8 +71,7 @@ bool DeviceV1_01::Init() {
   return true;
 }
 DeviceV1_01::DeviceV1_01(string serial) {
-  pBuffer.Reset(DEVICEV1_01_BUFFERSECONDS * DEVICEV1_01_SAMPLEFREQ);
-  pLastUpdate    = 0;
+//  pLastUpdate    = 0;
   pDeviceHandle  = NULL;
   pNewDevice     = NULL;
   pSerial        = serial;
@@ -85,7 +84,7 @@ DeviceV1_01::DeviceV1_01(string serial) {
 }
 AnalyzerInterface *DeviceV1_01::FindAnalyzer(string serial) {
   if(pAnalyzer == NULL) return NULL;
-  return (serial == pAnalyzer->GetID()) ? pAnalyzer : NULL;
+  return (serial == pAnalyzer->Serial()) ? pAnalyzer : NULL;
 }
 uint32_t DeviceV1_01::AnalyzersCount() {
   return (pAnalyzer == NULL) ? 0 : 1;
@@ -128,12 +127,10 @@ bool DeviceV1_01::Start() {
     return false;
   }
   LOGFile::Info("Starting 'V1.01' driver with serial '%s'...\n", pSerial.c_str());
-  pBuffer.Reset(DEVICEV1_01_BUFFERSECONDS * DEVICEV1_01_SAMPLEFREQ);
   pTerminate    = false;
-  pLastUpdate   = 0;
   pDeviceHandle = NULL;
   pNewDevice    = NULL;
-  pAnalyzer     = new AnalyzerSoft(pSerial, AnalyzerInterface::PHASE1, DEVICEV1_01_SAMPLEFREQ);  
+  pAnalyzer     = new AnalyzerSoft(pSerial, AnalyzerInterface::PHASE1, DEVICEV1_01_SAMPLEFREQ);
 
   if(libusb_init(&pContext) < 0) {
     LOGFile::Error("Can not open libUSB...\n");
@@ -220,23 +217,23 @@ bool DeviceV1_01::BuffersAppend(float voltageSample, float currentSample) {
 //  sprintf(Tmp, "%f, %f\n", voltageSample, currentSample);
 //  write(File, Tmp, strlen(Tmp));
   
-  if(pBuffer.Full()) return false;
+//  if(pBuffer.full()) return false;
   Sample_t Sample = { voltageSample, currentSample };
-  pBuffer.Push(Sample);
+  pBuffer.push_back(Sample);
   uint64_t Sampletime = Tools::GetTime();
-  if(pLastUpdate < (Sampletime - 500)) {
-    char ThreadName[16];
-    sprintf(ThreadName, "DeviceV1_00_%02d", pBuffer.Size() * 100 / pBuffer.Capacity());
-    pthread_setname_np(pCaptureThread, ThreadName);
-    pLastUpdate = Sampletime;
-  }
+//  if(pLastUpdate < (Sampletime - 500)) {
+//    char ThreadName[16];
+//    sprintf(ThreadName, "DeviceV1_00_%d", pBuffer.size());
+//    pthread_setname_np(pCaptureThread, ThreadName);
+//    pLastUpdate = Sampletime;
+//  }
   if(pAnalyzer->IsFinished() == false) return true;
   bool Started = false;
-  while((pBuffer.Empty() == false) && (Started == false)) {
-    vector<float> Voltage, Current;
-    Sample = pBuffer.Pop();
-    Voltage.push_back(Sample.Voltage);
-    Current.push_back(Sample.Current);
+  while((pBuffer.empty() == false) && (Started == false)) {
+    Sample = pBuffer.front();
+    pBuffer.pop_front();
+    vector<float> Voltage = {Sample.Voltage};
+    vector<float> Current = {Sample.Current};
     if(pAnalyzer->BufferAppend(Voltage, Current, Sampletime) == true) Started = true;
   }
   return true;

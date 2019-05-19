@@ -218,8 +218,8 @@ bool ConfigManager::SaveConfig(string path, json val) {
 }
 json ConfigManager::ReadConfig(string path) {
   if(pInstance == NULL) return nullptr;
-  printf("Config Path %s -> %s\n", path.c_str(), pInstance->pConfig[json::json_pointer(path)].dump().c_str());
-  fflush(stdout);
+//  printf("Config Path %s -> %s\n", path.c_str(), pInstance->pConfig[json::json_pointer(path)].dump().c_str());
+//  fflush(stdout);
   return pInstance->pConfig[json::json_pointer(path)];
 }
 

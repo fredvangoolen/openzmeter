@@ -3,8 +3,8 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
-#include <RingBuffer.h>
 #include <libusb-1.0/libusb.h>
+#include <deque>
 #include "DeviceInterface.h"
 #include "AnalyzerSoft.h"
 #include "Tools.h"
@@ -33,7 +33,7 @@ class DeviceV2 : public DeviceInterface {
   private :
     vector<Analyzer_t>           pAnalyzers;               //Listado de analyzadores
 //    uint8_t                      pAnalyzersCount;          //Numero de analyzadores
-    RingBuffer<Sample_t>         pBuffer;                  //Read buffer
+    deque<Sample_t>              pBuffer;                  //Read buffer
 //    uint32_t                     pUsed;                    //Muestras en uso del buffer
 //    uint32_t                     pBuffLen;                 //Tamaño del buffer
 //    float                       *pVoltageSamples;          //Muestras de tension

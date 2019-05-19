@@ -34,7 +34,6 @@ class Device {
 };
 class DeviceManager {
   private :  
-//    static DeviceManager *pInstance;
     static vector<Device*> pDevices;
   private :
     static void GetDevicesCallback(HTTPRequest &req);
@@ -42,7 +41,7 @@ class DeviceManager {
     static void StartDeviceCallback(HTTPRequest &req);
     static void StopDeviceCallback(HTTPRequest &req);
     static void SetDeviceCallback(HTTPRequest &req);
-    
+   
     static void GetAnalyzersCallback(HTTPRequest &req);
     static void GetSeriesCallback(HTTPRequest &req);
     static void GetSeriesNowCallback(HTTPRequest &req);

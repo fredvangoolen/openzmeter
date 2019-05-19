@@ -49,16 +49,41 @@ Bluetooth::~Bluetooth() {
 bool Bluetooth::Start() {
   pthread_mutex_lock(&pMutex);
   pFailState = true;
-  if(SendBool("Powered", false) == false) return false; //Disable adapter
+  if(SendBool("Powered", false) == false) {
+    pthread_mutex_unlock(&pMutex);
+    return false; //Disable adapter
+  }
   string MAC = GetMac();
+  if(MAC.empty() == true) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
   MAC.erase(std::remove(MAC.begin(), MAC.end(), ':'), MAC.end());
   pServerName = "openZmeter_" + MAC.substr(8);
-  if(SendString("Alias", pServerName.c_str()) == false) return false; //Set adapter name
-  if(SendBool("Powered", true) == false) return false; //enable adapter
-  if(SendBool("Discoverable", true) == false) return false;
-  if(SendUINT32("DiscoverableTimeout", 0) == false) return false;
-  if(SendBool("Discoverable", true) == false) return false;
-  if(SendUINT32("DiscoverableTimeout", 0) == false) return false;
+  if(SendString("Alias", pServerName.c_str()) == false) {
+    pthread_mutex_unlock(&pMutex);
+    return false; //Set adapter name 
+  }
+  if(SendBool("Powered", true) == false) {
+    pthread_mutex_unlock(&pMutex);
+    return false; //enable adapter
+  }
+  if(SendBool("Discoverable", true) == false) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  if(SendUINT32("DiscoverableTimeout", 0) == false) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  if(SendBool("Discoverable", true) == false) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  if(SendUINT32("DiscoverableTimeout", 0) == false) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
   pBridgeSocket = socket(AF_INET, SOCK_DGRAM, 0);
   if(pBridgeSocket < 0) {
     LOGFile::Error("Can not open control socket for bluetooth interface (%s)\n", strerror(errno));
@@ -146,7 +171,10 @@ bool Bluetooth::Stop() {
   waitpid(pDNSMasqPID, NULL, 0);
   pDNSMasqPID = 0;
   pServerName = "Stopped";
-  if(SendBool("Powered", false) == false) return false; //Disable adapter
+  if(SendBool("Powered", false) == false) {
+    pthread_mutex_unlock(&pMutex);
+    return false; //Disable adapter 
+  }
   DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez/hci0", "org.bluez.NetworkServer1", "Unregister");
   DBusMessageIter ArgsIter;
   dbus_message_iter_init_append(Msg, &ArgsIter);

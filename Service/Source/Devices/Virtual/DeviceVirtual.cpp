@@ -151,6 +151,6 @@ DeviceVirtual::~DeviceVirtual() {
 }
 AnalyzerInterface *DeviceVirtual::FindAnalyzer(string serial) {
   if(pAnalyzer == NULL) return NULL;
-  return (serial == pAnalyzer->GetID()) ? pAnalyzer : NULL;
+  return (serial == pAnalyzer->Serial()) ? pAnalyzer : NULL;
 }
 //======================================================================================================================
