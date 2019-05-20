@@ -104,30 +104,31 @@ void *Events::Events_Thread(void* args) {
       if(Stationary != This->pPrevStationary) LOGFile::Debug("Analyzer '%s' %s stationary state\n", This->pAnalyzer->Serial().c_str(), Stationary ? "reach" : "leave");
       
       //Check for new events
-      for(uint8_t n = 0; n < RMS_Avg.size(); n++) {
-        Event_t Event;
-        Event.Type = EVT_NONE;
-        //Check for interruption new events
-        if((PercentChange(Cycle.RMS[n], This->pAnalyzer->GetNominalVoltage()) < EVENT_INTERRUPTION) && (This->FindRunningEvent(EVT_INTERRUPTION) == false)) Event.Type = EVT_INTERRUPTION;
-        //Check for DIP new events
-        if((PercentChange(Cycle.RMS[n], This->pAnalyzer->GetNominalVoltage()) < EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_DIP) == false)) Event.Type = EVT_DIP;
-        //Check for SWELL new events
-        if((PercentChange(Cycle.RMS[n], This->pAnalyzer->GetNominalVoltage()) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_SWELL) == false)) Event.Type = EVT_SWELL;
-        //Check for RVC new events
-        if((Stationary == false) && (This->pPrevStationary == true) && (This->FindRunningEvent(EVT_INTERRUPTION | EVT_DIP | EVT_SWELL | EVT_RVC) == false)) Event.Type = EVT_RVC;
-        if(Event.Type != EVT_NONE) {
-          Event.Reference = (Event.Type == EVT_RVC) ? RMS_Avg : vector<float>(RMS_Avg.size(), This->pAnalyzer->GetNominalVoltage());
-          Event.SteadyValue = vector<float>(RMS_Avg.size(), 0);
-          Event.PeakValue = vector<float>(RMS_Avg.size(), 0);
-          Event.Duration = 0;
-          Event.Clossing = false;
-          Event.Start =  This->pParams->Timestamp + ((Pos * 1000.0) / This->pSampleRate);
-          Event.BeginSamples.assign(This->pPrevSamples.end() - (EVENT_RAWENVELOPETIME * This->pSampleRate), This->pPrevSamples.end());
-          for(deque<EventCycle_t>::iterator it = This->pPrevCycles.begin(); it != This->pPrevCycles.end(); it++) Event.BeginRMS.push_back(it->RMS);
-          This->pEvents.push_back(Event);
+      if(This->pPrevSamples.size() > (EVENT_RAWENVELOPETIME * This->pSampleRate)) {
+        for(uint8_t n = 0; n < RMS_Avg.size(); n++) {
+          Event_t Event;
+          Event.Type = EVT_NONE;
+          //Check for interruption new events
+          if((PercentChange(Cycle.RMS[n], This->pAnalyzer->GetNominalVoltage()) < EVENT_INTERRUPTION) && (This->FindRunningEvent(EVT_INTERRUPTION) == false)) Event.Type = EVT_INTERRUPTION;
+          //Check for DIP new events
+          if((PercentChange(Cycle.RMS[n], This->pAnalyzer->GetNominalVoltage()) < EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_DIP) == false)) Event.Type = EVT_DIP;
+          //Check for SWELL new events
+          if((PercentChange(Cycle.RMS[n], This->pAnalyzer->GetNominalVoltage()) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_SWELL) == false)) Event.Type = EVT_SWELL;
+          //Check for RVC new events
+          if((Stationary == false) && (This->pPrevStationary == true) && (This->FindRunningEvent(EVT_INTERRUPTION | EVT_DIP | EVT_SWELL | EVT_RVC) == false)) Event.Type = EVT_RVC;
+          if(Event.Type != EVT_NONE) {
+            Event.Reference = (Event.Type == EVT_RVC) ? RMS_Avg : vector<float>(RMS_Avg.size(), This->pAnalyzer->GetNominalVoltage());
+            Event.SteadyValue = vector<float>(RMS_Avg.size(), 0);
+            Event.PeakValue = vector<float>(RMS_Avg.size(), 0);
+            Event.Duration = 0;
+            Event.Clossing = false;
+            Event.Start =  This->pParams->Timestamp + ((Pos * 1000.0) / This->pSampleRate);
+            Event.BeginSamples.assign(This->pPrevSamples.end() - (EVENT_RAWENVELOPETIME * This->pSampleRate), This->pPrevSamples.end());
+            for(deque<EventCycle_t>::iterator it = This->pPrevCycles.begin(); it != This->pPrevCycles.end(); it++) Event.BeginRMS.push_back(it->RMS);
+            This->pEvents.push_back(Event);
+          }
         }
       }
-      
       //Insert current cycle/samples in prev data buffers and in running events than need its
       for(uint n = 0; n < CycleLen; n++) {
         vector<float> Sample;

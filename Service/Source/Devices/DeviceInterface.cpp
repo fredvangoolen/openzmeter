@@ -285,10 +285,11 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
   string Analyzer = Params["Analyzer"];
-  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+  if(!Params["To"].is_number_unsigned() || !Params["Period"].is_number_unsigned() || !Params["LastSample"].is_number_unsigned()) return req.FromString("'To', 'Period' and 'LastSample' must be a numbers", MHD_HTTP_BAD_REQUEST);
   uint64_t To         = Params.value<uint64_t>("To", 0);
   uint64_t Period     = Params.value<uint64_t>("Period", 3600000);
   uint64_t LastSample = Params.value<uint64_t>("LastSample", 0);
+  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
   string   Aggreg     = Params["Aggreg"];
   uint64_t Now        = Tools::GetTime();
   if(To == 0) To = Now;
