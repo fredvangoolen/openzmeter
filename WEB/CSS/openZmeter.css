@@ -13,6 +13,25 @@
   height: 16px !important;
   display: inline-block;
 }
+.glyphicon-time {
+  background-image: url(../Imgs/time.png);
+  width: 16px !important;
+  height: 16px !important;
+  display: inline-block;
+}
+.glyphicon-chevron-up {
+  background-image: url(../Imgs/bullet_arrow_up.png);
+  width: 16px !important;
+  height: 16px !important;
+  display: inline-block;
+}
+.glyphicon-chevron-down {
+  background-image: url(../Imgs/bullet_arrow_down.png);
+  width: 16px !important;
+  height: 16px !important;
+  display: inline-block;
+}
+
 .glyphicon-calendar:before {
   content: none;
 }

@@ -14,14 +14,20 @@
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(string id, AnalyzerInterface::AnalyzerMode mode, float samplerate) : AnalyzerInterface(id.c_str(), mode) {
-  float Q = 1.0;
-  float K = tan(M_PI * (pNominalFrequency / samplerate));
-  float Norm = 1 / (1 + K / Q + K * K);
-//  pFilters.A0 = K / Q * Norm;
-//  pFilters.A1 = 0;
-//  pFilters.A2 = -pFilters.A0;
-//  pFilters.B1 = 2 * (K * K - 1) * Norm;
-//  pFilters.B2 = (1 - K / Q + K * K) * Norm;
+  for(uint n = 0; n < ZEROCROSSING_FILTERSTAGES; n++) {
+    float Q = 1.0;
+    float K = tan(M_PI * (pNominalFrequency / samplerate));
+    float Norm = 1 / (1 + K / Q + K * K);
+    Filter_t Stage;
+    Stage.A0 = K / Q * Norm;
+    Stage.A1 = 0;
+    Stage.A2 = -Stage.A0;
+    Stage.B1 = 2 * (K * K - 1) * Norm;
+    Stage.B2 = (1 - K / Q + K * K) * Norm;
+    Stage.ChannelsZ1 = vector<float>((pMode == PHASE1) ? 1 : 3, 0.0);
+    Stage.ChannelsZ2 = vector<float>((pMode == PHASE1) ? 1 : 3, 0.0);
+    pFilters.push_back(Stage);
+  }
   pEvents = new Events(this, samplerate);
   pLastSamples.resize((pMode == PHASE1) ? 1 : 3);
 //  pFilters.Channels.resize((pMode == PHASE1) ? 1 : 3);
@@ -30,7 +36,7 @@ AnalyzerSoft::AnalyzerSoft(string id, AnalyzerInterface::AnalyzerMode mode, floa
   pBlockCycles.reserve(20);
 //  pCyclesPos       = 0;
   pCycleLen        = 0;
-  pMaxSamples      = floor((15.0 * samplerate) / pNominalFrequency);
+  pMaxSamples      = ceil((15.0 * samplerate) / pNominalFrequency);
   pSamplerate      = samplerate;
 //  pSyncName        = NULL;
 //  pSyncPassword    = NULL;
@@ -54,7 +60,7 @@ AnalyzerSoft::AnalyzerSoft(string id, AnalyzerInterface::AnalyzerMode mode, floa
     char Name[16];
     sprintf(Name, "FFT_V%u", i);
     pVoltageFFT.push_back(new FFT(Name));
-    uint32_t PhaseShift = (pSamplerate * ZEROCROSSING_FILTERSTAGES) / (pNominalFrequency * 2) + 3;
+    uint32_t PhaseShift = 154;
 //    pDelayVoltage.push_back(RingBuffer<float>(PhaseShift, false));
     for(uint32_t n = 0; n < PhaseShift; n++) pDelayVoltage[i].push_back(0.0);
   }
@@ -63,7 +69,7 @@ AnalyzerSoft::AnalyzerSoft(string id, AnalyzerInterface::AnalyzerMode mode, floa
     sprintf(Name, "FFT_I%u", i);
     pCurrentFFT.push_back(new FFT(Name));
 //    pDelayCurrent.push_back(RingBuffer<float>(1, false));
-    for(int n = 0; n < 1; n++) pDelayCurrent[i].push_back(0.0);
+    for(int n = 0; n < 5; n++) pDelayCurrent[i].push_back(0.0);
   }
   pthread_mutex_init(&pThreadMutex, NULL);
   pthread_cond_init (&pThreadCond, NULL);
@@ -90,9 +96,6 @@ float AnalyzerSoft::PercentChange(float in, float reference) {
   return ((in - reference) / reference) * 100;
 }
 bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime) {
-//  printf("%f\n", voltageSamples[0]);
-//  fflush(stdout);
-  
   for(uint8_t i = 0; i < pAggreg10C.Voltage_Samples.size(); i++) pDelayVoltage[i].push_back(voltageSamples[i]);
   for(uint8_t i = 0; i < pAggreg10C.Current_Samples.size(); i++) pDelayCurrent[i].push_back(currentSamples[i]);
   if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
@@ -105,31 +108,23 @@ bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vecto
     pDelayCurrent[i].pop_front();
   }
   vector<float> Outs = voltageSamples;
-//  for(uint8_t i = 0; i < voltageSamples.size(); i++) {
-//    for(int j = 0; j < ZEROCROSSING_FILTERSTAGES; j++) {
-//      float Out = Outs[i] * pFilters.A0 + pFilters.Channels[i].Z1[j];
-//      pFilters.Channels[i].Z1[j] = Outs[i] * pFilters.A1 + pFilters.Channels[i].Z2[j] - pFilters.B1 * Out;
-//      pFilters.Channels[i].Z2[j] = Outs[i] * pFilters.A2 - pFilters.B2 * Out;
-//      Outs[i] = Out;
-//    }
-//  }
+  for(uint8_t i = 0; i < voltageSamples.size(); i++) {
+    for(uint j = 0; j < pFilters.size(); j++) {
+      float Out = Outs[i] * pFilters[j].A0 + pFilters[j].ChannelsZ1[i];
+      pFilters[j].ChannelsZ1[i] = Outs[i] * pFilters[j].A1 + pFilters[j].ChannelsZ2[i] - pFilters[j].B1 * Out;
+      pFilters[j].ChannelsZ2[i] = Outs[i] * pFilters[j].A2 - pFilters[j].B2 * Out;
+      Outs[i] = Out;
+    }
+  }
   if(pBlockCycles.size() == pBlockCycles.capacity()) pBlockCycles.clear();
   pCycleLen++;
   if(((pLastSamples[0] >= 0.0) && (Outs[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (Outs[0] > 0.0))) {
     pBlockCycles.push_back(pCycleLen);
-    if(pCycles.size() > (ZEROCROSSING_SECONDS * pNominalFrequency)) pCycles.pop_front();
     pCycles.push_back(pCycleLen);
-//    if(pCycles.size() < pCycles.capacity()) {
-//      pCycles.push_back(pCycleLen);
-//    } else {
-//      pCycles[pCyclesPos] = pCycleLen;
-//      pCyclesPos = (pCyclesPos + 1) % pCycles.capacity();
-//    }
+    if(pCycles.size() > (ZEROCROSSING_SECONDS * pNominalFrequency)) pCycles.pop_front();
     pCycleLen = 0;
   }
-
-  
-  pLastSamples = Outs;
+  pLastSamples = Outs;  
   if((pBlockCycles.size() == pBlockCycles.capacity()) || (pAggreg10C.Voltage_Samples[0].size() == pMaxSamples)) {
     pthread_mutex_lock(&pThreadMutex);
     pWorking = true;
@@ -317,7 +312,7 @@ float AnalyzerSoft::CalcFrequency() {
     if((pCycles[i] < MinCycle) || (pCycles[i] > MaxCycle)) return NAN;
     Samples += pCycles[i];
   } 
-  return (Samples / pSamplerate) * 10.0;
+  return pCycles.size() / ((2.0 * Samples) / pSamplerate);
 }
 void AnalyzerSoft::GetParams(Params_t &params, ParamsType &copy) {
   pthread_mutex_lock(&pWaitingThreadsMutex);
