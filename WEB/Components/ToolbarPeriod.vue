@@ -17,11 +17,31 @@
           <li v-bind:class="{active: ((Period == 'month') && (To == 'natural'))}"><a @click="PeriodClick('month', 'natural')">This month</a></li>
           <li v-bind:class="{active: ((Period == 'year') && (To == 'natural'))}"><a @click="PeriodClick('year', 'natural')">This year</a></li>
           <li role="separator" class="divider"></li>
-          <li v-bind:class="{active: ((Period == 'year') && (To == 'natural'))}"><a @click="PeriodClick('year', 'natural')">Custom</a></li>
+          <li v-bind:class="{active: (Number.isInteger(To) == true)}"><a @click="EditPeriod()">Custom</a></li>
         </ul>
       </div>
       <div class="input-group-btn">
         <button class="btn btn-default narrow" type="button" v-on:click="Next"><img :src="require('Imgs/resultset_next.png')"></button>
+      </div>
+    </div>
+    <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog" ref="dialog" data-keyboard="false">
+      <div class="modal-backdrop in"></div>
+      <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+          <div class="pull-left"><h4 class="modal-title">Data range</h4></div>
+          <div class="pull-right btn-group">
+            <button type="button" class="btn btn-default btn-xs" @click="Apply"><img :src="require('Imgs/tick.png')" alt="Apply"></button>
+            <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY - HH:mm:ss', viewMode: 'days' }" v-on:DateChanged="SetStartDate"></date-picker></div>
+            <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY - HH:mm:ss', viewMode: 'days' }" v-on:DateChanged="SetEndDate"></date-picker></div>
+          </div>              
+        </div>
+      </div>
       </div>
     </div>
   </div>
@@ -29,10 +49,11 @@
 
 <script>
   import moment from 'JS/moment.js';
+  import DatePicker from 'Components/DatePicker.vue';
   export default {
     props: { variable: String },
     data: function() {
-      return { Period: 'day', To: 'last', SelectedText: 'Last 24 hours' };
+      return { Period: 'day', To: 'last', SelectedText: 'Last 24 hours', ShowDialog: false };
     },
     beforeDestroy: function() {
       clearInterval(this.Timer);
@@ -43,6 +64,7 @@
       this.Timer = null;
       this.DateWindow = [0, 0];
       this.Update = true;
+      this.TmpDateWindow;
       var Conf = JSON.parse(localStorage.getItem(this.variable));
       if(Conf.To !== undefined) this.To = Conf.To;
       if(Conf.Period !== undefined) this.Period = Conf.Period;
@@ -52,6 +74,32 @@
       this.PeriodClick(this.Period, this.To);
     },
     methods: {
+      EditPeriod: function() {
+        this.ShowDialog = true;
+        this.TmpDateWindow = Array.from(this.DateWindow);
+        this.$nextTick(function() { 
+          this.$refs.StartDate.SetDate(moment(this.TmpDateWindow[0]));
+          this.$refs.EndDate.SetDate(moment(this.TmpDateWindow[1])); 
+          $(this.$refs.dialog).modal('show');
+        });
+      },
+      SetStartDate: function(date) {
+        if(date.valueOf() < this.TmpDateWindow[1]) this.TmpDateWindow[0] = date.valueOf();
+      },
+      SetEndDate: function(date) {
+        if(date.valueOf() > this.TmpDateWindow[0]) this.TmpDateWindow[1] = date.valueOf();
+      },
+      Apply: function() {
+        if((this.DateWindow[0] != this.TmpDateWindow[0]) || (this.DateWindow[1] != this.TmpDateWindow[1])) {
+          this.SetCustom(this.TmpDateWindow[0], this.TmpDateWindow[1]);
+          this.EmitUpdate();
+        }
+        this.Back();
+      },
+      Back: function() {
+        $(this.$refs.dialog).modal('hide');
+        this.ShowDialog = false;
+      },
       PeriodClick: function(period, to) {
         this.LastSample = 0;
         this.Period = period;
@@ -99,15 +147,6 @@
         from = Math.round(from);
         to = Math.round(to);
         this.PeriodClick(to - from, to);
-//        this.$refs.SetCustom(minDate, maxDate);
-        
-        
-  //    $(Self.Opt.NowBtn).removeClass('active');
-  //    localStorage.setItem('GraphEnd', maxDate);
-  //    localStorage.setItem('GraphPeriod', maxDate - minDate);
-  //    Self.Range = [minDate, maxDate];
-//        this.LastSample = 0;
-  //    Self.GetSeries();
       },
       //      SetAutoUpdate(autoUpdate) {
 //        this.AutoUpdate = autoUpdate;
@@ -165,7 +204,8 @@
         this.$emit('PeriodChanged', this.DateWindow, To, Period, this.LastSample, this.Aggreg);
         console.log("Load " + this.Period + " up to " + this.To);
       }
-    }
+    },
+    components: {DatePicker}
   }
 </script>
 
