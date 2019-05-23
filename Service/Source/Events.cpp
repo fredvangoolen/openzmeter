@@ -53,6 +53,10 @@ bool Events::FindRunningEvent(uint32_t mask) {
   }
   return false;
 }
+void Events::Save(Event_t &evt) {
+  //Añado todos los parametros y ejecuto
+    
+}
 void *Events::Events_Thread(void* args) {
   Events *This = (Events*)args;
   while(true) {
@@ -152,26 +156,29 @@ void *Events::Events_Thread(void* args) {
         }
       }
       if(This->pPrevCycles.size() > (This->pAnalyzer->GetNominalFrequency() * EVENT_RMSENVELOPETIME * 2)) This->pPrevCycles.pop_front(); 
-      Pos = Pos + CycleLen;      
+      Pos = Pos + CycleLen;
       
       //Update/close/save running events
-      for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
+      for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end();) {
         if((it->Clossing == true) && (This->pPrevCycles.size() == (This->pAnalyzer->GetNominalFrequency() * EVENT_RMSENVELOPETIME * 2))) {
- //Save y elimino
+          This->Save(*it);
+          list<Event_t>::iterator Tmp = it;
+          it = it++;
+          This->pEvents.erase(Tmp);
         } else {
           if(it->Type != EVT_RVC) This->pParams->Flag = true;
        //    if(EventEnd == true) SaveEvent(i, true);//Compruebo si algun evento ha finalizado
-//    bool EventEnd = (pRunningEvent.Type != EVT_NONE);
-//    if(pRunningEvent.Type == EVT_RVC) {
-//      if(Stationary == false) EventEnd = false;
-//    } else if((pRunningEvent.Type == EVT_DIP) || (pRunningEvent.Type == EVT_SWELL) || (pRunningEvent.Type == EVT_INTERRUPTION)) {
-//      for(int n = 0; n < (pTriphase ? 3 : 1); n++) {
-//        if(fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) < EVENT_HYSTERESIS) continue;
-//        EventEnd = false;
-//        break;
-//      }
-//    }
-//    if(EventEnd == true) SaveEvent(i, true);
+      //    bool EventEnd = (pRunningEvent.Type != EVT_NONE);
+      //    if(pRunningEvent.Type == EVT_RVC) {
+      //      if(Stationary == false) EventEnd = false;
+      //    } else if((pRunningEvent.Type == EVT_DIP) || (pRunningEvent.Type == EVT_SWELL) || (pRunningEvent.Type == EVT_INTERRUPTION)) {
+      //      for(int n = 0; n < (pTriphase ? 3 : 1); n++) {
+      //        if(fabs(PercentChange(Cycle->RMS[n], Tools::Electrical.NominalVoltage)) < EVENT_HYSTERESIS) continue;
+      //        EventEnd = false;
+      //        break;
+      //      }
+      //    }
+      //    if(EventEnd == true) SaveEvent(i, true);
 
         
 //Si sigue sin estar cerrado actualizo
