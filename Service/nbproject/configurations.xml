@@ -43,7 +43,7 @@
         </df>
         <df name="Tariffs">
           <df name="ESP">
-            <in>Spain.cpp</in>
+            <in>TariffPlugin_ESP.cpp</in>
           </df>
           <df name="NONE">
             <in>TariffPlugin_NONE.cpp</in>
@@ -504,7 +504,10 @@
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="Source/Tariffs/ESP/Spain.cpp" ex="false" tool="1" flavor2="8">
+      <item path="Source/Tariffs/ESP/TariffPlugin_ESP.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
         <ccTool flags="1">
         </ccTool>
       </item>

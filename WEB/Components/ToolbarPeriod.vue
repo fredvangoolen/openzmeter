@@ -127,7 +127,12 @@
       SetLastSample: function(lastsample) {
         this.LastSample = lastsample;
       },
-      Previous: function() {},
+      Previous: function() {
+        if(Number.isNumber(this.Period) == true) { 
+          Period = this.Period;
+        }
+        
+      },
       Next: function() {},
       SetAnalyzer() {
         this.LastSample = 0;

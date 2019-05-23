@@ -26,7 +26,6 @@ class Events : public Database {
     typedef struct {
       vector<float> RMS;
       uint64_t      Timestamp;
-//      uint32_t      Len;
     } EventCycle_t;
     typedef struct {
       enum EventType                 Type;                 //Running event type
@@ -60,10 +59,11 @@ class Events : public Database {
     static void *Events_Thread(void *args);
     static float PercentChange(float in, float reference);
   private :
+    void Save(Event_t &evt);
     bool FindRunningEvent(uint32_t mask);
   public :
     void Start(AnalyzerInterface::Params_t *params, vector<uint32_t> *cycles);
     void Wait();
     Events(AnalyzerInterface *interface, float samplerate);
-    virtual ~Events();      
+    virtual ~Events();
 };
