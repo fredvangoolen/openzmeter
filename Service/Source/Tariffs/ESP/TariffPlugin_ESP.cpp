@@ -8,7 +8,6 @@ bool TariffPower_ESP3::pRegistered = TariffPower_ESP3::Register("ESP_3.x", Tarif
 TariffPowerPlugin *TariffPower_ESP3::Instance() {
   TariffPower_ESP3 *Module = new TariffPower_ESP3();
   Module->pLen = 0;
-  Module->pMaxPower = 0;
   return Module;
 }
 TariffPower_ESP3::~TariffPower_ESP3() {
@@ -18,8 +17,11 @@ void TariffPower_ESP3::Config(const float contracted, const float cost) {
   pStats.Cost = cost;
 }
 void TariffPower_ESP3::PushSample(const float active, const float reactive) {
-  pLen ++;
+  if(pLen == 0) {
+    pMaxPower = 0;
+  }
   if(active > pMaxPower) pMaxPower = active;
+  pLen++;
 }
 float TariffPower_ESP3::PopSample(const float active, const float reactive) { 
   return (pStats.Contracted * pStats.Cost) / 96.0;
@@ -48,10 +50,32 @@ TariffPower_ESP3::CycleStats_t TariffPower_ESP3::CycleStats() {
   return pStats;
 }
 //----------------------------------------------------------------------------------------------------------------------
-bool TariffPower_ESP6::pRegistered = TariffPower_ESP6::Register("ESP_6.x", TariffPower_ESP6::Instance);
-TariffPowerPlugin *TariffPower_ESP6::Instance() {
+bool TariffPower_ESP6::pRegistered1 = TariffPower_ESP6::Register("ESP_6.x (P1)", TariffPower_ESP6::Instance1);
+bool TariffPower_ESP6::pRegistered2= TariffPower_ESP6::Register("ESP_6.x (P2)", TariffPower_ESP6::Instance2);
+bool TariffPower_ESP6::pRegistered345 = TariffPower_ESP6::Register("ESP_6.x (P3, P4, P5)", TariffPower_ESP6::Instance345);
+bool TariffPower_ESP6::pRegistered6 = TariffPower_ESP6::Register("ESP_6.x (P6)", TariffPower_ESP6::Instance6);
+TariffPowerPlugin *TariffPower_ESP6::Instance1() {
   TariffPower_ESP6 *Module = new TariffPower_ESP6();
   Module->pLen = 0;
+  Module->pConst = 1.0;
+  return Module;
+}
+TariffPowerPlugin *TariffPower_ESP6::Instance2() {
+  TariffPower_ESP6 *Module = new TariffPower_ESP6();
+  Module->pLen = 0;
+  Module->pConst = 0.5;
+  return Module;
+}
+TariffPowerPlugin *TariffPower_ESP6::Instance345() {
+  TariffPower_ESP6 *Module = new TariffPower_ESP6();
+  Module->pLen = 0;
+  Module->pConst = 0.37;
+  return Module;
+}
+TariffPowerPlugin *TariffPower_ESP6::Instance6() {
+  TariffPower_ESP6 *Module = new TariffPower_ESP6();
+  Module->pLen = 0;
+  Module->pConst = 0.17;
   return Module;
 }
 TariffPower_ESP6::~TariffPower_ESP6() {
@@ -61,15 +85,30 @@ void TariffPower_ESP6::Config(const float contracted, const float cost) {
   pStats.Cost = cost;
 }
 void TariffPower_ESP6::PushSample(const float active, const float reactive) {
+  if(pLen == 0) {
+    pAccum = 0.0;
+    pExcessQuarters = 0;
+  }
+  if(active > pStats.Contracted) {
+    pExcessQuarters++;
+    pAccum += pow(active - pStats.Contracted, 2.0);
+  }
   pLen ++;
 }
 float TariffPower_ESP6::PopSample(const float active, const float reactive) { 
   return (pStats.Contracted * pStats.Cost) / 96.0;
 }
 TariffPower_ESP6::CycleStats_t TariffPower_ESP6::CycleStats() {
-  pStats.Other = "";
-  pStats.OtherCosts = 0.0;
   pStats.Days = pLen / 96;
+  if(pExcessQuarters > 0) {
+    std::ostringstream Formatter;
+    Formatter << std::fixed << std::setprecision(2) << pExcessQuarters;
+    pStats.Other = "Contracted power penalty (Quarters: " + to_string(pExcessQuarters) + ")";
+    pStats.OtherCosts = 1.4064 * pConst * sqrt(pAccum);
+  } else  {
+    pStats.Other = "";
+    pStats.OtherCosts = 0.0;
+  }
   pLen = 0;
   return pStats;
 }
