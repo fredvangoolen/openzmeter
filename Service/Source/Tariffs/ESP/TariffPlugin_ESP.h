@@ -21,11 +21,20 @@ class TariffPower_ESP3 : public TariffPowerPlugin {
 };
 class TariffPower_ESP6 : public TariffPowerPlugin {
   private :
-    static bool pRegistered;
+    static bool pRegistered1;
+    static bool pRegistered2;
+    static bool pRegistered345;
+    static bool pRegistered6;
   private :
     uint32_t pLen;
+    float    pConst;
+    uint32_t pExcessQuarters;
+    float    pAccum;
   private :
-    static TariffPowerPlugin *Instance();
+    static TariffPowerPlugin *Instance1();
+    static TariffPowerPlugin *Instance2();
+    static TariffPowerPlugin *Instance345();
+    static TariffPowerPlugin *Instance6();
   public :
     ~TariffPower_ESP6();
     void         Config(const float contracted, const float cost);
