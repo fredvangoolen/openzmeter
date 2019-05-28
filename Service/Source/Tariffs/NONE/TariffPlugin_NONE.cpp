@@ -55,4 +55,3 @@ TariffEnergy_NONE::CycleStats_t TariffEnergy_NONE::CycleStats() {
   return pStats;
 }
 //----------------------------------------------------------------------------------------------------------------------
-

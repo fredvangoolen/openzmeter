@@ -260,10 +260,12 @@ json Tariff::GetConfig() {
   T["Billing"] = pBillingCycles;
   return T;
 }
-json Tariff::GetResume() {
+json Tariff::GetResume(uint64_t now) {
   json Result;
-  Result["Sampletime"] = pSampletime;
+  Result["From"] = pFirstSampleTime;
+  Result["To"] = pLastSampletime;
   Result["Periods"] = json::array();
+  Result["Complete"] = (now > pLastSampletime);
   for(vector<Period_t>::iterator it = pPeriods.begin(); it != pPeriods.end(); it++) {
     json Period, Energy, Power;
     TariffEnergyPlugin::CycleStats_t EnergyStats = it->EnergyModule->CycleStats();
@@ -320,6 +322,7 @@ bool Tariff::PushSample(const uint64_t time, const float active, const float rea
   if(pSamples.size() == 0) {
     pSumEnergyCost = 0.0;
     pSumPowerCost  = 0.0;
+    pFirstSampleTime = time;
   }
   Sample_t Sample;
   Sample.Active   = isnan(active) ? 0.0 : active;
@@ -328,7 +331,7 @@ bool Tariff::PushSample(const uint64_t time, const float active, const float rea
   pSamples.push(Sample);
   pPeriods[Sample.Period].PowerModule->PushSample(Sample.Active, Sample.Reactive);
   pPeriods[Sample.Period].EnergyModule->PushSample(Sample.Active, Sample.Reactive);
-  pSampletime = time;
+  pLastSampletime = time;
   if(time == pEndDate) return false;
   for(vector<uint64_t>::iterator it = pBillingCycles.begin(); it != pBillingCycles.end(); it++) {
     if(time == *it) return false;
@@ -339,7 +342,7 @@ bool Tariff::PopSample(uint64_t &time, float &active, float &reactive, string &p
   if(pSamples.size() == 0) return false;
   Sample_t Sample = pSamples.front();
   pSamples.pop();
-  time             = pSampletime - (900000ULL * pSamples.size());
+  time             = pLastSampletime - (900000ULL * pSamples.size());
   active           = Sample.Active;
   reactive         = Sample.Reactive;
   period           = "P" + to_string(Sample.Period + 1);

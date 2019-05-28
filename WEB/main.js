@@ -8,8 +8,6 @@ import './CSS/bootstrap.min.css';
 import './JS/dygraph.js';
 
 Vue.use(Router);
-
-//import * as oZm from './JS/openZmeter.js';
 import './CSS/openZmeter.css';
 
 //Views ----------------------------------------

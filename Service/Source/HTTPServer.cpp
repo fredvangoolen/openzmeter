@@ -154,7 +154,6 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
   }
 }
 //----------------------------------------------------------------------------------------------------------------------
-
 vector<HTTPServer::Callback_t> HTTPServer::pCallbacks;
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
@@ -163,16 +162,15 @@ HTTPServer::HTTPServer() {
 bool HTTPServer::Config() {
   uint16_t Port = 8080;
   json Config = ConfigManager::ReadConfig("/HTTPServer");
-  if(!Config.is_object()) {
-    LOGFile::Error("No http server configuration found\n");
-    return false;
-  }
+  if(!Config.is_object()) Config = json::object();
   if(Config["Port"].is_number_unsigned()) Port = Config["Port"];
-  pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_POLL | MHD_USE_PIPE_FOR_SHUTDOWN , Port, NULL, NULL, 
+  pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, Port, NULL, NULL, 
                              &HandleClient, NULL,
                              MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int)60,
                              MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
                              MHD_OPTION_END);
+  if(pDaemon == NULL) LOGFile::Error("HTTP port already in use\n");  
+  ConfigManager::SaveConfig("/HTTPServer", Config); 
   return (pDaemon != NULL);
 }
 HTTPServer::~HTTPServer() {

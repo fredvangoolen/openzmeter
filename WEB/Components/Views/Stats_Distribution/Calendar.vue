@@ -27,42 +27,50 @@
     },
     created: function() {
       this.Calendar = null;
+      this.Days = null;
+      this.Year = null;
     },
     mounted: function() {
       this.Calendar = $(this.$refs.calendar).calendar({ language: "custom" });
     },
     methods: {
+      GetData: function(data) {
+        data.push(['Day', 'Energy']);
+        for(var day in this.Days) data.push([moment().year(this.Year).dayOfYear(day).format('DD/MM/YYYY'), this.Days[day]]);
+        return data;
+      },
       SetData: function(result) {
-        if(result['Active_Power'].length !== 0) this.Calendar.setYear(moment(result.Sampletime[0]).year());
-        var Days = [];
+        this.Year = moment(result.Sampletime[0]).year();
+        if(result['Active_Power'].length !== 0) this.Calendar.setYear(this.Year);
+        this.Days = [];
         for(var i = 0; i < result['Active_Power'].length; i++) {
           var Day = moment(result.Sampletime[i]).dayOfYear();
-          if(Days[Day] === undefined) Days[Day] = null;
-          if(result['Active_Power'][i] !== null) Days[Day] = (Days[Day] === null) ? result['Active_Power'][i] : Days[Day] + result['Active_Power'][i];
+          if(this.Days[Day] === undefined) this.Days[Day] = null;
+          if(result['Active_Power'][i] !== null) this.Days[Day] = (this.Days[Day] === null) ? result['Active_Power'][i] : this.Days[Day] + result['Active_Power'][i];
         }
         var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]);
         var Max = -Infinity;
         var Min =  Infinity;
-        for(var Day in Days) {
-          if(Days[Day] !== null) {
-            Max = Math.max(Max, Days[Day]);
-            Min = Math.min(Min, Days[Day]);
+        for(var Day in this.Days) {
+          if(this.Days[Day] !== null) {
+            Max = Math.max(Max, this.Days[Day]);
+            Min = Math.min(Min, this.Days[Day]);
           }
         }
         var Units = oZm.GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
         this.$emit('RangeChanged', oZm.ScaleToUnits(Min, Units), oZm.ScaleToUnits(Max, Units), Units);
         this.Calendar.setCustomDayRenderer(function(element, date) {
           var Day = moment(date).dayOfYear();
-          if(Days[Day] === null) {
+          if(this.Days[Day] === null) {
             $(element).css({ 'color': '#BBB' });
             $(element).prop({'data-toggle': 'tooltip', 'title': 'No data'} );
           } else {
-            var Energy = Days[Day];
+            var Energy = this.Days[Day];
             var Color = ColorScale((Energy - Min) / (Max - Min));
             $(element).css({ 'background-color': Color, 'color': chroma(Color).luminance() > 0.5 ? '#000' : '#FFF', 'border': '1px solid #fff'});
             $(element).prop({'data-toggle': 'tooltip', 'title': oZm.Round2Plain(oZm.ScaleToUnits(Energy, Units)) + ' ' + Units + 'Wh'} );
           }
-        });
+        }.bind(this));
       }
     }
   }
@@ -73,6 +81,8 @@
     font-size: 12px;
     text-align: center;
     width: 35px;
+    height: 26px;
+    padding: 3px !important;
   }
   .calendar >>> .month-title, .calendar >>> .day-header {
     text-align: center;

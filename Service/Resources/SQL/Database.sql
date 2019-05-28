@@ -14,16 +14,13 @@ CREATE TABLE IF NOT EXISTS users(
   lastlogin     bigint             NOT NULL,
   country_code  character varying  NOT NULL REFERENCES country(country_code) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,
   name          character varying  NOT NULL,
-	surname       character varying  NOT NULL,
-	id_card       character varying  NOT NULL,
-	address       character varying  NOT NULL,
-	company       character varying  NOT NULL,
-	photo         character varying  NULL,
-	email         character varying  NOT NULL,
-	telegram      character varying  NOT NULL,
-  geo           point              NULL
+  address       character varying  NOT NULL,
+  company       character varying  NOT NULL,
+  photo         text               NULL,
+  email         character varying  NOT NULL,
+  telegram      character varying  NOT NULL
 ) WITH (OIDS=FALSE);
-INSERT INTO users(username, password, lastlogin, country_code, name, surname, id_card, address, company, photo, email, telegram) VALUES('admin', MD5('admin'), 0, 'ESP', 'System administrator', '', '', '', '', '', '', '') ON CONFLICT (username) DO NOTHING;
+INSERT INTO users(username, password, lastlogin, country_code, name, address, company, photo, email, telegram) VALUES('admin', MD5('admin'), 0, 'ESP', 'System administrator', '', '', '', '', '') ON CONFLICT (username) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS sessions(
   id        serial NOT NULL PRIMARY KEY,

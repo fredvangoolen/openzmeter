@@ -57,6 +57,24 @@
         this.Data = data;
         this.CalcOptions();
       },
+      GetData: function() {
+        var Data = [];
+        var Header = ['Day', 'Date'];
+        for(var h = 0; h < 24; h++) {
+          if(this.Aggregation === '15M') {
+            for(var q = 1; q < 5; q++) Header.push(("0" + h).slice(-2) + ' Q' + q);
+          } else {
+            Header.push(("0" + h).slice(-2));
+          }
+        }
+        Data.push(Header);
+        for(var Day in this.Days) {
+          var Row = [this.Days[Day].DayOfWeek, this.Days[Day].Date];
+          for(var i = 0; i < this.Days[Day].Cells.length; i++) Row.push((this.Days[Day].Cells[i].Value === undefined) ? '' : this.Days[Day].Cells[i].Value);
+          Data.push(Row);
+        }       
+        return Data;
+      },
       CalcOptions: function() {
         if(this.Data === null) return;
         var Days = {};

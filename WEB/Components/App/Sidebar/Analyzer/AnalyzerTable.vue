@@ -14,12 +14,12 @@
             <button type="button" class="btn btn-success btn-xs" v-bind:class="{ disabled: CurrentlySelected(props.rowData) }" v-on:click="Select(props.rowData)">Select</button>
             <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
             <ul class="dropdown-menu pull-right">
-              <li><a v-on:click="Configure(props.rowData)" >Configure</a></li>
-              <li><a v-on:click="ACL(props.rowData)">ACL</a></li>
+              <li><a v-on:click="Configure(props.rowData)" v-if="false">Configure</a></li>
+              <li><a v-on:click="ACL(props.rowData)" v-if="false">ACL</a></li>
               <li><a v-on:click="Tariffs(props.rowData)">Tariff</a></li>
-              <li><a v-on:click="Alerts(props.rowData)">Alerts</a></li>
-              <li role="separator" class="divider"></li>
-              <li><a v-on:click="Maintenance(props.rowData)">Maintenance</a></li>
+              <li><a v-on:click="Alerts(props.rowData)" v-if="false">Alerts</a></li>
+              <li role="separator" class="divider" v-if="false"></li>
+              <li><a v-on:click="Maintenance(props.rowData)" v-if="false">Maintenance</a></li>
             </ul>
           </div>
         </template>
@@ -69,17 +69,17 @@
         if(id.ID === this.$root.SelectedAnalyzer.ID) return true;
         return false;
       },
-      Select: function(id) {
-        localStorage.setItem("SelAnalyzer", id.ID);
-        this.$root.SelectedAnalyzer = id;
+      Select: function(analyzer) {
+        localStorage.setItem("SelAnalyzer", analyzer.ID);
+        this.$root.SelectedAnalyzer = analyzer;
         this.$nextTick(function() {
           this.$root.$emit('AnalyzerChanged');
           this.$parent.Close();
         });
       },
-      Configure: function(id) {
+      Configure: function(analyzer) {
         this.Show = false;
-        this.$parent.$refs.Configure.Load(id.ID); 
+        this.$parent.$refs.Configure.Load(analyzer.ID); 
       },
       ACL: function(id) {
         alert("ACL not yet implemented"); 
@@ -91,8 +91,9 @@
       Alerts: function(id) {
         alert("Alerts not yet implemented");
       },
-      Maintenance: function(id) {
-        alert("Maintenance not yet implemented");
+      Maintenance: function(analyzer) {
+        this.Show = false;
+        this.$parent.$refs.Maintenance.Load(analyzer);
       }
     },
     components: { Vuetable, Spinner }

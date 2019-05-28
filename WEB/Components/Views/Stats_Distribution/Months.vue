@@ -18,32 +18,45 @@
     data: function() {
       return { ShowSpinner: true, Units: '', Columns: [] };
     },
+    created: function() {
+      this.Months = null;
+      this.Periods = null;
+    },
     methods: {
+      GetData: function(data) {
+        data.push(['Month'].concat(this.Periods));
+        for(var month in this.Months) {
+          var Row = [this.Months[month].Month];
+          for(var period in this.Periods) Row.push(this.Months[month][this.Periods[period]]);
+          data.push(Row);
+        }
+        return data;
+      },
       SetData: function(result) {
-        var Months = [];
-        var Periods = [];
+        this.Months = [];
+        this.Periods = [];
         var Max = 0.0;
         for(var i = 0; i < result['Active_Power'].length; i++) {
           var Month = moment(result.Sampletime[i]).month();
-          if(Months[Month] === undefined) Months[Month] = { };
+          if(this.Months[Month] === undefined) this.Months[Month] = { };
           var Period = (result.Period_Name[i] === null) ? 'NONE' : result.Period_Name[i];
-          if(Periods.includes(Period) === false) Periods.push(Period);
-          if(Months[Month][Period] === undefined) Months[Month][Period] = null;
-          if(result['Active_Power'][i] !== null) Months[Month][Period] = (Months[Month][Period] === null) ? result['Active_Power'][i] : Months[Month][Period] + result['Active_Power'][i];
-          Max = Math.max(Max, Math.abs(Months[Month][Period]));
+          if(this.Periods.includes(Period) === false) this.Periods.push(Period);
+          if(this.Months[Month][Period] === undefined) this.Months[Month][Period] = null;
+          if(result['Active_Power'][i] !== null) this.Months[Month][Period] = (this.Months[Month][Period] === null) ? result['Active_Power'][i] : this.Months[Month][Period] + result['Active_Power'][i];
+          Max = Math.max(Max, Math.abs(this.Months[Month][Period]));
         }
         this.Units = oZm.GetBestUnits(Max);
-        Periods = Periods.sort();
+        this.Periods = this.Periods.sort();
         this.Columns = [ { name: 'Month', title: 'Month' } ]; 
-        for(var Period in Periods) this.Columns.push({ name: Periods[Period], title: Periods[Period] });
+        for(var Period in this.Periods) this.Columns.push({ name: this.Periods[Period], title: this.Periods[Period] });
         this.$nextTick(function() {
           this.$refs.table.normalizeFields();
         });
-        for(var Month in Months) {
-          for(var Period in Months[Month]) Months[Month][Period] = (Months[Month][Period] === null) ? '-' : oZm.Round2Plain(oZm.ScaleToUnits(Months[Month][Period], this.Units));
-           Months[Month].Month = Names[Month];          
+        for(var Month in this.Months) {
+          for(var Period in this.Months[Month]) this.Months[Month][Period] = (this.Months[Month][Period] === null) ? '-' : oZm.Round2Plain(oZm.ScaleToUnits(this.Months[Month][Period], this.Units));
+          this.Months[Month].Month = Names[Month];          
         }
-        this.$refs.table.setData({ data: Months });
+        this.$refs.table.setData({ data: this.Months });
         this.ShowSpinner = false;
       }
     },

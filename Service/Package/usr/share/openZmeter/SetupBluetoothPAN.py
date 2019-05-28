@@ -84,18 +84,21 @@ def pair_error(error):
 	else:
 		print("Creating device failed: %s" % (error))
 	mainloop.quit()
+
+
+
 def main():
-	print("Bluetooth PAN server configuration for NanoPI Air (openZmeter)")
-
-	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-	bus = dbus.SystemBus()
-
-	adapter_props = dbus.Interface(bus.get_object('org.bluez', '/org/bluez/hci0'), "org.freedesktop.DBus.Properties");
-	adapter_props.Set(ADAPTER_INTERFACE, "Alias", dbus.String("openZmeter"))
-	adapter_props.Set(ADAPTER_INTERFACE, "Powered", dbus.Boolean(1))
-	adapter_props.Set(ADAPTER_INTERFACE, "Discoverable", dbus.Boolean(1))
-	adapter_props.Set(ADAPTER_INTERFACE, "Pairable", dbus.Boolean(1))
-	print("HCI0 set as powered, discoverable and pairable")
+#	print("Bluetooth PAN server configuration for NanoPI Air (openZmeter)")
+#
+#	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+#	bus = dbus.SystemBus()  #pDBus = dbus_bus_get(DBUS_BUS_SYSTEM, &Error);
+#
+#	adapter_props = dbus.Interface(bus.get_object('org.bluez', '/org/bluez/hci0'), "org.freedesktop.DBus.Properties"); #DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez/hci0", "org.freedesktop.DBus.Properties", "Set");
+#	adapter_props.Set(ADAPTER_INTERFACE, "Alias", dbus.String("openZmeter"))
+#	adapter_props.Set(ADAPTER_INTERFACE, "Powered", dbus.Boolean(1))
+#	adapter_props.Set(ADAPTER_INTERFACE, "Discoverable", dbus.Boolean(1))
+#	adapter_props.Set(ADAPTER_INTERFACE, "Pairable", dbus.Boolean(1))
+#	print("HCI0 set as powered, discoverable and pairable")
 
 	Agent(bus, AGENT_PATH)
 	obj = bus.get_object(BUS_NAME, "/org/bluez");
@@ -104,20 +107,20 @@ def main():
 	manager.RequestDefaultAgent(AGENT_PATH)
 	print("BT agent registered with fixed PIN 1234")
 
-	server = dbus.Interface(bus.get_object('org.bluez', '/org/bluez/hci0'), "org.bluez.NetworkServer1")
-	server.Register("nap", "br0")
-	print("Using br0 as network master device")
-
-	mainloop = GObject.MainLoop()
-	mainloop.run()
-
-if __name__ == '__main__':
-	try:
-		main()
-	except KeyboardInterrupt:
-		bus = dbus.SystemBus()
-		adapter_props = dbus.Interface(bus.get_object('org.bluez', '/org/bluez/hci0'), "org.freedesktop.DBus.Properties");
-		adapter_props.Set(ADAPTER_INTERFACE, "Discoverable", dbus.Boolean(0))
-		adapter_props.Set(ADAPTER_INTERFACE, "Pairable", dbus.Boolean(0))
-		adapter_props.Set(ADAPTER_INTERFACE, "Powered", dbus.Boolean(0))
-		print("HCI0 set as non powered, non discoverable and non pairable")
+#	server = dbus.Interface(bus.get_object('org.bluez', '/org/bluez/hci0'), "org.bluez.NetworkServer1")
+#	server.Register("nap", "br0")
+#	print("Using br0 as network master device")
+#
+#	mainloop = GObject.MainLoop()
+#	mainloop.run()
+#
+#if __name__ == '__main__':
+#	try:
+#		main()
+#	except KeyboardInterrupt:
+#		bus = dbus.SystemBus()
+#		adapter_props = dbus.Interface(bus.get_object('org.bluez', '/org/bluez/hci0'), "org.freedesktop.DBus.Properties");
+#		adapter_props.Set(ADAPTER_INTERFACE, "Discoverable", dbus.Boolean(0))
+#		adapter_props.Set(ADAPTER_INTERFACE, "Pairable", dbus.Boolean(0))
+#		adapter_props.Set(ADAPTER_INTERFACE, "Powered", dbus.Boolean(0))
+#		print("HCI0 set as non powered, non discoverable and non pairable")

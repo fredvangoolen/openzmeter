@@ -9,6 +9,7 @@
               <color-bar :width="140" :height="10" ref="colorbar"></color-bar>
               <toolbar-aggregation variable="HeatmapPeriod" :options="['15M', '1H']" v-on:AggregationChanged="AggregationChanged"></toolbar-aggregation>
               <toolbar-years @YearChanged="YearChanged" aggreg="15M"></toolbar-years>
+              <toolbar-tools :options="['EXPORT']" ref="tools" v-on:ExportClick="ExportClick"></toolbar-tools>
             </div>
           </div>
           <div class="panel-body" style="min-height: 300px">
@@ -27,6 +28,7 @@
   import HeatmapTable from './HeatmapTable.vue';
   import ColorBar from 'Components/ColorBar.vue';
   import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
+  import ToolbarTools from 'Components/ToolbarTools.vue';
   import ToolbarYears from 'Components/ToolbarYears.vue';
   import moment from 'JS/moment.js';
   export default {
@@ -34,6 +36,9 @@
       return { ShowSpinner: true };
     },
     methods: {
+      ExportClick: function() {
+        this.$refs.tools.SaveCVS('Heatmap.csv', this.$refs.table.GetData());
+      },
       AggregationChanged(aggreg) {
         this.$refs.table.SetAggregation(aggreg);
       },
@@ -53,7 +58,7 @@
         });
       }
     },
-    components: { Spinner, ToolbarAggregation, ToolbarYears, HeatmapTable, ColorBar }
+    components: { Spinner, ToolbarAggregation, ToolbarYears, HeatmapTable, ColorBar, ToolbarTools }
 }
 </script>
 

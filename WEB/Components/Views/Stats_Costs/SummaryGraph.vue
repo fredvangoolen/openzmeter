@@ -41,12 +41,8 @@
         var MonthsNames = moment.months();
         for(var i = 0; i < values.length; i++) {
           this.Labels.push(MonthsNames[moment(values[i].Sampletime).month()]);
-          Summary.push([i, values[i].Total]); //result.Bills[i].Sampletime, 
+          Summary.push([i, (values[i].Complete === true) ? values[i].Total : null]);
         }
-
-        
-        
-        
         this.$refs.graph.SetOptions( { dateWindow: [-0.5, values.length - 0.5], file: Summary } );
         this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
       }

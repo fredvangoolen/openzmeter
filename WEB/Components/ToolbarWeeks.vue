@@ -50,4 +50,8 @@
     width: 16px;
     display: inline-block;
   }
+  .btn-group ul {
+    max-height: 142px;
+    overflow-y: auto;
+  }
 </style>

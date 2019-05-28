@@ -1,16 +1,19 @@
 <template>
-  <input class="checkbox" type="checkbox" data-size="mini">
+  <input class="checkbox" type="checkbox">
 </template>
 
 <script>
   import Toggle from 'JS/bootstrap-toggle.js';  
   export default {
-    props: ['onText', 'off', 'onstyle', 'offstyle'],
+    props: {onText: { type: String, default: 'On'}, offText: {type: String, default: 'Off'}, onStyle: {type: String, default: 'success'}, offStyle: {type: String, default: 'danger'}, size: { type: String, default: 'mini'}},
     data: function() { 
       return {};
     },
     mounted: function(){
-      $(this.$el).bootstrapToggle({on: this.onText, off: this.off, onstyle: this.onstyle, offstyle: this.offstyle});
+      $(this.$el).bootstrapToggle({on: this.onText, off: this.offText, onstyle: this.onStyle, offstyle: this.offStyle, size: this.size});
+      $(this.$el).on('change', function(e) {
+        this.$emit('Changed', $(this.$el).prop('checked'));    
+      }.bind(this));
     },
     components: { Toggle }
   }
