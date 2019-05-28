@@ -11,6 +11,7 @@
       <analyzer-tariff-billing ref="Billing"></analyzer-tariff-billing>
       <!--analyzer-acls ref="ACLs"></analyzer-acls>
       <analyzer-acl ref="ACL"></analyzer-acl-->
+      <analyzer-maintenance ref="Maintenance"></analyzer-maintenance>
     </div>
   </div>
 </template>
@@ -25,6 +26,7 @@
   import AnalyzerAcl from './AnalyzerACL.vue';
   import AnalyzerTariffPeriods from './AnalyzerTariffPeriods.vue';
   import AnalyzerTariffBilling from './AnalyzerTariffBilling.vue';
+  import AnalyzerMaintenance from './AnalyzerMaintenance.vue';
   export default {
     data() {
       return { ShowDialog: false };
@@ -53,7 +55,7 @@
     destroyed: function() {
       this.$root.$el.removeChild(this.$el);
     },
-    components: { AnalyzerNotFound, AnalyzerTariffs, AnalyzerConfigure, AnalyzerTable, AnalyzerTariff, AnalyzerTariffPeriods, AnalyzerTariffBilling, AnalyzerAcls, AnalyzerAcl }
+    components: { AnalyzerNotFound, AnalyzerTariffs, AnalyzerConfigure, AnalyzerTable, AnalyzerTariff, AnalyzerTariffPeriods, AnalyzerTariffBilling, AnalyzerAcls, AnalyzerAcl, AnalyzerMaintenance }
   }
 </script>
 

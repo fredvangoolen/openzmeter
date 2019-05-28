@@ -60,7 +60,8 @@ class Tariff {
     vector<Tax_t>     pTaxs;
     queue<Sample_t>   pSamples;
     vector<uint64_t>  pBillingCycles;
-    uint64_t          pSampletime;
+    uint64_t          pFirstSampleTime;
+    uint64_t          pLastSampletime;
     float             pSumPowerCost;
     float             pSumEnergyCost;
   private :
@@ -72,7 +73,7 @@ class Tariff {
     bool SetConfig(json t);
     json GetTemplate();
     json GetConfig();
-    json GetResume();
+    json GetResume(uint64_t now);
     bool PushSample(const uint64_t time, const float active, const float reactive);
     bool PopSample(uint64_t &time, float &active, float &reactive, string &period, string &color, float &cost, float &contractedPower);
 };

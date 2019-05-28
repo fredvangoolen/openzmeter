@@ -46,7 +46,7 @@
         var Analyzer = this.$root.SelectedAnalyzer;
         var Range = this.SerieProps.Range(this.Data, this.Phases);
         var Options = {
-          visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data, valueRange: Range,
+          visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data, valueRange: Range, selectMode: 'euclidian',
           labels: ['Time'].concat(this.SerieProps.Names(Analyzer)), colors: oZm.ColorArray(this.SerieProps.Color, this.SerieProps.Names(Analyzer).length)
         };
         this.$refs.Chart.SetOptions(Options);

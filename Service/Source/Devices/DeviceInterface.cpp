@@ -115,7 +115,6 @@ void DeviceManager::SetDeviceCallback(HTTPRequest& req) {
   }
   req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
 }
-
 void DeviceManager::GetAnalyzersCallback(HTTPRequest &req) {
   //All users can do this action, for admin all analyzers are returned and can be edited, for other users only own analyzers or authorized ones are returned and only owner can edit. In all cases only present ones are returned
   json Params = req.GetParams();
@@ -210,8 +209,8 @@ void DeviceManager::GetSeriesCallback(HTTPRequest &req) {
   }
   Query += " WHERE sampletime > " + req.Bind(LastSample) + " AND sampletime >= " + req.Bind(From) + " AND sampletime <= " + req.Bind(To) + ") AS result";
   req.ExecSentenceAsyncResult(Query);
-  printf("%s\n", Query.c_str());
-  fflush(stdout);
+//  printf("%s\n", Query.c_str());
+//  fflush(stdout);
   if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
 }
@@ -286,12 +285,14 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
   string Analyzer = Params["Analyzer"];
-  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+  if(!Params["To"].is_number_unsigned() || !Params["Period"].is_number_unsigned() || !Params["LastSample"].is_number_unsigned()) return req.FromString("'To', 'Period' and 'LastSample' must be a numbers", MHD_HTTP_BAD_REQUEST);
   uint64_t To         = Params.value<uint64_t>("To", 0);
   uint64_t Period     = Params.value<uint64_t>("Period", 3600000);
   uint64_t LastSample = Params.value<uint64_t>("LastSample", 0);
+  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
   string   Aggreg     = Params["Aggreg"];
-  if(To == 0) To = Tools::GetTime();
+  uint64_t Now        = Tools::GetTime();
+  if(To == 0) To = Now;
   uint64_t From = To - Period;
   uint32_t PeriodSeconds = 900000;
   string TimeZone = "Etc/UTC";
@@ -348,12 +349,12 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
       float    Cost       = NAN;
       float    Contracted = NAN;
       if((Tariff != NULL) && (Tariff->PopSample(Time, Active, Reactive, Period, Color, Cost, Contracted) == false)) {
-        Result["Bills"].push_back(Tariff->GetResume());
+        Result["Bills"].push_back(Tariff->GetResume(Now));
         break;
       }
-      AccActive  = isnan(AccActive) ? Active : isnan(Active) ? AccActive : AccActive + Active;
-      AccReactive = isnan(AccReactive) ? Reactive : isnan(Reactive) ? AccReactive : AccReactive + Reactive;
-      AccCost = isnan(AccCost) ? Cost : isnan(Cost) ? AccCost : AccCost + Cost;
+      if(Time <= Now) AccActive  = isnan(AccActive) ? Active : isnan(Active) ? AccActive : AccActive + Active;
+      if(Time <= Now) AccReactive = isnan(AccReactive) ? Reactive : isnan(Reactive) ? AccReactive : AccReactive + Reactive;
+      if(Time <= Now) AccCost = isnan(AccCost) ? Cost : isnan(Cost) ? AccCost : AccCost + Cost;
       if(Aggreg == "1H") {
         if((Time % 3600000) != 3599999) {
           if(Tariff != NULL) continue;

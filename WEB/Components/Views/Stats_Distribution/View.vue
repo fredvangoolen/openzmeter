@@ -8,6 +8,7 @@
             <div class="header-buttons clearfix">
               <color-bar :width="140" :height="10" ref="colorbar"></color-bar>
               <toolbar-years @YearChanged="YearChanged" aggreg="1H"></toolbar-years>
+              <toolbar-tools ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
             </div>
           </div>
           <div class="panel-body">
@@ -18,71 +19,8 @@
       </div>
       <div class="col-md-12 col-lg-6"><months ref="months"></months></div>
       <div class="col-md-12 col-lg-6"><day ref="day"></day></div>
-      <div class="col-md-12 col-lg-6"></div>
-      <!--div class="row">
-                <div class="col-md-12">
-                  <div class="panel panel-other"> 
-                    <div class="panel-heading">
-                      <span>By day</span>
-                      <div style="float: right; width: 200px">
-                        <div id="CalendarScale" style="height: 10px; width: 200px; display: flex; flex-direction:row; border: 1px solid #EEE"></div>
-                        <div style="float: left; font-size: 80%" id="CalendarMin">?</div>
-                        <div style="float: right; font-size: 80%" id="CalendarMax">?</div>
-                        <div style="text-align: center; font-size: 80%"><em id="CalendarUnits"></em></div>
-                      </div>
-                    </div>
-                    
-                  </div>
-              </div>
-            </div>
-          
-          
-          
-
-                  
-                  <div class="panel panel-other">
-                    <div class="panel-heading">
-                      <i class="fa fa-clock-o" aria-hidden="true"></i></i> By hour
-                      <div style="float: right" id="HourUnits"></div>
-                    </div>
-                    <div class="panel-body">
-                      <table id="HourTable" class="table small table-striped table-responsive">
-                        <thead>
-                          <tr>
-                            <th style="width: 30px">Hour</th><th style="width: 100%"></th><th>Average</th><th>Accumulated</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-12 col-lg-6">
-                  <div class="panel panel-other">
-                    <div class="panel-heading">
-                      <i class="fa fa-bars" aria-hidden="true"></i> By week
-                      <div class="pull-right" id="WeekUnits"></div>
-                    </div>
-                    <div class="panel-body">
-                      <table id="WeekTable" class="table small table-responsive">
-                        <thead>
-                          <tr>
-                            <th style="width: 30px">Week</th><th style="width: 100%"></th><th>Weekday</th><th>Weekend</th><th>Total</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div-->
-      </div>
- </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -90,6 +28,7 @@
   import Months from './Months.vue';
   import Day from './Day.vue';
   import ToolbarYears from 'Components/ToolbarYears.vue';
+  import ToolbarTools from 'Components/ToolbarTools.vue';
   import ColorBar from 'Components/ColorBar.vue';
   import Spinner from 'Components/Spinner.vue';
   import moment from 'JS/moment.js';
@@ -115,9 +54,21 @@
       },
       RangeChanged(min, max, units) {
         this.$refs.colorbar.SetRange(oZm.Round2(min), oZm.Round2(max), units + 'Wh');
+      },
+      ExportClick: function() {
+        var Data = [];
+        Data.push(['Daily stats']);
+        Data = this.$refs.calendar.GetData(Data);
+        Data.push([]);
+        Data.push(['Monthly stats']);
+        Data = this.$refs.months.GetData(Data);
+        Data.push([]);
+        Data.push(['Weekday stats']);
+        Data = this.$refs.day.GetData(Data);
+        this.$refs.tools.SaveCVS('Distribution.csv', Data);
       }
     },
-    components: { Spinner, ToolbarYears, Calendar, Months, Day, ColorBar }
+    components: { Spinner, ToolbarYears, ToolbarTools, Calendar, Months, Day, ColorBar }
   }
 </script>
 

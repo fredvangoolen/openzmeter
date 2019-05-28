@@ -6,11 +6,12 @@
         <div class="modal-header">
           <div class="pull-left"><h4 class="modal-title">User</h4></div>
           <div class="pull-right btn-group">
-            <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes"><img :src="require('Imgs/diskette.png')"></button>
-            <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+            <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes" v-on:click="Save"><img :src="require('Imgs/diskette.png')"></button>
+            <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Discard" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
           </div>
         </div>
         <div class="modal-body">
+          <spinner v-if="ShowSpinner"></spinner>
           <div class="row">
             <div class="col-xs-12 col-lg-4 col-sm-6">
               <div class="row">
@@ -18,13 +19,15 @@
                   <div class="rounded-panel">
                     <div class="popover-title"><strong>Profile image</strong>
                       <div class="pull-right btn-group">
-                        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Browse image"><img :src="require('Imgs/folder_explorer.png')"></button>
-                        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Remove image"><img :src="require('Imgs/cross.png')"></button>
+                        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Browse image" v-on:click="ShowImageDialog" v-if="Image == false"><img :src="require('Imgs/folder_explorer.png')"></button>
+                        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Remove image" v-on:click="ClearImage" v-if="Image == true"><img :src="require('Imgs/cross.png')"></button>
                       </div>
-                      <div class="clearfix"
                     </div>
                     <div class="popover-content" style="text-align: center">
-                      <img id="dynamic" width="186" height="186" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYxIDY0LjE0MDk0OSwgMjAxMC8xMi8wNy0xMDo1NzowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNS4xIFdpbmRvd3MiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NkRGM0FBNENBNzUwMTFFMTg3RUVENDc3MzNDODRBOEYiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NkRGM0FBNERBNzUwMTFFMTg3RUVENDc3MzNDODRBOEYiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo2REYzQUE0QUE3NTAxMUUxODdFRUQ0NzczM0M4NEE4RiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo2REYzQUE0QkE3NTAxMUUxODdFRUQ0NzczM0M4NEE4RiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqVW+oIAAAIeSURBVHjazJfNLgRBEMereoasIOGyibj4OnoTDp6AFxDPIXEiTuKyXgCJfRNHHycXFw5cxHarmhmy3VNj/sRuVNK7melfddVUVX8xEeVHvauLwLzhvScKNFphIucccQj9vZ3NLX01e3jWD+MWtam2c/npBF9+9s3DM2kIeEQfH6oQrC3OUWWzow6wSNG1tDDXFr3WDCEMlUaLP3VAcsJ0cHpJ74OBra15EwXlvHjuQ6hzCFNxeZbRVGfy61X3sIfVwP7J+Z8wRQ30ihroFhEovBW5vnukKjJR5rR7faVLA42QySFMzH3azMv35UOWOQljkaAhHQ1nHMUahzApFzlQieaQRSvyWfOajJ5yCNPExQ5kXFQnJ1Mn8PA0qnMIk3K2A1yFLRGfrAwWhzAWFzsgGpZSOp1MDmEMrlYDDlgGEQ4dK3Ig05yxvbq1cQhjcfUi/C5qoZlDGCMDxjQElCwOYVodkMKFdkKEQ8eq1QAiCIeOlUeLh8OUEK6NCU01ADkAcO4nEfg/DowxBQ1F6HTHNhYPpjYOYSwunoayeFjHKE7CaXEIY3G1GgjUrmRxCPP/Hcj0RBvaK9riEMbi8uEdSvu+XcEY4Bgb67PHlTuXg6bMRJ7/CTNsUx3pHp/1b+UwPeMHvukuUZ5w5FKpF1i9eIRfMF+cGM+IXna3N1b1We9jy9LmiUZ2LbS2gidp92pwQtq0tEkar7xJe/0QYAAFQ5kvEpljPQAAAABJRU5ErkJggg==" style="width: 192px; height: 192px;"></div></div>
+                      <input type="file" ref="ImageChooser" accept="image/*" style="display:none" v-on:change="LoadImage">
+                      <img id="dynamic" width="128" height="128" :src="ImageData">
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -32,43 +35,39 @@
               <div class="row">
                 <div class="col-xs-12">
                   <label class="control-label">Username</label>
-                  <input type="text" class="form-control" id="inputUserName" disabled>
+                  <input type="text" class="form-control" :value="UserName" disabled>
                 </div>
                 <div class="col-xs-12">
                   <label class="control-label">Password</label>
                   <input type="password" class="form-control" id="inputPassword">
                 </div>
                 <div class="col-xs-12">
-                  <label class="control-label">E-Mail</label>
-                  <input type="text" class="form-control" id="inputEMail">
-                </div>
-                <div class="col-xs-12">
-                  <label class="control-label">Telegram ID</label>
-                  <input type="text" class="form-control" id="inputTelegram">
+                  <label class="control-label">Full name</label>
+                  <input type="text" class="form-control" ref="Name" :value="Name">
                 </div>
               </div>
             </div>
           </div>
           <div class="row">
-            <div class="col-xs-12 col-sm-6 col-lg-4">
-              <label class="control-label">Name</label>
-              <input type="text" class="form-control" id="inputName">
+            <div class="col-xs-12 col-sm-6">
+              <label class="control-label">Telegram ID</label>
+              <input type="text" class="form-control" ref="TelegramID" :value="TelegramID">
             </div>
-            <div class="col-xs-12 col-sm-6 col-lg-4">
-              <label class="control-label">Surname</label>
-              <input type="text" class="form-control" id="inputSurname">
+            <div class="col-xs-12 col-sm-6">
+              <label class="control-label">E-Mail</label>
+              <input type="text" class="form-control" ref="EMail" :value="EMail">
             </div>
-            <div class="col-xs-12 col-sm-6 col-lg-4">
+            <div class="col-xs-12 col-sm-6">
               <label class="control-label">Country</label>
-              <input type="text" class="form-control" id="inputIDCard">
+              <input type="text" class="form-control" ref="Country" :value="Country">
             </div>
-            <div class="col-xs-12 col-sm-6 col-lg-6">
+            <div class="col-xs-12 col-sm-6">
               <label class="control-label">Company</label>
-              <input type="text" class="form-control" id="inputCompany">
+              <input type="text" class="form-control" ref="Company" :value="Company">
             </div>
-            <div class="col-xs-12 col-lg-6">
+            <div class="col-xs-12">
               <label class="control-label">Address</label>
-              <input type="text" class="form-control" id="inputAddress">
+              <input type="text" class="form-control" ref="Address" :value="Address">
             </div>
           </div>
         </div>
@@ -78,16 +77,87 @@
 </template>
   
 <script>
+  import Spinner from 'Components/Spinner.vue';
   export default {
     data: function() {
-      return { ShowDialog: false };
+      return { ShowDialog: false, ShowSpinner: true, Image: false, ImageData: null, UserName: '', Name: '', Address: '', Company: '', EMail: '', TelegramID: '' };
+    },
+    created: function() {
+      this.ClearImage();
     },
     methods: {
       show: function() {
         this.ShowDialog = true;
+        $.ajax({ url: "getUser", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
+          success: function(result) {
+            this.UserName = localStorage.getItem('UserName');
+            this.Name = result.Name;
+            this.Address = result.Address;
+            this.Company = result.Company;
+            if(result.Photo == null) {
+              this.ClearImage();
+            } else {
+              this.ImageData = result.Photo;
+            }
+            this.EMail = result.EMail;
+            this.TelegramID = result.TelegramID;
+            this.Country = result.Country_Code;
+            this.ShowSpinner = false;
+          }.bind(this)
+        });
         this.$nextTick(function() {
           $(this.$el).modal('show');
         });
+      },
+      Back: function() {
+        this.ShowDialog = false;
+      },
+      Save: function() {
+        
+      },
+      ShowImageDialog: function() {
+        this.$refs.ImageChooser.click();
+      },
+      LoadImage: function(files) {
+        files = files.target.files;    
+        var reader = new FileReader();
+        reader.readAsDataURL(files[0]);
+        reader.onload = function(event) {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = function() {
+            const elem = document.createElement('canvas');
+            elem.width = 128;
+            elem.height = 128;
+            const ctx = elem.getContext('2d');
+            ctx.beginPath();
+            ctx.moveTo(0 + 16, 0);
+            ctx.lineTo(128 - 16, 0);
+            ctx.quadraticCurveTo(128, 0, 128, 16);
+            ctx.lineTo(128, 0 + 128 - 16);
+            ctx.quadraticCurveTo(0 + 128, 0 + 128, 0 + 128 - 16, 0 + 128);
+            ctx.lineTo(0 + 16, 0 + 128);
+            ctx.quadraticCurveTo(0, 0 + 128, 0, 0 + 128 - 16);
+            ctx.lineTo(0, 0 + 16);
+            ctx.quadraticCurveTo(0, 0, 0 + 16, 0);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(img, 0, 0, 128, 128);
+            this.ImageData = ctx.canvas.toDataURL();
+            this.Image = true;
+          }.bind(this);
+          reader.onerror = function(error) {
+            console.log(error);
+          };
+        }.bind(this);
+      },
+      ClearImage: function() {
+        const elem = document.createElement('canvas');
+        elem.width = 128;
+        elem.height = 128;
+        const ctx = elem.getContext('2d');
+        this.ImageData = ctx.canvas.toDataURL();
+        this.Image = false;
       }
     },
     mounted: function() {
@@ -95,7 +165,8 @@
     },
     destroyed: function() {
       this.$root.$el.removeChild(this.$el);
-    }
+    },
+    components: {Spinner}
   }
 </script>
 

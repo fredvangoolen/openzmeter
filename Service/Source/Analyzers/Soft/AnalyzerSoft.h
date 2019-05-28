@@ -5,10 +5,10 @@
 #pragma once
 #include <pthread.h>
 #include <inttypes.h>
+#include <deque>
 #include "AnalyzerInterface.h"
 #include "FFT.h"
-#include "Tariff.h"
-#include "RingBuffer.h"
+#include "Events.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define ZEROCROSSING_FILTERSTAGES          5
 #define ZEROCROSSING_SECONDS              10        //Numero de segundos usados para calcular frequencia
@@ -20,10 +20,6 @@ class AnalyzerSoft : public AnalyzerInterface {
       size_t Size;
       size_t MaxSize;
     } CurlBuff_t;
-//    typedef struct {
-//      float Z1[ZEROCROSSING_FILTERSTAGES];
-//      float Z2[ZEROCROSSING_FILTERSTAGES];
-//    } FilterStage_t;
     typedef struct {
       float                 A0;
       float                 A1;
@@ -32,7 +28,6 @@ class AnalyzerSoft : public AnalyzerInterface {
       float                 B2;
       vector<float>         ChannelsZ1;
       vector<float>         ChannelsZ2;
-//      vector<FilterStage_t> Channels;
     } Filter_t;
   private :
     uint64_t                   pSequence;                //Numero de bloques analizados
@@ -46,6 +41,7 @@ class AnalyzerSoft : public AnalyzerInterface {
 //    char                      *pSyncName;                //Server user
 //    char                      *pSyncPassword;            //Server password
 //    pthread_t                  pSyncThread;              //Working thread
+    Events                    *pEvents;                  //Events detector
     vector<FFT*>               pVoltageFFT;              //Muestras de FFT tension del bloque
     vector<FFT*>               pCurrentFFT;              //Muestras de FFT corriente del bloque
     bool                       pWorking;                 //Flag para indicar que el hilo esta trabajando
@@ -60,23 +56,22 @@ class AnalyzerSoft : public AnalyzerInterface {
     bool                       pDataReady;               //Datos disponibles
     pthread_mutex_t            pDataReadyMutex;          //Mutex para registrar cambios en DataReady
     pthread_cond_t             pDataReadyCond;           //Variable de condicion para bloquear los clientes
-//    PricesInterface           *pPrices;                  //Module to query prices
-    vector<RingBuffer<float> > pDelayVoltage;            //Delay buffer for samples
-    vector<RingBuffer<float> > pDelayCurrent;            //Delay buffer for samples
+    vector<deque<float> >      pDelayVoltage;            //Delay buffer for samples
+    vector<deque<float> >      pDelayCurrent;            //Delay buffer for samples
     vector<Filter_t>           pFilters;                 //Filter bank
-    vector<uint32_t>           pCycles;                  //Prev cycles lenghts
+    deque<uint32_t>            pCycles;                  //Prev cycles lenghts
     vector<uint32_t>           pBlockCycles;             //Current block cycles lengths
     vector<float>              pLastSamples;             //Filter samples backup
     uint32_t                   pCycleLen;                //Current cycle len
     uint32_t                   pMaxSamples;              //Max block samples
-    uint32_t                   pCyclesPos;               //Cycle write position
+//    uint32_t                   pCyclesPos;               //Cycle write position
   private :
     static void  *Analyzer_Thread(void *args);
 //    static void  *Sync_Thread(void *args);
 //    static size_t Curl_Read_Callback(void *contents, size_t size, size_t nmemb, void *userp);
   private :
     float PercentChange(float in, float reference);
-    void  Analyze();
+//    void  Analyze();
     float CalcFrequency();
   protected :
     //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;

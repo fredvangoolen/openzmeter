@@ -4,9 +4,9 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <libusb-1.0/libusb.h>
+#include <deque>
 #include "DeviceInterface.h"
 #include "AnalyzerSoft.h"
-#include "RingBuffer.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define DEVICEV1_01_VID             0x0483                          //Product ID
 #define DEVICEV1_01_PID             0x7270                          //Device ID
@@ -26,21 +26,21 @@ class DeviceV1_01 : public Device {
       float Current;
     } Sample_t;
   private :
-    AnalyzerSoft                *pAnalyzer;                //Analizador
-    RingBuffer<Sample_t>         pBuffer;                  //Read buffer
-    uint64_t                     pLastUpdate;              //Timestamp de la ultima vez que se actualizo el nombre del thread
-    string                       pSerial;                  //Numero de serie del dispositivo de captura
-    float                        pVoltageGain;             //Ganancia de tension
-    float                        pCurrentGain;             //Ganancia de corriente
-    float                        pVoltageOffset;           //Offset de tension
-    float                        pCurrentOffset;           //Offset de corriente
-    struct libusb_device_handle *pDeviceHandle;            //Dispositivo de captura
-    struct libusb_device        *pNewDevice;               //Dispositivo que se conecta    
+    AnalyzerSoft                *pAnalyzer;                //Analyzer
+    deque<Sample_t>              pBuffer;                  //Read buffer
+//    uint64_t                     pLastUpdate;              //Thread name last update
+    string                       pSerial;                  //Capture device serial number
+    float                        pVoltageGain;             //Voltage gain
+    float                        pCurrentGain;             //Current gain
+    float                        pVoltageOffset;           //Voltage offset
+    float                        pCurrentOffset;           //Current offset
+    struct libusb_device_handle *pDeviceHandle;            //USB handle
+    struct libusb_device        *pNewDevice;               //USB device
+    libusb_context              *pContext;                 //USB context
     pthread_t                    pSignalThread;            //Thread to handle LED and sounds
 //    bool                         pTerminateSignal;         //Flag to terminate signal thread
     pthread_mutex_t              pMutex;
     json                         pConfig;
-    libusb_context              *pContext;                 //USB context
   private :
     static bool                  pClassRegistered;
   private : 

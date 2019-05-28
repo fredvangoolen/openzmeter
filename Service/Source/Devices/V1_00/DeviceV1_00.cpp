@@ -71,7 +71,6 @@ bool DeviceV1_00::Init() {
   return true;
 }
 DeviceV1_00::DeviceV1_00(string serial) {
-  pBuffer.Reset(DEVICEV1_00_BUFFERSECONDS * DEVICEV1_00_SAMPLEFREQ);
   pLastUpdate    = 0;
   pDeviceHandle  = NULL;
   pNewDevice     = NULL;
@@ -99,7 +98,7 @@ DeviceV1_00::~DeviceV1_00() {
 }
 AnalyzerInterface *DeviceV1_00::FindAnalyzer(string serial) {
   if(pAnalyzer == NULL) return NULL;
-  return (serial == pAnalyzer->GetID()) ? pAnalyzer : NULL;
+  return (serial == pAnalyzer->Serial()) ? pAnalyzer : NULL;
 }
 uint32_t DeviceV1_00::AnalyzersCount() {
   return (pAnalyzer == NULL) ? 0 : 1;
@@ -148,21 +147,22 @@ int DeviceV1_00::PlugCallback(struct libusb_context *ctx, struct libusb_device *
   return 0;
 }
 bool  DeviceV1_00::BuffersAppend(float voltageSample, float currentSample) {
-  if(pBuffer.Full()) return false;
+//  if(pBuffer.full()) return false;
   Sample_t Sample = { voltageSample, currentSample };
-  pBuffer.Push(Sample);
+  pBuffer.push_back(Sample);
   uint64_t Sampletime = Tools::GetTime();
   if(pLastUpdate < (Sampletime - 500)) {
     char ThreadName[16];
-    sprintf(ThreadName, "DeviceV1_%02d", pBuffer.Size() * 100 / pBuffer.Capacity());
+    sprintf(ThreadName, "DeviceV1_%02lu", pBuffer.size() * 100 / pBuffer.max_size());
     pthread_setname_np(pCaptureThread, ThreadName);
     pLastUpdate = Sampletime;
   }
   if(pAnalyzer->IsFinished() == false) return true;
   bool Started = false;
-  while((pBuffer.Empty() == false) && (Started == false)) {
+  while((pBuffer.empty() == false) && (Started == false)) {
     vector<float> Voltage, Current;
-    Sample = pBuffer.Pop();
+    Sample = pBuffer.front();
+    pBuffer.pop_front();
     Voltage.push_back(Sample.Voltage);
     Current.push_back(Sample.Current);
     if(pAnalyzer->BufferAppend(Voltage, Current, Sampletime) == true) Started = true;
@@ -351,7 +351,7 @@ bool DeviceV1_00::Start() {
     return false;
   }
   LOGFile::Info("Starting 'V1.00' driver with serial '%s'...\n", pSerial.c_str());
-  pBuffer.Reset(DEVICEV1_00_BUFFERSECONDS * DEVICEV1_00_SAMPLEFREQ);
+  pBuffer.resize(DEVICEV1_00_BUFFERSECONDS * DEVICEV1_00_SAMPLEFREQ);
   pTerminate    = false;
   pLastUpdate   = 0;
   pDeviceHandle = NULL;
