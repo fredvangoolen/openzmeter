@@ -48,6 +48,24 @@ Bluetooth::~Bluetooth() {
 }
 bool Bluetooth::Start() {
   pthread_mutex_lock(&pMutex);
+  //Register agent
+  DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "RegisterAgent");
+  DBusMessageIter ArgsIter;
+  dbus_message_iter_init_append(Msg, &ArgsIter);
+  const char *Path = "/oZm_BT/agent1";
+  const char *Capabilities = "NoInputNoOutput";
+  dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_OBJECT_PATH, &Path);
+  dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &Capabilities);
+  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(pDBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  if(Reply) dbus_message_unref(Reply);
+  dbus_message_unref(Msg);
+  //Set as default agent
+  Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "RequestDefaultAgent");
+  dbus_message_iter_init_append(Msg, &ArgsIter);
+  dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_OBJECT_PATH, &Path);
+  Reply = dbus_connection_send_with_reply_and_block(pDBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  if(Reply) dbus_message_unref(Reply);
+  dbus_message_unref(Msg);
   pFailState = true;
   if(SendBool("Powered", false) == false) {
     pthread_mutex_unlock(&pMutex);
@@ -133,14 +151,13 @@ bool Bluetooth::Start() {
     Stop();
     return false;
   }
-  DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez/hci0", "org.bluez.NetworkServer1", "Register");
-  DBusMessageIter ArgsIter;
+  Msg = dbus_message_new_method_call("org.bluez", "/org/bluez/hci0", "org.bluez.NetworkServer1", "Register");
   dbus_message_iter_init_append(Msg, &ArgsIter);
   const char *UUID = "nap";
   const char *Bridge = "br0";
   dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &UUID);
   dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &Bridge);
-  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(pDBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  Reply = dbus_connection_send_with_reply_and_block(pDBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
   if(Reply) dbus_message_unref(Reply);
   dbus_message_unref(Msg);
   //Start DNSMASQ
@@ -175,12 +192,20 @@ bool Bluetooth::Stop() {
     pthread_mutex_unlock(&pMutex);
     return false;
   }
-  DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez/hci0", "org.bluez.NetworkServer1", "Unregister");
+  //Unregister agent
+  DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "UnregisterAgent");
   DBusMessageIter ArgsIter;
+  dbus_message_iter_init_append(Msg, &ArgsIter);
+  const char *Path = "/oZm_BT/agent1";
+  dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_OBJECT_PATH, &Path);
+  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(pDBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  if(Reply) dbus_message_unref(Reply);
+  dbus_message_unref(Msg);
+  Msg = dbus_message_new_method_call("org.bluez", "/org/bluez/hci0", "org.bluez.NetworkServer1", "Unregister");
   dbus_message_iter_init_append(Msg, &ArgsIter);
   const char *UUID = "nap";
   dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &UUID);
-  DBusMessage *Reply = dbus_connection_send_with_reply_and_block(pDBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+  Reply = dbus_connection_send_with_reply_and_block(pDBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
   if(Reply) dbus_message_unref(Reply);
   dbus_message_unref(Msg);
   //Bring down interface
@@ -220,9 +245,17 @@ void Bluetooth::HandleAgent() {
   dbus_connection_read_write(pDBus, 0);
   DBusMessage *Msg = dbus_connection_pop_message(pDBus);
   if(Msg == NULL) return;
-  if(dbus_message_is_method_call(Msg, "test.method.Type", "Method")) {
-         //reply_to_method_call(msg, conn);
-  
+  if(dbus_message_is_method_call(Msg, "org.bluez.Agent1", "AuthorizeService")) {
+    dbus_uint32_t Serial = 0;
+    char *Param = (char*)"";
+    DBusMessageIter Args;
+    dbus_message_iter_init(Msg, &Args);
+    dbus_message_iter_get_basic(&Args, &Param);
+    LOGFile::Info("Authorized BT client: '%s'\n", Param);
+    DBusMessage *Reply = dbus_message_new_method_return(Msg);
+    dbus_connection_send(pDBus, Reply, &Serial);
+    dbus_connection_flush(pDBus);
+    dbus_message_unref(Reply);
   }
   dbus_message_unref(Msg);
 }
