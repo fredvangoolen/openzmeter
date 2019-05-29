@@ -87,7 +87,7 @@ def pair_error(error):
 
 
 
-def main():
+#def main():
 #	print("Bluetooth PAN server configuration for NanoPI Air (openZmeter)")
 #
 #	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
@@ -100,12 +100,12 @@ def main():
 #	adapter_props.Set(ADAPTER_INTERFACE, "Pairable", dbus.Boolean(1))
 #	print("HCI0 set as powered, discoverable and pairable")
 
-	Agent(bus, AGENT_PATH)
-	obj = bus.get_object(BUS_NAME, "/org/bluez");
-	manager = dbus.Interface(obj, "org.bluez.AgentManager1")
-	manager.RegisterAgent(AGENT_PATH, "NoInputNoOutput")
-	manager.RequestDefaultAgent(AGENT_PATH)
-	print("BT agent registered with fixed PIN 1234")
+#	Agent(bus, AGENT_PATH)
+#	obj = bus.get_object(BUS_NAME, "/org/bluez");
+#	manager = dbus.Interface(obj, "org.bluez.AgentManager1")
+#	manager.RegisterAgent(AGENT_PATH, "NoInputNoOutput")
+#	manager.RequestDefaultAgent(AGENT_PATH)
+#	print("BT agent registered with fixed PIN 1234")
 
 #	server = dbus.Interface(bus.get_object('org.bluez', '/org/bluez/hci0'), "org.bluez.NetworkServer1")
 #	server.Register("nap", "br0")
