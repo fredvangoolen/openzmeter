@@ -1,21 +1,23 @@
 #pragma once
 #include <string>
 #include <dbus/dbus.h>
+#include <uci.h>
 #include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class Bluetooth {
   private :
-    static string     pBridgeName;
     static Bluetooth *pInstance;
     static bool       pRegistered;
   private :
     DBusConnection  *pDBus;
-    int              pBridgeSocket;
+    string           pBridgeName;
+
+//    int              pBridgeSocket;
     string           pServerName;
     pthread_mutex_t  pMutex;
-    int              pDNSMasqPID;
+//    int              pDNSMasqPID;
     bool             pFailState;
   private:
     bool   Start();
@@ -27,6 +29,7 @@ class Bluetooth {
   public :
     static void GetBluetoothCallback(HTTPRequest &req);
     static void SetBluetoothCallback(HTTPRequest &req);
+    static void GetWiFiNetworksCallback(HTTPRequest &req);
   public:
     Bluetooth();
     void HandleAgent();

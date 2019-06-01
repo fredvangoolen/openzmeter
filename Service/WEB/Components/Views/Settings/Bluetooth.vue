@@ -15,7 +15,7 @@
           <label class="control-label">Device name</label>
           <div class="input-group">
             <span class="input-group-addon input-group-addon-toogle">
-              <toggle v-on:Changed="EnableChange"></toggle>
+              <toggle ref="EnableBT" v-on:Changed="EnableChange"></toggle>
             </span>
             <input type="text" class="form-control" disabled :value="Name">
           </div>
@@ -34,7 +34,10 @@
   import Spinner from 'Components/Spinner.vue';
   export default {
     data: function() {
-      return {Name: '', Enable: true, Bluetooth_Support: false, Loading: false };
+      return {Name: '', Bluetooth_Support: false, Loading: false };
+    },
+    created: function() {
+      this.Enabled = false;
     },
     mounted: function() {
       this.Load();
@@ -47,15 +50,18 @@
             this.Enabled = result.Enabled;
             this.Name = result.Name;
             this.Loading = false;
+            this.$nextTick(function() { 
+              this.$refs.EnableBT.SetState(this.Enabled); 
+            });
           }.bind(this)
         });        
       },
       EnableChange: function(value) {
-        this.Enable = value;
+        this.Enabled = value;
       },
       Save: function() {
         this.Loading = true;    
-        $.ajax({ url: "setBluetooth", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Enabled: this.Enable }), success: this.Load});
+        $.ajax({ url: "setBluetooth", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Enabled: this.Enabled }), success: this.Load});
       }
     },
     components: {Toggle, Spinner}

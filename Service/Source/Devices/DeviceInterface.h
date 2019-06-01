@@ -5,11 +5,13 @@
 #pragma once
 #include <vector>
 #include <pthread.h>
+#include <nlohmann/json.hpp>
 #include "AnalyzerInterface.h"
 #include "HTTPServer.h"
-#include <json.hpp>
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
+using json = nlohmann::json;
+//----------------------------------------------------------------------------------------------------------------------
 class Device {
   public :
     enum DeviceState { UNCONFIGURED, STOPPED, RUNNING };

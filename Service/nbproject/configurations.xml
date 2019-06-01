@@ -2,6 +2,9 @@
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="." name="0">
+      <df name="Configs">
+        <in>debian.config</in>
+      </df>
       <df name="Libs">
         <df name="cctz">
           <in>civil_time_detail.cc</in>
@@ -85,16 +88,39 @@
       </toolsSet>
       <flagsDictionary>
         <element flagsID="0" commonFlags="-g"/>
-        <element flagsID="1" commonFlags="-std=c++11 -march=native"/>
+        <element flagsID="1" commonFlags="-std=c++11"/>
+        <element flagsID="2" commonFlags="-std=c++11 -march=native"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
       <makefileType>
         <makeTool>
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
-          <buildCommand>${MAKE} -j2 -f Makefile</buildCommand>
+          <buildCommand>${MAKE} -j2 -f Makefile CONFIG=Configs/debian.config</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath>Tmp/openZmeter</executablePath>
+          <cTool>
+            <incDir>
+              <pElem>Source</pElem>
+              <pElem>Source/Devices</pElem>
+              <pElem>Source/Devices/V1_01</pElem>
+              <pElem>Source/Devices/V1_00</pElem>
+              <pElem>Source/Devices/Remote</pElem>
+              <pElem>Source/Devices/Virtual</pElem>
+              <pElem>Source/Devices/V2_00</pElem>
+              <pElem>Source/Analyzers</pElem>
+              <pElem>Source/Analyzers/Remote</pElem>
+              <pElem>Source/Analyzers/Soft</pElem>
+              <pElem>Source/Tariffs</pElem>
+              <pElem>Source/Tariffs/ESP</pElem>
+              <pElem>Source/Tariffs/ESP/ESIOS</pElem>
+              <pElem>Source/Tariffs/NONE</pElem>
+              <pElem>Libs</pElem>
+              <pElem>Libs/cctz</pElem>
+              <pElem>Libs/nlohmann</pElem>
+              <pElem>.</pElem>
+            </incDir>
+          </cTool>
           <ccTool flags="0">
             <incDir>
               <pElem>/usr/include/postgresql</pElem>
@@ -111,51 +137,53 @@
           <preBuildCommand></preBuildCommand>
         </preBuild>
       </makefileType>
+      <item path="Configs/debian.config" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="Libs/cctz/civil_time_detail.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_fixed.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_format.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_if.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_impl.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_info.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_libc.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_lookup.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_posix.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Libs/cctz/zone_info_source.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Source/Analyzers/AnalyzerInterface.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
@@ -172,19 +200,6 @@
             <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Libs</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Libs/cctz</pElem>
@@ -206,11 +221,11 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Source/Bluetooth.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
@@ -227,15 +242,6 @@
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
             <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Libs</pElem>
             <pElem>Libs/cctz</pElem>
             <pElem>Libs/nlohmann</pElem>
@@ -247,7 +253,7 @@
         </ccTool>
       </item>
       <item path="Source/Database.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
@@ -255,7 +261,6 @@
             <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
@@ -275,46 +280,9 @@
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="Source/Devices/DeviceInterface.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>/usr/include/nlohmann</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Libs/nlohmann</pElem>
-            <pElem>Libs/cctz</pElem>
-            <pElem>.</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>OZM_DEBUG</Elem>
-          </preprocessorList>
-        </ccTool>
+      <item path="Source/Devices/DeviceInterface.cpp" ex="false" tool="0" flavor2="0">
+        <cTool flags="1">
+        </cTool>
       </item>
       <item path="Source/Devices/Remote/DeviceRemote.cpp"
             ex="false"
@@ -327,25 +295,25 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Source/Devices/V1_01/DeviceV1_01.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Source/Devices/Virtual/DeviceVirtual.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Source/Events.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
@@ -362,19 +330,6 @@
             <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Libs</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Libs/cctz</pElem>
@@ -385,49 +340,12 @@
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="Source/FFT.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>/usr/include/nlohmann</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Libs/nlohmann</pElem>
-            <pElem>Libs/cctz</pElem>
-            <pElem>.</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>OZM_DEBUG</Elem>
-          </preprocessorList>
-        </ccTool>
+      <item path="Source/FFT.cpp" ex="false" tool="0" flavor2="0">
+        <cTool flags="1">
+        </cTool>
       </item>
       <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
@@ -444,15 +362,6 @@
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
             <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Libs</pElem>
             <pElem>Libs/cctz</pElem>
             <pElem>Libs/nlohmann</pElem>
@@ -464,7 +373,7 @@
         </ccTool>
       </item>
       <item path="Source/MODBus.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
@@ -472,7 +381,6 @@
             <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
@@ -493,7 +401,7 @@
         </ccTool>
       </item>
       <item path="Source/Main.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
@@ -510,19 +418,6 @@
             <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Libs</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Libs/cctz</pElem>
@@ -534,7 +429,7 @@
         </ccTool>
       </item>
       <item path="Source/NTP.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
@@ -551,19 +446,6 @@
             <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Libs</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Libs/cctz</pElem>
@@ -575,7 +457,7 @@
         </ccTool>
       </item>
       <item path="Source/NetworkManager.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
@@ -592,19 +474,6 @@
             <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Libs</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Libs/cctz</pElem>
@@ -619,26 +488,26 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Source/Tariffs/NONE/TariffPlugin_NONE.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Source/Tariffs/Tariff.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Source/Tariffs/TariffPlugin.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
           <incDir>
             <pElem>/usr/include/nlohmann</pElem>
             <pElem>Source</pElem>
@@ -655,19 +524,6 @@
             <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Libs</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Libs/cctz</pElem>
@@ -696,19 +552,6 @@
             <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Libs</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Libs/cctz</pElem>
@@ -823,19 +666,6 @@
             <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Libs</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Libs/cctz</pElem>
@@ -946,19 +776,6 @@
             <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Libs</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Libs/cctz</pElem>
@@ -987,19 +804,6 @@
             <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Libs</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Libs/cctz</pElem>
@@ -1028,19 +832,6 @@
             <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Libs</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Libs/cctz</pElem>
@@ -1069,19 +860,6 @@
             <pElem>Source/Tariffs/NONE</pElem>
             <pElem>Source/Tariffs/ESP</pElem>
             <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
             <pElem>Libs</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Libs/cctz</pElem>

@@ -1,5 +1,7 @@
 <template>
-  <input class="checkbox" type="checkbox">
+  <div>
+    <input ref="check" class="checkbox" type="checkbox">
+  </div>
 </template>
 
 <script>
@@ -9,11 +11,16 @@
     data: function() { 
       return {};
     },
-    mounted: function(){
-      $(this.$el).bootstrapToggle({on: this.onText, off: this.offText, onstyle: this.onStyle, offstyle: this.offStyle, size: this.size});
-      $(this.$el).on('change', function(e) {
-        this.$emit('Changed', $(this.$el).prop('checked'));    
+    mounted: function() {
+      $(this.$refs.check).bootstrapToggle({on: this.onText, off: this.offText, onstyle: this.onStyle, offstyle: this.offStyle, size: this.size});
+      $(this.$refs.check).on('change', function(e) {
+        this.$emit('Changed', $(this.$refs.check).prop('checked'));    
       }.bind(this));
+    },
+    methods: {
+      SetState : function(checked) {
+        $(this.$refs.check).bootstrapToggle((checked) ? 'on' : 'off');
+      }
     },
     components: { Toggle }
   }

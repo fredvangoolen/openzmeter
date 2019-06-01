@@ -239,6 +239,7 @@ bool DeviceV1_01::BuffersAppend(float voltageSample, float currentSample) {
   return true;
 }
 void *DeviceV1_01::Capture_Thread(void *args) {
+  printf("1\n"); fflush(stdout);
   int Prio = sched_get_priority_max(SCHED_RR);
   if(Prio == -1) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -247,6 +248,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
     Param.sched_priority = Prio - 5;
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Warning("Cant raise thread priority -> %s\n", __func__, __LINE__, strerror(errno));
   }
+  printf("2\n"); fflush(stdout);
   DeviceV1_01 *This = (DeviceV1_01*)args;
   uint8_t BufferIN[DEVICEV1_01_TRANSFERS][8192];
   struct libusb_transfer *TransferIN[DEVICEV1_01_TRANSFERS];
