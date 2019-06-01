@@ -8,8 +8,6 @@
 #include "HTTPServer.h"
 #include "Tariff.h"
 #include "Tools.h"
-#include <json.hpp>
-using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 vector<Device*> __attribute__((init_priority(200))) DeviceManager::pDevices;
 //----------------------------------------------------------------------------------------------------------------------

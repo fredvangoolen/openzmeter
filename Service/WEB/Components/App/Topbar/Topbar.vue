@@ -85,7 +85,7 @@ export default {
             this.BatteryLevel = null;
           }
           if(vals['Sys_Stats'].Temperature != undefined) {
-            this.Temp = Math.round(vals['Sys_Stats'].Temperature*1000) + 'º';
+            this.Temp = Math.round(vals['Sys_Stats'].Temperature) + 'º';
           } else {
             this.Temp = null;
           }

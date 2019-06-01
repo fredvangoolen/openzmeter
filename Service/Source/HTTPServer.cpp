@@ -15,7 +15,6 @@
 #include <netinet/in.h>
 #include "HTTPServer.h"
 #include "Tools.h"
-#include "NetworkManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 HTTPRequest::HTTPRequest(char *cookie, bool deflate) : Database() {
   pStartTime = Tools::GetTime();
@@ -154,7 +153,7 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
   }
 }
 //----------------------------------------------------------------------------------------------------------------------
-vector<HTTPServer::Callback_t> HTTPServer::pCallbacks;
+vector<HTTPServer::Callback_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
   pDaemon = NULL;

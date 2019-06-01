@@ -28,7 +28,6 @@ class DeviceV1_01 : public Device {
   private :
     AnalyzerSoft                *pAnalyzer;                //Analyzer
     deque<Sample_t>              pBuffer;                  //Read buffer
-//    uint64_t                     pLastUpdate;              //Thread name last update
     string                       pSerial;                  //Capture device serial number
     float                        pVoltageGain;             //Voltage gain
     float                        pCurrentGain;             //Current gain

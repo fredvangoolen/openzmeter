@@ -15,7 +15,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "Tools.h"
-#include "NetworkManager.h"
+//#include "NetworkManager.h"
 #include "HTTPServer.h"
 #include "DeviceInterface.h"
 #include "NTP.h"
@@ -151,6 +151,7 @@ ResourceLoader::~ResourceLoader() {
   pInstance = NULL;
 }
 uint8_t *ResourceLoader::GetFile(string name, size_t *size) {
+  *size = 0;
   if(pInstance == NULL) return NULL;
   for(uint32_t i = 0; i < pInstance->pFiles.size(); i++) {
     if(pInstance->pFiles[i].Name != name) continue;

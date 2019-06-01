@@ -1,8 +1,10 @@
 <template>
   <div class="panel panel-other" v-if="WIFI_Support">
     <div class="panel-heading clearfix">
-      <div class="huge-small pull-left">Wifi</div>
+      <div class="huge-small pull-left">Connectivity</div>
       <div class="btn-group pull-right">
+        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes" v-on:click="Save"><img :src="require('Imgs/diskette.png')"> Save</button>
+        
         <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Add network" @click="Add"><img :src="require('Imgs/plus.png')">Add</button>
         <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Refresh" @click="UpdateNetworks"><img :src="require('Imgs/arrow_rotate_clockwise.png')">Refresh</button>  
       </div>

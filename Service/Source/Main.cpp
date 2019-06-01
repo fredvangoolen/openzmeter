@@ -11,9 +11,11 @@
 #include "Tools.h"
 #include "HTTPServer.h"
 #include "DeviceInterface.h"
-#include "NetworkManager.h"
+//#include "NetworkManager.h"
 #include "NTP.h"
-#include "Bluetooth.h"
+#ifdef OPENWRT
+  #include "OpenWRT.h"
+#endif
 //---------------------------------------------------------------------------------------------------------------------
 void GetNewsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
@@ -101,7 +103,9 @@ int main(int argc, char** argv) {
   /* Create config manager */
   ConfigManager ConfigManager(ConfigFileName);
   /* Create bluetooth manager */
-  Bluetooth BluetoothManager;
+  #ifdef OPENWRT
+    Bluetooth BluetoothManager;
+  #endif
   /* Create PID File */
   PIDFile PIDFile;
   /* Create LOG file */
@@ -126,7 +130,7 @@ int main(int argc, char** argv) {
   HTTPServer HTTPServer;
   if(HTTPServer.Config() == false) return EXIT_FAILURE;
 //  HTTPServer.RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
-  HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
+//  HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
   HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
   HTTPServer::RegisterCallback("/getCountries",        GetCountriesCallback);  
   HTTPServer::RegisterCallback("/getUser",             GetUserCallback);
@@ -144,7 +148,9 @@ int main(int argc, char** argv) {
 
   int Iter = 0;
   while(!Terminate) {
+  #ifdef OPENWRT
     BluetoothManager.HandleAgent();
+  #endif
     usleep(200000);
     if((Iter % 10) == 0) {
 //      if(NetworkManager::GetConnectivityStatus() < 2) NetworkManager::Reset();
