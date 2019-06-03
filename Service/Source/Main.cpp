@@ -77,8 +77,9 @@ void RunDaemon() {
 int main(int argc, char** argv) {
   setbuf(stdout, NULL);
   signal(SIGILL, SIG_IGN);
+  signal(SIGPIPE, SIG_IGN);
   string ConfigFileName = "/etc/openZmeter.conf";
-  bool   Daemonize      = false;
+//  bool   Daemonize      = false;
   bool   Debug          = false;
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
@@ -86,7 +87,7 @@ int main(int argc, char** argv) {
     } else if(strcmp(argv[i], "--debug") == 0) {
       Debug = true;
     } else if(strcmp(argv[i], "--daemon") == 0) {
-      Daemonize = true;
+      RunDaemon();
     } else if(strcmp(argv[i], "--help") == 0) {
       printf("--help           - Shows this screen");
       printf("--config=<file>  - Set config file\n");
@@ -97,21 +98,19 @@ int main(int argc, char** argv) {
       printf("Option %s not recogniced. Use --help to show valid options.", argv[i]);
     }
   }
-  if(Daemonize == true) RunDaemon();
-  /* Create resource loader */
-  ResourceLoader ResourceLoader;
-  /* Create config manager */
-  ConfigManager ConfigManager(ConfigFileName);
+  /* Load config file */
+  ConfigManager::SetFile(ConfigFileName);
+  /* Create PID File */
+  PIDFile PIDFile;
+  /* Create LOG file */
+//  LOGFile LOGFile(Debug, !Daemonize);
+  /* Create database */
+//  if(Database::Config() == false) return EXIT_FAILURE;
+
   /* Create bluetooth manager */
   #ifdef OPENWRT
     Bluetooth BluetoothManager;
   #endif
-  /* Create PID File */
-  PIDFile PIDFile;
-  /* Create LOG file */
-  LOGFile LOGFile(Debug, !Daemonize);
-  /* Create database */
-  if(Database::Config() == false) return EXIT_FAILURE;
 
   /* Create embedded NTP client */
 //  json NTPConfig = json::object();

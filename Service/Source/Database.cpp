@@ -10,8 +10,10 @@
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 string Database::pConnectionString;
+bool   Database::pConfigured = false;
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(string schema) {
+  if(pConfigured == false) ReadConfig(); 
   pSchema    = schema;
   pResult    = NULL;
   pDBConn    = PQconnectdb(pConnectionString.c_str());
@@ -22,9 +24,16 @@ Database::Database(string schema) {
     pDBConn = NULL;
     return;
   }
-  if(ExecSentenceNoResult("SET synchronous_commit TO OFF; SET client_min_messages = error; CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema) + "; SET search_path TO " +  Bind(pSchema) + ", public") == false) {
+  ExecSentenceNoResult("SET synchronous_commit TO OFF; SET client_min_messages = error");
+  if(pConfigured == false) {
+    LOGFile::Debug("Creating database tables\n");
+    ExecResource("SQL/Database.sql");
+    pConfigured = true;
+  }
+  if(ExecSentenceNoResult("CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema) + "; SET search_path TO " +  Bind(pSchema) + ", public") == false) {
     PQfinish(pDBConn);
     pDBConn = NULL;
+    return;
   }
 }
 string Database::GetSchema() {
@@ -34,26 +43,28 @@ Database::~Database() {
   ClearAsync();
   if(pDBConn) PQfinish(pDBConn);
 }
-bool Database::Config() {
+void Database::ReadConfig() {
   json Config = ConfigManager::ReadConfig("/Database");
-  if(!Config.is_object()) {
-    LOGFile::Error("No database configuration found\n");
-    return false;
-  }
   uint16_t Port     = 5432;
   string   Hostname = "localhost";
   string   DataBase = "openzmeter";
   string   Username = "openzmeter";
   string   Password = "openzmeter";
-  if(Config["Hostname"].is_string())      Hostname = Config["Hostname"];
-  if(Config["Port"].is_number_unsigned()) Port     = Config["Port"];
-  if(Config["Database"].is_string())      DataBase = Config["Database"];
-  if(Config["Username"].is_string())      Username = Config["Username"];
-  if(Config["Password"].is_string())      Password = Config["Password"];
+  if(Config.is_object()) {
+    if(Config["Hostname"].is_string())      Hostname = Config["Hostname"];
+    if(Config["Port"].is_number_unsigned()) Port     = Config["Port"];
+    if(Config["Database"].is_string())      DataBase = Config["Database"];
+    if(Config["Username"].is_string())      Username = Config["Username"];
+    if(Config["Password"].is_string())      Password = Config["Password"];
+  }
+  Config = json::object();
+  Config["Hostname"] = Hostname;
+  Config["Port"] = Port;;
+  Config["Database"] = DataBase;
+  Config["Username"] = Username;
+  Config["Password"] = Password;
+  ConfigManager::WriteConfig("/Database", Config);
   pConnectionString = "host=" + Hostname + " port=" + to_string(Port) + " user=" + Username + " password=" + Password + " dbname=" + DataBase + " sslmode=allow";
-  Database DB("public");
-  LOGFile::Debug("Creating database tables\n");
-  return DB.ExecResource("SQL/Database.sql");
 }
 bool Database::FecthRow() {
   if(pResult != NULL) PQclear(pResult);  

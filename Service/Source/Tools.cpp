@@ -43,36 +43,36 @@ PIDFile::~PIDFile() {
   if(!pFile.empty()) remove(pFile.c_str());
 }
 //----------------------------------------------------------------------------------------------------------------------
-LOGFile        *LOGFile::pInstance = NULL;
+fstream         LOGFile::pFile;
+bool            LOGFile::pConfigured = false;
 bool            LOGFile::pConsole = true;
-bool            LOGFile::pDebug = true;
+//bool            LOGFile::pDebug = true;
 pthread_mutex_t LOGFile::pMutex = PTHREAD_MUTEX_INITIALIZER;
-LOGFile::LOGFile(bool debug, bool console) {
-  string Name = "/var/log/openZmeter.log";
-  json Config = ConfigManager::ReadConfig("/LogFile");
-  if(Config.is_string()) Name = Config;
-  pConsole = console;
-  pDebug   = debug;
-  pFile = NULL;
-  if(pInstance != NULL) {
-    delete pInstance;
-    pInstance = NULL;
-  }
-  if(Name.empty() == false) {
-    pFile = fopen(Name.c_str(), "at");
-    if(!pFile) pFile = fopen(Name.c_str(), "wt");
-    if(pFile == NULL) LOGFile::Warning("Can not create or open log file (%s)\n", strerror(errno));
-  }
-  pInstance = this;
-}
-LOGFile::~LOGFile() {
-  pthread_mutex_lock(&pMutex);
-  pInstance = NULL;
-  pthread_mutex_unlock(&pMutex);
-  if(pFile) fclose(pFile);
-}
+//LOGFile::LOGFile(bool debug, bool console) {
+//  string Name = "/var/log/openZmeter.log";
+//  json Config = ConfigManager::ReadConfig("/LogFile");
+//  if(Config.is_string()) Name = Config;
+//  pConsole = console;
+//  pDebug   = debug;
+//  pFile = NULL;
+//  if(pInstance != NULL) {
+//    delete pInstance;
+//    pInstance = NULL;
+//  }
+//  if(Name.empty() == false) {
+//    pFile = fopen(Name.c_str(), "at");
+//    if(!pFile) pFile = fopen(Name.c_str(), "wt");
+//    if(pFile == NULL) LOGFile::Warning("Can not create or open log file (%s)\n", strerror(errno));
+//  }
+//  pInstance = this;
+//}
+//LOGFile::~LOGFile() {
+//  pthread_mutex_lock(&pMutex);
+//  pInstance = NULL;
+//  pthread_mutex_unlock(&pMutex);
+//  if(pFile) fclose(pFile);
+//}
 void LOGFile::Debug(const char* msg, ...) {
-  if(pDebug == false) return;
   va_list args;
   va_start(args, msg);
   Msg(DEBUG, msg, args);
@@ -97,6 +97,9 @@ void LOGFile::Error(const char* msg, ...) {
   va_end(args);
 }
 void LOGFile::Msg(Type type, const char *msg, va_list params) {
+  if(pConfigured == false) {
+  
+  }
   time_t Now;
   struct tm *TimeStamp;
   char DateStr[80];
@@ -116,47 +119,41 @@ void LOGFile::Msg(Type type, const char *msg, va_list params) {
     } else {
       return;
     }
-    vprintf(msg, params);
+    if(vprintf(msg, params) < 0) pConsole = false;
     fflush(stdout);
   }
-  if((pInstance != NULL) && (pInstance->pFile != NULL)) {
-    fprintf(pInstance->pFile, "%s", DateStr);
-    vfprintf(pInstance->pFile, msg, params);
+  if(pFile.is_open() && (type != DEBUG)) {
+    char Buff[8192];
+    if(vsnprintf(Buff, sizeof(Buff), msg, params) != -1) pFile << DateStr << Buff;
   }
   pthread_mutex_unlock(&pMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
 extern char _binary_ResourceFiles_start[];
 extern char _binary_ResourceFiles_end[];
-ResourceLoader *ResourceLoader::pInstance = NULL;
-ResourceLoader::ResourceLoader() {
-  if(pInstance != NULL) return;
-  pInstance = this;
-  char *Ptr = _binary_ResourceFiles_start;
-  uint32_t FileCount = atoi(Ptr);
-  pFiles.reserve(FileCount);
-  Ptr = &Ptr[strlen(Ptr) + 1];
-  for(uint32_t i = 0; i < FileCount; i++) {
-    File_t File;
-    File.Name = Ptr;
-    Ptr = &Ptr[strlen(Ptr) + 1];
-    File.Size = atoi(Ptr);
-    Ptr = &Ptr[strlen(Ptr) + 1];
-    File.Ptr = (uint8_t*)Ptr;
-    Ptr = &Ptr[File.Size];
-    pFiles.push_back(File);
-  }
-}
-ResourceLoader::~ResourceLoader() {
-  pInstance = NULL;
-}
+vector<ResourceLoader::File_t> ResourceLoader::pFiles;;
 uint8_t *ResourceLoader::GetFile(string name, size_t *size) {
   *size = 0;
-  if(pInstance == NULL) return NULL;
-  for(uint32_t i = 0; i < pInstance->pFiles.size(); i++) {
-    if(pInstance->pFiles[i].Name != name) continue;
-    *size = pInstance->pFiles[i].Size;
-    return pInstance->pFiles[i].Ptr;
+  if(pFiles.size() == 0) {
+    char *Ptr = _binary_ResourceFiles_start;
+    uint32_t FileCount = atoi(Ptr);
+    pFiles.reserve(FileCount);
+    Ptr = &Ptr[strlen(Ptr) + 1];
+    for(uint32_t i = 0; i < FileCount; i++) {
+      File_t File;
+      File.Name = Ptr;
+      Ptr = &Ptr[strlen(Ptr) + 1];
+      File.Size = atoi(Ptr);
+      Ptr = &Ptr[strlen(Ptr) + 1];
+      File.Ptr = (uint8_t*)Ptr;
+      Ptr = &Ptr[File.Size];
+      pFiles.push_back(File);
+    }
+  }
+  for(uint32_t i = 0; i < pFiles.size(); i++) {
+    if(pFiles[i].Name != name) continue;
+    *size = pFiles[i].Size;
+    return pFiles[i].Ptr;
   }
   return NULL;
 }
@@ -164,14 +161,15 @@ uint8_t *ResourceLoader::GetFile(string name, size_t *size) {
 ConfigManager   *ConfigManager::pInstance = NULL;
 pthread_mutex_t  ConfigManager::pMutex = PTHREAD_MUTEX_INITIALIZER;
 ConfigManager::ConfigManager(string name) {
+  pthread_mutex_lock(&pMutex);
   if(pInstance != NULL) {
     delete pInstance;
     pInstance = NULL;
   }
-  pthread_mutex_lock(&pMutex);
   pFile = open(name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
   if(pFile < 0) {
     LOGFile::Error("Can not open config file (%s)\n", strerror(errno));
+    pthread_mutex_unlock(&pMutex);
     return;
   }
   string Read;
@@ -191,7 +189,9 @@ ConfigManager::~ConfigManager() {
   pInstance = NULL;
   pthread_mutex_unlock(&pMutex);
 }
-bool ConfigManager::SaveConfig(string path, json val) {
+void ConfigManager::SetFile(string name) {
+}
+bool ConfigManager::WriteConfig(string path, json val) {
   pthread_mutex_lock(&pMutex);
   if(pInstance == NULL) {
     pthread_mutex_unlock(&pMutex);
@@ -218,7 +218,7 @@ bool ConfigManager::SaveConfig(string path, json val) {
   return true;
 }
 json ConfigManager::ReadConfig(string path) {
-  if(pInstance == NULL) return nullptr;
+  if((pInstance == NULL) || (pInstance->pConfig.is_object() == false)) return nullptr;
 //  printf("Config Path %s -> %s\n", path.c_str(), pInstance->pConfig[json::json_pointer(path)].dump().c_str());
 //  fflush(stdout);
   return pInstance->pConfig[json::json_pointer(path)];

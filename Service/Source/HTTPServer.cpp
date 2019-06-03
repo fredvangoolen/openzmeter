@@ -169,7 +169,7 @@ bool HTTPServer::Config() {
                              MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
                              MHD_OPTION_END);
   if(pDaemon == NULL) LOGFile::Error("HTTP port already in use\n");  
-  ConfigManager::SaveConfig("/HTTPServer", Config); 
+  ConfigManager::WriteConfig("/HTTPServer", Config); 
   return (pDaemon != NULL);
 }
 HTTPServer::~HTTPServer() {
