@@ -5,7 +5,7 @@ module.exports = {
   entry: './main.js',
   output: {
     path: path.resolve(__dirname, '../Tmp/WEB'),
-    publicPath: '/Tmp/',
+    publicPath: '/',
     filename: 'openZmeter.js'
   },
   plugins: [

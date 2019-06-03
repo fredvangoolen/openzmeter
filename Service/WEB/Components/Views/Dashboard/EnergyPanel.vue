@@ -205,7 +205,7 @@
         }
         this.AccumSamples = AccumSamples;
         this.MaxTime = moment(MaxTime).format("hh:mm:ss - DD/MM/YYYY") + ((MaxCount > 1) ? ' (and ' + MaxCount + ' times more)' : '');
-        var UnitsMax = oZm.Series['ACTIVE_ENERGY'].FormatValue(MaxValue);    
+        var UnitsMax = oZm.Series['ACTIVE_ENERGY'].FormatValue(Number.isFinite(MaxValue) ? MaxValue : 0.0);    
         this.MaxValue = UnitsMax.Value + ' <em>' + UnitsMax.Units + '</em>';
         var UnitsAccum = oZm.Series['ACTIVE_ENERGY'].FormatValue(AccumValue);    
         this.AccumValue = UnitsAccum.Value + '<em>' + UnitsAccum.Units + '</em>';

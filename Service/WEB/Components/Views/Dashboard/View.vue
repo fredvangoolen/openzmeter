@@ -29,10 +29,6 @@
     mounted: function() {
       var Graphs = [this.$refs.voltage.$refs.Chart.Graph, this.$refs.current.$refs.Chart.Graph, this.$refs.active_power.$refs.Chart.Graph, this.$refs.frequency.$refs.Chart.Graph];
       Dygraph.synchronize(Graphs, { range: false, zoom: false });
-      
-      
-      //var Graphs = [ this.$refs.voltage.$refs.Chart.Graph ];
-      
     },
     components: { Energy, Graphs, Variables }
   }
