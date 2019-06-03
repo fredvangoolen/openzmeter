@@ -153,7 +153,7 @@ bool  DeviceV1_00::BuffersAppend(float voltageSample, float currentSample) {
   uint64_t Sampletime = Tools::GetTime();
   if(pLastUpdate < (Sampletime - 500)) {
     char ThreadName[16];
-    sprintf(ThreadName, "DeviceV1_%02u", pBuffer.size() * 100 / pBuffer.max_size());
+    sprintf(ThreadName, "DeviceV1_%02zu", pBuffer.size() * 100 / pBuffer.max_size());
     pthread_setname_np(pCaptureThread, ThreadName);
     pLastUpdate = Sampletime;
   }

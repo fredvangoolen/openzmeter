@@ -34,7 +34,7 @@ endif
 ifeq ($(DEBUG), true)
 	CFLAGS += -O0 -g -g3 -ggdb 
 else
-	CFLAGS += -Os -Wall -fno-rtti -fopt-info-vec
+	CFLAGS += -Os -Wall -fno-rtti -fopt-info-vec -s
 endif
 ifeq ($(DEVICE_V1_00), true)
 	EXECUTABLE_SOURCE += Source/Devices/V1_00/DeviceV1_00.cpp
@@ -59,6 +59,7 @@ endif
 
 $(WEB_TARGET):	 $(WEB_SOURCE)
 	@echo "Building WEB interface"
+	@if [ ! -d "WEB/node_modules" ]; then cd WEB; npm install; fi
 	@cd WEB; npm run --silent build
 
 $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)

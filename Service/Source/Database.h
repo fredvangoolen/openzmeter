@@ -15,13 +15,14 @@ using json = nlohmann::json;
 class Database {
   private :
     static string pConnectionString;
+    static bool   pConfigured;
   private :
     PGconn      *pDBConn;
     string       pSchema;
     PGresult    *pResult;
   private :
-//    void   ClearResult();
-    void   ClearAsync();
+    void ReadConfig();
+    void ClearAsync();
   public :
     string      Bind(uint32_t param);
     string      Bind(uint64_t param);
@@ -43,6 +44,4 @@ class Database {
     string      GetSchema();
     Database(string schema = "public");
     virtual ~Database();
-  public :
-    static bool Config();
 };

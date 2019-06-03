@@ -13,7 +13,8 @@ using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 class PIDFile {
-  string pFile;
+  private :
+    string pFile;
   public :
     PIDFile();
     virtual ~PIDFile();
@@ -23,23 +24,25 @@ class LOGFile {
   private :
     enum Type {WARNING, ERROR, DEBUG, INFO};
   private :
-    static LOGFile         *pInstance;
+//    static LOGFile         *pInstance;
+    static bool             pConfigured;
     static pthread_mutex_t  pMutex;
-    static bool             pDebug;
+//    static bool             pDebug;
     static bool             pConsole;
-  private :
+    static fstream          pFile;
+private :
     static void Msg(Type type, const char *msg, va_list params);
-  private :
-    FILE *pFile;
-    void  WriteFile();
+    static void WriteFile();
   public :
     static void Info(const char *msg, ...);
     static void Warning(const char *msg, ...);
     static void Error(const char *msg, ...);
     static void Debug(const char *msg, ...);
+//    static void EnableConsole(bool enable);
+//    static void EnableDe
   public :
-    LOGFile(bool debug, bool console);
-    virtual ~LOGFile();
+//    LOGFile(bool debug, bool console);
+//    virtual ~LOGFile();
 };
 //----------------------------------------------------------------------------------------------------------------------
 class ResourceLoader {
@@ -50,14 +53,9 @@ class ResourceLoader {
       uint8_t *Ptr;
     } File_t;
   private :
-    static ResourceLoader *pInstance;
-  private :
-    vector<File_t> pFiles;
+    static vector<File_t> pFiles;
   public :
     static uint8_t *GetFile(string name, size_t *size);
-  public :
-    ResourceLoader();
-    virtual ~ResourceLoader();
 };
 //----------------------------------------------------------------------------------------------------------------------
 class ConfigManager {
@@ -71,8 +69,9 @@ class ConfigManager {
     ConfigManager(string name);
     virtual ~ConfigManager();
   public :
+    static void  SetFile(string name);
     static json  ReadConfig(string path);
-    static bool  SaveConfig(string path, json val);
+    static bool  WriteConfig(string path, json val);
 };
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
