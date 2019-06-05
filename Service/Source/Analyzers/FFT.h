@@ -17,7 +17,6 @@ class FFT {
   public :
     vector<Complex_t>  Output;                //Datos de salida
   private :
-//    bool               pRunning;              //FFT runing
     vector<float>     *pInput;                //Muestras de entrada
     pthread_t          pThread;               //Hilo de ejecucion
     pthread_mutex_t    pThreadMutex;          //Mutex para la variable de condicion

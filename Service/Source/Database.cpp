@@ -3,6 +3,7 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #include <stdlib.h>
+#include <sys/types.h>
 #include <string.h>
 #include <float.h>
 #include <math.h>
@@ -10,10 +11,9 @@
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 string Database::pConnectionString;
-bool   Database::pConfigured = false;
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(string schema) {
-  if(pConfigured == false) ReadConfig(); 
+  if(pConnectionString.empty() == true) ReadConfig();
   pSchema    = schema;
   pResult    = NULL;
   pDBConn    = PQconnectdb(pConnectionString.c_str());
@@ -24,13 +24,7 @@ Database::Database(string schema) {
     pDBConn = NULL;
     return;
   }
-  ExecSentenceNoResult("SET synchronous_commit TO OFF; SET client_min_messages = error");
-  if(pConfigured == false) {
-    LOGFile::Debug("Creating database tables\n");
-    ExecResource("SQL/Database.sql");
-    pConfigured = true;
-  }
-  if(ExecSentenceNoResult("CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema) + "; SET search_path TO " +  Bind(pSchema) + ", public") == false) {
+  if(ExecSentenceNoResult("SET synchronous_commit TO OFF; SET client_min_messages = error; CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema) + "; SET search_path TO " +  Bind(pSchema) + ", public") == false) {
     PQfinish(pDBConn);
     pDBConn = NULL;
     return;

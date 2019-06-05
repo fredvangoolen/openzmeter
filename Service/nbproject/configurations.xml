@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="crt"
+                   displayName="crt"
+                   projectFiles="true"
+                   root="/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/crt">
+      <itemPath>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/crt/crt1.c</itemPath>
+    </logicalFolder>
     <df root="." name="0">
       <df name="Libs">
         <df name="cctz">
@@ -35,6 +41,8 @@
             <in>AnalyzerSoft.cpp</in>
           </df>
           <in>AnalyzerInterface.cpp</in>
+          <in>Events.cpp</in>
+          <in>FFT.cpp</in>
         </df>
         <df name="Devices">
           <df name="Remote">
@@ -51,6 +59,11 @@
           </df>
           <in>DeviceInterface.cpp</in>
         </df>
+        <df name="Support">
+          <df name="OpenWRT">
+            <in>OpenWRT.cpp</in>
+          </df>
+        </df>
         <df name="Tariffs">
           <df name="ESP">
             <in>TariffPlugin_ESP.cpp</in>
@@ -62,8 +75,6 @@
           <in>TariffPlugin.cpp</in>
         </df>
         <in>Database.cpp</in>
-        <in>Events.cpp</in>
-        <in>FFT.cpp</in>
         <in>HTTPServer.cpp</in>
         <in>MODBus.cpp</in>
         <in>Main.cpp</in>
@@ -93,7 +104,7 @@
       </toolsSet>
       <flagsDictionary>
         <element flagsID="0" commonFlags="-g"/>
-        <element flagsID="1" commonFlags="-mtune=generic -march=x86-64 -std=c++11"/>
+        <element flagsID="1" commonFlags="-g -Os -std=c99 -ffreestanding"/>
         <element flagsID="2" commonFlags="-std=c++11"/>
         <element flagsID="3" commonFlags="-std=c++11 -march=native"/>
       </flagsDictionary>
@@ -102,9 +113,20 @@
       <makefileType>
         <makeTool>
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
-          <buildCommand>${MAKE} -j2 -f Makefile CONFIG=Configs/debian.config</buildCommand>
+          <buildCommand>${MAKE} -j2 -f Makefile CONFIG=Configs/openWRT.config</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath>Tmp/openZmeter</executablePath>
+          <cTool>
+            <incDir>
+              <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/crt</pElem>
+              <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/obj/include/bits</pElem>
+              <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/include</pElem>
+              <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/src/include</pElem>
+              <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/src/internal</pElem>
+              <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/obj/include</pElem>
+              <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21</pElem>
+            </incDir>
+          </cTool>
           <ccTool flags="0">
           </ccTool>
         </makeTool>
@@ -113,96 +135,606 @@
           <preBuildCommand></preBuildCommand>
         </preBuild>
       </makefileType>
+      <item path="/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/crt/crt1.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="1">
+        </cTool>
+      </item>
       <item path="Libs/cctz/civil_time_detail.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/dbus-1.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
+            <pElem>/usr/include/libxml2</pElem>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
+            <pElem>/usr/include/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
+            <pElem>Source/Tariffs/ESP</pElem>
+            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>OZM_DEBUG</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/civil_time_detail.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_fixed.cc" ex="false" tool="1" flavor2="8">
         <ccTool flags="3">
+          <incDir>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/dbus-1.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
+            <pElem>/usr/include/libxml2</pElem>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
+            <pElem>/usr/include/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
+            <pElem>Source/Tariffs/ESP</pElem>
+            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>OZM_DEBUG</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_fixed.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_format.cc" ex="false" tool="1" flavor2="8">
         <ccTool flags="3">
+          <incDir>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/dbus-1.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
+            <pElem>/usr/include/libxml2</pElem>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
+            <pElem>/usr/include/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
+            <pElem>Source/Tariffs/ESP</pElem>
+            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>OZM_DEBUG</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_format.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_if.cc" ex="false" tool="1" flavor2="8">
         <ccTool flags="3">
+          <incDir>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/dbus-1.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
+            <pElem>/usr/include/libxml2</pElem>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
+            <pElem>/usr/include/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
+            <pElem>Source/Tariffs/ESP</pElem>
+            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>OZM_DEBUG</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_if.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_impl.cc" ex="false" tool="1" flavor2="8">
         <ccTool flags="3">
+          <incDir>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/dbus-1.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
+            <pElem>/usr/include/libxml2</pElem>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
+            <pElem>/usr/include/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
+            <pElem>Source/Tariffs/ESP</pElem>
+            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>OZM_DEBUG</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_impl.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_info.cc" ex="false" tool="1" flavor2="8">
         <ccTool flags="3">
+          <incDir>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/dbus-1.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
+            <pElem>/usr/include/libxml2</pElem>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
+            <pElem>/usr/include/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
+            <pElem>Source/Tariffs/ESP</pElem>
+            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>OZM_DEBUG</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_info.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_libc.cc" ex="false" tool="1" flavor2="8">
         <ccTool flags="3">
+          <incDir>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/dbus-1.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
+            <pElem>/usr/include/libxml2</pElem>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
+            <pElem>/usr/include/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
+            <pElem>Source/Tariffs/ESP</pElem>
+            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>OZM_DEBUG</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_libc.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_lookup.cc" ex="false" tool="1" flavor2="8">
         <ccTool flags="3">
+          <incDir>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/dbus-1.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
+            <pElem>/usr/include/libxml2</pElem>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
+            <pElem>/usr/include/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
+            <pElem>Source/Tariffs/ESP</pElem>
+            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>OZM_DEBUG</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_lookup.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_posix.cc" ex="false" tool="1" flavor2="8">
         <ccTool flags="3">
+          <incDir>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/dbus-1.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
+            <pElem>/usr/include/libxml2</pElem>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
+            <pElem>/usr/include/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
+            <pElem>Source/Tariffs/ESP</pElem>
+            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>OZM_DEBUG</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_posix.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/zone_info_source.cc" ex="false" tool="1" flavor2="8">
         <ccTool flags="3">
+          <incDir>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/dbus-1.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
+            <pElem>/usr/include/libxml2</pElem>
+            <pElem>/usr/local/pgsql/include</pElem>
+            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
+            <pElem>/usr/include/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Devices/V1_00</pElem>
+            <pElem>Source/Devices/V2_00</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
+            <pElem>Source/Tariffs/ESP</pElem>
+            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>OZM_DEBUG</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/zone_info_source.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Analyzers/AnalyzerInterface.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
           <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Source/Analyzers</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
             <pElem>Source</pElem>
-            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+      </item>
+      <item path="Source/Analyzers/Events.cpp" ex="false" tool="1" flavor2="8">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+      </item>
+      <item path="Source/Analyzers/FFT.cpp" ex="false" tool="1" flavor2="8">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
@@ -219,33 +751,50 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Source/Database.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="2">
           <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
             <pElem>Libs</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/Devices/DeviceInterface.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
           <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Analyzers</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
             <pElem>Source</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
             <pElem>Libs/cctz</pElem>
-            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
@@ -262,56 +811,41 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Source/Devices/V1_01/DeviceV1_01.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Source/Devices/Virtual/DeviceVirtual.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="3">
-        </ccTool>
-      </item>
-      <item path="Source/Events.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>Source</pElem>
-            <pElem>Libs/nlohmann</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
-          </incDir>
-        </ccTool>
-      </item>
-      <item path="Source/FFT.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>Source</pElem>
-            <pElem>Libs/nlohmann</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
-          </incDir>
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="2">
           <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/netinet</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
             <pElem>Libs</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
@@ -353,13 +887,33 @@
       <item path="Source/Main.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="2">
           <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/netinet</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>Source/Support/OpenWRT</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/net</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/linux</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/asm</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/asm-generic</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/dbus-1.0/dbus</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/lib/dbus-1.0/include/dbus</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
             <pElem>Libs</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/dbus-1.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/lib/dbus-1.0/include</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
@@ -398,6 +952,10 @@
           </preprocessorList>
         </ccTool>
       </item>
+      <item path="Source/Support/OpenWRT/OpenWRT.cpp" ex="false" tool="1" flavor2="8">
+        <ccTool flags="2">
+        </ccTool>
+      </item>
       <item path="Source/Tariffs/ESP/TariffPlugin_ESP.cpp"
             ex="false"
             tool="1"
@@ -413,14 +971,24 @@
         </ccTool>
       </item>
       <item path="Source/Tariffs/Tariff.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
           <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
             <pElem>Libs/cctz</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
@@ -463,13 +1031,31 @@
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="2">
           <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/netinet</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>Source/Support/OpenWRT</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/net</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/linux</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/asm</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/asm-generic</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/dbus-1.0/dbus</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/lib/dbus-1.0/include/dbus</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/arpa</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
             <pElem>Libs</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/dbus-1.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/lib/dbus-1.0/include</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
@@ -603,12 +1189,33 @@
       <folder path="0/Source/Analyzers/Soft">
         <ccTool>
           <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
             <pElem>Source</pElem>
-            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/netinet</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>Source/Support/OpenWRT</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/net</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/linux</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/asm</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/asm-generic</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/dbus-1.0/dbus</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/lib/dbus-1.0/include/dbus</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
             <pElem>Libs</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/dbus-1.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/lib/dbus-1.0/include</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
@@ -704,14 +1311,24 @@
       <folder path="0/Source/Devices/V1_00">
         <ccTool>
           <incDir>
-            <pElem>/usr/include/libusb-1.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/libusb-1.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Source/Devices/V1_00</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>Source/Devices</pElem>
-            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
@@ -720,14 +1337,24 @@
       <folder path="0/Source/Devices/V1_01">
         <ccTool>
           <incDir>
-            <pElem>/usr/include/libusb-1.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/libusb-1.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Source/Devices/V1_01</pElem>
             <pElem>Source/Analyzers</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Devices</pElem>
-            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
@@ -736,35 +1363,58 @@
       <folder path="0/Source/Devices/Virtual">
         <ccTool>
           <incDir>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>/usr/include/dbus-1.0</pElem>
-            <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
-            <pElem>/usr/include/libxml2</pElem>
-            <pElem>/usr/local/pgsql/include</pElem>
-            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
-            <pElem>/usr/include/nlohmann</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Libs</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
             <pElem>Libs/nlohmann</pElem>
-            <pElem>Libs/cctz</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/libusb-1.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>OZM_DEBUG</Elem>
-          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Support">
+        <ccTool>
+          <incDir>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/ext</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Support/OpenWRT</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/sys</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/bits</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/debug</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/netinet</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/lib/dbus-1.0/include/dbus</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/dbus-1.0/dbus</pElem>
+            <pElem>Source</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/net</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/linux</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/asm</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/include/asm-generic</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/backward</pElem>
+            <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/dbus-1.0</pElem>
+            <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/lib/dbus-1.0/include</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </folder>
       <folder path="0/Source/Tariffs/ESP">

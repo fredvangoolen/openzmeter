@@ -12,6 +12,7 @@
 //#include <curl/curl.h>
 #include "AnalyzerSoft.h"
 #include "Tools.h"
+#include "Support/SysSupport.h"
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(string id, AnalyzerInterface::AnalyzerMode mode, float samplerate) : AnalyzerInterface(id.c_str(), mode) {
   for(uint n = 0; n < ZEROCROSSING_FILTERSTAGES; n++) {
@@ -365,7 +366,7 @@ void AnalyzerSoft::GetParams(Params_t &params, ParamsType &copy) {
   pWaitingThreads--;
   pthread_cond_signal(&pWaitingThreadsCond);
   pthread_mutex_unlock(&pWaitingThreadsMutex);
-  if(copy & SYS_STATS) params.Sys_Stats = Tools::GetSysInfo();
+  if(copy & SYS_STATS) params.Sys_Stats = System::GetSystemDetails();
 }
 bool AnalyzerSoft::IsFinished() {
   bool Result;
