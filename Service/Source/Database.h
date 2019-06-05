@@ -15,13 +15,13 @@ using json = nlohmann::json;
 class Database {
   private :
     static string pConnectionString;
-    static bool   pConfigured;
   private :
     PGconn      *pDBConn;
     string       pSchema;
     PGresult    *pResult;
   private :
-    void ReadConfig();
+    static void ReadConfig();
+  private :
     void ClearAsync();
   public :
     string      Bind(uint32_t param);

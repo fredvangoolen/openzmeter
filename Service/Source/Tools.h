@@ -6,43 +6,31 @@
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
-#include "Database.h"
-#include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
-//----------------------------------------------------------------------------------------------------------------------
 using namespace std;
+//----------------------------------------------------------------------------------------------------------------------
+class ConfigManager {
+  private :
+    static ConfigManager          *pInstance;
+    static pthread_mutex_t         pMutex;
+  private :
+    int   pFile;
+    json  pConfig;
+  public :
+    ConfigManager(string name);
+    virtual ~ConfigManager();
+  public :
+    static json  ReadConfig(string path);
+    static bool  WriteConfig(string path, json val);
+};
+//----------------------------------------------------------------------------------------------------------------------
 class PIDFile {
   private :
     string pFile;
   public :
     PIDFile();
     virtual ~PIDFile();
-};
-//----------------------------------------------------------------------------------------------------------------------
-class LOGFile {
-  private :
-    enum Type {WARNING, ERROR, DEBUG, INFO};
-  private :
-//    static LOGFile         *pInstance;
-    static bool             pConfigured;
-    static pthread_mutex_t  pMutex;
-//    static bool             pDebug;
-    static bool             pConsole;
-    static fstream          pFile;
-private :
-    static void Msg(Type type, const char *msg, va_list params);
-    static void WriteFile();
-  public :
-    static void Info(const char *msg, ...);
-    static void Warning(const char *msg, ...);
-    static void Error(const char *msg, ...);
-    static void Debug(const char *msg, ...);
-//    static void EnableConsole(bool enable);
-//    static void EnableDe
-  public :
-//    LOGFile(bool debug, bool console);
-//    virtual ~LOGFile();
 };
 //----------------------------------------------------------------------------------------------------------------------
 class ResourceLoader {
@@ -58,33 +46,33 @@ class ResourceLoader {
     static uint8_t *GetFile(string name, size_t *size);
 };
 //----------------------------------------------------------------------------------------------------------------------
-class ConfigManager {
+class LOGFile {
   private :
-    static ConfigManager  *pInstance;
-    static pthread_mutex_t pMutex;
+    enum Type {ERROR = 1, WARNING = 2, INFO = 3, DEBUG = 4};
   private :
-    int   pFile;
-    json  pConfig;
+    static pthread_mutex_t  pMutex;
+    static bool             pConsole;
+    static LOGFile         *pInstance;
+  private :
+    static void Msg(Type type, const char *msg, va_list params);
+  private :
+    FILE   *pFile;
+    Type    pLevel;
   public :
-    ConfigManager(string name);
-    virtual ~ConfigManager();
+    LOGFile();
+    virtual ~LOGFile();
   public :
-    static void  SetFile(string name);
-    static json  ReadConfig(string path);
-    static bool  WriteConfig(string path, json val);
+    static void Info(const char *msg, ...);
+    static void Warning(const char *msg, ...);
+    static void Error(const char *msg, ...);
+    static void Debug(const char *msg, ...);
+  public :
 };
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   public :
-    static uint8_t pBatteryLevel;
-    static bool    pBatteryCharging;
-    static bool    pExternalPower;
-  private :
-    static uint64_t ParseProcMem(const char *name, const char *buff);
-//    static bool     GetMemory(uint64_t *total, uint64_t *available);
-  public :
-    static uint64_t     GetTime();
-    static json         GetSysInfo();
-    static void         SendUDP(json obj);
+    static uint64_t  GetTime();
+    static string    Run(string command);
+    static void      SendUDP(json obj);
 };
 //----------------------------------------------------------------------------------------------------------------------

@@ -3,6 +3,7 @@
  * Author:   Eduardo Viciana (30 de mayo de 2018)
  * ------------------------------------------------------------------------------------------------------------------ */
 #include <fftw3.h>
+#include <sys/types.h>
 #include "FFT.h"
 #include <errno.h>
 #include <string.h>

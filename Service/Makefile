@@ -9,12 +9,14 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 #Executable related components
 EXECUTABLE_TARGET = Tmp/openZmeter
 EXECUTABLE_SOURCE = Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/Tools.cpp Source/Devices/DeviceInterface.cpp Source/Analyzers/AnalyzerInterface.cpp Source/Tariffs/Tariff.cpp
-CFLAGS += -Wno-psabi -Wall -std=c++11 -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs -lstdc++ -lpq -lmicrohttpd -lz -lm -lpthread
+CFLAGS += -Wno-psabi -Wall -std=c++11 -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs 
+LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz -lm -lpthread
 
 #Add libs (cctz, nlohmann)
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
 CFLAGS += -I Libs
-
+CC?=g++
+LD?=ld
 EXECUTABLE_OBJS	+= $(EXECUTABLE_SOURCE:%=Tmp/%.o)
 #=======================================================================================================================
 default: READCONFIG $(EXECUTABLE_TARGET)
@@ -39,22 +41,26 @@ endif
 ifeq ($(DEVICE_V1_00), true)
 	EXECUTABLE_SOURCE += Source/Devices/V1_00/DeviceV1_00.cpp
 	ANALYZER_SOFT = true
+	LDFLAGS += -lusb-1.0
 endif
 ifeq ($(DEVICE_V1_01), true)
 	EXECUTABLE_SOURCE += Source/Devices/V1_01/DeviceV1_01.cpp
 	ANALYZER_SOFT = true
+	LDFLAGS += -lusb-1.0
 endif
 ifeq ($(DEVICE_VIRTUAL), true)
 	EXECUTABLE_SOURCE += Source/Devices/Virtual/DeviceVirtual.cpp
 	ANALYZER_SOFT = true
 endif
 ifeq ($(ANALYZER_SOFT), true)
-	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp Source/FFT.cpp Source/Events.cpp
-	CFLAGS += -I Source/Analyzers/Soft -lusb-1.0 -lfftw3f
+	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp Source/Analyzers/FFT.cpp Source/Analyzers/Events.cpp
+	CFLAGS += -I Source/Analyzers/Soft
+	LDFLAGS += -lfftw3f
 endif
 ifeq ($(OPENWRT), true)
-	EXECUTABLE_SOURCE += Source/OpenWRT.cpp
-	CFLAGS += -DOPENWRT -ldbus-1
+	EXECUTABLE_SOURCE += Source/Support/OpenWRT/OpenWRT.cpp
+	CFLAGS += -I Source/Support/OpenWRT -DOPENWRT
+	LDFLAGS += -ldbus-1
 endif
 
 $(WEB_TARGET):	 $(WEB_SOURCE)
@@ -77,7 +83,7 @@ $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
 	
 $(EXECUTABLE_TARGET): $(EXECUTABLE_OBJS) $(RESOURCES_TARGET)
 	@echo "Linking target" $(TARGET_EXEC)
-	@$(CC) $(CFLAGS) $(EXECUTABLE_OBJS) $(RESOURCES_TARGET) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
+	$(CC) $(CFLAGS) $(EXECUTABLE_OBJS) $(RESOURCES_TARGET) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
 
 Tmp/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)

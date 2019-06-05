@@ -3,6 +3,7 @@
  * Author:   Eduardo Viciana (2018)
  * -------------------------------------------------------------------------------------------------------------------*/ 
 #include <math.h>
+#include <sys/types.h>
 #include <string.h>
 #include "AnalyzerInterface.h"
 #include "Tools.h"

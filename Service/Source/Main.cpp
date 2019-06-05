@@ -11,11 +11,7 @@
 #include "Tools.h"
 #include "HTTPServer.h"
 #include "DeviceInterface.h"
-//#include "NetworkManager.h"
-#include "NTP.h"
-#ifdef OPENWRT
-  #include "OpenWRT.h"
-#endif
+#include "Support/SysSupport.h"
 //---------------------------------------------------------------------------------------------------------------------
 void GetNewsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
@@ -78,14 +74,11 @@ int main(int argc, char** argv) {
   setbuf(stdout, NULL);
   signal(SIGILL, SIG_IGN);
   signal(SIGPIPE, SIG_IGN);
+  signal(SIGILL, SIG_IGN);
   string ConfigFileName = "/etc/openZmeter.conf";
-//  bool   Daemonize      = false;
-  bool   Debug          = false;
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
       ConfigFileName = &argv[i][9];
-    } else if(strcmp(argv[i], "--debug") == 0) {
-      Debug = true;
     } else if(strcmp(argv[i], "--daemon") == 0) {
       RunDaemon();
     } else if(strcmp(argv[i], "--help") == 0) {
@@ -99,28 +92,19 @@ int main(int argc, char** argv) {
     }
   }
   /* Load config file */
-  ConfigManager::SetFile(ConfigFileName);
+  ConfigManager ConfigManager(ConfigFileName);
   /* Create PID File */
   PIDFile PIDFile;
   /* Create LOG file */
-//  LOGFile LOGFile(Debug, !Daemonize);
-  /* Create database */
-//  if(Database::Config() == false) return EXIT_FAILURE;
-
-  /* Create bluetooth manager */
-  #ifdef OPENWRT
-    Bluetooth BluetoothManager;
-  #endif
-
-  /* Create embedded NTP client */
-//  json NTPConfig = json::object();
-//  if(Config["HTTPServer"].is_object()) NTPConfig = Config["HTTPServer"];
-  //  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object)) json_object_object_add(pConfig, "NTP", json_object_new_object());
-//  if((json_object_object_get_ex(pConfig, "NTP", &Find) != true) || (json_object_get_type(Find) != json_type_object) || (NTP::Config(Find) == false)) {
-//    pthread_mutex_unlock(&pConfigMutex);
-//    LogMsg("ERROR", "Can not create NTP client\n");
-//    return false;
-//  }
+  LOGFile LOGFile;
+  /* Create database tables */
+  LOGFile::Debug("Creating database tables\n");
+  {
+    Database DB("public");
+    if(DB.ExecResource("SQL/Database.sql") == false) return EXIT_FAILURE;
+  }
+  /* Create system manager */
+  System SystemManager;
 
   /* Create devices interface */
   DeviceManager DeviceManager;
@@ -145,17 +129,12 @@ int main(int argc, char** argv) {
     if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Warning("Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
   }
 
-  int Iter = 0;
+  uint32_t Iter = 0;
   while(!Terminate) {
-  #ifdef OPENWRT
-    BluetoothManager.HandleAgent();
-  #endif
-    usleep(200000);
-    if((Iter % 10) == 0) {
-//      if(NetworkManager::GetConnectivityStatus() < 2) NetworkManager::Reset();
-    }
+    SystemManager.PeriodicTask();
     if((Iter % 128) == 0) HTTPServer.RemoveExpiredSessions();
     Iter++;
+    usleep(200000);
   }
   return EXIT_SUCCESS;
 }

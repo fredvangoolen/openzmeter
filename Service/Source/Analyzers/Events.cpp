@@ -3,6 +3,7 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #include <math.h>
+#include <sys/types.h>
 #include "Tools.h"
 #include "Events.h"
 Events::Events(AnalyzerInterface *interface, float samplerate) : Database(interface->Serial()) {
