@@ -8,14 +8,14 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 
 #Executable related components
 EXECUTABLE_TARGET = Tmp/openZmeter
-EXECUTABLE_SOURCE = Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/Tools.cpp Source/Devices/DeviceInterface.cpp Source/Analyzers/AnalyzerInterface.cpp Source/Tariffs/Tariff.cpp
+EXECUTABLE_SOURCE = Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/Tools.cpp Source/Devices/Devices.cpp Source/Analyzers/AnalyzerInterface.cpp Source/Tariffs/Tariff.cpp
 CFLAGS += -Wno-psabi -Wall -std=c++11 -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs 
-LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz -lm -lpthread
+LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz
 
 #Add libs (cctz, nlohmann)
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
-CFLAGS += -I Libs
-CC?=g++
+CFLAGS += -I Libs -I Source/Support
+CC?=gcc
 LD?=ld
 EXECUTABLE_OBJS	+= $(EXECUTABLE_SOURCE:%=Tmp/%.o)
 #=======================================================================================================================
@@ -40,16 +40,19 @@ else
 endif
 ifeq ($(DEVICE_V1_00), true)
 	EXECUTABLE_SOURCE += Source/Devices/V1_00/DeviceV1_00.cpp
+	CFLAGS += -DDEVICE_V1_00
 	ANALYZER_SOFT = true
 	LDFLAGS += -lusb-1.0
 endif
 ifeq ($(DEVICE_V1_01), true)
 	EXECUTABLE_SOURCE += Source/Devices/V1_01/DeviceV1_01.cpp
 	ANALYZER_SOFT = true
+	CFLAGS += -DDEVICE_V1_01
 	LDFLAGS += -lusb-1.0
 endif
 ifeq ($(DEVICE_VIRTUAL), true)
 	EXECUTABLE_SOURCE += Source/Devices/Virtual/DeviceVirtual.cpp
+	CFLAGS += -DDEVICE_VIRTUAL
 	ANALYZER_SOFT = true
 endif
 ifeq ($(ANALYZER_SOFT), true)
@@ -83,7 +86,7 @@ $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
 	
 $(EXECUTABLE_TARGET): $(EXECUTABLE_OBJS) $(RESOURCES_TARGET)
 	@echo "Linking target" $(TARGET_EXEC)
-	$(CC) $(CFLAGS) $(EXECUTABLE_OBJS) $(RESOURCES_TARGET) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
+	$(CC)  $(EXECUTABLE_OBJS) $(RESOURCES_TARGET) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
 
 Tmp/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)

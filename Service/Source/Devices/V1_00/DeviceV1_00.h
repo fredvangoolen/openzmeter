@@ -5,7 +5,7 @@
 #pragma once
 #include <libusb-1.0/libusb.h>
 #include <deque>
-#include "DeviceInterface.h"
+#include "Devices.h"
 #include "AnalyzerSoft.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define DEVICEV1_00_VID             0x0483                          //Product ID

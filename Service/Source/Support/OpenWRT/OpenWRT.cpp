@@ -44,15 +44,17 @@ System::System() {
   Config = ConfigManager::ReadConfig("/WIFI");
   pInterfaceWIFI = "wlan0";
   pNetworkWIFI = "lan";
+  pWirelessWIFI = "default_radio";
   if(Config.is_object() == true) {
     if(Config["Interface"].is_string()) pInterfaceWIFI = Config["Interface"];
     if(Config["Network"].is_string()) pNetworkWIFI = Config["Network"];
+    if(Config["Config"].is_string()) pWirelessWIFI = Config["Config"];
   }
   Config = json::object();
   Config["Interface"] = pInterfaceWIFI;
   Config["Network"] = pNetworkWIFI;
+  Config["Config"] = pWirelessWIFI;
   ConfigManager::WriteConfig("/WIFI", Config);
-  
   if(Enabled) StartBT();
   if(pRegistered == false) {
     HTTPServer::RegisterCallback("/getBluetooth", GetBluetoothCallback);
@@ -72,6 +74,20 @@ System::~System() {
   pInstance = NULL;
   StopBT();
   if(pDBus) dbus_connection_unref(pDBus);
+}
+string System::Run(string command, int *resultCode) {
+  char Buffer[128];
+  string Result = "";
+  FILE *Pipe = popen(command.c_str(), "r");
+  if(!Pipe) {
+    LOGFile::Error("Can not exec '%s' (%s)\n", command.c_str(), strerror(errno));
+    if(resultCode != NULL) *resultCode = -1;
+    return "";
+  }
+  while(fgets(Buffer, sizeof(Buffer), Pipe) != NULL) Result += Buffer;
+  int Code = WEXITSTATUS(pclose(Pipe));
+  if(resultCode != NULL) *resultCode = Code;
+  return Result;
 }
 bool System::StartBT() {
   pthread_mutex_lock(&pMutex);
@@ -297,7 +313,7 @@ void System::ScanWIFICallback(HTTPRequest& req) {
   if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   pthread_mutex_lock(&pMutex);
   json Result = json::array();
-  string CommandStr = Tools::Run("ubus call iwinfo scan '{\"device\":\"" + pInstance->pInterfaceWIFI + "\"}'");
+  string CommandStr = Run("ubus call iwinfo scan '{\"device\":\"" + pInstance->pInterfaceWIFI + "\"}'");
   if(CommandStr.empty() == false) {
     json Tmp = json::parse(CommandStr, NULL, false);
     if(Tmp.is_discarded()) {
@@ -325,54 +341,153 @@ void System::GetWIFICallback(HTTPRequest& req) {
   //only 'admin' user can get this information
   if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
   if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  if(!Params["Type"].is_string() || ((Params["Type"] != "CURRENT") && (Params["Type"] != "CONFIG"))) {
+    return req.FromString("'Type' param is requiered to be 'CURRENT' or 'CONFIG'", MHD_HTTP_BAD_REQUEST);
+  }
   pthread_mutex_lock(&pMutex);
   json Result = json::object();
-  string CommandStr = Tools::Run("ubus call iwinfo info '{\"device\":\"" + pInstance->pInterfaceWIFI + "\"}'");
-  if(CommandStr.empty() == false) {
-    json Tmp = json::parse(CommandStr, NULL, false);
-    if(Tmp.is_discarded()) {
-      pthread_mutex_unlock(&pMutex);
-      return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-    }
-    if(Tmp.is_object()) {
-      if(Tmp["ssid"].is_string()) Result["ESSID"] = Tmp["ssid"];
-      if(Tmp["channel"].is_number()) Result["Channel"] = Tmp["channel"];
-      if(Tmp["quality"].is_number() && Tmp["quality_max"].is_number()) {
-        float Current = Tmp["quality"], Max = Tmp["quality_max"];
-        Result["Quality"] = (int)(Current * 100.0 / Max);
+  if(Params["Type"] == "CURRENT") {
+    string CommandStr = Run("ubus call network.device status '{\"name\":\"" + pInstance->pInterfaceWIFI + "\"}'");
+    if(CommandStr.empty() == false) {
+      json Tmp = json::parse(CommandStr, NULL, false);
+      if(Tmp.is_discarded()) {
+        pthread_mutex_unlock(&pMutex);
+        return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+      }
+      if(Tmp.is_object() && Tmp["up"].is_boolean()) Result["Enabled"] = Tmp["up"];
+      if(Result["Enabled"] == false) {
+        pthread_mutex_unlock(&pMutex);
+        return req.FromJSON(Result);
       }
     }
-  }
-  CommandStr = Tools::Run("ubus call network.interface." + pInstance->pNetworkWIFI + " status");
-  if(CommandStr.empty() == false) {
-    json Tmp = json::parse(CommandStr, NULL, false);
-    if(Tmp.is_discarded()) {
-      pthread_mutex_unlock(&pMutex);
-      return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+    CommandStr = Run("ubus call network.interface." + pInstance->pNetworkWIFI + " status");
+    if(CommandStr.empty() == false) {
+      json Tmp = json::parse(CommandStr, NULL, false);
+      if (Tmp.is_discarded()) {
+        pthread_mutex_unlock(&pMutex);
+        return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+      }
+      if(Tmp.is_object()) {
+        if(Tmp["up"].is_boolean()) Result["Connected"] = Tmp["up"];
+        if(Result["Connected"] == false) {
+          pthread_mutex_unlock(&pMutex);
+          return req.FromJSON(Result);
+        }
+        if(Tmp["dns-server"].is_array()) Result["DNS"] = Tmp["dns-server"];
+        if(Tmp["ipv4-address"].is_array() && Tmp["ipv4-address"][0].is_object() && Tmp["ipv4-address"][0]["address"].is_string()) Result["IP"] = Tmp["ipv4-address"][0]["address"];
+        if(Tmp["proto"].is_string()) Result["IPMode"] = (Tmp["proto"] == "dhcp") ? "DHCP" : "STATIC";
+        if(Tmp["route"].is_array() && Tmp["route"][0].is_object() && Tmp["route"][0]["nexthop"].is_string()) Result["Gateway"] = Tmp["route"][0]["nexthop"];
+      }
     }
-    if(Tmp.is_object()) {
-      if(Tmp["up"].is_boolean()) Result["Connected"] = Tmp["up"];
-      if(Tmp["dns-server"].is_array()) Result["DNS"] = Tmp["dns-server"];
-      if(Tmp["ipv4-address"].is_array() && Tmp["ipv4-address"][0].is_object() && Tmp["ipv4-address"][0]["address"].is_string()) Result["IP"] = Tmp["ipv4-address"][0]["address"];
-      if(Tmp["proto"].is_string()) Result["IPMode"] = (Tmp["proto"] == "dhcp") ? "DHCP" : "STATIC";
-      if(Tmp["route"].is_array() && Tmp["route"][0].is_object() && Tmp["route"][0]["nexthop"].is_string()) Result["Gateway"] = Tmp["route"][0]["nexthop"];
+    CommandStr = Run("ubus call iwinfo info '{\"device\":\"" + pInstance->pInterfaceWIFI + "\"}'");
+    if(CommandStr.empty() == false) {
+      json Tmp = json::parse(CommandStr, NULL, false);
+      if(Tmp.is_discarded()) {
+        pthread_mutex_unlock(&pMutex);
+        return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+      }
+      if(Tmp.is_object()) {
+        if(Tmp["ssid"].is_string()) Result["ESSID"] = Tmp["ssid"];
+        if(Tmp["channel"].is_number()) Result["Channel"] = Tmp["channel"];
+        if(Tmp["quality"].is_number() && Tmp["quality_max"].is_number()) {
+          float Current = Tmp["quality"], Max = Tmp["quality_max"];
+          Result["Quality"] = (int) (Current * 100.0 / Max);
+        }
+      }
     }
-  }
-  CommandStr = Tools::Run("ubus call network.device status '{\"name\":\"" + pInstance->pInterfaceWIFI + "\"}'");
-  if(CommandStr.empty() == false) {
-    json Tmp = json::parse(CommandStr, NULL, false);
-    if(Tmp.is_discarded()) {
-      pthread_mutex_unlock(&pMutex);
-      return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  } else {
+    string CommandStr = Run("ubus call uci get '{\"config\":\"network\", \"section\":\"" + pInstance->pNetworkWIFI + "\"}'");
+    if(CommandStr.empty() == false) {
+      json Tmp = json::parse(CommandStr, NULL, false);
+      if(Tmp.is_discarded()) {
+        pthread_mutex_unlock(&pMutex);
+        return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+      }
+      if(Tmp.is_object()) {
+        if(Tmp["values"].is_object()) {
+          if(Tmp["values"]["proto"].is_string()) Result["IPMode"] = (Tmp["values"]["proto"] == "static") ? "STATIC" : "DHCP";
+          if(Result["IPMode"] != "DHCP") {
+            if(Tmp["values"]["ipaddr"].is_string()) Result["IP"] = Tmp["values"]["ipaddr"];
+            if(Tmp["values"]["netmask"].is_string()) Result["Netmask"] = Tmp["values"]["netmask"];
+            if(Tmp["values"]["gateway"].is_string()) Result["Gateway"] = Tmp["values"]["gateway"];
+            if(Tmp["values"]["dns"].is_array()) Result["DNS"] = Tmp["values"]["dns"];
+          }
+        }
+      }
     }
-    if(Tmp.is_object()) {
-      if(Tmp["up"].is_boolean()) Result["Enabled"] = Tmp["up"];
+    CommandStr = Run("ubus call uci get '{\"config\":\"wireless\", \"section\":\"" + pInstance->pWirelessWIFI + "\"}'");
+    if(CommandStr.empty() == false) {
+      json Tmp = json::parse(CommandStr, NULL, false);
+      if(Tmp.is_discarded()) {
+        pthread_mutex_unlock(&pMutex);
+        return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+      }
+      if(Tmp.is_object()) {
+        if(Tmp["values"].is_object()) {
+          if(Tmp["values"]["ssid"].is_string()) Result["ESSID"] = Tmp["values"]["ssid"];
+          if(Tmp["values"]["encryption"].is_string()) Result["KeyMode"] = (Tmp["values"]["encryption"] == "none") ? "NONE" : (Tmp["values"]["encryption"] == "wep") ? "WEP" : (Tmp["values"]["encryption"] == "psk") ? "WPA" : "WPA2";
+          if(Result["KeyMode"] != "NONE") {
+            if(Tmp["values"]["key"].is_string()) Result["Key"] = Tmp["values"]["key"];
+          }
+        }
+      }
     }
   }
   pthread_mutex_unlock(&pMutex);
   return req.FromJSON(Result);
 }
-void System::SetWIFICallback(HTTPRequest& req) {}
+void System::SetWIFICallback(HTTPRequest& req) {
+  json Params = req.GetParams();
+  //only 'admin' user can get this information
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  pthread_mutex_lock(&pMutex);
+  json Result;
+  Result["Status"] = true;
+  int ErrorCode = 0;
+  if(Params["Enabled"].is_boolean()) {
+    Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pInstance->pNetworkWIFI + "\", \"values\": {\"enabled\":\"" + (Params["Enabled"] ? "1" : "0") + "\"}}'", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+  }
+  if(Params["IPMode"].is_string() && ((Params["IPMode"] == "DHCP") || (Params["IPMode"] == "STATIC"))) {
+    Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pInstance->pNetworkWIFI + "\", \"values\": {\"proto\":\"" + ((Params["IPMode"] == "DHCP") ? "dhcp" : "static") + "\"}}'", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+  }
+  if(Params["IP"].is_string()) {
+    Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pInstance->pNetworkWIFI + "\", \"values\": {\"ipaddr\":" + Params["IP"].dump() + "}}'", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+  }
+  if(Params["Netmask"].is_string()) {
+    Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pInstance->pNetworkWIFI + "\", \"values\": {\"netmask\":" + Params["Netmask"].dump() + "}}'", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+  }
+  if(Params["Gateway"].is_string()) {
+    Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pInstance->pNetworkWIFI + "\", \"values\": {\"gateway\":" + Params["Gateway"].dump() + "}}'", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+  }
+  if(Params["DNS"].is_array()) {
+    Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pInstance->pNetworkWIFI + "\", \"values\": {\"dns\":" + Params["DNS"].dump() + "}}'", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+  }
+  if(Params["ESSID"].is_string()) {
+    Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pInstance->pWirelessWIFI + "\", \"values\": {\"ssid\":" + Params["ESSID"].dump() + "}}'", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+  }
+  if(Params["KeyMode"].is_string() && ((Params["KeyMode"] == "NONE") || (Params["KeyMode"] == "WEP") || (Params["KeyMode"] == "WPA") || (Params["KeyMode"] == "WPA2"))) {
+    Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pInstance->pWirelessWIFI + "\", \"values\": {\"encryption\":\"" + ((Params["KeyMode"] == "NONE") ? "none" : (Params["KeyMode"] == "WEP") ? "wep" : (Params["KeyMode"] == "WPA") ? "psk" : "psk2") + "\"}}'", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+  }
+  if(Params["Key"].is_string()) {
+    Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pInstance->pWirelessWIFI + "\", \"values\": {\"key\":" + Params["Key"].dump() + "}}'", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+  }
+  Run("uci commit", &ErrorCode);
+  if(ErrorCode != 0) Result["Status"] = false;
+  Run("ubus call network restart", &ErrorCode);
+  if(ErrorCode != 0) Result["Status"] = false;
+  pthread_mutex_unlock(&pMutex);
+  return req.FromJSON(Result);
+}
 void System::GetNTPCallback(HTTPRequest& req) {
   json Params = req.GetParams();
   //only 'admin' user can get this information
@@ -380,7 +495,7 @@ void System::GetNTPCallback(HTTPRequest& req) {
   if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   pthread_mutex_lock(&pMutex);
   json Result = json::object();
-  string CommandStr = Tools::Run("ubus call uci get '{\"config\":\"system\", \"section\":\"ntp\"}'");
+  string CommandStr = Run("ubus call uci get '{\"config\":\"system\", \"section\":\"ntp\"}'");
   if(CommandStr.empty() == false) {
     json Tmp = json::parse(CommandStr, NULL, false);
     if(Tmp.is_discarded()) {
@@ -450,7 +565,7 @@ json System::GetSystemDetails() {
     Buffer[Len] = 0;
     Result["Temperature"] = atoi(Buffer) / 1000.0;
   }
-  string CommandStr = Tools::Run("ubus call iwinfo info '{\"device\":\"" + pInstance->pInterfaceWIFI + "\"}'");
+  string CommandStr = Run("ubus call iwinfo info '{\"device\":\"" + pInstance->pInterfaceWIFI + "\"}'");
   if(CommandStr.empty() == false) {
     json Tmp = json::parse(CommandStr, NULL, false);
     if(Tmp.is_discarded()) {

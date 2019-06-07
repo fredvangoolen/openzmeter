@@ -4,15 +4,32 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #include <string.h>
 #include <math.h>
-#include "DeviceInterface.h"
+#include "Devices.h"
 #include "HTTPServer.h"
 #include "Tariff.h"
 #include "Tools.h"
+#ifdef DEVICE_V1_00
+  #include "V1_00/DeviceV1_00.h"
+#endif
+#ifdef DEVICE_V1_01
+  #include "V1_01/DeviceV1_01.h"
+#endif
+#ifdef DEVICE_VIRTUAL
+  #include "Virtual/DeviceVirtual.h"
+#endif
 //----------------------------------------------------------------------------------------------------------------------
-vector<Device*> __attribute__((init_priority(200))) DeviceManager::pDevices;
+vector<Device*> DeviceManager::pDevices;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager() {
-//  if(pInstance != NULL) return;
+  #ifdef DEVICE_V1_00
+    DeviceV1_00::GetInstances(pDevices);
+  #endif
+  #ifdef DEVICE_V1_01
+    DeviceV1_01::GetInstances(pDevices);
+  #endif
+  #ifdef DEVICE_VIRTUAL
+    DeviceVirtual::GetInstances(pDevices);
+  #endif
   HTTPServer::RegisterCallback("/getDevices",          GetDevicesCallback);
   HTTPServer::RegisterCallback("/getDevice",           GetDeviceCallback);
   HTTPServer::RegisterCallback("/stopDevice",          StopDeviceCallback);
@@ -30,15 +47,11 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("/getTariffs",          DeviceManager::GetTariffsCallback);
   HTTPServer::RegisterCallback("/setTariffs",          DeviceManager::SetTariffsCallback);
   HTTPServer::RegisterCallback("/delTariffs",          DeviceManager::DelTariffsCallback);
-  LOGFile::Info("Loading device config...\n");
-  for(uint32_t i = 0; i < pDevices.size(); i++) pDevices[i]->SetConfig(pDevices[i]->GetConfig());
+//  for(uint32_t i = 0; i < pDevices.size(); i++) pDevices[i]->Start();
 }
 DeviceManager::~DeviceManager() {
   for(uint32_t i = 0; i < pDevices.size(); i++) delete pDevices[i];
 //  pInstance = NULL;
-}
-void DeviceManager::AddDevice(Device *device) {
-  pDevices.push_back(device);
 }
 void DeviceManager::GetDevicesCallback(HTTPRequest &req) {
   json Params = req.GetParams();
@@ -107,7 +120,7 @@ void DeviceManager::SetDeviceCallback(HTTPRequest& req) {
   for(vector<Device*>::iterator it = pDevices.begin() ; it != pDevices.end(); ++it) {
     if((*it)->Serial() == Serial) {
       json Response;
-      Response["Status"] = (*it)->SetConfig(Params);
+//      Response["Status"] = (*it)->SetConfig(Params);
       return req.FromJSON(Response); 
     }
   }
@@ -576,8 +589,6 @@ void DeviceManager::GetEventsCallback(HTTPRequest &req) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 Device::Device() {
-  pTerminate     = false;
-  pCaptureThread = 0;
   pState = UNCONFIGURED;
 }
 Device::DeviceState Device::State() {
@@ -589,4 +600,13 @@ json Device::GetConfig() {
   json Config = ConfigManager::ReadConfig("/Devices/" + Serial());
   if(!Config.is_object()) Config = json::object();
   return Config;
+}
+string Device::Serial() {
+  return pSerial;
+}
+string Device::Name() {
+  return pName;
+}
+string Device::Driver() {
+  return pDriver;
 }

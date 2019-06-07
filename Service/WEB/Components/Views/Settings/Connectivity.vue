@@ -4,7 +4,7 @@
       <div class="huge-small header-text">Connectivity</div>
       <div class="header-buttons">
         <div class="btn-group">
-          <button type="button" class="btn btn-default btn-xs disabled" data-toggle="tooltip" title="Save changes"><img :src="require('Imgs/diskette.png')"> Save</button>
+          <button type="button" class="btn btn-default btn-xs" v-if="BTChanges || WIFIChanges || NTPChanges" v-on:click="SaveChanges" data-toggle="tooltip" title="Save changes"><img :src="require('Imgs/diskette.png')"> Save</button>
         </div>
       </div>
     </div>
@@ -36,7 +36,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
             </span>
             <input type="text" class="form-control" disabled :value="WIFIName">
             <span class="input-group-btn">
-              <button class="btn btn-default" type="button"><img :src="require('Imgs/network_wireless_edit.png')"></button>
+              <button class="btn btn-default" type="button" v-on:click="ConfigWIFI"><img :src="require('Imgs/network_wireless_edit.png')"></button>
             </span>
           </div>
         </div>
@@ -45,6 +45,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
           <textarea rows="4" class="form-control" disabled>{{ WIFIDetails }}</textarea>
         </div>
       </div>
+      <wifi-dialog ref="dialog"></wifi-dialog>
       <div class="row">
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">NTP synchronization</label>
@@ -73,21 +74,27 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
   import moment from 'JS/moment.js';
   import 'JS/moment-timezone.js';
   import Spinner from 'Components/Spinner.vue';
+  import WifiDialog from './WIFIEdit.vue';
   export default {
     data: function() {
-      return {BTName: '', Bluetooth_Support: false, WIFIName: '', WIFIDetails: '', WIFI_Support: false, NTP_Support: false, NTP_Server: '', NTPDetails: '', Loading: false };
+      return { BTName: '', Bluetooth_Support: false, BTChanges: false,
+                WIFIName: '', WIFIDetails: '', WIFI_Support: false, WIFIChanges: false, WIFISettings: {},
+                NTP_Support: false, NTP_Server: '', NTPDetails: '', NTPChanges: false,
+                Loading: false };
     },
     created: function() {
       this.BTEnabled = false;
       this.WIFIEnabled = false;
       this.NTPEnabled = false;
       this.Timer = null;
+      this.Timer2 = null;
     },
     mounted: function() {
       this.Load();
     },
     beforedestroy: function() {
       clearInterval(this.Timer);
+      clearInterval(this.Timer2);
     },
     methods: {
       UpdateTime: function() {
@@ -100,6 +107,22 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
           }.bind(this)
         });  
       },
+      UpdateWifi: function() {
+        $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: "CURRENT" }), 
+          success: function(result) { 
+            if(result.Connected === true) {
+              this.WIFIName = result.ESSID;
+              this.WIFIDetails = 'Device IP address   : ' + result.IP + ' (' + result.IPMode + ')\nDNS servers         : ' + result.DNS.join(', ') + '\nDefault gateway     : ' + result.Gateway + '\nCurrent WIFI channel: ' + result.Channel;
+            } else {
+              this.WIFIName = '';
+              this.WIFIDetails = 'Not connected';
+            }
+          }.bind(this),
+          complete: function() { 
+            setTimeout(this.UpdateWifi, 5000); 
+          }.bind(this)
+        });  
+      },
       Load: function() {
         $.ajax({ url: "getBluetooth", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
           success: function(result) { 
@@ -108,11 +131,11 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
             this.BTName = result.Name;
             this.Loading = false;
             this.$nextTick(function() { 
-              this.$refs.EnableBT.SetState(this.BTEnabled); 
+              this.$refs.EnableBT.SetState(this.BTEnabled);
             });
           }.bind(this)
         });
-        $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
+        $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: "CURRENT" }), 
           success: function(result) { 
             this.WIFI_Support = true;
             this.WIFIEnabled = result.Enabled;
@@ -125,7 +148,8 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
             }
             this.Loading = false;
             this.$nextTick(function() { 
-              this.$refs.EnableWIFI.SetState(this.WIFIEnabled); 
+              this.$refs.EnableWIFI.SetState(this.WIFIEnabled);
+              setTimeout(this.UpdateWifi, 1000); 
             });
           }.bind(this)
         });
@@ -145,18 +169,47 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
       },
       EnableBTChange: function(value) {
         this.BTEnabled = value;
+        this.BTChanges = true;
       },
       EnableWIFIChange: function(value) {
-        
+        this.WIFIEnabled = value;
+        this.WIFIChanges = true;
       },
-      EnableNTPChange: function(value) {},
-      Save: function() {
-        this.Loading = true;    
-        $.ajax({ url: "setBluetooth", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Enabled: this.BTEnabled }), success: this.Load});
+      EnableNTPChange: function(value) {
+        this.NTPEnabled = value;
+        this.NTPChanges = true;
+      },
+      ConfigWIFI: function() {
+        this.$refs.dialog.Show(); 
+      },
+      SetWifiConfig: function(config) {
+        this.WIFIChanges = true;
+        this.WIFISettings = config;
+      },
+      SaveChanges: function() {
+        clearInterval(this.Timer);
+        clearInterval(this.Timer2);
+        if(this.BTChanges === true) {
+          $.ajax({ url: "setBluetooth", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Enabled: this.BTEnabled }) });
+          this.BTChanges = false;
+        }
+        if(this.WIFIChanges === true) {
+          this.WIFISettings.Enabled = this.WIFIEnabled;
+          $.ajax({ url: "setWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(this.WIFISettings)});
+          this.WIFIChanges = false;
+          this.WIFISettings = {};
+        }
       }
     },
-    components: {Toggle, Spinner}
+    components: { Toggle, Spinner, WifiDialog }
   }
+  
+  
+  
+  
+  
+  
+  
   $('#checkNTP').change(function() {
     if($(this).prop('checked')) {
       $('#inputCurrentTime > span').css("pointer-events", "none");

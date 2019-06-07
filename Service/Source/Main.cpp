@@ -10,8 +10,8 @@
 #include <sys/stat.h>
 #include "Tools.h"
 #include "HTTPServer.h"
-#include "DeviceInterface.h"
-#include "Support/SysSupport.h"
+#include "Devices.h"
+#include "SysSupport.h"
 //---------------------------------------------------------------------------------------------------------------------
 void GetNewsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
