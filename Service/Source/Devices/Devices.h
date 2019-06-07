@@ -16,16 +16,19 @@ class Device {
   public :
     enum DeviceState { UNCONFIGURED, STOPPED, RUNNING };
   protected :
-    pthread_t   pCaptureThread;           //Descriptor del hilo de captura
-    bool        pTerminate;               //Marca que deben detenerse los trabajos pendientes
     DeviceState pState;                   //Device state
+    string      pSerial;                  //Device serial
+    string      pDriver;                  //Driver name
+    string      pName;                    //Driver description
+  public :
+    string Serial();
+    string Driver();
+    string Name();
   public :
     virtual uint32_t           AnalyzersCount() = 0;
     virtual AnalyzerInterface *FindAnalyzer(string serial) = 0;
-    virtual string             Serial() = 0;
-    virtual string             Driver() = 0;
-    virtual string             Name() = 0;
-    virtual bool               SetConfig(json config) = 0;
+//    virtual string             Name() = 0;
+//    virtual bool               SetConfig(json config) = 0;
     virtual bool               Start() = 0;
     virtual bool               Stop() = 0;
   public :
@@ -36,7 +39,7 @@ class Device {
 };
 class DeviceManager {
   private :  
-    static vector<Device*> pDevices;
+    static vector<Device*>  pDevices;
   private :
     static void GetDevicesCallback(HTTPRequest &req);
     static void GetDeviceCallback(HTTPRequest &req);
@@ -53,8 +56,6 @@ class DeviceManager {
     static void GetTariffsCallback(HTTPRequest &req);
     static void SetTariffsCallback(HTTPRequest &req);
     static void DelTariffsCallback(HTTPRequest &req);    
-  public :
-    static void AddDevice(Device *device);
   public :
     DeviceManager();
     ~DeviceManager();    

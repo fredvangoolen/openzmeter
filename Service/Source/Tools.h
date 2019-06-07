@@ -72,7 +72,6 @@ class LOGFile {
 class Tools {
   public :
     static uint64_t  GetTime();
-    static string    Run(string command);
     static void      SendUDP(json obj);
 };
 //----------------------------------------------------------------------------------------------------------------------

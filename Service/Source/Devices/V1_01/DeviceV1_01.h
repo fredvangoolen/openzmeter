@@ -5,7 +5,7 @@
 #pragma once
 #include <libusb-1.0/libusb.h>
 #include <deque>
-#include "DeviceInterface.h"
+#include "Devices.h"
 #include "AnalyzerSoft.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define DEVICEV1_01_VID             0x0483                          //Product ID
@@ -25,10 +25,16 @@ class DeviceV1_01 : public Device {
       float Voltage;
       float Current;
     } Sample_t;
+    typedef struct {
+      uint8_t          Buffer[8192];
+      libusb_transfer *Transfer;
+    } Transfer_t;    
   private :
+    pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
+    Transfer_t                   pTransfers[DEVICEV1_01_TRANSFERS];
+    bool                         pTerminate;               //Marca que deben detenerse los trabajos pendientes
     AnalyzerSoft                *pAnalyzer;                //Analyzer
     deque<Sample_t>              pBuffer;                  //Read buffer
-    string                       pSerial;                  //Capture device serial number
     float                        pVoltageGain;             //Voltage gain
     float                        pCurrentGain;             //Current gain
     float                        pVoltageOffset;           //Voltage offset
@@ -39,26 +45,27 @@ class DeviceV1_01 : public Device {
     pthread_t                    pSignalThread;            //Thread to handle LED and sounds
 //    bool                         pTerminateSignal;         //Flag to terminate signal thread
     pthread_mutex_t              pMutex;
-    json                         pConfig;
-  private :
-    static bool                  pClassRegistered;
+      
   private : 
     static bool             Init();
     static void            *Capture_Thread(void *args);
-    static void            *Signal_Thread(void *args);
+    static void            *Sig_Thread(void *args);
     static void             ReadCallback(struct libusb_transfer *transfer);
     static int              PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
     bool               SetConfig(json config);
     AnalyzerInterface *FindAnalyzer(string serial);
-    uint32_t           AnalyzersCount();
-    string             Serial();
-    string             Driver();
-    string             Name();
+
+//    string             Serial();
+//    string             Driver();
+//    string             Name();
     bool               Start();
     bool               Stop();
     bool               BuffersAppend(float voltageSample, float currentSample);
   public :
+    static void GetInstances(vector<Device*> &instances);
+  public :
+    uint32_t           AnalyzersCount();
     DeviceV1_01(string serial);
     ~DeviceV1_01();
 };

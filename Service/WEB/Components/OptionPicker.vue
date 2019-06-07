@@ -23,8 +23,11 @@
         event.preventDefault();
         this.Selected = option;
         this.$emit('OptionChanged', option);
-      }
-    }, 
+      },
+      SetOption: function(option) {
+        this.Selected = option;
+      },
+    },
     created: function() {
       if(this.selected !== undefined) this.Selected = this.selected;
     }

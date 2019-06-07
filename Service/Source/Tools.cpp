@@ -3,10 +3,11 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 //#include <fstream>
-//#include <time.h>
+#include <sys/time.h>
 //#include <unistd.h>
+#include <stdarg.h>
 //#include <stdlib.h>
-//#include <fcntl.h>
+#include <fcntl.h>
 //#include <ctype.h>
 //#include <sys/mman.h>
 //#include <sys/time.h>
@@ -14,12 +15,9 @@
 //#include <sys/types.h>
 //#include <sys/stat.h>
 #include "Tools.h"
-//#include "HTTPServer.h"
-//#include "DeviceInterface.h"
 
-#ifdef OPENWRT
-  #include "OpenWRT.h"
-#endif
+
+
 //añadido para probar el envio
   #include <arpa/inet.h>
       #include <netinet/in.h>
@@ -119,15 +117,15 @@ bool            LOGFile::pConsole = true;
 pthread_mutex_t LOGFile::pMutex = PTHREAD_MUTEX_INITIALIZER;
 LOGFile::LOGFile() {
   string Name = "/var/log/openZmeter.log";
-  Type   Level = DEBUG;
+  pLevel = DEBUG;
   json Config = ConfigManager::ReadConfig("/Log");
   if(Config.is_object()) {
     if(Config["File"].is_string()) Name = Config["File"];
-    if(Config["Level"].is_number_unsigned()) Level = Config["Level"];
+    if(Config["Level"].is_number_unsigned()) pLevel = Config["Level"];
   }
   Config = json::object();
   Config["File"] = Name;
-  Config["Level"] = Level;
+  Config["Level"] = pLevel;
   ConfigManager::WriteConfig("/Log", Config);
   pFile = NULL;
   if(Name.empty() == false) {
@@ -193,7 +191,9 @@ void LOGFile::Msg(Type type, const char *msg, va_list params) {
     if(vprintf(msg, params) < 0) pConsole = false;
     fflush(stdout);
   }
-  if((pInstance != NULL) && (type < pInstance->pLevel) && (pInstance->pFile != NULL)) vfprintf(pInstance->pFile, msg, params);
+  if(pInstance != NULL) {
+    if((type < pInstance->pLevel) && (pInstance->pFile != NULL)) vfprintf(pInstance->pFile, msg, params);
+  }
   pthread_mutex_unlock(&pMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -244,18 +244,6 @@ uint64_t Tools::GetTime() {
     return 0;
   }
   return (uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000;
-}
-string Tools::Run(string command) {
-  char Buffer[128];
-  string Result = "";
-  FILE *Pipe = popen(command.c_str(), "r");
-  if(!Pipe) {
-    LOGFile::Error("Can not exec '%s' (%s)\n", command.c_str(), strerror(errno));
-    return "";
-  }
-  while(fgets(Buffer, sizeof(Buffer), Pipe) != NULL) Result += Buffer;
-  pclose(Pipe);
-  return Result;
 }
 void Tools::SendUDP(json obj) {
   struct sockaddr_in Client;

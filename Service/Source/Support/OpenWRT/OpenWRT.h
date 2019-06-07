@@ -18,6 +18,7 @@ class System {
     bool             pBTStarted;
     string           pInterfaceWIFI;
     string           pNetworkWIFI;
+    string           pWirelessWIFI;
   private:
     bool   StartBT();
     bool   StopBT();
@@ -27,6 +28,7 @@ class System {
     bool   SendStringBT(const char *property, const char *value);
     void   HandleAgentBT();
   private :
+    static string   Run(string command, int *resultCode = NULL);
     static uint64_t ParseProcMem(const char *name, const char *buff);
     static void GetBluetoothCallback(HTTPRequest &req);
     static void SetBluetoothCallback(HTTPRequest &req);

@@ -16,60 +16,25 @@
 #include <libusb-1.0/libusb.h>
 #include "DeviceVirtual.h"
 #include "Tools.h"
-// Register ============================================================================================================
-bool DeviceVirtual::pClassRegistered = DeviceVirtual::Init();
 // Funciones ===========================================================================================================
-bool DeviceVirtual::Init() {
+void DeviceVirtual::GetInstances(vector<Device*> &instances) {
   LOGFile::Info("Adding 'Virtual' device driver instance with serial 'VIRTUAL'\n");
-  DeviceManager::AddDevice(new DeviceVirtual());
-  return true;
+  instances.push_back(new DeviceVirtual());
 }
 DeviceVirtual::DeviceVirtual() {
   pAnalyzer   = NULL;
   pSampleRate = 10000;
   pVoltage    = 230.0;
   pFrequency  = 50.0;
-  pthread_mutex_init(&pMutex, NULL);
+  pMode       = AnalyzerInterface::PHASE1;
+  pSerial     = "VIRTUAL";
+  pDriver     = "Virtual";
+  pName       = "Emulate most of real capture device for testing";
+  pMutex      = PTHREAD_MUTEX_INITIALIZER;
+  Start();
 }
 uint32_t DeviceVirtual::AnalyzersCount() {
   return (pAnalyzer == NULL) ? 0 : 1;
-}
-string DeviceVirtual::Serial() {
-  return "VIRTUAL";
-}
-string DeviceVirtual::Driver() {
-  return "Virtual";
-}
-string DeviceVirtual::Name() {
-  return "Emulate most of real capture device for testing";
-}
-bool DeviceVirtual::SetConfig(json config) {
-  if(pState == RUNNING) return false;
-  LOGFile::Info("Configuring 'Virtual' driver...\n");
-  bool AutoStart = false;
-  string Mode;
-  if(config["Voltage"].is_number()) pVoltage = config["Voltage"];
-  if(config["Frequency"].is_number()) pFrequency = config["Frequency"];
-  if(config["SampleRate"].is_number()) pSampleRate = config["SampleRate"];
-  if(config["AutoStart"].is_boolean()) AutoStart = config["AutoStart"];
-  if(config["Mode"].is_string()) Mode = config["Mode"];
-  if((Mode != "1PHASE") && (Mode != "3PHASE") && (Mode != "3PHASE+N")) Mode = "1PHASE";
-  pMode = (Mode == "1PHASE") ? AnalyzerInterface::PHASE1 : (Mode == "3PHASE") ? AnalyzerInterface::PHASE3 : AnalyzerInterface::PHASE3N;
-  if((pVoltage < 85) || (pVoltage > 300)) pVoltage = 230.0;
-  if((pFrequency < 10) || (pFrequency > 80)) pFrequency = 50.0;
-  if((pSampleRate < (pFrequency * 100))) pSampleRate = (pFrequency * 100);
-  if(pState == UNCONFIGURED) {
-    pState = STOPPED;
-    pConfig = config;
-    if((AutoStart == true) && (Start() == false)) return false;
-  }
-  pConfig["Voltage"] = pVoltage;
-  pConfig["Frequency"] = pFrequency;
-  pConfig["SampleRate"] = pSampleRate;
-  pConfig["Mode"] = Mode;
-  pConfig["AutoStart"] = AutoStart;
-//  if(ConfigManager::Instance()->SaveConfig() == false) return false;
-  return true;
 }
 bool DeviceVirtual::Start() {
   pthread_mutex_lock(&pMutex);
@@ -77,11 +42,36 @@ bool DeviceVirtual::Start() {
     pthread_mutex_unlock(&pMutex);
     return false;
   }
-  LOGFile::Info("Starting 'Virtual' driver...\n");
+  LOGFile::Info("Loading 'Virtual' driver configuration\n");
+  bool AutoStart = false;
+  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  if(Config.is_object()) {
+    if(Config["Voltage"].is_number()) pVoltage = Config["Voltage"];
+    if(Config["Frequency"].is_number()) pFrequency = Config["Frequency"];
+    if(Config["SampleRate"].is_number()) pSampleRate = Config["SampleRate"];
+    if(Config["AutoStart"].is_boolean()) AutoStart = Config["AutoStart"];
+    if(Config["Mode"].is_string() && ((Config["Mode"] == "1PHASE") || (Config["Mode"] == "3PHASE") || (Config["Mode"] == "3PHASE+N"))) pMode = (Config["Mode"] == "1PHASE") ? AnalyzerInterface::PHASE1 : (Config["Mode"] == "3PHASE") ? AnalyzerInterface::PHASE3 : AnalyzerInterface::PHASE3N;
+  }
+  if((pVoltage < 85) || (pVoltage > 300)) pVoltage = 230.0;
+  if((pFrequency < 10) || (pFrequency > 80)) pFrequency = 50.0;
+  if((pSampleRate < (pFrequency * 100))) pSampleRate = (pFrequency * 100);
+  Config = json::object();
+  Config["Voltage"] = pVoltage;
+  Config["Frequency"] = pFrequency;
+  Config["SampleRate"] = pSampleRate;
+  Config["Mode"] = (pMode == AnalyzerInterface::PHASE1) ? "1PHASE" : (pMode == AnalyzerInterface::PHASE3) ? "3PHASE" : "3PHASE+N";
+  Config["AutoStart"] = AutoStart;
+  ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
+  if(pState == UNCONFIGURED) {
+    pState = STOPPED;
+    if(AutoStart == false) {
+      pthread_mutex_unlock(&pMutex);
+      return true;
+    }
+  }
+  LOGFile::Info("Starting 'Virtual' driver\n");
   pTerminate = false;
-  char Name[128];
-  snprintf(Name, sizeof(Name), "VIRTUAL_%s", (pMode == AnalyzerInterface::PHASE1) ? "1PHASE" : (pMode == AnalyzerInterface::PHASE3) ? "3PHASE" : "3PHASE+N");
-  pAnalyzer = new AnalyzerSoft(Name, pMode, pSampleRate);
+  pAnalyzer = new AnalyzerSoft("VIRTUAL_" + (pMode == AnalyzerInterface::PHASE1) ? "1PHASE" : (pMode == AnalyzerInterface::PHASE3) ? "3PHASE" : "3PHASE+N", pMode, pSampleRate);
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     delete pAnalyzer;
