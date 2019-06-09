@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name="cmsis_boot">
+        <df name="Startup">
+          <in>startup_stm32l1xx_md.c</in>
+        </df>
+        <in>system_stm32l1xx.c</in>
+      </df>
+      <df name="cmsis_lib">
+        <df name="Source">
+          <in>misc.c</in>
+          <in>stm32l1xx_dma.c</in>
+          <in>stm32l1xx_gpio.c</in>
+          <in>stm32l1xx_pwr.c</in>
+          <in>stm32l1xx_rcc.c</in>
+          <in>stm32l1xx_syscfg.c</in>
+        </df>
+      </df>
+      <df name="usb_lib">
+        <in>usb_core.c</in>
+        <in>usb_lib.c</in>
+        <in>usb_regs.c</in>
+      </df>
+      <df name="usb_microphone">
+        <in>hw_config.c</in>
+        <in>usb_desc.c</in>
+        <in>usb_endp.c</in>
+        <in>usb_istr.c</in>
+        <in>usb_prop.c</in>
+        <in>usb_pwr.c</in>
+      </df>
+      <in>delay.c</in>
+      <in>main.c</in>
+      <in>uart.c</in>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>false</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <codeAssistance>
+      </codeAssistance>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+          <executablePath></executablePath>
+        </makeTool>
+        <preBuild>
+          <preBuildCommandWorkingDir>.</preBuildCommandWorkingDir>
+          <preBuildCommand></preBuildCommand>
+        </preBuild>
+      </makefileType>
+      <item path="cmsis_boot/Startup/startup_stm32l1xx_md.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="cmsis_boot/system_stm32l1xx.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="cmsis_lib/Source/misc.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="cmsis_lib/Source/stm32l1xx_dma.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="cmsis_lib/Source/stm32l1xx_gpio.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="cmsis_lib/Source/stm32l1xx_pwr.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="cmsis_lib/Source/stm32l1xx_rcc.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="cmsis_lib/Source/stm32l1xx_syscfg.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="delay.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="main.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="uart.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="usb_lib/usb_core.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="usb_lib/usb_lib.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="usb_lib/usb_regs.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="usb_microphone/hw_config.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="usb_microphone/usb_desc.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="usb_microphone/usb_endp.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="usb_microphone/usb_istr.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="usb_microphone/usb_prop.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="usb_microphone/usb_pwr.c" ex="false" tool="0" flavor2="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>

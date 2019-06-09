@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name="cmsis">
+        <in>core_cm3.h</in>
+        <in>core_cmFunc.h</in>
+        <in>core_cmInstr.h</in>
+      </df>
+      <df name="cmsis_boot">
+        <df name="Startup">
+          <in>startup_stm32l1xx_md.c</in>
+        </df>
+        <in>stm32l1xx.h</in>
+        <in>system_stm32l1xx.c</in>
+        <in>system_stm32l1xx.h</in>
+      </df>
+      <df name="cmsis_lib">
+        <df name="Include">
+          <in>misc.h</in>
+          <in>stm32l1xx_dma.h</in>
+          <in>stm32l1xx_gpio.h</in>
+          <in>stm32l1xx_pwr.h</in>
+          <in>stm32l1xx_rcc.h</in>
+          <in>stm32l1xx_syscfg.h</in>
+        </df>
+        <df name="Source">
+          <in>misc.c</in>
+          <in>stm32l1xx_dma.c</in>
+          <in>stm32l1xx_gpio.c</in>
+          <in>stm32l1xx_pwr.c</in>
+          <in>stm32l1xx_rcc.c</in>
+          <in>stm32l1xx_syscfg.c</in>
+        </df>
+      </df>
+      <df name="usb_lib">
+        <in>usb_core.c</in>
+        <in>usb_core.h</in>
+        <in>usb_lib.c</in>
+        <in>usb_lib.h</in>
+        <in>usb_regs.c</in>
+        <in>usb_regs.h</in>
+      </df>
+      <df name="usb_microphone">
+        <in>hw_config.c</in>
+        <in>hw_config.h</in>
+        <in>usb_conf.h</in>
+        <in>usb_desc.c</in>
+        <in>usb_desc.h</in>
+        <in>usb_endp.c</in>
+        <in>usb_istr.c</in>
+        <in>usb_istr.h</in>
+        <in>usb_prop.c</in>
+        <in>usb_prop.h</in>
+        <in>usb_pwr.c</in>
+        <in>usb_pwr.h</in>
+      </df>
+      <in>delay.c</in>
+      <in>delay.h</in>
+      <in>main.c</in>
+      <in>pipka.h</in>
+      <in>uart.c</in>
+      <in>uart.h</in>
+    </df>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <platform>2</platform>
+      </toolsSet>
+      <compile>
+        <compiledirpicklist>
+          <compiledirpicklistitem>.</compiledirpicklistitem>
+          <compiledirpicklistitem>${AUTO_FOLDER}</compiledirpicklistitem>
+        </compiledirpicklist>
+        <compiledir>${AUTO_FOLDER}</compiledir>
+        <compilecommandpicklist>
+          <compilecommandpicklistitem>${MAKE} ${ITEM_NAME}.o</compilecommandpicklistitem>
+          <compilecommandpicklistitem>${AUTO_COMPILE}</compilecommandpicklistitem>
+        </compilecommandpicklist>
+        <compilecommand>${AUTO_COMPILE}</compilecommand>
+      </compile>
+      <dbx_gdbdebugger version="1">
+        <gdb_pathmaps>
+        </gdb_pathmaps>
+        <gdb_interceptlist>
+          <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
+        </gdb_interceptlist>
+        <gdb_options>
+          <DebugOptions>
+          </DebugOptions>
+        </gdb_options>
+        <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
+      </dbx_gdbdebugger>
+      <nativedebugger version="1">
+        <engine>gdb</engine>
+      </nativedebugger>
+      <runprofile version="9">
+        <runcommandpicklist>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+        </runcommandpicklist>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <rundir>.</rundir>
+        <buildfirst>false</buildfirst>
+        <terminal-type>0</terminal-type>
+        <remove-instrumentation>0</remove-instrumentation>
+        <environment>
+        </environment>
+      </runprofile>
+    </conf>
+  </confs>
+</configurationDescriptor>
