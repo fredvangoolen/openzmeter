@@ -481,9 +481,7 @@ void System::SetWIFICallback(HTTPRequest& req) {
     Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pInstance->pWirelessWIFI + "\", \"values\": {\"key\":" + Params["Key"].dump() + "}}'", &ErrorCode);
     if(ErrorCode != 0) Result["Status"] = false;
   }
-  Run("uci commit", &ErrorCode);
-  if(ErrorCode != 0) Result["Status"] = false;
-  Run("ubus call network restart", &ErrorCode);
+  Run("uci commit && ubus call network reload", &ErrorCode);
   if(ErrorCode != 0) Result["Status"] = false;
   pthread_mutex_unlock(&pMutex);
   return req.FromJSON(Result);
