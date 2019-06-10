@@ -73,8 +73,8 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32l1xx_gpio.h"
-#include "stm32l1xx_rcc.h"
+#include "stm32f0xx_gpio.h"
+#include "stm32f0xx_rcc.h"
 
 /** @addtogroup STM32L1xx_StdPeriph_Driver
   * @{

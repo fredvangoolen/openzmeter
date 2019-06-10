@@ -14,7 +14,7 @@
 #include "Tools.h"
 #include "Support/SysSupport.h"
 //----------------------------------------------------------------------------------------------------------------------
-AnalyzerSoft::AnalyzerSoft(string id, AnalyzerInterface::AnalyzerMode mode, float samplerate) : AnalyzerInterface(id.c_str(), mode) {
+AnalyzerSoft::AnalyzerSoft(string id, AnalyzerInterface::AnalyzerMode mode, float samplerate) : AnalyzerInterface(id, mode) {
   for(uint n = 0; n < ZEROCROSSING_FILTERSTAGES; n++) {
     float Q = 1.0;
     float K = tan(M_PI * (pNominalFrequency / samplerate));
