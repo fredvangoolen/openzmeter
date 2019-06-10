@@ -31,9 +31,9 @@
 #define __HW_CONFIG_H
 
 
-#include "stm32l1xx.h"
-#include <stm32l1xx_rcc.h>
-#include <stm32l1xx_gpio.h>
+#include "stm32f0xx.h"
+#include <stm32f0xx_rcc.h>
+#include <stm32f0xx_gpio.h>
 #include <stm32l1xx_pwr.h>
 #include <stm32l1xx_syscfg.h>
 #include <misc.h>

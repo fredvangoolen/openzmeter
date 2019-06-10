@@ -2,26 +2,22 @@
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="." name="0">
-      <df name="cmsis">
-        <in>core_cm3.h</in>
+      <df name="CMSIS">
+        <in>Core_CM0.h</in>
+        <in>Startup_STM32F0xx.s</in>
+        <in>System_STM32F0xx.c</in>
+        <in>System_STM32F0xx.h</in>
         <in>core_cmFunc.h</in>
         <in>core_cmInstr.h</in>
-      </df>
-      <df name="cmsis_boot">
-        <df name="Startup">
-          <in>startup_stm32l1xx_md.c</in>
-        </df>
-        <in>stm32l1xx.h</in>
-        <in>system_stm32l1xx.c</in>
-        <in>system_stm32l1xx.h</in>
+        <in>stm32f0xx.h</in>
+        <in>stm32f0xx_dma.h</in>
+        <in>stm32f0xx_gpio.h</in>
+        <in>stm32f0xx_rcc.h</in>
       </df>
       <df name="cmsis_lib">
         <df name="Include">
           <in>misc.h</in>
-          <in>stm32l1xx_dma.h</in>
-          <in>stm32l1xx_gpio.h</in>
           <in>stm32l1xx_pwr.h</in>
-          <in>stm32l1xx_rcc.h</in>
           <in>stm32l1xx_syscfg.h</in>
         </df>
         <df name="Source">
@@ -55,9 +51,10 @@
         <in>usb_pwr.c</in>
         <in>usb_pwr.h</in>
       </df>
+      <in>Main.c</in>
+      <in>STM32F042K6.ld</in>
       <in>delay.c</in>
       <in>delay.h</in>
-      <in>main.c</in>
       <in>pipka.h</in>
       <in>uart.c</in>
       <in>uart.h</in>

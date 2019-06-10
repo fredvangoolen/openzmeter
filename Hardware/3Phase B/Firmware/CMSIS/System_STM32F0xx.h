@@ -1,14 +1,14 @@
 /**
   ******************************************************************************
-  * @file    system_stm32l1xx.h
+  * @file    system_stm32f0xx.h
   * @author  MCD Application Team
-  * @version V1.2.0
-  * @date    22-February-2013
-  * @brief   CMSIS Cortex-M3 Device Peripheral Access Layer System Header File.
+  * @version V1.3.1
+  * @date    17-January-2014
+  * @brief   CMSIS Cortex-M0 Device Peripheral Access Layer System Header File.
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT 2013 STMicroelectronics</center></h2>
+  * <h2><center>&copy; COPYRIGHT 2014 STMicroelectronics</center></h2>
   *
   * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
   * You may not use this file except in compliance with the License.
@@ -29,21 +29,21 @@
   * @{
   */
 
-/** @addtogroup stm32l1xx_system
+/** @addtogroup stm32f0xx_system
   * @{
   */  
   
 /**
   * @brief Define to prevent recursive inclusion
   */
-#ifndef __SYSTEM_STM32L1XX_H
-#define __SYSTEM_STM32L1XX_H
+#ifndef __SYSTEM_STM32F0XX_H
+#define __SYSTEM_STM32F0XX_H
 
 #ifdef __cplusplus
  extern "C" {
 #endif 
 
-/** @addtogroup STM32L1xx_System_Includes
+/** @addtogroup STM32F0xx_System_Includes
   * @{
   */
 
@@ -52,7 +52,7 @@
   */
 
 
-/** @addtogroup STM32L1xx_System_Exported_types
+/** @addtogroup STM32F0xx_System_Exported_types
   * @{
   */
 
@@ -62,7 +62,7 @@ extern uint32_t SystemCoreClock;          /*!< System Clock Frequency (Core Cloc
   * @}
   */
 
-/** @addtogroup STM32L1xx_System_Exported_Constants
+/** @addtogroup STM32F0xx_System_Exported_Constants
   * @{
   */
 
@@ -70,7 +70,7 @@ extern uint32_t SystemCoreClock;          /*!< System Clock Frequency (Core Cloc
   * @}
   */
 
-/** @addtogroup STM32L1xx_System_Exported_Macros
+/** @addtogroup STM32F0xx_System_Exported_Macros
   * @{
   */
 
@@ -78,7 +78,7 @@ extern uint32_t SystemCoreClock;          /*!< System Clock Frequency (Core Cloc
   * @}
   */
 
-/** @addtogroup STM32L1xx_System_Exported_Functions
+/** @addtogroup STM32F0xx_System_Exported_Functions
   * @{
   */
   
@@ -92,7 +92,7 @@ extern void SystemCoreClockUpdate(void);
 }
 #endif
 
-#endif /*__SYSTEM_STM32L1XX_H */
+#endif /*__SYSTEM_STM32F0XX_H */
 
 /**
   * @}

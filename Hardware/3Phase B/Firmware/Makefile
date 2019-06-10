@@ -1,41 +1,32 @@
 #Executable related components
 EXECUTABLE_TARGET = Tmp/Firmware
-EXECUTABLE_SOURCE = main.c
-CFLAGS += -Wno-psabi -Wall -std=c++11 -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs 
-LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz
+EXECUTABLE_SOURCE = Main.c
+CFLAGS += -Wall -std=c99 -mcpu=cortex-m0 -mthumb -g -g2 -Os
+LDFLAGS += -TSTM32F042K6.ld -Wl,--gc-sections -nostdlib -Wl,-Map=$(EXECUTABLE_TARGET:%=%.map)
 
-#Add libs (cctz, nlohmann)
-#EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
-#CFLAGS += -I Libs -I Source/Support
-CC?=gcc
-LD?=ld
+#Add CMSIS
+EXECUTABLE_SOURCE += $(shell find CMSIS -name "*.s" ! -type d -print) $(shell find CMSIS -name "*.c" ! -type d -print)
+CFLAGS += -I CMSIS
+CC=arm-none-eabi-gcc
 EXECUTABLE_OBJS	+= $(EXECUTABLE_SOURCE:%=Tmp/%.o)
 #=======================================================================================================================
-default: READCONFIG $(EXECUTABLE_TARGET)
+default: $(EXECUTABLE_TARGET)
 
 clean:
 	@rm -rf Tmp
 
-READCONFIG:
-ifdef CONFIG
-	@mkdir -p Tmp
-	@echo "Reading configuration from '$(CONFIG)'"
-include $(CONFIG)
-else
-	@echo "Use make CONFIG={config_file}"
-	@false
-endif
-ifeq ($(DEBUG), true)
-	CFLAGS += -O0 -g -g3 -ggdb 
-else
-	CFLAGS += -Os -Wall -fno-rtti -fopt-info-vec -s
-endif
-
-$(EXECUTABLE_TARGET): $(EXECUTABLE_OBJS) $(RESOURCES_TARGET)
+$(EXECUTABLE_TARGET): $(EXECUTABLE_OBJS)
 	@echo "Linking target" $(TARGET_EXEC)
-	$(CC)  $(EXECUTABLE_OBJS) $(RESOURCES_TARGET) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
+	@$(CC)  $(EXECUTABLE_OBJS) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
+	@arm-none-eabi-objcopy -O binary $(EXECUTABLE_TARGET) Tmp/Image.bin
+	@arm-none-eabi-size $(EXECUTABLE_TARGET)
 
-Tmp/%.cpp.o: %.cpp
+Tmp/%.c.o: %.c
 	@mkdir -p $(dir $@)
 	@echo "Building" $@
-	@$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
+
+Tmp/%.s.o: %.s
+	@mkdir -p $(dir $@)
+	@echo "Building" $@
+	$(CC) $(CFLAGS) -c $< -o $@

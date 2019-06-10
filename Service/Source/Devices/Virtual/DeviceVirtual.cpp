@@ -71,7 +71,7 @@ bool DeviceVirtual::Start() {
   }
   LOGFile::Info("Starting 'Virtual' driver\n");
   pTerminate = false;
-  pAnalyzer = new AnalyzerSoft("VIRTUAL_" + (pMode == AnalyzerInterface::PHASE1) ? "1PHASE" : (pMode == AnalyzerInterface::PHASE3) ? "3PHASE" : "3PHASE+N", pMode, pSampleRate);
+  pAnalyzer = new AnalyzerSoft(pSerial + "_" + ((pMode == AnalyzerInterface::PHASE1) ? "1PHASE" : (pMode == AnalyzerInterface::PHASE3) ? "3PHASE" : "3PHASE+N"), pMode, pSampleRate);
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     delete pAnalyzer;
