@@ -27,15 +27,10 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32F0XX_RCC_H
-#define __STM32F0XX_RCC_H
-
-#ifdef __cplusplus
- extern "C" {
-#endif
+#pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f0xx.h"
+#include "STM32F0xx.h"
 
 /** @addtogroup STM32F0xx_StdPeriph_Driver
   * @{
@@ -536,21 +531,21 @@ void RCC_DeInit(void);
 
 /* Internal/external clocks, PLL, CSS and MCO configuration functions *********/
 void RCC_HSEConfig(uint8_t RCC_HSE);
-ErrorStatus RCC_WaitForHSEStartUp(void);
+//ErrorStatus RCC_WaitForHSEStartUp(void);
 void RCC_AdjustHSICalibrationValue(uint8_t HSICalibrationValue);
-void RCC_HSICmd(FunctionalState NewState);
+//void RCC_HSICmd(FunctionalState NewState);
 void RCC_AdjustHSI14CalibrationValue(uint8_t HSI14CalibrationValue);
-void RCC_HSI14Cmd(FunctionalState NewState);
-void RCC_HSI14ADCRequestCmd(FunctionalState NewState);
+//void RCC_HSI14Cmd(FunctionalState NewState);
+//void RCC_HSI14ADCRequestCmd(FunctionalState NewState);
 void RCC_LSEConfig(uint32_t RCC_LSE);
 void RCC_LSEDriveConfig(uint32_t RCC_LSEDrive);
-void RCC_LSICmd(FunctionalState NewState);
+//void RCC_LSICmd(FunctionalState NewState);
 void RCC_PLLConfig(uint32_t RCC_PLLSource, uint32_t RCC_PLLMul);
-void RCC_PLLCmd(FunctionalState NewState);
-void RCC_HSI48Cmd(FunctionalState NewState); /*!< Only applicable for STM32F072 devices */
-uint32_t RCC_GetHSI48CalibrationValue(void); /*!< Only applicable for STM32F072 devices */
+//void RCC_PLLCmd(FunctionalState NewState);
+//void RCC_HSI48Cmd(FunctionalState NewState); /*!< Only applicable for STM32F072 devices */
+//uint32_t RCC_GetHSI48CalibrationValue(void); /*!< Only applicable for STM32F072 devices */
 void RCC_PREDIV1Config(uint32_t RCC_PREDIV1_Div);
-void RCC_ClockSecuritySystemCmd(FunctionalState NewState);
+//void RCC_ClockSecuritySystemCmd(FunctionalState NewState);
 #ifdef STM32F051
 void RCC_MCOConfig(uint8_t RCC_MCOSource);
 #else
@@ -572,37 +567,23 @@ void RCC_USBCLKConfig(uint32_t RCC_USBCLK); /*!< Only applicable for STM32F042 a
 void RCC_GetClocksFreq(RCC_ClocksTypeDef* RCC_Clocks);
 
 /* Peripheral clocks configuration functions **********************************/
-void RCC_RTCCLKConfig(uint32_t RCC_RTCCLKSource);
-void RCC_RTCCLKCmd(FunctionalState NewState);
-void RCC_BackupResetCmd(FunctionalState NewState);
+//void RCC_RTCCLKConfig(uint32_t RCC_RTCCLKSource);
+//void RCC_RTCCLKCmd(FunctionalState NewState);
+//void RCC_BackupResetCmd(FunctionalState NewState);
 
-void RCC_AHBPeriphClockCmd(uint32_t RCC_AHBPeriph, FunctionalState NewState);
-void RCC_APB2PeriphClockCmd(uint32_t RCC_APB2Periph, FunctionalState NewState);
-void RCC_APB1PeriphClockCmd(uint32_t RCC_APB1Periph, FunctionalState NewState);
+//void RCC_AHBPeriphClockCmd(uint32_t RCC_AHBPeriph, FunctionalState NewState);
+//void RCC_APB2PeriphClockCmd(uint32_t RCC_APB2Periph, FunctionalState NewState);
+//void RCC_APB1PeriphClockCmd(uint32_t RCC_APB1Periph, FunctionalState NewState);
 
-void RCC_AHBPeriphResetCmd(uint32_t RCC_AHBPeriph, FunctionalState NewState);
-void RCC_APB2PeriphResetCmd(uint32_t RCC_APB2Periph, FunctionalState NewState);
-void RCC_APB1PeriphResetCmd(uint32_t RCC_APB1Periph, FunctionalState NewState);
+//void RCC_AHBPeriphResetCmd(uint32_t RCC_AHBPeriph, FunctionalState NewState);
+//void RCC_APB2PeriphResetCmd(uint32_t RCC_APB2Periph, FunctionalState NewState);
+//void RCC_APB1PeriphResetCmd(uint32_t RCC_APB1Periph, FunctionalState NewState);
 
 /* Interrupts and flags management functions **********************************/
-void RCC_ITConfig(uint8_t RCC_IT, FunctionalState NewState);
-FlagStatus RCC_GetFlagStatus(uint8_t RCC_FLAG);
-void RCC_ClearFlag(void);
-ITStatus RCC_GetITStatus(uint8_t RCC_IT);
-void RCC_ClearITPendingBit(uint8_t RCC_IT);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* __STM32F0XX_RCC_H */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */ 
+//void RCC_ITConfig(uint8_t RCC_IT, FunctionalState NewState);
+//FlagStatus RCC_GetFlagStatus(uint8_t RCC_FLAG);
+//void RCC_ClearFlag(void);
+//ITStatus RCC_GetITStatus(uint8_t RCC_IT);
+//void RCC_ClearITPendingBit(uint8_t RCC_IT);
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
