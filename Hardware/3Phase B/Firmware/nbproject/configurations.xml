@@ -2,35 +2,12 @@
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="." name="0">
-      <df name="CMSIS">
-        <in>System_STM32F0xx.c</in>
-      </df>
-      <df name="cmsis_lib">
-        <df name="Source">
-          <in>misc.c</in>
-          <in>stm32l1xx_dma.c</in>
-          <in>stm32l1xx_gpio.c</in>
-          <in>stm32l1xx_pwr.c</in>
-          <in>stm32l1xx_rcc.c</in>
-          <in>stm32l1xx_syscfg.c</in>
-        </df>
-      </df>
-      <df name="usb_lib">
-        <in>usb_core.c</in>
-        <in>usb_lib.c</in>
-        <in>usb_regs.c</in>
-      </df>
-      <df name="usb_microphone">
-        <in>hw_config.c</in>
-        <in>usb_desc.c</in>
-        <in>usb_endp.c</in>
-        <in>usb_istr.c</in>
-        <in>usb_prop.c</in>
-        <in>usb_pwr.c</in>
-      </df>
       <in>Main.c</in>
+      <in>System.c</in>
+      <in>USB.c</in>
+      <in>USB_Dev.c</in>
       <in>delay.c</in>
-      <in>uart.c</in>
+      <in>usb_core.c</in>
     </df>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -47,12 +24,12 @@
   <confs>
     <conf name="Default" type="0">
       <toolsSet>
-        <compilerSet>default</compilerSet>
+        <compilerSet>arm-none-eabi|GNU</compilerSet>
         <dependencyChecking>false</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <flagsDictionary>
-        <element flagsID="0" commonFlags="-g -Os -std=c99"/>
+        <element flagsID="0" commonFlags="-std=c99 -g"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -61,69 +38,49 @@
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
           <buildCommand>${MAKE} -f Makefile</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath></executablePath>
+          <executablePath>Tmp/Firmware</executablePath>
         </makeTool>
         <preBuild>
           <preBuildCommandWorkingDir>.</preBuildCommandWorkingDir>
           <preBuildCommand></preBuildCommand>
         </preBuild>
       </makefileType>
-      <item path="CMSIS/System_STM32F0xx.c" ex="false" tool="0" flavor2="3">
-        <cTool flags="0">
-        </cTool>
-      </item>
       <item path="Main.c" ex="false" tool="0" flavor2="3">
         <cTool flags="0">
           <incDir>
             <pElem>CMSIS</pElem>
-            <pElem>.</pElem>
           </incDir>
         </cTool>
       </item>
-      <item path="cmsis_lib/Source/misc.c" ex="false" tool="0" flavor2="2">
+      <item path="System.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+          <incDir>
+            <pElem>CMSIS</pElem>
+          </incDir>
+        </cTool>
       </item>
-      <item path="cmsis_lib/Source/stm32l1xx_dma.c" ex="false" tool="0" flavor2="2">
+      <item path="USB.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+          <incDir>
+            <pElem>CMSIS</pElem>
+          </incDir>
+        </cTool>
       </item>
-      <item path="cmsis_lib/Source/stm32l1xx_gpio.c" ex="false" tool="0" flavor2="2">
-      </item>
-      <item path="cmsis_lib/Source/stm32l1xx_pwr.c" ex="false" tool="0" flavor2="2">
-      </item>
-      <item path="cmsis_lib/Source/stm32l1xx_rcc.c" ex="false" tool="0" flavor2="2">
-      </item>
-      <item path="cmsis_lib/Source/stm32l1xx_syscfg.c"
-            ex="false"
-            tool="0"
-            flavor2="2">
+      <item path="USB_Dev.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+          <incDir>
+            <pElem>CMSIS</pElem>
+          </incDir>
+        </cTool>
       </item>
       <item path="delay.c" ex="false" tool="0" flavor2="2">
       </item>
-      <folder path="0/CMSIS">
-        <cTool>
+      <item path="usb_core.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
           <incDir>
             <pElem>CMSIS</pElem>
-            <pElem>.</pElem>
           </incDir>
         </cTool>
-      </folder>
-      <item path="uart.c" ex="false" tool="0" flavor2="2">
-      </item>
-      <item path="usb_lib/usb_core.c" ex="false" tool="0" flavor2="2">
-      </item>
-      <item path="usb_lib/usb_lib.c" ex="false" tool="0" flavor2="2">
-      </item>
-      <item path="usb_lib/usb_regs.c" ex="false" tool="0" flavor2="2">
-      </item>
-      <item path="usb_microphone/hw_config.c" ex="false" tool="0" flavor2="2">
-      </item>
-      <item path="usb_microphone/usb_desc.c" ex="false" tool="0" flavor2="2">
-      </item>
-      <item path="usb_microphone/usb_endp.c" ex="false" tool="0" flavor2="2">
-      </item>
-      <item path="usb_microphone/usb_istr.c" ex="false" tool="0" flavor2="2">
-      </item>
-      <item path="usb_microphone/usb_prop.c" ex="false" tool="0" flavor2="2">
-      </item>
-      <item path="usb_microphone/usb_pwr.c" ex="false" tool="0" flavor2="2">
       </item>
     </conf>
   </confs>
