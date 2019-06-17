@@ -2,7 +2,7 @@
 EXECUTABLE_TARGET = Tmp/Firmware
 EXECUTABLE_SOURCE = Main.c System.c USB_Dev.c USB.c usb_core.c
 LIBSPEC=-L /usr/lib/gcc/arm-none-eabi/5.4.1/armv6-m
-CFLAGS += -Wall -std=c99 -mcpu=cortex-m0 -mthumb -march=armv6-m -mfloat-abi=soft -fno-strict-aliasing -fdata-sections -ffunction-sections -mlong-calls -g 
+CFLAGS += -Wall -std=c99 -mcpu=cortex-m0 -mthumb -march=armv6-m -mfloat-abi=soft -fno-strict-aliasing -mlong-calls -g
 LDFLAGS += -T STM32F042K6.ld -nostartfiles -Wl,--cref -Wl,-Map=$(EXECUTABLE_TARGET:%=%.map)
 
 #Add CMSIS
