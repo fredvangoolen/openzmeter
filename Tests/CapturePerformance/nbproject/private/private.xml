@@ -9,9 +9,7 @@
         <group name="zControl_Camaras">
             <file>file:/home/edu/Proyectos/zMeter/Test/Main.cpp</file>
         </group>
-        <group name="ServiceV2">
-            <file>file:/home/edu/Proyectos/zMeter/V2/Tests/CapturePerformance/Main.cpp</file>
-        </group>
+        <group name="ServiceV2"/>
         <group/>
     </open-files>
 </project-private>

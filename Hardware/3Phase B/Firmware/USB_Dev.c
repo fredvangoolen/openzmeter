@@ -91,7 +91,7 @@ static uint16_t get_next_pma(uint16_t sz) {
   return (_result < (0x020 + sz)) ? 0 : (_result - sz);
 }
 
-uint32_t getinfo(void) {
+uint32_t getinfo() {
   if (!(RCC->APB1ENR & RCC_APB1ENR_USBEN)) return STATUS_VAL(0);
   if (USB->BCDR & USB_BCDR_DPPU) return STATUS_VAL(USBD_HW_ENABLED | USBD_HW_SPEED_FS);
   return STATUS_VAL(USBD_HW_ENABLED);
@@ -147,11 +147,12 @@ void USB_Enable(bool enable) {
     RCC->APB1ENR |= RCC_APB1ENR_USBEN;
     RCC->APB1RSTR |= RCC_APB1RSTR_USBRST;
     RCC->APB1RSTR &= ~RCC_APB1RSTR_USBRST;
-    USB->CNTR = USB_CNTR_CTRM | USB_CNTR_RESETM | USB_CNTR_ERRM |
-#if !defined(USBD_SOF_DISABLED)
-            USB_CNTR_SOFM |
-#endif
-            USB_CNTR_SUSPM | USB_CNTR_WKUPM;
+    USB->CNTR = USB_CNTR_CTRM | USB_CNTR_RESETM | USB_CNTR_ERRM //|
+//#if !defined(USBD_SOF_DISABLED)
+//            USB_CNTR_SOFM |
+//#endif
+//            USB_CNTR_SUSPM | USB_CNTR_WKUPM
+            ;
   } else if (RCC->APB1ENR & RCC_APB1ENR_USBEN) {
     USB->BCDR = 0;
     RCC->APB1RSTR |= RCC_APB1RSTR_USBRST;
@@ -379,13 +380,16 @@ uint16_t get_frame(void) {
   return USB->FNR & USB_FNR_FN;
 }
 
-void evt_poll(usbd_device *dev, usbd_evt_callback callback) {
+
+
+
+void USB_ISR() {
   uint8_t _ev, _ep;
   uint16_t _istr = USB->ISTR;
   _ep = _istr & USB_ISTR_EP_ID;
-  if (_istr & USB_ISTR_CTR) {
+  if(_istr & USB_ISTR_CTR) {
     volatile uint16_t *reg = EPR(_ep);
-    if (*reg & USB_EP_CTR_TX) {
+    if(*reg & USB_EP_CTR_TX) {
       *reg &= (USB_EPREG_MASK ^ USB_EP_CTR_TX);
       _ep |= 0x80;
       _ev = usbd_evt_eptx;
@@ -393,58 +397,39 @@ void evt_poll(usbd_device *dev, usbd_evt_callback callback) {
       *reg &= (USB_EPREG_MASK ^ USB_EP_CTR_RX);
       _ev = (*reg & USB_EP_SETUP) ? usbd_evt_epsetup : usbd_evt_eprx;
     }
-  } else if (_istr & USB_ISTR_RESET) {
+  } else if(_istr & USB_ISTR_RESET) {
     USB->ISTR &= ~USB_ISTR_RESET;
     USB->BTABLE = 0;
-    for (int i = 0; i < 8; i++) {
-      USB_DeconfigEP(i);
-    }
-    _ev = USB_EVENT_RESET;
-#if !defined(USBD_SOF_DISABLED)
-  } else if (_istr & USB_ISTR_SOF) {
-    _ev = usbd_evt_sof;
-    USB->ISTR &= ~USB_ISTR_SOF;
-#endif
-  } else if (_istr & USB_ISTR_WKUP) {
-    _ev = usbd_evt_wkup;
-    USB->CNTR &= ~USB_CNTR_FSUSP;
-    USB->ISTR &= ~USB_ISTR_WKUP;
-  } else if (_istr & USB_ISTR_SUSP) {
-    _ev = usbd_evt_susp;
-    USB->CNTR |= USB_CNTR_FSUSP;
-    USB->ISTR &= ~USB_ISTR_SUSP;
+    for(int i = 0; i < 8; i++) USB_DeconfigEP(i);
+    udev.status.device_state = USB_STATE_DEFAULT;
+    udev.status.control_state = USB_CONTROL_IDLE;
+    udev.status.device_cfg = 0;
+    USB_ConfigEP(0, USB_EPTYPE_CONTROL, udev.status.ep0size);
+    udev.endpoint[0] = usbd_process_ep0;
+    USB->DADDR = USB_DADDR_EF;
+    return;
+    
+    
+    
+    
+//#if !defined(USBD_SOF_DISABLED)
+//  } else if(_istr & USB_ISTR_SOF) {
+//    _ev = usbd_evt_sof;
+//    USB->ISTR &= ~USB_ISTR_SOF;
+//#endif
+//  } else if(_istr & USB_ISTR_WKUP) {
+//    _ev = usbd_evt_wkup;
+//    USB->CNTR &= ~USB_CNTR_FSUSP;
+//    USB->ISTR &= ~USB_ISTR_WKUP;
+//  } else if (_istr & USB_ISTR_SUSP) {
+//    _ev = usbd_evt_susp;
+//    USB->CNTR |= USB_CNTR_FSUSP;
+//    USB->ISTR &= ~USB_ISTR_SUSP;
   } else if (_istr & USB_ISTR_ERR) {
     USB->ISTR &= ~USB_ISTR_ERR;
     _ev = usbd_evt_error;
   } else {
     return;
   }
-  callback(dev, _ev, _ep);
+  usbd_process_evt(&udev, _ev, _ep);
 }
-
-static uint32_t fnv1a32_turn(uint32_t fnv, uint32_t data) {
-  for (int i = 0; i < 4; i++) {
-    fnv ^= (data & 0xFF);
-    fnv *= 16777619;
-    data >>= 8;
-  }
-  return fnv;
-}
-
-uint16_t get_serialno_desc(void *buffer) {
-  struct usb_string_descriptor *dsc = buffer;
-  uint16_t *str = dsc->wString;
-  uint32_t fnv = 2166136261;
-  fnv = fnv1a32_turn(fnv, *(uint32_t*) (UID_BASE + 0x00));
-  fnv = fnv1a32_turn(fnv, *(uint32_t*) (UID_BASE + 0x04));
-  fnv = fnv1a32_turn(fnv, *(uint32_t*) (UID_BASE + 0x14));
-  for (int i = 28; i >= 0; i -= 4) {
-    uint16_t c = (fnv >> i) & 0x0F;
-    c += (c < 10) ? '0' : ('A' - 10);
-    *str++ = c;
-  }
-  dsc->bDescriptorType = USB_DTYPE_STRING;
-  dsc->bLength = 18;
-  return 18;
-}
-

@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <STM32F0xx.h>
 #include "USB.h"
-#define BUFF_LEN 1000
+#define BUFF_LEN 1024
 // Types definition ----------------------------------------------------------------------------------------------------
 typedef struct {
   uint16_t VR;
@@ -12,7 +12,7 @@ typedef struct {
   uint16_t IS;
   uint16_t IN;
   uint16_t IT;
-  uint32_t Battery;
+  uint16_t Battery;
 } ADC_Sequence_t;
 typedef struct {
   uint8_t Prescaler;        //Increases on each interrupt event
@@ -43,9 +43,9 @@ typedef struct {
 } SystemStatus_t;
 typedef struct {
   uint16_t Buffer[BUFF_LEN];
-  uint16_t ReadPos;
-  uint16_t WritePos;
-  uint16_t Size;  
+  uint16_t Head;
+  uint16_t Tail;
+//  uint16_t Size;  
 } USB_Buffer_t;
 // Local variables -----------------------------------------------------------------------------------------------------
 SystemStatus_t SysStatus;
@@ -54,14 +54,29 @@ ADC_Sequence_t ADC_Read[8];
 USB_Buffer_t   USB_Buffer;
 // Buffer management functions -----------------------------------------------------------------------------------------
 void Buffer_Init() {
-  USB_Buffer.ReadPos = 0;
-  USB_Buffer.WritePos = 0;
-  USB_Buffer.Size = 0;
+  USB_Buffer.Head = 0;
+  USB_Buffer.Tail = 0;
+//  USB_Buffer.Size = 0;
 }
 void BufferPush(uint16_t value) {
-  USB_Buffer.Buffer[USB_Buffer.WritePos] = value;
-  USB_Buffer.WritePos = (USB_Buffer.WritePos + 1) % BUFF_LEN;
-  if(USB_Buffer.Size < BUFF_LEN) USB_Buffer.Size++;
+  uint16_t Next = (USB_Buffer.Head + 1) % BUFF_LEN;
+  if(Next != USB_Buffer.Tail) {
+    USB_Buffer.Buffer[USB_Buffer.Head] = value;
+    USB_Buffer.Head = Next;
+  //if(USB_Buffer.Size < BUFF_LEN) USB_Buffer.Size++;
+  } else {
+//    USB_Buffer.Size = 0;
+//   __asm("BKPT #0\n") ; // Break into the debugger
+  }  
+}
+uint16_t BufferPop() {
+  if(USB_Buffer.Head == USB_Buffer.Tail) {
+    return 0xFFFF;
+  } else {
+    uint16_t Val = USB_Buffer.Buffer[USB_Buffer.Tail];
+    USB_Buffer.Tail = (USB_Buffer.Tail + 1) % BUFF_LEN;
+    return Val;
+  }
 }
 // Control LED, buton and buzzer ---------------------------------------------------------------------------------------
 void SysTick_ISR() {
@@ -69,15 +84,15 @@ void SysTick_ISR() {
   if(SysTicks.Prescaler % 2) {
     GPIOA->BSRR = GPIO_BSRR_BS_10;    //A mode (PA10=1)
     GPIOB->BSRR = GPIO_BSRR_BS_5 | GPIO_BSRR_BS_4 | GPIO_BSRR_BS_3;
-    if(((SysTicks.Prescaler % 3) == 0) && SysStatus.Power_A_ON  && (!SysStatus.Power_A_BLINK  || (SysStatus.Power_A_BLINK  && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BR_5;
-    if(((SysTicks.Prescaler % 3) == 1) && SysStatus.Status_A_ON && (!SysStatus.Status_A_BLINK || (SysStatus.Status_A_BLINK && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BR_4;
-    if(((SysTicks.Prescaler % 3) == 2) && SysStatus.Wifi_A_ON   && (!SysStatus.Wifi_A_BLINK   || (SysStatus.Wifi_A_BLINK   && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BR_3;
+    if(((SysTicks.Prescaler % 4) == 0) && SysStatus.Power_A_ON  && (!SysStatus.Power_A_BLINK  || (SysStatus.Power_A_BLINK  && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BR_5;
+    if(((SysTicks.Prescaler % 4) == 1) && SysStatus.Status_A_ON && (!SysStatus.Status_A_BLINK || (SysStatus.Status_A_BLINK && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BR_4;
+    if(((SysTicks.Prescaler % 4) == 2) && SysStatus.Wifi_A_ON   && (!SysStatus.Wifi_A_BLINK   || (SysStatus.Wifi_A_BLINK   && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BR_3;
   } else {
     GPIOA->BSRR = GPIO_BSRR_BR_10;    //A mode (PA10=0)
     GPIOB->BSRR = GPIO_BSRR_BR_5 | GPIO_BSRR_BR_4 | GPIO_BSRR_BR_3;
-    if(((SysTicks.Prescaler % 3) == 0) && SysStatus.Power_B_ON  && (!SysStatus.Power_B_BLINK  || (SysStatus.Power_B_BLINK  && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BS_5;
-    if(((SysTicks.Prescaler % 3) == 1) && SysStatus.Status_B_ON && (!SysStatus.Status_B_BLINK || (SysStatus.Status_B_BLINK && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BS_4;
-    if(((SysTicks.Prescaler % 3) == 2) && SysStatus.Wifi_B_ON   && (!SysStatus.Wifi_B_BLINK   || (SysStatus.Wifi_B_BLINK   && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BS_3;
+    if(((SysTicks.Prescaler % 4) == 0) && SysStatus.Power_B_ON  && (!SysStatus.Power_B_BLINK  || (SysStatus.Power_B_BLINK  && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BS_5;
+    if(((SysTicks.Prescaler % 4) == 1) && SysStatus.Status_B_ON && (!SysStatus.Status_B_BLINK || (SysStatus.Status_B_BLINK && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BS_4;
+    if(((SysTicks.Prescaler % 4) == 2) && SysStatus.Wifi_B_ON   && (!SysStatus.Wifi_B_BLINK   || (SysStatus.Wifi_B_BLINK   && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BS_3;
   }
   GPIOA->BSRR = (((SysTicks.Prescaler % 8) == 0) && SysStatus.Bluetooth_ON && (!SysStatus.Bluetooth_BLINK || (SysStatus.Bluetooth_BLINK && (SysTicks.Prescaler < 127)))) ? GPIO_BSRR_BS_9 : GPIO_BSRR_BR_9;
   GPIOB->BSRR = Out;
@@ -99,16 +114,34 @@ void DMA_CH1_ISR() {
   GPIOA->ODR =  GPIOA->ODR ^ GPIO_ODR_1;
   ADC_Sequence_t *Ptr = (DMA1->ISR & DMA_ISR_HTIF1) ? &ADC_Read[0] : &ADC_Read[4];
   DMA1->IFCR |= DMA_IFCR_CTCIF1 | DMA_IFCR_CHTIF1;
-  BufferPush(((Ptr[0].VR + Ptr[1].VR + Ptr[2].VR + Ptr[3].VR) / 2) | 0x0000);
-  BufferPush(((Ptr[0].VS + Ptr[1].VS + Ptr[2].VS + Ptr[3].VS) / 2) | 0x2000);
-  BufferPush(((Ptr[0].VT + Ptr[1].VT + Ptr[2].VT + Ptr[3].VT) / 2) | 0x4000);
-  BufferPush(((Ptr[0].IR + Ptr[1].IR + Ptr[2].IR + Ptr[3].IR) / 2) | 0x6000);
-  BufferPush(((Ptr[0].IS + Ptr[1].IS + Ptr[2].IS + Ptr[3].IS) / 2) | 0x8000);
-  BufferPush(((Ptr[0].IT + Ptr[1].IT + Ptr[2].IT + Ptr[3].IT) / 2) | 0xA000);
-  BufferPush(((Ptr[0].IN + Ptr[1].IN + Ptr[2].IN + Ptr[3].IN) / 2) | 0xC000);
-  SysStatus.Battery = (Ptr[0].Battery + Ptr[1].Battery + Ptr[2].Battery + Ptr[3].Battery) / 64;
+  BufferPush(((Ptr[0].VR + Ptr[1].VR + Ptr[2].VR + Ptr[3].VR) >> 1) | 0x0000);
+  BufferPush(((Ptr[0].VS + Ptr[1].VS + Ptr[2].VS + Ptr[3].VS) >> 1) | 0x2000);
+  BufferPush(((Ptr[0].VT + Ptr[1].VT + Ptr[2].VT + Ptr[3].VT) >> 1) | 0x4000);
+  BufferPush(((Ptr[0].IR + Ptr[1].IR + Ptr[2].IR + Ptr[3].IR) >> 1) | 0x6000);
+  BufferPush(((Ptr[0].IS + Ptr[1].IS + Ptr[2].IS + Ptr[3].IS) >> 1) | 0x8000);
+  BufferPush(((Ptr[0].IT + Ptr[1].IT + Ptr[2].IT + Ptr[3].IT) >> 1) | 0xA000);
+  BufferPush(((Ptr[0].IN + Ptr[1].IN + Ptr[2].IN + Ptr[3].IN) >> 1) | 0xC000);
+  SysStatus.Battery = Ptr[0].Battery >> 4;
 }
 // USB callbacks functions ---------------------------------------------------------------------------------------------
+//static void cdc_rxonly (usbd_device *dev, uint8_t event, uint8_t ep) {
+//   usbd_ep_read(dev, ep, fifo, CDC_DATA_SZ);
+//}
+uint16_t Serie = 0;
+uint16_t fifo[32];
+void cdc_txonly(usbd_device *dev, uint8_t event, uint8_t ep) {
+//    uint8_t _t = dev->driver->frame_no();
+//    memset(fifo, _t, CDC_DATA_SZ);
+//  if(USB_Buffer.Size < 31) {
+//    ep_write(ep, fifo, 0);
+//    return;
+//  }
+  for(int x = 0; x < 32; x++) {
+    fifo[x] = BufferPop();
+  }
+  ep_write(ep, fifo, 64);
+}
+
 void SendBuffer() {
   // Copio desde el buffer y voy reduciendo, si no hay muestras que enviar relleno con FFFF para que no se bloquee el EP
   // Cada 100 bloques enviados mando estado
@@ -117,12 +150,6 @@ void SendBuffer() {
 void SetState() {
   //Configure LEDs state and beeps
   //Configure gains 
-}
-// USB interrupt handle ------------------------------------------------------------------------------------------------
-extern usbd_device udev;
-
-void USB_ISR() {
-  usbd_poll(&udev);
 }
 // Prepare device to run after wakeup or power up ----------------------------------------------------------------------
 void Setup() {
@@ -172,7 +199,7 @@ void Setup() {
   
   cdc_init_usbd();
   NVIC_EnableIRQ(USB_IRQn);
-  NVIC_SetPriority(USB_IRQn, 1);  
+  NVIC_SetPriority(USB_IRQn, 1);
            
   
       

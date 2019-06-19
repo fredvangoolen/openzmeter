@@ -63,28 +63,7 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
-      '/':             { target: 'http://192.168.8.10:80'},
-      '/Login':        { target: 'http://192.168.8.10:80'},
-      '/LogIn':        { target: 'http://192.168.8.10:80'},
-      '/Logout':       { target: 'http://192.168.8.10:80'},
-      '/getSeries':    { target: 'http://192.168.8.10:80'},
-      '/getSeriesNow': { target: 'http://192.168.8.10:80'},
-      '/getAnalyzers': { target: 'http://192.168.8.10:80'},
-      '/getPrices':    { target: 'http://192.168.8.10:80'},
-      '/getDevices':   { target: 'http://192.168.8.10:80'},
-      '/startDevice':  { target: 'http://192.168.8.10:80'},
-      '/stopDevice':   { target: 'http://192.168.8.10:80'},
-      '/setDevices':   { target: 'http://192.168.8.10:80'},
-      '/getTariffs':   { target: 'http://192.168.8.10:80'},
-      '/setTariffs':   { target: 'http://192.168.8.10:80'},
-      '/delTariffs':   { target: 'http://192.168.8.10:80'},
-      '/getEvents':    { target: 'http://192.168.8.10:80'},
-      '/getNetworks':  { target: 'http://192.168.8.10:80'},
-      '/getDevice':    { target: 'http://192.168.8.10:80'},
-      '/getBluetooth': { target: 'http://192.168.8.10:80'},
-      '/setBluetooth': { target: 'http://192.168.8.10:80'},
-      '/getUser':      { target: 'http://192.168.8.10:80'},
-      '/setUser':      { target: 'http://192.168.8.10:80'}
+      '*':             { target: 'http://localhost:8081'}
     }
   },
   performance: {

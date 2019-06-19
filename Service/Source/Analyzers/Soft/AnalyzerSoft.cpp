@@ -170,8 +170,10 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       if(RMS > This->pMinCurrent) {
         This->pAggreg10C.Current_Inputs[j] = 1;
         This->pAggreg10C.Current[j] = RMS;
-        for(uint32_t i = 0; i < This->pAggreg10C.Current_Samples[j].size(); i++) This->pAggreg10C.Active_Power[j] = This->AccumulateSUM(This->pAggreg10C.Active_Power[j], This->pAggreg10C.Voltage_Samples[j][i] * This->pAggreg10C.Current_Samples[j][i]);
-        This->pAggreg10C.Active_Power[j] = This->pAggreg10C.Active_Power[j] / This->pAggreg10C.Current_Samples[j].size();
+        if(j < This->pAggreg10C.Voltage_Samples.size()) {
+          for(uint32_t i = 0; i < This->pAggreg10C.Voltage_Samples[j].size(); i++) This->pAggreg10C.Active_Power[j] = This->AccumulateSUM(This->pAggreg10C.Active_Power[j], This->pAggreg10C.Voltage_Samples[j][i] * This->pAggreg10C.Current_Samples[j][i]);
+          This->pAggreg10C.Active_Power[j] = This->pAggreg10C.Active_Power[j] / This->pAggreg10C.Current_Samples[j].size();
+        }
       }
     }
     for(uint j = 0; j < This->pAggreg10C.Voltage.size(); j++) {

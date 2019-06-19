@@ -14,6 +14,9 @@
 #ifdef DEVICE_V1_01
   #include "V1_01/DeviceV1_01.h"
 #endif
+#ifdef DEVICE_V2_01
+  #include "V2_01/DeviceV2_01.h"
+#endif
 #ifdef DEVICE_VIRTUAL
   #include "Virtual/DeviceVirtual.h"
 #endif
@@ -26,6 +29,9 @@ DeviceManager::DeviceManager() {
   #endif
   #ifdef DEVICE_V1_01
     DeviceV1_01::GetInstances(pDevices);
+  #endif
+  #ifdef DEVICE_V2_01
+    DeviceV2_01::GetInstances(pDevices);
   #endif
   #ifdef DEVICE_VIRTUAL
     DeviceVirtual::GetInstances(pDevices);

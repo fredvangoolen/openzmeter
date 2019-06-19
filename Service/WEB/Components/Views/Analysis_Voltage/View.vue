@@ -4,7 +4,7 @@
       <div class="col-lg-12"><voltage></voltage></div>
     </div>
     <div class="row">
-      <div class="col-lg-12"><details-panel></details-panel></div>
+      <!--div class="col-lg-12"><details-panel></details-panel></div-->
     </div>
   </div>
 </template>

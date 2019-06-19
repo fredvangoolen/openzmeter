@@ -21,33 +21,7 @@ const uint8_t USB_Descriptor[] = {
   3,                                      /* Index of string descriptor describing the device's serial number */
   0x01                                    /* bNumConfigurations */
 };
-const uint8_t USB_ConfigDescriptor[] = {
-  0x09,                                   /* bLength: Configuation Descriptor size */
-  USB_DTYPE_CONFIGURATION,                /* bDescriptorType: Configuration */
-  0x19, 0x00,                             /* wTotalLength:no of returned bytes */
-  0x01,                                   /* bNumInterfaces: 1 interface */
-  0x01,                                   /* bConfigurationValue: Configuration value */
-  0x00,                                   /* iConfiguration: Index of string descriptor describing the configuration */
-  0xC0,                                   /* bmAttributes: self powered */
-  0x00,                                   /* MaxPower 0 mA */
 
-  0x09,                                   /* bLength: Interface Descriptor size */
-  USB_DTYPE_INTERFACE,                    /* bDescriptorType: Interface */
-  0x00,                                   /* bInterfaceNumber: Number of Interface */
-  0x00,                                   /* bAlternateSetting: Alternate setting */
-  0x01,                                   /* bNumEndpoints: One endpoints used */
-  0xFF,                                   /* bInterfaceClass: Communication Interface Class */
-  0xFF,                                   /* bInterfaceSubClass: Abstract Control Model */
-  0xFF,                                   /* bInterfaceProtocol: No protocol */
-  0x00,                                   /* iInterface: */
-  
-  0x07,                                   /* bLength: Endpoint Descriptor size */
-  USB_DTYPE_ENDPOINT,                     /* bDescriptorType: Endpoint */
-  0x81,                                   /* bEndpointAddress: (IN1) */
-  0x02,                                   /* bmAttributes: Bulk */
-  0x40, 0x00,                             /* wMaxPacketSize: */
-  0x00,                                   /* bInterval: ignore for Bulk transfer */
-};
 const uint8_t StringLangID[] = { 
   0x04,                                   /* bLength */
   USB_DTYPE_STRING,                       /* bDescriptorType */
@@ -66,27 +40,30 @@ const uint8_t StringProduct[] = {
   't', 0, 'u', 0, 'r', 0, 'e', 0, ' ', 0, 'd', 0, 'e', 0, 'v', 0,
   'i', 0, 'c', 0, 'e', 0 
 };
-static const uint8_t *USB_Strings[] = { &StringLangID, &StringVendor, &StringProduct };
+//uint8_t StringSerial[50];
+//const uint8_t *USB_Strings[] = { &StringLangID, &StringVendor, &StringProduct};
 //----------------------------------------------------------------------------------------------------------------------
 
 
 #define CDC_EP0_SIZE    0x08
-#define CDC_RXD_EP      0x01
+//#define CDC_RXD_EP      0x01
 #define CDC_TXD_EP      0x81
 #define CDC_DATA_SZ     0x40
-#define CDC_NTF_EP      0x82
-#define CDC_NTF_SZ      0x08
-#define HID_RIN_EP      0x83
-#define HID_RIN_SZ      0x10
+//#define CDC_NTF_EP      0x82
+//#define CDC_NTF_SZ      0x08
+//#define HID_RIN_EP      0x83
+//#define HID_RIN_SZ      0x10
 
 #define CDC_LOOPBACK
 
 
 usbd_device udev;
-uint32_t	ubuf[0x20];
-uint8_t     fifo[0x200];
+uint32_t	ubuf[0x20] __attribute__ ((aligned (4)));
+//uint8_t     fifo[0x200];
 uint32_t    fpos = 0;
 
+
+/*
 
 USB_Response cdc_getdesc (usbd_ctlreq *req, void **address, uint16_t *length) {
   const uint8_t dtype = req->wValue >> 8;
@@ -94,20 +71,17 @@ USB_Response cdc_getdesc (usbd_ctlreq *req, void **address, uint16_t *length) {
   const uint8_t *desc;
   uint16_t len = 0;
   switch (dtype) {
-    case USB_DTYPE_DEVICE :
-      desc = USB_Descriptor;
-      break;
     case USB_DTYPE_CONFIGURATION :
       desc = USB_ConfigDescriptor;
       len = sizeof(USB_ConfigDescriptor);
       break;
-    case USB_DTYPE_STRING :
-      if(dnumber < 3) {
-        desc = USB_Strings[dnumber];
-      } else {
-        return USB_FAIL;
-      }
-      break;
+//    case USB_DTYPE_STRING :
+//      if(dnumber < 3) {
+//        desc = USB_Strings[dnumber];
+//      } else {
+//        return USB_FAIL;
+//      }
+//      break;
     default:
       return USB_FAIL;
   }
@@ -118,7 +92,7 @@ USB_Response cdc_getdesc (usbd_ctlreq *req, void **address, uint16_t *length) {
   *length = len;
   return USB_ACK;
 };
-
+*/
 
 USB_Response cdc_control(usbd_device *dev, usbd_ctlreq *req, usbd_rqc_callback *callback) {
     if (((USB_REQ_RECIPIENT | USB_REQ_TYPE) & req->bmRequestType) == (USB_REQ_INTERFACE | USB_REQ_CLASS)
@@ -141,70 +115,76 @@ USB_Response cdc_control(usbd_device *dev, usbd_ctlreq *req, usbd_rqc_callback *
 }
 
 
-/*
-static void cdc_rxonly (usbd_device *dev, uint8_t event, uint8_t ep) {
-   usbd_ep_read(dev, ep, fifo, CDC_DATA_SZ);
-}
 
-static void cdc_txonly(usbd_device *dev, uint8_t event, uint8_t ep) {
-    uint8_t _t = dev->driver->frame_no();
-//    memset(fifo, _t, CDC_DATA_SZ);
-    usbd_ep_write(dev, ep, fifo, CDC_DATA_SZ);
-}
-*/
+
 
 
 
 /* CDC loop callback. Both for the Data IN and Data OUT endpoint */
-static void cdc_loopback(usbd_device *dev, uint8_t event, uint8_t ep) {
-    int _t;
-    switch (event) {
-    case usbd_evt_eptx:
-        _t = ep_write(CDC_TXD_EP, &fifo[0], (fpos < CDC_DATA_SZ) ? fpos : CDC_DATA_SZ);
-        if (_t > 0) {
+//static void cdc_loopback(usbd_device *dev, uint8_t event, uint8_t ep) {
+//    int _t;
+//    switch (event) {
+//    case usbd_evt_eptx:
+//        _t = ep_write(CDC_TXD_EP, &fifo[0], (fpos < CDC_DATA_SZ) ? fpos : CDC_DATA_SZ);
+//        if (_t > 0) {
 //            memmove(&fifo[0], &fifo[_t], fpos - _t);
-            fpos -= _t;
-        }
-    case usbd_evt_eprx:
-        if (fpos < (sizeof(fifo) - CDC_DATA_SZ)) {
-            _t = ep_read(CDC_RXD_EP, &fifo[fpos], CDC_DATA_SZ);
-            if (_t > 0) {
-                fpos += _t;
-            }
-        }
-    default:
-        break;
-    }
-}
+//            fpos -= _t;
+//        }
+//    case usbd_evt_eprx:
+//        if (fpos < (sizeof(fifo) - CDC_DATA_SZ)) {
+//            _t = ep_read(CDC_RXD_EP, &fifo[fpos], CDC_DATA_SZ);
+//            if (_t > 0) {
+//                fpos += _t;
+//            }
+//        }
+//    default:
+//        break;
+//    }
+//}
 USB_Response cdc_setconf (usbd_device *dev, uint8_t cfg) {
-    switch (cfg) {
+  switch (cfg) {
     case 0:
         /* deconfiguring device */
-        USB_DeconfigEP(CDC_NTF_EP);
+//        USB_DeconfigEP(CDC_NTF_EP);
         USB_DeconfigEP(CDC_TXD_EP);
-        USB_DeconfigEP(CDC_RXD_EP);
-        usbd_reg_endpoint(dev, CDC_RXD_EP, 0);
+//        USB_DeconfigEP(CDC_RXD_EP);
+//        usbd_reg_endpoint(dev, CDC_RXD_EP, 0);
         usbd_reg_endpoint(dev, CDC_TXD_EP, 0);
         return USB_ACK;
     case 1:
         /* configuring device */
-        USB_ConfigEP( CDC_RXD_EP, USB_EPTYPE_BULK /*| USB_EPTYPE_DBLBUF*/, CDC_DATA_SZ);
-        USB_ConfigEP( CDC_TXD_EP, USB_EPTYPE_BULK /*| USB_EPTYPE_DBLBUF*/, CDC_DATA_SZ);
-        USB_ConfigEP( CDC_NTF_EP, USB_EPTYPE_INTERRUPT, CDC_NTF_SZ);
-#if defined(CDC_LOOPBACK)
-        usbd_reg_endpoint(dev, CDC_RXD_EP, cdc_loopback);
-        usbd_reg_endpoint(dev, CDC_TXD_EP, cdc_loopback);
-#else
-        usbd_reg_endpoint(dev, CDC_RXD_EP, cdc_rxonly);
+//        USB_ConfigEP( CDC_RXD_EP, USB_EPTYPE_BULK /*| USB_EPTYPE_DBLBUF*/, CDC_DATA_SZ);
+        USB_ConfigEP( CDC_TXD_EP, USB_EPTYPE_BULK | USB_EPTYPE_DBLBUF, CDC_DATA_SZ);
+//        USB_ConfigEP( CDC_NTF_EP, USB_EPTYPE_INTERRUPT, CDC_NTF_SZ);
+//#if defined(CDC_LOOPBACK)
+//        usbd_reg_endpoint(dev, CDC_RXD_EP, cdc_loopback);
+//        usbd_reg_endpoint(dev, CDC_TXD_EP, cdc_loopback);
+//#else
+//        usbd_reg_endpoint(dev, CDC_RXD_EP, cdc_rxonly);
         usbd_reg_endpoint(dev, CDC_TXD_EP, cdc_txonly);
-#endif
+//#endif
         ep_write(CDC_TXD_EP, 0, 0);
         return USB_ACK;
     default:
         return USB_FAIL;
     }
 }
+  void IntToUnicode(uint32_t value, uint8_t *pbuf) {
+  for(uint8_t i = 0; i < 8; i++) {
+    *(pbuf++) = (value & 0x0F) + (((value & 0x0F) < 0x0A) ? '0' : 'A' - 10);
+    *(pbuf++) = 0;
+    value = value >> 4;
+  }
+}
 
 void cdc_init_usbd(void) {
+//  uint8_t *dsc = StringSerial;
+//  dsc[0] = 50;
+//  dsc[1] = USB_DTYPE_STRING;
+//  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7AC), &dsc[2]);
+//  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7B0), &dsc[18]);
+//  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7B4), &dsc[34]);
+  
+  
     usbd_init(&udev, CDC_EP0_SIZE, ubuf, sizeof(ubuf));
 }
