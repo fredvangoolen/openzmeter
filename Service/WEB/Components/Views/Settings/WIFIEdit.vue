@@ -105,7 +105,7 @@
         this.ShowDialog = false;
       },
       Save: function() {
-        this.Config.SSID = this.$refs.SSID.value;
+        this.Config.ESSID = this.$refs.SSID.value;
         this.Config.Key = this.$refs.Password.value;
         this.Config.IPMode = (this.DHCPActive === true) ? "DHCP" : "STATIC";
         if(this.DHCPActive === false) {

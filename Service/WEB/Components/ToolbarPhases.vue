@@ -30,8 +30,8 @@
           Len = 1;
         } else if(this.Mode === '3PHASE') {
           Len = 3;
-        } else if((this.Mode === '3PHASE+N') && (type === 'CURRENT')) {
-          Len = 4;
+        } else if(this.Mode === '3PHASE+N') {
+          Len = (this.type === 'CURRENT') ? 4 : 3;
         }
         while(this.Phases.length < Len) this.Phases.push(false);
         this.Phases = this.Phases.slice(0, Len);

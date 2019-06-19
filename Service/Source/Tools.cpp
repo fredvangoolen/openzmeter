@@ -112,7 +112,7 @@ PIDFile::~PIDFile() {
   if(!pFile.empty()) remove(pFile.c_str());
 }
 //----------------------------------------------------------------------------------------------------------------------
-LOGFile        *LOGFile::pInstance;
+LOGFile        *LOGFile::pInstance = NULL;
 bool            LOGFile::pConsole = true;
 pthread_mutex_t LOGFile::pMutex = PTHREAD_MUTEX_INITIALIZER;
 LOGFile::LOGFile() {
@@ -171,28 +171,27 @@ void LOGFile::Error(const char* msg, ...) {
 void LOGFile::Msg(Type type, const char *msg, va_list params) {
   time_t Now;
   struct tm *TimeStamp;
-  char DateStr[80];
+  char DateStr[32];
+  char MsgStr[1024];
   pthread_mutex_lock(&pMutex);
   time(&Now);
   TimeStamp = localtime(&Now);
-  strftime(DateStr, 80, "[%d/%m/%Y - %X] ", TimeStamp);
+  strftime(DateStr, 80, "[%d/%m/%Y - %X]", TimeStamp);
+  vsnprintf(MsgStr, sizeof(MsgStr), msg, params);
   if(pConsole == true) {
     if(type == ERROR) {
-      printf("\033[1;31m%s\033[0m", DateStr);
+      if(printf("\033[1;31m%s\033[0m %s", DateStr, MsgStr) == 0) pConsole = false;
     } else if(type == WARNING) {
-      printf("\033[1;33m%s\033[0m", DateStr);
+      if(printf("\033[1;33m%s\033[0m %s", DateStr, MsgStr) == 0) pConsole = false;
     } else if(type == DEBUG) {
-      printf("\033[1;37m%s\033[0m", DateStr);
+      if(printf("\033[1;37m%s\033[0m %s", DateStr, MsgStr) == 0) pConsole = false;
     } else if(type == INFO) {
-      printf("\033[1;34m%s\033[0m", DateStr);
-    } else {
-      return;
+      if(printf("\033[1;34m%s\033[0m %s", DateStr, MsgStr) == 0) pConsole = false;
     }
-    if(vprintf(msg, params) < 0) pConsole = false;
-    fflush(stdout);
   }
+  if(pConsole == true) fflush(stdout);
   if(pInstance != NULL) {
-    if((type < pInstance->pLevel) && (pInstance->pFile != NULL)) vfprintf(pInstance->pFile, msg, params);
+    if((type < pInstance->pLevel) && (pInstance->pFile != NULL)) fprintf(pInstance->pFile, "[%s]  %s", DateStr, MsgStr);
   }
   pthread_mutex_unlock(&pMutex);
 }

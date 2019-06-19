@@ -107,7 +107,7 @@ bool DeviceV1_01::Start() {
   }
   Config = json::object();
   Config["VoltageGain"] = pVoltageGain;
-  Config["VoltageOffset"] =pVoltageOffset;
+  Config["VoltageOffset"] = pVoltageOffset;
   Config["CurrentGain"] = pCurrentGain;
   Config["CurrentOffset"] = pCurrentOffset;
   Config["AutoStart"] = AutoStart;
@@ -148,13 +148,16 @@ bool DeviceV1_01::Start() {
   return true;
 }
 bool DeviceV1_01::Stop() {
+  //detengo la captura
+  if(pAnalyzer) delete pAnalyzer;
+  pAnalyzer = NULL;
   return true;
 }
 DeviceV1_01::~DeviceV1_01() {
   Stop();
 //  if(pVoltageSamples) free(pVoltageSamples);
 //  if(pCurrentSamples) free(pCurrentSamples);
-  if(pAnalyzer) delete pAnalyzer;
+//  if(pAnalyzer) delete pAnalyzer;
   //  if(Buffer) {
 //    pthread_cond_signal(&WriteWait);
 //    pthread_cond_signal(&ReadWait);
@@ -280,7 +283,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
           This->pNewDevice = NULL;
           continue;
         } else {
-          LOGFile::Info("Kernel driver dettached for DeviceV1.01 device with serial %s\n", This->pSerial.c_str());
+          LOGFile::Info("Kernel driver dettached for DeviceV1.01 device with serial '%s'\n", This->pSerial.c_str());
         }
       }
       Result = libusb_claim_interface(This->pDeviceHandle, 0);
@@ -291,7 +294,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       } else {
-        LOGFile::Info("Claimed interface 1 on 'V1.01' device with serial %s\n", This->pSerial.c_str());
+        LOGFile::Info("Claimed interface 0 for DeviceV1.01 device with serial %s\n", This->pSerial.c_str());
       }
       for(int i = 0; i < DEVICEV1_01_TRANSFERS; i++) {
         libusb_fill_bulk_transfer(This->pTransfers[i].Transfer, This->pDeviceHandle, DEVICEV1_01_ENDPOINT_IN, This->pTransfers[i].Buffer, sizeof(This->pTransfers[i].Buffer), ReadCallback, This, -1);
@@ -304,7 +307,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       }
-      LOGFile::Info("Capture started on device V1.01 with serial %s\n", This->pSerial.c_str());
+      LOGFile::Info("Capture started on DeviceV1.01 with serial '%s'\n", This->pSerial.c_str());
 //      This->pTerminateSignal = false;
 //      if(pthread_create(&This->pSignalThread, NULL, Signal_Thread, This) != 0) {
 //        LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));

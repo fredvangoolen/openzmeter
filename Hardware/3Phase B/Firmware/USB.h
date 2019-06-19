@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+
 /* USB device machine states */
 typedef enum {
   USB_STATE_DEFAULT,         /* Default */
@@ -37,6 +38,9 @@ void    USB_StallEP(uint8_t ep, bool stall);
 bool    USB_StalledEP(uint8_t ep);
 int32_t ep_read(uint8_t ep, void *buf, uint16_t blen);
 int32_t ep_write(uint8_t ep, void *buf, uint16_t blen);
+
+
+
 
 //void evt_poll(usbd_device *dev, usbd_evt_callback callback);
 
@@ -524,3 +528,12 @@ struct usb_string_descriptor {
 #if defined (__cplusplus)
 }
 #endif
+extern usbd_device udev;
+void usbd_process_ep0 (usbd_device *dev, uint8_t event, uint8_t ep);
+void cdc_txonly(usbd_device *dev, uint8_t event, uint8_t ep);
+
+extern const uint8_t StringLangID[];
+extern const uint8_t StringVendor[];
+extern const uint8_t StringProduct[];
+extern const uint8_t USB_Descriptor[];
+extern const uint8_t USB_ConfigDescriptor[];

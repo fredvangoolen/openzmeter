@@ -84,11 +84,10 @@ int main(int argc, char** argv) {
     } else if(strcmp(argv[i], "--help") == 0) {
       printf("--help           - Shows this screen");
       printf("--config=<file>  - Set config file\n");
-      printf("--debug          - Enable debug messages\n");
       printf("--daemon         - Detach from console and run as service ");
       return 0;
     } else {
-      printf("Option %s not recogniced. Use --help to show valid options.", argv[i]);
+      printf("Option %s not recogniced. Use --help to show valid options.\n\n", argv[i]);
     }
   }
   /* Load config file */

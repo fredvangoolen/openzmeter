@@ -10,7 +10,7 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 EXECUTABLE_TARGET = Tmp/openZmeter
 EXECUTABLE_SOURCE = Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/Tools.cpp Source/Devices/Devices.cpp Source/Analyzers/AnalyzerInterface.cpp Source/Tariffs/Tariff.cpp
 CFLAGS += -Wno-psabi -Wall -std=c++11 -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs 
-LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz
+LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz -lpthread
 
 #Add libs (cctz, nlohmann)
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
@@ -50,6 +50,12 @@ ifeq ($(DEVICE_V1_01), true)
 	CFLAGS += -DDEVICE_V1_01
 	LDFLAGS += -lusb-1.0
 endif
+ifeq ($(DEVICE_V2_01), true)
+	EXECUTABLE_SOURCE += Source/Devices/V2_01/DeviceV2_01.cpp
+	ANALYZER_SOFT = true
+	CFLAGS += -DDEVICE_V2_01
+	LDFLAGS += -lusb-1.0
+endif
 ifeq ($(DEVICE_VIRTUAL), true)
 	EXECUTABLE_SOURCE += Source/Devices/Virtual/DeviceVirtual.cpp
 	CFLAGS += -DDEVICE_VIRTUAL
@@ -63,6 +69,11 @@ endif
 ifeq ($(OPENWRT), true)
 	EXECUTABLE_SOURCE += Source/Support/OpenWRT/OpenWRT.cpp
 	CFLAGS += -I Source/Support/OpenWRT -DOPENWRT
+	LDFLAGS += -ldbus-1
+endif
+ifeq ($(DEBIAN), true)
+	EXECUTABLE_SOURCE += Source/Support/Debian/Debian.cpp
+	CFLAGS += -I Source/Support/Debian -DDEBIAN
 	LDFLAGS += -ldbus-1
 endif
 

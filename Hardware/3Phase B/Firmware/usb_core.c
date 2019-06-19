@@ -19,8 +19,36 @@
 #include "USB.h"
 
 
+const uint8_t USB_ConfigDescriptor[] = {
+  0x09,                                   /* bLength: Configuation Descriptor size */
+  USB_DTYPE_CONFIGURATION,                /* bDescriptorType: Configuration */
+  0x19, 0x00,                             /* wTotalLength:no of returned bytes */
+  0x01,                                   /* bNumInterfaces: 1 interface */
+  0x01,                                   /* bConfigurationValue: Configuration value */
+  0x00,                                   /* iConfiguration: Index of string descriptor describing the configuration */
+  0xC0,                                   /* bmAttributes: self powered */
+  0x00,                                   /* MaxPower 0 mA */
 
-static void usbd_process_ep0 (usbd_device *dev, uint8_t event, uint8_t ep);
+  0x09,                                   /* bLength: Interface Descriptor size */
+  USB_DTYPE_INTERFACE,                    /* bDescriptorType: Interface */
+  0x00,                                   /* bInterfaceNumber: Number of Interface */
+  0x00,                                   /* bAlternateSetting: Alternate setting */
+  0x01,                                   /* bNumEndpoints: One endpoints used */
+  0xFF,                                   /* bInterfaceClass: Communication Interface Class */
+  0xFF,                                   /* bInterfaceSubClass: Abstract Control Model */
+  0xFF,                                   /* bInterfaceProtocol: No protocol */
+  0x00,                                   /* iInterface: */
+  
+  0x07,                                   /* bLength: Endpoint Descriptor size */
+  USB_DTYPE_ENDPOINT,                     /* bDescriptorType: Endpoint */
+  0x81,                                   /* bEndpointAddress: (IN1) */
+  0x02,                                   /* bmAttributes: Bulk */
+  0x40, 0x00,                             /* wMaxPacketSize: */
+  0x00,                                   /* bInterval: ignore for Bulk transfer */
+};
+
+
+void usbd_process_ep0 (usbd_device *dev, uint8_t event, uint8_t ep);
 
 
 
@@ -30,8 +58,8 @@ static void usbd_process_ep0 (usbd_device *dev, uint8_t event, uint8_t ep);
  * \return none
  */
 void USB_SetAddress(usbd_device *dev, usbd_ctlreq *req) {
-    USB->DADDR = USB_DADDR_EF | req->wValue;
-    dev->status.device_state = (req->wValue) ? USB_STATE_ADDRESSED : USB_STATE_DEFAULT;
+  USB->DADDR = USB_DADDR_EF | req->wValue;
+  dev->status.device_state = (req->wValue) ? USB_STATE_ADDRESSED : USB_STATE_DEFAULT;
 }
 
 /** \brief Control transfer completion callback processing
@@ -51,14 +79,14 @@ static void usbd_process_callback (usbd_device *dev) {
  * \return usbd_ack if success
  */
 USB_Response cdc_setconf (usbd_device *dev, uint8_t cfg);
-USB_Response usbd_configure(usbd_device *dev, uint8_t config) {
-        if (cdc_setconf(dev, config) == USB_ACK) {
-            dev->status.device_cfg = config;
-            dev->status.device_state = (config) ? USB_STATE_CONFIGURED : USB_STATE_ADDRESSED;
-            return USB_ACK;
-        }
-    return USB_FAIL;
-}
+//USB_Response usbd_configure(usbd_device *dev, uint8_t config) {
+//        if (cdc_setconf(dev, config) == USB_ACK) {
+//            dev->status.device_cfg = config;
+//            dev->status.device_state = (config) ? USB_STATE_CONFIGURED : USB_STATE_ADDRESSED;
+//            return USB_ACK;
+//        }
+//    return USB_FAIL;
+//}
 
 
 /** \brief Standard control request processing for device
@@ -66,48 +94,78 @@ USB_Response usbd_configure(usbd_device *dev, uint8_t config) {
  * \param req pointer to control request
  * \return TRUE if request is handled
  */
-USB_Response cdc_getdesc (usbd_ctlreq *req, void **address, uint16_t *length);
-USB_Response usbd_process_devrq (usbd_device *dev, usbd_ctlreq *req) {
-    switch (req->bRequest) {
-    case USB_STD_CLEAR_FEATURE:
+//USB_Response cdc_getdesc (usbd_ctlreq *req, void **address, uint16_t *length);
+USB_Response usbd_process_devrq(usbd_ctlreq *req) {
+  switch(req->bRequest) {
+    case USB_STD_CLEAR_FEATURE :
         /* not yet supported */
         break;
-    case USB_STD_GET_CONFIG:
-        req->data[0] = dev->status.device_cfg;
+    case USB_STD_GET_CONFIG :
+        req->data[0] = udev.status.device_cfg;
         return USB_ACK;
-    case USB_STD_GET_DESCRIPTOR:
-        if (req->wValue == ((USB_DTYPE_STRING << 8) | INTSERIALNO_DESCRIPTOR )) {
-            dev->status.data_count = get_serialno_desc(req->data);
-            return USB_ACK;
+    case USB_STD_GET_DESCRIPTOR :
+      if((req->wValue >> 8) == USB_DTYPE_STRING) {
+        if((req->wValue & 0xFF) == 0x00) {
+          udev.status.data_ptr = StringLangID;
+          udev.status.data_count = StringLangID[0];
+          return USB_ACK;
+        } else if((req->wValue & 0xFF) == 0x01) {
+          udev.status.data_ptr = StringVendor;
+          udev.status.data_count = StringVendor[0];
+          return USB_ACK;
+        } else if((req->wValue & 0xFF) == 0x02) {
+          udev.status.data_ptr = StringProduct;
+          udev.status.data_count = StringProduct[0];
+          return USB_ACK;
+        } else if((req->wValue & 0xFF) == 0x03) {
+          uint8_t *dsc = req->data;
+          dsc[0] = 50;
+          dsc[1] = USB_DTYPE_STRING;
+          IntToUnicode(*(__IO uint32_t*)(0x1FFFF7AC), &dsc[2]);
+          IntToUnicode(*(__IO uint32_t*)(0x1FFFF7B0), &dsc[18]);
+          IntToUnicode(*(__IO uint32_t*)(0x1FFFF7B4), &dsc[34]);
+          udev.status.data_count = 50;
+          return USB_ACK;
         } else {
-//            if (dev->descriptor_callback) {
-                return cdc_getdesc(req, &(dev->status.data_ptr), &(dev->status.data_count));
-//            }
+          return USB_FAIL;
         }
-        break;
-    case USB_STD_GET_STATUS:
-        req->data[0] = 0;
-        req->data[1] = 0;
+      } else if((req->wValue >> 8) == USB_DTYPE_DEVICE) {
+        udev.status.data_ptr = USB_Descriptor;
+        udev.status.data_count = USB_Descriptor[0];
         return USB_ACK;
-    case USB_STD_SET_ADDRESS:
-        if (getinfo(dev) & USBD_HW_ADDRFST) {
-            USB_SetAddress(dev, req);
-        } else {
-            dev->complete_callback = USB_SetAddress;
-        }
+      } else if((req->wValue >> 8) == USB_DTYPE_CONFIGURATION) {
+        udev.status.data_ptr = USB_ConfigDescriptor;
+        udev.status.data_count = sizeof(USB_ConfigDescriptor);
         return USB_ACK;
-    case USB_STD_SET_CONFIG:
-        return usbd_configure(dev, req->wValue);
-    case USB_STD_SET_DESCRIPTOR:
+      }
+      return USB_FAIL;
+      
+//      break;
+    case USB_STD_GET_STATUS :
+      req->data[0] = 0;
+      req->data[1] = 0;
+      return USB_ACK;
+    case USB_STD_SET_ADDRESS :
+      if(getinfo() & USBD_HW_ADDRFST) {
+        USB_SetAddress(&udev, req);
+      } else {
+        udev.complete_callback = USB_SetAddress;
+      }
+      return USB_ACK;
+    case USB_STD_SET_CONFIG :
+      if(cdc_setconf(&udev, req->wValue) == USB_ACK) {
+        udev.status.device_cfg = req->wValue;
+        udev.status.device_state = (req->wValue) ? USB_STATE_CONFIGURED : USB_STATE_ADDRESSED;
+        return USB_ACK;
+      }
+      return USB_FAIL;
+    case USB_STD_SET_DESCRIPTOR :
         /* should be externally handled */
         break;
     case USB_STD_SET_FEATURE:
-        /* not yet supported */
-        break;
-    default:
-        break;
-    }
-    return USB_FAIL;
+      break;
+  }
+  return USB_FAIL;
 }
 
 /** \brief Standard control request processing for interface
@@ -163,7 +221,7 @@ USB_Response usbd_process_request(usbd_device *dev, usbd_ctlreq *req) {
     /* continuing standard USB requests */
     switch (req->bmRequestType & (USB_REQ_TYPE | USB_REQ_RECIPIENT)) {
     case USB_REQ_STANDARD | USB_REQ_DEVICE:
-        return usbd_process_devrq(dev, req);
+        return usbd_process_devrq(req);
     case USB_REQ_STANDARD | USB_REQ_INTERFACE:
         return usbd_process_intrq(dev, req);
     case USB_REQ_STANDARD | USB_REQ_ENDPOINT:
@@ -302,7 +360,7 @@ static void usbd_process_eprx(usbd_device *dev, uint8_t ep) {
  * \param dev usb device
  * \param event endpoint event
  */
-static void usbd_process_ep0 (usbd_device *dev, uint8_t event, uint8_t ep) {
+void usbd_process_ep0(usbd_device *dev, uint8_t event, uint8_t ep) {
     switch (event) {
     case usbd_evt_epsetup:
         /* force switch to setup state */
@@ -323,27 +381,15 @@ static void usbd_process_ep0 (usbd_device *dev, uint8_t event, uint8_t ep) {
  * \param evt usb event
  * \param ep active endpoint
  */
-static void usbd_process_evt(usbd_device *dev, uint8_t evt, uint8_t ep) {
-    switch (evt) {
-    case USB_EVENT_RESET:
-    dev->status.device_state = USB_STATE_DEFAULT;
-    dev->status.control_state = USB_CONTROL_IDLE;
-    dev->status.device_cfg = 0;
-    USB_ConfigEP(0, USB_EPTYPE_CONTROL, dev->status.ep0size);
-    dev->endpoint[0] = usbd_process_ep0;
-    USB->DADDR = USB_DADDR_EF;
-        break;
+void usbd_process_evt(usbd_device *dev, uint8_t evt, uint8_t ep) {
+  switch (evt) {
     case usbd_evt_eprx:
     case usbd_evt_eptx:
     case usbd_evt_epsetup:
-        if (dev->endpoint[ep & 0x07]) dev->endpoint[ep & 0x07](dev, evt, ep);
-        break;
+      if(dev->endpoint[ep & 0x07]) dev->endpoint[ep & 0x07](dev, evt, ep);
+      break;
     default:
-        break;
-    }
-    if (dev->events[evt]) dev->events[evt](dev, evt, ep);
-}
-
- __attribute__((externally_visible)) void usbd_poll(usbd_device *dev) {
-    evt_poll(dev, usbd_process_evt);
+      break;
+  }
+  if (dev->events[evt]) dev->events[evt](dev, evt, ep);
 }
