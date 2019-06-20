@@ -34,7 +34,7 @@
         this.UserName = localStorage.getItem('UserName');
       }
       $(document).ajaxError(function( event, jqxhr, settings, exception ) {
-        if(jqxhr.status === 401) this.$refs.logout.show();
+//        if(jqxhr.status === 401) this.$refs.logout.show();
       }.bind(this));
     },
     components: { UserLogout, UserEdit }

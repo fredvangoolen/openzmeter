@@ -427,9 +427,9 @@ int main(void) {
       if(Counter < 13) {
         SetBeep(10);
         SetLeds(1 << Counter, 0);
-        SleepMS(500);
+        SleepMS(1000);
         SetLeds(0, 0);
-        SleepMS(500);
+        SleepMS(1000);
         Counter++;
         if(bDeviceState == CONFIGURED) {
           SetBeep(80);
