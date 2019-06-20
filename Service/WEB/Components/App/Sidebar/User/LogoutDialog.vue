@@ -8,7 +8,7 @@
         </div>
         <div class="modal-body">
           <p>The current session has expired due to inactivity. Please re-login</p>
-          <p><a href="/Login">Login</a></p>
+          <p><a v-on:click="Logout">Login</a></p>
         </div>
       </div>
     </div>
@@ -21,6 +21,9 @@
       return { ShowDialog: false };
     },
     methods: {
+      Logout: function() {
+        window.location.href = 'Logout';
+      },
       show: function() {
         this.ShowDialog = true;
         this.$nextTick(function() {

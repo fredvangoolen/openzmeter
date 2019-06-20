@@ -87,7 +87,6 @@
              }
         }
       };
-//      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
     mounted: function() {
       $(window).on('resize', this.ResizeHandler.bind(this));
@@ -116,26 +115,6 @@
         if(this.$root.SelectedAnalyzer === null) return;
         this.$refs.tools.SaveCVS('Frequency.csv', [['Time', 'Frequency']].concat(this.Data));
       },
-      
-//      SetAnalyzer: function() {
-//        this.LastSample = 0;
-//        this.$refs.graph.SetOptions( { file: [] } );
-//        this.UpdateGraph();
-//        this.NowValue();
-//      },
-//      SetAutoUpdate: function(autoUpdate, to) {
-//        this.AutoUpdate = autoUpdate;
-//        this.To = to;    
-//        clearInterval(this.Timer);
-//        this.LastSample = 0;
-//        if(autoUpdate === false) this.$refs.tools.WriteTo(this.DateWindow[1]);
-//        if((autoUpdate === true) || (this.Data === [])) this.UpdateGraph();
-//      },
-//      PeriodChange: function(time) {
-//        this.Period = time;
-//        this.LastSample = 0;
-//        this.UpdateGraph();
-//      },
       NowValue: function() {
         if(this.NowTimer !== null) clearInterval(this.NowTimer);    
         if(this.$root.SelectedAnalyzer === null) {
@@ -237,13 +216,7 @@
         this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
       },
       ZoomEvt: function(minDate, maxDate, yRanges) {
-        clearInterval(this.Timer);
-        this.AutoUpdate = false;
-        this.To = this.$refs.tools.WriteTo(maxDate, true);
-        this.$refs.period.SetPeriod(maxDate - minDate);
-        this.Period = maxDate - minDate;
-        this.LastSample = 0;
-        this.UpdateGraph();
+        this.$refs.period.SetCustom(minDate, maxDate);
       }
     },
     components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarTools, Graph }

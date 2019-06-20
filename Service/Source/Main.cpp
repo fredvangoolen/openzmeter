@@ -15,16 +15,11 @@
 //---------------------------------------------------------------------------------------------------------------------
 void GetNewsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
-  uint64_t Time = 0;
-  if(Params["NewsTime"].is_number()) Time = Params["NewsTime"];
-  if(!Params["Action"].is_string()) {
-    req.ExecSentenceAsyncResult("SELECT COALESCE((SELECT jsonb_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime = " + req.Bind(Time) + "), 'null') AS result");
-  } else if(Params["Action"] == "Before") {
-    req.ExecSentenceAsyncResult("SELECT COALESCE((SELECT jsonb_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime < " + req.Bind(Time) + " ORDER BY newstime DESC LIMIT 1), 'null') AS result");    
-  } else if(Params["Action"] == "After") {
-    req.ExecSentenceAsyncResult("SELECT COALESCE((SELECT jsonb_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime > " + req.Bind(Time) + " ORDER BY newstime ASC LIMIT 1), 'null') AS result");
+  if(Params["NewsTime"].is_number()) {
+    uint64_t Time = Params["NewsTime"];
+    req.ExecSentenceAsyncResult("SELECT COALESCE((SELECT json_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime = " + req.Bind(Time) + "), 'null') AS result");
   } else {
-    return req.FromString("'Action' must be 'After' or 'Before'", MHD_HTTP_BAD_REQUEST);
+    req.ExecSentenceAsyncResult("SELECT json_build_object('Version', '" __DATE__ "_" __TIME__ "', 'News', array_agg(newstime)) AS result from news");
   }
   if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("result"), MHD_HTTP_OK);

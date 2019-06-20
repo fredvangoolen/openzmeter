@@ -35,6 +35,9 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
+        options: {
+          compact: true
+        },
         exclude: /node_modules/
       },
       {
@@ -63,7 +66,7 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
-      '*':             { target: 'http://10.8.0.104:8081'}
+      '*':             { target: 'http://10.8.0.135:80'}
     }
   },
   performance: {

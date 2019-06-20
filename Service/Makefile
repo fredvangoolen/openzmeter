@@ -8,7 +8,7 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 
 #Executable related components
 EXECUTABLE_TARGET = Tmp/openZmeter
-EXECUTABLE_SOURCE = Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/Tools.cpp Source/Devices/Devices.cpp Source/Analyzers/AnalyzerInterface.cpp Source/Tariffs/Tariff.cpp
+EXECUTABLE_SOURCE = Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/Tools.cpp Source/Devices/Devices.cpp Source/Analyzers/AnalyzerInterface.cpp Source/Tariffs/Tariff.cpp 
 CFLAGS += -Wno-psabi -Wall -std=c++11 -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs 
 LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz -lpthread
 

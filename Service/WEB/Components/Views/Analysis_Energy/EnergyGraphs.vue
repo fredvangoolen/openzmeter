@@ -5,8 +5,8 @@
         <div class="huge header-text">Active Energy</div>
         <div class="header-buttons clearfix" ref="ToolbarActive">
           <toolbar-aggregation variable="AggregationEnergy" :options="['15M', '1H']" v-on:AggregationChanged="AggregationChanged" ref="aggregation"></toolbar-aggregation>
-          <toolbar-period variable="Period" v-on:PeriodChanged="PeriodChange" ref="period"></toolbar-period>
-          <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:NowStatus="SetAutoUpdate" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeActiveClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
+          <toolbar-period variable="Period" v-on:PeriodChanged="UpdateGraph" ref="period"></toolbar-period>
+          <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeActiveClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
         </div>
       </div>
       <div class="panel-body">
@@ -57,13 +57,7 @@
       this.Bills = [];
       this.ActiveData = [];
       this.ReactiveData = [];
-      this.LastSample = 0;
-      this.Timer = null;
       this.NowTimer = null;
-      this.Aggreg = null;
-      this.Period = null;
-      this.DateWindow = [0, 0];
-      this.AutoUpdate = null;
       this.GraphOptionsActive = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: oZm.LegendFormatter_Follow, plotter: Graph.multiColumnBarPlotter,
         labels: ['Time', 'Active Energy'], zoomCallback: this.ZoomEvt, interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt, dblclick: this.DoubleClickEvt }, colors: [oZm.Series['ACTIVE_ENERGY'].Color], xAxisHeight: 24, 
@@ -89,43 +83,24 @@
                valueFormatter: function (x) { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); }
              }
         }
-      };      
-      this.$root.$on('AnalyzerChanged', this.SetAnalyzer); 
+      };
+      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
     mounted: function() {
       $(window).on('resize', this.ResizeHandler.bind(this));
       window.dispatchEvent(new Event('resize'));
-      this.UpdateGraph();
       this.NowValue();
     },
     beforeDestroy: function() {
       $(window).off('resize', this.ResizeHandler);
-      clearInterval(this.Timer);
       clearInterval(this.NowTimer);
     },
     methods: {
       SetAnalyzer: function() {
-        this.LastSample = 0;
-        this.UpdateGraph();
         this.NowValue();
       },
-      SetAutoUpdate: function(autoUpdate, to) {
-        this.AutoUpdate = autoUpdate;
-        this.To = to;    
-        clearInterval(this.Timer);
-        this.LastSample = 0;
-        if(autoUpdate === false) this.$refs.tools.WriteTo(this.DateWindow[1]);
-        if((autoUpdate === true) || (this.Data === [])) this.UpdateGraph();
-      },
       AggregationChanged: function(aggreg) {
-        this.Aggreg = aggreg;
-        this.LastSample = 0;
-        this.UpdateGraph();
-      },
-      PeriodChange: function(time) {
-        this.Period = time;
-        this.LastSample = 0;
-        this.UpdateGraph();
+        this.$refs.period.SetAggregation(aggreg);
       },
       ResizeHandler: function() {
         if(typeof this.$refs.graphActive !== 'undefined') this.$refs.graphActive.Redraw('100%', $(this.$refs.activeCounters.$el).height());
@@ -174,26 +149,23 @@
           }.bind(this)
         });
       },
-      UpdateGraph: function() {
-        if((this.$root.SelectedAnalyzer === null) || (this.Aggreg === null) || (this.Period === null) || (this.AutoUpdate === null) || (this.To === null)) return;
+      UpdateGraph: function(to, period, lastsample, aggreg) {
         if(this.LastSample === 0) {
           this.ActiveData = [];
           this.ReactiveDate = [];
           this.ShowSpinner = true;
         }
-        this.$refs.tools.BeginUpdate();
-        $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: this.Aggreg, To: this.To, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: this.Period }), 
+        var Analyzer = this.$root.SelectedAnalyzer;
+        $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, To: to, LastSample: lastsample, Analyzer: Analyzer.ID, Period: period }), 
           success: function(result) {
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
-            this.DateWindow = [result['From'], result['To']];
-            this.To = this.$refs.tools.WriteTo(result['To']);
-            this.LastSample = oZm.LastSampletime(result, this.LastSample);
             if(this.Aggreg === '15M') {
               for(var n = 0; n < result['Active_Power'].length; n++) result['Active_Power'][n] = result['Active_Power'][n] / 4.0;
               for(var n = 0; n < result['Reactive_Power'].length; n++) result['Reactive_Power'][n] = result['Reactive_Power'][n] / 4.0;
             }
             this.ActiveData = oZm.GraphDataAppend(result, 'Active_Power', this.ActiveData);
             this.ReactiveData = oZm.GraphDataAppend(result, 'Reactive_Power', this.ReactiveData);
+            lastsample = oZm.LastSampletime(result, lastsample);
             this.Bills = result["Bills"];
             //Group periods
             var LastItem = (this.Periods.length > 0) ? this.Periods.slice(-1)[0] : null;
@@ -212,19 +184,17 @@
                   LastItem = Period;
                 }
               }
-              this.Periods = this.Periods.filter(period => (period.To > this.DateWindow[0]) || (period.From < this.DateWindow[1]) ).sort(function(a, b) { if(a.To < b.To) return -1; if(a.To > b.To) return 1; return 0; });
+              this.Periods = this.Periods.filter(period => (period.To > result.from) || (period.From < result.to) ).sort(function(a, b) { if(a.To < b.To) return -1; if(a.To > b.To) return 1; return 0; });
             }
-            this.$refs.graphActive.SetOptions( { dateWindow: this.DateWindow, file: this.ActiveData, valueRange: oZm.Series['ACTIVE_ENERGY'].Range(this.ActiveData, [true]) } );
-            this.$refs.graphReactive.SetOptions( { dateWindow: this.DateWindow, file: this.ReactiveData, valueRange: oZm.Series['REACTIVE_ENERGY'].Range(this.ReactiveData, [true]) } );
-            this.$refs.activeCounters.SetStats(this.DateWindow, this.ActiveData, result["Aggregation_Source"]);
-            this.$refs.reactiveCounters.SetStats(this.DateWindow, this.ReactiveData, result["Aggregation_Source"]);
-            this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
-            this.ShowSpinner = false;
+            this.$refs.graphActive.SetOptions( { dateWindow: [result.From, result.To], file: this.ActiveData, valueRange: oZm.Series['ACTIVE_ENERGY'].Range(this.ActiveData, [true]) } );
+            this.$refs.graphReactive.SetOptions( { dateWindow: [result.From, result.To], file: this.ReactiveData, valueRange: oZm.Series['REACTIVE_ENERGY'].Range(this.ReactiveData, [true]) } );
+            this.$refs.activeCounters.SetStats([result.From, result.To], this.ActiveData, result["Aggregation_Source"]);
+            this.$refs.reactiveCounters.SetStats([result.From, result.To], this.ReactiveData, result["Aggregation_Source"]);
           }.bind(this),
           complete: function() {
-            this.$refs.tools.EndUpdate();
-            if(this.Timer !== null) clearTimeout(this.Timer);
-            if(this.AutoUpdate === true) this.Timer = setTimeout(this.UpdateGraph.bind(this), 5000);
+            this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
+            this.ShowSpinner = false;
+            this.$refs.period.UpdateCompleted(lastsample);
           }.bind(this),
           error: function(response) {
             if(response.status === 400) this.$refs.aggregation.AggregationFail();
@@ -241,12 +211,7 @@
         this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
       },
       ZoomEvt: function(minDate, maxDate, yRanges) {
-        this.AutoUpdate = false;
-        this.To = this.$refs.tools.WriteTo(maxDate, true);
-        this.$refs.period.SetPeriod(maxDate - minDate);
-        this.Period = maxDate - minDate;
-        this.LastSample = 0;
-        this.UpdateGraph();
+        this.$refs.period.SetCustom(minDate, maxDate);
       }
     },
     components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarTools, Graph, Counters }
