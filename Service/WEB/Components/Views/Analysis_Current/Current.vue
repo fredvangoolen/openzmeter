@@ -117,12 +117,7 @@
         this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
       },
       ZoomEvt(minDate, maxDate, yRanges) {
-        clearInterval(this.Timer);
-        this.$refs.tools.WriteTo(maxDate, true);
-        this.$refs.period.SetPeriod(maxDate - minDate);
-        this.DateWindow = [minDate, maxDate];
-        this.LastSample = 0;
-//        this.UpdateGraph();
+        this.$refs.period.SetCustom(minDate, maxDate);
       }
     },
     components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarPhases, ToolbarTools, Counters, Graph }

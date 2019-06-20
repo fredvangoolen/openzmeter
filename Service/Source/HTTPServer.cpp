@@ -123,6 +123,7 @@ bool HTTPRequest::Deflate() {
 }
 void HTTPRequest::CloseSession() {
   ExecSentenceNoResult("DELETE FROM sessions WHERE id = " + Bind(pSessionID));
+  pUserName.clear();
 }
 int  HTTPRequest::ResultCode() {
   return pResultCode;
@@ -184,7 +185,7 @@ void HTTPServer::RemoveExpiredSessions() {
   DB.ExecSentenceNoResult("DELETE FROM sessions WHERE (timestamp < " + DB.Bind(Tools::GetTime() - 1296000000) + " AND username IS NOT NULL) OR (timestamp < " + DB.Bind(Tools::GetTime() - 60000) + " AND username IS NULL)");
 }
 int HTTPServer::SendRedirect(struct MHD_Connection *connection, string url) {
-  LOGFile::Debug("Redirecting client to '%s'\n", url);
+  LOGFile::Debug("Redirecting client to '%s'\n", url.c_str());
   struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
   MHD_add_response_header(response, "Location", url.c_str());
   int Return = MHD_queue_response(connection, MHD_HTTP_SEE_OTHER, response);
@@ -210,7 +211,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     if((Request->ResultCode() != MHD_HTTP_OK) && (strcmp(method, MHD_HTTP_METHOD_GET) == 0)) {
       if(strcmp(url, "/Logout") == 0) {
         Request->CloseSession();
-        return SendRedirect(connection, "/Login");
+        return SendRedirect(connection, "/Login.html");
       } else if((strcmp(url, "/Login") == 0) && (Request->UserName().empty())) {
         Request->FromFile("WEB/Login.html");
       } else if(Request->UserName().empty()) {
