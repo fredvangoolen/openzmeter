@@ -3,9 +3,9 @@
     <div class="panel-heading">
       <div class="huge header-text">Energy consumption</div>
       <div class="header-buttons clearfix" ref="Toolbar">
-        <toolbar-aggregation variable="AggregationEnergy" v-on:AggregationChanged="AggregationChanged" :options="['15M', '1H']"></toolbar-aggregation>
+        <toolbar-aggregation variable="AggregationEnergy" v-on:AggregationChanged="AggregationChanged" :options="['15M', '1H']" ref="aggregation"></toolbar-aggregation>
         <toolbar-period variable="Period" v-on:PeriodChanged="UpdateGraph" ref="period"></toolbar-period>
-        <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE', 'NOW']" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
+        <toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
       </div>
     </div>
     <div class="panel-body">
@@ -97,7 +97,7 @@
       MinimizeClick: function() {
         $(window).bind('resize', this.ResizeHandler.bind(this));
       },
-      UpdateGraph: function(datewindow, to, period, lastsample, aggreg) {
+      UpdateGraph: function(to, period, lastsample, aggreg) {
         if(lastsample === 0) {
           this.Data = [];
           this.Periods = [];
@@ -106,14 +106,14 @@
         }
         $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: aggreg, Series: ['ACTIVE_POWER'], To: to, LastSample: lastsample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: period }), 
           success: function(result) {
-            if((this.$refs.period.Update === false) || (result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
+            if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             if(result['Aggregation_source'] === '15M') {
               for(var n = 0; n < result['Active_Power'].length; n++) result['Active_Power'][n] = result['Active_Power'][n] / 4.0;
             }
             this.Data = oZm.GraphDataAppend(result, 'Active_Power', this.Data);
             this.Costs = oZm.GraphDataAppend(result, 'Expense', this.Costs);
-            this.$refs.period.SetAggregation(result['Aggregation_Source'], false);
-            this.$refs.period.SetLastSample(oZm.LastSampletime(result, this.$refs.period.LastSample));
+            if(aggreg !== result['Aggregation_Source']) this.$refs.period.SetAggregation(result['Aggregation_Source']);
+            lastsample = oZm.LastSampletime(result, lastsample);
             this.Bills = result["Bills"];
             //Group periods
             var LastItem = (this.Periods.length > 0) ? this.Periods.slice(-1)[0] : null;
@@ -132,11 +132,14 @@
                   LastItem = Period;
                 }
               }
-              this.Periods = this.Periods.filter(period => (period.To > datewindow[0]) || (period.From < datewindow[1]) ).sort(function(a, b) { if(a.To < b.To) return -1; if(a.To > b.To) return 1; return 0; });
+              this.Periods = this.Periods.filter(period => (period.To > result.From) || (period.From < result.To) ).sort(function(a, b) { if(a.To < b.To) return -1; if(a.To > b.To) return 1; return 0; });
             }
-            this.$refs.graph.SetOptions( { dateWindow: datewindow, file: this.Data, valueRange: oZm.Series['ACTIVE_ENERGY'].Range(this.Data, [true]) } );
+            this.$refs.graph.SetOptions( { dateWindow: [result.From, result.To], file: this.Data, valueRange: oZm.Series['ACTIVE_ENERGY'].Range(this.Data, [true]) } );
             this.UpdateCounters(result['Aggregation_Source']);
+          }.bind(this),
+          complete: function() {
             this.ShowSpinner = false;
+            this.$refs.period.UpdateCompleted(lastsample);
           }.bind(this),
           error: function() {
             this.ShowSpinner = true;

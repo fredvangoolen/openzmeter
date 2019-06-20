@@ -1,11 +1,10 @@
 <template>
   <div class="btn-group">
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('EXPORT')" @click="$emit('ExportClick')" data-toggle="tooltip" title="Export data to CSV file"><img :src="require('Imgs/table_export.png')"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('MAXIMIZE') && !ShowMaximized" @click="$emit('MaximizeClick')" data-toggle="tooltip" title="Maximize graph"><img :src="require('Imgs/arrow_out.png')"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('MAXIMIZE') && ShowMaximized" @click="MinimizeClick" data-toggle="tooltip" title="Minimize graph"><img :src="require('Imgs/arrow_in.png')"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('NOW') && false" v-bind:class="{ active: Now, disabled: UpdateInProgress }" @click="NowClick" data-toggle="tooltip" title="Show most recent samples and update in real time"><img :src="require('Imgs/time_go.png')"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && (Pause == true)" @click="PlayClick" data-toggle="tooltip" title="Resume live update"><img :src="require('Imgs/play.png')"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && (Pause == false)" @click="PauseClick" data-toggle="tooltip" title="Pause"><img :src="require('Imgs/pause.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('EXPORT')" v-on:click="$emit('ExportClick')" data-toggle="tooltip" title="Export data to CSV file"><img :src="require('Imgs/table_export.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('MAXIMIZE') && !ShowMaximized" v-on:click="$emit('MaximizeClick')" data-toggle="tooltip" title="Maximize graph"><img :src="require('Imgs/arrow_out.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('MAXIMIZE') && ShowMaximized" v-on:click="MinimizeClick" data-toggle="tooltip" title="Minimize graph"><img :src="require('Imgs/arrow_in.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && (Pause == true)" v-on:click="PlayClick" data-toggle="tooltip" title="Resume live update"><img :src="require('Imgs/play.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && (Pause == false)" v-on:click="PauseClick" data-toggle="tooltip" title="Pause"><img :src="require('Imgs/pause.png')"></button>
     <div class="modal" v-if="ShowMaximized" tabindex="1" role="dialog" data-backdrop="static" ref="MaximizeDialog" data-keyboard="false">
       <div class="modal-dialog" style="width: 100%; height: 100%; padding: 10px; margin: 0px">
         <div class="modal-content" style="height: 100%">
@@ -22,36 +21,11 @@
 
 <script>
   export default {
-    props: { options: Array, variable: String },
+    props: { options: Array },
     data() {
       return { UpdateInProgress: false, Now: false, ShowMaximized: false, Pause: false };
     },
     methods: {
-      NowClick: function() {
-        this.Now = !this.Now;
-        $(this.$el).children('button').blur();
-        if(this.Now === true) this.WriteTo(0);
-        this.$emit('NowStatus', this.Now);
-      },
-      ReadTo: function() {
-        var Time = parseInt(localStorage.getItem(this.variable));
-        if(isNaN(Time) === true) Time = 0;
-        this.Now = (Time === 0);
-        return Time;
-      },
-      WriteTo: function(time, force) {
-        time = Math.round(time);
-        if((this.Now === true) && (force !== true)) time = 0;
-        localStorage.setItem(this.variable, time);
-        this.Now = (time === 0);
-        return time;
-      },
-      BeginUpdate: function() {
-        this.UpdateInProgress = true;
-      },
-      EndUpdate: function() {
-        this.UpdateInProgress = false;
-      },
       PlayClick: function() {
         this.Pause = false;
         $(this.$el).children('button').blur();
@@ -136,10 +110,6 @@
       this.Toolbar = null;
       this.PrevToolbar = null;
       this.PrevGraph = null;
-      this.ReadTo();
-    },
-    mounted: function() {
-      if(this.options.includes('NOW')) this.$emit('NowStatus', this.Now, this.ReadTo());      
     }
   }
 </script>
