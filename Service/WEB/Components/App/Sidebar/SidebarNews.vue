@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="sidenav-version"><div>Build: {{ BuildDate }}</div>
-      <button type="button" class="btn btn-default btn-xs pull-right" v-on:click="show"><img :src="require('Imgs/newspaper.png')"></button>
+      <!--button type="button" class="btn btn-default btn-xs pull-right" v-on:click="show"><img :src="require('Imgs/newspaper.png')"></button-->
     </div>
-    <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog" data-keyboard="false" ref="dialog">
+    <!--div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog" data-keyboard="false" ref="dialog">
       <div class="modal-backdrop in"></div>
       <div class="modal-dialog">
         <div class="modal-content">
@@ -23,7 +23,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div-->
   </div>
 </template>
 
@@ -34,7 +34,6 @@
       return { ShowSpinner: true, BuildDate: 'Wait...', ShowDialog: false, Title: '', Contents: '', News: []};
     },
     mounted: function() {
-      this.$root.$el.append(this.$refs.dialog);
       $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
         success: function(result) {
           this.News = result.News;
@@ -66,12 +65,14 @@
           }.bind(this)
         });
         this.$nextTick(function() {
+          this.$root.$el.append(this.$refs.dialog);
           $(this.$refs.dialog).modal('show');
         });
       },
       Prev: function() {},
       Next: function() {},
       Back: function() {
+        $(this.$refs.dialog).modal('hide');
         this.ShowDialog = false;
       },
       ReadNews() {

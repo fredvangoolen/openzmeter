@@ -65,8 +65,10 @@
       this.DateWindow = [0, 0];
       this.TmpDateWindow = [0, 0];
       var Conf = JSON.parse(localStorage.getItem(this.variable));
-      if(Conf.To !== undefined) this.To = Conf.To;
-      if(Conf.Period !== undefined) this.Period = Conf.Period;
+      if(Conf !== null) {
+        if(Conf.To !== undefined) this.To = Conf.To;
+        if(Conf.Period !== undefined) this.Period = Conf.Period;
+      }
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
     methods: {

@@ -13,7 +13,7 @@
           <div class="panel-body">
             <spinner v-if="ShowSpinner"></spinner>
             <summary-graph ref="summary"></summary-graph>
-            <bill v-for="bill in Bills" :bill="bill" :currency="Currency" ref="bills"></bill>
+            <bill v-for="bill in Bills" :bill="bill" :currency="Currency" ref="bills" v-bind:key="bill.From"></bill>
           </div>
         </div>
       </div>
