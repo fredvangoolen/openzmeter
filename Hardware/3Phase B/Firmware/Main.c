@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <STM32F0xx.h>
 #include "USB.h"
+// Configuration -------------------------------------------------------------------------------------------------------
 #define BUFF_LEN 1024
 // Types definition ----------------------------------------------------------------------------------------------------
 typedef struct {
@@ -15,16 +16,11 @@ typedef struct {
   uint16_t Battery;
 } ADC_Sequence_t;
 typedef struct {
-  uint8_t Prescaler;        //Increases on each interrupt event
-} SysTicks_t;
-typedef struct {
   uint8_t Battery;            //Battery level
-  uint8_t Buzzer:2;           //Buzzer beeps
+  uint8_t Buzzer:4;           //Buzzer beeps
   uint8_t Button:2;           //Pending button action
-  uint8_t Power_A_ON:1;       //Power LED (PB5)
-  uint8_t Power_A_BLINK:1;
-  uint8_t Power_B_ON:1;
-  uint8_t Power_B_BLINK:1;
+  uint8_t Power_R_ON:1;       //Power LED (PB5) RED
+  uint8_t Power_G_ON:1;       //Power LED (PB5) GREEN
   uint8_t Status_A_ON:1;      //Status LED (PB4)
   uint8_t Status_A_BLINK:1;
   uint8_t Status_B_ON:1;
@@ -35,35 +31,31 @@ typedef struct {
   uint8_t Wifi_B_BLINK:1;
   uint8_t Bluetooth_ON:1;     //Bluetooth LED (PA9)
   uint8_t Bluetooth_BLINK:1;
-  uint8_t On:1;               //System is on (5v boost on)
-  uint8_t Ready:1;            //NanoPI is active (yet booting or shuting down)
+//  uint8_t On:1;               //System is on (5v boost on)
+//  uint8_t Ready:1;            //NanoPI is active (yet booting or shuting down)
   uint8_t ExtPower:1;         //External power flag
   uint8_t Charging:1;         //Charging flag
-  //Me quedan 2 bits
 } SystemStatus_t;
 typedef struct {
   uint16_t Buffer[BUFF_LEN];
   uint16_t Head;
   uint16_t Tail;
-//  uint16_t Size;  
 } USB_Buffer_t;
 // Local variables -----------------------------------------------------------------------------------------------------
-SystemStatus_t SysStatus;
-SysTicks_t     SysTicks;
-ADC_Sequence_t ADC_Read[8];
-USB_Buffer_t   USB_Buffer;
+volatile uint32_t SysTicks;
+SystemStatus_t    SysStatus;
+ADC_Sequence_t    ADC_Read[8];
+USB_Buffer_t      USB_Buffer;
 // Buffer management functions -----------------------------------------------------------------------------------------
 void Buffer_Init() {
   USB_Buffer.Head = 0;
   USB_Buffer.Tail = 0;
-//  USB_Buffer.Size = 0;
 }
 void BufferPush(uint16_t value) {
   uint16_t Next = (USB_Buffer.Head + 1) % BUFF_LEN;
   if(Next != USB_Buffer.Tail) {
     USB_Buffer.Buffer[USB_Buffer.Head] = value;
     USB_Buffer.Head = Next;
-  //if(USB_Buffer.Size < BUFF_LEN) USB_Buffer.Size++;
   } else {
 //    USB_Buffer.Size = 0;
 //   __asm("BKPT #0\n") ; // Break into the debugger
@@ -80,25 +72,27 @@ uint16_t BufferPop() {
 }
 // Control LED, buton and buzzer ---------------------------------------------------------------------------------------
 void SysTick_ISR() {
-  uint32_t Out = 0;
-  if(SysTicks.Prescaler % 2) {
-    GPIOA->BSRR = GPIO_BSRR_BS_10;    //A mode (PA10=1)
-    GPIOB->BSRR = GPIO_BSRR_BS_5 | GPIO_BSRR_BS_4 | GPIO_BSRR_BS_3;
-    if(((SysTicks.Prescaler % 4) == 0) && SysStatus.Power_A_ON  && (!SysStatus.Power_A_BLINK  || (SysStatus.Power_A_BLINK  && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BR_5;
-    if(((SysTicks.Prescaler % 4) == 1) && SysStatus.Status_A_ON && (!SysStatus.Status_A_BLINK || (SysStatus.Status_A_BLINK && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BR_4;
-    if(((SysTicks.Prescaler % 4) == 2) && SysStatus.Wifi_A_ON   && (!SysStatus.Wifi_A_BLINK   || (SysStatus.Wifi_A_BLINK   && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BR_3;
+  if(SysTicks % 2) {
+    GPIOA->BSRR = GPIO_BSRR_BS_10 | GPIO_BSRR_BS_15;    //A mode (PA10=1)
+    GPIOB->BSRR = GPIO_BSRR_BS_5 | GPIO_BSRR_BS_4;
+    if(((SysTicks % 8) == 1) && SysStatus.Power_R_ON  && (!SysStatus.Charging || (SysStatus.Charging && ((SysTicks % 256) < 127)))) GPIOB->BSRR |= GPIO_BSRR_BR_5;
+    if(((SysTicks % 8) == 3) && SysStatus.Status_A_ON && (!SysStatus.Status_A_BLINK || (SysStatus.Status_A_BLINK && ((SysTicks % 256) < 127)))) GPIOB->BSRR |= GPIO_BSRR_BR_4;
+    if(((SysTicks % 8) == 5) && SysStatus.Wifi_A_ON   && (!SysStatus.Wifi_A_BLINK   || (SysStatus.Wifi_A_BLINK   && ((SysTicks % 256) < 127)))) GPIOA->BSRR |= GPIO_BSRR_BR_15;
   } else {
-    GPIOA->BSRR = GPIO_BSRR_BR_10;    //A mode (PA10=0)
-    GPIOB->BSRR = GPIO_BSRR_BR_5 | GPIO_BSRR_BR_4 | GPIO_BSRR_BR_3;
-    if(((SysTicks.Prescaler % 4) == 0) && SysStatus.Power_B_ON  && (!SysStatus.Power_B_BLINK  || (SysStatus.Power_B_BLINK  && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BS_5;
-    if(((SysTicks.Prescaler % 4) == 1) && SysStatus.Status_B_ON && (!SysStatus.Status_B_BLINK || (SysStatus.Status_B_BLINK && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BS_4;
-    if(((SysTicks.Prescaler % 4) == 2) && SysStatus.Wifi_B_ON   && (!SysStatus.Wifi_B_BLINK   || (SysStatus.Wifi_B_BLINK   && (SysTicks.Prescaler < 127)))) Out |= GPIO_BSRR_BS_3;
+    GPIOA->BSRR = GPIO_BSRR_BR_10 | GPIO_BSRR_BR_15;    //A mode (PA10=0)
+    GPIOB->BSRR = GPIO_BSRR_BR_5 | GPIO_BSRR_BR_4;
+    if(((SysTicks % 8) == 0) && SysStatus.Power_G_ON  && (!SysStatus.Charging || (SysStatus.Charging && ((SysTicks % 256) < 127)))) GPIOB->BSRR |= GPIO_BSRR_BS_5;
+    if(((SysTicks % 8) == 2) && SysStatus.Status_B_ON && (!SysStatus.Status_B_BLINK || (SysStatus.Status_B_BLINK && ((SysTicks % 256) < 127)))) GPIOB->BSRR |= GPIO_BSRR_BS_4;
+    if(((SysTicks % 8) == 4) && SysStatus.Wifi_B_ON   && (!SysStatus.Wifi_B_BLINK   || (SysStatus.Wifi_B_BLINK   && ((SysTicks % 256) < 127)))) GPIOA->BSRR |= GPIO_BSRR_BS_15;
   }
-  GPIOA->BSRR = (((SysTicks.Prescaler % 8) == 0) && SysStatus.Bluetooth_ON && (!SysStatus.Bluetooth_BLINK || (SysStatus.Bluetooth_BLINK && (SysTicks.Prescaler < 127)))) ? GPIO_BSRR_BS_9 : GPIO_BSRR_BR_9;
-  GPIOB->BSRR = Out;
+  GPIOA->BSRR = (((SysTicks % 8) == 0) && SysStatus.Bluetooth_ON && (!SysStatus.Bluetooth_BLINK || (SysStatus.Bluetooth_BLINK && ((SysTicks % 256) < 127)))) ? GPIO_BSRR_BS_9 : GPIO_BSRR_BR_9;
+  if((SysTicks % 64) == 0) {
+    TIM2->CCR2 = ((SysStatus.Buzzer & 0x01) ? 1000 - 1 : 0);
+    SysStatus.Buzzer = SysStatus.Buzzer >> 1;    
+  }
   //Detecto pulsacion de boton
   
-  SysTicks.Prescaler++;
+  SysTicks++;
 }
 // Suspend device and prepare for later wake up on button press --------------------------------------------------------
 void Suspend() {
@@ -161,7 +155,7 @@ void Setup() {
   while(((RCC->CR2 & RCC_CR2_HSI48RDY) == 0) || ((RCC->CR2 & RCC_CR2_HSI14RDY) == 0));
   RCC->CFGR |= RCC_CFGR_SW_HSI48;
   RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOFEN | RCC_AHBENR_DMA1EN;
-  RCC->APB1ENR |= RCC_APB1ENR_USBEN | RCC_APB1ENR_CRSEN | RCC_APB1ENR_PWREN | RCC_APB1ENR_TIM3EN;
+  RCC->APB1ENR |= RCC_APB1ENR_USBEN | RCC_APB1ENR_CRSEN | RCC_APB1ENR_PWREN | RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN;
   RCC->APB2ENR |= RCC_APB2ENR_SYSCFGCOMPEN | RCC_APB2ENR_ADC1EN;
   //Configure port F (PF0, PF1 -> Digital outputs)
   GPIOF->MODER   |= GPIO_MODER_MODER0_0 | GPIO_MODER_MODER1_0;
@@ -169,8 +163,10 @@ void Setup() {
   //Configure Port A (PA0, PA8 -> Digital inputs, PA1, PA9, PA10, PA15 -> Digital outputs, PA2, PA3, PA4, PA5, PA6, PA7 -> Analog input, PA11, PA12 -> Alternate function, PA13, PA14 -> SWD)
   GPIOA->MODER |= GPIO_MODER_MODER1_0 | GPIO_MODER_MODER2 | GPIO_MODER_MODER3 | GPIO_MODER_MODER4 | GPIO_MODER_MODER5 | GPIO_MODER_MODER6 | GPIO_MODER_MODER7 | GPIO_MODER_MODER9_0 | 
                   GPIO_MODER_MODER10_0 | GPIO_MODER_MODER11_1 | GPIO_MODER_MODER12_1 | GPIO_MODER_MODER15_0;
-  //Configure Port B (PB7 -> Digital input, PB0, PB1 -> Analog inputs, PB3, PB4, PB5, PB6)
-  GPIOB->MODER |= GPIO_MODER_MODER0 | GPIO_MODER_MODER1 | GPIO_MODER_MODER3_0 | GPIO_MODER_MODER4_0 | GPIO_MODER_MODER5_0 | GPIO_MODER_MODER6_0;
+  GPIOA->PUPDR |= GPIO_PUPDR_PUPDR8_0;
+  //Configure Port B (PB7 -> Digital input, PB0, PB1 -> Analog inputs, PB4, PB5, PB6 -> Digital output, PB3)
+  GPIOB->MODER |= GPIO_MODER_MODER0 | GPIO_MODER_MODER1 | GPIO_MODER_MODER3_1 | GPIO_MODER_MODER4_0 | GPIO_MODER_MODER5_0 | GPIO_MODER_MODER6_0;
+  GPIOB->AFR[0] |= 0x00002000; //PB3 -> TIM2_CH2
   //Enable DMA controller
   DMA1_Channel1->CPAR = (uint32_t)&ADC1->DR;
   DMA1_Channel1->CMAR = (uint32_t)ADC_Read;
@@ -179,12 +175,11 @@ void Setup() {
   NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   NVIC_SetPriority(DMA1_Channel1_IRQn, 0);
   // Initialize the ADC (12MHz, 7.5 adquisition, DMA active, trigger on Timer3)
-  ADC1->CFGR1 |= ADC_CFGR1_EXTEN_0 | ADC_CFGR1_EXTSEL_1 | ADC_CFGR1_EXTSEL_0 | ADC_CFGR1_DMACFG | ADC_CFGR1_DMAEN;
-//  ADC1->CFGR2 |= ADC_CFGR2_CKMODE_1;
   ADC1->SMPR |= ADC_SMPR_SMP_0;
-  ADC1->CHSELR |= ADC_CHSELR_CHSEL2 | ADC_CHSELR_CHSEL3 | ADC_CHSELR_CHSEL4 | ADC_CHSELR_CHSEL5 | ADC_CHSELR_CHSEL6 | ADC_CHSELR_CHSEL7 | ADC_CHSELR_CHSEL8 | ADC_CHSELR_CHSEL9 ;
   ADC1->CR = ADC_CR_ADCAL;
   while(ADC1->CR & ADC_CR_ADCAL);
+  ADC1->CHSELR |= ADC_CHSELR_CHSEL2 | ADC_CHSELR_CHSEL3 | ADC_CHSELR_CHSEL4 | ADC_CHSELR_CHSEL5 | ADC_CHSELR_CHSEL6 | ADC_CHSELR_CHSEL7 | ADC_CHSELR_CHSEL8 | ADC_CHSELR_CHSEL9;
+  ADC1->CFGR1 |= ADC_CFGR1_EXTEN_0 | ADC_CFGR1_EXTSEL_1 | ADC_CFGR1_EXTSEL_0 | ADC_CFGR1_DMACFG | ADC_CFGR1_DMAEN;
   ADC1->CR |= ADC_CR_ADEN;
   while(ADC1->ISR & ADC_ISR_ADRDY);
   ADC1->CR |= ADC_CR_ADSTART;
@@ -193,37 +188,67 @@ void Setup() {
   TIM3->CR2 |= TIM_CR2_MMS_1;
   TIM3->CR1 |= TIM_CR1_DIR | TIM_CR1_CEN;
   Buffer_Init();
-  //Configure SysTicks every 1ms (48MHz Clock) 
+  // Configure Timer2 (4kHz 50%) for sounder
+  TIM2->CCMR1 |= TIM_CCMR1_OC2PE | TIM_CCMR1_OC2M_2 | TIM_CCMR1_OC2M_1;
+  TIM2->ARR = 12000 - 1;
+  TIM2->CCER  |= TIM_CCER_CC2E; // BEEPER_TIM_CH2 output compare enable
+  TIM2->EGR    = TIM_EGR_UG; // Generate an update event to reload the prescaler value immediately
+  TIM2->CR1   |= TIM_CR1_ARPE | TIM_CR1_CEN;
+  //Configure SysTicks every 1ms (48MHz Clock)
+  *((uint32_t*)&SysStatus) = 0;
   SysTick_Config(48000);
   NVIC_SetPriority(SysTick_IRQn, 2);
-  
+  // Configure and init USB 
   cdc_init_usbd();
   NVIC_EnableIRQ(USB_IRQn);
   NVIC_SetPriority(USB_IRQn, 1);
-           
-  
-      
-      
-    USB_Enable(true);
-    USB_Connect(true);
-  
+  USB_Enable(true);
+  USB_Connect(true);
+  SysStatus.Button = 0x01;
 }
-
-
-
-
-
-
-
+void Sleep(uint16_t ms) {
+  uint32_t Time = SysTicks + ms;
+  while(SysTicks < Time);
+} 
 // Main loop -----------------------------------------------------------------------------------------------------------
 void Loop() {
+  //Read charging and external power bits
+  SysStatus.ExtPower = (GPIOB->IDR & GPIO_IDR_7) ? 1 : 0;
+  SysStatus.Charging = (GPIOA->IDR & GPIO_IDR_8) ? 0 : 1;
+  //Handle power on action
+  if(((GPIOB->ODR && GPIO_ODR_6) == 0) && (SysStatus.Button == 0b01)) {
+    SysStatus.Power_G_ON = 1;
+    Sleep(1000);
+    SysStatus.Power_R_ON = 1;
+    SysStatus.Buzzer = 0b1101;
+    GPIOB->BSRR |= GPIO_BSRR_BS_6;
+    //Wait NanoPI up to 20 sec
+    uint32_t Time = SysTicks + 20000;
+    while(SysTicks < Time) {
+      if(udev.status.device_state == USB_STATE_CONFIGURED) {
+        SysStatus.Button = 0b00;
+        SysStatus.Power_G_ON = 0;
+        return;
+      }
+    }
+    SysStatus.Buzzer = 0b1111;
+    SysStatus.Power_R_ON = 0;
+    Sleep(1000);
+    GPIOB->BSRR |= GPIO_BSRR_BR_6;
+  }
+  return;
+  while(1);
+  //If button click while off and 1 sec elapsed
+//  if((SysStatus.On == 0) && (SysStatus.Ready == 0) && (SysStatus.Button == 0b01) && (Timeout < SysTicks)) {
+    
+//  }
+//  return;  
   bool PowerON  = false;  //Boost converter enabled
 //  bool Ready    = false;  //NanoPI ready (false while booting or shutting down)
   bool ExtPower = false;  //External power present
 //  bool Charging = false;  //Battery charging
   SysStatus.Bluetooth_ON = 1;
   SysStatus.Bluetooth_BLINK = 1;
-  
 //  for(uint32_t x = 0; x < 10000000; x++);
   //Suspend();
  

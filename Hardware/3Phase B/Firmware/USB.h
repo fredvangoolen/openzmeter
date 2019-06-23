@@ -218,7 +218,7 @@ struct usb_cdc_line_coding {
 /**\anchor USB_EVENTS
  * \name USB device events
  * @{ */
-#define USB_EVENT_RESET      0   /* Reset.*/
+//#define USB_EVENT_RESET      0   /* Reset.*/
 #define usbd_evt_sof        1   /**<\brief Start of frame.*/
 #define usbd_evt_susp       2   /**<\brief Suspend.*/
 #define usbd_evt_wkup       3   /**<\brief Wakeup.*/
@@ -528,7 +528,7 @@ struct usb_string_descriptor {
 #if defined (__cplusplus)
 }
 #endif
-extern usbd_device udev;
+extern volatile usbd_device udev;
 void usbd_process_ep0 (usbd_device *dev, uint8_t event, uint8_t ep);
 void cdc_txonly(usbd_device *dev, uint8_t event, uint8_t ep);
 

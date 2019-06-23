@@ -2,11 +2,11 @@
   <div class="row">
     <div class="col-xs-12 col-sm-6">
       <label class="control-label">Nominal Voltage</label>
-      <input type="text" class="form-control">
+      <input-spin :min="20" :max="350" :value="230" :increment="10" ref="voltage"></input-spin>
     </div>
     <div class="col-xs-12 col-sm-6">
       <label class="control-label">Nominal Frequency</label>
-      <input type="text" class="form-control" id="inputSurname">
+      <input-spin :min="10" :max="100" :value="50" ref="freq" :increment="1"></input-spin>
     </div>
     <div class="col-xs-12 col-sm-6">
       <label class="control-label">Mode</label>
@@ -14,7 +14,7 @@
     </div>
     <div class="col-xs-12 col-sm-6">
       <label class="control-label">Samplerate</label>
-      <input type="text" class="form-control" id="inputCompany">
+      <input-spin :min="10000" :max="100000" :value="20000" ref="samplerate" :increment="100"></input-spin>
     </div>
   </div>
 </template>
@@ -24,6 +24,7 @@
   import Vuetable from 'vuetable-2';
   import Spinner from 'Components/Spinner.vue';
   import OptionPicker from 'Components/OptionPicker.vue';
+  import InputSpin from 'Components/InputSpin.vue';
   export default {
     data() {
       return {
@@ -90,7 +91,7 @@
         alert("Maintenance not yet implemented");
       }
     },
-    components: { Vuetable, Spinner, OptionPicker }
+    components: { Vuetable, Spinner, OptionPicker, InputSpin }
   }
 </script>
 

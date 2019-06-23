@@ -48,6 +48,7 @@ ConfigManager::ConfigManager(string name) {
     Read += string(Buff, Len);
   } while(Len > 0);
   pConfig = json::parse(Read, NULL, false);
+  if(pConfig.is_discarded()) pConfig = json::object();
   pInstance = this;
   pthread_mutex_unlock(&pMutex);
 }
