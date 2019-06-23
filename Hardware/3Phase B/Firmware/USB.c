@@ -57,7 +57,7 @@ const uint8_t StringProduct[] = {
 #define CDC_LOOPBACK
 
 
-usbd_device udev;
+volatile usbd_device udev;
 uint32_t	ubuf[0x20] __attribute__ ((aligned (4)));
 //uint8_t     fifo[0x200];
 uint32_t    fpos = 0;

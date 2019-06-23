@@ -1,20 +1,20 @@
 <template>
   <div class="row">
     <div class="col-xs-12 col-sm-6">
-      <label class="control-label">Nominal Voltage</label>
-      <input type="text" class="form-control">
+      <label class="control-label">Voltage channel Gain</label>
+      <input-spin :min="20" :max="350" :value="230" :increment="10" ref="voltage"></input-spin>
     </div>
     <div class="col-xs-12 col-sm-6">
-      <label class="control-label">Nominal Frequency</label>
-      <input type="text" class="form-control" id="inputSurname">
+      <label class="control-label">Voltage channel Offset</label>
+      <input-spin :min="20" :max="350" :value="230" :increment="10" ref="voltage"></input-spin>
     </div>
     <div class="col-xs-12 col-sm-6">
-      <label class="control-label">Mode</label>
-      <option-picker :options="['1PHASE', '3PHASE', '3PHASEN']" :selected="'1PHASE'" v-on:OptionChanged="ModeChanged" :big="true"></option-picker>
+      <label class="control-label">Current channel Gain</label>
+      <input-spin :min="20" :max="350" :value="230" :increment="10" ref="voltage"></input-spin>
     </div>
     <div class="col-xs-12 col-sm-6">
-      <label class="control-label">Samplerate</label>
-      <input type="text" class="form-control" id="inputCompany">
+      <label class="control-label">Current channel Offset</label>
+      <input-spin :min="20" :max="350" :value="230" :increment="10" ref="voltage"></input-spin>
     </div>
   </div>
 </template>
@@ -24,6 +24,7 @@
   import Vuetable from 'vuetable-2';
   import Spinner from 'Components/Spinner.vue';
   import OptionPicker from 'Components/OptionPicker.vue';
+  import InputSpin from 'Components/InputSpin.vue';
   export default {
     data() {
       return {
@@ -90,7 +91,7 @@
         alert("Maintenance not yet implemented");
       }
     },
-    components: { Vuetable, Spinner, OptionPicker }
+    components: { Vuetable, Spinner, OptionPicker, InputSpin }
   }
 </script>
 
