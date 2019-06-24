@@ -1,7 +1,7 @@
 <template>
   <ul class="sidenav-menu">
     <li>
-      <router-link to="/Dashboard">
+      <router-link class="link" to="/Dashboard">
         <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/dashboard.png')"></span>
         <span class="sidenav-link-title">Dashboard</span>
       </router-link>
@@ -14,11 +14,11 @@
         <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>          
       </a>
       <ul class="sidenav-dropdown" data-sidenav-dropdown>
-        <li><router-link to="/Analysis/Voltage">Voltage</router-link></li>
-        <li><router-link to="/Analysis/Current">Current</router-link></li>
-        <li><router-link to="/Analysis/Power">Power</router-link></li>
-        <li><router-link to="/Analysis/Energy">Energy</router-link></li>
-        <li><router-link to="/Analysis/Frequency">Frequency</router-link></li>
+        <li><router-link class="link" to="/Analysis/Voltage">Voltage</router-link></li>
+        <li><router-link class="link" to="/Analysis/Current">Current</router-link></li>
+        <li><router-link class="link" to="/Analysis/Power">Power</router-link></li>
+        <li><router-link class="link" to="/Analysis/Energy">Energy</router-link></li>
+        <li><router-link class="link" to="/Analysis/Frequency">Frequency</router-link></li>
       </ul>
     </li>
     <li>
@@ -29,9 +29,9 @@
         <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>
       </a>
       <ul class="sidenav-dropdown" data-sidenav-dropdown>
-        <li><router-link to="/Events/ITIC">ITIC</router-link></li>
-        <li><router-link to="/Events/Disturbances">Disturbances</router-link></li>
-        <li><router-link to="/Events/EN50160">EN50160</router-link></li>
+        <li><router-link class="link" to="/Events/ITIC">ITIC</router-link></li>
+        <li><router-link class="link" to="/Events/Disturbances">Disturbances</router-link></li>
+        <li><router-link class="link" to="/Events/EN50160">EN50160</router-link></li>
       </ul>
     </li>
     <li>
@@ -42,13 +42,13 @@
         <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>
       </a>
       <ul class="sidenav-dropdown" data-sidenav-dropdown>
-        <li><router-link to="/Stats/Costs">Costs</router-link></li>
-        <li><router-link to="/Stats/Heatmap">Heatmap</router-link></li>
-        <li><router-link to="/Stats/Distribution">Distribution</router-link></li>
+        <li><router-link class="link" to="/Stats/Costs">Costs</router-link></li>
+        <li><router-link class="link" to="/Stats/Heatmap">Heatmap</router-link></li>
+        <li><router-link class="link" to="/Stats/Distribution">Distribution</router-link></li>
       </ul>
     </li>
     <li>
-      <router-link to="/Settings">
+      <router-link class="link" to="/Settings">
         <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/cog.png')"></span>
         <span class="sidenav-link-title">Settings</span>
       </router-link>
@@ -69,10 +69,11 @@
     }, 
     mounted: function() {
       $('.sidenav-menu').on('click', '[data-sidenav-dropdown-toggle]', function (e) {
-      $(this).next('[data-sidenav-dropdown]').slideToggle('fast');
-      $(this).find('[data-sidenav-dropdown-icon]').toggleClass('show');
-      e.preventDefault();
-    });
+        $(this).parent().parent().find("[data-sidenav-dropdown]:visible").not($(this).next('[data-sidenav-dropdown]')).slideUp("fast");
+        $(this).next('[data-sidenav-dropdown]').slideToggle('fast');
+        $(this).find('[data-sidenav-dropdown-icon]').toggleClass('show');
+        e.preventDefault();
+      });
     }
   }
 </script>

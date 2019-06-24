@@ -25,6 +25,11 @@ export default {
         this.hideOverlay();
       }
     }.bind(this));
+    $('.link').click(function (e){
+      $(e.target).parent().parent().parent().find("[data-sidenav-dropdown]:visible").not($(e.target).parent().parent()).slideUp("fast");
+      $('.navbar-nav').toggleClass('show');
+      this.hideOverlay();
+    }.bind(this));
   },
   methods: {
     showOverlay: function () {
