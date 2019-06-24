@@ -182,6 +182,7 @@ void HTTPServer::RegisterCallback(string handleName, HTTPServer::Func_t function
 }
 void HTTPServer::RemoveExpiredSessions() {
   Database DB;
+  if(Tools::GetTime() < 1296000000) return;
   DB.ExecSentenceNoResult("DELETE FROM sessions WHERE (timestamp < " + DB.Bind(Tools::GetTime() - 1296000000) + " AND username IS NOT NULL) OR (timestamp < " + DB.Bind(Tools::GetTime() - 60000) + " AND username IS NULL)");
 }
 int HTTPServer::SendRedirect(struct MHD_Connection *connection, string url) {
