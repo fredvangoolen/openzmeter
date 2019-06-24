@@ -26,7 +26,7 @@
             </div>
           </div>
           <div class="modal-body">
-            <p>Requested aggregation returns to much points.<br/>Zoom in and try again.</p><p>Aggregation period has been changed to the lowest allowed.</p>
+            <p>Requested aggregation returns too much points.<br/>Zoom in and try again.</p><p>Aggregation period has been changed to the lowest allowed.</p>
           </div>
         </div>
       </div>
@@ -71,6 +71,7 @@
           this.Selected = '1H';
           this.SelectedText = '1 hour';
         }
+        localStorage.setItem(this.variable, this.Selected);
         this.$emit('AggregationChanged', this.Selected);
       }
     },

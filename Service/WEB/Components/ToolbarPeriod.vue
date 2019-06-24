@@ -70,10 +70,11 @@
                     this.To = Conf.To;
                 if (Conf.Period !== undefined)
                     this.Period = Conf.Period;
-                if (Conf.SelectedText !== undefined)
-                    this.SelectedText = Conf.SelectedText;
             }
             this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
+        },
+        mounted: function(){
+            this.SelectedText=this.$refs.periodTags.querySelector('.active').innerText;
         },
         methods: {
             SetAnalyzer() {
