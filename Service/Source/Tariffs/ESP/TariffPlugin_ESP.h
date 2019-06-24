@@ -3,7 +3,7 @@
  * Author:   Eduardo Viciana (septiembre 2018)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
-#include "../TariffPlugin.h"
+#include "../Tariff.h"
 class TariffPower_ESP3 : public TariffPowerPlugin {
   private :
     static bool pRegistered;

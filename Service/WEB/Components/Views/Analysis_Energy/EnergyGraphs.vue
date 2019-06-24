@@ -150,7 +150,7 @@
         });
       },
       UpdateGraph: function(to, period, lastsample, aggreg) {
-        if(this.LastSample === 0) {
+        if(lastsample === 0) {
           this.ActiveData = [];
           this.ReactiveDate = [];
           this.ShowSpinner = true;

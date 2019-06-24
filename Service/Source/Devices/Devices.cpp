@@ -8,34 +8,10 @@
 #include "HTTPServer.h"
 #include "Tariff.h"
 #include "Tools.h"
-#ifdef DEVICE_V1_00
-  #include "V1_00/DeviceV1_00.h"
-#endif
-#ifdef DEVICE_V1_01
-  #include "V1_01/DeviceV1_01.h"
-#endif
-#ifdef DEVICE_V2_01
-  #include "V2_01/DeviceV2_01.h"
-#endif
-#ifdef DEVICE_VIRTUAL
-  #include "Virtual/DeviceVirtual.h"
-#endif
 //----------------------------------------------------------------------------------------------------------------------
-vector<Device*> DeviceManager::pDevices;
+vector<Device*> __attribute__((init_priority(200))) DeviceManager::pDevices;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager() {
-  #ifdef DEVICE_V1_00
-    DeviceV1_00::GetInstances(pDevices);
-  #endif
-  #ifdef DEVICE_V1_01
-    DeviceV1_01::GetInstances(pDevices);
-  #endif
-  #ifdef DEVICE_V2_01
-    DeviceV2_01::GetInstances(pDevices);
-  #endif
-  #ifdef DEVICE_VIRTUAL
-    DeviceVirtual::GetInstances(pDevices);
-  #endif
   HTTPServer::RegisterCallback("/getDevices",          GetDevicesCallback);
   HTTPServer::RegisterCallback("/getDevice",           GetDeviceCallback);
   HTTPServer::RegisterCallback("/stopDevice",          StopDeviceCallback);
@@ -46,14 +22,16 @@ DeviceManager::DeviceManager() {
   
   HTTPServer::RegisterCallback("/getSeries",           DeviceManager::GetSeriesCallback);
   HTTPServer::RegisterCallback("/getSeriesNow",        DeviceManager::GetSeriesNowCallback);
-//    HTTPServer::RegisterCallback("/getSeriesAggreg",     DeviceInterface::GetSeriesAggregCallback);
   HTTPServer::RegisterCallback("/getSeriesRange",      DeviceManager::GetSeriesRangeCallback);
   HTTPServer::RegisterCallback("/getEvents",           DeviceManager::GetEventsCallback);
   HTTPServer::RegisterCallback("/getPrices",           DeviceManager::GetPricesCallback);
   HTTPServer::RegisterCallback("/getTariffs",          DeviceManager::GetTariffsCallback);
   HTTPServer::RegisterCallback("/setTariffs",          DeviceManager::SetTariffsCallback);
   HTTPServer::RegisterCallback("/delTariffs",          DeviceManager::DelTariffsCallback);
-//  for(uint32_t i = 0; i < pDevices.size(); i++) pDevices[i]->Start();
+  for(uint32_t i = 0; i < pDevices.size(); i++) pDevices[i]->Start();
+}
+void DeviceManager::AddDevice(Device *dev) {
+  pDevices.push_back(dev);
 }
 DeviceManager::~DeviceManager() {
   for(uint32_t i = 0; i < pDevices.size(); i++) delete pDevices[i];

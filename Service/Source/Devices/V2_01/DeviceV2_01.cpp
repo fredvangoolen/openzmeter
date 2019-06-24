@@ -16,24 +16,26 @@
 #include <sys/time.h>
 #include "DeviceV2_01.h"
 #include "Tools.h"
+//----------------------------------------------------------------------------------------------------------------------
+bool DeviceV2_01::pRegistered = DeviceV2_01::GetInstances();
 // Funciones ===========================================================================================================
-void DeviceV2_01::GetInstances(vector<Device*> &instances) {
+bool DeviceV2_01::GetInstances() {
   libusb_context *Context;
   if(libusb_init(&Context) < 0) {
     LOGFile::Error("Can not open libUSB...\n");
-    return;
+    return false;
   }
   libusb_device **Devs;
   int Count = libusb_get_device_list(NULL, &Devs);
   if(Count < 0) {
     LOGFile::Error("Can not enumerate USB devices...\n");
-    return;
+    return false;
   }
   for(int i = 0; i < Count; ++i) {
     libusb_device_descriptor Descriptor;
     if(libusb_get_device_descriptor(Devs[i], &Descriptor) < 0) {
       LOGFile::Error("Can not load USB descriptor...\n");
-      return;
+      return false;
     }
     if(Descriptor.idVendor != DEVICEV2_01_VID) continue;
     if(Descriptor.idProduct != DEVICEV2_01_PID) continue;
@@ -62,24 +64,23 @@ void DeviceV2_01::GetInstances(vector<Device*> &instances) {
     }
     libusb_close(Dev_Handle);
     LOGFile::Info("Adding 'V2.01' device driver instance with serial '%s'\n", String);
-    DeviceV2_01 *Dev = new DeviceV2_01(String);
-    instances.push_back(Dev);
+    DeviceManager::AddDevice(new DeviceV2_01(String));
   }
   libusb_free_device_list(Devs, Count);
   libusb_exit(Context);
+  return true;
 }
 DeviceV2_01::DeviceV2_01(string serial) {
   pDeviceHandle  = NULL;
   pNewDevice     = NULL;
   pSerial        = serial;
-  pMutex         = PTHREAD_MUTEX_INITIALIZER;
-  pDriver = "V2.01";
-  pName = "Capture device V2.01";
-  pVoltageGain.resize(3, 0.1);
+  pDriver        = "V2.01";
+  pName          = "Capture device V2.01";
+  pVoltageGain.resize(3, 0.110266113281);
+  pCurrentGain.resize(4, 0.00604248046876);
   pVoltageOffset.resize(3, 0.0);
-  pCurrentGain.resize(4, 0.01);
   pCurrentOffset.resize(4, 0.0);
-  Start();
+  pMutex         = PTHREAD_MUTEX_INITIALIZER;
 }
 AnalyzerInterface *DeviceV2_01::FindAnalyzer(string serial) {
   for(uint32_t i = 0; i < pAnalyzers.size(); i++) {
@@ -183,9 +184,8 @@ bool DeviceV2_01::Start() {
   pDeviceHandle = NULL;
   pNewDevice    = NULL;
   for(uint n = 0; n < pAnalyzers.size(); n++) {
-    string Name = pSerial;
-    if(pAnalyzers[n].Mode == AnalyzerInterface::PHASE1) Name = Name + "_" + to_string(pAnalyzers[n].OffsetC);
-    pAnalyzers[n].Analyzer = new AnalyzerSoft(pSerial, pAnalyzers[n].Mode, DEVICEV2_01_SAMPLEFREQ);
+    string Name = (pAnalyzers[n].Mode == AnalyzerInterface::PHASE1) ? pSerial + "_1P_" + to_string(pAnalyzers[n].OffsetC) : (pAnalyzers[n].Mode == AnalyzerInterface::PHASE3) ? pSerial + "_3P" : pSerial + "_3PN";
+    pAnalyzers[n].Analyzer = new AnalyzerSoft(Name, pAnalyzers[n].Mode, DEVICEV2_01_SAMPLEFREQ);
   }
   if(libusb_init(&pContext) < 0) {
     LOGFile::Error("Can not open libUSB...\n");
@@ -218,8 +218,6 @@ bool DeviceV2_01::Stop() {
 }
 DeviceV2_01::~DeviceV2_01() {
   Stop();
-//  if(pVoltageSamples) free(pVoltageSamples);
-//  if(pCurrentSamples) free(pCurrentSamples);
 //  if(pAnalyzer) delete pAnalyzer;
   //  if(Buffer) {
 //    pthread_cond_signal(&WriteWait);
@@ -287,16 +285,10 @@ int DeviceV2_01::PlugCallback(struct libusb_context *ctx, struct libusb_device *
   return 0;
 }
 bool DeviceV2_01::BuffersAppend() {
-//  if(pBuffer.Full()) return false;
   pBuffer.push_back(pCapture);
   uint64_t Sampletime = Tools::GetTime();
-//  if(pLastUpdate < (Sampletime - 500)) {
-//    char ThreadName[16];
-//    sprintf(ThreadName, "DeviceV2_%02d", pBuffer.Size() * 100 / pBuffer.Capacity());
-//    pthread_setname_np(pCaptureThread, ThreadName);
-//    pLastUpdate = Sampletime;
-//  }
   for(uint32_t i = 0; i < pAnalyzers.size(); i++) {
+    if(pAnalyzers[i].Analyzer == NULL) continue;
     if(pAnalyzers[i].Analyzer->IsFinished() == false) return true;
   }
   bool Started = false;
@@ -304,6 +296,7 @@ bool DeviceV2_01::BuffersAppend() {
     Sample_t Sample = pBuffer.front();
     pBuffer.pop_front();
     for(uint32_t i = 0; i < pAnalyzers.size(); i++) {
+      if(pAnalyzers[i].Analyzer == NULL) continue;
       vector<float> Voltage, Current;
       for(uint8_t n = 0; n < ((pAnalyzers[i].Mode == AnalyzerInterface::PHASE1) ? 1 : 3); n++) Voltage.push_back(Sample.Voltage[pAnalyzers[i].OffsetV + n]);
       for(uint8_t n = 0; n < ((pAnalyzers[i].Mode == AnalyzerInterface::PHASE1) ? 1 : (pAnalyzers[i].Mode == AnalyzerInterface::PHASE3) ? 3 : 4); n++) Current.push_back(Sample.Current[pAnalyzers[i].OffsetC + n]);
@@ -317,7 +310,7 @@ void *DeviceV2_01::Capture_Thread(void *args) {
   for(int i = 0; i < DEVICEV2_01_TRANSFERS; i++) This->pTransfers[i].Transfer = libusb_alloc_transfer(0);
   while(!This->pTerminate) {
     struct timeval tv = { 1, 0 };
-    int Result = libusb_handle_events_timeout_completed(NULL, &tv, NULL);
+    int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) LOGFile::Error("libusb_handle_events_timeout_completed returns code %d\n", Result);
     if(This->pNewDevice != NULL) {
       struct libusb_device_descriptor Descriptor;
@@ -405,151 +398,6 @@ void *DeviceV2_01::Capture_Thread(void *args) {
   return NULL;
 }
 
-//DeviceInterface *DeviceV2::CreateInstance(json_object* config) {
-//  DeviceV2 *This = new DeviceV2();
-//  Tools::LogMsg("INFO", "Starting DeviceV2 driver...\n");
-//  for(int i = 0; i < 3; i++) This->pVoltageGain[i]   = 1;
-//  for(int i = 0; i < 3; i++) This->pVoltageOffset[i] = 0;
-//  for(int i = 0; i < 4; i++) This->pCurrentGain[i]   = 1;
-//  for(int i = 0; i < 4; i++) This->pCurrentOffset[i] = 0;
-////  This->pUsed                  = 0;
-//  This->pVoltageChannelCount   = 0;
-//  This->pCurrentChannelCount   = 0;
-//  This->pChannelMask           = 0;
-//  This->pChannelCount          = 0;
-//  This->pReadPos               = 0;
-//  This->pWritePos              = 0;
-//  This->pLastUpdate            = 0;
-//  This->pDeviceHandle          = NULL;
-//  This->pNewDevice             = NULL;
-//  This->pOversample            = 0;
-//  This->pADCSamplerate         = 20000;
-//  This->pUSBState              = USB_WAIT;
-//  This->pSerial                = (char*)"000000000000000000000000";
-//  This->pAnalyzersCount        = 0;
-//  float NominalVoltage   = 230.0;
-//  float NominalFrequency = 50.0;
-//  struct json_object *Find, *Find2;
-//  Tools::JSONUInt32(config, "Samplerate", &This->pADCSamplerate);
-
-
-//  if((json_object_object_get_ex(config, "Outputs", &Find) == true) && (json_object_get_type(Find) == json_type_array)) {
-//    This->pAnalyzers = (Analyzer_t*)realloc(This->pAnalyzers, sizeof(Analyzer_t*) * json_object_array_length(Find));
-//    for(uint i = 0; i < json_object_array_length(Find); i++) {
-//      json_object *Output = json_object_array_get_idx(Find, i);
-//      char *ReadMode = (char*)"3Phase";
-//      char *Name     = (char*)"Unnamed input";
-//      if((json_object_object_get_ex(Output, "DisplayName", &Find2) == true) && (json_object_get_type(Find2) == json_type_string)) Name = (char*)json_object_get_string(Find2);
-//      if((json_object_object_get_ex(Output, "Mode", &Find2) == true) && (json_object_get_type(Find2) == json_type_string)) ReadMode = (char*)json_object_get_string(Find2);
-//      if(strcmp("3Phase", ReadMode) == 0) {
-//        bool UseNeutral = true;
-//        if((json_object_object_get_ex(Output, "NeutralCurrent", &Find2) == true) && (json_object_get_type(Find2) == json_type_boolean)) UseNeutral = json_object_get_boolean(Find2);
-//        if(((UseNeutral == true) && (This->pChannelMask != 0)) || ((UseNeutral == false) && ((This->pChannelMask & 0x2A) != 0))) {
-//          LOGFile::Error("CaptureV2: Invalid output config, same current channel can not be used twice\n");
-//          return NULL;  
-//        }
-//        This->pChannelMask = This->pChannelMask | ((UseNeutral == true) ? 0x7F : 0x7E);
-//        Analyzer_t Analyzer;
-//        Analyzer.ID = strdup(This->pSerial);
-//        Analyzer.Analyzer = new AnalyzerSoft(This->pADCSamplerate / This->pOversample, Analyzer.ID, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, UseNeutral ? AnalyzerInterface::PHASE3N : AnalyzerInterface::PHASE3);
-//        Analyzer.OffsetV = 0;
-//        Analyzer.VoltageCount = 3;
-//        Analyzer.OffsetC = 0;
-//        Analyzer.CurrentCount = (UseNeutral == true) ? 4 : 3;
-//        This->pAnalyzers.push_back(Analyzer);
-//      } else if(strcmp("1Phase", ReadMode) == 0) {
-//        char    *CurrentChannelText = (char*)"R";
-//        uint8_t  VoltageMask = 0;
-//        uint8_t  CurrentMask = 0;
-//        Analyzer_t Analyzer;
-//        Analyzer.VoltageCount = 1;
-//        if((json_object_object_get_ex(Output, "VoltageChannel", &Find2) == true) && (json_object_get_type(Find2) == json_type_string)) {
-//          char *VoltageChannelText = (char*)json_object_get_string(Find2);
-//          if(strcmp("R", VoltageChannelText) == 0) {
-//            VoltageMask = 0x40;
-//            Analyzer.OffsetV = 0;
-//          } else if(strcmp("S", VoltageChannelText) == 0) {
-//            VoltageMask = 0x10;
-//            Analyzer.OffsetV = 1;
-//          } else if(strcmp("T", VoltageChannelText) == 0) {
-//            VoltageMask = 0x04;
-//            Analyzer.OffsetV = 2;
-//          } else {
-//            LOGFile::Error("CaptureV2: Invalid channel, try 'R', 'S' or 'T'\n");
-//            return NULL;
-//          }
-//        }
-//        Analyzer.CurrentCount = 1;
-//        if((json_object_object_get_ex(Output, "CurrentChannel", &Find2) == true) && (json_object_get_type(Find2) == json_type_string)) {
-//          CurrentChannelText = (char*)json_object_get_string(Find2);
-//          if(strcmp("R", CurrentChannelText) == 0) {
-//            CurrentMask = 0x20;
-//            Analyzer.OffsetC = 0;
-//          } else if(strcmp("S", CurrentChannelText) == 0) {
-//            CurrentMask = 0x08;
-//            Analyzer.OffsetC = 1;
-//          } else if(strcmp("T", CurrentChannelText) == 0) {
-//            CurrentMask = 0x02;
-//            Analyzer.OffsetC = 2;
-//          } else if(strcmp("N", CurrentChannelText) == 0) {
-//            CurrentMask = 0x01;
-//            Analyzer.OffsetC = 3;
-//          } else {
-//            LOGFile::Error("CaptureV2: Invalid channel, try 'R', 'S', 'T' or 'N'\n");
-//            return NULL;
-//          }
-//        }
-//        if((This->pChannelMask & CurrentMask) != 0) {
-//          LOGFile::Error("CaptureV2: Invalid output config, same current channel can not be used twice\n");
-//          return NULL;
-//        }
-//        This->pChannelMask = This->pChannelMask | CurrentMask | VoltageMask;
-//        Analyzer.ID = (char*)malloc(strlen(This->pSerial) + 2);
-//        sprintf(Analyzer.ID, "%s%s", This->pSerial, CurrentChannelText);
-//        Analyzer.Analyzer = new AnalyzerSoft(This->pADCSamplerate / This->pOversample, Analyzer.ID, NominalVoltage, NominalFrequency, Name, 50.0, 0.1, AnalyzerInterface::PHASE1);
-//        This->pAnalyzers.push_back(Analyzer);
-//      } else {
-//        LOGFile::Error("CaptureV2: Invalid output config, Mode must be one '1Phase' or '3Phase'\n");
-//        return NULL;
-//      }
-//    }
-//  }
-//  //count voltage, current and totals channels
-//  if(This->pChannelMask & 0x40) This->pVoltageChannelCount++;
-//  if(This->pChannelMask & 0x20) This->pCurrentChannelCount++;
-//  if(This->pChannelMask & 0x10) This->pVoltageChannelCount++;
-//  if(This->pChannelMask & 0x08) This->pCurrentChannelCount++;
-//  if(This->pChannelMask & 0x04) This->pVoltageChannelCount++;
-//  if(This->pChannelMask & 0x02) This->pCurrentChannelCount++;
-//  if(This->pChannelMask & 0x01) This->pCurrentChannelCount++;
-//  This->pChannelCount = This->pVoltageChannelCount + This->pCurrentChannelCount;
-  //Adjust sample offset on 1phase devices
-//  for(uint8_t i = 0; i < This->pAnalyzers.size(); i++) {
-//    if((This->pAnalyzers[i].OffsetV > 1) && ((This->pChannelMask && 0x10) == 0)) This->pAnalyzers[i].OffsetV--;
-//    if((This->pAnalyzers[i].OffsetV > 0) && ((This->pChannelMask && 0x40) == 0)) This->pAnalyzers[i].OffsetV--;
-//    if((This->pAnalyzers[i].OffsetC > 2) && ((This->pChannelMask && 0x02) == 0)) This->pAnalyzers[i].OffsetC--;
-//    if((This->pAnalyzers[i].OffsetC > 1) && ((This->pChannelMask && 0x08) == 0)) This->pAnalyzers[i].OffsetC--;
-//    if((This->pAnalyzers[i].OffsetC > 0) && ((This->pChannelMask && 0x20) == 0)) This->pAnalyzers[i].OffsetC--;
-//  }
-//  int Error = libusb_init(NULL);
-//  if(Error < 0) {
-//    LOGFile::Error("Can not open libUSB...\n");
-//    return NULL;
-//  }
-//  if(pthread_create(&This->pCaptureThread, NULL, Capture_Thread, This) != 0) {
-//    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    libusb_exit(NULL);
-//    return NULL;
-//  }
-//  Error = libusb_hotplug_register_callback(NULL, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV2_VID, DEVICEV2_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, This, NULL);
-//  if(Error < 0) {
-//    LOGFile::Error("Failed to register libUSB callback\n");
-//    This->pTerminate = true;
-//    pthread_join(This->pCaptureThread, NULL);
-//    return NULL;
-//  }
-//  return This;
-//}
 //DeviceV2::~DeviceV2() {
 //  pTerminate = true;
 //  Tools::LogMsg("INFO", "Waiting for adquisition thread ends...\n");
