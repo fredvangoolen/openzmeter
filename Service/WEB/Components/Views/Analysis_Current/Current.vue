@@ -84,7 +84,7 @@
         this.$refs.tools.SaveCVS('Current.csv', [['Time'].concat(oZm.Series['CURRENT'].Names(Analyzer))].concat(this.Data));
       },
       UpdateGraph(to, period, lastsample, aggreg) {
-        if(this.LastSample === 0) {
+        if(lastsample === 0) {
           this.Data = [];
           this.ShowSpinner = true;
         }

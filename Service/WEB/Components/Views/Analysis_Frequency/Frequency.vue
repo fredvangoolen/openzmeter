@@ -184,7 +184,7 @@
         this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
       },
       UpdateGraph: function(to, period, lastsample, aggreg) {
-        if(this.LastSample === 0) {
+        if(lastsample === 0) {
           this.Data = [];
           this.ShowSpinner = true;
         }

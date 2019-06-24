@@ -15,8 +15,7 @@
 #define DEVICEV2_01_PRODSTRING      "openZmeter - Capture device"   //Product string
 #define DEVICEV2_01_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
 #define DEVICEV2_01_SAMPLEFREQ    19200.00                          //Frequencia de muestreo
-#define DEVICEV2_01_BUFFERSECONDS       10                          //Tamaño del buffer (10 segundos)
-#define DEVICEV2_01_TRANSFERS           32                          //Numero de transferencias a encolar
+#define DEVICEV2_01_TRANSFERS            8                          //Numero de transferencias a encolar
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV2_01 : public Device {
   private :
@@ -34,7 +33,8 @@ class DeviceV2_01 : public Device {
       uint8_t          Buffer[8192];
       libusb_transfer *Transfer;
     } Transfer_t;    
-//    enum USBState {USB_RESET, USB_WAIT, USB_SYNC};
+  private :
+    static bool                  pRegistered;    
   private :
     pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
     Transfer_t                   pTransfers[DEVICEV2_01_TRANSFERS];
@@ -47,23 +47,12 @@ class DeviceV2_01 : public Device {
     vector<float>                pCurrentOffset;           //Offset de corriente
     Sample_t                     pCapture;                 //Capture status
     int                          pCaptureSync;             //Flag for detect lost samples
-    
-//    uint64_t                     pLastUpdate;              //Timestamp de la ultima vez que se actualizo el nombre del thread
-//    char                        *pSerial;                  //Numero de serie del dispositivo de captura
-//    float                        pReadSamples[7];          //Muestras leidas, previas a clasificacion
-//    uint8_t                      pChannel;                 //Canal actual de lectura
-//    uint8_t                      pChannelMask;             //Mascara de canales a capturar
-//    uint8_t                      pChannelCount;            //Numero de canales de lectura
-//    uint8_t                      pVoltageChannelCount;     //Numero de canales de tension
-//    uint8_t                      pCurrentChannelCount;     //Numero de canales de corriente
-//    uint32_t                     pADCSamplerate;           //Samplerate del ADC
-//    uint8_t                      pOversample;              //Oversample usado en el micro
     struct libusb_device_handle *pDeviceHandle;            //Dispositivo de captura
     struct libusb_device        *pNewDevice;               //Dispositivo que se conecta
     libusb_context              *pContext;                 //USB context
-        pthread_mutex_t              pMutex;
+    pthread_mutex_t              pMutex;
   private :
-    static bool             Init();
+    static bool             GetInstances();
     static void            *Capture_Thread(void *args);
     static void             ReadCallback(struct libusb_transfer *transfer);
     static int              PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
@@ -73,8 +62,6 @@ class DeviceV2_01 : public Device {
     bool               Start();
     bool               Stop();
     bool               BuffersAppend();
-  public :
-    static void GetInstances(vector<Device*> &instances);
   public :
     uint32_t           AnalyzersCount();
     DeviceV2_01(string serial);
