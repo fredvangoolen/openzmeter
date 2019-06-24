@@ -70,6 +70,8 @@ int main(int argc, char** argv) {
   signal(SIGILL, SIG_IGN);
   signal(SIGPIPE, SIG_IGN);
   signal(SIGILL, SIG_IGN);
+  signal(SIGINT, SignalHandler);
+  signal(SIGTERM, SignalHandler);
   string ConfigFileName = "/etc/openZmeter.conf";
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
@@ -105,30 +107,29 @@ int main(int argc, char** argv) {
   
   /* Create WEB service */
   HTTPServer HTTPServer;
-  if(HTTPServer.Config() == false) return EXIT_FAILURE;
+//  if(HTTPServer.Config() == false) return EXIT_FAILURE;
 //  HTTPServer.RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
 //  HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
   HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
   HTTPServer::RegisterCallback("/getCountries",        GetCountriesCallback);  
   HTTPServer::RegisterCallback("/getUser",             GetUserCallback);
   HTTPServer::RegisterCallback("/setUser",             SetUserCallback);
-  signal(SIGINT, SignalHandler);
-  signal(SIGTERM, SignalHandler);
 
-  int Prio = sched_get_priority_max(SCHED_RR);
-  if(Prio == -1) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-  } else {
-    sched_param Param {.sched_priority = Prio };
-    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Warning("Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
-  }
+
+//  int Prio = sched_get_priority_max(SCHED_RR);
+//  if(Prio == -1) {
+//    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//  } else {
+//    sched_param Param {.sched_priority = Prio };
+//    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Warning("Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
+//  }
 
   uint32_t Iter = 0;
   while(!Terminate) {
     SystemManager.PeriodicTask();
-    if((Iter % 128) == 0) HTTPServer.RemoveExpiredSessions();
+    if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions();
     Iter++;
-    usleep(200000);
+    usleep(1000000);
   }
   return EXIT_SUCCESS;
 }

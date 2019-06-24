@@ -16,24 +16,26 @@
 #include <sys/time.h>
 #include "DeviceV1_01.h"
 #include "Tools.h"
+//----------------------------------------------------------------------------------------------------------------------
+bool DeviceV1_01::pRegistered = DeviceV1_01::GetInstances();
 // Funciones ===========================================================================================================
-void DeviceV1_01::GetInstances(vector<Device*> &instances) {
+bool DeviceV1_01::GetInstances() {
   libusb_context *Context;
   if(libusb_init(&Context) < 0) {
     LOGFile::Error("Can not open libUSB...\n");
-    return;
+    return false;
   }
   libusb_device **Devs;
   int Count = libusb_get_device_list(NULL, &Devs);
   if(Count < 0) {
     LOGFile::Error("Can not enumerate USB devices...\n");
-    return;
+    return false;
   }
   for(int i = 0; i < Count; ++i) {
     libusb_device_descriptor Descriptor;
     if(libusb_get_device_descriptor(Devs[i], &Descriptor) < 0) {
       LOGFile::Error("Can not load USB descriptor...\n");
-      return;
+      return false;
     }
     if(Descriptor.idVendor != DEVICEV1_01_VID) continue;
     if(Descriptor.idProduct != DEVICEV1_01_PID) continue;
@@ -62,11 +64,11 @@ void DeviceV1_01::GetInstances(vector<Device*> &instances) {
     }
     libusb_close(Dev_Handle);
     LOGFile::Info("Adding 'V1.01' device driver instance with serial '%s'\n", String);
-    DeviceV1_01 *Dev = new DeviceV1_01(String);
-    instances.push_back(Dev);
+    DeviceManager::AddDevice(new DeviceV1_01(String));
   }
   libusb_free_device_list(Devs, Count);
   libusb_exit(Context);
+  return true;
 }
 DeviceV1_01::DeviceV1_01(string serial) {
   pDeviceHandle  = NULL;
@@ -80,7 +82,6 @@ DeviceV1_01::DeviceV1_01(string serial) {
   pCurrentOffset = 0;
   pAnalyzer      = NULL;
   pMutex         = PTHREAD_MUTEX_INITIALIZER;
-  Start();
 }
 AnalyzerInterface *DeviceV1_01::FindAnalyzer(string serial) {
   if(pAnalyzer == NULL) return NULL;
@@ -283,7 +284,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
           This->pNewDevice = NULL;
           continue;
         } else {
-          LOGFile::Info("Kernel driver dettached for DeviceV1.01 device with serial '%s'\n", This->pSerial.c_str());
+          LOGFile::Info("Kernel driver dettached for DeviceV1.01 with serial '%s'\n", This->pSerial.c_str());
         }
       }
       Result = libusb_claim_interface(This->pDeviceHandle, 0);
@@ -294,7 +295,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       } else {
-        LOGFile::Info("Claimed interface 0 for DeviceV1.01 device with serial %s\n", This->pSerial.c_str());
+        LOGFile::Info("Claimed interface 0 for DeviceV1.01 with serial %s\n", This->pSerial.c_str());
       }
       for(int i = 0; i < DEVICEV1_01_TRANSFERS; i++) {
         libusb_fill_bulk_transfer(This->pTransfers[i].Transfer, This->pDeviceHandle, DEVICEV1_01_ENDPOINT_IN, This->pTransfers[i].Buffer, sizeof(This->pTransfers[i].Buffer), ReadCallback, This, -1);

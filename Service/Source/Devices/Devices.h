@@ -27,8 +27,6 @@ class Device {
   public :
     virtual uint32_t           AnalyzersCount() = 0;
     virtual AnalyzerInterface *FindAnalyzer(string serial) = 0;
-//    virtual string             Name() = 0;
-//    virtual bool               SetConfig(json config) = 0;
     virtual bool               Start() = 0;
     virtual bool               Stop() = 0;
   public :
@@ -40,13 +38,14 @@ class Device {
 class DeviceManager {
   private :  
     static vector<Device*>  pDevices;
+  public :
+    static void AddDevice(Device *dev);
   private :
     static void GetDevicesCallback(HTTPRequest &req);
     static void GetDeviceCallback(HTTPRequest &req);
     static void StartDeviceCallback(HTTPRequest &req);
     static void StopDeviceCallback(HTTPRequest &req);
     static void SetDeviceCallback(HTTPRequest &req);
-   
     static void GetAnalyzersCallback(HTTPRequest &req);
     static void GetSeriesCallback(HTTPRequest &req);
     static void GetSeriesNowCallback(HTTPRequest &req);

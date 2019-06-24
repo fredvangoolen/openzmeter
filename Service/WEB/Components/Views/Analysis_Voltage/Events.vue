@@ -1,23 +1,32 @@
 <template>
-    <div class="panel panel-other">
+  <div class="panel panel-other">
     <div class="panel-heading clearfix">
-
-
+      From {{ StartDate }} to {{ EndDate }}
     </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-            <div class="row">
-                <div class="col col-lg-12 col-xl-6">
-                  <table id="EventsTable" class="table small table-striped table-responsive" width="100%">
-                    <thead>
-                      <tr>
-                        <th style="width: 130px">Date</th><th>Type</th><th>Duration <em>(s)</em></th><th>ΔU <em>(V)</em></th><th>ΔU <em>(%)</em></th><th style="width: 190px"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                  </table>
-                </div>
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
+        <template slot="actions" slot-scope="props">
+          <div class="btn-group">
+            <button type="button" class="btn btn-success btn-xs" v-bind:class="{ disabled: CurrentlySelected(props.rowData) }" v-on:click="Select(props.rowData)">Select</button>
+            <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
+            <ul class="dropdown-menu pull-right">
+              <li><a v-on:click="Configure(props.rowData)" v-if="false">Configure</a></li>
+              <li><a v-on:click="ACL(props.rowData)" v-if="false">ACL</a></li>
+              <li><a v-on:click="Tariffs(props.rowData)">Tariff</a></li>
+              <li><a v-on:click="Alerts(props.rowData)" v-if="false">Alerts</a></li>
+              <li role="separator" class="divider" v-if="false"></li>
+              <li><a v-on:click="Maintenance(props.rowData)" v-if="false">Maintenance</a></li>
+            </ul>
+          </div>
+        </template>
+      </vuetable>
+
+
+
+
+      <div class="row">
+        
                 <div class="col col-lg-12 col-xl-6 hide">
                   <div class="panel panel-noborder">
                     <div id="EventWaveformPanel">
@@ -27,23 +36,62 @@
                     </div>
                   </div>
                 </div>
-              </div>
-
-
+      </div>
     </div>
   </div>  
 </template>
 
 <script>
   import Spinner from 'Components/Spinner.vue';
+  import Vuetable from 'vuetable-2';
+  import moment from 'JS/moment.js';
   export default {
     data: function() {
-      return { ShowSpinner: true };
+      return { ShowSpinner: true, StartDate: '', EndDate: '',
+        Columns: [
+          {name: 'Date', title: 'Date'},
+          {name: 'Type', title: 'Type'}, 
+          {name: 'Duration', title: 'Duration'},
+          {name: 'ΔU', title: 'ΔU (V)'},
+          {name: 'ΔU', title: 'ΔU (%)'},
+          {name: '__slot:actions', title: ''}
+        ]
+      };
+    },
+    created: function() {
+      this.Events = [];
     },
     methods: {
-      Redraw: function() {}
+      Redraw: function() {},
+      GetEvents: function(to, period, lastsample) {
+        var Analyzer = this.$root.SelectedAnalyzer;
+        if(lastsample === 0) {
+          this.ShowSpinner = true;
+          this.Events = [];          
+        }
+        $.ajax({ url: 'getEvents', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ To: to, LastSample: lastsample, Analyzer: Analyzer.ID, Period: period }),
+          success: function(result) {
+            this.EndDate = moment(result.To).format('DD/MM/YYYY - HH:mm:ss');
+            this.StartDate = moment(result.From).format('DD/MM/YYYY - HH:mm:ss');
+            if((result['StartTime'] === null) || (result['StartTime'].length === 0)) return;
+            for(var x = 0; x < result['StartTime'].lenght; x++) {
+//              this.Events.push();
+              
+            }
+            this.$refs.table.setData( { data: this.Events });
+          }.bind(this),
+          complete: function() {
+            this.ShowSpinner = false;
+          }.bind(this),
+          error: function(response) {
+            this.ShowSpinner = true;
+          }.bind(this)
+        });
+
+        
+      }
     },
-    components: { Spinner }
+    components: { Spinner, Vuetable }
   }
 </script>
 

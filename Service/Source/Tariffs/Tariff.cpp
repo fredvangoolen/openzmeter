@@ -366,7 +366,7 @@ bool Tariff::PopSample(uint64_t &time, float &active, float &reactive, string &p
   return true;
 }
 //----------------------------------------------------------------------------------------------------------------------
-vector<TariffPowerPlugin::Type_t> TariffPowerPlugin::pPlugins;
+vector<TariffPowerPlugin::Type_t> __attribute__((init_priority(200))) TariffPowerPlugin::pPlugins;
 bool TariffPowerPlugin::Register(string name, Func_t instance) {
   Type_t Type;
   Type.Name = name;
@@ -396,7 +396,7 @@ string TariffPowerPlugin::Name() {
   return pName;
 }
 //----------------------------------------------------------------------------------------------------------------------
-vector<TariffEnergyPlugin::Type_t> TariffEnergyPlugin::pPlugins;
+vector<TariffEnergyPlugin::Type_t> __attribute__((init_priority(200))) TariffEnergyPlugin::pPlugins;
 bool TariffEnergyPlugin::Register(string name, Func_t instance) {
   Type_t Type;
   Type.Name = name;

@@ -9,6 +9,8 @@
 using namespace std;
 class DeviceVirtual : public Device {
   private :
+    static bool pRegistered;
+  private :
     pthread_t                       pCaptureThread;
     bool                            pTerminate;
     AnalyzerSoft                   *pAnalyzer;
@@ -18,15 +20,13 @@ class DeviceVirtual : public Device {
     float                           pFrequency;
     pthread_mutex_t                 pMutex;
   private : 
+    static bool GetInstances();
     static void *Capture_Thread(void *args);
   private :
-//    bool               SetConfig(json config);
     AnalyzerInterface *FindAnalyzer(string serial);
     uint32_t           AnalyzersCount();
     bool               Start();
     bool               Stop();
-  public :
-    static void GetInstances(vector<Device*> &instances);
   public :
     DeviceVirtual();
     ~DeviceVirtual();

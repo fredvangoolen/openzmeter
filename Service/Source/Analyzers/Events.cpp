@@ -158,7 +158,6 @@ void *Events::Events_Thread(void* args) {
       }
       if(This->pPrevCycles.size() > (This->pAnalyzer->GetNominalFrequency() * EVENT_RMSENVELOPETIME * 2)) This->pPrevCycles.pop_front(); 
       Pos = Pos + CycleLen;
-      
       //Update/close/save running events
       for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end();) {
         if((it->Clossing == true) && (This->pPrevCycles.size() == (This->pAnalyzer->GetNominalFrequency() * EVENT_RMSENVELOPETIME * 2))) {
