@@ -83,10 +83,11 @@
         this.$refs.tools.SaveCVS('Voltage.csv', [['Time'].concat(oZm.Series['VOLTAGE'].Names(Analyzer))].concat(this.Data));
       },
       UpdateGraph(to, period, lastsample, aggreg) {
-        if(this.LastSample === 0) {
+        if(lastsample === 0) {
           this.Data = [];
           this.ShowSpinner = true;
         }
+        this.$parent.$refs.details.$refs.events.GetEvents(to, period, lastsample);
         var Analyzer = this.$root.SelectedAnalyzer;
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, Series: ['VOLTAGE'], To: to, LastSample: lastsample, Analyzer: Analyzer.ID, Period: period }), 
           success: function(result) {

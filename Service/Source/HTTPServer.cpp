@@ -42,37 +42,17 @@ uint32_t HTTPRequest::size() {
   return pPostData.size();
 }
 void HTTPRequest::FromFile(string name) {
-#ifdef OZM_DEBUG
-  string Path = "Resources/" + name;
-  std::ifstream File(Path, ios::binary);
-  pResultCode = MHD_HTTP_NOT_FOUND;
-  if(File.is_open()) {
-    File.seekg (0, File.end);
-    int Size = File.tellg();
-    File.seekg(0, File.beg);
-    if((Size > 0) && (Size < INT_MAX)) {
-      pPostData = string(Size, 0);
-      File.seekg(0, ios::beg);
-      File.read(&pPostData[0], pPostData.size());
-      pResultCode = MHD_HTTP_OK;
-    }
-  }
-#else
   size_t Size = 0;
   char *Tmp = (char*)ResourceLoader::GetFile(name, &Size);
   pResultCode = (Size == 0) ? MHD_HTTP_NOT_FOUND : MHD_HTTP_OK;
   pPostData = string(Tmp, Size);
-#endif
   if(pResultCode == MHD_HTTP_OK) {
     size_t FileNameLen = name.length();
     if((FileNameLen >= 3) && (name.compare(FileNameLen - 3, 3, ".js")) == 0)        pMimeType = "text/javascript";
     else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".css"))  == 0) pMimeType = "text/css";
     else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".ico"))  == 0) pMimeType = "image/x-icon";
     else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".png"))  == 0) pMimeType = "image/png";
-    else if((FileNameLen >= 4) && (name.compare(FileNameLen - 4, 4, ".svg"))  == 0) pMimeType = "image/svg+xml";
     else if((FileNameLen >= 5) && (name.compare(FileNameLen - 5, 5, ".html")) == 0) pMimeType = "text/html";
-  //  else if((FileNameLen >= 5) && (strcmp(&url[FileNameLen - 6], ".woff2")) == 0) 
-  //    MHD_add_response_header(response, "Content-Type", "font/woff2");
     else {
       pMimeType = "application/octet-stream";
       LOGFile::Debug("No mimetype defined for request '%s'\n", name.c_str());
@@ -158,8 +138,6 @@ vector<HTTPServer::Callback_t> __attribute__((init_priority(200))) HTTPServer::p
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
   pDaemon = NULL;
-}
-bool HTTPServer::Config() {
   uint16_t Port = 8080;
   json Config = ConfigManager::ReadConfig("/HTTPServer");
   if(!Config.is_object()) Config = json::object();
@@ -169,11 +147,14 @@ bool HTTPServer::Config() {
                              MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int)60,
                              MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
                              MHD_OPTION_END);
-  if(pDaemon == NULL) LOGFile::Error("HTTP port already in use\n");
   Config = json::object();
   Config["Port"] = Port;
   ConfigManager::WriteConfig("/HTTPServer", Config); 
-  return (pDaemon != NULL);
+  if(pDaemon == NULL) {
+    LOGFile::Error("HTTP port (%d) already in use\n");
+  } else {
+    LOGFile::Info("HTTP server started on port %d\n", Port);
+  }
 }
 HTTPServer::~HTTPServer() {
   if(pDaemon) MHD_stop_daemon(pDaemon);

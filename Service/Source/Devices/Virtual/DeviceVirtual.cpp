@@ -16,10 +16,13 @@
 #include <libusb-1.0/libusb.h>
 #include "DeviceVirtual.h"
 #include "Tools.h"
+//----------------------------------------------------------------------------------------------------------------------
+bool DeviceVirtual::pRegistered = DeviceVirtual::GetInstances();
 // Funciones ===========================================================================================================
-void DeviceVirtual::GetInstances(vector<Device*> &instances) {
+bool DeviceVirtual::GetInstances() {
   LOGFile::Info("Adding 'Virtual' device driver instance with serial 'VIRTUAL'\n");
-  instances.push_back(new DeviceVirtual());
+  DeviceManager::AddDevice(new DeviceVirtual());
+  return true;
 }
 DeviceVirtual::DeviceVirtual() {
   pAnalyzer   = NULL;
@@ -31,7 +34,6 @@ DeviceVirtual::DeviceVirtual() {
   pDriver     = "Virtual";
   pName       = "Emulate most of real capture device for testing";
   pMutex      = PTHREAD_MUTEX_INITIALIZER;
-  Start();
 }
 uint32_t DeviceVirtual::AnalyzersCount() {
   return (pAnalyzer == NULL) ? 0 : 1;

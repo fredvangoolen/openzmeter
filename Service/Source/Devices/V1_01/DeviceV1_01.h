@@ -28,7 +28,9 @@ class DeviceV1_01 : public Device {
     typedef struct {
       uint8_t          Buffer[8192];
       libusb_transfer *Transfer;
-    } Transfer_t;    
+    } Transfer_t;
+  private :
+    static bool                  pRegistered; 
   private :
     pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
     Transfer_t                   pTransfers[DEVICEV1_01_TRANSFERS];
@@ -43,27 +45,18 @@ class DeviceV1_01 : public Device {
     struct libusb_device        *pNewDevice;               //USB device
     libusb_context              *pContext;                 //USB context
     pthread_t                    pSignalThread;            //Thread to handle LED and sounds
-//    bool                         pTerminateSignal;         //Flag to terminate signal thread
     pthread_mutex_t              pMutex;
-      
   private : 
-    static bool             Init();
-    static void            *Capture_Thread(void *args);
-    static void            *Sig_Thread(void *args);
-    static void             ReadCallback(struct libusb_transfer *transfer);
-    static int              PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
+    static bool  GetInstances();
+    static void *Capture_Thread(void *args);
+    static void *Sig_Thread(void *args);
+    static void  ReadCallback(struct libusb_transfer *transfer);
+    static int   PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
-    bool               SetConfig(json config);
     AnalyzerInterface *FindAnalyzer(string serial);
-
-//    string             Serial();
-//    string             Driver();
-//    string             Name();
     bool               Start();
     bool               Stop();
     bool               BuffersAppend(float voltageSample, float currentSample);
-  public :
-    static void GetInstances(vector<Device*> &instances);
   public :
     uint32_t           AnalyzersCount();
     DeviceV1_01(string serial);

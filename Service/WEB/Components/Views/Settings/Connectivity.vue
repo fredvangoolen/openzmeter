@@ -149,7 +149,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
             this.Loading = false;
             this.$nextTick(function() { 
               this.$refs.EnableWIFI.SetState(this.WIFIEnabled);
-              setTimeout(this.UpdateWifi, 1000); 
+              this.Timer = setTimeout(this.UpdateWifi, 1000); 
             });
           }.bind(this)
         });
@@ -162,7 +162,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
             this.Loading = false;
             this.$nextTick(function() { 
               this.$refs.EnableNTP.SetState(this.NTPEnabled); 
-              setTimeout(this.UpdateTime, 1000); 
+              this.Timer = setTimeout(this.UpdateTime, 1000); 
             });
           }.bind(this)
         });  

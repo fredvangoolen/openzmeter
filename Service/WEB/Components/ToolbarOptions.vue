@@ -35,8 +35,9 @@
     },
     created: function() {
       var Conf = JSON.parse(localStorage.getItem(this.variable));
-      if(typeof(Conf) !== 'object') Conf = {};
+      if(Conf === null) Conf = {};
       for(var n = 0; n < this.options.length; n++) {
+        if(Conf.hasOwnProperty(this.options[n]) === false) continue;
         this.Conf[this.options[n]] = (Conf[this.options[n]] === true) ? true : false;
       }
     },

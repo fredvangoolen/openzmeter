@@ -1,6 +1,6 @@
 #WEB related components
 WEB_TARGET = Tmp/WEB/openZmeter.js
-WEB_SOURCE = $(shell find WEB -type f)
+WEB_SOURCE = $(shell find WEB -type f ! -path "WEB/node_modules/*")
 
 #Resources related components
 RESOURCES_TARGET = Tmp/ResourceFiles.o
@@ -34,26 +34,23 @@ else
 	@false
 endif
 ifeq ($(DEBUG), true)
-	CFLAGS += -O0 -g -g3 -ggdb 
+	CFLAGS += -O0 -g -g3 -ggdb -fstack-protector-all
 else
 	CFLAGS += -Os -Wall -fno-rtti -fopt-info-vec -s
 endif
 ifeq ($(DEVICE_V1_00), true)
 	EXECUTABLE_SOURCE += Source/Devices/V1_00/DeviceV1_00.cpp
-	CFLAGS += -DDEVICE_V1_00
 	ANALYZER_SOFT = true
 	LDFLAGS += -lusb-1.0
 endif
 ifeq ($(DEVICE_V1_01), true)
 	EXECUTABLE_SOURCE += Source/Devices/V1_01/DeviceV1_01.cpp
 	ANALYZER_SOFT = true
-	CFLAGS += -DDEVICE_V1_01
 	LDFLAGS += -lusb-1.0
 endif
 ifeq ($(DEVICE_V2_01), true)
 	EXECUTABLE_SOURCE += Source/Devices/V2_01/DeviceV2_01.cpp
 	ANALYZER_SOFT = true
-	CFLAGS += -DDEVICE_V2_01
 	LDFLAGS += -lusb-1.0
 endif
 ifeq ($(DEVICE_VIRTUAL), true)
@@ -66,15 +63,21 @@ ifeq ($(ANALYZER_SOFT), true)
 	CFLAGS += -I Source/Analyzers/Soft
 	LDFLAGS += -lfftw3f
 endif
-ifeq ($(OPENWRT), true)
+ifeq ($(OS_TARGET), OPENWRT)
 	EXECUTABLE_SOURCE += Source/Support/OpenWRT/OpenWRT.cpp
 	CFLAGS += -I Source/Support/OpenWRT -DOPENWRT
 	LDFLAGS += -ldbus-1
 endif
-ifeq ($(DEBIAN), true)
+ifeq ($(OS_TARGET), DEBIAN)
 	EXECUTABLE_SOURCE += Source/Support/Debian/Debian.cpp
 	CFLAGS += -I Source/Support/Debian -DDEBIAN
 	LDFLAGS += -ldbus-1
+endif
+ifeq ($(TARIFF_ESP), true)
+	EXECUTABLE_SOURCE += Source/Tariffs/ESP/TariffPlugin_ESP.cpp
+endif
+ifeq ($(TARIFF_NONE), true)
+	EXECUTABLE_SOURCE += Source/Tariffs/NONE/TariffPlugin_NONE.cpp
 endif
 
 $(WEB_TARGET):	 $(WEB_SOURCE)
