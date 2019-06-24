@@ -8,22 +8,12 @@
       <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
-            <button type="button" class="btn btn-success btn-xs" v-bind:class="{ disabled: CurrentlySelected(props.rowData) }" v-on:click="Select(props.rowData)">Select</button>
-            <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
-            <ul class="dropdown-menu pull-right">
-              <li><a v-on:click="Configure(props.rowData)" v-if="false">Configure</a></li>
-              <li><a v-on:click="ACL(props.rowData)" v-if="false">ACL</a></li>
-              <li><a v-on:click="Tariffs(props.rowData)">Tariff</a></li>
-              <li><a v-on:click="Alerts(props.rowData)" v-if="false">Alerts</a></li>
-              <li role="separator" class="divider" v-if="false"></li>
-              <li><a v-on:click="Maintenance(props.rowData)" v-if="false">Maintenance</a></li>
-            </ul>
+            <button type="button" class="btn btn-xs" v-on:click="RMS(props.rowData)">RMS</button>
+            <button type="button" class="btn btn-xs" v-on:click="Wave(props.rowData)">Wave</button>
+            <button type="button" class="btn btn-danger btn-xs" v-on:click="Delte(props.rowData)">Delete</button>
           </div>
         </template>
       </vuetable>
-
-
-
 
       <div class="row">
         
