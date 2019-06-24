@@ -925,7 +925,7 @@ L 3Phase-rescue:Thermistor_NTC-3Phase-rescue TH1
 U 1 1 5BDB864F
 P 1850 1150
 F 0 "TH1" V 1675 1150 50  0000 C CNN
-F 1 "NTC 10D5" H 1975 1150 50  0001 C CNN
+F 1 "NTC 10D7" H 1975 1150 50  0001 C CNN
 F 2 "Varistor:RV_Disc_D7mm_W3.6mm_P5mm" H 1850 1200 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100pcs-Thermistor-NTC10D-5-10D-5-10D5-5MM-Diameter-Negative-Temperature-coefficient/1596219_32866984932.html" H 1850 1200 50  0001 C CNN
 	1    1850 1150
@@ -936,7 +936,7 @@ L 3Phase-rescue:Varistor-3Phase-rescue RV1
 U 1 1 5BDB8784
 P 1800 1550
 F 0 "RV1" V 1925 1550 50  0000 C CNN
-F 1 "07D431K" H 1675 1550 50  0001 C CNN
+F 1 "07D391K" H 1675 1550 50  0001 C CNN
 F 2 "Varistor:RV_Disc_D7mm_W3.6mm_P5mm" V 1730 1550 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100pcs-lot-Varistor-Resistor-7D431K-7D-431K-Voltage-Dependent-Resistor/1762106_32460712919.html " H 1800 1550 50  0001 C CNN
 	1    1800 1550
@@ -3375,7 +3375,7 @@ L Device:L_Core_Ferrite_Small L5
 U 1 1 5CC07481
 P 6200 9000
 F 0 "L5" H 6159 9000 50  0000 R CNN
-F 1 "10uH" H 6159 9045 50  0001 R CNN
+F 1 "2.7uH" H 6159 9045 50  0001 R CNN
 F 2 "Inductor_SMD:L_0603_1608Metric" H 6200 9000 50  0001 C CNN
 F 3 "~" H 6200 9000 50  0001 C CNN
 	1    6200 9000
@@ -3481,10 +3481,10 @@ Connection ~ 5000 1450
 Wire Wire Line
 	5000 1450 5150 1450
 $Comp
-L 3Phase-rescue:D_Zener_Small_ALT-3Phase-rescue D?
+L 3Phase-rescue:D_Zener_Small_ALT-3Phase-rescue D15
 U 1 1 5D62E090
 P 4275 1725
-F 0 "D?" H 4275 1815 50  0000 C CNN
+F 0 "D15" H 4275 1815 50  0000 C CNN
 F 1 "BZT52C15S" H 4275 1635 50  0001 C CNN
 F 2 "Diode_SMD:D_SOD-323" V 4275 1725 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100-PCS-LOT-BZT52C15S-BZT52C15-SOD-323-123-WJ/4580010_32950079051.html" V 4275 1725 50  0001 C CNN
