@@ -169,7 +169,9 @@ bool HTTPServer::Config() {
                              MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int)60,
                              MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
                              MHD_OPTION_END);
-  if(pDaemon == NULL) LOGFile::Error("HTTP port already in use\n");  
+  if(pDaemon == NULL) LOGFile::Error("HTTP port already in use\n");
+  Config = json::object();
+  Config["Port"] = Port;
   ConfigManager::WriteConfig("/HTTPServer", Config); 
   return (pDaemon != NULL);
 }
@@ -198,8 +200,9 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
 }
 int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
   HTTPRequest *Request = (HTTPRequest*)*ptr;
+  string URL = url;
   if(Request == NULL) {
-    LOGFile::Debug("HTTP %s request '%s'\n", method, url);
+    LOGFile::Debug("HTTP %s request '%s'\n", method, URL.c_str());
     string FilePath;
     char *AcceptEncoding = (char*)MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT_ENCODING);
     char *Cookie         = (char*)MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");
@@ -208,12 +211,12 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     *ptr = Request;
     if(Request->SessionID().empty()) return MHD_NO;
     if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) return MHD_YES;
-    if((strcmp(method, MHD_HTTP_METHOD_GET) == 0) || (strcmp(method, MHD_HTTP_METHOD_HEAD) == 0)) Request->FromFile(string("WEB") + url);
+    if((strcmp(method, MHD_HTTP_METHOD_GET) == 0) || (strcmp(method, MHD_HTTP_METHOD_HEAD) == 0)) Request->FromFile(string("WEB") + URL.c_str());
     if((Request->ResultCode() != MHD_HTTP_OK) && (strcmp(method, MHD_HTTP_METHOD_GET) == 0)) {
-      if(strcmp(url, "/Logout") == 0) {
+      if(URL == "/Logout") {
         Request->CloseSession();
         return SendRedirect(connection, "/Login.html");
-      } else if((strcmp(url, "/Login") == 0) && (Request->UserName().empty())) {
+      } else if((URL == "/Login") && (Request->UserName().empty())) {
         Request->FromFile("WEB/Login.html");
       } else if(Request->UserName().empty()) {
         return SendRedirect(connection, "/Login");
@@ -238,7 +241,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     if(Request->ProcessParams((((sockaddr_in*)Addr)->sin_addr.s_addr == 0x0100007F)) == false) {
       Request->FromString("No valid JSON request", MHD_HTTP_BAD_REQUEST);
     } else {
-      if(strcmp(url, "/LogIn") == 0) {
+      if(URL == "/LogIn") {
         json Params = Request->GetParams();
         bool UpdateLastLogin = true;
         if(Params["UpdateLastLogin"].is_boolean()) UpdateLastLogin = Params["UpdateLastLogin"];
@@ -265,7 +268,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         } else {
           bool Handled = false;
           for(vector<Callback_t>::iterator it = pCallbacks.begin() ; it != pCallbacks.end(); ++it) {
-            if(it->HandleName.compare(url) == 0) {
+            if(it->HandleName == URL) {
               it->Function(*Request);
               Handled = true;
               break;
@@ -275,7 +278,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         }
       }
       MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &Request->WriteFunction, Request, NULL);
-      if(strcmp(url, "/LogIn") == 0) {
+      if(URL == "/LogIn") {
         string Cookie = "SESSION=" + Request->SessionID() +"; httponly; Path=/";
         MHD_add_response_header(Response, MHD_HTTP_HEADER_SET_COOKIE, Cookie.c_str());
       }
