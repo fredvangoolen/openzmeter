@@ -53,11 +53,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
             <span class="input-group-addon input-group-addon-toogle">
               <toggle ref="EnableNTP" v-on:Changed="EnableNTPChange"></toggle>
             </span>
-            <input type="text" class="form-control" :value="NTP_Server">
-            <input type='text' class="form-control" v-if="false"/>
-            <span class="input-group-addon" v-if="false">
-              <span class="glyphicon-calendar"></span>
-            </span>  
+            <input type="text" class="form-control" ref="ntpserver" v-on:input="NTPServerChanged" :disabled="!NTPEnabled">
           </div>
         </div>
         <div class="col-xs-12 col-sm-6">
@@ -79,13 +75,12 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
     data: function() {
       return { BTName: '', Bluetooth_Support: false, BTChanges: false,
                 WIFIName: '', WIFIDetails: '', WIFI_Support: false, WIFIChanges: false, WIFISettings: {},
-                NTP_Support: false, NTP_Server: '', NTPDetails: '', NTPChanges: false,
-                Loading: false };
+                NTP_Support: false, NTPDetails: '', NTPChanges: false,
+                Loading: false, NTPEnabled: false};
     },
     created: function() {
       this.BTEnabled = false;
       this.WIFIEnabled = false;
-      this.NTPEnabled = false;
       this.Timer = null;
       this.Timer2 = null;
     },
@@ -157,8 +152,8 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
           success: function(result) { 
             this.NTP_Support = true;
             this.NTPEnabled = result.Enabled;
-            this.NTP_Server = result.Server;
-            this.NTPDetails = 'Local timezone : ' + /*moment.tz.zone(moment.tz.guess()).name +*/ '\nTime           : ' + moment(result.Time).format('DD/MM/YYYY HH:mm:ss');
+            this.$refs.ntpserver.value = result.Server;
+            this.NTPDetails = 'Local timezone : ' + '\nTime           : ' + moment(result.Time).format('DD/MM/YYYY HH:mm:ss');
             this.Loading = false;
             this.$nextTick(function() { 
               this.$refs.EnableNTP.SetState(this.NTPEnabled); 
@@ -186,6 +181,9 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
         this.WIFIChanges = true;
         this.WIFISettings = config;
       },
+      NTPServerChanged: function() {
+        this.NTPChanges = true;
+      },
       SaveChanges: function() {
         clearInterval(this.Timer);
         clearInterval(this.Timer2);
@@ -199,71 +197,13 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
           this.WIFIChanges = false;
           this.WIFISettings = {};
         }
+        if(this.NTPChanges === true) 
+          $.ajax({ url: "setNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ NTP_Enabled: this.NTPEnabled, NTP_Server: this.$refs.ntpserver.value, Time: moment().valueOf() }) });
+          this.NTPChanges = false;
       }
     },
     components: { Toggle, Spinner, WifiDialog }
   }
-  
-  
-  
-  
-  
-  
-  
-  $('#checkNTP').change(function() {
-    if($(this).prop('checked')) {
-      $('#inputCurrentTime > span').css("pointer-events", "none");
-      $('#inputCurrentTime > input').attr("disabled", "true");
-      $('#inputNTPServer').removeAttr("disabled");
-    } else {
-      $('#inputNTPServer').attr("disabled", "true");
-      $('#inputCurrentTime > input').removeAttr("disabled");
-      $('#inputCurrentTime > span').css("pointer-events", "inherit");
-    }
-  });
-function AjaxGetTimeZones() {
-  $('#checkNTP').bootstrapToggle();
-  $.ajax({ url: "getTimeSettings", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: 
-    function(result) {
-      NTP_DateTimePicker = $('#inputCurrentTime').datetimepicker({ format: 'DD/MM/YYYY HH:mm:00', defaultDate: moment(result.Time), sideBySide: true });
-      $('#inputCurrentTime > input').attr('value', moment(moment(result.Time)).format('DD/MM/YYYY HH:mm:ss'));
-      $('#dropdownTimeZone span:first-child').text(result.TimeZone);
-      $('#inputNTPServer').val(result.NTP_Server);
-      if(result.NTP_Enabled === true) {
-        $('#checkNTP').bootstrapToggle('on');
-        $('#inputNTPServer').removeAttr("disabled");
-      } else {
-        $('#checkNTP').bootstrapToggle('off');
-        $('#inputNTPServer').attr("disabled", "true");
-      }
-      result.TimeZones.sort();
-      for(i = 0; i < result.TimeZones.length; i++) $('#dropdownListTimeZone').append('<li><a href="#">' + result.TimeZones[i] + '</a></li>');
-      
-      $("#dropdownListTimeZone li a").click(function(event) {
-        event.preventDefault();
-        $('#dropdownTimeZone span:first-child').text($(this).text());
-     });
-    }
-  });
-}
-$('#btnNTPSave').click(function() {
-  $('#btnNTPSave').attr("disabled");
-  $.ajax({ url: "setTimeSettings", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', 
-    data: JSON.stringify({ NTP_Enabled: $('#checkNTP').is(':checked'), NTP_Server: $('#inputNTPServer').val(), TimeZone: $('#dropdownTimeZone span:first-child').text(), Time: moment.tz($('#inputCurrentTime > input').val(), 'DD/MM/YYYY HH:mm:ss', $('#dropdownTimeZone span:first-child').text()).utc().valueOf() }), 
-    success: function(result) {
-      $('#dlgSave .modal-body > p').html("Settings changed correctly!");
-      $('#dlgSave').modal('show'); 
-    },
-    error: function(result) {
-      $('#dlgSave .modal-body > p').html("Failed to save settings!");
-      $('#dlgSave').modal('show'); 
-    },
-    complete: function(result) {
-      $('#btnNTPSave').removeAttr("disabled");    
-    }
-  });
-});
-
 </script>
 
 <style scoped>
