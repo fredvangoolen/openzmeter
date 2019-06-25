@@ -30,6 +30,7 @@ export default {
       $('.navbar-nav').toggleClass('show');
       this.hideOverlay();
     }.bind(this));
+    $('body').on('click', '.sidenav-overlay', this.hideOverlay);
   },
   methods: {
     showOverlay: function () {
@@ -38,7 +39,6 @@ export default {
       if(overlay[0] === undefined) {
         overlay = $('<div data-sidenav-overlay class="sidenav-overlay"/>');
         $('body').append(overlay);
-        $('body').on('click', '[data-sidenav-overlay]', this.hideOverlay);
       }
       overlay.fadeToggle('fast');
     },
