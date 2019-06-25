@@ -149,25 +149,22 @@ bool DeviceV1_01::Start() {
   return true;
 }
 bool DeviceV1_01::Stop() {
-  //detengo la captura
-  if(pAnalyzer) delete pAnalyzer;
+  pthread_mutex_lock(&pMutex);
+  if(pState != RUNNING) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  LOGFile::Info("Stopping 'V1.01' driver for serial '%s'\n", pSerial.c_str());
+  pTerminate = true;
+  pthread_join(pCaptureThread, NULL);
+  if(pAnalyzer != NULL) delete pAnalyzer;
   pAnalyzer = NULL;
+  pState = STOPPED;
+  pthread_mutex_unlock(&pMutex);
   return true;
 }
 DeviceV1_01::~DeviceV1_01() {
   Stop();
-//  if(pVoltageSamples) free(pVoltageSamples);
-//  if(pCurrentSamples) free(pCurrentSamples);
-//  if(pAnalyzer) delete pAnalyzer;
-  //  if(Buffer) {
-//    pthread_cond_signal(&WriteWait);
-//    pthread_cond_signal(&ReadWait);
-//    pTerminate = true;
-//    Tools::LogMsg("INFO", "Waiting for adquisition thread ends...\n");
-//    pthread_join(CaptureThread, NULL);
-//    pthread_join(AnalyzeThread, NULL);
-//    free(Buffer);
-//  }
 }
 void DeviceV1_01::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV1_01 *This = (DeviceV1_01*)transfer->user_data;
@@ -183,7 +180,10 @@ void DeviceV1_01::ReadCallback(struct libusb_transfer *transfer) {
       }
     }
   }
-  if(This->pTerminate == false) libusb_submit_transfer(transfer);
+  if(This->pTerminate == false) 
+    libusb_submit_transfer(transfer);
+  else
+    libusb_free_transfer(transfer);
 }
 int DeviceV1_01::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
   DeviceV1_01 *This = (DeviceV1_01*)user_data;
@@ -316,7 +316,9 @@ void *DeviceV1_01::Capture_Thread(void *args) {
       This->pNewDevice = NULL;
     }
   }
-  for(int i = 0; i < DEVICEV1_01_TRANSFERS; i++) libusb_free_transfer(This->pTransfers[i].Transfer);
+  libusb_release_interface(This->pDeviceHandle, 0);
+  libusb_close(This->pDeviceHandle);
+  libusb_exit(This->pContext);
   return NULL;
 }
 void *DeviceV1_01::Sig_Thread(void* args) {
