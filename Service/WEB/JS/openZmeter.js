@@ -151,6 +151,7 @@ export var Series = {
     Link: '/Analysis/Power',
     Color:  '#DF842A',
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'var', Value: Round2(ScaleToUnits(val, Units)) }; },
+    Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
     Range: function(values, phases) {
       var UpperRange = -Infinity;
       var LowerRange = 0;

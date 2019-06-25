@@ -113,9 +113,6 @@ img {
   float: right;
   text-align: right;
 }
-.modal-backdrop {
-  background-color: #FFF;
-}
 .subpanel {
   color: #474544;
   padding: 0px 5px;
@@ -158,9 +155,12 @@ img {
   .navbar-toggle {
     display: none;
   }
-
-
 }
+
+.modal-backdrop.in {
+  opacity: 0.8;
+}
+
 .white-separator {
   height: 1px;
   background: #FFF;

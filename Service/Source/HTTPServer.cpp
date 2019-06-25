@@ -135,6 +135,7 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
 }
 //----------------------------------------------------------------------------------------------------------------------
 vector<HTTPServer::Callback_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
+bool                                                               HTTPServer::pRegistered = false;
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
   pDaemon = NULL;
@@ -155,9 +156,16 @@ HTTPServer::HTTPServer() {
   } else {
     LOGFile::Info("HTTP server started on port %d\n", Port);
   }
+  if(pRegistered == false) {
+    RegisterCallback("/Ping", PingCallback);
+    pRegistered = true;
+  }
 }
 HTTPServer::~HTTPServer() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
+}
+void HTTPServer::PingCallback(HTTPRequest &req) {
+  req.FromString("{}", (req.UserName() == "") ? MHD_HTTP_UNAUTHORIZED : MHD_HTTP_OK);
 }
 void HTTPServer::RegisterCallback(string handleName, HTTPServer::Func_t function) {
   Callback_t Item = {handleName, function};
@@ -196,7 +204,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     if((Request->ResultCode() != MHD_HTTP_OK) && (strcmp(method, MHD_HTTP_METHOD_GET) == 0)) {
       if(URL == "/Logout") {
         Request->CloseSession();
-        return SendRedirect(connection, "/Login.html");
+        return SendRedirect(connection, "/Login");
       } else if((URL == "/Login") && (Request->UserName().empty())) {
         Request->FromFile("WEB/Login.html");
       } else if(Request->UserName().empty()) {

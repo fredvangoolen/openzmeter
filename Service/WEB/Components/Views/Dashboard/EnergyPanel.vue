@@ -5,7 +5,7 @@
       <div class="header-buttons clearfix" ref="Toolbar">
         <toolbar-aggregation variable="AggregationEnergy" v-on:AggregationChanged="AggregationChanged" :options="['15M', '1H']" ref="aggregation"></toolbar-aggregation>
         <toolbar-period variable="Period" v-on:PeriodChanged="UpdateGraph" ref="period"></toolbar-period>
-        <toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
+        <toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
       </div>
     </div>
     <div class="panel-body">
@@ -97,6 +97,11 @@
       MinimizeClick: function() {
         $(window).bind('resize', this.ResizeHandler.bind(this));
       },
+      ExportClick: function() {
+        if(this.$root.SelectedAnalyzer === null) return;
+        var Analyzer = this.$root.SelectedAnalyzer;
+        this.$refs.tools.SaveCVS('Active_Energy.csv', [['Time'].concat(oZm.Series['ACTIVE_ENERGY'].Names(Analyzer))].concat(this.Data));
+      },
       UpdateGraph: function(to, period, lastsample, aggreg) {
         if(lastsample === 0) {
           this.Data = [];
@@ -107,7 +112,7 @@
         $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: aggreg, Series: ['ACTIVE_POWER'], To: to, LastSample: lastsample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: period }), 
           success: function(result) {
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
-            if(result['Aggregation_source'] === '15M') {
+            if(result['Aggregation_Source'] === '15M') {
               for(var n = 0; n < result['Active_Power'].length; n++) result['Active_Power'][n] = result['Active_Power'][n] / 4.0;
             }
             this.Data = oZm.GraphDataAppend(result, 'Active_Power', this.Data);

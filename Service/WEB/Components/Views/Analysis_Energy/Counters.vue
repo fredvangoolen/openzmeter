@@ -97,14 +97,13 @@
         var AccumValue = 0.0, MaxValue = -Infinity, AccumSamples = 0, MaxCount = 0, MaxTime = null;
         for(var x = 0; x < data.length; x++) {
           if(data[x][1] === null) continue;
-          var Value = data[x][1] / ((aggreg === '15M') ? 4.0 : 1.0); 
           AccumSamples++;
-          AccumValue += Value;
-          if(Value > MaxValue) {
-            MaxValue = Value;
+          AccumValue += data[x][1];
+          if(data[x][1] > MaxValue) {
+            MaxValue = data[x][1];
             MaxCount = 0;
             MaxTime = data[x][0];
-          } else if(Value === MaxValue) {
+          } else if(data[x][1] === MaxValue) {
             MaxCount++;
           }
         }

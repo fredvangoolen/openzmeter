@@ -6,7 +6,7 @@
         <div class="header-buttons clearfix" ref="ToolbarActive">
           <toolbar-aggregation variable="AggregationEnergy" :options="['15M', '1H']" v-on:AggregationChanged="AggregationChanged" ref="aggregation"></toolbar-aggregation>
           <toolbar-period variable="Period" v-on:PeriodChanged="UpdateGraph" ref="period"></toolbar-period>
-          <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeActiveClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
+          <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClickActive" v-on:MaximizeClick="MaximizeActiveClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
         </div>
       </div>
       <div class="panel-body">
@@ -23,7 +23,7 @@
       <div class="panel-heading">
         <div class="header-text">Fund. Reactive Energy</div>
         <div class="pull-right btn-group" ref="ToolbarReactive">
-          <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeReactiveClick" v-on:MinimizeClick="MinimizeClick" ref="reactiveTools"></toolbar-tools>
+          <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClickReactive" v-on:MaximizeClick="MaximizeReactiveClick" v-on:MinimizeClick="MinimizeClick" ref="reactiveTools"></toolbar-tools>
         </div>
       </div>
       <div class="panel-body">  
@@ -117,9 +117,15 @@
       MinimizeClick: function() {
         $(window).bind('resize', this.ResizeHandler.bind(this));
       },
-      ExportClick: function() {
+      ExportClickActive: function() {
         if(this.$root.SelectedAnalyzer === null) return;
-        this.$refs.tools.SaveCVS('Frequency.csv', [['Time', 'Frequency']].concat(this.Data));
+        var Analyzer = this.$root.SelectedAnalyzer;
+        this.$refs.tools.SaveCVS('Active_Energy.csv', [['Time'].concat(oZm.Series['ACTIVE_ENERGY'].Names(Analyzer))].concat(this.ActiveData));
+      },
+      ExportClickReactive: function() {
+        if(this.$root.SelectedAnalyzer === null) return;
+        var Analyzer = this.$root.SelectedAnalyzer;
+        this.$refs.tools.SaveCVS('Reactive_Energy.csv', [['Time'].concat(oZm.Series['REACTIVE_ENERGY'].Names(Analyzer))].concat(this.ReactiveData));
       },
       NowValue: function() {
         if(this.$root.SelectedAnalyzer === null) return;
@@ -159,7 +165,7 @@
         $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, To: to, LastSample: lastsample, Analyzer: Analyzer.ID, Period: period }), 
           success: function(result) {
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
-            if(this.Aggreg === '15M') {
+            if(result['Aggregation_Source'] === '15M') {
               for(var n = 0; n < result['Active_Power'].length; n++) result['Active_Power'][n] = result['Active_Power'][n] / 4.0;
               for(var n = 0; n < result['Reactive_Power'].length; n++) result['Reactive_Power'][n] = result['Reactive_Power'][n] / 4.0;
             }
