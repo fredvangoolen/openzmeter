@@ -19,6 +19,7 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("/configDevice",        SetDeviceCallback);
   
   HTTPServer::RegisterCallback("/getAnalyzers",        DeviceManager::GetAnalyzersCallback);
+  HTTPServer::RegisterCallback("/setAnalyzer",         DeviceManager::SetAnalyzerCallback);
   
   HTTPServer::RegisterCallback("/getSeries",           DeviceManager::GetSeriesCallback);
   HTTPServer::RegisterCallback("/getSeriesNow",        DeviceManager::GetSeriesNowCallback);
@@ -127,6 +128,39 @@ void DeviceManager::GetAnalyzersCallback(HTTPRequest &req) {
       Response.push_back(Row);
       break;
     }
+  }
+  req.FromJSON(Response);
+}
+void DeviceManager::SetAnalyzerCallback(HTTPRequest &req) {
+  //All users can do this action, for admin all analyzers are returned and can be edited, for other users only own analyzers or authorized ones are returned and only owner can edit. In all cases only present ones are returned
+  json Params = req.GetParams();
+  json Response = json::array();
+  if(!Params["ID"].is_string() || !Params["MaxCurrent"].is_number() || !Params["MinCurrent"].is_number() || !Params["Name"].is_string() || !Params["NominalFreq"].is_number() || !Params["NominalVoltage"].is_string()) return req.FromString("'ID', 'MaxCurrent', 'MinCurrent', 'Name', 'NominalFreq' and 'NominalVoltage' param is requiered", MHD_HTTP_BAD_REQUEST);
+  AnalyzerInterface *Analyzer = NULL;
+  Device *Dev = NULL;
+  string Serial = Params["ID"];
+  for(uint n = 0; n < pDevices.size(); n++) {
+    Dev = pDevices[n];
+    Analyzer = Dev->FindAnalyzer(Serial);
+    if(Analyzer != NULL) break;
+  }
+  if(Analyzer == NULL) return req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+  float MaxCurrent = Params["MaxCurrent"];
+  float MinCurrent = Params["MinCurrent"];
+  string Name = Params["Name"];
+  float Freq = Params["NominalFreq"];
+  float Voltage = Params["NominalVoltage"];
+  json Result = json::object();
+  if((MaxCurrent < 0) || (MinCurrent < 0) || (MinCurrent >= MaxCurrent) || (Freq < 0) || (Freq > 100) || (Voltage < 50) || (Voltage > 450)) return req.FromString("'MaxCurrent', 'MinCurrent', 'NominalFreq' or 'NominalVoltage' is out of valid ranges", MHD_HTTP_BAD_REQUEST);
+  if(req.ExecSentenceNoResult("UPDATE analyzers SET frequency = " + req.Bind(Freq) + ", voltage = " + req.Bind(Voltage) + ", name = " + req.Bind(Name) + ", max_current = " + req.Bind(MaxCurrent) + ", min_current = " + req.Bind(MinCurrent) + " WHERE serial = " + req.Bind(Serial)) == true) {
+    if(Dev->State() == Device::RUNNING) {
+      Dev->Stop();
+      Result["Result"] = Dev->Start();
+    } else {
+      Result["Result"] = true;
+    }
+  } else {
+    Result["Result"] = false;
   }
   req.FromJSON(Response);
 }
