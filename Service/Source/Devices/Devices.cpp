@@ -134,8 +134,7 @@ void DeviceManager::GetAnalyzersCallback(HTTPRequest &req) {
 void DeviceManager::SetAnalyzerCallback(HTTPRequest &req) {
   //All users can do this action, for admin all analyzers are returned and can be edited, for other users only own analyzers or authorized ones are returned and only owner can edit. In all cases only present ones are returned
   json Params = req.GetParams();
-  json Response = json::array();
-  if(!Params["ID"].is_string() || !Params["MaxCurrent"].is_number() || !Params["MinCurrent"].is_number() || !Params["Name"].is_string() || !Params["NominalFreq"].is_number() || !Params["NominalVoltage"].is_string()) return req.FromString("'ID', 'MaxCurrent', 'MinCurrent', 'Name', 'NominalFreq' and 'NominalVoltage' param is requiered", MHD_HTTP_BAD_REQUEST);
+  if(!Params["ID"].is_string() || !Params["MaxCurrent"].is_number() || !Params["MinCurrent"].is_number() || !Params["Name"].is_string() || !Params["NominalFreq"].is_number() || !Params["NominalVoltage"].is_number()) return req.FromString("'ID', 'MaxCurrent', 'MinCurrent', 'Name', 'NominalFreq' and 'NominalVoltage' param is requiered", MHD_HTTP_BAD_REQUEST);
   AnalyzerInterface *Analyzer = NULL;
   Device *Dev = NULL;
   string Serial = Params["ID"];
@@ -162,7 +161,7 @@ void DeviceManager::SetAnalyzerCallback(HTTPRequest &req) {
   } else {
     Result["Result"] = false;
   }
-  req.FromJSON(Response);
+  req.FromJSON(Result);
 }
 void DeviceManager::GetSeriesCallback(HTTPRequest &req) {
   //Only owner or auth users can get access
