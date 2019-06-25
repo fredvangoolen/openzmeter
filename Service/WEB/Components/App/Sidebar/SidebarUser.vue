@@ -9,12 +9,14 @@
     </div>
     <user-logout ref="logout"></user-logout>
     <user-edit ref="userEdit"></user-edit>
+    <offline ref="offline"></offline>
   </div>
 </template>
 
 <script>
   import UserLogout from './User/LogoutDialog.vue';
   import UserEdit from './User/User.vue';
+  import Offline from './User/Offline.vue';
   export default {
     data() {
       return { UserName: '' };
@@ -25,6 +27,24 @@
       },
       Edit: function() {
         this.$refs.userEdit.show();
+      },
+      PingServer: function() {
+        $.ajax({ url: "Ping", timeout: 5000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
+          success: function() {
+            this.$refs.logout.hide();
+            this.$refs.offline.hide();
+          }.bind(this),
+          complete: function() {
+            this.Timer = setTimeout(this.PingServer, 2000);
+          }.bind(this),
+          error: function(request) {
+            if(request.status == 401) {
+              this.$refs.logout.show();
+            } else {
+              this.$refs.offline.show();
+            }
+          }.bind(this)
+        });
       }
     },
     created: function() {
@@ -33,11 +53,12 @@
       } else {
         this.UserName = localStorage.getItem('UserName');
       }
-      $(document).ajaxError(function(event, jqxhr, settings, exception ) {
-        if(jqxhr.status === 401) this.$refs.logout.show();
-      }.bind(this));
+      this.Timer = null;
     },
-    components: { UserLogout, UserEdit }
+    mounted: function() {
+      this.PingServer();
+    },
+    components: { UserLogout, UserEdit, Offline }
   }
 </script>
   

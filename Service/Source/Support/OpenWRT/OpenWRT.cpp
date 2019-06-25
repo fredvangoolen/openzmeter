@@ -506,7 +506,7 @@ void System::GetNTPCallback(HTTPRequest& req) {
           string Value = Tmp["values"]["enabled"];
           Result["Enabled"] = (Value == "1");
         }
-        if(Tmp["values"]["server"].is_array() && (Tmp["values"]["server"].size() > 0) && (Tmp["values"]["server"][0].is_string())) Result["Server"] = Tmp["values"]["server"][0];
+        if(Tmp["values"]["server"].is_string()) Result["Server"] = Tmp["values"]["server"];
       }
     }
   }
@@ -515,6 +515,34 @@ void System::GetNTPCallback(HTTPRequest& req) {
   return req.FromJSON(Result);
 }
 void System::SetNTPCallback(HTTPRequest& req) {
+  json Params = req.GetParams();
+  //only 'admin' user can get this information
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  pthread_mutex_lock(&pMutex);
+  json Result;
+  Result["Status"] = true;
+  int ErrorCode = 0;
+  if(Params["NTP_Enabled"].is_boolean() && Params["NTP_Server"].is_string()) {
+    Run("ubus call uci set '{\"config\":\"system\", \"section\":\"ntp\", \"values\":{\"enabled\":\"" + string((Params["NTP_Enabled"] == true) ? "1" : "0") + "\", \"server\":" + Params["NTP_Server"].dump() + "}}'", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+    Run("uci commit", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+    Run("reload_config", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+    if((Params["NTP_Enabled"] == false) && Params["Time"].is_number_unsigned()) {
+      uint64_t Time = Params["Time"];
+      timeval TimeVal;
+      TimeVal.tv_sec  = Time / 1000;
+      TimeVal.tv_usec = Time % 1000;
+      if(settimeofday(&TimeVal, NULL) != 0) {
+        Result["Status"] = false;
+        LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      }
+    } 
+  }
+  pthread_mutex_unlock(&pMutex);
+  return req.FromJSON(Result);
 }
 uint64_t System::ParseProcMem(const char *name, const char *buff) {
   const char *hit = strstr(buff, name);

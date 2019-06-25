@@ -26,7 +26,7 @@ import StatsHeatmap from 'Components/Views/Stats_Heatmap/View.vue';
 import StatsDistribution from 'Components/Views/Stats_Distribution/View.vue';
 import Settings from './Components/Views/Settings/View.vue';
 
-import PageNotFound from './Components/Views/PageNotFound.vue';
+//import PageNotFound from './Components/Views/PageNotFound.vue';
 
 new Vue({
   el: '#app',
@@ -49,6 +49,6 @@ new Vue({
       { path:'/Stats/Heatmap', component: StatsHeatmap },
       { path:'/Stats/Distribution', component: StatsDistribution },
       { path:'/Settings', component: Settings },
-      { path: '*', component: PageNotFound }
+//      { path: '*', component: PageNotFound }
     ]})
 })
