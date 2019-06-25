@@ -14,7 +14,7 @@
             <button type="button" class="btn btn-success btn-xs" v-bind:class="{ disabled: CurrentlySelected(props.rowData) }" v-on:click="Select(props.rowData)">Select</button>
             <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
             <ul class="dropdown-menu pull-right">
-              <li><a v-on:click="Configure(props.rowData)" v-if="false">Configure</a></li>
+              <li><a v-on:click="Configure(props.rowData)" v-if="true">Configure</a></li>
               <li><a v-on:click="ACL(props.rowData)" v-if="false">ACL</a></li>
               <li><a v-on:click="Tariffs(props.rowData)">Tariff</a></li>
               <li><a v-on:click="Alerts(props.rowData)" v-if="false">Alerts</a></li>
@@ -79,7 +79,7 @@
       },
       Configure: function(analyzer) {
         this.Show = false;
-        this.$parent.$refs.Configure.Load(analyzer.ID); 
+        this.$parent.$refs.Configure.Load(analyzer); 
       },
       ACL: function(id) {
         alert("ACL not yet implemented"); 
