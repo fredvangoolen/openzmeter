@@ -15,7 +15,7 @@
 #define DEVICEV2_01_PRODSTRING      "openZmeter - Capture device"   //Product string
 #define DEVICEV2_01_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
 #define DEVICEV2_01_SAMPLEFREQ    19200.00                          //Frequencia de muestreo
-#define DEVICEV2_01_TRANSFERS            8                          //Numero de transferencias a encolar
+#define DEVICEV2_01_TRANSFERS           32                          //Numero de transferencias a encolar
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV2_01 : public Device {
   private :

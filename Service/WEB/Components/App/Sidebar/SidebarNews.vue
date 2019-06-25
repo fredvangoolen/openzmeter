@@ -95,7 +95,7 @@
   }
 </script>
 
-<style>
+<style scoped>
   .modal-body {
     min-height: 200px;
   }

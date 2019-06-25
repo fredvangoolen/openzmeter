@@ -29,6 +29,13 @@
         this.$nextTick(function() {
           $(this.$el).modal('show');
         });
+      },
+      hide: function() {
+        $(this.$el).modal('hide');
+                
+        this.$nextTick(function() {
+          this.ShowDialog = false;
+        });
       }
     },
     mounted: function() {

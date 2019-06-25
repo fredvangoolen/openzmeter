@@ -212,22 +212,25 @@ bool DeviceV2_01::Start() {
   return true;
 }
 bool DeviceV2_01::Stop() {
-  //Paro captura y espero a que se detenga
-  //leo y elimino analizadores
+  pthread_mutex_lock(&pMutex);
+  if(pState != RUNNING) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  LOGFile::Info("Stopping 'V2.01' driver for serial '%s'\n", pSerial.c_str());
+  pTerminate = true;
+  pthread_join(pCaptureThread, NULL);
+  for(uint n = 0; n < pAnalyzers.size(); n++) {
+    if(pAnalyzers[n].Analyzer != NULL) delete pAnalyzers[n].Analyzer;
+    pAnalyzers[n].Analyzer = NULL;
+  }
+  pAnalyzers.clear();
+  pState = STOPPED;
+  pthread_mutex_unlock(&pMutex);
   return true;
 }
 DeviceV2_01::~DeviceV2_01() {
   Stop();
-//  if(pAnalyzer) delete pAnalyzer;
-  //  if(Buffer) {
-//    pthread_cond_signal(&WriteWait);
-//    pthread_cond_signal(&ReadWait);
-//    pTerminate = true;
-//    Tools::LogMsg("INFO", "Waiting for adquisition thread ends...\n");
-//    pthread_join(CaptureThread, NULL);
-//    pthread_join(AnalyzeThread, NULL);
-//    free(Buffer);
-//  }
 }
 void DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV2_01 *This = (DeviceV2_01*)transfer->user_data;
@@ -266,7 +269,10 @@ void DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
       This->pCaptureSync = 0;
     }
   }
-  if(This->pTerminate == false) libusb_submit_transfer(transfer);
+  if(This->pTerminate == false) 
+    libusb_submit_transfer(transfer);
+  else
+    libusb_free_transfer(transfer);
 }
 int DeviceV2_01::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
   DeviceV2_01 *This = (DeviceV2_01*)user_data;
@@ -394,20 +400,9 @@ void *DeviceV2_01::Capture_Thread(void *args) {
 //      if(Error < 0) LOGFile::Error("Can not setup device with serial %s (%d)\n", This->pSerial, Error);
     }
   }
-  for(int i = 0; i < DEVICEV2_01_TRANSFERS; i++) libusb_free_transfer(This->pTransfers[i].Transfer);
+  libusb_release_interface(This->pDeviceHandle, 0);
+  libusb_close(This->pDeviceHandle);
+  libusb_exit(This->pContext);
   return NULL;
 }
-
-//DeviceV2::~DeviceV2() {
-//  pTerminate = true;
-//  Tools::LogMsg("INFO", "Waiting for adquisition thread ends...\n");
-//  pthread_join(pCaptureThread, NULL);
-//  if(pVoltageSamples) free(pVoltageSamples);
-//  if(pCurrentSamples) free(pCurrentSamples);
-//  for(uint i = 0; i < pAnalyzers.size(); i++) {
-//    delete pAnalyzers[i].Analyzer;
-//    free(pAnalyzers[i].ID);
-//  }
-//  free(pAnalyzers);
-//}
 //======================================================================================================================

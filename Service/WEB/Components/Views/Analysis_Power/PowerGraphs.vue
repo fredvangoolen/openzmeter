@@ -6,7 +6,7 @@
         <div class="header-buttons clearfix" ref="ToolbarActive">
           <toolbar-aggregation variable="AggregationEnergy" :options="['15M', '1H']" v-on:AggregationChanged="AggregationChanged" ref="aggregation"></toolbar-aggregation>
           <toolbar-period variable="Period" v-on:PeriodChanged="UpdateGraph" ref="period"></toolbar-period>
-          <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeActiveClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
+          <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClickActive" v-on:MaximizeClick="MaximizeActiveClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
         </div>
       </div>
       <div class="panel-body">
@@ -23,7 +23,7 @@
       <div class="panel-heading" id="ReactivePowerPanel">
         <div class="header-text">Fund. Reactive Power</div>
         <div class="header-buttons clearfix" ref="ToolbarReactive">
-          <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="$emit('ExportClick')" v-on:MaximizeClick="MaximizeReactiveClick" v-on:MinimizeClick="MinimizeClick" ref="reactiveTools"></toolbar-tools>
+          <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClickReactive" v-on:MaximizeClick="MaximizeReactiveClick" v-on:MinimizeClick="MinimizeClick" ref="reactiveTools"></toolbar-tools>
         </div>
       </div>
       <div class="panel-body">
@@ -160,9 +160,15 @@
       MinimizeClick: function() {
         $(window).bind('resize', this.ResizeHandler.bind(this));
       },
-      ExportClick: function() {
+      ExportClickActive: function() {
         if(this.$root.SelectedAnalyzer === null) return;
-        this.$refs.tools.SaveCVS('Power.csv', [['Time', 'Frequency']].concat(this.Data));
+        var Analyzer = this.$root.SelectedAnalyzer;
+        this.$refs.tools.SaveCVS('Active_Power.csv', [['Time'].concat(oZm.Series['ACTIVE_POWER'].Names(Analyzer))].concat(this.ActiveData));
+      },
+      ExportClickReactive: function() {
+        if(this.$root.SelectedAnalyzer === null) return;
+        var Analyzer = this.$root.SelectedAnalyzer;
+        this.$refs.tools.SaveCVS('Reactive_Power.csv', [['Time'].concat(oZm.Series['REACTIVE_POWER'].Names(Analyzer))].concat(this.ReactiveData));
       },
       NowValue: function() {
         if(this.$root.SelectedAnalyzer === null) return;
