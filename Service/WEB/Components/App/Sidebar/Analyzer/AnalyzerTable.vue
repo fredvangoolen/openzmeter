@@ -47,7 +47,7 @@
     methods: {
       GetAnalyzers() {
         $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-          success: function(result) { 
+          success: function(result) {
             var TableData = { data: result };
             this.$refs.table.setData(TableData);
             this.ShowSpinner = false;
@@ -57,7 +57,7 @@
       OnlineStatus: function(value) {
         return (value === true) ? '&#9635;' : '&#9633;';
       },
-      Load: function(analyzers) {
+      Load: function() {
         this.Show = true;
         this.ShowSpinner = true;
         this.$nextTick(function() {
