@@ -118,7 +118,7 @@
       <makefileType>
         <makeTool>
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
-          <buildCommand>${MAKE} -j2 -f Makefile CONFIG=Configs/openWRT.config</buildCommand>
+          <buildCommand>${MAKE} -j2 -f Makefile CONFIG=Configs/debian.config</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath>Tmp/openZmeter</executablePath>
           <cTool>
