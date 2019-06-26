@@ -84,7 +84,6 @@ class AnalyzerInterface : protected Database {
     AnalyzerMode  pMode;
   protected :
     void  InitAggreg(Params_t &params, AggregType type);
-//    void  ResetAggreg(Params_t &params);
     void  SaveAggreg(Params_t &params);
     void  AccumulateAggreg(Params_t &src, Params_t &dst);
     void  NormalizeAggreg(Params_t &src);

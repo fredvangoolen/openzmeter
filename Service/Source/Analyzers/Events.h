@@ -23,24 +23,23 @@ class Events : public Database {
                       EVT_INTERRUPTION = 0x04, 
                       EVT_RVC          = 0x08
                     };
+    enum EventState { EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };
     typedef struct {
       vector<float> RMS;
       uint64_t      Timestamp;
     } EventCycle_t;
     typedef struct {
       enum EventType                 Type;                 //Running event type
-      bool                           Clossing;             //Events ends waiting to fill post samples/cycles to save it
+      EventState                     State;                //Events state
       uint64_t                       Start;                //Event start timestamp
       uint64_t                       Duration;             //Event duration in samples
       vector<float>                  Reference;            //Voltage reference for event (Stationary for RVC, nominal for others)
       vector<float>                  SteadyValue;          //event voltage change (Start to End relation on RVC, null on others)
       vector<float>                  PeakValue;            //max/min voltage variation along event
-      vector<vector<float> >         BeginSamples;         //
-      vector<vector<float> >         BeginRMS;             //
-      vector<vector<float> >         InnerSamples;         //
-      vector<vector<float> >         InnerRMS;             //
-      vector<vector<float> >         EndSamples;           //
-      vector<vector<float> >         EndRMS;               //
+      deque<vector<float> >          SamplesRAW_A;         //
+      deque<vector<float> >          SamplesRMS_A;         //
+      deque<vector<float> >          SamplesRAW_B;         //
+      deque<vector<float> >          SamplesRMS_B;         //
     } Event_t;
   private :
     pthread_t                        pThread;              //Hilo de ejecucion

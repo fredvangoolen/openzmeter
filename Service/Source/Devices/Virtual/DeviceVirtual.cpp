@@ -130,6 +130,10 @@ void  *DeviceVirtual::Capture_Thread(void *args) {
       Current[2] = -5.0 * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency - 4.0 * M_PI / 3.0);
       Current[2] = Current[2] + Current[2] * 0.1 * sin((2.0 * M_PI * (GeneratedSamples - This->pSampleRate * 240.0)) / (This->pSampleRate * 100.0));
       Current[3] = Current[0] + Current[1] + Current[2];
+      if(((Sampletime - StartTime) > 120000) && ((Sampletime - StartTime) < 300000)) {
+        Voltage[0] *= 0.8;
+      }
+      
       GeneratedSamples++;
       This->pAnalyzer->BufferAppend(Voltage, Current, Sampletime);
     } else {
