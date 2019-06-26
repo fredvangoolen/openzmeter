@@ -178,7 +178,7 @@ void *Events::Events_Thread(void* args) {
           if(it->SamplesRAW_A.size() < (This->pSampleRate * EVENT_RAWENVELOPETIME)) {
             it->SamplesRAW_A.push_back(Sample);
           } else {
-            it->SamplesRAW_A.push_back(Sample);
+            it->SamplesRAW_B.push_back(Sample);
             if(it->SamplesRAW_B.size() > (This->pSampleRate * EVENT_RAWENVELOPETIME)) it->SamplesRAW_B.pop_front();
           }
         }
@@ -204,13 +204,13 @@ void *Events::Events_Thread(void* args) {
           it = it++;
           This->pEvents.erase(Tmp);
         } else if(it->State == EVT_CLOSING) {
-          continue;
+          it++;
         } else {
           //Check if RVC event can be closed, or update values
           if(it->Type == EVT_RVC) {
             if(Stationary == true) {
               it->State = EVT_CLOSING;
-              Event.SteadyValue = vector<float>(RMS_Avg.size(), 0);
+              it->SteadyValue = vector<float>(RMS_Avg.size(), 0);
             } else {
               for(uint8_t ch = 0; ch < Cycle.RMS.size(); ch++) {
                 if(fabs(it->Reference[ch] - Cycle.RMS[ch]) > fabs(it->Reference[ch] - it->PeakValue[ch])) it->PeakValue[ch] = Cycle.RMS[ch];

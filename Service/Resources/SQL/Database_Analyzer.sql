@@ -51,9 +51,9 @@ CREATE TABLE IF NOT EXISTS aggreg_1h (
   active_power   real[]  NOT NULL,
   reactive_power real[]  NOT NULL,
   stat_voltage   int4[]  NOT NULL,
-	stat_frequency int4[]  NOT NULL,
-	stat_thd       int4[]  NOT NULL,
-	stat_harmonics int4[]  NOT NULL
+  stat_frequency int4[]  NOT NULL,
+  stat_thd       int4[]  NOT NULL,
+  stat_harmonics int4[]  NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS events (
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS events (
   rms2        real[],
   samples3    real[],
   rms3        real[],
-  CONSTRAINT events_pkey PRIMARY KEY (updatetime, evttype)
+  CONSTRAINT events_pkey PRIMARY KEY (starttime, evttype)
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS prices (
