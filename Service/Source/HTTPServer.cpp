@@ -111,6 +111,9 @@ int  HTTPRequest::ResultCode() {
 string HTTPRequest::MimeType() {
   return pMimeType;
 }
+void HTTPRequest::MimeType(string type) {
+  pMimeType = type;
+}
 ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t max) {
   HTTPRequest *Request = (HTTPRequest*)cls;
   if(Request->pDeflate) {
@@ -152,9 +155,9 @@ HTTPServer::HTTPServer() {
   Config["Port"] = Port;
   ConfigManager::WriteConfig("/HTTPServer", Config); 
   if(pDaemon == NULL) {
-    LOGFile::Error("HTTP port (%d) already in use\n");
+    LOGFile::Error("HTTP port (%hu) already in use\n", Port);
   } else {
-    LOGFile::Info("HTTP server started on port %d\n", Port);
+    LOGFile::Info("HTTP server started on port %hu\n", Port);
   }
   if(pRegistered == false) {
     RegisterCallback("/Ping", PingCallback);
@@ -210,7 +213,15 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
       } else if(Request->UserName().empty()) {
         return SendRedirect(connection, "/Login");
       } else {
-        Request->FromFile("WEB/Index.html");
+        size_t Len;
+        const char *Content = (const char *)ResourceLoader::GetFile("WEB/Index.html", &Len);
+        string Index = string(Content, Len);
+        string Find = "{{ VERSION }}";
+        string Version = __BUILD__;
+        Len = Index.find(Find, 0);
+        if(Len != string::npos) Index = Index.replace(Len, Find.size(), Version);
+        Request->FromString(Index, MHD_HTTP_OK);
+        Request->MimeType("text/html");
       }
     }
     MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &Request->WriteFunction, Request, NULL);

@@ -78,7 +78,7 @@ bool Database::ExecSentenceNoResult(string sql) {
   PGresult *Result = PQexec(pDBConn, sql.c_str());
   if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
     char *Save;
-    LOGFile::Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    LOGFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     PQclear(Result);
     return false;
   } else {
@@ -91,12 +91,12 @@ bool Database::ExecSentenceAsyncResult(string sql) {
   ClearAsync();
   if(PQsendQuery(pDBConn, sql.c_str()) == 0) {
     char *Save;
-    LOGFile::Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    LOGFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     return false;
   }
   if(PQsetSingleRowMode(pDBConn) == 0) {
     char *Save;
-    LOGFile::Error("Error in SQL query \"%s\" (%s)\n", sql.c_str(), strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    LOGFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     return false;
   }
   return true;

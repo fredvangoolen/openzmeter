@@ -31,6 +31,7 @@ class HTTPRequest : public Database {
     string   SessionID();
     string   UserName();
     string   MimeType();
+    void     MimeType(string type);
     uint32_t size();
     bool     Deflate();
     int      ResultCode();
