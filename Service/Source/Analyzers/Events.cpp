@@ -197,12 +197,12 @@ void *Events::Events_Thread(void* args) {
       //Check events state
       for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); ) {
         //If closed evend finish post event period save it and remove from list
-        if((it->State == EVT_CLOSING) && (it->SamplesRAW_A.size() == (This->pAnalyzer->GetNominalFrequency() * EVENT_RMSENVELOPETIME)) && (it->SamplesRMS_A.size() == (This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME))) {
+        if((it->State == EVT_CLOSING) && (it->SamplesRAW_A.size() == (This->pSampleRate * EVENT_RAWENVELOPETIME)) && (it->SamplesRMS_A.size() == (This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME))) {
           it->State = EVT_CLOSED;
           This->Save(*it);
-          list<Event_t>::iterator Tmp = it;
-          it = it++;
-          This->pEvents.erase(Tmp);
+//          list<Event_t>::iterator Tmp = it;
+//          it = it++;
+          This->pEvents.erase(it++);
         } else if(it->State == EVT_CLOSING) {
           it++;
         } else {
@@ -210,7 +210,7 @@ void *Events::Events_Thread(void* args) {
           if(it->Type == EVT_RVC) {
             if(Stationary == true) {
               it->State = EVT_CLOSING;
-              it->SteadyValue = vector<float>(RMS_Avg.size(), 0);
+              it->SteadyValue = vector<float>(RMS_Avg.size(), 0.0);
             } else {
               for(uint8_t ch = 0; ch < Cycle.RMS.size(); ch++) {
                 if(fabs(it->Reference[ch] - Cycle.RMS[ch]) > fabs(it->Reference[ch] - it->PeakValue[ch])) it->PeakValue[ch] = Cycle.RMS[ch];
