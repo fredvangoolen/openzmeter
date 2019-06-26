@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" @wheel="ZoomWheelGraphReset">
     <div id="DisableDiv" class="overlay"></div>
     <topbar ref="indicator_bar"></topbar>
     <sidebar ref="sidebar"></sidebar>
@@ -11,6 +11,7 @@
 import Topbar from './Topbar/Topbar.vue';
 import Sidebar from './Sidebar/Sidebar.vue';
 import moment from 'JS/moment.js';
+import * as oZm from 'JS/openZmeter.js';
 export default {
   data: function() {
     return { };
@@ -57,6 +58,9 @@ export default {
     SetAnalyzer() {
       this.UpdateIndicators1();
       this.UpdateIndicators2();
+    },
+    ZoomWheelGraphReset(){
+      oZm.zoomWheelGraphReset();
     }
   },
   created: function() {
