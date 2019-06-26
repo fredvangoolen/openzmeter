@@ -13,7 +13,7 @@
 #define EVENT_INTERRUPTION            90.0        //Bajada en % para generar interrupcion
 #define EVENT_HYSTERESIS              02.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
 #define EVENT_RAWENVELOPETIME          0.5        //Time in seconds before and after event to store RAW samples
-#define EVENT_RMSENVELOPETIME         60.0        //Time in seconds before and after event to store RMS samples
+#define EVENT_RMSENVELOPETIME         10.0        //Time in seconds before and after event to store RMS samples
 //----------------------------------------------------------------------------------------------------------------------
 class Events : public Database {
   private :
