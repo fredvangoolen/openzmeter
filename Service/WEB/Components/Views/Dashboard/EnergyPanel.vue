@@ -74,7 +74,8 @@
           dblclick: this.DoubleClickEvt,
           touchstart: oZm.startTouch,
           touchend: this.EndTouchEvt,
-          touchmove: oZm.moveTouch},
+          touchmove: oZm.moveTouch,
+          mousewheel : this.MouseWheelEvt},
         colors: [oZm.Series['ACTIVE_ENERGY'].Color], xAxisHeight: 24, legendFormatter: oZm.LegendFormatter_Follow, underlayCallback: this.DrawPeriods, selectMode: 'euclidian',
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
@@ -201,8 +202,15 @@
         //}
       },
       DoubleClickEvt: function(event, g, context) {
-        oZm.dblClick(event, g, context);
-        this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
+        //oZm.dblClick(event, g, context);
+        //this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
+        this.$refs.period.Period=this.$refs.period.LastPeriod;
+        this.$refs.period.To=this.$refs.period.LastTo;
+        this.$refs.period.PeriodClick(this.$refs.period.Period,this.$refs.period.To);
+      },
+      MouseWheelEvt: function(event, g, contex) {
+        oZm.mouseWheelZoom(event, g, contex,this.ZoomEvt,g.dateWindow_[0], g.dateWindow_[1]);
+          //this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
       },
       ZoomEvt: function(minDate, maxDate, yRanges) {
         this.$refs.period.SetCustom(minDate, maxDate);
