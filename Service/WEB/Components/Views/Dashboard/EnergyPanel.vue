@@ -66,7 +66,15 @@
       this.Data = [];
       this.GraphOptions = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, legend: 'follow', plotter: Graph.multiColumnBarPlotter,
-        labels: ['Time', 'Energy'], interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: this.MouseUpEvt, dblclick: this.DoubleClickEvt },
+        labels: ['Time', 'Energy'], 
+        interactionModel: { 
+          mousedown: oZm.mouseDown, 
+          mousemove: oZm.mouseMove, 
+          mouseup: this.MouseUpEvt, 
+          dblclick: this.DoubleClickEvt,
+          touchstart: oZm.startTouch,
+          touchend: this.EndTouchEvt,
+          touchmove: oZm.moveTouch},
         colors: [oZm.Series['ACTIVE_ENERGY'].Color], xAxisHeight: 24, legendFormatter: oZm.LegendFormatter_Follow, underlayCallback: this.DrawPeriods, selectMode: 'euclidian',
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
@@ -185,6 +193,12 @@
       MouseUpEvt: function(event, g, contex) {
         oZm.mouseUp(event, g, contex);
         if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
+      },
+      EndTouchEvt: function(event, g, contex) {
+        oZm.endTouch(event, g, contex);
+        //if((contex.isPanning) /*&& (contex.regionWidth > 0)*/) {
+          this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
+        //}
       },
       DoubleClickEvt: function(event, g, context) {
         oZm.dblClick(event, g, context);
