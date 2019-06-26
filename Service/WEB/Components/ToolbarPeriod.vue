@@ -53,7 +53,7 @@
     export default {
         props: {variable: String},
         data: function () {
-            return {Period: 'day', To: 'last', SelectedText: 'Last 24 hours', ShowDialog: false, Updating: true};
+            return {Period: 'day', To: 'last', SelectedText: 'Last 24 hours', ShowDialog: false, Updating: true, LastPeriod: 'day', LastTo: 'last'};
         },
         beforeDestroy: function () {
             clearInterval(this.Timer);
@@ -66,14 +66,21 @@
             this.TmpDateWindow = [0, 0];
             var Conf = JSON.parse(localStorage.getItem(this.variable));
             if (Conf !== null) {
-                if (Conf.To !== undefined)
+                if (Conf.To !== undefined){
                     this.To = Conf.To;
-                if (Conf.Period !== undefined)
+                    this.LastTo = Conf.To;
+                }
+                if (Conf.Period !== undefined){
                     this.Period = Conf.Period;
+                    this.LastPeriod = Conf.Period;
+                }
             }
             this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
         },
         mounted: function(){
+            this.SelectedText=this.$refs.periodTags.querySelector('.active').innerText;
+        },
+        updated: function(){
             this.SelectedText=this.$refs.periodTags.querySelector('.active').innerText;
         },
         methods: {
@@ -128,13 +135,14 @@
                 this.LastSample = 0;
                 this.Period = period;
                 this.To = to;
-                if(event!=undefined){
-                    this.SelectedText = event.target.firstChild.textContent;
-                }else{
-                    this.SelectedText=this.$refs.periodTags.querySelector('.active').innerText;
-                }
                 localStorage.setItem(this.variable, JSON.stringify({To: this.To, Period: this.Period}));
                 this.EmitUpdate();
+                if(event!=undefined){
+                    this.SelectedText = event.target.firstChild.textContent;
+                }
+                /*else{
+                    this.SelectedText=this.$refs.periodTags.querySelector('.active').innerText;
+                }*/
             },
             Previous: function () {
                 var Period = this.Period;
@@ -151,6 +159,10 @@
                 this.SetCustom(To - Period, To);
             },
             SetCustom: function (from, to) {
+                if(Number.isInteger(this.Period) != true){
+                    this.LastPeriod=this.Period;
+                    this.LastTo=this.To;
+                }
                 this.SelectedText = 'Custom';
                 this.To = Math.round(to);
                 this.Period = Math.round(to - from);
