@@ -47,6 +47,7 @@ class DeviceManager {
     static void StopDeviceCallback(HTTPRequest &req);
     static void SetDeviceCallback(HTTPRequest &req);
     static void GetAnalyzersCallback(HTTPRequest &req);
+    static void SetAnalyzerCallback(HTTPRequest &req);
     static void GetSeriesCallback(HTTPRequest &req);
     static void GetSeriesNowCallback(HTTPRequest &req);
     static void GetSeriesRangeCallback(HTTPRequest &req);

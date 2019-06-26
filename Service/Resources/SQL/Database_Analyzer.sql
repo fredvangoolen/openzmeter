@@ -57,13 +57,20 @@ CREATE TABLE IF NOT EXISTS aggreg_1h (
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS events (
-  starttime bigint NOT NULL PRIMARY KEY, 
-  duration  bigint NOT NULL, 
-  samplerate real, 
-  type character varying(16), 
-  voltage real, 
-  percent real, 
-  samples real[]
+  starttime   bigint                NOT NULL,
+  evttype     character varying(16) NOT NULL,
+  duration    bigint                NOT NULL,
+  samplerate  real                  NOT NULL,
+  voltage     real[]                NOT NULL,
+  peak        real[]                NOT NULL,
+  notes       text                  NOT NULL,
+  samples1    real[],
+  rms1        real[],
+  samples2    real[],
+  rms2        real[],
+  samples3    real[],
+  rms3        real[],
+  CONSTRAINT events_pkey PRIMARY KEY (updatetime, evttype)
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS prices (
