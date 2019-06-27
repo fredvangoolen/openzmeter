@@ -72,8 +72,8 @@
         var Y1Range = oZm.Series['CURRENT_SAMPLES'].Range(this.Data, this.CurrentPhases);
         var Y2Range = oZm.Series['VOLTAGE_SAMPLES'].Range(this.Data, Array(this.CurrentPhases.length).fill(false).concat(VoltagePhases));
         var Options = {
-          interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: oZm.mouseUp, dblclick: oZm.dblClick_Restore },
-          legend: 'follow', legendFormatter: oZm.LegendFormatter_Follow, series: Series, visibility: this.CurrentPhases.concat(VoltagePhases),
+          interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup: oZm.mouseUp, dblclick: oZm.dblClick_Restore },
+          legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, series: Series, visibility: this.CurrentPhases.concat(VoltagePhases),
           labels: ['Sample'].concat(oZm.Series['CURRENT'].Names(Analyzer)).concat(oZm.Series['VOLTAGE'].Names(Analyzer)), 
           colors: oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length)), 
           plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], showRangeSelector: false,

@@ -24,13 +24,6 @@
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarOptions from 'Components/ToolbarOptions.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
-  function GraphWaveTimeTicks(max, analyzer) {
-    var ticks = [];
-    for(var i = 0; i <= Math.floor(max / analyzer.SampleFreq * analyzer.NominalFreq); i++) {
-      ticks.push({ v: i * analyzer.SampleFreq / analyzer.NominalFreq, label: oZm.Round2(i / analyzer.NominalFreq * 1000) });
-    }
-    return ticks;
-  }
   export default {
     data() {
       return { ShowSpinner: true, Time: 'Loading data...' };
@@ -72,8 +65,8 @@
         var Y1Range = oZm.Series['VOLTAGE_SAMPLES'].Range(this.Data, this.VoltagePhases);
         var Y2Range = oZm.Series['CURRENT_SAMPLES'].Range(this.Data, Array(this.VoltagePhases.length).fill(false).concat(CurrentPhases));
         var Options = {
-          interactionModel: { mousedown: oZm.mouseDown, mousemove: oZm.mouseMove, mouseup: oZm.mouseUp, dblclick: oZm.dblClick_Restore },
-          legend: 'follow', legendFormatter: oZm.LegendFormatter_Follow, series: Series, visibility: this.VoltagePhases.concat(CurrentPhases),
+          interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup: oZm.mouseUp, dblclick: oZm.dblClick_Restore },
+          legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, series: Series, visibility: this.VoltagePhases.concat(CurrentPhases),
           labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)).concat(oZm.Series['CURRENT'].Names(Analyzer)), 
           colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length)), 
           plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], showRangeSelector: false,
@@ -86,7 +79,7 @@
                   valueFormatter: function (x) { return oZm.Round2(x) + ' <em class="x-small">A</em>'; },
                   axisLabelFormatter: function (x) { return (Object.keys(Series).length > 0) ? oZm.Round2(x) : ''; }
             },
-            x: { ticker: function(min, max) { return GraphWaveTimeTicks(max, Analyzer); },
+            x: { ticker: function(min, max) { return Graph.WaveTimeTicks(max, Analyzer); },
                  valueFormatter: function (x) { return oZm.Round2((x * 1000) / Analyzer.SampleFreq) + ' <em class="x-small">ms</em>'; }
                }
           },

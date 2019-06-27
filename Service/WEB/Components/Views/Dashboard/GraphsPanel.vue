@@ -112,7 +112,7 @@
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
       this.GraphOptions = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, legend: 'follow', 
-        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], xAxisHeight: 12, legendFormatter: oZm.LegendFormatter_Follow
+        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], xAxisHeight: 12, legendFormatter: Graph.LegendFormatter_Follow
       };
     },
     beforeDestroy: function() {
