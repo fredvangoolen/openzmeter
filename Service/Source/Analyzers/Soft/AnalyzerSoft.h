@@ -6,7 +6,7 @@
 #include <pthread.h>
 #include <inttypes.h>
 #include <deque>
-#include "AnalyzerInterface.h"
+#include "Analyzers.h"
 #include "FFT.h"
 #include "Events.h"
 //----------------------------------------------------------------------------------------------------------------------

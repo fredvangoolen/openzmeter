@@ -168,8 +168,8 @@
         canvas.lineTo(area.x, 13);
         canvas.stroke();  
         for(var i = 0; i < this.Periods.length; i++) {
-          var Left = g.toDomXCoord(this.Periods[i].From);
-          var Right = g.toDomXCoord(this.Periods[i].To);
+          var Left = g.toDomXCoord(this.Periods[i].From - 1800000);
+          var Right = g.toDomXCoord(this.Periods[i].To - 1800000);
           if(Left < (area.x + 1)) Left = (area.x + 1);
           canvas.fillStyle = (this.Periods[i].Color === null) ? "#EEEEEE" : this.Periods[i].Color;
           canvas.fillRect(Left, area.y, Right, 13);

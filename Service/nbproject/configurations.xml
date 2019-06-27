@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <logicalFolder name="crt"
-                   displayName="crt"
-                   projectFiles="true"
-                   root="/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/crt">
-      <itemPath>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/crt/crt1.c</itemPath>
-    </logicalFolder>
     <df root="." name="0">
       <df name="Libs">
         <df name="cctz">
@@ -40,7 +34,7 @@
           <df name="Soft">
             <in>AnalyzerSoft.cpp</in>
           </df>
-          <in>AnalyzerInterface.cpp</in>
+          <in>Analyzers.cpp</in>
           <in>Events.cpp</in>
           <in>FFT.cpp</in>
         </df>
@@ -108,7 +102,8 @@
       </toolsSet>
       <flagsDictionary>
         <element flagsID="0" commonFlags="-g"/>
-        <element flagsID="1" commonFlags="-g -Os -std=c99 -ffreestanding"/>
+        <element flagsID="1"
+                 commonFlags="-mtune=generic -march=x86-64 -std=c++11 -fstack-protector-all"/>
         <element flagsID="2" commonFlags="-std=c++11"/>
         <element flagsID="3" commonFlags="-std=c++11 -fstack-protector-all"/>
         <element flagsID="4" commonFlags="-std=c++11 -march=native"/>
@@ -121,17 +116,6 @@
           <buildCommand>${MAKE} -j8 -f Makefile CONFIG=Configs/openWRT.config</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath>Tmp/openZmeter</executablePath>
-          <cTool>
-            <incDir>
-              <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/crt</pElem>
-              <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/obj/include/bits</pElem>
-              <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/include</pElem>
-              <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/src/include</pElem>
-              <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/src/internal</pElem>
-              <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/obj/include</pElem>
-              <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21</pElem>
-            </incDir>
-          </cTool>
           <ccTool flags="0">
           </ccTool>
         </makeTool>
@@ -140,28 +124,16 @@
           <preBuildCommand></preBuildCommand>
         </preBuild>
       </makefileType>
-      <item path="/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/crt/crt1.c"
-            ex="false"
-            tool="0"
-            flavor2="3">
-        <cTool flags="1">
-        </cTool>
-      </item>
       <item path="Libs/cctz/civil_time_detail.cc" ex="false" tool="1" flavor2="8">
         <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Libs/cctz/civil_time_detail.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_fixed.cc" ex="false" tool="1" flavor2="8">
@@ -169,16 +141,11 @@
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_fixed.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_format.cc" ex="false" tool="1" flavor2="8">
@@ -186,16 +153,11 @@
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_format.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_if.cc" ex="false" tool="1" flavor2="8">
@@ -203,16 +165,11 @@
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_if.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_impl.cc" ex="false" tool="1" flavor2="8">
@@ -220,16 +177,11 @@
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_impl.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_info.cc" ex="false" tool="1" flavor2="8">
@@ -237,16 +189,11 @@
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_info.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_libc.cc" ex="false" tool="1" flavor2="8">
@@ -254,16 +201,11 @@
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_libc.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_lookup.cc" ex="false" tool="1" flavor2="8">
@@ -271,16 +213,11 @@
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_lookup.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_posix.cc" ex="false" tool="1" flavor2="8">
@@ -288,16 +225,11 @@
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_posix.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/zone_info_source.cc" ex="false" tool="1" flavor2="8">
@@ -305,82 +237,53 @@
         </ccTool>
       </item>
       <item path="Libs/cctz/zone_info_source.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
-      <item path="Source/Analyzers/AnalyzerInterface.cpp"
-            ex="false"
-            tool="1"
-            flavor2="8">
-        <ccTool flags="3">
+      <item path="Source/Analyzers/Analyzers.cpp" ex="false" tool="1" flavor2="8">
+        <ccTool flags="1">
           <incDir>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Source</pElem>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
             <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/Analyzers/Events.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
             <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190627.0007"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/Analyzers/FFT.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
             <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/Analyzers/Remote/AnalyzerRemote.cpp"
@@ -394,28 +297,20 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Database.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
             <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/Devices/Devices.cpp" ex="false" tool="1" flavor2="8">
@@ -435,7 +330,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
+            <Elem>__BUILD__="20190627.1119"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -457,42 +352,35 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Devices/V2_01/DeviceV2_01.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Devices/Virtual/DeviceVirtual.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
             <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/MODBus.cpp" ex="false" tool="1" flavor2="8">
@@ -530,28 +418,25 @@
         </ccTool>
       </item>
       <item path="Source/Main.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices</pElem>
             <pElem>Source/Support/Debian</pElem>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/Support/Debian/Debian.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Support/OpenWRT/OpenWRT.cpp" ex="false" tool="1" flavor2="8">
@@ -562,39 +447,43 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Tariffs/NONE/TariffPlugin_NONE.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Tariffs/Tariff.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="1">
           <incDir>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
             <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <folder path="0/Libs">
@@ -726,22 +615,19 @@
       <folder path="0/Source/Analyzers/Soft">
         <ccTool>
           <incDir>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Source</pElem>
             <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/Source/Devices/Remote">
@@ -858,64 +744,58 @@
       <folder path="0/Source/Devices/V1_01">
         <ccTool>
           <incDir>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/libusb-1.0</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/Source/Devices/V2_01">
         <ccTool>
           <incDir>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/libusb-1.0</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Devices/V2_01</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/Source/Devices/Virtual">
         <ccTool>
           <incDir>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/libusb-1.0</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/Source/Support">
@@ -969,18 +849,12 @@
       <folder path="0/Source/Support/Debian">
         <ccTool>
           <incDir>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/Source/Support/OpenWRT">
@@ -1286,25 +1160,40 @@
           </preprocessorList>
         </ccTool>
       </folder>
-      <folder path="0/Source/Tariffs">
+      <folder path="0/Source/Tariffs/ESP">
         <ccTool>
           <incDir>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
             <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/ESP</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
             <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190626.2352"</Elem>
-          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Tariffs/NONE">
+        <ccTool>
+          <incDir>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>../../../../openWRT/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </folder>
     </conf>
