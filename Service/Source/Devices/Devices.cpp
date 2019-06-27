@@ -507,12 +507,16 @@ void DeviceManager::GetEventsCallback(HTTPRequest &req) {
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
   string Analyzer = Params["Analyzer"];
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(Analyzer));
-  if(Params["ID"].is_number_unsigned()) {
-    if(!Params["Type"].is_string()) return req.FromString("'Type' param is requiered", MHD_HTTP_BAD_REQUEST);
-    uint64_t ID = Params["ID"];
+  if(Params["StartTime"].is_number_unsigned()) {
+    if(!Params["Type"].is_string() || !Params["Samples"].is_string() || ((Params["Samples"] != "RMS") && (Params["Samples"] != "RAW"))) return req.FromString("'Type' and 'Samples' params are requiered", MHD_HTTP_BAD_REQUEST);
+    uint64_t ID = Params["StartTime"];
     string Type = Params["Type"];
-    req.ExecSentenceAsyncResult("SELECT json_build_object('StartTime', starttime, 'Duration', duration, 'SampleRate', samplerate, 'Finished', finished, 'Type', evttype, 'Voltage', voltage, 'Peak', peak, 'RAWPre', samples1, 'RMSPre', rms1, 'RAW', samples2, 'RMS', rms2, 'RAWPost', samples3, 'RMSPost', rms3) AS evt "
-                                "FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+    string Samples = Params["Samples"];
+    if(Samples == "RAW") {
+      req.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', samples1, 'Samples', samples2, 'Post_Samples', samples3) AS evt FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+    } else {
+      req.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', rms1, 'Samples', rms2, 'Post_Samples', rms3) AS evt FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+    }
   } else {
     if(!Params["To"].is_number() || !Params["Period"].is_number() || !Params["LastSample"].is_number()) return req.FromString("'To', 'Period' and 'LastSample' params are requiered", MHD_HTTP_BAD_REQUEST);
     uint64_t To = Params["To"];
@@ -522,7 +526,7 @@ void DeviceManager::GetEventsCallback(HTTPRequest &req) {
     uint64_t From = To - Period;
     req.ExecSentenceAsyncResult("SELECT json_build_object('From', " + req.Bind(From) + ", 'To', " + req.Bind(To) + ", 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), 'Change', COALESCE(ARRAY_AGG(change ORDER BY starttime ASC), '{}'), "
                                 "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), 'Finished', COALESCE(ARRAY_AGG(finished ORDER BY starttime ASC), '{}'), "
-                                "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), 'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), 'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}')) AS evt "
+                                "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), 'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), 'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}'), 'Notes', COALESCE(ARRAY_AGG(notes ORDER BY starttime ASC), '{}')) AS evt "
                                 "FROM events WHERE starttime > " + req.Bind(LastSample) + " AND starttime >= " + req.Bind(From) + " AND starttime <= " + req.Bind(To));
   }
   if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);

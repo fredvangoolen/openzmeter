@@ -58,6 +58,7 @@ class Events : public Database {
     static void *Events_Thread(void *args);
     static float PercentChange(float in, float reference);
   private :
+    void InitEvent(EventType type, vector<float> reference, uint32_t pos);
     void Save(Event_t &evt);
     bool FindRunningEvent(uint32_t mask);
   public :

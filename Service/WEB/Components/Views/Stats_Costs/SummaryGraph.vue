@@ -14,7 +14,7 @@
       this.Labels = [];
       this.GraphOptions = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', 
-        xAxisHeight: 18, legendFormatter: oZm.LegendFormatter_Follow, plotter: Graph.multiColumnBarPlotter, labels: ['Time', 'Cost'], colors: [oZm.Series['ACTIVE_ENERGY'].Color], includeZero: true,
+        xAxisHeight: 18, legendFormatter: Graph.LegendFormatter_Follow, plotter: Graph.multiColumnBarPlotter, labels: ['Time', 'Cost'], colors: [oZm.Series['ACTIVE_ENERGY'].Color], includeZero: true,
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 30,
                valueFormatter: function (x) { return oZm.Round2(x) + ' <em class="x-small">' + '€' + '</em>'; },
