@@ -70,11 +70,11 @@ void Events::Save(Event_t &evt) {
     for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
   }
   if(evt.State == EVT_RUNNING) {
-    ExecSentenceNoResult("INSERT INTO events(starttime, duration, samplerate, evttype, voltage, peak, notes, samples1, rms1) VALUES (" + Bind(evt.Start) + ", 0, " + Bind(pSampleRate) + ", " + Bind(Type) + ", " + Bind(evt.Reference) + ", " + Bind(evt.PeakValue) + ", '', " + Bind(RAW) + ", " + Bind(RMS) + ")");
+    ExecSentenceNoResult("INSERT INTO events(starttime, duration, finished, samplerate, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + Bind(evt.Start) + ", 0, FALSE," + Bind(pSampleRate) + ", " + Bind(Type) + ", " + Bind(evt.Reference) + ", " + Bind(evt.PeakValue) + ", " + Bind(evt.ChangeValue) + ", '', " + Bind(RAW) + ", " + Bind(RMS) + ")");
   } else if(evt.State == EVT_CLOSING) {
-    ExecSentenceNoResult("UPDATE events SET duration = " + Bind(evt.Duration) + ", peak = " + Bind(evt.PeakValue) + ", samples2 = " + Bind(RAW) + ", rms2 = " + Bind(RMS) + " WHERE starttime = " + Bind(evt.Start) + " AND evttype = " + Bind(Type));
+    ExecSentenceNoResult("UPDATE events SET duration = " + Bind(evt.Duration) + ", peak = " + Bind(evt.PeakValue) + ", change = " + Bind(evt.ChangeValue) + ", samples2 = " + Bind(RAW) + ", rms2 = " + Bind(RMS) + " WHERE starttime = " + Bind(evt.Start) + " AND evttype = " + Bind(Type));
   } else {
-    ExecSentenceNoResult("UPDATE events SET samples3 = " + Bind(RAW) + ", rms3 = " + Bind(RMS) + " WHERE starttime = " + Bind(evt.Start) + " AND evttype = " + Bind(Type));
+    ExecSentenceNoResult("UPDATE events SET samples3 = " + Bind(RAW) + ", rms3 = " + Bind(RMS) +  + ", finished = TRUE WHERE starttime = " + Bind(evt.Start) + " AND evttype = " + Bind(Type));
   }
   evt.SamplesRAW_A = deque<vector<float> >();
   evt.SamplesRMS_A = deque<vector<float> >();
@@ -146,8 +146,8 @@ void *Events::Events_Thread(void* args) {
           if((Stationary == false) && (This->pPrevStationary == true) && (This->FindRunningEvent(EVT_INTERRUPTION | EVT_DIP | EVT_SWELL | EVT_RVC) == false)) Event.Type = EVT_RVC;
           if(Event.Type != EVT_NONE) {
             Event.Reference = (Event.Type == EVT_RVC) ? RMS_Avg : vector<float>(RMS_Avg.size(), This->pAnalyzer->GetNominalVoltage());
-            Event.SteadyValue = vector<float>(RMS_Avg.size(), 0);
             Event.PeakValue = Cycle.RMS;
+            Event.ChangeValue = vector<float>(Cycle.RMS.size(), 0.0);
             Event.Duration = 0;
             Event.State = EVT_RUNNING;
             Event.Start =  This->pParams->Timestamp + ((Pos * 1000) / This->pSampleRate);
@@ -200,8 +200,6 @@ void *Events::Events_Thread(void* args) {
         if((it->State == EVT_CLOSING) && (it->SamplesRAW_A.size() == (This->pSampleRate * EVENT_RAWENVELOPETIME)) && (it->SamplesRMS_A.size() == (This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME))) {
           it->State = EVT_CLOSED;
           This->Save(*it);
-//          list<Event_t>::iterator Tmp = it;
-//          it = it++;
           This->pEvents.erase(it++);
         } else if(it->State == EVT_CLOSING) {
           it++;
@@ -210,7 +208,7 @@ void *Events::Events_Thread(void* args) {
           if(it->Type == EVT_RVC) {
             if(Stationary == true) {
               it->State = EVT_CLOSING;
-              it->SteadyValue = vector<float>(RMS_Avg.size(), 0.0);
+              it->ChangeValue = RMS_Avg;
             } else {
               for(uint8_t ch = 0; ch < Cycle.RMS.size(); ch++) {
                 if(fabs(it->Reference[ch] - Cycle.RMS[ch]) > fabs(it->Reference[ch] - it->PeakValue[ch])) it->PeakValue[ch] = Cycle.RMS[ch];
