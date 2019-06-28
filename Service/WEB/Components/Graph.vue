@@ -6,13 +6,46 @@
   import Dygraph from 'JS/dygraph.js';
   import * as oZm from 'JS/openZmeter.js';
   var lastClicked = null;
+  function endTouch (event, g, context) {
+    if(event.touches.length !== 0) {
+      // this is effectively a "reset"
+      startTouch(event, g, context);
+    } else if (event.changedTouches.length == 1) {
+      // Could be part of a "double tap"
+      // The heuristic here is that it's a double-tap if the two touchend events
+      // occur within 500ms and within a 50x50 pixel box.
+      var now = new Date().getTime();
+      var t = event.changedTouches[0];
+      if (context.startTimeForDoubleTapMs && now - context.startTimeForDoubleTapMs < 500 && context.doubleTapX && Math.abs(context.doubleTapX - t.screenX) < 50 && context.doubleTapY && Math.abs(context.doubleTapY - t.screenY) < 50) {
+        g.resetZoom();
+      } else {
+        context.startTimeForDoubleTapMs = now;
+        context.doubleTapX = t.screenX;
+        context.doubleTapY = t.screenY;
+      }
+      
+    }
+  }
   export default {
+    // Tickers, plotters and legends formats
     WaveTimeTicks: function(max, analyzer) {
       var ticks = [];
       for(var i = 0; i <= Math.floor(max / analyzer.SampleFreq * analyzer.NominalFreq); i++) {
         ticks.push({ v: i * analyzer.SampleFreq / analyzer.NominalFreq, label: oZm.Round2(i / analyzer.NominalFreq * 1000) });
       }
       return ticks;
+    },
+    DBTicks: function(min, max, offset) {
+      var ticks = [];
+      for(var i = Math.floor(min - offset); i < Math.ceil(max - offset); i++) {
+        if((i % 10) === 0) ticks.push({ v: i + offset, label: i });
+      }
+      return ticks;
+    },
+    OddHarmonicsTicks: function () {
+      var Ticks = [];
+      for(var i = 0; i < oZm.Series['HARMONICS'].Names.length; i = i + 2) Ticks.push({ v: i, label: oZm.Series['HARMONICS'].Names[i] });
+      return Ticks;
     },
     multiColumnBarPlotter: function(e) {
       if(e.seriesIndex !== 0) return;
@@ -47,18 +80,40 @@
       }
       return Result;
     },
-    DBTicks: function(min, max, offset) {
-      var ticks = [];
-      for(var i = Math.floor(min - offset); i < Math.ceil(max - offset); i++) {
-        if((i % 10) === 0) ticks.push({ v: i + offset, label: i });
+    // mouse events
+    mouseDown: function(event, g, context) {
+      context.initializeMouseDown(event, g, context);
+      lastClicked = g;
+      if(event.altKey || event.shiftKey) {
+        Dygraph.startZoom(event, g, context);
+      } else {
+        Dygraph.startPan(event, g, context);
       }
-      return ticks;
     },
-    OddHarmonics: function () {
-      var Ticks = [];
-      for(var i = 0; i < oZm.Series['HARMONICS'].Names.length; i = i + 2) Ticks.push({ v: i, label: oZm.Series['HARMONICS'].Names[i] });
-      return Ticks;
+    mouseMove: function(event, g, context) {
+      context.is2DPan = false;
+      if(context.isPanning) {
+        Dygraph.movePan(event, g, context);
+      } else if(context.isZooming) {
+        Dygraph.moveZoom(event, g, context);
+      }
     },
+    mouseUp: function(event, g, context) {
+      if(context.isPanning) {
+        Dygraph.endPan(event, g, context);
+      } else if (context.isZooming) {
+        Dygraph.endZoom(event, g, context);
+      }
+    },
+    dblClick_Restore: function(event, g, context) {
+      g.updateOptions({ dateWindow: null, valueRange: null });
+    },
+
+    //interactions models
+    FixedRangeInteractionModel: function() {
+      return {mousedown: this.mouseDown, mousemove: this.mouseMove, mouseup: this.mouseUp, dblclick: this.dblClick_Restore};
+    },
+
     offsetToPercentage: function(g, offsetX, offsetY) {
       // This is calculating the pixel offset of the leftmost date.
       var xOffset = g.toDomCoords(g.xAxisRange()[0], null)[0];
@@ -88,30 +143,14 @@
       // to "% distance up from the bottom".
       return [xPct, (1-yPct)];
     },
-    mouseDown: function(event, g, context) {
-      context.initializeMouseDown(event, g, context);
-      lastClicked = g;
-      if (event.altKey || event.shiftKey) {
-        Dygraph.startZoom(event, g, context);
-      } else {
-        Dygraph.startPan(event, g, context);
-      }
-    },
-    mouseMove: function(event, g, context) {
-      context.is2DPan = false;
-      if (context.isPanning) {
-        Dygraph.movePan(event, g, context);
-      } else if (context.isZooming) {
-        Dygraph.moveZoom(event, g, context);
-      }
-    },
+    
     startTouch: function(event, g, context) {
       event.preventDefault(); // touch browsers are all nice.
       if (event.touches.length > 1) {
         // If the user ever puts two fingers down, it's not a double tap.
         context.startTimeForDoubleTapMs = null;
       }
-
+      context.isPanning = false;
       var touches = [];
       for (var i = 0; i < event.touches.length; i++) {
         var t = event.touches[i];
@@ -166,7 +205,6 @@
     moveTouch: function(event, g, context) {
       // If the tap moves, then it's definitely not part of a double-tap.
       context.startTimeForDoubleTapMs = null;
-
       var i,
           touches = [];
       for (i = 0; i < event.touches.length; i++) {
@@ -207,6 +245,7 @@
       // them into x-scale and y-scale bits.
       if (touches.length == 1) {
         xScale = 1.0;
+        context.isPanning = true;
         //yScale = 1.0;
       } else if (touches.length >= 2) {
         var initHalfWidth = initialTouches[1].pageX - c_init.pageX;
@@ -247,25 +286,6 @@
         g.getFunctionOption("zoomCallback").call(g, viewWindow[0], viewWindow[1], g.yAxisRanges());
       }
     },
-    endTouch: function(event, g, context) {
-      if (event.touches.length !== 0) {
-        // this is effectively a "reset"
-        startTouch(event, g, context);
-      } else if (event.changedTouches.length == 1) {
-        // Could be part of a "double tap"
-        // The heuristic here is that it's a double-tap if the two touchend events
-        // occur within 500ms and within a 50x50 pixel box.
-        var now = new Date().getTime();
-        var t = event.changedTouches[0];
-        if (context.startTimeForDoubleTapMs && now - context.startTimeForDoubleTapMs < 500 && context.doubleTapX && Math.abs(context.doubleTapX - t.screenX) < 50 && context.doubleTapY && Math.abs(context.doubleTapY - t.screenY) < 50) {
-          g.resetZoom();
-        } else {
-          context.startTimeForDoubleTapMs = now;
-          context.doubleTapX = t.screenX;
-          context.doubleTapY = t.screenY;
-        }
-      }
-    },
     mouseWheelZoom: function(event, g, context, callbackFunc) {
       if(lastClicked != g) return;
       var normal = event.detail ? event.detail * -1 : event.wheelDelta / 40;
@@ -288,9 +308,9 @@
     },
     EndTouchEvt: function(event, g, contex) {
       endTouch(event, g, contex);
-        //if((contex.isPanning) /*&& (contex.regionWidth > 0)*/) {
-          this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
-        //}
+      if((contex.isPanning)/* && (contex.regionWidth > 0)*/) {
+        this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
+      }
     },
     MouseUpEvt: function(event, g, contex) {
         oZm.mouseUp(event, g, contex);
