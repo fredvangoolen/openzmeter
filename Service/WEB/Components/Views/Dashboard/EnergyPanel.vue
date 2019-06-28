@@ -36,7 +36,7 @@
             <div class="current-value" v-html="BudgetValue"></div>
           </div>
         </div>
-        <div class="col-md-12 col-lg-8 col-xl-9">
+        <div class="col-md-6 col-lg-8 col-xl-9">
           <graph :options="GraphOptions" ref="graph"></graph>
         </div>
       </div>
