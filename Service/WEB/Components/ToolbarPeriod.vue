@@ -6,7 +6,7 @@
       </div>
       <div class="input-group-btn">
         <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" :disabled="Updating">{{ SelectedText }}<span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" ref="periodTags">
+        <ul class="dropdown-menu pull-left" ref="periodTags">
           <li v-bind:class="{active: ((Period == 'day') && (To == 'last'))}"><a @click="PeriodClick('day', 'last', $event)">Last 24 hours</a></li>
           <li v-bind:class="{active: ((Period == 'week') && (To == 'last'))}"><a @click="PeriodClick('week', 'last', $event)">Last 7 days</a></li>
           <li v-bind:class="{active: ((Period == 'month') && (To == 'last'))}"><a @click="PeriodClick('month', 'last', $event)">Last 30 days</a></li>

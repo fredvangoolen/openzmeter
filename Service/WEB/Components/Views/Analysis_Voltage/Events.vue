@@ -18,7 +18,7 @@
     </div>
     <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog" ref="Dialog" data-keyboard="false">
       <div class="modal-backdrop in"></div>
-      <div class="modal-dialog" style="width: 100%; height: 100%; padding: 10px; margin: 0px">
+      <div class="modal-dialog full-screen-dialog">
         <div class="modal-content" style="height: 100%">
           <div class="modal-header">
             <div class="pull-left"><h4 class="modal-title">Event &raquo; {{ ViewMode }}</h4></div>
