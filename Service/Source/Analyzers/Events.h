@@ -6,7 +6,7 @@
 #include <deque>
 #include <list>
 #include "Database.h"
-#include "AnalyzerInterface.h"
+#include "Analyzers.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define EVENT_RVC                      5.0        //% variation for RVC detection
 #define EVENT_DIP_SWELL               10.0        //Variacion en % para generar subida o bajada
@@ -34,8 +34,8 @@ class Events : public Database {
       uint64_t                       Start;                //Event start timestamp
       uint64_t                       Duration;             //Event duration in samples
       vector<float>                  Reference;            //Voltage reference for event (Stationary for RVC, nominal for others)
-      vector<float>                  SteadyValue;          //event voltage change (Start to End relation on RVC, null on others)
       vector<float>                  PeakValue;            //max/min voltage variation along event
+      vector<float>                  ChangeValue;          //diference voltage of event
       deque<vector<float> >          SamplesRAW_A;         //
       deque<vector<float> >          SamplesRMS_A;         //
       deque<vector<float> >          SamplesRAW_B;         //
@@ -58,6 +58,7 @@ class Events : public Database {
     static void *Events_Thread(void *args);
     static float PercentChange(float in, float reference);
   private :
+    void InitEvent(EventType type, vector<float> reference, uint32_t pos);
     void Save(Event_t &evt);
     bool FindRunningEvent(uint32_t mask);
   public :

@@ -8,24 +8,33 @@
       <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
-            <button type="button" class="btn btn-xs" v-on:click="RMS(props.rowData)">RMS</button>
-            <button type="button" class="btn btn-xs" v-on:click="Wave(props.rowData)">Wave</button>
-            <button type="button" class="btn btn-danger btn-xs" v-on:click="Delte(props.rowData)">Delete</button>
+            <button type="button" class="btn btn-xs btn-success" v-on:click="Edit(props.rowData)" :disable="props.rowData.Finished==false">Edit</button>
+            <button type="button" class="btn btn-xs btn-default" v-on:click="RMS(props.rowData)" :disable="props.rowData.Finished==false">RMS</button>
+            <button type="button" class="btn btn-xs btn-default" v-on:click="RAW(props.rowData)" :disable="props.rowData.Finished==false">Wave</button>
+            <button type="button" class="btn btn-danger btn-xs" v-on:click="Delete(props.rowData)" :disable="props.rowData.Finished==false">Delete</button>
           </div>
         </template>
       </vuetable>
-
-      <div class="row">
-        
-                <div class="col col-lg-12 col-xl-6 hide">
-                  <div class="panel panel-noborder">
-                    <div id="EventWaveformPanel">
-                      <div id="EventWaveformMaximize">
-                        <div id="EventChart" class="chart big_chart"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+    </div>
+    <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog" ref="Dialog" data-keyboard="false">
+      <div class="modal-backdrop in"></div>
+      <div class="modal-dialog" style="width: 100%; height: 100%; padding: 10px; margin: 0px">
+        <div class="modal-content" style="height: 100%">
+          <div class="modal-header">
+            <div class="pull-left"><h4 class="modal-title">Event &raquo; {{ ViewMode }}</h4></div>
+            <div class="header-buttons" ref="Toolbar">
+              <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="PhasesChanged" type="VOLTAGE"></toolbar-phases>
+              <toolbar-tools ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
+              <div class="btn-group">
+                <button type="button" class="btn btn-default btn-xs" @click="Close"><img :src="require('Imgs/arrow_undo.png')"></button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-body">
+            <spinner v-if="ShowDialogSpinner"></spinner>
+            <graph ref="graph" :options="GraphOptions"></graph>
+          </div>
+        </div>
       </div>
     </div>
   </div>  
@@ -35,23 +44,48 @@
   import Spinner from 'Components/Spinner.vue';
   import Vuetable from 'vuetable-2';
   import moment from 'JS/moment.js';
+  import * as oZm from 'JS/openZmeter.js';
+  import Graph from 'Components/Graph.vue';
+  import Dygraph from 'JS/dygraph.js';
+  import ToolbarPhases from 'Components/ToolbarPhases.vue';
+  import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data: function() {
-      return { ShowSpinner: true, StartDate: '', EndDate: '',
+      return { ShowSpinner: true, StartDate: '', EndDate: '', ShowDialog: false, ViewMode: 'RMS', ShowDialogSpinner: false,
         Columns: [
           {name: 'Date', title: 'Date'},
           {name: 'Type', title: 'Type'}, 
-          {name: 'Duration', title: 'Duration'},
-          {name: 'ΔU', title: 'ΔU (V)'},
-          {name: 'ΔU', title: 'ΔU (%)'},
+          {name: 'Duration', title: 'Duration <em>(s)</em>'},
+          {name: 'Change', title: 'ΔU <em>(V)</em>'},
+          {name: 'Percent', title: 'ΔU <em>(%)</em>'},
+          {name: 'Notes', title: 'Notes'},
           {name: '__slot:actions', title: ''}
         ]
       };
     },
     created: function() {
       this.Events = [];
+      this.Phases = null;
+      this.GraphOptions = {
+        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow,
+//        zoomCallback: this.ZoomEvt.bind(this), interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup: this.MouseUpEvt.bind(this), dblclick: this.DoubleClickEvt.bind(this) }, xAxisHeight: 24, 
+        axes: {
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
+               valueFormatter: function (x) { var Result = oZm.Series['VOLTAGE'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
+               axisLabelFormatter: function (x) { var Result = oZm.Series['VOLTAGE'].FormatValue(x); return Result.Value; }
+             },
+          x: { axisLabelFormatter: function(x) { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); },
+               valueFormatter: function (x) { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); }
+             }
+        }
+      };
     },
     methods: {
+      PhasesChanged: function(phases) {
+        this.Phases = phases;
+        this.Data = [[]];
+        this.$refs.graph.SetOptions({visibility: phases});
+      },
       Redraw: function() {},
       GetEvents: function(to, period, lastsample) {
         var Analyzer = this.$root.SelectedAnalyzer;
@@ -64,9 +98,25 @@
             this.EndDate = moment(result.To).format('DD/MM/YYYY - HH:mm:ss');
             this.StartDate = moment(result.From).format('DD/MM/YYYY - HH:mm:ss');
             if((result['StartTime'] === null) || (result['StartTime'].length === 0)) return;
-            for(var x = 0; x < result['StartTime'].lenght; x++) {
-//              this.Events.push();
-              
+            for(var x = 0; x < result['StartTime'].length; x++) {
+              var Event = { StartTime: result.StartTime[x], Date: moment(result.StartTime[x]).format('DD/MM/YYYY - HH:mm:ss'), Type: result.Type[x], Finished: result.Finished[x] };
+              Event.Duration = (result.Duration === 0) ? 'RUNNNING' : oZm.Round2Plain(result.Duration[x] / result.SampleRate[x]);
+              var Max = 0;        
+              for(var i = 0; i < result.Reference[x].length; i++) {
+                if(Math.abs(result.Reference[x][i] - result.Peak[x][i]) > Math.abs(Max)) Max = result.Peak[x][i] - result.Reference[x][i];
+              }
+             if(Event.Type === 'RVC') {
+                var Diff = 0;
+                for(var i = 0; i < result.Reference[x].length; i++) {
+                  if(Math.abs(result.Reference[x][i] - result.Change[x][i]) > Math.abs(Diff)) Diff = result.Change[x][i] - result.Reference[x][i];
+                }
+                Event.Change = oZm.Round2Plain(Diff) + '<br>(' + oZm.Round2Plain(Max) + ' Max)';
+                Event.Percent = oZm.Round2Plain(Diff / result.Reference[x][0] * 100.0);                
+              } else {
+                Event.Change = oZm.Round2Plain(Max);
+                Event.Percent = oZm.Round2Plain(Max / result.Reference[x][0] * 100.0);
+              }       
+              this.Events.push(Event);
             }
             this.$refs.table.setData( { data: this.Events });
           }.bind(this),
@@ -77,13 +127,113 @@
             this.ShowSpinner = true;
           }.bind(this)
         });
+      },
+      ResizeHandler: function() {
+        $(this.$refs.graph.Graph.graphDiv).parent().removeAttr('style');
+        this.$refs.graph.Graph.resize($(this.$refs.Dialog).width() - 50, $(this.$refs.Dialog).height() - 80);
+      },
+      Close: function() {
+        $(window).off('resize', this.ResizeHandler);
+        this.$root.$el.removeChild(this.$refs.Dialog);
+        this.ShowDialog = false;
+      },
+      Show: function() {
+        this.ShowDialog = true;
+        this.ShowDialogSpinner = true;
+        $(window).on('resize', this.ResizeHandler);
+        this.$nextTick(function() {
+          this.$root.$el.append(this.$refs.Dialog);
+          $(this.$refs.Dialog).modal('show');
+          this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
+        });        
+      },
+      ExportClick: function() {
+        var Analyzer = this.$root.SelectedAnalyzer;
+        this.$refs.tools.SaveCVS('Event_' + this.ViewMode + '.csv', [['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer))].concat(this.Data));
+      },
+      RMS: function(evt) {
+        this.ViewMode = 'RMS';
+        this.GetSamples(evt);
+      },
+      RAW: function(evt) {
+        this.ViewMode = 'RAW';
+        this.GetSamples(evt);
+      },
+      GetSamples: function(evt) {
+        this.Show();
+                var Analyzer = this.$root.SelectedAnalyzer;
+        $.ajax({ url: 'getEvents', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ StartTime: evt.StartTime, Analyzer: Analyzer.ID, Type: evt.Type, Samples: this.ViewMode }),
+          success: function(result) {
+            this.Data = [];
+            for(var i = 0; i < result.Prev_Samples[0].length; i++) {
+              var Row = [this.Data.length];
+              for(var n = 0; n < result.Prev_Samples.length; n++) Row.push(result.Prev_Samples[n][i]);
+              this.Data.push(Row);
+            }
+            for(var i = 0; i < result.Samples[0].length; i++) {
+              var Row = [this.Data.length];
+              for(var n = 0; n < result.Samples.length; n++) Row.push(result.Samples[n][i]);
+              this.Data.push(Row);
+            }
+            for(var i = 0; i < result.Post_Samples[0].length; i++) {
+              var Row = [this.Data.length];
+              for(var n = 0; n < result.Post_Samples.length; n++) Row.push(result.Post_Samples[n][i]);
+              this.Data.push(Row);
+            }
+            var Options = {
+//              interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup: oZm.mouseUp, dblclick: oZm.dblClick_Restore },
+//              legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, series: Series, visibility: this.VoltagePhases.concat(CurrentPhases),
+              labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), 
+              colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length), 
+              plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], showRangeSelector: false,
+              axes: {
+                y: { pixelsPerLabel: 15, axisLabelWidth: 34,/* valueRange: Y1Range, */
+                     valueFormatter: function (x) { return oZm.Round2(x) + ' <em class="x-small">V</em>'; },
+                     axisLabelFormatter: function (x) { return oZm.Round2(x); }
+                 },
+                x: { ticker: function(min, max) { return Graph.WaveTimeTicks(max, Analyzer); },
+                     valueFormatter: function (x) { return oZm.Round2((x * 1000) / Analyzer.SampleFreq) + ' <em class="x-small">ms</em>'; }
+                   }
+              },
+              file: this.Data
+            };
+            this.$refs.graph.SetOptions(Options);
+            this.ShowDialogSpinner = false;
+          }.bind(this)
+        }); 
 
-        
-      }
+      },  
+      Delete: function(evt) {},
+      Edit: function(evt) {}
+
     },
-    components: { Spinner, Vuetable }
+    components: { Spinner, Vuetable, Graph, ToolbarPhases, ToolbarTools }
   }
 </script>
+
+<style scoped>
+  .table >>> th:nth-child(1) {
+    width: 160px;
+  } 
+  .table >>> th:nth-child(2) {
+    width: 60px;
+    text-align: center;
+  }
+  .table >>> td:nth-child(2) {
+    text-align: center;
+  }
+  .table >>> th:nth-child(3), .table >>> th:nth-child(4), .table >>> th:nth-child(5) {
+    width: 100px;
+    text-align: right;
+  }
+  .table >>> td:nth-child(3), .table >>> td:nth-child(4), .table >>> td:nth-child(5) {
+    text-align: right;
+  }
+  .table >>> th:nth-child(7) {
+    width: 170px;
+  } 
+</style>
+
 
 /* Tabla de eventos */
 var LastEventStartTime = 0;

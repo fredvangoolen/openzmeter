@@ -67,16 +67,8 @@
       this.GraphOptions = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, legend: 'follow', plotter: Graph.multiColumnBarPlotter,
         labels: ['Time', 'Energy'], 
-        interactionModel: { 
-          mousedown: oZm.mouseDown, 
-          mousemove: oZm.mouseMove, 
-          mouseup: this.MouseUpEvt, 
-          dblclick: this.DoubleClickEvt,
-          touchstart: oZm.startTouch,
-          touchend: this.EndTouchEvt,
-          touchmove: oZm.moveTouch,
-          mousewheel : this.MouseWheelEvt},
-        colors: [oZm.Series['ACTIVE_ENERGY'].Color], xAxisHeight: 24, legendFormatter: oZm.LegendFormatter_Follow, underlayCallback: this.DrawPeriods, selectMode: 'euclidian',
+        interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, touchstart: Graph.startTouch, touchmove: Graph.moveTouch, mouseup: Graph.MouseUpEvt.bind(this), touchend: Graph.EndTouchEvt.bind(this), mousewheel : Graph.mouseWheelZoom.bind(this), dblclick: this.DoubleClickEvt },
+        colors: [oZm.Series['ACTIVE_ENERGY'].Color], xAxisHeight: 24, legendFormatter: Graph.LegendFormatter_Follow, underlayCallback: this.DrawPeriods, selectMode: 'euclidian',
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_ENERGY'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
@@ -168,8 +160,8 @@
         canvas.lineTo(area.x, 13);
         canvas.stroke();  
         for(var i = 0; i < this.Periods.length; i++) {
-          var Left = g.toDomXCoord(this.Periods[i].From);
-          var Right = g.toDomXCoord(this.Periods[i].To);
+          var Left = g.toDomXCoord(this.Periods[i].From - 1800000);
+          var Right = g.toDomXCoord(this.Periods[i].To - 1800000);
           if(Left < (area.x + 1)) Left = (area.x + 1);
           canvas.fillStyle = (this.Periods[i].Color === null) ? "#EEEEEE" : this.Periods[i].Color;
           canvas.fillRect(Left, area.y, Right, 13);
@@ -191,26 +183,8 @@
         canvas.rect(area.x, area.y + 13, area.w, area.h);
         canvas.clip();
       },
-      MouseUpEvt: function(event, g, contex) {
-        oZm.mouseUp(event, g, contex);
-        if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
-      },
-      EndTouchEvt: function(event, g, contex) {
-        oZm.endTouch(event, g, contex);
-        //if((contex.isPanning) /*&& (contex.regionWidth > 0)*/) {
-          this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
-        //}
-      },
       DoubleClickEvt: function(event, g, context) {
-        //oZm.dblClick(event, g, context);
-        //this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
-        this.$refs.period.Period=this.$refs.period.LastPeriod;
-        this.$refs.period.To=this.$refs.period.LastTo;
-        this.$refs.period.PeriodClick(this.$refs.period.Period,this.$refs.period.To);
-      },
-      MouseWheelEvt: function(event, g, contex) {
-        oZm.mouseWheelZoom(event, g, contex,this.ZoomEvt,g.dateWindow_[0], g.dateWindow_[1]);
-          //this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
+        this.$refs.period.PopState();
       },
       ZoomEvt: function(minDate, maxDate, yRanges) {
         this.$refs.period.SetCustom(minDate, maxDate);

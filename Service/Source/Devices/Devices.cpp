@@ -16,11 +16,9 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("/getDevice",           GetDeviceCallback);
   HTTPServer::RegisterCallback("/stopDevice",          StopDeviceCallback);
   HTTPServer::RegisterCallback("/startDevice",         StartDeviceCallback);
-  HTTPServer::RegisterCallback("/configDevice",        SetDeviceCallback);
-  
+  HTTPServer::RegisterCallback("/setDevice",           SetDeviceCallback);
   HTTPServer::RegisterCallback("/getAnalyzers",        DeviceManager::GetAnalyzersCallback);
   HTTPServer::RegisterCallback("/setAnalyzer",         DeviceManager::SetAnalyzerCallback);
-  
   HTTPServer::RegisterCallback("/getSeries",           DeviceManager::GetSeriesCallback);
   HTTPServer::RegisterCallback("/getSeriesNow",        DeviceManager::GetSeriesNowCallback);
   HTTPServer::RegisterCallback("/getSeriesRange",      DeviceManager::GetSeriesRangeCallback);
@@ -36,7 +34,6 @@ void DeviceManager::AddDevice(Device *dev) {
 }
 DeviceManager::~DeviceManager() {
   for(uint32_t i = 0; i < pDevices.size(); i++) delete pDevices[i];
-//  pInstance = NULL;
 }
 void DeviceManager::GetDevicesCallback(HTTPRequest &req) {
   json Params = req.GetParams();
@@ -414,83 +411,6 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
   req.FromJSON(Result);
   return;  
 }
-
-
-
-//string DeviceInterface::GetSeriesAggregCallback(HTTPRequest &req) {
-//  uint64_t Period = 0, From = 0, To = 0;
-//  char    *Analyzer = NULL, *Aggreg = NULL, *Series = NULL;
-//  json_object_object_foreach(reader, JSON_Key, JSON_Val) {
-//    enum json_type JSON_Type = json_object_get_type(JSON_Val);
-//    if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Series") == 0)) 
-//      Series = (char*)json_object_get_string(JSON_Val);
-//    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Aggreg") == 0))
-//      Aggreg = (char*)json_object_get_string(JSON_Val);
-//    else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Period") == 0))      
-//      Period = json_object_get_int64(JSON_Val);
-//    else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "To") == 0))
-//      To = json_object_get_int64(JSON_Val);
-//    else if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Analyzer") == 0))
-//      Analyzer = (char*)json_object_get_string(JSON_Val);
-//  }
-//  if(Analyzer == NULL) {
-//    *postdata  = (char*)"'Analyzer' param is requiered";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  if(Series == NULL) {
-//    *postdata  = (char*)"'Series' param is requiered";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  if((Aggreg == NULL) || ((strcmp(Aggreg, "3s") != 0) && (strcmp(Aggreg, "1m") != 0) && (strcmp(Aggreg, "10m") != 0) && (strcmp(Aggreg, "1h") != 0))) {
-//    *postdata  = (char*)"'Aggreg' need to be '3s', '1m', '10m' or '1h'";
-//    *resultLen = strlen(*postdata);
-//    return false;
-//  }
-//  if(To == 0) To = Tools::GetTime();
-//  From = To - Period;
-//  db->PrepareSentence("SET search_path TO ?");
-//  db->BindSingleString(Analyzer);
-//  db->ExecSentence();
-//  char QueryText[8192];
-//  int  QueryLen = 0;
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT COUNT(*) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 ") AS \"Samples\", ", Aggreg, From, To);
-//  char *Save;
-//  char *Serie = strtok_r(Series, ", ", &Save);
-//  while(Serie != NULL) {
-//    char *Oper = NULL, *Tmp1 = strchr(Serie, '('), *Tmp2 = strrchr(Serie, ')');
-//    if((Tmp1 != NULL) && (Tmp2 != NULL)) {
-//      Oper = Serie;
-//      Tmp1[0] = 0;
-//      Serie = &Tmp1[1];
-//      Tmp2[0] = 0;
-//    }
-//    if((strcmp(Serie, "rms_v") == 0) || (strcmp(Serie, "rms_i") == 0) || (strcmp(Serie, "active_power") == 0) || (strcmp(Serie, "apparent_power") == 0) || (strcmp(Serie, "power_factor") == 0) || (strcmp(Serie, "active_energy") == 0) || (strcmp(Serie, "thd_v") == 0) || (strcmp(Serie, "thd_i") == 0) || (strcmp(Serie, "phi") == 0) || (strcmp(Serie, "harmonics_i") == 0) || (strcmp(Serie, "harmonics_v") == 0)) {
-//      if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
-//        QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT %s(elem) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " GROUP BY rn ORDER BY rn) as %s_%s,", Oper, Aggreg, Serie, From, To, Oper, Serie);
-//      } else if(strcmp(Oper, "rms") == 0) {
-//        QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "ARRAY(SELECT SQRT(SUM(POW(elem, 2.0)) / COUNT(*)) FROM aggreg_%s, unnest(%s) WITH ORDINALITY x(elem, rn) WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 " GROUP BY rn ORDER BY rn) as %s_%s,", Aggreg, Serie, From, To, Oper, Serie);
-//      }
-//    } else if(strcmp(Serie, "freq") == 0) {
-//      if((strcmp(Oper, "sum") == 0) || (strcmp(Oper, "max") == 0) || (strcmp(Oper, "min") == 0) || (strcmp(Oper, "avg") == 0)) {
-//        QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT %s(%s) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 ") AS %s_%s, ", Oper, Serie, Aggreg, From, To, Oper, Serie);
-//      } else if(strcmp(Oper, "rms") == 0) {
-//        QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT SQRT(SUM(POW(%s, 2.0)) / COUNT(*)) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 ") AS %s_%s, ", Serie, Aggreg, From, To, Oper, Serie);
-//      }
-//    } else if(strcmp(Serie, "flag") == 0) {
-//      if((strcmp(Oper, "and") == 0) || (strcmp(Oper, "or") == 0)) {
-//        QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "(SELECT bool_%s(%s) FROM aggreg_%s WHERE sampletime >= %" PRIu64 " AND sampletime < %" PRIu64 ") AS %s_%s, ", Oper, Serie, Aggreg, From, To, Oper, Serie);
-//      }
-//    }
-//    Serie = strtok_r(NULL, ", ", &Save);
-//  }
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"From\", ", From);
-//  QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%" PRIu64 " AS \"To\") AS Result", To); 
-//  *postdata = db->ExecSentenceJSON(QueryText, resultLen);
-//  return "";
-//}
 void DeviceManager::GetSeriesNowCallback(HTTPRequest &req) {
   ///TODO : CHECK PERMISIONS
   json                          Params = req.GetParams();
@@ -585,22 +505,30 @@ void DeviceManager::GetSeriesRangeCallback(HTTPRequest &req) {
 void DeviceManager::GetEventsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["To"].is_number())         Params["To"] = 0;
-  if(!Params["Period"].is_number())     Params["Period"] = 3600000;
-  if(!Params["LastSample"].is_number()) Params["LastSample"] = 0;
   string Analyzer = Params["Analyzer"];
-  uint64_t To = Params["To"];
-  uint64_t Period = Params["Period"];
-  uint64_t LastSample = Params["LastSample"];
-  if(To == 0) To = Tools::GetTime();
-  uint64_t From = To - Period;
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(Analyzer) + ", 'public'");
-  string Query = "SELECT evt FROM analyzers, (SELECT json_build_object('From', 1546297200000, 'To', 1577833199999, 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), ";
-  Query += "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), ";
-  Query += "'Type', COALESCE(ARRAY_AGG(type ORDER BY starttime ASC), '{}'), 'Voltage', COALESCE(ARRAY_AGG(voltage ORDER BY starttime ASC), '{}'), 'Percent', COALESCE(ARRAY_AGG(percent ORDER BY starttime ASC), '{}')) AS evt ";
-  Query += "FROM events WHERE starttime > " + req.Bind(LastSample) + " AND starttime >= " + req.Bind(From) + " AND starttime <= " + req.Bind(To) + ") AS t1 ";
-  Query += "WHERE username = " + req.Bind(req.UserName()) + " OR serial IN (SELECT serial from permisions WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ") LIMIT 1";
-  req.ExecSentenceAsyncResult(Query);
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(Analyzer));
+  if(Params["StartTime"].is_number_unsigned()) {
+    if(!Params["Type"].is_string() || !Params["Samples"].is_string() || ((Params["Samples"] != "RMS") && (Params["Samples"] != "RAW"))) return req.FromString("'Type' and 'Samples' params are requiered", MHD_HTTP_BAD_REQUEST);
+    uint64_t ID = Params["StartTime"];
+    string Type = Params["Type"];
+    string Samples = Params["Samples"];
+    if(Samples == "RAW") {
+      req.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', samples1, 'Samples', samples2, 'Post_Samples', samples3) AS evt FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+    } else {
+      req.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', rms1, 'Samples', rms2, 'Post_Samples', rms3) AS evt FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+    }
+  } else {
+    if(!Params["To"].is_number() || !Params["Period"].is_number() || !Params["LastSample"].is_number()) return req.FromString("'To', 'Period' and 'LastSample' params are requiered", MHD_HTTP_BAD_REQUEST);
+    uint64_t To = Params["To"];
+    uint64_t Period = Params["Period"];
+    uint64_t LastSample = Params["LastSample"];
+    if(To == 0) To = Tools::GetTime();
+    uint64_t From = To - Period;
+    req.ExecSentenceAsyncResult("SELECT json_build_object('From', " + req.Bind(From) + ", 'To', " + req.Bind(To) + ", 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), 'Change', COALESCE(ARRAY_AGG(change ORDER BY starttime ASC), '{}'), "
+                                "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), 'Finished', COALESCE(ARRAY_AGG(finished ORDER BY starttime ASC), '{}'), "
+                                "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), 'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), 'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}'), 'Notes', COALESCE(ARRAY_AGG(notes ORDER BY starttime ASC), '{}')) AS evt "
+                                "FROM events WHERE starttime > " + req.Bind(LastSample) + " AND starttime >= " + req.Bind(From) + " AND starttime <= " + req.Bind(To));
+  }
   if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("evt"), MHD_HTTP_OK);
 }

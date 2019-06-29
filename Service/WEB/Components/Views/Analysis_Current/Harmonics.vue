@@ -79,22 +79,22 @@
           ToShow[i] = Row;
         }
         var Options = { 
-          strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], interactionModel: { }, plotter: oZm.multiColumnBarPlotter, visibility: this.CurrentPhases.concat(VoltagePhases),
-          dateWindow: [ToShow[0][0] - 0.5, ToShow[ToShow.length - 1][0] + 0.5], legend: 'follow', legendFormatter: oZm.LegendFormatter_Follow, showRangeSelector: false,
+          strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], interactionModel: { }, plotter: Graph.multiColumnBarPlotter, visibility: this.CurrentPhases.concat(VoltagePhases),
+          dateWindow: [ToShow[0][0] - 0.5, ToShow[ToShow.length - 1][0] + 0.5], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, showRangeSelector: false,
           labels: ['Harmonic'].concat(oZm.Series['CURRENT'].Names(Analyzer)).concat(oZm.Series['VOLTAGE'].Names(Analyzer)), series: Series,
           colors: oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length)), 
           axes: { 
             y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: [Y1Range[0] + this.COffset, Y1Range[1] + this.COffset],
-                 ticker: this.Log ? function(min, max) { return oZm.GraphDBTicks(min, max, this.COffset); }.bind(this) : Dygraph.numericTicks,
+                 ticker: this.Log ? function(min, max) { return Graph.DBTicks(min, max, this.COffset); }.bind(this) : Dygraph.numericTicks,
                  valueFormatter: function(x) { return oZm.Round2(x - this.COffset) + '<em class="x-small">' + (this.Log ? 'dB' : 'A') + '</em>'; }.bind(this),
                  axisLabelFormatter: function (x) { return oZm.Round2(x - this.COffset); }.bind(this)
                },
             y2: { pixelsPerLabel: 15, axisLabelWidth: (this.ShowVoltage) ? 34 : 0, valueRange: [Y2Range[0] + this.VOffset, Y2Range[1] + this.VOffset],
                   valueFormatter: function(x) { return oZm.Round2(x - this.VOffset) + ' <em class="x-small">' + (this.Log ? 'dB' : 'V') + '</em>'; }.bind(this),
-                  ticker: (this.Log || this.ShowVoltage === false) ? function(min, max) { return (this.ShowVoltage === true) ? oZm.GraphDBTicks(min, max, this.VOffset) : []; }.bind(this) : Dygraph.numericTicks,
-                  axisLabelFormatter: function (x) { return oZm.Round2(x); }
+                  ticker: (this.Log || this.ShowVoltage === false) ? function(min, max) { return (this.ShowVoltage === true) ? Graph.DBTicks(min, max, this.VOffset) : []; }.bind(this) : Dygraph.numericTicks,
+                  axisLabelFormatter: function (x) { return oZm.Round2(x - this.VOffset); }.bind(this)
                 },
-            x: { drawGrid: false, ticker: oZm.GraphOddHarmonics, axisLabelFormatter: function (x) { return oZm.Series['HARMONICS'].Names[x]; },
+            x: { drawGrid: false, ticker: Graph.OddHarmonics, axisLabelFormatter: function (x) { return oZm.Series['HARMONICS'].Names[x]; },
                  valueFormatter: function(y) { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (Analyzer.NominalFreq * (y + 1)) + '<em class="small"> Hz</em>)'; }           
                }
           },

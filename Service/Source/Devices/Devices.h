@@ -6,7 +6,7 @@
 #include <vector>
 #include <pthread.h>
 #include <nlohmann/json.hpp>
-#include "AnalyzerInterface.h"
+#include "Analyzers.h"
 #include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
@@ -52,6 +52,7 @@ class DeviceManager {
     static void GetSeriesNowCallback(HTTPRequest &req);
     static void GetSeriesRangeCallback(HTTPRequest &req);
     static void GetEventsCallback(HTTPRequest &req);
+    static void GetEventCallback(HTTPRequest &req);
     static void GetPricesCallback(HTTPRequest &req);
     static void GetTariffsCallback(HTTPRequest &req);
     static void SetTariffsCallback(HTTPRequest &req);

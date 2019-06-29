@@ -8,69 +8,70 @@
 </template>
 
 <script>
-import Topbar from './Topbar/Topbar.vue';
-import Sidebar from './Sidebar/Sidebar.vue';
-import moment from 'JS/moment.js';
-import * as oZm from 'JS/openZmeter.js';
-export default {
-  data: function() {
-    return { };
-  },
-  methods: {
-    UpdateIndicators1() {
-      if(this.UpdateIndicatorsTimer1) clearInterval(this.UpdateIndicatorsTimer1);
-      if(this.$root.SelectedAnalyzer === null) return;
-      $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY', 'SYS_STATS'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
-        success: function(result) {
-          this.$refs.indicator_bar.setValue(result);
-        }.bind(this),
-        complete: function() {
-          this.UpdateIndicatorsTimer1 = setTimeout(this.UpdateIndicators1, 2000);
-        }.bind(this), 
-        error: function() {
-          this.$refs.indicator_bar.setValue(null);
-        }.bind(this)
-      });
+  import Topbar from './Topbar/Topbar.vue';
+  import Sidebar from './Sidebar/Sidebar.vue';
+  import moment from 'JS/moment.js';
+  import * as oZm from 'JS/openZmeter.js';
+  import Graph from 'Components/Graph.vue';
+  export default {
+    data: function() {
+      return { };
     },
-    UpdateIndicators2() {
-      if(this.UpdateIndicatorsTimer2) clearInterval(this.UpdateIndicatorsTimer2);
-      if(this.$root.SelectedAnalyzer === null) return;
-      $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER'], Analyzer: this.$root.SelectedAnalyzer.ID, Aggreg: '15M', To: moment().endOf('day').valueOf(), Period: 86400000 }), 
-        success: function(result) {
-          var Energy;
-          if(result['Active_Power'].length > 0) Energy = Array(result['Active_Power'][0].length).fill(0);
-          for(var n = 0; n < result['Active_Power'].length; n++) {
-            for(var p = 0; p < result['Active_Power'][n].length; p++) {
-              if(result['Active_Power'][n][p] === null) continue;
-              Energy[p] = Energy[p] + result['Active_Power'][n][p] / 4.0;
+    methods: {
+      UpdateIndicators1() {
+        if(this.UpdateIndicatorsTimer1) clearInterval(this.UpdateIndicatorsTimer1);
+        if(this.$root.SelectedAnalyzer === null) return;
+        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY', 'SYS_STATS'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
+          success: function(result) {
+            this.$refs.indicator_bar.setValue(result);
+          }.bind(this),
+          complete: function() {
+            this.UpdateIndicatorsTimer1 = setTimeout(this.UpdateIndicators1, 2000);
+          }.bind(this), 
+          error: function() {
+            this.$refs.indicator_bar.setValue(null);
+          }.bind(this)
+        });
+      },
+      UpdateIndicators2() {
+        if(this.UpdateIndicatorsTimer2) clearInterval(this.UpdateIndicatorsTimer2);
+        if(this.$root.SelectedAnalyzer === null) return;
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER'], Analyzer: this.$root.SelectedAnalyzer.ID, Aggreg: '15M', To: moment().endOf('day').valueOf(), Period: 86400000 }), 
+          success: function(result) {
+            var Energy;
+            if(result['Active_Power'].length > 0) Energy = Array(result['Active_Power'][0].length).fill(0);
+            for(var n = 0; n < result['Active_Power'].length; n++) {
+              for(var p = 0; p < result['Active_Power'][n].length; p++) {
+                if(result['Active_Power'][n][p] === null) continue;
+                Energy[p] = Energy[p] + result['Active_Power'][n][p] / 4.0;
+              }
             }
-          }
-          this.$refs.indicator_bar.setValue({ Active_Energy: Energy });
-        }.bind(this),
-        complete: function() {
-          this.UpdateIndicatorsTimer2 = setTimeout(this.UpdateIndicators2, 1000000);
-        }.bind(this), 
-        error: function() {
-          this.$refs.indicator_bar.setValue(null);
-        }.bind(this)
-      });
+            this.$refs.indicator_bar.setValue({ Active_Energy: Energy });
+          }.bind(this),
+          complete: function() {
+            this.UpdateIndicatorsTimer2 = setTimeout(this.UpdateIndicators2, 1000000);
+          }.bind(this), 
+          error: function() {
+            this.$refs.indicator_bar.setValue(null);
+          }.bind(this)
+        });
+      },
+      SetAnalyzer() {
+        this.UpdateIndicators1();
+        this.UpdateIndicators2();
+      },
+      ZoomWheelGraphReset(){
+        Graph.zoomWheelGraphReset();
+      }
     },
-    SetAnalyzer() {
-      this.UpdateIndicators1();
-      this.UpdateIndicators2();
+    created: function() {
+      this.UpdateIndicatorsTimer1 = null;
+      this.UpdateIndicatorsTimer2 = null;
+      this.$root.SelectedAnalyzer = null;
+      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
-    ZoomWheelGraphReset(){
-      oZm.zoomWheelGraphReset();
-    }
-  },
-  created: function() {
-    this.UpdateIndicatorsTimer1 = null;
-    this.UpdateIndicatorsTimer2 = null;
-    this.$root.SelectedAnalyzer = null;
-    this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
-  },
-  components: { Topbar, Sidebar }
-}
+    components: { Topbar, Sidebar }
+  }
 </script>
 
 <style>
