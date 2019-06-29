@@ -70,16 +70,40 @@ void Events::Save(Event_t &evt) {
     for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
   }
   if(evt.State == EVT_RUNNING) {
-    ExecSentenceNoResult("INSERT INTO events(starttime, duration, samplerate, evttype, voltage, peak, notes, samples1, rms1) VALUES (" + Bind(evt.Start) + ", 0, " + Bind(pSampleRate) + ", " + Bind(Type) + ", " + Bind(evt.Reference) + ", " + Bind(evt.PeakValue) + ", '', " + Bind(RAW) + ", " + Bind(RMS) + ")");
+    ExecSentenceNoResult("INSERT INTO events(starttime, duration, finished, samplerate, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + Bind(evt.Start) + ", 0, FALSE," + Bind(pSampleRate) + ", " + Bind(Type) + ", " + Bind(evt.Reference) + ", " + Bind(evt.PeakValue) + ", " + Bind(evt.ChangeValue) + ", '', " + Bind(RAW) + ", " + Bind(RMS) + ")");
   } else if(evt.State == EVT_CLOSING) {
-    ExecSentenceNoResult("UPDATE events SET duration = " + Bind(evt.Duration) + ", peak = " + Bind(evt.PeakValue) + ", samples2 = " + Bind(RAW) + ", rms2 = " + Bind(RMS) + " WHERE starttime = " + Bind(evt.Start) + " AND evttype = " + Bind(Type));
+    ExecSentenceNoResult("UPDATE events SET duration = " + Bind(evt.Duration) + ", peak = " + Bind(evt.PeakValue) + ", change = " + Bind(evt.ChangeValue) + ", samples2 = " + Bind(RAW) + ", rms2 = " + Bind(RMS) + " WHERE starttime = " + Bind(evt.Start) + " AND evttype = " + Bind(Type));
   } else {
-    ExecSentenceNoResult("UPDATE events SET samples3 = " + Bind(RAW) + ", rms3 = " + Bind(RMS) + " WHERE starttime = " + Bind(evt.Start) + " AND evttype = " + Bind(Type));
+    ExecSentenceNoResult("UPDATE events SET samples3 = " + Bind(RAW) + ", rms3 = " + Bind(RMS) +  + ", finished = TRUE WHERE starttime = " + Bind(evt.Start) + " AND evttype = " + Bind(Type));
   }
   evt.SamplesRAW_A = deque<vector<float> >();
   evt.SamplesRMS_A = deque<vector<float> >();
   evt.SamplesRAW_B = deque<vector<float> >();
   evt.SamplesRMS_B = deque<vector<float> >();
+}
+void Events::InitEvent(EventType type, vector<float> reference, uint32_t pos) {
+  Event_t Event;
+  Event.Type = type;
+  Event.Duration = 0;
+  Event.State = EVT_RUNNING;
+  Event.Reference = reference;
+  Event.PeakValue = reference;
+  Event.ChangeValue = reference;
+  Event.SamplesRAW_A = deque<vector<float> >();
+  Event.SamplesRMS_A = deque<vector<float> >();
+  Event.SamplesRAW_B = deque<vector<float> >();
+  Event.SamplesRMS_B = deque<vector<float> >();
+  for(deque<EventCycle_t>::reverse_iterator it = pPrevCycles.rbegin(); it != pPrevCycles.rend(); it++) {
+    Event.SamplesRMS_A.push_front(it->RMS);
+    if(Event.SamplesRMS_A.size() == (pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME)) break;
+  }
+  for(deque<vector<float> >::reverse_iterator it = pPrevSamples.rbegin(); it != pPrevSamples.rend(); it++) {
+    Event.SamplesRAW_A.push_front(*it);
+    if(Event.SamplesRAW_A.size() == (EVENT_RAWENVELOPETIME * pSampleRate)) break;
+  }
+  Event.Start = pParams->Timestamp + (uint32_t)((pos * 1000) / pSampleRate);
+  Save(Event);
+  pEvents.push_back(Event);
 }
 void *Events::Events_Thread(void* args) {
   Events *This = (Events*)args;
@@ -111,7 +135,7 @@ void *Events::Events_Thread(void* args) {
         if(Len > 99) Len = 99;
         deque<EventCycle_t>::reverse_iterator it = This->pPrevCycles.rbegin();
         for(uint32_t j = 0; j < Len; j++, it++) RMS_Avg[n] += it->RMS[n];
-        RMS_Avg[n] = RMS_Avg[n] / Len;
+        RMS_Avg[n] = RMS_Avg[n] / (Len + 1);
       }
       //Check steady state
       float Tolerance = EVENT_RVC - ((This->pPrevStationary == true) ? 0.0 : EVENT_HYSTERESIS);
@@ -129,43 +153,18 @@ void *Events::Events_Thread(void* args) {
           }
         }
       }
-      if(Stationary != This->pPrevStationary)
-        LOGFile::Debug("Analyzer '%s' %s stationary state\n", This->pAnalyzer->Serial().c_str(), Stationary ? "reach" : "leave");
+      if(Stationary != This->pPrevStationary) LOGFile::Debug("Analyzer '%s' %s stationary state\n", This->pAnalyzer->Serial().c_str(), (Stationary ? "reach" : "leave"));
       //Check for new events
       if((This->pPrevSamples.size() >= (EVENT_RAWENVELOPETIME * This->pSampleRate)) && (This->pPrevCycles.size() >= (This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME))) {
         for(uint8_t n = 0; n < RMS_Avg.size(); n++) {
-          Event_t Event;
-          Event.Type = EVT_NONE;
           //Check for interruption new events
-          if((-PercentChange(Cycle.RMS[n], This->pAnalyzer->GetNominalVoltage()) > EVENT_INTERRUPTION) && (This->FindRunningEvent(EVT_INTERRUPTION) == false)) Event.Type = EVT_INTERRUPTION;
+          if((-PercentChange(Cycle.RMS[n], This->pAnalyzer->GetNominalVoltage()) > EVENT_INTERRUPTION) && (This->FindRunningEvent(EVT_INTERRUPTION) == false)) This->InitEvent(EVT_INTERRUPTION, vector<float>(RMS_Avg.size(), This->pAnalyzer->GetNominalVoltage()), Pos);
           //Check for DIP new events
-          if((-PercentChange(Cycle.RMS[n], This->pAnalyzer->GetNominalVoltage()) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_DIP) == false)) Event.Type = EVT_DIP;
+          if((-PercentChange(Cycle.RMS[n], This->pAnalyzer->GetNominalVoltage()) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_DIP) == false)) This->InitEvent(EVT_DIP, vector<float>(RMS_Avg.size(), This->pAnalyzer->GetNominalVoltage()), Pos);
           //Check for SWELL new events
-          if((PercentChange(Cycle.RMS[n], This->pAnalyzer->GetNominalVoltage()) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_SWELL) == false)) Event.Type = EVT_SWELL;
+          if((PercentChange(Cycle.RMS[n], This->pAnalyzer->GetNominalVoltage()) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_SWELL) == false)) This->InitEvent(EVT_SWELL, vector<float>(RMS_Avg.size(), This->pAnalyzer->GetNominalVoltage()), Pos);
           //Check for RVC new events
-          if((Stationary == false) && (This->pPrevStationary == true) && (This->FindRunningEvent(EVT_INTERRUPTION | EVT_DIP | EVT_SWELL | EVT_RVC) == false)) Event.Type = EVT_RVC;
-          if(Event.Type != EVT_NONE) {
-            Event.Reference = (Event.Type == EVT_RVC) ? RMS_Avg : vector<float>(RMS_Avg.size(), This->pAnalyzer->GetNominalVoltage());
-            Event.SteadyValue = vector<float>(RMS_Avg.size(), 0);
-            Event.PeakValue = Cycle.RMS;
-            Event.Duration = 0;
-            Event.State = EVT_RUNNING;
-            Event.Start =  This->pParams->Timestamp + ((Pos * 1000) / This->pSampleRate);
-            Event.SamplesRAW_A = deque<vector<float> >();
-            Event.SamplesRMS_A = deque<vector<float> >();
-            Event.SamplesRAW_B = deque<vector<float> >();
-            Event.SamplesRMS_B = deque<vector<float> >();
-            for(deque<EventCycle_t>::reverse_iterator it = This->pPrevCycles.rbegin(); it != This->pPrevCycles.rend(); it++) {
-              Event.SamplesRMS_A.push_front(it->RMS);
-              if(Event.SamplesRMS_A.size() == (This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME)) break;
-            }
-            for(deque<vector<float> >::reverse_iterator it = This->pPrevSamples.rbegin(); it != This->pPrevSamples.rend(); it++) {
-              Event.SamplesRAW_A.push_front(*it);
-              if(Event.SamplesRAW_A.size() == (EVENT_RAWENVELOPETIME * This->pSampleRate)) break;
-            }
-            This->Save(Event);
-            This->pEvents.push_back(Event);
-          }
+          if((Stationary == false) && (This->pPrevStationary == true) && (This->FindRunningEvent(EVT_RVC) == false)) This->InitEvent(EVT_RVC, RMS_Avg, Pos);
         }
       }
       //Insert current cycle samples in prev data buffers and in running events than need its
@@ -177,7 +176,7 @@ void *Events::Events_Thread(void* args) {
         for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
           if(it->SamplesRAW_A.size() < (This->pSampleRate * EVENT_RAWENVELOPETIME)) {
             it->SamplesRAW_A.push_back(Sample);
-          } else {
+          } else if(it->State == EVT_RUNNING) {
             it->SamplesRAW_B.push_back(Sample);
             if(it->SamplesRAW_B.size() > (This->pSampleRate * EVENT_RAWENVELOPETIME)) it->SamplesRAW_B.pop_front();
           }
@@ -189,7 +188,7 @@ void *Events::Events_Thread(void* args) {
       for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
         if(it->SamplesRMS_A.size() < (This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME)) {
           it->SamplesRMS_A.push_back(Cycle.RMS);
-        } else {
+        } else if(it->State == EVT_RUNNING) {
           it->SamplesRMS_B.push_back(Cycle.RMS);
           if(it->SamplesRMS_B.size() > (This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME)) it->SamplesRMS_B.pop_front();
         }
@@ -197,12 +196,10 @@ void *Events::Events_Thread(void* args) {
       //Check events state
       for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); ) {
         //If closed evend finish post event period save it and remove from list
-        if((it->State == EVT_CLOSING) && (it->SamplesRAW_A.size() == (This->pAnalyzer->GetNominalFrequency() * EVENT_RMSENVELOPETIME)) && (it->SamplesRMS_A.size() == (This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME))) {
+        if((it->State == EVT_CLOSING) && (it->SamplesRAW_A.size() == (This->pSampleRate * EVENT_RAWENVELOPETIME)) && (it->SamplesRMS_A.size() == (This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME))) {
           it->State = EVT_CLOSED;
           This->Save(*it);
-          list<Event_t>::iterator Tmp = it;
-          it = it++;
-          This->pEvents.erase(Tmp);
+          This->pEvents.erase(it++);
         } else if(it->State == EVT_CLOSING) {
           it++;
         } else {
@@ -210,7 +207,7 @@ void *Events::Events_Thread(void* args) {
           if(it->Type == EVT_RVC) {
             if(Stationary == true) {
               it->State = EVT_CLOSING;
-              it->SteadyValue = vector<float>(RMS_Avg.size(), 0);
+              it->ChangeValue = RMS_Avg;
             } else {
               for(uint8_t ch = 0; ch < Cycle.RMS.size(); ch++) {
                 if(fabs(it->Reference[ch] - Cycle.RMS[ch]) > fabs(it->Reference[ch] - it->PeakValue[ch])) it->PeakValue[ch] = Cycle.RMS[ch];

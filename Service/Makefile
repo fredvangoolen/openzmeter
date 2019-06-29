@@ -8,7 +8,7 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 
 #Executable related components
 EXECUTABLE_TARGET = Tmp/openZmeter
-EXECUTABLE_SOURCE = Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/Tools.cpp Source/Devices/Devices.cpp Source/Analyzers/AnalyzerInterface.cpp Source/Tariffs/Tariff.cpp 
+EXECUTABLE_SOURCE = Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/Tools.cpp Source/Devices/Devices.cpp Source/Analyzers/Analyzers.cpp Source/Tariffs/Tariff.cpp 
 CFLAGS += -Wno-psabi -Wall -std=c++11 -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs 
 LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz -lpthread
 
@@ -37,7 +37,7 @@ endif
 ifeq ($(DEBUG), true)
 	CFLAGS += -O0 -g -g3 -ggdb -fstack-protector-all
 else
-	CFLAGS += -Os -Wall -fno-rtti -fopt-info-vec -s
+	CFLAGS += -O2 -Wall -fno-rtti -fopt-info-vec -s -flto -ftree-vectorize
 endif
 ifeq ($(DEVICE_V1_00), true)
 	EXECUTABLE_SOURCE += Source/Devices/V1_00/DeviceV1_00.cpp
@@ -106,7 +106,7 @@ $(EXECUTABLE_TARGET): $(EXECUTABLE_OBJS) $(RESOURCES_TARGET)
 Tmp/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo "Building" $@
-	@$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 
 #include dirs

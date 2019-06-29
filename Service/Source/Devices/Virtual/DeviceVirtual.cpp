@@ -118,7 +118,7 @@ void  *DeviceVirtual::Capture_Thread(void *args) {
     uint64_t Sampletime = Tools::GetTime();
     if((This->pAnalyzer->IsFinished() == true) && (((Sampletime - StartTime) * This->pSampleRate / 1000) > GeneratedSamples)) {
       Voltage[0] = This->pAnalyzer->GetNominalVoltage() * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency);
-      Voltage[0] = Voltage[0] + Voltage[0] * 0.05 * sin((2.0 * M_PI * GeneratedSamples) / (This->pSampleRate * 300.0));
+//      Voltage[0] = Voltage[0] + Voltage[0] * 0.05 * sin((2.0 * M_PI * GeneratedSamples) / (This->pSampleRate * 300.0));
       Voltage[1] = This->pAnalyzer->GetNominalVoltage() * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency - 2.0 * M_PI / 3.0);
       Voltage[1] = Voltage[1] + Voltage[1] * 0.05 * sin((2.0 * M_PI * (GeneratedSamples - This->pSampleRate * 100.0)) / (This->pSampleRate * 100.0));
       Voltage[2] = This->pAnalyzer->GetNominalVoltage() * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency - 4.0 * M_PI / 3.0);
@@ -130,8 +130,12 @@ void  *DeviceVirtual::Capture_Thread(void *args) {
       Current[2] = -5.0 * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency - 4.0 * M_PI / 3.0);
       Current[2] = Current[2] + Current[2] * 0.1 * sin((2.0 * M_PI * (GeneratedSamples - This->pSampleRate * 240.0)) / (This->pSampleRate * 100.0));
       Current[3] = Current[0] + Current[1] + Current[2];
-      if(((Sampletime - StartTime) > 120000) && ((Sampletime - StartTime) < 300000)) {
+      if(((Sampletime - StartTime) > 20000) && ((Sampletime - StartTime) < 30000)) {
+        Voltage[0] *= 0.94;
+      } else if(((Sampletime - StartTime) >= 30000) && ((Sampletime - StartTime) < 40000)) {
         Voltage[0] *= 0.8;
+      } else if(((Sampletime - StartTime) >= 40000) && ((Sampletime - StartTime) < 50000)) {
+        Voltage[0] *= 0.01;
       }
       
       GeneratedSamples++;
