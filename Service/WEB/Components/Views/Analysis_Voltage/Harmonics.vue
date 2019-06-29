@@ -94,7 +94,7 @@
                   ticker: (this.Log || this.ShowCurrent === false) ? function(min, max) { return (this.ShowCurrent === true) ? Graph.DBTicks(min, max, this.COffset) : []; }.bind(this) : Dygraph.numericTicks,
                   axisLabelFormatter: function (x) { return oZm.Round2(x - this.COffset); }.bind(this)
                 },
-            x: { drawGrid: false, ticker: Graph.OddHarmonics, axisLabelFormatter: function (x) { return oZm.Series['HARMONICS'].Names[x]; },
+            x: { drawGrid: false, ticker: Graph.OddHarmonicsTicks, axisLabelFormatter: function (x) { return oZm.Series['HARMONICS'].Names[x]; },
                  valueFormatter: function(y) { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (Analyzer.NominalFreq * (y + 1)) + '<em class="small"> Hz</em>)'; }           
                }
           },

@@ -1,5 +1,5 @@
 <template>
-  <div id="app" @wheel="ZoomWheelGraphReset">
+  <div id="app">
     <div id="DisableDiv" class="overlay"></div>
     <topbar ref="indicator_bar"></topbar>
     <sidebar ref="sidebar"></sidebar>
@@ -59,9 +59,6 @@
       SetAnalyzer() {
         this.UpdateIndicators1();
         this.UpdateIndicators2();
-      },
-      ZoomWheelGraphReset(){
-        Graph.zoomWheelGraphReset();
       }
     },
     created: function() {
@@ -86,12 +83,12 @@
     bottom: 0px;
     right: 0px;
   }
-  @media (min-width: 768px) {
+  @media (min-width: 640px) {
     #contents {
       top: 56px;
     }
   }
-  @media (min-width: 1024px) {
+  @media (min-width: 1280px) {
     #contents {
       left: 256px;
     }

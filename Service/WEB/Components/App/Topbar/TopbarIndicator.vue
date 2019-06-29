@@ -32,7 +32,7 @@
 </script>
  
 <style>
-    .indicator-bar {
+  .indicator-bar {
     background-image: linear-gradient(to bottom,#f3f3f3,#e2e2e2);
     text-align: center;
     font-size: 14px;
@@ -45,7 +45,7 @@
     font-size: 18x;
     top: 0px;
   }
-  @media(min-width:768px) {
+  @media(min-width:640px) {
     .indicator-bar {
       background-image: none;
       position: absolute;
@@ -54,43 +54,43 @@
       border: none;
     }
   }
-  @media(min-width:1024px) {
+  @media(min-width:1280px) {
     .indicator-bar {
       right: 2px;
     }
   } 
-@media(min-width:768px) {
-  .indicator-bar > div > div > div:first-child {
-    font-size: 12px;
+  @media(min-width:768px) {
+    .indicator-bar > div > div > div:first-child {
+      font-size: 12px;
+    }
   }
-}
-.indicator-bar > div {
-  border-radius: 4px;
-  display: inline-block;
-  height: 50px;
-}
-.indicator-bar > div > div {
-  display: table;
-  height: 48px;
-}
-.indicator-bar > div > div > div {
-  display: table-cell;
-  vertical-align: middle;
-  padding: 0 4px;
-  text-align: center;
-}
-.indicator-bar > div > div > div:first-child {
-  text-align: right;
-  background-color: #fff;
-  color: #333;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: normal;
-  line-height: 10px;
-  padding: 2px;
-  min-width: 32px;
-}
-.indicator-bar > div > div > div > span {
-  display: block;
-}
+  .indicator-bar > div {
+    border-radius: 4px;
+    display: inline-block;
+    height: 50px;
+  }
+  .indicator-bar > div > div {
+    display: table;
+    height: 48px;
+  }
+  .indicator-bar > div > div > div {
+    display: table-cell;
+    vertical-align: middle;
+    padding: 0 4px;
+    text-align: center;
+  }
+  .indicator-bar > div > div > div:first-child {
+    text-align: right;
+    background-color: #fff;
+    color: #333;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: normal;
+    line-height: 10px;
+    padding: 2px;
+    min-width: 32px;
+  }
+  .indicator-bar > div > div > div > span {
+    display: block;
+  }
 </style>
