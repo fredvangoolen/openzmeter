@@ -78,7 +78,7 @@ export default {
     z-index: 100;
     margin: 0px;
   }
-  @media(min-width:1024px) {
+  @media(min-width:1280px) {
     .navbar-nav {
       min-height: calc(100vh - 56px);
       transform: none;

@@ -5,7 +5,7 @@
         <button class="btn btn-default narrow" type="button" v-on:click="Previous" :disabled="Updating"><img :src="require('Imgs/resultset_previous.png')"></button>
       </div>
       <div class="input-group-btn">
-        <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" :disabled="Updating">{{ SelectedText }}<span class="caret"></span></button>
+        <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" :disabled="Updating">{{ (Prev == null) ? SelectedText : 'Inspecting' }}<span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" ref="periodTags">
           <li v-bind:class="{active: ((Period == 'day') && (To == 'last'))}"><a @click="PeriodClick('day', 'last', $event)">Last 24 hours</a></li>
           <li v-bind:class="{active: ((Period == 'week') && (To == 'last'))}"><a @click="PeriodClick('week', 'last', $event)">Last 7 days</a></li>
@@ -53,7 +53,7 @@
   export default {
     props: {variable: String},
     data: function () {
-      return {Period: 'day', To: 'last', SelectedText: 'Last 24 hours', ShowDialog: false, Updating: true, LastPeriod: 'day', LastTo: 'last'};
+      return { Period: 'day', To: 'last', SelectedText: 'Last 24 hours', ShowDialog: false, Updating: true, Prev: null };
     },
     beforeDestroy: function () {
       clearInterval(this.Timer);
@@ -65,22 +65,16 @@
       this.DateWindow = [0, 0];
       this.TmpDateWindow = [0, 0];
       var Conf = JSON.parse(localStorage.getItem(this.variable));
-      if (Conf !== null) {
-        if (Conf.To !== undefined) {
-          this.To = Conf.To;
-          this.LastTo = Conf.To;
-        }
-        if (Conf.Period !== undefined) {
-          this.Period = Conf.Period;
-          this.LastPeriod = Conf.Period;
-        }
+      if(Conf !== null) {
+        if(Conf.To !== undefined) this.To = Conf.To;
+        if(Conf.Period !== undefined) this.Period = Conf.Period;
       }
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
-    mounted: function () {
+    mounted: function() {
       this.SelectedText = this.$refs.periodTags.querySelector('.active').innerText;
     },
-    updated: function () {
+    updated: function() {
       this.SelectedText = this.$refs.periodTags.querySelector('.active').innerText;
     },
     methods: {
@@ -132,9 +126,12 @@
         this.Timer = setTimeout(this.EmitUpdate.bind(this), this.AggregMS / 2);
       },
       PopState: function() {
-        this.Period = this.LastPeriod;
-        this.To = this.LastTo;
-        this.PeriodClick(this.Period, this.To);
+        if(this.Prev != null) {
+          this.Period = this.Prev.Period;
+          this.To = this.Prev.To;
+          this.PeriodClick(this.Period, this.To);
+          this.Prev = null;
+        }
       },
       PeriodClick: function (period, to, event) {
         this.LastSample = 0;
@@ -142,7 +139,7 @@
         this.To = to;
         localStorage.setItem(this.variable, JSON.stringify({To: this.To, Period: this.Period}));
         this.EmitUpdate();
-        if (event != undefined) {
+        if(event != undefined) {
           this.SelectedText = event.target.firstChild.textContent;
         }
       },
@@ -160,16 +157,17 @@
         var To = this.DateWindow[1] + Period;
         this.SetCustom(To - Period, To);
       },
-      SetCustom: function (from, to) {
-        if(Number.isInteger(this.Period) != true) {
-          this.LastPeriod = this.Period;
-          this.LastTo = this.To;
+      SetCustom: function (from, to, saveState) {
+        if(saveState === true) {
+          if(this.Prev === null) this.Prev = { Period: this.Period, To: this.To};
+        } else {
+          this.Prev = null;
         }
         this.SelectedText = 'Custom';
         this.To = Math.round(to);
         this.Period = Math.round(to - from);
         this.LastSample = 0;
-        localStorage.setItem(this.variable, JSON.stringify({To: this.To, Period: this.Period}));
+        if(this.Prev === null) localStorage.setItem(this.variable, JSON.stringify({To: this.To, Period: this.Period}));
         this.EmitUpdate();
       },
       EditPeriod: function () {

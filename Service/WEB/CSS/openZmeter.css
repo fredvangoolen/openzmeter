@@ -105,14 +105,6 @@ img {
 }
 /* Ajustes de la barra duperior de indicadores y logo */
 
-.header-text {
-    display: inline-block;
-    padding-bottom: 0px;
-}
-.header-buttons {
-  float: right;
-  text-align: right;
-}
 .subpanel {
   color: #474544;
   padding: 0px 5px;
@@ -127,7 +119,15 @@ img {
   border: 1px solid rgba(0,0,0,.2);
   border-radius: 6px;
 }
-@media(max-width:1024px) {
+.header-text {
+  display: inline-block;
+  padding-bottom: 0px;
+}
+.header-buttons {
+  float: right;
+  text-align: right;
+}
+@media(max-width:768px) {
   .header-text {
     text-align: center;
     display: block;
@@ -140,21 +140,13 @@ img {
     padding-top: 2px;
   }
 }
-@media(min-width:768px) {
-  .navbar-toggle {
-    display: block;
-  }
-
-}
-@media(min-width:1024px) {
+@media(min-width:1280px) {
   .sidenav {
     transform: none;
     top: 56px;
     box-shadow: none;
   }
-  .navbar-toggle {
-    display: none;
-  }
+
 }
 
 .modal-backdrop.in {

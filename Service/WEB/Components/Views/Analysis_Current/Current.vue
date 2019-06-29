@@ -41,7 +41,7 @@
       this.Phases = null;
       this.GraphOptions = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow,
-        zoomCallback: this.ZoomEvt.bind(this), interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup: this.MouseUpEvt.bind(this), dblclick: this.DoubleClickEvt.bind(this) }, xAxisHeight: 24, 
+        interactionModel: Graph.ScrollableInteractionModel(this), xAxisHeight: 24, 
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { var Result = oZm.Series['CURRENT'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
@@ -108,16 +108,11 @@
           }.bind(this)
         });
       },
-      MouseUpEvt(event, g, contex) {
-        oZm.mouseUp(event, g, contex);
-        if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
+      WindowRestore: function() {
+        this.$refs.period.PopState();
       },
-      DoubleClickEvt(event, g, context) {
-        oZm.dblClick(event, g, context);
-        this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
-      },
-      ZoomEvt(minDate, maxDate, yRanges) {
-        this.$refs.period.SetCustom(minDate, maxDate);
+      WindowChange: function(minDate, maxDate) {
+        this.$refs.period.SetCustom(minDate, maxDate, true);
       }
     },
     components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarPhases, ToolbarTools, Counters, Graph }

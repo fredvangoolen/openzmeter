@@ -11,7 +11,7 @@
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
       <div class="row">
-        <div class="col-md-6 col-lg-4 col-xl-3" ref="counters">
+        <div class="col-md-5 col-lg-4 col-xl-3" ref="counters">
           <div class="subpanel clearfix">
             <div class="counters-title">Period stats:</div>
             <div class="counters-aggreg">{{ CountersAggregation }}<br>From {{ TimeStatsFrom }} to {{ TimeStatsTo }}</div>
@@ -36,7 +36,7 @@
             <div class="current-value" v-html="BudgetValue"></div>
           </div>
         </div>
-        <div class="col-md-6 col-lg-8 col-xl-9">
+        <div class="col-md-7 col-lg-8 col-xl-9">
           <graph :options="GraphOptions" ref="graph"></graph>
         </div>
       </div>
@@ -66,8 +66,7 @@
       this.Data = [];
       this.GraphOptions = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, legend: 'follow', plotter: Graph.multiColumnBarPlotter,
-        labels: ['Time', 'Energy'], 
-        interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, touchstart: Graph.startTouch, touchmove: Graph.moveTouch, mouseup: Graph.MouseUpEvt.bind(this), touchend: Graph.EndTouchEvt.bind(this), mousewheel : Graph.mouseWheelZoom.bind(this), dblclick: this.DoubleClickEvt },
+        labels: ['Time', 'Energy'], interactionModel: Graph.ScrollableInteractionModel(this),
         colors: [oZm.Series['ACTIVE_ENERGY'].Color], xAxisHeight: 24, legendFormatter: Graph.LegendFormatter_Follow, underlayCallback: this.DrawPeriods, selectMode: 'euclidian',
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
@@ -183,11 +182,11 @@
         canvas.rect(area.x, area.y + 13, area.w, area.h);
         canvas.clip();
       },
-      DoubleClickEvt: function(event, g, context) {
+      WindowRestore: function() {
         this.$refs.period.PopState();
       },
-      ZoomEvt: function(minDate, maxDate, yRanges) {
-        this.$refs.period.SetCustom(minDate, maxDate);
+      WindowChange: function(minDate, maxDate) {
+        this.$refs.period.SetCustom(minDate, maxDate, true);
       },
       UpdateCounters: function(aggreg) {
         this.CountersAggregation = 'From ' + oZm.GetAggregLongName(aggreg) + ' aggregation';        
