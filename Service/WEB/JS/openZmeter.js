@@ -252,13 +252,6 @@ export var Series = {
 };
 
 
-export function mouseUp(event, g, context) {
-  if (context.isPanning) {
-    Dygraph.endPan(event, g, context);
-  } else if (context.isZooming) {
-    Dygraph.endZoom(event, g, context);
-  }
-}
 export function dblClick(event, g, context) {
   if (!(event.offsetX && event.offsetY)) {
     event.offsetX = event.layerX - event.target.offsetLeft;
@@ -297,11 +290,6 @@ export function zoom(g, zoomInPercentage, xBias, yBias) {
     valueRange: newYAxes[0]*/
     });
 }
-
-export function dblClick_Restore(event, g, context) {
-  restorePositioning(g);
-}
-
 
 ////var SpinnerOpts = { lines: 10, length: 10, width: 5, radius: 10 }; // default options for spinner
 ///* offline.js configuration and tools */

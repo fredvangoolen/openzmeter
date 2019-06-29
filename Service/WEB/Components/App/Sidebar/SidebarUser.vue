@@ -29,7 +29,7 @@
         this.$refs.userEdit.show();
       },
       PingServer: function() {
-        $.ajax({ url: "Ping", timeout: 5000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
+        $.ajax({ url: 'Ping', timeout: 5000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
           success: function() {
             this.$refs.logout.hide();
             this.$refs.offline.hide();
@@ -40,8 +40,10 @@
           error: function(request) {
             if(request.status == 401) {
               this.$refs.logout.show();
+              this.$refs.offline.hide();
             } else {
               this.$refs.offline.show();
+              this.$refs.logout.hide();
             }
           }.bind(this)
         });

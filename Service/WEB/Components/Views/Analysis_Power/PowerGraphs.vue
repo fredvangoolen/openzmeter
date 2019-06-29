@@ -60,7 +60,7 @@
       this.NowTimer = null;
       this.GraphOptionsActive = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, underlayCallback: this.DrawPeriods,
-        labels: ['Time', 'Active Power'], zoomCallback: this.ZoomEvt.bind(this), interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup: this.MouseUpEvt.bind(this), dblclick: this.DoubleClickEvt.bind(this) }, colors: [oZm.Series['ACTIVE_POWER'].Color], xAxisHeight: 24, 
+        labels: ['Time', 'Active Power'], interactionModel: Graph.ScrollableInteractionModel(this), colors: [oZm.Series['ACTIVE_POWER'].Color], xAxisHeight: 24, 
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
@@ -73,7 +73,7 @@
       };
       this.GraphOptionsReactive = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow,
-        labels: ['Time', 'Reactive Power'], zoomCallback: this.ZoomEvt.bind(this), interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup: this.MouseUpEvt.bind(this), dblclick: this.DoubleClickEvt.bind(this) }, colors: [oZm.Series['REACTIVE_POWER'].Color], xAxisHeight: 24, 
+        labels: ['Time', 'Reactive Power'], interactionModel: Graph.ScrollableInteractionModel(this), colors: [oZm.Series['REACTIVE_POWER'].Color], xAxisHeight: 24, 
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) {  var Result = oZm.Series['REACTIVE_POWER'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
@@ -247,16 +247,11 @@
           }.bind(this)
         });
       },
-      MouseUpEvt: function(event, g, contex) {
-        oZm.mouseUp(event, g, contex);
-        if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
+      WindowRestore: function() {
+        this.$refs.period.PopState();
       },
-      DoubleClickEvt: function(event, g, context) {
-        oZm.dblClick(event, g, context);
-        this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
-      },
-      ZoomEvt: function(minDate, maxDate, yRanges) {
-        this.$refs.period.SetCustom(minDate, maxDate);
+      WindowChange: function(minDate, maxDate) {
+        this.$refs.period.SetCustom(minDate, maxDate, true);
       }
     },
     components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarTools, Graph, Counters }
