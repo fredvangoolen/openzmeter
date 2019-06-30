@@ -11,7 +11,7 @@
             <button type="button" class="btn btn-xs btn-success" v-on:click="Edit(props.rowData)" :disable="props.rowData.Finished==false">Edit</button>
             <button type="button" class="btn btn-xs btn-default" v-on:click="RMS(props.rowData)" :disable="props.rowData.Finished==false">RMS</button>
             <button type="button" class="btn btn-xs btn-default" v-on:click="RAW(props.rowData)" :disable="props.rowData.Finished==false">Wave</button>
-            <button type="button" class="btn btn-danger btn-xs" v-on:click="Delete(props.rowData)" :disable="props.rowData.Finished==false">Delete</button>
+            <button type="button" class="btn btn-danger btn-xs" v-on:click="Delete(props.rowIndex)" :disable="props.rowData.Finished==false">Delete</button>
           </div>
         </template>
       </vuetable>
@@ -66,8 +66,9 @@
     created: function() {
       this.Events = [];
       this.Phases = null;
+      this.LastSample = 0;
       this.GraphOptions = {
-        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow,
+        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#EEE", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow,
         interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup : Graph.mouseUp, dblclick : Graph.dblClick_Restore }, xAxisHeight: 24, 
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
@@ -91,15 +92,17 @@
         var Analyzer = this.$root.SelectedAnalyzer;
         if(lastsample === 0) {
           this.ShowSpinner = true;
-          this.Events = [];          
+          this.Events = [];
+          this.LastSample = 0;
         }
-        $.ajax({ url: 'getEvents', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ To: to, LastSample: lastsample, Analyzer: Analyzer.ID, Period: period }),
+        $.ajax({ url: 'getEvents', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ To: to, LastSample: this.LastSample, Analyzer: Analyzer.ID, Period: period }),
           success: function(result) {
             this.EndDate = moment(result.To).format('DD/MM/YYYY - HH:mm:ss');
             this.StartDate = moment(result.From).format('DD/MM/YYYY - HH:mm:ss');
             if((result['StartTime'] === null) || (result['StartTime'].length === 0)) return;
             for(var x = 0; x < result['StartTime'].length; x++) {
-              var Event = { StartTime: result.StartTime[x], Date: moment(result.StartTime[x]).format('DD/MM/YYYY - HH:mm:ss'), Type: result.Type[x], Finished: result.Finished[x] };
+              if(result['StartTime'][x] > this.LastSample) this.LastSample = result['StartTime'][x];
+              var Event = { StartTime: result.StartTime[x], Date: moment(result.StartTime[x]).format('DD/MM/YYYY - HH:mm:ss'), Type: result.Type[x], Finished: result.Finished[x], Reference: result.Reference[x] };
               Event.Duration = (result.Duration === 0) ? 'RUNNNING' : oZm.Round2Plain(result.Duration[x] / result.SampleRate[x]);
               var Max = 0;        
               for(var i = 0; i < result.Reference[x].length; i++) {
@@ -161,8 +164,8 @@
       },
       GetSamples: function(evt) {
         this.Show();
-                var Analyzer = this.$root.SelectedAnalyzer;
-        $.ajax({ url: 'getEvents', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ StartTime: evt.StartTime, Analyzer: Analyzer.ID, Type: evt.Type, Samples: this.ViewMode }),
+        var Analyzer = this.$root.SelectedAnalyzer;
+        $.ajax({ url: 'getEvent', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ StartTime: evt.StartTime, Analyzer: Analyzer.ID, Type: evt.Type, Samples: this.ViewMode }),
           success: function(result) {
             this.Data = [];
             for(var i = 0; i < result.Prev_Samples[0].length; i++) {
@@ -181,6 +184,111 @@
               this.Data.push(Row);
             }
             var Options = {
+              underlayCallback: function(canvas, area, g) {
+                var LineDash = canvas.getLineDash();
+//      canvas.fillStyle = "#EEE";
+//      canvas.fillRect(g.toDomXCoord(0), 0, g.toDomXCoord(result['Envelope']) - g.toDomXCoord(0), g.height_);
+//      canvas.fillRect(g.toDomXCoord(ToShow.length - result['Envelope']), 0, g.toDomXCoord(ToShow.length), g.height_);
+//      var NominalVoltage = Nodes['NominalVoltage'] * Math.SQRT2;
+//      canvas.beginPath();
+//      canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(NominalVoltage));
+//      canvas.lineTo(g.width_, g.toDomYCoord(NominalVoltage));
+//      canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(-NominalVoltage));
+//      canvas.lineTo(g.width_, g.toDomYCoord(-NominalVoltage));
+//      canvas.strokeStyle = '#f00';
+//      canvas.lineWidth = 0.5;
+//      canvas.stroke();
+//      if(result['Duration'] > result['Envelope'] * 4) {
+//        canvas.fillStyle = "#fff";
+//        canvas.fillRect(g.toDomXCoord(result['Envelope'] * 2), 0, g.toDomXCoord(result['Envelope'] * 2 + 100) - g.toDomXCoord(result['Envelope'] * 2), g.height_);
+        canvas.beginPath();
+        canvas.moveTo(g.toDomXCoord(result.Prev_Samples[0].length), 0);
+        canvas.lineTo(g.toDomXCoord(result.Prev_Samples[0].length), g.height_);
+        canvas.moveTo(g.toDomXCoord(this.Data.length - result.Post_Samples[0].length), 0);
+        canvas.lineTo(g.toDomXCoord(this.Data.length - result.Post_Samples[0].length), g.height_);
+        if(evt.Type == 'DIP') {
+          canvas.moveTo(g.toDomXCoord(result.Prev_Samples[0].length - result.Prev_Samples[0].length / 8), g.toDomYCoord(evt.Reference[0] * 0.9));   canvas.lineTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length / 2), g.toDomYCoord(evt.Reference[0] * 0.9));
+          canvas.moveTo(g.toDomXCoord(result.Prev_Samples[0].length - result.Prev_Samples[0].length / 8), g.toDomYCoord(-evt.Reference[0] * 0.90));  canvas.lineTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length / 2), g.toDomYCoord(-evt.Reference[0] * 0.9));
+          canvas.moveTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length / 2), g.toDomYCoord(evt.Reference[0] * 0.95));   canvas.lineTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length + result.Post_Samples[0].length / 8), g.toDomYCoord(evt.Reference[0] * 0.95));
+          canvas.moveTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length / 2), g.toDomYCoord(-evt.Reference[0] * 0.95));  canvas.lineTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length + result.Post_Samples[0].length / 8), g.toDomYCoord(-evt.Reference[0] * 0.95));
+
+
+          canvas.save();
+          canvas.translate(g.toDomXCoord(result.Prev_Samples[0].length - result.Prev_Samples[0].length / 8), g.toDomYCoord(evt.Reference[0] * 0.9) - 8);
+          canvas.textAlign = 'left';
+          canvas.textBaseline = 'middle';
+          canvas.font = "12px sans-serif";
+          canvas.fillStyle = "#555";
+          canvas.fillText("DIP enter", 0 , 0, g.height_);
+          canvas.restore();
+          canvas.save();
+          canvas.translate(g.toDomXCoord(result.Prev_Samples[0].length - result.Prev_Samples[0].length / 8), g.toDomYCoord(-evt.Reference[0] * 0.9) + 12);
+          canvas.textAlign = 'left';
+          canvas.textBaseline = 'middle';
+          canvas.font = "12px sans-serif";
+          canvas.fillStyle = "#555";
+          canvas.fillText("DIP enter", 0 , 0, g.height_);
+          canvas.restore();
+
+          canvas.save();
+          canvas.translate(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length + result.Post_Samples[0].length / 8) - 46, g.toDomYCoord(evt.Reference[0] * 0.95) - 8);
+          canvas.textAlign = 'left';
+          canvas.textBaseline = 'middle';
+          canvas.font = "12px sans-serif";
+          canvas.fillStyle = "#555";
+          canvas.fillText("DIP exit", 0 , 0, g.height_);
+          canvas.restore();
+          canvas.save();
+          canvas.translate(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length + result.Post_Samples[0].length / 8) - 46, g.toDomYCoord(-evt.Reference[0] * 0.95) + 12);
+          canvas.textAlign = 'left';
+          canvas.textBaseline = 'middle';
+          canvas.font = "12px sans-serif";
+          canvas.fillStyle = "#555";
+          canvas.fillText("DIP exit", 0 , 0, g.height_);
+          canvas.restore();
+          
+        }
+    
+        canvas.setLineDash([3, 2]);
+        canvas.strokeStyle = '#5cb85c';
+        canvas.lineWidth = 1.5;
+        canvas.stroke();
+
+        canvas.save();
+        canvas.translate(g.toDomXCoord(result.Prev_Samples[0].length) - 8, g.height_ - 26);
+        canvas.rotate(-Math.PI / 2);
+        canvas.textAlign = 'left';
+        canvas.textBaseline = 'middle';
+        canvas.font = "12px sans-serif";
+        canvas.fillStyle = "#555";
+        canvas.fillText("Event start", 0 , 0, g.height_);
+        canvas.restore();
+        canvas.save();
+        canvas.translate(g.toDomXCoord(this.Data.length - result.Post_Samples[0].length) + 8, g.height_ - 26);
+        canvas.rotate(-Math.PI / 2);
+        canvas.textAlign = 'left';
+        canvas.textBaseline = 'middle';
+        canvas.font = "12px sans-serif";
+        canvas.fillStyle = "#555";
+        canvas.fillText("Event end", 0 , 0, g.height_);
+        canvas.restore();
+
+        
+        
+        //      
+//      }
+//      canvas.beginPath();
+//      canvas.moveTo(g.toDomXCoord(result['Envelope']), 0);
+//      canvas.lineTo(g.toDomXCoord(result['Envelope']), g.height_);
+//      canvas.moveTo(g.toDomXCoord(ToShow.length - result['Envelope']), 0);
+//      canvas.lineTo(g.toDomXCoord(ToShow.length - result['Envelope']), g.height_);
+      canvas.strokeStyle = '#000';
+      canvas.lineWidth = 0.5;
+//      canvas.stroke();
+
+//canvas.restore();
+canvas.setLineDash(LineDash);  
+    }.bind(this),
 //              interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup: oZm.mouseUp, dblclick: oZm.dblClick_Restore },
 //              legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, series: Series, visibility: this.VoltagePhases.concat(CurrentPhases),
               labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), 
@@ -203,9 +311,16 @@
         }); 
 
       },  
-      Delete: function(evt) {},
+      Delete: function(evt) {
+        var Analyzer = this.$root.SelectedAnalyzer;
+        $.ajax({ url: 'delEvent', timeout: 20000, type: 'POST', dataType: 'text', contentType: 'application/json', data: JSON.stringify({ StartTime: this.Events[evt].StartTime, Analyzer: Analyzer.ID, Type: this.Events[evt].Type }),
+          success: function(result) {
+            this.Events.splice(evt, 1);
+            this.$refs.table.setData( { data: this.Events });
+          }.bind(this)
+        });
+      },
       Edit: function(evt) {}
-
     },
     components: { Spinner, Vuetable, Graph, ToolbarPhases, ToolbarTools }
   }
@@ -249,20 +364,6 @@ function AjaxGetEvents(from, to, clear) {
       if(LastEventStartTime === 0) {
         EventsTable.clear().draw();
         EventsDatasheet = [];
-      }
-      for(var i = 0; i < result['StartTime'].length; i++) {
-        var Time = new Date(result['StartTime'][i]);
-        var RowText = '<tr>' +
-          '<td data-search="' + result['StartTime'][i] + '">' + Time.toLocaleString() + '.' + Time.getMilliseconds() + '</td>' +
-          '<td>' + result['Type'][i] + '</td>' +
-          '<td>' + Round2(result['Duration'][i] / result['SampleRate'][i]) + '</td>' +
-          '<td>' + Round2(result['Voltage'][i]) + '</td>' +
-          '<td>' + Round2(result['Percentage'][i]) + '</td>' +
-          '<td><div class="btn-group"><button class="btn btn-xs btn-primary"><i class="fa fa-line-chart"></i> Get samples</button><button class="btn btn-xs btn-danger delete_event"><i class="fa fa-trash"></i> Delete event</button></div></td>' +
-          '</tr>';
-        EventsTable.row.add($(RowText)).draw();
-        LastEventStartTime = result['StartTime'][i];
-        EventsDatasheet.push(result['StartTime'][i]);
       }
       if(EventChart === null) {
         EventChart = new Dygraph(document.getElementById("EventChart"), [Array(Analyzer.GetSeriesNames('Voltage').length + 1).fill(0)], {

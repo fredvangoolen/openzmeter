@@ -82,6 +82,7 @@ void Events::Save(Event_t &evt) {
   evt.SamplesRMS_B = deque<vector<float> >();
 }
 void Events::InitEvent(EventType type, vector<float> reference, uint32_t pos) {
+  LOGFile::Info("NUEVO EVENTO!!\n");
   Event_t Event;
   Event.Type = type;
   Event.Duration = 0;
@@ -117,6 +118,8 @@ void *Events::Events_Thread(void* args) {
       pthread_cond_wait(&This->pThreadCond, &This->pThreadMutex);
     }
     pthread_mutex_unlock(&This->pThreadMutex);
+    uint32_t RequiredRAW = This->pSampleRate * EVENT_RAWENVELOPETIME;
+    uint32_t RequiredRMS = This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME;
     uint32_t Pos = 0;
     This->pParams->Flag = false;
     for(uint32_t i = 0; i < This->pCycles->size(); i++) {
@@ -155,7 +158,7 @@ void *Events::Events_Thread(void* args) {
       }
       if(Stationary != This->pPrevStationary) LOGFile::Debug("Analyzer '%s' %s stationary state\n", This->pAnalyzer->Serial().c_str(), (Stationary ? "reach" : "leave"));
       //Check for new events
-      if((This->pPrevSamples.size() >= (EVENT_RAWENVELOPETIME * This->pSampleRate)) && (This->pPrevCycles.size() >= (This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME))) {
+      if((This->pPrevSamples.size() >= RequiredRAW) && (This->pPrevCycles.size() >= RequiredRMS)) {
         for(uint8_t n = 0; n < RMS_Avg.size(); n++) {
           //Check for interruption new events
           if((-PercentChange(Cycle.RMS[n], This->pAnalyzer->GetNominalVoltage()) > EVENT_INTERRUPTION) && (This->FindRunningEvent(EVT_INTERRUPTION) == false)) This->InitEvent(EVT_INTERRUPTION, vector<float>(RMS_Avg.size(), This->pAnalyzer->GetNominalVoltage()), Pos);
@@ -172,31 +175,31 @@ void *Events::Events_Thread(void* args) {
         vector<float> Sample;
         for(uint j = 0; j < This->pParams->Voltage_Samples.size(); j++) Sample.push_back(This->pParams->Voltage_Samples[j][n + Pos]);
         This->pPrevSamples.push_back(Sample);
-        if(This->pPrevSamples.size() > (This->pSampleRate * EVENT_RAWENVELOPETIME)) This->pPrevSamples.pop_front();
+        if(This->pPrevSamples.size() > RequiredRAW) This->pPrevSamples.pop_front();
         for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
-          if(it->SamplesRAW_A.size() < (This->pSampleRate * EVENT_RAWENVELOPETIME)) {
+          if(it->SamplesRAW_A.size() < RequiredRAW) {
             it->SamplesRAW_A.push_back(Sample);
           } else if(it->State == EVT_RUNNING) {
             it->SamplesRAW_B.push_back(Sample);
-            if(it->SamplesRAW_B.size() > (This->pSampleRate * EVENT_RAWENVELOPETIME)) it->SamplesRAW_B.pop_front();
+            if(it->SamplesRAW_B.size() > RequiredRAW) it->SamplesRAW_B.pop_front();
           }
         }
       }
       //Insert current cycle in prev data buffers and in running events than need its
       This->pPrevCycles.push_back(Cycle);
-      if(This->pPrevCycles.size() > (This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME)) This->pPrevCycles.pop_front();
+      if(This->pPrevCycles.size() > RequiredRMS) This->pPrevCycles.pop_front();
       for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
-        if(it->SamplesRMS_A.size() < (This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME)) {
+        if(it->SamplesRMS_A.size() < RequiredRMS) {
           it->SamplesRMS_A.push_back(Cycle.RMS);
         } else if(it->State == EVT_RUNNING) {
           it->SamplesRMS_B.push_back(Cycle.RMS);
-          if(it->SamplesRMS_B.size() > (This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME)) it->SamplesRMS_B.pop_front();
+          if(it->SamplesRMS_B.size() > RequiredRMS) it->SamplesRMS_B.pop_front();
         }
       }
       //Check events state
       for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); ) {
         //If closed evend finish post event period save it and remove from list
-        if((it->State == EVT_CLOSING) && (it->SamplesRAW_A.size() == (This->pSampleRate * EVENT_RAWENVELOPETIME)) && (it->SamplesRMS_A.size() == (This->pAnalyzer->GetNominalFrequency() * 2 * EVENT_RMSENVELOPETIME))) {
+        if((it->State == EVT_CLOSING) && (it->SamplesRAW_A.size() == RequiredRAW) && (it->SamplesRMS_A.size() == RequiredRMS)) {
           it->State = EVT_CLOSED;
           This->Save(*it);
           This->pEvents.erase(it++);
