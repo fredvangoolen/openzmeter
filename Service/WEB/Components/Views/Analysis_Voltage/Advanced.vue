@@ -10,7 +10,7 @@
       </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <graph ref="graph" :options="{}"></graph>
+      <graph ref="graph" :options="GraphOptions"></graph>
     </div>
   </div>
 </template>
@@ -26,7 +26,9 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data() {
-      return { ShowSpinner: true, Time: 'Loading data...' };
+      return { ShowSpinner: true, Time: 'Loading data...',
+                GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(Graph) }
+      };
     },
     created: function() {
       this.Data = null;
@@ -87,8 +89,8 @@
           ToShow[i] = Row;
         }
         var Options = {
-          strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], fillGraph: true, interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup  : oZm.mouseUp, dblclick : oZm.dblClick_Restore },
-          legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, labels: ['Bin'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)).concat(oZm.Series['CURRENT'].Names(Analyzer)), series: Series, visibility: this.VoltagePhases.concat(CurrentPhases),
+          strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], fillGraph: true, legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, 
+          labels: ['Bin'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)).concat(oZm.Series['CURRENT'].Names(Analyzer)), series: Series, visibility: this.VoltagePhases.concat(CurrentPhases),
           plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], showRangeSelector: false,
           colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length)),
           axes: { 

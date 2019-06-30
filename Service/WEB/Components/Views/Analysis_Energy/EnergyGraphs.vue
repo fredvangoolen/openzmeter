@@ -60,7 +60,7 @@
       this.NowTimer = null;
       this.GraphOptionsActive = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, plotter: Graph.multiColumnBarPlotter,
-        labels: ['Time', 'Active Energy'], zoomCallback: this.ZoomEvt, interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup: this.MouseUpEvt, dblclick: this.DoubleClickEvt }, colors: [oZm.Series['ACTIVE_ENERGY'].Color], xAxisHeight: 24, 
+        labels: ['Time', 'Active Energy'], interactionModel: Graph.ScrollableInteractionModel(this), colors: [oZm.Series['ACTIVE_ENERGY'].Color], xAxisHeight: 24, 
         drawHighlightPointCallback: Graph.drawHighlighBarChartCallback,
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
@@ -74,7 +74,7 @@
       };
       this.GraphOptionsReactive = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, plotter: Graph.multiColumnBarPlotter,
-        labels: ['Time', 'Reactive Energy'], zoomCallback: this.ZoomEvt.bind(this), interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup: this.MouseUpEvt.bind(this), dblclick: this.DoubleClickEvt.bind(this) }, colors: [oZm.Series['REACTIVE_ENERGY'].Color], xAxisHeight: 24, 
+        labels: ['Time', 'Reactive Energy'], interactionModel: Graph.ScrollableInteractionModel(this), colors: [oZm.Series['REACTIVE_ENERGY'].Color], xAxisHeight: 24, 
         drawHighlightPointCallback: Graph.drawHighlighBarChartCallback,
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
@@ -210,16 +210,11 @@
           }.bind(this)
         });
       },
-      MouseUpEvt: function(event, g, contex) {
-        oZm.mouseUp(event, g, contex);
-        if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
+      WindowRestore: function() {
+        this.$refs.period.PopState();
       },
-      DoubleClickEvt: function(event, g, context) {
-        oZm.dblClick(event, g, context);
-        this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
-      },
-      ZoomEvt: function(minDate, maxDate, yRanges) {
-        this.$refs.period.SetCustom(minDate, maxDate);
+      WindowChange: function(minDate, maxDate) {
+        this.$refs.period.SetCustom(minDate, maxDate, true);
       }
     },
     components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarTools, Graph, Counters }

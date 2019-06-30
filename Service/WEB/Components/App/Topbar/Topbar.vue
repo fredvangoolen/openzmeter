@@ -98,6 +98,14 @@ export default {
 </script>
  
 <style scoped>
+  .navbar-toggle {
+    display: block;
+  }
+  @media(min-width:1280px) {
+    .navbar-toggle {
+      display: block;
+    }
+  }
   .navbar-brand > img {
     margin-top: 4px;
   }
