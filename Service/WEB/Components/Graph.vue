@@ -3,6 +3,8 @@
 </template>
 
 <script>
+  import Dygraph from 'JS/dygraph.js';
+  import chroma from 'JS/chroma.js';
   var Dygraph = require('JS/dygraph.js');
   import * as oZm from 'JS/openZmeter.js';
   function mouseDown(event, g, context) {
@@ -190,12 +192,15 @@
       var ctx = e.drawingContext;
       var sets = e.allSeriesPoints;
       var y_bottom = e.dygraph.toDomYCoord(0);
+      g.y_bottom=y_bottom;
       var min_sep = Infinity;
       for(var j = 0; j < sets.length; j++) {
         for(var i = 1; i < sets[j].length; i++) min_sep = Math.min(sets[j][i].canvasx - sets[j][i - 1].canvasx, min_sep);
       }
       var bar_width = Math.floor(2.5 / 3 * min_sep);
+      g.bar_width=bar_width;
       var subbar_width = bar_width / sets.length;
+      g.subbar_width=subbar_width;
       for(var j = 0; j < sets.length; j++) {
         ctx.strokeStyle = g.getColors()[j];
         ctx.fillStyle = g.getColors()[j];
@@ -231,6 +236,10 @@
     MouseUpEvt: function(event, g, contex) {
         oZm.mouseUp(event, g, contex);
         if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
+    },
+    drawHighlighBarChartCallback: function(g, seriesName, canvasContext, cx, cy, color, pointSize){
+      canvasContext.fillStyle=chroma(canvasContext.fillStyle).brighten(2);
+      canvasContext.fillRect(cx-g.bar_width/2,cy,g.bar_width,g.y_bottom - cy);
     },
     props: ['options'],
     data() {
