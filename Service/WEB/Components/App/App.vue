@@ -83,9 +83,18 @@
     bottom: 0px;
     right: 0px;
   }
+  .modal-dialog.full-screen-dialog{
+    width: 100%; 
+    height: 100%; 
+    padding: 0px; 
+    margin: 0px !important;
+  }
   @media (min-width: 640px) {
     #contents {
       top: 56px;
+    }
+    .modal-dialog.full-screen-dialog{
+      padding: 10px; 
     }
   }
   @media (min-width: 1280px) {

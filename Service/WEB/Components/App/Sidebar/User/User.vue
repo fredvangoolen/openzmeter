@@ -179,4 +179,9 @@
   .popover-title {
     padding: 6px;
   }
+  @media only screen and (max-width: 768px) {
+  .modal-dialog {
+    margin-top:120px !important;
+  }
+}
 </style>

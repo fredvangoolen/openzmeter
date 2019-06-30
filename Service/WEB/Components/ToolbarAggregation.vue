@@ -5,7 +5,7 @@
         <span class="input-group-addon"><img :src="require('Imgs/clock_15.png')"></span>
         <div class="input-group-btn">
           <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">{{ SelectedText }}<span class="caret"></span></button>
-          <ul class="dropdown-menu pull-right">
+          <ul class="dropdown-menu pull-left">
             <li v-if="options.includes('3S')" v-bind:class="{active: (Selected == '3S')}"><a @click="AggregClick('3S', $event)" href="#">3 seconds</a></li>
             <li v-if="options.includes('1M')" v-bind:class="{active: (Selected == '1M')}"><a @click="AggregClick('1M', $event)" href="#">1 minute</a></li>
             <li v-if="options.includes('10M')" v-bind:class="{active: (Selected == '10M')}"><a @click="AggregClick('10M', $event)" href="#">10 minutes</a></li>
