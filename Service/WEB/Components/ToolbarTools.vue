@@ -6,7 +6,7 @@
     <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && (Pause == true)" v-on:click="PlayClick" data-toggle="tooltip" title="Resume live update"><img :src="require('Imgs/play.png')"></button>
     <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && (Pause == false)" v-on:click="PauseClick" data-toggle="tooltip" title="Pause"><img :src="require('Imgs/pause.png')"></button>
     <div class="modal" v-if="ShowMaximized" tabindex="1" role="dialog" data-backdrop="static" ref="MaximizeDialog" data-keyboard="false">
-      <div class="modal-dialog" style="width: 100%; height: 100%; padding: 10px; margin: 0px">
+      <div class="modal-dialog full-screen-dialog">
         <div class="modal-content" style="height: 100%">
           <div class="modal-header">
             <div class="pull-left"><h4 class="modal-title">{{ Title }}</h4></div>
