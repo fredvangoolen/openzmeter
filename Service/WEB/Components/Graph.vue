@@ -5,7 +5,6 @@
 <script>
   import Dygraph from 'JS/dygraph.js';
   import chroma from 'JS/chroma.js';
-  var Dygraph = require('JS/dygraph.js');
   import * as oZm from 'JS/openZmeter.js';
   function mouseDown(event, g, context) {
     context.initializeMouseDown(event, g, context);
