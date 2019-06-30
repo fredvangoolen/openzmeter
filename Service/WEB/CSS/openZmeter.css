@@ -35,7 +35,18 @@
 .glyphicon-calendar:before {
   content: none;
 }
-
+.glyphicon-chevron-left {
+  background-image: url(../Imgs/resultset_previous.png);
+  width: 16px !important;
+  height: 16px !important;
+  display: inline-block;    
+}
+.glyphicon-chevron-right {
+  background-image: url(../Imgs/resultset_next.png);
+  width: 16px !important;
+  height: 16px !important;
+  display: inline-block;    
+}
 /* dataTables icons */
 table.dataTable thead .sorting_desc:after {
   content: no-open-quote;
@@ -388,11 +399,6 @@ div.scrtabs-tab-container + div.panel {
   color: #FFF;
   background-color: #474544;
 }
-.scrtabs-tab-scroll-arrow {
-  border: none;
-  color: #474544;
-}
-
 .btn-group,.btn-group-vertical {
   vertical-align: text-bottom;
   display: inline-table;
@@ -400,6 +406,13 @@ div.scrtabs-tab-container + div.panel {
 }
 .btn .caret {
   margin-left: 3px;
+}
+
+.scrtabs-tab-scroll-arrow {
+  border: 1px solid #bbb !important;
+  height: 40px !important;
+  background: #FFF;
+  padding-top: 11px !important;
 }
 
 .scrollable-menu {
