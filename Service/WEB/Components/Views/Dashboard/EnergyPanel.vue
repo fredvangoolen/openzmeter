@@ -68,7 +68,8 @@
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, legend: 'follow', plotter: Graph.multiColumnBarPlotter,
         labels: ['Time', 'Energy'], 
         interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, touchstart: Graph.startTouch, touchmove: Graph.moveTouch, mouseup: Graph.MouseUpEvt.bind(this), touchend: Graph.EndTouchEvt.bind(this), mousewheel : Graph.mouseWheelZoom.bind(this), dblclick: this.DoubleClickEvt },
-        colors: [oZm.Series['ACTIVE_ENERGY'].Color], xAxisHeight: 24, legendFormatter: Graph.LegendFormatter_Follow, underlayCallback: this.DrawPeriods, selectMode: 'euclidian',
+        colors: [oZm.Series['ACTIVE_ENERGY'].Color], xAxisHeight: 24, legendFormatter: Graph.LegendFormatter_Follow, underlayCallback: this.DrawPeriods,
+        drawHighlightPointCallback: Graph.drawHighlightPointCallback,
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_ENERGY'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
