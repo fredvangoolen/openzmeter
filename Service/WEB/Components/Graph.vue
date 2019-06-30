@@ -303,7 +303,7 @@
     zoomWheelGraphReset: function(){
       lastClicked = null;
     },
-    drawHighlightPointCallback: function(g, seriesName, canvasContext, cx, cy, color, pointSize){
+    drawHighlighBarChartCallback: function(g, seriesName, canvasContext, cx, cy, color, pointSize){
       canvasContext.fillStyle=chroma(canvasContext.fillStyle).brighten(2);
       canvasContext.fillRect(cx-g.bar_width/2,cy,g.bar_width,g.y_bottom - cy);
     },
