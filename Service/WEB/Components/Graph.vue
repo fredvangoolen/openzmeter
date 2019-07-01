@@ -197,7 +197,9 @@
         for(var i = 1; i < sets[j].length; i++) min_sep = Math.min(sets[j][i].canvasx - sets[j][i - 1].canvasx, min_sep);
       }
       var bar_width = Math.floor(2.5 / 3 * min_sep);
-      g.bar_width=bar_width;
+      if(bar_width!=NaN){
+        g.bar_width=bar_width;
+      }
       var subbar_width = bar_width / sets.length;
       g.subbar_width=subbar_width;
       for(var j = 0; j < sets.length; j++) {
@@ -236,13 +238,18 @@
         oZm.mouseUp(event, g, contex);
         if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
     },
-    drawHighlighBarChartCallback: function(g, seriesName, canvasContext, cx, cy, color, pointSize){
+    DrawHighlighBarChartCallback: function(g, seriesName, canvasContext, cx, cy, color, pointSize){
+      if(g.bar_width!==undefined){
+        canvasContext.fillRect(g.user_attrs_.cx-g.bar_width/2,g.user_attrs_.cy,g.bar_width,g.y_bottom - g.user_attrs_.cy);
+      }
+      g.user_attrs_.cx=cx;
+      g.user_attrs_.cy=cy;
       canvasContext.fillStyle=chroma(canvasContext.fillStyle).brighten(2);
       canvasContext.fillRect(cx-g.bar_width/2,cy,g.bar_width,g.y_bottom - cy);
     },
-    props: ['options'],
+    props: ['options','lasthighlight'],
     data() {
-      return { };
+      return {};
     },
     methods: {
       SetOptions: function(options) {
@@ -262,6 +269,7 @@
     created: function() {
       this.Graph = null;
       this.Options = Object.assign({ strokeWidth: 0.5, gridLineColor: "rgba(0, 0, 0, 0.1)", gridLinePattern: [4, 4], labels: ['Index', 'Value'], interactionModel: {} }, this.options);
+      this.LastHighlight=this.lasthighlight;
     },
     mounted: function() {
       this.Graph = new Dygraph(this.$el, [[0, 0]], this.Options);
