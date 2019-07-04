@@ -247,7 +247,7 @@
       canvasContext.fillStyle=chroma(canvasContext.fillStyle).brighten(2);
       canvasContext.fillRect(cx-g.bar_width/2,cy,g.bar_width,g.y_bottom - cy);
     },
-    props: ['options','lasthighlight'],
+    props: ['options'],
     data() {
       return {};
     },
@@ -269,7 +269,6 @@
     created: function() {
       this.Graph = null;
       this.Options = Object.assign({ strokeWidth: 0.5, gridLineColor: "rgba(0, 0, 0, 0.1)", gridLinePattern: [4, 4], labels: ['Index', 'Value'], interactionModel: {} }, this.options);
-      this.LastHighlight=this.lasthighlight;
     },
     mounted: function() {
       this.Graph = new Dygraph(this.$el, [[0, 0]], this.Options);

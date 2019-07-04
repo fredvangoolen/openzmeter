@@ -21,8 +21,9 @@
 <script>
   import Vuetable from 'vuetable-2';
   import DevicesConfigure from './DevicesConfigure.vue';
+  import 'CSS/table-responsive.css';
   export default {
-    data: function() {
+    data(){ 
       return { Devices: [], 
         Columns: [
           {name: 'Driver', title: 'Driver'},
@@ -31,16 +32,19 @@
           {name: 'Analyzers', title: 'Analyzers'}, 
           {name: 'Status', title: 'Status'}, 
           {name: '__slot:actions', title: ''}
-        ] 
-      };
+        ]
+      }
     },
     methods: {
       LoadTable: function() {
+        this.$nextTick(function() {
         $.ajax({ url: "getDevices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
           success: function(result) { 
             var TableData = { data: result };
             this.$refs.table.setData(TableData); 
+            this.Counter++;
           }.bind(this)
+        });
         });
       },
       Stop: function(id, evt) {
@@ -67,6 +71,20 @@
     },
     mounted: function() {
       this.LoadTable();
+    },
+    updated: function(){
+        var headertext = [],
+          headers = this.$refs.table.$el.querySelectorAll("th"),
+          tablebody = this.$refs.table.$el.querySelector("tbody");
+          for(var i = 0; i < headers.length; i++) {
+            var current = headers[i];
+            headertext.push(current.textContent.replace(/\r?\n|\r/,""));
+          } 
+          for (var i = 0, row; row = tablebody.rows[i]; i++) {
+            for (var j = 0, col; col = row.cells[j]; j++) {
+              col.setAttribute("data-th", headertext[j]);
+            } 
+          }
     },
     components: { Vuetable, DevicesConfigure }
   }
