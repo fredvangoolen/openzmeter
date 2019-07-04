@@ -4,9 +4,10 @@
       <div class="huge-small header-text">Input devices</div>
     </div>
     <div class="panel-body">
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
+      <spinner v-if="ShowSpinner"></spinner>
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
-          <div class="btn-group" style="width:100%">
+          <div class="btn-group" >
             <button class="btn btn-xs btn-danger" v-if="props.rowData.Status === 'RUNNING'" @click="Stop(props.rowData.Serial, $event)">Stop</button>
             <button class="btn btn-xs btn-success" v-if="props.rowData.Status !== 'RUNNING'" @click="Start(props.rowData.Serial, $event)">Start</button>
             <button class="btn btn-xs btn-default" @click="Configure(props.rowData, $event)">Configure</button>
@@ -20,11 +21,13 @@
 
 <script>
   import Vuetable from 'vuetable-2';
+  import Spinner from 'Components/Spinner.vue';
   import DevicesConfigure from './DevicesConfigure.vue';
   import 'CSS/table-responsive.css';
+  import * as oZm from 'JS/openZmeter.js';
   export default {
     data(){ 
-      return { Devices: [], 
+      return { Devices: [], ShowSpinner: true,
         Columns: [
           {name: 'Driver', title: 'Driver'},
           {name: 'Name', title: 'Name'},
@@ -37,14 +40,12 @@
     },
     methods: {
       LoadTable: function() {
-        this.$nextTick(function() {
         $.ajax({ url: "getDevices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
           success: function(result) { 
             var TableData = { data: result };
             this.$refs.table.setData(TableData); 
-            this.Counter++;
+            this.ShowSpinner = false;
           }.bind(this)
-        });
         });
       },
       Stop: function(id, evt) {
@@ -70,27 +71,18 @@
       }
     },
     mounted: function() {
+      this.ShowSpinner = true;
       this.LoadTable();
     },
     updated: function(){
-        var headertext = [],
-          headers = this.$refs.table.$el.querySelectorAll("th"),
-          tablebody = this.$refs.table.$el.querySelector("tbody");
-          for(var i = 0; i < headers.length; i++) {
-            var current = headers[i];
-            headertext.push(current.textContent.replace(/\r?\n|\r/,""));
-          } 
-          for (var i = 0, row; row = tablebody.rows[i]; i++) {
-            for (var j = 0, col; col = row.cells[j]; j++) {
-              col.setAttribute("data-th", headertext[j]);
-            } 
-          }
+        oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    components: { Vuetable, DevicesConfigure }
+    components: { Vuetable, DevicesConfigure, Spinner}
   }
 </script>
 
 <style scoped>
+@media screen and (min-width: 600px) {
   .table >>> th:nth-child(1) {
     width: 60px;
     text-align: center;
@@ -122,7 +114,5 @@
   .table >>> th:nth-child(6) {
     width: 120px;
   }
-  .table >>> td:nth-child(6) {
-    text-align: right;
-  }
+}
 </style>

@@ -291,6 +291,25 @@ export function zoom(g, zoomInPercentage, xBias, yBias) {
     });
 }
 
+/**
+ * Creates captions on stackable view (mobile devices) to create a card for each row.
+ * @param {Table as vue object} tableVue 
+ */
+export function createCaptionsForResponsiveTable (tableVue){
+  var headertext = [],
+  headers = tableVue.$el.querySelectorAll("th"),
+  tablebody = tableVue.$el.querySelector("tbody");
+  for(var i = 0; i < headers.length; i++) {
+    var current = headers[i];
+    headertext.push(current.textContent.replace(/\r?\n|\r/,""));
+  } 
+  for (var i = 0, row; row = tablebody.rows[i]; i++) {
+    for (var j = 0, col; col = row.cells[j]; j++) {
+      col.setAttribute("data-th", headertext[j]);
+    } 
+  }
+}
+
 ////var SpinnerOpts = { lines: 10, length: 10, width: 5, radius: 10 }; // default options for spinner
 ///* offline.js configuration and tools */
 //Offline.options = { requests: true };
