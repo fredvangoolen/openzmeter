@@ -71,18 +71,155 @@
       this.Events = [];
       this.Phases = null;
       this.LastSample = 0;
+      this.c = null;
       this.GraphOptions = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#EEE", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow,
-        interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup : Graph.mouseUp, dblclick : Graph.dblClick_Restore }, xAxisHeight: 24, 
+        interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup : Graph.mouseUp, dblclick : Graph.dblClick_Restore }, xAxisHeight: 24, plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], showRangeSelector: false,
         axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { var Result = oZm.Series['VOLTAGE'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
-               axisLabelFormatter: function (x) { var Result = oZm.Series['VOLTAGE'].FormatValue(x); return Result.Value; }
-             },
-          x: { axisLabelFormatter: function(x) { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); },
-               valueFormatter: function (x) { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); }
-             }
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34,/* valueRange: Y1Range, */
+               valueFormatter: function (x) { return oZm.Round2(x) + ' <em class="x-small">V</em>'; },
+               axisLabelFormatter: function (x) { return oZm.Round2(x); }
+          },
+          x: { ticker: function(min, max) { 
+                 var Analyzer = this.$root.SelectedAnalyzer;
+                 if(Analyzer == null) return [];
+                 return Graph.WaveTimeTicks(max, Analyzer); 
+               }.bind(this),
+               valueFormatter: function (x) {
+                 var Analyzer = this.$root.SelectedAnalyzer;
+                 if(Analyzer == null) return [];
+                 return oZm.Round2((x * 1000) / Analyzer.SampleFreq) + ' <em class="x-small">ms</em>'; 
+               }.bind(this)
+          }
+        },
+        underlayCallback: function(canvas, area, g) {
+          var Analyzer = this.$root.SelectedAnalyzer;
+          if((Analyzer == null) || (this.Event == null)) return;
+          var LineDash = canvas.getLineDash();
+          var StartCount = this.Event.Prev_Samples[0].length;
+          var EndCount = StartCount + this.Event.Samples[0].length + ((this.Event.SampleDuration > (2 * this.Event.Prev_Samples[0].length)) ? this.Event.Prev_Samples[0].length * 0.1 : 0);
+          //Start and end lines
+          canvas.save();
+          canvas.setLineDash([3, 2]);
+          canvas.strokeStyle = '#5cb85c';
+          canvas.lineWidth = 1.5;
+          canvas.beginPath();
+          canvas.moveTo(g.toDomXCoord(StartCount), 0);
+          canvas.lineTo(g.toDomXCoord(StartCount), g.height_);
+          canvas.moveTo(g.toDomXCoord(EndCount), 0);
+          canvas.lineTo(g.toDomXCoord(EndCount), g.height_);
+          canvas.stroke();
+          //Start and end labels
+          canvas.save();
+          canvas.translate(g.toDomXCoord(StartCount) - 8, g.height_ - 26);
+          canvas.rotate(-Math.PI / 2);
+          canvas.textAlign = 'left';
+          canvas.textBaseline = 'middle';
+          canvas.font = "12px sans-serif";
+          canvas.fillStyle = "#555";
+          canvas.fillText("Event start", 0 , 0, g.height_);
+          canvas.restore();
+          canvas.save();
+          canvas.translate(g.toDomXCoord(EndCount) + 8, g.height_ - 26);
+          canvas.rotate(-Math.PI / 2);
+          canvas.textAlign = 'left';
+          canvas.textBaseline = 'middle';
+          canvas.font = "12px sans-serif";
+          canvas.fillStyle = "#555";
+          canvas.fillText("Event end", 0 , 0, g.height_);
+          canvas.restore();
+//    return;
+//      canvas.fillStyle = "#EEE";
+//      canvas.fillRect(g.toDomXCoord(0), 0, g.toDomXCoord(result['Envelope']) - g.toDomXCoord(0), g.height_);
+//      canvas.fillRect(g.toDomXCoord(ToShow.length - result['Envelope']), 0, g.toDomXCoord(ToShow.length), g.height_);
+//      var NominalVoltage = Nodes['NominalVoltage'] * Math.SQRT2;
+//      canvas.beginPath();
+//      canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(NominalVoltage));
+//      canvas.lineTo(g.width_, g.toDomYCoord(NominalVoltage));
+//      canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(-NominalVoltage));
+//      canvas.lineTo(g.width_, g.toDomYCoord(-NominalVoltage));
+//      canvas.strokeStyle = '#f00';
+//      canvas.lineWidth = 0.5;
+//      canvas.stroke();
+//      if(result['Duration'] > result['Envelope'] * 4) {
+//        canvas.fillStyle = "#fff";
+//        canvas.fillRect(g.toDomXCoord(result['Envelope'] * 2), 0, g.toDomXCoord(result['Envelope'] * 2 + 100) - g.toDomXCoord(result['Envelope'] * 2), g.height_);
+
+        if(this.Event.Type == 'DIP') {
+          var HighStart = this.Event.Reference[0] * 0.9;
+          var HighEnd = this.Event.Reference[0] * 0.95;
+          //draw top and bottom lines
+          canvas.beginPath();
+          canvas.moveTo(g.toDomXCoord(StartCount - StartCount / 8), g.toDomYCoord(HighStart));
+          canvas.lineTo(g.toDomXCoord(StartCount + StartCount / 2), g.toDomYCoord(HighStart));
+          canvas.moveTo(g.toDomXCoord(StartCount - StartCount / 8), g.toDomYCoord(-HighStart));
+          canvas.lineTo(g.toDomXCoord(StartCount + StartCount / 2), g.toDomYCoord(-HighStart));
+          canvas.stroke();
+       return;
+//      canvas.moveTo(g.toDomXCoord(result.Prev_Samples[0].length - result.Prev_Samples[0].length / 8), g.toDomYCoord(-evt.Reference[0] * 0.90));  canvas.lineTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length / 2), g.toDomYCoord(-evt.Reference[0] * 0.9));
+//          canvas.moveTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length / 2), g.toDomYCoord(evt.Reference[0] * 0.95));   canvas.lineTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length + result.Post_Samples[0].length / 8), g.toDomYCoord(evt.Reference[0] * 0.95));
+//          canvas.moveTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length / 2), g.toDomYCoord(-evt.Reference[0] * 0.95));  canvas.lineTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length + result.Post_Samples[0].length / 8), g.toDomYCoord(-evt.Reference[0] * 0.95));
+
+
+          
+          canvas.translate(g.toDomXCoord(result.Prev_Samples[0].length - result.Prev_Samples[0].length / 8), g.toDomYCoord(evt.Reference[0] * 0.9) - 8);
+          canvas.textAlign = 'left';
+          canvas.textBaseline = 'middle';
+          canvas.font = "12px sans-serif";
+          canvas.fillStyle = "#555";
+          canvas.fillText("DIP enter", 0 , 0, g.height_);
+          canvas.restore();
+          canvas.save();
+          canvas.translate(g.toDomXCoord(result.Prev_Samples[0].length - result.Prev_Samples[0].length / 8), g.toDomYCoord(-evt.Reference[0] * 0.9) + 12);
+          canvas.textAlign = 'left';
+          canvas.textBaseline = 'middle';
+          canvas.font = "12px sans-serif";
+          canvas.fillStyle = "#555";
+          canvas.fillText("DIP enter", 0 , 0, g.height_);
+          canvas.restore();
+
+          canvas.save();
+          canvas.translate(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length + result.Post_Samples[0].length / 8) - 46, g.toDomYCoord(evt.Reference[0] * 0.95) - 8);
+          canvas.textAlign = 'left';
+          canvas.textBaseline = 'middle';
+          canvas.font = "12px sans-serif";
+          canvas.fillStyle = "#555";
+          canvas.fillText("DIP exit", 0 , 0, g.height_);
+          canvas.restore();
+          canvas.save();
+          canvas.translate(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length + result.Post_Samples[0].length / 8) - 46, g.toDomYCoord(-evt.Reference[0] * 0.95) + 12);
+          canvas.textAlign = 'left';
+          canvas.textBaseline = 'middle';
+          canvas.font = "12px sans-serif";
+          canvas.fillStyle = "#555";
+          canvas.fillText("DIP exit", 0 , 0, g.height_);
+          canvas.restore();
+          
         }
+    
+        canvas.setLineDash([3, 2]);
+        canvas.strokeStyle = '#5cb85c';
+        canvas.lineWidth = 1.5;
+        canvas.stroke();
+
+
+
+        
+        
+        //      
+//      }
+//      canvas.beginPath();
+//      canvas.moveTo(g.toDomXCoord(result['Envelope']), 0);
+//      canvas.lineTo(g.toDomXCoord(result['Envelope']), g.height_);
+//      canvas.moveTo(g.toDomXCoord(ToShow.length - result['Envelope']), 0);
+//      canvas.lineTo(g.toDomXCoord(ToShow.length - result['Envelope']), g.height_);
+      canvas.strokeStyle = '#000';
+      canvas.lineWidth = 0.5;
+//      canvas.stroke();
+
+//canvas.restore();
+canvas.setLineDash(LineDash);  
+    }.bind(this),
       };
     },
     methods: {
@@ -106,7 +243,7 @@
             if((result['StartTime'] === null) || (result['StartTime'].length === 0)) return;
             for(var x = 0; x < result['StartTime'].length; x++) {
               if(result['StartTime'][x] > this.LastSample) this.LastSample = result['StartTime'][x];
-              var Event = { StartTime: result.StartTime[x], Date: moment(result.StartTime[x]).format('DD/MM/YYYY - HH:mm:ss'), Type: result.Type[x], Finished: result.Finished[x], Reference: result.Reference[x] };
+              var Event = { StartTime: result.StartTime[x], Date: moment(result.StartTime[x]).format('DD/MM/YYYY - HH:mm:ss'), Type: result.Type[x], Finished: result.Finished[x], Reference: result.Reference[x], SampleDuration: result.Duration[x] };
               Event.Duration = (result.Duration === 0) ? 'RUNNNING' : oZm.Round2Plain(result.Duration[x] / result.SampleRate[x]);
               var Max = 0;        
               for(var i = 0; i < result.Reference[x].length; i++) {
@@ -171,6 +308,7 @@
         var Analyzer = this.$root.SelectedAnalyzer;
         $.ajax({ url: 'getEvent', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ StartTime: evt.StartTime, Analyzer: Analyzer.ID, Type: evt.Type, Samples: this.ViewMode }),
           success: function(result) {
+            this.Event = Object.assign(evt, result);
             this.Data = [];
             for(var i = 0; i < result.Prev_Samples[0].length; i++) {
               var Row = [this.Data.length];
@@ -178,6 +316,9 @@
               this.Data.push(Row);
             }
             for(var i = 0; i < result.Samples[0].length; i++) {
+              if((evt.SampleDuration > (2 * result.Prev_Samples[0].length)) && (i === result.Prev_Samples[0].length)) {
+                for(var n = 0; n < (result.Prev_Samples[0].length * 0.1); n++) this.Data.push([this.Data.length].concat(new Array(result.Samples.length).fill(null)));
+              }
               var Row = [this.Data.length];
               for(var n = 0; n < result.Samples.length; n++) Row.push(result.Samples[n][i]);
               this.Data.push(Row);
@@ -187,133 +328,10 @@
               for(var n = 0; n < result.Post_Samples.length; n++) Row.push(result.Post_Samples[n][i]);
               this.Data.push(Row);
             }
-            var Options = {
-              underlayCallback: function(canvas, area, g) {
-                var LineDash = canvas.getLineDash();
-//      canvas.fillStyle = "#EEE";
-//      canvas.fillRect(g.toDomXCoord(0), 0, g.toDomXCoord(result['Envelope']) - g.toDomXCoord(0), g.height_);
-//      canvas.fillRect(g.toDomXCoord(ToShow.length - result['Envelope']), 0, g.toDomXCoord(ToShow.length), g.height_);
-//      var NominalVoltage = Nodes['NominalVoltage'] * Math.SQRT2;
-//      canvas.beginPath();
-//      canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(NominalVoltage));
-//      canvas.lineTo(g.width_, g.toDomYCoord(NominalVoltage));
-//      canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(-NominalVoltage));
-//      canvas.lineTo(g.width_, g.toDomYCoord(-NominalVoltage));
-//      canvas.strokeStyle = '#f00';
-//      canvas.lineWidth = 0.5;
-//      canvas.stroke();
-//      if(result['Duration'] > result['Envelope'] * 4) {
-//        canvas.fillStyle = "#fff";
-//        canvas.fillRect(g.toDomXCoord(result['Envelope'] * 2), 0, g.toDomXCoord(result['Envelope'] * 2 + 100) - g.toDomXCoord(result['Envelope'] * 2), g.height_);
-        canvas.beginPath();
-        canvas.moveTo(g.toDomXCoord(result.Prev_Samples[0].length), 0);
-        canvas.lineTo(g.toDomXCoord(result.Prev_Samples[0].length), g.height_);
-        canvas.moveTo(g.toDomXCoord(this.Data.length - result.Post_Samples[0].length), 0);
-        canvas.lineTo(g.toDomXCoord(this.Data.length - result.Post_Samples[0].length), g.height_);
-        if(evt.Type == 'DIP') {
-          canvas.moveTo(g.toDomXCoord(result.Prev_Samples[0].length - result.Prev_Samples[0].length / 8), g.toDomYCoord(evt.Reference[0] * 0.9));   canvas.lineTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length / 2), g.toDomYCoord(evt.Reference[0] * 0.9));
-          canvas.moveTo(g.toDomXCoord(result.Prev_Samples[0].length - result.Prev_Samples[0].length / 8), g.toDomYCoord(-evt.Reference[0] * 0.90));  canvas.lineTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length / 2), g.toDomYCoord(-evt.Reference[0] * 0.9));
-          canvas.moveTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length / 2), g.toDomYCoord(evt.Reference[0] * 0.95));   canvas.lineTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length + result.Post_Samples[0].length / 8), g.toDomYCoord(evt.Reference[0] * 0.95));
-          canvas.moveTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length / 2), g.toDomYCoord(-evt.Reference[0] * 0.95));  canvas.lineTo(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length + result.Post_Samples[0].length / 8), g.toDomYCoord(-evt.Reference[0] * 0.95));
-
-
-          canvas.save();
-          canvas.translate(g.toDomXCoord(result.Prev_Samples[0].length - result.Prev_Samples[0].length / 8), g.toDomYCoord(evt.Reference[0] * 0.9) - 8);
-          canvas.textAlign = 'left';
-          canvas.textBaseline = 'middle';
-          canvas.font = "12px sans-serif";
-          canvas.fillStyle = "#555";
-          canvas.fillText("DIP enter", 0 , 0, g.height_);
-          canvas.restore();
-          canvas.save();
-          canvas.translate(g.toDomXCoord(result.Prev_Samples[0].length - result.Prev_Samples[0].length / 8), g.toDomYCoord(-evt.Reference[0] * 0.9) + 12);
-          canvas.textAlign = 'left';
-          canvas.textBaseline = 'middle';
-          canvas.font = "12px sans-serif";
-          canvas.fillStyle = "#555";
-          canvas.fillText("DIP enter", 0 , 0, g.height_);
-          canvas.restore();
-
-          canvas.save();
-          canvas.translate(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length + result.Post_Samples[0].length / 8) - 46, g.toDomYCoord(evt.Reference[0] * 0.95) - 8);
-          canvas.textAlign = 'left';
-          canvas.textBaseline = 'middle';
-          canvas.font = "12px sans-serif";
-          canvas.fillStyle = "#555";
-          canvas.fillText("DIP exit", 0 , 0, g.height_);
-          canvas.restore();
-          canvas.save();
-          canvas.translate(g.toDomXCoord(result.Prev_Samples[0].length + result.Samples[0].length + result.Post_Samples[0].length / 8) - 46, g.toDomYCoord(-evt.Reference[0] * 0.95) + 12);
-          canvas.textAlign = 'left';
-          canvas.textBaseline = 'middle';
-          canvas.font = "12px sans-serif";
-          canvas.fillStyle = "#555";
-          canvas.fillText("DIP exit", 0 , 0, g.height_);
-          canvas.restore();
-          
-        }
-    
-        canvas.setLineDash([3, 2]);
-        canvas.strokeStyle = '#5cb85c';
-        canvas.lineWidth = 1.5;
-        canvas.stroke();
-
-        canvas.save();
-        canvas.translate(g.toDomXCoord(result.Prev_Samples[0].length) - 8, g.height_ - 26);
-        canvas.rotate(-Math.PI / 2);
-        canvas.textAlign = 'left';
-        canvas.textBaseline = 'middle';
-        canvas.font = "12px sans-serif";
-        canvas.fillStyle = "#555";
-        canvas.fillText("Event start", 0 , 0, g.height_);
-        canvas.restore();
-        canvas.save();
-        canvas.translate(g.toDomXCoord(this.Data.length - result.Post_Samples[0].length) + 8, g.height_ - 26);
-        canvas.rotate(-Math.PI / 2);
-        canvas.textAlign = 'left';
-        canvas.textBaseline = 'middle';
-        canvas.font = "12px sans-serif";
-        canvas.fillStyle = "#555";
-        canvas.fillText("Event end", 0 , 0, g.height_);
-        canvas.restore();
-
-        
-        
-        //      
-//      }
-//      canvas.beginPath();
-//      canvas.moveTo(g.toDomXCoord(result['Envelope']), 0);
-//      canvas.lineTo(g.toDomXCoord(result['Envelope']), g.height_);
-//      canvas.moveTo(g.toDomXCoord(ToShow.length - result['Envelope']), 0);
-//      canvas.lineTo(g.toDomXCoord(ToShow.length - result['Envelope']), g.height_);
-      canvas.strokeStyle = '#000';
-      canvas.lineWidth = 0.5;
-//      canvas.stroke();
-
-//canvas.restore();
-canvas.setLineDash(LineDash);  
-    }.bind(this),
-//              interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup: oZm.mouseUp, dblclick: oZm.dblClick_Restore },
-//              legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, series: Series, visibility: this.VoltagePhases.concat(CurrentPhases),
-              labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), 
-              colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length), 
-              plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], showRangeSelector: false,
-              axes: {
-                y: { pixelsPerLabel: 15, axisLabelWidth: 34,/* valueRange: Y1Range, */
-                     valueFormatter: function (x) { return oZm.Round2(x) + ' <em class="x-small">V</em>'; },
-                     axisLabelFormatter: function (x) { return oZm.Round2(x); }
-                 },
-                x: { ticker: function(min, max) { return Graph.WaveTimeTicks(max, Analyzer); },
-                     valueFormatter: function (x) { return oZm.Round2((x * 1000) / Analyzer.SampleFreq) + ' <em class="x-small">ms</em>'; }
-                   }
-              },
-              file: this.Data
-            };
-            this.$refs.graph.SetOptions(Options);
+            this.$refs.graph.SetOptions( { file: this.Data, labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length) } );
             this.ShowDialogSpinner = false;
           }.bind(this)
         }); 
-
       },  
       Delete: function(evt) {
         var Analyzer = this.$root.SelectedAnalyzer;
