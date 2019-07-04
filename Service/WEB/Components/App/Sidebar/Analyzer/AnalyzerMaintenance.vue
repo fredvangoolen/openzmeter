@@ -32,6 +32,8 @@
   import moment from 'JS/moment.js';
   import DatePicker from 'Components/DatePicker.vue';
   import Spinner from 'Components/Spinner.vue';
+  import Oboe from 'JS/oboe.js';
+  import Pako from 'JS/pako.js';
   export default {
     data() {
       return { Show: false, ShowSpinner: false };
