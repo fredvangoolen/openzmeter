@@ -24,6 +24,7 @@ class AnalyzerSoft : public AnalyzerInterface {
       float                 A0;
       float                 A1;
       float                 A2;
+//      float                 B_0;
       float                 B1;
       float                 B2;
       vector<float>         ChannelsZ1;
@@ -37,10 +38,6 @@ class AnalyzerSoft : public AnalyzerInterface {
     Params_t                   pAggreg10M;               //Agregacion de 10 minutos
     Params_t                   pAggreg15M;               //Agregacion de 15 minutos
     Params_t                   pAggreg1H;                //Agregacion de 1 hora
-//    char                      *pSyncServer;              //Server to sync
-//    char                      *pSyncName;                //Server user
-//    char                      *pSyncPassword;            //Server password
-//    pthread_t                  pSyncThread;              //Working thread
     Events                    *pEvents;                  //Events detector
     vector<FFT*>               pVoltageFFT;              //Muestras de FFT tension del bloque
     vector<FFT*>               pCurrentFFT;              //Muestras de FFT corriente del bloque
@@ -56,31 +53,23 @@ class AnalyzerSoft : public AnalyzerInterface {
     bool                       pDataReady;               //Datos disponibles
     pthread_mutex_t            pDataReadyMutex;          //Mutex para registrar cambios en DataReady
     pthread_cond_t             pDataReadyCond;           //Variable de condicion para bloquear los clientes
-    vector<deque<float> >      pDelayVoltage;            //Delay buffer for samples
-    vector<deque<float> >      pDelayCurrent;            //Delay buffer for samples
+    deque<vector<float> >      pDelayVoltage;            //Delay buffer for samples
+    deque<vector<float> >      pDelayCurrent;            //Delay buffer for samples
     vector<Filter_t>           pFilters;                 //Filter bank
     deque<uint32_t>            pCycles;                  //Prev cycles lenghts
     vector<uint32_t>           pBlockCycles;             //Current block cycles lengths
     vector<float>              pLastSamples;             //Filter samples backup
     uint32_t                   pCycleLen;                //Current cycle len
     uint32_t                   pMaxSamples;              //Max block samples
-//    uint32_t                   pCyclesPos;               //Cycle write position
   private :
     static void  *Analyzer_Thread(void *args);
-//    static void  *Sync_Thread(void *args);
-//    static size_t Curl_Read_Callback(void *contents, size_t size, size_t nmemb, void *userp);
   private :
     float PercentChange(float in, float reference);
-//    void  Analyze();
     float CalcFrequency();
-  protected :
-    //    virtual uint32_t SamplesCopy(float **dest, uint32_t offset, uint32_t len) = 0;
   public :
     AnalyzerSoft(string id, AnalyzerInterface::AnalyzerMode mode, float samplerate);
     ~AnalyzerSoft();
     void GetParams(Params_t &params, ParamsType &copy);
-//    void ConfigRemote(json_object *config);
-//    void ConfigPrices(json_object *config);
     bool BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime);
     bool IsFinished();
 };
