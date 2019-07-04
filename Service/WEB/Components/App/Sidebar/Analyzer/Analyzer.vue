@@ -52,7 +52,7 @@
     mounted: function() {
       this.$root.$el.append(this.$el);
     },
-    beforedestroy: function() {
+    beforeDestroy: function() {
       this.$root.$el.removeChild(this.$el);
     },
     components: { AnalyzerNotFound, AnalyzerTariffs, AnalyzerConfigure, AnalyzerTable, AnalyzerTariff, AnalyzerTariffPeriods, AnalyzerTariffBilling, AnalyzerAcls, AnalyzerAcl, AnalyzerMaintenance }

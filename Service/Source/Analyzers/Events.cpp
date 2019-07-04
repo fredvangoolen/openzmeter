@@ -82,7 +82,6 @@ void Events::Save(Event_t &evt) {
   evt.SamplesRMS_B = deque<vector<float> >();
 }
 void Events::InitEvent(EventType type, vector<float> reference, uint32_t pos) {
-  LOGFile::Info("NUEVO EVENTO!!\n");
   Event_t Event;
   Event.Type = type;
   Event.Duration = 0;
@@ -101,6 +100,17 @@ void Events::InitEvent(EventType type, vector<float> reference, uint32_t pos) {
   for(deque<vector<float> >::reverse_iterator it = pPrevSamples.rbegin(); it != pPrevSamples.rend(); it++) {
     Event.SamplesRAW_A.push_front(*it);
     if(Event.SamplesRAW_A.size() == (EVENT_RAWENVELOPETIME * pSampleRate)) break;
+  }
+  //A new event destroy any running RVC
+  if(type != EVT_RVC) {
+    for(list<Event_t>::iterator it = pEvents.begin(); it != pEvents.end(); ) {
+      if((it->Type == EVT_RVC) && (it->State == EVT_RUNNING)) {
+        ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + Bind(it->Start) + " AND evttype = 'RVC'");
+        pEvents.erase(it++);
+      } else {
+        it++;
+      }
+    }
   }
   Event.Start = pParams->Timestamp + (uint32_t)((pos * 1000) / pSampleRate);
   Save(Event);
@@ -167,7 +177,7 @@ void *Events::Events_Thread(void* args) {
           //Check for SWELL new events
           if((PercentChange(Cycle.RMS[n], This->pAnalyzer->GetNominalVoltage()) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_SWELL) == false)) This->InitEvent(EVT_SWELL, vector<float>(RMS_Avg.size(), This->pAnalyzer->GetNominalVoltage()), Pos);
           //Check for RVC new events
-          if((Stationary == false) && (This->pPrevStationary == true) && (This->FindRunningEvent(EVT_RVC) == false)) This->InitEvent(EVT_RVC, RMS_Avg, Pos);
+          if((Stationary == false) && (This->pPrevStationary == true) && (This->FindRunningEvent(EVT_RVC | EVT_DIP | EVT_SWELL | EVT_INTERRUPTION) == false)) This->InitEvent(EVT_RVC, RMS_Avg, Pos);
         }
       }
       //Check events state
