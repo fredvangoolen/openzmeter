@@ -3,7 +3,7 @@
     <div class="panel-heading">
       <div class="huge header-text">{{ SerieProps.Title }}</div>
       <div class="header-buttons">
-        <div><span class="huge-small" v-html="LastValue"></span><em class="huge-small-unit">{{ SerieProps.Units }}</em></div>
+        <div><span class="huge-small" v-html="LastValue"></span><em class="huge-small-unit">{{ UnitsScale }}{{ SerieProps.Units }}</em></div>
         <div>{{ Aggregation }}</div>
       </div>
     </div>
@@ -31,7 +31,7 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import Graph from 'Components/Graph.vue';
   export default {
-    props: ['type'],
+    props: ['type'], UnitsScale: '',
     data() {
       return {
         ShowSpinner: true,
@@ -64,7 +64,9 @@
           success: function(result) {
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             this.Data = oZm.GraphDataAppend(result, this.SerieProps.Serie, this.Data);
-            this.LastValue = oZm.Array_Round2(result[this.SerieProps.Serie].slice(-1)[0], oZm.ColorArray($(this.$refs.panel).css('border-color'), 4));
+            var LastSample = result[this.SerieProps.Serie].slice(-1)[0];
+            this.UnitsScale = oZm.GetBestUnits(oZm.ArrayAbsMax(LastSample));
+            this.LastValue = oZm.Array_Round2(oZm.ScaleArrayToUnits(LastSample, this.UnitsScale), oZm.ColorArray($(this.$refs.panel).css('border-color'), 4));
             this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
             this.DateWindow = [result['From'], result['To']];
             this.LastSample = oZm.LastSampletime(result, this.LastSample);

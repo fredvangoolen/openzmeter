@@ -170,32 +170,6 @@ void *Events::Events_Thread(void* args) {
           if((Stationary == false) && (This->pPrevStationary == true) && (This->FindRunningEvent(EVT_RVC) == false)) This->InitEvent(EVT_RVC, RMS_Avg, Pos);
         }
       }
-      //Insert current cycle samples in prev data buffers and in running events than need its
-      for(uint n = 0; n < CycleLen; n++) {
-        vector<float> Sample;
-        for(uint j = 0; j < This->pParams->Voltage_Samples.size(); j++) Sample.push_back(This->pParams->Voltage_Samples[j][n + Pos]);
-        This->pPrevSamples.push_back(Sample);
-        if(This->pPrevSamples.size() > RequiredRAW) This->pPrevSamples.pop_front();
-        for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
-          if(it->SamplesRAW_A.size() < RequiredRAW) {
-            it->SamplesRAW_A.push_back(Sample);
-          } else if(it->State == EVT_RUNNING) {
-            it->SamplesRAW_B.push_back(Sample);
-            if(it->SamplesRAW_B.size() > RequiredRAW) it->SamplesRAW_B.pop_front();
-          }
-        }
-      }
-      //Insert current cycle in prev data buffers and in running events than need its
-      This->pPrevCycles.push_back(Cycle);
-      if(This->pPrevCycles.size() > RequiredRMS) This->pPrevCycles.pop_front();
-      for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
-        if(it->SamplesRMS_A.size() < RequiredRMS) {
-          it->SamplesRMS_A.push_back(Cycle.RMS);
-        } else if(it->State == EVT_RUNNING) {
-          it->SamplesRMS_B.push_back(Cycle.RMS);
-          if(it->SamplesRMS_B.size() > RequiredRMS) it->SamplesRMS_B.pop_front();
-        }
-      }
       //Check events state
       for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); ) {
         //If closed evend finish post event period save it and remove from list
@@ -260,6 +234,32 @@ void *Events::Events_Thread(void* args) {
             This->Save(*it);
           }
           it++;
+        }
+      }      
+      //Insert current cycle samples in prev data buffers and in running events than need its
+      for(uint n = 0; n < CycleLen; n++) {
+        vector<float> Sample;
+        for(uint j = 0; j < This->pParams->Voltage_Samples.size(); j++) Sample.push_back(This->pParams->Voltage_Samples[j][n + Pos]);
+        This->pPrevSamples.push_back(Sample);
+        if(This->pPrevSamples.size() > RequiredRAW) This->pPrevSamples.pop_front();
+        for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
+          if(it->SamplesRAW_A.size() < RequiredRAW) {
+            it->SamplesRAW_A.push_back(Sample);
+          } else if(it->State == EVT_RUNNING) {
+            it->SamplesRAW_B.push_back(Sample);
+            if(it->SamplesRAW_B.size() > RequiredRAW) it->SamplesRAW_B.pop_front();
+          }
+        }
+      }
+      //Insert current cycle in prev data buffers and in running events than need its
+      This->pPrevCycles.push_back(Cycle);
+      if(This->pPrevCycles.size() > RequiredRMS) This->pPrevCycles.pop_front();
+      for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
+        if(it->SamplesRMS_A.size() < RequiredRMS) {
+          it->SamplesRMS_A.push_back(Cycle.RMS);
+        } else if(it->State == EVT_RUNNING) {
+          it->SamplesRMS_B.push_back(Cycle.RMS);
+          if(it->SamplesRMS_B.size() > RequiredRMS) it->SamplesRMS_B.pop_front();
         }
       }      
       Pos = Pos + CycleLen;
