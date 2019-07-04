@@ -8,7 +8,7 @@
     </div>
     <div class="modal-body">
       <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
             <button type="button" class="btn btn-success btn-xs" v-bind:class="{ disabled: CurrentlySelected(props.rowData) }" v-on:click="Select(props.rowData)">Select</button>
@@ -31,7 +31,9 @@
 <script>
   import Vue from 'vue';
   import Vuetable from 'vuetable-2';
+  import 'CSS/table-responsive.css';
   import Spinner from 'Components/Spinner.vue';
+  import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
       return {
@@ -43,6 +45,9 @@
           {name: '__slot:actions', title: ''}
         ]
       };
+    },
+    updated: function(){
+      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     methods: {
       GetAnalyzers() {
@@ -101,6 +106,7 @@
 </script>
 
 <style scoped>
+@media screen and (min-width: 600px) {
   .table >>> th:nth-child(1) {
     width: 60px;
     text-align: center;
@@ -118,5 +124,7 @@
   }
   .table >>> th:nth-child(4) {
     width: 90px;
-  }
+  } 
+}
+
 </style>
