@@ -5,7 +5,7 @@
     </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
             <button type="button" class="btn btn-xs btn-success" v-on:click="Edit(props.rowData)" :disable="props.rowData.Finished==false">Edit</button>
@@ -23,6 +23,7 @@
 <script>
   import Spinner from 'Components/Spinner.vue';
   import Vuetable from 'vuetable-2';
+  import 'CSS/table-responsive.css';
   import moment from 'JS/moment.js';
   import * as oZm from 'JS/openZmeter.js';
   import EventDialog from './EventDialog.vue';
@@ -39,6 +40,9 @@
           {name: '__slot:actions', title: ''}
         ]
       };
+    },
+    updated: function(){
+        oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     created: function() {
       this.Events = [];
@@ -111,6 +115,7 @@
 </script>
 
 <style scoped>
+@media screen and (min-width: 600px) {
   .table >>> th:nth-child(1) {
     width: 160px;
   } 
