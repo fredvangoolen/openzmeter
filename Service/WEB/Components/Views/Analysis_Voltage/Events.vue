@@ -115,25 +115,26 @@
 </script>
 
 <style scoped>
-@media screen and (min-width: 600px) {
-  .table >>> th:nth-child(1) {
-    width: 160px;
-  } 
-  .table >>> th:nth-child(2) {
-    width: 60px;
-    text-align: center;
+  @media screen and (min-width: 600px) {
+    .table >>> th:nth-child(1) {
+      width: 160px;
+    } 
+    .table >>> th:nth-child(2) {
+      width: 60px;
+      text-align: center;
+    }
+    .table >>> td:nth-child(2) {
+      text-align: center;
+    }
+    .table >>> th:nth-child(3), .table >>> th:nth-child(4), .table >>> th:nth-child(5) {
+      width: 100px;
+      text-align: right;
+    }
+    .table >>> td:nth-child(3), .table >>> td:nth-child(4), .table >>> td:nth-child(5) {
+      text-align: right;
+    }
+    .table >>> th:nth-child(7) {
+      width: 170px;
+    }
   }
-  .table >>> td:nth-child(2) {
-    text-align: center;
-  }
-  .table >>> th:nth-child(3), .table >>> th:nth-child(4), .table >>> th:nth-child(5) {
-    width: 100px;
-    text-align: right;
-  }
-  .table >>> td:nth-child(3), .table >>> td:nth-child(4), .table >>> td:nth-child(5) {
-    text-align: right;
-  }
-  .table >>> th:nth-child(7) {
-    width: 170px;
-  } 
 </style>
