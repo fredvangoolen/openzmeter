@@ -31,8 +31,9 @@
 <script>
   import Vue from 'vue';
   import Vuetable from 'vuetable-2';
-  import Spinner from 'Components/Spinner.vue';
   import 'CSS/table-responsive.css';
+  import Spinner from 'Components/Spinner.vue';
+  import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
       return {
@@ -46,18 +47,7 @@
       };
     },
     updated: function(){
-        var headertext = [],
-          headers = this.$refs.table.$el.querySelectorAll("th"),
-          tablebody = this.$refs.table.$el.querySelector("tbody");
-          for(var i = 0; i < headers.length; i++) {
-            var current = headers[i];
-            headertext.push(current.textContent.replace(/\r?\n|\r/,""));
-          } 
-          for (var i = 0, row; row = tablebody.rows[i]; i++) {
-            for (var j = 0, col; col = row.cells[j]; j++) {
-              col.setAttribute("data-th", headertext[j]);
-            } 
-          }
+      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     methods: {
       GetAnalyzers() {
@@ -116,7 +106,8 @@
 </script>
 
 <style scoped>
-  /* .table >>> th:nth-child(1) {
+@media screen and (min-width: 600px) {
+  .table >>> th:nth-child(1) {
     width: 60px;
     text-align: center;
   }
@@ -130,10 +121,10 @@
   }
   .table >>> td:nth-child(3) {
     text-align: center;
-  }*/
+  }
   .table >>> th:nth-child(4) {
     width: 90px;
   } 
-
+}
 
 </style>

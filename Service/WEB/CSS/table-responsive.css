@@ -23,6 +23,7 @@ table.stackable thead th { font-weight: 600; }
 
   table.stackable tbody tr { 
     display: block;
+    border: 1px solid #ddd;
   }
 
   table.stackable tbody tr:not(:last-child) { 
