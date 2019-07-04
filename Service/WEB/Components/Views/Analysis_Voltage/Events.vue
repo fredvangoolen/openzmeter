@@ -60,7 +60,7 @@
             if((result['StartTime'] === null) || (result['StartTime'].length === 0)) return;
             for(var x = 0; x < result['StartTime'].length; x++) {
               if(result['StartTime'][x] > this.LastSample) this.LastSample = result['StartTime'][x];
-              var Event = { StartTime: result.StartTime[x], Date: moment(result.StartTime[x]).format('DD/MM/YYYY - HH:mm:ss'), Type: result.Type[x], Finished: result.Finished[x], Reference: result.Reference[x], SampleDuration: result.Duration[x] };
+              var Event = { StartTime: result.StartTime[x], Date: moment(result.StartTime[x]).format('DD/MM/YYYY - HH:mm:ss'), Type: result.Type[x], Finished: result.Finished[x], Reference: result.Reference[x], PeakVoltage: result.Peak[x], ExitVoltage: result.Change[x], SampleDuration: result.Duration[x] };
               Event.Duration = (result.Duration === 0) ? 'RUNNNING' : oZm.Round2Plain(result.Duration[x] / result.SampleRate[x]);
               var Max = 0;        
               for(var i = 0; i < result.Reference[x].length; i++) {
