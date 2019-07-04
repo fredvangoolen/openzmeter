@@ -4,9 +4,10 @@
       <div class="huge-small header-text">Input devices</div>
     </div>
     <div class="panel-body">
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
+      <spinner v-if="ShowSpinner"></spinner>
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
-          <div class="btn-group" style="width:100%">
+          <div class="btn-group" >
             <button class="btn btn-xs btn-danger" v-if="props.rowData.Status === 'RUNNING'" @click="Stop(props.rowData.Serial, $event)">Stop</button>
             <button class="btn btn-xs btn-success" v-if="props.rowData.Status !== 'RUNNING'" @click="Start(props.rowData.Serial, $event)">Start</button>
             <button class="btn btn-xs btn-default" @click="Configure(props.rowData, $event)">Configure</button>
@@ -20,10 +21,13 @@
 
 <script>
   import Vuetable from 'vuetable-2';
+  import Spinner from 'Components/Spinner.vue';
   import DevicesConfigure from './DevicesConfigure.vue';
+  import 'CSS/table-responsive.css';
+  import * as oZm from 'JS/openZmeter.js';
   export default {
-    data: function() {
-      return { Devices: [], 
+    data(){ 
+      return { Devices: [], ShowSpinner: true,
         Columns: [
           {name: 'Driver', title: 'Driver'},
           {name: 'Name', title: 'Name'},
@@ -31,8 +35,8 @@
           {name: 'Analyzers', title: 'Analyzers'}, 
           {name: 'Status', title: 'Status'}, 
           {name: '__slot:actions', title: ''}
-        ] 
-      };
+        ]
+      }
     },
     methods: {
       LoadTable: function() {
@@ -40,6 +44,7 @@
           success: function(result) { 
             var TableData = { data: result };
             this.$refs.table.setData(TableData); 
+            this.ShowSpinner = false;
           }.bind(this)
         });
       },
@@ -66,13 +71,18 @@
       }
     },
     mounted: function() {
+      this.ShowSpinner = true;
       this.LoadTable();
     },
-    components: { Vuetable, DevicesConfigure }
+    updated: function(){
+        oZm.createCaptionsForResponsiveTable(this.$refs.table);
+    },
+    components: { Vuetable, DevicesConfigure, Spinner}
   }
 </script>
 
 <style scoped>
+@media screen and (min-width: 600px) {
   .table >>> th:nth-child(1) {
     width: 60px;
     text-align: center;
@@ -104,7 +114,5 @@
   .table >>> th:nth-child(6) {
     width: 120px;
   }
-  .table >>> td:nth-child(6) {
-    text-align: right;
-  }
+}
 </style>
