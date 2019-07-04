@@ -98,17 +98,23 @@
         this.Tariff.Template.Description = value.target.value;      
       },
       Load: function(tariff) {
-        this.Show = true;
-        this.Tariff = tariff;
-        if(this.Tariff.Template.WeekendPeriod >= this.Tariff.Template.Periods.length) this.Tariff.Template.WeekendPeriod = null;
-        if(this.Tariff.Template.HolidayPeriod >= this.Tariff.Template.Periods.length) this.Tariff.Template.HolidayPeriod = null;
-        this.$nextTick(function() {
-          $(this.$refs.Name).val(tariff.Name);
-          $(this.$refs.Description).val(tariff.Template.Description);      
-          this.$refs.StartDate.SetDate(moment(tariff.StartDate));
-          this.$refs.EndDate.SetDate(moment(tariff.EndDate));
-          this.Error = this.$parent.Check(tariff);
+        $.ajax({ url: "getCountries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
+          success: function(result) {
+            this.Show = true;
+            this.Tariff = tariff;
+            if(this.Tariff.Template.WeekendPeriod >= this.Tariff.Template.Periods.length) this.Tariff.Template.WeekendPeriod = null;
+            if(this.Tariff.Template.HolidayPeriod >= this.Tariff.Template.Periods.length) this.Tariff.Template.HolidayPeriod = null;
+            this.$nextTick(function() {
+              $(this.$refs.Name).val(tariff.Name);
+              $(this.$refs.Description).val(tariff.Template.Description);      
+              this.$refs.StartDate.SetDate(moment(tariff.StartDate));
+              this.$refs.EndDate.SetDate(moment(tariff.EndDate));
+              this.Error = this.$parent.Check(tariff);
+            });
+
+          }.bind(this)
         });
+      
       },
       Periods() {
         this.Show = false;
