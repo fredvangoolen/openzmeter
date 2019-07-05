@@ -221,51 +221,21 @@
                   canvas.restore();
                   canvas.restore();
                 }
-    
-
-
-
-        
-        
-        //      
-//      }
-//      canvas.beginPath();
-//      canvas.moveTo(g.toDomXCoord(result['Envelope']), 0);
-//      canvas.lineTo(g.toDomXCoord(result['Envelope']), g.height_);
-//      canvas.moveTo(g.toDomXCoord(ToShow.length - result['Envelope']), 0);
-//      canvas.lineTo(g.toDomXCoord(ToShow.length - result['Envelope']), g.height_);
-//      canvas.strokeStyle = '#000';
-//      canvas.lineWidth = 0.5;
-//      canvas.stroke();
-
-      canvas.restore();
-    }.bind(this),
-        
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      file: this.Data, labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length) } );
-            this.ShowSpinner = false;
-            this.$nextTick(function() {
-              window.dispatchEvent(new Event('resize'));
-            });
-          }.bind(this)
+                canvas.restore();
+              }.bind(this),
+              file: this.Data, labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length) } );
+              this.ShowSpinner = false;
+              this.$nextTick(function() {
+                window.dispatchEvent(new Event('resize'));
+              });
+            }.bind(this)
         }); 
       },
       ExportClick: function() {
         var Analyzer = this.$root.SelectedAnalyzer;
         this.$refs.tools.SaveCVS('Event_' + this.ViewMode + '.csv', [['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer))].concat(this.Data));
       },
-          PhasesChanged: function(phases) {
+      PhasesChanged: function(phases) {
         this.Phases = phases;
         this.Data = [[]];
         this.$refs.graph.SetOptions({visibility: phases});
@@ -274,7 +244,10 @@
         $(this.$refs.graph.Graph.graphDiv).parent().removeAttr('style');
         this.$refs.graph.Graph.resize($(this.$el).width() - 50, $(this.$el).height() - 80);
       },
-      
+      WindowChange: function() {},
+      WindowRestore: function() {
+        this.$refs.graph.SetOptions( {dateWindow: [0, this.Data.length]} );
+      }
     },
     components: { Spinner, Graph, ToolbarPhases, ToolbarTools }
   };  

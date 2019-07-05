@@ -224,8 +224,8 @@
       return Result;
     },
     //interactions models
-    FixedRangeInteractionModel: function() {
-      return { mousedown: mouseDown, mousemove: mouseMove, mouseup: mouseUp, dblclick: MouseDblClick };
+    FixedRangeInteractionModel: function(parent) {
+      return { mousedown: mouseDown, mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent) };
     },
     ScrollableInteractionModel: function(parent) {
       console.log(this);

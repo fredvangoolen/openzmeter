@@ -18,8 +18,8 @@
               <li><a v-on:click="ACL(props.rowData)" v-if="false">ACL</a></li>
               <li><a v-on:click="Tariffs(props.rowData)">Tariff</a></li>
               <li><a v-on:click="Alerts(props.rowData)" v-if="false">Alerts</a></li>
-              <li role="separator" class="divider" v-if="false"></li>
-              <li><a v-on:click="Maintenance(props.rowData)" v-if="false">Maintenance</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a v-on:click="Maintenance(props.rowData)">Maintenance</a></li>
             </ul>
           </div>
         </template>

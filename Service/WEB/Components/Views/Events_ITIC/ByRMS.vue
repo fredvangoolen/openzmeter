@@ -30,13 +30,23 @@
       };
     },
     methods: {
+      MaxDiff: function(a) {
+        if(this.$root.SelectedAnalyzer === null) return 0;
+        var Analyzer = this.$root.SelectedAnalyzer;
+        var Max = a[0] - Analyzer.NominalVoltage;
+        for(var n = 1; n < a.length; n++) {
+          if(Math.abs(a[n] - Analyzer.NominalVoltage) > Math.abs(Max)) Max = a[n] - Analyzer.NominalVoltage;
+        }
+        return (Max * 100.0) / Analyzer.NominalVoltage;
+      },
       SetData: function(start, end, events) {
         var ByRMS = [];
         for(var i = 0; i < this.RMSs.length; i++) ByRMS.push([i, 0]);
         for(var i = 0; i < events.StartTime.length; i++) {
           if((events.StartTime < start) || (events.StartTime > end)) continue;
+          var Diff = this.MaxDiff(events.Peak[i]);
           for(var j = 0; j < this.RMSs.length; j++) {
-            if((events.Percent[i] >= this.RMSs[j]) && (events.Percent[i] < this.RMSs[j + 1])) {
+            if((Diff >= this.RMSs[j]) && (Diff < this.RMSs[j + 1])) {
               ByRMS[j][1] = ByRMS[j][1] + 1;
               break;
             }
