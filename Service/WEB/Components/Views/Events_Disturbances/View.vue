@@ -78,35 +78,31 @@
       this.TimeLine = null;
     },
     mounted: function() {
-  if(this.TimeLine == null) {
-    this.TimeLine = new vis.Timeline(document.getElementById('disturbances_chart'), null, {
-      stack: false,
-      editable: false,
-      margin: {
-        item: 10, // minimal margin between items
-        axis: 5   // minimal margin between items and the axis
-      },
-      orientation: 'top'
-    });
-    this.TimeLine.on('rangechanged', function(evt) {
-      if(evt.byUser === false) return;
-      clearInterval(DisturbancesTimer);
-      $('#btnDisturbancesNow').removeClass('active');
-      localStorage.setItem('GraphEnd', evt.end.getTime());
-      localStorage.setItem('GraphPeriod', evt.end.getTime() - evt.start.getTime());
-      LastEventStarttime = 0;
-      AjaxGetEvents();
-    });
-    var Groups = new vis.DataSet([
-      { id: 1, content: 'Dips'},
-      { id: 2, content: 'Swells'},
-      { id: 3, content: 'Interruptions'},
-      { id: 4, content: 'RVC'},
-      { id: 5, content: 'Glitchs'}
-    ]);
-    this.TimeLine.setGroups(Groups);
-  }
-      
+      if(this.TimeLine == null) {
+        this.TimeLine = new vis.Timeline(document.getElementById('disturbances_chart'), null, {
+          stack: false,
+          editable: false,
+          margin: { item: 10, axis: 5 },
+          orientation: 'top'
+        });
+        this.TimeLine.on('rangechanged', function(evt) {
+          if(evt.byUser === false) return;
+          clearInterval(DisturbancesTimer);
+          $('#btnDisturbancesNow').removeClass('active');
+          localStorage.setItem('GraphEnd', evt.end.getTime());
+          localStorage.setItem('GraphPeriod', evt.end.getTime() - evt.start.getTime());
+          LastEventStarttime = 0;
+          AjaxGetEvents();
+        });
+        var Groups = new vis.DataSet([
+          { id: 1, content: 'Dips'},
+          { id: 2, content: 'Swells'},
+          { id: 3, content: 'Interruptions'},
+          { id: 4, content: 'RVC'},
+          { id: 5, content: 'Glitchs'}
+        ]);
+        this.TimeLine.setGroups(Groups);
+      }
     }
   }
 </script>

@@ -7,8 +7,8 @@
       </div>
     </div>
     <div class="modal-body">
-      <input id="file-input" type="file" name="name" style="display: none;" />
-      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Only stored samples and events are affected by this next actions.<hr />Analyzer data take currently <strong>{{ DBSize }}</strong></div>
+      <input id="file-input" type="file" name="name" style="display: none;" ref="filename" v-on:change="FileSet" />
+      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Only stored samples and events are affected by this next actions.<hr style="margin-top: 5px; margin-bottom: 5px;"/>Analyzer data takes currently <strong>{{ DBSize }}</strong></div>
       <div class="row">
         <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetStartDate"></date-picker></div>
         <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetEndDate"></date-picker></div>
@@ -32,12 +32,12 @@
 </template>
 
 <script>
-  import bsSuggest from 'JS/bootstrap-suggest.js';
   import moment from 'JS/moment.js';
   import DatePicker from 'Components/DatePicker.vue';
   import Spinner from 'Components/Spinner.vue';
   import * as oZm from 'JS/openZmeter.js';
   import Oboe from 'JS/oboe.js';
+  import StreamSaver from 'JS/streamsaver.js';
   import Pako from 'JS/pako.js';
   export default {
     data() {
@@ -65,15 +65,19 @@
         this.Show = false;
         this.$parent.$refs.Table.Load(this.Analyzer);
       },
+      FileSet: function(evt) {
+        console.log(evt);
+      },
       BackupRange: function() {
-        var input = document.createElement('input');
-        input.type = 'file';
-        input.click();
-        input.onchange = e => {
-          var file = e.target.files[0];
+        setTimeout(this.GenerateData.bind(this), 100);
+      },
+      GenerateData: function(fs) {
+        for(var n= 0; n < 10000; n++) {
+          this.Backup.Voltage.push([230.00000, 230.12234234, 223.23234234]);
         }
+        console.log(this.Backup.Voltage.length);
+        setTimeout(this.GenerateData.bind(this), 100);
 
-        
       },
       ClearRange: function() {},
       Restore: function() {},
@@ -81,9 +85,7 @@
       ClearAll: function() {}
     },
     created: function() {
-      this.Analyzer = null;
-      this.Tariffs = [];
-      this.Initial = null;
+      this.Backup = {Voltage: []};
     },
     beforeDestroy: function() {
       $(this.$refs.Base).off('onSetSelectValue', this.SelectBase.bind(this));

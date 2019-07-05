@@ -26,7 +26,7 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data() {
-      return { ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this) } };
+      return { ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' } };
     },
     created: function() {
       this.Data = null;
