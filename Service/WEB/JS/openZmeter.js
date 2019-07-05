@@ -746,13 +746,13 @@ export function Array_Round2(values, colors, cadena1, cadena2) {
 ///* Format memory size with best units */
 export function GetBestUnitsBin(value) {
   if(value > 1024 * 1024 * 1024) {
-    return Round2Plain(value / (1024 * 1024 * 1024)) + 'GB';
+    return Round2Plain(value / (1024 * 1024 * 1024)) + ' GB';
   } else if(value > 1024 * 1024) {
-    return Round2Plain(value / (1024 * 1024)) + 'MB';
+    return Round2Plain(value / (1024 * 1024)) + ' MB';
   } else if(value > 1024) {
-    return Round2Plain(value / 1024) + 'kB';
+    return Round2Plain(value / 1024) + ' kB';
   } else {
-    return value + 'B';
+    return value + ' B';
   }
 }
 //

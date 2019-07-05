@@ -31,10 +31,11 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import Graph from 'Components/Graph.vue';
   export default {
-    props: ['type'], UnitsScale: '',
+    props: ['type'],
     data() {
       return {
         ShowSpinner: true,
+        UnitsScale: '',
         SerieProps: {},
         Aggregation: 'Loading data...',
         LastValue: []

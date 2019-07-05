@@ -27,7 +27,7 @@
   export default {
     data() {
       return { ShowSpinner: true, Time: 'Loading data...',
-                GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(Graph) }
+                GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this) }
       };
     },
     created: function() {
@@ -150,6 +150,10 @@
       },
       MaximizeClick: function() {
         this.$refs.tools.Maximize('Advanced', this.$refs.graph.Graph, this.$refs.Toolbar);
+      },
+      WindowChange: function() {},
+      WindowRestore: function() {
+        this.$refs.graph.SetOptions( {dateWindow: [0, this.Data.length]} );
       }
     },
     components: { Spinner, ToolbarPhases, ToolbarOptions, ToolbarTools, Graph }

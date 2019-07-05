@@ -114,7 +114,7 @@ void DeviceManager::GetAnalyzersCallback(HTTPRequest &req) {
   //All users can do this action, for admin all analyzers are returned and can be edited, for other users only own analyzers or authorized ones are returned and only owner can edit. In all cases only present ones are returned
   json Params = req.GetParams();
   json Response = json::array();
-  req.ExecSentenceAsyncResult("SELECT serial, username, timezone, country_code FROM analyzers NATURAL LEFT JOIN country WHERE serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " UNION SELECT username FROM permisions WHERE username = " + req.Bind(req.UserName()) + ")");
+  req.ExecSentenceAsyncResult("SELECT serial, username, timezone, country_code, (SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) from pg_tables WHERE schemaname = serial) as size FROM analyzers NATURAL LEFT JOIN country WHERE serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " UNION SELECT username FROM permisions WHERE username = " + req.Bind(req.UserName()) + ")");
   while(req.FecthRow()) {
     string Serial = req.ResultString("serial");
     AnalyzerInterface *Analyzer = NULL;
@@ -123,6 +123,7 @@ void DeviceManager::GetAnalyzersCallback(HTTPRequest &req) {
       if(Analyzer == NULL) continue;
       json Row = Analyzer->GetJSONDescriptor();
       Row["Owner"] = req.ResultString("username");
+      Row["Size"] = req.ResultUInt64("size");
       Row["TimeZone"] = req.ResultString("timezone");
       Response.push_back(Row);
       break;
