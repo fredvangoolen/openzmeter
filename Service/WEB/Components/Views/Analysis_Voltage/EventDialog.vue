@@ -36,7 +36,7 @@
     created: function() {
       this.Phases = null;
       this.Event = null;
-      this.GraphOptions = { stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, interactionModel: Graph.FixedRangeInteractionModel(this), xAxisHeight: 24 };
+      this.GraphOptions = { selectMode: 'euclidian', stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, interactionModel: Graph.FixedRangeInteractionModel(this), xAxisHeight: 24 };
     },
     mounted: function() {
       this.$root.$el.append(this.$el);

@@ -33,7 +33,7 @@
   }
   export default {
     data() {
-      return { ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this) } };
+      return { ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' } };
     },
     methods: {
       Redraw: function() {

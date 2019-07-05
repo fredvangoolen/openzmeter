@@ -27,7 +27,7 @@
   export default {
     data() {
       return { ShowSpinner: true, Time: 'Loading data...',
-                GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this) }
+                GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' }
       };
     },
     created: function() {
