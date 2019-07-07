@@ -7,7 +7,7 @@
       </div>
     </div>
     <div class="modal-body">
-      <input id="file-input" type="file" name="name" style="display: none;" ref="filename" v-on:change="FileSet" />
+      <input type="file" name="name" style="display: none;" ref="filename" v-on:change="FileSet" accept="application/gzip, .gz"/>
       <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Only stored samples and events are affected by this next actions.<hr style="margin-top: 5px; margin-bottom: 5px;"/>Analyzer data takes currently <strong>{{ DBSize }}</strong></div>
       <div class="row">
         <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetStartDate"></date-picker></div>
@@ -66,7 +66,31 @@
         this.$parent.$refs.Table.Load(this.Analyzer);
       },
       FileSet: function(evt) {
-        console.log(evt);
+        if(evt.target.files.length !== 1) return;
+        var Reader = new FileReader();
+        var Inflator = new Pako.Inflate();
+        var File = evt.target.files[0];
+        var Offset = 0;
+        var DecompresedSize = 0;
+        var onDeflatedData = function(data) {
+          DecompresedSize += data.length;
+        };
+        var onLoadHandler = function(evt) {
+          if(evt.target.error !== null) {
+            console.log("ERROR LOADING FILE");
+            return;
+          }            
+          Offset += evt.target.result.byteLength;
+          Inflator.push(evt.target.result, (Offset >= File.size) ? Pako.Z_FINISH: Pako.Z_SYNC_FLUSH);
+          if(Offset < File.size) {
+            Reader.readAsArrayBuffer(File.slice(Offset, Offset + 65536));
+          } else {
+            console.log(DecompresedSize);
+          }
+        };
+        Reader.onload = onLoadHandler;
+        Inflator.onData = onDeflatedData;
+        Reader.readAsArrayBuffer(File.slice(0, 65536));
       },
       BackupRange: function() {
         setTimeout(this.GenerateData.bind(this), 100);
@@ -81,9 +105,7 @@
       },
       ClearRange: function() {},
       Restore: function() {
-        //abro el gzip si se puede
-        
-        
+        this.$refs.filename.click();
       },
       BackupAll: function() {},
       ClearAll: function() {}
