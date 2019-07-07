@@ -80,7 +80,11 @@
 
       },
       ClearRange: function() {},
-      Restore: function() {},
+      Restore: function() {
+        //abro el gzip si se puede
+        
+        
+      },
       BackupAll: function() {},
       ClearAll: function() {}
     },

@@ -1,109 +1,105 @@
 <template>
-  <div>
-    <div class="row">
-      <div class="col-lg-12">
-        <div class="panel panel-other">
-          <!--div id="DisturbancesSpinner" class="spinnerdiv"></div-->
-          <div class="panel-heading">
-            <span class="header-text">Disturbances</span>
-            <!--div class="pull-right">
-                  <span class="small"></span><br>
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs" id="btnDisturbancesNow" data-toggle="tooltip" title="Move to most recent samples and update in real time"><i class="fa fa-play"></i></button>
-                  </div>
-                </div>
-                <div class="pull-right">&nbsp;</div>
-                <div class="pull-right">
-                  <span class="small">Time scale:</span><br>
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowEventYear"  data-toggle="tooltip" title="Select exactly a year period from current time">Year</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowEventMonth" data-toggle="tooltip" title="Select exactly a month period from current time">Month</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowEventWeek"  data-toggle="tooltip" title="Select exactly a week period from current time">Week</button>
-                    <button type="button" class="btn btn-default btn-xs" id="btnShowEventDay"   data-toggle="tooltip" title="Select exactly a day period from current time">Day</button>
-                  </div>
-                </div>
-                <span class="clearfix"> </span-->
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="panel panel-other">
+        <div class="panel-heading">
+          <span class="header-text">Disturbances</span>
+          <div class="header-buttons clearfix" ref="Toolbar">
+            <toolbar-period variable="Period" v-on:PeriodChanged="GetEvents" ref="period"></toolbar-period>
+            <toolbar-tools :options="['EXPORT']" v-on:ExportClick="ExportClick" ref="tools"></toolbar-tools>
           </div>
-          <div class="panel-body">
-            <div id="disturbances_chart"></div>
-            <br>
-            <div class="panel panel-default">
-              <div class="panel-heading">
-                <i class="fa fa-table fa-fw"></i> Details
-              </div>
-              <div class="panel-body">
-                <div class="row">
-                  <div class="col col-md-5">
-                    <table id="EventsTable" class="table small table-striped table-responsive" cellspacing="0" width="100%">
-                      <thead>
-                        <tr>
-                          <th style="width: 130px">Date</th><th>Type</th><th>Duration <em>(s)</em></th><th>ΔU <em>(V)</em></th><th>ΔU <em>(%)</em></th><th style="width: 60px"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                      </tbody>
-                    </table>
-                  </div>
-                  <div class="col col-md-7">
-                    <div id="EventSpinner" class="spinnerdiv"></div>
-                    <div id="EventWaveformPanel">
-                      <div id="EventWaveformMaximize">
-                        <div style="padding:5px">
-                          <div style="display:inline-block">&nbsp;</div>
-                          <div id="EventChartLegend" style="float: right"></div>
-                        </div>
-                        <div id="EventChart" class="chart big_chart"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        </div>
+        <div class="panel-body">
+          <spinner v-if="ShowSpinner"></spinner>
+          <div id="disturbances_chart"></div>
         </div>
       </div>
+    </div>
+    <div class="col-lg-12">
+      <events-table ref="table" v-on:UpdateComplete="UpdateComplete"></events-table>
     </div>
   </div>
 </template>
 
 <script>
   import vis from 'JS/vis.js';
-  import 'CSS/vis.css'  
+  import 'CSS/vis.css';
+  import Spinner from 'Components/Spinner.vue';
+  import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
+  import ToolbarTools from 'Components/ToolbarTools.vue';
+  import EventsTable from '../Analysis_Voltage/Events.vue';
   export default {
     data: function() {
-      return { }
+      return { ShowSpinner: true };
     },
     created: function() {
       this.TimeLine = null;
     },
     mounted: function() {
-      if(this.TimeLine == null) {
-        this.TimeLine = new vis.Timeline(document.getElementById('disturbances_chart'), null, {
-          stack: false,
-          editable: false,
-          margin: { item: 10, axis: 5 },
-          orientation: 'top'
-        });
-        this.TimeLine.on('rangechanged', function(evt) {
-          if(evt.byUser === false) return;
-          clearInterval(DisturbancesTimer);
-          $('#btnDisturbancesNow').removeClass('active');
-          localStorage.setItem('GraphEnd', evt.end.getTime());
-          localStorage.setItem('GraphPeriod', evt.end.getTime() - evt.start.getTime());
-          LastEventStarttime = 0;
-          AjaxGetEvents();
-        });
-        var Groups = new vis.DataSet([
-          { id: 1, content: 'Dips'},
-          { id: 2, content: 'Swells'},
-          { id: 3, content: 'Interruptions'},
-          { id: 4, content: 'RVC'},
-          { id: 5, content: 'Glitchs'}
-        ]);
-        this.TimeLine.setGroups(Groups);
-      }
-    }
+      this.TimeLine = new vis.Timeline(document.getElementById('disturbances_chart'), null, {
+        stack: false,
+        editable: false,
+        margin: { item: 10, axis: 5 },
+        orientation: 'top'
+      });
+      this.TimeLine.on('rangechanged', this.WindowChange.bind(this));
+      var Groups = new vis.DataSet([
+        { id: 1, content: 'Dips'},
+        { id: 2, content: 'Swells'},
+        { id: 3, content: 'Interruptions'},
+        { id: 4, content: 'RVC'},
+        { id: 5, content: 'Glitchs'}
+      ]);
+      this.TimeLine.setGroups(Groups);
+      this.$refs.period.SetAggregation('1H');
+      this.TimeLine.setItems([]);
+    },
+    methods: {
+      WindowChange: function(evt) {
+        if(evt.byUser === false) return;
+        this.$refs.period.SetCustom(evt.start.getTime(), evt.end.getTime(), false);
+      },
+      UpdateComplete: function() {
+        this.$refs.period.UpdateCompleted(this.$refs.table.LastSample);
+        var TimeLineDataset = new vis.DataSet();
+        for(var i = 0; i < this.$refs.table.Events.length; i++) {    
+          var Item = { 
+            id: i, 
+            start: this.$refs.table.Events[i].StartTime,
+            content: '<table>' +
+                     '<tr><td><strong>Time</strong></td><td> : ' + this.$refs.table.Events[i].Date + '</td></tr>' +
+                     '<tr><td><strong>Duration</strong></td><td> : ' + this.$refs.table.Events[i].Duration + '</td></tr>' +
+//                     '<tr><td><strong>ΔU<sub>max</sub></strong></td><td> : ' + Round2Plain(result['Voltage'][i]) + ' V</td></tr>' +
+//                     '<tr><td><strong>% ΔU<sub>max</sub></strong></td><td> : ' + Round2Plain(result['Percentage'][i]) + '%</td></tr>' + 
+                     '</table>'
+          };
+          if(this.$refs.table.Events[i].Type == 'INTERRUPTION') {
+            Item.className = 'red';
+            Item.group = 3;
+          } else if(this.$refs.table.Events[i].Type == 'SWELL') {
+            Item.className = 'blue';
+            Item.group = 2;
+          } else if(this.$refs.table.Events[i].Type == 'DIP') {
+            Item.className = 'blue';
+            Item.group = 1;
+          } else if(this.$refs.table.Events[i].Type == 'RVC') {
+            Item.className = 'blue';
+            Item.group = 4;
+          }
+          TimeLineDataset.add(Item);
+        }
+        this.TimeLine.setItems(TimeLineDataset);
+        this.TimeLine.setWindow(this.$refs.table.DateWindow[0], this.$refs.table.DateWindow[1]);
+        this.ShowSpinner = false;
+      },
+      GetEvents: function(to, period, lastsample) {
+        if(lastsample === 0) this.ShowSpinner = true;
+        this.TimeLine.setWindow(to - period, to);
+        this.$refs.table.GetEvents(to, period, lastsample);
+      },
+      ExportClick: function() {}
+    },
+    components: { Spinner, ToolbarPeriod, ToolbarTools, EventsTable }
   }
 </script>
 
