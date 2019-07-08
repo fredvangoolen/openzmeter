@@ -56,7 +56,7 @@
       Save: function() {
         this.ShowSpinner = true;
         var Analyzer = this.$root.SelectedAnalyzer;
-        $.ajax({ url: 'SetEvent', timeout: 20000, type: 'POST', dataType: 'text', contentType: 'application/json', data: JSON.stringify( { Analyzer: Analyzer.ID, Notes: this.Event.Notes, StartTime: this.Event.StartTime, Type: this.Event.Type } ), 
+        $.ajax({ url: 'setEvent', timeout: 20000, type: 'POST', dataType: 'text', contentType: 'application/json', data: JSON.stringify( { Analyzer: Analyzer.ID, Notes: this.Event.Notes, StartTime: this.Event.StartTime, Type: this.Event.Type } ), 
           success: function(data) {
             this.ShowDialog = false;
             $(this.$el).modal('hide');
