@@ -969,7 +969,7 @@ L 3Phase-rescue:C_Small-3Phase-rescue C10
 U 1 1 5BDBB3A5
 P 3600 1400
 F 0 "C10" H 3610 1470 50  0000 L CNN
-F 1 "22nF 50v" H 3610 1320 50  0001 L CNN
+F 1 "100nF 50v" H 3610 1320 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 3600 1400 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/Free-shipping-100PCS-capacitance-0402-0-047uF-473-47nF-X7R-25V-10-1-0x0-5mm-1005/511081_1142739709.html" H 3600 1400 50  0001 C CNN
 	1    3600 1400
@@ -1021,17 +1021,6 @@ F 3 "https://es.aliexpress.com/store/product/100pcs-lot-47uF-25V-Electrolytic-Ca
 $EndComp
 Text GLabel 4150 1300 1    60   Input ~ 0
 15v
-$Comp
-L 3Phase-rescue:D_Small_ALT-3Phase-rescue D7
-U 1 1 5BDC68E2
-P 3750 1150
-F 0 "D7" H 3700 1230 50  0000 L CNN
-F 1 "1N4148" H 3600 1070 50  0001 L CNN
-F 2 "Diode_SMD:D_SOD-323" V 3750 1150 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-Diode-1N4001-M1-1N4005-M5-1N4007-M7-1N4004-M4-SR160-1N4148-1N4148-1N5819-RS1M-RS2M/730231_32868492349.html" V 3750 1150 50  0001 C CNN
-	1    3750 1150
-	1    0    0    -1  
-$EndComp
 $Comp
 L 3Phase-rescue:D_Small_ALT-3Phase-rescue D3
 U 1 1 5BDBD504
@@ -2140,14 +2129,10 @@ Wire Wire Line
 Connection ~ 4000 1850
 Connection ~ 4000 1250
 Wire Wire Line
-	3850 1150 4000 1150
-Wire Wire Line
 	4000 1150 4000 1250
 Wire Wire Line
 	3850 1250 4000 1250
 Connection ~ 3450 1350
-Wire Wire Line
-	3450 1150 3650 1150
 Wire Wire Line
 	3450 1350 3450 1150
 Connection ~ 3600 1250
@@ -3481,15 +3466,15 @@ Connection ~ 5000 1450
 Wire Wire Line
 	5000 1450 5150 1450
 $Comp
-L 3Phase-rescue:D_Zener_Small_ALT-3Phase-rescue D15
+L Device:R_Small R40
 U 1 1 5D62E090
 P 4275 1725
-F 0 "D15" H 4275 1815 50  0000 C CNN
-F 1 "BZT52C20S" H 4275 1635 50  0001 C CNN
-F 2 "Diode_SMD:D_SOD-323" V 4275 1725 50  0001 C CNN
+F 0 "R40" H 4375 1750 50  0000 C CNN
+F 1 "4k7" H 4275 1635 50  0001 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" V 4275 1725 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100-PCS-LOT-BZT52C15S-BZT52C15-SOD-323-123-WJ/4580010_32950079051.html" V 4275 1725 50  0001 C CNN
 	1    4275 1725
-	0    1    1    0   
+	1    0    0    -1  
 $EndComp
 Wire Wire Line
 	4275 1825 4275 1850
@@ -3501,4 +3486,6 @@ Wire Wire Line
 Connection ~ 4275 1550
 Wire Wire Line
 	4275 1550 4300 1550
+Wire Wire Line
+	3450 1150 4000 1150
 $EndSCHEMATC
