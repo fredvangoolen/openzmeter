@@ -72,7 +72,10 @@
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_ENERGY'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
-               axisLabelFormatter: function (x) { var Units = oZm.GetBestUnits(Math.max(Math.abs(Range[0]), Math.abs(Range[1]))); return oZm.Round2(oZm.ScaleToUnits(x, Units)); }
+               axisLabelFormatter: function (x) {
+                 if(this.axes_[0].valueRange === undefined) return "";
+                 var Units = oZm.GetBestUnits(Math.max(Math.abs(this.axes_[0].valueRange[0]), Math.abs(this.axes_[0].valueRange[1]))); 
+                 return oZm.Round2(oZm.ScaleToUnits(x, Units)); }
              },
           x: { axisLabelFormatter: function(x) { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); },
                valueFormatter: function (x) { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); }
@@ -210,9 +213,9 @@
         this.AccumSamples = AccumSamples;
         this.MaxTime = moment(MaxTime).format("hh:mm:ss - DD/MM/YYYY") + ((MaxCount > 1) ? ' (and ' + MaxCount + ' times more)' : '');
         var UnitsMax = oZm.Series['ACTIVE_ENERGY'].FormatValue(Number.isFinite(MaxValue) ? MaxValue : 0.0);    
-        this.MaxValue = UnitsMax.Value + ' <em>' + UnitsMax.Units + '</em>';
+        this.MaxValue = UnitsMax.Value + ' ' + UnitsMax.Units;
         var UnitsAccum = oZm.Series['ACTIVE_ENERGY'].FormatValue(AccumValue);    
-        this.AccumValue = UnitsAccum.Value + '<em>' + UnitsAccum.Units + '</em>';
+        this.AccumValue = UnitsAccum.Value + ' ' + UnitsAccum.Units;
         this.BudgetValue = oZm.Round2(Cost) + ' <em>€</em>';
         this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
       }

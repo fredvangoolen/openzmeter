@@ -95,11 +95,20 @@
       ResizeHandler: function() {
         if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', $(this.$parent.$refs.subgraphs).height() - 20);
       },
+      MaxDiff: function(a) {
+        if(this.$root.SelectedAnalyzer === null) return 0;
+        var Analyzer = this.$root.SelectedAnalyzer;
+        var Max = a[0] - Analyzer.NominalVoltage;
+        for(var n = 1; n < a.length; n++) {
+          if(Math.abs(a[n] - Analyzer.NominalVoltage) > Math.abs(Max)) Max = a[n] - Analyzer.NominalVoltage;
+        }
+        return (Max * 100.0) / Analyzer.NominalVoltage;
+      },
       SetData: function(start, end, events) {
         var ByITIC = [[0, 0]];
         for(var i = 0; i < events.StartTime.length; i++) {
           if((events.StartTime[i] < start) || (events.StartTime[i] > end)) continue;
-          ByITIC.push([(events.Duration[i] / events.SampleRate[i]) * 1000.0, 100 + events.Percent[i]]);
+          ByITIC.push([(events.Duration[i] / events.SampleRate[i]) * 1000.0, 100 + this.MaxDiff(events.Peak[i])]);
         }
         this.$refs.graph.SetOptions({ file: ByITIC });
       }

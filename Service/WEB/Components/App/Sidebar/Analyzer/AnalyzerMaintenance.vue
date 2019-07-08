@@ -3,158 +3,115 @@
     <div class="modal-header">
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Maintenance</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <button type="button" class="btn btn-default btn-xs" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </div>
     <div class="modal-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Only stored samples are affected by this next actions.</div>
+      <input type="file" name="name" style="display: none;" ref="filename" v-on:change="FileSet" accept="application/gzip, .gz"/>
+      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Only stored samples and events are affected by this next actions.<hr style="margin-top: 5px; margin-bottom: 5px;"/>Analyzer data takes currently <strong>{{ DBSize }}</strong></div>
       <div class="row">
         <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetStartDate"></date-picker></div>
         <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetEndDate"></date-picker></div>
       </div>
+      <hr style="margin-top: 10px; margin-bottom: 10px;"/>
       <div class="row" style="margin-top:5px; margin-bottom: 5px">
         <div class="col-xs-6"><button type="button" class="btn btn-default btn-block btn-xs" @click="BackupRange">Backup range</button></div>
-        <div class="col-xs-6"><button type="button" class="btn btn-default btn-block btn-danger btn-xs" @click="ClearRange">Clear range</button></div>
+        <div class="col-xs-6"><button type="button" class="btn btn-default btn-block btn-xs" @click="BackupAll">Backup all</button></div>
       </div>
       <hr style="margin-top: 10px; margin-bottom: 10px;"/>
       <div class="row" style="margin-top:5px; margin-bottom: 5px">
-        <div class="col-xs-4"><button type="button" class="btn btn-default btn-block btn-xs" @click="Restore">Restore backup</button></div>
-        <div class="col-xs-4"><button type="button" class="btn btn-default btn-block btn-xs" @click="BackupAll">Backup all</button></div>
-        <div class="col-xs-4"><button type="button" class="btn btn-default btn-block btn-danger btn-xs" @click="ClearAll">Clear all</button></div>
+        <div class="col-xs-6"><button type="button" class="btn btn-default btn-block btn-danger btn-xs" @click="ClearRange">Clear range</button></div>
+        <div class="col-xs-6"><button type="button" class="btn btn-default btn-block btn-danger btn-xs" @click="ClearAll">Clear all</button></div>
+      </div>
+      <hr style="margin-top: 10px; margin-bottom: 10px;"/>
+      <div class="row" style="margin-top:5px; margin-bottom: 5px">
+        <div class="col-xs-12"><button type="button" class="btn btn-default btn-block btn-xs" @click="Restore">Restore backup</button></div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-  import bsSuggest from 'JS/bootstrap-suggest.js';
   import moment from 'JS/moment.js';
   import DatePicker from 'Components/DatePicker.vue';
   import Spinner from 'Components/Spinner.vue';
+  import * as oZm from 'JS/openZmeter.js';
   import Oboe from 'JS/oboe.js';
+  import StreamSaver from 'JS/streamsaver.js';
   import Pako from 'JS/pako.js';
   export default {
     data() {
-      return { Show: false, ShowSpinner: false };
+      return { Show: false, DBSize: '', StartDate: null, EndDate: null };
     },
     methods: {
-      BackupRange: function() {},
-      ClearRange: function() {},
-      Restore: function() {},
-      BackupAll: function() {},
-      ClearAll: function() {},
-        Save: function() {
-        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.ID, CountryCode: 'ESP' /*this.Analyzer.CountryCode*/ }, this.Tariff) ), 
-          success: function() {
-            this.Show = false;
-            this.$parent.$refs.Tariffs.Load(this.Analyzer);
-          }.bind(this),
-          error: function() {
-            this.Error = 'Failed to save tariff to analyzer!';
-            setTimeout(function() { this.Error = ''; }.bind(this), 1000); 
-          }.bind(this)
-        });
-      },
       Load: function(analyzer, id) {
         this.Analyzer = analyzer;
         this.Show = true;
-//        this.ShowSpinner = true;
-//        this.Tariffs = [];
+        this.DBSize = oZm.GetBestUnitsBin(analyzer.Size);
+        this.StartDate = moment().startOf('year');
+        this.EndDate = moment().endOf('year');
         this.$nextTick(function() {
-//          $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-//            success: function(result) {
-//              for(var i = 0; i < result.length; i++) this.Tariffs.push({ id: result[i].RateID, name: result[i].Name, description: 'From ' + moment(result[i].StartDate).format('DD/MM/YYYY') + ' to ' + moment(result[i].EndDate).format('DD/MM/YYYY')}); 
-//              if(id !== null) {
-//                $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.ID, RateID: id }), 
-//                  success: function(result) {
-//                    this.Initial = result;
-//                    this.Tariff = Object.assign({}, result);
-//                    this.Tariffs.unshift({ id: 'CURRENT', name: '(*) ' + result.Name, description: 'From ' + moment(result.StartDate).format('DD/MM/YYYY') + ' to ' + moment(result.EndDate).format('DD/MM/YYYY')});
-//                    this.SetTariffs();
-//                  }.bind(this)
-//                });
-//              } else {
-//                this.Initial = null;
-//                $(this.$refs.Base).attr('data-id', '');
-//                $(this.$refs.Base).val('');
-//                this.Tariff = { StartDate: moment().startOf('year').valueOf(), EndDate: moment().endOf('year').valueOf(), Template: null, Config: {Periods: [], Taxs: [], Billing: []} };
-//                this.$refs.StartDate.Disable();
-//                this.$refs.EndDate.Disable();
-//                this.SetTariffs();
-//              }
-//            }.bind(this)
-//          });
+          this.$refs.StartDate.SetDate(this.StartDate);
+          this.$refs.EndDate.SetDate(this.EndDate);
         });
       },
-      Validate: function() {
-        this.Error = '';
-        if(this.Tariff.Template === null) {
-          this.Error = 'Select a base tariff first';
-          return; 
-        }
-        if(this.Tariff.StartDate < this.Tariff.Template.Seasons[0].StartDate) {
-          this.Error = 'Date ranges is outside selected tariff ranges';
-          return;
-        }
-        if(this.Tariff.EndDate > this.Tariff.Template.Seasons.slice(-1)[0].EndDate) {
-          this.Error = 'Date ranges is outside selected tariff ranges';
-          return;
-        }
-      },
       SetStartDate: function(date) {
-        this.Tariff.StartDate = date.startOf('day').valueOf();
-        this.Validate();
+        this.StartDate = date.startOf('day').valueOf();
       },
       SetEndDate: function(date) {
-        this.Tariff.EndDate = date.endOf('day').valueOf();
-        this.Validate();
+        this.EndDate = date.endOf('day').valueOf();
       },
       Back: function() {
         this.Show = false;
-        this.$parent.$refs.Tariffs.Load(this.Analyzer);
+        this.$parent.$refs.Table.Load(this.Analyzer);
       },
-      FillPeriods: function() {
-        this.Tariff.Config.Periods.length = this.Tariff.Template.Periods.length;
-        for(var n = 0; n < this.Tariff.Template.Periods.length; n++) this.Tariff.Config.Periods[n] = Object.assign({ Contracted_Power: 0.0, Energy_Cost: 0.0, Power_Cost: 0.0 }, this.Tariff.Config.Periods[n]);
+      FileSet: function(evt) {
+        if(evt.target.files.length !== 1) return;
+        var Reader = new FileReader();
+        var Inflator = new Pako.Inflate();
+        var File = evt.target.files[0];
+        var Offset = 0;
+        var DecompresedSize = 0;
+        var onDeflatedData = function(data) {
+          DecompresedSize += data.length;
+        };
+        var onLoadHandler = function(evt) {
+          if(evt.target.error !== null) {
+            console.log("ERROR LOADING FILE");
+            return;
+          }            
+          Offset += evt.target.result.byteLength;
+          Inflator.push(evt.target.result, (Offset >= File.size) ? Pako.Z_FINISH: Pako.Z_SYNC_FLUSH);
+          if(Offset < File.size) {
+            Reader.readAsArrayBuffer(File.slice(Offset, Offset + 65536));
+          } else {
+            console.log(DecompresedSize);
+          }
+        };
+        Reader.onload = onLoadHandler;
+        Inflator.onData = onDeflatedData;
+        Reader.readAsArrayBuffer(File.slice(0, 65536));
       },
-      SelectBase: function(e, keywork) {
-        this.$refs.StartDate.Enable();
-        this.$refs.EndDate.Enable();
-        if(keywork.id === 'CURRENT') {
-          this.LoadCurrent();
-          this.Validate();
-        } else {
-          this.ShowSpinner = true;
-          $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: keywork.id }), 
-            success: function(result) {
-              this.Tariff.Template = result.Template;
-              this.Tariff.Name = result.Name;
-              this.FillPeriods();
-              this.Validate();
-              this.ShowSpinner = false;
-            }.bind(this)
-          });
+      BackupRange: function() {
+        setTimeout(this.GenerateData.bind(this), 100);
+      },
+      GenerateData: function(fs) {
+        for(var n= 0; n < 10000; n++) {
+          this.Backup.Voltage.push([230.00000, 230.12234234, 223.23234234]);
         }
+        console.log(this.Backup.Voltage.length);
+        setTimeout(this.GenerateData.bind(this), 100);
+
       },
-      DeselectBase: function(e) {
-        this.$refs.StartDate.Disable();
-        this.$refs.EndDate.Disable();
-        this.Error = 'Select a base tariff from list';
+      ClearRange: function() {},
+      Restore: function() {
+        this.$refs.filename.click();
       },
-      Periods: function() {
-        this.Show = false;
-        this.$parent.$refs.Periods.Load(this.Tariff);
-      },
-      Billing: function() {
-        this.Show = false;
-        this.$parent.$refs.Billing.Load(this.Tariff);
-      }
+      BackupAll: function() {},
+      ClearAll: function() {}
     },
     created: function() {
-      this.Analyzer = null;
-      this.Tariffs = [];
-      this.Initial = null;
+      this.Backup = {Voltage: []};
     },
     beforeDestroy: function() {
       $(this.$refs.Base).off('onSetSelectValue', this.SelectBase.bind(this));
