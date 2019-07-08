@@ -31,7 +31,6 @@
       },
       hide: function() {
         $(this.$el).modal('hide');
-                
         this.$nextTick(function() {
           this.ShowDialog = false;
         });

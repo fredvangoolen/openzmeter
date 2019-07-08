@@ -1,7 +1,10 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      From {{ StartDate }} to {{ EndDate }}
+      <div class="header-text">From {{ StartDate }} to {{ EndDate }}</div>
+      <div class="header-buttons clearfix" ref="Toolbar">
+        <toolbar-tools variable="To" ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
+      </div>  
     </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
@@ -27,6 +30,7 @@
   import moment from 'JS/moment.js';
   import * as oZm from 'JS/openZmeter.js';
   import EventDialog from './EventDialog.vue';
+  import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data: function() {
       return { ShowSpinner: true, StartDate: '', EndDate: '',
@@ -42,11 +46,12 @@
       };
     },
     updated: function(){
-        oZm.createCaptionsForResponsiveTable(this.$refs.table);
+      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     created: function() {
       this.Events = [];
       this.LastSample = 0;
+      this.DateWindow = null;
     },
     methods: {
       Redraw: function() {},
@@ -59,25 +64,27 @@
         }
         $.ajax({ url: 'getEvents', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ To: to, LastSample: this.LastSample, Analyzer: Analyzer.ID, Period: period }),
           success: function(result) {
+            this.DateWindow = [result.From, result.To];
             this.EndDate = moment(result.To).format('DD/MM/YYYY - HH:mm:ss');
             this.StartDate = moment(result.From).format('DD/MM/YYYY - HH:mm:ss');
             if((result['StartTime'] === null) || (result['StartTime'].length === 0)) return;
             for(var x = 0; x < result['StartTime'].length; x++) {
               if(result['StartTime'][x] > this.LastSample) this.LastSample = result['StartTime'][x];
-              var Event = { StartTime: result.StartTime[x], Date: moment(result.StartTime[x]).format('DD/MM/YYYY - HH:mm:ss'), Type: result.Type[x], Finished: result.Finished[x], Reference: result.Reference[x], PeakVoltage: result.Peak[x], ExitVoltage: result.Change[x], SampleDuration: result.Duration[x] };
+              var Event = { StartTime: result.StartTime[x], Date: moment(result.StartTime[x]).format('DD/MM/YYYY - HH:mm:ss'), Type: result.Type[x], Finished: result.Finished[x], Reference: result.Reference[x], PeakVoltage: result.Peak[x], ExitVoltage: result.Change[x], SampleDuration: result.Duration[x], SampleRate: result.SampleRate[x], Notes: result.Notes[x] };
               Event.Duration = (result.Duration === 0) ? 'RUNNNING' : oZm.Round2Plain(result.Duration[x] / result.SampleRate[x]);
               var Max = 0;        
               for(var i = 0; i < result.Reference[x].length; i++) {
                 if(Math.abs(result.Reference[x][i] - result.Peak[x][i]) > Math.abs(Max)) Max = result.Peak[x][i] - result.Reference[x][i];
               }
-             if(Event.Type === 'RVC') {
-                var Diff = 0;
+              if(Event.Type === 'RVC') {
+                Event.Diff = 0;
                 for(var i = 0; i < result.Reference[x].length; i++) {
-                  if(Math.abs(result.Reference[x][i] - result.Change[x][i]) > Math.abs(Diff)) Diff = result.Change[x][i] - result.Reference[x][i];
+                  if(Math.abs(result.Reference[x][i] - result.Change[x][i]) > Math.abs(Event.Diff)) Event.Diff = result.Change[x][i] - result.Reference[x][i];
                 }
-                Event.Change = oZm.Round2Plain(Diff) + '<br>(' + oZm.Round2Plain(Max) + ' Max)';
-                Event.Percent = oZm.Round2Plain(Diff / result.Reference[x][0] * 100.0);                
+                Event.Change = oZm.Round2Plain(Event.Diff) + '<br>(' + oZm.Round2Plain(Max) + ' Max)';
+                Event.Percent = oZm.Round2Plain(Event.Diff / result.Reference[x][0] * 100.0);                
               } else {
+                Event.Diff = Max;
                 Event.Change = oZm.Round2Plain(Max);
                 Event.Percent = oZm.Round2Plain(Max / result.Reference[x][0] * 100.0);
               }       
@@ -87,6 +94,7 @@
           }.bind(this),
           complete: function() {
             this.ShowSpinner = false;
+            this.$emit("UpdateComplete");
           }.bind(this),
           error: function(response) {
             this.ShowSpinner = true;
@@ -108,9 +116,16 @@
           }.bind(this)
         });
       },
-      Edit: function(evt) {}
+      Edit: function(evt) {},
+      ExportClick: function() {
+        if(this.$root.SelectedAnalyzer === null) return;
+        var Analyzer = this.$root.SelectedAnalyzer;
+        var Export = [['Date', 'Type', 'Duration', 'ΔU (V)', 'Notes']];
+        for(var i = 0; i < this.Events.length; i++) Export.push([this.Events[i].Date, this.Events[i].Type, this.Events[i].SampleDuration / this.Events[i].SampleRate, this.Events[i].Diff, this.Events[i].Notes]);          
+        this.$refs.tools.SaveCVS('Events.csv', Export);
+      }
     },
-    components: { Spinner, Vuetable, EventDialog }
+    components: { Spinner, Vuetable, EventDialog, ToolbarTools }
   }
 </script>
 
