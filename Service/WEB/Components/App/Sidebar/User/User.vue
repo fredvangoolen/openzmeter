@@ -176,6 +176,9 @@
     color: #333;
     font-size: 14px;
   }
+  .modal-dialog img{
+    max-width: 100%;
+  }
   .popover-title {
     padding: 6px;
   }
