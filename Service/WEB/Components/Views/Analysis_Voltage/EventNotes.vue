@@ -12,6 +12,7 @@
         </div>
         <div class="modal-body">
           <spinner v-if="ShowSpinner"></spinner>
+          <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != ''">{{ Error }}</div>
           <div class="row">
             <div class="col-xs-12">
               <label class="control-label">Notes</label>
@@ -28,7 +29,7 @@
   import Spinner from 'Components/Spinner.vue';
   export default {
     data: function() {
-      return { ShowDialog: false, ShowSpinner: false, Event: {Notes: ''} };
+      return { ShowDialog: false, ShowSpinner: false, Error: '', Event: { Notes: '' }, EventOrig: null };
     },
     created: function() {
       this.Event = null;      
@@ -46,42 +47,41 @@
       },
       Show: function(evt) {
         this.Event = Object.assign({}, evt);
+        this.EventOrig = evt;
         this.ShowDialog = true;
-        //this.ShowSpinner = true
-        var Analyzer = this.$root.SelectedAnalyzer;
         this.$nextTick(function() {
           $(this.$el).modal('show');
         });
-        /*$.ajax({ url: 'getEvent', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ StartTime: evt.StartTime, Analyzer: Analyzer.ID, Type: evt.Type, Samples: this.ViewMode }),
-          success: function(result) {
-            this.Event = Object.assign(evt, result);
-            this.ShowSpinner = false;  
-            }.bind(this)
-        });*/ 
       },
       Save: function() {
-        $.ajax({ url: "addEventNotes", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(this.Event), 
+        this.ShowSpinner = true;
+        var Analyzer = this.$root.SelectedAnalyzer;
+        $.ajax({ url: 'SetEvent', timeout: 20000, type: 'POST', dataType: 'text', contentType: 'application/json', data: JSON.stringify( { Analyzer: Analyzer.ID, Notes: this.Event.Notes, StartTime: this.Event.StartTime, Type: this.Event.Type } ), 
           success: function(data) {
-            if(data.Result === true) {
-              this.ShowDialog = false;
-              $(this.$el).modal('hide');
-              this.$parent.$refs.Table.Load();
-            } else {
-              this.Error = 'Form values are incorrect. Please, review.';
-              setTimeout(function() { this.Error = ''; }.bind(this), 5000); 
-            }
+            this.ShowDialog = false;
+            $(this.$el).modal('hide');
+            this.EventOrig.Notes = this.Event.Notes;
           }.bind(this),
           error: function() {
             this.Error = 'Failed to save analyzer!';
             setTimeout(function() { this.Error = ''; }.bind(this), 5000); 
+          }.bind(this),
+          complete: function() {
+            this.ShowSpinner = false;
           }.bind(this)
         });
       },
       Back: function() {
-          $(this.$el).modal('hide');
-          this.ShowDialog = false;
+        $(this.$el).modal('hide');
+        this.ShowDialog = false;
       }
     },
-    components: { Spinner}
+    components: { Spinner }
   };  
 </script>
+
+<style scoped>
+  textarea {
+    resize: none;
+  }
+</style>

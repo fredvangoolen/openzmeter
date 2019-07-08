@@ -16,6 +16,7 @@
                 <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Discard" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
               </div>
             </div>
+            <div class="pull-right page-count">{{ NewsPos + 1}} of {{ News.length }}<br/>{{ NewsDate }}</div>
           </div>
           <div class="modal-body">
             <spinner v-if="ShowSpinner"></spinner>
@@ -29,9 +30,10 @@
 
 <script>
   import Spinner from 'Components/Spinner.vue';
+  import moment from 'JS/moment.js';
   export default {
     data() {
-      return { ShowSpinner: true, BuildDate: 'Wait...', ShowDialog: false, Title: '', Contents: '', News: [], NewsPos: -1};
+      return { ShowSpinner: true, BuildDate: 'Wait...', ShowDialog: false, Title: '', Contents: '', NewsDate: '', News: [], NewsPos: -1};
     },
     mounted: function() {
       $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
@@ -61,6 +63,7 @@
           success: function(result) {
             this.Title = result.Header;
             this.Contents = result.Contents;
+            this.NewsDate = moment(this.News[this.NewsPos]).format('DD/MM/YYYY');
             this.ShowSpinner = false;
             if(result.NewsTime > parseInt(localStorage.getItem('LastLogin'))) localStorage.setItem('LastLogin', result.NewsTime);
           }.bind(this)
@@ -115,5 +118,10 @@
   }
   .sidenav-version > span {
     vertical-align: middle;
+  }
+  .page-count {
+    line-height: 11px;
+    font-size: 12px;
+    text-align: center;
   }
 </style>
