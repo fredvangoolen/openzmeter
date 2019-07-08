@@ -26,8 +26,7 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data() {
-      return { ShowSpinner: true, Time: 'Loading data...',
-                GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(Graph) }
+      return { ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' }
       };
     },
     methods: {
@@ -96,6 +95,10 @@
       },
       MaximizeClick: function() {
         this.$refs.tools.Maximize('Waveform', this.$refs.graph.Graph, this.$refs.Toolbar);
+      },
+      WindowChange: function() {},
+      WindowRestore: function() {
+        this.$refs.graph.SetOptions( {dateWindow: [0, this.Data.length]} );
       }
     },
     created: function() {

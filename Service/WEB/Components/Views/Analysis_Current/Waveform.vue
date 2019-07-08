@@ -10,7 +10,7 @@
     </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <graph ref="graph" :options="{}"></graph>
+      <graph ref="graph" :options="GraphOptions"></graph>
     </div>
   </div>
 </template>
@@ -33,7 +33,7 @@
   }
   export default {
     data() {
-      return { ShowSpinner: true, Time: 'Loading data...' };
+      return { ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' } };
     },
     methods: {
       Redraw: function() {
@@ -102,6 +102,10 @@
       },
       MaximizeClick: function() {
         this.$refs.tools.Maximize('Waveform', this.$refs.graph.Graph, this.$refs.Toolbar);
+      },
+      WindowChange: function() {},
+      WindowRestore: function() {
+        this.$refs.graph.SetOptions( {dateWindow: [0, this.Data.length]} );
       }
     },
     created: function() {

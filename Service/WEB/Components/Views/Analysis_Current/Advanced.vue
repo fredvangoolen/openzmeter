@@ -10,7 +10,7 @@
       </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <graph ref="graph" :options="{}"></graph>
+      <graph ref="graph" :options="GraphOptions"></graph>
     </div>
   </div>
 </template>
@@ -26,7 +26,7 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data() {
-      return { ShowSpinner: true, Time: 'Loading data...' };
+      return { ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' } };
     },
     created: function() {
       this.Data = null;
@@ -148,6 +148,10 @@
       },
       MaximizeClick: function() {
         this.$refs.tools.Maximize('Advanced', this.$refs.graph.Graph, this.$refs.Toolbar);
+      },
+      WindowChange: function() {},
+      WindowRestore: function() {
+        this.$refs.graph.SetOptions( {dateWindow: [0, this.Data.length]} );
       }
     },
     components: { Spinner, ToolbarPhases, ToolbarOptions, ToolbarTools, Graph }

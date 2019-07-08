@@ -158,7 +158,7 @@
             if(Request.status === 200) {
               var Response = JSON.parse(Request.responseText);
               if(Response.Result === true) {
-                localStorage.setItem('LastLogin', Response.Result.LastLogin);
+                localStorage.setItem('LastLogin', Response.LastLogin);
                 localStorage.setItem('UserName', document.getElementById('username').value);
                 setTimeout(function() { 
                   location.replace('/');

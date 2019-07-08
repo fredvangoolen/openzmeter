@@ -68,6 +68,15 @@
         for(var j = 0; j < this.Voltages.length - 1; j++) this.Weeks[week].Voltage.push(0);
         for(var j = 0; j < this.THDs.length - 1; j++) this.Weeks[week].THD.push(0);
       },
+      MaxDiff: function(a) {
+        if(this.$root.SelectedAnalyzer === null) return 0;
+        var Analyzer = this.$root.SelectedAnalyzer;
+        var Max = a[0] - Analyzer.NominalVoltage;
+        for(var n = 1; n < a.length; n++) {
+          if(Math.abs(a[n] - Analyzer.NominalVoltage) > Math.abs(Max)) Max = a[n] - Analyzer.NominalVoltage;
+        }
+        return (Max * 100.0) / Analyzer.NominalVoltage;
+      },
       ProcessYear: function() {
         if((this.Events === null) || (this.Data === null)) return;
         var Analyzer = this.$root.SelectedAnalyzer;
@@ -77,7 +86,7 @@
           var Week = moment(this.Events['StartTime'][i]).isoWeek();
           if(this.Weeks[Week] === undefined) this.InitWeek(Week, moment(this.Events['StartTime'][i]).startOf('isoWeek').valueOf(), moment(this.Events['StartTime'][i]).endOf('isoWeek').valueOf());
           var Duration = this.Events['Duration'][i] / this.Events['SampleRate'][i];
-          var Percent = this.Events['Percent'][i];
+          var Percent = this.MaxDiff(this.Events.Peak[i]);
           if((Duration < 60.0) && ((Percent < -15.0) || (Percent > -10.0))) {
             this.Weeks[Week].Dip = this.Weeks[Week].Dip + 1;
             this.Weeks[0].Dip = this.Weeks[0].Dip + 1;
