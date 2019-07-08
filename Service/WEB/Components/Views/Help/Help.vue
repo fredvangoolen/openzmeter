@@ -65,45 +65,40 @@
 </template>
 
 <script>
-export default {
+  export default {
     data () {
       return { };
-    },
-}
+    }
+  }
 </script>
 
 <style>
-h3{
-     font-family: 'Josefin Sans', sans-serif;
-}
-
-.box-part{
+  h3 {
+    font-family: 'Josefin Sans', sans-serif;
+  }
+  .box-part{
     background:#FFF;
     border-radius:10px;
     padding:60px 10px;
     margin:30px 0px;
-}
-
-.box-part:hover{
+  }
+  .box-part:hover{
     background: #474544;
-}
-
-.box-part:hover .fa , 
-.box-part:hover .title , 
-.box-part:hover .text ,
-.box-part:hover a{
+  }
+  .box-part:hover .fa , 
+  .box-part:hover .title , 
+  .box-part:hover .text ,
+  .box-part:hover a{
     color:#FFF;
     -webkit-transition: all 0.2s ease-out;
     -moz-transition: all 0.2s ease-out;
     -o-transition: all 0.2s ease-out;
     transition: all 0.2s ease-out;
-}
-
-.text{
+  }
+  .text{
     margin:20px 0px;
-}
-
-.fa{
-     color:#4183D7;
-}
+  }
+  .fa{
+    color:#4183D7;
+  }
 </style>

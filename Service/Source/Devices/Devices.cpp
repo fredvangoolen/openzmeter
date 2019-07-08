@@ -24,6 +24,7 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("/getSeriesRange",      DeviceManager::GetSeriesRangeCallback);
   HTTPServer::RegisterCallback("/getEvents",           DeviceManager::GetEventsCallback);
   HTTPServer::RegisterCallback("/getEvent",            DeviceManager::GetEventCallback);
+  HTTPServer::RegisterCallback("/setEvent",            DeviceManager::SetEventCallback);
   HTTPServer::RegisterCallback("/delEvent",            DeviceManager::DelEventCallback);
   HTTPServer::RegisterCallback("/getPrices",           DeviceManager::GetPricesCallback);
   HTTPServer::RegisterCallback("/getTariffs",          DeviceManager::GetTariffsCallback);
@@ -548,6 +549,16 @@ void DeviceManager::DelEventCallback(HTTPRequest &req) {
   uint64_t ID = Params["StartTime"];
   string Type = Params["Type"];
   req.FromString("", req.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type)) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+}
+void DeviceManager::SetEventCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Analyzer"].is_string() || !Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string() || !Params["Notes"].is_string()) return req.FromString("'Analyzer', 'StartTime', 'Type' and 'Notes' params are requiered", MHD_HTTP_BAD_REQUEST);
+  string Analyzer = Params["Analyzer"];
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(Analyzer));
+  uint64_t ID = Params["StartTime"];
+  string Type = Params["Type"];
+  string Notes = Params["Notes"];
+  req.FromString("", req.ExecSentenceNoResult("UPDATE events SET Notes = " + req.Bind(Notes) + " WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type)) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
 }
 //----------------------------------------------------------------------------------------------------------------------
 Device::Device() {
