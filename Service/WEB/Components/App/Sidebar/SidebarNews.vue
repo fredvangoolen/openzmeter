@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="sidenav-version"><div>Build: {{ BuildDate }}</div>
-      <!--button type="button" class="btn btn-default btn-xs pull-right" v-on:click="show"><img :src="require('Imgs/newspaper.png')"></button-->
+      <button type="button" class="btn btn-default btn-xs pull-right" v-on:click="show" :disabled="News.length == 0"><img :src="require('Imgs/newspaper.png')"></button>
     </div>
-    <!--div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog" data-keyboard="false" ref="dialog">
+    <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog" data-keyboard="false" ref="dialog">
       <div class="modal-backdrop in"></div>
       <div class="modal-dialog">
         <div class="modal-content">
@@ -11,8 +11,8 @@
             <div class="pull-left"><h4 class="modal-title">{{ Title }}</h4></div>
             <div class="pull-right btn-group">
               <div class="pull-right btn-group">
-                <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes" v-on:click="Prev"><img :src="require('Imgs/resultset_previous.png')"></button>
-                <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes" v-on:click="Next"><img :src="require('Imgs/resultset_next.png')"></button>
+                <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Previous" :disabled="NewsPos == 0" v-on:click="Prev"><img :src="require('Imgs/resultset_previous.png')"></button>
+                <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Next" :disabled="NewsPos == (News.length - 1)" v-on:click="Next"><img :src="require('Imgs/resultset_next.png')"></button>
                 <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Discard" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
               </div>
             </div>
@@ -23,7 +23,7 @@
           </div>
         </div>
       </div>
-    </div-->
+    </div>
   </div>
 </template>
 
@@ -31,13 +31,23 @@
   import Spinner from 'Components/Spinner.vue';
   export default {
     data() {
-      return { ShowSpinner: true, BuildDate: 'Wait...', ShowDialog: false, Title: '', Contents: '', News: []};
+      return { ShowSpinner: true, BuildDate: 'Wait...', ShowDialog: false, Title: '', Contents: '', News: [], NewsPos: -1};
     },
     mounted: function() {
       $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
         success: function(result) {
           this.News = result.News;
           this.BuildDate = result.Version;
+          if(isNaN(parseInt(localStorage.getItem('LastLogin'))) === true) localStorage.setItem('LastLogin', 0);
+          var LastLogin = parseInt(localStorage.getItem('LastLogin'));
+          for(var n = 0; n < this.News.length; n++) {
+            if(this.News[n] > LastLogin) {
+              this.NewsPos = n;
+              this.show();
+              break;
+            }
+          }
+          if(this.NewsPos === -1) this.NewsPos = this.News.length - 1;
         }.bind(this)
       });
     },
@@ -45,51 +55,38 @@
       this.$root.$el.removeChild(this.$refs.dialog);
     },
     methods: {
-      show: function() {
-        this.ShowDialog = true;
-        $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
+      FetchNews: function() {
+        this.ShowSpinner = true;
+        $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ NewsTime: this.News[this.NewsPos] }),
           success: function(result) {
-//            this.UserName = localStorage.getItem('UserName');
-//            this.Name = result.Name;
-//            this.Address = result.Address;
-//            this.Company = result.Company;
-//            if(result.Photo == null) {
-//              this.ClearImage();
-//            } else {
-//              this.ImageData = result.Photo;
-//            }
-//            this.EMail = result.EMail;
-//            this.TelegramID = result.TelegramID;
-//            this.Country = result.Country_Code;
+            this.Title = result.Header;
+            this.Contents = result.Contents;
             this.ShowSpinner = false;
+            if(result.NewsTime > parseInt(localStorage.getItem('LastLogin'))) localStorage.setItem('LastLogin', result.NewsTime);
           }.bind(this)
         });
+      },
+      show: function(time) {
+        this.ShowDialog = true;
+        if(this.News.length === 0) return;
+        this.FetchNews();
         this.$nextTick(function() {
           this.$root.$el.append(this.$refs.dialog);
           $(this.$refs.dialog).modal('show');
         });
       },
-      Prev: function() {},
-      Next: function() {},
+      Prev: function() {
+        if(this.NewsPos > 0) this.NewsPos--;
+        this.FetchNews();
+      },
+      Next: function() {
+        if(this.NewsPos < (this.News.length - 1)) this.NewsPos++;
+        this.FetchNews();
+      },
       Back: function() {
         $(this.$refs.dialog).modal('hide');
         this.ShowDialog = false;
       },
-      ReadNews() {
-//        $('#btnNewsNext').click(LoadNews);
-        $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ LastLogin: parseInt(localStorage.getItem('LastLogin')) }), 
-          success: function(result) {
-            if(result === null) {
-              $('#dlgNews').modal('hide');
-              return;
-            }
-            $('#dlgNews .modal-header h4').html(result.Header);
-            $('#dlgNews .modal-body').html(result.Contents);
-            $('#dlgNews').modal('show');
-            localStorage.setItem('LastLogin', result.Timestamp + 1);
-          }
-        }); 
-      }
     },
     components: {Spinner}
   }
