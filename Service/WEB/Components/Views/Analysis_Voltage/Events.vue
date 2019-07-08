@@ -11,7 +11,7 @@
       <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
-            <button type="button" class="btn btn-xs btn-success" v-on:click="Edit(props.rowData)" :disable="props.rowData.Finished==false">Edit</button>
+            <button type="button" class="btn btn-xs btn-success" v-on:click="Edit(props.rowData)" :disable="props.rowData.Finished==false">Add notes</button>
             <button type="button" class="btn btn-xs btn-default" v-on:click="RMS(props.rowData)" :disable="props.rowData.Finished==false">RMS</button>
             <button type="button" class="btn btn-xs btn-default" v-on:click="RAW(props.rowData)" :disable="props.rowData.Finished==false">Wave</button>
             <button type="button" class="btn btn-danger btn-xs" v-on:click="Delete(props.rowIndex)" :disable="props.rowData.Finished==false">Delete</button>
@@ -20,6 +20,7 @@
       </vuetable>
     </div>
     <event-dialog ref="event"></event-dialog>
+    <event-notes ref="eventNotes"></event-notes>
   </div>  
 </template>
 
@@ -30,6 +31,7 @@
   import moment from 'JS/moment.js';
   import * as oZm from 'JS/openZmeter.js';
   import EventDialog from './EventDialog.vue';
+  import EventNotes from './EventNotes.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data: function() {
@@ -116,7 +118,9 @@
           }.bind(this)
         });
       },
-      Edit: function(evt) {},
+      Edit: function(evt) {
+        this.$refs.eventNotes.Show(evt);
+      },
       ExportClick: function() {
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
@@ -125,7 +129,7 @@
         this.$refs.tools.SaveCVS('Events.csv', Export);
       }
     },
-    components: { Spinner, Vuetable, EventDialog, ToolbarTools }
+    components: { Spinner, Vuetable, EventDialog, EventNotes, ToolbarTools }
   }
 </script>
 
@@ -149,7 +153,7 @@
       text-align: right;
     }
     .table >>> th:nth-child(7) {
-      width: 170px;
+      width: 200px;
     }
   }
 </style>

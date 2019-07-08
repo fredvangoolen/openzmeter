@@ -54,10 +54,10 @@
       </router-link>
     </li>
     <li>
-      <a href="Help">
+      <router-link class="link" to="/Help">
         <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/help.png')"></span>
         <span class="sidenav-link-title">Help</span>
-      </a>
+      </router-link>
     </li>
   </ul>
 </template>
