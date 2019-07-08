@@ -53,6 +53,7 @@ class DeviceManager {
     static void GetSeriesRangeCallback(HTTPRequest &req);
     static void GetEventsCallback(HTTPRequest &req);
     static void GetEventCallback(HTTPRequest &req);
+    static void SetEventCallback(HTTPRequest &req);
     static void DelEventCallback(HTTPRequest &req);
     static void GetPricesCallback(HTTPRequest &req);
     static void GetTariffsCallback(HTTPRequest &req);
