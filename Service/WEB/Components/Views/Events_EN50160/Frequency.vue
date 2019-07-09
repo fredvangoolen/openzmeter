@@ -29,7 +29,7 @@
       return { Nominal: 0, Frequency: 0, FrequencyText: '', ShowSpinner: true, Warning: true };
     },
     created: function() {
-      this.GraphOptions = { strokeWidth: 1, labels: ["Variation", "Time"], stepPlot: true, plotter: Graph.multiColumnBarPlotter, colors: [oZm.Series['FREQUENCY'].Color], interactionModel: {}, legend: 'follow' };
+      this.GraphOptions = { strokeWidth: 1, labels: ["Variation", "Time"], stepPlot: true, plotter: Graph.multiColumnBarPlotter, colors: [oZm.Series['FREQUENCY'].Color], interactionModel: {}, legend: 'follow', drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback,};
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);  
     },
     mounted: function() {
