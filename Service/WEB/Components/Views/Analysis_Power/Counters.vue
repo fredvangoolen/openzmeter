@@ -62,7 +62,7 @@
         if(values.length > 1) {
           for(var n = 0; n < values.length; n++) {
             var Format = oZm.Series[this.variable].FormatValue(values[n]);
-            Return += Format.Value + '<em>' + Format.Units +'</em><br>';
+            Return += Format.Value + Format.Units +'<br>';
           }
         }
         return Return;
@@ -83,7 +83,7 @@
         if(result[oZm.Series[this.variable].Serie][Pos] !== null) {
           Phases = this.FormatPhases(result[oZm.Series[this.variable].Serie][Pos]);
           var Format = oZm.Series[this.variable].FormatValue(this.SumPhases(result[oZm.Series[this.variable].Serie][Pos]));
-          Value = Format.Value + '<em>' + Format.Units +'</em>';
+          Value = Format.Value + ' ' + Format.Units;
         }
         return [Time, Value, Phases];
       },
@@ -99,7 +99,7 @@
         this.TimeStatsTo = moment(window[1]).format('DD/MM/YYYY HH:mm:ss');
         var MinValue = +Infinity, MaxValue = -Infinity, MinCount = 0, MaxCount = 0, MinTime = null, MaxTime = null;
         for(var x = 0; x < data.length; x++) {
-          if(data[x][1] === null) continue;
+          if(data[x][1] === null) data[x][1] = 0;
           if(data[x][1] < MinValue) {
             MinValue = data[x][1];
             MinCount = 0;
@@ -118,9 +118,9 @@
         this.MinTime = moment(MinTime).format("hh:mm:ss - DD/MM/YYYY") + ((MinCount > 1) ? ' (and ' + MinCount + ' times more)' : '');
         this.MaxTime = moment(MaxTime).format("hh:mm:ss - DD/MM/YYYY") + ((MaxCount > 1) ? ' (and ' + MaxCount + ' times more)' : '');
         var Format = oZm.Series[this.variable].FormatValue(MinValue);
-        this.MinValue = Format.Value + ' <em>' + Format.Units +'</em>';
+        this.MinValue = Format.Value + ' ' + Format.Units;
         var Format = oZm.Series[this.variable].FormatValue(MaxValue);
-        this.MaxValue = Format.Value + ' <em>' + Format.Units +'</em>';
+        this.MaxValue = Format.Value + ' ' + Format.Units;
       }
     }
   }

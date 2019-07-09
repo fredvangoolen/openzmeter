@@ -135,7 +135,7 @@
                   var HighStart = (this.Event.Type == 'DIP') ? this.Event.Reference[0] * 0.9 : (this.Event.Type == 'SWELL') ? this.Event.Reference[0] * 1.1 : this.Event.Reference[0] * 0.1;
                   var HighEnd = (this.Event.Type == 'DIP') ? this.Event.Reference[0] * 0.95 : (this.Event.Type == 'SWELL') ? this.Event.Reference[0] * 1.05 : this.Event.Reference[0] * 0.15;
                   //draw top and bottom lines
-                  if(this.ViewMode==='RMS'){
+                  if(this.ViewMode==='RMS') {
                     canvas.beginPath();
                     canvas.moveTo(g.toDomXCoord(StartCount - StartCount / 8), g.toDomYCoord(HighStart));
                     canvas.lineTo(g.toDomXCoord(StartCount + EventWidth / 2), g.toDomYCoord(HighStart));
@@ -195,37 +195,37 @@
                       canvas.stroke();
                     }
                   }
-                    if(this.ViewMode==='RMS'){
-                      canvas.save();            
-                      canvas.translate(g.toDomXCoord(StartCount - StartCount / 8), g.toDomYCoord(HighStart) - 8);
-                      canvas.fillText("RVC enter", 0 , 0, g.height_);
-                      canvas.restore();
-                      canvas.save();
-                      canvas.translate(g.toDomXCoord(StartCount - StartCount / 8), g.toDomYCoord(-HighStart) + 8);
-                      canvas.fillText("RVC enter", 0 , 0, g.height_);
-                      canvas.restore();
-                      canvas.save();
-                      canvas.translate(g.toDomXCoord(EndCount + StartCount / 8), g.toDomYCoord(HighEnd) - 8);
-                      canvas.textAlign = 'right';
-                      canvas.fillText("RVC exit", 0 , 0, g.height_);
-                      canvas.restore();
-                      canvas.save();
-                      canvas.translate(g.toDomXCoord(EndCount + StartCount / 8), g.toDomYCoord(-HighEnd) + 8);
-                      canvas.textAlign = 'right';
-                      canvas.fillText("RVC exit", 0 , 0, g.height_);
-                      canvas.restore();
-                      canvas.save();
-                      canvas.translate(g.toDomXCoord(StartCount + EventWidth / 2), g.toDomYCoord(HighPeak) - 8);
-                      canvas.textAlign = 'center';
-                      canvas.fillText("RVC peak", 0 , 0, g.height_);
-                      canvas.restore();
-                      canvas.save();
-                      canvas.translate(g.toDomXCoord(StartCount + EventWidth / 2), g.toDomYCoord(-HighPeak) + 8);
-                      canvas.textAlign = 'center';
-                      canvas.fillText("RVC peak", 0 , 0, g.height_);
-                      canvas.restore();
-                      canvas.restore();
-                    }
+                  if(this.ViewMode==='RMS') {
+                    canvas.save();            
+                    canvas.translate(g.toDomXCoord(StartCount - StartCount / 8), g.toDomYCoord(HighStart) - 8);
+                    canvas.fillText("RVC enter", 0 , 0, g.height_);
+                    canvas.restore();
+                    canvas.save();
+                    canvas.translate(g.toDomXCoord(StartCount - StartCount / 8), g.toDomYCoord(-HighStart) + 8);
+                    canvas.fillText("RVC enter", 0 , 0, g.height_);
+                    canvas.restore();
+                    canvas.save();
+                    canvas.translate(g.toDomXCoord(EndCount + StartCount / 8), g.toDomYCoord(HighEnd) - 8);
+                    canvas.textAlign = 'right';
+                    canvas.fillText("RVC exit", 0 , 0, g.height_);
+                    canvas.restore();
+                    canvas.save();
+                    canvas.translate(g.toDomXCoord(EndCount + StartCount / 8), g.toDomYCoord(-HighEnd) + 8);
+                    canvas.textAlign = 'right';
+                    canvas.fillText("RVC exit", 0 , 0, g.height_);
+                    canvas.restore();
+                    canvas.save();
+                    canvas.translate(g.toDomXCoord(StartCount + EventWidth / 2), g.toDomYCoord(HighPeak) - 8);
+                    canvas.textAlign = 'center';
+                    canvas.fillText("RVC peak", 0 , 0, g.height_);
+                    canvas.restore();
+                    canvas.save();
+                    canvas.translate(g.toDomXCoord(StartCount + EventWidth / 2), g.toDomYCoord(-HighPeak) + 8);
+                    canvas.textAlign = 'center';
+                    canvas.fillText("RVC peak", 0 , 0, g.height_);
+                    canvas.restore();
+                    canvas.restore();
+                  }
                 }
                 canvas.restore();
               }.bind(this),
