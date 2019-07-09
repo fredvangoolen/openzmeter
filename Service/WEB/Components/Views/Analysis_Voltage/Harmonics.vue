@@ -81,6 +81,7 @@
         var Options = {
           strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], interactionModel: { }, plotter: Graph.multiColumnBarPlotter, visibility: this.VoltagePhases.concat(CurrentPhases),
           dateWindow: [ToShow[0][0] - 0.5, ToShow[ToShow.length - 1][0] + 0.5], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, showRangeSelector: false,
+          drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback,
           labels: ['Harmonic'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)).concat(oZm.Series['CURRENT'].Names(Analyzer)), series: Series,
           colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length)), 
           axes: { 

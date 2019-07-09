@@ -17,6 +17,7 @@
     created : function() {
       this.Dates = [];
       this.GraphOptions = { strokeWidth: 0.5, labels: ["Duration", "Events"], legend: 'follow', plotter: Graph.multiColumnBarPlotter, colors: ["#DF842A"], interactionModel: {},
+        drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback,
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 14,
                valueFormatter: function (x) { return x; },

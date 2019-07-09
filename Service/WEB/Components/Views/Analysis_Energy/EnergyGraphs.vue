@@ -61,7 +61,7 @@
       this.GraphOptionsActive = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, plotter: Graph.multiColumnBarPlotter,
         labels: ['Time', 'Active Energy'], interactionModel: Graph.ScrollableInteractionModel(this), colors: [oZm.Series['ACTIVE_ENERGY'].Color], xAxisHeight: 24, 
-        drawHighlightPointCallback: Graph.DrawHighlighBarChartCallback,
+        drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback,
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_ENERGY'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
@@ -75,7 +75,7 @@
       this.GraphOptionsReactive = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, plotter: Graph.multiColumnBarPlotter,
         labels: ['Time', 'Reactive Energy'], interactionModel: Graph.ScrollableInteractionModel(this), colors: [oZm.Series['REACTIVE_ENERGY'].Color], xAxisHeight: 24, 
-        drawHighlightPointCallback: Graph.DrawHighlighBarChartCallback,
+        drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback,
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) {  var Result = oZm.Series['REACTIVE_ENERGY'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
