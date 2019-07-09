@@ -188,6 +188,8 @@
     multiColumnBarPlotter: function(e) {
       if(e.seriesIndex !== 0) return;
       var g = e.dygraph;
+      g.user_attrs_.cx=[];
+      g.user_attrs_.cy=[];
       var ctx = e.drawingContext;
       var sets = e.allSeriesPoints;
       var y_bottom = e.dygraph.toDomYCoord(0);
@@ -198,7 +200,7 @@
       }
       var bar_width = Math.floor(2.5 / 3 * min_sep);
       if(bar_width!=NaN){
-        g.bar_width=bar_width;
+        g.bar_width=bar_width/sets.length;
       }
       var subbar_width = bar_width / sets.length;
       g.subbar_width=subbar_width;
@@ -237,14 +239,24 @@
         oZm.mouseUp(event, g, contex);
         if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
     },
-    DrawHighlighBarChartCallback: function(g, seriesName, canvasContext, cx, cy, color, pointSize){
-      if(g.bar_width!==undefined){
-        canvasContext.fillRect(g.user_attrs_.cx-g.bar_width/2,g.user_attrs_.cy,g.bar_width,g.y_bottom - g.user_attrs_.cy);
+    DrawHighlightBarChartCallback: function(g, seriesName, canvasContext, cx, cy, color, pointSize){
+      var serieIndex=g.user_attrs_.colors.indexOf(color);
+      if(g.user_attrs_.cx!==undefined && g.user_attrs_.cx[serieIndex]!=undefined){
+        canvasContext.fillRect(
+          g.user_attrs_.cx[serieIndex]-g.bar_width/(g.colors_.length==1?2:1)*(1-serieIndex),
+        g.user_attrs_.cy[serieIndex],
+        g.bar_width,
+        g.y_bottom - g.user_attrs_.cy[serieIndex]);
       }
-      g.user_attrs_.cx=cx;
-      g.user_attrs_.cy=cy;
-      canvasContext.fillStyle=chroma(canvasContext.fillStyle).brighten(2);
-      canvasContext.fillRect(cx-g.bar_width/2,cy,g.bar_width,g.y_bottom - cy);
+      
+      g.user_attrs_.cx[serieIndex]=cx;
+      g.user_attrs_.cy[serieIndex]=cy;
+      canvasContext.fillStyle=chroma(color).brighten(2);
+      canvasContext.fillRect(
+        cx-g.bar_width/(g.colors_.length==1?2:1)*(1-serieIndex),
+      cy,
+      g.bar_width,
+      g.y_bottom - cy);
     },
     props: ['options'],
     data() {
