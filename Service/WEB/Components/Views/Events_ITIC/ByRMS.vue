@@ -16,6 +16,7 @@
     created: function() {
       this.RMSs = [-100, -80, -50, -20, -15, -10, -5, 0, 5, 10, 15, 20, 50, 100];
       this.GraphOptions = { strokeWidth: 1, labels: ["Variation", "Events"], legend: 'follow', plotter: Graph.multiColumnBarPlotter, colors: ["#DF842A"], dateWindow: [-1, this.RMSs.length], interactionModel: {},
+        drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback,
         axes: {
           y: { pixelsPerLabel: 15,
                axisLabelWidth: 14,

@@ -29,7 +29,7 @@
       return {THD: 0, THDText: '', ShowSpinner: true, Warning: true };
     },
     created: function() {
-      this.GraphOptions = { strokeWidth: 1, labels: ["Distorsion", "Time"], stepPlot: true, plotter: Graph.multiColumnBarPlotter, colors: [oZm.Series['REACTIVE_POWER'].Color], interactionModel: {}, legend: 'follow' };
+      this.GraphOptions = { strokeWidth: 1, labels: ["Distorsion", "Time"], stepPlot: true, plotter: Graph.multiColumnBarPlotter, colors: [oZm.Series['REACTIVE_POWER'].Color], interactionModel: {}, legend: 'follow', drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback, };
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);  
     },
     mounted: function() {
