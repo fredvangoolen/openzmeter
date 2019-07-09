@@ -10,7 +10,6 @@
           <div class="modal-header">
             <div class="pull-left"><h4 class="modal-title">{{ Title }}</h4></div>
             <div class="pull-right btn-group">
-              <h5 class="modal-title"><span class="label label-success">{{NewsPos+1}}/{{News.length}}</span></h5>
               <div class="pull-right btn-group">
                 <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Previous" :disabled="NewsPos == 0" v-on:click="Prev"><img :src="require('Imgs/resultset_previous.png')"></button>
                 <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Next" :disabled="NewsPos == (News.length - 1)" v-on:click="Next"><img :src="require('Imgs/resultset_next.png')"></button>
