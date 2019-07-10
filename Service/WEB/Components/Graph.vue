@@ -282,7 +282,9 @@
       this.Options = Object.assign({ strokeWidth: 0.5, gridLineColor: "rgba(0, 0, 0, 0.1)", gridLinePattern: [4, 4], labels: ['Index', 'Value'], interactionModel: {} }, this.options);
     },
     mounted: function() {
-      this.Graph = new Dygraph(this.$el, [[0, 0]], this.Options);
+      var Data = [[0, 0]];
+      if(this.Options.labels !== undefined) Data = [new Array(this.Options.labels.length).fill(0.0)];
+      this.Graph = new Dygraph(this.$el, Data, this.Options);
     },
     beforeDestroy: function() {
       this.Graph.destroy();
