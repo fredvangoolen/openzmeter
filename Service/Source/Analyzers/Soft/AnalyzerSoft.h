@@ -24,7 +24,6 @@ class AnalyzerSoft : public AnalyzerInterface {
       float                 A0;
       float                 A1;
       float                 A2;
-//      float                 B_0;
       float                 B1;
       float                 B2;
       vector<float>         ChannelsZ1;

@@ -37,7 +37,7 @@
       },
       SetPhases: function(phases) {
         this.$refs.phases.SetPhases(phases);
-        this.VoltagePhases = phases;
+        this.Phases = phases;
         this.CalcOptions();
       },
       SetOption: function(option, val) {
@@ -57,16 +57,17 @@
         this.ShowSpinner = false;
       },
       CalcOptions: function() {
-        if((this.$root.SelectedAnalyzer === null) || (this.VoltagePhases === null) || (this.ShowCurrent === null) || (Array.isArray(this.Data) === false)) return;
-        var Analyzer = this.$root.SelectedAnalyzer, Series = {}, CurrentPhases = [];
-        for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length; n++) {
-          CurrentPhases.push((this.VoltagePhases[n] === true) && (this.ShowCurrent === true));
-          if((this.VoltagePhases[n] === true) && (this.ShowCurrent === true)) Series[oZm.Series['CURRENT'].Names(Analyzer)[n]] = { axis: 'y2' };
+        if((this.$root.SelectedAnalyzer === null) || (this.Phases === null) || (this.ShowCurrent === null) || (Array.isArray(this.Data) === false)) return;
+        var Analyzer = this.$root.SelectedAnalyzer, Series = {}, CurrentPhases = [], VoltagePhases = [];
+        for(var n = 0; n < this.Phases.length; n++) {
+          if(n < oZm.Series['VOLTAGE'].Names(Analyzer).length) VoltagePhases.push(this.Phases[n]);
+          CurrentPhases.push((this.Phases[n] === true) && (this.ShowCurrent === true));
+          if((this.Phases[n] === true) && (this.ShowCurrent === true)) Series[oZm.Series['CURRENT'].Names(Analyzer)[n]] = { axis: 'y2' };
         }
-        var Y1Range = oZm.Series['VOLTAGE_SAMPLES'].Range(this.Data, this.VoltagePhases);
-        var Y2Range = oZm.Series['CURRENT_SAMPLES'].Range(this.Data, Array(this.VoltagePhases.length).fill(false).concat(CurrentPhases));
+        var Y1Range = oZm.Series['VOLTAGE_SAMPLES'].Range(this.Data, VoltagePhases);
+        var Y2Range = oZm.Series['CURRENT_SAMPLES'].Range(this.Data, Array(VoltagePhases.length).fill(false).concat(CurrentPhases));
         var Options = {
-          legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, series: Series, visibility: this.VoltagePhases.concat(CurrentPhases),
+          legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, series: Series, visibility: VoltagePhases.concat(CurrentPhases),
           labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)).concat(oZm.Series['CURRENT'].Names(Analyzer)), 
           colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length)), 
           plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], showRangeSelector: false,
@@ -103,7 +104,7 @@
     },
     created: function() {
       this.Data = null;
-      this.VoltagePhases = null;
+      this.Phases = null;
       this.ShowCurrent = null;
     },
     components: { Spinner, ToolbarPhases, ToolbarOptions, ToolbarTools, Graph }

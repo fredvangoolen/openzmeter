@@ -48,50 +48,6 @@ F 3 "https://es.aliexpress.com/store/product/Free-Shipping-100pcs-lots-MCP6004-I
 	-1   0    0    -1  
 $EndComp
 $Comp
-L Components:4066 U2
-U 1 1 5BD04518
-P 5125 3725
-F 0 "U2" H 5325 3576 50  0000 C CNN
-F 1 "4066" H 5325 3875 50  0000 C CNN
-F 2 "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm" H 5125 3725 60  0001 C CNN
-F 3 "" H 5125 3725 60  0001 C CNN
-	1    5125 3725
-	1    0    0    -1  
-$EndComp
-$Comp
-L Components:4066 U2
-U 2 1 5BD045A3
-P 5450 5325
-F 0 "U2" H 5650 5176 50  0000 C CNN
-F 1 "4066" H 5650 5475 50  0000 C CNN
-F 2 "Housings_SOIC:SOIC-14_3.9x8.7mm_Pitch1.27mm" H 5450 5325 60  0001 C CNN
-F 3 "" H 5450 5325 60  0001 C CNN
-	2    5450 5325
-	1    0    0    -1  
-$EndComp
-$Comp
-L Components:4066 U2
-U 3 1 5BD045CE
-P 5100 6750
-F 0 "U2" H 5300 6601 50  0000 C CNN
-F 1 "4066" H 5300 6900 50  0000 C CNN
-F 2 "Housings_SOIC:SOIC-14_3.9x8.7mm_Pitch1.27mm" H 5100 6750 60  0001 C CNN
-F 3 "" H 5100 6750 60  0001 C CNN
-	3    5100 6750
-	1    0    0    -1  
-$EndComp
-$Comp
-L Components:4066 U2
-U 4 1 5BD045F7
-P 5425 8200
-F 0 "U2" H 5625 8051 50  0000 C CNN
-F 1 "4066" H 5625 8350 50  0000 C CNN
-F 2 "Housings_SOIC:SOIC-14_3.9x8.7mm_Pitch1.27mm" H 5425 8200 60  0001 C CNN
-F 3 "" H 5425 8200 60  0001 C CNN
-	4    5425 8200
-	1    0    0    -1  
-$EndComp
-$Comp
 L 3Phase-rescue:R-3Phase-rescue R8
 U 1 1 5BD04895
 P 4650 2825
@@ -536,7 +492,7 @@ L 3Phase-rescue:C_Small-3Phase-rescue C5
 U 1 1 5BD0638E
 P 4700 1150
 F 0 "C5" H 4710 1220 50  0000 L CNN
-F 1 "C_Small" H 4710 1070 50  0001 L CNN
+F 1 "100nF" H 4710 1070 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 4700 1150 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 4700 1150 50  0001 C CNN
 	1    4700 1150
@@ -1395,54 +1351,6 @@ L3I_ADC
 Text GLabel 4450 7250 0    60   Input ~ 0
 NI_ADC
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R58
-U 1 1 5BF32CC5
-P 5475 3675
-F 0 "R58" V 5555 3675 50  0000 C CNN
-F 1 "1k5" V 5475 3675 50  0001 C CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" V 5405 3675 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-8-2K-8K2-9-1K-9K1/624710_32949773329.html" H 5475 3675 50  0001 C CNN
-	1    5475 3675
-	0    -1   1    0   
-$EndComp
-Text GLabel 4600 3775 0    60   Input ~ 0
-L1_GAIN
-$Comp
-L 3Phase-rescue:R-3Phase-rescue R59
-U 1 1 5BF44E5F
-P 5100 5275
-F 0 "R59" V 5180 5275 50  0000 C CNN
-F 1 "1k5" V 5100 5275 50  0001 C CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" V 5030 5275 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-1-3K-1K3-1-5K-1K5/624710_32953475610.html" H 5100 5275 50  0001 C CNN
-	1    5100 5275
-	0    -1   1    0   
-$EndComp
-Text GLabel 4600 5375 0    60   Input ~ 0
-L2_GAIN
-$Comp
-L 3Phase-rescue:R-3Phase-rescue R60
-U 1 1 5BFA4892
-P 5450 6700
-F 0 "R60" V 5530 6700 50  0000 C CNN
-F 1 "1k5" V 5450 6700 50  0001 C CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" V 5380 6700 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-1-3K-1K3-1-5K-1K5/624710_32953475610.html" H 5450 6700 50  0001 C CNN
-	1    5450 6700
-	0    -1   1    0   
-$EndComp
-$Comp
-L 3Phase-rescue:R-3Phase-rescue R61
-U 1 1 5BFA574E
-P 5075 8150
-F 0 "R61" V 5155 8150 50  0000 C CNN
-F 1 "1k5" V 5075 8150 50  0001 C CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" V 5005 8150 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-1-3K-1K3-1-5K-1K5/624710_32953475610.html" H 5075 8150 50  0001 C CNN
-	1    5075 8150
-	0    -1   1    0   
-$EndComp
-$Comp
 L Components:LED_Dual_ACA D12
 U 1 1 5BFAD7FE
 P 2300 5225
@@ -1869,14 +1777,9 @@ Wire Wire Line
 	875  10000 825  10000
 Wire Wire Line
 	825  9400 875  9400
-Wire Wire Line
-	5300 6700 5275 6700
-Connection ~ 5650 8150
 Connection ~ 5650 6700
 Wire Wire Line
 	5650 7675 5650 7700
-Wire Wire Line
-	5600 8150 5650 8150
 Wire Wire Line
 	6075 6000 6075 5975
 Wire Wire Line
@@ -1886,26 +1789,13 @@ Wire Wire Line
 Wire Wire Line
 	6275 7600 6625 7600
 Wire Wire Line
-	4600 5375 5275 5375
-Connection ~ 4875 4875
-Wire Wire Line
 	4475 3125 4475 3150
 Wire Wire Line
 	4875 4850 4875 4875
-Connection ~ 5650 5275
 Wire Wire Line
 	5650 4850 5650 4875
 Wire Wire Line
-	5625 5275 5650 5275
-Wire Wire Line
-	4950 3775 4600 3775
-Connection ~ 4875 3275
-Wire Wire Line
-	4875 3675 4950 3675
-Wire Wire Line
 	4875 3200 4875 3275
-Wire Wire Line
-	5300 3675 5325 3675
 Connection ~ 5650 3675
 Wire Wire Line
 	5650 3250 5650 3275
@@ -2396,26 +2286,12 @@ Connection ~ 4875 5850
 Wire Wire Line
 	4875 6250 4875 6300
 Wire Wire Line
-	4875 6700 4925 6700
-Connection ~ 4875 6300
-Wire Wire Line
 	5650 7350 5650 7375
 Connection ~ 4875 7250
 Wire Wire Line
 	5525 7675 4875 7675
 Wire Wire Line
 	4875 7625 4875 7675
-Wire Wire Line
-	4875 8150 4925 8150
-Connection ~ 4875 7675
-Text GLabel 4600 6800 0    60   Input ~ 0
-L3_GAIN
-Wire Wire Line
-	4925 6800 4600 6800
-Text GLabel 4600 8250 0    60   Input ~ 0
-N_GAIN
-Wire Wire Line
-	4600 8250 5250 8250
 Wire Wire Line
 	4475 2825 4475 2925
 Wire Wire Line
@@ -2441,11 +2317,7 @@ Wire Wire Line
 Wire Wire Line
 	5650 6700 5700 6700
 Wire Wire Line
-	4875 4875 4875 5275
-Wire Wire Line
 	5650 5275 5700 5275
-Wire Wire Line
-	4875 3275 4875 3675
 Wire Wire Line
 	5650 3675 5700 3675
 Wire Wire Line
@@ -2617,11 +2489,7 @@ Wire Wire Line
 Wire Wire Line
 	4875 5850 4900 5850
 Wire Wire Line
-	4875 6300 4875 6700
-Wire Wire Line
 	4875 7250 4900 7250
-Wire Wire Line
-	4875 7675 4875 8150
 Wire Wire Line
 	1650 8525 1800 8525
 Wire Wire Line
@@ -2700,17 +2568,6 @@ F 3 "https://es.aliexpress.com/store/product/Free-Shipping-100pcs-lots-MCP6004-I
 $EndComp
 Wire Wire Line
 	6075 3700 6075 3575
-$Comp
-L power:GND #PWR0102
-U 1 1 5C127F7D
-P 5125 3925
-F 0 "#PWR0102" H 5125 3675 50  0001 C CNN
-F 1 "GND" H 5125 3775 50  0000 C CNN
-F 2 "" H 5125 3925 50  0000 C CNN
-F 3 "" H 5125 3925 50  0000 C CNN
-	1    5125 3925
-	-1   0    0    -1  
-$EndComp
 $Comp
 L 3Phase-rescue:R-3Phase-rescue R38
 U 1 1 5C1EE790
@@ -2793,10 +2650,6 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	1    6775 5000
 	1    0    0    1   
 $EndComp
-Wire Wire Line
-	6625 3700 6625 3675
-Wire Wire Line
-	6775 3700 6775 3675
 Wire Wire Line
 	6275 4775 6625 4775
 Wire Wire Line
@@ -2927,45 +2780,6 @@ Wire Wire Line
 	2300 7625 1950 7625
 Wire Wire Line
 	1950 7725 2300 7725
-Wire Wire Line
-	5125 3925 5125 3900
-Wire Wire Line
-	5125 3550 5125 3525
-Wire Wire Line
-	5275 5275 5250 5275
-Wire Wire Line
-	4875 5275 4950 5275
-$Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C27
-U 1 1 5C351266
-P 5000 3525
-F 0 "C27" H 5010 3595 50  0000 L CNN
-F 1 "100nF" H 5010 3445 50  0001 L CNN
-F 2 "Capacitor_SMD:C_0603_1608Metric" H 5000 3525 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 5000 3525 50  0001 C CNN
-	1    5000 3525
-	0    1    -1   0   
-$EndComp
-Wire Wire Line
-	5100 3525 5125 3525
-Connection ~ 5125 3525
-Wire Wire Line
-	5125 3525 5125 3475
-$Comp
-L power:GND #PWR0107
-U 1 1 5C3CD0CB
-P 4775 3525
-F 0 "#PWR0107" H 4775 3275 50  0001 C CNN
-F 1 "GND" H 4775 3375 50  0000 C CNN
-F 2 "" H 4775 3525 50  0000 C CNN
-F 3 "" H 4775 3525 50  0000 C CNN
-	1    4775 3525
-	0    1    -1   0   
-$EndComp
-Wire Wire Line
-	4900 3525 4775 3525
-Wire Wire Line
-	5250 8150 5225 8150
 $Comp
 L Transistor_FET:2N7002 Q2
 U 1 1 5C95A6F5
@@ -3389,17 +3203,6 @@ F 1 "+5V" V 6150 5950 50  0000 C CNN
 F 2 "" H 6075 5900 50  0000 C CNN
 F 3 "" H 6075 5900 50  0000 C CNN
 	1    6075 5900
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:+5V #PWR0116
-U 1 1 5D196230
-P 5125 3475
-F 0 "#PWR0116" H 5125 3325 50  0001 C CNN
-F 1 "+5V" V 5200 3525 50  0000 C CNN
-F 2 "" H 5125 3475 50  0000 C CNN
-F 3 "" H 5125 3475 50  0000 C CNN
-	1    5125 3475
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
