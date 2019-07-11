@@ -188,30 +188,25 @@
     multiColumnBarPlotter: function(e) {
       if(e.seriesIndex !== 0) return;
       var g = e.dygraph;
-      g.user_attrs_.cx=[];
-      g.user_attrs_.cy=[];
+      g.UndoHighlight = { cx: [], cy: [] };
       var ctx = e.drawingContext;
       var sets = e.allSeriesPoints;
+      g.SeriesCount = sets.length;
       var y_bottom = e.dygraph.toDomYCoord(0);
-      g.y_bottom=y_bottom;
+      g.y_bottom = y_bottom;
       var min_sep = Infinity;
       for(var j = 0; j < sets.length; j++) {
         for(var i = 1; i < sets[j].length; i++) min_sep = Math.min(sets[j][i].canvasx - sets[j][i - 1].canvasx, min_sep);
       }
       var bar_width = Math.floor(2.5 / 3 * min_sep);
-      if(bar_width!=NaN){
-        g.bar_width=bar_width/sets.length;
-      }
-      var subbar_width = bar_width / sets.length;
-      g.subbar_width=subbar_width;
+      g.subbar_width = bar_width / sets.length;
       for(var j = 0; j < sets.length; j++) {
         ctx.strokeStyle = g.getColors()[j];
         ctx.fillStyle = g.getColors()[j];
         for(var i = 0; i < sets[j].length; i++) {
           var p = sets[j][i];
-          var x_left = p.canvasx - (subbar_width * sets.length / 2) + j * subbar_width;
-          ctx.fillRect(x_left, p.canvasy, bar_width / sets.length, y_bottom - p.canvasy);
-          ctx.strokeRect(x_left, p.canvasy, bar_width / sets.length, y_bottom - p.canvasy);
+          var x_left = p.canvasx - (g.subbar_width * sets.length / 2) + j * g.subbar_width;
+          ctx.fillRect(x_left, p.canvasy, g.subbar_width, y_bottom - p.canvasy);
         }
       }
     },
@@ -233,30 +228,26 @@
       return { mousedown: mouseDown, mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
                 touchstart: touchStart, touchmove: touchMove, touchend: touchEnd.bind(parent) };
     },
-
-
     MouseUpEvt: function(event, g, contex) {
         oZm.mouseUp(event, g, contex);
         if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
     },
-    DrawHighlightBarChartCallback: function(g, seriesName, canvasContext, cx, cy, color, pointSize){
-      var serieIndex=g.user_attrs_.colors.indexOf(color);
-      if(g.user_attrs_.cx!==undefined && g.user_attrs_.cx[serieIndex]!=undefined){
-        canvasContext.fillRect(
-          g.user_attrs_.cx[serieIndex]-g.bar_width/(g.colors_.length==1?2:1)*(1-serieIndex),
-        g.user_attrs_.cy[serieIndex],
-        g.bar_width,
-        g.y_bottom - g.user_attrs_.cy[serieIndex]);
+    DrawHighlightBarChartCallback: function(g, seriesName, canvasContext, cx, cy, color, pointSize) {
+      var serieIndex = g.user_attrs_.labels.indexOf(seriesName) - 1;
+      var VisibleSerie = serieIndex;
+      for(var n = 0; n < serieIndex; n++) {
+        if(g.user_attrs_.visibility[n] === false) VisibleSerie--;
       }
+      if(g.UndoHighlight.cx !== undefined && g.UndoHighlight.cx[serieIndex] !== undefined) {
+        var x_left = g.UndoHighlight.cx[serieIndex] - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
+        canvasContext.fillRect(x_left, g.UndoHighlight.cy[serieIndex], g.subbar_width, g.y_bottom - g.UndoHighlight.cy[serieIndex]);
+      }
+      g.UndoHighlight.cx[serieIndex]=cx;
+      g.UndoHighlight.cy[serieIndex]=cy;
+      canvasContext.fillStyle = chroma(color).brighten(2);
       
-      g.user_attrs_.cx[serieIndex]=cx;
-      g.user_attrs_.cy[serieIndex]=cy;
-      canvasContext.fillStyle=chroma(color).brighten(2);
-      canvasContext.fillRect(
-        cx-g.bar_width/(g.colors_.length==1?2:1)*(1-serieIndex),
-      cy,
-      g.bar_width,
-      g.y_bottom - cy);
+      var x_left = cx - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
+      canvasContext.fillRect(x_left, cy, g.subbar_width, g.y_bottom - cy);
     },
     props: ['options'],
     data() {
