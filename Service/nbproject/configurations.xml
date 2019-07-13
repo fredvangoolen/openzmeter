@@ -118,7 +118,7 @@
       <makefileType>
         <makeTool>
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
-          <buildCommand>${MAKE} -j8 -f Makefile CONFIG=Configs/openWRT.config</buildCommand>
+          <buildCommand>${MAKE} -j8 -f Makefile CONFIG=Configs/debian.config</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath>Tmp/openZmeter</executablePath>
           <cTool>
@@ -737,7 +737,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190704.0220"</Elem>
+            <Elem>__BUILD__="20190713.0902"</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -946,7 +946,7 @@
           </incDir>
           <preprocessorList>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190704.0217"</Elem>
+            <Elem>__BUILD__="20190713.0902"</Elem>
           </preprocessorList>
           <undefinedList>
             <Elem>__ARM_ASM_SYNTAX_UNIFIED__</Elem>
