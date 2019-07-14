@@ -14,7 +14,7 @@
         </div>
         <div class="col-sm-12 col-md-4 col-lg-6">
           <h4>Voltage and current phase angle</h4>
-          <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive"></vuetable>
+          <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
         </div>
       </div>
     </div>
@@ -29,6 +29,7 @@
   import Graph from 'Components/Graph.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import vuetable from 'vuetable-2';
+  import 'CSS/table-responsive.css';
   export default {
     data() {
       return { ShowSpinner: true, Time: 'Loading data...',
@@ -72,6 +73,9 @@
     },
     mounted: function() {
       $(window).on('resize', this.Redraw.bind(this));
+    },
+    updated: function(){
+        oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     beforeDestroy: function() {
       $(window).off('resize', this.Redraw);
@@ -178,6 +182,7 @@
 </script>
 
 <style scoped>
+@media screen and (min-width: 600px) {
   .table >>> th:nth-child(1)  {
     width: 40px;
     text-align: center;
@@ -198,4 +203,5 @@
   .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
     text-align: right;
   }
+}
 </style>
