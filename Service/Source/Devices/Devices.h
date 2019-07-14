@@ -39,7 +39,7 @@ class DeviceManager {
   private :  
     static vector<Device*>  pDevices;
   public :
-    static void AddDevice(Device *dev);
+    static bool AddDevice(Device *dev);
   private :
     static void GetDevicesCallback(HTTPRequest &req);
     static void GetDeviceCallback(HTTPRequest &req);

@@ -69,7 +69,6 @@
           canvas.font = "16px sans-serif";
           canvas.fillStyle = "#333";
           canvas.fillText("No interruption region", c + 5 , g.toDomYCoord(0) - 5);
-          canvas.textAlign = "end";
           canvas.fillText("No damage region",  c + w - 5 , g.toDomYCoord(0) - 5);
           canvas.textBaseline = "top";
           canvas.fillText("Prohibited region", c + w - 5 , 5);

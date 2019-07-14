@@ -32,8 +32,12 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("/delTariffs",          DeviceManager::DelTariffsCallback);
   for(uint32_t i = 0; i < pDevices.size(); i++) pDevices[i]->Start();
 }
-void DeviceManager::AddDevice(Device *dev) {
+bool DeviceManager::AddDevice(Device *dev) {
+  for(uint n = 0; n < pDevices.size(); n++) {
+    if(dev->Serial() == pDevices[n]->Serial()) return false;
+  }
   pDevices.push_back(dev);
+  return true;
 }
 DeviceManager::~DeviceManager() {
   for(uint32_t i = 0; i < pDevices.size(); i++) delete pDevices[i];
