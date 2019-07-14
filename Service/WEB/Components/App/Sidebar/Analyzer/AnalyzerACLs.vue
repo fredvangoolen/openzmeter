@@ -27,8 +27,9 @@
     data() {
       return { Show: false,
         Columns: [
-          {name: 'Name', title: 'User Name'},
-          {name: 'StartDate', title: 'Read', callback: 'DateFormat'},
+          {name: 'UserName', title: 'User Name'},
+          {name: 'View', title: 'View', callback: 'DateFormat'},
+          {name: ''},
           {name: 'EndDate', title: 'End date', callback: 'DateFormat'}, 
           {name: '__slot:actions', title: ''}
         ]
