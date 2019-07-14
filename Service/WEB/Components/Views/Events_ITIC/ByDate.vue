@@ -25,7 +25,7 @@
              },
           x: {  pixelsPerLabel: 26,
                 valueFormatter: function (x) { return ((x < 0) || (x >= this.Dates.length)) ? "" : moment(this.Dates[x][1]).format('DD<br>MM'); }.bind(this),
-                axisLabelFormatter: function (x) { return ((x < 0) || (x >= this.Dates.length)) ? "" : moment(this.Dates[x][1]).format('DD<br>MM'); }.bind(this)
+                axisLabelFormatter: function (x) { return ((x < 0) || (x >= this.Dates.length) || (Number.isInteger() === false)) ? "" : moment(this.Dates[x][1]).format('DD<br>MM'); }.bind(this)
              }
         }
       };

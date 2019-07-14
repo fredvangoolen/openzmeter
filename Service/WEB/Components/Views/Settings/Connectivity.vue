@@ -98,7 +98,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
             this.NTPDetails = 'Local timezone : ' + moment.tz.zone(moment.tz.guess()).name + '\nTime           : ' + moment(result.Time).format('DD/MM/YYYY HH:mm:ss');
           }.bind(this),
           complete: function() { 
-            setTimeout(this.UpdateTime, 500); 
+            this.Timer2 = setTimeout(this.UpdateTime, 500); 
           }.bind(this)
         });  
       },
@@ -114,7 +114,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
             }
           }.bind(this),
           complete: function() { 
-            setTimeout(this.UpdateWifi, 5000); 
+            this.Timer = setTimeout(this.UpdateWifi, 5000); 
           }.bind(this)
         });  
       },
@@ -157,7 +157,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
             this.Loading = false;
             this.$nextTick(function() { 
               this.$refs.EnableNTP.SetState(this.NTPEnabled); 
-              this.Timer = setTimeout(this.UpdateTime, 1000); 
+              this.Timer2 = setTimeout(this.UpdateTime, 1000); 
             });
           }.bind(this)
         });  

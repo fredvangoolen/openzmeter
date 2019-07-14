@@ -9,10 +9,10 @@
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
       <div class="row">
-        <div class="col-sm-3 col-md-6 col-lg-4" ref="graphContainer">
+        <div class="col-sm-12 col-md-8 col-lg-6" ref="graphContainer">
           <graph ref="graph" class="graph" :options="GraphOptions"></graph>
         </div>
-        <div class="col-sm-9 col-md-6 col-lg-8">
+        <div class="col-sm-12 col-md-4 col-lg-6">
           <h4>Voltage and current phase angle</h4>
           <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive"></vuetable>
         </div>
@@ -43,7 +43,31 @@
     created: function() {
       this.Data = [];
       this.GraphOptions = {
-        highlightCircleSize: 0,  interactionModel: { }, legend: 'never', valueRange: [-130, 130], dateWindow: [-130, 130], plotter: this.Plotter, xAxisHeight: 0.1, xLabelHeight: 0.1
+        highlightCircleSize: 0,  interactionModel: { }, legend: 'never', plotter: this.Plotter, xAxisHeight: 0.1, xLabelHeight: 0.1,
+        labels: ['Index', 'Phase', 'Magnitude'], colors: ['#d9534f', '#428bca'], valueRange: [-100, 100], dateWindow: [-100, 100],
+        axes: {
+          y: { drawAxis: false, drawGrid: false, axisLabelWidth: 0.1, axisLineColor: "#FFF" },
+          x: { drawAxis: false, drawGrid: false, axisLabelWidth: 0.1, axisLineColor: "#FFF" }
+        },
+        underlayCallback: function(canvas, area, g) {
+          if((area.h <= 0) || (area.w <= 0)) return;
+          canvas.lineWidth = 0.5;
+          canvas.strokeStyle = g.attrs_.axisLineColor;
+          canvas.beginPath();
+          canvas.moveTo(g.toDomXCoord(-100), g.toDomYCoord(0));
+          canvas.lineTo(g.toDomXCoord(100), g.toDomYCoord(0));
+          canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(-100));
+          canvas.lineTo(g.toDomXCoord(0), g.toDomYCoord(100));
+          canvas.stroke();
+          canvas.beginPath();
+          canvas.setLineDash(g.user_attrs_.gridLinePattern);
+          canvas.strokeStyle = g.user_attrs_.gridLineColor;
+          canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(100) - g.toDomXCoord(0), 0, 2 * Math.PI);
+          canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(75) - g.toDomXCoord(0), 0, 2 * Math.PI);
+          canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(50) - g.toDomXCoord(0), 0, 2 * Math.PI);
+          canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(25) - g.toDomXCoord(0), 0, 2 * Math.PI);
+          canvas.stroke();
+        }
       };
     },
     mounted: function() {
@@ -56,27 +80,13 @@
       Plotter: function(e) {
         if((e.seriesIndex !== 0) || (e.plotArea.h < 0) || (e.plotArea.w < 0)) return;
         var ctx = e.drawingContext;
-        ctx.lineWidth = 0.5;
-        ctx.strokeStyle = e.dygraph.attrs_.axisLineColor;
-        ctx.beginPath();
-        ctx.moveTo(e.dygraph.toDomXCoord(-100), e.dygraph.toDomYCoord(0));
-        ctx.lineTo(e.dygraph.toDomXCoord(100), e.dygraph.toDomYCoord(0));
-        ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(-100));
-        ctx.lineTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(100));
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.setLineDash(e.dygraph.user_attrs_.gridLinePattern);
-        ctx.strokeStyle = e.dygraph.user_attrs_.gridLineColor;
-        ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(100) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(75) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(50) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(25) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
-        ctx.stroke();
+        var MaxSerieA = 0;
+        var MaxSerieB = 0;
+        for(var i = 0; i < e.points.length; i++) {
+          if((i % 2) == 0) MaxSerieA = Math.max(MaxSerieA, e.dygraph.file_[i][2]);
+          if((i % 2) == 1) MaxSerieB = Math.max(MaxSerieB, e.dygraph.file_[i][2]);
+//          MaxCurrent = Math.max(MaxCurrent, result.Current[i]);
+        }
         ctx.beginPath();
         ctx.fillStyle = '#000';
         ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), 5, 0, 2 * Math.PI, false);
@@ -130,7 +140,7 @@
       Redraw: function() {
         this.$nextTick(function() {
           if((this.$refs === undefined) || (this.$refs.graphContainer === undefined)) return;
-          var Width = this.$refs.graphContainer.clientWidth;
+          var Width = this.$refs.graphContainer.clientWidth - 30;
           this.$refs.graph.Redraw(Width, Width);
         });
       },
@@ -144,8 +154,6 @@
         this.Data = [];
         var Table = [];
         var Vectors = [];
-        var MaxCurrent = 0;
-        var MaxVoltage = 0;
         for(var i = 0; i < result['Voltage'].length; i++) {
           Vectors.push([i * 2, 120 * i, result.Voltage[i]]);
           Vectors.push([i * 2 + 1, 120 * i - result.Phi[i], result.Current[i]]);
@@ -153,22 +161,14 @@
           this.Data.push([Phases[i], "Current", i * 120 - result.Phi[i], result['Current'][i]]);
           Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(i * 120) + 'º', Value: oZm.Round2(result['Voltage'][i]) + '<em> V</em>' } );
           Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(i * 120 - result.Phi[i]) + 'º', Value: oZm.Round2(result.Current[i]) + '<em> A</em>'} );
-          MaxVoltage = Math.max(MaxVoltage, result.Voltage[i]);
-          MaxCurrent = Math.max(MaxCurrent, result.Current[i]);
+//          MaxVoltage = Math.max(MaxVoltage, result.Voltage[i]);
+//          MaxCurrent = Math.max(MaxCurrent, result.Current[i]);
         }
-        for(var i = 0; i < Vectors.length; i += 2) {
-          Vectors[i][2] = Vectors[i][2] / MaxVoltage;
-          Vectors[i + 1][2] = Vectors[i + 1][2] / MaxCurrent;
-        }
-        var Options = {
-          labels: ['Index', 'Phase', 'Magnitude'], colors: ['#d9534f', '#428bca'], 
-          axes: {
-            y: { drawAxis: false, drawGrid: false, axisLabelWidth: 0.0, axisLineColor: "#FFF" },
-            x: { drawAxis: false, drawGrid: false, axisLabelWidth: 0, axisLineColor: "#FFF" }
-          },
-          file: Vectors
-        };
-        this.$refs.graph.SetOptions(Options);
+//        for(var i = 0; i < Vectors.length; i += 2) {
+//          Vectors[i][2] = Vectors[i][2] / MaxVoltage;
+//          Vectors[i + 1][2] = Vectors[i + 1][2] / MaxCurrent;
+//        }
+        this.$refs.graph.SetOptions({ file: Vectors });
         this.$refs.table.setData( { data: Table });
         this.ShowSpinner = false;
       }
@@ -179,7 +179,7 @@
 
 <style scoped>
   .table >>> th:nth-child(1)  {
-    width: 20px;
+    width: 40px;
     text-align: center;
   }  
   .table >>> th:nth-child(2)  {
