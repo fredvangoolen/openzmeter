@@ -15,6 +15,7 @@
 #include "Support/SysSupport.h"
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(string id, AnalyzerInterface::AnalyzerMode mode, float samplerate) : AnalyzerInterface(id, mode) {
+  //Calc peak filter coefficients for nominal frequency
   for(uint n = 0; n < ZEROCROSSING_FILTERSTAGES; n++) {
     float w0 = 2 * M_PI * (pNominalFrequency / samplerate);
     float alpha = sin(w0) / 2.0;
@@ -22,21 +23,8 @@ AnalyzerSoft::AnalyzerSoft(string id, AnalyzerInterface::AnalyzerMode mode, floa
     Stage.A0 = alpha / (1.0 + alpha);
     Stage.A1 = 0.0;
     Stage.A2 = -alpha / (1.0 + alpha);
-//    Stage.B_0 = (1.0 + alpha);
     Stage.B1 = (-2.0 * cos(w0)) / (1.0 + alpha);
     Stage.B2 = (1.0 - alpha) / (1.0 + alpha);
-    
-    
-    
-//    float Q = 1.0;
-//    float K = tan(M_PI * (pNominalFrequency / samplerate));
-//    float Norm = 1 / (1 + K / Q + K * K);
-//    Filter_t Stage;
-//    Stage.A0 = K / Q * Norm;
-//    Stage.A1 = 0;
-//    Stage.A2 = -Stage.A0;
-//    Stage.B1 = 2 * (K * K - 1) * Norm;
-//    Stage.B2 = (1 - K / Q + K * K) * Norm;
     Stage.ChannelsZ1 = vector<float>((pMode == PHASE1) ? 1 : 3, 0.0);
     Stage.ChannelsZ2 = vector<float>((pMode == PHASE1) ? 1 : 3, 0.0);
     pFilters.push_back(Stage);
@@ -211,12 +199,14 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       This->pAggreg10C.Power_Factor[j] = This->pAggreg10C.Active_Power[j] / This->pAggreg10C.Apparent_Power[j];
       This->pAggreg10C.Reactive_Energy[j] = (This->pAggreg10C.Reactive_Power[j] * This->pAggreg10C.Current_Inputs[j]) / (This->pSamplerate * 3600.0);
     }
-    if((This->pMode == PHASE3N) && (!isnan(This->pAggreg10C.Current[3]))) {
+    if(This->pMode == PHASE3N) {
       This->pCurrentFFT[3]->Wait();
-      for(int i = 10; i <= 500 ; i = i + 10) {
-        int   Harmonic = (i / 10) - 1;
-        float CurrentHarmonic = This->pCurrentFFT[3]->BinPower(i);
-        if(Harmonic > 0) This->pAggreg10C.Current_THD[3] = This->AccumulateSUM(This->pAggreg10C.Current_THD[3], pow(CurrentHarmonic, 2.0));
+      if(!isnan(This->pAggreg10C.Current[3])) {
+        for(int i = 10; i <= 500 ; i = i + 10) {
+          int   Harmonic = (i / 10) - 1;
+          float CurrentHarmonic = This->pCurrentFFT[3]->BinPower(i);
+          if(Harmonic > 0) This->pAggreg10C.Current_THD[3] = This->AccumulateSUM(This->pAggreg10C.Current_THD[3], pow(CurrentHarmonic, 2.0));
+        }
       }
     }
     This->pEvents->Wait();
