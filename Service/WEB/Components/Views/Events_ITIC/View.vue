@@ -11,20 +11,16 @@
           </div>
           <div class="panel-body">
             <spinner v-if="ShowSpinner"></spinner>
-            <div class="row">
-              <div class="col-md-12 col-lg-6"><curve ref="itic"></curve></div> 
-              <div class="col-md-12 col-lg-6">
-                <div class="row" ref="subgraphs">
-                  <div class="col-xs-12 col-md-6"><by-date ref="date"></by-date></div>
-                  <div class="col-xs-12 col-md-6"><by-type ref="type"></by-type></div>
-                  <div class="col-xs-12 col-md-6"><by-rms ref="rms"></by-rms></div>
-                  <div class="col-xs-12 col-md-6"><by-duration ref="duration"></by-duration></div>
-                </div>
-              </div>
-            </div>
+            <curve ref="itic"></curve>
           </div>
         </div>
       </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12 col-md-6"><spinner v-if="ShowSpinner"></spinner><by-date ref="date"></by-date></div>
+      <div class="col-xs-12 col-md-6"><spinner v-if="ShowSpinner"></spinner><by-type ref="type"></by-type></div>
+      <div class="col-xs-12 col-md-6"><spinner v-if="ShowSpinner"></spinner><by-rms ref="rms"></by-rms></div>
+      <div class="col-xs-12 col-md-6"><spinner v-if="ShowSpinner"></spinner><by-duration ref="duration"></by-duration></div>
     </div>
   </div>
 </template>

@@ -88,12 +88,15 @@
       };
     },
     mounted: function() {
-      $(window).bind('resize', this.ResizeHandler.bind(this));
+      $(window).on('resize', this.ResizeHandler.bind(this));
       window.dispatchEvent(new Event('resize'));
+    },
+    beforedestroy: function() {
+      $(window).off('resize', this.ResizeHandler.bind(this));
     },
     methods: {
       ResizeHandler: function() {
-        if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', $(this.$parent.$refs.subgraphs).height() - 20);
+        if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', 400);
       },
       MaxDiff: function(a) {
         if(this.$root.SelectedAnalyzer === null) return 0;
