@@ -105,7 +105,6 @@ void Suspend() {
 }
 // DMA interrupts to handle ADC oversample -----------------------------------------------------------------------------
 void DMA_CH1_ISR() {
-  GPIOA->ODR =  GPIOA->ODR ^ GPIO_ODR_1;
   ADC_Sequence_t *Ptr = (DMA1->ISR & DMA_ISR_HTIF1) ? &ADC_Read[0] : &ADC_Read[4];
   DMA1->IFCR |= DMA_IFCR_CTCIF1 | DMA_IFCR_CHTIF1;
   BufferPush(((Ptr[0].VR + Ptr[1].VR + Ptr[2].VR + Ptr[3].VR) >> 1) | 0x0000);

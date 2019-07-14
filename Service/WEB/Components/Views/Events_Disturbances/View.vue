@@ -6,7 +6,6 @@
           <span class="header-text">Disturbances</span>
           <div class="header-buttons clearfix" ref="Toolbar">
             <toolbar-period variable="Period" v-on:PeriodChanged="GetEvents" ref="period"></toolbar-period>
-            <toolbar-tools :options="['EXPORT']" v-on:ExportClick="ExportClick" ref="tools"></toolbar-tools>
           </div>
         </div>
         <div class="panel-body">
@@ -24,9 +23,10 @@
 <script>
   import vis from 'JS/vis.js';
   import 'CSS/vis.css';
+  import 'CSS/jquery.qtip.css';
+  import qtip from 'JS/jquery.qtip.js';
   import Spinner from 'Components/Spinner.vue';
   import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
   import EventsTable from '../Analysis_Voltage/Events.vue';
   export default {
     data: function() {
@@ -53,6 +53,7 @@
       this.TimeLine.setGroups(Groups);
       this.$refs.period.SetAggregation('1H');
       this.TimeLine.setItems([]);
+      $(document).on("mouseover", '.vis-item', this.OnMouseOver);
     },
     methods: {
       WindowChange: function(evt) {
@@ -69,8 +70,8 @@
             content: '<table>' +
                      '<tr><td><strong>Time</strong></td><td> : ' + this.$refs.table.Events[i].Date + '</td></tr>' +
                      '<tr><td><strong>Duration</strong></td><td> : ' + this.$refs.table.Events[i].Duration + '</td></tr>' +
-//                     '<tr><td><strong>ΔU<sub>max</sub></strong></td><td> : ' + Round2Plain(result['Voltage'][i]) + ' V</td></tr>' +
-//                     '<tr><td><strong>% ΔU<sub>max</sub></strong></td><td> : ' + Round2Plain(result['Percentage'][i]) + '%</td></tr>' + 
+                     '<tr><td><strong>ΔU<sub>max</sub></strong></td><td> : ' + this.$refs.table.Events[i].Change + ' V</td></tr>' +
+                     '<tr><td><strong>% ΔU<sub>max</sub></strong></td><td> : ' + this.$refs.table.Events[i].Percent + '%</td></tr>' + 
                      '</table>'
           };
           if(this.$refs.table.Events[i].Type == 'INTERRUPTION') {
@@ -97,9 +98,19 @@
         this.TimeLine.setWindow(to - period, to);
         this.$refs.table.GetEvents(to, period, lastsample);
       },
-      ExportClick: function() {}
+      OnMouseOver: function($e) {
+        $($e.target).qtip({
+          overwrite: false,
+            content: {
+              text: $('.vis-item-content', $e.target).html()
+            },
+            position: { my: 'top left', at: 'bottom left' },
+            style: { classes: 'qtip-bootstrap' }
+        });
+        $($e.target).qtip().show();
+      }
     },
-    components: { Spinner, ToolbarPeriod, ToolbarTools, EventsTable }
+    components: { Spinner, ToolbarPeriod, EventsTable }
   }
 </script>
 
