@@ -57,7 +57,7 @@ void *FFT::FFT_Thread(void *args) {
     }
     pthread_mutex_unlock(&This->pThreadMutex);
     This->Transform(This->Output);
-    for(uint i = 0; i < ((This->Output.size() / 2) + 1); i++) This->Output[i] = This->Output[i] / (float)This->Output.size();
+    for(uint i = 0; i < ((This->Output.size() / 2) + 1); i++) This->Output[i] = (This->Output[i] / (float)(This->Output.size() / M_SQRT2));
     This->Output.resize((This->Output.size() / 2) + 1);
     pthread_mutex_lock(&This->pThreadMutex);
     This->pWorking = false;
@@ -89,9 +89,9 @@ float FFT::CalcAngle(complex<float> a, complex<float> b) {
   else
     return Tmp - atan(b.imag() / b.real()) + M_PI;
 }
-float FFT::BinPower(complex<float> bin) {
-  return sqrt(norm(bin)) / M_SQRT2 * 2.0;
-}
+//float FFT::BinPower(complex<float> bin) {
+//  return sqrt(norm(bin)) / M_SQRT2 * 2.0;
+//}
 void FFT::Transform(vector<complex<float> > &vec) {
 	size_t n = vec.size();
 	if(n == 0) {
