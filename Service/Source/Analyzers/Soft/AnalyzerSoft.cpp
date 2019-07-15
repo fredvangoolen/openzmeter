@@ -172,9 +172,9 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       if(isnan(This->pAggreg10C.Voltage[j])) continue;
       for(uint i = 0; i < This->pAggreg10C.Voltage_Harmonics[j].size(); i++) {
         This->pAggreg10C.Voltage_Harmonics[j][i] = This->pVoltageFFT[j]->Output[10 + i * 10];
-        if(i > 0) This->pAggreg10C.Voltage_THD[j] = This->AccumulateSUM(This->pAggreg10C.Voltage_THD[j], pow(norm(This->pAggreg10C.Voltage_Harmonics[j][i]), 2.0));
+        if(i > 0) This->pAggreg10C.Voltage_THD[j] = This->AccumulateSUM(This->pAggreg10C.Voltage_THD[j], pow(FFT::BinPower(This->pAggreg10C.Voltage_Harmonics[j][i]), 2.0));
       }
-      This->pAggreg10C.Voltage_THD[j] = sqrt(This->pAggreg10C.Voltage_THD[j]) / norm(This->pAggreg10C.Voltage_Harmonics[j][0]);
+      This->pAggreg10C.Voltage_THD[j] = sqrt(This->pAggreg10C.Voltage_THD[j]) / FFT::BinPower(This->pAggreg10C.Voltage_Harmonics[j][0]);
     }
     for(int j = 0; j < ((This->pMode == PHASE1) ? 1 : 3); j++) {
       This->pCurrentFFT[j]->Wait();
@@ -182,16 +182,16 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       This->pAggreg10C.Apparent_Power[j] = This->pAggreg10C.Voltage[j] * This->pAggreg10C.Current[j];
       for(uint i = 0; i < This->pAggreg10C.Current_Harmonics[j].size(); i++) {
         This->pAggreg10C.Current_Harmonics[j][i] = This->pCurrentFFT[j]->Output[10 + i * 10];
-        if(i > 0) This->pAggreg10C.Current_THD[j] = This->AccumulateSUM(This->pAggreg10C.Current_THD[j], pow(norm(This->pAggreg10C.Current_Harmonics[j][i]), 2.0));
+        if(i > 0) This->pAggreg10C.Current_THD[j] = This->AccumulateSUM(This->pAggreg10C.Current_THD[j], pow(FFT::BinPower(This->pAggreg10C.Current_Harmonics[j][i]), 2.0));
         if(i == 0) {
-          This->pAggreg10C.Reactive_Power[j] = norm(This->pAggreg10C.Voltage_Harmonics[j][i] * This->pAggreg10C.Current_Harmonics[j][i]);
+          This->pAggreg10C.Reactive_Power[j] = sqrt(norm(This->pAggreg10C.Voltage_Harmonics[j][i] * This->pAggreg10C.Current_Harmonics[j][i]));
           float PHI = FFT::CalcAngle(This->pAggreg10C.Voltage_Harmonics[j][i], This->pAggreg10C.Current_Harmonics[j][i]);
           PHI = fmod(PHI, 2.0 * M_PI);
           if(PHI > M_PI) PHI = PHI -  2.0 * M_PI;
           This->pAggreg10C.Phi[j] = PHI * 180.0 / M_PI;
         }
       }
-      This->pAggreg10C.Current_THD[j] = sqrt(This->pAggreg10C.Current_THD[j]) / norm(This->pAggreg10C.Current_Harmonics[j][0]);
+      This->pAggreg10C.Current_THD[j] = sqrt(This->pAggreg10C.Current_THD[j]) / FFT::BinPower(This->pAggreg10C.Current_Harmonics[j][0]);
       This->pAggreg10C.Active_Energy[j] = (This->pAggreg10C.Active_Power[j] * This->pAggreg10C.Current_Samples[j].size()) / (This->pSamplerate * 3600.0);
       This->pAggreg10C.Power_Factor[j] = This->pAggreg10C.Active_Power[j] / This->pAggreg10C.Apparent_Power[j];
       This->pAggreg10C.Reactive_Energy[j] = (This->pAggreg10C.Reactive_Power[j] * This->pAggreg10C.Current_Inputs[j]) / (This->pSamplerate * 3600.0);
@@ -201,9 +201,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       if(!isnan(This->pAggreg10C.Current[3])) {
         for(uint i = 0; i < This->pAggreg10C.Current_Harmonics[3].size(); i++) {
           This->pAggreg10C.Current_Harmonics[3][i] = This->pCurrentFFT[3]->Output[10 + i * 10];
-          //int   Harmonic = (i / 10) - 1;
-          //float CurrentHarmonic = This->pCurrentFFT[3]->BinPower(i);
-          if(i > 0) This->pAggreg10C.Current_THD[3] = This->AccumulateSUM(This->pAggreg10C.Current_THD[3], pow(norm(This->pAggreg10C.Current_Harmonics[3][i]), 2.0));
+          if(i > 0) This->pAggreg10C.Current_THD[3] = This->AccumulateSUM(This->pAggreg10C.Current_THD[3], pow(FFT::BinPower(This->pAggreg10C.Current_Harmonics[3][i]), 2.0));
         }
       }
     }
@@ -249,7 +247,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
           }
           bool HarmonicsInRange = true;
           for(uint n = 0; n < HarmonicsAllowed.size(); n++) {
-            float Variation = This->PercentChange(norm(This->pAggreg10M.Voltage_Harmonics[i][n + 1]), This->pNominalVoltage);
+            float Variation = This->PercentChange(FFT::BinPower(This->pAggreg10M.Voltage_Harmonics[i][n + 1]), This->pNominalVoltage);
             if(Variation > HarmonicsAllowed[n]) {
               HarmonicsInRange = false;
               break;
@@ -346,12 +344,12 @@ void AnalyzerSoft::GetParams(Params_t &params, ParamsType &copy) {
     if(copy & CURRENT_SAMPLES) params.Current_Samples = pAggreg10C.Current_Samples;
     if(copy & VOLTAGE_FFT) {
       for(uint i = 0; i < params.Voltage_FFT.size(); i++) {
-        for(uint n = 0; n < pVoltageFFT[i]->Output.size(); n++) params.Voltage_FFT[i].push_back(norm(pVoltageFFT[i]->Output[n]));
+        for(uint n = 0; n < pVoltageFFT[i]->Output.size(); n++) params.Voltage_FFT[i].push_back(FFT::BinPower(pVoltageFFT[i]->Output[n]));
       }
     }
     if(copy & CURRENT_FFT) {
       for(uint i = 0; i < params.Current_FFT.size(); i++) {
-        for(uint n = 0; n < pCurrentFFT[i]->Output.size(); n++) params.Current_FFT[i].push_back(norm(pCurrentFFT[i]->Output[n]));
+        for(uint n = 0; n < pCurrentFFT[i]->Output.size(); n++) params.Current_FFT[i].push_back(FFT::BinPower(pCurrentFFT[i]->Output[n]));
       }
     }
   }
