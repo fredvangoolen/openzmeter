@@ -480,8 +480,32 @@ void DeviceManager::GetSeriesNowCallback(HTTPRequest &req) {
     if(Copy & AnalyzerInterface::CURRENT_THD) Result["Current_THD"] = Aggreg.Current_THD;
     if(Copy & AnalyzerInterface::PHI) Result["Phi"] = Aggreg.Phi;
     if(Copy & AnalyzerInterface::VOLTAGE_PHASE) Result["Voltage_Phase"] = Aggreg.Voltage_Phase;
-    if(Copy & AnalyzerInterface::VOLTAGE_HARMONICS) Result["Voltage_Harmonics"] = Aggreg.Voltage_Harmonics;
-    if(Copy & AnalyzerInterface::CURRENT_HARMONICS) Result["Current_Harmonics"] = Aggreg.Current_Harmonics;
+    if(Copy & AnalyzerInterface::VOLTAGE_HARMONICS) {
+      Result["Voltage_Harmonics"] = json::array();
+      for(uint n = 0; n < Aggreg.Voltage_Harmonics.size(); n++) {
+        json Ch = json::array();
+        for(uint i = 0; i < Aggreg.Voltage_Harmonics[n].size(); i++) {
+          json Row = json::array();
+          Row.push_back(Aggreg.Voltage_Harmonics[n][i].real());
+          Row.push_back(Aggreg.Voltage_Harmonics[n][i].imag());
+          Ch.push_back(Row);
+        }
+        Result["Voltage_Harmonics"].push_back(Ch);
+      }
+    }
+    if(Copy & AnalyzerInterface::CURRENT_HARMONICS) {
+      Result["Current_Harmonics"] = json::array();
+      for(uint n = 0; n < Aggreg.Current_Harmonics.size(); n++) {
+        json Ch = json::array();
+        for(uint i = 0; i < Aggreg.Current_Harmonics[n].size(); i++) {
+          json Row = json::array();
+          Row.push_back(Aggreg.Current_Harmonics[n][i].real());
+          Row.push_back(Aggreg.Current_Harmonics[n][i].imag());
+          Ch.push_back(Row);
+        }
+        Result["Current_Harmonics"].push_back(Ch);
+      }
+    }
     if(Copy & AnalyzerInterface::VOLTAGE_SAMPLES) Result["Voltage_Samples"] = Aggreg.Voltage_Samples;
     if(Copy & AnalyzerInterface::CURRENT_SAMPLES) Result["Current_Samples"] = Aggreg.Current_Samples;
     if(Copy & AnalyzerInterface::VOLTAGE_FFT) Result["Voltage_FFT"] = Aggreg.Voltage_FFT;

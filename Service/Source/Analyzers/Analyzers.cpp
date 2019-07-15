@@ -71,11 +71,11 @@ void AnalyzerInterface::InitAggreg(Params_t &params, AggregType type) {
     params.Current_THD = vector<float>((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, NAN);
     params.Phi = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
     params.Power_Factor = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
-    params.Current_Harmonics = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(50, NAN));
+    params.Current_Harmonics = vector<vector<complex<float> > >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<complex<float> >(50, complex<float>(NAN, 0.0)));
   }
   if((params.Type == AGGREG_10C) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M)) {
     params.Voltage_THD.resize((pMode == PHASE1) ? 1 : 3, NAN);
-    params.Voltage_Harmonics = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(50, NAN));
+    params.Voltage_Harmonics = vector<vector<complex<float> > >((pMode == PHASE1) ? 1 : 3, vector<complex<float> >(50, complex<float>(NAN, 0.0)));
   }
   if(params.Type == AGGREG_10C) {
     params.Active_Energy = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
@@ -118,8 +118,8 @@ void AnalyzerInterface::SaveAggreg(Params_t &params) {
     Result["Voltage_THD"] = params.Voltage_THD;
     Result["Current_THD"] = params.Current_THD;
     Result["Phi"] = params.Phi;
-    Result["Voltage_Harmonics"] = params.Voltage_Harmonics;
-    Result["Current_Harmonics"] = params.Current_Harmonics;
+//    Result["Voltage_Harmonics"] = params.Voltage_Harmonics;
+//    Result["Current_Harmonics"] = params.Current_Harmonics;
   }
   Result["Aggregation"] = (params.Type == AGGREG_3S) ? "3S" : (params.Type == AGGREG_1M) ? "1M" : (params.Type == AGGREG_10M) ? "10M" : (params.Type == AGGREG_15M) ? "15M": "1H";
   Result["Sampletime"] = params.Timestamp;
@@ -176,10 +176,10 @@ void AnalyzerInterface::NormalizeAggreg(Params_t &params) {
   for(uint i = 0; i < params.Phi.size(); i++) params.Phi[i] = params.Phi[i] / params.Current_Inputs[i];
   for(uint i = 0; i < params.Voltage_THD.size(); i++) params.Voltage_THD[i] = sqrt(params.Voltage_THD[i] / params.Voltage_Inputs);
   for(uint i = 0; i < params.Current_Harmonics.size(); i++) {
-    for(uint j = 0; j < params.Current_Harmonics[i].size(); j++) params.Current_Harmonics[i][j] = sqrt(params.Current_Harmonics[i][j] / params.Current_Inputs[i]);
+    for(uint j = 0; j < params.Current_Harmonics[i].size(); j++) params.Current_Harmonics[i][j] = sqrt(params.Current_Harmonics[i][j] / (float)params.Current_Inputs[i]);
   }
   for(uint i = 0; i < params.Voltage_Harmonics.size(); i++) {
-    for(uint j = 0; j < params.Voltage_Harmonics[i].size(); j++) params.Voltage_Harmonics[i][j] = sqrt(params.Voltage_Harmonics[i][j] / params.Voltage_Inputs);
+    for(uint j = 0; j < params.Voltage_Harmonics[i].size(); j++) params.Voltage_Harmonics[i][j] = sqrt(params.Voltage_Harmonics[i][j] / (float)params.Voltage_Inputs);
   }
   params.Frequency = params.Frequency / params.Frequency_Inputs;
   if(params.Frequency_Inputs > 1) params.Frequency_Inputs = 1;
@@ -199,4 +199,10 @@ float AnalyzerInterface::AccumulateRMS(float val1, float val2) {
   if(isnan(val1) && !isnan(val2))  return pow(val2, 2.0);
   if(!isnan(val1) && isnan(val2))  return val1;
   return val1 + pow(val2, 2.0);
+}
+complex<float> AnalyzerInterface::AccumulateRMS(complex<float> val1, complex<float> val2) {
+  if(isnan(val1.real()) && isnan(val2.real()))   return complex<float>(NAN, 0.0);
+  if(isnan(val1.real()) && !isnan(val2.real()))  return pow(val2, 2.0f);
+  if(!isnan(val1.real()) && isnan(val2.real()))  return val1;
+  return val1 + pow(val2, 2.0f);
 }
