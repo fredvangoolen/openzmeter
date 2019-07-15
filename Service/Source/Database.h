@@ -4,6 +4,7 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <vector>
+#include <complex>
 #include <sstream>
 #include <inttypes.h>
 #include <libpq-fe.h>
@@ -31,6 +32,7 @@ class Database {
     string      Bind(const vector<float> &params);
     string      Bind(const vector<uint16_t> &params);
     string      Bind(bool param);
+    string      Bind(const vector<vector<complex<float> > > &params);
     string      BindID(string string);
     string      Bind(string string);
     bool        ExecSentenceNoResult(string sql);

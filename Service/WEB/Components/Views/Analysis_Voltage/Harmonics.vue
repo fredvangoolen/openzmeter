@@ -28,6 +28,9 @@
       return { ShowSpinner: true, Time: 'Loading data...' };
     },
     methods: {
+      BinPower: function(value) {
+        return Math.sqrt(Math.pow(value[0], 2.0) + Math.pow(value[1], 2.0)) / Math.SQRT2 * 2.0;
+      },
       Redraw: function() {
         this.$nextTick(function() {
           this.$refs.graph.Redraw('100%', '300');
@@ -61,7 +64,7 @@
         var Analyzer = this.$root.SelectedAnalyzer, Series = {}, ToShow = [], CurrentPhases = [];
         for(var i = this.First ? 0 : 1; i < this.Data.length; i++) {
           var Row = [i];
-          for(var n = 0; n < this.Data[i].length; n++) Row.push(this.Log ? 20.0 * Math.log10(Math.max(0.001, this.Data[i][n])) : this.Data[i][n]);
+          for(var n = 0; n < this.Data[i].length; n++) Row.push(this.Log ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.Data[i][n]))) : this.BinPower(this.Data[i][n]));
           ToShow.push(Row);
         }
         for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length; n++) {
@@ -110,19 +113,22 @@
         var Data = [];
         var Header = ['Harmonic'];
         for(var i = 0; i < oZm.Series['VOLTAGE'].Names(Analyzer).length; i++) { 
-          Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i]); 
+          Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i]);
           Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i] + ' (dB)');
+          Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i] + ' (Complex)');
         }
         for(var i = 0; i < oZm.Series['CURRENT'].Names(Analyzer).length; i++) {
           Header.push(oZm.Series['CURRENT'].Names(Analyzer)[i]);
-          Header.push(oZm.Series['CURRENT'].Names(Analyzer)[i] + ' (dB)'); 
+          Header.push(oZm.Series['CURRENT'].Names(Analyzer)[i] + ' (dB)');
+          Header.push(oZm.Series['CURRENT'].Names(Analyzer)[i] + ' (Complex)');
         }
         Data.push(Header);
         for(i = 0; i < oZm.Series['HARMONICS'].Names.length; i++) {
           var Row = [oZm.Series['HARMONICS'].Names[i]];
           for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length + oZm.Series['CURRENT'].Names(Analyzer).length; n++) {
-            Row.push(this.Data[i][n]);
-            Row.push(20.0 * Math.log10(Math.max(0.000000001, this.Data[i][n])));
+            Row.push(this.BinPower(this.Data[i][n]));
+            Row.push(20.0 * Math.log10(Math.max(0.000000001, this.BinPower(this.Data[i][n]))));
+            Row.push(this.Data[i][n][0] + ((this.Data[i][n][1] > 0) ? '+' + this.Data[i][n][1] : this.Data[i][n][1]) + 'i');
           }
           Data.push(Row);
         }

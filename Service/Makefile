@@ -62,7 +62,6 @@ endif
 ifeq ($(ANALYZER_SOFT), true)
 	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp Source/Analyzers/FFT.cpp Source/Analyzers/Events.cpp
 	CFLAGS += -I Source/Analyzers/Soft
-	LDFLAGS += -lfftw3f
 endif
 ifeq ($(OS_TARGET), OPENWRT)
 	EXECUTABLE_SOURCE += Source/Support/OpenWRT/OpenWRT.cpp

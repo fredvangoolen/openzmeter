@@ -4,11 +4,13 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <vector>
+#include <complex>
 #include "Database.h"
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
+//----------------------------------------------------------------------------------------------------------------------
 class AnalyzerInterface : protected Database {
   public :
     enum AnalyzerMode {PHASE1, PHASE3, PHASE3N};
@@ -42,36 +44,36 @@ class AnalyzerInterface : protected Database {
     static vector<float>  HarmonicsAllowed;  //Rangos permitidos para cada harmonico
   public :
     typedef struct {
-      AggregType              Type;                       //Aggregation type
-      float                   Frequency;                  //Frecuencia
-      bool                    Flag;                       //Periodo marcado
-      uint64_t                Timestamp;                  //Aggregation timestampt
-      uint16_t                Voltage_Inputs;             //Valid RMS_V samples in aggregation
-      uint16_t                Frequency_Inputs;           //Valid Freq samples in aggregation
-      vector<uint16_t>        StatsFrequency;             //Distribucion de frecuencias
-      vector<uint16_t>        StatsVoltage;               //Distribucion de tensiones
-      vector<uint16_t>        StatsTHD;                   //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
-      vector<uint16_t>        StatsHarmonics;             //Numero de muestras que cumplen los limites de harmonicos / no cumplen
-      vector<uint16_t>        Current_Inputs;             //Valid RMS_I samples in aggregation
-      vector<float>           Voltage;                    //Aggregation average RMS voltage
-      vector<float>           Current;                    //Aggregation average RMS current
-      vector<float>           Active_Power;               //Aggregation average Active Power (P)
-      vector<float>           Reactive_Power;             //Reactive power
-      vector<float>           Active_Energy;              //Energia consumida
-      vector<float>           Reactive_Energy;            //Reactive energy
-      vector<float>           Apparent_Power;             //Potencia aparente (S)
-      vector<float>           Power_Factor;               //Factor de potencia (cos(PHI))
-      vector<float>           Voltage_THD;                //Distorsion harmonica de la tension
-      vector<float>           Current_THD;                //Distorsion harmonica de la corriente
-      vector<float>           Voltage_Phase;              //Angulo entre canales de tension
-      vector<float>           Phi;                        //Angulo de Phi
-      vector< vector<float> > Voltage_Harmonics;          //Armonicos del canal de tension
-      vector< vector<float> > Current_Harmonics;          //Armonicos del canal de corriente
-      vector< vector<float> > Voltage_FFT;                //Resultados de la FFT en tension
-      vector< vector<float> > Current_FFT;                //Resultados de la FFT en corriente
-      vector< vector<float> > Voltage_Samples;            //Voltage samples
-      vector< vector<float> > Current_Samples;            //Current samples
-      json                    Sys_Stats;                  //System status for NOW(10C) aggreg
+      AggregType                        Type;                       //Aggregation type
+      float                             Frequency;                  //Frecuencia
+      bool                              Flag;                       //Periodo marcado
+      uint64_t                          Timestamp;                  //Aggregation timestampt
+      uint16_t                          Voltage_Inputs;             //Valid RMS_V samples in aggregation
+      uint16_t                          Frequency_Inputs;           //Valid Freq samples in aggregation
+      vector<uint16_t>                  StatsFrequency;             //Distribucion de frecuencias
+      vector<uint16_t>                  StatsVoltage;               //Distribucion de tensiones
+      vector<uint16_t>                  StatsTHD;                   //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
+      vector<uint16_t>                  StatsHarmonics;             //Numero de muestras que cumplen los limites de harmonicos / no cumplen
+      vector<uint16_t>                  Current_Inputs;             //Valid RMS_I samples in aggregation
+      vector<float>                     Voltage;                    //Aggregation average RMS voltage
+      vector<float>                     Current;                    //Aggregation average RMS current
+      vector<float>                     Active_Power;               //Aggregation average Active Power (P)
+      vector<float>                     Reactive_Power;             //Reactive power
+      vector<float>                     Active_Energy;              //Energia consumida
+      vector<float>                     Reactive_Energy;            //Reactive energy
+      vector<float>                     Apparent_Power;             //Potencia aparente (S)
+      vector<float>                     Power_Factor;               //Factor de potencia (cos(PHI))
+      vector<float>                     Voltage_THD;                //Distorsion harmonica de la tension
+      vector<float>                     Current_THD;                //Distorsion harmonica de la corriente
+      vector<float>                     Voltage_Phase;              //Angulo entre canales de tension
+      vector<float>                     Phi;                        //Angulo de Phi
+      vector< vector<complex<float> > > Voltage_Harmonics;          //Armonicos del canal de tension
+      vector< vector<complex<float> > > Current_Harmonics;          //Armonicos del canal de corriente
+      vector< vector<float> >           Voltage_FFT;                //Resultados de la FFT en tension
+      vector< vector<float> >           Current_FFT;                //Resultados de la FFT en corriente
+      vector< vector<float> >           Voltage_Samples;            //Voltage samples
+      vector< vector<float> >           Current_Samples;            //Current samples
+      json                              Sys_Stats;                  //System status for NOW(10C) aggreg
     } Params_t;
   protected :
     uint64_t      pLastSave;
@@ -83,12 +85,13 @@ class AnalyzerInterface : protected Database {
     float         pSamplerate;              //Velocidad de muestreo (NaN if unsuported)
     AnalyzerMode  pMode;
   protected :
-    void  InitAggreg(Params_t &params, AggregType type);
-    void  SaveAggreg(Params_t &params);
-    void  AccumulateAggreg(Params_t &src, Params_t &dst);
-    void  NormalizeAggreg(Params_t &src);
-    float AccumulateSUM(float val1, float val2);
-    float AccumulateRMS(float val1, float val2);
+    void           InitAggreg(Params_t &params, AggregType type);
+    void           SaveAggreg(Params_t &params);
+    void           AccumulateAggreg(Params_t &src, Params_t &dst);
+    void           NormalizeAggreg(Params_t &src);
+    float          AccumulateSUM(float val1, float val2);
+    float          AccumulateRMS(float val1, float val2);
+    complex<float> AccumulateRMS(complex<float> val1, complex<float> val2);
   public :
     virtual void GetParams(Params_t &params, ParamsType &copy) = 0;
   public :
