@@ -27,11 +27,11 @@ class FFT {
     void   InverseTransform(vector<complex<float> > &vec);
     void   TransformRadix2(vector<complex<float> > &vec);
     void   TransformBluestein(vector<complex<float> > &vec);
-    void  Convolve(const vector<complex<float> > &xvec, const vector<complex<float> > &yvec, vector<complex<float> > &outvec);
+    void   Convolve(const vector<complex<float> > &xvec, const vector<complex<float> > &yvec, vector<complex<float> > &outvec);
     size_t ReverseBits(size_t x, int n);
   public :
     static float CalcAngle(complex<float> a, complex<float> b);
-    static float BinPower(complex<float> bin);
+//    static float BinPower(complex<float> bin);
   public :
     FFT(char *name);
     void  Start(vector<float> &in);
