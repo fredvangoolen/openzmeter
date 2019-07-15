@@ -89,9 +89,9 @@ float FFT::CalcAngle(complex<float> a, complex<float> b) {
   else
     return Tmp - atan(b.imag() / b.real()) + M_PI;
 }
-//float FFT::BinPower(uint32_t bin) {
-//  return sqrt(pow(Output[bin].real(), 2.0) + pow(Output[bin].imag(), 2.0)) / M_SQRT2 * 2.0;
-//}
+float FFT::BinPower(complex<float> bin) {
+  return sqrt(norm(bin)) / M_SQRT2 * 2.0;
+}
 void FFT::Transform(vector<complex<float> > &vec) {
 	size_t n = vec.size();
 	if(n == 0) {
