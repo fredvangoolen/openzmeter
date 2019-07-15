@@ -29,7 +29,7 @@
     },
     methods: {
       BinPower: function(value) {
-        return Math.sqrt(Math.pow(value[0], 2.0) + Math.pow(value[1], 2.0)) / Math.SQRT2 * 2.0;
+        return Math.sqrt(Math.pow(value[0], 2.0) + Math.pow(value[1], 2.0));
       },
       Redraw: function() {
         this.$nextTick(function() {
