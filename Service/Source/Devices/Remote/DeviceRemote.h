@@ -3,29 +3,30 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
-#include <libusb-1.0/libusb.h>
+#include <list>
 #include "Devices.h"
 #include "AnalyzerRemote.h"
-#include "Tools.h"
+#include "HTTPServer.h"
+//----------------------------------------------------------------------------------------------------------------------
+using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceRemote : public Device {
   private :
-    typedef struct {
-      char           *ID;
-      char           *Name;
-      AnalyzerRemote *Analyzer;
-    } Analyzer_t;
-    static Analyzer_t      *pAnalyzers;               //Analyzers list
-    static uint32_t         pAnalyzersCount;          //Analyzers count
-    static DeviceRemote    *pInstance;                //Only one instance allowed!
-    static pthread_mutex_t  pListMutex;               //Access to list limited
+    static bool pRegistered;  
   private :
-    AnalyzerInterface *FindAnalyzer(char *serial);
+    list<AnalyzerRemote*>   pAnalyzers;               //Analyzers list
+    pthread_mutex_t         pMutex;                   //Access to list limited
   private :
-    static bool SetRemoteAnalyzerCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool SetRemoteDataCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    static bool GetInstances();
+//    static bool SetRemoteAnalyzerCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+//    static bool SetRemoteDataCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+  private :
+    AnalyzerInterface *FindAnalyzer(string serial);
+    uint32_t           AnalyzersCount();
+    bool               Start();
+    bool               Stop();
   public :
-    DeviceRemote(json_object* config);
+    DeviceRemote();
     ~DeviceRemote();
 };
 //----------------------------------------------------------------------------------------------------------------------
