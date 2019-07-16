@@ -4,11 +4,11 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <libusb-1.0/libusb.h>
-#include "DeviceInterface.h"
+#include "Devices.h"
 #include "AnalyzerRemote.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-class DeviceRemote : public DeviceInterface {
+class DeviceRemote : public Device {
   private :
     typedef struct {
       char           *ID;
