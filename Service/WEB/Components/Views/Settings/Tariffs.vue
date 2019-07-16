@@ -5,9 +5,10 @@
       <button type="button" class="pull-right btn btn-default btn-xs" data-toggle="tooltip" title="Add tariff" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
     </div>
     <div class="panel-body">
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
+      <spinner v-if="ShowSpinner"></spinner>
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
-          <div class="btn-group" style="width:100%">
+          <div class="btn-group" >
             <button class="btn btn-xs btn-default" @click="Edit(props.rowData.RateID, $event)">Edit</button>
             <button class="btn btn-xs btn-danger" @click="Delete(props.rowData.RateID, props.rowData.Name, $event)">Delete</button>
           </div>
@@ -22,9 +23,11 @@
   import Vuetable from 'vuetable-2';
   import moment from 'JS/moment.js';
   import TariffsEdit from './TariffsEdit.vue';
+  import 'CSS/table-responsive.css';
+  import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
-      return {
+      return {ShowSpinner: true,
         Columns: [
           {name: 'CountryCode', title: 'Country'},   
           {name: 'Name', title: 'Name'},
@@ -43,6 +46,7 @@
           success: function(result) {
             var TableData = { data: result };
             this.$refs.table.setData(TableData);
+            this.ShowSpinner = false;
           }.bind(this)
         });
       },
@@ -65,13 +69,18 @@
       }
     },
     mounted: function() {
+      this.ShowSpinner = true;
       this.GetTariffs();
+    },
+    updated: function(){
+        oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     components: { Vuetable, TariffsEdit }
   }
 </script>
 
 <style scoped>
+@media screen and (min-width: 600px) {
   .table >>> th:nth-child(1) {
     width: 60px;
     text-align: center;
@@ -92,4 +101,5 @@
   .table >>> td:nth-child(5) {
     text-align: right;
   }
+}
 </style>
