@@ -9,7 +9,7 @@
         <template slot="actions" slot-scope="props">
           <div class="btn-group" style="width:100%">
             <button class="btn btn-xs btn-default" @click="Edit(props.rowData.RateID, $event)">Edit</button>
-            <button class="btn btn-xs btn-danger" @click="Delete(props.rowData.RateID, $event)">Delete</button>
+            <button class="btn btn-xs btn-danger" @click="Delete(props.rowData.RateID, props.rowData.Name, $event)">Delete</button>
           </div>
         </template>
       </vuetable>
@@ -53,9 +53,15 @@
       Add: function() {
         this.$refs.EditDialog.Show(null);
       },
-      Delete: function(id, evt) {
-        $(evt.target).blur();
-        $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: id }), success: this.GetTariffs.bind(this) });
+      Delete: function(id, name, evt) {
+        if(confirm("Delete '" + name + "' tariff?")){
+          $(evt.target).blur();
+          $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify({ RateID: id }), success: 
+          function(result) {
+              this.GetTariffs();
+            }.bind(this)
+          });
+        }
       }
     },
     mounted: function() {

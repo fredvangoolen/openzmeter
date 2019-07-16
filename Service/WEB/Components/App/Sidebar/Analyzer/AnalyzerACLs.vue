@@ -58,7 +58,9 @@
       },
       Delete: function(row) {
         //Elimino
-        this.Load(this.Serial);        
+        if(confirm("Delete '"+this.serial+"' device?")){
+          this.Load(this.Serial);        
+        }
       },
       Add: function() {
         this.Show = false;

@@ -68,8 +68,10 @@
         });
       },
       Delete: function() {
-        this.Tariff.Template.Periods.splice(-1, 1);
-        this.FillTable();
+        if(confirm("Delete last period?")){
+          this.Tariff.Template.Periods.splice(-1, 1);
+          this.FillTable();
+        }
       },
       Add: function() {
         this.Tariff.Template.Periods.push({PowerMode: 'NONE', ReactiveMode: 'NONE', Color: '#fffff0'});
