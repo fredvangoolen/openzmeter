@@ -1,20 +1,26 @@
 <template>
   <div class="row">
+    <div class="col-xs-12">
+      <label class="control-label">Start on boot</label>
+      <toggle></toggle>
+    </div>
+    
+    
     <div class="col-xs-12 col-sm-6">
       <label class="control-label">Voltage channel Gain</label>
-      <input-spin :min="20" :max="350" :value="230" :increment="10" ref="voltage"></input-spin>
+      <input-spin :min="-10" :max="10" :value="0" :increment="0.001" ref="voltageGain" prepend="%"></input-spin>
     </div>
     <div class="col-xs-12 col-sm-6">
       <label class="control-label">Voltage channel Offset</label>
-      <input-spin :min="20" :max="350" :value="230" :increment="10" ref="voltage"></input-spin>
+      <input-spin :min="-20" :max="20" :value="0" :increment="0.1" ref="voltageOffset" prepend="V"></input-spin>
     </div>
     <div class="col-xs-12 col-sm-6">
       <label class="control-label">Current channel Gain</label>
-      <input-spin :min="20" :max="350" :value="230" :increment="10" ref="voltage"></input-spin>
+      <input-spin :min="-10" :max="10" :value="0" :increment="0.001" ref="currentGain" prepend="%"></input-spin>
     </div>
     <div class="col-xs-12 col-sm-6">
       <label class="control-label">Current channel Offset</label>
-      <input-spin :min="20" :max="350" :value="230" :increment="10" ref="voltage"></input-spin>
+      <input-spin :min="-1" :max="1" :value="0" :increment="0.001" ref="currentOffset" prepend="A"></input-spin>
     </div>
   </div>
 </template>
@@ -23,8 +29,8 @@
   import Vue from 'vue';
   import Vuetable from 'vuetable-2';
   import Spinner from 'Components/Spinner.vue';
-  import OptionPicker from 'Components/OptionPicker.vue';
   import InputSpin from 'Components/InputSpin.vue';
+  import Toggle from 'Components/Toggle.vue';
   export default {
     data() {
       return {
@@ -91,7 +97,7 @@
         alert("Maintenance not yet implemented");
       }
     },
-    components: { Vuetable, Spinner, OptionPicker, InputSpin }
+    components: { Vuetable, Spinner, InputSpin, Toggle }
   }
 </script>
 

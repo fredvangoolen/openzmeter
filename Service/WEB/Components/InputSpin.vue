@@ -1,15 +1,18 @@
 <template>
   <div class="input-group inputspin">
+    <span v-if="prepend" class="input-group-addon" id="basic-addon1">{{ prepend }}</span>
     <input type="text" class="form-control" :value="value" :min="min" :max="max">
     <div class="input-group-btn-vertical">
       <button class="btn btn-default" type="button">&#9650;</button>
       <button class="btn btn-default" type="button">&#9660;</button>
     </div>
+    
   </div>
 </template>
 
 <script>
   export default {
+      props: ['prepend'],
     data: function() {
       return {};
     },

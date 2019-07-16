@@ -1,5 +1,6 @@
 import chroma from 'JS/chroma.js';
 import Dygraph from 'JS/dygraph.js';
+import moment from 'JS/moment.js';
 export var Series = {
   'VOLTAGE': { 
     CSS_Class: 'panel-voltage', 
@@ -493,7 +494,7 @@ export function GraphDataAppend(result, serie, data) {
   if(result['Sampletime'] !== null && result['Sampletime'].length > 0) {
     if((data.length === 0) || data[data.length - 1][0] < result['Sampletime'][0]) {
       for(var i = 0; i < result['Sampletime'].length; i++) {
-        data.push([new Date(result['Sampletime'][i])].concat(result[serie][i]));
+        data.push([moment(result['Sampletime'][i]).valueOf()].concat(result[serie][i]));
       }
       Out = [];
       for(var n = 0; n < data.length; n++) {

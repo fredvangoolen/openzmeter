@@ -201,7 +201,7 @@
       UpdateGraph: function(to, period, lastsample, aggreg) {
         if(lastsample === 0) {
           this.ActiveData = [];
-          this.ReactiveDate = [];
+          this.ReactiveData = [];
           this.ShowSpinner = true;
         }
         var Analyzer = this.$root.SelectedAnalyzer;
