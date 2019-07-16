@@ -56,8 +56,11 @@ ifeq ($(DEVICE_V2_01), true)
 endif
 ifeq ($(DEVICE_VIRTUAL), true)
 	EXECUTABLE_SOURCE += Source/Devices/Virtual/DeviceVirtual.cpp
-	CFLAGS += -DDEVICE_VIRTUAL
 	ANALYZER_SOFT = true
+endif
+ifeq ($(DEVICE_REMOTE), true)
+	EXECUTABLE_SOURCE += Source/Devices/Remote/DeviceRemote.cpp Source/Analyzers/Remote/AnalyzerRemote.cpp
+	CFLAGS += -I Source/Analyzers/Remote
 endif
 ifeq ($(ANALYZER_SOFT), true)
 	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp Source/Analyzers/FFT.cpp Source/Analyzers/Events.cpp
