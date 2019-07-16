@@ -9,7 +9,7 @@
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
       <div class="row">
-        <div class="col-sm-12 col-md-8 col-lg-6" ref="graphContainer">
+        <div class="col-sm-12 col-md-8 col-lg-6 graphDiv" ref="graphContainer">
           <graph ref="graph" class="graph" :options="GraphOptions"></graph>
         </div>
         <div class="col-sm-12 col-md-4 col-lg-6">
@@ -31,7 +31,7 @@
   import vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
   export default {
-    data() {
+    data: function() {
       return { ShowSpinner: true, Time: 'Loading data...',
       Columns: [
           {name: 'Phase', title: 'Phase'},
@@ -45,7 +45,7 @@
       this.Data = [];
       this.GraphOptions = {
         highlightCircleSize: 0,  interactionModel: { }, legend: 'never', plotter: this.Plotter, xAxisHeight: 0.1, xLabelHeight: 0.1,
-        labels: ['Index', 'Phase', 'Magnitude'], colors: ['#d9534f', '#428bca'], valueRange: [-100, 100], dateWindow: [-100, 100],
+        labels: ['Index', 'Phase', 'Magnitude'], colors: ['#d9534f', '#428bca'], valueRange: [-120, 120], dateWindow: [-120, 120],
         axes: {
           y: { drawAxis: false, drawGrid: false, axisLabelWidth: 0.1, axisLineColor: "#FFF" },
           x: { drawAxis: false, drawGrid: false, axisLabelWidth: 0.1, axisLineColor: "#FFF" }
@@ -53,20 +53,23 @@
         underlayCallback: function(canvas, area, g) {
           if((area.h <= 0) || (area.w <= 0)) return;
           canvas.lineWidth = 0.5;
-          canvas.strokeStyle = g.attrs_.axisLineColor;
-          canvas.beginPath();
-          canvas.moveTo(g.toDomXCoord(-100), g.toDomYCoord(0));
-          canvas.lineTo(g.toDomXCoord(100), g.toDomYCoord(0));
-          canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(-100));
-          canvas.lineTo(g.toDomXCoord(0), g.toDomYCoord(100));
-          canvas.stroke();
-          canvas.beginPath();
           canvas.setLineDash(g.user_attrs_.gridLinePattern);
           canvas.strokeStyle = g.user_attrs_.gridLineColor;
+          canvas.beginPath();
+          for(var n = 0; n < 2 * Math.PI; n = n + Math.PI / 6) {
+            canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(0));
+            canvas.lineTo(g.toDomXCoord(120 * Math.cos(n)), g.toDomYCoord(120 * Math.sin(n)));
+          }
+          canvas.stroke();
+          canvas.beginPath();
+          for(var n = 1; n < 13; n++) {
+            if(n === 10) continue;      
+            canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(n * 10) - g.toDomXCoord(0), 0, 2 * Math.PI);
+          }    
+          canvas.stroke();
+          canvas.strokeStyle = oZm.Series["VOLTAGE"].Color;
+          canvas.beginPath();
           canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(100) - g.toDomXCoord(0), 0, 2 * Math.PI);
-          canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(75) - g.toDomXCoord(0), 0, 2 * Math.PI);
-          canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(50) - g.toDomXCoord(0), 0, 2 * Math.PI);
-          canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(25) - g.toDomXCoord(0), 0, 2 * Math.PI);
           canvas.stroke();
         }
       };
@@ -82,61 +85,72 @@
     },
     methods: {
       Plotter: function(e) {
-        if((e.seriesIndex !== 0) || (e.plotArea.h < 0) || (e.plotArea.w < 0)) return;
+        var Analyzer = this.$root.SelectedAnalyzer;
+        if((Analyzer === null) || (e.seriesIndex !== 0) || (e.plotArea.h < 0) || (e.plotArea.w < 0) || (e.dygraph.file_.length === 0) || (e.dygraph.file_[0].length !== 3)) return;
         var ctx = e.drawingContext;
-        var MaxSerieA = 0;
-        var MaxSerieB = 0;
+        var MaxCurrent = 0;
         for(var i = 0; i < e.points.length; i++) {
-          if((i % 2) == 0) MaxSerieA = Math.max(MaxSerieA, e.dygraph.file_[i][2]);
-          if((i % 2) == 1) MaxSerieB = Math.max(MaxSerieB, e.dygraph.file_[i][2]);
-//          MaxCurrent = Math.max(MaxCurrent, result.Current[i]);
+          if((i % 2) == 1) MaxCurrent = Math.max(MaxCurrent, e.dygraph.file_[i][2]);
         }
-        ctx.beginPath();
-        ctx.fillStyle = '#000';
-        ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), 5, 0, 2 * Math.PI, false);
-        ctx.fill();
-        ctx.setLineDash([]);
-        if((e.dygraph.file_.length === 0) || (e.dygraph.file_[0].length !== 3)) return;
         for(var i = 0; i < e.points.length; i++) {
           if(isNaN(e.allSeriesPoints[1][i].yval)) continue;
-          var X = e.dygraph.toDomXCoord((100.0 * e.allSeriesPoints[1][i].yval - 5) * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0));
-          var Y = e.dygraph.toDomYCoord((100.0 * e.allSeriesPoints[1][i].yval - 5) * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0));
+          var Module = e.allSeriesPoints[1][i].yval / (((i % 2) == 0) ? Analyzer.NominalVoltage : Analyzer.MaxCurrent) * 100.0;
           if(i % 2) {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            var StartAngle = (e.dygraph.file_[i - 1][1] < e.dygraph.file_[i][1]) ? e.dygraph.file_[i - 1][1] * Math.PI / -180.0 : e.dygraph.file_[i][1] * Math.PI / -180.0;
+            var EndAngle = (e.dygraph.file_[i - 1][1] < e.dygraph.file_[i][1]) ? e.dygraph.file_[i][1] * Math.PI / -180.0 : e.dygraph.file_[i - 1][1] * Math.PI / -180.0;
+            ctx.save();
+            var MidAngle = (e.dygraph.file_[i - 1][1] - e.dygraph.file_[i][1]) * Math.PI / -180.0;
+            ctx.translate(e.dygraph.toDomXCoord(50 * Math.cos(MidAngle / 2.0)), e.dygraph.toDomYCoord(50 * Math.sin(MidAngle / 2.0)));
+            ctx.rotate(MidAngle / -2.0);
+            ctx.beginPath();
+            ctx.textAlign = "left";
+            ctx.font = "10px sans";
+            ctx.fillStyle = "#333";
+            ctx.fillText(oZm.Round2Plain(Math.abs(e.dygraph.file_[i - 1][1] - e.dygraph.file_[i][1])) + "º", 2, 5);
+            ctx.fill();
+            ctx.restore();  
+            
+            ctx.fillStyle = e.dygraph.user_attrs_.gridLineColor;
+            ctx.setLineDash([]);
+            
             ctx.beginPath();
             ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
-            if(e.dygraph.file_[i - 1][1] < e.dygraph.file_[i][1]) {
-              ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(100) - e.dygraph.toDomXCoord(0), e.dygraph.file_[i - 1][1] * Math.PI / -180.0, e.dygraph.file_[i][1] * Math.PI / -180.0, true);
-            } else {
-              ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(100) - e.dygraph.toDomXCoord(0), e.dygraph.file_[i][1] * Math.PI / -180.0, e.dygraph.file_[i - 1][1] * Math.PI / -180.0, true);
-            }
+            ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(50) - e.dygraph.toDomXCoord(0), StartAngle, EndAngle, true);
             ctx.lineTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
             ctx.fill();
+            
+            ctx.strokeStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(50) - e.dygraph.toDomXCoord(0), StartAngle, EndAngle, true);
+            ctx.stroke();
           }
-          e.points[i].canvasx = X;
-          e.points[i].canvasy = Y;
+          ctx.setLineDash([]);
           ctx.strokeStyle = e.dygraph.getColors()[i % 2];
           ctx.fillStyle = e.dygraph.getColors()[i % 2];
           ctx.lineWidth = 1;
+          
           ctx.beginPath();
           ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
-          ctx.lineTo(X, Y);
+          ctx.lineTo(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
           ctx.stroke();
+          
+          ctx.beginPath();
+          ctx.arc(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)), 3, 0, 2 * Math.PI);
+          ctx.fill();
+
+          ctx.setLineDash([2, 2]);
+          ctx.beginPath();
+          ctx.moveTo(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
+          ctx.lineTo(e.dygraph.toDomXCoord(120 * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(120 * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
+          ctx.stroke();
+          
           ctx.save();
-          ctx.beginPath();
-          ctx.translate(X, Y);
+          ctx.translate(e.dygraph.toDomXCoord(100 * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(100 * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
           ctx.rotate(e.dygraph.file_[i][1] * Math.PI / -180.0);
-          ctx.moveTo(-5, 4);
-          ctx.lineTo(10, 0);
-          ctx.lineTo(-5, -4);
-          ctx.fill();
           ctx.beginPath();
-          ctx.arc(21, 0, 10, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.font = "bold 12px sans";
-          ctx.fillStyle = "#FFF";
-          ctx.fillText((i % 2) ? "A" : "V", 17, 4);
+          ctx.textAlign = "left";
+          ctx.font = "10px sans";
+          ctx.fillText(oZm.Round2Plain(e.allSeriesPoints[1][i].yval) + ((i % 2) ? "A" : "V"), 2, -2);
           ctx.fill();
           ctx.restore();
         }
@@ -145,6 +159,7 @@
         this.$nextTick(function() {
           if((this.$refs === undefined) || (this.$refs.graphContainer === undefined)) return;
           var Width = this.$refs.graphContainer.clientWidth - 30;
+          if(Width > 600) Width = 600;
           this.$refs.graph.Redraw(Width, Width);
         });
       },
@@ -182,7 +197,12 @@
 </script>
 
 <style scoped>
-@media screen and (min-width: 600px) {
+  .graphDiv {
+    text-align: center;
+  }
+  .graphDiv >>> .graph {
+    margin: auto;
+  }
   .table >>> th:nth-child(1)  {
     width: 40px;
     text-align: center;

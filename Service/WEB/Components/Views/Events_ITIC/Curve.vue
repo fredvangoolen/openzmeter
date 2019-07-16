@@ -68,11 +68,11 @@
           canvas.stroke();
           canvas.font = "16px sans-serif";
           canvas.fillStyle = "#333";
-          canvas.fillText("No interruption region", c + 5 , g.toDomYCoord(0) - 5);
-          canvas.textAlign = "end";
+          canvas.textAlign = 'right';
           canvas.fillText("No damage region",  c + w - 5 , g.toDomYCoord(0) - 5);
-          canvas.textBaseline = "top";
-          canvas.fillText("Prohibited region", c + w - 5 , 5);
+          canvas.fillText("Prohibited region", c + w - 5 , 14);      
+          canvas.textAlign = "left";
+          canvas.fillText("No interruption region", c + 5 , g.toDomYCoord(0) - 5);
           canvas.restore();
         },
         axes: {
