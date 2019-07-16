@@ -62,8 +62,10 @@
         this.$parent.$refs.Season.Load(this.Tariff, this.Tariff.Template.Seasons.length - 1);
       },
       Delete: function(index) {
-        this.Tariff.Template.Seasons.splice(index, 1);
-        this.FillTable();
+        if(confirm("Delete '"+this.Tariff.Template.Seasons[index].Name +"' season?")){
+          this.Tariff.Template.Seasons.splice(index, 1);
+          this.FillTable();
+        }
       },
       Add: function() {
         this.Tariff.Template.Seasons.push({ StartDate: this.Tariff.StartDate, EndDate: this.Tariff.EndDate, DayPeriods: new Array(24).fill(0), Name: 'Unnamed season' });
