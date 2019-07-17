@@ -223,5 +223,4 @@
   .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
     text-align: right;
   }
-}
 </style>
