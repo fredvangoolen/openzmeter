@@ -55,8 +55,8 @@ class HTTPServer {
       Func_t Function;
     } Callback_t;
   private :
+    static pthread_mutex_t    pMutex;
     static vector<Callback_t> pCallbacks;
-    static bool               pRegistered;
   private:
     MHD_Daemon  *pDaemon;
   private :
@@ -66,6 +66,7 @@ class HTTPServer {
     static int  SendRedirect(struct MHD_Connection *connection, string url);
   public :
     static void RegisterCallback(string handleName, Func_t function);
+    static void UnregisterCallback(string handleName);
   public :
     HTTPServer();
     void     ExpireSessions();

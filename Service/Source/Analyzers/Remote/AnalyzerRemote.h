@@ -10,7 +10,7 @@ class AnalyzerRemote : public AnalyzerInterface {
 //                                     bool reactive_energy, bool apparent_power, bool power_factor, bool thd_v, bool thd_i, bool phi, bool voltage_harmonics, 
 //                                     bool current_harmonics, bool fft_v, bool fft_i, bool voltage, bool current);
   public :
-//    AnalyzerRemote(char *id, float nominalVoltage, float nominalFreq, char *name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online);
+    AnalyzerRemote(string id, AnalyzerInterface::AnalyzerMode mode, float samplerate);
 //    void UpdateConfig(float nominalVoltage, float nominalFreq, char *name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online);
 //    bool SaveJSON(json_object *json, Database *db);
 };

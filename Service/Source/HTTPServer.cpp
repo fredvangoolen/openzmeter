@@ -138,7 +138,7 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
 }
 //----------------------------------------------------------------------------------------------------------------------
 vector<HTTPServer::Callback_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
-bool                                                               HTTPServer::pRegistered = false;
+pthread_mutex_t                                                    HTTPServer::pMutex = PTHREAD_MUTEX_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
   pDaemon = NULL;
@@ -159,20 +159,37 @@ HTTPServer::HTTPServer() {
   } else {
     LOGFile::Info("HTTP server started on port %hu\n", Port);
   }
-  if(pRegistered == false) {
-    RegisterCallback("/Ping", PingCallback);
-    pRegistered = true;
-  }
+  RegisterCallback("/Ping", PingCallback);
 }
 HTTPServer::~HTTPServer() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
+  UnregisterCallback("/Ping");
 }
 void HTTPServer::PingCallback(HTTPRequest &req) {
   req.FromString("{}", (req.UserName() == "") ? MHD_HTTP_UNAUTHORIZED : MHD_HTTP_OK);
 }
 void HTTPServer::RegisterCallback(string handleName, HTTPServer::Func_t function) {
   Callback_t Item = {handleName, function};
+  pthread_mutex_lock(&pMutex);
+  for(uint n = 0; n < pCallbacks.size(); n++) {
+    if(pCallbacks[n].HandleName == handleName) {
+      pCallbacks[n] = Item;
+      pthread_mutex_unlock(&pMutex);
+      return;
+    }
+  }
   pCallbacks.push_back(Item);
+  pthread_mutex_unlock(&pMutex);
+}
+void HTTPServer::UnregisterCallback(string handleName) {
+  pthread_mutex_lock(&pMutex);
+  for(vector<Callback_t>::iterator it = pCallbacks.begin(); it < pCallbacks.end(); it++) {
+    if(it->HandleName == handleName) {
+      pCallbacks.erase(it);
+      break;
+    }
+  }
+  pthread_mutex_unlock(&pMutex);
 }
 void HTTPServer::RemoveExpiredSessions() {
   Database DB;

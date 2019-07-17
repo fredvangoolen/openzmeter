@@ -22,15 +22,15 @@ DeviceRemote::DeviceRemote() {
   pDriver = "Remote";
   pName   = "Allow repplication of remote openZmeter devices in local machine";
   pMutex  = PTHREAD_MUTEX_INITIALIZER;
-  
-//  if(pInstance != NULL) {
-//    LOGFile::Warning("Only one DeviceRemote driver allowed...\n");
-//    return;
-//  }
-//  Tools::LogMsg("INFO", "Starting DeviceRemote driver...\n");
-//  pInstance = this;
-//  HTTPServer::RegisterCallback((char*)"/setRemoteAnalyzer",  SetRemoteAnalyzerCallback);
-//  HTTPServer::RegisterCallback((char*)"/setRemoteData",  SetRemoteDataCallback);
+}
+bool DeviceRemote::Start() {
+  HTTPServer::RegisterCallback((char*)"/setRemoteAnalyzer", SetRemoteAnalyzerCallback);
+  HTTPServer::RegisterCallback((char*)"/setRemoteData",  SetRemoteDataCallback);
+  LOGFile::Info("Starting 'Remote' driver\n");
+  return false;
+}
+bool DeviceRemote::Stop() {
+  return false;
 }
 uint32_t DeviceRemote::AnalyzersCount() {
   pthread_mutex_lock(&pMutex);
