@@ -53,8 +53,10 @@
         });
       },
       Delete: function(index) {
-        this.Tariff.Template.Holidays.splice(index, 1);
-        this.FillTable();
+        if(confirm("Delete '"+this.Tariff.Template.Holidays[index].Name +"' holidays?")){
+          this.Tariff.Template.Holidays.splice(index, 1);
+          this.FillTable();
+        }
       },
       Add: function() {
         this.Tariff.Template.Holidays.push({ StartDate: this.Tariff.StartDate, EndDate: this.Tariff.EndDate, Name: 'Unnamed holiday' });

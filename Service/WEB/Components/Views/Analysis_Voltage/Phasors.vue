@@ -203,6 +203,7 @@
   .graphDiv >>> .graph {
     margin: auto;
   }
+@media screen and (min-width: 600px) {
   .table >>> th:nth-child(1)  {
     width: 40px;
     text-align: center;
