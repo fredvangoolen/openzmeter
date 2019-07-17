@@ -53,7 +53,7 @@ export var Series = {
       return [LowerRange, UpperRange];  
     }
   },
-  'ACTIVE_POWER': { CSS_Class: 'panel-active-power', Title: 'Active Power', Serie: 'Active_Power', Units: 'w', Link: '/Analysis/Power', Color: '#f0ad4e',
+  'ACTIVE_POWER': { CSS_Class: 'panel-active-power', Title: 'Active Power', Serie: 'Active_Power', Units: 'W', Link: '/Analysis/Power', Color: '#f0ad4e',
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'W', Value: Round2(ScaleToUnits(val, Units)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)']; },
     Range: function(values, phases) {
@@ -103,9 +103,9 @@ export var Series = {
     CSS_Class: 'panel-reactive-energy',
     Title: 'Reactive Energy',
     Serie: 'Reactive_Energy',
-    Units: 'varh',
+    Units: 'VArh',
     Color: '#643d8b',
-    FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'varh', Value: Round2(ScaleToUnits(val, Units)) }; },
+    FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'VArh', Value: Round2(ScaleToUnits(val, Units)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
     Range: function(values, phases) {
       var UpperRange = -Infinity;
@@ -147,10 +147,10 @@ export var Series = {
     CSS_Class: '', 
     Title: 'Fund. Reactive Power', 
     Serie: 'Reactive_Power', 
-    Units: 'var', 
+    Units: 'VAr', 
     Link: '/Analysis/Power',
     Color:  '#DF842A',
-    FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'var', Value: Round2(ScaleToUnits(val, Units)) }; },
+    FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'VAr', Value: Round2(ScaleToUnits(val, Units)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
     Range: function(values, phases) {
       var UpperRange = -Infinity;

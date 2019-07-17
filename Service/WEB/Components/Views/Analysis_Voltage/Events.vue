@@ -111,12 +111,14 @@
       },
       Delete: function(evt) {
         var Analyzer = this.$root.SelectedAnalyzer;
-        $.ajax({ url: 'delEvent', timeout: 20000, type: 'POST', dataType: 'text', contentType: 'application/json', data: JSON.stringify({ StartTime: this.Events[evt].StartTime, Analyzer: Analyzer.ID, Type: this.Events[evt].Type }),
-          success: function(result) {
-            this.Events.splice(evt, 1);
-            this.$refs.table.setData( { data: this.Events });
-          }.bind(this)
-        });
+        if(confirm("Delete selected event?")){
+          $.ajax({ url: 'delEvent', timeout: 20000, type: 'POST', dataType: 'text', contentType: 'application/json', data: JSON.stringify({ StartTime: this.Events[evt].StartTime, Analyzer: Analyzer.ID, Type: this.Events[evt].Type }),
+            success: function(result) {
+              this.Events.splice(evt, 1);
+              this.$refs.table.setData( { data: this.Events });
+            }.bind(this)
+          });
+        }
       },
       Edit: function(evt) {
         this.$refs.eventNotes.Show(evt);
