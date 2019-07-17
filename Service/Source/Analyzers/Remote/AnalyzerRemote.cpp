@@ -5,29 +5,29 @@
 #include <string.h>
 #include "Tools.h"
 #include "AnalyzerRemote.h"
-AnalyzerRemote::AnalyzerRemote(char* id, float nominalVoltage, float nominalFreq, char* name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online) : AnalyzerInterface(id, nominalVoltage, nominalFreq, name, maxCurrent, minCurrent, mode) {
+AnalyzerRemote::AnalyzerRemote(string id, AnalyzerInterface::AnalyzerMode mode, float samplerate) : AnalyzerInterface(id, mode) {
  //llamo al update config
 }
-void AnalyzerRemote::UpdateConfig(float nominalVoltage, float nominalFreq, char* name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online) {
+//void AnalyzerRemote::UpdateConfig(float nominalVoltage, float nominalFreq, char* name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online) {
   //Si ha cambiado el modo tengo que asegurarme que las muestras que hay son coherentes, si no la web fallara!
-}
-void AnalyzerRemote::GetParams(Params_t &params, bool frequency, bool flag, bool rms_v, bool rms_i, bool active_power, bool reactive_power, bool active_energy,
-                                     bool reactive_energy, bool apparent_power, bool power_factor, bool thd_v, bool thd_i, bool phi, bool voltage_harmonics, 
-                                     bool current_harmonics, bool fft_v, bool fft_i, bool voltage, bool current) {
-
-}
-bool AnalyzerRemote::SaveJSON(json_object *json, Database *db) {
-  char *Table = NULL;
-  Tools::JSONString(json, "Table", &Table, false);
-  if(Table == NULL) return false;
-  if((strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0)) {
-    Params_t Params;
-    if(strcmp("aggreg_3s", Table) == 0) Params.Type = AGGREG_3S;
-    if(Tools::JSONUInt64(json, "sampletime", &Params.Timestamp) == false) return false;                                                 //sampletime
-    if(Tools::JSONArrayFloat(json, "rms_v", &Params.RMS_V[0], (pMode == PHASE1) ? 1 : 3) == false) return false;                            //rms_v 
-    if(Tools::JSONArrayFloat(json, "rms_i", &Params.RMS_I[0], (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4) == false) return false;    //rms_i 
-    if(Tools::JSONArrayFloat(json, "active_power", &Params.Active_Power[0], (pMode == PHASE1) ? 1 : 3) == false) return false;              //active_power 
-    if(Tools::JSONArrayFloat(json, "active_energy", &Params.Active_Energy[0], (pMode == PHASE1) ? 1 : 3) == false) return false;            //active_energy
+//}
+//void AnalyzerRemote::GetParams(Params_t &params, bool frequency, bool flag, bool rms_v, bool rms_i, bool active_power, bool reactive_power, bool active_energy,
+//                                     bool reactive_energy, bool apparent_power, bool power_factor, bool thd_v, bool thd_i, bool phi, bool voltage_harmonics, 
+//                                     bool current_harmonics, bool fft_v, bool fft_i, bool voltage, bool current) {
+//
+//}
+//bool AnalyzerRemote::SaveJSON(json_object *json, Database *db) {
+//  char *Table = NULL;
+//  Tools::JSONString(json, "Table", &Table, false);
+//  if(Table == NULL) return false;
+//  if((strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0)) {
+//    Params_t Params;
+//    if(strcmp("aggreg_3s", Table) == 0) Params.Type = AGGREG_3S;
+//    if(Tools::JSONUInt64(json, "sampletime", &Params.Timestamp) == false) return false;                                                 //sampletime
+//    if(Tools::JSONArrayFloat(json, "rms_v", &Params.RMS_V[0], (pMode == PHASE1) ? 1 : 3) == false) return false;                            //rms_v 
+//    if(Tools::JSONArrayFloat(json, "rms_i", &Params.RMS_I[0], (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4) == false) return false;    //rms_i 
+//    if(Tools::JSONArrayFloat(json, "active_power", &Params.Active_Power[0], (pMode == PHASE1) ? 1 : 3) == false) return false;              //active_power 
+//    if(Tools::JSONArrayFloat(json, "active_energy", &Params.Active_Energy[0], (pMode == PHASE1) ? 1 : 3) == false) return false;            //active_energy
 //  BindArrayFloat(params->Reactive_Power, (pMode == PHASE1) ? 1 : 3);                                         //reactive_power
 //  BindArrayFloat(params->Reactive_Energy, (pMode == PHASE1) ? 1 : 3);                                        //reactive_energy
 //  BindSingleFloat(params->Frequency);                                                                        //frequency
@@ -72,9 +72,9 @@ bool AnalyzerRemote::SaveJSON(json_object *json, Database *db) {
 //      *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
 //      return true;
 //    }
-    SaveAggreg(Params);
-    LOGFile::Debug("Storing 3S aggregation\n");
-  } 
+//    SaveAggreg(Params);
+//    LOGFile::Debug("Storing 3S aggregation\n");
+//  } 
   
   
   
@@ -131,6 +131,6 @@ bool AnalyzerRemote::SaveJSON(json_object *json, Database *db) {
 //      float      Phi[3];                        //Angulo de Phi
 //    } Params_t;
   
-  return true;
-
-}
+//  return true;
+//
+//}

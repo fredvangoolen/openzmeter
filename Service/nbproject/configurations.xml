@@ -108,9 +108,11 @@
       </toolsSet>
       <flagsDictionary>
         <element flagsID="0" commonFlags="-g -Os -std=c99 -ffreestanding"/>
-        <element flagsID="1" commonFlags="-std=c++11"/>
-        <element flagsID="2" commonFlags="-std=c++11 -fstack-protector-all"/>
-        <element flagsID="3" commonFlags="-std=c++11 -march=native"/>
+        <element flagsID="1"
+                 commonFlags="-mtune=generic -march=x86-64 -std=c++11 -fstack-protector-all"/>
+        <element flagsID="2" commonFlags="-std=c++11"/>
+        <element flagsID="3" commonFlags="-std=c++11 -fstack-protector-all"/>
+        <element flagsID="4" commonFlags="-std=c++11 -march=native"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -147,286 +149,208 @@
         </cTool>
       </item>
       <item path="Libs/cctz/civil_time_detail.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="Libs/cctz/civil_time_detail.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2211"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_fixed.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_fixed.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2211"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_format.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_format.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2212"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_if.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_if.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2212"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_impl.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_impl.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2212"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_info.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_info.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2212"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_libc.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_libc.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2212"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_lookup.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_lookup.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2211"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_posix.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_posix.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2212"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Libs/cctz/zone_info_source.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
         </ccTool>
       </item>
       <item path="Libs/cctz/zone_info_source.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <incDir>
-            <pElem>Source/Support</pElem>
-            <pElem>Source/Support/Debian</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2211"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Analyzers/Analyzers.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <preprocessorList>
-            <Elem>__BUILD__="20190716.2212"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Analyzers/Events.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Analyzers/FFT.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Analyzers/Remote/AnalyzerRemote.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Analyzers/Soft/AnalyzerSoft.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Database.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
           <incDir>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
             <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2211"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/Devices/Devices.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
           <incDir>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>__BUILD__="20190716.2211"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/Devices/Remote/DeviceRemote.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Source/Devices/V1_00/DeviceV1_00.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Source/Devices/V1_01/DeviceV1_01.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Devices/V2_01/DeviceV2_01.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Devices/Virtual/DeviceVirtual.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
           <incDir>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
             <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2211"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/MODBus.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
           <incDir>
             <pElem>/usr/include/postgresql</pElem>
             <pElem>/usr/include/dbus-1.0</pElem>
@@ -460,74 +384,64 @@
         </ccTool>
       </item>
       <item path="Source/Main.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
           <incDir>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices</pElem>
             <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2211"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/Support/Debian/Debian.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Support/OpenWRT/OpenWRT.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Source/Tariffs/ESP/TariffPlugin_ESP.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Tariffs/NONE/TariffPlugin_NONE.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Tariffs/Tariff.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <preprocessorList>
-            <Elem>__BUILD__="20190716.2211"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
           <incDir>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
             <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2211"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <folder path="0/Libs">
@@ -564,64 +478,71 @@
           </preprocessorList>
         </ccTool>
       </folder>
-      <folder path="0/Source/Analyzers">
+      <folder path="0/Source/Analyzers/Remote">
         <ccTool>
           <incDir>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
             <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2214"</Elem>
-          </preprocessorList>
         </ccTool>
       </folder>
-      <folder path="0/Source/Devices">
+      <folder path="0/Source/Analyzers/Soft">
         <ccTool>
           <incDir>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Support/Debian</pElem>
             <pElem>/usr/include/postgresql</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-          </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/Source/Devices/Remote">
         <ccTool>
           <incDir>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Source/Support/Debian</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>__BUILD__="20190716.2212"</Elem>
+            <Elem>DEBIAN</Elem>
+            <Elem>__BUILD__="20190717.0957"</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/Source/Devices/V1_00">
         <ccTool>
           <incDir>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Source/Support/Debian</pElem>
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>DEBIAN</Elem>
             <Elem>DEVICE_V1_00</Elem>
             <Elem>DEVICE_V1_01</Elem>
             <Elem>DEVICE_V2_01</Elem>
@@ -632,40 +553,49 @@
       <folder path="0/Source/Devices/V1_01">
         <ccTool>
           <incDir>
-            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>/usr/include/libusb-1.0</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>__BUILD__="20190716.2212"</Elem>
-          </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/Source/Devices/V2_01">
         <ccTool>
           <incDir>
-            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>/usr/include/libusb-1.0</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Devices/V2_01</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>__BUILD__="20190716.2212"</Elem>
-          </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/Source/Devices/Virtual">
         <ccTool>
           <incDir>
-            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>/usr/include/libusb-1.0</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>__BUILD__="20190716.2212"</Elem>
-          </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/Source/Support">
@@ -719,18 +649,9 @@
       <folder path="0/Source/Support/Debian">
         <ccTool>
           <incDir>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/postgresql</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-          </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/Source/Support/OpenWRT">
@@ -1035,25 +956,34 @@
           </preprocessorList>
         </ccTool>
       </folder>
-      <folder path="0/Source/Tariffs">
+      <folder path="0/Source/Tariffs/ESP">
         <ccTool>
           <incDir>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
             <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
+            <pElem>Source/Tariffs/ESP</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
             <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190716.2214"</Elem>
-          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Tariffs/NONE">
+        <ccTool>
+          <incDir>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </folder>
     </conf>
