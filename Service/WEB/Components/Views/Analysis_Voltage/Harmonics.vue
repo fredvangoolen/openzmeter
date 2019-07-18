@@ -128,7 +128,7 @@
           for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length + oZm.Series['CURRENT'].Names(Analyzer).length; n++) {
             Row.push(this.BinPower(this.Data[i][n]));
             Row.push(20.0 * Math.log10(Math.max(0.000000001, this.BinPower(this.Data[i][n]))));
-            Row.push(this.Data[i][n][0] + ((this.Data[i][n][1] > 0) ? '+' + this.Data[i][n][1] : this.Data[i][n][1]) + 'i');
+            Row.push(String(this.Data[i][n][0]) + ((this.Data[i][n][1] > 0) ? '+' + this.Data[i][n][1] : this.Data[i][n][1]) + 'i');
           }
           Data.push(Row);
         }
