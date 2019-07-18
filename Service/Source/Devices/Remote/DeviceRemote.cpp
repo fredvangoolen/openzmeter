@@ -24,6 +24,57 @@ DeviceRemote::DeviceRemote() {
   pMutex  = PTHREAD_MUTEX_INITIALIZER;
 }
 bool DeviceRemote::Start() {
+  pthread_mutex_lock(&pMutex);
+  if(pState == RUNNING) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  LOGFile::Info("Loading 'Remote' driver configuration\n");
+  bool AutoStart = false;
+  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  if(Config.is_object() && Config["Serials"].is_array()) {
+    pVoltage = Config["Voltage"];
+  }
+  if((pVoltage < 85) || (pVoltage > 300)) pVoltage = 230.0;
+  if((pFrequency < 10) || (pFrequency > 80)) pFrequency = 50.0;
+  if((pSampleRate < (pFrequency * 100))) pSampleRate = (pFrequency * 100);
+  Config = json::object();
+  Config["Voltage"] = pVoltage;
+  Config["Frequency"] = pFrequency;
+  Config["SampleRate"] = pSampleRate;
+  Config["Mode"] = (pMode == AnalyzerInterface::PHASE1) ? "1PHASE" : (pMode == AnalyzerInterface::PHASE3) ? "3PHASE" : "3PHASE+N";
+  Config["AutoStart"] = AutoStart;
+  ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
+  if(pState == UNCONFIGURED) {
+    pState = STOPPED;
+    if(AutoStart == false) {
+      pthread_mutex_unlock(&pMutex);
+      return true;
+    }
+  }
+  LOGFile::Info("Starting 'Virtual' driver\n");
+  pTerminate = false;
+  pAnalyzer = new AnalyzerSoft(pSerial + "_" + ((pMode == AnalyzerInterface::PHASE1) ? "1PHASE" : (pMode == AnalyzerInterface::PHASE3) ? "3PHASE" : "3PHASE+N"), pMode, pSampleRate);
+  if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    delete pAnalyzer;
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  pState = RUNNING;
+  pthread_mutex_unlock(&pMutex);
+  return true;
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   HTTPServer::RegisterCallback((char*)"/setRemoteAnalyzer", SetRemoteAnalyzerCallback);
   HTTPServer::RegisterCallback((char*)"/setRemoteData",  SetRemoteDataCallback);
   LOGFile::Info("Starting 'Remote' driver\n");
