@@ -13,7 +13,8 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerInterface : protected Database {
   public :
-    enum AnalyzerMode {PHASE1, PHASE3, PHASE3N};
+    enum AnalyzerMode { PHASE1, PHASE3, PHASE3N };
+    enum AnalyzerRights { OWNER, READ, WRITE };
     enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
     enum ParamsType { FREQUENCY         = 0x00000001, 
                       FLAG              = 0x00000002,
@@ -92,6 +93,7 @@ class AnalyzerInterface : protected Database {
     float          AccumulateSUM(float val1, float val2);
     float          AccumulateRMS(float val1, float val2);
     complex<float> AccumulateRMS(complex<float> val1, complex<float> val2);
+    AnalyzerRights CheckRights(string username);
   public :
     virtual void GetParams(Params_t &params, ParamsType &copy) = 0;
   public :

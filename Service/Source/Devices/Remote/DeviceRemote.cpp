@@ -30,21 +30,25 @@ bool DeviceRemote::Start() {
     return false;
   }
   LOGFile::Info("Loading 'Remote' driver configuration\n");
+//  HTTPServer::RegisterCallback((char*)"/setRemoteAnalyzer", SetRemoteAnalyzerCallback);
+//  HTTPServer::RegisterCallback((char*)"/setRemoteData",  SetRemoteDataCallback);
   bool AutoStart = false;
-  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
-  if(Config.is_object() && Config["Serials"].is_array()) {
-    pVoltage = Config["Voltage"];
+  json ConfigIN  = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  json ConfigOUT = json::object();
+  ConfigOUT["Analyzers"] = json::array();
+  if(ConfigIN["AutoStart"].is_boolean()) AutoStart = ConfigIN["AutoStart"];
+  if(ConfigIN.is_object() && ConfigIN["Analyzers"].is_array()) {
+    for(uint n = 0; n < ConfigIN["Analyzers"].size(); n++) {
+      if(!ConfigIN["Analyzers"][n].is_object() || !ConfigIN["Analyzers"][n]["Serial"].is_string()) continue;
+      json Analyzer = json::object();
+      Analyzer["Serial"] = ConfigIN["Analyzers"][n]["Serial"];
+      Analyzer["Mode"] = "1PHASE";
+      if(ConfigIN["Analyzers"][n]["Mode"].is_string() && ((ConfigIN["Analyzers"][n]["Mode"] == "1PHASE") || (ConfigIN["Analyzers"][n]["Mode"] == "3PHASE") || (ConfigIN["Analyzers"][n]["Mode"] == "3PHASE+N"))) Analyzer["Mode"] = ConfigIN["Analyzers"][n]["Mode"];
+      ConfigOUT["Analyzers"].push_back(Analyzer);
+    }
   }
-  if((pVoltage < 85) || (pVoltage > 300)) pVoltage = 230.0;
-  if((pFrequency < 10) || (pFrequency > 80)) pFrequency = 50.0;
-  if((pSampleRate < (pFrequency * 100))) pSampleRate = (pFrequency * 100);
-  Config = json::object();
-  Config["Voltage"] = pVoltage;
-  Config["Frequency"] = pFrequency;
-  Config["SampleRate"] = pSampleRate;
-  Config["Mode"] = (pMode == AnalyzerInterface::PHASE1) ? "1PHASE" : (pMode == AnalyzerInterface::PHASE3) ? "3PHASE" : "3PHASE+N";
-  Config["AutoStart"] = AutoStart;
-  ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
+  ConfigOUT["AutoStart"] = AutoStart;
+  ConfigManager::WriteConfig("/Devices/" + pSerial, ConfigOUT);
   if(pState == UNCONFIGURED) {
     pState = STOPPED;
     if(AutoStart == false) {
@@ -53,35 +57,29 @@ bool DeviceRemote::Start() {
     }
   }
   LOGFile::Info("Starting 'Virtual' driver\n");
-  pTerminate = false;
-  pAnalyzer = new AnalyzerSoft(pSerial + "_" + ((pMode == AnalyzerInterface::PHASE1) ? "1PHASE" : (pMode == AnalyzerInterface::PHASE3) ? "3PHASE" : "3PHASE+N"), pMode, pSampleRate);
-  if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    delete pAnalyzer;
-    pthread_mutex_unlock(&pMutex);
-    return false;
+  for(uint n = 0; n < ConfigOUT["Analyzers"].size(); n++) {
+    string Serial = ConfigOUT["Analyzers"][n]["Serial"];
+    AnalyzerInterface::AnalyzerMode Mode = (ConfigOUT["Analyzers"][n]["Mode"] == "1PHASE") ? AnalyzerInterface::PHASE1 : (ConfigOUT["Analyzers"][n]["Mode"] == "3PHASE") ? AnalyzerInterface::PHASE3 : AnalyzerInterface::PHASE3N;
+    pAnalyzers.push_back(new AnalyzerRemote(Serial, Mode));
   }
   pState = RUNNING;
   pthread_mutex_unlock(&pMutex);
   return true;
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  HTTPServer::RegisterCallback((char*)"/setRemoteAnalyzer", SetRemoteAnalyzerCallback);
-  HTTPServer::RegisterCallback((char*)"/setRemoteData",  SetRemoteDataCallback);
-  LOGFile::Info("Starting 'Remote' driver\n");
-  return false;
 }
 bool DeviceRemote::Stop() {
-  return false;
+  pthread_mutex_lock(&pMutex);
+  if(pState != RUNNING) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  LOGFile::Info("Stopping 'Remote' driver...\n");
+  while(pAnalyzers.size() > 0) {
+    delete pAnalyzers.front();
+    pAnalyzers.pop_front();
+  }
+  pState = STOPPED;  
+  pthread_mutex_unlock(&pMutex);
+  return true;
 }
 uint32_t DeviceRemote::AnalyzersCount() {
   pthread_mutex_lock(&pMutex);
@@ -101,16 +99,10 @@ AnalyzerInterface *DeviceRemote::FindAnalyzer(string serial) {
   pthread_mutex_unlock(&pMutex);
   return Result;
 }
-
-
-
 DeviceRemote::~DeviceRemote() {
-  while(pAnalyzers.size()) {
-    AnalyzerRemote *Analyzer = pAnalyzers.front();
-    delete Analyzer;
-    pAnalyzers.pop_front();
-  }
+  Stop();
 }
+
 //bool DeviceRemote::SetRemoteAnalyzerCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
 //  char *Serial = NULL, *Name = NULL, *Mode = NULL;
 //  float NominalVoltage = NAN, NominalFreq = NAN, MaxCurrent = NAN, MinCurrent = NAN, SampleFreq = NAN;

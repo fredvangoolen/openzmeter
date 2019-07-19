@@ -5,8 +5,10 @@
 #include <string.h>
 #include "Tools.h"
 #include "AnalyzerRemote.h"
-AnalyzerRemote::AnalyzerRemote(string id, AnalyzerInterface::AnalyzerMode mode, float samplerate) : AnalyzerInterface(id, mode) {
+AnalyzerRemote::AnalyzerRemote(string id, AnalyzerInterface::AnalyzerMode mode) : AnalyzerInterface(id, mode) {
  //llamo al update config
+}
+void AnalyzerRemote::GetParams(Params_t& params, ParamsType& copy) {
 }
 //void AnalyzerRemote::UpdateConfig(float nominalVoltage, float nominalFreq, char* name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online) {
   //Si ha cambiado el modo tengo que asegurarme que las muestras que hay son coherentes, si no la web fallara!
