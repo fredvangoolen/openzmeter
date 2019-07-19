@@ -18,6 +18,7 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("/startDevice",         StartDeviceCallback);
   HTTPServer::RegisterCallback("/setDevice",           SetDeviceCallback);
   HTTPServer::RegisterCallback("/getAnalyzers",        DeviceManager::GetAnalyzersCallback);
+  
   HTTPServer::RegisterCallback("/setAnalyzer",         DeviceManager::SetAnalyzerCallback);
   HTTPServer::RegisterCallback("/getSeries",           DeviceManager::GetSeriesCallback);
   HTTPServer::RegisterCallback("/getSeriesNow",        DeviceManager::GetSeriesNowCallback);

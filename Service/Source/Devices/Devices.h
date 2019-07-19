@@ -39,7 +39,8 @@ class DeviceManager {
   private :  
     static vector<Device*>  pDevices;
   public :
-    static bool AddDevice(Device *dev);
+    static bool               AddDevice(Device *dev);
+    static AnalyzerInterface *FindAnalyzer(string serial);
   private :
     static void GetDevicesCallback(HTTPRequest &req);
     static void GetDeviceCallback(HTTPRequest &req);
@@ -47,6 +48,7 @@ class DeviceManager {
     static void StopDeviceCallback(HTTPRequest &req);
     static void SetDeviceCallback(HTTPRequest &req);
     static void GetAnalyzersCallback(HTTPRequest &req);
+    
     static void SetAnalyzerCallback(HTTPRequest &req);
     static void GetSeriesCallback(HTTPRequest &req);
     static void GetSeriesNowCallback(HTTPRequest &req);

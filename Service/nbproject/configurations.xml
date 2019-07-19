@@ -42,7 +42,6 @@
           </df>
           <in>Analyzers.cpp</in>
           <in>Events.cpp</in>
-          <in>FFT.cpp</in>
         </df>
         <df name="Devices">
           <df name="Remote">
@@ -113,6 +112,7 @@
         <element flagsID="2" commonFlags="-std=c++11"/>
         <element flagsID="3" commonFlags="-std=c++11 -fstack-protector-all"/>
         <element flagsID="4" commonFlags="-std=c++11 -march=native"/>
+        <element flagsID="5" commonFlags="-std=c++14"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -252,17 +252,6 @@
           </incDir>
         </ccTool>
       </item>
-      <item path="Source/Analyzers/FFT.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Libs/nlohmann</pElem>
-            <pElem>Source</pElem>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
-          </incDir>
-        </ccTool>
-      </item>
       <item path="Source/Analyzers/Remote/AnalyzerRemote.cpp"
             ex="false"
             tool="1"
@@ -270,11 +259,15 @@
         <ccTool flags="1">
         </ccTool>
       </item>
+      <item path="Source/Analyzers/RemoteSync.cpp" ex="false" tool="1" flavor2="11">
+        <ccTool flags="5">
+        </ccTool>
+      </item>
       <item path="Source/Analyzers/Soft/AnalyzerSoft.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Source/Database.cpp" ex="false" tool="1" flavor2="8">
@@ -289,18 +282,24 @@
         </ccTool>
       </item>
       <item path="Source/Devices/Devices.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="3">
           <incDir>
-            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>Source/Tariffs</pElem>
-            <pElem>Source</pElem>
-            <pElem>Libs/cctz</pElem>
-            <pElem>/usr/include/postgresql</pElem>
             <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Support/Debian</pElem>
             <pElem>.</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>DEBIAN</Elem>
+            <Elem>__BUILD__="20190718.2117"</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/Devices/Remote/DeviceRemote.cpp"
@@ -494,16 +493,22 @@
       <folder path="0/Source/Analyzers/Soft">
         <ccTool>
           <incDir>
-            <pElem>Libs/nlohmann</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Support/Debian</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Support</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
             <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Support/Debian</pElem>
             <pElem>.</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>DEBIAN</Elem>
+            <Elem>__BUILD__="20190718.2117"</Elem>
+          </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/Source/Devices/Remote">
@@ -523,7 +528,7 @@
           </incDir>
           <preprocessorList>
             <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190717.0957"</Elem>
+            <Elem>__BUILD__="20190718.2117"</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -628,7 +633,7 @@
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>__BUILD__="20190716.2214"</Elem>
+            <Elem>__BUILD__="20190718.1639"</Elem>
           </preprocessorList>
           <undefinedList>
             <Elem>__ARM_ASM_SYNTAX_UNIFIED__</Elem>
