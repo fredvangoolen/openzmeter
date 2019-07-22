@@ -201,6 +201,7 @@
       }
       var bar_width = Math.floor(2.5 / 3 * min_sep);
       g.subbar_width = bar_width / sets.length;
+      if(g.subbar_width < 2) g.subbar_width = 2;
       for(var j = 0; j < sets.length; j++) {
         ctx.strokeStyle = g.getColors()[j];
         ctx.fillStyle = g.getColors()[j];
