@@ -164,6 +164,7 @@
 //            context.doubleTapY = t.screenY;
           }
       }
+      this.WindowChange(g.dateWindow_[0], g.dateWindow_[1]);
     }
   export default {
     WaveTimeTicks: function(max, analyzer) {

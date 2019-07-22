@@ -5,7 +5,7 @@
         <button class="btn btn-default narrow" type="button" v-on:click="Previous" :disabled="Updating"><img :src="require('Imgs/resultset_previous.png')"></button>
       </div>
       <div class="input-group-btn">
-        <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" :disabled="Updating">{{ (Prev == null) ? SelectedText : 'Inspecting' }}<span class="caret"></span></button>
+        <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" :disabled="Updating">{{ /*(Prev == null) ?*/ SelectedText /*: 'Inspecting'*/ }}<span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" ref="periodTags">
           <li v-bind:class="{active: ((Period == 'day') && (To == 'last'))}"><a @click="PeriodClick('day', 'last', $event)">Last 24 hours</a></li>
           <li v-bind:class="{active: ((Period == 'week') && (To == 'last'))}"><a @click="PeriodClick('week', 'last', $event)">Last 7 days</a></li>
