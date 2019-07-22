@@ -7,6 +7,7 @@
   import chroma from 'JS/chroma.js';
   import * as oZm from 'JS/openZmeter.js';
   function mouseDown(event, g, context) {
+    if(this.StopAutoupdate) this.StopAutoupdate();
     context.initializeMouseDown(event, g, context);
     if(event.altKey || event.shiftKey) {
       Dygraph.startZoom(event, g, context);
@@ -33,6 +34,7 @@
   }
   function mouseWheelZoom(event, g, context) {
     if(!event.shiftKey) return;
+    if(this.StopAutoupdate) this.StopAutoupdate();
     var normal = event.detail ? event.detail * -1 : event.wheelDelta / 40;
     var percentage = normal / 50;
     if (!event.offsetX) event.offsetX = event.layerX - event.target.offsetLeft;
@@ -51,6 +53,7 @@
     this.WindowRestore();
   }
   function touchStart(event, g, context) {
+    if(this.StopAutoupdate) this.StopAutoupdate();
     event.preventDefault();  // touch browsers are all nice.
     if(event.touches.length > 1) context.startTimeForDoubleTapMs = null;
     var touches = [];
@@ -227,7 +230,7 @@
       return { mousedown: mouseDown, mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent) };
     },
     ScrollableInteractionModel: function(parent) {
-      return { mousedown: mouseDown, mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
+      return { mousedown: mouseDown.bind(parent), mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
                 touchstart: touchStart, touchmove: touchMove, touchend: touchEnd.bind(parent) };
     },
     MouseUpEvt: function(event, g, contex) {
