@@ -203,26 +203,26 @@
   .graphDiv >>> .graph {
     margin: auto;
   }
-@media screen and (min-width: 600px) {
-  .table >>> th:nth-child(1)  {
-    width: 40px;
-    text-align: center;
-  }  
-  .table >>> th:nth-child(2)  {
-    width: 50px;
-    text-align: center;
+  @media screen and (min-width: 600px) {
+    .table >>> th:nth-child(1)  {
+      width: 40px;
+      text-align: center;
+    }  
+    .table >>> th:nth-child(2)  {
+      width: 50px;
+      text-align: center;
+    }
+    .table >>> th:nth-child(3), .table >>> th:nth-child(4)  {
+      text-align: right;
+    }
+    .table >>> td {
+      font-size: 16px
+    }
+    .table >>> td:nth-child(1), .table >>> td:nth-child(1) {
+      text-align: center;
+    }
+    .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
+      text-align: right;
+    }
   }
-  .table >>> th:nth-child(3), .table >>> th:nth-child(4)  {
-    text-align: right;
-  }
-  .table >>> td {
-    font-size: 16px
-  }
-  .table >>> td:nth-child(1), .table >>> td:nth-child(1) {
-    text-align: center;
-  }
-  .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
-    text-align: right;
-  }
-}
 </style>
