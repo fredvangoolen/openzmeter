@@ -26,6 +26,44 @@
       #include <sys/socket.h>
       #include <unistd.h>
 //----------------------------------------------------------------------------------------------------------------------
+RWLocks::RWLocks() {
+  pMutex = PTHREAD_MUTEX_INITIALIZER;
+  pReadersCondition = PTHREAD_COND_INITIALIZER;
+  pWritersCondition = PTHREAD_COND_INITIALIZER;
+  pWriters = 0;
+  pReaders = 0;
+  pActiveWriter = false;
+}
+void RWLocks::ReadLock() {
+  pthread_mutex_lock(&pMutex);
+  while(pWriters != 0) pthread_cond_wait(&pReadersCondition, &pMutex);
+  pReaders++;
+  pthread_mutex_unlock(&pMutex);
+}
+void RWLocks::ReadUnlock() {
+  pthread_mutex_lock(&pMutex);
+  pReaders--;
+  pthread_mutex_lock(&pMutex);
+  pthread_cond_signal(&pWritersCondition);
+}
+void RWLocks::WriteLock() {
+  pthread_mutex_lock(&pMutex);
+  pWriters++;
+  while((pReaders != 0) || (pActiveWriter != false)) pthread_cond_wait(&pWritersCondition, &pMutex);
+  pActiveWriter = true;
+  pthread_mutex_lock(&pMutex);
+}
+void RWLocks::WriteUnlock() {
+  pthread_mutex_lock(&pMutex);
+  pWriters--;
+  pActiveWriter = false;
+  if(pWriters > 0) 
+    pthread_cond_signal(&pWritersCondition);
+  else
+    pthread_cond_broadcast(&pReadersCondition);
+  pthread_mutex_lock(&pMutex);
+}
+//----------------------------------------------------------------------------------------------------------------------
 ConfigManager   *ConfigManager::pInstance = NULL;
 pthread_mutex_t  ConfigManager::pMutex = PTHREAD_MUTEX_INITIALIZER;
 ConfigManager::ConfigManager(string name) {
@@ -58,7 +96,7 @@ ConfigManager::~ConfigManager() {
   pInstance = NULL;
   pthread_mutex_unlock(&pMutex);
 }
-bool ConfigManager::WriteConfig(string path, json val) {
+bool ConfigManager::WriteConfig(const string &path, const json &val) {
   pthread_mutex_lock(&pMutex);
   LOGFile::Debug("Saving '%s' settings\n", path.c_str());
   if(pInstance == NULL) {
@@ -85,7 +123,7 @@ bool ConfigManager::WriteConfig(string path, json val) {
   pthread_mutex_unlock(&pMutex);
   return true;
 }
-json ConfigManager::ReadConfig(string path) {
+json ConfigManager::ReadConfig(const string &path) {
   pthread_mutex_lock(&pMutex);
   LOGFile::Debug("Reading '%s' settings\n", path.c_str());
   if((pInstance == NULL) || (pInstance->pConfig.is_object() == false)) {
@@ -245,7 +283,7 @@ uint64_t Tools::GetTime() {
   }
   return (uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000;
 }
-void Tools::SendUDP(json obj) {
+void Tools::SendUDP(const json &obj) {
   struct sockaddr_in Client;
   int Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if(Socket == -1) {

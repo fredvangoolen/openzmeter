@@ -31,7 +31,7 @@ FFT::~FFT() {
   pthread_cond_signal(&pThreadCond);
   if(pthread_join(pThread, NULL) != 0) LOGFile::Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
 }
-void FFT::Start(vector<float> &in) {
+void FFT::Start(const vector<float> &in) {
   pthread_mutex_lock(&pThreadMutex);
   if(pWorking == true) {
     pthread_mutex_unlock(&pThreadMutex);
@@ -74,7 +74,7 @@ void FFT::Wait() {
   } 
   pthread_mutex_unlock(&pThreadMutex);
 }
-float FFT::CalcAngle(complex<float> a, complex<float> b) {
+float FFT::CalcAngle(const complex<float> &a, const complex<float> &b) {
   float Tmp;
   if((a.real() == 0) && (a.imag() == 0)) 
     Tmp = 0;

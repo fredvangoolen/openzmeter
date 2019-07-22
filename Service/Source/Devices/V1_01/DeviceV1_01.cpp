@@ -83,7 +83,7 @@ DeviceV1_01::DeviceV1_01(string serial) {
   pAnalyzer      = NULL;
   pMutex         = PTHREAD_MUTEX_INITIALIZER;
 }
-AnalyzerInterface *DeviceV1_01::FindAnalyzer(string serial) {
+Analyzer *DeviceV1_01::FindAnalyzer(string serial) {
   if(pAnalyzer == NULL) return NULL;
   return (serial == pAnalyzer->Serial()) ? pAnalyzer : NULL;
 }
@@ -124,7 +124,7 @@ bool DeviceV1_01::Start() {
   pTerminate    = false;
   pDeviceHandle = NULL;
   pNewDevice    = NULL;
-  pAnalyzer     = new AnalyzerSoft(pSerial, AnalyzerInterface::PHASE1, DEVICEV1_01_SAMPLEFREQ);
+  pAnalyzer     = new AnalyzerSoft(pSerial, Analyzer::PHASE1, DEVICEV1_01_SAMPLEFREQ);
   if(libusb_init(&pContext) < 0) {
     LOGFile::Error("Can not open libUSB...\n");
     pthread_mutex_unlock(&pMutex);
@@ -325,7 +325,7 @@ void *DeviceV1_01::Sig_Thread(void* args) {
 //  DeviceV1_01 *This = (DeviceV1_01*)args;
 //  bool Toogle = false;
 //  while(!This->pTerminateSignal) {
-    AnalyzerInterface::Params_t Params;
+    Analyzer::Params_t Params;
 /*    This->pAnalyzer->GetParams(&Params, NULL);
     uint16_t Current = 0;
     uint16_t Voltage = 1 << 6;

@@ -46,9 +46,9 @@ class Events : public Database {
     pthread_mutex_t                  pThreadMutex;         //Mutex para la variable de condicion
     pthread_cond_t                   pThreadCond;          //Variable de condicion para esperar
     bool                             pTerminate;           //Termination flag
-    AnalyzerInterface::Params_t     *pParams;              //Input block to analyze
+    Analyzer::Params_t     *pParams;              //Input block to analyze
     vector<uint32_t>                *pCycles;              //Input cycles lengths
-    AnalyzerInterface               *pAnalyzer;            //Analyzer parent
+    Analyzer               *pAnalyzer;            //Analyzer parent
     float                            pSampleRate;          //Analyzer samplerate
     deque<vector<float> >            pPrevSamples;         //Previous samples
     deque<EventCycle_t>              pPrevCycles;          //Previous cycles
@@ -62,8 +62,8 @@ class Events : public Database {
     void Save(Event_t &evt);
     bool FindRunningEvent(uint32_t mask);
   public :
-    void Start(AnalyzerInterface::Params_t *params, vector<uint32_t> *cycles);
+    void Start(Analyzer::Params_t *params, vector<uint32_t> *cycles);
     void Wait();
-    Events(AnalyzerInterface *interface, float samplerate);
+    Events(Analyzer *interface, float samplerate);
     virtual ~Events();
 };

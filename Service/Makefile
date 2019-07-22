@@ -8,7 +8,7 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 
 #Executable related components
 EXECUTABLE_TARGET = Tmp/openZmeter
-EXECUTABLE_SOURCE = Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/Tools.cpp Source/Devices/Devices.cpp Source/Analyzers/Analyzers.cpp Source/Tariffs/Tariff.cpp 
+EXECUTABLE_SOURCE = Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/Tools.cpp Source/Devices/Device.cpp Source/Devices/DeviceManager.cpp Source/Analyzers/Analyzers.cpp Source/Tariffs/Tariff.cpp 
 CFLAGS += -Wno-psabi -Wall -std=c++11 -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs 
 LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz -lpthread
 
@@ -63,7 +63,7 @@ ifeq ($(DEVICE_REMOTE), true)
 	CFLAGS += -I Source/Analyzers/Remote
 endif
 ifeq ($(ANALYZER_SOFT), true)
-	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp Source/Analyzers/FFT.cpp Source/Analyzers/Events.cpp
+	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp Source/Analyzers/Soft/FFT.cpp Source/Analyzers/Soft/Events.cpp
 	CFLAGS += -I Source/Analyzers/Soft
 endif
 ifeq ($(OS_TARGET), OPENWRT)

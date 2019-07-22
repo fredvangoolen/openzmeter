@@ -6,7 +6,7 @@
 #include <sys/types.h>
 #include "Tools.h"
 #include "Events.h"
-Events::Events(AnalyzerInterface *interface, float samplerate) : Database(interface->Serial()) {
+Events::Events(Analyzer *interface, float samplerate) : Database(interface->Serial()) {
   pSampleRate = samplerate;
   pTerminate = false;
   pParams = NULL;
@@ -28,7 +28,7 @@ Events::~Events() {
   pthread_cond_signal(&pThreadCond);
   if(pthread_join(pThread, NULL) != 0) LOGFile::Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
 }
-void Events::Start(AnalyzerInterface::Params_t *params, vector<uint32_t> *cycles) {
+void Events::Start(Analyzer::Params_t *params, vector<uint32_t> *cycles) {
   pthread_mutex_lock(&pThreadMutex);
   if(pParams != NULL) {
     pthread_mutex_unlock(&pThreadMutex);
