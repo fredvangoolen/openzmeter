@@ -100,7 +100,8 @@
           }.bind(this),
           complete: function() {
             this.ShowSpinner = false;
-            this.$refs.period.UpdateCompleted(lastsample);
+            this.$refs.period.Updating = false;
+            //this.$refs.period.UpdateCompleted(lastsample);
           }.bind(this),
           error: function(response) {
             if(response.status === 400) this.$refs.aggregation.AggregationFail();
