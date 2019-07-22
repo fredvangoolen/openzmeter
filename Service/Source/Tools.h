@@ -10,10 +10,25 @@
 using json = nlohmann::json;
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
+class RWLocks {
+  private : 
+    pthread_mutex_t  pMutex;
+    pthread_cond_t   pReadersCondition;
+    pthread_cond_t   pWritersCondition;
+    uint             pReaders;
+    uint             pWriters;
+    bool             pActiveWriter;
+  public :
+    RWLocks();
+    void ReadLock();
+    void ReadUnlock();
+    void WriteLock();
+    void WriteUnlock();
+};
 class ConfigManager {
   private :
-    static ConfigManager          *pInstance;
-    static pthread_mutex_t         pMutex;
+    static ConfigManager    *pInstance;
+    static pthread_mutex_t   pMutex;
   private :
     int   pFile;
     json  pConfig;
@@ -21,8 +36,8 @@ class ConfigManager {
     ConfigManager(string name);
     virtual ~ConfigManager();
   public :
-    static json  ReadConfig(string path);
-    static bool  WriteConfig(string path, json val);
+    static json ReadConfig(const string &path);
+    static bool WriteConfig(const string &path, const json &val);
 };
 //----------------------------------------------------------------------------------------------------------------------
 class PIDFile {
@@ -43,7 +58,7 @@ class ResourceLoader {
   private :
     static vector<File_t> pFiles;
   public :
-    static uint8_t *GetFile(string name, size_t *size);
+    static uint8_t *GetFile(const string name, size_t *size);
 };
 //----------------------------------------------------------------------------------------------------------------------
 class LOGFile {
@@ -72,6 +87,6 @@ class LOGFile {
 class Tools {
   public :
     static uint64_t  GetTime();
-    static void      SendUDP(json obj);
+    static void      SendUDP(const json &obj);
 };
 //----------------------------------------------------------------------------------------------------------------------

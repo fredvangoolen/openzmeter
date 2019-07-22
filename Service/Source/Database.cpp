@@ -12,7 +12,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 string Database::pConnectionString;
 //----------------------------------------------------------------------------------------------------------------------
-Database::Database(string schema) {
+Database::Database(const string &schema) {
   if(pConnectionString.empty() == true) ReadConfig();
   pSchema    = schema;
   pResult    = NULL;
@@ -30,7 +30,7 @@ Database::Database(string schema) {
     return;
   }
 }
-string Database::GetSchema() {
+string Database::GetSchema() const {
   return pSchema;
 }
 Database::~Database() {
@@ -65,14 +65,14 @@ bool Database::FecthRow() {
   pResult = PQgetResult(pDBConn);
   return (PQresultStatus(pResult) == PGRES_SINGLE_TUPLE);
 }
-bool Database::ExecResource(string file) {
+bool Database::ExecResource(const string &file) {
   size_t Len;
   ClearAsync();
   char *Script = (char*)ResourceLoader::GetFile(file, &Len);
   Script[Len - 1] = 0;
   return ExecSentenceNoResult(Script);
 }
-bool Database::ExecSentenceNoResult(string sql) {
+bool Database::ExecSentenceNoResult(const string &sql) {
   if(pDBConn == NULL) return false;
   ClearAsync();
   PGresult *Result = PQexec(pDBConn, sql.c_str());
@@ -86,7 +86,7 @@ bool Database::ExecSentenceNoResult(string sql) {
     return true;  
   }
 }
-bool Database::ExecSentenceAsyncResult(string sql) {
+bool Database::ExecSentenceAsyncResult(const string &sql) {
   if(pDBConn == NULL) return false;
   ClearAsync();
   if(PQsendQuery(pDBConn, sql.c_str()) == 0) {
@@ -108,16 +108,16 @@ void Database::ClearAsync() {
     pResult = PQgetResult(pDBConn);
   } while(pResult != NULL);
 }
-string Database::Bind(uint32_t param) {
+string Database::Bind(const uint32_t param) const {
   return to_string(param);
 }
-string Database::Bind(uint64_t param) {
+string Database::Bind(const uint64_t param) const {
   return to_string(param);
 }
-string Database::Bind(float param) {
+string Database::Bind(const float param) const {
   return isnan(param) ? string("NULL") : to_string(param);
 }
-string Database::Bind(const vector< vector<float> > &params) {
+string Database::Bind(const vector< vector<float> > &params) const {
   string Result = "'{";
   for(uint32_t i = 0; i < params.size(); i++) {
     Result.append("{");
@@ -130,7 +130,7 @@ string Database::Bind(const vector< vector<float> > &params) {
   Result.append("}'");
   return Result;
 }
-string Database::Bind(const vector<uint16_t> &params) {
+string Database::Bind(const vector<uint16_t> &params) const {
   string Result = "'{";
   for(uint i = 0; i < params.size(); i++) {
     Result.append(to_string(params[i]));
@@ -138,7 +138,7 @@ string Database::Bind(const vector<uint16_t> &params) {
   }
   return Result;
 }
-string Database::Bind(const vector<float> &params) {
+string Database::Bind(const vector<float> &params) const {
   string Result = "'{";
   for(uint i = 0; i < params.size(); i++) {
     Result.append(isnan(params[i]) ? string("NULL") : to_string(params[i]));
@@ -146,7 +146,7 @@ string Database::Bind(const vector<float> &params) {
   }
   return Result;
 }
-string Database::Bind(const vector<vector<complex<float> > > &params) {
+string Database::Bind(const vector<vector<complex<float> > > &params) const {
   string Result = "'{";
   for(uint i = 0; i < params.size(); i++) {
     Result.append("{");
@@ -159,41 +159,41 @@ string Database::Bind(const vector<vector<complex<float> > > &params) {
   Result.append("}'");
   return Result;
 }
-string Database::Bind(bool param) {
+string Database::Bind(const bool param) const {
   return (param == true) ? "true" : "false";
 }
-string Database::Bind(string param) {
+string Database::Bind(const string &param) const {
   if(pDBConn == NULL) return "";
   char *Scape = PQescapeLiteral(pDBConn, param.c_str(), param.length());
   string Result = Scape;
   PQfreemem(Scape);
   return Result;
 }
-string Database::BindID(string param) {
+string Database::BindID(const string &param) const {
   if(pDBConn == NULL) return "";
   char *Scape = PQescapeIdentifier(pDBConn, param.c_str(), param.length());
   string Result = Scape;
   PQfreemem(Scape);
   return Result;
 }
-json Database::ResultJSON(string name) {
+json Database::ResultJSON(const string &name) const {
   return json::parse(ResultString(name));
 }
-string Database::ResultString(string name) {
+string Database::ResultString(const string &name) const {
   if(pResult == NULL) return "";
   int32_t Col = PQfnumber(pResult, name.c_str());
   if(Col == -1) return "";
   if(PQgetisnull(pResult, 0, Col) == 1) return "";
   return PQgetvalue(pResult, 0, Col);
 }
-float Database::ResultFloat(string name) {
+float Database::ResultFloat(const string &name) const {
   if(pResult == NULL) return NAN;
   int32_t Col = PQfnumber(pResult, name.c_str());
   if(Col == -1) return NAN;
   if(PQgetisnull(pResult, 0, Col) == 1) return NAN;
   return atof(PQgetvalue(pResult, 0, Col));
 }
-uint64_t Database::ResultUInt64(string name) {
+uint64_t Database::ResultUInt64(const string &name) const {
   if(pResult == NULL) return 0;
   int32_t Col = PQfnumber(pResult, name.c_str());
   if(Col == -1) return 0;

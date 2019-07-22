@@ -5,16 +5,23 @@
 #pragma once
 #include <vector>
 #include <complex>
-#include "Database.h"
 #include <nlohmann/json.hpp>
-using json = nlohmann::json;
+#include "Tools.h"
+#include "Database.h"
+#include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
+using json = nlohmann::json;
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-class AnalyzerInterface : protected Database {
+class Analyzer : protected RWLocks {
+  protected :
+    static vector<float>  FrequencyRanges;   //Rangos de frecuencias para estadisticas
+    static vector<float>  VoltageRanges;     //Rangos de tensiones para estadisticas
+    static vector<float>  THDRanges;         //Rangos de distorsion harmonica para estadisticas
+    static vector<float>  HarmonicsAllowed;  //Rangos permitidos para cada harmonico
   public :
     enum AnalyzerMode { PHASE1, PHASE3, PHASE3N };
-    enum AnalyzerRights { OWNER, READ, WRITE };
+    enum AnalyzerRights { READ = 0x01, WRITE = 0x02, CONFIG = 0x04 };
     enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
     enum ParamsType { FREQUENCY         = 0x00000001, 
                       FLAG              = 0x00000002,
@@ -38,11 +45,6 @@ class AnalyzerInterface : protected Database {
                       CURRENT_SAMPLES   = 0x00080000,
                       SYS_STATS         = 0x00100000
     };
-  protected :
-    static vector<float>  FrequencyRanges;   //Rangos de frecuencias para estadisticas
-    static vector<float>  VoltageRanges;     //Rangos de tensiones para estadisticas
-    static vector<float>  THDRanges;         //Rangos de distorsion harmonica para estadisticas
-    static vector<float>  HarmonicsAllowed;  //Rangos permitidos para cada harmonico
   public :
     typedef struct {
       AggregType                        Type;                       //Aggregation type
@@ -77,32 +79,67 @@ class AnalyzerInterface : protected Database {
       json                              Sys_Stats;                  //System status for NOW(10C) aggreg
     } Params_t;
   protected :
-    uint64_t      pLastSave;
-    float         pNominalVoltage;
-    float         pNominalFrequency;
-    string        pName;
-    float         pMaxCurrent;
-    float         pMinCurrent;
-    float         pSamplerate;              //Velocidad de muestreo (NaN if unsuported)
-    AnalyzerMode  pMode;
+    uint64_t        pLastSave;                //Timestamp of last save or communication
+    float           pNominalVoltage;          //Analyzer nominal voltage
+    float           pNominalFrequency;        //Analyzer nominal frequency
+    string          pSerial;                  //Serial number
+    string          pCountryCode;             //Country code
+    string          pContract;                //Contract identifier
+    string          pZipCode;                 //Installation zip code
+    float           pGeo[2];                  //GPS position
+    string          pName;                    //Analyzer description
+    float           pMaxCurrent;              //Max current, over this value warnings are shown
+    float           pMinCurrent;              //Min current, under this value some analysis are disabled
+    float           pSamplerate;              //Velocidad de muestreo (NaN if unsuported)
+    AnalyzerMode    pMode;                    //Operation mode
   protected :
-    void           InitAggreg(Params_t &params, AggregType type);
-    void           SaveAggreg(Params_t &params);
-    void           AccumulateAggreg(Params_t &src, Params_t &dst);
-    void           NormalizeAggreg(Params_t &src);
-    float          AccumulateSUM(float val1, float val2);
-    float          AccumulateRMS(float val1, float val2);
-    complex<float> AccumulateRMS(complex<float> val1, complex<float> val2);
-    AnalyzerRights CheckRights(string username);
+    void           InitAggreg(Params_t &params, AggregType type) const;
+    void           AccumulateAggreg(Params_t &src, const Params_t &dst) const;
+    void           NormalizeAggreg(Params_t &src) const;
+    float          AccumulateSUM(const float val1, const float val2) const;
+    float          AccumulateRMS(const float val1, const float val2) const;
+    complex<float> AccumulateRMS(const complex<float> &val1, const complex<float> &val2) const;
+    bool           CheckRights(HTTPRequest &req, const uint neededAccess) const;
+  protected :
+    virtual void GetAnalyzer(HTTPRequest &req) = 0;
+    virtual void SetAnalyzer(HTTPRequest &req) = 0;
+    virtual void GetSeries(HTTPRequest &req) = 0;
+    virtual void GetSeriesNow(HTTPRequest &req) = 0;
+    virtual void GetSeriesRange(HTTPRequest &req) = 0;
+    virtual void GetEvents(HTTPRequest &req) = 0;
+    virtual void GetEvent(HTTPRequest &req) = 0;
+    virtual void SetEvent(HTTPRequest &req) = 0;
+    virtual void DelEvent(HTTPRequest &req) = 0;
+    virtual void GetTariffs(HTTPRequest &req) = 0;
+    virtual void GetTariff(HTTPRequest &req) = 0;
+    virtual void SetTariff(HTTPRequest &req) = 0;
+    virtual void DelTariff(HTTPRequest &req) = 0;
+    virtual void AddTariff(HTTPRequest &req) = 0;
+    virtual void GetPrices(HTTPRequest &req) = 0;
   public :
-    virtual void GetParams(Params_t &params, ParamsType &copy) = 0;
+    static json  CheckConfig(const json &config);
   public :
-    AnalyzerInterface(string id, AnalyzerMode mode);
-    virtual     ~AnalyzerInterface();
-    float        GetMaxCurrent();
-    float        GetNominalVoltage();
-    float        GetNominalFrequency();
-    AnalyzerMode Mode();
-    string       Serial();
-    json         GetJSONDescriptor();
+    Analyzer(const string &id, const AnalyzerMode mode);
+    virtual ~Analyzer();
+//    float        GetMaxCurrent() const;
+//    float        GetNominalVoltage() const;
+//    float        GetNominalFrequency() const;
+//    AnalyzerMode Mode() const;
+    string Serial() const;
+    json   GetJSONDescriptor() const;
+    void   GetAnalyzerCallback(HTTPRequest &req);
+    void   SetAnalyzerCallback(HTTPRequest &req);
+    void   GetSeriesCallback(HTTPRequest &req);
+    void   GetSeriesNowCallback(HTTPRequest &req);
+    void   GetSeriesRangeCallback(HTTPRequest &req);
+    void   GetEventsCallback(HTTPRequest &req);
+    void   GetEventCallback(HTTPRequest &req);
+    void   SetEventCallback(HTTPRequest &req);
+    void   DelEventCallback(HTTPRequest &req);
+    void   GetTariffsCallback(HTTPRequest &req);
+    void   GetTariffCallback(HTTPRequest &req);
+    void   SetTariffCallback(HTTPRequest &req);
+    void   DelTariffCallback(HTTPRequest &req);
+    void   AddTariffCallback(HTTPRequest &req);
+    void   GetPricesCallback(HTTPRequest &req);
 };

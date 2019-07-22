@@ -4,11 +4,11 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include "Analyzers.h"
-class AnalyzerRemote : public AnalyzerInterface {
+class AnalyzerRemote : public Analyzer {
   protected :
     void GetParams(Params_t& params, ParamsType& copy);
   public :
-    AnalyzerRemote(string id, AnalyzerInterface::AnalyzerMode mode);
+    AnalyzerRemote(string id, Analyzer::AnalyzerMode mode);
 //    void UpdateConfig(float nominalVoltage, float nominalFreq, char *name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online);
 //    bool SaveJSON(json_object *json, Database *db);
 };

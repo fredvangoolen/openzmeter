@@ -5,7 +5,7 @@
 #pragma once
 #include <libusb-1.0/libusb.h>
 #include <deque>
-#include "Devices.h"
+#include "Device.h"
 #include "AnalyzerSoft.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define DEVICEV1_00_VID             0x0483                          //Product ID
@@ -49,8 +49,8 @@ class DeviceV1_00 : public Device {
     static void             ReadCallback(struct libusb_transfer *transfer);
     static int              PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
-    bool               SetConfig(json config);
-    AnalyzerInterface *FindAnalyzer(string serial);
+//    bool               SetConfig(json config);
+    Analyzer *FindAnalyzer(string serial);
     uint32_t           AnalyzersCount();
     string             Serial();
     string             Driver();

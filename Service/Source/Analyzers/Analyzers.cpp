@@ -8,44 +8,82 @@
 #include "Analyzers.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-vector<float> AnalyzerInterface::FrequencyRanges = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
-vector<float> AnalyzerInterface::VoltageRanges = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
-vector<float> AnalyzerInterface::THDRanges = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY };
-vector<float> AnalyzerInterface::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
+vector<float> Analyzer::FrequencyRanges = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
+vector<float> Analyzer::VoltageRanges = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
+vector<float> Analyzer::THDRanges = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY };
+vector<float> Analyzer::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
 //----------------------------------------------------------------------------------------------------------------------
-AnalyzerInterface::AnalyzerInterface(string id, AnalyzerMode mode) : Database(id.c_str()) {
-  LOGFile::Debug("Creating analyzer database tables\n");
-  ExecResource("SQL/Database_Analyzer.sql");
+Analyzer::Analyzer(const string &id, const Analyzer::AnalyzerMode mode) {
+//  LOGFile::Debug("Creating analyzer database tables\n");
+//  ExecResource("SQL/Database_Analyzer.sql");
+  pSerial = id;
   pMode = mode;
+
+  pNominalFrequency = 50.0;
+  pNominalVoltage = 230.0;
   pLastSave = 0;
-  ExecSentenceNoResult("INSERT INTO analyzers(username, serial, country_code, contract, zipcode, frequency, voltage, name, geo, max_current, min_current) "
-                       "VALUES('admin', " + Bind(id) + ", 'UTC', '', '', 50.0, 230.0, 'Unnamed input analyzer', POINT(0, 0), 50.0, 0.1) ON CONFLICT(serial) DO NOTHING");
-  ExecSentenceAsyncResult("SELECT frequency, voltage, name, max_current, min_current FROM analyzers WHERE serial = " + Bind(id));
-  if(FecthRow()) {
-    pNominalVoltage = ResultFloat("voltage");
-    pNominalFrequency = ResultFloat("frequency");
-    pName = ResultString("name");
-    pMaxCurrent = ResultFloat("max_current");
-    pMinCurrent =  ResultFloat("min_current");
-  } else {
-    LOGFile::Error("Can not create or read analyzer configuration\n");
-  }
+//  ExecSentenceNoResult("INSERT INTO analyzers(username, serial, country_code, contract, zipcode, frequency, voltage, name, geo, max_current, min_current) "
+//                       "VALUES('admin', " + Bind(id) + ", 'UTC', '', '', 50.0, 230.0, 'Unnamed input analyzer', POINT(0, 0), 50.0, 0.1) ON CONFLICT(serial) DO NOTHING");
+//  ExecSentenceAsyncResult("SELECT frequency, voltage, name, max_current, min_current FROM analyzers WHERE serial = " + Bind(id));
+//  if(FecthRow()) {
+//    pNominalVoltage = ResultFloat("voltage");
+//    pNominalFrequency = ResultFloat("frequency");
+//    pName = ResultString("name");
+//    pMaxCurrent = ResultFloat("max_current");
+//    pMinCurrent =  ResultFloat("min_current");
+//  } else {
+//    LOGFile::Error("Can not create or read analyzer configuration\n");
+//  }
 }
-AnalyzerInterface::~AnalyzerInterface() {
+Analyzer::~Analyzer() {
 }
-float AnalyzerInterface::GetMaxCurrent() {
-  return pMaxCurrent;
+//json Analyzer::CheckConfig(const json& config) {
+//  json   ConfigOUT = json::object();
+//  float  Frequency = 50.0;
+//  float  Voltage = 230.0;
+//  float  Max_Current = 50.0;
+//  float  Min_Current = 0.1;
+//  string Country_Code = "UTC";
+//  string Contract = "";
+//  string Zip_Code = "";
+//  string Name = "";
+//  float  Geo[2] = {0, 0};
+//  if(config.is_object()) {
+//    if(config["Frequency"].is_number()) Frequency = config["Frequency"];
+//  }
+//  ConfigOUT["Frequency"] = Frequency;
+//  
+//  return ConfigOUT;
+//}
+//float Analyzer::GetMaxCurrent() const {
+//  return pMaxCurrent;
+//}
+string Analyzer::Serial() const {
+  return pSerial;
 }
-string AnalyzerInterface::Serial() {
-  return GetSchema();
+//float Analyzer::GetNominalVoltage() const {
+//  return pNominalVoltage;
+//}
+//float Analyzer::GetNominalFrequency() const {
+//  return pNominalFrequency;
+//}
+//Analyzer::AnalyzerMode Analyzer::Mode() const {
+//  return pMode;
+//}
+json Analyzer::GetJSONDescriptor() const {
+  json Response;
+  Response["ID"] = Serial();
+  Response["NominalVoltage"] = pNominalVoltage;
+  Response["NominalFreq"] = pNominalFrequency;
+  Response["Name"] = pName;
+  Response["MaxCurrent"] = pMaxCurrent;
+  Response["MinCurrent"] = pMinCurrent;
+  Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
+  Response["SampleFreq"] = pSamplerate;
+  Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
+  return Response;
 }
-float AnalyzerInterface::GetNominalVoltage() {
-  return pNominalVoltage;
-}
-float AnalyzerInterface::GetNominalFrequency() {
-  return pNominalFrequency;
-}
-void AnalyzerInterface::InitAggreg(Params_t &params, AggregType type) {
+void Analyzer::InitAggreg(Params_t &params, AggregType type) const {
   params.Type = type;
   params.Timestamp = 0;
   params.Frequency = NAN;
@@ -89,60 +127,7 @@ void AnalyzerInterface::InitAggreg(Params_t &params, AggregType type) {
   }
   params.Sys_Stats = json::object();
 }
-void AnalyzerInterface::SaveAggreg(Params_t &params) {
-  if(params.Type == AGGREG_3S)
-    ExecSentenceNoResult("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ")");
-  else if(params.Type == AGGREG_1M)
-    ExecSentenceNoResult("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ") RETURNING sampletime) INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) SELECT sampletime, " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.Power_Factor) + ", " + Bind(params.Voltage_THD) + ", " + Bind(params.Current_THD) + ", " + Bind(params.Phi) + ", " + Bind(params.Voltage_Harmonics) + ", " + Bind(params.Current_Harmonics) + " FROM Sample");
-  else if(params.Type == AGGREG_10M)
-    ExecSentenceNoResult("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ")");
-  else if(params.Type == AGGREG_15M)
-    ExecSentenceNoResult("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ")");
-  else if(params.Type == AGGREG_1H)
-    ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.StatsVoltage) + ", " + Bind(params.StatsFrequency) + ", " + Bind(params.StatsTHD) + ", " + Bind(params.StatsHarmonics) + ")");
-  if(params.Type == AGGREG_1M) ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + Bind(params.Timestamp - 86400000));   //Delete 1 day old
-  //TEST
-  json Result;
-  if((params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M) || (params.Type == AGGREG_1H)) {
-    Result["Voltage"] = params.Voltage;
-    Result["Current"] = params.Current;
-    Result["Frequency"] = params.Frequency;
-    Result["Flag"] = params.Flag;
-  }
-  if((params.Type == AGGREG_3S) || (params.Type == AGGREG_15M) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_1H)) {
-    Result["Active_Power"] = params.Active_Power;
-    Result["Reactive_Power"] = params.Reactive_Power;
-  }
-  if(params.Type == AGGREG_1M) {
-    Result["Power_Factor"] = params.Power_Factor;
-    Result["Voltage_THD"] = params.Voltage_THD;
-    Result["Current_THD"] = params.Current_THD;
-    Result["Phi"] = params.Phi;
-//    Result["Voltage_Harmonics"] = params.Voltage_Harmonics;
-//    Result["Current_Harmonics"] = params.Current_Harmonics;
-  }
-  Result["Aggregation"] = (params.Type == AGGREG_3S) ? "3S" : (params.Type == AGGREG_1M) ? "1M" : (params.Type == AGGREG_10M) ? "10M" : (params.Type == AGGREG_15M) ? "15M": "1H";
-  Result["Sampletime"] = params.Timestamp;
-  Tools::SendUDP(Result);
-  pLastSave = Tools::GetTime();
-}
-json AnalyzerInterface::GetJSONDescriptor() {
-  json Response;
-  Response["ID"] = Serial();
-  Response["NominalVoltage"] = pNominalVoltage;
-  Response["NominalFreq"] = pNominalFrequency;
-  Response["Name"] = pName;
-  Response["MaxCurrent"] = pMaxCurrent;
-  Response["MinCurrent"] = pMinCurrent;
-  Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
-  Response["SampleFreq"] = pSamplerate;
-  Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
-  return Response;
-}
-AnalyzerInterface::AnalyzerMode AnalyzerInterface::Mode() {
-  return pMode;
-}
-void AnalyzerInterface::AccumulateAggreg(Params_t &dst, Params_t &src) {
+void Analyzer::AccumulateAggreg(Params_t &dst, const Params_t &src) const {
   dst.Timestamp = src.Timestamp;
   for(uint i = 0; i < dst.Voltage.size(); i++) dst.Voltage[i] = AccumulateRMS(dst.Voltage[i], src.Voltage[i]);
   dst.Voltage_Inputs += src.Voltage_Inputs;
@@ -166,7 +151,7 @@ void AnalyzerInterface::AccumulateAggreg(Params_t &dst, Params_t &src) {
   }
   dst.Flag |= src.Flag;
 }
-void AnalyzerInterface::NormalizeAggreg(Params_t &params) {
+void Analyzer::NormalizeAggreg(Params_t &params) const {
   for(uint i = 0; i < params.Voltage.size(); i++) params.Voltage[i] = sqrt(params.Voltage[i] / params.Voltage_Inputs);
   for(uint i = 0; i < params.Current.size(); i++) params.Current[i] = sqrt(params.Current[i] / params.Current_Inputs[i]);
   for(uint i = 0; i < params.Active_Power.size(); i++) params.Active_Power[i] = params.Active_Power[i] / params.Current_Inputs[i];
@@ -188,21 +173,119 @@ void AnalyzerInterface::NormalizeAggreg(Params_t &params) {
     if(params.Current_Inputs[i] > 1) params.Current_Inputs[i] = 1;
   }
 }
-float AnalyzerInterface::AccumulateSUM(float val1, float val2) {
+float Analyzer::AccumulateSUM(const float val1, const float val2) const {
   if(isnan(val1) && isnan(val2))   return NAN;
   if(isnan(val1) && !isnan(val2))  return val2;
   if(!isnan(val1) && isnan(val2))  return val1;
   return val1 + val2;
 }
-float AnalyzerInterface::AccumulateRMS(float val1, float val2) {
+float Analyzer::AccumulateRMS(const float val1, const float val2) const {
   if(isnan(val1) && isnan(val2))   return NAN;
   if(isnan(val1) && !isnan(val2))  return pow(val2, 2.0);
   if(!isnan(val1) && isnan(val2))  return val1;
   return val1 + pow(val2, 2.0);
 }
-complex<float> AnalyzerInterface::AccumulateRMS(complex<float> val1, complex<float> val2) {
+complex<float> Analyzer::AccumulateRMS(const complex<float> &val1, const complex<float> &val2) const {
   if(isnan(val1.real()) && isnan(val2.real()))   return complex<float>(NAN, 0.0);
   if(isnan(val1.real()) && !isnan(val2.real()))  return pow(val2, 2.0f);
   if(!isnan(val1.real()) && isnan(val2.real()))  return val1;
   return val1 + pow(val2, 2.0f);
+}
+bool Analyzer::CheckRights(HTTPRequest &req, const uint neededAccess) const {
+ req.FromString("", MHD_HTTP_UNAUTHORIZED);
+ return false;
+}
+void Analyzer::GetAnalyzerCallback(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+//  json Params = req.GetParams();
+//  if(!Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string()) return req.FromString("'Analyzer', 'StartTime' and 'Type' params are requiered", MHD_HTTP_BAD_REQUEST);
+//  DelEvent(req);
+}
+void Analyzer::SetAnalyzerCallback(HTTPRequest &req) {
+  if(CheckRights(req, CONFIG) == false) return;
+//  json Params = req.GetParams();
+//  if(!Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string()) return req.FromString("'Analyzer', 'StartTime' and 'Type' params are requiered", MHD_HTTP_BAD_REQUEST);
+//  DelEvent(req);
+}
+void Analyzer::GetSeriesCallback(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  json Params = req.GetParams();
+  if(!Params["To"].is_number())         Params["To"] = 0;
+  if(!Params["Period"].is_number())     Params["Period"] = 3600000;
+  if(!Params["LastSample"].is_number()) Params["LastSample"] = 0;
+  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+  if(!Params["Series"].is_array()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+  GetSeries(req);
+}
+void Analyzer::GetSeriesNowCallback(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  json Params = req.GetParams();
+  if(!Params["Series"].is_array()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+  GetSeries(req);
+}
+void Analyzer::GetSeriesRangeCallback(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  json Params = req.GetParams();
+  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+  GetSeriesRange(req);
+}
+void Analyzer::GetEventsCallback(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  json Params = req.GetParams();
+  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+  if(!Params["To"].is_number() || !Params["Period"].is_number() || !Params["LastSample"].is_number()) return req.FromString("'To', 'Period' and 'LastSample' params are requiered", MHD_HTTP_BAD_REQUEST);
+  GetEvents(req);
+}
+void Analyzer::GetEventCallback(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  json Params = req.GetParams();
+  if(!Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string() || !Params["Samples"].is_string()) return req.FromString("'Analyzer', 'StartTime', 'Type' and 'Samples' params are requiered", MHD_HTTP_BAD_REQUEST);
+  GetEvent(req);
+}
+void Analyzer::DelEventCallback(HTTPRequest &req) {
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  json Params = req.GetParams();
+  if(!Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string()) return req.FromString("'Analyzer', 'StartTime' and 'Type' params are requiered", MHD_HTTP_BAD_REQUEST);
+  DelEvent(req);
+}
+void Analyzer::SetEventCallback(HTTPRequest &req) {
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  json Params = req.GetParams();
+  if(!Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string() || !Params["Notes"].is_string()) return req.FromString("'Analyzer', 'StartTime', 'Type' and 'Notes' params are requiered", MHD_HTTP_BAD_REQUEST);
+  SetEvent(req);
+}
+void Analyzer::GetTariffsCallback(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  GetTariffs(req);
+}
+void Analyzer::GetTariffCallback(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  json Params = req.GetParams();
+  if(!Params["RateID"].is_number()) return req.FromString("'RateID' param is requiered", MHD_HTTP_BAD_REQUEST);
+  GetTariff(req);
+}
+void Analyzer::SetTariffCallback(HTTPRequest &req) {
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  json Params = req.GetParams();
+  if(!Params["RateID"].is_number() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["CountryCode"].is_string()) return req.FromString("'RateID', StartDate', 'EndDate', 'CountryCode' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  SetTariff(req);    
+}
+void Analyzer::DelTariffCallback(HTTPRequest &req) {
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  json Params = req.GetParams();
+  if(!Params["RateID"].is_number() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["CountryCode"].is_string()) return req.FromString("'RateID', StartDate', 'EndDate', 'CountryCode' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  DelTariff(req); 
+}
+void Analyzer::AddTariffCallback(HTTPRequest &req) {
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  json Params = req.GetParams();
+  if(!Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["CountryCode"].is_string()) return req.FromString("'StartDate', 'EndDate', 'CountryCode' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  AddTariff(req); 
+}
+void Analyzer::GetPricesCallback(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  json Params = req.GetParams();
+  if(!Params["To"].is_number_unsigned() || !Params["Period"].is_number_unsigned() || !Params["LastSample"].is_number_unsigned()) return req.FromString("'To', 'Period' and 'LastSample' must be a numbers", MHD_HTTP_BAD_REQUEST);
+  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+  GetPrices(req);
 }

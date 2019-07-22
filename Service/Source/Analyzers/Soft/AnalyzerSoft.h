@@ -11,9 +11,9 @@
 #include "Events.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define ZEROCROSSING_FILTERSTAGES          5
-#define ZEROCROSSING_SECONDS              10        //Numero de segundos usados para calcular frequencia
+#define ZEROCROSSING_SECONDS              10        //Used seconds to calc frequency
 //----------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoft : public AnalyzerInterface {
+class AnalyzerSoft : public Analyzer, protected Database {
   private :
     typedef struct {
       char  *Buffer;
@@ -63,10 +63,29 @@ class AnalyzerSoft : public AnalyzerInterface {
   private :
     static void  *Analyzer_Thread(void *args);
   private :
+    void  SaveAggreg(Params_t &params);
     float PercentChange(float in, float reference);
     float CalcFrequency();
+    
+    void GetAnalyzer(HTTPRequest &req);
+    void SetAnalyzer(HTTPRequest &req);
+    void GetSeries(HTTPRequest &req);
+    void GetSeriesNow(HTTPRequest &req);
+    void GetSeriesRange(HTTPRequest &req);
+    void GetEvents(HTTPRequest &req);
+    void GetEvent(HTTPRequest &req);
+    void SetEvent(HTTPRequest &req);
+    void DelEvent(HTTPRequest &req);
+    void GetTariffs(HTTPRequest &req);
+    void GetTariff(HTTPRequest &req);
+    void SetTariff(HTTPRequest &req);
+    void DelTariff(HTTPRequest &req);
+    void AddTariff(HTTPRequest &req);
+    void GetPrices(HTTPRequest &req);
+    
+    
   public :
-    AnalyzerSoft(string id, AnalyzerInterface::AnalyzerMode mode, float samplerate);
+    AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const json &option, const float samplerate);
     ~AnalyzerSoft();
     void GetParams(Params_t &params, ParamsType &copy);
     bool BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime);

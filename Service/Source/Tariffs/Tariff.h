@@ -67,7 +67,7 @@ class Tariff {
   private :
     uint8_t FindPeriod(uint64_t time);
   public :
-    Tariff(uint64_t start, uint64_t end, string tz);
+    Tariff(const uint64_t start, const uint64_t end, const string &tz);
     ~Tariff();
     bool SetTemplate(json t);
     bool SetConfig(json t);
@@ -83,9 +83,9 @@ class TariffList {
     vector<Tariff*> pList;
     time_zone       pTimeZone;
   private :
-    bool PushTariff(const json tariff);
+    bool PushTariff(const json &tariff);
   public :
-    TariffList(const json list, const string timezone);
+    TariffList(const json &list, const string &timezone);
     ~TariffList();
     Tariff   *Find(const uint64_t time);
     uint64_t  BillFrom(const uint64_t);

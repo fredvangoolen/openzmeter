@@ -59,7 +59,7 @@ bool DeviceRemote::Start() {
   LOGFile::Info("Starting 'Virtual' driver\n");
   for(uint n = 0; n < ConfigOUT["Analyzers"].size(); n++) {
     string Serial = ConfigOUT["Analyzers"][n]["Serial"];
-    AnalyzerInterface::AnalyzerMode Mode = (ConfigOUT["Analyzers"][n]["Mode"] == "1PHASE") ? AnalyzerInterface::PHASE1 : (ConfigOUT["Analyzers"][n]["Mode"] == "3PHASE") ? AnalyzerInterface::PHASE3 : AnalyzerInterface::PHASE3N;
+    Analyzer::AnalyzerMode Mode = (ConfigOUT["Analyzers"][n]["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (ConfigOUT["Analyzers"][n]["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
     pAnalyzers.push_back(new AnalyzerRemote(Serial, Mode));
   }
   pState = RUNNING;
@@ -87,9 +87,9 @@ uint32_t DeviceRemote::AnalyzersCount() {
   pthread_mutex_unlock(&pMutex);
   return Analyzers;
 }
-AnalyzerInterface *DeviceRemote::FindAnalyzer(string serial) {
+Analyzer *DeviceRemote::FindAnalyzer(string serial) {
   pthread_mutex_lock(&pMutex);
-  AnalyzerInterface *Result = NULL;
+  Analyzer *Result = NULL;
   for(list<AnalyzerRemote*>::iterator it = pAnalyzers.begin(); it != pAnalyzers.end(); it++) {
     if(serial == (*it)->Serial()) {
       Result = *it;

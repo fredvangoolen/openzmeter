@@ -4,7 +4,7 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <list>
-#include "Devices.h"
+#include "Device.h"
 #include "AnalyzerRemote.h"
 #include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ class DeviceRemote : public Device {
 //    static bool SetRemoteAnalyzerCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
 //    static bool SetRemoteDataCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
   private :
-    AnalyzerInterface *FindAnalyzer(string serial);
+    Analyzer *FindAnalyzer(string serial);
     uint32_t           AnalyzersCount();
     bool               Start();
     bool               Stop();
