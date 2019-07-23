@@ -39,7 +39,6 @@
           </df>
           <df name="Soft">
             <in>AnalyzerSoft.cpp</in>
-            <in>Events.cpp</in>
             <in>FFT.cpp</in>
           </df>
           <in>Analyzers.cpp</in>
@@ -314,9 +313,6 @@
             <pElem>Source/Support/Debian</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>__BUILD__="20190722.1356"</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/Analyzers/Remote/AnalyzerRemote.cpp"
@@ -333,14 +329,10 @@
         <ccTool flags="2">
         </ccTool>
       </item>
-      <item path="Source/Analyzers/Soft/Events.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-        </ccTool>
-      </item>
       <item path="Source/Analyzers/Soft/FFT.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="2">
           <preprocessorList>
-            <Elem>__BUILD__="20190722.1427"</Elem>
+            <Elem>__BUILD__="20190723.1415"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -360,7 +352,7 @@
           </incDir>
           <preprocessorList>
             <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190722.1356"</Elem>
+            <Elem>__BUILD__="20190723.1415"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -372,7 +364,7 @@
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>__BUILD__="20190722.1744"</Elem>
+            <Elem>__BUILD__="20190723.1417"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -384,7 +376,7 @@
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>__BUILD__="20190722.1356"</Elem>
+            <Elem>__BUILD__="20190723.1415"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -439,7 +431,7 @@
           </incDir>
           <preprocessorList>
             <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190722.1356"</Elem>
+            <Elem>__BUILD__="20190723.1415"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -493,7 +485,7 @@
           </incDir>
           <preprocessorList>
             <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190722.1356"</Elem>
+            <Elem>__BUILD__="20190723.1415"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -522,7 +514,7 @@
       <item path="Source/Tariffs/Tariff.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="2">
           <preprocessorList>
-            <Elem>__BUILD__="20190722.1356"</Elem>
+            <Elem>__BUILD__="20190723.1415"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -542,7 +534,7 @@
           </incDir>
           <preprocessorList>
             <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190722.1356"</Elem>
+            <Elem>__BUILD__="20190723.1415"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -593,7 +585,7 @@
           </incDir>
           <preprocessorList>
             <Elem>DEBIAN</Elem>
-            <Elem>__BUILD__="20190719.2312"</Elem>
+            <Elem>__BUILD__="20190723.1820"</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -605,6 +597,9 @@
             <pElem>Source/Support/Debian</pElem>
             <pElem>.</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>__BUILD__="20190719.2312"</Elem>
+          </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/Source/Analyzers/Soft">
@@ -614,9 +609,6 @@
             <pElem>Source/Support/Debian</pElem>
             <pElem>.</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>__BUILD__="20190722.1744"</Elem>
-          </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/Source/Devices">
@@ -697,7 +689,7 @@
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>__BUILD__="20190722.1427"</Elem>
+            <Elem>__BUILD__="20190723.1417"</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -731,7 +723,7 @@
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>__BUILD__="20190722.1427"</Elem>
+            <Elem>__BUILD__="20190723.1415"</Elem>
           </preprocessorList>
           <undefinedList>
             <Elem>__ARM_ASM_SYNTAX_UNIFIED__</Elem>

@@ -12,7 +12,13 @@ Device::Device() {
   pState = UNCONFIGURED;
 }
 Device::~Device() {
-  StopDevice();
+  WriteUnlock();
+  while(pAnalyzers.size() > 0) {
+    Analyzer *Analyzer = pAnalyzers.back();
+    pAnalyzers.pop_back();
+    delete Analyzer;
+  }
+  WriteUnlock();
 }
 string Device::Serial() const {
   return pSerial;

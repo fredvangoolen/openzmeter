@@ -22,6 +22,10 @@ DeviceVirtual::DeviceVirtual() {
   pDriver     = "Virtual";
   pName       = "Emulate most of real capture device for testing";
 }
+
+DeviceVirtual::~DeviceVirtual() {
+  StopDevice();
+}
 bool DeviceVirtual::StartDevice() {
   WriteLock();
   if(pState == RUNNING) {

@@ -23,28 +23,6 @@ class Analyzer : protected RWLocks {
     enum AnalyzerMode { PHASE1, PHASE3, PHASE3N };
     enum AnalyzerRights { READ = 0x01, WRITE = 0x02, CONFIG = 0x04 };
     enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
-    enum ParamsType { FREQUENCY         = 0x00000001, 
-                      FLAG              = 0x00000002,
-                      VOLTAGE           = 0x00000004, 
-                      CURRENT           = 0x00000008, 
-                      ACTIVE_POWER      = 0x00000010, 
-                      REACTIVE_POWER    = 0x00000020, 
-                      ACTIVE_ENERGY     = 0x00000040, 
-                      REACTIVE_ENERGY   = 0x00000080, 
-                      APPARENT_POWER    = 0x00000100, 
-                      POWER_FACTOR      = 0x00000200, 
-                      VOLTAGE_THD       = 0x00000400, 
-                      CURRENT_THD       = 0x00000800,
-                      VOLTAGE_PHASE     = 0x00001000, 
-                      PHI               = 0x00002000, 
-                      VOLTAGE_HARMONICS = 0x00004000,
-                      CURRENT_HARMONICS = 0x00008000, 
-                      VOLTAGE_FFT       = 0x00010000,
-                      CURRENT_FFT       = 0x00020000,
-                      VOLTAGE_SAMPLES   = 0x00040000,
-                      CURRENT_SAMPLES   = 0x00080000,
-                      SYS_STATS         = 0x00100000
-    };
   public :
     typedef struct {
       AggregType                        Type;                       //Aggregation type
@@ -72,11 +50,10 @@ class Analyzer : protected RWLocks {
       vector<float>                     Phi;                        //Angulo de Phi
       vector< vector<complex<float> > > Voltage_Harmonics;          //Armonicos del canal de tension
       vector< vector<complex<float> > > Current_Harmonics;          //Armonicos del canal de corriente
-      vector< vector<float> >           Voltage_FFT;                //Resultados de la FFT en tension
-      vector< vector<float> >           Current_FFT;                //Resultados de la FFT en corriente
+//      vector< vector<float> >           Voltage_FFT;                //Resultados de la FFT en tension
+//      vector< vector<float> >           Current_FFT;                //Resultados de la FFT en corriente
       vector< vector<float> >           Voltage_Samples;            //Voltage samples
       vector< vector<float> >           Current_Samples;            //Current samples
-      json                              Sys_Stats;                  //System status for NOW(10C) aggreg
     } Params_t;
   protected :
     uint64_t        pLastSave;                //Timestamp of last save or communication
