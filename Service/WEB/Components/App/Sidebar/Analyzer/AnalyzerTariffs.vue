@@ -10,7 +10,7 @@
     <div class="modal-body">
       <spinner v-if="ShowSpinner"></spinner>
       <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != '' && !ShowSpinner">{{ Error }}</div>
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
             <button type="button" class="btn btn-default btn-xs" v-on:click="Edit(props.rowData)">Edit</button>
@@ -24,8 +24,10 @@
 
 <script>
   import vuetable from 'vuetable-2';
+  import 'CSS/table-responsive.css';
   import moment from 'JS/moment.js';
   import Spinner from 'Components/Spinner.vue';
+  import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
       return { Show: false, ShowSpinner: true, Error: '',
@@ -39,6 +41,9 @@
     },
     created: function() {
       this.Analizer = null;
+    },
+    updated: function(){
+      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     methods: {
       DateFormat: function(val) {
@@ -90,6 +95,7 @@
 </script>
   
 <style scoped>
+@media screen and (min-width: 600px) {
   .table >>> th:nth-child(2), .table >>> th:nth-child(3)  {
     width: 100px;
     text-align: center;
@@ -103,4 +109,5 @@
   .table >>> td:nth-child(4) {
     text-align: right;
   }
+}
 </style>

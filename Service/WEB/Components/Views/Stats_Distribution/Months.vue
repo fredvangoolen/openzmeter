@@ -3,16 +3,17 @@
     <div class="panel-heading">By month<div class="pull-right">{{ Units }}Wh</div></div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive"></vuetable>
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
     </div>
   </div>
 </template>
 
 <script>
   import vuetable from 'vuetable-2';
-  import moment from 'JS/moment.js';
-  import * as oZm from 'JS/openZmeter.js';
+  import moment from 'JS/moment.js';  
+  import 'CSS/table-responsive.css';
   import Spinner from 'Components/Spinner.vue';
+  import * as oZm from 'JS/openZmeter.js';
   var Names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   export default {
     data: function() {
@@ -60,11 +61,15 @@
         this.ShowSpinner = false;
       }
     },
+    updated: function(){
+      oZm.createCaptionsForResponsiveTable(this.$refs.table);
+    },
     components: { vuetable, Spinner }
   }
 </script>
 
 <style scoped>
+@media screen and (min-width: 600px) {
   .table >>> th:not(:first-child) {
     text-align: right;
     width: 80px;
@@ -72,4 +77,5 @@
   .table >>> td:not(:first-child) {
     text-align: right;
   }
+}
 </style>
