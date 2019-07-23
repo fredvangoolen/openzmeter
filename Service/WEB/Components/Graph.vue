@@ -53,7 +53,7 @@
     this.WindowRestore();
   }
   function touchStart(event, g, context) {
-    if(this.StopAutoupdate) this.StopAutoupdate();
+    if(this && this.StopAutoupdate) this.StopAutoupdate();
     event.preventDefault();  // touch browsers are all nice.
     if(event.touches.length > 1) context.startTimeForDoubleTapMs = null;
     var touches = [];
@@ -149,7 +149,7 @@
   function touchEnd(event, g, context) {
       if (event.touches.length !== 0) {
         // this is effectively a "reset"
-        startTouch(event, g, context);
+        touchStart(event, g, context);
       } else if (event.changedTouches.length == 1) {
           // Could be part of a "double tap"
           // The heuristic here is that it's a double-tap if the two touchend events
@@ -231,7 +231,7 @@
     },
     ScrollableInteractionModel: function(parent) {
       return { mousedown: mouseDown.bind(parent), mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
-                touchstart: touchStart, touchmove: touchMove, touchend: touchEnd.bind(parent) };
+                touchstart: touchStart.bind(parent), touchmove: touchMove, touchend: touchEnd.bind(parent) };
     },
     MouseUpEvt: function(event, g, contex) {
         oZm.mouseUp(event, g, contex);
