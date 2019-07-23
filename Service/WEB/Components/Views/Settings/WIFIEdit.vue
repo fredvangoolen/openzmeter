@@ -12,7 +12,8 @@
           </div>
         </div>
         <div class="modal-body" v-if="Mode=='Scan'">
-          <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
+          <spinner v-if="ShowSpinner"></spinner>
+          <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
             <template slot="actions" slot-scope="props">
               <div class="btn-group">
                 <button type="button" class="btn btn-success btn-xs" v-on:click="Select(props.rowData)">Select</button>
@@ -73,12 +74,14 @@
 <script>
   import Toggle from 'Components/Toggle.vue';
   import Vuetable from 'vuetable-2';
-  import OptionPicker from 'Components/OptionPicker.vue';
+  import OptionPicker from 'Components/OptionPicker.vue';  
+  import 'CSS/table-responsive.css';
   import Spinner from 'Components/Spinner.vue';
+  import * as oZm from 'JS/openZmeter.js';
   import ProgressBar from 'Components/ProgressBar.vue';
   export default {
     data() {
-      return { Error: '', ShowDialog: false, Loading: true, Mode: 'Edit', Config: {},
+      return { Error: '', ShowDialog: false, ShowSpinner: true, Loading: true, Mode: 'Edit', Config: {},
       Columns: [
           {name: 'ESSID', title: 'Name'},
           {name: 'Channel', title: 'Channel'}, 
@@ -113,10 +116,14 @@
       },
       Scan: function() {
         this.Mode = 'Scan';
+        this.ShowSpinner=true;
         $.ajax({ url: "scanWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
           success: function(result) {
             var TableData = { data: result };
             this.$refs.table.setData(TableData);
+            this.$nextTick(function() {
+              this.ShowSpinner=false;
+            });
           }.bind(this)
         });
       },
@@ -145,6 +152,9 @@
         this.Config.IPMode = value===true ? 'DHCP' : 'STATIC';
       }
     },
+    updated: function(){
+      oZm.createCaptionsForResponsiveTable(this.$refs.table);
+    },
     mounted: function() {
       this.$root.$el.append(this.$el);
     },
@@ -161,6 +171,7 @@
     color: #333;
     font-size: 14px;
   }
+@media screen and (min-width: 600px) {
   .modal-body >>> .progress {
     height: 12px;
     background-color: #FFFFFF;
@@ -180,4 +191,5 @@
   .table >>> th:nth-child(4) {
     width: 60px;
   }
+}
 </style>
