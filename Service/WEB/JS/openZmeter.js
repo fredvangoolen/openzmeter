@@ -22,11 +22,15 @@ export var Series = {
       }
       UpperRange = (UpperRange === -Infinity) ? 1 : UpperRange;
       LowerRange = (LowerRange === Infinity) ? 0 : LowerRange;
-      if((UpperRange > 1) && (LowerRange > 0)) {
-        var Diff = Math.max(10, UpperRange - LowerRange);
+      if((UpperRange - LowerRange) > 5) {
+        var Diff = Math.max(1, UpperRange - LowerRange);
         UpperRange = UpperRange + Diff * 0.1;
         LowerRange = LowerRange - Diff * 0.1;
+      } else {
+        UpperRange = UpperRange + 0.25;
+        LowerRange = LowerRange - 0.25;
       }
+      if(LowerRange < 0) LowerRange = 0;
       return [LowerRange, UpperRange];  
     }
   },
@@ -45,11 +49,15 @@ export var Series = {
       }
       UpperRange = (UpperRange === -Infinity) ? 1 : UpperRange;
       LowerRange = (LowerRange === Infinity) ? 0 : LowerRange;
-      if((UpperRange > 1) && (LowerRange > 0)) {
+      if((UpperRange - LowerRange) > 1) {
         var Diff = Math.max(1, UpperRange - LowerRange);
         UpperRange = UpperRange + Diff * 0.1;
         LowerRange = LowerRange - Diff * 0.1;
+      } else {
+        UpperRange = UpperRange + 0.05;
+        LowerRange = LowerRange - 0.05;
       }
+      if(LowerRange < 0) LowerRange = 0;
       return [LowerRange, UpperRange];  
     }
   },
