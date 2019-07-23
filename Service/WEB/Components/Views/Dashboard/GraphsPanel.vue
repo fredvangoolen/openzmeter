@@ -1,7 +1,7 @@
 <template>
   <div ref="panel" class="panel" :class="SerieProps.CSS_Class">
     <div class="panel-heading">
-      <div class="huge header-text">{{ SerieProps.Title }}</div>
+      <div class="huge header-text">{{ SerieProps.Title }} {{StopUpdating}}</div>
       <div class="header-buttons">
         <div><span class="huge-small" v-html="LastValue"></span><em class="huge-small-unit">{{ UnitsScale }}{{ SerieProps.Units }}</em></div>
         <div>{{ Aggregation }}</div>
@@ -35,6 +35,7 @@
     data() {
       return {
         ShowSpinner: true,
+        StopUpdating: false,
         UnitsScale: '',
         SerieProps: {},
         Aggregation: 'Loading data...',
@@ -49,6 +50,8 @@
         var Options = {
           visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data, valueRange: Range, selectMode: 'euclidian',
           labels: ['Time'].concat(this.SerieProps.Names(Analyzer)), colors: oZm.ColorArray(this.SerieProps.Color, this.SerieProps.Names(Analyzer).length),
+          highlightCallback: this.HoverIn,
+          unhighlightCallback: this.HoverOut,
           axes: {
             y: { pixelsPerLabel: 15, axisLabelWidth: 30,
                  valueFormatter: function (x) { var Result = this.SerieProps.FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; }.bind(this),
@@ -61,31 +64,44 @@
       },
       UpdateGraph() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], From: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: 7200000 }), 
-          success: function(result) {
-            if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
-            this.Data = oZm.GraphDataAppend(result, this.SerieProps.Serie, this.Data);
-            var LastSample = result[this.SerieProps.Serie].slice(-1)[0];
-            this.UnitsScale = oZm.GetBestUnits(oZm.ArrayAbsMax(LastSample));
-            this.LastValue = oZm.Array_Round2(oZm.ScaleArrayToUnits(LastSample, this.UnitsScale), oZm.ColorArray($(this.$refs.panel).css('border-color'), 4));
-            this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
-            this.DateWindow = [result['From'], result['To']];
-            this.LastSample = oZm.LastSampletime(result, this.LastSample);
-            if(this.Data.length > 0) this.CalcOptions();
-            this.ShowSpinner = false;
-          }.bind(this),
-          complete: function() {
-            if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
-            this.UpdateGraphTimer = setTimeout(this.UpdateGraph, 5000);
-          }.bind(this), 
-          error: function() {
-            this.ShowSpinner = true;
-          }.bind(this)
-        });
+        if(this.StopUpdating==false){
+          $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], From: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: 7200000 }), 
+            success: function(result) {
+              if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
+              this.Data = oZm.GraphDataAppend(result, this.SerieProps.Serie, this.Data);
+              var LastSample = result[this.SerieProps.Serie].slice(-1)[0];
+              this.UnitsScale = oZm.GetBestUnits(oZm.ArrayAbsMax(LastSample));
+              this.LastValue = oZm.Array_Round2(oZm.ScaleArrayToUnits(LastSample, this.UnitsScale), oZm.ColorArray($(this.$refs.panel).css('border-color'), 4));
+              this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
+              this.DateWindow = [result['From'], result['To']];
+              this.LastSample = oZm.LastSampletime(result, this.LastSample);
+              if(this.Data.length > 0) this.CalcOptions();
+              this.ShowSpinner = false;
+            }.bind(this),
+            complete: function() {
+              this.RearmUpdateGraphTimer();
+            }.bind(this), 
+            error: function() {
+              this.ShowSpinner = true;
+            }.bind(this)
+          });
+        }else{
+          this.RearmUpdateGraphTimer();
+        }
+      },
+      RearmUpdateGraphTimer(){
+        if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
+          this.UpdateGraphTimer = setTimeout(this.UpdateGraph, 5000);
       },
       SetPhases(phases) {
         this.Phases = phases;
         if(this.Data.length > 0) this.CalcOptions();
+      },
+      HoverIn() {
+        this.StopUpdating=true;
+      },
+      HoverOut() {
+        this.StopUpdating=false;
       },
       MaximizeClick() {
         this.$refs.tools.Maximize(this.SerieProps.Title, this.$refs.Chart.Graph, this.$refs.Toolbar);

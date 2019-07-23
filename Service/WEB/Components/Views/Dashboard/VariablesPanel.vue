@@ -25,6 +25,7 @@
     data() {
       return {
         ShowSpinner: true,
+        StopUpdating: false,
         Series: ['ACTIVE_POWER', 'REACTIVE_POWER', 'POWER_FACTOR', 'PHI', 'VOLTAGE_THD', 'CURRENT_THD'],
         Aggregation: 'Loading data...',
         LastSample: 0,
@@ -51,37 +52,47 @@
       },
       UpdateBars() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Series: this.Series, From: 0, Period: 86400000, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID }), 
-          success: function(result) {
-            if(result['Sampletime'] === null) return;
-            if(result['Sampletime'].length === 0) return;
-            this.DateWindow = [result['From'], result['To']];
-            this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
-            this.LastSample = oZm.LastSampletime(result, this.LastSample);        
-            for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
-            this.CalcOptions();
-            this.ShowSpinner = false;
-          }.bind(this),
-          complete: function() {
-            if(this.Timer !== null) clearTimeout(this.Timer);
-            this.Timer = setTimeout(this.UpdateBars, 30000);
-          }.bind(this), 
-          error: function() {
-            this.ShowSpinner = true;
-          }.bind(this)
-        });
+        if(this.StopUpdating==false){
+          $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Series: this.Series, From: 0, Period: 86400000, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+            success: function(result) {
+              if(result['Sampletime'] === null) return;
+              if(result['Sampletime'].length === 0) return;
+              this.DateWindow = [result['From'], result['To']];
+              this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
+              this.LastSample = oZm.LastSampletime(result, this.LastSample);        
+              for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
+              this.CalcOptions();
+              this.ShowSpinner = false;
+            }.bind(this),
+            complete: function() {
+              if(this.Timer !== null) clearTimeout(this.Timer);
+              this.Timer = setTimeout(this.UpdateBars, 30000);
+            }.bind(this), 
+            error: function() {
+              this.ShowSpinner = true;
+            }.bind(this)
+          });
+        }else{
+          if(this.Timer !== null) clearTimeout(this.Timer);
+          this.Timer = setTimeout(this.UpdateBars, 30000);
+        }
       },
       UpdateNow() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: this.Series, Analyzer: this.$root.SelectedAnalyzer.ID }), 
-          success: function(result) {
-            for(var n = 0; n < this.Series.length; n++) this.$refs.rows[n].SetNowLabel(result[oZm.Series[this.Series[n]].Serie][this.Phase]);
-          }.bind(this),
-          complete: function() {
-            if(this.TimerNow !== null) clearTimeout(this.TimerNow);
-            this.TimerNow = setTimeout(this.UpdateNow, 3000);
-          }.bind(this)
-        });
+        if(this.StopUpdating==false){
+          $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: this.Series, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+            success: function(result) {
+              for(var n = 0; n < this.Series.length; n++) this.$refs.rows[n].SetNowLabel(result[oZm.Series[this.Series[n]].Serie][this.Phase]);
+            }.bind(this),
+            complete: function() {
+              if(this.TimerNow !== null) clearTimeout(this.TimerNow);
+              this.TimerNow = setTimeout(this.UpdateNow, 3000);
+            }.bind(this)
+          });
+        }else{
+          if(this.TimerNow !== null) clearTimeout(this.TimerNow);
+          this.TimerNow = setTimeout(this.UpdateNow, 3000);
+        }
       },
       SetAnalyzer() {
         this.LastSample = 0;
