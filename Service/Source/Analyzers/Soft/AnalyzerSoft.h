@@ -6,15 +6,45 @@
 #include <pthread.h>
 #include <inttypes.h>
 #include <deque>
+#include <list>
 #include "Analyzers.h"
 #include "FFT.h"
-#include "Events.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define ZEROCROSSING_FILTERSTAGES          5
 #define ZEROCROSSING_SECONDS              10        //Used seconds to calc frequency
+#define EVENT_RVC                        5.0        //% variation for RVC detection
+#define EVENT_DIP_SWELL                 10.0        //Variacion en % para generar subida o bajada
+#define EVENT_INTERRUPTION              90.0        //Bajada en % para generar interrupcion
+#define EVENT_HYSTERESIS                02.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
+#define EVENT_RAWENVELOPETIME            0.5        //Time in seconds before and after event to store RAW samples
+#define EVENT_RMSENVELOPETIME           10.0        //Time in seconds before and after event to store RMS samples
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoft : public Analyzer, protected Database {
   private :
+    enum EventType { EVT_NONE         = 0x00,
+                     EVT_SWELL        = 0x01, 
+                     EVT_DIP          = 0x02,
+                     EVT_INTERRUPTION = 0x04, 
+                     EVT_RVC          = 0x08
+                   };
+    enum EventState { EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };
+    typedef struct {
+      vector<float> RMS;
+      uint64_t      Timestamp;
+    } EventCycle_t;
+    typedef struct {
+      enum EventType                 Type;                 //Running event type
+      EventState                     State;                //Events state
+      uint64_t                       Start;                //Event start timestamp
+      uint64_t                       Duration;             //Event duration in samples
+      vector<float>                  Reference;            //Voltage reference for event (Stationary for RVC, nominal for others)
+      vector<float>                  PeakValue;            //max/min voltage variation along event
+      vector<float>                  ChangeValue;          //diference voltage of event
+      deque<vector<float> >          SamplesRAW_A;         //
+      deque<vector<float> >          SamplesRMS_A;         //
+      deque<vector<float> >          SamplesRAW_B;         //
+      deque<vector<float> >          SamplesRMS_B;         //
+    } Event_t;
     typedef struct {
       char  *Buffer;
       size_t Size;
@@ -37,7 +67,6 @@ class AnalyzerSoft : public Analyzer, protected Database {
     Params_t                   pAggreg10M;               //Agregacion de 10 minutos
     Params_t                   pAggreg15M;               //Agregacion de 15 minutos
     Params_t                   pAggreg1H;                //Agregacion de 1 hora
-    Events                    *pEvents;                  //Events detector
     vector<FFT*>               pVoltageFFT;              //Muestras de FFT tension del bloque
     vector<FFT*>               pCurrentFFT;              //Muestras de FFT corriente del bloque
     bool                       pWorking;                 //Flag para indicar que el hilo esta trabajando
@@ -60,34 +89,45 @@ class AnalyzerSoft : public Analyzer, protected Database {
     vector<float>              pLastSamples;             //Filter samples backup
     uint32_t                   pCycleLen;                //Current cycle len
     uint32_t                   pMaxSamples;              //Max block samples
+    pthread_t                  pEventThread;             //Hilo de ejecucion
+    pthread_mutex_t            pEventMutex;              //Mutex para la variable de condicion
+    pthread_cond_t             pEventCond;               //Variable de condicion para esperar
+    deque<vector<float> >      pPrevSamples;             //Previous samples
+    deque<EventCycle_t>        pPrevCycles;              //Previous cycles
+    bool                       pPrevStationary;          //Steady state flag
+    bool                       pEventsWorking;           //Events mutex is working
+    list<Event_t>              pEvents;                  //Running events
+//    Database                   pEventsDatabase;          //
   private :
-    static void  *Analyzer_Thread(void *args);
+    static void *Analyzer_Thread(void *args);
+    static void *Events_Thread(void *args);
   private :
     void  SaveAggreg(Params_t &params);
-    float PercentChange(float in, float reference);
+    void  SaveEvent(Event_t &evt);
     float CalcFrequency();
-    
-    void GetAnalyzer(HTTPRequest &req);
-    void SetAnalyzer(HTTPRequest &req);
-    void GetSeries(HTTPRequest &req);
-    void GetSeriesNow(HTTPRequest &req);
-    void GetSeriesRange(HTTPRequest &req);
-    void GetEvents(HTTPRequest &req);
-    void GetEvent(HTTPRequest &req);
-    void SetEvent(HTTPRequest &req);
-    void DelEvent(HTTPRequest &req);
-    void GetTariffs(HTTPRequest &req);
-    void GetTariff(HTTPRequest &req);
-    void SetTariff(HTTPRequest &req);
-    void DelTariff(HTTPRequest &req);
-    void AddTariff(HTTPRequest &req);
-    void GetPrices(HTTPRequest &req);
-    
-    
+    float CalcChange(const float in, const float reference) const;
+    void  InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
+    bool  FindRunningEvent(const uint32_t mask);
+    void  FindEvent();
+    void  WaitEvent();
+    void  GetAnalyzer(HTTPRequest &req);
+    void  SetAnalyzer(HTTPRequest &req);
+    void  GetSeries(HTTPRequest &req);
+    void  GetSeriesNow(HTTPRequest &req);
+    void  GetSeriesRange(HTTPRequest &req);
+    void  GetEvents(HTTPRequest &req);
+    void  GetEvent(HTTPRequest &req);
+    void  SetEvent(HTTPRequest &req);
+    void  DelEvent(HTTPRequest &req);
+    void  GetTariffs(HTTPRequest &req);
+    void  GetTariff(HTTPRequest &req);
+    void  SetTariff(HTTPRequest &req);
+    void  DelTariff(HTTPRequest &req);
+    void  AddTariff(HTTPRequest &req);
+    void  GetPrices(HTTPRequest &req);
   public :
     AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const json &option, const float samplerate);
     ~AnalyzerSoft();
-    void GetParams(Params_t &params, ParamsType &copy);
     bool BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime);
     bool IsFinished();
 };
