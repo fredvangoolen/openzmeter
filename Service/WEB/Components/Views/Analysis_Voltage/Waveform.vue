@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ Time }}</div>
+      <div class="header-text">{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/warning16.png')">No current or current too low</div>
       <div class="header-buttons" ref="Toolbar">
         <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedMulti" type="CURRENT"></toolbar-phases>
         <toolbar-options variable="DetailOptions" :options="['Current']" v-on:OptionChanged="SetOption"></toolbar-options>
@@ -26,7 +26,7 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data() {
-      return { ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' }
+      return { ShowWarning: true, ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' }
       };
     },
     methods: {
@@ -53,12 +53,14 @@
           for(var n = 0; n < result.Current_Samples.length; n++) Row.push(result.Current_Samples[n][i]);
           this.Data.push(Row);
         }
+        this.MaxCurrent = oZm.ArrayAbsMax(result.Current);
         this.CalcOptions();
         this.ShowSpinner = false;
       },
       CalcOptions: function() {
         if((this.$root.SelectedAnalyzer === null) || (this.Phases === null) || (this.ShowCurrent === null) || (Array.isArray(this.Data) === false)) return;
         var Analyzer = this.$root.SelectedAnalyzer, Series = {}, CurrentPhases = [], VoltagePhases = [];
+        this.ShowWarning = (this.MaxCurrent < Analyzer.MinCurrent); 
         for(var n = 0; n < this.Phases.length; n++) {
           if(n < oZm.Series['VOLTAGE'].Names(Analyzer).length) VoltagePhases.push(this.Phases[n]);
           CurrentPhases.push((this.Phases[n] === true) && (this.ShowCurrent === true));
@@ -103,6 +105,7 @@
       }
     },
     created: function() {
+      this.MaxCurrent = 0;
       this.Data = null;
       this.Phases = null;
       this.ShowCurrent = null;
@@ -114,5 +117,12 @@
 <style scoped>  
   .header-text {
     font-size: 14px;
+  }
+  .title-warning {
+    line-height: 20px;
+    font-size: 14px;
+  }
+  .title-warning img {
+    margin: -4px 4px 0px 0px;
   }
 </style>

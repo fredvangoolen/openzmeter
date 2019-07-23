@@ -28,9 +28,10 @@
   import DetailTabs from 'Components/Tabs.vue';
   export default {
     data () {
-      return { ActiveTab: '', Paused: false };
+      return { ActiveTab: '' };
     },
     created: function() {
+      this.Ajax = null;
       this.LastSample = 0;
       this.UpdateGraphs1MTimer = null;
       this.UpdateGraphsNowTimer = null;
@@ -49,11 +50,12 @@
     },
     methods: {
       PlayStatusChanged: function(stat) {
-        this.Paused = stat;
-        if(this.Paused === true) 
+        if(stat === true) {
+          this.Ajax.abort();
           clearInterval(this.UpdateGraphsNowTimer);
-        else
+        } else {
           this.UpdateGraphsNow();
+        }
         this.$refs.waveform.$refs.tools.SetPlayStatus(stat);
         this.$refs.harmonics.$refs.tools.SetPlayStatus(stat);
         this.$refs.advanced.$refs.tools.SetPlayStatus(stat);
@@ -86,7 +88,7 @@
       },
       UpdateGraphs1M() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Period: 86400000, To: 0, LastSample: this.LastSample, Series: ['VOLTAGE_HARMONICS', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.ID }),
+        this.Ajax = $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Period: 86400000, To: 0, LastSample: this.LastSample, Series: ['VOLTAGE_HARMONICS', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.ID }),
           success: function(result) {
             this.$refs.evolution.SetData(result);
             this.$refs.parameters.SetData(result);
