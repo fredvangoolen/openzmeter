@@ -34,6 +34,7 @@
     },
     created: function() {
       this.TimeLine = null;
+      console.log(this. $route);
     },
     mounted: function() {
       this.TimeLine = new vis.Timeline(document.getElementById('disturbances_chart'), null, {

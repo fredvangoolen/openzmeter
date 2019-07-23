@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/warning16.png')">No current or current too low</div>
+      <div class="header-text">{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <div class="header-buttons" ref="Toolbar">
         <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick"></toolbar-tools>
       </div>
@@ -127,13 +127,14 @@
           ctx.setLineDash([]);
           ctx.strokeStyle = e.dygraph.getColors()[i % 2];
           ctx.fillStyle = e.dygraph.getColors()[i % 2];
-          ctx.lineWidth = 1;
+          ctx.lineWidth = 2;
           
           ctx.beginPath();
           ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
           ctx.lineTo(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
           ctx.stroke();
           
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)), 3, 0, 2 * Math.PI);
           ctx.fill();

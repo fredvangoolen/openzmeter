@@ -6,7 +6,7 @@
         <button class="btn btn-default dropdown-toggle" v-bind:class="{disabled: (weeks.length == 0)}" type="button" data-toggle="dropdown"><span>{{ SelectedText }}</span><span class="caret"></span></button>
         <ul class="dropdown-menu pull-right">
           <li v-for="(week, id) in weeks" v-bind:class="{ active: (week == SelectedText) }" v-if="week != undefined"><a @click="WeekClick(id, $event)">
-              <img v-if="week.Warning===true" :src="require('Imgs/warning16.png')" data-toggle="tooltip" title="Limit exceded">
+              <img v-if="week.Warning===true" :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded">
               <div v-if="week.Warning!==true"></div>
               {{ week.Name }}</a></li>
         </ul>
