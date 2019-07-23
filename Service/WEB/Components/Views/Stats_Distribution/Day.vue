@@ -3,7 +3,7 @@
     <div class="panel-heading">By week day<div class="float-right">{{ Units }}Wh</div></div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive"></vuetable>
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
     </div>
   </div>
 </template>
@@ -11,8 +11,9 @@
 <script>
   import moment from 'JS/moment.js';
   import vuetable from 'vuetable-2';
-  import * as oZm from 'JS/openZmeter.js';
+  import 'CSS/table-responsive.css';
   import Spinner from 'Components/Spinner.vue';
+  import * as oZm from 'JS/openZmeter.js';
   var Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   export default {
     data() {
@@ -60,11 +61,15 @@
         this.ShowSpinner = false;
       }
     },
+    updated: function(){
+      oZm.createCaptionsForResponsiveTable(this.$refs.table);
+    },
     components: { vuetable, Spinner }
   }
 </script>
 
 <style scoped>
+@media screen and (min-width: 600px) {
   .table >>> th:not(:first-child) {
     text-align: right;
     width: 80px;
@@ -72,4 +77,5 @@
   .table >>> td:not(:first-child) {
     text-align: right;
   }
+}
 </style>

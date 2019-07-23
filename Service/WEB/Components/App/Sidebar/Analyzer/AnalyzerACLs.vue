@@ -8,7 +8,8 @@
       </div>
     </div>
     <div class="modal-body">
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
+      <spinner v-if="ShowSpinner"></spinner>
+      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
             <button type="button" class="btn btn-default btn-xs" v-on:click="Edit(props.rowData)">Edit</button>
@@ -22,10 +23,13 @@
 
 <script>
   import vuetable from 'vuetable-2';
+  import 'CSS/table-responsive.css';
+  import Spinner from 'Components/Spinner.vue';
+  import * as oZm from 'JS/openZmeter.js';
   import moment from 'JS/moment.js';
   export default {
     data() {
-      return { Show: false,
+      return { Show: false, ShowSpinner: true,
         Columns: [
           {name: 'UserName', title: 'User Name'},
           {name: 'View', title: 'View', callback: 'DateFormat'},
@@ -45,10 +49,12 @@
       Load(id) {
         this.Show = true;
         this.Serial = id;
+        this.ShowSpinner = true;
         $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: id }), 
           success: function(result) {
             var TableData = { data: result };
             this.$refs.table.setData(TableData);
+            this.ShowSpinner = false;
           }.bind(this)
         });
       },
@@ -71,11 +77,15 @@
         this.$parent.$refs.Table.Load();
       }
     },
+    updated: function(){
+      oZm.createCaptionsForResponsiveTable(this.$refs.table);
+    },
     components: { vuetable }
   }
 </script>
   
 <style scoped>
+@media screen and (min-width: 600px) {
   .table >>> th:nth-child(2), .table >>> th:nth-child(3)  {
     width: 100px;
     text-align: center;
@@ -89,4 +99,5 @@
   .table >>> td:nth-child(4) {
     text-align: right;
   }
+}
 </style>
