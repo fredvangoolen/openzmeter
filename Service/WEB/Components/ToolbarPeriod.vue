@@ -5,7 +5,7 @@
         <button class="btn btn-default narrow" type="button" v-on:click="Previous"><img :src="require('Imgs/resultset_previous.png')"></button>
       </div>
       <div class="input-group-btn">
-        <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">{{ /*(Prev == null) ?*/ SelectedText /*: 'Inspecting'*/ }}<span class="caret"></span></button>
+        <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">{{ (Prev == null) ? SelectedText : 'Inspecting' }}<span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" ref="periodTags">
           <li v-bind:class="{active: ((Period == 'day') && (To == 'last'))}"><a @click="PeriodClick('day', 'last', $event)">Last 24 hours</a></li>
           <li v-bind:class="{active: ((Period == 'week') && (To == 'last'))}"><a @click="PeriodClick('week', 'last', $event)">Last 7 days</a></li>
@@ -87,7 +87,7 @@
       UpdateCompleted: function(lastsampletime) {
         this.LastSample = lastsampletime;
         clearInterval(this.Timer);
-        this.Timer = setTimeout(this.EmitUpdate.bind(this), this.AggregMS / 2);
+        if(this.UpdateEnabled) this.Timer = setTimeout(this.EmitUpdate.bind(this), this.AggregMS);
       },
       SetAnalyzer: function() {
         this.LastSample = 0;
@@ -136,6 +136,8 @@
           this.To = this.Prev.To;
           this.PeriodClick(this.Period, this.To);
           this.Prev = null;
+          console.log("resume updates");
+          this.UpdateEnabled = true;
         }
       },
       PeriodClick: function (period, to, event) {
@@ -173,11 +175,6 @@
         this.Period = Math.round(to - from);
         this.LastSample = 0;
         if(this.Prev === null) localStorage.setItem(this.variable, JSON.stringify({To: this.To, Period: this.Period}));
-        if(this.UpdateEnabled === false) {
-          
-          console.log("resume updates");
-        }
-        this.UpdateEnabled = true;
         this.EmitUpdate();
       },
       EditPeriod: function () {
