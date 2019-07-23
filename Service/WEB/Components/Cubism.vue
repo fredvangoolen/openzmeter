@@ -75,7 +75,13 @@
         }
         data.valueRange = [-Range, +Range];
         this.Graph.updateOptions(data);
-      }
+      },
+      HoverIn() {
+        this.$parent.StopUpdating=true;
+      },
+      HoverOut() {
+        this.$parent.StopUpdating=false;
+      },
     },
     created: function() {
       this.$parent.$on('SeriesUpdate', this.SetData);
@@ -84,6 +90,8 @@
     },
     mounted: function() {
       this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], { highlightCircleSize: 0, legend: 'always', xAxisHeight: 0.1, xLabelHeight: 1, interactionModel: { }, plotter: barChartPlotterCubism, labels: ["Time", ((this.SerieProps.Title === undefined) ? this.SerieProps.Names[this.index] : this.SerieProps.Title)], colors: ["#d9534f"], labelsDiv: this.$refs.legend,
+        highlightCallback: this.HoverIn,
+        unhighlightCallback: this.HoverOut,
         plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ],
         legendFormatter: function(data) {
           if(data.x === undefined) {
