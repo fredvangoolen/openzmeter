@@ -15,6 +15,8 @@
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const json &option, const float samplerate) : Analyzer(id, mode), Database(id) {
+  LOGFile::Debug("Creating analyzer database tables\n");
+  ExecResource("SQL/Database_AnalyzerSoft.sql");
   //Calc peak filter coefficients for nominal frequency
   for(uint n = 0; n < ZEROCROSSING_FILTERSTAGES; n++) {
     float w0 = 2 * M_PI * (pNominalFrequency / samplerate);
@@ -614,13 +616,18 @@ void *AnalyzerSoft::Events_Thread(void* args) {
   return NULL;
 }
 void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
-  json Result = json::object();
+  json Response = json::object();
   ReadLock();
-  Result["MaxCurrent"] = pMaxCurrent;
-  Result["MinCurrent"] = pMinCurrent;
-//  string Name = Params["Name"];
-//  float Freq = Params["NominalFreq"];
-//  float Voltage = Params["NominalVoltage"];
+  Response["ID"] = pSerial;
+  Response["Name"] = pName;
+  Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
+  Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
+  Response["NominalVoltage"] = pNominalVoltage;
+  Response["NominalFreq"] = pNominalFrequency;
+  Response["MaxCurrent"] = pMaxCurrent;
+  Response["MinCurrent"] = pMinCurrent;
+  Response["SampleFreq"] = pSamplerate;
+  Response[];
   ReadUnlock();
   req.FromJSON(Result);
 }

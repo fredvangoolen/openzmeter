@@ -38,7 +38,7 @@ json Device::GetJSONAnalyzerDescriptor(const string &serial) {
   ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != serial) continue;
-    json Response = pAnalyzers[n]->GetJSONDescriptor();
+    json Response = pAnalyzers[n]->GetJSONShortDescriptor();
     ReadUnlock();
     return Response;
   }
@@ -48,7 +48,7 @@ json Device::GetJSONAnalyzerDescriptor(const string &serial) {
 json Device::GetJSONAllAnalyzerDescriptors() {
   json Response = json::array();
   ReadLock();
-  for(uint n = 0; n != pAnalyzers.size(); n++) Response.push_back(pAnalyzers[n]->GetJSONDescriptor());
+  for(uint n = 0; n != pAnalyzers.size(); n++) Response.push_back(pAnalyzers[n]->GetJSONShortDescriptor());
   ReadUnlock();
   return Response;
 }

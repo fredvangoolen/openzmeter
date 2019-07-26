@@ -53,18 +53,8 @@ class Analyzer : protected RWLocks {
     } Params_t;
   protected :
     uint64_t        pLastSave;                //Timestamp of last save or communication
-    float           pNominalVoltage;          //Analyzer nominal voltage
-    float           pNominalFrequency;        //Analyzer nominal frequency
     string          pSerial;                  //Serial number
-    string          pCountryCode;             //Country code
-    string          pContract;                //Contract identifier
-    string          pZipCode;                 //Installation zip code
-    float           pGeo[2];                  //GPS position
     string          pName;                    //Analyzer description
-    float           pMaxCurrent;              //Max current, over this value warnings are shown
-    float           pMinCurrent;              //Min current, under this value some analysis are disabled
-    float           pSamplerate;              //Velocidad de muestreo (NaN if unsuported)
-    AnalyzerMode    pMode;                    //Operation mode
   protected :
     void           InitAggreg(Params_t &params, AggregType type) const;
     void           AccumulateAggreg(Params_t &src, const Params_t &dst) const;
@@ -95,7 +85,7 @@ class Analyzer : protected RWLocks {
     Analyzer(const string &id, const AnalyzerMode mode);
     virtual ~Analyzer();
     string Serial() const;
-    json   GetJSONDescriptor() const;
+    json   GetJSONShortDescriptor() const;
     void   GetAnalyzerCallback(HTTPRequest &req);
     void   SetAnalyzerCallback(HTTPRequest &req);
     void   GetSeriesCallback(HTTPRequest &req);
