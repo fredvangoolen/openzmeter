@@ -36,7 +36,7 @@
       UpdateIndicators2() {
         if(this.UpdateIndicatorsTimer2) clearInterval(this.UpdateIndicatorsTimer2);
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER'], Analyzer: this.$root.SelectedAnalyzer.ID, Aggreg: '15M', To: moment().endOf('day').valueOf(), Period: 86400000 }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER'], LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.ID, Aggreg: '15M', To: moment().endOf('day').valueOf(), Period: 86400000 }), 
           success: function(result) {
             var Energy;
             if(result['Active_Power'].length > 0) Energy = Array(result['Active_Power'][0].length).fill(0);

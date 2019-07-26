@@ -50,10 +50,6 @@ class Analyzer : protected RWLocks {
       vector<float>                     Phi;                        //Angulo de Phi
       vector< vector<complex<float> > > Voltage_Harmonics;          //Armonicos del canal de tension
       vector< vector<complex<float> > > Current_Harmonics;          //Armonicos del canal de corriente
-//      vector< vector<float> >           Voltage_FFT;                //Resultados de la FFT en tension
-//      vector< vector<float> >           Current_FFT;                //Resultados de la FFT en corriente
-      vector< vector<float> >           Voltage_Samples;            //Voltage samples
-      vector< vector<float> >           Current_Samples;            //Current samples
     } Params_t;
   protected :
     uint64_t        pLastSave;                //Timestamp of last save or communication
@@ -98,10 +94,6 @@ class Analyzer : protected RWLocks {
   public :
     Analyzer(const string &id, const AnalyzerMode mode);
     virtual ~Analyzer();
-//    float        GetMaxCurrent() const;
-//    float        GetNominalVoltage() const;
-//    float        GetNominalFrequency() const;
-//    AnalyzerMode Mode() const;
     string Serial() const;
     json   GetJSONDescriptor() const;
     void   GetAnalyzerCallback(HTTPRequest &req);

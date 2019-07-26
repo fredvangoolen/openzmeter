@@ -60,6 +60,8 @@ class AnalyzerSoft : public Analyzer, protected Database {
       vector<float>         ChannelsZ2;
     } Filter_t;
   private :
+    vector< vector<float> >    pVoltageSamples;          //Voltage samples
+    vector< vector<float> >    pCurrentSamples;          //Current samples
     uint64_t                   pSequence;                //Numero de bloques analizados
     Params_t                   pAggreg10C;               //Agregacion de 10 ciclos
     Params_t                   pAggreg3S;                //Agregacion de 3 segundos

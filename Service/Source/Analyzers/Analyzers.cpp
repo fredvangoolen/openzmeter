@@ -18,9 +18,12 @@ Analyzer::Analyzer(const string &id, const Analyzer::AnalyzerMode mode) {
 //  ExecResource("SQL/Database_Analyzer.sql");
   pSerial = id;
   pMode = mode;
-
-  pNominalFrequency = 50.0;
   pNominalVoltage = 230.0;
+  pNominalFrequency = 50.0;
+  pName = "Unnamed analyzer";
+  pMaxCurrent = 35.0;
+  pMinCurrent = 0.1;
+  pSamplerate = NAN;
   pLastSave = 0;
 //  ExecSentenceNoResult("INSERT INTO analyzers(username, serial, country_code, contract, zipcode, frequency, voltage, name, geo, max_current, min_current) "
 //                       "VALUES('admin', " + Bind(id) + ", 'UTC', '', '', 50.0, 230.0, 'Unnamed input analyzer', POINT(0, 0), 50.0, 0.1) ON CONFLICT(serial) DO NOTHING");
@@ -37,8 +40,8 @@ Analyzer::Analyzer(const string &id, const Analyzer::AnalyzerMode mode) {
 }
 Analyzer::~Analyzer() {
 }
-//json Analyzer::CheckConfig(const json& config) {
-//  json   ConfigOUT = json::object();
+json Analyzer::CheckConfig(const json& config) {
+  json   ConfigOUT = json::object();
 //  float  Frequency = 50.0;
 //  float  Voltage = 230.0;
 //  float  Max_Current = 50.0;
@@ -53,8 +56,8 @@ Analyzer::~Analyzer() {
 //  }
 //  ConfigOUT["Frequency"] = Frequency;
 //  
-//  return ConfigOUT;
-//}
+  return ConfigOUT;
+}
 //float Analyzer::GetMaxCurrent() const {
 //  return pMaxCurrent;
 //}
@@ -120,12 +123,7 @@ void Analyzer::InitAggreg(Params_t &params, AggregType type) const {
     params.Voltage_Phase  = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
     params.Reactive_Energy = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
     params.Apparent_Power = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
-    params.Current_Samples = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(0));
-    params.Voltage_Samples = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(0));
-    params.Current_FFT = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(0));
-    params.Voltage_FFT = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(0));
   }
-  params.Sys_Stats = json::object();
 }
 void Analyzer::AccumulateAggreg(Params_t &dst, const Params_t &src) const {
   dst.Timestamp = src.Timestamp;
@@ -192,8 +190,8 @@ complex<float> Analyzer::AccumulateRMS(const complex<float> &val1, const complex
   return val1 + pow(val2, 2.0f);
 }
 bool Analyzer::CheckRights(HTTPRequest &req, const uint neededAccess) const {
- req.FromString("", MHD_HTTP_UNAUTHORIZED);
- return false;
+// req.FromString("", MHD_HTTP_UNAUTHORIZED);
+ return true;
 }
 void Analyzer::GetAnalyzerCallback(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
@@ -213,9 +211,7 @@ void Analyzer::SetAnalyzerCallback(HTTPRequest &req) {
 void Analyzer::GetSeriesCallback(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
-  if(!Params["To"].is_number())         Params["To"] = 0;
-  if(!Params["Period"].is_number())     Params["Period"] = 3600000;
-  if(!Params["LastSample"].is_number()) Params["LastSample"] = 0;
+  if(!Params["To"].is_number() || !Params["Period"].is_number() || !Params["LastSample"].is_number()) return req.FromString("'To', 'Period' and 'LastSample' param are requiered", MHD_HTTP_BAD_REQUEST);
   if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
   if(!Params["Series"].is_array()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
   ReadLock();
@@ -227,7 +223,7 @@ void Analyzer::GetSeriesNowCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Series"].is_array()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
   ReadLock();
-  GetSeries(req);
+  GetSeriesNow(req);
   ReadUnlock();
 }
 void Analyzer::GetSeriesRangeCallback(HTTPRequest &req) {

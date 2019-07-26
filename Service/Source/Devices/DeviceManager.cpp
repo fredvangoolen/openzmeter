@@ -10,6 +10,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 vector<Device*> __attribute__((init_priority(200))) DeviceManager::pDevices;
 RWLocks         __attribute__((init_priority(200))) DeviceManager::pLock;
+DeviceManager *DeviceManager::pInstance = NULL;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager() {
   pLock.WriteLock();
