@@ -14,8 +14,6 @@ vector<float> Analyzer::THDRanges = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5,
 vector<float> Analyzer::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
 //----------------------------------------------------------------------------------------------------------------------
 Analyzer::Analyzer(const string &id, const Analyzer::AnalyzerMode mode) {
-//  LOGFile::Debug("Creating analyzer database tables\n");
-//  ExecResource("SQL/Database_Analyzer.sql");
   pSerial = id;
   pMode = mode;
   pNominalVoltage = 230.0;
@@ -25,6 +23,7 @@ Analyzer::Analyzer(const string &id, const Analyzer::AnalyzerMode mode) {
   pMinCurrent = 0.1;
   pSamplerate = NAN;
   pLastSave = 0;
+  
 //  ExecSentenceNoResult("INSERT INTO analyzers(username, serial, country_code, contract, zipcode, frequency, voltage, name, geo, max_current, min_current) "
 //                       "VALUES('admin', " + Bind(id) + ", 'UTC', '', '', 50.0, 230.0, 'Unnamed input analyzer', POINT(0, 0), 50.0, 0.1) ON CONFLICT(serial) DO NOTHING");
 //  ExecSentenceAsyncResult("SELECT frequency, voltage, name, max_current, min_current FROM analyzers WHERE serial = " + Bind(id));
@@ -73,16 +72,10 @@ string Analyzer::Serial() const {
 //Analyzer::AnalyzerMode Analyzer::Mode() const {
 //  return pMode;
 //}
-json Analyzer::GetJSONDescriptor() const {
+json Analyzer::GetJSONShortDescriptor() const {
   json Response;
-  Response["ID"] = Serial();
-  Response["NominalVoltage"] = pNominalVoltage;
-  Response["NominalFreq"] = pNominalFrequency;
+  Response["ID"] = pSerial;
   Response["Name"] = pName;
-  Response["MaxCurrent"] = pMaxCurrent;
-  Response["MinCurrent"] = pMinCurrent;
-  Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
-  Response["SampleFreq"] = pSamplerate;
   Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
   return Response;
 }
