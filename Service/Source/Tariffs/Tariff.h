@@ -15,7 +15,6 @@ using namespace cctz;
 class TariffPowerPlugin;
 class TariffEnergyPlugin;
 class Tariff {
-  friend class TariffList;
   public :
     typedef struct {
       float    Active;

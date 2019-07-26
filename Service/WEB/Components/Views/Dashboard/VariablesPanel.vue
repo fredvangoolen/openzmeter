@@ -51,7 +51,7 @@
       },
       UpdateBars() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Series: this.Series, From: 0, Period: 86400000, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Series: this.Series, To: 0, Period: 86400000, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID }), 
           success: function(result) {
             if(result['Sampletime'] === null) return;
             if(result['Sampletime'].length === 0) return;

@@ -43,7 +43,7 @@ void RWLocks::ReadLock() {
 void RWLocks::ReadUnlock() {
   pthread_mutex_lock(&pMutex);
   pReaders--;
-  pthread_mutex_lock(&pMutex);
+  pthread_mutex_unlock(&pMutex);
   pthread_cond_signal(&pWritersCondition);
 }
 void RWLocks::WriteLock() {
@@ -51,7 +51,7 @@ void RWLocks::WriteLock() {
   pWriters++;
   while((pReaders != 0) || (pActiveWriter != false)) pthread_cond_wait(&pWritersCondition, &pMutex);
   pActiveWriter = true;
-  pthread_mutex_lock(&pMutex);
+  pthread_mutex_unlock(&pMutex);
 }
 void RWLocks::WriteUnlock() {
   pthread_mutex_lock(&pMutex);
@@ -61,7 +61,7 @@ void RWLocks::WriteUnlock() {
     pthread_cond_signal(&pWritersCondition);
   else
     pthread_cond_broadcast(&pReadersCondition);
-  pthread_mutex_lock(&pMutex);
+  pthread_mutex_unlock(&pMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
 ConfigManager   *ConfigManager::pInstance = NULL;
