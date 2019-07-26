@@ -7,6 +7,7 @@
   import chroma from 'JS/chroma.js';
   import * as oZm from 'JS/openZmeter.js';
   function mouseDown(event, g, context) {
+    if(this.StopAutoupdate) this.StopAutoupdate();
     context.initializeMouseDown(event, g, context);
     if(event.altKey || event.shiftKey) {
       Dygraph.startZoom(event, g, context);
@@ -33,6 +34,7 @@
   }
   function mouseWheelZoom(event, g, context) {
     if(!event.shiftKey) return;
+    if(this.StopAutoupdate) this.StopAutoupdate();
     var normal = event.detail ? event.detail * -1 : event.wheelDelta / 40;
     var percentage = normal / 50;
     if (!event.offsetX) event.offsetX = event.layerX - event.target.offsetLeft;
@@ -51,6 +53,7 @@
     this.WindowRestore();
   }
   function touchStart(event, g, context) {
+    if(this && this.StopAutoupdate) this.StopAutoupdate();
     event.preventDefault();  // touch browsers are all nice.
     if(event.touches.length > 1) context.startTimeForDoubleTapMs = null;
     var touches = [];
@@ -146,7 +149,7 @@
   function touchEnd(event, g, context) {
       if (event.touches.length !== 0) {
         // this is effectively a "reset"
-        startTouch(event, g, context);
+        touchStart(event, g, context);
       } else if (event.changedTouches.length == 1) {
           // Could be part of a "double tap"
           // The heuristic here is that it's a double-tap if the two touchend events
@@ -164,6 +167,7 @@
 //            context.doubleTapY = t.screenY;
           }
       }
+      this.WindowChange(g.dateWindow_[0], g.dateWindow_[1]);
     }
   export default {
     WaveTimeTicks: function(max, analyzer) {
@@ -200,6 +204,7 @@
       }
       var bar_width = Math.floor(2.5 / 3 * min_sep);
       g.subbar_width = bar_width / sets.length;
+      if(g.subbar_width < 2) g.subbar_width = 2;
       for(var j = 0; j < sets.length; j++) {
         ctx.strokeStyle = g.getColors()[j];
         ctx.fillStyle = g.getColors()[j];
@@ -222,11 +227,12 @@
     },
     //interactions models
     FixedRangeInteractionModel: function(parent) {
-      return { mousedown: mouseDown, mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent) };
-    },
-    ScrollableInteractionModel: function(parent) {
       return { mousedown: mouseDown, mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
                 touchstart: touchStart, touchmove: touchMove, touchend: touchEnd.bind(parent) };
+    },
+    ScrollableInteractionModel: function(parent) {
+      return { mousedown: mouseDown.bind(parent), mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
+                touchstart: touchStart.bind(parent), touchmove: touchMove, touchend: touchEnd.bind(parent) };
     },
     MouseUpEvt: function(event, g, contex) {
         oZm.mouseUp(event, g, contex);

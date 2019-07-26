@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ Time }}</div>
+      <div class="header-text">{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <div class="header-buttons" ref="Toolbar">
         <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedMulti" type="CURRENT"></toolbar-phases>
         <toolbar-options variable="DetailOptions" :options="['Voltage']" v-on:OptionChanged="SetOption"></toolbar-options>
@@ -33,7 +33,7 @@
   }
   export default {
     data() {
-      return { ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' } };
+      return { ShowWarning: true, ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' } };
     },
     methods: {
       Redraw: function() {
@@ -59,12 +59,14 @@
           for(var n = 0; n < result.Voltage_Samples.length; n++) Row.push(result.Voltage_Samples[n][i]);
           this.Data.push(Row);
         }
+        this.MaxCurrent = oZm.ArrayAbsMax(result.Current);
         this.CalcOptions();
         this.ShowSpinner = false;
       },
       CalcOptions() {
         if((this.$root.SelectedAnalyzer === null) || (this.CurrentPhases === null) || (this.ShowVoltage === null) || (Array.isArray(this.Data) === false)) return;
         var Analyzer = this.$root.SelectedAnalyzer, Series = {}, VoltagePhases = [];
+        this.ShowWarning = (this.MaxCurrent < Analyzer.MinCurrent); 
         for(var n = 0; n < oZm.Series['CURRENT'].Names(Analyzer).length; n++) {
           VoltagePhases.push((this.CurrentPhases[n] === true) && (this.ShowVoltage === true));
           if((this.CurrentPhases[n] === true) && (this.ShowVoltage === true)) Series[oZm.Series['VOLTAGE'].Names(Analyzer)[n]] = { axis: 'y2' };
@@ -109,6 +111,7 @@
       }
     },
     created: function() {
+      this.MaxCurrent = 0.0;
       this.Data = null;
       this.CurrentPhases = null;
       this.ShowVoltage = null;
@@ -116,3 +119,16 @@
     components: { Spinner, ToolbarPhases, ToolbarOptions, ToolbarTools, Graph }
   }
 </script>
+
+<style scoped>
+  .header-text {
+    font-size: 14px;
+  }
+  .title-warning {
+    line-height: 20px;
+    font-size: 14px;
+  }
+  .title-warning img {
+    margin: -4px 4px 0px 0px;
+  }
+</style>

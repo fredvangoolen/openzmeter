@@ -10,7 +10,8 @@
     <div class="modal-body">
       <div class="row">
         <div class="col-xs-12">
-          <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive">
+          <spinner v-if="ShowSpinner"></spinner>
+          <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
             <template slot="actions" slot-scope="props">
               <div class="btn-group" style="width:100%">
                 <button class="btn btn-xs btn-default" @click="Edit(props.rowIndex, $event)">Edit</button>
@@ -26,10 +27,13 @@
 
 <script>
   import Vuetable from 'vuetable-2';
+  import 'CSS/table-responsive.css';
+  import Spinner from 'Components/Spinner.vue';
+  import * as oZm from 'JS/openZmeter.js';
   import moment from 'JS/moment.js';
   export default {
     data() {
-      return { Show: false, Tariff: null, 
+      return { Show: false, Tariff: null, ShowSpinner: true,
         Columns: [
           {name: 'Name', title: 'Name'},
           {name: 'StartDate', title: 'Start date', callback: 'DateFormat'},
@@ -43,18 +47,22 @@
         return moment(val).format('DD/MM/YYYY');
       },
       FillTable: function() {
-        this.$refs.table.setData({ data: this.Tariff.Template.Holidays });        
+        this.$refs.table.setData({ data: this.Tariff.Template.Holidays });   
+        this.ShowSpinner = false;     
       },
       Load: function(tariff) {
         this.Show = true;
         this.Tariff = tariff;
+        this.ShowSpinner = true;
         this.$nextTick(function() {
           this.FillTable();
         });
       },
       Delete: function(index) {
-        this.Tariff.Template.Holidays.splice(index, 1);
-        this.FillTable();
+        if(confirm("Delete '"+this.Tariff.Template.Holidays[index].Name +"' holidays?")){
+          this.Tariff.Template.Holidays.splice(index, 1);
+          this.FillTable();
+        }
       },
       Add: function() {
         this.Tariff.Template.Holidays.push({ StartDate: this.Tariff.StartDate, EndDate: this.Tariff.EndDate, Name: 'Unnamed holiday' });
@@ -70,11 +78,15 @@
         this.$parent.$refs.Main.Load(this.Tariff);
       }
     },
+    updated: function(){
+      oZm.createCaptionsForResponsiveTable(this.$refs.table);
+    },
     components: { Vuetable }
   }
 </script>
 
 <style scoped>
+@media screen and (min-width: 600px) {
   .table >>> th:nth-child(2), .table >>> th:nth-child(3)  {
     width: 100px;
     text-align: center;
@@ -88,4 +100,5 @@
   .table >>> td:nth-child(4) {
     text-align: right;
   }
+}
 </style>

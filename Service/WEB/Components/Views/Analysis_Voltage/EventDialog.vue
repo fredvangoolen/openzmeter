@@ -50,6 +50,18 @@
         $(this.$el).modal('hide');
         this.ShowDialog = false;
       },
+      XTicks: function(x) {
+        var Analyzer = this.$root.SelectedAnalyzer;
+        if((Analyzer == null) || (this.Event == null)) return;
+        var EventDuration = this.Event.SampleDuration / Analyzer.SampleFreq;
+        if(x <= (this.Event.Prev_Samples[0].length + this.Event.Samples[0].length / 2.0)) {
+          return oZm.Round3((x - this.Event.Prev_Samples[0].length) / ((this.ViewMode == 'RMS') ? (Analyzer.NominalFreq * 2.0) : (Analyzer.SampleFreq)));
+        } else if(x >= (this.Data.length - (this.Event.Post_Samples[0].length + this.Event.Samples[0].length / 2.0))) {
+          return oZm.Round3(EventDuration + (x - (this.Data.length - this.Event.Post_Samples[0].length)) / ((this.ViewMode == 'RMS') ? (Analyzer.NominalFreq * 2.0) : (Analyzer.SampleFreq)));
+        } else {
+          return "";
+        }
+      },
       Show: function(evt, mode) {
         this.ShowDialog = true;
         this.ViewMode = mode;
@@ -83,20 +95,12 @@
             }
             this.$refs.graph.SetOptions( { plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ],
               axes: {
-                y: { pixelsPerLabel: 15, axisLabelWidth: 34,/* valueRange: Y1Range, */
+                y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                      valueFormatter: function (x) { return oZm.Round2(x) + ' <em class="x-small">V</em>'; },
                      axisLabelFormatter: function (x) { return oZm.Round2(x); }
                 },
-                x: { ticker: function(min, max) { 
-                       var Analyzer = this.$root.SelectedAnalyzer;
-                       if(Analyzer == null) return [];
-                       return Graph.WaveTimeTicks(max, Analyzer); 
-                     }.bind(this),
-                     valueFormatter: function (x) {
-                       var Analyzer = this.$root.SelectedAnalyzer;
-                       if(Analyzer == null) return [];
-                       return oZm.Round2((x * 1000) / Analyzer.SampleFreq) + ' <em class="x-small">ms</em>'; 
-                     }.bind(this)
+                x: { pixelsPerLabel: 25, axisLabelFormatter: this.XTicks.bind(this),
+                     valueFormatter: function (x) { return this.XTicks(x) + ' <em class="x-small">ms</em>'; }.bind(this)
                 }
               },
               underlayCallback: function(canvas, area, g) {
@@ -133,7 +137,7 @@
                 canvas.restore();
                 if((this.Event.Type == 'DIP') || (this.Event.Type == 'INTERRUPTION') || (this.Event.Type == 'SWELL')) {
                   var HighStart = (this.Event.Type == 'DIP') ? this.Event.Reference[0] * 0.9 : (this.Event.Type == 'SWELL') ? this.Event.Reference[0] * 1.1 : this.Event.Reference[0] * 0.1;
-                  var HighEnd = (this.Event.Type == 'DIP') ? this.Event.Reference[0] * 0.95 : (this.Event.Type == 'SWELL') ? this.Event.Reference[0] * 1.05 : this.Event.Reference[0] * 0.15;
+                  var HighEnd = (this.Event.Type == 'DIP') ? this.Event.Reference[0] * 0.92 : (this.Event.Type == 'SWELL') ? this.Event.Reference[0] * 1.08 : this.Event.Reference[0] * 0.12;
                   //draw top and bottom lines
                   if(this.ViewMode==='RMS') {
                     canvas.beginPath();
@@ -229,7 +233,7 @@
                 }
                 canvas.restore();
               }.bind(this),
-              file: this.Data, labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length) } );
+              file: this.Data, includeZero: true, labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length) } );
               this.ShowSpinner = false;
               this.$nextTick(function() {
                 window.dispatchEvent(new Event('resize'));
