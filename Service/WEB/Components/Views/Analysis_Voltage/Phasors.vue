@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ Time }}</div>
+      <div class="header-text">{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <div class="header-buttons" ref="Toolbar">
         <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick"></toolbar-tools>
       </div>
@@ -14,7 +14,7 @@
         </div>
         <div class="col-sm-12 col-md-4 col-lg-6">
           <h4>Voltage and current phase angle</h4>
-          <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped table-responsive"></vuetable>
+          <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
         </div>
       </div>
     </div>
@@ -29,9 +29,10 @@
   import Graph from 'Components/Graph.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import vuetable from 'vuetable-2';
+  import 'CSS/table-responsive.css';
   export default {
     data: function() {
-      return { ShowSpinner: true, Time: 'Loading data...',
+      return { ShowWarning: true,  ShowSpinner: true, Time: 'Loading data...',
       Columns: [
           {name: 'Phase', title: 'Phase'},
           {name: 'Channel', title: 'Channel'},
@@ -75,6 +76,9 @@
     },
     mounted: function() {
       $(window).on('resize', this.Redraw.bind(this));
+    },
+    updated: function(){
+        oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     beforeDestroy: function() {
       $(window).off('resize', this.Redraw);
@@ -123,13 +127,14 @@
           ctx.setLineDash([]);
           ctx.strokeStyle = e.dygraph.getColors()[i % 2];
           ctx.fillStyle = e.dygraph.getColors()[i % 2];
-          ctx.lineWidth = 1;
+          ctx.lineWidth = 2;
           
           ctx.beginPath();
           ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
           ctx.lineTo(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
           ctx.stroke();
           
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)), 3, 0, 2 * Math.PI);
           ctx.fill();
@@ -164,6 +169,7 @@
       },
       SetData(result) {
         var Analyzer = this.$root.SelectedAnalyzer;
+        this.ShowWarning = (oZm.ArrayAbsMax(result.Current) < Analyzer.MinCurrent); 
         this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
         var Phases = (oZm.Series['VOLTAGE'].Names(Analyzer).length === 1) ? ['L'] : ['R', 'S', 'T'];
         this.Data = [];
@@ -176,13 +182,7 @@
           this.Data.push([Phases[i], "Current", i * 120 - result.Phi[i], result['Current'][i]]);
           Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(i * 120) + 'º', Value: oZm.Round2(result['Voltage'][i]) + '<em> V</em>' } );
           Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(i * 120 - result.Phi[i]) + 'º', Value: oZm.Round2(result.Current[i]) + '<em> A</em>'} );
-//          MaxVoltage = Math.max(MaxVoltage, result.Voltage[i]);
-//          MaxCurrent = Math.max(MaxCurrent, result.Current[i]);
         }
-//        for(var i = 0; i < Vectors.length; i += 2) {
-//          Vectors[i][2] = Vectors[i][2] / MaxVoltage;
-//          Vectors[i + 1][2] = Vectors[i + 1][2] / MaxCurrent;
-//        }
         this.$refs.graph.SetOptions({ file: Vectors });
         this.$refs.table.setData( { data: Table });
         this.ShowSpinner = false;
@@ -199,24 +199,36 @@
   .graphDiv >>> .graph {
     margin: auto;
   }
-  .table >>> th:nth-child(1)  {
-    width: 40px;
-    text-align: center;
-  }  
-  .table >>> th:nth-child(2)  {
-    width: 50px;
-    text-align: center;
+  @media screen and (min-width: 600px) {
+    .table >>> th:nth-child(1)  {
+      width: 40px;
+      text-align: center;
+    }  
+    .table >>> th:nth-child(2)  {
+      width: 50px;
+      text-align: center;
+    }
+    .table >>> th:nth-child(3), .table >>> th:nth-child(4)  {
+      text-align: right;
+    }
+    .table >>> td {
+      font-size: 16px
+    }
+    .table >>> td:nth-child(1), .table >>> td:nth-child(1) {
+      text-align: center;
+    }
+    .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
+      text-align: right;
+    }
   }
-  .table >>> th:nth-child(3), .table >>> th:nth-child(4)  {
-    text-align: right;
+  .header-text {
+    font-size: 14px;
   }
-  .table >>> td {
-    font-size: 16px
+  .title-warning {
+    line-height: 20px;
+    font-size: 14px;
   }
-  .table >>> td:nth-child(1), .table >>> td:nth-child(1) {
-    text-align: center;
-  }
-  .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
-    text-align: right;
+  .title-warning img {
+    margin: -4px 4px 0px 0px;
   }
 </style>

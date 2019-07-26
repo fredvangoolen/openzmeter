@@ -28,7 +28,10 @@
 <script>
   import Vue from 'vue';
   import Vuetable from 'vuetable-2';
+  import 'CSS/table-responsive.css';
   import Spinner from 'Components/Spinner.vue';
+  import * as oZm from 'JS/openZmeter.js';
+  import OptionPicker from 'Components/OptionPicker.vue';
   import InputSpin from 'Components/InputSpin.vue';
   import Toggle from 'Components/Toggle.vue';
   export default {
@@ -97,11 +100,15 @@
         alert("Maintenance not yet implemented");
       }
     },
-    components: { Vuetable, Spinner, InputSpin, Toggle }
+    updated: function(){
+      oZm.createCaptionsForResponsiveTable(this.$refs.table);
+    },
+    components: { Vuetable, Spinner, OptionPicker, InputSpin }
   }
 </script>
 
 <style scoped>
+@media screen and (min-width: 600px) {
   .table >>> th:nth-child(1) {
     width: 60px;
     text-align: center;
@@ -120,6 +127,7 @@
   .table >>> th:nth-child(4) {
     width: 90px;
   }
+}
 </style>
 
 

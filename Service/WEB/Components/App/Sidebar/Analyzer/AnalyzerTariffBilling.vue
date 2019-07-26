@@ -13,7 +13,7 @@
             <tr><td><strong>Concept</strong></td><td><strong>Type</strong></td><td class="text-right"><strong>Value</strong></td></tr>
             <tr v-for="(tax, idx) in Tariff.Config.Taxs">
               <td><div class="input-group input-group-xs">
-                <span class="input-group-btn"><button class="btn btn-default" type="button" @click="Delete(idx)"><img :src="require('Imgs/cross.png')"></button></span>
+                <span class="input-group-btn"><button class="btn btn-default delete" type="button" @click="Delete(idx)"><img :src="require('Imgs/cross.png')"></button></span>
                 <input type="text" class="form-control" @change="NameChanged($event, idx)" :value="tax.Name">
               </div></td>
               <td><option-picker :options="TypeNames" @OptionChanged="TypeChanged($event, idx)" :selected="TypeNames[TypesEnum.indexOf(tax.Type)]"></option-picker></td>
@@ -95,7 +95,9 @@
         this.Tariff.Config.Taxs.push({Name: 'Unnamed tax', Type: 'PERCENT_TOTAL', Value: 0.0});
       },
       Delete: function(idx) {
-        this.Tariff.Config.Taxs.splice(idx, 1);
+        if(confirm("Delete '"+this.Tariff.Config.Taxs[idx].Name+"' tax?")){
+          this.Tariff.Config.Taxs.splice(idx, 1);
+        }
       },
       TypeChanged: function(name, idx) {
         this.Tariff.Config.Taxs[idx].Type = this.TypesEnum[this.TypeNames.indexOf(name)];
@@ -134,5 +136,8 @@
   }
   .dropdown-toggle {
     width: 120px;
+  }
+  button.delete{
+    width: 25px;
   }
 </style>

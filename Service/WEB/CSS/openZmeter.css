@@ -69,6 +69,9 @@ table.dataTable thead .sorting:after {
   height: 16px !important;
   right: 0px;
 }
+.btn.disabled, .btn[disabled], fieldset[disabled] .btn {
+  filter: grayscale(0.5);
+}
 
 /* latin */
 @font-face {
@@ -337,7 +340,7 @@ div.scrtabs-tab-container + div.panel {
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 .dygraph-axis-label {
-  font-size: 10px;
+  font-size: 11px;
   color: black;
   line-height: 10px;
 }
