@@ -12,12 +12,12 @@ class DeviceVirtual : public Device {
   private :
     static bool pRegistered;
   private :
-    pthread_t                       pCaptureThread;
-    bool                            pTerminate;
-    float                           pSampleRate;
-    float                           pVoltage;
-    float                           pFrequency;
-    Analyzer::AnalyzerMode          pMode;
+    pthread_t              pCaptureThread;
+    bool                   pTerminate;
+    float                  pSampleRate;
+    float                  pVoltage;
+    float                  pFrequency;
+    Analyzer::AnalyzerMode pMode;
   private : 
     static bool GetInstances();
     static void *Capture_Thread(void *args);

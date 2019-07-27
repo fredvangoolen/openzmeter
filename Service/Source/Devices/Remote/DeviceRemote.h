@@ -14,17 +14,14 @@ class DeviceRemote : public Device {
   private :
     static bool pRegistered;  
   private :
-    list<AnalyzerRemote*>   pAnalyzers;               //Analyzers list
-    pthread_mutex_t         pMutex;                   //Access to list limited
-  private :
     static bool GetInstances();
+    static void GetRemoteCallback(HTTPRequest &req);
+    static void SetRemoteCallback(HTTPRequest &req);
 //    static bool SetRemoteAnalyzerCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
 //    static bool SetRemoteDataCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
   private :
-    Analyzer *FindAnalyzer(string serial);
-    uint32_t           AnalyzersCount();
-    bool               Start();
-    bool               Stop();
+    bool StartDevice();
+    bool StopDevice();
   public :
     DeviceRemote();
     ~DeviceRemote();

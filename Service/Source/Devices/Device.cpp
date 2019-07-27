@@ -200,65 +200,65 @@ bool Device::DelEventCallback(HTTPRequest &req) {
   ReadUnlock();
   return false;
 }
-bool Device::GetTariffsCallback(HTTPRequest &req) {
+bool Device::GetRatesCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
   ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->GetTariffsCallback(req);
+    pAnalyzers[n]->GetRatesCallback(req);
     ReadUnlock();
     return true;
   }
   ReadUnlock();
   return false;
 }
-bool Device::GetTariffCallback(HTTPRequest &req) {
+bool Device::GetRateCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
   ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->GetTariffCallback(req);
+    pAnalyzers[n]->GetRateCallback(req);
     ReadUnlock();
     return true;
   }
   ReadUnlock();
   return false;
 }
-bool Device::SetTariffCallback(HTTPRequest &req) {
+bool Device::SetRateCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
   ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->SetTariffCallback(req);
+    pAnalyzers[n]->SetRateCallback(req);
     ReadUnlock();
     return true;
   }
   ReadUnlock();
   return false;
 }
-bool Device::DelTariffCallback(HTTPRequest &req) {
+bool Device::DelRateCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
   ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->DelTariffCallback(req);
+    pAnalyzers[n]->DelRateCallback(req);
     ReadUnlock();
     return true;
   }
   ReadUnlock();
   return false;
 }
-bool Device::AddTariffCallback(HTTPRequest &req) {
+bool Device::AddRateCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
   ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->AddTariffCallback(req);
+    pAnalyzers[n]->AddRateCallback(req);
     ReadUnlock();
     return true;
   }

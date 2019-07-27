@@ -15,6 +15,13 @@ using namespace cctz;
 class TariffPowerPlugin;
 class TariffEnergyPlugin;
 class Tariff {
+    friend class TariffList;
+  private :
+    static void GetTariffsCallback(HTTPRequest &req);
+    static void GetTariffCallback(HTTPRequest &req);
+    static void SetTariffCallback(HTTPRequest &req);
+    static void DelTariffCallback(HTTPRequest &req);
+    static void AddTariffCallback(HTTPRequest &req);
   public :
     typedef struct {
       float    Active;
@@ -73,8 +80,11 @@ class Tariff {
     json GetTemplate();
     json GetConfig();
     json GetResume(uint64_t now);
+    uint64_t StartDate();
     bool PushSample(const uint64_t time, const float active, const float reactive);
     bool PopSample(uint64_t &time, float &active, float &reactive, string &period, string &color, float &cost, float &contractedPower);
+  public :
+    
 };
 //----------------------------------------------------------------------------------------------------------------------
 class TariffList {

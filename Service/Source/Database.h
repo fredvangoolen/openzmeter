@@ -32,7 +32,7 @@ class Database {
     string      Bind(const vector<float> &params) const;
     string      Bind(const vector<uint16_t> &params) const;
     string      Bind(const bool param) const;
-    string      Bind(const vector<vector<complex<float> > > &params) const;
+//    string      Bind(const vector<vector<complex<float> > > &params) const;
     string      Bind(const string &string) const;
     string      BindID(const string &string) const;
     bool        ExecSentenceNoResult(const string &sql);

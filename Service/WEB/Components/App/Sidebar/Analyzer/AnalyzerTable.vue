@@ -11,7 +11,7 @@
       <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
-            <button type="button" class="btn btn-success btn-xs" v-bind:class="{ disabled: CurrentlySelected(props.rowData) }" v-on:click="Select(props.rowData)">Select</button>
+            <button type="button" class="btn btn-success btn-xs" :disabled="CurrentlySelected(props.rowData)" v-on:click="Select(props.rowData)">Select</button>
             <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
             <ul class="dropdown-menu pull-right">
               <li><a v-on:click="Configure(props.rowData)" v-if="true">Configure</a></li>
@@ -53,6 +53,7 @@
       GetAnalyzers() {
         $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
           success: function(result) {
+            if(result.length === 0) this.$parent.$refs.NotFound.Load();
             var TableData = { data: result };
             this.$refs.table.setData(TableData);
             this.ShowSpinner = false;
@@ -65,26 +66,28 @@
       Load: function() {
         this.Show = true;
         this.ShowSpinner = true;
-        this.$nextTick(function() {
-          this.GetAnalyzers();
-        });
+        this.GetAnalyzers();
       },
-      CurrentlySelected: function(id) {
+      CurrentlySelected: function(analyzer) {
         if(this.$root.SelectedAnalyzer === null) return false;
-        if(id.ID === this.$root.SelectedAnalyzer.ID) return true;
+        if(analyzer.ID === this.$root.SelectedAnalyzer.ID) return true;
         return false;
       },
       Select: function(analyzer) {
-        localStorage.setItem("SelAnalyzer", analyzer.ID);
-        this.$root.SelectedAnalyzer = analyzer;
-        this.$nextTick(function() {
-          this.$root.$emit('AnalyzerChanged');
-          this.$parent.Close();
+        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.ID }), 
+          success: function(result) { 
+            this.$root.SelectedAnalyzer = result;
+            this.$root.$emit('AnalyzerChanged', result);
+            this.$parent.Close();
+          }.bind(this),
+          error: function() {
+            this.ShowSpinner = false;
+          }.bind(this)
         });
       },
       Configure: function(analyzer) {
         this.Show = false;
-        this.$parent.$refs.Configure.Load(analyzer); 
+        this.$parent.$refs.Configure.Load(analyzer.ID); 
       },
       ACL: function(id) {
         alert("ACL not yet implemented"); 
@@ -106,25 +109,24 @@
 </script>
 
 <style scoped>
-@media screen and (min-width: 600px) {
-  .table >>> th:nth-child(1) {
-    width: 60px;
-    text-align: center;
+  @media screen and (min-width: 600px) {
+    .table >>> th:nth-child(1) {
+      width: 60px;
+      text-align: center;
+    }
+    .table >>> td:nth-child(1) {
+      text-align: center;
+      font-size: 14px;
+    }
+    .table >>> th:nth-child(3) {
+      width: 180px;
+      text-align: center;
+    }
+    .table >>> td:nth-child(3) {
+      text-align: center;
+    }
+    .table >>> th:nth-child(4) {
+      width: 90px;
+    } 
   }
-  .table >>> td:nth-child(1) {
-    text-align: center;
-    font-size: 14px;
-  }
-  .table >>> th:nth-child(3) {
-    width: 180px;
-    text-align: center;
-  }
-  .table >>> td:nth-child(3) {
-    text-align: center;
-  }
-  .table >>> th:nth-child(4) {
-    width: 90px;
-  } 
-}
-
 </style>

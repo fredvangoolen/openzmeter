@@ -50,7 +50,7 @@ bool DeviceVirtual::StartDevice() {
   ConfigOUT["SampleRate"] = pSampleRate;
   ConfigOUT["Mode"] = (pMode == Analyzer::PHASE1) ? "1PHASE" : (pMode == Analyzer::PHASE3) ? "3PHASE" : "3PHASE+N";
   ConfigOUT["AutoStart"] = AutoStart;
-  ConfigOUT["Analyzer"] = Analyzer::CheckConfig(ConfigIN["Analyzer"]);
+  ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(ConfigIN["Analyzer"]);
   ConfigManager::WriteConfig("/Devices/" + pSerial, ConfigOUT);
   if(pState == UNCONFIGURED) {
     pState = STOPPED;
@@ -83,9 +83,8 @@ bool DeviceVirtual::StopDevice() {
   pTerminate = true;
   pthread_join(pCaptureThread, NULL);
   while(pAnalyzers.size() > 0) {
-    Analyzer *Analyzer = pAnalyzers.back();
+    delete pAnalyzers.back();
     pAnalyzers.pop_back();
-    delete Analyzer;
   }
   pState = STOPPED;  
   WriteUnlock();

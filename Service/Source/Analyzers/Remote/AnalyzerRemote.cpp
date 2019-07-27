@@ -5,12 +5,30 @@
 #include <string.h>
 #include "Tools.h"
 #include "AnalyzerRemote.h"
-AnalyzerRemote::AnalyzerRemote(string id, Analyzer::AnalyzerMode mode) {
-  //: AnalyzerInterface(id, mode)
- //llamo al update config
+AnalyzerRemote::AnalyzerRemote(string id) : Analyzer(id) {
+  pName = "Never seen";
 }
-void AnalyzerRemote::GetParams(Params_t& params, ParamsType& copy) {
+AnalyzerRemote::~AnalyzerRemote() {
 }
+void  AnalyzerRemote::GetAnalyzer(HTTPRequest &req) {}
+void  AnalyzerRemote::SetAnalyzer(HTTPRequest &req) {}
+void  AnalyzerRemote::GetSeries(HTTPRequest &req) {}
+void  AnalyzerRemote::GetSeriesNow(HTTPRequest &req) {}
+void  AnalyzerRemote::GetSeriesRange(HTTPRequest &req) {}
+void  AnalyzerRemote::GetEvents(HTTPRequest &req) {}
+void  AnalyzerRemote::GetEvent(HTTPRequest &req) {}
+void  AnalyzerRemote::SetEvent(HTTPRequest &req) {}
+void  AnalyzerRemote::DelEvent(HTTPRequest &req) {}
+void  AnalyzerRemote::GetRates(HTTPRequest &req) {}
+void  AnalyzerRemote::GetRate(HTTPRequest &req) {}
+void  AnalyzerRemote::SetRate(HTTPRequest &req) {}
+void  AnalyzerRemote::DelRate(HTTPRequest &req) {}
+void  AnalyzerRemote::AddRate(HTTPRequest &req) {}
+void  AnalyzerRemote::GetPrices(HTTPRequest &req) {}
+
+
+//void AnalyzerRemote::GetParams(Params_t& params, ParamsType& copy) {
+//}
 //void AnalyzerRemote::UpdateConfig(float nominalVoltage, float nominalFreq, char* name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online) {
   //Si ha cambiado el modo tengo que asegurarme que las muestras que hay son coherentes, si no la web fallara!
 //}
