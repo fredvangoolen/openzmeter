@@ -24,6 +24,7 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("/startDevice",         StartDeviceCallback);
   HTTPServer::RegisterCallback("/setDevice",           SetDeviceCallback);
   HTTPServer::RegisterCallback("/getAnalyzers",        DeviceManager::GetAnalyzersCallback);
+  HTTPServer::RegisterCallback("/getAnalyzer",         DeviceManager::GetAnalyzerCallback);
   HTTPServer::RegisterCallback("/setAnalyzer",         DeviceManager::SetAnalyzerCallback);
   HTTPServer::RegisterCallback("/getSeries",           DeviceManager::GetSeriesCallback);
   HTTPServer::RegisterCallback("/getSeriesNow",        DeviceManager::GetSeriesNowCallback);
@@ -32,11 +33,12 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("/getEvent",            DeviceManager::GetEventCallback);
   HTTPServer::RegisterCallback("/setEvent",            DeviceManager::SetEventCallback);
   HTTPServer::RegisterCallback("/delEvent",            DeviceManager::DelEventCallback);
+  HTTPServer::RegisterCallback("/getRates",            DeviceManager::GetRatesCallback);
+  HTTPServer::RegisterCallback("/getRate",             DeviceManager::GetRateCallback);
+  HTTPServer::RegisterCallback("/setRate",             DeviceManager::SetRateCallback);
+  HTTPServer::RegisterCallback("/delRate",             DeviceManager::DelRateCallback);
+  HTTPServer::RegisterCallback("/addRate",             DeviceManager::AddRateCallback);
   HTTPServer::RegisterCallback("/getPrices",           DeviceManager::GetPricesCallback);
-  HTTPServer::RegisterCallback("/getTariffs",          DeviceManager::GetTariffsCallback);
-  HTTPServer::RegisterCallback("/getTariff",           DeviceManager::GetTariffCallback);
-  HTTPServer::RegisterCallback("/setTariff",           DeviceManager::SetTariffCallback);
-  HTTPServer::RegisterCallback("/delTariff",           DeviceManager::DelTariffCallback);
   for(uint i = 0; i < pDevices.size(); i++) pDevices[i]->StartDevice();
   pInstance = this;
   pLock.WriteUnlock();
@@ -288,60 +290,60 @@ void DeviceManager::DelEventCallback(HTTPRequest &req) {
   pLock.ReadUnlock();
   req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
 }
-void DeviceManager::GetTariffsCallback(HTTPRequest &req) {
+void DeviceManager::GetRatesCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
   pLock.ReadLock();
   for(uint n = 0; n != pDevices.size(); n++) {
-    if(pDevices[n]->GetTariffsCallback(req) == false) continue;
+    if(pDevices[n]->GetRatesCallback(req) == false) continue;
     pLock.ReadUnlock();
     return;
   }
   pLock.ReadUnlock();
   req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
 }
-void DeviceManager::GetTariffCallback(HTTPRequest &req) {
+void DeviceManager::GetRateCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
   pLock.ReadLock();
   for(uint n = 0; n != pDevices.size(); n++) {
-    if(pDevices[n]->GetTariffCallback(req) == false) continue;
+    if(pDevices[n]->GetRateCallback(req) == false) continue;
     pLock.ReadUnlock();
     return;
   }
   pLock.ReadUnlock();
   req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
 }
-void DeviceManager::SetTariffCallback(HTTPRequest &req) {
+void DeviceManager::SetRateCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
   pLock.ReadLock();
   for(uint n = 0; n != pDevices.size(); n++) {
-    if(pDevices[n]->SetTariffCallback(req) == false) continue;
+    if(pDevices[n]->SetRateCallback(req) == false) continue;
     pLock.ReadUnlock();
     return;
   }
   pLock.ReadUnlock();
   req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
 }
-void DeviceManager::DelTariffCallback(HTTPRequest &req) {
+void DeviceManager::DelRateCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
   pLock.ReadLock();
   for(uint n = 0; n != pDevices.size(); n++) {
-    if(pDevices[n]->DelTariffCallback(req) == false) continue;
+    if(pDevices[n]->DelRateCallback(req) == false) continue;
     pLock.ReadUnlock();
     return;
   }
   pLock.ReadUnlock();
   req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
 }
-void DeviceManager::AddTariffCallback(HTTPRequest &req) {
+void DeviceManager::AddRateCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
   pLock.ReadLock();
   for(uint n = 0; n != pDevices.size(); n++) {
-    if(pDevices[n]->AddTariffCallback(req) == false) continue;
+    if(pDevices[n]->AddRateCallback(req) == false) continue;
     pLock.ReadUnlock();
     return;
   }

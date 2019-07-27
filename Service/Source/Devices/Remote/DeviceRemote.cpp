@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <math.h>
 #include "DeviceRemote.h"
+#include "DeviceManager.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceRemote::pRegistered = DeviceRemote::GetInstances();
@@ -21,17 +22,19 @@ DeviceRemote::DeviceRemote() {
   pSerial = "REMOTE";
   pDriver = "Remote";
   pName   = "Allow repplication of remote openZmeter devices in local machine";
-  pMutex  = PTHREAD_MUTEX_INITIALIZER;
 }
-bool DeviceRemote::Start() {
-  pthread_mutex_lock(&pMutex);
+DeviceRemote::~DeviceRemote() {
+  StopDevice();
+}
+bool DeviceRemote::StartDevice() {
+  WriteLock();
   if(pState == RUNNING) {
-    pthread_mutex_unlock(&pMutex);
+    WriteUnlock();
     return false;
   }
   LOGFile::Info("Loading 'Remote' driver configuration\n");
-//  HTTPServer::RegisterCallback((char*)"/setRemoteAnalyzer", SetRemoteAnalyzerCallback);
-//  HTTPServer::RegisterCallback((char*)"/setRemoteData",  SetRemoteDataCallback);
+  HTTPServer::RegisterCallback("/setRemote",  SetRemoteCallback);
+  HTTPServer::RegisterCallback("/getRemote",  GetRemoteCallback);
   bool AutoStart = false;
   json ConfigIN  = ConfigManager::ReadConfig("/Devices/" + pSerial);
   json ConfigOUT = json::object();
@@ -39,12 +42,7 @@ bool DeviceRemote::Start() {
   if(ConfigIN["AutoStart"].is_boolean()) AutoStart = ConfigIN["AutoStart"];
   if(ConfigIN.is_object() && ConfigIN["Analyzers"].is_array()) {
     for(uint n = 0; n < ConfigIN["Analyzers"].size(); n++) {
-      if(!ConfigIN["Analyzers"][n].is_object() || !ConfigIN["Analyzers"][n]["Serial"].is_string()) continue;
-      json Analyzer = json::object();
-      Analyzer["Serial"] = ConfigIN["Analyzers"][n]["Serial"];
-      Analyzer["Mode"] = "1PHASE";
-      if(ConfigIN["Analyzers"][n]["Mode"].is_string() && ((ConfigIN["Analyzers"][n]["Mode"] == "1PHASE") || (ConfigIN["Analyzers"][n]["Mode"] == "3PHASE") || (ConfigIN["Analyzers"][n]["Mode"] == "3PHASE+N"))) Analyzer["Mode"] = ConfigIN["Analyzers"][n]["Mode"];
-      ConfigOUT["Analyzers"].push_back(Analyzer);
+      if(ConfigIN["Analyzers"][n].is_string()) ConfigOUT["Analyzers"].push_back(ConfigIN["Analyzers"][n]);
     }
   }
   ConfigOUT["AutoStart"] = AutoStart;
@@ -52,56 +50,34 @@ bool DeviceRemote::Start() {
   if(pState == UNCONFIGURED) {
     pState = STOPPED;
     if(AutoStart == false) {
-      pthread_mutex_unlock(&pMutex);
+      WriteUnlock();
       return true;
     }
   }
-  LOGFile::Info("Starting 'Virtual' driver\n");
-  for(uint n = 0; n < ConfigOUT["Analyzers"].size(); n++) {
-    string Serial = ConfigOUT["Analyzers"][n]["Serial"];
-    Analyzer::AnalyzerMode Mode = (ConfigOUT["Analyzers"][n]["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (ConfigOUT["Analyzers"][n]["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
-    pAnalyzers.push_back(new AnalyzerRemote(Serial, Mode));
-  }
+  LOGFile::Info("Starting 'Remote' driver\n");
+  for(uint n = 0; n < ConfigOUT["Analyzers"].size(); n++) pAnalyzers.push_back(new AnalyzerRemote(ConfigOUT["Analyzers"][n]));
   pState = RUNNING;
-  pthread_mutex_unlock(&pMutex);
+  WriteUnlock();
   return true;
 }
-bool DeviceRemote::Stop() {
-  pthread_mutex_lock(&pMutex);
+bool DeviceRemote::StopDevice() {
+  WriteLock();
   if(pState != RUNNING) {
-    pthread_mutex_unlock(&pMutex);
+    WriteUnlock();
     return false;
   }
   LOGFile::Info("Stopping 'Remote' driver...\n");
   while(pAnalyzers.size() > 0) {
-    delete pAnalyzers.front();
-    pAnalyzers.pop_front();
+    delete pAnalyzers.back();
+    pAnalyzers.pop_back();
   }
   pState = STOPPED;  
-  pthread_mutex_unlock(&pMutex);
+  WriteUnlock();
   return true;
 }
-uint32_t DeviceRemote::AnalyzersCount() {
-  pthread_mutex_lock(&pMutex);
-  uint Analyzers = pAnalyzers.size();
-  pthread_mutex_unlock(&pMutex);
-  return Analyzers;
-}
-Analyzer *DeviceRemote::FindAnalyzer(string serial) {
-  pthread_mutex_lock(&pMutex);
-  Analyzer *Result = NULL;
-  for(list<AnalyzerRemote*>::iterator it = pAnalyzers.begin(); it != pAnalyzers.end(); it++) {
-    if(serial == (*it)->Serial()) {
-      Result = *it;
-      break;
-    }
-  }
-  pthread_mutex_unlock(&pMutex);
-  return Result;
-}
-DeviceRemote::~DeviceRemote() {
-  Stop();
-}
+void DeviceRemote::GetRemoteCallback(HTTPRequest &req) {}
+void DeviceRemote::SetRemoteCallback(HTTPRequest &req) {}
+
 
 //bool DeviceRemote::SetRemoteAnalyzerCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
 //  char *Serial = NULL, *Name = NULL, *Mode = NULL;

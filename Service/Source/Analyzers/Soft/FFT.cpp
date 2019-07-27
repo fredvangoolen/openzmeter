@@ -44,6 +44,9 @@ void FFT::Start(const vector<float> &in) {
   pthread_mutex_unlock(&pThreadMutex);
   pthread_cond_signal(&pThreadCond);
 }
+float FFT::BinPower(uint bin) {
+  return sqrt(norm(Output[bin])) / M_SQRT2 * 2.0;
+}
 void *FFT::FFT_Thread(void *args) {
   FFT *This = (FFT*)args;
   while(true) {

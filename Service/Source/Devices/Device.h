@@ -45,10 +45,10 @@ class Device : protected RWLocks {
     bool   GetEventCallback(HTTPRequest &req);
     bool   SetEventCallback(HTTPRequest &req);
     bool   DelEventCallback(HTTPRequest &req);
-    bool   GetTariffsCallback(HTTPRequest &req);
-    bool   GetTariffCallback(HTTPRequest &req);
-    bool   SetTariffCallback(HTTPRequest &req);
-    bool   DelTariffCallback(HTTPRequest &req);
-    bool   AddTariffCallback(HTTPRequest &req);
+    bool   GetRatesCallback(HTTPRequest &req);
+    bool   GetRateCallback(HTTPRequest &req);
+    bool   SetRateCallback(HTTPRequest &req);
+    bool   DelRateCallback(HTTPRequest &req);
+    bool   AddRateCallback(HTTPRequest &req);
     bool   GetPricesCallback(HTTPRequest &req);
 };

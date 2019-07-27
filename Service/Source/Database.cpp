@@ -146,19 +146,19 @@ string Database::Bind(const vector<float> &params) const {
   }
   return Result;
 }
-string Database::Bind(const vector<vector<complex<float> > > &params) const {
-  string Result = "'{";
-  for(uint i = 0; i < params.size(); i++) {
-    Result.append("{");
-    for(uint n = 0; n < params[i].size(); n++) {
-      Result.append(isnan(params[i][n].real()) ? string("NULL") : to_string(sqrt(norm(params[i][n]))));
-      Result.append((n < (params[i].size() - 1)) ? ", " : "}");
-    }
-    if(i < (params.size() - 1)) Result.append(", ");
-  }
-  Result.append("}'");
-  return Result;
-}
+//string Database::Bind(const vector<vector<complex<float> > > &params) const {
+//  string Result = "'{";
+//  for(uint i = 0; i < params.size(); i++) {
+//    Result.append("{");
+//    for(uint n = 0; n < params[i].size(); n++) {
+//      Result.append(isnan(params[i][n].real()) ? string("NULL") : to_string(sqrt(norm(params[i][n]))));
+//      Result.append((n < (params[i].size() - 1)) ? ", " : "}");
+//    }
+//    if(i < (params.size() - 1)) Result.append(", ");
+//  }
+//  Result.append("}'");
+//  return Result;
+//}
 string Database::Bind(const bool param) const {
   return (param == true) ? "true" : "false";
 }

@@ -33,6 +33,7 @@ class FFT {
   public :
     FFT(char *name);
     void  Start(const vector<float> &in);
+    float BinPower(uint32_t bin);
     void  Wait();
     ~FFT();
 };

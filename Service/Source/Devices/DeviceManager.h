@@ -33,11 +33,11 @@ class DeviceManager {
     static void GetEventCallback(HTTPRequest &req);
     static void SetEventCallback(HTTPRequest &req);
     static void DelEventCallback(HTTPRequest &req);
-    static void GetTariffsCallback(HTTPRequest &req);
-    static void GetTariffCallback(HTTPRequest &req);
-    static void SetTariffCallback(HTTPRequest &req);
-    static void DelTariffCallback(HTTPRequest &req);
-    static void AddTariffCallback(HTTPRequest &req);
+    static void GetRatesCallback(HTTPRequest &req);
+    static void GetRateCallback(HTTPRequest &req);
+    static void SetRateCallback(HTTPRequest &req);
+    static void DelRateCallback(HTTPRequest &req);
+    static void AddRateCallback(HTTPRequest &req);
     static void GetPricesCallback(HTTPRequest &req);
   public :
     DeviceManager();

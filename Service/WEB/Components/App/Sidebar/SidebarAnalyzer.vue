@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="sidenav-header">
-      <div>{{ analyzerName }}</div>
+      <div>{{ ($root.SelectedAnalyzer == null) ? 'None selected' : $root.SelectedAnalyzer.Name }}</div>
       <div class="btn-group pull-right">
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{disabled: !hasAnalyzers}" @click="ShowDialog"><img :src="require('Imgs/magnifier.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="ShowDialog"><img :src="require('Imgs/magnifier.png')"></button>
         <button type="button" class="btn btn-default btn-xs disabled"><img :src="require('Imgs/exclamation.png')"></button>
       </div>
       <div class="clearfix"></div>
@@ -18,44 +18,30 @@
   import moment from 'JS/moment.js';
   export default {
     data() {
-      return { AvaliableAnalyzers: [], hasAnalyzers: false, SelAnalyzer: null, analyzerName: 'None selected'};
-    },
-    created: function() {
-      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
+      return { SelAnalyzer: null };
     },
     mounted: function() {
-      this.GetAnalyzers();
+      this.CheckAnalyzer();
     },
     methods: {
-      SetAnalyzer: function() {
-        if(this.$root.SelectedAnalyzer === null) {
-          this.analyzerName = 'None selected';
+      CheckAnalyzer: function() {
+        if(localStorage.getItem("SelAnalyzer") === undefined) {
+          this.$refs.Dialog.Show();
         } else {
-          this.analyzerName = this.$root.SelectedAnalyzer.Name;
+          $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: localStorage.getItem("SelAnalyzer") }), 
+            success: function(result) { 
+              this.$root.SelectedAnalyzer = result;  
+              this.$root.$emit('AnalyzerChanged', result);
+            }.bind(this),
+            error: function() {
+              this.$refs.Dialog.Show();
+            }.bind(this)
+          });
         }
-      },
-      GetAnalyzers() {
-        $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-          success: function(result) { this.AvaliableAnalyzers = result; this.CheckSelected(); }.bind(this)
-        });
       },
       ShowDialog() {
         this.$refs.Dialog.Show(this.AvaliableAnalyzers);
       },
-      CheckSelected() {
-        if(this.AvaliableAnalyzers.length === 0) {
-          this.ShowDialog();
-          this.hasAnalyzers = false;
-        } else {
-          this.hasAnalyzers = true;
-          for(var i = 0; i < this.AvaliableAnalyzers.length; i++) {
-            if(this.AvaliableAnalyzers[i].ID === localStorage.getItem("SelAnalyzer")) this.SelAnalyzer = this.AvaliableAnalyzers[i];
-          }
-          if(this.SelAnalyzer === null) this.ShowDialog();
-          this.$root.SelectedAnalyzer = this.SelAnalyzer;  
-          this.$root.$emit('AnalyzerChanged');
-        }
-      }
     },
     components: { ProgressBar, AnalyzerDialog }
   }
@@ -81,5 +67,5 @@
   .sidenav-header > div:first-child {
     width: 186px;
     display: inline-block;
-}
+  }
 </style>
