@@ -153,8 +153,9 @@ bool DeviceV1_01::StopDevice() {
   pTerminate = true;
   pthread_join(pCaptureThread, NULL);
   while(pAnalyzers.size() > 0) {
-    delete pAnalyzers.back();
+    Analyzer *Analyzer = pAnalyzers.back();
     pAnalyzers.pop_back();
+    delete Analyzer;
   }
   pState = STOPPED;
   WriteUnlock();

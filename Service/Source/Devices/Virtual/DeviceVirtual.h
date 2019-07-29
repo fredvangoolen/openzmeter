@@ -19,13 +19,16 @@ class DeviceVirtual : public Device {
     float                  pFrequency;
     Analyzer::AnalyzerMode pMode;
   private : 
-    static bool GetInstances();
+    static bool  GetInstances();
     static void *Capture_Thread(void *args);
   private :
     bool StartDevice();
     bool StopDevice();
-  public :
+    void GetDevice(HTTPRequest &req);
+    void SetDevice(HTTPRequest &req);
+  private :
     DeviceVirtual();
+  public :
     ~DeviceVirtual();
 };
 //----------------------------------------------------------------------------------------------------------------------

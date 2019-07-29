@@ -26,9 +26,9 @@ DeviceVirtual::~DeviceVirtual() {
   StopDevice();
 }
 bool DeviceVirtual::StartDevice() {
-  WriteLock();
+  pAnalyzersLock.WriteLock();
   if(pState == RUNNING) {
-    WriteUnlock();
+    pAnalyzersLock.WriteUnlock();
     return false;
   }
   LOGFile::Info("Loading 'Virtual' driver configuration\n");
@@ -55,40 +55,62 @@ bool DeviceVirtual::StartDevice() {
   if(pState == UNCONFIGURED) {
     pState = STOPPED;
     if(AutoStart == false) {
-      WriteUnlock();
+      pAnalyzersLock.WriteUnlock();
       return true;
     }
   }
+  string ModeString = ConfigOUT["Mode"];
   LOGFile::Info("Starting 'Virtual' driver\n");
   pTerminate = false;
-  string ModeString = ConfigOUT["Mode"];
   pAnalyzers.push_back(new AnalyzerSoft(pSerial + "_" + ModeString, pMode, ConfigOUT["Analyzer"], pSampleRate));
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    WriteUnlock();
+    pAnalyzersLock.WriteUnlock();
     StopDevice();
     return false;
   }
   pState = RUNNING;
-  WriteUnlock();
+  pAnalyzersLock.WriteUnlock();
   return true;
 }
 bool DeviceVirtual::StopDevice() {
-  WriteLock();
+  pAnalyzersLock.WriteLock();
   if(pState != RUNNING) {
-    WriteUnlock();
+    pAnalyzersLock.WriteUnlock();
     return false;
   }
   LOGFile::Info("Stopping 'Virtual' driver...\n");
   pTerminate = true;
   pthread_join(pCaptureThread, NULL);
   while(pAnalyzers.size() > 0) {
-    delete pAnalyzers.back();
+    Analyzer *Analyzer = pAnalyzers.back();
     pAnalyzers.pop_back();
+    delete Analyzer;
   }
-  pState = STOPPED;  
-  WriteUnlock();
+  pState = STOPPED;
+  pAnalyzersLock.WriteUnlock();
   return true;
+}
+void DeviceVirtual::GetDevice(HTTPRequest &req) {
+//  ReadLock();
+  req.FromJSON(ConfigManager::ReadConfig("/Devices/" + pSerial));
+//  ReadUnlock();
+}
+void DeviceVirtual::SetDevice(HTTPRequest &req) {
+//  json Params = req.GetParams();
+//  if(!Params["Settings"].is_object()) return req.FromString("'Settings' param is required", MHD_HTTP_BAD_REQUEST);
+//  WriteLock();
+//  DeviceState State = pState;
+//  ConfigManager::WriteConfig("/Devices/" + pSerial, Params["Settings"]);
+//  WriteUnlock();
+//  json Response;
+//  if(State == Device::RUNNING) {
+//    StopDevice();
+//    Response["Result"] = StartDevice();
+//  } else {
+//    Response["Result"] = true;
+//  }
+//  req.FromJSON(Response);
 }
 void *DeviceVirtual::Capture_Thread(void *args) {
   int Prio = sched_get_priority_max(SCHED_RR);

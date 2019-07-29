@@ -13,7 +13,7 @@
 using json = nlohmann::json;
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-class Analyzer : protected RWLocks {
+class Analyzer {
   protected :
     static vector<float>  FrequencyRanges;   //Rangos de frecuencias para estadisticas
     static vector<float>  VoltageRanges;     //Rangos de tensiones para estadisticas
@@ -49,19 +49,19 @@ class Analyzer : protected RWLocks {
     virtual ~Analyzer();
     string Serial() const;
     json   GetJSONShortDescriptor() const;
-    void   GetAnalyzerCallback(HTTPRequest &req);
-    void   SetAnalyzerCallback(HTTPRequest &req);
-    void   GetSeriesCallback(HTTPRequest &req);
-    void   GetSeriesNowCallback(HTTPRequest &req);
-    void   GetSeriesRangeCallback(HTTPRequest &req);
-    void   GetEventsCallback(HTTPRequest &req);
-    void   GetEventCallback(HTTPRequest &req);
-    void   SetEventCallback(HTTPRequest &req);
-    void   DelEventCallback(HTTPRequest &req);
-    void   GetRatesCallback(HTTPRequest &req);
-    void   GetRateCallback(HTTPRequest &req);
-    void   SetRateCallback(HTTPRequest &req);
-    void   DelRateCallback(HTTPRequest &req);
-    void   AddRateCallback(HTTPRequest &req);
-    void   GetPricesCallback(HTTPRequest &req);
+//    void   GetAnalyzerCallback(HTTPRequest &req);
+//    void   SetAnalyzerCallback(HTTPRequest &req);
+//    void   GetSeriesCallback(HTTPRequest &req);
+//    void   GetSeriesNowCallback(HTTPRequest &req);
+//    void   GetSeriesRangeCallback(HTTPRequest &req);
+//    void   GetEventsCallback(HTTPRequest &req);
+//    void   GetEventCallback(HTTPRequest &req);
+//    void   SetEventCallback(HTTPRequest &req);
+//    void   DelEventCallback(HTTPRequest &req);
+//    void   GetRatesCallback(HTTPRequest &req);
+//    void   GetRateCallback(HTTPRequest &req);
+//    void   SetRateCallback(HTTPRequest &req);
+//    void   DelRateCallback(HTTPRequest &req);
+//    void   AddRateCallback(HTTPRequest &req);
+//    void   GetPricesCallback(HTTPRequest &req);
 };

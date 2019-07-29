@@ -92,7 +92,7 @@ bool HTTPRequest::ProcessParams(bool local) {
   }
   return false;
 }
-json HTTPRequest::GetParams() const {
+const json &HTTPRequest::GetParams() const {
   return pJSONParams;
 }
 uint64_t HTTPRequest::GetTime() const {
@@ -137,8 +137,8 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
   }
 }
 //----------------------------------------------------------------------------------------------------------------------
-vector<HTTPServer::Callback_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
-pthread_mutex_t                                                    HTTPServer::pMutex = PTHREAD_MUTEX_INITIALIZER;
+vector<HTTPServer::Callback_t> HTTPServer::pCallbacks;
+RWLocks                        HTTPServer::pLock = RWLocks();
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
   pDaemon = NULL;
@@ -170,26 +170,24 @@ void HTTPServer::PingCallback(HTTPRequest &req) {
 }
 void HTTPServer::RegisterCallback(const string &handleName, const HTTPServer::Func_t function) {
   Callback_t Item = {handleName, function};
-  pthread_mutex_lock(&pMutex);
+  pLock.WriteLock();
   for(uint n = 0; n < pCallbacks.size(); n++) {
-    if(pCallbacks[n].HandleName == handleName) {
-      pCallbacks[n] = Item;
-      pthread_mutex_unlock(&pMutex);
-      return;
-    }
+    if(pCallbacks[n].HandleName != handleName) continue;
+    pCallbacks[n] = Item;
+    pLock.WriteUnlock();
+    return;
   }
   pCallbacks.push_back(Item);
-  pthread_mutex_unlock(&pMutex);
+  pLock.WriteUnlock();
 }
 void HTTPServer::UnregisterCallback(const string &handleName) {
-  pthread_mutex_lock(&pMutex);
+  pLock.WriteLock();
   for(vector<Callback_t>::iterator it = pCallbacks.begin(); it < pCallbacks.end(); it++) {
-    if(it->HandleName == handleName) {
-      pCallbacks.erase(it);
-      break;
-    }
+    if(it->HandleName != handleName) continue;
+    pCallbacks.erase(it);
+    break;
   }
-  pthread_mutex_unlock(&pMutex);
+  pLock.WriteUnlock();
 }
 void HTTPServer::RemoveExpiredSessions() const {
   Database DB;
@@ -284,14 +282,18 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
           Request->FromString("Unauthorided access to API", MHD_HTTP_UNAUTHORIZED);
         } else {
           bool Handled = false;
+          pLock.ReadLock();
           for(vector<Callback_t>::iterator it = pCallbacks.begin() ; it != pCallbacks.end(); ++it) {
-            if(it->HandleName == URL) {
-              it->Function(*Request);
-              Handled = true;
-              break;
-            }
+            if(it->HandleName != URL) continue;
+            pLock.ReadUnlock();
+            it->Function(*Request);
+            Handled = true;
+            break;
           }
-          if(Handled == false) Request->FromString("Method not found", MHD_HTTP_METHOD_NOT_ALLOWED);
+          if(Handled == false) {
+            pLock.ReadUnlock();
+            Request->FromString("Method not found", MHD_HTTP_METHOD_NOT_ALLOWED);
+          }
         }
       }
       MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &Request->WriteFunction, Request, NULL);

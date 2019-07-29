@@ -3,28 +3,91 @@
  * Author:   Eduardo Viciana (agosto de 2018)
  * -------------------------------------------------------------------------------------------------------------------*/
 #include <string.h>
+#include <condition_variable>
 #include "Tools.h"
 #include "AnalyzerRemote.h"
 AnalyzerRemote::AnalyzerRemote(string id) : Analyzer(id) {
   pName = "Never seen";
+  pQuerySequence = 0;
 }
 AnalyzerRemote::~AnalyzerRemote() {
+  pQueriesLock.WriteLock();
+  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) pthread_cond_signal(&(*it)->Cond);
+  pQueriesLock.WriteUnlock();
 }
-void  AnalyzerRemote::GetAnalyzer(HTTPRequest &req) {}
-void  AnalyzerRemote::SetAnalyzer(HTTPRequest &req) {}
-void  AnalyzerRemote::GetSeries(HTTPRequest &req) {}
-void  AnalyzerRemote::GetSeriesNow(HTTPRequest &req) {}
-void  AnalyzerRemote::GetSeriesRange(HTTPRequest &req) {}
-void  AnalyzerRemote::GetEvents(HTTPRequest &req) {}
-void  AnalyzerRemote::GetEvent(HTTPRequest &req) {}
-void  AnalyzerRemote::SetEvent(HTTPRequest &req) {}
-void  AnalyzerRemote::DelEvent(HTTPRequest &req) {}
-void  AnalyzerRemote::GetRates(HTTPRequest &req) {}
-void  AnalyzerRemote::GetRate(HTTPRequest &req) {}
-void  AnalyzerRemote::SetRate(HTTPRequest &req) {}
-void  AnalyzerRemote::DelRate(HTTPRequest &req) {}
-void  AnalyzerRemote::AddRate(HTTPRequest &req) {}
-void  AnalyzerRemote::GetPrices(HTTPRequest &req) {}
+void AnalyzerRemote::AddQuery(string url, HTTPRequest &req) {
+  Query_t Query;
+  //Genero json de la consulta
+  pQueriesLock.WriteLock();
+  Query.Sequence = pQuerySequence++;
+  pQueries.push_back(&Query);
+  pQueriesLock.WriteUnlock();
+  bool Error = Query.Locks.ReadWait(20000);
+
+  pQueriesLock.WriteLock();
+  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
+    if(*it != &Query) continue;
+    pQueries.erase(it);
+    break;
+  }
+  pQueriesLock.WriteUnlock();
+  if(Error == true) {
+    req.FromString("", MHD_HTTP_GATEWAY_TIMEOUT);
+  } else {
+    req.FromString("{ \"Result\": \"Funciona\"}", MHD_HTTP_OK);
+    Query.Locks.ReadEnd();
+  }
+}
+void  AnalyzerRemote::SetRemote(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Sequence"].is_number_unsigned()) return req.FromString("'Sequence' param is required", MHD_HTTP_BAD_REQUEST);
+
+}
+void AnalyzerRemote::GetAnalyzer(HTTPRequest &req) {
+  AddQuery("/GetAnalyzer", req);
+}
+void AnalyzerRemote::SetAnalyzer(HTTPRequest &req) {
+  AddQuery("/SetAnalyzer", req);
+}
+void AnalyzerRemote::GetSeries(HTTPRequest &req) {
+  AddQuery("/GetSeries", req);
+}
+void AnalyzerRemote::GetSeriesNow(HTTPRequest &req) {
+  AddQuery("/GetSeriesNow", req);
+}
+void AnalyzerRemote::GetSeriesRange(HTTPRequest &req) {
+  AddQuery("/GetSeriesRange", req);
+}
+void AnalyzerRemote::GetEvents(HTTPRequest &req) {
+  AddQuery("/GetEvents", req);
+}
+void AnalyzerRemote::GetEvent(HTTPRequest &req) {
+  AddQuery("/GetEvent", req);
+}
+void AnalyzerRemote::SetEvent(HTTPRequest &req) {
+  AddQuery("/SetEvent", req);
+}
+void AnalyzerRemote::DelEvent(HTTPRequest &req) {
+  AddQuery("/DelEvent", req);
+}
+void AnalyzerRemote::GetRates(HTTPRequest &req) {
+  AddQuery("/GetRates", req);
+}
+void AnalyzerRemote::GetRate(HTTPRequest &req) {
+  AddQuery("/GetRate", req);
+}
+void AnalyzerRemote::SetRate(HTTPRequest &req) {
+  AddQuery("/SetRate", req);
+}
+void AnalyzerRemote::DelRate(HTTPRequest &req) {
+  AddQuery("/DelRate", req);
+}
+void AnalyzerRemote::AddRate(HTTPRequest &req) {
+  AddQuery("/AddRate", req);
+}
+void AnalyzerRemote::GetPrices(HTTPRequest &req) {
+  AddQuery("/GetPrices", req);
+}
 
 
 //void AnalyzerRemote::GetParams(Params_t& params, ParamsType& copy) {

@@ -64,6 +64,69 @@ void RWLocks::WriteUnlock() {
   pthread_mutex_unlock(&pMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
+ProviderLocks::ProviderLocks() {
+  pCond = PTHREAD_COND_INITIALIZER;
+  pMutex = PTHREAD_MUTEX_INITIALIZER;
+}
+//void ProviderLocks::Write();
+bool ProviderLocks::ReadWait(uint timeoutMS) {
+  pthread_mutex_lock(&pMutex);
+  struct timeval  Current;
+  struct timespec Timeout;
+  gettimeofday(&Current, NULL);
+  Timeout.tv_sec  = Current.tv_sec + (timeoutMS / 1000);
+  Timeout.tv_nsec = (timeoutMS % 1000) * 1000000;
+  int Error = pthread_cond_timedwait(&pCond, &pMutex, &Timeout);
+  pthread_mutex_unlock(&pMutex);
+  return (Error == 0);
+}
+//void ProviderLocksReadEnd() {}
+//----------------------------------------------------------------------------------------------------------------------
+WorkerLocks::WorkerLocks() {
+  pWorking = false;
+  pTerminate = false;
+  pCond = PTHREAD_COND_INITIALIZER;
+  pMutex = PTHREAD_MUTEX_INITIALIZER;
+}
+void WorkerLocks::Abort() {
+  pTerminate = true;
+  pthread_cond_signal(&pCond);
+}
+void WorkerLocks::WakeWorker() {
+  pthread_mutex_lock(&pMutex);
+  pWorking = true;
+  pthread_mutex_unlock(&pMutex);
+  pthread_cond_signal(&pCond);
+}
+bool WorkerLocks::WorkerWaitTask() {
+  pthread_mutex_lock(&pMutex);
+  while(pWorking == false) {
+    if(pTerminate == true) {
+      pthread_mutex_unlock(&pMutex);
+      return false;
+    }
+    pthread_cond_wait(&pCond, &pMutex);
+  }
+  pthread_mutex_unlock(&pMutex);
+  return true;
+}
+void WorkerLocks::WorkerEndsTask() {
+  pthread_mutex_lock(&pMutex);
+  pWorking = false;
+  pthread_mutex_unlock(&pMutex);
+  pthread_cond_signal(&pCond);
+}
+void WorkerLocks::WaitWorker() {
+  pthread_mutex_lock(&pMutex);
+  while(pWorking == true) {
+    if(pTerminate == true) return;
+    pthread_cond_wait(&pCond, &pMutex);
+  } 
+  pthread_mutex_unlock(&pMutex);
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
 ConfigManager   *ConfigManager::pInstance = NULL;
 pthread_mutex_t  ConfigManager::pMutex = PTHREAD_MUTEX_INITIALIZER;
 ConfigManager::ConfigManager(string name) {

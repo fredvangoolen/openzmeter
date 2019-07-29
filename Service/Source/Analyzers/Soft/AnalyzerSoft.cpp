@@ -539,6 +539,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     }
     This->AccumulateAggreg(This->pAggreg1H, This->pAggreg10C);
     This->pPrevTimestamp = This->pAggreg10C.Timestamp;
+    
     pthread_mutex_lock(&This->pWaitingThreadsMutex);
     while(This->pWaitingThreads != 0) pthread_cond_wait(&This->pWaitingThreadsCond, &This->pWaitingThreadsMutex);
     pthread_mutex_unlock(&This->pWaitingThreadsMutex);
@@ -547,6 +548,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     pthread_mutex_unlock(&This->pDataReadyMutex);
     This->InitAggreg(This->pAggreg10C, AGGREG_10C);
     LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", This->GetSchema().c_str(), Tools::GetTime() - Start, This->pSequence);
+
     pthread_mutex_lock(&This->pThreadMutex);
     This->pCurrentSamples = vector<vector<float> >((This->pMode == PHASE1) ? 1 : (This->pMode == PHASE3) ? 3 : 4, vector<float>(0));
     This->pVoltageSamples = vector<vector<float> >((This->pMode == PHASE1) ? 1 : 3, vector<float>(0));
@@ -738,7 +740,6 @@ json AnalyzerSoft::CheckConfig(const json& config) {
 }
 void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   json Response = json::object();
-  ReadLock();
   Response["ID"] = pSerial;
   Response["Name"] = pName;
   Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
@@ -752,7 +753,6 @@ void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   Response["Contract"] = pContract;
   Response["ZipCode"] = pZipCode;
   Response["GeoPosition"] = pGeo;
-  ReadUnlock();
   req.FromJSON(Response);
 }
 void AnalyzerSoft::SetAnalyzer(HTTPRequest &req) {
