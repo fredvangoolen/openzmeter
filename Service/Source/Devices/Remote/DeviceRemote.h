@@ -12,16 +12,17 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceRemote : public Device {
   private :
-    static bool pRegistered;  
+    static bool          pRegistered;
+    static DeviceRemote *pInstance;
   private :
     static bool GetInstances();
     static void GetRemoteCallback(HTTPRequest &req);
     static void SetRemoteCallback(HTTPRequest &req);
-//    static bool SetRemoteAnalyzerCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-//    static bool SetRemoteDataCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
   private :
     bool StartDevice();
     bool StopDevice();
+    void GetDevice(HTTPRequest &req);
+    void SetDevice(HTTPRequest &req);
   public :
     DeviceRemote();
     ~DeviceRemote();

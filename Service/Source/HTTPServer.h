@@ -9,6 +9,7 @@
 #include <microhttpd.h>
 #include "nlohmann/json.hpp"
 #include "Database.h"
+#include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 #define HTTP_CHUNK 32768
@@ -28,35 +29,35 @@ class HTTPRequest : public Database {
   public :
     HTTPRequest(char *cookie, bool deflate);
     ~HTTPRequest();
-    string   SessionID() const;
-    string   UserName() const;
-    string   MimeType() const;
-    void     MimeType(const string &type);
-    uint32_t size() const;
-    bool     Deflate() const;
-    int      ResultCode() const;
-    void     CloseSession();
-    void     FromFile(const string &filename);
-    void     AppendParams(const char *input, size_t *len);
-    bool     ProcessParams(bool local);
-    json     GetParams() const;
-    uint64_t GetTime() const;
-    void     FromJSON(const json &obj);
-    void     FromString(const string &obj, int resultCode);
+    string      SessionID() const;
+    string      UserName() const;
+    string      MimeType() const;
+    void        MimeType(const string &type);
+    uint32_t    size() const;
+    bool        Deflate() const;
+    int         ResultCode() const;
+    void        CloseSession();
+    void        FromFile(const string &filename);
+    void        AppendParams(const char *input, size_t *len);
+    bool        ProcessParams(bool local);
+    const json &GetParams() const;
+    uint64_t    GetTime() const;
+    void        FromJSON(const json &obj);
+    void        FromString(const string &obj, int resultCode);
   public :
     static ssize_t WriteFunction(void *cls, uint64_t pos, char *buf, size_t max);
 };
 class HTTPServer {
   public :
-  typedef void (*Func_t)(HTTPRequest &request);
+    typedef void (*Func_t)(HTTPRequest &request);
   private :
     typedef struct {
       string HandleName;
       Func_t Function;
     } Callback_t;
   private :
-    static pthread_mutex_t    pMutex;
-    static vector<Callback_t> pCallbacks;
+    static RWLocks            pLock;            //Control access to pCallbacks vector
+    static vector<Callback_t> pCallbacks;       //List of callbacks URLs
   private:
     MHD_Daemon  *pDaemon;
   private :

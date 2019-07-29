@@ -13,10 +13,11 @@
 using namespace std;
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
-class Device : protected RWLocks {
+class Device {
   public :
     enum DeviceState { UNCONFIGURED, STOPPED, RUNNING };
   protected :
+    RWLocks           pAnalyzersLock;     //Analyzer list locks
     vector<Analyzer*> pAnalyzers;         //Analyzers list
     DeviceState       pState;             //Device state
     string            pSerial;            //Device serial
@@ -25,30 +26,33 @@ class Device : protected RWLocks {
   public :
     virtual bool StartDevice() = 0;
     virtual bool StopDevice() = 0;
-  public :
+    virtual void GetDevice(HTTPRequest &req) = 0;
+    virtual void SetDevice(HTTPRequest &req) = 0;
+  protected :
     Device();
+  public :
     virtual ~Device();
+//    bool StartDevice();
+//    bool StopDevice();
     json   GetJSONDescriptor();
     json   GetJSONAnalyzerDescriptor(const string &serial);
     json   GetJSONAllAnalyzerDescriptors();
     string Serial() const;
-    void   GetDeviceCallback(HTTPRequest &req);
-    void   SetDeviceCallback(HTTPRequest &req);
-    void   StartDeviceCallback(HTTPRequest &req);
-    void   StopDeviceCallback(HTTPRequest &req);
-    bool   GetAnalyzerCallback(HTTPRequest &req);
-    bool   SetAnalyzerCallback(HTTPRequest &req);
-    bool   GetSeriesCallback(HTTPRequest &req);
-    bool   GetSeriesNowCallback(HTTPRequest &req);
-    bool   GetSeriesRangeCallback(HTTPRequest &req);
-    bool   GetEventsCallback(HTTPRequest &req);
-    bool   GetEventCallback(HTTPRequest &req);
-    bool   SetEventCallback(HTTPRequest &req);
-    bool   DelEventCallback(HTTPRequest &req);
-    bool   GetRatesCallback(HTTPRequest &req);
-    bool   GetRateCallback(HTTPRequest &req);
-    bool   SetRateCallback(HTTPRequest &req);
-    bool   DelRateCallback(HTTPRequest &req);
-    bool   AddRateCallback(HTTPRequest &req);
-    bool   GetPricesCallback(HTTPRequest &req);
+    void   StartDevice(HTTPRequest &req);
+    void   StopDevice(HTTPRequest &req);
+    bool   GetAnalyzer(HTTPRequest &req);
+    bool   SetAnalyzer(HTTPRequest &req);
+    bool   GetSeries(HTTPRequest &req);
+    bool   GetSeriesNow(HTTPRequest &req);
+    bool   GetSeriesRange(HTTPRequest &req);
+    bool   GetEvents(HTTPRequest &req);
+    bool   GetEvent(HTTPRequest &req);
+    bool   SetEvent(HTTPRequest &req);
+    bool   DelEvent(HTTPRequest &req);
+    bool   GetRates(HTTPRequest &req);
+    bool   GetRate(HTTPRequest &req);
+    bool   SetRate(HTTPRequest &req);
+    bool   DelRate(HTTPRequest &req);
+    bool   AddRate(HTTPRequest &req);
+    bool   GetPrices(HTTPRequest &req);
 };

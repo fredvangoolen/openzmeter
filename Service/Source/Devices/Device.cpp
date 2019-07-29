@@ -12,269 +12,252 @@ Device::Device() {
   pState = UNCONFIGURED;
 }
 Device::~Device() {
-  WriteUnlock();
+  pAnalyzersLock.WriteLock();
   while(pAnalyzers.size() > 0) {
     Analyzer *Analyzer = pAnalyzers.back();
     pAnalyzers.pop_back();
     delete Analyzer;
   }
-  WriteUnlock();
+  pAnalyzersLock.WriteUnlock();
 }
 string Device::Serial() const {
   return pSerial;
 }
 json Device::GetJSONDescriptor() {
   json Device;
-  ReadLock();
   Device["Driver"] = pDriver;
   Device["Name"] = pName;
   Device["Serial"] = pSerial;
   Device["Analyzers"] = pAnalyzers.size();
   Device["Status"] = (pState == Device::UNCONFIGURED) ? "UNCONFIGURED" : (pState == Device::STOPPED) ? "STOPPED" : "RUNNING";
-  ReadUnlock();
   return Device;
 }
 json Device::GetJSONAnalyzerDescriptor(const string &serial) {
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != serial) continue;
     json Response = pAnalyzers[n]->GetJSONShortDescriptor();
-    ReadUnlock();
+    pAnalyzersLock.ReadUnlock();
     return Response;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return nullptr;
 }
 json Device::GetJSONAllAnalyzerDescriptors() {
   json Response = json::array();
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) Response.push_back(pAnalyzers[n]->GetJSONShortDescriptor());
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return Response;
 }
-void Device::GetDeviceCallback(HTTPRequest &req) {
-  ReadLock();
-  req.FromJSON(ConfigManager::ReadConfig("/Devices/" + pSerial));
-  ReadUnlock();
-}
-void Device::SetDeviceCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Settings"].is_object()) return req.FromString("'Settings' param is required", MHD_HTTP_BAD_REQUEST);
-  WriteLock();
-  DeviceState State = pState;
-  ConfigManager::WriteConfig("/Devices/" + pSerial, Params["Settings"]);
-  WriteUnlock();
-  json Response;
-  if(State == Device::RUNNING) {
-    StopDevice();
-    Response["Result"] = StartDevice();
-  } else {
-    Response["Result"] = true;
-  }
-  req.FromJSON(Response);
-}
-void Device::StartDeviceCallback(HTTPRequest &req) {
+void Device::StartDevice(HTTPRequest &req) {
   json Response;
   Response["Status"] = StartDevice();
   req.FromJSON(Response); 
 }
-void Device::StopDeviceCallback(HTTPRequest &req) {
+void Device::StopDevice(HTTPRequest &req) {
   json Response;
   Response["Status"] = StopDevice();
   req.FromJSON(Response);
 }
-bool Device::GetAnalyzerCallback(HTTPRequest& req) {
+bool Device::GetAnalyzer(HTTPRequest& req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
-    if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->GetAnalyzerCallback(req);
-    ReadUnlock();
+    Analyzer *Analyzer = pAnalyzers[n];
+    if(Analyzer->Serial() != Serial) continue;
+    if(Analyzer->CheckRights(req, READ | WRITE | CONFIG) == false) return;
+    Analyzer->GetAnalyzer(req);
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }
-bool Device::SetAnalyzerCallback(HTTPRequest& req) {
+bool Device::SetAnalyzer(HTTPRequest& req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
-    if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->SetAnalyzerCallback(req);
-    ReadUnlock();
+    Analyzer *Analyzer = pAnalyzers[n];
+    if(Analyzer->Serial() != Serial) continue;
+    if(Analyzer->CheckRights(req, CONFIG) == false) return;
+    if(!Params["MaxCurrent"].is_number() || !Params["MinCurrent"].is_number() || !Params["Name"].is_string() || !Params["NominalFreq"].is_number() || !Params["NominalVoltage"].is_number()) return req.FromString("'MaxCurrent', 'MinCurrent', 'Name', 'NominalFreq' and 'NominalVoltage' param is requiered", MHD_HTTP_BAD_REQUEST);
+//Faltan mas parametros por comprobar
+    Analyzer->SetAnalyzer(req);
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }
-bool Device::GetSeriesCallback(HTTPRequest &req) {
+bool Device::GetSeries(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     pAnalyzers[n]->GetSeriesCallback(req);
-    ReadUnlock();
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }
-bool Device::GetSeriesNowCallback(HTTPRequest &req) {
+bool Device::GetSeriesNow(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     pAnalyzers[n]->GetSeriesNowCallback(req);
-    ReadUnlock();
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }
-bool Device::GetSeriesRangeCallback(HTTPRequest &req) {
+bool Device::GetSeriesRange(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     pAnalyzers[n]->GetSeriesRangeCallback(req);
-    ReadUnlock();
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }
-bool Device::GetEventsCallback(HTTPRequest &req) {
+bool Device::GetEvents(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     pAnalyzers[n]->GetEventsCallback(req);
-    ReadUnlock();
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }
-bool Device::GetEventCallback(HTTPRequest &req) {
+bool Device::GetEvent(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     pAnalyzers[n]->GetEventCallback(req);
-    ReadUnlock();
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }
-bool Device::SetEventCallback(HTTPRequest &req) {
+bool Device::SetEvent(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     pAnalyzers[n]->SetEventCallback(req);
-    ReadUnlock();
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }
-bool Device::DelEventCallback(HTTPRequest &req) {
+bool Device::DelEvent(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     pAnalyzers[n]->DelEventCallback(req);
-    ReadUnlock();
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }
-bool Device::GetRatesCallback(HTTPRequest &req) {
+bool Device::GetRates(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     pAnalyzers[n]->GetRatesCallback(req);
-    ReadUnlock();
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }
-bool Device::GetRateCallback(HTTPRequest &req) {
+bool Device::GetRate(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     pAnalyzers[n]->GetRateCallback(req);
-    ReadUnlock();
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }
-bool Device::SetRateCallback(HTTPRequest &req) {
+bool Device::SetRate(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     pAnalyzers[n]->SetRateCallback(req);
-    ReadUnlock();
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }
-bool Device::DelRateCallback(HTTPRequest &req) {
+bool Device::DelRate(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     pAnalyzers[n]->DelRateCallback(req);
-    ReadUnlock();
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }
-bool Device::AddRateCallback(HTTPRequest &req) {
+bool Device::AddRate(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     pAnalyzers[n]->AddRateCallback(req);
-    ReadUnlock();
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }
-bool Device::GetPricesCallback(HTTPRequest &req) {
+bool Device::GetPrices(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  ReadLock();
+  pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     pAnalyzers[n]->GetPricesCallback(req);
-    ReadUnlock();
+    pAnalyzersLock.ReadUnlock();
     return true;
   }
-  ReadUnlock();
+  pAnalyzersLock.ReadUnlock();
   return false;
 }

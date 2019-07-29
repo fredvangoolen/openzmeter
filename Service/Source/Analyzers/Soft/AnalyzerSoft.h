@@ -19,7 +19,7 @@
 #define EVENT_RAWENVELOPETIME            0.5        //Time in seconds before and after event to store RAW samples
 #define EVENT_RMSENVELOPETIME           10.0        //Time in seconds before and after event to store RMS samples
 //----------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoft : public Analyzer, protected Database {
+class AnalyzerSoft : public Analyzer, private Database {
   private :
     enum EventType { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
     enum EventState { EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };

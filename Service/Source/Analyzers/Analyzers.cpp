@@ -65,46 +65,25 @@ bool Analyzer::CheckRights(HTTPRequest &req, const uint neededAccess) const {
 // req.FromString("", MHD_HTTP_UNAUTHORIZED);
  return true;
 }
-void Analyzer::GetAnalyzerCallback(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  ReadLock();
-  GetAnalyzer(req);
-  ReadUnlock();
-}
-void Analyzer::SetAnalyzerCallback(HTTPRequest &req) {
-  if(CheckRights(req, CONFIG) == false) return;
-  json Params = req.GetParams();
-  if(!Params["MaxCurrent"].is_number() || !Params["MinCurrent"].is_number() || !Params["Name"].is_string() || !Params["NominalFreq"].is_number() || !Params["NominalVoltage"].is_number()) return req.FromString("'MaxCurrent', 'MinCurrent', 'Name', 'NominalFreq' and 'NominalVoltage' param is requiered", MHD_HTTP_BAD_REQUEST);
-//Faltan mas parametros por comprobar
-  ReadLock();
-  SetAnalyzer(req);
-  ReadUnlock();
-}
 void Analyzer::GetSeriesCallback(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
   if(!Params["To"].is_number() || !Params["Period"].is_number() || !Params["LastSample"].is_number()) return req.FromString("'To', 'Period' and 'LastSample' param are requiered", MHD_HTTP_BAD_REQUEST);
   if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
   if(!Params["Series"].is_array()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
-  ReadLock();
   GetSeries(req);
-  ReadUnlock();
 }
 void Analyzer::GetSeriesNowCallback(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
   if(!Params["Series"].is_array()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
-  ReadLock();
   GetSeriesNow(req);
-  ReadUnlock();
 }
 void Analyzer::GetSeriesRangeCallback(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
   if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
-  ReadLock();
   GetSeriesRange(req);
-  ReadUnlock();
 }
 void Analyzer::GetEventsCallback(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;

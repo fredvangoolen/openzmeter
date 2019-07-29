@@ -14,7 +14,6 @@ class DeviceManager {
   private :  
     static vector<Device*>  pDevices;         //Initiated by devices, cleared on destroy
     static RWLocks          pLock;            //Contro access to critical sections
-    static DeviceManager   *pInstance;        //To allow only one instance
   public :
     static bool AddDevice(Device *dev);
   private :
