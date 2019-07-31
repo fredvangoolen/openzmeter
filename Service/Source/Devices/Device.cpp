@@ -67,7 +67,6 @@ bool Device::GetAnalyzer(HTTPRequest& req) {
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     Analyzer *Analyzer = pAnalyzers[n];
     if(Analyzer->Serial() != Serial) continue;
-    if(Analyzer->CheckRights(req, READ | WRITE | CONFIG) == false) return;
     Analyzer->GetAnalyzer(req);
     pAnalyzersLock.ReadUnlock();
     return true;
@@ -80,12 +79,8 @@ bool Device::SetAnalyzer(HTTPRequest& req) {
   string Serial = Params["Analyzer"];
   pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
-    Analyzer *Analyzer = pAnalyzers[n];
-    if(Analyzer->Serial() != Serial) continue;
-    if(Analyzer->CheckRights(req, CONFIG) == false) return;
-    if(!Params["MaxCurrent"].is_number() || !Params["MinCurrent"].is_number() || !Params["Name"].is_string() || !Params["NominalFreq"].is_number() || !Params["NominalVoltage"].is_number()) return req.FromString("'MaxCurrent', 'MinCurrent', 'Name', 'NominalFreq' and 'NominalVoltage' param is requiered", MHD_HTTP_BAD_REQUEST);
-//Faltan mas parametros por comprobar
-    Analyzer->SetAnalyzer(req);
+    if(pAnalyzers[n]->Serial() != Serial) continue;
+    pAnalyzers[n]->SetAnalyzer(req);
     pAnalyzersLock.ReadUnlock();
     return true;
   }
@@ -98,7 +93,7 @@ bool Device::GetSeries(HTTPRequest &req) {
   pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->GetSeriesCallback(req);
+    pAnalyzers[n]->GetSeries(req);
     pAnalyzersLock.ReadUnlock();
     return true;
   }
@@ -111,7 +106,7 @@ bool Device::GetSeriesNow(HTTPRequest &req) {
   pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->GetSeriesNowCallback(req);
+    pAnalyzers[n]->GetSeriesNow(req);
     pAnalyzersLock.ReadUnlock();
     return true;
   }
@@ -124,7 +119,7 @@ bool Device::GetSeriesRange(HTTPRequest &req) {
   pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->GetSeriesRangeCallback(req);
+    pAnalyzers[n]->GetSeriesRange(req);
     pAnalyzersLock.ReadUnlock();
     return true;
   }
@@ -137,7 +132,7 @@ bool Device::GetEvents(HTTPRequest &req) {
   pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->GetEventsCallback(req);
+    pAnalyzers[n]->GetEvents(req);
     pAnalyzersLock.ReadUnlock();
     return true;
   }
@@ -150,7 +145,7 @@ bool Device::GetEvent(HTTPRequest &req) {
   pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->GetEventCallback(req);
+    pAnalyzers[n]->GetEvent(req);
     pAnalyzersLock.ReadUnlock();
     return true;
   }
@@ -163,7 +158,7 @@ bool Device::SetEvent(HTTPRequest &req) {
   pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->SetEventCallback(req);
+    pAnalyzers[n]->SetEvent(req);
     pAnalyzersLock.ReadUnlock();
     return true;
   }
@@ -176,7 +171,7 @@ bool Device::DelEvent(HTTPRequest &req) {
   pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->DelEventCallback(req);
+    pAnalyzers[n]->DelEvent(req);
     pAnalyzersLock.ReadUnlock();
     return true;
   }
@@ -189,7 +184,7 @@ bool Device::GetRates(HTTPRequest &req) {
   pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->GetRatesCallback(req);
+    pAnalyzers[n]->GetRates(req);
     pAnalyzersLock.ReadUnlock();
     return true;
   }
@@ -202,7 +197,7 @@ bool Device::GetRate(HTTPRequest &req) {
   pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->GetRateCallback(req);
+    pAnalyzers[n]->GetRate(req);
     pAnalyzersLock.ReadUnlock();
     return true;
   }
@@ -215,7 +210,7 @@ bool Device::SetRate(HTTPRequest &req) {
   pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->SetRateCallback(req);
+    pAnalyzers[n]->SetRate(req);
     pAnalyzersLock.ReadUnlock();
     return true;
   }
@@ -228,7 +223,7 @@ bool Device::DelRate(HTTPRequest &req) {
   pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->DelRateCallback(req);
+    pAnalyzers[n]->DelRate(req);
     pAnalyzersLock.ReadUnlock();
     return true;
   }
@@ -241,7 +236,7 @@ bool Device::AddRate(HTTPRequest &req) {
   pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->AddRateCallback(req);
+    pAnalyzers[n]->AddRate(req);
     pAnalyzersLock.ReadUnlock();
     return true;
   }
@@ -254,7 +249,7 @@ bool Device::GetPrices(HTTPRequest &req) {
   pAnalyzersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
-    pAnalyzers[n]->GetPricesCallback(req);
+    pAnalyzers[n]->GetPrices(req);
     pAnalyzersLock.ReadUnlock();
     return true;
   }

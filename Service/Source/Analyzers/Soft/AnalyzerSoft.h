@@ -19,7 +19,7 @@
 #define EVENT_RAWENVELOPETIME            0.5        //Time in seconds before and after event to store RAW samples
 #define EVENT_RMSENVELOPETIME           10.0        //Time in seconds before and after event to store RMS samples
 //----------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoft : public Analyzer, private Database {
+class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks {
   private :
     enum EventType { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
     enum EventState { EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };
@@ -83,6 +83,11 @@ class AnalyzerSoft : public Analyzer, private Database {
       vector<float>         ChannelsZ2;
     } Filter_t;
   private :
+    static vector<float>  FrequencyRanges;   //Rangos de frecuencias para estadisticas
+    static vector<float>  VoltageRanges;     //Rangos de tensiones para estadisticas
+    static vector<float>  THDRanges;         //Rangos de distorsion harmonica para estadisticas
+    static vector<float>  HarmonicsAllowed;  //Rangos permitidos para cada harmonico
+  private :
     vector< vector<float> >    pVoltageSamples;          //Voltage samples
     vector< vector<float> >    pCurrentSamples;          //Current samples
     float                      pNominalVoltage;          //Analyzer nominal voltage
@@ -90,7 +95,7 @@ class AnalyzerSoft : public Analyzer, private Database {
     string                     pCountryCode;             //Country code
     string                     pContract;                //Contract identifier
     string                     pZipCode;                 //Installation zip code
-    vector<float>              pGeo;                  //GPS position
+    vector<float>              pGeo;                     //GPS position
     float                      pMaxCurrent;              //Max current, over this value warnings are shown
     float                      pMinCurrent;              //Min current, under this value some analysis are disabled
     float                      pSamplerate;              //Velocidad de muestreo (NaN if unsuported)
@@ -104,18 +109,10 @@ class AnalyzerSoft : public Analyzer, private Database {
     Params_t                   pAggreg1H;                //Agregacion de 1 hora
     vector<FFT*>               pVoltageFFT;              //Muestras de FFT tension del bloque
     vector<FFT*>               pCurrentFFT;              //Muestras de FFT corriente del bloque
-    bool                       pWorking;                 //Flag para indicar que el hilo esta trabajando
     pthread_t                  pThread;                  //Hilo de ejecucion
-    pthread_mutex_t            pThreadMutex;             //Mutex para la variable de condicion
-    pthread_cond_t             pThreadCond;              //Variable de condicion para esperar
     bool                       pTerminate;               //Marca para finalizar proceso
     uint64_t                   pPrevTimestamp;           //Timestamp del ultimo bloque procesado
-    uint32_t                   pWaitingThreads;          //Hilos esperando datos
-    pthread_mutex_t            pWaitingThreadsMutex;     //Mutex para registrar cambios en WaitingThreads
-    pthread_cond_t             pWaitingThreadsCond;      //Variable de condicion para bloquear el analizer
-    bool                       pDataReady;               //Datos disponibles
-    pthread_mutex_t            pDataReadyMutex;          //Mutex para registrar cambios en DataReady
-    pthread_cond_t             pDataReadyCond;           //Variable de condicion para bloquear los clientes
+    ProviderLocks              PNowDataLock;             //GetSeriesNow access control
     deque<vector<float> >      pDelayVoltage;            //Delay buffer for samples
     deque<vector<float> >      pDelayCurrent;            //Delay buffer for samples
     vector<Filter_t>           pFilters;                 //Filter bank
@@ -125,12 +122,10 @@ class AnalyzerSoft : public Analyzer, private Database {
     uint32_t                   pCycleLen;                //Current cycle len
     uint32_t                   pMaxSamples;              //Max block samples
     pthread_t                  pEventThread;             //Hilo de ejecucion
-    pthread_mutex_t            pEventMutex;              //Mutex para la variable de condicion
-    pthread_cond_t             pEventCond;               //Variable de condicion para esperar
+    WorkerLocks                pEventLocks;              //Control access to event detection thread
     deque<vector<float> >      pPrevSamples;             //Previous samples
     deque<EventCycle_t>        pPrevCycles;              //Previous cycles
     bool                       pPrevStationary;          //Steady state flag
-    bool                       pEventsWorking;           //Events mutex is working
     list<Event_t>              pEvents;                  //Running events
   private :
     static void *Analyzer_Thread(void *args);
@@ -147,8 +142,6 @@ class AnalyzerSoft : public Analyzer, private Database {
     float CalcChange(const float in, const float reference) const;
     void  InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
     bool  FindRunningEvent(const uint32_t mask);
-    void  FindEvent();
-    void  WaitEvent();
     void  GetAnalyzer(HTTPRequest &req);
     void  SetAnalyzer(HTTPRequest &req);
     void  GetSeries(HTTPRequest &req);

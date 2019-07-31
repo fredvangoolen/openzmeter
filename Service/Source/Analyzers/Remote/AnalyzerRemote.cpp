@@ -12,7 +12,7 @@ AnalyzerRemote::AnalyzerRemote(string id) : Analyzer(id) {
 }
 AnalyzerRemote::~AnalyzerRemote() {
   pQueriesLock.WriteLock();
-  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) pthread_cond_signal(&(*it)->Cond);
+//  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) pthread_cond_signal(&(*it)->Cond);
   pQueriesLock.WriteUnlock();
 }
 void AnalyzerRemote::AddQuery(string url, HTTPRequest &req) {
@@ -22,7 +22,7 @@ void AnalyzerRemote::AddQuery(string url, HTTPRequest &req) {
   Query.Sequence = pQuerySequence++;
   pQueries.push_back(&Query);
   pQueriesLock.WriteUnlock();
-  bool Error = Query.Locks.ReadWait(20000);
+//  bool Error = Query.Locks.ReadWait(20000);
 
   pQueriesLock.WriteLock();
   for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
@@ -31,12 +31,12 @@ void AnalyzerRemote::AddQuery(string url, HTTPRequest &req) {
     break;
   }
   pQueriesLock.WriteUnlock();
-  if(Error == true) {
-    req.FromString("", MHD_HTTP_GATEWAY_TIMEOUT);
-  } else {
-    req.FromString("{ \"Result\": \"Funciona\"}", MHD_HTTP_OK);
-    Query.Locks.ReadEnd();
-  }
+//  if(Error == true) {
+//    req.FromString("", MHD_HTTP_GATEWAY_TIMEOUT);
+//  } else {
+//    req.FromString("{ \"Result\": \"Funciona\"}", MHD_HTTP_OK);
+//    Query.Locks.ReadEnd();
+//  }
 }
 void  AnalyzerRemote::SetRemote(HTTPRequest &req) {
   json Params = req.GetParams();
