@@ -1,7 +1,7 @@
 <template>
   <div ref="panel" class="panel" :class="SerieProps.CSS_Class">
     <div class="panel-heading">
-      <div class="huge header-text">{{ SerieProps.Title }} {{StopUpdating}}</div>
+      <div class="huge header-text">{{ SerieProps.Title }}</div>
       <div class="header-buttons">
         <div><span class="huge-small" v-html="LastValue"></span><em class="huge-small-unit">{{ UnitsScale }}{{ SerieProps.Units }}</em></div>
         <div>{{ Aggregation }}</div>

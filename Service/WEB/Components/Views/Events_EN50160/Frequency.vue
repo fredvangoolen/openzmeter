@@ -2,7 +2,7 @@
   <div class="panel panel-frequency">
     <div class="panel-heading">
       <div class="float-left">Grid frequency</div>
-      <div class="float-right" v-if="Warning"><img :src="require('Imgs/warning16.png')" data-toggle="tooltip" title="Limit exceded"></div>
+      <div class="float-right" v-if="Warning"><img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded"></div>
       <div class="clearfix"></div>
     </div>
     <div class="panel-body">

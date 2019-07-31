@@ -69,6 +69,9 @@ table.dataTable thead .sorting:after {
   height: 16px !important;
   right: 0px;
 }
+.btn.disabled, .btn[disabled], fieldset[disabled] .btn {
+  filter: grayscale(0.5);
+}
 
 /* latin */
 @font-face {

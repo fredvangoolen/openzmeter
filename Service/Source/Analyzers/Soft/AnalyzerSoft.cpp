@@ -184,8 +184,9 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
         This->pAggreg10C.Current_Harmonics[j][i] = This->pCurrentFFT[j]->Output[10 + i * 10];
         if(i > 0) This->pAggreg10C.Current_THD[j] = This->AccumulateSUM(This->pAggreg10C.Current_THD[j], norm(This->pAggreg10C.Current_Harmonics[j][i]));
         if(i == 0) {
-          This->pAggreg10C.Reactive_Power[j] = sqrt(norm(This->pAggreg10C.Voltage_Harmonics[j][i] * This->pAggreg10C.Current_Harmonics[j][i]));
+//          This->pAggreg10C.Reactive_Power[j] = sqrt(norm(This->pAggreg10C.Voltage_Harmonics[j][i] * This->pAggreg10C.Current_Harmonics[j][i]));
           float PHI = FFT::CalcAngle(This->pAggreg10C.Voltage_Harmonics[j][i], This->pAggreg10C.Current_Harmonics[j][i]);
+          This->pAggreg10C.Reactive_Power[j] = FFT::BinPower(This->pAggreg10C.Voltage_Harmonics[j][i]) * FFT::BinPower(This->pAggreg10C.Current_Harmonics[j][i]) * sin(PHI);
           PHI = fmod(PHI, 2.0 * M_PI);
           if(PHI > M_PI) PHI = PHI -  2.0 * M_PI;
           This->pAggreg10C.Phi[j] = PHI * 180.0 / M_PI;

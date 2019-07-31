@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ Time }}</div>
+      <div class="header-text">{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
         <div class="header-buttons" ref="Toolbar">
           <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedMulti" type="CURRENT"></toolbar-phases>
           <toolbar-options variable="DetailOptions" :options="['Voltage', 'Log']" v-on:OptionChanged="SetOption"></toolbar-options>
@@ -26,9 +26,10 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data() {
-      return { ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' } };
+      return { ShowWarning: true, ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' } };
     },
     created: function() {
+      this.MaxCurrent = 0;
       this.Data = null;
       this.CurrentPhases = null;
       this.ShowVoltage = null;
@@ -61,12 +62,14 @@
           for(var n = 0; n < result.Voltage_FFT.length; n++) Row.push(result.Voltage_FFT[n][i]);
           this.Data.push(Row);
         }
+        this.MaxCurrent = oZm.ArrayAbsMax(result.Current);
         this.CalcOptions();
         this.ShowSpinner = false;
       },
       CalcOptions() {
         if((this.$root.SelectedAnalyzer === null) || (this.CurrentPhases === null) || (this.ShowVoltage === null) || (this.Log === null) || (this.Data === null)) return;
         var Analyzer = this.$root.SelectedAnalyzer, ToShow = [], Series = {}, VoltagePhases = [];
+        this.ShowWarning = (this.MaxCurrent < Analyzer.MinCurrent); 
         for(var i = 0; i < this.Data.length; i++) {
           var Row = [i];
           for(var n = 0; n < this.Data[i].length; n++) Row.push(this.Log ? 20.0 * Math.log10(Math.max(0.001, this.Data[i][n])) : this.Data[i][n]);
@@ -76,8 +79,10 @@
           VoltagePhases.push((this.CurrentPhases[n] === true) && (this.ShowVoltage === true));
           if((this.CurrentPhases[n] === true) && (this.ShowVoltage === true)) Series[oZm.Series['VOLTAGE'].Names(Analyzer)[n]] = { axis: 'y2' };
         }  
-        var Y1Range = oZm.Series['CURRENT_SAMPLES'].Range(ToShow, this.CurrentPhases);
-        var Y2Range = oZm.Series['VOLTAGE_SAMPLES'].Range(ToShow, Array(this.CurrentPhases.length).fill(false).concat(VoltagePhases));
+        var Y1Range = oZm.Series['CURRENT'].Range(ToShow, this.CurrentPhases);
+        if(this.Log) Y1Range[0] = -60;
+        var Y2Range = oZm.Series['VOLTAGE'].Range(ToShow, Array(this.CurrentPhases.length).fill(false).concat(VoltagePhases));
+        if(this.Log) Y2Range[0] = -60;
         this.COffset = (Y1Range[0] < 0.0) ? -Y1Range[0] : 0.0;
         this.VOffset = (Y2Range[0] < 0.0) ? -Y2Range[0] : 0.0;
         for(var i = 0; i < this.Data.length; i++) {
@@ -157,3 +162,16 @@
     components: { Spinner, ToolbarPhases, ToolbarOptions, ToolbarTools, Graph }
   }
 </script>
+
+<style scoped>
+  .header-text {
+    font-size: 14px;
+  }
+  .title-warning {
+    line-height: 20px;
+    font-size: 14px;
+  }
+  .title-warning img {
+    margin: -4px 4px 0px 0px;
+  }
+</style>
