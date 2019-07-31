@@ -334,7 +334,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190715.2248"</Elem>
+            <Elem>__BUILD__="20190731.2149"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -355,7 +355,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190715.2248"</Elem>
+            <Elem>__BUILD__="20190731.2149"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -376,7 +376,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190715.2248"</Elem>
+            <Elem>__BUILD__="20190731.2149"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -411,7 +411,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190715.2248"</Elem>
+            <Elem>__BUILD__="20190731.2149"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -432,7 +432,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190715.2248"</Elem>
+            <Elem>__BUILD__="20190731.2149"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -488,7 +488,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190715.2248"</Elem>
+            <Elem>__BUILD__="20190731.2149"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -543,7 +543,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190715.2248"</Elem>
+            <Elem>__BUILD__="20190731.2149"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -571,6 +571,9 @@
       </item>
       <item path="Source/Tariffs/Tariff.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="3">
+          <preprocessorList>
+            <Elem>__BUILD__="20190731.2149"</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="8">
@@ -590,7 +593,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190715.2248"</Elem>
+            <Elem>__BUILD__="20190731.2149"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -737,7 +740,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190715.2300"</Elem>
+            <Elem>__BUILD__="20190731.2152"</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -869,7 +872,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190715.2248"</Elem>
+            <Elem>__BUILD__="20190731.2149"</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -890,7 +893,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190715.2248"</Elem>
+            <Elem>__BUILD__="20190731.2149"</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -911,7 +914,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190715.2248"</Elem>
+            <Elem>__BUILD__="20190731.2149"</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
