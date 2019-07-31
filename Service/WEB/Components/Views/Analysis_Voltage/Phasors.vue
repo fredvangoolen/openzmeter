@@ -52,7 +52,44 @@
         },
         underlayCallback: function(canvas, area, g) {
           if((area.h <= 0) || (area.w <= 0)) return;
-          canvas.lineWidth = 0.5;
+          //x-axis
+          canvas.strokeStyle = '#000';
+          canvas.setLineDash([]);
+          canvas.lineWidth = 1;
+          canvas.beginPath();
+          canvas.moveTo(g.toDomXCoord(-115), g.toDomYCoord(0));
+          canvas.lineTo(g.toDomXCoord(115), g.toDomYCoord(0));
+          canvas.stroke();
+          
+          canvas.beginPath();
+          canvas.translate(g.toDomXCoord(115), g.toDomYCoord(0));
+          canvas.moveTo(-10, 4);
+          canvas.lineTo(5, 0);
+          canvas.lineTo(-10, -4);
+          canvas.fill();
+          canvas.closePath();
+          canvas.restore();
+          canvas.save();
+
+          //y-axis
+          canvas.strokeStyle = '#000';
+          canvas.setLineDash([]);
+          canvas.lineWidth = 1;
+          canvas.beginPath();
+          canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(-115));
+          canvas.lineTo(g.toDomXCoord(0), g.toDomYCoord(115));
+          canvas.stroke();
+          
+          canvas.beginPath();
+          canvas.translate(g.toDomXCoord(0), g.toDomYCoord(115));
+          canvas.moveTo(4,10);
+          canvas.lineTo(0,-5);
+          canvas.lineTo(-4,10);
+          canvas.fill();
+          canvas.closePath();
+          canvas.restore();
+
+          canvas.lineWidth = 2;
           canvas.setLineDash(g.user_attrs_.gridLinePattern);
           canvas.strokeStyle = g.user_attrs_.gridLineColor;
           canvas.beginPath();
@@ -62,15 +99,19 @@
           }
           canvas.stroke();
           canvas.beginPath();
-          for(var n = 1; n < 13; n++) {
-            if(n === 10) continue;      
+          for(var n = 1; n < 11; n++) {
+            //if(n === 10) continue;      
             canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(n * 10) - g.toDomXCoord(0), 0, 2 * Math.PI);
           }    
           canvas.stroke();
-          canvas.strokeStyle = oZm.Series["VOLTAGE"].Color;
-          canvas.beginPath();
-          canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(100) - g.toDomXCoord(0), 0, 2 * Math.PI);
-          canvas.stroke();
+          // canvas.strokeStyle = oZm.Series["VOLTAGE"].Color;
+          // canvas.beginPath();
+          // canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(100) - g.toDomXCoord(0), 0, 2 * Math.PI);
+          // canvas.stroke();
+          // canvas.strokeStyle = oZm.Series["CURRENT"].Color;
+          // canvas.beginPath();
+          // canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(80) - g.toDomXCoord(0), 0, 2 * Math.PI);
+          // canvas.stroke();          
         }
       };
     },
@@ -113,17 +154,21 @@
             ctx.fillStyle = e.dygraph.user_attrs_.gridLineColor;
             ctx.setLineDash([]);
             
+            //Angular area
             ctx.beginPath();
             ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
             ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(50) - e.dygraph.toDomXCoord(0), StartAngle, EndAngle, true);
             ctx.lineTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
             ctx.fill();
             
+            //Black arc to delimit angular area.
             ctx.strokeStyle = '#333';
             ctx.beginPath();
             ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(50) - e.dygraph.toDomXCoord(0), StartAngle, EndAngle, true);
             ctx.stroke();
           }
+
+          //Module line
           ctx.setLineDash([]);
           ctx.strokeStyle = e.dygraph.getColors()[i % 2];
           ctx.fillStyle = e.dygraph.getColors()[i % 2];
@@ -136,24 +181,37 @@
           
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)), 3, 0, 2 * Math.PI);
+          ctx.translate(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
+          ctx.rotate(e.dygraph.file_[i][1] * Math.PI / -180.0);
+          ctx.moveTo(-10, 4);
+          ctx.lineTo(5, 0);
+          ctx.lineTo(-10, -4);
+          ctx.fillStyle = e.dygraph.getColors()[i % 2];
           ctx.fill();
+          ctx.restore();
 
+          //Dot line for the series
+          ctx.lineWidth = 1;
           ctx.setLineDash([2, 2]);
+          ctx.strokeStyle = e.dygraph.getColors()[i % 2];
           ctx.beginPath();
           ctx.moveTo(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
           ctx.lineTo(e.dygraph.toDomXCoord(120 * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(120 * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
           ctx.stroke();
           
+            
+          //Value
           ctx.save();
           ctx.translate(e.dygraph.toDomXCoord(100 * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(100 * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
           ctx.rotate(e.dygraph.file_[i][1] * Math.PI / -180.0);
           ctx.beginPath();
           ctx.textAlign = "left";
           ctx.font = "10px sans";
-          ctx.fillText(oZm.Round2Plain(e.allSeriesPoints[1][i].yval) + ((i % 2) ? "A" : "V"), 2, -2);
+          ctx.fillStyle = e.dygraph.getColors()[i % 2];
+          ctx.fillText(oZm.Round2Plain(e.allSeriesPoints[1][i].yval) + ((i % 2) ? "A" : "V"), 2, -5);
           ctx.fill();
           ctx.restore();
+          ctx.save();
         }
       },
       Redraw: function() {
