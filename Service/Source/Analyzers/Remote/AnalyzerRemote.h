@@ -13,6 +13,7 @@ class AnalyzerRemote : public Analyzer {
       ProviderLocks   Locks;
     } Query_t;
   private :
+    pthread_t        pThread;
     uint64_t         pQuerySequence;
     RWLocks          pQueriesLock;
     list<Query_t*>   pQueries;

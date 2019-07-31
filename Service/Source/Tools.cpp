@@ -65,22 +65,54 @@ void RWLocks::WriteUnlock() {
 }
 //----------------------------------------------------------------------------------------------------------------------
 ProviderLocks::ProviderLocks() {
-  pCond = PTHREAD_COND_INITIALIZER;
-  pMutex = PTHREAD_MUTEX_INITIALIZER;
+  pWaitingThreads      = 0;
+  pDataReady           = false;
+  pWaitingThreadsMutex = PTHREAD_MUTEX_INITIALIZER;
+  pDataReadyMutex      = PTHREAD_MUTEX_INITIALIZER;
+  pWaitingThreadsCond  = PTHREAD_COND_INITIALIZER;
+  pDataReadyCond       = PTHREAD_COND_INITIALIZER;
 }
-//void ProviderLocks::Write();
-bool ProviderLocks::ReadWait(uint timeoutMS) {
-  pthread_mutex_lock(&pMutex);
-  struct timeval  Current;
-  struct timespec Timeout;
-  gettimeofday(&Current, NULL);
-  Timeout.tv_sec  = Current.tv_sec + (timeoutMS / 1000);
-  Timeout.tv_nsec = (timeoutMS % 1000) * 1000000;
-  int Error = pthread_cond_timedwait(&pCond, &pMutex, &Timeout);
-  pthread_mutex_unlock(&pMutex);
-  return (Error == 0);
+void ProviderLocks::ProviderWrite() {
+  pthread_mutex_lock(&pDataReadyMutex);
+  pDataReady = true;
+  pthread_mutex_unlock(&pDataReadyMutex);
+  pthread_cond_broadcast(&pDataReadyCond);
 }
-//void ProviderLocksReadEnd() {}
+void ProviderLocks::ProviderWait() {
+  pthread_mutex_lock(&pWaitingThreadsMutex);
+  while(pWaitingThreads != 0) pthread_cond_wait(&pWaitingThreadsCond, &pWaitingThreadsMutex);
+  pthread_mutex_unlock(&pWaitingThreadsMutex);
+  pthread_mutex_lock(&pDataReadyMutex);
+  pDataReady = false;
+  pthread_mutex_unlock(&pDataReadyMutex);
+}
+bool ProviderLocks::ConsumerWait(uint timeoutMS) {
+  int Error = 0;
+  pthread_mutex_lock(&pWaitingThreadsMutex);
+  pWaitingThreads++;
+  pthread_mutex_unlock(&pWaitingThreadsMutex);
+  pthread_mutex_lock(&pDataReadyMutex);
+  while((pDataReady == false) && (Error == 0)) {
+    struct timeval  Current;
+    struct timespec Timeout;
+    gettimeofday(&Current, NULL);
+    Timeout.tv_sec  = Current.tv_sec + 5;
+    Timeout.tv_nsec = 0;
+    Error = pthread_cond_timedwait(&pDataReadyCond, &pDataReadyMutex, &Timeout);
+  }
+  pthread_mutex_unlock(&pDataReadyMutex);
+  if(Error != 0) {
+    ConsumerEnds();
+    return false;
+  }
+  return true;
+}
+void ProviderLocks::ConsumerEnds() {
+  pthread_mutex_lock(&pWaitingThreadsMutex);
+  pWaitingThreads--;
+  pthread_cond_signal(&pWaitingThreadsCond);
+  pthread_mutex_unlock(&pWaitingThreadsMutex);
+}
 //----------------------------------------------------------------------------------------------------------------------
 WorkerLocks::WorkerLocks() {
   pWorking = false;
@@ -124,8 +156,13 @@ void WorkerLocks::WaitWorker() {
   } 
   pthread_mutex_unlock(&pMutex);
 }
-
-
+bool WorkerLocks::IsWorking() {
+  bool Result;
+  pthread_mutex_lock(&pMutex);
+  Result = (pWorking == false);
+  pthread_mutex_unlock(&pMutex);
+  return Result;
+}
 //----------------------------------------------------------------------------------------------------------------------
 ConfigManager   *ConfigManager::pInstance = NULL;
 pthread_mutex_t  ConfigManager::pMutex = PTHREAD_MUTEX_INITIALIZER;

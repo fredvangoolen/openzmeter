@@ -28,10 +28,10 @@ class RWLocks {
 };
 //----------------------------------------------------------------------------------------------------------------------
 class WorkerLocks {
-  //Worker lock until signal to wakeup, caller can wait worker to ends
+  //Worker locks until signal to wakeup, caller can wait worker to ends
   private :
     bool            pWorking;
-    bool            pTerminate;      //Wake worker and instruct to ends
+    bool            pTerminate;
     pthread_mutex_t pMutex;
     pthread_cond_t  pCond;
   public :
@@ -40,19 +40,25 @@ class WorkerLocks {
     bool WorkerWaitTask();
     void WorkerEndsTask();
     void WakeWorker();
-    void WaitWorker();    
+    void WaitWorker();
+    bool IsWorking();
 };
 //----------------------------------------------------------------------------------------------------------------------
 class ProviderLocks {
   //Writer locked until all consumers finish, all consumers locked until data to consume
   private :
-    pthread_mutex_t pMutex;
-    pthread_cond_t  pCond;
+    uint             pWaitingThreads;
+    pthread_mutex_t  pWaitingThreadsMutex;
+    pthread_cond_t   pWaitingThreadsCond;
+    bool             pDataReady;
+    pthread_mutex_t  pDataReadyMutex;
+    pthread_cond_t   pDataReadyCond;
   public :
     ProviderLocks();
-    void Write();
-    bool ReadWait(uint timeoutMS);
-    void ReadEnd();
+    void ProviderWrite();
+    void ProviderWait();
+    bool ConsumerWait(uint timeoutMS);
+    void ConsumerEnds();
 };
 //----------------------------------------------------------------------------------------------------------------------
 class ConfigManager {
