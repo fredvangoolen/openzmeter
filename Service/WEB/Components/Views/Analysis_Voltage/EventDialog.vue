@@ -233,7 +233,7 @@
                 }
                 canvas.restore();
               }.bind(this),
-              file: this.Data, labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length) } );
+              file: this.Data, includeZero: true, labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length) } );
               this.ShowSpinner = false;
               this.$nextTick(function() {
                 window.dispatchEvent(new Event('resize'));

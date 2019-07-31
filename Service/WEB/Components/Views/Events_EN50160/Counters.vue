@@ -5,7 +5,7 @@
       <div class="col col-lg-3 col-md-6 col-xs-12">
         <div class="panel panel-other-light text-center">
           <div class="panel-body">
-            <div class="float-right" v-if="DipsWarning"><img :src="require('Imgs/warning16.png')" data-toggle="tooltip" title="Limit exceded"></div>
+            <div class="float-right" v-if="DipsWarning"><img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded"></div>
             <span class="huge-small">Voltage swell or dips</span><br/>Less than 1 min and -15%/+10% nominal voltage
             <progress-bar :value="Dips" :text="DipsText"></progress-bar>
             <div>10 to 1000 allowed per year</div>
@@ -15,7 +15,7 @@
       <div class="col col-lg-3 col-md-6 col-xs-12">
         <div class="panel panel-other-light text-center">
           <div class="panel-body">
-            <div class="float-right" v-if="ShortWarning"><img :src="require('Imgs/warning16.png')" data-toggle="tooltip" title="Limit exceded"></div>
+            <div class="float-right" v-if="ShortWarning"><img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded"></div>
             <span class="huge-small">Short interruptions</span><br/>Less than 3 min and under 1% nominal voltage
             <progress-bar :value="Short" :text="ShortText"></progress-bar>
             <div>10 to 100 allowed per year</div>
@@ -25,7 +25,7 @@
       <div class="col col-lg-3 col-md-6 col-xs-12">
         <div class="panel panel-other-light text-center">
           <div class="panel-body">
-            <div class="float-right" v-if="LongWarning"><img :src="require('Imgs/warning16.png')" data-toggle="tooltip" title="Limit exceded"></div>
+            <div class="float-right" v-if="LongWarning"><img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded"></div>
             <span class="huge-small">Long interruptions</span><br/>More than 3 min and under 1% nominal voltage
             <progress-bar :value="Long" :text="LongText"></progress-bar>
             <div>10 to 50 allowed per year</div>
@@ -35,7 +35,7 @@
       <div class="col col-lg-3 col-md-6 col-xs-12">
         <div class="panel panel-other-light text-center">
           <div class="panel-body">
-            <div class="float-right" v-if="HarmonicsWarning"><img :src="require('Imgs/warning16.png')" data-toggle="tooltip" title="Limit exceded"></div>
+            <div class="float-right" v-if="HarmonicsWarning"><img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded"></div>
             <span class="huge-small">Harmonics</span><br/>Harmonics in valid ranges as detailed in EN50160
             <progress-bar :value="Harmonics" :text="HarmonicsText"></progress-bar>
             <div class="float-left">90%</div><div class="float-right">100%</div>

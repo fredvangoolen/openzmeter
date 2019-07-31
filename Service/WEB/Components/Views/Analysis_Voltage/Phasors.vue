@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ Time }}</div>
+      <div class="header-text">{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <div class="header-buttons" ref="Toolbar">
         <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick"></toolbar-tools>
       </div>
@@ -32,7 +32,7 @@
   import 'CSS/table-responsive.css';
   export default {
     data: function() {
-      return { ShowSpinner: true, Time: 'Loading data...',
+      return { ShowWarning: true,  ShowSpinner: true, Time: 'Loading data...',
       Columns: [
           {name: 'Phase', title: 'Phase'},
           {name: 'Channel', title: 'Channel'},
@@ -179,18 +179,7 @@
           ctx.lineTo(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
           ctx.stroke();
           
-          ctx.lineWidth = 2;
-          ctx.setLineDash(e.dygraph.user_attrs_.gridLinePattern);
-          ctx.beginPath();
-          ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)) - e.dygraph.toDomXCoord(0), 0, 2 * Math.PI);
-          ctx.stroke();
-         
-          //Point (to change for arrow)
-          // ctx.beginPath();
-          // ctx.arc(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)), 3, 0, 2 * Math.PI);
-          // ctx.fill();
-
-          //Arrowhead
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.translate(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
           ctx.rotate(e.dygraph.file_[i][1] * Math.PI / -180.0);
@@ -238,6 +227,7 @@
       },
       SetData(result) {
         var Analyzer = this.$root.SelectedAnalyzer;
+        this.ShowWarning = (oZm.ArrayAbsMax(result.Current) < Analyzer.MinCurrent); 
         this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
         var Phases = (oZm.Series['VOLTAGE'].Names(Analyzer).length === 1) ? ['L'] : ['R', 'S', 'T'];
         this.Data = [];
@@ -250,13 +240,7 @@
           this.Data.push([Phases[i], "Current", i * 120 - result.Phi[i], result['Current'][i]]);
           Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(i * 120) + 'º', Value: oZm.Round2(result['Voltage'][i]) + '<em> V</em>' } );
           Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(i * 120 - result.Phi[i]) + 'º', Value: oZm.Round2(result.Current[i]) + '<em> A</em>'} );
-//          MaxVoltage = Math.max(MaxVoltage, result.Voltage[i]);
-//          MaxCurrent = Math.max(MaxCurrent, result.Current[i]);
         }
-//        for(var i = 0; i < Vectors.length; i += 2) {
-//          Vectors[i][2] = Vectors[i][2] / MaxVoltage;
-//          Vectors[i + 1][2] = Vectors[i + 1][2] / MaxCurrent;
-//        }
         this.$refs.graph.SetOptions({ file: Vectors });
         this.$refs.table.setData( { data: Table });
         this.ShowSpinner = false;
@@ -294,5 +278,15 @@
     .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
       text-align: right;
     }
+  }
+  .header-text {
+    font-size: 14px;
+  }
+  .title-warning {
+    line-height: 20px;
+    font-size: 14px;
+  }
+  .title-warning img {
+    margin: -4px 4px 0px 0px;
   }
 </style>

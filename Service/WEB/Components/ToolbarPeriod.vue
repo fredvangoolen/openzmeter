@@ -2,10 +2,10 @@
   <div class="btn-group">
     <div class="input-group input-group-xs">
       <div class="input-group-btn">
-        <button class="btn btn-default narrow" type="button" v-on:click="Previous" :disabled="Updating"><img :src="require('Imgs/resultset_previous.png')"></button>
+        <button class="btn btn-default narrow" type="button" v-on:click="Previous"><img :src="require('Imgs/resultset_previous.png')"></button>
       </div>
       <div class="input-group-btn">
-        <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" :disabled="Updating">{{ /*(Prev == null) ?*/ SelectedText /*: 'Inspecting'*/ }}<span class="caret"></span></button>
+        <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">{{ (Prev == null) ? SelectedText : 'Inspecting' }}<span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" ref="periodTags">
           <li v-bind:class="{active: ((Period == 'day') && (To == 'last'))}"><a @click="PeriodClick('day', 'last', $event)">Last 24 hours</a></li>
           <li v-bind:class="{active: ((Period == 'week') && (To == 'last'))}"><a @click="PeriodClick('week', 'last', $event)">Last 7 days</a></li>
@@ -21,7 +21,7 @@
         </ul>
       </div>
       <div class="input-group-btn">
-        <button class="btn btn-default narrow" type="button" v-on:click="Next" :disabled="Updating"><img :src="require('Imgs/resultset_next.png')"></button>
+        <button class="btn btn-default narrow" type="button" v-on:click="Next"><img :src="require('Imgs/resultset_next.png')"></button>
       </div>
     </div>
     <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog" ref="dialog" data-keyboard="false">
@@ -53,12 +53,13 @@
   export default {
     props: {variable: String},
     data: function () {
-      return { Period: 'day', To: 'last', SelectedText: 'Last 24 hours', ShowDialog: false, Updating: true, Prev: null };
+      return { Period: 'day', To: 'last', SelectedText: 'Last 24 hours', ShowDialog: false, Prev: null };
     },
     beforeDestroy: function () {
       clearInterval(this.Timer);
     },
     created: function () {
+      this.UpdateEnabled = true;
       this.Aggreg = null;
       this.LastSample = 0;
       this.Timer = null;
@@ -78,7 +79,17 @@
       this.SelectedText = this.$refs.periodTags.querySelector('.active').innerText;
     },
     methods: {
-      SetAnalyzer() {
+      StopUpdate: function() {
+        console.log("stop updates");
+        this.UpdateEnabled = false;
+        clearInterval(this.Timer);
+      },
+      UpdateCompleted: function(lastsampletime) {
+        this.LastSample = lastsampletime;
+        clearInterval(this.Timer);
+        if(this.UpdateEnabled) this.Timer = setTimeout(this.EmitUpdate.bind(this), this.AggregMS);
+      },
+      SetAnalyzer: function() {
         this.LastSample = 0;
         this.PeriodClick(this.Period, this.To);
       },
@@ -98,6 +109,7 @@
         this.EmitUpdate();
       },
       EmitUpdate: function () {
+        console.log("updating");
         clearInterval(this.Timer);
         if ((this.$root.SelectedAnalyzer === null) || (this.Aggreg === null))
           return;
@@ -116,14 +128,7 @@
           Period = this.Period;
           this.DateWindow = [To - Period, To];
         }
-        this.Updating = true;
         this.$emit('PeriodChanged', To, Period, this.LastSample, this.Aggreg);
-      },
-      UpdateCompleted: function (lastsampletime) {
-        this.LastSample = lastsampletime;
-        this.Updating = false;
-        clearInterval(this.Timer);
-        this.Timer = setTimeout(this.EmitUpdate.bind(this), this.AggregMS / 2);
       },
       PopState: function() {
         if(this.Prev != null) {
@@ -131,6 +136,8 @@
           this.To = this.Prev.To;
           this.PeriodClick(this.Period, this.To);
           this.Prev = null;
+          console.log("resume updates");
+          this.UpdateEnabled = true;
         }
       },
       PeriodClick: function (period, to, event) {

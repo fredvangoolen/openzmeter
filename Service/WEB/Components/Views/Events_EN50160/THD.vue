@@ -2,7 +2,7 @@
   <div class="panel panel-reactive-power">
     <div class="panel-heading">
       <div class="float-left">Harmonic distorsion</div>
-      <div class="float-right" v-if="Warning"><img :src="require('Imgs/warning16.png')" data-toggle="tooltip" title="Limit exceded"></div>
+      <div class="float-right" v-if="Warning"><img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded"></div>
       <div class="clearfix"></div>
     </div>
     <div class="panel-body">
