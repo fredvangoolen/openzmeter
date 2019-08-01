@@ -4,21 +4,38 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <list>
+#include "HTTPServer.h"
 #include "Analyzers.h"
 class AnalyzerRemote : public Analyzer {
   private :
     typedef struct {
       uint64_t        Sequence;
-      pthread_t       Thread;
+      json            RequestContents;
+      string          ResponseData;
+      uint16_t        ResponseCode;
       ProviderLocks   Locks;
     } Query_t;
+    typedef struct {
+      HTTPRequest   Request;
+      ProviderLocks Locks;
+    } Request_t;
   private :
     pthread_t        pThread;
     uint64_t         pQuerySequence;
     RWLocks          pQueriesLock;
     list<Query_t*>   pQueries;
+    
+    RWLocks          pRequestLocks;
+    list<Request_t*> pRequest;
+    
+    
+    //Los getRemote duermen 20 segundos, hasta que se despiertan, si hay peticiones cojen las que puedan y las mandan
+    
   private :
-    void  AddQuery(string url, HTTPRequest &req);
+    void  HandleRequest(string url, HTTPRequest &req);
+    void  SendQuery();
+    
+    
     void  GetAnalyzer(HTTPRequest &req);
     void  SetAnalyzer(HTTPRequest &req);
     void  GetSeries(HTTPRequest &req);
