@@ -112,8 +112,6 @@ AnalyzerSoft::~AnalyzerSoft() {
   pTerminate = true;
   Abort();
   pthread_join(pThread, NULL);
-  pEventLocks.Abort();
-  pthread_join(pEventThread, NULL);
   for(uint8_t i = 0; i < pVoltageFFT.size(); i++) delete pVoltageFFT[i];
   for(uint8_t i = 0; i < pCurrentFFT.size(); i++) delete pCurrentFFT[i];
 }
@@ -372,8 +370,8 @@ bool AnalyzerSoft::FindRunningEvent(const uint32_t mask) {
 }
 void *AnalyzerSoft::Analyzer_Thread(void *args) {
   AnalyzerSoft *This = (AnalyzerSoft*)args;
-  while(true) {
-    This->WorkerWaitTask();
+  while(This->pTerminate == false) {
+    if(This->WorkerWaitTask() == false) break;
     uint64_t Start = Tools::GetTime();
     //Init FFTs and event detection threads
     This->pEventLocks.WakeWorker();
@@ -523,12 +521,14 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     This->pSequence++;
     This->WorkerEndsTask();
   }
+  This->pEventLocks.Abort();
+  pthread_join(This->pEventThread, NULL);
   return NULL;
 }
 void *AnalyzerSoft::Events_Thread(void* args) {
   AnalyzerSoft *This = (AnalyzerSoft*)args;
-  while(true) {
-    if(This->pEventLocks.WorkerWaitTask() == false) return NULL;
+  while(This->pTerminate == false) {
+    if(This->pEventLocks.WorkerWaitTask() == false) break;
     uint32_t RequiredRAW = This->pSamplerate * EVENT_RAWENVELOPETIME;
     uint32_t RequiredRMS = This->pNominalFrequency * 2 * EVENT_RMSENVELOPETIME;
     uint32_t Pos = 0;

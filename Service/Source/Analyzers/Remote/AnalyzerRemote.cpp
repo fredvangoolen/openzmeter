@@ -15,15 +15,21 @@ AnalyzerRemote::~AnalyzerRemote() {
 //  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) pthread_cond_signal(&(*it)->Cond);
   pQueriesLock.WriteUnlock();
 }
-void AnalyzerRemote::AddQuery(string url, HTTPRequest &req) {
+void AnalyzerRemote::HandleRequest(string url, HTTPRequest &req) {
   Query_t Query;
-  //Genero json de la consulta
+  Query.Sequence = 0;
+  Query.RequestContents = req.GetParams();
+  Query.RequestContents.erase("Analyzer");
   pQueriesLock.WriteLock();
-  Query.Sequence = pQuerySequence++;
   pQueries.push_back(&Query);
   pQueriesLock.WriteUnlock();
-//  bool Error = Query.Locks.ReadWait(20000);
-
+  SendQuery();
+  if(Query.Locks.ConsumerWait(20000) == false) {
+    req.FromString("", MHD_HTTP_GATEWAY_TIMEOUT);
+  } else {
+    req.FromString(Query.ResponseData, Query.ResponseCode);
+    Query.Locks.ConsumerEnds();
+  }
   pQueriesLock.WriteLock();
   for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
     if(*it != &Query) continue;
@@ -31,62 +37,100 @@ void AnalyzerRemote::AddQuery(string url, HTTPRequest &req) {
     break;
   }
   pQueriesLock.WriteUnlock();
-//  if(Error == true) {
-//    req.FromString("", MHD_HTTP_GATEWAY_TIMEOUT);
-//  } else {
-//    req.FromString("{ \"Result\": \"Funciona\"}", MHD_HTTP_OK);
-//    Query.Locks.ReadEnd();
-//  }
 }
-void  AnalyzerRemote::SetRemote(HTTPRequest &req) {
+void AnalyzerRemote::SendQuery() {
+  pRequestLocks.WriteLock();
+//  if(pRequest.size() == 0) {
+//    pRequestLocks.WriteUnlock();
+//    return;
+//  }
+  json Request = json::array();
+  pQueriesLock.WriteLock();
+  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
+    if((*it)->Sequence != 0) continue;
+    (*it)->Sequence = ++pQuerySequence;
+    json Query = json::object();
+    Query["SequenceID"] = (*it)->Sequence;
+    Query["Contents"] = (*it)->RequestContents;
+    Request.push_back(Query);
+  }
+  LOGFile::Warning("Total: %u, Consulta: %s\n", pQueries.size(), Request.dump().c_str());
+  pQueriesLock.WriteUnlock();
+  
+  
+  
+  pRequestLocks.WriteUnlock();
+}
+void AnalyzerRemote::GetRemote(HTTPRequest& req) {
   json Params = req.GetParams();
-  if(!Params["Sequence"].is_number_unsigned()) return req.FromString("'Sequence' param is required", MHD_HTTP_BAD_REQUEST);
 
 }
+void AnalyzerRemote::SetRemote(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Sequence"].is_number_unsigned()) return req.FromString("'Sequence' param is required", MHD_HTTP_BAD_REQUEST);
+  
+  
+  //Tengo que hacer el pQuery.Locks.ConsumerEnds();
+}
 void AnalyzerRemote::GetAnalyzer(HTTPRequest &req) {
-  AddQuery("/GetAnalyzer", req);
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;  
+  HandleRequest("/GetAnalyzer", req);
 }
 void AnalyzerRemote::SetAnalyzer(HTTPRequest &req) {
-  AddQuery("/SetAnalyzer", req);
+  if(CheckRights(req, CONFIG) == false) return;
+  HandleRequest("/SetAnalyzer", req);
 }
 void AnalyzerRemote::GetSeries(HTTPRequest &req) {
-  AddQuery("/GetSeries", req);
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  HandleRequest("/GetSeries", req);
 }
 void AnalyzerRemote::GetSeriesNow(HTTPRequest &req) {
-  AddQuery("/GetSeriesNow", req);
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  HandleRequest("/GetSeriesNow", req);
 }
 void AnalyzerRemote::GetSeriesRange(HTTPRequest &req) {
-  AddQuery("/GetSeriesRange", req);
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  HandleRequest("/GetSeriesRange", req);
 }
 void AnalyzerRemote::GetEvents(HTTPRequest &req) {
-  AddQuery("/GetEvents", req);
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  HandleRequest("/GetEvents", req);
 }
 void AnalyzerRemote::GetEvent(HTTPRequest &req) {
-  AddQuery("/GetEvent", req);
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  HandleRequest("/GetEvent", req);
 }
 void AnalyzerRemote::SetEvent(HTTPRequest &req) {
-  AddQuery("/SetEvent", req);
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  HandleRequest("/SetEvent", req);
 }
 void AnalyzerRemote::DelEvent(HTTPRequest &req) {
-  AddQuery("/DelEvent", req);
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  HandleRequest("/DelEvent", req);
 }
 void AnalyzerRemote::GetRates(HTTPRequest &req) {
-  AddQuery("/GetRates", req);
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  HandleRequest("/GetRates", req);
 }
 void AnalyzerRemote::GetRate(HTTPRequest &req) {
-  AddQuery("/GetRate", req);
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  HandleRequest("/GetRate", req);
 }
 void AnalyzerRemote::SetRate(HTTPRequest &req) {
-  AddQuery("/SetRate", req);
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  HandleRequest("/SetRate", req);
 }
 void AnalyzerRemote::DelRate(HTTPRequest &req) {
-  AddQuery("/DelRate", req);
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  HandleRequest("/DelRate", req);
 }
 void AnalyzerRemote::AddRate(HTTPRequest &req) {
-  AddQuery("/AddRate", req);
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  HandleRequest("/AddRate", req);
 }
 void AnalyzerRemote::GetPrices(HTTPRequest &req) {
-  AddQuery("/GetPrices", req);
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  HandleRequest("/GetPrices", req);
 }
 
 

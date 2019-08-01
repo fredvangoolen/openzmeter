@@ -78,25 +78,40 @@ bool DeviceRemote::StopDevice() {
   pAnalyzersLock.WriteUnlock();
   return true;
 }
-void DeviceRemote::GetDevice(HTTPRequest &req) {}
+void DeviceRemote::GetDevice(HTTPRequest &req) {
+}
 void DeviceRemote::SetDevice(HTTPRequest &req) {
 }
-void DeviceRemote::GetRemoteCallback(HTTPRequest &req) {}
+void DeviceRemote::GetRemoteCallback(HTTPRequest &req) {
+  pInstance->pAnalyzersLock.ReadLock();
+  pInstance->GetRemote(req);
+  pInstance->pAnalyzersLock.ReadUnlock();
+}
 void DeviceRemote::SetRemoteCallback(HTTPRequest &req) {
+  pInstance->pAnalyzersLock.ReadLock();
+  pInstance->SetRemote(req);
+  pInstance->pAnalyzersLock.ReadUnlock();
+}
+void DeviceRemote::GetRemote(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
   string Serial = Params["Analyzer"];
-  pInstance->pAnalyzersLock.ReadLock();
-  for(uint n = 0; n != pInstance->pAnalyzers.size(); n++) {
-    AnalyzerRemote *Analyzer = (AnalyzerRemote*)pInstance->pAnalyzers[n];
-    if(Analyzer->Serial() != Serial) continue;
-    Analyzer->SetRemote(req);
-    pInstance->pAnalyzersLock.ReadUnlock();
+  for(uint n = 0; n != pAnalyzers.size(); n++) {
+    if(pAnalyzers[n]->Serial() != Serial) continue;
+    ((AnalyzerRemote*)pAnalyzers[n])->GetRemote(req);
     return;
   }
-  pInstance->pAnalyzersLock.ReadUnlock();
 }
-
+void DeviceRemote::SetRemote(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+  string Serial = Params["Analyzer"];
+  for(uint n = 0; n != pAnalyzers.size(); n++) {
+    if(pAnalyzers[n]->Serial() != Serial) continue;
+    ((AnalyzerRemote*)pAnalyzers[n])->SetRemote(req);
+    return;
+  }
+}
 
 //bool DeviceRemote::SetRemoteAnalyzerCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen) {
 //  char *Serial = NULL, *Name = NULL, *Mode = NULL;

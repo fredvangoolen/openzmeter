@@ -23,6 +23,8 @@ class DeviceRemote : public Device {
     bool StopDevice();
     void GetDevice(HTTPRequest &req);
     void SetDevice(HTTPRequest &req);
+    void GetRemote(HTTPRequest &req);
+    void SetRemote(HTTPRequest &req);
   public :
     DeviceRemote();
     ~DeviceRemote();

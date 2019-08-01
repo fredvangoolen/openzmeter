@@ -96,8 +96,8 @@ bool ProviderLocks::ConsumerWait(uint timeoutMS) {
     struct timeval  Current;
     struct timespec Timeout;
     gettimeofday(&Current, NULL);
-    Timeout.tv_sec  = Current.tv_sec + 5;
-    Timeout.tv_nsec = 0;
+    Timeout.tv_sec  = Current.tv_sec + (timeoutMS / 1000);
+    Timeout.tv_nsec = (timeoutMS % 1000) * 1000000;
     Error = pthread_cond_timedwait(&pDataReadyCond, &pDataReadyMutex, &Timeout);
   }
   pthread_mutex_unlock(&pDataReadyMutex);
