@@ -199,6 +199,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     char *AcceptEncoding = (char*)MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT_ENCODING);
     char *Cookie         = (char*)MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "SESSION");
     bool  Deflate        = ((AcceptEncoding != NULL) && (strstr(AcceptEncoding, "deflate") != NULL));
+    bool  EnableCache    = true;
     Request = new HTTPRequest(Cookie, Deflate);
     *ptr = Request;
     if(Request->SessionID().empty()) return MHD_NO;
@@ -222,10 +223,11 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         if(Len != string::npos) Index = Index.replace(Len, Find.size(), Version);
         Request->FromString(Index, MHD_HTTP_OK);
         Request->MimeType("text/html");
+        EnableCache = false;
       }
     }
     MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &Request->WriteFunction, Request, NULL);
-    MHD_add_response_header(Response, MHD_HTTP_HEADER_CACHE_CONTROL, "public, max-age=2592000");
+    MHD_add_response_header(Response, MHD_HTTP_HEADER_CACHE_CONTROL, EnableCache ? "public, max-age=2592000" : "no-cache");
     MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_TYPE, Request->MimeType().c_str());
     MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_ENCODING, Request->Deflate() ? "deflate" : "");
     int Return = MHD_queue_response(connection, Request->ResultCode(), Response);
