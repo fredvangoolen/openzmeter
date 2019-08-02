@@ -164,6 +164,16 @@ bool WorkerLocks::IsWorking() {
   return Result;
 }
 //----------------------------------------------------------------------------------------------------------------------
+SleepLocks::SleepLocks() {
+
+}
+bool SleepLocks::Sleep(uint timeoutMS) {
+
+}
+void SleepLocks::Wake() {
+
+}
+//----------------------------------------------------------------------------------------------------------------------
 ConfigManager   *ConfigManager::pInstance = NULL;
 pthread_mutex_t  ConfigManager::pMutex = PTHREAD_MUTEX_INITIALIZER;
 ConfigManager::ConfigManager(string name) {

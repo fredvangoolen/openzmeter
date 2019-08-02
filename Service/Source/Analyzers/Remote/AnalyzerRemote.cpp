@@ -9,36 +9,17 @@
 AnalyzerRemote::AnalyzerRemote(string id) : Analyzer(id) {
   pName = "Never seen";
   pQuerySequence = 0;
+  pRequestLocks  = NULL;
+  pQueriesMutex  = PTHREAD_MUTEX_INITIALIZER;
+  pRequestMutex  = PTHREAD_MUTEX_INITIALIZER;
 }
 AnalyzerRemote::~AnalyzerRemote() {
-  pQueriesLock.WriteLock();
+//  pQueriesLock.WriteLock();
 //  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) pthread_cond_signal(&(*it)->Cond);
-  pQueriesLock.WriteUnlock();
+//  pQueriesLock.WriteUnlock();
 }
-void AnalyzerRemote::HandleRequest(string url, HTTPRequest &req) {
-  Query_t Query;
-  Query.Sequence = 0;
-  Query.RequestContents = req.GetParams();
-  Query.RequestContents.erase("Analyzer");
-  pQueriesLock.WriteLock();
-  pQueries.push_back(&Query);
-  pQueriesLock.WriteUnlock();
-  SendQuery();
-  if(Query.Locks.ConsumerWait(20000) == false) {
-    req.FromString("", MHD_HTTP_GATEWAY_TIMEOUT);
-  } else {
-    req.FromString(Query.ResponseData, Query.ResponseCode);
-    Query.Locks.ConsumerEnds();
-  }
-  pQueriesLock.WriteLock();
-  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
-    if(*it != &Query) continue;
-    pQueries.erase(it);
-    break;
-  }
-  pQueriesLock.WriteUnlock();
-}
-void AnalyzerRemote::SendQuery() {
+
+void AnalyzerRemote::PushQuery() {
   pRequestLocks.WriteLock();
 //  if(pRequest.size() == 0) {
 //    pRequestLocks.WriteUnlock();
@@ -62,15 +43,74 @@ void AnalyzerRemote::SendQuery() {
   pRequestLocks.WriteUnlock();
 }
 void AnalyzerRemote::GetRemote(HTTPRequest& req) {
-  json Params = req.GetParams();
-
+  pthread_mutex_lock(&pQueriesMutex);
+  if(pQueries.size() == 0) {
+    
+    
+    pthread_mutex_lock(&pQueriesMutex);
+  }
+  
+  
+  
+  pQueries.push_back(&Query);
+  pQueriesLock.WriteUnlock();
+  PushQuery();
+  if(Query.Locks.ConsumerWait(20000) == false) {
+    req.FromString("", MHD_HTTP_GATEWAY_TIMEOUT);
+  } else {
+    req.FromString(Query.ResponseData, Query.ResponseCode);
+    Query.Locks.ConsumerEnds();
+  }
+  pQueriesLock.WriteLock();
+  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
+    if(*it != &Query) continue;
+    pQueries.erase(it);
+    break;
+  }
+  pQueriesLock.WriteUnlock();
 }
 void AnalyzerRemote::SetRemote(HTTPRequest &req) {
   json Params = req.GetParams();
-  if(!Params["Sequence"].is_number_unsigned()) return req.FromString("'Sequence' param is required", MHD_HTTP_BAD_REQUEST);
+  if(!Params["Code"].is_number() || !Params["Sequence"].is_number_unsigned()) return req.FromString("'Sequence' and 'Code' param are required", MHD_HTTP_BAD_REQUEST);
+  uint64_t Sequence = Params["Sequence"];
+  uint16_t Code = Params["Code"];
+  pthread_mutex_lock(&pQueriesMutex);
+  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
+    if((*it)->Sequence != Sequence) continue;
+    Query_t *Query = (*it);
+    pQueries.erase(it);
+    pthread_mutex_unlock(&pQueriesMutex);
+    Query->Request->FromString(Params["Response"].dump(), Code);
+    Query->Locks.Wake();
+    return;
+  }
+  pthread_mutex_unlock(&pQueriesMutex);
+}
+void AnalyzerRemote::HandleRequest(string url, HTTPRequest &req) {
+  Query_t Query;
+  Query.Sequence = 0;
+  Query.Request = &req;
+  Query.RequestContents["Method"] = url;
+  Query.RequestContents["Params"] = req.GetParams();
+  Query.RequestContents["Params"].erase("Analyzer");
+  pthread_mutex_lock(&pQueriesMutex);
+  pQueries.push_back(&Query);
+  pthread_mutex_unlock(&pQueriesMutex);
   
+  pthread_mutex_lock(&pRequestMutex);
+  if(pRequestLocks != NULL) pRequestLocks->Wake();
+  pthread_mutex_unlock(&pRequestMutex);
   
-  //Tengo que hacer el pQuery.Locks.ConsumerEnds();
+  if(Query.Locks.Sleep(20000) == false) {
+    req.FromString("", MHD_HTTP_GATEWAY_TIMEOUT);
+    pthread_mutex_lock(&pQueriesMutex);
+    for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
+      if(*it != &Query) continue;
+      pQueries.erase(it);
+      break;
+    }
+    pthread_mutex_unlock(&pQueriesMutex);
+  }
 }
 void AnalyzerRemote::GetAnalyzer(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;  
