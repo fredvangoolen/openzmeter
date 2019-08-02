@@ -127,6 +127,10 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks {
     deque<EventCycle_t>        pPrevCycles;              //Previous cycles
     bool                       pPrevStationary;          //Steady state flag
     list<Event_t>              pEvents;                  //Running events
+    pthread_t                  pSyncThread;              //Synchronize thread
+    string                     pSyncServer;              //Sync server
+    string                     pSyncUser;                //Sync username
+    string                     pSyncPass;                //Sync password
   private :
     static void *Analyzer_Thread(void *args);
     static void *Events_Thread(void *args);

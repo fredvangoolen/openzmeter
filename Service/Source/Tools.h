@@ -51,25 +51,16 @@ class ProviderLocks {
     pthread_mutex_t  pWaitingThreadsMutex;
     pthread_cond_t   pWaitingThreadsCond;
     bool             pDataReady;
+    bool             pTerminate;
     pthread_mutex_t  pDataReadyMutex;
     pthread_cond_t   pDataReadyCond;
   public :
     ProviderLocks();
+    void Abort();
     void ProviderWrite();
     void ProviderWait();
     bool ConsumerWait(uint timeoutMS);
     void ConsumerEnds();
-};
-//----------------------------------------------------------------------------------------------------------------------
-class SleepLocks {
-  //Suspend execution until waked from other thread or timeouts
-  private :
-    pthread_mutex_t  pMutex;
-    pthread_cond_t   pCond;
-  public :
-    SleepLocks();
-    bool Sleep(uint timeoutMS);
-    void Wake();
 };
 //----------------------------------------------------------------------------------------------------------------------
 class ConfigManager {

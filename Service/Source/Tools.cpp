@@ -67,10 +67,15 @@ void RWLocks::WriteUnlock() {
 ProviderLocks::ProviderLocks() {
   pWaitingThreads      = 0;
   pDataReady           = false;
+  pTerminate           = false;
   pWaitingThreadsMutex = PTHREAD_MUTEX_INITIALIZER;
   pDataReadyMutex      = PTHREAD_MUTEX_INITIALIZER;
   pWaitingThreadsCond  = PTHREAD_COND_INITIALIZER;
   pDataReadyCond       = PTHREAD_COND_INITIALIZER;
+}
+void ProviderLocks::Abort() {
+  pTerminate = true;
+  pthread_cond_broadcast(&pDataReadyCond);
 }
 void ProviderLocks::ProviderWrite() {
   pthread_mutex_lock(&pDataReadyMutex);
@@ -93,6 +98,7 @@ bool ProviderLocks::ConsumerWait(uint timeoutMS) {
   pthread_mutex_unlock(&pWaitingThreadsMutex);
   pthread_mutex_lock(&pDataReadyMutex);
   while((pDataReady == false) && (Error == 0)) {
+    if(pTerminate == true) return false;
     struct timeval  Current;
     struct timespec Timeout;
     gettimeofday(&Current, NULL);
@@ -162,16 +168,6 @@ bool WorkerLocks::IsWorking() {
   Result = (pWorking == false);
   pthread_mutex_unlock(&pMutex);
   return Result;
-}
-//----------------------------------------------------------------------------------------------------------------------
-SleepLocks::SleepLocks() {
-
-}
-bool SleepLocks::Sleep(uint timeoutMS) {
-
-}
-void SleepLocks::Wake() {
-
 }
 //----------------------------------------------------------------------------------------------------------------------
 ConfigManager   *ConfigManager::pInstance = NULL;
