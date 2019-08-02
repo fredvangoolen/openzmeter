@@ -50,17 +50,23 @@ bool DeviceVirtual::Start() {
   if(Config.is_object()) {
     if(Config["Voltage"].is_number()) pVoltage = Config["Voltage"];
     if(Config["Frequency"].is_number()) pFrequency = Config["Frequency"];
-    if(Config["SampleRate"].is_number()) pSampleRate = Config["SampleRate"];
+    if(Config["Samplerate"].is_number()) pSampleRate = Config["Samplerate"];
     if(Config["AutoStart"].is_boolean()) AutoStart = Config["AutoStart"];
+    if(Config["Current"].is_number()) pCurrent = Config["Current"];
+    if(Config["CurrentPhase"].is_number()) pCurrentPhase = Config["CurrentPhase"];    
     if(Config["Mode"].is_string() && ((Config["Mode"] == "1PHASE") || (Config["Mode"] == "3PHASE") || (Config["Mode"] == "3PHASE+N"))) pMode = (Config["Mode"] == "1PHASE") ? AnalyzerInterface::PHASE1 : (Config["Mode"] == "3PHASE") ? AnalyzerInterface::PHASE3 : AnalyzerInterface::PHASE3N;
   }
-  if((pVoltage < 85) || (pVoltage > 300)) pVoltage = 230.0;
-  if((pFrequency < 10) || (pFrequency > 80)) pFrequency = 50.0;
+  if((pVoltage < 10) || (pVoltage > 350)) pVoltage = 230.0;
+  if((pFrequency < 10) || (pFrequency > 100)) pFrequency = 50.0;
+  if((pCurrent < 0.1) || (pCurrent > 1000)) pFrequency = 5.0;
+  if((pCurrentPhase < -180.0) || (pCurrentPhase > 180.0)) pCurrentPhase = 0;
   if((pSampleRate < (pFrequency * 100))) pSampleRate = (pFrequency * 100);
   Config = json::object();
   Config["Voltage"] = pVoltage;
   Config["Frequency"] = pFrequency;
-  Config["SampleRate"] = pSampleRate;
+  Config["Samplerate"] = pSampleRate;
+  Config["Current"] = pCurrent;
+  Config["CurrentPhase"] = pCurrentPhase;
   Config["Mode"] = (pMode == AnalyzerInterface::PHASE1) ? "1PHASE" : (pMode == AnalyzerInterface::PHASE3) ? "3PHASE" : "3PHASE+N";
   Config["AutoStart"] = AutoStart;
   ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
@@ -117,7 +123,7 @@ void  *DeviceVirtual::Capture_Thread(void *args) {
     vector<float> Current;
     uint64_t Sampletime = Tools::GetTime();
     if((This->pAnalyzer->IsFinished() == true) && (((Sampletime - StartTime) * This->pSampleRate / 1000) > GeneratedSamples)) {
-      Voltage.push_back(This->pAnalyzer->GetNominalVoltage() * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency));
+      Voltage.push_back(This->pVoltage * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency));
       Current.push_back(                                 (((Sampletime % 20000) < 10000) ? 0.5 : 0.02) * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency));
 //      Voltage[0] = Voltage[0] + Voltage[0] * 0.05 * sin((2.0 * M_PI * GeneratedSamples) / (This->pSampleRate * 300.0));
 //      Current[0] = Current[0] + Current[0] * 0.1 * sin((2.0 * M_PI * GeneratedSamples) / (This->pSampleRate * 360.0));
