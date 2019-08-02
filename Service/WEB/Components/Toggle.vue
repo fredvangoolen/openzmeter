@@ -16,7 +16,7 @@
       this.SetState(false);  
     },
     methods: {
-      SetState : function(checked) {
+      SetState: function(checked) {
         $(this.$refs.check).off('change');
         $(this.$refs.check).bootstrapToggle((checked) ? 'on' : 'off');
         $(this.$refs.check).on('change', function(e) {

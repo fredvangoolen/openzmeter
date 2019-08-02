@@ -2,21 +2,28 @@
   <div class="row">
     <div class="col-xs-12">
       <label class="control-label" style="line-height: 22px">Start on boot</label>
-      <toggle class="float-right" onText="Yes" offText="No"></toggle>
+      <toggle class="float-right" onText="Yes" offText="No" ref="autoStart"></toggle>
       <hr style="margin: 5px 0px 5px 0px"/>
       <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Device inputs can be calibrated to compensate components derating over time.</div>
     </div>
     <div class="col-xs-12 col-sm-6">
       <label class="control-label">Voltage channel correction</label>
-      <input-spin :min="-10" :max="10" :value="Settings.VoltageGain" :increment="0.001" :decimals="3" ref="voltageGain" prepend="%" v-on:change="VoltageGainChange"></input-spin>
+      <input-spin :min="-10" :max="10" :value="Settings.VoltageGain" :increment="0.001" :decimals="3" prepend="%" v-on:change="VoltageGainChange"></input-spin>
     </div>
     <div class="col-xs-12 col-sm-6">
       <label class="control-label">Voltage channel offset</label>
-      <input-spin :min="-20" :max="20" :value="Settings.VoltageOffset" :increment="0.01" ref="voltageOffset" prepend="V" v-on:change="VoltageOffsetChange"></input-spin>
+      <input-spin :min="-20" :max="20" :value="Settings.VoltageOffset" :increment="0.01" prepend="V" v-on:change="VoltageOffsetChange"></input-spin>
     </div>
     <div class="col-xs-12 col-sm-6">
       <label class="control-label">Current channel correction</label>
-      <input-spin :min="-10" :max="10" :value="Settings.CurrentGain" :increment="0.001" :decimals="3" ref="currentGain" prepend="%" v-on:change="CurrentGainChange"></input-spin>
+      <div style="display: flex">
+        <div style="min-width: 134px">
+          <option-picker :options="['NO INVERT', 'INVERT']" selected="NO INVERT" v-on:OptionChanged="InvertChanged" ref="invert" :big="true"></option-picker>
+        </div>
+        <div>
+          <input-spin :min="-10" :max="10" :value="Settings.CurrentGain" :increment="0.001" :decimals="3" prepend="%" v-on:change="CurrentGainChange"></input-spin>
+        </div>
+      </div>          
     </div>
     <div class="col-xs-12 col-sm-6">
       <label class="control-label">Current channel offset</label>
@@ -42,32 +49,27 @@
     created: function() {
       this.Settings = this.settings;
     },
-    components: { InputSpin, Toggle }
+    mounted: function() {
+      this.$refs.autoStart.SetState(this.Settings.AutoStart);
+//      this.$refs.invert.SetOption(this.Settings.Invert ? 'INVERT' : 'NO INVERT');
+    },
+    methods: {
+      VoltageGainChange: function(val) {
+        this.Settings.VoltageGain = val;
+      },
+      VoltageOffsetChange: function(val) {
+        this.Settings.VoltageOffset = val;
+      },
+      CurrentGainChange: function(val) {
+        this.Settings.CurrentGain = val;
+      },
+      CurrentOffsetChange: function(val) {
+        this.Settings.CurrentOffset = val;
+      },
+      InvertChanged: function(val) {
+        this.Settings.Invert = (val === 'INVERT');
+      }
+    },
+    components: { InputSpin, Toggle, OptionPicker }
   }
 </script>
-
-<style scoped>
-  @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(1) {
-      width: 60px;
-      text-align: center;
-    }
-    .table >>> td:nth-child(1) {
-      text-align: center;
-      font-size: 14px;
-    }
-    .table >>> th:nth-child(3) {
-      width: 180px;
-      text-align: center;
-    }
-    .table >>> td:nth-child(3) {
-      text-align: center;
-    }
-    .table >>> th:nth-child(4) {
-      width: 90px;
-    }
-  }
-  
-</style>
-
-
