@@ -11,9 +11,10 @@
           </div>
         </div>
         <div class="modal-body">
+          <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != ''">{{ Error }}</div>
           <spinner v-if="ShowSpinner"></spinner>
           <device-virtual v-if="(ShowSpinner == false) && (Driver == 'Virtual')" ref="options" :settings="Settings"></device-virtual>
-          <device1 v-if="(ShowSpinner == false) && (Driver == 'V1.01')" ref="options" :settings="Settings"></device1>
+          <device1_01 v-if="(ShowSpinner == false) && (Driver == 'V1.01')" ref="options" :settings="Settings"></device1_01>
         </div>
       </div>
     </div>
@@ -22,17 +23,18 @@
 
 <script>
   import DeviceVirtual from './DeviceVirtual.vue';
-  import Device1 from './Device1.vue';
+  import Device1_01 from './Device1_01.vue';
   import Toggle from 'Components/Toggle.vue';
   import Spinner from 'Components/Spinner.vue';
   export default {
     data() {
-      return { ShowSpinner: true, ShowDialog: false, Serial: '', Driver: '', Settings: {} };
+      return { ShowSpinner: true, ShowDialog: false, Serial: '', Driver: '', Settings: {}, Error: '' };
     },
     methods: {
       Load: function(dev) {
         this.Serial = dev.Serial;
         this.ShowDialog = true;
+        this.ShowSpinner = true;
         this.Driver = dev.Driver;
         this.$nextTick(function() {
           $(this.$el).modal('show');
@@ -40,6 +42,8 @@
         $.ajax({ url: "getDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Serial: dev.Serial }),
           success: function(result) {
             this.ShowSpinner = false;
+            result.Samplerate = 10000;
+            result.CurrentPhase = 10;
             this.Settings = result;
           }.bind(this)
         });
@@ -49,6 +53,17 @@
         this.ShowDialog = false;
       },
       Save: function() {
+        this.ShowSpinner = true;
+        $.ajax({ url: "setDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(Object.assign({Serial: this.Serial}, this.Settings)),
+          success: function(result) {
+            this.ShowSpinner = false;
+            this.Close();
+          }.bind(this),
+          error: function() {
+            this.Error = 'Failed to save device settings!';
+            setTimeout(function() { this.Error = ''; }.bind(this), 1000); 
+          }.bind(this)
+        });
         
       }
     },
@@ -58,7 +73,7 @@
     destroyed: function() {
       this.$root.$el.removeChild(this.$el);
     },
-    components: { Toggle, DeviceVirtual, Device1, Spinner }
+    components: { Toggle, DeviceVirtual, Device1_01, Spinner }
   }
 </script>
 

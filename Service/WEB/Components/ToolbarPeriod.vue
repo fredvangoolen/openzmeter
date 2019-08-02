@@ -80,7 +80,6 @@
     },
     methods: {
       StopUpdate: function() {
-        console.log("stop updates");
         this.UpdateEnabled = false;
         clearInterval(this.Timer);
       },
@@ -109,7 +108,6 @@
         this.EmitUpdate();
       },
       EmitUpdate: function () {
-        console.log("updating");
         clearInterval(this.Timer);
         if ((this.$root.SelectedAnalyzer === null) || (this.Aggreg === null))
           return;
@@ -136,7 +134,6 @@
           this.To = this.Prev.To;
           this.PeriodClick(this.Period, this.To);
           this.Prev = null;
-          console.log("resume updates");
           this.UpdateEnabled = true;
         }
       },

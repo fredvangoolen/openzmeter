@@ -17,6 +17,8 @@ class DeviceVirtual : public Device {
     AnalyzerInterface::AnalyzerMode pMode;
     float                           pSampleRate;
     float                           pVoltage;
+    float                           pCurrent;
+    float                           pCurrentPhase;
     float                           pFrequency;
     pthread_mutex_t                 pMutex;
   private : 

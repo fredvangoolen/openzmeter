@@ -1,124 +1,72 @@
 <template>
   <div class="row">
-    <div class="col-xs-12 col-sm-6">
-      <label class="control-label">Nominal Voltage</label>
-      <input-spin :min="20" :max="350" :value="230" :increment="10" ref="voltage"></input-spin>
+    <div class="col-xs-12">
+      <label class="control-label" style="line-height: 22px">Start on boot</label>
+      <toggle class="float-right" onText="Yes" offText="No" ref="autoStart"></toggle>
+      <hr style="margin: 5px 0px 5px 0px"/>
     </div>
     <div class="col-xs-12 col-sm-6">
-      <label class="control-label">Nominal Frequency</label>
-      <input-spin :min="10" :max="100" :value="50" ref="freq" :increment="1"></input-spin>
+      <label class="control-label">Voltage</label>
+      <input-spin :min="10" :max="350" :value="Settings.Voltage" :increment="10" :decimals="2" prepend="V" v-on:change="VoltageChange"></input-spin>
+    </div>
+    <div class="col-xs-12 col-sm-6">
+      <label class="control-label">Frequency</label>
+      <input-spin :min="10" :max="100" :value="Settings.Frequency" ref="freq" :increment="1" :decimals="2" prepend="Hz" v-on:change="FrequencyChange"></input-spin>
+    </div>
+    <div class="col-xs-12 col-sm-6">
+      <label class="control-label">Current</label>
+      <input-spin :min="0.1" :max="1000" :value="Settings.Current" :increment="0.1" :decimals="2" prepend="A" v-on:change="CurrentChange"></input-spin>
+    </div>
+    <div class="col-xs-12 col-sm-6">
+      <label class="control-label">Current phase</label>
+      <input-spin :min="-180" :max="180" :value="Settings.CurrentPhase" :increment="0.1" :decimals="2" prepend="°" v-on:change="CurrentPhaseChange"></input-spin>
     </div>
     <div class="col-xs-12 col-sm-6">
       <label class="control-label">Mode</label>
-      <option-picker :options="['1PHASE', '3PHASE', '3PHASEN']" :selected="'1PHASE'" v-on:OptionChanged="ModeChanged" :big="true"></option-picker>
+      <option-picker :options="['1PHASE', '3PHASE', '3PHASE+N']" :selected="Settings.Mode" v-on:OptionChanged="ModeChanged" :big="true"></option-picker>
     </div>
     <div class="col-xs-12 col-sm-6">
       <label class="control-label">Samplerate</label>
-      <input-spin :min="10000" :max="100000" :value="20000" ref="samplerate" :increment="100"></input-spin>
+      <input-spin :min="10000" :max="100000" :value="Settings.Samplerate" :increment="100" :decimals="0" prepend="Hz" v-on:change="SamplerateChange"></input-spin>
     </div>
   </div>
 </template>
 
 <script>
   import Vue from 'vue';
-  import Vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
-  import Spinner from 'Components/Spinner.vue';
   import * as oZm from 'JS/openZmeter.js';
   import OptionPicker from 'Components/OptionPicker.vue';
   import InputSpin from 'Components/InputSpin.vue';
+  import Toggle from 'Components/Toggle.vue';
   export default {
+    props: ['settings'],
     data() {
-      return {
-        Show: false, ShowSpinner: true,
-        Columns: [
-          {name: 'Online', title: 'Online', callback: 'OnlineStatus'},
-          {name: 'Name', title: 'Description'}, 
-          {name: 'ID', title: 'Serial'},
-          {name: '__slot:actions', title: ''}
-        ]
-      };
+      return { Settings: {} };
     },
+    created: function() {
+      this.Settings = this.settings;
+    },
+    
     methods: {
-      ModeChanged: function() {
-        
+      ModeChanged: function(val) {
+        this.Settings.Mode = val;  
       },
-      GetAnalyzers() {
-        $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-          success: function(result) { 
-            var TableData = { data: result };
-            this.$refs.table.setData(TableData);
-            this.ShowSpinner = false;
-          }.bind(this)
-        });
+      VoltageChange: function(val) {
+        this.Settings.Voltage = val;
       },
-      OnlineStatus: function(value) {
-        return (value === true) ? '&#9635;' : '&#9633;';
+      CurrentChange: function(val) {
+        this.Settings.Current = val;
       },
-      Load: function(analyzers) {
-        this.Show = true;
-        this.ShowSpinner = true;
-        this.$nextTick(function() {
-//          this.GetAnalyzers();
-        });
+      FrequencyChange: function(val) {
+        this.Settings.Frequency = val;
       },
-      CurrentlySelected: function(id) {
-        if(this.$root.SelectedAnalyzer === null) return false;
-        if(id.ID === this.$root.SelectedAnalyzer.ID) return true;
-        return false;
+      CurrentPhaseChange: function(val) {
+        this.Settings.CurrentPhase = val;
       },
-      Select: function(id) {
-        localStorage.setItem("SelAnalyzer", id.ID);
-        this.$root.SelectedAnalyzer = id;
-        this.$nextTick(function() {
-          this.$root.$emit('AnalyzerChanged');
-          this.$parent.Close();
-        });
-      },
-      Configure: function(id) {
-        this.Show = false;
-        this.$parent.$refs.Configure.Load(id.ID); 
-      },
-      ACL: function(id) {
-        alert("ACL not yet implemented"); 
-      },
-      Tariffs: function(id) { 
-        this.Show = false;
-        this.$parent.$refs.Tariffs.Load(id.ID); 
-      },
-      Alerts: function(id) {
-        alert("Alerts not yet implemented");
-      },
-      Maintenance: function(id) {
-        alert("Maintenance not yet implemented");
+      SamplerateChange: function(val) {
+        this.Settings.Samplerate = val;
       }
     },
-    updated: function(){
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
-    },
-    components: { Vuetable, Spinner, OptionPicker, InputSpin }
+    components: { Toggle, OptionPicker, InputSpin }
   }
 </script>
-
-<style scoped>
-@media screen and (min-width: 600px) {
-  .table >>> th:nth-child(1) {
-    width: 60px;
-    text-align: center;
-  }
-  .table >>> td:nth-child(1) {
-    text-align: center;
-    font-size: 14px;
-  }
-  .table >>> th:nth-child(3) {
-    width: 180px;
-    text-align: center;
-  }
-  .table >>> td:nth-child(3) {
-    text-align: center;
-  }
-  .table >>> th:nth-child(4) {
-    width: 90px;
-  }
-}
-</style>

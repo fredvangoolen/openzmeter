@@ -152,11 +152,11 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
           success: function(result) { 
             this.NTP_Support = true;
             this.NTPEnabled = result.Enabled;
-            this.$refs.ntpserver.value = result.Server;
             this.NTPDetails = 'Local timezone : ' + '\nTime           : ' + moment(result.Time).format('DD/MM/YYYY HH:mm:ss');
             this.Loading = false;
             this.$nextTick(function() { 
               this.$refs.EnableNTP.SetState(this.NTPEnabled); 
+              this.$refs.ntpserver.value = result.Server;
               this.Timer2 = setTimeout(this.UpdateTime, 1000); 
             });
           }.bind(this)

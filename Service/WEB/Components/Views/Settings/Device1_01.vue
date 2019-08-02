@@ -34,9 +34,6 @@
 
 <script>
   import Vue from 'vue';
-  import Vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
-  import Spinner from 'Components/Spinner.vue';
   import * as oZm from 'JS/openZmeter.js';
   import OptionPicker from 'Components/OptionPicker.vue';
   import InputSpin from 'Components/InputSpin.vue';
