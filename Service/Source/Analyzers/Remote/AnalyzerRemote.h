@@ -11,29 +11,19 @@ class AnalyzerRemote : public Analyzer {
     typedef struct {
       uint64_t        Sequence;
       json            RequestContents;
-      string          ResponseData;
-      uint16_t        ResponseCode;
-      ProviderLocks   Locks;
+      HTTPRequest    *Request;
+      SleepLocks      Locks;
     } Query_t;
-    typedef struct {
-      HTTPRequest   Request;
-      ProviderLocks Locks;
-    } Request_t;
   private :
     pthread_t        pThread;
     uint64_t         pQuerySequence;
-    RWLocks          pQueriesLock;
+//    pthread_mutex_t  pQueriesMutex;
     list<Query_t*>   pQueries;
-    
-    RWLocks          pRequestLocks;
-    list<Request_t*> pRequest;
-    
-    
-    //Los getRemote duermen 20 segundos, hasta que se despiertan, si hay peticiones cojen las que puedan y las mandan
-    
+    SleepLocks      *pRequestLocks;
+    pthread_mutex_t  pMutex;
   private :
     void  HandleRequest(string url, HTTPRequest &req);
-    void  SendQuery();
+    void  PushQuery();
     
     
     void  GetAnalyzer(HTTPRequest &req);

@@ -45,7 +45,7 @@ class WorkerLocks {
 };
 //----------------------------------------------------------------------------------------------------------------------
 class ProviderLocks {
-  //Writer locked until all consumers finish, all consumers locked until data to consume
+  //Provider wait until all consumers ends, consumers wait until provider write
   private :
     uint             pWaitingThreads;
     pthread_mutex_t  pWaitingThreadsMutex;
@@ -59,6 +59,17 @@ class ProviderLocks {
     void ProviderWait();
     bool ConsumerWait(uint timeoutMS);
     void ConsumerEnds();
+};
+//----------------------------------------------------------------------------------------------------------------------
+class SleepLocks {
+  //Suspend execution until waked from other thread or timeouts
+  private :
+    pthread_mutex_t  pMutex;
+    pthread_cond_t   pCond;
+  public :
+    SleepLocks();
+    bool Sleep(uint timeoutMS);
+    void Wake();
 };
 //----------------------------------------------------------------------------------------------------------------------
 class ConfigManager {
