@@ -51,7 +51,7 @@
     },
     mounted: function() {
       this.$refs.autoStart.SetState(this.Settings.AutoStart);
-//      this.$refs.invert.SetOption(this.Settings.Invert ? 'INVERT' : 'NO INVERT');
+      this.$refs.invert.SetOption(this.Settings.CurrentInvert ? 'INVERT' : 'NO INVERT');
     },
     methods: {
       VoltageGainChange: function(val) {
@@ -67,7 +67,7 @@
         this.Settings.CurrentOffset = val;
       },
       InvertChanged: function(val) {
-        this.Settings.Invert = (val === 'INVERT');
+        this.Settings.CurrentInvert = (val === 'INVERT');
       }
     },
     components: { InputSpin, Toggle, OptionPicker }

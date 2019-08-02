@@ -872,7 +872,7 @@
           <preprocessorList>
             <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190802.1716"</Elem>
+            <Elem>__BUILD__="20190802.2157"</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -949,7 +949,7 @@
           </incDir>
           <preprocessorList>
             <Elem>DEVICE_VIRTUAL</Elem>
-            <Elem>__BUILD__="20190715.2248"</Elem>
+            <Elem>__BUILD__="20190802.2236"</Elem>
           </preprocessorList>
           <undefinedList>
             <Elem>__ARM_ASM_SYNTAX_UNIFIED__</Elem>

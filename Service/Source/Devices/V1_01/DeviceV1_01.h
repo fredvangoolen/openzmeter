@@ -41,6 +41,7 @@ class DeviceV1_01 : public Device {
     float                        pCurrentGain;             //Current gain
     float                        pVoltageOffset;           //Voltage offset
     float                        pCurrentOffset;           //Current offset
+    bool                         pCurrentInvert;           //Invert current channel
     struct libusb_device_handle *pDeviceHandle;            //USB handle
     struct libusb_device        *pNewDevice;               //USB device
     libusb_context              *pContext;                 //USB context

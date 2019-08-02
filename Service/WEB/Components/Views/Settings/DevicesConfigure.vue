@@ -12,8 +12,8 @@
         </div>
         <div class="modal-body">
           <spinner v-if="ShowSpinner"></spinner>
-          <device-virtual v-if="Driver == 'Virtual'" ref="options" :settings="Settings"></device-virtual>
-          <device1 v-if="Driver == 'V1.01'" ref="options" :settings="Settings"></device1>
+          <device-virtual v-if="(ShowSpinner == false) && (Driver == 'Virtual')" ref="options" :settings="Settings"></device-virtual>
+          <device1 v-if="(ShowSpinner == false) && (Driver == 'V1.01')" ref="options" :settings="Settings"></device1>
         </div>
       </div>
     </div>
