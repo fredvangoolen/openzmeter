@@ -23,6 +23,7 @@
   import Vuetable from 'vuetable-2';
   import moment from 'JS/moment.js';
   import TariffsEdit from './TariffsEdit.vue';
+  import Spinner from 'Components/Spinner.vue';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   export default {
@@ -75,7 +76,7 @@
     updated: function(){
         oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    components: { Vuetable, TariffsEdit }
+    components: { Spinner, Vuetable, TariffsEdit }
   }
 </script>
 

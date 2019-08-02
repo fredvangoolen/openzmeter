@@ -1,49 +1,63 @@
 <template>
   <div class="input-group inputspin">
+    <input type="text" class="form-control" :value="Format(Value)" v-on:change="Change">
     <span v-if="prepend" class="input-group-addon" id="basic-addon1">{{ prepend }}</span>
-    <input type="text" class="form-control" :value="value" :min="min" :max="max">
     <div class="input-group-btn-vertical">
-      <button class="btn btn-default" type="button">&#9650;</button>
-      <button class="btn btn-default" type="button">&#9660;</button>
-    </div>
-    
+      <button class="btn btn-default" type="button" v-on:click="Increment">&#9650;</button>
+      <button class="btn btn-default" type="button" v-on:click="Decrement">&#9660;</button>
+    </div>    
   </div>
 </template>
 
 <script>
   export default {
-      props: ['prepend'],
+    props: {prepend: { type: String }, min: { type: Number, default: 0}, max: { type: Number, default: 100}, increment: { type: Number, default: 0.1 }, value: { type: Number, default: 50}, decimals: { type: Number, default: 2 }},
     data: function() {
-      return {};
+      return { Value: 50 };
+    },
+    created: function() {
+      this.Value = this.value;
     },
     methods: {
-//        $('.spinner .btn:first-of-type').on('click', function() {
-//      var btn = $(this);
-//      var input = btn.closest('.spinner').find('input');
-//      if (input.attr('max') == undefined || parseInt(input.val()) < parseInt(input.attr('max'))) {    
-//        input.val(parseInt(input.val(), 10) + 1);
-//      } else {
-//        btn.next("disabled", true);
-//      }
-//    });
-//    $('.spinner .btn:last-of-type').on('click', function() {
-//      var btn = $(this);
-//      var input = btn.closest('.spinner').find('input');
-//      if (input.attr('min') == undefined || parseInt(input.val()) > parseInt(input.attr('min'))) {    
-//        input.val(parseInt(input.val(), 10) - 1);
-//      } else {
-//        btn.prev("disabled", true);
-//      }
-//    });
-    
-    }
-    
+      Increment: function(evt) {
+        $(evt.target).blur();
+        this.Value = parseFloat(this.Value) + this.increment;
+        if(this.Value > this.max) this.Value = this.max;
+        this.$emit('change', this.Value);
+      },
+      Decrement: function(evt) {
+        $(evt.target).blur();
+        this.Value = parseFloat(this.Value) - this.increment;
+        if(this.Value < this.min) this.Value = this.min;
+        this.$emit('change', this.Value);
+      },
+      Change: function(evt) {
+        var Value = evt.target.value;
+        if(isNaN(parseFloat(Value)) === true) Value = this.min;
+        if(Value > this.max) Value = this.max;
+        if(Value < this.min) Value = this.min;
+        this.Value = Value;
+        this.$emit('change', this.Value);
+      },
+      Format: function(val) {
+        var Exponent = Math.pow(10, this.decimals);
+        val = Math.round(val * Exponent);
+        var Integer = Math.trunc(val / Exponent);
+        var Fraction = Math.abs(val % Exponent);
+        Fraction = Fraction.toString();
+        while(Fraction.length < this.decimals) Fraction = '0' + Fraction;
+        return Integer.toString() + '.' + Fraction;
+      }
+    }    
   }
 </script>
 
 <style scoped>
   .inputspin input {
     text-align: right;
+  }
+  .inputspin > span {
+    border-left: none;
   }
   .input-group-btn-vertical {
     position: relative;
