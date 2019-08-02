@@ -76,10 +76,12 @@ DeviceV1_01::DeviceV1_01(string serial) {
   pSerial        = serial;
   pDriver        = "V1.01";
   pName          = "Capture device V1.01";
-  pVoltageGain   = 0.014704938926227089;
-  pCurrentGain   = 0.0015625;
-  pVoltageOffset = 0;
-  pCurrentOffset = 0;
+  pVoltageGain   = 0.0;
+  pCurrentGain   = 0.0;
+  pCurrentInvert = false;
+  pVoltageOffset = 0.0;
+  pCurrentOffset = 0.0;
+  pCurrentInvert = false;
   pAnalyzer      = NULL;
   pMutex         = PTHREAD_MUTEX_INITIALIZER;
 }
@@ -104,6 +106,7 @@ bool DeviceV1_01::Start() {
     if(Config["VoltageOffset"].is_number()) pVoltageOffset = Config["VoltageOffset"];
     if(Config["CurrentGain"].is_number()) pCurrentGain = Config["CurrentGain"];
     if(Config["CurrentOffset"].is_number()) pCurrentOffset = Config["CurrentOffset"];
+    if(Config["CurrentInvert"].is_boolean()) pCurrentInvert = Config["CurrentInvert"];
     if(Config["AutoStart"].is_boolean()) AutoStart = Config["AutoStart"];
   }
   Config = json::object();
@@ -111,6 +114,7 @@ bool DeviceV1_01::Start() {
   Config["VoltageOffset"] = pVoltageOffset;
   Config["CurrentGain"] = pCurrentGain;
   Config["CurrentOffset"] = pCurrentOffset;
+  Config["CurrentInvert"] = pCurrentInvert;
   Config["AutoStart"] = AutoStart;
   ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
   if(pState == UNCONFIGURED) {
@@ -172,8 +176,9 @@ void DeviceV1_01::ReadCallback(struct libusb_transfer *transfer) {
     int16_t *Pkg   = (int16_t*)&transfer->buffer[64 * Block];
     for(uint8_t Count = 0; Count < 16; Count++) {
       if(Pkg[Count * 2 + 0] == -32768) continue;
-      float Voltage = (Pkg[Count * 2 + 0] - This->pVoltageOffset) * This->pVoltageGain;
-      float Current = (Pkg[Count * 2 + 1] - This->pCurrentOffset) * This->pCurrentGain;
+      float Voltage = ((Pkg[Count * 2 + 0] * 0.0142446289062) * (1.0 + (This->pVoltageGain / 100.0))) + This->pVoltageOffset;
+      float Current = ((Pkg[Count * 2 + 1] * 0.0015625000000) * (1.0 + (This->pCurrentGain / 100.0)) * (This->pCurrentInvert ? -1.0 : 1.0)) + This->pCurrentOffset;
+      
       if(This->BuffersAppend(Voltage, Current) == false) {
         LOGFile::Error("Capture buffer overflow! Posible lost of samples\n");
         break;
