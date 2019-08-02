@@ -1,26 +1,26 @@
 <template>
   <div class="row">
     <div class="col-xs-12">
-      <label class="control-label">Start on boot</label>
-      <toggle></toggle>
-    </div>
-    
-    
-    <div class="col-xs-12 col-sm-6">
-      <label class="control-label">Voltage channel Gain</label>
-      <input-spin :min="-10" :max="10" :value="0" :increment="0.001" ref="voltageGain" prepend="%"></input-spin>
+      <label class="control-label" style="line-height: 22px">Start on boot</label>
+      <toggle class="float-right" onText="Yes" offText="No"></toggle>
+      <hr style="margin: 5px 0px 5px 0px"/>
+      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Device inputs can be calibrated to compensate components derating over time.</div>
     </div>
     <div class="col-xs-12 col-sm-6">
-      <label class="control-label">Voltage channel Offset</label>
-      <input-spin :min="-20" :max="20" :value="0" :increment="0.1" ref="voltageOffset" prepend="V"></input-spin>
+      <label class="control-label">Voltage channel correction</label>
+      <input-spin :min="-10" :max="10" :value="Settings.VoltageGain" :increment="0.001" :decimals="3" ref="voltageGain" prepend="%" v-on:change="VoltageGainChange"></input-spin>
     </div>
     <div class="col-xs-12 col-sm-6">
-      <label class="control-label">Current channel Gain</label>
-      <input-spin :min="-10" :max="10" :value="0" :increment="0.001" ref="currentGain" prepend="%"></input-spin>
+      <label class="control-label">Voltage channel offset</label>
+      <input-spin :min="-20" :max="20" :value="Settings.VoltageOffset" :increment="0.01" ref="voltageOffset" prepend="V" v-on:change="VoltageOffsetChange"></input-spin>
     </div>
     <div class="col-xs-12 col-sm-6">
-      <label class="control-label">Current channel Offset</label>
-      <input-spin :min="-1" :max="1" :value="0" :increment="0.001" ref="currentOffset" prepend="A"></input-spin>
+      <label class="control-label">Current channel correction</label>
+      <input-spin :min="-10" :max="10" :value="Settings.CurrentGain" :increment="0.001" :decimals="3" ref="currentGain" prepend="%" v-on:change="CurrentGainChange"></input-spin>
+    </div>
+    <div class="col-xs-12 col-sm-6">
+      <label class="control-label">Current channel offset</label>
+      <input-spin :min="-1" :max="1" :value="Settings.CurrentOffset" :increment="0.01" ref="currentOffset" prepend="A" v-on:change="CurrentOffsetChange"></input-spin>
     </div>
   </div>
 </template>
@@ -35,99 +35,39 @@
   import InputSpin from 'Components/InputSpin.vue';
   import Toggle from 'Components/Toggle.vue';
   export default {
+    props: ['settings'],
     data() {
-      return {
-        Show: false, ShowSpinner: true,
-        Columns: [
-          {name: 'Online', title: 'Online', callback: 'OnlineStatus'},
-          {name: 'Name', title: 'Description'}, 
-          {name: 'ID', title: 'Serial'},
-          {name: '__slot:actions', title: ''}
-        ]
-      };
+      return { Settings: {} };
     },
-    methods: {
-      ModeChanged: function() {
-        
-      },
-      GetAnalyzers() {
-        $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-          success: function(result) { 
-            var TableData = { data: result };
-            this.$refs.table.setData(TableData);
-            this.ShowSpinner = false;
-          }.bind(this)
-        });
-      },
-      OnlineStatus: function(value) {
-        return (value === true) ? '&#9635;' : '&#9633;';
-      },
-      Load: function(analyzers) {
-        this.Show = true;
-        this.ShowSpinner = true;
-        this.$nextTick(function() {
-//          this.GetAnalyzers();
-        });
-      },
-      CurrentlySelected: function(id) {
-        if(this.$root.SelectedAnalyzer === null) return false;
-        if(id.ID === this.$root.SelectedAnalyzer.ID) return true;
-        return false;
-      },
-      Select: function(id) {
-        localStorage.setItem("SelAnalyzer", id.ID);
-        this.$root.SelectedAnalyzer = id;
-        this.$nextTick(function() {
-          this.$root.$emit('AnalyzerChanged');
-          this.$parent.Close();
-        });
-      },
-      Configure: function(id) {
-        this.Show = false;
-        this.$parent.$refs.Configure.Load(id.ID); 
-      },
-      ACL: function(id) {
-        alert("ACL not yet implemented"); 
-      },
-      Tariffs: function(id) { 
-        this.Show = false;
-        this.$parent.$refs.Tariffs.Load(id.ID); 
-      },
-      Alerts: function(id) {
-        alert("Alerts not yet implemented");
-      },
-      Maintenance: function(id) {
-        alert("Maintenance not yet implemented");
-      }
+    created: function() {
+      this.Settings = this.settings;
     },
-    updated: function(){
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
-    },
-    components: { Vuetable, Spinner, OptionPicker, InputSpin }
+    components: { InputSpin, Toggle }
   }
 </script>
 
 <style scoped>
-@media screen and (min-width: 600px) {
-  .table >>> th:nth-child(1) {
-    width: 60px;
-    text-align: center;
+  @media screen and (min-width: 600px) {
+    .table >>> th:nth-child(1) {
+      width: 60px;
+      text-align: center;
+    }
+    .table >>> td:nth-child(1) {
+      text-align: center;
+      font-size: 14px;
+    }
+    .table >>> th:nth-child(3) {
+      width: 180px;
+      text-align: center;
+    }
+    .table >>> td:nth-child(3) {
+      text-align: center;
+    }
+    .table >>> th:nth-child(4) {
+      width: 90px;
+    }
   }
-  .table >>> td:nth-child(1) {
-    text-align: center;
-    font-size: 14px;
-  }
-  .table >>> th:nth-child(3) {
-    width: 180px;
-    text-align: center;
-  }
-  .table >>> td:nth-child(3) {
-    text-align: center;
-  }
-  .table >>> th:nth-child(4) {
-    width: 90px;
-  }
-}
+  
 </style>
 
 

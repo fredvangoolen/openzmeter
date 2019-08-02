@@ -9,9 +9,6 @@
             <button type="button" class="btn btn-default btn-xs" v-on:click="Save"><img :src="require('Imgs/diskette.png')"></button>
             <button type="button" class="btn btn-default btn-xs" v-on:click="Close"><img :src="require('Imgs/arrow_undo.png')"></button>
           </div>
-          <div class="pull-right">
-            <div class="checkbox"><label><input type="checkbox" value=""><strong>Start on boot</strong></label></div>
-          </div>
         </div>
         <div class="modal-body">
           <spinner v-if="ShowSpinner"></spinner>
@@ -42,10 +39,10 @@
         });
         $.ajax({ url: "getDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Serial: dev.Serial }),
           success: function(result) {
+            this.ShowSpinner = false;
             this.Settings = result;
-            
           }.bind(this)
-        });    
+        });
       },
       Close: function() {
         $(this.$el).modal('hide');
@@ -61,7 +58,7 @@
     destroyed: function() {
       this.$root.$el.removeChild(this.$el);
     },
-    components: { Toggle, DeviceVirtual, Device1 }
+    components: { Toggle, DeviceVirtual, Device1, Spinner }
   }
 </script>
 
