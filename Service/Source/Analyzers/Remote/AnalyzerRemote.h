@@ -10,22 +10,19 @@ class AnalyzerRemote : public Analyzer {
   private :
     typedef struct {
       uint64_t        Sequence;
-      json            RequestContents;
+      string          Method;
+//      json            RequestContents;
       HTTPRequest    *Request;
-      SleepLocks      Locks;
+      ProviderLocks   Locks;
     } Query_t;
   private :
     pthread_t        pThread;
     uint64_t         pQuerySequence;
-//    pthread_mutex_t  pQueriesMutex;
     list<Query_t*>   pQueries;
-    SleepLocks      *pRequestLocks;
+    ProviderLocks   *pRequestLocks;
     pthread_mutex_t  pMutex;
   private :
     void  HandleRequest(string url, HTTPRequest &req);
-    void  PushQuery();
-    
-    
     void  GetAnalyzer(HTTPRequest &req);
     void  SetAnalyzer(HTTPRequest &req);
     void  GetSeries(HTTPRequest &req);

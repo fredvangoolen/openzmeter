@@ -63,6 +63,8 @@ bool DeviceRemote::StartDevice() {
   return true;
 }
 bool DeviceRemote::StopDevice() {
+  HTTPServer::UnregisterCallback("/setRemote");
+  HTTPServer::UnregisterCallback("/getRemote");
   pAnalyzersLock.WriteLock();
   if(pState != RUNNING) {
     pAnalyzersLock.WriteUnlock();

@@ -10,107 +10,82 @@ AnalyzerRemote::AnalyzerRemote(string id) : Analyzer(id) {
   pName = "Never seen";
   pQuerySequence = 0;
   pRequestLocks  = NULL;
-  pQueriesMutex  = PTHREAD_MUTEX_INITIALIZER;
-  pRequestMutex  = PTHREAD_MUTEX_INITIALIZER;
+  pMutex         = PTHREAD_MUTEX_INITIALIZER;
 }
 AnalyzerRemote::~AnalyzerRemote() {
-//  pQueriesLock.WriteLock();
-//  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) pthread_cond_signal(&(*it)->Cond);
-//  pQueriesLock.WriteUnlock();
+  pthread_mutex_lock(&pMutex);
+  if(pRequestLocks != NULL) pRequestLocks->Abort();
+  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) (*it)->Locks.Abort();
+  pthread_mutex_unlock(&pMutex);
 }
-
-void AnalyzerRemote::PushQuery() {
-  pRequestLocks.WriteLock();
-//  if(pRequest.size() == 0) {
-//    pRequestLocks.WriteUnlock();
-//    return;
-//  }
-  json Request = json::array();
-  pQueriesLock.WriteLock();
+void AnalyzerRemote::GetRemote(HTTPRequest& req) {
+  pthread_mutex_lock(&pMutex);
+  if(pRequestLocks != NULL) {
+    req.FromString("", MHD_HTTP_SERVICE_UNAVAILABLE);
+    pthread_mutex_unlock(&pMutex);
+    return;
+  }
+  pRequestLocks = new ProviderLocks();
+  pthread_mutex_unlock(&pMutex);
+  if(pRequestLocks->ConsumerWait(15000) == false) {
+    req.FromString("", MHD_HTTP_NO_CONTENT);
+    pthread_mutex_lock(&pMutex);
+    delete pRequestLocks;
+    pRequestLocks = NULL;
+    pthread_mutex_unlock(&pMutex);
+    return;
+  }
+  json Response = json::array();
+  pthread_mutex_lock(&pMutex);
   for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
     if((*it)->Sequence != 0) continue;
     (*it)->Sequence = ++pQuerySequence;
     json Query = json::object();
-    Query["SequenceID"] = (*it)->Sequence;
-    Query["Contents"] = (*it)->RequestContents;
-    Request.push_back(Query);
+    Query["Method"] = (*it)->Method;
+    Query["Params"] = (*it)->Request->GetParams();
+    Query["Params"].erase("Analyzer");
+    Query["Sequence"] = (*it)->Sequence;
+    Response.push_back(Query);
   }
-  LOGFile::Warning("Total: %u, Consulta: %s\n", pQueries.size(), Request.dump().c_str());
-  pQueriesLock.WriteUnlock();
-  
-  
-  
-  pRequestLocks.WriteUnlock();
-}
-void AnalyzerRemote::GetRemote(HTTPRequest& req) {
-  pthread_mutex_lock(&pQueriesMutex);
-  if(pQueries.size() == 0) {
-    
-    
-    pthread_mutex_lock(&pQueriesMutex);
-  }
-  
-  
-  
-  pQueries.push_back(&Query);
-  pQueriesLock.WriteUnlock();
-  PushQuery();
-  if(Query.Locks.ConsumerWait(20000) == false) {
-    req.FromString("", MHD_HTTP_GATEWAY_TIMEOUT);
-  } else {
-    req.FromString(Query.ResponseData, Query.ResponseCode);
-    Query.Locks.ConsumerEnds();
-  }
-  pQueriesLock.WriteLock();
-  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
-    if(*it != &Query) continue;
-    pQueries.erase(it);
-    break;
-  }
-  pQueriesLock.WriteUnlock();
+  pthread_mutex_unlock(&pMutex);
+  LOGFile::Warning("Total: %u, Consulta: %s\n", pQueries.size(), Response.dump().c_str());
+  req.FromJSON(Response);
 }
 void AnalyzerRemote::SetRemote(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Code"].is_number() || !Params["Sequence"].is_number_unsigned()) return req.FromString("'Sequence' and 'Code' param are required", MHD_HTTP_BAD_REQUEST);
   uint64_t Sequence = Params["Sequence"];
   uint16_t Code = Params["Code"];
-  pthread_mutex_lock(&pQueriesMutex);
+  pthread_mutex_lock(&pMutex);
   for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
     if((*it)->Sequence != Sequence) continue;
     Query_t *Query = (*it);
     pQueries.erase(it);
-    pthread_mutex_unlock(&pQueriesMutex);
+    pthread_mutex_unlock(&pMutex);
     Query->Request->FromString(Params["Response"].dump(), Code);
-    Query->Locks.Wake();
+    Query->Locks.ProviderWrite();
     return;
   }
-  pthread_mutex_unlock(&pQueriesMutex);
+  pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerRemote::HandleRequest(string url, HTTPRequest &req) {
   Query_t Query;
   Query.Sequence = 0;
+  Query.Method = url;
   Query.Request = &req;
-  Query.RequestContents["Method"] = url;
-  Query.RequestContents["Params"] = req.GetParams();
-  Query.RequestContents["Params"].erase("Analyzer");
-  pthread_mutex_lock(&pQueriesMutex);
+  pthread_mutex_lock(&pMutex);
   pQueries.push_back(&Query);
-  pthread_mutex_unlock(&pQueriesMutex);
+  if(pRequestLocks != NULL) pRequestLocks->ProviderWrite();
+  pthread_mutex_unlock(&pMutex);
   
-  pthread_mutex_lock(&pRequestMutex);
-  if(pRequestLocks != NULL) pRequestLocks->Wake();
-  pthread_mutex_unlock(&pRequestMutex);
-  
-  if(Query.Locks.Sleep(20000) == false) {
-    req.FromString("", MHD_HTTP_GATEWAY_TIMEOUT);
-    pthread_mutex_lock(&pQueriesMutex);
-    for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
-      if(*it != &Query) continue;
-      pQueries.erase(it);
-      break;
-    }
-    pthread_mutex_unlock(&pQueriesMutex);
+  if(Query.Locks.ConsumerWait(15000) == false) req.FromString("", MHD_HTTP_GATEWAY_TIMEOUT);
+  pthread_mutex_lock(&pMutex);
+  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
+    if(*it != &Query) continue;
+    pQueries.erase(it);
+    break;
   }
+  pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerRemote::GetAnalyzer(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;  
