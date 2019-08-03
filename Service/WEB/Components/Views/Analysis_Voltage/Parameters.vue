@@ -2,11 +2,11 @@
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
       <div class="header-text">{{ Aggregation }}</div>
-        <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases variable="DetailsPhaseSingle" ref="phases" v-on:PhasesChanged="$parent.PhasesChangedSingle"></toolbar-phases>
-          <toolbar-tools variable="To" ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
-        </div>
+      <div class="header-buttons" ref="Toolbar">
+        <toolbar-phases variable="DetailsPhaseSingle" ref="phases" v-on:PhasesChanged="$parent.PhasesChangedSingle"></toolbar-phases>
+        <toolbar-tools variable="To" ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
       </div>
+    </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
       <cubism v-for="(serie, index) in Series" :serie="serie" :key="serie" ref="rows" :index="index"></cubism>
@@ -24,7 +24,7 @@
   import Dygraph from 'JS/dygraph.js';
   export default {
     data() {
-      return { ShowSpinner: true, Aggregation: 'Loading data...', Series: ['POWER_FACTOR', 'VOLTAGE_THD', 'PHI'], Phase: null };
+      return { ShowSpinner: true, Aggregation: 'Loading data...', Series: ['POWER_FACTOR', 'VOLTAGE_THD', 'PHI'] };
     },
     methods: {
       Redraw() {
@@ -79,6 +79,7 @@
     },
     created: function() {
       this.Data = {};
+      this.Phase = null;
       for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = [];
     },
     mounted: function() {

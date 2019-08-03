@@ -181,6 +181,7 @@ export var Series = {
     Title: 'Apparent Power', 
     Serie: 'Apparent_Power', 
     Units: 'va',
+    Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['S'] : ['S(R)', 'S(S)', 'S(T)']; },
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'va', Value: Round2(ScaleToUnits(val, Units)) }; },
     rangeFunc: function() {} 
   },

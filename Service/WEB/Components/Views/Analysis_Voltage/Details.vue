@@ -81,7 +81,6 @@
         this.$refs.parameters.SetPhases(phase);
       },
       SetAnalyzer() {
-        this.Time = 'Loading data...';
         this.LastSample = 0;
         this.UpdateGraphs1M();
         this.UpdateGraphsNow();
@@ -120,3 +119,10 @@
     components: { Spinner, DetailTabs, Waveform, Harmonics, Evolution, Events, Parameters, Phasors, Advanced, ToolbarPhases, ToolbarOptions, ToolbarTools }
   }
 </script>
+
+<style scoped>
+  .panel-other {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+  }
+</style>
