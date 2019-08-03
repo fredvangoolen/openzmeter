@@ -11,7 +11,7 @@
 
 <script>
   import Voltage from './Voltage.vue';
-  import DetailsPanel from './Details.vue';  
+  import DetailsPanel from './Details.vue';
   export default {
     data() {
       return { };
