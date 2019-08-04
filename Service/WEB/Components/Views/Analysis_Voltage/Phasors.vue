@@ -102,7 +102,7 @@
             ctx.textAlign = "left";
             ctx.font = "10px sans";
             ctx.fillStyle = "#333";
-            ctx.fillText(oZm.Round2Plain(Math.abs(e.dygraph.file_[i - 1][1] - e.dygraph.file_[i][1])) + "º", 2, 5);
+            ctx.fillText(oZm.Round2Plain(Math.abs(e.dygraph.file_[i - 1][1] - e.dygraph.file_[i][1])) + "°", 2, 5);
             ctx.fill();
             ctx.restore();  
             
@@ -174,8 +174,8 @@
           Vectors.push([i * 2 + 1, 120 * i - result.Phi[i], result.Current[i]]);
           this.Data.push([Phases[i], "Voltage", i * 120, result['Voltage'][i]]);
           this.Data.push([Phases[i], "Current", i * 120 - result.Phi[i], result['Current'][i]]);
-          Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(i * 120) + 'º', Value: oZm.Round2(result['Voltage'][i]) + '<em> V</em>' } );
-          Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(i * 120 - result.Phi[i]) + 'º', Value: oZm.Round2(result.Current[i]) + '<em> A</em>'} );
+          Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(i * 120) + '°', Value: oZm.Round2(result['Voltage'][i]) + '<em> V</em>' } );
+          Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(i * 120 - result.Phi[i]) + '°', Value: oZm.Round2(result.Current[i]) + '<em> A</em>'} );
 //          MaxVoltage = Math.max(MaxVoltage, result.Voltage[i]);
 //          MaxCurrent = Math.max(MaxCurrent, result.Current[i]);
         }

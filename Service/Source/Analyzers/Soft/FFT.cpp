@@ -100,45 +100,42 @@ void FFT::TransformRadix2(vector<complex<float> > &vec) {
     if (size == n) break;
   }
 }
-
 void FFT::TransformBluestein(vector<complex<float> > &vec) {
   size_t n = vec.size();
   size_t m = 1;
-  while (m / 2 <= n) {
-    if (m > SIZE_MAX / 2) throw std::length_error("Vector too large");
+  while(m / 2 <= n) {
+    if(m > SIZE_MAX / 2) throw std::length_error("Vector too large");
     m *= 2;
   }
   vector<complex<float> > expTable(n);
-  for (size_t i = 0; i < n; i++) {
+  for(size_t i = 0; i < n; i++) {
     unsigned long long temp = static_cast<unsigned long long> (i) * i;
     temp %= static_cast<unsigned long long> (n) * 2;
     float angle = M_PI * temp / n;
     expTable[i] = std::exp(complex<float>(0, -angle));
   }
   vector<complex<float> > av(m);
-  for (size_t i = 0; i < n; i++) av[i] = vec[i] * expTable[i];
+  for(size_t i = 0; i < n; i++) av[i] = vec[i] * expTable[i];
   vector<complex<float> > bv(m);
   bv[0] = expTable[0];
-  for (size_t i = 1; i < n; i++) bv[i] = bv[m - i] = std::conj(expTable[i]);
+  for(size_t i = 1; i < n; i++) bv[i] = bv[m - i] = std::conj(expTable[i]);
   vector<complex<float> > cv(m);
   Convolve(av, bv, cv);
-  for (size_t i = 0; i < n; i++) vec[i] = cv[i] * expTable[i];
+  for(size_t i = 0; i < n; i++) vec[i] = cv[i] * expTable[i];
 }
-
 void FFT::Convolve(const vector<complex<float> > &xvec, const vector<complex<float> > &yvec, vector<complex<float> > &outvec) {
   size_t n = xvec.size();
-  if (n != yvec.size() || n != outvec.size()) throw std::domain_error("Mismatched lengths");
+  if(n != yvec.size() || n != outvec.size()) throw std::domain_error("Mismatched lengths");
   vector<complex<float> > xv = xvec;
   vector<complex<float> > yv = yvec;
   Transform(xv);
   Transform(yv);
-  for (size_t i = 0; i < n; i++) xv[i] *= yv[i];
+  for(size_t i = 0; i < n; i++) xv[i] *= yv[i];
   InverseTransform(xv);
-  for (size_t i = 0; i < n; i++) outvec[i] = xv[i] / static_cast<float> (n);
+  for(size_t i = 0; i < n; i++) outvec[i] = xv[i] / static_cast<float> (n);
 }
-
 size_t FFT::ReverseBits(size_t x, int n) {
   size_t result = 0;
-  for (int i = 0; i < n; i++, x >>= 1) result = (result << 1) | (x & 1U);
+  for(int i = 0; i < n; i++, x >>= 1) result = (result << 1) | (x & 1U);
   return result;
 }
