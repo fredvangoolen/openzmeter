@@ -15,10 +15,7 @@ class FFT : private WorkerLocks {
     vector<complex<float> > Output;                //Datos de salida
   private :
     pthread_t               pThread;               //Hilo de ejecucion
-//    pthread_mutex_t         pThreadMutex;          //Mutex para la variable de condicion
-//    pthread_cond_t          pThreadCond;           //Variable de condicion para esperar
     bool                    pTerminate;            //Marca para finalizar proceso
-//    bool                    pWorking;              //Variable to check processing
   private :
   private :
     static void *FFT_Thread(void *args);
