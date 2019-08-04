@@ -1,10 +1,10 @@
 <template>
   <div>
     <div class="sidenav-header">
-      <div>{{ analyzerName }}</div>
+      <div>{{ (SelAnalyzer == null) ? 'None selected' : SelAnalyzer.Name }}</div>
       <div class="btn-group pull-right">
-        <button type="button" class="btn btn-default btn-xs" :disabled="EventsCount == 0" @click="ShowEvents" data-toggle="tooltip" :title="(EventsCount == 0) ? 'No events since last login' : EventsCount + ' events since last login'"><img v-bind:class="{blink_img: (EventsCount != 0)}" :src="require('Imgs/exclamation.png')"></button>
-        <button type="button" class="btn btn-default btn-xs" :disabled="!hasAnalyzers" @click="ShowDialog" data-toggle="tooltip" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" v-on:click="ShowEvents" data-toggle="tooltip" :title="(EventsCount == 0) ? 'No events since last login' : EventsCount + ' events since last login'"><img v-bind:class="{blink_img: (EventsCount != 0)}" :src="require('Imgs/exclamation.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" v-on:click="ShowDialog" data-toggle="tooltip" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
       </div>
       <div class="clearfix"></div>
     </div>
@@ -18,7 +18,7 @@
   import moment from 'JS/moment.js';
   export default {
     data() {
-      return { AvaliableAnalyzers: [], hasAnalyzers: false, SelAnalyzer: null, analyzerName: 'None selected', EventsCount: 0 };
+      return { SelAnalyzer: null, EventsCount: 0 };
     },
     created: function() {
       this.LastSample = 0;
@@ -26,20 +26,31 @@
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
     mounted: function() {
-      this.GetAnalyzers();
+      this.CheckAnalyzer();
     },
     beforeDestroy: function () {
       clearInterval(this.Timer);
     },
     methods: {
-      SetAnalyzer: function() {
-        if(this.$root.SelectedAnalyzer === null) {
-          this.analyzerName = 'None selected';
+      SetAnalyzer: function(analyzer) {
+        this.SelAnalyzer = analyzer;
+        this.LastSample = 0;
+        this.EventsCount = 0;
+        this.GetEvents();
+      },
+      CheckAnalyzer: function() {
+        if(localStorage.getItem("SelAnalyzer") === undefined) {
+          this.$refs.Dialog.Show();
         } else {
-          this.analyzerName = this.$root.SelectedAnalyzer.Name;
-          this.LastSample = 0;
-          this.EventsCount = 0;
-          this.GetEvents();
+          $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: localStorage.getItem("SelAnalyzer") }), 
+            success: function(result) { 
+              this.$root.SelectedAnalyzer = result;  
+              this.$root.$emit('AnalyzerChanged', result);
+            }.bind(this),
+            error: function() {
+              this.$refs.Dialog.Show();
+            }.bind(this)
+          });
         }
       },
       ShowEvents: function() {
@@ -49,7 +60,7 @@
       GetEvents: function() {
         clearInterval(this.Timer);
         var Analyzer = this.$root.SelectedAnalyzer;
-        if(Analyzer == null) return;
+        if(Analyzer === null) return;
         $.ajax({ url: 'getEvents', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ To: moment().valueOf(), LastSample: this.LastSample, Analyzer: Analyzer.ID, Period: moment().valueOf() - parseInt(localStorage.getItem('LastLogin')) }),
           success: function(result) {
             if(result.StartTime.length > 0) {        
@@ -62,28 +73,9 @@
           }.bind(this)
         });
       },
-      GetAnalyzers() {
-        $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-          success: function(result) { this.AvaliableAnalyzers = result; this.CheckSelected(); }.bind(this)
-        });
-      },
       ShowDialog() {
-        this.$refs.Dialog.Show(this.AvaliableAnalyzers);
+        this.$refs.Dialog.Show();
       },
-      CheckSelected() {
-        if(this.AvaliableAnalyzers.length === 0) {
-          this.ShowDialog();
-          this.hasAnalyzers = false;
-        } else {
-          this.hasAnalyzers = true;
-          for(var i = 0; i < this.AvaliableAnalyzers.length; i++) {
-            if(this.AvaliableAnalyzers[i].ID === localStorage.getItem("SelAnalyzer")) this.SelAnalyzer = this.AvaliableAnalyzers[i];
-          }
-          if(this.SelAnalyzer === null) this.ShowDialog();
-          this.$root.SelectedAnalyzer = this.SelAnalyzer;  
-          this.$root.$emit('AnalyzerChanged');
-        }
-      }
     },
     components: { ProgressBar, AnalyzerDialog }
   }

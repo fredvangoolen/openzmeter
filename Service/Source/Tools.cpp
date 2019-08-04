@@ -2,29 +2,164 @@
  * File:     Tools.cpp
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
-//#include <fstream>
 #include <sys/time.h>
-//#include <unistd.h>
 #include <stdarg.h>
-//#include <stdlib.h>
 #include <fcntl.h>
-//#include <ctype.h>
-//#include <sys/mman.h>
-//#include <sys/time.h>
-
-//#include <sys/types.h>
-//#include <sys/stat.h>
 #include "Tools.h"
 
 
 
 //añadido para probar el envio
-  #include <arpa/inet.h>
-      #include <netinet/in.h>
-      #include <stdio.h>
-      #include <sys/types.h>
-      #include <sys/socket.h>
-      #include <unistd.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>
+//----------------------------------------------------------------------------------------------------------------------
+RWLocks::RWLocks() {
+  pMutex = PTHREAD_MUTEX_INITIALIZER;
+  pReadersCondition = PTHREAD_COND_INITIALIZER;
+  pWritersCondition = PTHREAD_COND_INITIALIZER;
+  pWriters = 0;
+  pReaders = 0;
+  pActiveWriter = false;
+}
+void RWLocks::ReadLock() {
+  pthread_mutex_lock(&pMutex);
+  while(pWriters != 0) pthread_cond_wait(&pReadersCondition, &pMutex);
+  pReaders++;
+  pthread_mutex_unlock(&pMutex);
+}
+void RWLocks::ReadUnlock() {
+  pthread_mutex_lock(&pMutex);
+  pReaders--;
+  pthread_mutex_unlock(&pMutex);
+  pthread_cond_signal(&pWritersCondition);
+}
+void RWLocks::WriteLock() {
+  pthread_mutex_lock(&pMutex);
+  pWriters++;
+  while((pReaders != 0) || (pActiveWriter != false)) pthread_cond_wait(&pWritersCondition, &pMutex);
+  pActiveWriter = true;
+  pthread_mutex_unlock(&pMutex);
+}
+void RWLocks::WriteUnlock() {
+  pthread_mutex_lock(&pMutex);
+  pWriters--;
+  pActiveWriter = false;
+  if(pWriters > 0) 
+    pthread_cond_signal(&pWritersCondition);
+  else
+    pthread_cond_broadcast(&pReadersCondition);
+  pthread_mutex_unlock(&pMutex);
+}
+//----------------------------------------------------------------------------------------------------------------------
+ProviderLocks::ProviderLocks() {
+  pWaitingThreads      = 0;
+  pDataReady           = false;
+  pTerminate           = false;
+  pWaitingThreadsMutex = PTHREAD_MUTEX_INITIALIZER;
+  pDataReadyMutex      = PTHREAD_MUTEX_INITIALIZER;
+  pWaitingThreadsCond  = PTHREAD_COND_INITIALIZER;
+  pDataReadyCond       = PTHREAD_COND_INITIALIZER;
+}
+void ProviderLocks::Abort() {
+  pTerminate = true;
+  pthread_cond_broadcast(&pDataReadyCond);
+}
+void ProviderLocks::ProviderWrite() {
+  pthread_mutex_lock(&pDataReadyMutex);
+  pDataReady = true;
+  pthread_mutex_unlock(&pDataReadyMutex);
+  pthread_cond_broadcast(&pDataReadyCond);
+}
+void ProviderLocks::ProviderWait() {
+  pthread_mutex_lock(&pWaitingThreadsMutex);
+  while(pWaitingThreads != 0) pthread_cond_wait(&pWaitingThreadsCond, &pWaitingThreadsMutex);
+  pthread_mutex_unlock(&pWaitingThreadsMutex);
+  pthread_mutex_lock(&pDataReadyMutex);
+  pDataReady = false;
+  pthread_mutex_unlock(&pDataReadyMutex);
+}
+bool ProviderLocks::ConsumerWait(uint timeoutMS) {
+  int Error = 0;
+  pthread_mutex_lock(&pWaitingThreadsMutex);
+  pWaitingThreads++;
+  pthread_mutex_unlock(&pWaitingThreadsMutex);
+  pthread_mutex_lock(&pDataReadyMutex);
+  while((pDataReady == false) && (Error == 0)) {
+    if(pTerminate == true) return false;
+    struct timeval  Current;
+    struct timespec Timeout;
+    gettimeofday(&Current, NULL);
+    Timeout.tv_sec  = Current.tv_sec + (timeoutMS / 1000);
+    Timeout.tv_nsec = (timeoutMS % 1000) * 1000000;
+    Error = pthread_cond_timedwait(&pDataReadyCond, &pDataReadyMutex, &Timeout);
+  }
+  pthread_mutex_unlock(&pDataReadyMutex);
+  if(Error != 0) {
+    ConsumerEnds();
+    return false;
+  }
+  return true;
+}
+void ProviderLocks::ConsumerEnds() {
+  pthread_mutex_lock(&pWaitingThreadsMutex);
+  pWaitingThreads--;
+  pthread_cond_signal(&pWaitingThreadsCond);
+  pthread_mutex_unlock(&pWaitingThreadsMutex);
+}
+//----------------------------------------------------------------------------------------------------------------------
+WorkerLocks::WorkerLocks() {
+  pWorking = false;
+  pTerminate = false;
+  pCond = PTHREAD_COND_INITIALIZER;
+  pMutex = PTHREAD_MUTEX_INITIALIZER;
+}
+void WorkerLocks::Abort() {
+  pTerminate = true;
+  pthread_cond_signal(&pCond);
+}
+void WorkerLocks::WakeWorker() {
+  pthread_mutex_lock(&pMutex);
+  pWorking = true;
+  pthread_mutex_unlock(&pMutex);
+  pthread_cond_signal(&pCond);
+}
+bool WorkerLocks::WorkerWaitTask() {
+  pthread_mutex_lock(&pMutex);
+  while(pWorking == false) {
+    if(pTerminate == true) {
+      pthread_mutex_unlock(&pMutex);
+      return false;
+    }
+    pthread_cond_wait(&pCond, &pMutex);
+  }
+  pthread_mutex_unlock(&pMutex);
+  return true;
+}
+void WorkerLocks::WorkerEndsTask() {
+  pthread_mutex_lock(&pMutex);
+  pWorking = false;
+  pthread_mutex_unlock(&pMutex);
+  pthread_cond_signal(&pCond);
+}
+void WorkerLocks::WaitWorker() {
+  pthread_mutex_lock(&pMutex);
+  while(pWorking == true) {
+    if(pTerminate == true) return;
+    pthread_cond_wait(&pCond, &pMutex);
+  } 
+  pthread_mutex_unlock(&pMutex);
+}
+bool WorkerLocks::IsWorking() {
+  bool Result;
+  pthread_mutex_lock(&pMutex);
+  Result = (pWorking == false);
+  pthread_mutex_unlock(&pMutex);
+  return Result;
+}
 //----------------------------------------------------------------------------------------------------------------------
 ConfigManager   *ConfigManager::pInstance = NULL;
 pthread_mutex_t  ConfigManager::pMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -58,7 +193,7 @@ ConfigManager::~ConfigManager() {
   pInstance = NULL;
   pthread_mutex_unlock(&pMutex);
 }
-bool ConfigManager::WriteConfig(string path, json val) {
+bool ConfigManager::WriteConfig(const string &path, const json &val) {
   pthread_mutex_lock(&pMutex);
   LOGFile::Debug("Saving '%s' settings\n", path.c_str());
   if(pInstance == NULL) {
@@ -85,7 +220,7 @@ bool ConfigManager::WriteConfig(string path, json val) {
   pthread_mutex_unlock(&pMutex);
   return true;
 }
-json ConfigManager::ReadConfig(string path) {
+json ConfigManager::ReadConfig(const string &path) {
   pthread_mutex_lock(&pMutex);
   LOGFile::Debug("Reading '%s' settings\n", path.c_str());
   if((pInstance == NULL) || (pInstance->pConfig.is_object() == false)) {
@@ -114,8 +249,8 @@ PIDFile::~PIDFile() {
 }
 //----------------------------------------------------------------------------------------------------------------------
 LOGFile        *LOGFile::pInstance = NULL;
-bool            LOGFile::pConsole = true;
-pthread_mutex_t LOGFile::pMutex = PTHREAD_MUTEX_INITIALIZER;
+bool            LOGFile::pConsole  = true;
+pthread_mutex_t LOGFile::pMutex    = PTHREAD_MUTEX_INITIALIZER;
 LOGFile::LOGFile() {
   string Name = "/var/log/openZmeter.log";
   pLevel = DEBUG;
@@ -245,7 +380,7 @@ uint64_t Tools::GetTime() {
   }
   return (uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000;
 }
-void Tools::SendUDP(json obj) {
+void Tools::SendUDP(const json &obj) {
   struct sockaddr_in Client;
   int Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if(Socket == -1) {

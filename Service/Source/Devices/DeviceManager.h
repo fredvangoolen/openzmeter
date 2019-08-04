@@ -1,52 +1,29 @@
 /* ================================== zMeter ===========================================================================
- * File:     CaptureInterface.h
- * Author:   Eduardo Viciana (12 de abril de 2017)
+ * File:     DeviceManager.h
+ * Author:   Eduardo Viciana
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <vector>
-#include <pthread.h>
-#include <nlohmann/json.hpp>
-#include "Analyzers.h"
+#include "Device.h"
 #include "HTTPServer.h"
+#include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
-using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
-class Device {
-  public :
-    enum DeviceState { UNCONFIGURED, STOPPED, RUNNING };
-  protected :
-    DeviceState pState;                   //Device state
-    string      pSerial;                  //Device serial
-    string      pDriver;                  //Driver name
-    string      pName;                    //Driver description
-  public :
-    string Serial();
-    string Driver();
-    string Name();
-  public :
-    virtual uint32_t           AnalyzersCount() = 0;
-    virtual AnalyzerInterface *FindAnalyzer(string serial) = 0;
-    virtual bool               Start() = 0;
-    virtual bool               Stop() = 0;
-  public :
-    Device();
-    virtual ~Device();
-    DeviceState State();
-    json        GetConfig();
-};
 class DeviceManager {
   private :  
-    static vector<Device*>  pDevices;
+    static vector<Device*>  pDevices;         //Initiated by devices, cleared on destroy
+    static RWLocks          pLock;            //Contro access to critical sections
   public :
     static bool AddDevice(Device *dev);
   private :
     static void GetDevicesCallback(HTTPRequest &req);
     static void GetDeviceCallback(HTTPRequest &req);
+    static void SetDeviceCallback(HTTPRequest &req);
     static void StartDeviceCallback(HTTPRequest &req);
     static void StopDeviceCallback(HTTPRequest &req);
-    static void SetDeviceCallback(HTTPRequest &req);
     static void GetAnalyzersCallback(HTTPRequest &req);
+    static void GetAnalyzerCallback(HTTPRequest &req);
     static void SetAnalyzerCallback(HTTPRequest &req);
     static void GetSeriesCallback(HTTPRequest &req);
     static void GetSeriesNowCallback(HTTPRequest &req);
@@ -55,11 +32,13 @@ class DeviceManager {
     static void GetEventCallback(HTTPRequest &req);
     static void SetEventCallback(HTTPRequest &req);
     static void DelEventCallback(HTTPRequest &req);
+    static void GetRatesCallback(HTTPRequest &req);
+    static void GetRateCallback(HTTPRequest &req);
+    static void SetRateCallback(HTTPRequest &req);
+    static void DelRateCallback(HTTPRequest &req);
+    static void AddRateCallback(HTTPRequest &req);
     static void GetPricesCallback(HTTPRequest &req);
-    static void GetTariffsCallback(HTTPRequest &req);
-    static void SetTariffsCallback(HTTPRequest &req);
-    static void DelTariffsCallback(HTTPRequest &req);    
   public :
     DeviceManager();
-    ~DeviceManager();    
+    ~DeviceManager();
 };

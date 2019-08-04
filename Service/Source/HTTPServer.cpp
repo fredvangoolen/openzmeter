@@ -38,10 +38,10 @@ HTTPRequest::HTTPRequest(char *cookie, bool deflate) : Database() {
 HTTPRequest::~HTTPRequest() {
   if(pDeflate) deflateEnd(&pDeflateObj);
 }
-uint32_t HTTPRequest::size() {
+uint32_t HTTPRequest::size() const {
   return pPostData.size();
 }
-void HTTPRequest::FromFile(string name) {
+void HTTPRequest::FromFile(const string &name) {
   size_t Size = 0;
   char *Tmp = (char*)ResourceLoader::GetFile(name, &Size);
   pResultCode = (Size == 0) ? MHD_HTTP_NOT_FOUND : MHD_HTTP_OK;
@@ -59,20 +59,20 @@ void HTTPRequest::FromFile(string name) {
     }
   }
 }
-void HTTPRequest::FromString(string obj, int resultCode) {
+void HTTPRequest::FromString(const string &obj, int resultCode) {
   pPostData = obj;
   pResultCode = resultCode;
   pMimeType = "text/plain";
 }
-void HTTPRequest::FromJSON(json obj) {
+void HTTPRequest::FromJSON(const json &obj) {
   pPostData = obj.dump();
   pResultCode = MHD_HTTP_OK;
   pMimeType = "application/json";
 }
-string HTTPRequest::SessionID() {
+string HTTPRequest::SessionID() const {
   return pSessionID;
 }
-string HTTPRequest::UserName() {
+string HTTPRequest::UserName() const {
   return pUserName;
 }
 void HTTPRequest::AppendParams(const char *input, size_t* len) {
@@ -92,26 +92,26 @@ bool HTTPRequest::ProcessParams(bool local) {
   }
   return false;
 }
-json HTTPRequest::GetParams() {
+const json &HTTPRequest::GetParams() const {
   return pJSONParams;
 }
-uint64_t HTTPRequest::GetTime() {
+uint64_t HTTPRequest::GetTime() const {
   return Tools::GetTime() - pStartTime;
 }
-bool HTTPRequest::Deflate() {
+bool HTTPRequest::Deflate() const {
   return pDeflate;
 }
 void HTTPRequest::CloseSession() {
   ExecSentenceNoResult("DELETE FROM sessions WHERE id = " + Bind(pSessionID));
   pUserName.clear();
 }
-int  HTTPRequest::ResultCode() {
+int  HTTPRequest::ResultCode() const {
   return pResultCode;
 }
-string HTTPRequest::MimeType() {
+string HTTPRequest::MimeType() const {
   return pMimeType;
 }
-void HTTPRequest::MimeType(string type) {
+void HTTPRequest::MimeType(const string &type) {
   pMimeType = type;
 }
 ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t max) {
@@ -137,8 +137,8 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
   }
 }
 //----------------------------------------------------------------------------------------------------------------------
-vector<HTTPServer::Callback_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
-bool                                                               HTTPServer::pRegistered = false;
+vector<HTTPServer::Callback_t> HTTPServer::pCallbacks;
+RWLocks                        HTTPServer::pLock = RWLocks();
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
   pDaemon = NULL;
@@ -159,27 +159,42 @@ HTTPServer::HTTPServer() {
   } else {
     LOGFile::Info("HTTP server started on port %hu\n", Port);
   }
-  if(pRegistered == false) {
-    RegisterCallback("/Ping", PingCallback);
-    pRegistered = true;
-  }
+  RegisterCallback("/Ping", PingCallback);
 }
 HTTPServer::~HTTPServer() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
+  UnregisterCallback("/Ping");
 }
 void HTTPServer::PingCallback(HTTPRequest &req) {
   req.FromString("{}", (req.UserName() == "") ? MHD_HTTP_UNAUTHORIZED : MHD_HTTP_OK);
 }
-void HTTPServer::RegisterCallback(string handleName, HTTPServer::Func_t function) {
+void HTTPServer::RegisterCallback(const string &handleName, const HTTPServer::Func_t function) {
   Callback_t Item = {handleName, function};
+  pLock.WriteLock();
+  for(uint n = 0; n < pCallbacks.size(); n++) {
+    if(pCallbacks[n].HandleName != handleName) continue;
+    pCallbacks[n] = Item;
+    pLock.WriteUnlock();
+    return;
+  }
   pCallbacks.push_back(Item);
+  pLock.WriteUnlock();
 }
-void HTTPServer::RemoveExpiredSessions() {
+void HTTPServer::UnregisterCallback(const string &handleName) {
+  pLock.WriteLock();
+  for(vector<Callback_t>::iterator it = pCallbacks.begin(); it < pCallbacks.end(); it++) {
+    if(it->HandleName != handleName) continue;
+    pCallbacks.erase(it);
+    break;
+  }
+  pLock.WriteUnlock();
+}
+void HTTPServer::RemoveExpiredSessions() const {
   Database DB;
   if(Tools::GetTime() < 1296000000) return;
   DB.ExecSentenceNoResult("DELETE FROM sessions WHERE (timestamp < " + DB.Bind(Tools::GetTime() - 1296000000) + " AND username IS NOT NULL) OR (timestamp < " + DB.Bind(Tools::GetTime() - 60000) + " AND username IS NULL)");
 }
-int HTTPServer::SendRedirect(struct MHD_Connection *connection, string url) {
+int HTTPServer::SendRedirect(struct MHD_Connection *connection, const string &url) {
   LOGFile::Debug("Redirecting client to '%s'\n", url.c_str());
   struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
   MHD_add_response_header(response, "Location", url.c_str());
@@ -269,14 +284,18 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
           Request->FromString("Unauthorided access to API", MHD_HTTP_UNAUTHORIZED);
         } else {
           bool Handled = false;
+          pLock.ReadLock();
           for(vector<Callback_t>::iterator it = pCallbacks.begin() ; it != pCallbacks.end(); ++it) {
-            if(it->HandleName == URL) {
-              it->Function(*Request);
-              Handled = true;
-              break;
-            }
+            if(it->HandleName != URL) continue;
+            pLock.ReadUnlock();
+            it->Function(*Request);
+            Handled = true;
+            break;
           }
-          if(Handled == false) Request->FromString("Method not found", MHD_HTTP_METHOD_NOT_ALLOWED);
+          if(Handled == false) {
+            pLock.ReadUnlock();
+            Request->FromString("Method not found", MHD_HTTP_METHOD_NOT_ALLOWED);
+          }
         }
       }
       MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &Request->WriteFunction, Request, NULL);
@@ -294,72 +313,3 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
   }
   return MHD_NO;
 }
-//void HTTPServer::HandlePostRequest(struct MHD_Connection *connection, const char *url, const char *upload_data, size_t *upload_data_size, void **ptr) {
-
-
-
-//        char Cookie[256];
-//        sprintf(Cookie, "SESSION=%s; httponly; Path=/", SessionID);
-//return SendFile(connection, (char*)"Login.html", MHD_HTTP_HEADER_SET_COOKIE, Cookie);
-//if((aditionalheadertype != NULL) && (aditionalheadervalue != NULL )) MHD_add_response_header(response, aditionalheadertype, aditionalheadervalue);
-
-
-
-//  Request_t *Request = (Request_t*)*ptr;
-  
-
-
-//  } else if(strcmp(url, "/setSysInfo") == 0) {
-//    char        *Type   = NULL;
-//    json_object *Params = NULL;
-//    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
-//      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-//      if((JSON_Type == json_type_string) && (strcmp(JSON_Key, "Type") == 0)) 
-//        Type = (char*)json_object_get_string(JSON_Val);
-//      else if((JSON_Type == json_type_object) && (strcmp(JSON_Key, "Params") == 0))
-//        Params = JSON_Val;
-//      else
-//        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
-//    }
-//    if((Type == NULL) || (Params == NULL)) return SendError(connection, MHD_HTTP_BAD_REQUEST, "Requiered param not specified");
-//    if(strcmp(Type, "Connectivity") == 0) {
-//      Request->JSONWriter = json_object_new_object();
-//      json_object_object_add(Request->JSONWriter, "result", json_object_new_boolean(NetworkManager::SetJSONNetworkConfig(Params)));
-//      Request->PostData = (char*)json_object_to_json_string_length(Request->JSONWriter, JSON_C_TO_STRING_PLAIN, &Request->PostDataLen);
-//    }
-//    return MHD_YES;
-//  } else if(strcmp(url, "/getEvents") == 0) {
-//  } else if(strcmp(url, "/getEventSamples") == 0) {
-//    uint32_t Node = 0;
-//    uint64_t Starttime = 0;
-//    json_object_object_foreach(Request->JSONReader, JSON_Key, JSON_Val) {
-//      enum json_type JSON_Type = json_object_get_type(JSON_Val);
-//      if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Node") == 0))
-//        Node = json_object_get_int(JSON_Val);
-//      else if((JSON_Type == json_type_int) && (strcmp(JSON_Key, "Starttime") == 0))
-//        Starttime = json_object_get_int64(JSON_Val);
-//      else
-//        return SendError(connection, MHD_HTTP_BAD_REQUEST, "Invalid JSON params");
-//    }
-////    if((Error == true) || (Node < 0) || (Node >= Tools::Devices.Len)) goto InvalidParams;
-//    char QueryText[8192];
-//    int  QueryLen = 0;
-//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "SELECT row_to_json(Result) AS result FROM ( SELECT ");
-////    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "%u AS \"Envelope\", ", (uint32_t)(EVENT_ENVELOPETIME * Tools::Devices.Items[Node].Instance->SampleRate()));
-//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "duration AS \"Duration\", ");
-//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "samples AS \"Samples\" ");
-//    QueryLen += snprintf(&QueryText[QueryLen], sizeof(QueryText) - QueryLen, "FROM events WHERE node = %u AND Starttime = %" PRIu64 ") AS Result", Node, Starttime);
-//    Request->DB = new Database();
-//    Request->PostData = Request->DB->ExecSentenceJSON(QueryText, &Request->PostDataLen);
-//    return MHD_YES;
-//  }
-//  Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-//  Request->PostData = (char*)"Invalid command";
-//  Request->PostDataLen = strlen(Request->PostData);
-//  return MHD_YES;
-////InvalidParams:
-////  Request->ResultCode = MHD_HTTP_BAD_REQUEST;
-////  Request->PostData = (char*)"Invalid JSON params";
-////  Request->PostResponseLen = strlen(Request->PostData);
-////  return MHD_YES;  
-//}

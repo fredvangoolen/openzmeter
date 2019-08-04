@@ -10,10 +10,63 @@
 using json = nlohmann::json;
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
+class RWLocks {
+  //Multiple read access allowed, exclusive access for writing
+  private : 
+    pthread_mutex_t  pMutex;
+    pthread_cond_t   pReadersCondition;
+    pthread_cond_t   pWritersCondition;
+    uint             pReaders;
+    uint             pWriters;
+    bool             pActiveWriter;
+  public :
+    RWLocks();
+    void ReadLock();
+    void ReadUnlock();
+    void WriteLock();
+    void WriteUnlock();
+};
+//----------------------------------------------------------------------------------------------------------------------
+class WorkerLocks {
+  //Worker locks until signal to wakeup, caller can wait worker to ends
+  private :
+    bool            pWorking;
+    bool            pTerminate;
+    pthread_mutex_t pMutex;
+    pthread_cond_t  pCond;
+  public :
+    WorkerLocks();
+    void Abort();
+    bool WorkerWaitTask();
+    void WorkerEndsTask();
+    void WakeWorker();
+    void WaitWorker();
+    bool IsWorking();
+};
+//----------------------------------------------------------------------------------------------------------------------
+class ProviderLocks {
+  //Provider wait until all consumers ends, consumers wait until provider write
+  private :
+    uint             pWaitingThreads;
+    pthread_mutex_t  pWaitingThreadsMutex;
+    pthread_cond_t   pWaitingThreadsCond;
+    bool             pDataReady;
+    bool             pTerminate;
+    pthread_mutex_t  pDataReadyMutex;
+    pthread_cond_t   pDataReadyCond;
+  public :
+    ProviderLocks();
+    void Abort();
+    void ProviderWrite();
+    void ProviderWait();
+    bool ConsumerWait(uint timeoutMS);
+    void ConsumerEnds();
+};
+//----------------------------------------------------------------------------------------------------------------------
 class ConfigManager {
   private :
-    static ConfigManager          *pInstance;
-    static pthread_mutex_t         pMutex;
+    static ConfigManager    *pInstance;
+    static pthread_mutex_t   pMutex;
   private :
     int   pFile;
     json  pConfig;
@@ -21,8 +74,8 @@ class ConfigManager {
     ConfigManager(string name);
     virtual ~ConfigManager();
   public :
-    static json  ReadConfig(string path);
-    static bool  WriteConfig(string path, json val);
+    static json ReadConfig(const string &path);
+    static bool WriteConfig(const string &path, const json &val);
 };
 //----------------------------------------------------------------------------------------------------------------------
 class PIDFile {
@@ -43,7 +96,7 @@ class ResourceLoader {
   private :
     static vector<File_t> pFiles;
   public :
-    static uint8_t *GetFile(string name, size_t *size);
+    static uint8_t *GetFile(const string name, size_t *size);
 };
 //----------------------------------------------------------------------------------------------------------------------
 class LOGFile {
@@ -72,6 +125,6 @@ class LOGFile {
 class Tools {
   public :
     static uint64_t  GetTime();
-    static void      SendUDP(json obj);
+    static void      SendUDP(const json &obj);
 };
 //----------------------------------------------------------------------------------------------------------------------

@@ -96,7 +96,7 @@ DeviceV1_00::~DeviceV1_00() {
 //  }
 //  if(pSerial) free(pSerial);
 }
-AnalyzerInterface *DeviceV1_00::FindAnalyzer(string serial) {
+Analyzer *DeviceV1_00::FindAnalyzer(string serial) {
   if(pAnalyzer == NULL) return NULL;
   return (serial == pAnalyzer->Serial()) ? pAnalyzer : NULL;
 }
@@ -322,28 +322,28 @@ void *DeviceV1_00::Signal_Thread(void* args) {
  */
   return NULL;
 }
-bool  DeviceV1_00::SetConfig(json config) {
-  if(pState == RUNNING) return false;
-  LOGFile::Info("Configuring 'V1.00' driver with serial '%s'...\n", pSerial.c_str());
-  bool AutoStart = false;
-  if(config["VoltageGain"].is_number()) pVoltageGain = config["VoltageGain"];
-  if(config["VoltageOffset"].is_number()) pVoltageOffset = config["VoltageOffset"];
-  if(config["CurrentGain"].is_number()) pCurrentGain = config["CurrentGain"];
-  if(config["CurrentOffset"].is_number()) pCurrentOffset = config["CurrentOffset"];
-  if(config["AutoStart"].is_boolean()) AutoStart = config["AutoStart"];  
-  if(pState == UNCONFIGURED) {
-    pState = STOPPED;
-    pConfig = config;
-    if((AutoStart == true) && (Start() == false)) return false;
-  }
-  pConfig["VoltageGain"] = pVoltageGain;
-  pConfig["VoltageOffset"] =pVoltageOffset;
-  pConfig["CurrentGain"] = pCurrentGain;
-  pConfig["CurrentOffset"] = pCurrentOffset;
-  pConfig["AutoStart"] = AutoStart;
-//  if(ConfigManager::Instance()->SaveConfig() == false) return false;
-  return true;
-}
+//bool  DeviceV1_00::SetConfig(json config) {
+//  if(pState == RUNNING) return false;
+//  LOGFile::Info("Configuring 'V1.00' driver with serial '%s'...\n", pSerial.c_str());
+//  bool AutoStart = false;
+//  if(config["VoltageGain"].is_number()) pVoltageGain = config["VoltageGain"];
+//  if(config["VoltageOffset"].is_number()) pVoltageOffset = config["VoltageOffset"];
+//  if(config["CurrentGain"].is_number()) pCurrentGain = config["CurrentGain"];
+//  if(config["CurrentOffset"].is_number()) pCurrentOffset = config["CurrentOffset"];
+//  if(config["AutoStart"].is_boolean()) AutoStart = config["AutoStart"];  
+//  if(pState == UNCONFIGURED) {
+//    pState = STOPPED;
+//    pConfig = config;
+//    if((AutoStart == true) && (Start() == false)) return false;
+//  }
+//  pConfig["VoltageGain"] = pVoltageGain;
+//  pConfig["VoltageOffset"] =pVoltageOffset;
+//  pConfig["CurrentGain"] = pCurrentGain;
+//  pConfig["CurrentOffset"] = pCurrentOffset;
+//  pConfig["AutoStart"] = AutoStart;
+////  if(ConfigManager::Instance()->SaveConfig() == false) return false;
+//  return true;
+//}
 bool DeviceV1_00::Start() {
   pthread_mutex_lock(&pMutex);
   if(pState == RUNNING) {
@@ -356,7 +356,7 @@ bool DeviceV1_00::Start() {
   pLastUpdate   = 0;
   pDeviceHandle = NULL;
   pNewDevice    = NULL;
-  pAnalyzer     = new AnalyzerSoft(pSerial, AnalyzerInterface::PHASE1, DEVICEV1_00_SAMPLEFREQ);
+  pAnalyzer     = new AnalyzerSoft(pSerial, Analyzer::PHASE1, DEVICEV1_00_SAMPLEFREQ);
 //  if((json_object_object_get_ex(config, "Remote", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigRemote(Find);
 //  if((json_object_object_get_ex(config, "Prices", &Find) == true) && (json_object_get_type(Find) == json_type_object)) This->pAnalyzer->ConfigPrices(Find);
   if(libusb_init(&pContext) < 0) {

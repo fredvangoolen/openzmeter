@@ -5,7 +5,7 @@
 #pragma once
 #include <libusb-1.0/libusb.h>
 #include <deque>
-#include "Devices.h"
+#include "Device.h"
 #include "AnalyzerSoft.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define DEVICEV1_01_VID             0x0483                          //Product ID
@@ -30,12 +30,11 @@ class DeviceV1_01 : public Device {
       libusb_transfer *Transfer;
     } Transfer_t;
   private :
-    static bool                  pRegistered; 
+    static bool                  pRegistered;
   private :
     pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
     Transfer_t                   pTransfers[DEVICEV1_01_TRANSFERS];
     bool                         pTerminate;               //Marca que deben detenerse los trabajos pendientes
-    AnalyzerSoft                *pAnalyzer;                //Analyzer
     deque<Sample_t>              pBuffer;                  //Read buffer
     float                        pVoltageGain;             //Voltage gain
     float                        pCurrentGain;             //Current gain
@@ -46,7 +45,6 @@ class DeviceV1_01 : public Device {
     struct libusb_device        *pNewDevice;               //USB device
     libusb_context              *pContext;                 //USB context
     pthread_t                    pSignalThread;            //Thread to handle LED and sounds
-    pthread_mutex_t              pMutex;
   private : 
     static bool  GetInstances();
     static void *Capture_Thread(void *args);
@@ -54,9 +52,9 @@ class DeviceV1_01 : public Device {
     static void  ReadCallback(struct libusb_transfer *transfer);
     static int   PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
-    AnalyzerInterface *FindAnalyzer(string serial);
-    bool               Start();
-    bool               Stop();
+//    Analyzer *FindAnalyzer(string serial);
+    bool               StartDevice();
+    bool               StopDevice();
     bool               BuffersAppend(float voltageSample, float currentSample);
   public :
     uint32_t           AnalyzersCount();

@@ -7,12 +7,12 @@
 //#include <cctz/civil_time.h>
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
-TariffList::TariffList(const json list, const string timezone) {
+TariffList::TariffList(const json &list, const string &timezone) {
   cctz::load_time_zone(timezone, &pTimeZone);
   if(list.is_array() == false) return;
   for(uint32_t n = 0; n < list.size(); n++) PushTariff(list[n]);
 }
-bool TariffList::PushTariff(json tariff) {
+bool TariffList::PushTariff(const json &tariff) {
   if(!tariff["StartDate"].is_number()) return false;
   if(!tariff["EndDate"].is_number()) return false;
   if(!tariff["Template"].is_object()) return false;
@@ -25,7 +25,7 @@ bool TariffList::PushTariff(json tariff) {
   pList.push_back(Tmp);
   return true;
 }
-uint64_t TariffList::BillFrom(uint64_t from) {
+uint64_t TariffList::BillFrom(const uint64_t from) {
   uint64_t BillingFrom = (from / 3600000) * 3600000;
   Tariff *Tariff = Find(BillingFrom);
   if(Tariff != NULL) {
@@ -37,7 +37,7 @@ uint64_t TariffList::BillFrom(uint64_t from) {
   }
   return BillingFrom;
 }
-uint64_t TariffList::BillTo(uint64_t to) {
+uint64_t TariffList::BillTo(const uint64_t to) {
   uint64_t BillingTo = (to / 3600000) * 3600000 + 3600000 - 1;
   Tariff *Tariff = Find(BillingTo);
   if(Tariff != NULL) {
@@ -49,7 +49,7 @@ uint64_t TariffList::BillTo(uint64_t to) {
   }
   return BillingTo;
 }
-Tariff *TariffList::Find(uint64_t time) {
+Tariff *TariffList::Find(const uint64_t time) {
   for(uint32_t i = 0; i < pList.size(); i++) {
     if((pList[i]->pStartDate <= time) && (pList[i]->pEndDate >= time)) return pList[i];
   }
@@ -59,7 +59,7 @@ TariffList::~TariffList() {
   for(uint32_t i = 0; i < pList.size(); i++) delete pList[i];
 }
 //----------------------------------------------------------------------------------------------------------------------
-Tariff::Tariff(uint64_t start, uint64_t end, string tz) {
+Tariff::Tariff(const uint64_t start, const uint64_t end, const string &tz) {
   cctz::load_time_zone(tz, &pTimeZone);
   pStartDate = start;
   pEndDate = end;

@@ -74,7 +74,6 @@
       },
       FormatAggregBlock(result) {
         if(result === null) return ['', 'No data', ''];
-        
         if(result['Sampletime'].length === 0) return ['', 'No data', ''];
         var Pos = result['Sampletime'].length - 1;
         var Time = 'At ' + moment(result.Sampletime[Pos]).format('HH:mm:ss');
