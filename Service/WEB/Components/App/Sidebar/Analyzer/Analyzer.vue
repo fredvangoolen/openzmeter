@@ -34,14 +34,9 @@
     methods: {
       Show: function(analyzers) {
         this.ShowDialog = true;
-        this.Analyzers = analyzers;
         this.$nextTick(function() {     
-          if(analyzers.length === 0) {
-            this.$refs.NotFound.Load();
-          } else {
-            this.$refs.Table.Load();
-          }
           $(this.$el).modal('show');
+          this.$refs.Table.Load();
         });
       },
       Close: function() {

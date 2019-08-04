@@ -15,6 +15,7 @@
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include "DeviceV1_01.h"
+#include "DeviceManager.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceV1_01::pRegistered = DeviceV1_01::GetInstances();
@@ -85,17 +86,13 @@ DeviceV1_01::DeviceV1_01(string serial) {
   pAnalyzer      = NULL;
   pMutex         = PTHREAD_MUTEX_INITIALIZER;
 }
-AnalyzerInterface *DeviceV1_01::FindAnalyzer(string serial) {
-  if(pAnalyzer == NULL) return NULL;
-  return (serial == pAnalyzer->Serial()) ? pAnalyzer : NULL;
+DeviceV1_01::~DeviceV1_01() {
+  StopDevice();
 }
-uint32_t DeviceV1_01::AnalyzersCount() {
-  return (pAnalyzer == NULL) ? 0 : 1;
-}
-bool DeviceV1_01::Start() {
-  pthread_mutex_lock(&pMutex);
+bool DeviceV1_01::StartDevice() {
+  WriteLock();
   if(pState == RUNNING) {
-    pthread_mutex_unlock(&pMutex);
+    WriteUnlock();
     return false;
   }
   LOGFile::Info("Loading 'V1.01' driver configuration for serial '%s'\n", pSerial.c_str());
@@ -120,7 +117,7 @@ bool DeviceV1_01::Start() {
   if(pState == UNCONFIGURED) {
     pState = STOPPED;
     if(AutoStart == false) {
-      pthread_mutex_unlock(&pMutex);
+      WriteUnlock();
       return true;
     }
   }
@@ -128,16 +125,16 @@ bool DeviceV1_01::Start() {
   pTerminate    = false;
   pDeviceHandle = NULL;
   pNewDevice    = NULL;
-  pAnalyzer     = new AnalyzerSoft(pSerial, AnalyzerInterface::PHASE1, DEVICEV1_01_SAMPLEFREQ);
+  pAnalyzers.push_back(new AnalyzerSoft(pSerial, Analyzer::PHASE1, json::object(), DEVICEV1_01_SAMPLEFREQ));
   if(libusb_init(&pContext) < 0) {
     LOGFile::Error("Can not open libUSB...\n");
-    pthread_mutex_unlock(&pMutex);
+    WriteUnlock();
     return false;
   }
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(pContext);
-    pthread_mutex_unlock(&pMutex);
+    WriteUnlock();
     return false;
   }
   if(libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV1_01_VID, DEVICEV1_01_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL) < 0) {
@@ -145,30 +142,30 @@ bool DeviceV1_01::Start() {
     pTerminate = true;
     pthread_join(pCaptureThread, NULL);
     libusb_exit(pContext);
-    pthread_mutex_unlock(&pMutex);
+    WriteUnlock();
     return false;
   }
   pState = RUNNING;
-  pthread_mutex_unlock(&pMutex);
+  WriteUnlock();
   return true;
 }
-bool DeviceV1_01::Stop() {
-  pthread_mutex_lock(&pMutex);
+bool DeviceV1_01::StopDevice() {
+  WriteLock();
   if(pState != RUNNING) {
-    pthread_mutex_unlock(&pMutex);
+    WriteUnlock();
     return false;
   }
   LOGFile::Info("Stopping 'V1.01' driver for serial '%s'\n", pSerial.c_str());
   pTerminate = true;
   pthread_join(pCaptureThread, NULL);
-  if(pAnalyzer != NULL) delete pAnalyzer;
-  pAnalyzer = NULL;
+  while(pAnalyzers.size() > 0) {
+    Analyzer *Analyzer = pAnalyzers.back();
+    pAnalyzers.pop_back();
+    delete Analyzer;
+  }
   pState = STOPPED;
-  pthread_mutex_unlock(&pMutex);
+  WriteUnlock();
   return true;
-}
-DeviceV1_01::~DeviceV1_01() {
-  Stop();
 }
 void DeviceV1_01::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV1_01 *This = (DeviceV1_01*)transfer->user_data;
@@ -218,21 +215,16 @@ bool DeviceV1_01::BuffersAppend(float voltageSample, float currentSample) {
 //  if(pBuffer.full()) return false;
   Sample_t Sample = { voltageSample, currentSample };
   pBuffer.push_back(Sample);
+  AnalyzerSoft *Analyzer = (AnalyzerSoft*)pAnalyzers[0];
   uint64_t Sampletime = Tools::GetTime();
-//  if(pLastUpdate < (Sampletime - 500)) {
-//    char ThreadName[16];
-//    sprintf(ThreadName, "DeviceV1_00_%d", pBuffer.size());
-//    pthread_setname_np(pCaptureThread, ThreadName);
-//    pLastUpdate = Sampletime;
-//  }
-  if(pAnalyzer->IsFinished() == false) return true;
+  if(Analyzer->IsFinished() == false) return true;
   bool Started = false;
   while((pBuffer.empty() == false) && (Started == false)) {
     Sample = pBuffer.front();
     pBuffer.pop_front();
     vector<float> Voltage = {Sample.Voltage};
     vector<float> Current = {Sample.Current};
-    if(pAnalyzer->BufferAppend(Voltage, Current, Sampletime) == true) Started = true;
+    if(Analyzer->BufferAppend(Voltage, Current, Sampletime) == true) Started = true;
   }
   return true;
 }
@@ -330,7 +322,7 @@ void *DeviceV1_01::Sig_Thread(void* args) {
 //  DeviceV1_01 *This = (DeviceV1_01*)args;
 //  bool Toogle = false;
 //  while(!This->pTerminateSignal) {
-    AnalyzerInterface::Params_t Params;
+//    Analyzer::Params_t Params;
 /*    This->pAnalyzer->GetParams(&Params, NULL);
     uint16_t Current = 0;
     uint16_t Voltage = 1 << 6;

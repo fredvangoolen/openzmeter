@@ -5,102 +5,60 @@
 #pragma once
 #include <vector>
 #include <complex>
-#include "Database.h"
 #include <nlohmann/json.hpp>
-using json = nlohmann::json;
+#include "Tools.h"
+#include "Database.h"
+#include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
+using json = nlohmann::json;
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-class AnalyzerInterface : protected Database {
+class Analyzer {
   public :
-    enum AnalyzerMode {PHASE1, PHASE3, PHASE3N};
-    enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
-    enum ParamsType { FREQUENCY         = 0x00000001, 
-                      FLAG              = 0x00000002,
-                      VOLTAGE           = 0x00000004, 
-                      CURRENT           = 0x00000008, 
-                      ACTIVE_POWER      = 0x00000010, 
-                      REACTIVE_POWER    = 0x00000020, 
-                      ACTIVE_ENERGY     = 0x00000040, 
-                      REACTIVE_ENERGY   = 0x00000080, 
-                      APPARENT_POWER    = 0x00000100, 
-                      POWER_FACTOR      = 0x00000200, 
-                      VOLTAGE_THD       = 0x00000400, 
-                      CURRENT_THD       = 0x00000800,
-                      VOLTAGE_PHASE     = 0x00001000, 
-                      PHI               = 0x00002000, 
-                      VOLTAGE_HARMONICS = 0x00004000,
-                      CURRENT_HARMONICS = 0x00008000, 
-                      VOLTAGE_FFT       = 0x00010000,
-                      CURRENT_FFT       = 0x00020000,
-                      VOLTAGE_SAMPLES   = 0x00040000,
-                      CURRENT_SAMPLES   = 0x00080000,
-                      SYS_STATS         = 0x00100000
-    };
-  protected :
-    static vector<float>  FrequencyRanges;   //Rangos de frecuencias para estadisticas
-    static vector<float>  VoltageRanges;     //Rangos de tensiones para estadisticas
-    static vector<float>  THDRanges;         //Rangos de distorsion harmonica para estadisticas
-    static vector<float>  HarmonicsAllowed;  //Rangos permitidos para cada harmonico
-  public :
+    enum AnalyzerMode { PHASE1, PHASE3, PHASE3N };
+    enum AnalyzerRights { READ = 0x01, WRITE = 0x02, CONFIG = 0x04 };
+  private :
     typedef struct {
-      AggregType                        Type;                       //Aggregation type
-      float                             Frequency;                  //Frecuencia
-      bool                              Flag;                       //Periodo marcado
-      uint64_t                          Timestamp;                  //Aggregation timestampt
-      uint16_t                          Voltage_Inputs;             //Valid RMS_V samples in aggregation
-      uint16_t                          Frequency_Inputs;           //Valid Freq samples in aggregation
-      vector<uint16_t>                  StatsFrequency;             //Distribucion de frecuencias
-      vector<uint16_t>                  StatsVoltage;               //Distribucion de tensiones
-      vector<uint16_t>                  StatsTHD;                   //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
-      vector<uint16_t>                  StatsHarmonics;             //Numero de muestras que cumplen los limites de harmonicos / no cumplen
-      vector<uint16_t>                  Current_Inputs;             //Valid RMS_I samples in aggregation
-      vector<float>                     Voltage;                    //Aggregation average RMS voltage
-      vector<float>                     Current;                    //Aggregation average RMS current
-      vector<float>                     Active_Power;               //Aggregation average Active Power (P)
-      vector<float>                     Reactive_Power;             //Reactive power
-      vector<float>                     Active_Energy;              //Energia consumida
-      vector<float>                     Reactive_Energy;            //Reactive energy
-      vector<float>                     Apparent_Power;             //Potencia aparente (S)
-      vector<float>                     Power_Factor;               //Factor de potencia (cos(PHI))
-      vector<float>                     Voltage_THD;                //Distorsion harmonica de la tension
-      vector<float>                     Current_THD;                //Distorsion harmonica de la corriente
-      vector<float>                     Voltage_Phase;              //Angulo entre canales de tension
-      vector<float>                     Phi;                        //Angulo de Phi
-      vector< vector<complex<float> > > Voltage_Harmonics;          //Armonicos del canal de tension
-      vector< vector<complex<float> > > Current_Harmonics;          //Armonicos del canal de corriente
-      vector< vector<float> >           Voltage_FFT;                //Resultados de la FFT en tension
-      vector< vector<float> >           Current_FFT;                //Resultados de la FFT en corriente
-      vector< vector<float> >           Voltage_Samples;            //Voltage samples
-      vector< vector<float> >           Current_Samples;            //Current samples
-      json                              Sys_Stats;                  //System status for NOW(10C) aggreg
-    } Params_t;
+      char  *Buffer;
+      size_t Size;
+      size_t MaxSize;
+    } CurlBuff_t;
   protected :
-    uint64_t      pLastSave;
-    float         pNominalVoltage;
-    float         pNominalFrequency;
-    string        pName;
-    float         pMaxCurrent;
-    float         pMinCurrent;
-    float         pSamplerate;              //Velocidad de muestreo (NaN if unsuported)
-    AnalyzerMode  pMode;
+    uint64_t        pLastSave;                //Timestamp of last save or communication
+    string          pSerial;                  //Serial number
+    string          pName;                    //Analyzer description
+  private :
+    bool            pTerminateSync;           //Signal to terminate sync thread
+    pthread_t       pSyncThread;              //Synchronize thread
+    string          pSyncServer;              //Sync server
+    string          pSyncUser;                //Sync username
+    string          pSyncPass;                //Sync password
   protected :
-    void           InitAggreg(Params_t &params, AggregType type);
-    void           SaveAggreg(Params_t &params);
-    void           AccumulateAggreg(Params_t &src, Params_t &dst);
-    void           NormalizeAggreg(Params_t &src);
-    float          AccumulateSUM(float val1, float val2);
-    float          AccumulateRMS(float val1, float val2);
-    complex<float> AccumulateRMS(complex<float> val1, complex<float> val2);
+    bool CheckRights(HTTPRequest &req, const uint neededAccess) const;
+    void EnableSync(const string &server, const string &user, const string &pass);
+    void DisableSync();
+  private :
+    static size_t CurlReadCallback(void *contents, size_t size, size_t nmemb, void *userp);
+    static void  *Sync_Thread(void *args);
   public :
-    virtual void GetParams(Params_t &params, ParamsType &copy) = 0;
+    virtual void GetAnalyzer(HTTPRequest &req) = 0;
+    virtual void SetAnalyzer(HTTPRequest &req) = 0;
+    virtual void GetSeries(HTTPRequest &req) = 0;
+    virtual void GetSeriesNow(HTTPRequest &req) = 0;
+    virtual void GetSeriesRange(HTTPRequest &req) = 0;
+    virtual void GetEvents(HTTPRequest &req) = 0;
+    virtual void GetEvent(HTTPRequest &req) = 0;
+    virtual void SetEvent(HTTPRequest &req) = 0;
+    virtual void DelEvent(HTTPRequest &req) = 0;
+    virtual void GetRates(HTTPRequest &req) = 0;
+    virtual void GetRate(HTTPRequest &req) = 0;
+    virtual void SetRate(HTTPRequest &req) = 0;
+    virtual void DelRate(HTTPRequest &req) = 0;
+    virtual void AddRate(HTTPRequest &req) = 0;
+    virtual void GetPrices(HTTPRequest &req) = 0;
   public :
-    AnalyzerInterface(string id, AnalyzerMode mode);
-    virtual     ~AnalyzerInterface();
-    float        GetMaxCurrent();
-    float        GetNominalVoltage();
-    float        GetNominalFrequency();
-    AnalyzerMode Mode();
-    string       Serial();
-    json         GetJSONDescriptor();
+    Analyzer(const string &id);
+    virtual ~Analyzer();
+    string Serial() const;
+    json   GetJSONShortDescriptor() const;
 };

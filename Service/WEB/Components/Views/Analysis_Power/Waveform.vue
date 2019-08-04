@@ -50,7 +50,7 @@
       },
       CalcOptions: function() {
         if((this.$root.SelectedAnalyzer === null) || (this.Phase === null) || (this.Data === null)) return;
-        var Analyzer = this.$root.SelectedAnalyzer, Series = { 'Voltage': {axis: 'y2'}, 'Current': {axis: 'y2'}, 'Power': {fillGraph: true}};
+        var Analyzer = this.$root.SelectedAnalyzer, Series = { 'Voltage': {axis: 'y2', strokePattern: [1, 2]}, 'Current': {axis: 'y2', strokePattern: [1, 2]}, 'Power': { fillGraph: true }};
         this.ShowWarning = (this.Data.Current[this.Phase] < Analyzer.MinCurrent); 
         var ToShow = [];
         for(var i = 0; i < this.Data.Voltage_Samples[0].length; i++) ToShow.push([i, this.Data.Voltage_Samples[this.Phase][i], this.Data.Current_Samples[this.Phase][i], this.Data.Voltage_Samples[this.Phase][i] * this.Data.Current_Samples[this.Phase][i]]);
@@ -59,6 +59,9 @@
         var VoltageRange = oZm.Series['VOLTAGE_SAMPLES'].Range(ToShow, [true, false, false]);
         var MaxVoltage = Math.max(Math.abs(VoltageRange[0]), Math.abs(VoltageRange[1]));
         var MaxCurrent = Math.max(Math.abs(CurrentRange[0]), Math.abs(CurrentRange[1]));
+        var MaxY1      = Math.max(Math.abs(Y1Range[0]), Math.abs(Y1Range[1]));
+        VoltageRange = [-MaxVoltage, MaxVoltage];
+        Y1Range      = [-MaxY1, MaxY1];
         this.CurrentMult = MaxVoltage / MaxCurrent;
         for(var i = 0; i < ToShow.length; i++) ToShow[i][2] = ToShow[i][2] * this.CurrentMult;
         

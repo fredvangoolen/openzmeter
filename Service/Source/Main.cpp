@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 #include "Tools.h"
 #include "HTTPServer.h"
-#include "Devices.h"
+#include "DeviceManager.h"
 #include "SysSupport.h"
 //---------------------------------------------------------------------------------------------------------------------
 void GetNewsCallback(HTTPRequest &req) {

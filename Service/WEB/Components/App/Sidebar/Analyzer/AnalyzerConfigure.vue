@@ -75,9 +75,14 @@
     methods: {
       Load: function(analyzer) {
         this.Show = true;
-        this.ShowSpinner = false;
-        this.analyzer = Object.assign({}, analyzer);
-        this.Error = '';
+        this.ShowSpinner = true;
+        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer }), 
+          success: function(result) { 
+            this.ShowSpinner = false;
+            this.analyzer = Object.assign({}, result);
+            this.Error = '';
+          }.bind(this)
+        });    
       },
       Save: function() {
         $.ajax({ url: "setAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(this.analyzer), 

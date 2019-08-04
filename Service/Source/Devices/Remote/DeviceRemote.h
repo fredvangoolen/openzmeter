@@ -3,29 +3,30 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
-#include <libusb-1.0/libusb.h>
-#include "Devices.h"
+#include <list>
+#include "Device.h"
 #include "AnalyzerRemote.h"
-#include "Tools.h"
+#include "HTTPServer.h"
+//----------------------------------------------------------------------------------------------------------------------
+using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceRemote : public Device {
   private :
-    typedef struct {
-      char           *ID;
-      char           *Name;
-      AnalyzerRemote *Analyzer;
-    } Analyzer_t;
-    static Analyzer_t      *pAnalyzers;               //Analyzers list
-    static uint32_t         pAnalyzersCount;          //Analyzers count
-    static DeviceRemote    *pInstance;                //Only one instance allowed!
-    static pthread_mutex_t  pListMutex;               //Access to list limited
+    static bool          pRegistered;
+    static DeviceRemote *pInstance;
   private :
-    AnalyzerInterface *FindAnalyzer(char *serial);
+    static bool GetInstances();
+    static void GetRemoteCallback(HTTPRequest &req);
+    static void SetRemoteCallback(HTTPRequest &req);
   private :
-    static bool SetRemoteAnalyzerCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
-    static bool SetRemoteDataCallback(char *user, json_object *reader, Database *db, json_object **writer, char **postdata, size_t *resultLen);
+    bool StartDevice();
+    bool StopDevice();
+    void GetDevice(HTTPRequest &req);
+    void SetDevice(HTTPRequest &req);
+    void GetRemote(HTTPRequest &req);
+    void SetRemote(HTTPRequest &req);
   public :
-    DeviceRemote(json_object* config);
+    DeviceRemote();
     ~DeviceRemote();
 };
 //----------------------------------------------------------------------------------------------------------------------

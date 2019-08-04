@@ -9,6 +9,7 @@
 #include <microhttpd.h>
 #include "nlohmann/json.hpp"
 #include "Database.h"
+#include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 #define HTTP_CHUNK 32768
@@ -28,47 +29,48 @@ class HTTPRequest : public Database {
   public :
     HTTPRequest(char *cookie, bool deflate);
     ~HTTPRequest();
-    string   SessionID();
-    string   UserName();
-    string   MimeType();
-    void     MimeType(string type);
-    uint32_t size();
-    bool     Deflate();
-    int      ResultCode();
-    void     CloseSession();
-    void     FromFile(string filename);
-    void     AppendParams(const char *input, size_t *len);
-    bool     ProcessParams(bool local);
-    json     GetParams();
-    uint64_t GetTime();
-    void     FromJSON(json obj);
-    void     FromString(string obj, int resultCode);
+    string      SessionID() const;
+    string      UserName() const;
+    string      MimeType() const;
+    void        MimeType(const string &type);
+    uint32_t    size() const;
+    bool        Deflate() const;
+    int         ResultCode() const;
+    void        CloseSession();
+    void        FromFile(const string &filename);
+    void        AppendParams(const char *input, size_t *len);
+    bool        ProcessParams(bool local);
+    const json &GetParams() const;
+    uint64_t    GetTime() const;
+    void        FromJSON(const json &obj);
+    void        FromString(const string &obj, int resultCode);
   public :
     static ssize_t WriteFunction(void *cls, uint64_t pos, char *buf, size_t max);
 };
 class HTTPServer {
   public :
-  typedef void (*Func_t)(HTTPRequest &request);
+    typedef void (*Func_t)(HTTPRequest &request);
   private :
     typedef struct {
       string HandleName;
       Func_t Function;
     } Callback_t;
   private :
-    static vector<Callback_t> pCallbacks;
-    static bool               pRegistered;
+    static RWLocks            pLock;            //Control access to pCallbacks vector
+    static vector<Callback_t> pCallbacks;       //List of callbacks URLs
   private:
     MHD_Daemon  *pDaemon;
   private :
     static void PingCallback(HTTPRequest &req);
     static int  HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
     static void HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe);
-    static int  SendRedirect(struct MHD_Connection *connection, string url);
+    static int  SendRedirect(struct MHD_Connection *connection, const string &url);
   public :
-    static void RegisterCallback(string handleName, Func_t function);
+    static void RegisterCallback(const string &handleName, const Func_t function);
+    static void UnregisterCallback(const string &handleName);
   public :
     HTTPServer();
-    void     ExpireSessions();
+//    void     ExpireSessions();
     virtual ~HTTPServer();
-    void     RemoveExpiredSessions();
+    void     RemoveExpiredSessions() const;
 };

@@ -82,7 +82,7 @@ DeviceV2_01::DeviceV2_01(string serial) {
   pCurrentOffset.resize(4, 0.0);
   pMutex         = PTHREAD_MUTEX_INITIALIZER;
 }
-AnalyzerInterface *DeviceV2_01::FindAnalyzer(string serial) {
+Analyzer *DeviceV2_01::FindAnalyzer(string serial) {
   for(uint32_t i = 0; i < pAnalyzers.size(); i++) {
     if(pAnalyzers[i].Analyzer == NULL) continue;
     if(serial == pAnalyzers[i].Analyzer->Serial()) return pAnalyzers[i].Analyzer;
@@ -133,20 +133,20 @@ bool DeviceV2_01::Start() {
       for(uint n = 0; n < Config["Outputs"].size(); n++) {
         Analyzer_t Analyzer;
         Analyzer.Analyzer = NULL;
-        Analyzer.Mode = AnalyzerInterface::PHASE3;
+        Analyzer.Mode = Analyzer::PHASE3;
         Analyzer.OffsetC = 0;
         Analyzer.OffsetV = 0;
         if(!Config["Outputs"][n].is_object()) continue;
-        if(Config["Outputs"][n]["Mode"].is_string() && ((Config["Outputs"][n]["Mode"] == "1PHASE") || (Config["Outputs"][n]["Mode"] == "3PHASE") || (Config["Outputs"][n]["Mode"] == "3PHASE+N"))) Analyzer.Mode = (Config["Outputs"][n]["Mode"] == "1PHASE") ? AnalyzerInterface::PHASE1 : (Config["Outputs"][n]["Mode"] == "3PHASE") ? AnalyzerInterface::PHASE3 : AnalyzerInterface::PHASE3N;
-        if(Analyzer.Mode == AnalyzerInterface::PHASE1) {
+        if(Config["Outputs"][n]["Mode"].is_string() && ((Config["Outputs"][n]["Mode"] == "1PHASE") || (Config["Outputs"][n]["Mode"] == "3PHASE") || (Config["Outputs"][n]["Mode"] == "3PHASE+N"))) Analyzer.Mode = (Config["Outputs"][n]["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Config["Outputs"][n]["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
+        if(Analyzer.Mode == Analyzer::PHASE1) {
           if(Config["Outputs"][n]["CurrentChannel"].is_number() && (Config["Outputs"][n]["CurrentChannel"] >= 0) && (Config["Outputs"][n]["CurrentChannel"] <= 4)) Analyzer.OffsetC = Config["Outputs"][n]["CurrentChannel"];
           if(Config["Outputs"][n]["VoltageChannel"].is_number() && (Config["Outputs"][n]["VoltageChannel"] >= 0) && (Config["Outputs"][n]["VoltageChannel"] <= 3)) Analyzer.OffsetC = Config["Outputs"][n]["VoltageChannel"];
           if((CurrentMask & (1 << Analyzer.OffsetC)) != 0) continue;
           CurrentMask |= (1 << Analyzer.OffsetC);
-        } else if(Analyzer.Mode == AnalyzerInterface::PHASE3) {
+        } else if(Analyzer.Mode == Analyzer::PHASE3) {
           if((CurrentMask & 0x0F) != 0) continue;
           CurrentMask |= 0x0F;
-        } else if(Analyzer.Mode == AnalyzerInterface::PHASE3N) {
+        } else if(Analyzer.Mode == Analyzer::PHASE3N) {
           if((CurrentMask & 0x0E) != 0) continue;
           CurrentMask |= 0x0E;
         }
@@ -163,8 +163,8 @@ bool DeviceV2_01::Start() {
   Config["Outputs"] = json::array();
   for(uint n = 0; n < pAnalyzers.size(); n++) {
     json Analyzer;
-    Analyzer["Mode"] = (pAnalyzers[n].Mode == AnalyzerInterface::PHASE1) ? "1PHASE" : (pAnalyzers[n].Mode == AnalyzerInterface::PHASE3) ? "3PHASE" : "3PHASE+N";
-    if(pAnalyzers[n].Mode == AnalyzerInterface::PHASE1) {
+    Analyzer["Mode"] = (pAnalyzers[n].Mode == Analyzer::PHASE1) ? "1PHASE" : (pAnalyzers[n].Mode == Analyzer::PHASE3) ? "3PHASE" : "3PHASE+N";
+    if(pAnalyzers[n].Mode == Analyzer::PHASE1) {
       Analyzer["CurrentChannel"] = pAnalyzers[n].OffsetC;
       Analyzer["VoltageChannel"] = pAnalyzers[n].OffsetV;
     }
@@ -184,7 +184,7 @@ bool DeviceV2_01::Start() {
   pDeviceHandle = NULL;
   pNewDevice    = NULL;
   for(uint n = 0; n < pAnalyzers.size(); n++) {
-    string Name = (pAnalyzers[n].Mode == AnalyzerInterface::PHASE1) ? pSerial + "_1P_" + to_string(pAnalyzers[n].OffsetC) : (pAnalyzers[n].Mode == AnalyzerInterface::PHASE3) ? pSerial + "_3P" : pSerial + "_3PN";
+    string Name = (pAnalyzers[n].Mode == Analyzer::PHASE1) ? pSerial + "_1P_" + to_string(pAnalyzers[n].OffsetC) : (pAnalyzers[n].Mode == Analyzer::PHASE3) ? pSerial + "_3P" : pSerial + "_3PN";
     pAnalyzers[n].Analyzer = new AnalyzerSoft(Name, pAnalyzers[n].Mode, DEVICEV2_01_SAMPLEFREQ);
   }
   if(libusb_init(&pContext) < 0) {
@@ -304,8 +304,8 @@ bool DeviceV2_01::BuffersAppend() {
     for(uint32_t i = 0; i < pAnalyzers.size(); i++) {
       if(pAnalyzers[i].Analyzer == NULL) continue;
       vector<float> Voltage, Current;
-      for(uint8_t n = 0; n < ((pAnalyzers[i].Mode == AnalyzerInterface::PHASE1) ? 1 : 3); n++) Voltage.push_back(Sample.Voltage[pAnalyzers[i].OffsetV + n]);
-      for(uint8_t n = 0; n < ((pAnalyzers[i].Mode == AnalyzerInterface::PHASE1) ? 1 : (pAnalyzers[i].Mode == AnalyzerInterface::PHASE3) ? 3 : 4); n++) Current.push_back(Sample.Current[pAnalyzers[i].OffsetC + n]);
+      for(uint8_t n = 0; n < ((pAnalyzers[i].Mode == Analyzer::PHASE1) ? 1 : 3); n++) Voltage.push_back(Sample.Voltage[pAnalyzers[i].OffsetV + n]);
+      for(uint8_t n = 0; n < ((pAnalyzers[i].Mode == Analyzer::PHASE1) ? 1 : (pAnalyzers[i].Mode == Analyzer::PHASE3) ? 3 : 4); n++) Current.push_back(Sample.Current[pAnalyzers[i].OffsetC + n]);
       if(pAnalyzers[i].Analyzer->BufferAppend(Voltage, Current, Sampletime) == true) Started = true;
     }
   }
