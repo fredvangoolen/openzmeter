@@ -89,63 +89,63 @@ void AnalyzerRemote::HandleRequest(string url, HTTPRequest &req) {
 }
 void AnalyzerRemote::GetAnalyzer(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;  
-  HandleRequest("/GetAnalyzer", req);
+  HandleRequest("getAnalyzer", req);
 }
 void AnalyzerRemote::SetAnalyzer(HTTPRequest &req) {
   if(CheckRights(req, CONFIG) == false) return;
-  HandleRequest("/SetAnalyzer", req);
+  HandleRequest("setAnalyzer", req);
 }
 void AnalyzerRemote::GetSeries(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("/GetSeries", req);
+  HandleRequest("getSeries", req);
 }
 void AnalyzerRemote::GetSeriesNow(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("/GetSeriesNow", req);
+  HandleRequest("getSeriesNow", req);
 }
 void AnalyzerRemote::GetSeriesRange(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("/GetSeriesRange", req);
+  HandleRequest("getSeriesRange", req);
 }
 void AnalyzerRemote::GetEvents(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("/GetEvents", req);
+  HandleRequest("getEvents", req);
 }
 void AnalyzerRemote::GetEvent(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("/GetEvent", req);
+  HandleRequest("getEvent", req);
 }
 void AnalyzerRemote::SetEvent(HTTPRequest &req) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
-  HandleRequest("/SetEvent", req);
+  HandleRequest("setEvent", req);
 }
 void AnalyzerRemote::DelEvent(HTTPRequest &req) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
-  HandleRequest("/DelEvent", req);
+  HandleRequest("delEvent", req);
 }
 void AnalyzerRemote::GetRates(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("/GetRates", req);
+  HandleRequest("getRates", req);
 }
 void AnalyzerRemote::GetRate(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("/GetRate", req);
+  HandleRequest("getRate", req);
 }
 void AnalyzerRemote::SetRate(HTTPRequest &req) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
-  HandleRequest("/SetRate", req);
+  HandleRequest("setRate", req);
 }
 void AnalyzerRemote::DelRate(HTTPRequest &req) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
-  HandleRequest("/DelRate", req);
+  HandleRequest("delRate", req);
 }
 void AnalyzerRemote::AddRate(HTTPRequest &req) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
-  HandleRequest("/AddRate", req);
+  HandleRequest("addRate", req);
 }
 void AnalyzerRemote::GetPrices(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("/GetPrices", req);
+  HandleRequest("getPrices", req);
 }
 
 
