@@ -23,6 +23,13 @@ class Analyzer {
       size_t Size;
       size_t MaxSize;
     } CurlBuff_t;
+    typedef struct {
+      pthread_t Thread;
+      json      Params;
+      string    Method;
+      uint64_t  Sequence;
+      Analyzer *Parent;
+    } RemoteRequest_t;
   protected :
     uint64_t        pLastSave;                //Timestamp of last save or communication
     string          pSerial;                  //Serial number
@@ -40,6 +47,7 @@ class Analyzer {
   private :
     static size_t CurlReadCallback(void *contents, size_t size, size_t nmemb, void *userp);
     static void  *Sync_Thread(void *args);
+    static void  *Request_Thread(void *args);
   public :
     virtual void GetAnalyzer(HTTPRequest &req) = 0;
     virtual void SetAnalyzer(HTTPRequest &req) = 0;

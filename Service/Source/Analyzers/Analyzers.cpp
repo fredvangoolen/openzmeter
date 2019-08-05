@@ -92,11 +92,15 @@ void *Analyzer::Sync_Thread(void *args) {
       curl_easy_getinfo(Curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
       if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_OK)) {
         json Content = json::parse(CurlBuff.Buffer, NULL, false);
-        if(!Content.is_discarded() && Content.is_object() && Content["Result"].is_boolean()) {
-          Registered = Content["Result"];
+        if(!Content.is_discarded() && Content.is_object() && Content["Result"].is_boolean() && (Content["Result"] == true)) {
+          Registered = true;
+          struct curl_slist *Cookies;
+//          curl_easy_getinfo(Curl, CURLINFO_COOKIELIST, &Cookies);
+          
           if(Registered) LOGFile::Info("INFO", "AnalyzerRemote: logged to remote server\n");
         }
       } else {
+        Registered = false;
         LOGFile::Debug("AnalyzerRemote: failed to register on remote server\n");
       }        
       if(Registered == false) usleep(1000000);
@@ -112,20 +116,22 @@ void *Analyzer::Sync_Thread(void *args) {
       CURLcode Code = curl_easy_perform(Curl);
       curl_easy_getinfo(Curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
       if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_OK)) {
-        LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", "getAnalyzer", This->pSerial.c_str());
-        
-        //Se supone que me ha llegado un array con peticiones que habia pendientes
-//        json_object *JSONReader = json_tokener_parse(CurlBuff.Buffer);
-//        if((JSONReader != NULL) && (json_object_get_type(JSONReader) == json_type_object)) {
-//          if((json_object_object_get_ex(JSONReader, "aggreg_3s", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Last3S = json_object_get_int64(Find);
-//          if((json_object_object_get_ex(JSONReader, "aggreg_1m", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Last1M = json_object_get_int64(Find);
-//          if((json_object_object_get_ex(JSONReader, "aggreg_10m", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Last10M = json_object_get_int64(Find);
-//          if((json_object_object_get_ex(JSONReader, "aggreg_1h", &Find) == true) && (json_object_get_type(Find) == json_type_int)) Last1H = json_object_get_int64(Find);
-//          if((json_object_object_get_ex(JSONReader, "events", &Find) == true) && (json_object_get_type(Find) == json_type_int)) LastEvent = json_object_get_int64(Find);
-//          if((json_object_object_get_ex(JSONReader, "prices", &Find) == true) && (json_object_get_type(Find) == json_type_int)) LastPrice = json_object_get_int64(Find);
-//          Tools::LogMsg("INFO", "AnalyzerRemote: configured on remote server\n");
-//          Initialized = true;
-//        }
+        json Content = json::parse(CurlBuff.Buffer, NULL, false);
+        if(!Content.is_discarded() && Content.is_array()) {
+          for(auto it = Content.begin(); it != Content.end(); it++) {
+            if(it->is_object() && (*it)["Sequence"].is_number() && (*it)["Method"].is_string() && (*it)["Params"].is_object()) {
+              RemoteRequest_t *Request = new RemoteRequest_t;
+              Request->Method   = (*it)["Method"];
+              Request->Params   = (*it)["Params"];
+              Request->Sequence = (*it)["Sequence"];
+              Request->Parent   = This;
+              if(pthread_create(&Request->Thread, NULL, Request_Thread, (void*)Request) != 0) {
+                LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+                delete Request;
+              }       
+            }
+          }
+        }
       } else if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_UNAUTHORIZED)) {
         LOGFile::Debug("Non authorized on remote server for analyzar '%s', trying to login again...\n", This->pSerial.c_str());
         usleep(1000000);
@@ -140,7 +146,49 @@ void *Analyzer::Sync_Thread(void *args) {
   curl_easy_cleanup(Curl);
   return NULL;
 }
-
+void *Analyzer::Request_Thread(void *args) {
+  RemoteRequest_t *This = (RemoteRequest_t*)args;
+  This->Params["UserName"] = "admin";
+  string ParamsText = This->Params.dump();
+  size_t ParamsSize = ParamsText.size();
+  LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Parent->pSerial.c_str());
+  HTTPRequest *Request = new HTTPRequest(NULL, false);
+  Request->AppendParams(ParamsText.c_str(), &ParamsSize);
+  Request->ProcessParams(true);
+  if(This->Method == "getAnalyzer") {
+    This->Parent->GetAnalyzer(*Request);
+  } else if(This->Method == "setAnalyzer") {
+    This->Parent->SetAnalyzer(*Request);
+  } else if(This->Method == "getSeries") {   
+    This->Parent->GetSeries(*Request);
+  } else if(This->Method == "getSeriesNow") {
+    This->Parent->GetSeriesNow(*Request);
+  } else if(This->Method == "getSeriesRange") {
+    This->Parent->GetSeriesRange(*Request);
+  } else if(This->Method == "getEvents") {
+    This->Parent->GetEvents(*Request);
+  } else if(This->Method == "getEvent") {
+    This->Parent->GetEvent(*Request);
+  } else if(This->Method == "setEvent") {
+    This->Parent->SetEvent(*Request);
+  } else if(This->Method == "delEvent") {
+    This->Parent->DelEvent(*Request);
+  } else if(This->Method == "getRates") {
+    This->Parent->GetRates(*Request);
+  } else if(This->Method == "getRate") {
+    This->Parent->GetRate(*Request);
+  } else if(This->Method == "setRate") {
+    This->Parent->SetRate(*Request);
+  } else if(This->Method == "delRate") {
+    This->Parent->DelRate(*Request);
+  } else if(This->Method == "addRate") {
+    This->Parent->AddRate(*Request);
+  } else if(This->Method == "getPrices") {
+    This->Parent->GetPrices(*Request);
+  }
+//Devuelvo lo que tenga en request
+  return NULL;
+}
 
 //void AnalyzerSoft::ConfigRemote(json_object* config) {
 //  json_object *Find;
