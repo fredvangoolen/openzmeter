@@ -14,15 +14,15 @@
 #include "Support/SysSupport.h"
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
-vector<float> AnalyzerSoft::FrequencyRanges = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
-vector<float> AnalyzerSoft::VoltageRanges = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
-vector<float> AnalyzerSoft::THDRanges = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY };
+vector<float> AnalyzerSoft::FrequencyRanges  = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
+vector<float> AnalyzerSoft::VoltageRanges    = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
+vector<float> AnalyzerSoft::THDRanges        = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY };
 vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const json &option, const float samplerate) : Analyzer(id), Database(id) {
   LOGFile::Debug("Creating analyzer database tables\n");
   ExecResource("SQL/Database_AnalyzerSoft.sql");
-  
+  EnableSync("10.42.0.1:8081", "admin", "admin");
   
   
   
@@ -106,7 +106,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;
   }
-  pthread_setname_np(pEventThread, "EventsDet");  
+  pthread_setname_np(pEventThread, "EventsDet");
 }
 AnalyzerSoft::~AnalyzerSoft() {
   pTerminate = true;
@@ -303,7 +303,7 @@ void AnalyzerSoft::SaveEvent(Event_t &evt) {
     for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
   }
   if(evt.State == EVT_RUNNING) {
-    ExecSentenceNoResult("INSERT INTO events(starttime, duration, finished, samplerate, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + Bind(evt.Start) + ", 0, FALSE," + Bind(pSamplerate) + ", " + Bind(Type) + ", " + Bind(evt.Reference) + ", " + Bind(evt.PeakValue) + ", " + Bind(evt.ChangeValue) + ", '', " + Bind(RAW) + ", " + Bind(RMS) + ")");
+    ExecSentenceNoResult("INSERT INTO events(starttime, duration, samplerate, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + Bind(evt.Start) + ", 0, " + Bind(pSamplerate) + ", " + Bind(Type) + ", " + Bind(evt.Reference) + ", " + Bind(evt.PeakValue) + ", " + Bind(evt.ChangeValue) + ", '', " + Bind(RAW) + ", " + Bind(RMS) + ")");
   } else if(evt.State == EVT_CLOSING) {
     ExecSentenceNoResult("UPDATE events SET duration = " + Bind(evt.Duration) + ", peak = " + Bind(evt.PeakValue) + ", change = " + Bind(evt.ChangeValue) + ", samples2 = " + Bind(RAW) + ", rms2 = " + Bind(RMS) + " WHERE starttime = " + Bind(evt.Start) + " AND evttype = " + Bind(Type));
   } else {

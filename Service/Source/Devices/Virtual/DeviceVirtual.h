@@ -10,7 +10,7 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceVirtual : public Device {
   private :
-    static bool pRegistered;
+    static bool                     pRegistered;
   private :
     pthread_t                       pCaptureThread;
     bool                            pTerminate;
@@ -20,7 +20,6 @@ class DeviceVirtual : public Device {
     float                           pCurrent;
     float                           pCurrentPhase;
     float                           pFrequency;
-    pthread_mutex_t                 pMutex;
   private : 
     static bool  GetInstances();
     static void *Capture_Thread(void *args);

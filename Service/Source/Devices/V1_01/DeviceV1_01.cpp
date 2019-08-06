@@ -83,41 +83,44 @@ DeviceV1_01::DeviceV1_01(string serial) {
   pVoltageOffset = 0.0;
   pCurrentOffset = 0.0;
   pCurrentInvert = false;
-  pAnalyzer      = NULL;
-  pMutex         = PTHREAD_MUTEX_INITIALIZER;
 }
 DeviceV1_01::~DeviceV1_01() {
   StopDevice();
 }
 bool DeviceV1_01::StartDevice() {
-  WriteLock();
+  pAnalyzersLock.WriteLock();
   if(pState == RUNNING) {
-    WriteUnlock();
+    pAnalyzersLock.WriteUnlock();
     return false;
   }
   LOGFile::Info("Loading 'V1.01' driver configuration for serial '%s'\n", pSerial.c_str());
   bool AutoStart = false;
-  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
-  if(Config.is_object()) {
-    if(Config["VoltageGain"].is_number()) pVoltageGain = Config["VoltageGain"];
-    if(Config["VoltageOffset"].is_number()) pVoltageOffset = Config["VoltageOffset"];
-    if(Config["CurrentGain"].is_number()) pCurrentGain = Config["CurrentGain"];
-    if(Config["CurrentOffset"].is_number()) pCurrentOffset = Config["CurrentOffset"];
-    if(Config["CurrentInvert"].is_boolean()) pCurrentInvert = Config["CurrentInvert"];
-    if(Config["AutoStart"].is_boolean()) AutoStart = Config["AutoStart"];
+  json ConfigIN = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  if(ConfigIN.is_object()) {
+    if(ConfigIN["VoltageGain"].is_number()) pVoltageGain = ConfigIN["VoltageGain"];
+    if(ConfigIN["VoltageOffset"].is_number()) pVoltageOffset = ConfigIN["VoltageOffset"];
+    if(ConfigIN["CurrentGain"].is_number()) pCurrentGain = ConfigIN["CurrentGain"];
+    if(ConfigIN["CurrentOffset"].is_number()) pCurrentOffset = ConfigIN["CurrentOffset"];
+    if(ConfigIN["CurrentInvert"].is_boolean()) pCurrentInvert = ConfigIN["CurrentInvert"];
+    if(ConfigIN["AutoStart"].is_boolean()) AutoStart = ConfigIN["AutoStart"];
   }
-  Config = json::object();
-  Config["VoltageGain"] = pVoltageGain;
-  Config["VoltageOffset"] = pVoltageOffset;
-  Config["CurrentGain"] = pCurrentGain;
-  Config["CurrentOffset"] = pCurrentOffset;
-  Config["CurrentInvert"] = pCurrentInvert;
-  Config["AutoStart"] = AutoStart;
-  ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
+  if((pVoltageGain < -10) || (pVoltageGain > 10)) pVoltageGain = 0.0;
+  if((pVoltageOffset < -20) || (pVoltageOffset > 20)) pVoltageOffset = 0.0;
+  if((pCurrentGain < -10.0) || (pCurrentGain > 10.0)) pCurrentGain = 0.0;
+  if((pCurrentOffset < -1.0) || (pCurrentOffset > 1.0)) pCurrentOffset = 0;
+  json ConfigOUT = json::object();
+  ConfigOUT["VoltageGain"] = pVoltageGain;
+  ConfigOUT["VoltageOffset"] = pVoltageOffset;
+  ConfigOUT["CurrentGain"] = pCurrentGain;
+  ConfigOUT["CurrentOffset"] = pCurrentOffset;
+  ConfigOUT["CurrentInvert"] = pCurrentInvert;
+  ConfigOUT["AutoStart"] = AutoStart;
+  ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(ConfigIN["Analyzer"]);
+  ConfigManager::WriteConfig("/Devices/" + pSerial, ConfigOUT);
   if(pState == UNCONFIGURED) {
     pState = STOPPED;
     if(AutoStart == false) {
-      WriteUnlock();
+      pAnalyzersLock.WriteUnlock();
       return true;
     }
   }
@@ -125,16 +128,18 @@ bool DeviceV1_01::StartDevice() {
   pTerminate    = false;
   pDeviceHandle = NULL;
   pNewDevice    = NULL;
-  pAnalyzers.push_back(new AnalyzerSoft(pSerial, Analyzer::PHASE1, json::object(), DEVICEV1_01_SAMPLEFREQ));
+  pAnalyzers.push_back(new AnalyzerSoft(pSerial, Analyzer::PHASE1, ConfigOUT["Analyzer"], DEVICEV1_01_SAMPLEFREQ));
   if(libusb_init(&pContext) < 0) {
     LOGFile::Error("Can not open libUSB...\n");
-    WriteUnlock();
+    pAnalyzersLock.WriteUnlock();
+    StopDevice();
     return false;
   }
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(pContext);
-    WriteUnlock();
+    pAnalyzersLock.WriteUnlock();
+    StopDevice();
     return false;
   }
   if(libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV1_01_VID, DEVICEV1_01_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL) < 0) {
@@ -142,17 +147,18 @@ bool DeviceV1_01::StartDevice() {
     pTerminate = true;
     pthread_join(pCaptureThread, NULL);
     libusb_exit(pContext);
-    WriteUnlock();
+    pAnalyzersLock.WriteUnlock();
+    StopDevice();
     return false;
   }
   pState = RUNNING;
-  WriteUnlock();
+  pAnalyzersLock.WriteUnlock();
   return true;
 }
 bool DeviceV1_01::StopDevice() {
-  WriteLock();
+  pAnalyzersLock.WriteLock();
   if(pState != RUNNING) {
-    WriteUnlock();
+    pAnalyzersLock.WriteUnlock();
     return false;
   }
   LOGFile::Info("Stopping 'V1.01' driver for serial '%s'\n", pSerial.c_str());
@@ -164,8 +170,30 @@ bool DeviceV1_01::StopDevice() {
     delete Analyzer;
   }
   pState = STOPPED;
-  WriteUnlock();
+  pAnalyzersLock.WriteUnlock();
   return true;
+}
+void DeviceV1_01::GetDevice(HTTPRequest &req) {
+  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  Config.erase("Analyzer");
+  req.FromJSON(Config);
+}
+void DeviceV1_01::SetDevice(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Settings"].is_object()) return req.FromString("'Settings' param is required", MHD_HTTP_BAD_REQUEST);
+  Params["Settings"].erase("Analyzer");
+  pAnalyzersLock.WriteLock();
+  DeviceState State = pState;
+  ConfigManager::WriteConfig("/Devices/" + pSerial, Params["Settings"]);
+  pAnalyzersLock.WriteUnlock();
+  json Response;
+  if(State == Device::RUNNING) {
+    StopDevice();
+    Response["Result"] = StartDevice();
+  } else {
+    Response["Result"] = true;
+  }
+  req.FromJSON(Response);
 }
 void DeviceV1_01::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV1_01 *This = (DeviceV1_01*)transfer->user_data;

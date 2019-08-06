@@ -2,6 +2,7 @@
  * File:     FFT.cpp
  * Author:   Eduardo Viciana (30 de mayo de 2018)
  * ------------------------------------------------------------------------------------------------------------------ */
+#include <fftw3.h>
 #include <sys/types.h>
 #include "FFT.h"
 #include <errno.h>
@@ -10,6 +11,7 @@
 #include <zlib.h>
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
+pthread_mutex_t FFT::pPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
 FFT::FFT(char *name) {
   pTerminate = false;
   if(pthread_create(&pThread, NULL, FFT_Thread, (void*)this) != 0) {
@@ -24,8 +26,9 @@ FFT::~FFT() {
   if(pthread_join(pThread, NULL) != 0) LOGFile::Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
 }
 void FFT::Start(const vector<float> &in) {
-  Output.clear();
-  Output.reserve(in.size());
+  pInput = in;
+//  Output.clear();
+//  Output.reserve(in.size());
   for(uint n = 0; n < in.size(); n++) Output.push_back(complex<float>(in[n], 0));
   WakeWorker();
 }
@@ -36,9 +39,18 @@ void *FFT::FFT_Thread(void *args) {
   FFT *This = (FFT*)args;
   while(This->pTerminate == false) {
     if(This->WorkerWaitTask() == false) return NULL;
-    This->Transform(This->Output);
-    for(uint i = 0; i < ((This->Output.size() / 2) + 1); i++) This->Output[i] = (This->Output[i] / (float)(This->Output.size() / M_SQRT2));
-    This->Output.resize((This->Output.size() / 2) + 1);
+    
+    This->Output.reserve((This->pInput.size() / 2) + 1);
+    pthread_mutex_lock(&This->pPlannerMutex);
+    fftwf_plan Plan = fftwf_plan_dft_r2c_1d(This->pInput.size(), &(This->pInput[0]), (fftwf_complex*)&This->Output[0], FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
+    pthread_mutex_unlock(&pPlannerMutex);
+    fftwf_execute_dft_r2c(Plan, &(This->pInput[0]), (fftwf_complex*)&This->Output[0]);
+    This->Output.resize((This->pInput.size() / 2) + 1);
+    
+    
+    //This->Transform(This->Output);
+    for(uint i = 0; i < This->Output.size(); i++) This->Output[i] = (This->Output[i] / (float)(This->Output.size() / M_SQRT2));
+//    This->Output.resize((This->Output.size() / 2) + 1);
     This->WorkerEndsTask();
   }
   return NULL;
@@ -61,7 +73,7 @@ float FFT::CalcAngle(const complex<float> &a, const complex<float> &b) {
   else
     return Tmp - atan(b.imag() / b.real()) + M_PI;
 }
-void FFT::Transform(vector<complex<float> > &vec) {
+/*void FFT::Transform(vector<complex<float> > &vec) {
   size_t n = vec.size();
   if(n == 0) {
     return;
@@ -139,3 +151,4 @@ size_t FFT::ReverseBits(size_t x, int n) {
   for(int i = 0; i < n; i++, x >>= 1) result = (result << 1) | (x & 1U);
   return result;
 }
+*/

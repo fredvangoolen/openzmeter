@@ -8,7 +8,7 @@
 #include "HTTPServer.h"
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
-vector<Device*> DeviceManager::pDevices;
+vector<Device*> __attribute__((init_priority(200))) DeviceManager::pDevices;
 RWLocks         DeviceManager::pLock;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager() {
