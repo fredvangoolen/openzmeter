@@ -47,6 +47,8 @@ void AnalyzerRemote::GetRemote(HTTPRequest& req) {
     Query["Sequence"] = (*it)->Sequence;
     Response.push_back(Query);
   }
+  delete pRequestLocks;
+  pRequestLocks = NULL;
   pthread_mutex_unlock(&pMutex);
   LOGFile::Warning("Total: %u, Consulta: %s\n", pQueries.size(), Response.dump().c_str());
   req.FromJSON(Response);
@@ -62,7 +64,7 @@ void AnalyzerRemote::SetRemote(HTTPRequest &req) {
     Query_t *Query = (*it);
     pQueries.erase(it);
     pthread_mutex_unlock(&pMutex);
-    Query->Request->FromString(Params["Response"].dump(), Code);
+    Query->Request->FromString(Params["Response"], Code);
     Query->Locks.ProviderWrite();
     return;
   }

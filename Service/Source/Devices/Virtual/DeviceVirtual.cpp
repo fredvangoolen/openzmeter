@@ -56,6 +56,7 @@ bool DeviceVirtual::StartDevice() {
   ConfigOUT["CurrentPhase"] = pCurrentPhase;
   ConfigOUT["Mode"] = (pMode == Analyzer::PHASE1) ? "1PHASE" : (pMode == Analyzer::PHASE3) ? "3PHASE" : "3PHASE+N";
   ConfigOUT["AutoStart"] = AutoStart;
+  ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(ConfigIN["Analyzer"]);
   ConfigManager::WriteConfig("/Devices/" + pSerial, ConfigOUT);
   if(pState == UNCONFIGURED) {
     pState = STOPPED;
@@ -67,7 +68,7 @@ bool DeviceVirtual::StartDevice() {
   string ModeString = ConfigOUT["Mode"];
   LOGFile::Info("Starting 'Virtual' driver\n");
   pTerminate = false;
-  pAnalyzers.push_back(new AnalyzerSoft(pSerial + "_" + ModeString, pMode, ConfigIN["Analyzer"], pSampleRate));
+  pAnalyzers.push_back(new AnalyzerSoft(pSerial + "_" + ModeString, pMode, ConfigOUT["Analyzer"], pSampleRate));
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pAnalyzersLock.WriteUnlock();
@@ -97,25 +98,26 @@ bool DeviceVirtual::StopDevice() {
   return true;
 }
 void DeviceVirtual::GetDevice(HTTPRequest &req) {
-//  ReadLock();
-  req.FromJSON(ConfigManager::ReadConfig("/Devices/" + pSerial));
-//  ReadUnlock();
+  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  Config.erase("Analyzer");
+  req.FromJSON(Config);
 }
 void DeviceVirtual::SetDevice(HTTPRequest &req) {
-//  json Params = req.GetParams();
-//  if(!Params["Settings"].is_object()) return req.FromString("'Settings' param is required", MHD_HTTP_BAD_REQUEST);
-//  WriteLock();
-//  DeviceState State = pState;
-//  ConfigManager::WriteConfig("/Devices/" + pSerial, Params["Settings"]);
-//  WriteUnlock();
-//  json Response;
-//  if(State == Device::RUNNING) {
-//    StopDevice();
-//    Response["Result"] = StartDevice();
-//  } else {
-//    Response["Result"] = true;
-//  }
-//  req.FromJSON(Response);
+  json Params = req.GetParams();
+  if(!Params["Settings"].is_object()) return req.FromString("'Settings' param is required", MHD_HTTP_BAD_REQUEST);
+  Params["Settings"].erase("Analyzer");
+  pAnalyzersLock.WriteLock();
+  DeviceState State = pState;
+  ConfigManager::WriteConfig("/Devices/" + pSerial, Params["Settings"]);
+  pAnalyzersLock.WriteUnlock();
+  json Response;
+  if(State == Device::RUNNING) {
+    StopDevice();
+    Response["Result"] = StartDevice();
+  } else {
+    Response["Result"] = true;
+  }
+  req.FromJSON(Response);
 }
 void *DeviceVirtual::Capture_Thread(void *args) {
   int Prio = sched_get_priority_max(SCHED_RR);

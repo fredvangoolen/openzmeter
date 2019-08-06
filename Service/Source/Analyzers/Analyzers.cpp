@@ -5,7 +5,6 @@
 #include <math.h>
 #include <sys/types.h>
 #include <string.h>
-#include <curl/curl.h>
 #include "Analyzers.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -13,8 +12,12 @@ Analyzer::Analyzer(const string &id) {
   pSerial = id;
   pName = "Unnamed analyzer";
   pLastSave = 0;
+  pCurl = NULL;
 }
 Analyzer::~Analyzer() {
+  if(pCurl != NULL) {
+    //Elimino curl
+  }
 }
 string Analyzer::Serial() const {
   return pSerial;
@@ -30,56 +33,96 @@ bool Analyzer::CheckRights(HTTPRequest &req, const uint neededAccess) const {
 // req.FromString("", MHD_HTTP_UNAUTHORIZED);
  return true;
 }
-size_t Analyzer::CurlReadCallback(void *contents, size_t size, size_t nmemb, void *userp) {
-  CurlBuff_t *Buff = (CurlBuff_t*)userp;
-  if((Buff->Size + size * nmemb + 1) > Buff->MaxSize) {
-    Buff->Buffer = (char*)realloc(Buff->Buffer, Buff->Size + size * nmemb + 1);
-    if(Buff->Buffer == NULL) {
+bool Analyzer::EnableSync(const string &server, const string &user, const string &pass) {
+  if(pCurl != NULL) DisableSync();
+  pSyncServer = server;
+  pSyncUser = user;
+  pSyncPass = pass;
+  pTerminateSync = false;
+  pCurlHeaders = NULL;
+  pCurl = curl_share_init();
+  pCurlHeaders = curl_slist_append(pCurlHeaders, "Accept: application/json");
+  pCurlHeaders = curl_slist_append(pCurlHeaders, "Connection: keep-alive");
+  pCurlHeaders = curl_slist_append(pCurlHeaders, "Content-Type: application/json");
+  pCurlLocks = PTHREAD_MUTEX_INITIALIZER;
+  curl_share_setopt(pCurl, CURLSHOPT_LOCKFUNC, CurlLockCallback);
+  curl_share_setopt(pCurl, CURLSHOPT_UNLOCKFUNC, CurlUnlockCallback);
+  curl_share_setopt(pCurl, CURLSHOPT_USERDATA, &pCurlLocks);
+  curl_share_setopt(pCurl, CURLSHOPT_SHARE, CURL_LOCK_DATA_COOKIE);  
+  if(pthread_create(&pSyncThread, NULL, Sync_Thread, (void*)this) != 0) {
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    return false;
+  }
+  return true;  
+}
+void Analyzer::DisableSync() {
+  if(pCurl == NULL) return;
+  pTerminateSync = true;
+  pthread_join(pSyncThread, NULL);
+  curl_share_cleanup(pCurl);
+  pCurl = NULL;
+  curl_slist_free_all(pCurlHeaders);
+}
+size_t Analyzer::CurlWriteCallback(void *contents, size_t size, size_t nmemb, void *userp) {
+  CurlWriteBuff_t *Buffer = (CurlWriteBuff_t*)userp;
+  if((Buffer->Size + size * nmemb + 1) > Buffer->MaxSize) {
+    Buffer->Buffer = (char*)realloc(Buffer->Buffer, Buffer->Size + size * nmemb + 1);
+    if(Buffer->Buffer == NULL) {
       return 0;
     } else {
-      Buff->MaxSize = Buff->Size + size * nmemb + 1;
+      Buffer->MaxSize = Buffer->Size + size * nmemb + 1;
     }
   }
-  memcpy(&Buff->Buffer[Buff->Size], contents, size * nmemb);
-  Buff->Size += size * nmemb;
-  Buff->Buffer[Buff->Size] = 0;
+  memcpy(&Buffer->Buffer[Buffer->Size], contents, size * nmemb);
+  Buffer->Size += size * nmemb;
+  Buffer->Buffer[Buffer->Size] = 0;
   return size * nmemb;
+}
+//size_t Analyzer::CurlReadCallback(void *dest, size_t size, size_t nmemb, void *userp) {
+//  CurlReadBuff_t *Buffer = (CurlReadBuff_t*)userp;
+//  ssize_t Bytes = Buffer->Request->WriteFunction(Buffer->Request, Buffer->Pos, (char*)dest, size * nmemb);
+//  Buffer->Pos = Buffer->Pos + Bytes;
+//  return Bytes;
+//}
+void Analyzer::CurlLockCallback(CURL *handle, curl_lock_data data, curl_lock_access access, void *userptr) {
+  printf("lock %p %p \n", handle, userptr);
+  //pthread_mutex_t *Mutex = ;
+  pthread_mutex_lock((pthread_mutex_t*)userptr); 
+//  Analyzer *This = (Analyzer*)userptr;
+//  if(access == CURL_LOCK_ACCESS_SHARED) {
+//    This->pCurlLocks.ReadLock();
+//  } else {
+//    This->pCurlLocks.WriteLock();
+//  }
+}
+void Analyzer::CurlUnlockCallback(CURL *handle, curl_lock_data data, void *userptr) {
+  printf("unlock %p %p \n", handle, userptr);
+  pthread_mutex_unlock((pthread_mutex_t*)userptr); 
+//  Analyzer *This = (Analyzer*)userptr;
+//  if(access == CURL_LOCK_ACCESS_SHARED) {
+//    This->pCurlLocks.ReadUnlock();
+//  } else {
+//    This->pCurlLocks.WriteUnlock();
+//  }
 }
 void *Analyzer::Sync_Thread(void *args) {
   Analyzer *This = (Analyzer*)args;
   pthread_setname_np(This->pSyncThread, "RemoteSync");
-  CurlBuff_t   CurlBuff;
-//  json_object *Find;
-//  size_t       JSONLen;
-  long         HTTPCode;
-//  char         Tmp[1024];
-//  uint64_t     Last3S      = 0;
-//  uint64_t     Last1M      = 0;
-//  uint64_t     Last10M     = 0;
-//  uint64_t     Last1H      = 0;
-//  uint64_t     LastEvent   = 0;
-//  uint64_t     LastPrice   = 0;
-  bool         Registered  = false;
-//  bool         Initialized = false;
-  CURL        *Curl        = curl_easy_init();
-  curl_slist  *Headers     = NULL;
-//  Database     DB(This->GetID());
+  CurlWriteBuff_t CurlBuff;
+  long            HTTPCode;
+  bool            Registered  = false;
+  CURL           *Curl        = curl_easy_init();
+  curl_easy_setopt(Curl, CURLOPT_HTTPHEADER, This->pCurlHeaders);
   curl_easy_setopt(Curl, CURLOPT_COOKIEFILE, "");
   curl_easy_setopt(Curl, CURLOPT_POST, 1L);
+  curl_easy_setopt(Curl, CURLOPT_ACCEPT_ENCODING, "");
   curl_easy_setopt(Curl, CURLOPT_WRITEDATA, (void*)&CurlBuff);
-  curl_easy_setopt(Curl, CURLOPT_WRITEFUNCTION, CurlReadCallback);
+  curl_easy_setopt(Curl, CURLOPT_WRITEFUNCTION, CurlWriteCallback);
+  curl_easy_setopt(Curl, CURLOPT_SHARE, This->pCurl);
   while(!This->pTerminateSync) {
-    if(Headers == NULL) {
-      curl_slist_free_all(Headers);
-      Headers = curl_slist_append(Headers, "Accept: application/json");
-      Headers = curl_slist_append(Headers, "Accept-Encoding: deflate");
-      Headers = curl_slist_append(Headers, "Connection: keep-alive");
-      Headers = curl_slist_append(Headers, "Content-Type: application/json");
-      curl_easy_setopt(Curl, CURLOPT_HTTPHEADER, Headers);
-    }
     if(Registered == false) {
       json   Content = json::object();
-      string URL     = This->pSyncServer + "/Login";
+      string URL     = This->pSyncServer + "/LogIn";
       CurlBuff.Size  = 0;
       Content["Username"] = This->pSyncUser;
       Content["Password"] = This->pSyncPass;
@@ -93,15 +136,12 @@ void *Analyzer::Sync_Thread(void *args) {
       if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_OK)) {
         json Content = json::parse(CurlBuff.Buffer, NULL, false);
         if(!Content.is_discarded() && Content.is_object() && Content["Result"].is_boolean() && (Content["Result"] == true)) {
-          Registered = true;
-          struct curl_slist *Cookies;
-//          curl_easy_getinfo(Curl, CURLINFO_COOKIELIST, &Cookies);
-          
-          if(Registered) LOGFile::Info("INFO", "AnalyzerRemote: logged to remote server\n");
+          Registered = Content["Result"];
+          if(Registered) LOGFile::Info("Analyzer '%s' logged on remote server\n", This->pSerial.c_str());
         }
       } else {
         Registered = false;
-        LOGFile::Debug("AnalyzerRemote: failed to register on remote server\n");
+        LOGFile::Debug("Analyzer '%s' can not login on remote server\n", This->pSerial.c_str());
       }        
       if(Registered == false) usleep(1000000);
     } else {
@@ -118,12 +158,12 @@ void *Analyzer::Sync_Thread(void *args) {
       if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_OK)) {
         json Content = json::parse(CurlBuff.Buffer, NULL, false);
         if(!Content.is_discarded() && Content.is_array()) {
-          for(auto it = Content.begin(); it != Content.end(); it++) {
-            if(it->is_object() && (*it)["Sequence"].is_number() && (*it)["Method"].is_string() && (*it)["Params"].is_object()) {
+          for(uint32_t n = 0; n < Content.size(); n++) {
+            if(Content[n].is_object() && Content[n]["Sequence"].is_number() && Content[n]["Method"].is_string() && Content[n]["Params"].is_object()) {
               RemoteRequest_t *Request = new RemoteRequest_t;
-              Request->Method   = (*it)["Method"];
-              Request->Params   = (*it)["Params"];
-              Request->Sequence = (*it)["Sequence"];
+              Request->Method   = Content[n]["Method"];
+              Request->Params   = Content[n]["Params"];
+              Request->Sequence = Content[n]["Sequence"];
               Request->Parent   = This;
               if(pthread_create(&Request->Thread, NULL, Request_Thread, (void*)Request) != 0) {
                 LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -133,25 +173,32 @@ void *Analyzer::Sync_Thread(void *args) {
           }
         }
       } else if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_UNAUTHORIZED)) {
-        LOGFile::Debug("Non authorized on remote server for analyzar '%s', trying to login again...\n", This->pSerial.c_str());
+        LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->pSerial.c_str());
         usleep(1000000);
         Registered = false;
       } else if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_NO_CONTENT)) {
         LOGFile::Debug("No pending queries in remote server for analyzar '%s'\n", This->pSerial.c_str());
+      } else if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_METHOD_NOT_ALLOWED)) {
+        LOGFile::Debug("Device remote is not enabled on remote server\n");
       } else {
         LOGFile::Debug("Failed request to remote server for analyzer '%s'\n", This->pSerial.c_str());
+        usleep(1000000);
       }
     }
   }
+  
   curl_easy_cleanup(Curl);
   return NULL;
 }
 void *Analyzer::Request_Thread(void *args) {
   RemoteRequest_t *This = (RemoteRequest_t*)args;
+  //  Database     DB(This->GetID());
+
   This->Params["UserName"] = "admin";
   string ParamsText = This->Params.dump();
   size_t ParamsSize = ParamsText.size();
   LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Parent->pSerial.c_str());
+//  CurlReadBuff_t Buffer;
   HTTPRequest *Request = new HTTPRequest(NULL, false);
   Request->AppendParams(ParamsText.c_str(), &ParamsSize);
   Request->ProcessParams(true);
@@ -186,7 +233,32 @@ void *Analyzer::Request_Thread(void *args) {
   } else if(This->Method == "getPrices") {
     This->Parent->GetPrices(*Request);
   }
-//Devuelvo lo que tenga en request
+  CURL           *Curl        = curl_easy_init();
+  CurlWriteBuff_t CurlBuff;
+//  Cookie: SESSION=369020
+  string URL = This->Parent->pSyncServer + "/setRemote";
+  json Content = json::object();
+  Content["Code"] = Request->ResultCode();
+  Content["Sequence"] = This->Sequence;
+  Content["Analyzer"] = This->Parent->pSerial;
+  Content["Response"] = Request->Content();
+  string ContentText = Content.dump();
+  curl_easy_setopt(Curl, CURLOPT_URL, URL.c_str());
+  curl_easy_setopt(Curl, CURLOPT_POST, 1L);
+  curl_easy_setopt(Curl, CURLOPT_SHARE, This->Parent->pCurl);
+  curl_easy_setopt(Curl, CURLOPT_WRITEDATA, (void*)&CurlBuff);
+  curl_easy_setopt(Curl, CURLOPT_COOKIEFILE, "");
+  curl_easy_setopt(Curl, CURLOPT_HTTPHEADER, This->Parent->pCurlHeaders);
+  curl_easy_setopt(Curl, CURLOPT_ACCEPT_ENCODING, "");
+  curl_easy_setopt(Curl, CURLOPT_WRITEFUNCTION, CurlWriteCallback);
+  curl_easy_setopt(Curl, CURLOPT_POSTFIELDS, ContentText.c_str());
+  curl_easy_setopt(Curl, CURLOPT_POSTFIELDSIZE, ContentText.size());
+  CurlBuff.Size = 0;
+   
+//  curl_easy_setopt(Curl, CURLOPT_READFUNCTION, CurlReadCallback);
+//  curl_easy_setopt(Curl, CURLOPT_READDATA, &Buffer);
+  curl_easy_perform(Curl);
+  curl_easy_cleanup(Curl);
   return NULL;
 }
 

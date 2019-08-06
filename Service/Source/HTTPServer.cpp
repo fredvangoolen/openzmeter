@@ -41,6 +41,9 @@ HTTPRequest::~HTTPRequest() {
 uint32_t HTTPRequest::size() const {
   return pPostData.size();
 }
+string HTTPRequest::Content() const {
+  return pPostData;
+}
 void HTTPRequest::FromFile(const string &name) {
   size_t Size = 0;
   char *Tmp = (char*)ResourceLoader::GetFile(name, &Size);
@@ -137,7 +140,7 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
   }
 }
 //----------------------------------------------------------------------------------------------------------------------
-vector<HTTPServer::Callback_t> HTTPServer::pCallbacks;
+vector<HTTPServer::Callback_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
 RWLocks                        HTTPServer::pLock = RWLocks();
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {

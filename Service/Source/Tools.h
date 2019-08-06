@@ -16,8 +16,8 @@ class RWLocks {
     pthread_mutex_t  pMutex;
     pthread_cond_t   pReadersCondition;
     pthread_cond_t   pWritersCondition;
-    uint             pReaders;
-    uint             pWriters;
+    uint32_t         pReaders;
+    uint32_t         pWriters;
     bool             pActiveWriter;
   public :
     RWLocks();
@@ -47,7 +47,7 @@ class WorkerLocks {
 class ProviderLocks {
   //Provider wait until all consumers ends, consumers wait until provider write
   private :
-    uint             pWaitingThreads;
+    uint32_t         pWaitingThreads;
     pthread_mutex_t  pWaitingThreadsMutex;
     pthread_cond_t   pWaitingThreadsCond;
     bool             pDataReady;
@@ -59,7 +59,7 @@ class ProviderLocks {
     void Abort();
     void ProviderWrite();
     void ProviderWait();
-    bool ConsumerWait(uint timeoutMS);
+    bool ConsumerWait(uint32_t timeoutMS);
     void ConsumerEnds();
 };
 //----------------------------------------------------------------------------------------------------------------------

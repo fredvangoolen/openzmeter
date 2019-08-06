@@ -32,6 +32,7 @@ class HTTPRequest : public Database {
     string      SessionID() const;
     string      UserName() const;
     string      MimeType() const;
+    string      Content() const;
     void        MimeType(const string &type);
     uint32_t    size() const;
     bool        Deflate() const;

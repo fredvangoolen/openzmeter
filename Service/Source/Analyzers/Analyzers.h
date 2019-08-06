@@ -5,6 +5,7 @@
 #pragma once
 #include <vector>
 #include <complex>
+#include <curl/curl.h>
 #include <nlohmann/json.hpp>
 #include "Tools.h"
 #include "Database.h"
@@ -22,7 +23,7 @@ class Analyzer {
       char  *Buffer;
       size_t Size;
       size_t MaxSize;
-    } CurlBuff_t;
+    } CurlWriteBuff_t;
     typedef struct {
       pthread_t Thread;
       json      Params;
@@ -30,11 +31,18 @@ class Analyzer {
       uint64_t  Sequence;
       Analyzer *Parent;
     } RemoteRequest_t;
+//    typedef struct {
+//      HTTPRequest *Request;
+//      uint64_t     Pos;
+//    } CurlReadBuff_t;
   protected :
     uint64_t        pLastSave;                //Timestamp of last save or communication
     string          pSerial;                  //Serial number
     string          pName;                    //Analyzer description
   private :
+    CURLSH         *pCurl;                    //Shared object for curl lib
+    curl_slist     *pCurlHeaders;             //Common headers
+    pthread_mutex_t pCurlLocks;               //Curl access control
     bool            pTerminateSync;           //Signal to terminate sync thread
     pthread_t       pSyncThread;              //Synchronize thread
     string          pSyncServer;              //Sync server
@@ -42,10 +50,13 @@ class Analyzer {
     string          pSyncPass;                //Sync password
   protected :
     bool CheckRights(HTTPRequest &req, const uint neededAccess) const;
-    void EnableSync(const string &server, const string &user, const string &pass);
+    bool EnableSync(const string &server, const string &user, const string &pass);
     void DisableSync();
   private :
-    static size_t CurlReadCallback(void *contents, size_t size, size_t nmemb, void *userp);
+    static size_t CurlWriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
+//    static size_t CurlReadCallback(void *dest, size_t size, size_t nmemb, void *userp);
+    static void   CurlLockCallback(CURL *handle, curl_lock_data data, curl_lock_access access, void *userptr);
+    static void   CurlUnlockCallback(CURL *handle, curl_lock_data data, void *userptr);
     static void  *Sync_Thread(void *args);
     static void  *Request_Thread(void *args);
   public :
