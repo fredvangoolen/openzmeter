@@ -87,8 +87,8 @@ bool HTTPRequest::ProcessParams(bool local) {
   pJSONParams = json::parse(pPostData, NULL, false);
   pPostData = "";
   if(!pJSONParams.is_discarded()) {
-    if(local && pJSONParams["UserName"].is_string()) {
-     pUserName = pJSONParams["UserName"];
+    if(pJSONParams["UserName"].is_string()) {
+     if(local) pUserName = pJSONParams["UserName"];
      pJSONParams.erase("UserName");
     }
     return true;

@@ -50,7 +50,6 @@ void AnalyzerRemote::GetRemote(HTTPRequest& req) {
   delete pRequestLocks;
   pRequestLocks = NULL;
   pthread_mutex_unlock(&pMutex);
-  LOGFile::Warning("Total: %u, Consulta: %s\n", pQueries.size(), Response.dump().c_str());
   req.FromJSON(Response);
 }
 void AnalyzerRemote::SetRemote(HTTPRequest &req) {

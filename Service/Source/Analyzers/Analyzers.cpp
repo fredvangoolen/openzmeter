@@ -78,32 +78,11 @@ size_t Analyzer::CurlWriteCallback(void *contents, size_t size, size_t nmemb, vo
   Buffer->Buffer[Buffer->Size] = 0;
   return size * nmemb;
 }
-//size_t Analyzer::CurlReadCallback(void *dest, size_t size, size_t nmemb, void *userp) {
-//  CurlReadBuff_t *Buffer = (CurlReadBuff_t*)userp;
-//  ssize_t Bytes = Buffer->Request->WriteFunction(Buffer->Request, Buffer->Pos, (char*)dest, size * nmemb);
-//  Buffer->Pos = Buffer->Pos + Bytes;
-//  return Bytes;
-//}
 void Analyzer::CurlLockCallback(CURL *handle, curl_lock_data data, curl_lock_access access, void *userptr) {
-  printf("lock %p %p \n", handle, userptr);
-  //pthread_mutex_t *Mutex = ;
   pthread_mutex_lock((pthread_mutex_t*)userptr); 
-//  Analyzer *This = (Analyzer*)userptr;
-//  if(access == CURL_LOCK_ACCESS_SHARED) {
-//    This->pCurlLocks.ReadLock();
-//  } else {
-//    This->pCurlLocks.WriteLock();
-//  }
 }
 void Analyzer::CurlUnlockCallback(CURL *handle, curl_lock_data data, void *userptr) {
-  printf("unlock %p %p \n", handle, userptr);
   pthread_mutex_unlock((pthread_mutex_t*)userptr); 
-//  Analyzer *This = (Analyzer*)userptr;
-//  if(access == CURL_LOCK_ACCESS_SHARED) {
-//    This->pCurlLocks.ReadUnlock();
-//  } else {
-//    This->pCurlLocks.WriteUnlock();
-//  }
 }
 void *Analyzer::Sync_Thread(void *args) {
   Analyzer *This = (Analyzer*)args;
@@ -192,13 +171,10 @@ void *Analyzer::Sync_Thread(void *args) {
 }
 void *Analyzer::Request_Thread(void *args) {
   RemoteRequest_t *This = (RemoteRequest_t*)args;
-  //  Database     DB(This->GetID());
-
   This->Params["UserName"] = "admin";
   string ParamsText = This->Params.dump();
   size_t ParamsSize = ParamsText.size();
   LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Parent->pSerial.c_str());
-//  CurlReadBuff_t Buffer;
   HTTPRequest *Request = new HTTPRequest(NULL, false);
   Request->AppendParams(ParamsText.c_str(), &ParamsSize);
   Request->ProcessParams(true);
@@ -233,15 +209,15 @@ void *Analyzer::Request_Thread(void *args) {
   } else if(This->Method == "getPrices") {
     This->Parent->GetPrices(*Request);
   }
-  CURL           *Curl        = curl_easy_init();
+  CURL           *Curl = curl_easy_init();
   CurlWriteBuff_t CurlBuff;
-//  Cookie: SESSION=369020
   string URL = This->Parent->pSyncServer + "/setRemote";
   json Content = json::object();
   Content["Code"] = Request->ResultCode();
   Content["Sequence"] = This->Sequence;
   Content["Analyzer"] = This->Parent->pSerial;
   Content["Response"] = Request->Content();
+  delete Request;
   string ContentText = Content.dump();
   curl_easy_setopt(Curl, CURLOPT_URL, URL.c_str());
   curl_easy_setopt(Curl, CURLOPT_POST, 1L);
@@ -254,9 +230,6 @@ void *Analyzer::Request_Thread(void *args) {
   curl_easy_setopt(Curl, CURLOPT_POSTFIELDS, ContentText.c_str());
   curl_easy_setopt(Curl, CURLOPT_POSTFIELDSIZE, ContentText.size());
   CurlBuff.Size = 0;
-   
-//  curl_easy_setopt(Curl, CURLOPT_READFUNCTION, CurlReadCallback);
-//  curl_easy_setopt(Curl, CURLOPT_READDATA, &Buffer);
   curl_easy_perform(Curl);
   curl_easy_cleanup(Curl);
   return NULL;
