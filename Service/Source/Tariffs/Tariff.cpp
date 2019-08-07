@@ -4,7 +4,6 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #include <string.h>
 #include <errno.h>
-//#include <cctz/civil_time.h>
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
 TariffList::TariffList(const json &list, const string &timezone) {
@@ -59,6 +58,8 @@ TariffList::~TariffList() {
   for(uint32_t i = 0; i < pList.size(); i++) delete pList[i];
 }
 //----------------------------------------------------------------------------------------------------------------------
+bool Tariff::pRegistered = Tariff::RegisterCallbacks();
+//----------------------------------------------------------------------------------------------------------------------
 Tariff::Tariff(const uint64_t start, const uint64_t end, const string &tz) {
   cctz::load_time_zone(tz, &pTimeZone);
   pStartDate = start;
@@ -69,6 +70,24 @@ Tariff::~Tariff() {
     delete pPeriods[n].PowerModule;
     delete pPeriods[n].EnergyModule;
   }
+}
+bool Tariff::RegisterCallbacks() {
+  HTTPServer::RegisterCallback("/getTariffs", GetTariffsCallback);
+  HTTPServer::RegisterCallback("/getTariff",  GetTariffCallback);
+  HTTPServer::RegisterCallback("/setTariff",  SetTariffCallback);
+  HTTPServer::RegisterCallback("/delTariff",  DelTariffCallback);
+  HTTPServer::RegisterCallback("/addTariff",  AddTariffCallback);
+  return true;
+}
+void Tariff::GetTariffsCallback(HTTPRequest &req) {
+  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('TariffID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') as result FROM rates");
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
+}
+void Tariff::GetTariffCallback(HTTPRequest &req) {}
+void Tariff::SetTariffCallback(HTTPRequest &req) {}
+void Tariff::DelTariffCallback(HTTPRequest &req) {}
+void Tariff::AddTariffCallback(HTTPRequest &req) {
 }
 uint8_t Tariff::FindPeriod(uint64_t timestamp) {
   uint8_t Period = UINT8_MAX;
