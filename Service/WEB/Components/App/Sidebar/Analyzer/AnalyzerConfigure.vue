@@ -3,6 +3,9 @@
     <div class="modal-header">
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Configuration</h4></div>
       <div class="pull-right btn-group">
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner, active: View=='Basic' }" @click="View='Basic'">Basic</button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner, active: View=='Contract' }" @click="View='Contract'">Contract</button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner, active: View=='Remote' }" @click="View='Remote'">Remote</button>
         <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner }" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save"></button>
         <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
@@ -10,10 +13,14 @@
     <div class="modal-body">
       <spinner v-if="ShowSpinner"></spinner>
       <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != '' && !ShowSpinner">{{ Error }}</div>
-      <div class="row">
-        <div class="col-xs-12">
+      <div class="row" v-if="View=='Basic'">
+        <div class="col-xs-9">
           <label class="control-label">Serial number</label>
           <input type="text" class="form-control" disabled v-model="analyzer.ID">
+        </div>
+        <div class="col-xs-3">
+          <label class="control-label">Mode</label>
+          <input type="text" class="form-control" disabled v-model="analyzer.Mode">
         </div>
         <div class="col-xs-12">
           <label class="control-label">Display name</label>
@@ -21,34 +28,43 @@
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Voltage</label>
-          <!-- div class="input-group">
-            <input type="number" class="form-control" id="inputAnalyzerVoltage" v-model="analyzer.NominalVoltage">
-            <span class="input-group-addon" id="basic-addon1">V</span>
-          </div -->
-          <select class="form-control" v-model="analyzer.NominalVoltage">
+          <input-spin prepend="V" :list="[{Text: '120 V (L-N)', Value: 120}, {Text: '240 V (L-L)', Value: 240}, {Text: '230 V (L-N)', Value: 230}]" :decimals="1" :min="10" :max="10000" :increment="1" :value="analyzer.NominalVoltage"></input-spin>
+          <!--select class="form-control" v-model="analyzer.NominalVoltage">
             <option value="120">120 V</option>
             <option value="230">230 V</option>
             <option value="400">400 V</option>            
-          </select>
+          </select-->
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Frequency</label>
-          <!-- div class="input-group">
-            <input type="number" class="form-control" id="inputAnalyzerFrequency" v-model="analyzer.NominalFreq">
-            <span class="input-group-addon" id="basic-addon1">Hz</span>
-          </div -->
-          <select class="form-control" v-model="analyzer.NominalFreq">
+          <input-spin prepend="Hz" :list="[50, 60]" :decimals="1" :min="10" :max="500" :increment="1" :value="analyzer.NominalFreq"></input-spin>
+          <!--select class="form-control" v-model="analyzer.NominalFreq">
             <option value="50">50 Hz</option>
             <option value="60">60 Hz</option>
-          </select>
+          </select-->
         </div>
-        <!-- div class="col-xs-12 col-sm-6">
-          <label class="control-label">CUPS</label>
-          <input type="text" class="form-control" id="inputAnalyzerCUPS">
+        <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
+        <div class="col-xs-12 col-sm-6">
+          <label class="control-label">Min current</label>
+          <input-spin prepend="A" :decimals="1" :min="10" :max="500" :increment="1" :value="analyzer.MinCurrent"></input-spin>
         </div>
         <div class="col-xs-12 col-sm-6">
-          <label class="control-label">Postal code</label>
-          <input type="text" class="form-control" id="inputAnalyzerZIP">
+          <label class="control-label">Max current</label>
+          <input-spin prepend="A" :decimals="1" :min="10" :max="500" :increment="1" :value="analyzer.MaxCurrent"></input-spin>
+        </div>      
+      </div>
+      <div class="row" v-if="View=='Contract'">
+        <div class="col-xs-12">
+          <label class="control-label">Contract ID</label>
+          <input type="text" class="form-control">
+        </div>
+        <div class="col-xs-12 col-sm-9">
+          <label class="control-label">Country</label>
+          <input type="text" class="form-control">
+        </div>
+        <div class="col-xs-12 col-sm-3">
+          <label class="control-label">ZIP</label>
+          <input type="text" class="form-control">
         </div>
         <div class="col-xs-12 col-sm-12">
           <label class="control-label">Location</label>
@@ -59,7 +75,26 @@
             <input type="text" class="form-control" id="inputAnalyzerLong">
             <span class="input-group-btn"><button class="btn btn-default"><img :src="require('Imgs/globe_africa.png')"></button></span>
           </div>
-        </div -->
+        </div>
+      </div>
+      <div class="row" v-if="View=='Remote'">
+        <div class="col-xs-12">
+          <label class="control-label" style="line-height: 22px">Enable remote access</label>
+          <toggle class="float-right" onText="Yes" offText="No"></toggle>
+          <hr style="margin: 5px 0px 5px 0px"/>
+        </div>
+        <div class="col-xs-12">
+          <label class="control-label">Remote URL</label>
+          <input type="text" class="form-control">
+        </div>
+        <div class="col-xs-12 col-sm-6">
+          <label class="control-label">User name</label>
+          <input type="text" class="form-control">
+        </div>
+        <div class="col-xs-12 col-sm-6">
+          <label class="control-label">Password</label>
+          <input type="text" class="form-control">
+        </div>
       </div>
     </div>
   </div>
@@ -67,10 +102,12 @@
 
 <script>
   import Spinner from 'Components/Spinner.vue';
+  import InputSpin from 'Components/InputSpin.vue';
   import OptionPicker from 'Components/OptionPicker.vue';
+  import Toggle from 'Components/Toggle.vue';
   export default {
     data() {
-      return { Show: false, ShowSpinner: true, analyzer: null, Error: ''};
+      return { View: 'Basic', Show: false, ShowSpinner: true, analyzer: null, Error: ''};
     },
     methods: {
       Load: function(analyzer) {
@@ -110,10 +147,6 @@
         this.$parent.$refs.Table.Load(); 
       }
     },
-    components: { Spinner, OptionPicker }
+    components: { Spinner, OptionPicker, InputSpin, Toggle }
   }
 </script>
-  
-<style>
-
-</style>

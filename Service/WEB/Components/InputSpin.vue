@@ -1,5 +1,11 @@
 <template>
   <div class="input-group inputspin">
+    <div class="input-group-btn" v-if="list != null">
+      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>
+      <ul class="dropdown-menu">
+        <li v-for="item in list"><a v-on:click="SetValue(item.Value)">{{ item.Text }}</a></li>
+      </ul>
+    </div>
     <input type="text" class="form-control" :value="Format(Value)" v-on:change="Change">
     <span v-if="prepend" class="input-group-addon" id="basic-addon1">{{ prepend }}</span>
     <div class="input-group-btn-vertical">
@@ -11,7 +17,7 @@
 
 <script>
   export default {
-    props: {prepend: { type: String }, min: { type: Number, default: 0}, max: { type: Number, default: 100}, increment: { type: Number, default: 0.1 }, value: { type: Number, default: 50}, decimals: { type: Number, default: 2 }},
+    props: {prepend: { type: String }, min: { type: Number, default: 0}, max: { type: Number, default: 100}, increment: { type: Number, default: 0.1 }, value: { type: Number, default: 50}, decimals: { type: Number, default: 2 }, list: { type: Array, default: null} },
     data: function() {
       return { Value: 50 };
     },
@@ -19,6 +25,11 @@
       this.Value = this.value;
     },
     methods: {
+      SetValue: function(val) {
+        this.Value = parseFloat(val);
+        if(this.Value > this.max) this.Value = this.max;
+        this.$emit('change', this.Value);        
+      },
       Increment: function(evt) {
         $(evt.target).blur();
         this.Value = parseFloat(this.Value) + this.increment;

@@ -54,6 +54,10 @@ class Tariff {
       string  Name;
     } Tax_t;
   private :
+    static bool       pRegistered;
+  private :
+    static bool RegisterCallbacks();
+  private :
     time_zone         pTimeZone;
     string            pDescription;
     uint8_t           pHolidayPeriod;
