@@ -31,10 +31,6 @@ class Analyzer {
       uint64_t  Sequence;
       Analyzer *Parent;
     } RemoteRequest_t;
-//    typedef struct {
-//      HTTPRequest *Request;
-//      uint64_t     Pos;
-//    } CurlReadBuff_t;
   protected :
     uint64_t        pLastSave;                //Timestamp of last save or communication
     string          pSerial;                  //Serial number
@@ -54,7 +50,6 @@ class Analyzer {
     void DisableSync();
   private :
     static size_t CurlWriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
-//    static size_t CurlReadCallback(void *dest, size_t size, size_t nmemb, void *userp);
     static void   CurlLockCallback(CURL *handle, curl_lock_data data, curl_lock_access access, void *userptr);
     static void   CurlUnlockCallback(CURL *handle, curl_lock_data data, void *userptr);
     static void  *Sync_Thread(void *args);

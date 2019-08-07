@@ -22,7 +22,7 @@ vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const json &option, const float samplerate) : Analyzer(id), Database(id) {
   LOGFile::Debug("Creating analyzer database tables\n");
   ExecResource("SQL/Database_AnalyzerSoft.sql");
-  EnableSync("10.42.0.1:8081", "admin", "admin");
+  
   
   
   
@@ -107,6 +107,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
     return;
   }
   pthread_setname_np(pEventThread, "EventsDet");
+  EnableSync("10.42.0.1:8081", "admin", "admin");
 }
 AnalyzerSoft::~AnalyzerSoft() {
   pTerminate = true;
@@ -1018,7 +1019,7 @@ void AnalyzerSoft::GetPrices(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   //Parse, check params and prepare result struct
   json Params = req.GetParams();
-  string Analyzer = Params["Analyzer"];
+//  string Analyzer = Params["Analyzer"];
   uint64_t To         = Params["To"];
   uint64_t Period     = Params["Period"];
   uint64_t LastSample = Params.value<uint64_t>("LastSample", 0);
@@ -1045,7 +1046,7 @@ void AnalyzerSoft::GetPrices(HTTPRequest &req) {
   Result["Bills"]              = json::array();
   //Load involved tariffs, currency and timezone
   req.ExecSentenceAsyncResult("SELECT currency, timezone, to_json(array_agg(json_build_object('Name', analyzers_rates.name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) ORDER BY startdate ASC)) as tariff " 
-                   "FROM analyzers, analyzers_rates, country WHERE country.country_code = analyzers.country_code AND analyzers_rates.serial = analyzers.serial AND analyzers.serial = " + req.Bind(Analyzer) + " AND enddate >= " + req.Bind(From) + " AND startdate <= " + req.Bind(To) + 
+                   "FROM analyzers, analyzers_rates, country WHERE country.country_code = analyzers.country_code AND analyzers_rates.serial = analyzers.serial AND analyzers.serial = " + req.Bind(pSerial) + " AND enddate >= " + req.Bind(From) + " AND startdate <= " + req.Bind(To) + 
                    " AND analyzers.serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " UNION SELECT serial FROM permisions WHERE username = " + req.Bind(req.UserName()) + ") GROUP BY currency, timezone");
   json DBTariffs = json::array();
   if(req.FecthRow()) {
@@ -1058,7 +1059,7 @@ void AnalyzerSoft::GetPrices(HTTPRequest &req) {
   uint64_t BillingFrom = Tariffs.BillFrom((LastSample > From) ? LastSample : From);
   uint64_t BillingTo = Tariffs.BillTo(To);
   //Retrieve active and reactive samples
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(Analyzer));
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
   req.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime > " + req.Bind(BillingFrom) + " AND sampletime <= " + req.Bind(BillingTo) + " ORDER BY sampletime ASC");
   bool MoreData = req.FecthRow();
   //Traverse all samples
