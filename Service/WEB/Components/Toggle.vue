@@ -7,13 +7,13 @@
 <script>
   import Toggle from 'JS/bootstrap-toggle.js';  
   export default {
-    props: {onText: { type: String, default: 'On'}, offText: {type: String, default: 'Off'}, onStyle: {type: String, default: 'success'}, offStyle: {type: String, default: 'danger'}, size: { type: String, default: 'mini'}},
+    props: {onText: { type: String, default: 'On'}, offText: {type: String, default: 'Off'}, onStyle: {type: String, default: 'success'}, offStyle: {type: String, default: 'danger'}, size: { type: String, default: 'mini'}, value: { type: Boolean, default: false}},
     data: function() { 
       return {};
     },
     mounted: function() {
       $(this.$refs.check).bootstrapToggle({on: this.onText, off: this.offText, onstyle: this.onStyle, offstyle: this.offStyle, size: this.size});
-      this.SetState(false);  
+      this.SetState(this.value);  
     },
     methods: {
       SetState: function(checked) {

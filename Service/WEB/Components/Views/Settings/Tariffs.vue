@@ -30,10 +30,10 @@
     data: function() {
       return {ShowSpinner: true,
         Columns: [
-          {name: 'CountryCode', title: 'Country'},   
+          {name: 'CountryCode', title: 'Country'},
           {name: 'Name', title: 'Name'},
           {name: 'StartDate', title: 'Start date', callback: 'DateFormat'},
-          {name: 'EndDate', title: 'End date', callback: 'DateFormat'}, 
+          {name: 'EndDate', title: 'End date', callback: 'DateFormat'},
           {name: '__slot:actions', title: ''}
         ]
       };
@@ -81,26 +81,26 @@
 </script>
 
 <style scoped>
-@media screen and (min-width: 600px) {
-  .table >>> th:nth-child(1) {
-    width: 60px;
-    text-align: center;
+  @media screen and (min-width: 600px) {
+    .table >>> th:nth-child(1) {
+      width: 60px;
+      text-align: center;
+    }
+    .table >>> td:nth-child(1) {
+      text-align: center;
+    }
+    .table >>> th:nth-child(3), .table >>> th:nth-child(4)  {
+      width: 150px;
+      text-align: center;
+    }
+    .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
+      text-align: center;
+    }
+    .table >>> th:nth-child(5) {
+      width: 100px;
+    }
+    .table >>> td:nth-child(5) {
+      text-align: right;
+    }
   }
-  .table >>> td:nth-child(1) {
-    text-align: center;
-  }
-  .table >>> th:nth-child(3), .table >>> th:nth-child(4)  {
-    width: 150px;
-    text-align: center;
-  }
-  .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
-    text-align: center;
-  }
-  .table >>> th:nth-child(5) {
-    width: 100px;
-  }
-  .table >>> td:nth-child(5) {
-    text-align: right;
-  }
-}
 </style>

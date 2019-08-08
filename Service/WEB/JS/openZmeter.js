@@ -305,7 +305,8 @@ export function zoom(g, zoomInPercentage, xBias, yBias) {
  * Creates captions on stackable view (mobile devices) to create a card for each row.
  * @param {Table as vue object} tableVue 
  */
-export function createCaptionsForResponsiveTable (tableVue){
+export function createCaptionsForResponsiveTable (tableVue) {
+  if(tableVue === undefined) return;
   var headertext = [],
   headers = tableVue.$el.querySelectorAll("th"),
   tablebody = tableVue.$el.querySelector("tbody");
