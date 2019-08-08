@@ -71,7 +71,7 @@
           $(this.$el).modal('show');
         });
         var Analyzer = this.$root.SelectedAnalyzer;
-        $.ajax({ url: 'getEvent', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ StartTime: evt.StartTime, Analyzer: Analyzer.ID, Type: evt.Type, Samples: this.ViewMode }),
+        $.ajax({ url: 'getEvent', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ StartTime: evt.StartTime, Analyzer: Analyzer.Analyzer, Type: evt.Type, Samples: this.ViewMode }),
           success: function(result) {
             this.Event = Object.assign(evt, result);
             this.Data = [];

@@ -172,7 +172,7 @@
       },
       NowValue: function() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '3S', LastSample: 0, Period: 6000, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '3S', LastSample: 0, Period: 6000, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             this.$refs.activeCounters.Set3SValues(result);
             this.$refs.reactiveCounters.Set3SValues(result);
@@ -187,7 +187,7 @@
             this.$refs.reactiveCounters.Set3SValues(null);
           }.bind(this)
         });
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '1M', LastSample: 0, Period: 120000, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '1M', LastSample: 0, Period: 120000, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             this.$refs.activeCounters.Set1MValues(result);
             this.$refs.reactiveCounters.Set1MValues(result);
@@ -205,7 +205,7 @@
           this.ShowSpinner = true;
         }
         var Analyzer = this.$root.SelectedAnalyzer;
-        $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, To: to, LastSample: lastsample, Analyzer: Analyzer.ID, Period: period }), 
+        $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, To: to, LastSample: lastsample, Analyzer: Analyzer.Analyzer, Period: period }), 
           success: function(result) {
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             this.ActiveData = oZm.GraphDataAppend(result, 'Active_Power', this.ActiveData);

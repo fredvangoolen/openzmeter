@@ -53,7 +53,7 @@
       UpdateBars() {
         if(this.$root.SelectedAnalyzer === null) return;
         if(this.StopUpdating==false){
-          $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Series: this.Series, To: 0, Period: 86400000, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+          $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Series: this.Series, To: 0, Period: 86400000, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
             success: function(result) {
               if(result['Sampletime'] === null) return;
               if(result['Sampletime'].length === 0) return;
@@ -80,7 +80,7 @@
       UpdateNow() {
         if(this.$root.SelectedAnalyzer === null) return;
         if(this.StopUpdating==false){
-          $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: this.Series, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+          $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: this.Series, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
             success: function(result) {
               for(var n = 0; n < this.Series.length; n++) this.$refs.rows[n].SetNowLabel(result[oZm.Series[this.Series[n]].Serie][this.Phase]);
             }.bind(this),

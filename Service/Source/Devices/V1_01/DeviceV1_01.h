@@ -52,10 +52,10 @@ class DeviceV1_01 : public Device {
     static void  ReadCallback(struct libusb_transfer *transfer);
     static int   PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
-    bool StartDevice();
-    bool StopDevice();
-    void GetDevice(HTTPRequest &req);
-    void SetDevice(HTTPRequest &req);
+    bool StartDevice() override;
+    bool StopDevice() override;
+    void GetDevice(HTTPRequest &req) override;
+    void SetDevice(HTTPRequest &req) override;
     bool BuffersAppend(float voltageSample, float currentSample);
   public :
     DeviceV1_01(string serial);

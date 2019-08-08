@@ -32,7 +32,7 @@
       return { ShowDialog: false };
     },
     methods: {
-      Show: function(analyzers) {
+      Show: function() {
         this.ShowDialog = true;
         this.$nextTick(function() {     
           $(this.$el).modal('show');

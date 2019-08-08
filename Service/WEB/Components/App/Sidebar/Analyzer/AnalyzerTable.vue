@@ -70,17 +70,17 @@
       },
       CurrentlySelected: function(analyzer) {
         if(this.$root.SelectedAnalyzer === null) return false;
-        if(analyzer.ID === this.$root.SelectedAnalyzer.ID) return true;
+        if(analyzer.Analyzer === this.$root.SelectedAnalyzer.Analyzer) return true;
         return false;
       },
       Select: function(analyzer) {
         this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.ID }), 
+        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }), 
           success: function(result) { 
             this.$root.SelectedAnalyzer = result;
             this.$root.$emit('AnalyzerChanged', result);
             this.$parent.Close();
-            localStorage.setItem('SelAnalyzer', analyzer.ID);
+            localStorage.setItem('SelAnalyzer', analyzer.Analyzer);
           }.bind(this),
           error: function() {
             this.ShowSpinner = false;
@@ -89,7 +89,7 @@
       },
       Configure: function(analyzer) {
         this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.ID }), 
+        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }), 
           success: function(result) { 
             this.Show = false;
             this.$parent.$refs.Configure.Load(result); 

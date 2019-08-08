@@ -122,10 +122,13 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks {
     deque<EventCycle_t>        pPrevCycles;              //Previous cycles
     bool                       pPrevStationary;          //Steady state flag
     list<Event_t>              pEvents;                  //Running events
+    string                     pConfigPath;              //Path to configuration
   private :
     static void *Analyzer_Thread(void *args);
     static void *Events_Thread(void *args);
   private :
+    void  Start(const json &options);
+    void  Stop();
     void  AccumulateAggreg(Params_t &src, const Params_t &dst) const;
     float AccumulateSUM(const float val1, const float val2) const;
     float AccumulateRMS(const float val1, const float val2) const;
@@ -155,7 +158,7 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks {
   public :
     static json CheckConfig(const json &config);
   public :
-    AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const json &option, const float samplerate);
+    AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate);
     ~AnalyzerSoft();
     bool BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime);
     bool IsFinished();

@@ -64,7 +64,7 @@
           this.Events = [];
           this.LastSample = 0;
         }
-        $.ajax({ url: 'getEvents', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ To: to, LastSample: this.LastSample, Analyzer: Analyzer.ID, Period: period }),
+        $.ajax({ url: 'getEvents', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ To: to, LastSample: this.LastSample, Analyzer: Analyzer.Analyzer, Period: period }),
           success: function(result) {
             this.DateWindow = [result.From, result.To];
             this.EndDate = moment(result.To).format('DD/MM/YYYY - HH:mm:ss');
@@ -112,7 +112,7 @@
       Delete: function(evt) {
         var Analyzer = this.$root.SelectedAnalyzer;
         if(confirm("Delete selected event?")){
-          $.ajax({ url: 'delEvent', timeout: 20000, type: 'POST', dataType: 'text', contentType: 'application/json', data: JSON.stringify({ StartTime: this.Events[evt].StartTime, Analyzer: Analyzer.ID, Type: this.Events[evt].Type }),
+          $.ajax({ url: 'delEvent', timeout: 20000, type: 'POST', dataType: 'text', contentType: 'application/json', data: JSON.stringify({ StartTime: this.Events[evt].StartTime, Analyzer: Analyzer.Analyzer, Type: this.Events[evt].Type }),
             success: function(result) {
               this.Events.splice(evt, 1);
               this.$refs.table.setData( { data: this.Events });

@@ -113,7 +113,7 @@
           this.Costs = [];
           this.ShowSpinner = true;
         }
-        $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: aggreg, Series: ['ACTIVE_POWER'], To: to, LastSample: lastsample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: period }), 
+        $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: aggreg, Series: ['ACTIVE_POWER'], To: to, LastSample: lastsample, Analyzer: this.$root.SelectedAnalyzer.Analyzer, Period: period }), 
           success: function(result) {
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             if(result['Aggregation_Source'] === '15M') {

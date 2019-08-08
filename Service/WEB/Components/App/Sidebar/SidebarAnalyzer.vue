@@ -61,7 +61,7 @@
         clearInterval(this.Timer);
         var Analyzer = this.$root.SelectedAnalyzer;
         if(Analyzer === null) return;
-        $.ajax({ url: 'getEvents', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ To: moment().valueOf(), LastSample: this.LastSample, Analyzer: Analyzer.ID, Period: moment().valueOf() - parseInt(localStorage.getItem('LastLogin')) }),
+        $.ajax({ url: 'getEvents', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ To: moment().valueOf(), LastSample: this.LastSample, Analyzer: Analyzer.Analyzer, Period: moment().valueOf() - parseInt(localStorage.getItem('LastLogin')) }),
           success: function(result) {
             if(result.StartTime.length > 0) {        
               this.EventsCount += result.StartTime.length;

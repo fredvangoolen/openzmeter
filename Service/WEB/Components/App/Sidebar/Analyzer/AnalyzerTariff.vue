@@ -60,7 +60,7 @@
         this.ShowSpinner = false;
       },
       Save: function() {
-        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.ID, CountryCode: 'ESP' /*this.Analyzer.CountryCode*/ }, this.Tariff) ), 
+        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.Analyzer, CountryCode: 'ESP' /*this.Analyzer.CountryCode*/ }, this.Tariff) ), 
           success: function() {
             this.Show = false;
             this.$parent.$refs.Tariffs.Load(this.Analyzer);
@@ -81,7 +81,7 @@
             success: function(result) {
               for(var i = 0; i < result.length; i++) this.Tariffs.push({ id: result[i].RateID, name: result[i].Name, description: 'From ' + moment(result[i].StartDate).format('DD/MM/YYYY') + ' to ' + moment(result[i].EndDate).format('DD/MM/YYYY')}); 
               if(id !== null) {
-                $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.ID, RateID: id }), 
+                $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.Analyzer, RateID: id }), 
                   success: function(result) {
                     this.Initial = result;
                     this.Tariff = Object.assign({}, result);

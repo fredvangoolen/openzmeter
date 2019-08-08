@@ -9,22 +9,23 @@
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 Analyzer::Analyzer(const string &id) {
-  pSerial = id;
-  pName = "Unnamed analyzer";
-  pLastSave = 0;
-  pCurl = NULL;
+  pSerial      = id;
+  pName        = "Unnamed analyzer";
+  pLastSave    = 0;
+  pSyncThread  = 0;
+  pCurl        = NULL;
+  pCurlHeaders = NULL;
+  pCurlLocks   = PTHREAD_MUTEX_INITIALIZER;
 }
 Analyzer::~Analyzer() {
-  if(pCurl != NULL) {
-    //Elimino curl
-  }
+  DisableSync();
 }
 string Analyzer::Serial() const {
   return pSerial;
 }
 json Analyzer::GetJSONShortDescriptor() const {
   json Response;
-  Response["ID"] = pSerial;
+  Response["Analyzer"] = pSerial;
   Response["Name"] = pName;
   Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
   return Response;
@@ -33,35 +34,55 @@ bool Analyzer::CheckRights(HTTPRequest &req, const uint neededAccess) const {
 // req.FromString("", MHD_HTTP_UNAUTHORIZED);
  return true;
 }
+json Analyzer::GetJSONSyncConfig() {
+  json Response = json::object();
+  Response["RemoteEnabled"] = (pCurl != NULL);
+  Response["RemoteServer"] = pSyncServer;
+  Response["RemoteUser"] = pSyncUser;
+  Response["RemotePass"] = pSyncPass;
+  return Response; 
+}
 bool Analyzer::EnableSync(const string &server, const string &user, const string &pass) {
-  if(pCurl != NULL) DisableSync();
-  pSyncServer = server;
-  pSyncUser = user;
-  pSyncPass = pass;
+  pthread_mutex_lock(&pCurlLocks);
+  if(pCurl != NULL) {
+    pthread_mutex_unlock(&pCurlLocks);  
+    DisableSync();
+    pthread_mutex_unlock(&pCurlLocks);  
+  }
+  pSyncServer    = server;
+  pSyncUser      = user;
+  pSyncPass      = pass;
   pTerminateSync = false;
-  pCurlHeaders = NULL;
+  pCurlHeaders   = NULL;
   pCurl = curl_share_init();
   pCurlHeaders = curl_slist_append(pCurlHeaders, "Accept: application/json");
   pCurlHeaders = curl_slist_append(pCurlHeaders, "Connection: keep-alive");
   pCurlHeaders = curl_slist_append(pCurlHeaders, "Content-Type: application/json");
-  pCurlLocks = PTHREAD_MUTEX_INITIALIZER;
   curl_share_setopt(pCurl, CURLSHOPT_LOCKFUNC, CurlLockCallback);
   curl_share_setopt(pCurl, CURLSHOPT_UNLOCKFUNC, CurlUnlockCallback);
   curl_share_setopt(pCurl, CURLSHOPT_USERDATA, &pCurlLocks);
   curl_share_setopt(pCurl, CURLSHOPT_SHARE, CURL_LOCK_DATA_COOKIE);  
   if(pthread_create(&pSyncThread, NULL, Sync_Thread, (void*)this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    pSyncThread = 0;
+    pthread_mutex_unlock(&pCurlLocks);
     return false;
   }
   return true;  
 }
 void Analyzer::DisableSync() {
-  if(pCurl == NULL) return;
+  pthread_mutex_lock(&pCurlLocks);
   pTerminateSync = true;
-  pthread_join(pSyncThread, NULL);
-  curl_share_cleanup(pCurl);
-  pCurl = NULL;
-  curl_slist_free_all(pCurlHeaders);
+  if(pSyncThread != 0) pthread_join(pSyncThread, NULL);
+  if(pCurl != NULL) {
+    curl_share_cleanup(pCurl);
+    pCurl = NULL;
+  }
+  if(pCurlHeaders != NULL) {
+    curl_slist_free_all(pCurlHeaders);
+    pCurlHeaders = NULL;
+  }
+  pthread_mutex_unlock(&pCurlLocks);  
 }
 size_t Analyzer::CurlWriteCallback(void *contents, size_t size, size_t nmemb, void *userp) {
   CurlWriteBuff_t *Buffer = (CurlWriteBuff_t*)userp;
@@ -98,7 +119,7 @@ void *Analyzer::Sync_Thread(void *args) {
   curl_easy_setopt(Curl, CURLOPT_WRITEDATA, (void*)&CurlBuff);
   curl_easy_setopt(Curl, CURLOPT_WRITEFUNCTION, CurlWriteCallback);
   curl_easy_setopt(Curl, CURLOPT_SHARE, This->pCurl);
-  while(!This->pTerminateSync) {
+  while(!This->pTerminateSync == false) {
     if(Registered == false) {
       json   Content = json::object();
       string URL     = This->pSyncServer + "/LogIn";
@@ -144,10 +165,14 @@ void *Analyzer::Sync_Thread(void *args) {
               Request->Params   = Content[n]["Params"];
               Request->Sequence = Content[n]["Sequence"];
               Request->Parent   = This;
-              if(pthread_create(&Request->Thread, NULL, Request_Thread, (void*)Request) != 0) {
+              pthread_t Thread = 0;
+              if(pthread_create(&Thread, NULL, Request_Thread, (void*)Request) != 0) {
                 LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
                 delete Request;
-              }       
+              } else {
+                pthread_setname_np(Thread, Request->Method.c_str());
+                pthread_detach(Thread);
+              }
             }
           }
         }

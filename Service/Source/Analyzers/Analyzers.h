@@ -25,7 +25,7 @@ class Analyzer {
       size_t MaxSize;
     } CurlWriteBuff_t;
     typedef struct {
-      pthread_t Thread;
+//      pthread_t Thread;
       json      Params;
       string    Method;
       uint64_t  Sequence;
@@ -47,6 +47,7 @@ class Analyzer {
   protected :
     bool CheckRights(HTTPRequest &req, const uint neededAccess) const;
     bool EnableSync(const string &server, const string &user, const string &pass);
+    json GetJSONSyncConfig();
     void DisableSync();
   private :
     static size_t CurlWriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
