@@ -142,6 +142,7 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
 //----------------------------------------------------------------------------------------------------------------------
 vector<HTTPServer::Callback_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
 RWLocks                        HTTPServer::pLock = RWLocks();
+string                         HTTPServer::pRelativePath = "/";
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
   pDaemon = NULL;
@@ -149,6 +150,7 @@ HTTPServer::HTTPServer() {
   json Config = ConfigManager::ReadConfig("/HTTPServer");
   if(!Config.is_object()) Config = json::object();
   if(Config["Port"].is_number_unsigned()) Port = Config["Port"];
+  if(Config["RelativePath"].is_string()) pRelativePath = Config["RelativePath"];
   pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, Port, NULL, NULL, 
                              &HandleClient, NULL,
                              MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int)60,
@@ -156,13 +158,14 @@ HTTPServer::HTTPServer() {
                              MHD_OPTION_END);
   Config = json::object();
   Config["Port"] = Port;
+  Config["RelativePath"] = pRelativePath;
   ConfigManager::WriteConfig("/HTTPServer", Config); 
   if(pDaemon == NULL) {
     LOGFile::Error("HTTP port (%hu) already in use\n", Port);
   } else {
-    LOGFile::Info("HTTP server started on port %hu\n", Port);
+    LOGFile::Info("HTTP server started on port %hu with relative path '%s'\n", Port, pRelativePath.c_str());
   }
-  RegisterCallback("/Ping", PingCallback);
+  RegisterCallback("Ping", PingCallback);
 }
 HTTPServer::~HTTPServer() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
@@ -198,9 +201,9 @@ void HTTPServer::RemoveExpiredSessions() const {
   DB.ExecSentenceNoResult("DELETE FROM sessions WHERE (timestamp < " + DB.Bind(Tools::GetTime() - 1296000000) + " AND username IS NOT NULL) OR (timestamp < " + DB.Bind(Tools::GetTime() - 60000) + " AND username IS NULL)");
 }
 int HTTPServer::SendRedirect(struct MHD_Connection *connection, const string &url) {
-  LOGFile::Debug("Redirecting client to '%s'\n", url.c_str());
+  LOGFile::Debug("Redirecting client to '%s'\n", (pRelativePath + url).c_str());
   struct MHD_Response *response = MHD_create_response_from_buffer(0, (void*)"", MHD_RESPMEM_PERSISTENT);
-  MHD_add_response_header(response, "Location", url.c_str());
+  MHD_add_response_header(response, "Location", (pRelativePath + url).c_str());
   int Return = MHD_queue_response(connection, MHD_HTTP_SEE_OTHER, response);
   MHD_destroy_response(response);
   return Return;
@@ -210,7 +213,7 @@ void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, vo
 }
 int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
   HTTPRequest *Request = (HTTPRequest*)*ptr;
-  string URL = url;
+  string URL = string(url).erase(0, pRelativePath.size());
   if(Request == NULL) {
     LOGFile::Debug("HTTP %s request '%s'\n", method, URL.c_str());
     string FilePath;
@@ -224,13 +227,20 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) return MHD_YES;
     if((strcmp(method, MHD_HTTP_METHOD_GET) == 0) || (strcmp(method, MHD_HTTP_METHOD_HEAD) == 0)) Request->FromFile(string("WEB") + URL.c_str());
     if((Request->ResultCode() != MHD_HTTP_OK) && (strcmp(method, MHD_HTTP_METHOD_GET) == 0)) {
-      if(URL == "/Logout") {
+      if(URL == "Logout") {
         Request->CloseSession();
-        return SendRedirect(connection, "/Login");
-      } else if((URL == "/Login") && (Request->UserName().empty())) {
-        Request->FromFile("WEB/Login.html");
+        return SendRedirect(connection, "Login");
+      } else if((URL == "Login") && (Request->UserName().empty())) {
+        size_t Len;
+        const char *Content = (const char *)ResourceLoader::GetFile("WEB/Login.html", &Len);
+        string Login = string(Content, Len);
+        string Find = "{{ RELATIVE_PATH }}";
+        Len = Login.find(Find, 0);
+        if(Len != string::npos) Login = Login.replace(Len, Find.size(), pRelativePath);
+        Request->FromString(Login, MHD_HTTP_OK);
+        Request->MimeType("text/html");
       } else if(Request->UserName().empty()) {
-        return SendRedirect(connection, "/Login");
+        return SendRedirect(connection, "Login");
       } else {
         size_t Len;
         const char *Content = (const char *)ResourceLoader::GetFile("WEB/Index.html", &Len);
@@ -239,6 +249,9 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         string Version = __BUILD__;
         Len = Index.find(Find, 0);
         if(Len != string::npos) Index = Index.replace(Len, Find.size(), Version);
+        Find = "{{ RELATIVE_PATH }}";
+        Len = Index.find(Find, 0);
+        if(Len != string::npos) Index = Index.replace(Len, Find.size(), pRelativePath);
         Request->FromString(Index, MHD_HTTP_OK);
         Request->MimeType("text/html");
         EnableCache = false;
@@ -261,7 +274,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     if(Request->ProcessParams((((sockaddr_in*)Addr)->sin_addr.s_addr == 0x0100007F)) == false) {
       Request->FromString("No valid JSON request", MHD_HTTP_BAD_REQUEST);
     } else {
-      if(URL == "/LogIn") {
+      if(URL == "LogIn") {
         json Params = Request->GetParams();
         bool UpdateLastLogin = true;
         if(Params["UpdateLastLogin"].is_boolean()) UpdateLastLogin = Params["UpdateLastLogin"];
@@ -302,8 +315,8 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         }
       }
       MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &Request->WriteFunction, Request, NULL);
-      if(URL == "/LogIn") {
-        string Cookie = "SESSION=" + Request->SessionID() +"; httponly; Path=/";
+      if(URL == "LogIn") {
+        string Cookie = "SESSION=" + Request->SessionID() + "; httponly; Path=" + pRelativePath;
         MHD_add_response_header(Response, MHD_HTTP_HEADER_SET_COOKIE, Cookie.c_str());
       }
       MHD_add_response_header(Response, "Process-Time", string(to_string(Request->GetTime()) + " ms").c_str());

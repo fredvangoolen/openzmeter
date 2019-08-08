@@ -55,8 +55,8 @@ bool DeviceRemote::StartDevice() {
     }
   }
   LOGFile::Info("Starting 'Remote' driver\n");
-  HTTPServer::RegisterCallback("/setRemote",  SetRemoteCallback);
-  HTTPServer::RegisterCallback("/getRemote",  GetRemoteCallback);
+  HTTPServer::RegisterCallback("setRemote",  SetRemoteCallback);
+  HTTPServer::RegisterCallback("getRemote",  GetRemoteCallback);
   for(uint n = 0; n < ConfigOUT["Analyzers"].size(); n++) pAnalyzers.push_back(new AnalyzerRemote(ConfigOUT["Analyzers"][n]));
   pState = RUNNING;
   pAnalyzersLock.WriteUnlock();
