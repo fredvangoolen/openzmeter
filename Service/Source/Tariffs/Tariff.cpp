@@ -72,11 +72,11 @@ Tariff::~Tariff() {
   }
 }
 bool Tariff::RegisterCallbacks() {
-  HTTPServer::RegisterCallback("/getTariffs", GetTariffsCallback);
-  HTTPServer::RegisterCallback("/getTariff",  GetTariffCallback);
-  HTTPServer::RegisterCallback("/setTariff",  SetTariffCallback);
-  HTTPServer::RegisterCallback("/delTariff",  DelTariffCallback);
-  HTTPServer::RegisterCallback("/addTariff",  AddTariffCallback);
+  HTTPServer::RegisterCallback("getTariffs", GetTariffsCallback);
+  HTTPServer::RegisterCallback("getTariff",  GetTariffCallback);
+  HTTPServer::RegisterCallback("setTariff",  SetTariffCallback);
+  HTTPServer::RegisterCallback("delTariff",  DelTariffCallback);
+  HTTPServer::RegisterCallback("addTariff",  AddTariffCallback);
   return true;
 }
 void Tariff::GetTariffsCallback(HTTPRequest &req) {

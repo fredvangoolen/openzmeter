@@ -57,13 +57,13 @@ System::System() {
   ConfigManager::WriteConfig("/WIFI", Config);
   if(Enabled) StartBT();
   if(pRegistered == false) {
-    HTTPServer::RegisterCallback("/getBluetooth", GetBluetoothCallback);
-    HTTPServer::RegisterCallback("/setBluetooth", SetBluetoothCallback);
-    HTTPServer::RegisterCallback("/scanWIFI", ScanWIFICallback);
-    HTTPServer::RegisterCallback("/getWIFI",  GetWIFICallback);
-    HTTPServer::RegisterCallback("/setWIFI",  SetWIFICallback);
-    HTTPServer::RegisterCallback("/getNTP", GetNTPCallback);
-    HTTPServer::RegisterCallback("/setNTP", SetNTPCallback);
+    HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback);
+    HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback);
+    HTTPServer::RegisterCallback("scanWIFI", ScanWIFICallback);
+    HTTPServer::RegisterCallback("getWIFI",  GetWIFICallback);
+    HTTPServer::RegisterCallback("setWIFI",  SetWIFICallback);
+    HTTPServer::RegisterCallback("getNTP", GetNTPCallback);
+    HTTPServer::RegisterCallback("setNTP", SetNTPCallback);
     pRegistered = true;
   }
   pthread_mutex_lock(&pMutex);

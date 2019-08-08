@@ -59,6 +59,7 @@ class HTTPServer {
   private :
     static RWLocks            pLock;            //Control access to pCallbacks vector
     static vector<Callback_t> pCallbacks;       //List of callbacks URLs
+    static string             pRelativePath;    //Relative path of server
   private:
     MHD_Daemon  *pDaemon;
   private :
@@ -71,7 +72,6 @@ class HTTPServer {
     static void UnregisterCallback(const string &handleName);
   public :
     HTTPServer();
-//    void     ExpireSessions();
     virtual ~HTTPServer();
     void     RemoveExpiredSessions() const;
 };

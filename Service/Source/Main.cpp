@@ -110,10 +110,10 @@ int main(int argc, char** argv) {
 //  if(HTTPServer.Config() == false) return EXIT_FAILURE;
 //  HTTPServer.RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
 //  HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
-  HTTPServer::RegisterCallback("/getNews",             GetNewsCallback);
-  HTTPServer::RegisterCallback("/getCountries",        GetCountriesCallback);  
-  HTTPServer::RegisterCallback("/getUser",             GetUserCallback);
-  HTTPServer::RegisterCallback("/setUser",             SetUserCallback);
+  HTTPServer::RegisterCallback("getNews",             GetNewsCallback);
+  HTTPServer::RegisterCallback("getCountries",        GetCountriesCallback);  
+  HTTPServer::RegisterCallback("getUser",             GetUserCallback);
+  HTTPServer::RegisterCallback("setUser",             SetUserCallback);
 
 
 //  int Prio = sched_get_priority_max(SCHED_RR);
