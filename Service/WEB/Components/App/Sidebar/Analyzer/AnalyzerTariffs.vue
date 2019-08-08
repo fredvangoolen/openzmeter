@@ -49,11 +49,11 @@
       DateFormat: function(val) {
         return moment(val).format('DD/MM/YYYY');
       },
-      Load(analizer) {
+      Load(analyzer) {
         this.Show = true;
         this.ShowSpinner = true;
         this.Analyzer = analizer;
-        $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analizer.ID }),
+        $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }),
           success: function(result) {
             var TableData = { data: result };
             this.$refs.table.setData(TableData);
@@ -78,7 +78,7 @@
       Delete: function(row) {
         if(confirm("Delete '"+row.Name+"' tariff?")){
           this.ShowSpinner = true;
-          $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: row.RateID, Analyzer: this.Analyzer.ID }), success: function() { this.Load(this.Analyzer); }.bind(this) });
+          $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: row.RateID, Analyzer: this.Analyzer.Analyzer }), success: function() { this.Load(this.Analyzer); }.bind(this) });
         }
       },
       Add: function() {

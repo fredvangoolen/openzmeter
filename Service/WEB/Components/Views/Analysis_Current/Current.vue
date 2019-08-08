@@ -97,7 +97,7 @@
           this.ShowSpinner = true;
         }
         var Analyzer = this.$root.SelectedAnalyzer;
-        this.Ajax = $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, Series: ['CURRENT'], To: to, LastSample: lastsample, Analyzer: Analyzer.ID, Period: period }), 
+        this.Ajax = $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, Series: ['CURRENT'], To: to, LastSample: lastsample, Analyzer: Analyzer.Analyzer, Period: period }), 
           success: function(result) {
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             this.Data = oZm.GraphDataAppend(result, 'Current', this.Data);

@@ -21,7 +21,7 @@
       UpdateIndicators1() {
         if(this.UpdateIndicatorsTimer1) clearInterval(this.UpdateIndicatorsTimer1);
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY', 'SYS_STATS'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY', 'SYS_STATS'], Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             this.$refs.indicator_bar.setValue(result);
           }.bind(this),
@@ -36,7 +36,7 @@
       UpdateIndicators2() {
         if(this.UpdateIndicatorsTimer2) clearInterval(this.UpdateIndicatorsTimer2);
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER'], LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.ID, Aggreg: '15M', To: moment().endOf('day').valueOf(), Period: 86400000 }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER'], LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer, Aggreg: '15M', To: moment().endOf('day').valueOf(), Period: 86400000 }), 
           success: function(result) {
             var Energy;
             if(result['Active_Power'].length > 0) Energy = Array(result['Active_Power'][0].length).fill(0);

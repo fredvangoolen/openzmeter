@@ -39,7 +39,7 @@
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
         var Year = moment().year(year);
-        $.ajax({ url: "getPrices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: Year.endOf('year').valueOf() - Year.startOf('year').valueOf(), To: Year.endOf('year').valueOf(), Aggreg: '1H', LastSample: 0, Analyzer: Analyzer.ID } ),
+        $.ajax({ url: "getPrices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: Year.endOf('year').valueOf() - Year.startOf('year').valueOf(), To: Year.endOf('year').valueOf(), Aggreg: '1H', LastSample: 0, Analyzer: Analyzer.Analyzer } ),
           success: function(result) {
             this.Bills = result.Bills.filter(function(value) { return value.Complete === true; });
             this.$refs.summary.SetData(result.Bills);

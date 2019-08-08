@@ -65,7 +65,7 @@
       UpdateGraph() {
         if(this.$root.SelectedAnalyzer === null) return;
         if(this.StopUpdating==false){
-          $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], To: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.ID, Period: 7200000 }), 
+          $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], To: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.Analyzer, Period: 7200000 }), 
             success: function(result) {
               if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
               this.Data = oZm.GraphDataAppend(result, this.SerieProps.Serie, this.Data);

@@ -123,6 +123,7 @@ void WorkerLocks::Abort() {
 }
 void WorkerLocks::WakeWorker() {
   pthread_mutex_lock(&pMutex);
+  if(pTerminate == true) return;
   pWorking = true;
   pthread_mutex_unlock(&pMutex);
   pthread_cond_signal(&pCond);
@@ -131,6 +132,7 @@ bool WorkerLocks::WorkerWaitTask() {
   pthread_mutex_lock(&pMutex);
   while(pWorking == false) {
     if(pTerminate == true) {
+      pTerminate = false;
       pthread_mutex_unlock(&pMutex);
       return false;
     }

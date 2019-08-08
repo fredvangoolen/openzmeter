@@ -65,7 +65,7 @@
       },
       UpdateGraphs1M() {
         if(this.$root.SelectedAnalyzer === null) return;
-        this.Ajax = $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Period: 86400000, To: 0, LastSample: this.LastSample, Series: ['ACTIVE_POWER', 'REACTIVE_POWER', 'VOLTAGE', 'CURRENT', 'POWER_FACTOR', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.ID }),
+        this.Ajax = $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Period: 86400000, To: 0, LastSample: this.LastSample, Series: ['ACTIVE_POWER', 'REACTIVE_POWER', 'VOLTAGE', 'CURRENT', 'POWER_FACTOR', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.Analyzer }),
           success: function(result) {
             result['Apparent_Power'] = [];        
             for(var n = 0; n < result['Sampletime'].length; n++) result['Apparent_Power'].push(result['Voltage'][n].map( function(val, index) { return val * result['Current'][n][index]; }));
@@ -80,7 +80,7 @@
       },
       UpdateGraphsNow() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'CURRENT', 'ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'CURRENT', 'ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             this.$refs.waveform.SetData(result);
             this.$refs.parameters.SetDataNow(result);

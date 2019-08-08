@@ -131,7 +131,7 @@
       },
       NowValue: function() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '15M', Period: 1800000, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '15M', Period: 1800000, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             this.$refs.activeCounters.Set15MValues(result);
             this.$refs.reactiveCounters.Set15MValues(result);
@@ -146,7 +146,7 @@
             this.$refs.reactiveCcounters.Set15MValues(null);
           }.bind(this)
         });
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '1H', Period: 7200000, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '1H', Period: 7200000, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             this.$refs.activeCounters.Set1HValues(result);
             this.$refs.reactiveCounters.Set1HValues(result);
@@ -164,7 +164,7 @@
           this.ShowSpinner = true;
         }
         var Analyzer = this.$root.SelectedAnalyzer;
-        $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, To: to, LastSample: lastsample, Analyzer: Analyzer.ID, Period: period }), 
+        $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, To: to, LastSample: lastsample, Analyzer: Analyzer.Analyzer, Period: period }), 
           success: function(result) {
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             if(result['Aggregation_Source'] === '15M') {

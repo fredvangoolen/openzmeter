@@ -19,52 +19,50 @@ vector<float> AnalyzerSoft::VoltageRanges    = { -INFINITY, -20, -15, -10, -9, -
 vector<float> AnalyzerSoft::THDRanges        = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY };
 vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
 //----------------------------------------------------------------------------------------------------------------------
-AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const json &option, const float samplerate) : Analyzer(id), Database(id) {
+AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), Database(id) {
   LOGFile::Debug("Creating analyzer database tables\n");
   ExecResource("SQL/Database_AnalyzerSoft.sql");
-  
-  
-  
-  
-   
-//  ExecSentenceNoResult("INSERT INTO analyzers(username, serial, country_code, contract, zipcode, frequency, voltage, name, geo, max_current, min_current) "
-//                       "VALUES('admin', " + Bind(id) + ", 'UTC', '', '', 50.0, 230.0, 'Unnamed input analyzer', POINT(0, 0), 50.0, 0.1) ON CONFLICT(serial) DO NOTHING");
-//  ExecSentenceAsyncResult("SELECT frequency, voltage, name, max_current, min_current FROM analyzers WHERE serial = " + Bind(id));
-//  if(FecthRow()) {
-//    pNominalVoltage = ResultFloat("voltage");
-//    pNominalFrequency = ResultFloat("frequency");
-//    pName = ResultString("name");
-//    pMaxCurrent = ResultFloat("max_current");
-//    pMinCurrent =  ResultFloat("min_current");
-//  } else {
-//    LOGFile::Error("Can not create or read analyzer configuration\n");
-//  }
-  
-  
+  pConfigPath = optionPath;
   pMode = mode;
-  pName = option["Name"];
-  pNominalVoltage = option["NominalVoltage"];
-  pNominalFrequency = option["NominalFreq"];
-  pMaxCurrent = option["MaxCurrent"];
-  pMinCurrent = option["MinCurrent"];
-  pCountryCode = option["CountryCode"];
-  pContract = option["Contract"];
-  pZipCode = option["ZipCode"];
-  pGeo = option["GeoPosition"].get<vector<float> >();
   pSamplerate = samplerate;
+  pThread = 0;
+  InitAggreg(pAggreg3S, AGGREG_3S);
+  InitAggreg(pAggreg1M, AGGREG_1M);
+  InitAggreg(pAggreg10M, AGGREG_10M);
+  InitAggreg(pAggreg15M, AGGREG_15M);
+  InitAggreg(pAggreg1H, AGGREG_1H);
+  Start(ConfigManager::ReadConfig(optionPath));
+}
+AnalyzerSoft::~AnalyzerSoft() {
+  Stop();
+}
+void AnalyzerSoft::Start(const json &options) {
+  pName = options["Name"];
+  pNominalVoltage = options["NominalVoltage"];
+  pNominalFrequency = options["NominalFreq"];
+  pMaxCurrent = options["MaxCurrent"];
+  pMinCurrent = options["MinCurrent"];
+  pCountryCode = options["CountryCode"];
+  pContract = options["Contract"];
+  pZipCode = options["ZipCode"];
+  pGeo = options["GeoPosition"].get<vector<float> >();
   pLastSamples.resize((pMode == PHASE1) ? 1 : 3);
   pBlockCycles.reserve(20);
   pCycleLen        = 0;
-  pMaxSamples      = ceil((15.0 * samplerate) / pNominalFrequency);
-  pSamplerate      = samplerate;
+  pMaxSamples      = ceil((15.0 * pSamplerate) / pNominalFrequency);
   pSequence        = 0;
   pTerminate       = false;
   pPrevTimestamp   = 0;
   pPrevStationary  = false;
-
+  pCycles.clear();
+  pEvents.clear();
+  pPrevSamples.clear();
+  pPrevCycles.clear();
+  
   //Calc peak filter coefficients for nominal frequency
+  pFilters.clear();
   for(uint n = 0; n < ZEROCROSSING_FILTERSTAGES; n++) {
-    float w0 = 2 * M_PI * (pNominalFrequency / samplerate);
+    float w0 = 2 * M_PI * (pNominalFrequency / pSamplerate);
     float alpha = sin(w0) / 2.0;
     Filter_t Stage;
     Stage.A0 = alpha / (1.0 + alpha);
@@ -77,46 +75,54 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
     pFilters.push_back(Stage);
   }
   InitAggreg(pAggreg10C, AGGREG_10C);
-  InitAggreg(pAggreg3S, AGGREG_3S);
-  InitAggreg(pAggreg1M, AGGREG_1M);
-  InitAggreg(pAggreg10M, AGGREG_10M);
-  InitAggreg(pAggreg15M, AGGREG_15M);
-  InitAggreg(pAggreg1H, AGGREG_1H);
   pCurrentSamples = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(0));
   pVoltageSamples = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(0));
-  uint32_t PhaseShift = ((pNominalFrequency / samplerate) / 4.0) * ZEROCROSSING_FILTERSTAGES;
+  uint32_t PhaseShift = ((pNominalFrequency / pSamplerate) / 4.0) * ZEROCROSSING_FILTERSTAGES;
   pDelayVoltage.resize(PhaseShift, vector<float>(pVoltageSamples.size(), 0.0));
   pDelayCurrent.resize(PhaseShift, vector<float>(pCurrentSamples.size(), 0.0));
+  pVoltageFFT.clear();
   for(uint8_t i = 0; i < pVoltageSamples.size(); i++) {
     char Name[16];
     sprintf(Name, "FFT_V%u", i);
     pVoltageFFT.push_back(new FFT(Name));
   }
+  pCurrentFFT.clear();
   for(uint8_t i = 0; i < pCurrentSamples.size(); i++) {
     char Name[16];
     sprintf(Name, "FFT_I%u", i);
     pCurrentFFT.push_back(new FFT(Name));
   }
-  if(pthread_create(&pThread, NULL, Analyzer_Thread, (void*)this) != 0) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return;
-  }
-  pthread_setname_np(pThread, (pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N");
   if(pthread_create(&pEventThread, NULL, Events_Thread, (void*)this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;
   }
   pthread_setname_np(pEventThread, "EventsDet");
-  EnableSync("10.42.0.1:8081", "admin", "admin");
+  if(pthread_create(&pThread, NULL, Analyzer_Thread, (void*)this) != 0) {
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    pThread = 0;
+    return;
+  }
+  pthread_setname_np(pThread, (pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N");
+  bool SyncEnabled = options["RemoteEnabled"];
+  if(SyncEnabled) {
+    string Server = options["RemoteServer"];
+    string User = options["RemoteUser"];
+    string Pass = options["RemotePass"];
+    EnableSync(Server, User, Pass);
+  }
 }
-AnalyzerSoft::~AnalyzerSoft() {
+void AnalyzerSoft::Stop() {
+  DisableSync();
   pTerminate = true;
   Abort();
   pthread_join(pThread, NULL);
+  pThread = 0;
   for(uint8_t i = 0; i < pVoltageFFT.size(); i++) delete pVoltageFFT[i];
   for(uint8_t i = 0; i < pCurrentFFT.size(); i++) delete pCurrentFFT[i];
+  WorkerEndsTask();
 }
 bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime) {
+  if(pThread == 0) return false;
   pDelayVoltage.push_back(voltageSamples);
   pDelayCurrent.push_back(currentSamples);
   if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
@@ -682,24 +688,41 @@ void *AnalyzerSoft::Events_Thread(void* args) {
   }
   return NULL;
 }
-json AnalyzerSoft::CheckConfig(const json& config) {
+json AnalyzerSoft::CheckConfig(const json &config) {
   json ConfigOUT = config;
-  if(!ConfigOUT.is_object()) ConfigOUT = json::object();
-  if(!ConfigOUT["Name"].is_string()) ConfigOUT["Name"] = "Unnamed analyzer";
-  if(!ConfigOUT["NominalVoltage"].is_number() || (ConfigOUT["NominalVoltage"] < 60.0) || (ConfigOUT["NominalVoltage"] > 450.0)) ConfigOUT["NominalVoltage"] = 230.0;
-  if(!ConfigOUT["NominalFreq"].is_number() || (ConfigOUT["NominalFreq"] < 0) || (ConfigOUT["NominalFreq"] > 400)) ConfigOUT["NominalFreq"] = 50.0;
-  if(!ConfigOUT["MaxCurrent"].is_number() || (ConfigOUT["MaxCurrent"] < 1) || (ConfigOUT["MaxCurrent"] > 100000)) ConfigOUT["MaxCurrent"] = 35.0;
-  if(!ConfigOUT["MinCurrent"].is_number() || (ConfigOUT["MinCurrent"] < 0.01) || (ConfigOUT["MinCurrent"] > 100)) ConfigOUT["MinCurrent"] = 0.1;
-  if(!ConfigOUT["CountryCode"].is_string()) ConfigOUT["CountryCode"] = "UTC";
-  if(!ConfigOUT["Contract"].is_string()) ConfigOUT["Contract"] = "";
-  if(!ConfigOUT["ZipCode"].is_string()) ConfigOUT["ZipCode"] = "";
-  if(!ConfigOUT["GeoPosition"].is_array() || (ConfigOUT["GeoPosition"].size() != 2) || !ConfigOUT["GeoPosition"][0].is_number() || !ConfigOUT["GeoPosition"][1].is_number()) ConfigOUT["GeoPosition"] = json::parse("[0, 0]");
+  ConfigOUT["Name"] = "Unnamed analyzer";
+  ConfigOUT["NominalVoltage"] = 230.0;
+  ConfigOUT["NominalFreq"] = 50.0;
+  ConfigOUT["MaxCurrent"] = 35.0;
+  ConfigOUT["MinCurrent"] = 0.1;
+  ConfigOUT["CountryCode"] = "UTC";
+  ConfigOUT["Contract"] = "";
+  ConfigOUT["ZipCode"] = "";
+  ConfigOUT["GeoPosition"] = json::parse("[0, 0]");
+  ConfigOUT["RemoteEnabled"] = false;
+  ConfigOUT["RemoteServer"] = "";
+  ConfigOUT["RemoteUser"] = "";
+  ConfigOUT["RemotePass"] = "";
+  if(!config.is_object()) return ConfigOUT;
+  if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
+  if(config.contains("NominalVoltage") && config["NominalVoltage"].is_number() && (config["NominalVoltage"] > 10.0) && (config["NominalVoltage"] < 450.0)) ConfigOUT["NominalVoltage"] = config["NominalVoltage"];
+  if(config.contains("NominalFreq") && config["NominalFreq"].is_number() && (config["NominalFreq"] >= 0) && (config["NominalFreq"] <= 400)) ConfigOUT["NominalFreq"] = config["NominalFreq"];
+  if(config.contains("MaxCurrent") && config["MaxCurrent"].is_number() && (config["MaxCurrent"] >= 1) && (config["MaxCurrent"] <= 100000)) ConfigOUT["MaxCurrent"] = config["MaxCurrent"];
+  if(config.contains("MinCurrent") && config["MinCurrent"].is_number() && (config["MinCurrent"] >= 0.01) && (config["MinCurrent"] <= 100)) ConfigOUT["MinCurrent"] = config["MinCurrent"];
+  if(config.contains("CountryCode") && config["CountryCode"].is_string()) ConfigOUT["CountryCode"] = config["CountryCode"];
+  if(config.contains("Contract") && config["Contract"].is_string()) ConfigOUT["Contract"] = config["Contract"];
+  if(config.contains("ZipCode") && config["ZipCode"].is_string()) ConfigOUT["ZipCode"] = config["ZipCode"];
+  if(config.contains("GeoPosition") && config["GeoPosition"].is_array() && (config["GeoPosition"].size() == 2) && config["GeoPosition"][0].is_number() && config["GeoPosition"][1].is_number()) ConfigOUT["GeoPosition"] = config["GeoPosition"];
+  if(config.contains("RemoteEnabled") && config["RemoteEnabled"].is_boolean()) ConfigOUT["RemoteEnabled"] = config["RemoteEnabled"];
+  if(config.contains("RemoteServer") && config["RemoteServer"].is_string()) ConfigOUT["RemoteServer"] = config["RemoteServer"];
+  if(config.contains("RemoteUser") && config["RemoteUser"].is_string()) ConfigOUT["RemoteUser"] = config["RemoteUser"];
+  if(config.contains("RemotePass") && config["RemotePass"].is_string()) ConfigOUT["RemotePass"] = config["RemotePass"];
   return ConfigOUT;
 }
 void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   json Response = json::object();
-  Response["ID"] = pSerial;
+  Response["Analyzer"] = pSerial;
   Response["Name"] = pName;
   Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
   Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
@@ -712,30 +735,19 @@ void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   Response["Contract"] = pContract;
   Response["ZipCode"] = pZipCode;
   Response["GeoPosition"] = pGeo;
+  json Remote = GetJSONSyncConfig();  
+  Response.insert(Remote.begin(), Remote.end());
   req.FromJSON(Response);
 }
 void AnalyzerSoft::SetAnalyzer(HTTPRequest &req) {
   if(CheckRights(req, CONFIG) == false) return;
-
-//  json Params = req.GetParams();
-//  float MaxCurrent = Params["MaxCurrent"];
-//  float MinCurrent = Params["MinCurrent"];
-//  string Name = Params["Name"];
-//  float Freq = Params["NominalFreq"];
-//  float Voltage = Params["NominalVoltage"];
-//  json Result = json::object();
-//  if((MaxCurrent < 0) || (MinCurrent < 0) || (MinCurrent >= MaxCurrent) || (Freq < 0) || (Freq > 100) || (Voltage < 50) || (Voltage > 450)) return req.FromString("'MaxCurrent', 'MinCurrent', 'NominalFreq' or 'NominalVoltage' is out of valid ranges", MHD_HTTP_BAD_REQUEST);
-//  if(req.ExecSentenceNoResult("UPDATE analyzers SET frequency = " + req.Bind(Freq) + ", voltage = " + req.Bind(Voltage) + ", name = " + req.Bind(Name) + ", max_current = " + req.Bind(MaxCurrent) + ", min_current = " + req.Bind(MinCurrent) + " WHERE serial = " + req.Bind(Serial)) == true) {
-//    if(Dev->State() == Device::RUNNING) {
-//      Dev->Stop();
-//      Result["Result"] = Dev->Start();
-//    } else {
-//      Result["Result"] = true;
-//    }
-//  } else {
-//    Result["Result"] = false;
-//  }
-//  req.FromJSON(Result);
+  json Config = CheckConfig(req.GetParams());
+  ConfigManager::WriteConfig(pConfigPath, Config);
+  Stop();
+  Start(Config);
+  json Result = json::object();
+  Result["Result"] = true;
+  req.FromJSON(Result);
 }
 void AnalyzerSoft::GetSeries(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
@@ -1019,7 +1031,6 @@ void AnalyzerSoft::GetPrices(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   //Parse, check params and prepare result struct
   json Params = req.GetParams();
-//  string Analyzer = Params["Analyzer"];
   uint64_t To         = Params["To"];
   uint64_t Period     = Params["Period"];
   uint64_t LastSample = Params.value<uint64_t>("LastSample", 0);

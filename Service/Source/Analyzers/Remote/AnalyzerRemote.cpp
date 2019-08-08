@@ -50,6 +50,7 @@ void AnalyzerRemote::GetRemote(HTTPRequest& req) {
   delete pRequestLocks;
   pRequestLocks = NULL;
   pthread_mutex_unlock(&pMutex);
+  pLastSave = Tools::GetTime();
   req.FromJSON(Response);
 }
 void AnalyzerRemote::SetRemote(HTTPRequest &req) {

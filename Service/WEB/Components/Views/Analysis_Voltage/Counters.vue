@@ -77,7 +77,7 @@
       },
       NowValue: function() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE'], To: 0, Aggreg: '10M', Period: 1200000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE'], To: 0, Aggreg: '10M', Period: 1200000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             if(result['Sampletime'].length === 0) {
               this.CurrentValue10M = ['No data'];

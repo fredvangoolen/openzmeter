@@ -16,7 +16,7 @@
       <div class="row" v-if="View=='Basic'">
         <div class="col-xs-9">
           <label class="control-label">Serial number</label>
-          <input type="text" class="form-control" disabled :value="Analyzer.ID">
+          <input type="text" class="form-control" disabled :value="Analyzer.Analyzer">
         </div>
         <div class="col-xs-3">
           <label class="control-label">Mode</label>
@@ -154,7 +154,7 @@
             if(data.Result === true) {
               this.Show = false;
               this.$parent.$refs.Table.Load();
-              if(this.$root.SelectedAnalyzer.ID === this.Analyzer.ID) {
+              if(this.$root.SelectedAnalyzer.Analyzer === this.Analyzer.Analyzer) {
                 this.$root.SelectedAnalyzer = this.Analyzer;
                 this.$root.$emit('AnalyzerChanged', this.Analyzer);
               }

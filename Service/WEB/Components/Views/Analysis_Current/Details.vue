@@ -78,7 +78,7 @@
       },
       UpdateGraphs1M() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Period: 86400000, To: 0, LastSample: this.LastSample, Series: ['CURRENT_HARMONICS', 'POWER_FACTOR', 'CURRENT_THD', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Period: 86400000, To: 0, LastSample: this.LastSample, Series: ['CURRENT_HARMONICS', 'POWER_FACTOR', 'CURRENT_THD', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             this.$refs.evolution.SetData(result);
             this.$refs.parameters.SetData(result);
@@ -92,7 +92,7 @@
       },
       UpdateGraphsNow() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['CURRENT', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'CURRENT_THD', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['CURRENT', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'CURRENT_THD', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             this.$refs.waveform.SetData(result);
             this.$refs.harmonics.SetData(result);

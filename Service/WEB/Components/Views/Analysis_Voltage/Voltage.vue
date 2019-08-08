@@ -89,7 +89,7 @@
         }
         this.$parent.$refs.details.$refs.events.GetEvents(to, period, lastsample);
         var Analyzer = this.$root.SelectedAnalyzer;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, Series: ['VOLTAGE'], To: to, LastSample: lastsample, Analyzer: Analyzer.ID, Period: period }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, Series: ['VOLTAGE'], To: to, LastSample: lastsample, Analyzer: Analyzer.Analyzer, Period: period }), 
           success: function(result) {
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             this.Data = oZm.GraphDataAppend(result, 'Voltage', this.Data);

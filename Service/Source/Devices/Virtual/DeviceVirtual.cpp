@@ -68,7 +68,7 @@ bool DeviceVirtual::StartDevice() {
   string ModeString = ConfigOUT["Mode"];
   LOGFile::Info("Starting 'Virtual' driver\n");
   pTerminate = false;
-  pAnalyzers.push_back(new AnalyzerSoft(pSerial + "_" + ModeString, pMode, ConfigOUT["Analyzer"], pSampleRate));
+  pAnalyzers.push_back(new AnalyzerSoft(pSerial + "_" + ModeString, pMode, "/Devices/" + pSerial + "/Analyzer", pSampleRate));
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pAnalyzersLock.WriteUnlock();

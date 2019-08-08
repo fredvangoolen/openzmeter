@@ -28,7 +28,7 @@
       AnalyzerChanged: function() {
         if(this.$root.SelectedAnalyzer === null) return;
         var Years = [];
-        $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Aggreg: this.aggreg, Analyzer: this.$root.SelectedAnalyzer.ID }), 
+        $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Aggreg: this.aggreg, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             for(var year = moment(result['From']).year(); year <= moment(result['To']).year(); year++) Years.push(year);
             this.Years = Years.reverse();
