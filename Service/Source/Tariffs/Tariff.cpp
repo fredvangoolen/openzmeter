@@ -80,7 +80,7 @@ bool Tariff::RegisterCallbacks() {
   return true;
 }
 void Tariff::GetTariffsCallback(HTTPRequest &req) {
-  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('TariffID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') as result FROM rates");
+  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('TariffID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code))), '[]') as result FROM rates");
   if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
 }

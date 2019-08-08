@@ -16,19 +16,19 @@
       <div class="row" v-if="View=='Basic'">
         <div class="col-xs-9">
           <label class="control-label">Serial number</label>
-          <input type="text" class="form-control" disabled v-model="analyzer.ID">
+          <input type="text" class="form-control" disabled :value="Analyzer.ID">
         </div>
         <div class="col-xs-3">
           <label class="control-label">Mode</label>
-          <input type="text" class="form-control" disabled v-model="analyzer.Mode">
+          <input type="text" class="form-control" disabled :value="Analyzer.Mode">
         </div>
         <div class="col-xs-12">
           <label class="control-label">Display name</label>
-          <input type="text" class="form-control" v-model="analyzer.Name" required>
+          <input type="text" class="form-control" v-model="Analyzer.Name" required>
         </div>
         <div class="col-xs-12 col-sm-6">
-          <label class="control-label">Voltage</label>
-          <input-spin prepend="V" :list="[{Text: '120 V (L-N)', Value: 120}, {Text: '240 V (L-L)', Value: 240}, {Text: '230 V (L-N)', Value: 230}]" :decimals="1" :min="10" :max="10000" :increment="1" :value="analyzer.NominalVoltage"></input-spin>
+          <label class="control-label">Nominal voltage</label>
+          <input-spin prepend="V" :list="[{Text: '120 V (L-N)', Value: 120}, {Text: '240 V (L-L)', Value: 240}, {Text: '230 V (L-N)', Value: 230}]" :decimals="1" :min="10" :max="10000" :increment="1" :value="Analyzer.NominalVoltage" v-on:change="SetVoltage"></input-spin>
           <!--select class="form-control" v-model="analyzer.NominalVoltage">
             <option value="120">120 V</option>
             <option value="230">230 V</option>
@@ -36,8 +36,8 @@
           </select-->
         </div>
         <div class="col-xs-12 col-sm-6">
-          <label class="control-label">Frequency</label>
-          <input-spin prepend="Hz" :list="[50, 60]" :decimals="1" :min="10" :max="500" :increment="1" :value="analyzer.NominalFreq"></input-spin>
+          <label class="control-label">Nominal frequency</label>
+          <input-spin prepend="Hz" :list="[{Text: 'DC', Value: 0}, {Text: '50 Hz', Value: 50}, {Text: '60 Hz', Value: 60}]" :decimals="1" :min="0" :max="500" :increment="1" :value="Analyzer.NominalFreq" v-on:change="SetFrequency"></input-spin>
           <!--select class="form-control" v-model="analyzer.NominalFreq">
             <option value="50">50 Hz</option>
             <option value="60">60 Hz</option>
@@ -46,54 +46,56 @@
         <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Min current</label>
-          <input-spin prepend="A" :decimals="1" :min="10" :max="500" :increment="1" :value="analyzer.MinCurrent"></input-spin>
+          <input-spin prepend="A" :decimals="1" :min="10" :max="500" :increment="1" :value="Analyzer.MinCurrent" v-on:change="SetMinCurrent"></input-spin>
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Max current</label>
-          <input-spin prepend="A" :decimals="1" :min="10" :max="500" :increment="1" :value="analyzer.MaxCurrent"></input-spin>
+          <input-spin prepend="A" :decimals="1" :min="0.1" :max="500" :increment="1" :value="Analyzer.MaxCurrent" v-on:change="SetMaxCurrent"></input-spin>
         </div>      
       </div>
       <div class="row" v-if="View=='Contract'">
         <div class="col-xs-12">
           <label class="control-label">Contract ID</label>
-          <input type="text" class="form-control">
+          <input type="text" class="form-control" v-model="Analyzer.Contract">
         </div>
         <div class="col-xs-12 col-sm-9">
           <label class="control-label">Country</label>
           <input type="text" class="form-control">
         </div>
         <div class="col-xs-12 col-sm-3">
-          <label class="control-label">ZIP</label>
-          <input type="text" class="form-control">
+          <label class="control-label">ZIP Code</label>
+          <input type="text" class="form-control" v-model="Analyzer.ZipCode">
         </div>
         <div class="col-xs-12 col-sm-12">
           <label class="control-label">Location</label>
-          <div class="input-group">
-            <span class="input-group-addon">Lat</span>
-            <input type="text" class="form-control" id="inputAnalyzerLat">
-            <span class="input-group-addon">Long</span>
-            <input type="text" class="form-control" id="inputAnalyzerLong">
-            <span class="input-group-btn"><button class="btn btn-default"><img :src="require('Imgs/globe_africa.png')"></button></span>
+          <div style="display: flex">
+            <div class="input-group" style="flex-grow: 50">
+              <input-spin ref="latitude" prepend="º Lat" :decimals="7" :min="-180" :max="180" :increment="0.01" :value="Analyzer.GeoPosition[0]" v-on:change="SetLatitude"></input-spin>
+            </div>
+            <div class="input-group" style="flex-grow: 50; margin: 0px 5px">
+              <input-spin ref="longitude" prepend="º Lon" :decimals="7" :min="-180" :max="180" :increment="0.01" :value="Analyzer.GeoPosition[1]" v-on:change="SetLongitude"></input-spin>
+            </div>
+            <button class="btn btn-default" v-on:click="GetLocation" title="Get current location"><img :src="require('Imgs/pin.png')"></button>
           </div>
         </div>
       </div>
       <div class="row" v-if="View=='Remote'">
         <div class="col-xs-12">
           <label class="control-label" style="line-height: 22px">Enable remote access</label>
-          <toggle class="float-right" onText="Yes" offText="No"></toggle>
+          <toggle class="float-right" onText="Yes" offText="No" :value="Analyzer.RemoteEnabled" v-on:change="SetRemoteEnabled"></toggle>
           <hr style="margin: 5px 0px 5px 0px"/>
         </div>
         <div class="col-xs-12">
           <label class="control-label">Remote URL</label>
-          <input type="text" class="form-control">
+          <input type="text" class="form-control" v-model="Analyzer.RemoteServer">
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">User name</label>
-          <input type="text" class="form-control">
+          <input type="text" class="form-control" v-model="Analyzer.RemoteUser">
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Password</label>
-          <input type="text" class="form-control">
+          <input type="text" class="form-control" v-model="Analyzer.RemotePass">
         </div>
       </div>
     </div>
@@ -107,29 +109,54 @@
   import Toggle from 'Components/Toggle.vue';
   export default {
     data() {
-      return { View: 'Basic', Show: false, ShowSpinner: true, analyzer: null, Error: ''};
+      return { View: 'Basic', Show: false, ShowSpinner: true, Analyzer: {}, Error: ''};
     },
     methods: {
       Load: function(analyzer) {
+        this.Analyzer = analyzer;
         this.Show = true;
-        this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer }), 
-          success: function(result) { 
-            this.ShowSpinner = false;
-            this.analyzer = Object.assign({}, result);
-            this.Error = '';
-          }.bind(this)
-        });    
+        this.View = 'Basic';
+        this.ShowSpinner = false;
+      },
+      SetVoltage: function(val) {
+        this.Analyzer.NominalVoltage = val;
+      },
+      SetFrequency: function(val) {
+        this.Analyzer.NominalFreq = val;
+      },
+      SetMinCurrent: function(val) {
+        this.Analyzer.MinCurrent = val;
+      },
+      SetMaxCurrent: function(val) {
+        this.Analyzer.MaxCurrent = val;
+      },
+      GetLocation: function() {
+        navigator.geolocation.getCurrentPosition(this.SetLocation);
+      },
+      SetLocation: function(val) {
+        this.$refs.latitude.SetValue(val.coords.latitude);
+        this.$refs.longitude.SetValue(val.coords.longitude);
+      },
+      SetLongitude: function(val) {
+        this.Analyzer.GeoPosition[1] = val;
+      },
+      SetLatitude: function(val) {
+        this.Analyzer.GeoPosition[0] = val;
+      },
+      SetRemoteEnabled: function(val) {
+        this.Analyzer.RemoteEnabled = val;
       },
       Save: function() {
-        $.ajax({ url: "setAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(this.analyzer), 
+        this.ShowSpinner = true;
+        $.ajax({ url: "setAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(this.Analyzer), 
           success: function(data) {
+            this.ShowSpinner = false;
             if(data.Result === true) {
               this.Show = false;
               this.$parent.$refs.Table.Load();
-              if(this.$root.SelectedAnalyzer.ID === this.analyzer.ID) {
-                this.$root.SelectedAnalyzer = this.analyzer;
-                this.$root.$emit('AnalyzerChanged');
+              if(this.$root.SelectedAnalyzer.ID === this.Analyzer.ID) {
+                this.$root.SelectedAnalyzer = this.Analyzer;
+                this.$root.$emit('AnalyzerChanged', this.Analyzer);
               }
             } else {
               this.Error = 'Form values are incorrect. Please, review.';
@@ -137,14 +164,15 @@
             }
           }.bind(this),
           error: function() {
+            this.ShowSpinner = false;
             this.Error = 'Failed to save analyzer!';
-            setTimeout(function() { this.Error = ''; }.bind(this), 5000); 
+            setTimeout(function() { this.Error = ''; }.bind(this), 5000);
           }.bind(this)
         });
       },
       Back: function() {
         this.Show = false;
-        this.$parent.$refs.Table.Load(); 
+        this.$parent.$refs.Table.Load();
       }
     },
     components: { Spinner, OptionPicker, InputSpin, Toggle }

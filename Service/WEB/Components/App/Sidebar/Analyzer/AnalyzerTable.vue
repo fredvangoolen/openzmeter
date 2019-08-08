@@ -74,6 +74,7 @@
         return false;
       },
       Select: function(analyzer) {
+        this.ShowSpinner = true;
         $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.ID }), 
           success: function(result) { 
             this.$root.SelectedAnalyzer = result;
@@ -87,8 +88,16 @@
         });
       },
       Configure: function(analyzer) {
-        this.Show = false;
-        this.$parent.$refs.Configure.Load(analyzer.ID); 
+        this.ShowSpinner = true;
+        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.ID }), 
+          success: function(result) { 
+            this.Show = false;
+            this.$parent.$refs.Configure.Load(result); 
+          }.bind(this),
+          error: function() {
+            this.ShowSpinner = false;
+          }.bind(this)
+        });
       },
       ACL: function(id) {
         alert("ACL not yet implemented"); 
