@@ -225,7 +225,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
     *ptr = Request;
     if(Request->SessionID().empty()) return MHD_NO;
     if(strcmp(method, MHD_HTTP_METHOD_POST) == 0) return MHD_YES;
-    if((strcmp(method, MHD_HTTP_METHOD_GET) == 0) || (strcmp(method, MHD_HTTP_METHOD_HEAD) == 0)) Request->FromFile(string("WEB") + URL.c_str());
+    if((strcmp(method, MHD_HTTP_METHOD_GET) == 0) || (strcmp(method, MHD_HTTP_METHOD_HEAD) == 0)) Request->FromFile(string("WEB") + pRelativePath + URL.c_str());
     if((Request->ResultCode() != MHD_HTTP_OK) && (strcmp(method, MHD_HTTP_METHOD_GET) == 0)) {
       if(URL == "Logout") {
         Request->CloseSession();

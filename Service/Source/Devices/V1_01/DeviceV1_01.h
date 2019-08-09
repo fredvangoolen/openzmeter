@@ -33,6 +33,7 @@ class DeviceV1_01 : public Device {
     static bool                  pRegistered;
   private :
     pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
+    pthread_mutex_t              pMutex;                   //Critical sections locks
     bool                         pTerminate;               //Marca que deben detenerse los trabajos pendientes
     Transfer_t                   pTransfers[DEVICEV1_01_TRANSFERS];
     deque<Sample_t>              pBuffer;                  //Read buffer
@@ -51,14 +52,16 @@ class DeviceV1_01 : public Device {
     static void *Sig_Thread(void *args);
     static void  ReadCallback(struct libusb_transfer *transfer);
     static int   PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
+    static json  CheckConfig(const json &config);
   private :
+    DeviceV1_01(string serial);
+    bool Start(const json &config);
     bool StartDevice() override;
     bool StopDevice() override;
     void GetDevice(HTTPRequest &req) override;
     void SetDevice(HTTPRequest &req) override;
     bool BuffersAppend(float voltageSample, float currentSample);
   public :
-    DeviceV1_01(string serial);
     ~DeviceV1_01();
 };
 //----------------------------------------------------------------------------------------------------------------------

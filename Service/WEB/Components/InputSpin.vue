@@ -43,8 +43,8 @@
         this.$emit('change', this.Value);
       },
       Change: function(evt) {
-        var Value = evt.target.value;
-        if(isNaN(parseFloat(Value)) === true) Value = this.min;
+        var Value = parseFloat(evt.target.value);
+        if(isNaN(Value) === true) Value = this.min;
         if(Value > this.max) Value = this.max;
         if(Value < this.min) Value = this.min;
         this.Value = Value;
@@ -57,7 +57,7 @@
         var Fraction = Math.abs(val % Exponent);
         Fraction = Fraction.toString();
         while(Fraction.length < this.decimals) Fraction = '0' + Fraction;
-        return Integer.toString() + '.' + Fraction;
+        return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + '.' + Fraction;
       }
     }    
   }

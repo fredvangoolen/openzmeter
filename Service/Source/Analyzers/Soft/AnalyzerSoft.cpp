@@ -413,9 +413,9 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       if(isnan(This->pAggreg10C.Voltage[j])) continue;
       for(uint i = 0; i < This->pAggreg10C.Voltage_Harmonics[j].size(); i++) {
         This->pAggreg10C.Voltage_Harmonics[j][i] = This->pVoltageFFT[j]->BinPower(10 + i * 10);
-        if(i > 0) This->pAggreg10C.Voltage_THD[j] = This->AccumulateSUM(This->pAggreg10C.Voltage_THD[j], norm(This->pAggreg10C.Voltage_Harmonics[j][i]));
+        if(i > 0) This->pAggreg10C.Voltage_THD[j] = This->AccumulateSUM(This->pAggreg10C.Voltage_THD[j], This->pAggreg10C.Voltage_Harmonics[j][i]);
       }
-      This->pAggreg10C.Voltage_THD[j] = sqrt(This->pAggreg10C.Voltage_THD[j]) / sqrt(norm(This->pAggreg10C.Voltage_Harmonics[j][0]));
+      This->pAggreg10C.Voltage_THD[j] = This->pAggreg10C.Voltage_THD[j] / This->pAggreg10C.Voltage_Harmonics[j][0];
     }
     for(int j = 0; j < ((This->pMode == PHASE1) ? 1 : 3); j++) {
       This->pCurrentFFT[j]->Wait();
@@ -423,17 +423,16 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       This->pAggreg10C.Apparent_Power[j] = This->pAggreg10C.Voltage[j] * This->pAggreg10C.Current[j];
       for(uint i = 0; i < This->pAggreg10C.Current_Harmonics[j].size(); i++) {
         This->pAggreg10C.Current_Harmonics[j][i] = This->pCurrentFFT[j]->BinPower(10 + i * 10);
-        if(i > 0) This->pAggreg10C.Current_THD[j] = This->AccumulateSUM(This->pAggreg10C.Current_THD[j], norm(This->pAggreg10C.Current_Harmonics[j][i]));
-        if(i == 0) {
-//          This->pAggreg10C.Reactive_Power[j] = sqrt(norm(This->pAggreg10C.Voltage_Harmonics[j][i] * This->pAggreg10C.Current_Harmonics[j][i]));
-          float PHI = FFT::CalcAngle(This->pAggreg10C.Voltage_Harmonics[j][i], This->pAggreg10C.Current_Harmonics[j][i]);
-          This->pAggreg10C.Reactive_Power[j] = This->pAggreg10C.Voltage_Harmonics[j][i] * This->pAggreg10C.Current_Harmonics[j][i] * sin(PHI);
-          PHI = fmod(PHI, 2.0 * M_PI);
-          if(PHI > M_PI) PHI = PHI -  2.0 * M_PI;
-          This->pAggreg10C.Phi[j] = PHI * 180.0 / M_PI;
-        }
+        if(i > 0) This->pAggreg10C.Current_THD[j] = This->AccumulateSUM(This->pAggreg10C.Current_THD[j], This->pAggreg10C.Current_Harmonics[j][i]);
       }
-      This->pAggreg10C.Current_THD[j] = sqrt(This->pAggreg10C.Current_THD[j]) / sqrt(norm(This->pAggreg10C.Current_Harmonics[j][0]));
+      float PHI = FFT::CalcAngle(This->pVoltageFFT[j]->Output[10], This->pCurrentFFT[j]->Output[10]);
+      This->pAggreg10C.Reactive_Power[j] = This->pAggreg10C.Voltage_Harmonics[j][0] * This->pAggreg10C.Current_Harmonics[j][0] * sin(PHI);
+      PHI = fmod(PHI, 2.0 * M_PI);
+      if(PHI > M_PI) PHI = PHI -  2.0 * M_PI;
+
+      
+      This->pAggreg10C.Phi[j] = PHI * 180.0 / M_PI;
+      This->pAggreg10C.Current_THD[j] = This->pAggreg10C.Current_THD[j] / This->pAggreg10C.Current_Harmonics[j][0];
       This->pAggreg10C.Active_Energy[j] = (This->pAggreg10C.Active_Power[j] * This->pCurrentSamples[j].size()) / (This->pSamplerate * 3600.0);
       This->pAggreg10C.Power_Factor[j] = This->pAggreg10C.Active_Power[j] / This->pAggreg10C.Apparent_Power[j];
       This->pAggreg10C.Reactive_Energy[j] = (This->pAggreg10C.Reactive_Power[j] * This->pAggreg10C.Current_Inputs[j]) / (This->pSamplerate * 3600.0);
@@ -861,8 +860,9 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
         json Ch = json::array();
         for(uint i = 0; i < pAggreg10C.Voltage_Harmonics[n].size(); i++) {
           json Row = json::array();
-          Row.push_back(pVoltageFFT[n]->Output[10 + i * 10].real());
-          Row.push_back(pVoltageFFT[n]->Output[10 + i * 10].imag());
+          complex<float> Val = pVoltageFFT[n]->Output[10 + i * 10] * (float)M_SQRT2;
+          Row.push_back(Val.real());
+          Row.push_back(Val.imag());
           Ch.push_back(Row);
         }
         Result["Voltage_Harmonics"].push_back(Ch);
@@ -873,8 +873,9 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
         json Ch = json::array();
         for(uint i = 0; i < pAggreg10C.Current_Harmonics[n].size(); i++) {
           json Row = json::array();
-          Row.push_back(pCurrentFFT[n]->Output[10 + i * 10].real());
-          Row.push_back(pCurrentFFT[n]->Output[10 + i * 10].imag());
+          complex<float> Val = pCurrentFFT[n]->Output[10 + i * 10] * (float)M_SQRT2;
+          Row.push_back(Val.real());
+          Row.push_back(Val.imag());
           Ch.push_back(Row);
         }
         Result["Current_Harmonics"].push_back(Ch);
@@ -883,14 +884,14 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
       Result["Voltage_FFT"] = json::array();
       for(uint i = 0; i < pVoltageFFT.size(); i++) {
         json Ch = json::array();
-        for(uint n = 0; n < pVoltageFFT[i]->Output.size(); n++) Ch.push_back(sqrt(norm(pVoltageFFT[i]->Output[n])));
+        for(uint n = 0; n < pVoltageFFT[i]->Output.size(); n++) Ch.push_back(pVoltageFFT[i]->BinPower(n));
         Result["Voltage_FFT"].push_back(Ch);
       }
     } else if(Serie == "CURRENT_FFT") {
       Result["Current_FFT"] = json::array();
       for(uint i = 0; i < pCurrentFFT.size(); i++) {
         json Ch = json::array();
-        for(uint n = 0; n < pCurrentFFT[i]->Output.size(); n++) Ch.push_back(sqrt(norm(pCurrentFFT[i]->Output[n])));
+        for(uint n = 0; n < pCurrentFFT[i]->Output.size(); n++) Ch.push_back(pCurrentFFT[i]->BinPower(n));
         Result["Current_FFT"].push_back(Ch);
       }
     } else if(Serie == "VOLTAGE_SAMPLES") {

@@ -39,18 +39,13 @@ void *FFT::FFT_Thread(void *args) {
   FFT *This = (FFT*)args;
   while(This->pTerminate == false) {
     if(This->WorkerWaitTask() == false) return NULL;
-    
-    This->Output.reserve((This->pInput.size() / 2) + 1);
+    This->Output.resize((This->pInput.size() / 2) + 1, complex<float>(0,0));
     pthread_mutex_lock(&This->pPlannerMutex);
     fftwf_plan Plan = fftwf_plan_dft_r2c_1d(This->pInput.size(), &(This->pInput[0]), (fftwf_complex*)&This->Output[0], FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
     pthread_mutex_unlock(&pPlannerMutex);
     fftwf_execute_dft_r2c(Plan, &(This->pInput[0]), (fftwf_complex*)&This->Output[0]);
-    This->Output.resize((This->pInput.size() / 2) + 1);
-    
-    
-    //This->Transform(This->Output);
-    for(uint i = 0; i < This->Output.size(); i++) This->Output[i] = (This->Output[i] / (float)(This->Output.size() / M_SQRT2));
-//    This->Output.resize((This->Output.size() / 2) + 1);
+//    This->Output.resize((This->pInput.size() / 2) + 1);
+    for(uint i = 0; i < This->Output.size(); i++) This->Output[i] = This->Output[i] / (float)(This->pInput.size());
     This->WorkerEndsTask();
   }
   return NULL;
@@ -73,82 +68,3 @@ float FFT::CalcAngle(const complex<float> &a, const complex<float> &b) {
   else
     return Tmp - atan(b.imag() / b.real()) + M_PI;
 }
-/*void FFT::Transform(vector<complex<float> > &vec) {
-  size_t n = vec.size();
-  if(n == 0) {
-    return;
-  } else if((n & (n - 1)) == 0) {
-    TransformRadix2(vec);
-  } else {
-    TransformBluestein(vec);
-  }
-}
-void FFT::InverseTransform(vector<complex<float> > &vec) {
-  std::transform(vec.cbegin(), vec.cend(), vec.begin(), static_cast<complex<float> (*)(const complex<float> &)>(std::conj));
-  Transform(vec);
-  std::transform(vec.cbegin(), vec.cend(), vec.begin(), static_cast<complex<float> (*)(const complex<float> &)>(std::conj));
-}
-void FFT::TransformRadix2(vector<complex<float> > &vec) {
-  size_t n = vec.size();
-  int levels = 0; // Compute levels = floor(log2(n))
-  for (size_t temp = n; temp > 1U; temp >>= 1) levels++;
-  if (static_cast<size_t> (1U) << levels != n) throw std::domain_error("Length is not a power of 2");
-  vector<complex<float> > expTable(n / 2);
-  for (size_t i = 0; i < n / 2; i++) expTable[i] = std::exp(complex<float>(0, -2 * M_PI * i / n));
-  for (size_t i = 0; i < n; i++) {
-    size_t j = ReverseBits(i, levels);
-    if (j > i) std::swap(vec[i], vec[j]);
-  }
-  for (size_t size = 2; size <= n; size *= 2) {
-    size_t halfsize = size / 2;
-    size_t tablestep = n / size;
-    for (size_t i = 0; i < n; i += size) {
-      for (size_t j = i, k = 0; j < i + halfsize; j++, k += tablestep) {
-        complex<float> temp = vec[j + halfsize] * expTable[k];
-        vec[j + halfsize] = vec[j] - temp;
-        vec[j] += temp;
-      }
-    }
-    if (size == n) break;
-  }
-}
-void FFT::TransformBluestein(vector<complex<float> > &vec) {
-  size_t n = vec.size();
-  size_t m = 1;
-  while(m / 2 <= n) {
-    if(m > SIZE_MAX / 2) throw std::length_error("Vector too large");
-    m *= 2;
-  }
-  vector<complex<float> > expTable(n);
-  for(size_t i = 0; i < n; i++) {
-    unsigned long long temp = static_cast<unsigned long long> (i) * i;
-    temp %= static_cast<unsigned long long> (n) * 2;
-    float angle = M_PI * temp / n;
-    expTable[i] = std::exp(complex<float>(0, -angle));
-  }
-  vector<complex<float> > av(m);
-  for(size_t i = 0; i < n; i++) av[i] = vec[i] * expTable[i];
-  vector<complex<float> > bv(m);
-  bv[0] = expTable[0];
-  for(size_t i = 1; i < n; i++) bv[i] = bv[m - i] = std::conj(expTable[i]);
-  vector<complex<float> > cv(m);
-  Convolve(av, bv, cv);
-  for(size_t i = 0; i < n; i++) vec[i] = cv[i] * expTable[i];
-}
-void FFT::Convolve(const vector<complex<float> > &xvec, const vector<complex<float> > &yvec, vector<complex<float> > &outvec) {
-  size_t n = xvec.size();
-  if(n != yvec.size() || n != outvec.size()) throw std::domain_error("Mismatched lengths");
-  vector<complex<float> > xv = xvec;
-  vector<complex<float> > yv = yvec;
-  Transform(xv);
-  Transform(yv);
-  for(size_t i = 0; i < n; i++) xv[i] *= yv[i];
-  InverseTransform(xv);
-  for(size_t i = 0; i < n; i++) outvec[i] = xv[i] / static_cast<float> (n);
-}
-size_t FFT::ReverseBits(size_t x, int n) {
-  size_t result = 0;
-  for(int i = 0; i < n; i++, x >>= 1) result = (result << 1) | (x & 1U);
-  return result;
-}
-*/

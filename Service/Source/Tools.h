@@ -27,6 +27,19 @@ class RWLocks {
     void WriteUnlock();
 };
 //----------------------------------------------------------------------------------------------------------------------
+class InstanceLocks {
+  //Hold destructor until no references to object
+  private : 
+    pthread_mutex_t  pMutex;
+    pthread_cond_t   pCond;
+    uint32_t         pReferences;
+  public :
+    InstanceLocks();
+    void WaitInstances();
+    void Reference();
+    void Dereference();
+};
+//----------------------------------------------------------------------------------------------------------------------
 class WorkerLocks {
   //Worker locks until signal to wakeup, caller can wait worker to ends
   private :

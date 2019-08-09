@@ -2,7 +2,7 @@
   <div class="row">
     <div class="col-xs-12">
       <label class="control-label" style="line-height: 22px">Start on boot</label>
-      <toggle class="float-right" onText="Yes" offText="No" ref="autoStart"></toggle>
+      <toggle class="float-right" onText="Yes" offText="No" :value="Settings.AutoStart" v-on:change="AutoStartChange"></toggle>
       <hr style="margin: 5px 0px 5px 0px"/>
     </div>
     <div class="col-xs-12 col-sm-6">
@@ -48,6 +48,9 @@
     },
     
     methods: {
+      AutoStartChange: function(val) {
+        this.Settings.AutoStart = val;
+      },
       ModeChanged: function(val) {
         this.Settings.Mode = val;  
       },
