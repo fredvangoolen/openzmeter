@@ -13,7 +13,7 @@ using namespace std;
 class DeviceManager {
   private :  
     static vector<Device*>  pDevices;         //Initiated by devices, cleared on destroy
-    static RWLocks          pLock;            //Contro access to critical sections
+    static RWLocks          pDevicesLock;     //Control access to critical sections
   public :
     static bool AddDevice(Device *dev);
   private :

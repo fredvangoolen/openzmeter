@@ -55,6 +55,28 @@ void RWLocks::WriteUnlock() {
   pthread_mutex_unlock(&pMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
+InstanceLocks::InstanceLocks() {
+  pMutex = PTHREAD_MUTEX_INITIALIZER;
+  pCond = PTHREAD_COND_INITIALIZER;
+  pReferences = 0;
+}
+void InstanceLocks::WaitInstances() {
+  pthread_mutex_lock(&pMutex);
+  while(pReferences != 0) pthread_cond_wait(&pCond, &pMutex);
+  pthread_mutex_unlock(&pMutex);
+}
+void InstanceLocks::Reference() {
+  pthread_mutex_lock(&pMutex);
+  pReferences++;
+  pthread_mutex_unlock(&pMutex);
+}
+void InstanceLocks::Dereference() {
+  pthread_mutex_lock(&pMutex);
+  pReferences--;
+  if(pReferences == 0) pthread_cond_signal(&pCond);
+  pthread_mutex_unlock(&pMutex);
+}
+//----------------------------------------------------------------------------------------------------------------------
 ProviderLocks::ProviderLocks() {
   pWaitingThreads      = 0;
   pDataReady           = false;

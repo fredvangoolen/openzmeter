@@ -13,7 +13,7 @@
 using namespace std;
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
-class Device {
+class Device : protected InstanceLocks {
   public :
     enum DeviceState { UNCONFIGURED, STOPPED, RUNNING };
   protected :
@@ -31,10 +31,10 @@ class Device {
   protected :
     Device();
   public :
-    string Serial() const;
+    string Serial();
     json GetJSONDescriptor();
     json GetJSONAnalyzerDescriptor(const string &serial);
-    json GetJSONAllAnalyzerDescriptors();  
+    json GetJSONAllAnalyzerDescriptors();
     void StartDevice(HTTPRequest &req);
     void StopDevice(HTTPRequest &req);
     bool GetAnalyzer(HTTPRequest &req);

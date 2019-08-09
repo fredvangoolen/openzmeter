@@ -42,8 +42,6 @@
         $.ajax({ url: "getDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Serial: dev.Serial }),
           success: function(result) {
             this.ShowSpinner = false;
-            result.Samplerate = 10000;
-            result.CurrentPhase = 10;
             this.Settings = result;
           }.bind(this)
         });

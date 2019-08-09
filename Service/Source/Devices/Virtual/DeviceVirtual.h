@@ -12,7 +12,8 @@ class DeviceVirtual : public Device {
   private :
     static bool                     pRegistered;
   private :
-    pthread_t                       pCaptureThread;
+    pthread_mutex_t                 pMutex;
+    pthread_t                       pThread;
     bool                            pTerminate;
     Analyzer::AnalyzerMode          pMode;
     float                           pSampleRate;
@@ -23,14 +24,15 @@ class DeviceVirtual : public Device {
   private : 
     static bool  GetInstances();
     static void *Capture_Thread(void *args);
-  private :
-    bool StartDevice();
-    bool StopDevice();
-    void GetDevice(HTTPRequest &req);
-    void SetDevice(HTTPRequest &req);
+    static json  CheckConfig(const json &config);
   private :
     DeviceVirtual();
+    bool Start(const json &config);
+    bool StartDevice() override;
+    bool StopDevice() override;
+    void GetDevice(HTTPRequest &req) override;
+    void SetDevice(HTTPRequest &req) override;
   public :
-    ~DeviceVirtual();
+    ~DeviceVirtual() override;
 };
 //----------------------------------------------------------------------------------------------------------------------
