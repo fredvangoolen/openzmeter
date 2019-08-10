@@ -75,7 +75,7 @@
       },
       NowValue3S: function() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['CURRENT'], To: 0, Aggreg: '3S', Period: 6000, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['CURRENT'], To: 0, Aggreg: '3S', Period: 6000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             if(result['Sampletime'].length === 0) {
               this.CurrentValue3S = ['No data'];
@@ -102,7 +102,7 @@
       },
       NowValue1M: function() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['CURRENT'], To: 0, Aggreg: '1M', Period: 120000, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['CURRENT'], To: 0, Aggreg: '1M', Period: 120000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             if(result['Sampletime'].length === 0) {
               this.CurrentValue1M = ['No data'];
