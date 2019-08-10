@@ -131,7 +131,7 @@
       },
       NowValue: function() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '15M', Period: 1800000, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '15M', Period: 1800000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             this.$refs.activeCounters.Set15MValues(result);
             this.$refs.reactiveCounters.Set15MValues(result);
@@ -146,7 +146,7 @@
             this.$refs.reactiveCcounters.Set15MValues(null);
           }.bind(this)
         });
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '1H', Period: 7200000, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '1H', Period: 7200000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             this.$refs.activeCounters.Set1HValues(result);
             this.$refs.reactiveCounters.Set1HValues(result);

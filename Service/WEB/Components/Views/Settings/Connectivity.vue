@@ -93,6 +93,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
     },
     methods: {
       UpdateTime: function() {
+        clearInterval(this.Timer2);
         $.ajax({ url: "getNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
           success: function(result) { 
             this.NTPDetails = 'Local timezone : ' + moment.tz.zone(moment.tz.guess()).name + '\nTime           : ' + moment(result.Time).format('DD/MM/YYYY HH:mm:ss');
@@ -103,6 +104,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
         });  
       },
       UpdateWifi: function() {
+        clearInterval(this.Timer);
         $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: "CURRENT" }), 
           success: function(result) { 
             if(result.Connected === true) {

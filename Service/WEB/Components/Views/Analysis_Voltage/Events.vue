@@ -63,6 +63,7 @@
           this.ShowSpinner = true;
           this.Events = [];
           this.LastSample = 0;
+          this.$refs.table.tableData = [];
         }
         $.ajax({ url: 'getEvents', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ To: to, LastSample: this.LastSample, Analyzer: Analyzer.Analyzer, Period: period }),
           success: function(result) {
@@ -92,7 +93,7 @@
               }       
               this.Events.push(Event);
             }
-            this.$refs.table.setData( { data: this.Events });
+            this.$refs.table.tableData = this.Events;
           }.bind(this),
           complete: function() {
             this.ShowSpinner = false;

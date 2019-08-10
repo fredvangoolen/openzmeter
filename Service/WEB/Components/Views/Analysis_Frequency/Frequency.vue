@@ -125,7 +125,7 @@
           this.Time3S = '';
           return;
         }
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['FREQUENCY'], To: 0, Aggreg: '3S', Period: 5000, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['FREQUENCY'], To: 0, Aggreg: '3S', Period: 5000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             if(result['Sampletime'].length === 0) {
               this.CurrentValue = 'No data';

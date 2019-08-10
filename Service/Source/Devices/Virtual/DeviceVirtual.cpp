@@ -140,11 +140,11 @@ void *DeviceVirtual::Capture_Thread(void *args) {
   uint64_t StartTime        = Tools::GetTime();
   uint64_t GeneratedSamples = 0;
   AnalyzerSoft *Analyzer    = (AnalyzerSoft*)This->pAnalyzers[0];
+  int32_t Phase = (This->pSampleRate / This->pFrequency) * (This->pCurrentPhase / 360.0);
   while(!This->pTerminate) {
     vector<float> Voltage;
     vector<float> Current;
     uint64_t Sampletime = Tools::GetTime();
-    float Phase = (This->pSampleRate / This->pFrequency) * (This->pCurrentPhase / 360.0);
     if((Analyzer->IsFinished() == true) && (((Sampletime - StartTime) * This->pSampleRate / 1000) > GeneratedSamples)) {
       Voltage.push_back(This->pVoltage * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency));
       Current.push_back(This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples - Phase) / This->pSampleRate * This->pFrequency));
