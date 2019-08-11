@@ -22,12 +22,11 @@
   import moment from 'JS/moment.js';
   export default {
     data: function() {
-      return { ShowDialog: false, Tariff: {}, RateID: null };
+      return { ShowDialog: false, Tariff: {} };
     },
     methods: {
       Show: function(id) {
         this.ShowDialog = true;
-        this.RateID = id;  
         this.$nextTick(function() {  
           if(id === null) {
             this.Tariff = { 
@@ -58,11 +57,7 @@
         });
       },
       Save: function() {
-//        alert("guardar no terminado!!");
-//        TariffDefinition.Name = $('#inputTariffName').val();
-//  TariffDefinition.Template.Description = $('#inputTariffComments').val();
-//  if(TariffKey !== null) TariffDefinition.RateID = TariffKey;
-        $.ajax({ url: "setTariff", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign(this.Tariff, { TariffID: this.TariffID }) ), 
+        $.ajax({ url: (this.Tariff.TariffID === undefined) ? 'addTariff' : 'setTariff', timeout: 20000, type: 'POST', dataType: 'text', contentType: 'application/json', data: JSON.stringify(this.Tariff), 
           success: function() {
             this.Close();
             this.$parent.GetTariffs();

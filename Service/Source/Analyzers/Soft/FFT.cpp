@@ -12,18 +12,18 @@
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t FFT::pPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
-FFT::FFT(char *name) {
+FFT::FFT(const string &name) {
   pTerminate = false;
   if(pthread_create(&pThread, NULL, FFT_Thread, (void*)this) != 0) {
+    pThread = 0;
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;
   }
-  pthread_setname_np(pThread, name);
+  pthread_setname_np(pThread, name.c_str());
 }
 FFT::~FFT() {
   pTerminate = true;
-  Abort();
-  if(pthread_join(pThread, NULL) != 0) LOGFile::Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
+  Abort(&pThread);
 }
 void FFT::Start(const vector<float> &in) {
   pInput = in;

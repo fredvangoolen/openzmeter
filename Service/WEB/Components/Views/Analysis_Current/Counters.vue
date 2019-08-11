@@ -86,7 +86,7 @@
               if(result['Current'][Pos] === null) {
                 this.CurrentValue3S = ['No data'];
               } else {
-                for(var i = 0; i < result['Current'][Pos].length; i++) this.CurrentValue3S[i] = oZm.Round2(result['Current'][Pos][i]);
+                for(var i = 0; i < result['Current'][Pos].length; i++) this.CurrentValue3S[i] = oZm.Round2(result['Current'][Pos][i]) + ' A';
               }
             }
           }.bind(this),
@@ -113,7 +113,7 @@
               if(result['Current'][Pos] === null) {
                 this.CurrentValue1M = ['No data'];
               } else {
-                for(var i = 0; i < result['Current'][Pos].length; i++) this.CurrentValue1M[i] = oZm.Round2(result['Current'][Pos][i]);
+                for(var i = 0; i < result['Current'][Pos].length; i++) this.CurrentValue1M[i] = oZm.Round2(result['Current'][Pos][i]) + ' A';
               }
             }
           }.bind(this),
