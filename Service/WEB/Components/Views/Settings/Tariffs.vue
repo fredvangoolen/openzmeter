@@ -9,8 +9,8 @@
       <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
-            <button class="btn btn-xs btn-default" @click="Edit(props.rowData.RateID, $event)">Edit</button>
-            <button class="btn btn-xs btn-danger" @click="Delete(props.rowData.RateID, props.rowData.Name, $event)">Delete</button>
+            <button class="btn btn-xs btn-default" @click="Edit(props.rowData, $event)">Edit</button>
+            <button class="btn btn-xs btn-danger" @click="Delete(props.rowData, $event)">Delete</button>
           </div>
         </template>
       </vuetable>
@@ -51,18 +51,18 @@
           }.bind(this)
         });
       },
-      Edit: function(id, evt) {
+      Edit: function(tariff, evt) {
         $(evt.target).blur();
-        this.$refs.EditDialog.Show(id);
+        this.$refs.EditDialog.Show(tariff.TariffID);
       },
       Add: function() {
         this.$refs.EditDialog.Show(null);
       },
-      Delete: function(id, name, evt) {
-        if(confirm("Delete '" + name + "' tariff?")){
+      Delete: function(tariff, evt) {
+        if(confirm("Delete '" + tariff.Name + "' tariff?")){
           $(evt.target).blur();
-          $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify({ RateID: id }), success: 
-          function(result) {
+          $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify({ TariffID: tariff.TariffID }), 
+            success: function(result) {
               this.GetTariffs();
             }.bind(this)
           });

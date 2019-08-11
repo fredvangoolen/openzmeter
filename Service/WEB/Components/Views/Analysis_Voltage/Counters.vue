@@ -88,7 +88,7 @@
               if(result['Voltage'][Pos] === null) {
                 this.CurrentValue10M = ['No data'];
               } else {
-                for(var i = 0; i < result['Voltage'][Pos].length; i++) this.CurrentValue10M[i] = oZm.Round2(result['Voltage'][Pos][i]);
+                for(var i = 0; i < result['Voltage'][Pos].length; i++) this.CurrentValue10M[i] = oZm.Round2(result['Voltage'][Pos][i]) + 'V';
               }
             }
           }.bind(this),

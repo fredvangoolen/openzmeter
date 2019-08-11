@@ -310,11 +310,11 @@ void AnalyzerSoft::SaveEvent(Event_t &evt) {
     for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
   }
   if(evt.State == EVT_RUNNING) {
-    ExecSentenceNoResult("INSERT INTO events(starttime, duration, samplerate, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + Bind(evt.Start) + ", 0, " + Bind(pSamplerate) + ", " + Bind(Type) + ", " + Bind(evt.Reference) + ", " + Bind(evt.PeakValue) + ", " + Bind(evt.ChangeValue) + ", '', " + Bind(RAW) + ", " + Bind(RMS) + ")");
+    ExecSentenceNoResult("INSERT INTO events(starttime, duration, samplerate, finished, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + Bind(evt.Start) + ", 0, " + Bind(pSamplerate) + ", false, " + Bind(Type) + ", " + Bind(evt.Reference) + ", " + Bind(evt.PeakValue) + ", " + Bind(evt.ChangeValue) + ", '', " + Bind(RAW) + ", " + Bind(RMS) + ")");
   } else if(evt.State == EVT_CLOSING) {
     ExecSentenceNoResult("UPDATE events SET duration = " + Bind(evt.Duration) + ", peak = " + Bind(evt.PeakValue) + ", change = " + Bind(evt.ChangeValue) + ", samples2 = " + Bind(RAW) + ", rms2 = " + Bind(RMS) + " WHERE starttime = " + Bind(evt.Start) + " AND evttype = " + Bind(Type));
   } else {
-    ExecSentenceNoResult("UPDATE events SET samples3 = " + Bind(RAW) + ", rms3 = " + Bind(RMS) +  + ", finished = TRUE WHERE starttime = " + Bind(evt.Start) + " AND evttype = " + Bind(Type));
+    ExecSentenceNoResult("UPDATE events SET finished = TRUE, samples3 = " + Bind(RAW) + ", rms3 = " + Bind(RMS) + " WHERE starttime = " + Bind(evt.Start) + " AND evttype = " + Bind(Type));
   }
   evt.SamplesRAW_A = deque<vector<float> >();
   evt.SamplesRMS_A = deque<vector<float> >();

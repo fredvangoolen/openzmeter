@@ -76,36 +76,42 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
       return { BTName: '', Bluetooth_Support: false, BTChanges: false,
                 WIFIName: '', WIFIDetails: '', WIFI_Support: false, WIFIChanges: false, WIFISettings: {},
                 NTP_Support: false, NTPDetails: '', NTPChanges: false,
-                Loading: false, NTPEnabled: false};
+                Loading: false, NTPEnabled: false };
     },
     created: function() {
       this.BTEnabled = false;
       this.WIFIEnabled = false;
+      this.NTPAjax = null;
+      this.WifiAjax = null;
       this.Timer = null;
       this.Timer2 = null;
     },
     mounted: function() {
       this.Load();
     },
-    beforedestroy: function() {
+    beforeDestroy: function() {
+      if(this.NTPAjax) this.NTPAjax.abort();
+      if(this.WifiAjax) this.WifiAjax.abort();
       clearInterval(this.Timer);
       clearInterval(this.Timer2);
     },
     methods: {
       UpdateTime: function() {
         clearInterval(this.Timer2);
-        $.ajax({ url: "getNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
+        if(this.NTPAjax) this.NTPAjax.abort();
+        this.NTPAjax = $.ajax({ url: "getNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
           success: function(result) { 
             this.NTPDetails = 'Local timezone : ' + moment.tz.zone(moment.tz.guess()).name + '\nTime           : ' + moment(result.Time).format('DD/MM/YYYY HH:mm:ss');
           }.bind(this),
-          complete: function() { 
-            this.Timer2 = setTimeout(this.UpdateTime, 500); 
+          complete: function() {
+            this.Timer2 = setTimeout(this.UpdateTime, 500);
           }.bind(this)
         });  
       },
       UpdateWifi: function() {
         clearInterval(this.Timer);
-        $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: "CURRENT" }), 
+        if(this.WifiAjax) this.WifiAjax.abort();
+        this.WifiAjax = $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: "CURRENT" }), 
           success: function(result) { 
             if(result.Connected === true) {
               this.WIFIName = result.ESSID;

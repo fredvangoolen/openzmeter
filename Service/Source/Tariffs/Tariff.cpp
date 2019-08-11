@@ -80,13 +80,21 @@ bool Tariff::RegisterCallbacks() {
   return true;
 }
 void Tariff::GetTariffsCallback(HTTPRequest &req) {
-  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('TariffID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code))), '[]') as result FROM rates");
+  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('TariffID', tariff, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'TimeZone', time_zone))), '[]') as result FROM tariffs");
   if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
 }
-void Tariff::GetTariffCallback(HTTPRequest &req) {}
-void Tariff::SetTariffCallback(HTTPRequest &req) {}
-void Tariff::DelTariffCallback(HTTPRequest &req) {}
+void Tariff::GetTariffCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  uint32_t TariffID = Params["TariffID"];
+  req.ExecSentenceAsyncResult("SELECT json_build_object('tariffID', tariff, 'Name', name, 'UserName', username, 'StartDate', startdate, 'EndDate', enddate, 'TimeZone', time_zone, 'Template', template) as result FROM tariffs WHERE tariff = " + req.Bind(TariffID));
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
+}
+void Tariff::SetTariffCallback(HTTPRequest &req) {
+}
+void Tariff::DelTariffCallback(HTTPRequest &req) {
+}
 void Tariff::AddTariffCallback(HTTPRequest &req) {
 }
 uint8_t Tariff::FindPeriod(uint64_t timestamp) {
