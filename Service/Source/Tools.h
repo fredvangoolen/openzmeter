@@ -49,7 +49,7 @@ class WorkerLocks {
     pthread_cond_t  pCond;
   public :
     WorkerLocks();
-    void Abort();
+    void Abort(pthread_t *thread);
     bool WorkerWaitTask();
     void WorkerEndsTask();
     void WakeWorker();

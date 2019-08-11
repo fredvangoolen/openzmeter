@@ -30,7 +30,7 @@
     data: function() {
       return {ShowSpinner: true,
         Columns: [
-          {name: 'CountryCode', title: 'Country'},
+          {name: 'TimeZone', title: 'Time zone'},
           {name: 'Name', title: 'Name'},
           {name: 'StartDate', title: 'Start date', callback: 'DateFormat'},
           {name: 'EndDate', title: 'End date', callback: 'DateFormat'},

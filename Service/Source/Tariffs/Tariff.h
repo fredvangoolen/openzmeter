@@ -58,6 +58,7 @@ class Tariff {
   private :
     static bool RegisterCallbacks();
   private :
+    bool              pValidTimeZone;
     time_zone         pTimeZone;
     string            pDescription;
     uint8_t           pHolidayPeriod;

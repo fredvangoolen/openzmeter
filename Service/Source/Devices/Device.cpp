@@ -32,7 +32,9 @@ json Device::GetJSONDescriptor() {
   Device["Driver"] = pDriver;
   Device["Name"] = pName;
   Device["Serial"] = pSerial;
+  pAnalyzersLock.ReadLock();
   Device["Analyzers"] = pAnalyzers.size();
+  pAnalyzersLock.ReadUnlock();
   Device["Status"] = (pState == Device::UNCONFIGURED) ? "UNCONFIGURED" : (pState == Device::STOPPED) ? "STOPPED" : "RUNNING";
   Dereference();
   return Device;

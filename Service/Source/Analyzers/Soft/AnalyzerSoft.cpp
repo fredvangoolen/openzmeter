@@ -22,42 +22,61 @@ vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), Database(id) {
   LOGFile::Debug("Creating analyzer database tables\n");
   ExecResource("SQL/Database_AnalyzerSoft.sql");
-  pConfigPath = optionPath;
-  pMode = mode;
-  pSamplerate = samplerate;
-  pThread = 0;
+  pConfigPath      = optionPath;
+  pMode            = mode;
+  pSamplerate      = samplerate;
+  pThread          = 0;
+  pEventThread     = 0;
+  pCycleLen        = 0;
+  pSequence        = 0;
+  pTerminate       = false;
+  pPrevTimestamp   = 0;
+  pPrevStationary  = false;
+  pCurrentSamples  = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(0));
+  pVoltageSamples  = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(0));
+  pBlockCycles.reserve(20);
+  pLastSamples.resize((pMode == PHASE1) ? 1 : 3);  
+  InitAggreg(pAggreg10C, AGGREG_10C);
   InitAggreg(pAggreg3S, AGGREG_3S);
   InitAggreg(pAggreg1M, AGGREG_1M);
   InitAggreg(pAggreg10M, AGGREG_10M);
   InitAggreg(pAggreg15M, AGGREG_15M);
   InitAggreg(pAggreg1H, AGGREG_1H);
-  Start(ConfigManager::ReadConfig(optionPath));
+  for(uint8_t i = 0; i < pVoltageSamples.size(); i++) pVoltageFFT.emplace_back("FFT_V" + to_string(i));
+  for(uint8_t i = 0; i < pCurrentSamples.size(); i++) pCurrentFFT.emplace_back("FFT_I" + to_string(i));
+  Configure(ConfigManager::ReadConfig(optionPath));
+  if(pthread_create(&pEventThread, NULL, Events_Thread, (void*)this) != 0) {
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    pEventThread = 0;
+    return;
+  }
+  if(pthread_create(&pThread, NULL, Analyzer_Thread, (void*)this) != 0) {
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    pThread = 0;
+    return;
+  }
+  pthread_setname_np(pEventThread, "EventsDet");
+  pthread_setname_np(pThread, (pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N");  
 }
 AnalyzerSoft::~AnalyzerSoft() {
-  Stop();
+  WaitInstances();
+  pTerminate = true;
+  DisableSync();
+  Abort(&pThread);
+  pEventLocks.Abort(&pEventThread);
 }
-void AnalyzerSoft::Start(const json &options) {
-  pName = options["Name"];
-  pNominalVoltage = options["NominalVoltage"];
+void AnalyzerSoft::Configure(const json &options) {
+  pConfigLocks.WriteLock();
+  pName             = options["Name"];
+  pNominalVoltage   = options["NominalVoltage"];
   pNominalFrequency = options["NominalFreq"];
-  pMaxCurrent = options["MaxCurrent"];
-  pMinCurrent = options["MinCurrent"];
-  pCountryCode = options["CountryCode"];
-  pContract = options["Contract"];
-  pZipCode = options["ZipCode"];
-  pGeo = options["GeoPosition"].get<vector<float> >();
-  pLastSamples.resize((pMode == PHASE1) ? 1 : 3);
-  pBlockCycles.reserve(20);
-  pCycleLen        = 0;
-  pMaxSamples      = ceil((15.0 * pSamplerate) / pNominalFrequency);
-  pSequence        = 0;
-  pTerminate       = false;
-  pPrevTimestamp   = 0;
-  pPrevStationary  = false;
-  pCycles.clear();
-  pEvents.clear();
-  pPrevSamples.clear();
-  pPrevCycles.clear();
+  pMaxCurrent       = options["MaxCurrent"];
+  pMinCurrent       = options["MinCurrent"];
+  pCountryCode      = options["CountryCode"];
+  pContract         = options["Contract"];
+  pZipCode          = options["ZipCode"];
+  pGeo              = options["GeoPosition"].get<vector<float> >();
+  pMaxSamples       = ceil((15.0 * pSamplerate) / pNominalFrequency);
   
   //Calc peak filter coefficients for nominal frequency
   pFilters.clear();
@@ -74,58 +93,24 @@ void AnalyzerSoft::Start(const json &options) {
     Stage.ChannelsZ2 = vector<float>((pMode == PHASE1) ? 1 : 3, 0.0);
     pFilters.push_back(Stage);
   }
-  InitAggreg(pAggreg10C, AGGREG_10C);
-  pCurrentSamples = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(0));
-  pVoltageSamples = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(0));
   uint32_t PhaseShift = ((pNominalFrequency / pSamplerate) / 4.0) * ZEROCROSSING_FILTERSTAGES;
   pDelayVoltage.resize(PhaseShift, vector<float>(pVoltageSamples.size(), 0.0));
   pDelayCurrent.resize(PhaseShift, vector<float>(pCurrentSamples.size(), 0.0));
-  pVoltageFFT.clear();
-  for(uint8_t i = 0; i < pVoltageSamples.size(); i++) {
-    char Name[16];
-    sprintf(Name, "FFT_V%u", i);
-    pVoltageFFT.push_back(new FFT(Name));
-  }
-  pCurrentFFT.clear();
-  for(uint8_t i = 0; i < pCurrentSamples.size(); i++) {
-    char Name[16];
-    sprintf(Name, "FFT_I%u", i);
-    pCurrentFFT.push_back(new FFT(Name));
-  }
-  if(pthread_create(&pEventThread, NULL, Events_Thread, (void*)this) != 0) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return;
-  }
-  pthread_setname_np(pEventThread, "EventsDet");
-  if(pthread_create(&pThread, NULL, Analyzer_Thread, (void*)this) != 0) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    pThread = 0;
-    return;
-  }
-  pthread_setname_np(pThread, (pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N");
-  bool SyncEnabled = options["RemoteEnabled"];
-  if(SyncEnabled) {
+  if(options["RemoteEnabled"] == true) {
     string Server = options["RemoteServer"];
     string User = options["RemoteUser"];
     string Pass = options["RemotePass"];
     EnableSync(Server, User, Pass);
+  } else {
+    DisableSync();
   }
-}
-void AnalyzerSoft::Stop() {
-  DisableSync();
-  pTerminate = true;
-  Abort();
-  pthread_join(pThread, NULL);
-  pThread = 0;
-  for(uint8_t i = 0; i < pVoltageFFT.size(); i++) delete pVoltageFFT[i];
-  for(uint8_t i = 0; i < pCurrentFFT.size(); i++) delete pCurrentFFT[i];
-  WorkerEndsTask();
+  pConfigLocks.WriteUnlock();
 }
 bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime) {
-  if(pThread == 0) return false;
+  if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
+  pConfigLocks.WriteLock();
   pDelayVoltage.push_back(voltageSamples);
   pDelayCurrent.push_back(currentSamples);
-  if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
   vector<float> Voltage = pDelayVoltage.front();
   vector<float> Current = pDelayCurrent.front();
   for(uint8_t i = 0; i < pVoltageSamples.size(); i++) pVoltageSamples[i].push_back(Voltage[i]);
@@ -141,6 +126,7 @@ bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vecto
       Outs[i] = Out;
     }
   }
+  pConfigLocks.WriteUnlock();
   if(pBlockCycles.size() == pBlockCycles.capacity()) pBlockCycles.clear();
   pCycleLen++;
   if(((pLastSamples[0] >= 0.0) && (Outs[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (Outs[0] > 0.0))) {
@@ -382,8 +368,8 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     uint64_t Start = Tools::GetTime();
     //Init FFTs and event detection threads
     This->pEventLocks.WakeWorker();
-    for(uint i = 0; i < This->pVoltageFFT.size(); i++) This->pVoltageFFT[i]->Start(This->pVoltageSamples[i]);
-    for(uint i = 0; i < This->pCurrentFFT.size(); i++) This->pCurrentFFT[i]->Start(This->pCurrentSamples[i]);
+    for(uint i = 0; i < This->pVoltageFFT.size(); i++) This->pVoltageFFT[i].Start(This->pVoltageSamples[i]);
+    for(uint i = 0; i < This->pCurrentFFT.size(); i++) This->pCurrentFFT[i].Start(This->pCurrentSamples[i]);
     This->pAggreg10C.Frequency = This->CalcFrequency();
     if(!isnan(This->pAggreg10C.Frequency)) This->pAggreg10C.Frequency_Inputs = 1;
     bool Valid = false;
@@ -409,23 +395,23 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       }
     }
     for(uint j = 0; j < This->pAggreg10C.Voltage.size(); j++) {
-      This->pVoltageFFT[j]->Wait();
+      This->pVoltageFFT[j].Wait();
       if(isnan(This->pAggreg10C.Voltage[j])) continue;
       for(uint i = 0; i < This->pAggreg10C.Voltage_Harmonics[j].size(); i++) {
-        This->pAggreg10C.Voltage_Harmonics[j][i] = This->pVoltageFFT[j]->BinPower(10 + i * 10);
+        This->pAggreg10C.Voltage_Harmonics[j][i] = This->pVoltageFFT[j].BinPower(10 + i * 10);
         if(i > 0) This->pAggreg10C.Voltage_THD[j] = This->AccumulateSUM(This->pAggreg10C.Voltage_THD[j], This->pAggreg10C.Voltage_Harmonics[j][i]);
       }
       This->pAggreg10C.Voltage_THD[j] = This->pAggreg10C.Voltage_THD[j] / This->pAggreg10C.Voltage_Harmonics[j][0];
     }
     for(int j = 0; j < ((This->pMode == PHASE1) ? 1 : 3); j++) {
-      This->pCurrentFFT[j]->Wait();
+      This->pCurrentFFT[j].Wait();
       if(isnan(This->pAggreg10C.Current[j]) || isnan(This->pAggreg10C.Voltage[j])) continue;
       This->pAggreg10C.Apparent_Power[j] = This->pAggreg10C.Voltage[j] * This->pAggreg10C.Current[j];
       for(uint i = 0; i < This->pAggreg10C.Current_Harmonics[j].size(); i++) {
-        This->pAggreg10C.Current_Harmonics[j][i] = This->pCurrentFFT[j]->BinPower(10 + i * 10);
+        This->pAggreg10C.Current_Harmonics[j][i] = This->pCurrentFFT[j].BinPower(10 + i * 10);
         if(i > 0) This->pAggreg10C.Current_THD[j] = This->AccumulateSUM(This->pAggreg10C.Current_THD[j], This->pAggreg10C.Current_Harmonics[j][i]);
       }
-      float PHI = FFT::CalcAngle(This->pVoltageFFT[j]->Output[10], This->pCurrentFFT[j]->Output[10]);
+      float PHI = FFT::CalcAngle(This->pVoltageFFT[j].Output[10], This->pCurrentFFT[j].Output[10]);
       This->pAggreg10C.Reactive_Power[j] = This->pAggreg10C.Voltage_Harmonics[j][0] * This->pAggreg10C.Current_Harmonics[j][0] * sin(PHI);
       PHI = fmod(PHI, 2.0 * M_PI);
       if(PHI > M_PI) PHI = PHI -  2.0 * M_PI;
@@ -438,10 +424,10 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       This->pAggreg10C.Reactive_Energy[j] = (This->pAggreg10C.Reactive_Power[j] * This->pAggreg10C.Current_Inputs[j]) / (This->pSamplerate * 3600.0);
     }
     if(This->pMode == PHASE3N) {
-      This->pCurrentFFT[3]->Wait();
+      This->pCurrentFFT[3].Wait();
       if(!isnan(This->pAggreg10C.Current[3])) {
         for(uint i = 0; i < This->pAggreg10C.Current_Harmonics[3].size(); i++) {
-          This->pAggreg10C.Current_Harmonics[3][i] = This->pCurrentFFT[3]->BinPower(10 + i * 10);
+          This->pAggreg10C.Current_Harmonics[3][i] = This->pCurrentFFT[3].BinPower(10 + i * 10);
           if(i > 0) This->pAggreg10C.Current_THD[3] = This->AccumulateSUM(This->pAggreg10C.Current_THD[3], norm(This->pAggreg10C.Current_Harmonics[3][i]));
         }
         This->pAggreg10C.Current_THD[3] = sqrt(This->pAggreg10C.Current_THD[3]) / sqrt(norm(This->pAggreg10C.Current_Harmonics[3][0]));
@@ -528,8 +514,6 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     This->pSequence++;
     This->WorkerEndsTask();
   }
-  This->pEventLocks.Abort();
-  pthread_join(This->pEventThread, NULL);
   return NULL;
 }
 void *AnalyzerSoft::Events_Thread(void* args) {
@@ -719,7 +703,11 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   return ConfigOUT;
 }
 void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
+    Dereference();
+    return;
+  }
   json Response = json::object();
   Response["Analyzer"] = pSerial;
   Response["Name"] = pName;
@@ -729,7 +717,6 @@ void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   Response["NominalFreq"] = pNominalFrequency;
   Response["MaxCurrent"] = pMaxCurrent;
   Response["MinCurrent"] = pMinCurrent;
-  Response["SampleFreq"] = pSamplerate;
   Response["CountryCode"] = pCountryCode;
   Response["Contract"] = pContract;
   Response["ZipCode"] = pZipCode;
@@ -737,19 +724,28 @@ void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   json Remote = GetJSONSyncConfig();  
   Response.insert(Remote.begin(), Remote.end());
   req.FromJSON(Response);
+  Dereference();
 }
 void AnalyzerSoft::SetAnalyzer(HTTPRequest &req) {
-  if(CheckRights(req, CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, CONFIG) == false) {
+    Dereference();
+    return;
+  }
   json Config = CheckConfig(req.GetParams());
   ConfigManager::WriteConfig(pConfigPath, Config);
-  Stop();
-  Start(Config);
+  Configure(Config);
   json Result = json::object();
   Result["Result"] = true;
   req.FromJSON(Result);
+  Dereference();
 }
 void AnalyzerSoft::GetSeries(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
+    Dereference();
+    return;
+  }
   json Params = req.GetParams();
   //Insert defaults
   uint64_t To = Params["To"];
@@ -763,12 +759,18 @@ void AnalyzerSoft::GetSeries(HTTPRequest &req) {
   if(Aggreg == "10M") PeriodSeconds = 600000;
   if(Aggreg == "15M") PeriodSeconds = 900000;
   if(Aggreg == "1H") PeriodSeconds = 3600000;
-  if((Period / PeriodSeconds) > 100000) return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
+  if((Period / PeriodSeconds) > 100000) {
+    Dereference();
+    return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
+  }
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
   string Query = "SELECT row_to_json(Result) AS result FROM ( SELECT " + req.Bind(From) + " AS " + req.BindID("From") + ", " + req.Bind(To) +" AS " + req.BindID("To") + ", ";
   Query += req.Bind((To - From) / PeriodSeconds) + " AS " + req.BindID("MaxSamples") + ", " + req.Bind(Aggreg) + " AS " + req.BindID("Aggregation_Source") + ", ";
   for(uint i = 0; i < Params["Series"].size(); i++) {
-    if(!Params["Series"][i].is_string()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+    if(!Params["Series"][i].is_string()) {
+      Dereference();
+      return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+    }
     string Serie = Params["Series"][i];
     if((Serie == "FREQUENCY") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {      
       Query += "COALESCE(ARRAY_AGG(freq ORDER BY sampletime ASC), '{}') AS " + req.BindID("Frequency") + ", ";
@@ -803,6 +805,7 @@ void AnalyzerSoft::GetSeries(HTTPRequest &req) {
     } else if((Serie == "VOLTAGE_HARMONICS_STATS") && (Aggreg ==  "1H")) {
       Query += "COALESCE(ARRAY_AGG(stat_harmonics ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Harmonics_Stats") + ", ";
     } else {
+      Dereference();
       return req.FromString("Invalid serie in selected aggregation", MHD_HTTP_BAD_REQUEST);
     }
   }
@@ -814,17 +817,31 @@ void AnalyzerSoft::GetSeries(HTTPRequest &req) {
   }
   Query += " WHERE sampletime > " + req.Bind(LastSample) + " AND sampletime >= " + req.Bind(From) + " AND sampletime <= " + req.Bind(To) + ") AS result";
   req.ExecSentenceAsyncResult(Query);
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  if(!req.FecthRow()) {
+    Dereference();
+    return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  }
   req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
+  Dereference();
 }
 void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
+    Dereference();
+    return;
+  }
   json Params = req.GetParams();
-  if(PNowDataLock.ConsumerWait(5000) == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  if(PNowDataLock.ConsumerWait(5000) == false) {
+    Dereference();
+    return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  }
   json Result = json::object();
   Result["Sampletime"] = pAggreg10C.Timestamp;
   for(uint i = 0; i < Params["Series"].size(); i++) {
-    if(!Params["Series"][i].is_string()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+    if(!Params["Series"][i].is_string()) {
+      Dereference();
+      return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+    }
     string Serie = Params["Series"][i];
     if(Serie == "FREQUENCY") {
       Result["Frequency"] = pAggreg10C.Frequency;
@@ -860,7 +877,7 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
         json Ch = json::array();
         for(uint i = 0; i < pAggreg10C.Voltage_Harmonics[n].size(); i++) {
           json Row = json::array();
-          complex<float> Val = pVoltageFFT[n]->Output[10 + i * 10] * (float)M_SQRT2;
+          complex<float> Val = pVoltageFFT[n].Output[10 + i * 10] * (float)M_SQRT2;
           Row.push_back(Val.real());
           Row.push_back(Val.imag());
           Ch.push_back(Row);
@@ -873,7 +890,7 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
         json Ch = json::array();
         for(uint i = 0; i < pAggreg10C.Current_Harmonics[n].size(); i++) {
           json Row = json::array();
-          complex<float> Val = pCurrentFFT[n]->Output[10 + i * 10] * (float)M_SQRT2;
+          complex<float> Val = pCurrentFFT[n].Output[10 + i * 10] * (float)M_SQRT2;
           Row.push_back(Val.real());
           Row.push_back(Val.imag());
           Ch.push_back(Row);
@@ -884,14 +901,14 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
       Result["Voltage_FFT"] = json::array();
       for(uint i = 0; i < pVoltageFFT.size(); i++) {
         json Ch = json::array();
-        for(uint n = 0; n < pVoltageFFT[i]->Output.size(); n++) Ch.push_back(pVoltageFFT[i]->BinPower(n));
+        for(uint n = 0; n < pVoltageFFT[i].Output.size(); n++) Ch.push_back(pVoltageFFT[i].BinPower(n));
         Result["Voltage_FFT"].push_back(Ch);
       }
     } else if(Serie == "CURRENT_FFT") {
       Result["Current_FFT"] = json::array();
       for(uint i = 0; i < pCurrentFFT.size(); i++) {
         json Ch = json::array();
-        for(uint n = 0; n < pCurrentFFT[i]->Output.size(); n++) Ch.push_back(pCurrentFFT[i]->BinPower(n));
+        for(uint n = 0; n < pCurrentFFT[i].Output.size(); n++) Ch.push_back(pCurrentFFT[i].BinPower(n));
         Result["Current_FFT"].push_back(Ch);
       }
     } else if(Serie == "VOLTAGE_SAMPLES") {
@@ -901,11 +918,13 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
     } else if(Serie == "SYS_STATS") {
       Result["Sys_Stats"] = System::GetSystemDetails();
     } else {
+      Dereference();
       return req.FromString("Unknown serie name", MHD_HTTP_BAD_REQUEST);
     }
   }
   req.FromJSON(Result);
   PNowDataLock.ConsumerEnds();
+  Dereference();
 }
 void AnalyzerSoft::GetSeriesRange(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
@@ -917,7 +936,11 @@ void AnalyzerSoft::GetSeriesRange(HTTPRequest &req) {
   req.FromString(req.ResultString("ranges"), MHD_HTTP_OK);
 }
 void AnalyzerSoft::GetEvents(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
+    Dereference();
+    return;
+  }
   json Params = req.GetParams();
   uint64_t To = Params["To"];
   uint64_t Period = Params["Period"];
@@ -929,14 +952,25 @@ void AnalyzerSoft::GetEvents(HTTPRequest &req) {
                               "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), 'Finished', COALESCE(ARRAY_AGG(finished ORDER BY starttime ASC), '{}'), "
                               "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), 'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), 'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}'), 'Notes', COALESCE(ARRAY_AGG(notes ORDER BY starttime ASC), '{}')) AS evt "
                               "FROM events WHERE starttime > " + req.Bind(LastSample) + " AND starttime >= " + req.Bind(From) + " AND starttime <= " + req.Bind(To));
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  if(!req.FecthRow()) {
+    Dereference();
+    return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  }
   req.FromString(req.ResultString("evt"), MHD_HTTP_OK);
+  Dereference();
 }
 void AnalyzerSoft::GetEvent(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
+    Dereference();
+    return;
+  }
   json Params = req.GetParams();
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  if((Params["Samples"] != "RMS") && (Params["Samples"] != "RAW")) return req.FromString("'Samples' params must be 'RMS' or 'RAW'", MHD_HTTP_BAD_REQUEST);
+  if((Params["Samples"] != "RMS") && (Params["Samples"] != "RAW")) {
+    Dereference();
+    return req.FromString("'Samples' params must be 'RMS' or 'RAW'", MHD_HTTP_BAD_REQUEST);
+  }
   uint64_t ID = Params["StartTime"];
   string Type = Params["Type"];
   string Samples = Params["Samples"];
@@ -945,42 +979,78 @@ void AnalyzerSoft::GetEvent(HTTPRequest &req) {
   } else {
     req.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', rms1, 'Samples', rms2, 'Post_Samples', rms3) AS evt FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
   }
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  if(!req.FecthRow()) {
+    Dereference();
+    return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  }
   req.FromString(req.ResultString("evt"), MHD_HTTP_OK);
+  Dereference();
 }
 void AnalyzerSoft::SetEvent(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, WRITE | CONFIG) == false) {
+    Dereference();
+    return;
+  }
   json Params = req.GetParams();
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
   uint64_t ID = Params["StartTime"];
   string Type = Params["Type"];
   string Notes = Params["Notes"];
-  req.FromString("", req.ExecSentenceNoResult("UPDATE events SET Notes = " + req.Bind(Notes) + " WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type)) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+  bool Result = req.ExecSentenceNoResult("UPDATE events SET Notes = " + req.Bind(Notes) + " WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+  Dereference();
 }
 void AnalyzerSoft::DelEvent(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, WRITE | CONFIG) == false) {
+    Dereference();
+    return;
+  }
   json Params = req.GetParams();
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
   uint64_t ID = Params["StartTime"];
   string Type = Params["Type"];
-  req.FromString("", req.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type)) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+  bool Result = req.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+  Dereference();
 }
 void AnalyzerSoft::GetRates(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
+    Dereference();
+    return;
+  }
   req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', analyzers_rates.name, 'StartDate', startdate, 'EndDate', enddate))), '[]') as result FROM analyzers_rates LEFT JOIN analyzers USING(serial) WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(pSerial));
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  if(!req.FecthRow()) {
+    Dereference();
+    return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  }
   req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
+  Dereference();
 }
 void AnalyzerSoft::GetRate(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
+    Dereference();
+    return;
+  }
   json Params = req.GetParams();
   uint32_t RateID = Params["RateID"];
   req.ExecSentenceAsyncResult("SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) as result FROM analyzers_rates where rate = " + req.Bind(RateID));
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  if(!req.FecthRow()) {
+    Dereference();
+    return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  }
   req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
+  Dereference();
 }
 void AnalyzerSoft::SetRate(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, WRITE | CONFIG) == false) {
+    Dereference();
+    return;
+  }
   json Params = req.GetParams();
   if(!Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["CountryCode"].is_string()) return req.FromString("'StartDate', 'EndDate', 'CountryCode' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
   uint64_t Start    = Params["StartDate"];
@@ -988,20 +1058,19 @@ void AnalyzerSoft::SetRate(HTTPRequest &req) {
   string   Name     = Params["Name"];
   string   TimeZone = Params["CountryCode"];
   req.ExecSentenceAsyncResult("SELECT timezone FROM country WHERE country_code = " + req.Bind(TimeZone));
-  if(req.FecthRow() == false) return req.FromString("Invalid 'CountryCode'", MHD_HTTP_BAD_REQUEST);
-  if(!Params["Template"].is_object()) return req.FromString("'Template' param required", MHD_HTTP_BAD_REQUEST);
+  if(req.FecthRow() == false) {
+    Dereference();
+    return req.FromString("Invalid 'CountryCode'", MHD_HTTP_BAD_REQUEST);
+  }
+  if(!Params["Template"].is_object()) {
+    Dereference();
+    return req.FromString("'Template' param required", MHD_HTTP_BAD_REQUEST);
+  }
   Tariff T(Start, End, req.ResultString("timezone"));
-  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
-  if(!Params["Analyzer"].is_string()) {
-    //System tariff
-    if(!Params["RateID"].is_number_unsigned()) {
-      req.FromString("", (req.ExecSentenceNoResult("INSERT INTO rates(name, username, country_code, template, startdate, enddate) VALUES (" + req.Bind(Name) + ", " + req.Bind(req.UserName()) + ", 'UTC', " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Start) + ", " + req.Bind(End) + ")") == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
-    } else {
-      uint32_t RateID = Params["RateID"];
-      req.FromString("", (req.ExecSentenceNoResult("UPDATE rates SET name = " + req.Bind(Name) + ", country_code = 'UTC', template = " + req.Bind(T.GetTemplate().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE username = " + req.Bind(req.UserName()) + " AND rate = " + req.Bind(RateID)) == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
-    }
-  } else {
-    //Analyzer tariff
+  if(T.SetTemplate(Params["Template"]) == false) {
+    Dereference();
+    return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
+  }
     string Analyzer = Params["Analyzer"];
     if(!Params["Config"].is_object()) return req.FromString("'Config' param required", MHD_HTTP_BAD_REQUEST);    
     if(T.SetConfig(Params["Config"]) == false) return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
@@ -1011,12 +1080,19 @@ void AnalyzerSoft::SetRate(HTTPRequest &req) {
       uint32_t RateID = Params["RateID"];
       req.FromString("", (req.ExecSentenceNoResult("UPDATE analyzers_rates SET name = " + req.Bind(Name) + ", template = " + req.Bind(T.GetTemplate().dump()) + ", config = " + req.Bind(T.GetConfig().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE rate = " + req.Bind(RateID) + " AND serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ")") == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
     }
-  }
+  Dereference();
 }
 void AnalyzerSoft::DelRate(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, WRITE | CONFIG) == false) {
+    Dereference();
+    return;
+  }
   json Params = req.GetParams();
-  if(!Params["RateID"].is_number_unsigned()) return req.FromString("'RateID' params required", MHD_HTTP_BAD_REQUEST);
+  if(!Params["RateID"].is_number_unsigned()) {
+    Dereference();
+    return req.FromString("'RateID' params required", MHD_HTTP_BAD_REQUEST);
+  }
   uint32_t RateID = Params["RateID"];
   if(!Params["Analyzer"].is_string()) {
     req.FromString("", (req.ExecSentenceNoResult("DELETE FROM rates WHERE rate = " + req.Bind(RateID) + " AND username = " + req.Bind(req.UserName())) == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
@@ -1024,12 +1100,23 @@ void AnalyzerSoft::DelRate(HTTPRequest &req) {
     string Analyzer = Params["Analyzer"];
     req.FromString("", (req.ExecSentenceNoResult("DELETE FROM analyzers_rates WHERE rate = " + req.Bind(RateID) + " AND serial IN (SELECT serial from analyzers WHERE serial = " + req.Bind(Analyzer) + " AND username = " + req.Bind(req.UserName()) + ")") == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
   }
+  Dereference();
 }
 void AnalyzerSoft::AddRate(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, WRITE | CONFIG) == false) {
+    Dereference();
+    return;
+  }
+  
+  Dereference();
 }
 void AnalyzerSoft::GetPrices(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
+    Dereference();
+    return;
+  }
   //Parse, check params and prepare result struct
   json Params = req.GetParams();
   uint64_t To         = Params["To"];
@@ -1041,9 +1128,13 @@ void AnalyzerSoft::GetPrices(HTTPRequest &req) {
   if(To == 0) To = Now;
   uint64_t From = To - Period;
   uint32_t PeriodSeconds = 900000;
+  //TODO CHECK time zone
   string TimeZone = "Etc/UTC";
   if(Aggreg == "1H") PeriodSeconds = 3600000;
-  if((Period / PeriodSeconds) > 100000) return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
+  if((Period / PeriodSeconds) > 100000) {
+    Dereference();
+    return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
+  }
   json Result;
   Result["To"]                 = To;
   Result["From"]               = From;
@@ -1130,5 +1221,5 @@ void AnalyzerSoft::GetPrices(HTTPRequest &req) {
     } while(Tariff != NULL);
   }
   req.FromJSON(Result);
-  return;  
+  Dereference();
 }
