@@ -767,7 +767,7 @@
         </ccTool>
       </item>
       <item path="Source/Support/Debian/Debian.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Source/Support/OpenWRT/OpenWRT.cpp" ex="false" tool="1" flavor2="8">
@@ -789,18 +789,23 @@
         </ccTool>
       </item>
       <item path="Source/Tariffs/Tariff.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="3">
           <incDir>
-            <pElem>Libs/cctz</pElem>
-            <pElem>Libs/nlohmann</pElem>
-            <pElem>Source/Tariffs</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+            <pElem>Source/Tariffs</pElem>
             <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Support/Debian</pElem>
             <pElem>.</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>DEBIAN</Elem>
+            <Elem>__BUILD__="20190810.2333"</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="8">
@@ -947,6 +952,10 @@
             <pElem>Source/Support/Debian</pElem>
             <pElem>.</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>DEBIAN</Elem>
+            <Elem>__BUILD__="20190810.2333"</Elem>
+          </preprocessorList>
           <undefinedList>
             <Elem>__ARM_ASM_SYNTAX_UNIFIED__</Elem>
             <Elem>__ARM_FEATURE_CRYPTO</Elem>
@@ -966,10 +975,13 @@
       <folder path="0/Source/Support/Debian">
         <ccTool>
           <incDir>
-            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
             <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
           </incDir>
         </ccTool>
       </folder>
@@ -1007,7 +1019,6 @@
             <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/lib/dbus-1.0/include</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL=1</Elem>
             <Elem>OPENWRT=1</Elem>
             <Elem>__ACCUM_EPSILON__=0x1P-15K</Elem>
