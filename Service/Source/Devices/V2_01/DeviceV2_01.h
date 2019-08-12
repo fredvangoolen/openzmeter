@@ -20,10 +20,9 @@
 class DeviceV2_01 : public Device {
   private :
     typedef struct {
-      uint8_t                          OffsetV;
-      uint8_t                          OffsetC;
+      uint8_t                 OffsetV;
+      uint8_t                 OffsetC;
       Analyzer::AnalyzerMode  Mode;
-      AnalyzerSoft                    *Analyzer;
     } Analyzer_t;
     typedef struct {
       float Voltage[3];
@@ -39,12 +38,13 @@ class DeviceV2_01 : public Device {
     pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
     Transfer_t                   pTransfers[DEVICEV2_01_TRANSFERS];
     bool                         pTerminate;               //Marca que deben detenerse los trabajos pendientes
-    vector<Analyzer_t>           pAnalyzers;               //Listado de analyzadores
+    vector<Analyzer_t>           pAnalyzersSetup;          //Listado de analyzadores
     deque<Sample_t>              pBuffer;                  //Read buffer
     vector<float>                pVoltageGain;             //Ganancia de tension
     vector<float>                pCurrentGain;             //Ganancia de corriente
     vector<float>                pVoltageOffset;           //Offset de tension
     vector<float>                pCurrentOffset;           //Offset de corriente
+    vector<float>                pCurrentLevel;            //Current level
     Sample_t                     pCapture;                 //Capture status
     int                          pCaptureSync;             //Flag for detect lost samples
     struct libusb_device_handle *pDeviceHandle;            //Dispositivo de captura
@@ -52,19 +52,20 @@ class DeviceV2_01 : public Device {
     libusb_context              *pContext;                 //USB context
     pthread_mutex_t              pMutex;
   private :
-    static bool             GetInstances();
-    static void            *Capture_Thread(void *args);
-    static void             ReadCallback(struct libusb_transfer *transfer);
-    static int              PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
+    static bool  GetInstances();
+    static void *Capture_Thread(void *args);
+    static void  ReadCallback(struct libusb_transfer *transfer);
+    static int   PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
+    static json  CheckConfig(const json &config);
   private :
-    bool               SetConfig(json config);
-    Analyzer *FindAnalyzer(string serial);
-    bool               Start();
-    bool               Stop();
-    bool               BuffersAppend();
-  public :
-    uint32_t           AnalyzersCount();
     DeviceV2_01(string serial);
+    bool Start(const json &config);
+    bool StartDevice() override;
+    bool StopDevice() override;
+    void GetDevice(HTTPRequest &req) override;
+    void SetDevice(HTTPRequest &req) override;
+    bool BuffersAppend();
+  public :
     ~DeviceV2_01();
 };
 //----------------------------------------------------------------------------------------------------------------------

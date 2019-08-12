@@ -7,7 +7,7 @@
 #include <inttypes.h>
 #include <deque>
 #include <list>
-#include "Analyzers.h"
+#include "Analyzer.h"
 #include "FFT.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define ZEROCROSSING_FILTERSTAGES          5

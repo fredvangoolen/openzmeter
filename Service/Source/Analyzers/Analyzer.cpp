@@ -5,7 +5,7 @@
 #include <math.h>
 #include <sys/types.h>
 #include <string.h>
-#include "Analyzers.h"
+#include "Analyzer.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 Analyzer::Analyzer(const string &id) {
