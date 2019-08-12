@@ -37,7 +37,8 @@ endif
 ifeq ($(DEBUG), true)
 	CFLAGS += -O0 -g -g3 -ggdb -fstack-protector-all
 else
-	CFLAGS += -O2 -Wall -fno-rtti -fopt-info-vec -s -flto -ftree-vectorize
+	CFLAGS  += -O2 -Wall -fno-rtti -fopt-info-vec -s -flto -ftree-vectorize
+	LDFLAGS += -flto
 endif
 ifeq ($(DEVICE_V1_00), true)
 	EXECUTABLE_SOURCE += Source/Devices/V1_00/DeviceV1_00.cpp

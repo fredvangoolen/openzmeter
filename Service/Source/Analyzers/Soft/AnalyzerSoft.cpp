@@ -32,8 +32,8 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pTerminate       = false;
   pPrevTimestamp   = 0;
   pPrevStationary  = false;
-  pCurrentSamples  = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(0));
-  pVoltageSamples  = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(0));
+  pCurrentSamples  = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(0.0));
+  pVoltageSamples  = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(0.0));
   pBlockCycles.reserve(20);
   pLastSamples.resize((pMode == PHASE1) ? 1 : 3);  
   InitAggreg(pAggreg10C, AGGREG_10C);
@@ -42,8 +42,8 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   InitAggreg(pAggreg10M, AGGREG_10M);
   InitAggreg(pAggreg15M, AGGREG_15M);
   InitAggreg(pAggreg1H, AGGREG_1H);
-  for(uint8_t i = 0; i < pVoltageSamples.size(); i++) pVoltageFFT.emplace_back("FFT_V" + to_string(i));
-  for(uint8_t i = 0; i < pCurrentSamples.size(); i++) pCurrentFFT.emplace_back("FFT_I" + to_string(i));
+  for(uint8_t i = 0; i < pVoltageSamples.size(); i++) pVoltageFFT.push_back(new FFT("FFT_V" + to_string(i)));
+  for(uint8_t i = 0; i < pCurrentSamples.size(); i++) pCurrentFFT.push_back(new FFT("FFT_I" + to_string(i)));
   Configure(ConfigManager::ReadConfig(optionPath));
   if(pthread_create(&pEventThread, NULL, Events_Thread, (void*)this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -63,6 +63,16 @@ AnalyzerSoft::~AnalyzerSoft() {
   pTerminate = true;
   DisableSync();
   Abort(&pThread);
+  while(pVoltageFFT.size() > 0) { 
+    FFT *Tmp = pVoltageFFT.back();
+    pVoltageFFT.pop_back();
+    delete Tmp;
+  }
+  while(pCurrentFFT.size() > 0) { 
+    FFT *Tmp = pCurrentFFT.back();
+    pCurrentFFT.pop_back();
+    delete Tmp;
+  }
   pEventLocks.Abort(&pEventThread);
 }
 void AnalyzerSoft::Configure(const json &options) {
@@ -368,8 +378,8 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     uint64_t Start = Tools::GetTime();
     //Init FFTs and event detection threads
     This->pEventLocks.WakeWorker();
-    for(uint i = 0; i < This->pVoltageFFT.size(); i++) This->pVoltageFFT[i].Start(This->pVoltageSamples[i]);
-    for(uint i = 0; i < This->pCurrentFFT.size(); i++) This->pCurrentFFT[i].Start(This->pCurrentSamples[i]);
+    for(uint i = 0; i < This->pVoltageFFT.size(); i++) This->pVoltageFFT[i]->Start(This->pVoltageSamples[i]);
+    for(uint i = 0; i < This->pCurrentFFT.size(); i++) This->pCurrentFFT[i]->Start(This->pCurrentSamples[i]);
     This->pAggreg10C.Frequency = This->CalcFrequency();
     if(!isnan(This->pAggreg10C.Frequency)) This->pAggreg10C.Frequency_Inputs = 1;
     bool Valid = false;
@@ -395,28 +405,26 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       }
     }
     for(uint j = 0; j < This->pAggreg10C.Voltage.size(); j++) {
-      This->pVoltageFFT[j].Wait();
+      This->pVoltageFFT[j]->Wait();
       if(isnan(This->pAggreg10C.Voltage[j])) continue;
       for(uint i = 0; i < This->pAggreg10C.Voltage_Harmonics[j].size(); i++) {
-        This->pAggreg10C.Voltage_Harmonics[j][i] = This->pVoltageFFT[j].BinPower(10 + i * 10);
+        This->pAggreg10C.Voltage_Harmonics[j][i] = This->pVoltageFFT[j]->BinPower(10 + i * 10);
         if(i > 0) This->pAggreg10C.Voltage_THD[j] = This->AccumulateSUM(This->pAggreg10C.Voltage_THD[j], This->pAggreg10C.Voltage_Harmonics[j][i]);
       }
       This->pAggreg10C.Voltage_THD[j] = This->pAggreg10C.Voltage_THD[j] / This->pAggreg10C.Voltage_Harmonics[j][0];
     }
     for(int j = 0; j < ((This->pMode == PHASE1) ? 1 : 3); j++) {
-      This->pCurrentFFT[j].Wait();
+      This->pCurrentFFT[j]->Wait();
       if(isnan(This->pAggreg10C.Current[j]) || isnan(This->pAggreg10C.Voltage[j])) continue;
       This->pAggreg10C.Apparent_Power[j] = This->pAggreg10C.Voltage[j] * This->pAggreg10C.Current[j];
       for(uint i = 0; i < This->pAggreg10C.Current_Harmonics[j].size(); i++) {
-        This->pAggreg10C.Current_Harmonics[j][i] = This->pCurrentFFT[j].BinPower(10 + i * 10);
+        This->pAggreg10C.Current_Harmonics[j][i] = This->pCurrentFFT[j]->BinPower(10 + i * 10);
         if(i > 0) This->pAggreg10C.Current_THD[j] = This->AccumulateSUM(This->pAggreg10C.Current_THD[j], This->pAggreg10C.Current_Harmonics[j][i]);
       }
-      float PHI = FFT::CalcAngle(This->pVoltageFFT[j].Output[10], This->pCurrentFFT[j].Output[10]);
+      float PHI = FFT::CalcAngle(This->pVoltageFFT[j]->Output[10], This->pCurrentFFT[j]->Output[10]);
       This->pAggreg10C.Reactive_Power[j] = This->pAggreg10C.Voltage_Harmonics[j][0] * This->pAggreg10C.Current_Harmonics[j][0] * sin(PHI);
       PHI = fmod(PHI, 2.0 * M_PI);
       if(PHI > M_PI) PHI = PHI -  2.0 * M_PI;
-
-      
       This->pAggreg10C.Phi[j] = PHI * 180.0 / M_PI;
       This->pAggreg10C.Current_THD[j] = This->pAggreg10C.Current_THD[j] / This->pAggreg10C.Current_Harmonics[j][0];
       This->pAggreg10C.Active_Energy[j] = (This->pAggreg10C.Active_Power[j] * This->pCurrentSamples[j].size()) / (This->pSamplerate * 3600.0);
@@ -424,10 +432,10 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       This->pAggreg10C.Reactive_Energy[j] = (This->pAggreg10C.Reactive_Power[j] * This->pAggreg10C.Current_Inputs[j]) / (This->pSamplerate * 3600.0);
     }
     if(This->pMode == PHASE3N) {
-      This->pCurrentFFT[3].Wait();
+      This->pCurrentFFT[3]->Wait();
       if(!isnan(This->pAggreg10C.Current[3])) {
         for(uint i = 0; i < This->pAggreg10C.Current_Harmonics[3].size(); i++) {
-          This->pAggreg10C.Current_Harmonics[3][i] = This->pCurrentFFT[3].BinPower(10 + i * 10);
+          This->pAggreg10C.Current_Harmonics[3][i] = This->pCurrentFFT[3]->BinPower(10 + i * 10);
           if(i > 0) This->pAggreg10C.Current_THD[3] = This->AccumulateSUM(This->pAggreg10C.Current_THD[3], norm(This->pAggreg10C.Current_Harmonics[3][i]));
         }
         This->pAggreg10C.Current_THD[3] = sqrt(This->pAggreg10C.Current_THD[3]) / sqrt(norm(This->pAggreg10C.Current_Harmonics[3][0]));
@@ -879,7 +887,7 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
         json Ch = json::array();
         for(uint i = 0; i < pAggreg10C.Voltage_Harmonics[n].size(); i++) {
           json Row = json::array();
-          complex<float> Val = pVoltageFFT[n].Output[10 + i * 10] * (float)M_SQRT2;
+          complex<float> Val = pVoltageFFT[n]->Output[10 + i * 10] * (float)M_SQRT2;
           Row.push_back(Val.real());
           Row.push_back(Val.imag());
           Ch.push_back(Row);
@@ -892,7 +900,7 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
         json Ch = json::array();
         for(uint i = 0; i < pAggreg10C.Current_Harmonics[n].size(); i++) {
           json Row = json::array();
-          complex<float> Val = pCurrentFFT[n].Output[10 + i * 10] * (float)M_SQRT2;
+          complex<float> Val = pCurrentFFT[n]->Output[10 + i * 10] * (float)M_SQRT2;
           Row.push_back(Val.real());
           Row.push_back(Val.imag());
           Ch.push_back(Row);
@@ -903,14 +911,14 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
       Result["Voltage_FFT"] = json::array();
       for(uint i = 0; i < pVoltageFFT.size(); i++) {
         json Ch = json::array();
-        for(uint n = 0; n < pVoltageFFT[i].Output.size(); n++) Ch.push_back(pVoltageFFT[i].BinPower(n));
+        for(uint n = 0; n < pVoltageFFT[i]->Output.size(); n++) Ch.push_back(pVoltageFFT[i]->BinPower(n));
         Result["Voltage_FFT"].push_back(Ch);
       }
     } else if(Serie == "CURRENT_FFT") {
       Result["Current_FFT"] = json::array();
       for(uint i = 0; i < pCurrentFFT.size(); i++) {
         json Ch = json::array();
-        for(uint n = 0; n < pCurrentFFT[i].Output.size(); n++) Ch.push_back(pCurrentFFT[i].BinPower(n));
+        for(uint n = 0; n < pCurrentFFT[i]->Output.size(); n++) Ch.push_back(pCurrentFFT[i]->BinPower(n));
         Result["Current_FFT"].push_back(Ch);
       }
     } else if(Serie == "VOLTAGE_SAMPLES") {
