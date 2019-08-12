@@ -114,7 +114,6 @@ bool DeviceV2_01::Start(const json &config) {
   pAnalyzersLock.WriteUnlock();
   if(libusb_init(&pContext) < 0) {
     LOGFile::Error("Can not open libUSB...\n");
-    pthread_mutex_unlock(&pMutex);
     return false;
   }
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
@@ -138,35 +137,35 @@ json DeviceV2_01::CheckConfig(const json& config) {
   json ConfigOUT = json::object();
   ConfigOUT["VoltageGain"] = vector<float>(3, 0.0);
   ConfigOUT["VoltageOffset"] = vector<float>(3, 0.0);
-  ConfigOUT["CurrentGain"] = vector<float>(3, 0.0);
-  ConfigOUT["CurrentOffset"] = vector<float>(3, 0.0);
-  ConfigOUT["CurrentLevel"] = vector<float>(3, 0.0);
+  ConfigOUT["CurrentGain"] = vector<float>(4, 0.0);
+  ConfigOUT["CurrentOffset"] = vector<float>(4, 0.0);
+  ConfigOUT["CurrentLevel"] = vector<float>(4, 1000000.0);
   ConfigOUT["AutoStart"] = false;
   ConfigOUT["Outputs"] = json::array();
   if(config.is_object()) {
     if(config.contains("VoltageGain") && config["VoltageGain"].is_array() && (config["VoltageGain"].size() == 3)) {
       for(uint n = 0; n < 3; n++) {
-        if(config["VoltageGain"][n].is_number()) ConfigOUT["VoltageGain"][n] = config["VoltageGain"][n];
+        if(config["VoltageGain"][n].is_number() && (config["VoltageGain"][n] >= -10.0) && (config["VoltageGain"][n] <= 10.0)) ConfigOUT["VoltageGain"][n] = config["VoltageGain"][n];
       }
     }
     if(config.contains("VoltageOffset") && config["VoltageOffset"].is_array() && (config["VoltageOffset"].size() == 3)) {
       for(uint n = 0; n < 3; n++) {
-        if(config["VoltageOffset"][n].is_number()) ConfigOUT["VoltageOffset"][n] = config["VoltageOffset"][n];
+        if(config["VoltageOffset"][n].is_number() && (config["VoltageOffset"][n] >= -20.0) && (config["VoltageOffset"][n] <= 20.0)) ConfigOUT["VoltageOffset"][n] = config["VoltageOffset"][n];
       }
     }
     if(config.contains("CurrentGain") && config["CurrentGain"].is_array() && (config["CurrentGain"].size() == 4)) {
       for(uint n = 0; n < 4; n++) {
-        if(config["CurrentGain"][n].is_number()) ConfigOUT["CurrentGain"][n] = config["CurrentGain"][n];
+        if(config["CurrentGain"][n].is_number() && (config["CurrentGain"][n] >= -10.0) && (config["CurrentGain"][n] <= 10.0)) ConfigOUT["CurrentGain"][n] = config["CurrentGain"][n];
       }
     }
     if(config.contains("CurrentOffset") && config["CurrentOffset"].is_array() && (config["CurrentOffset"].size() == 4)) {
       for(uint n = 0; n < 4; n++) {
-        if(config["CurrentOffset"][n].is_number()) ConfigOUT["CurrentOffset"][n] = config["CurrentOffset"][n];
+        if(config["CurrentOffset"][n].is_number() && (config["CurrentOffset"][n] >= -10.0) && (config["CurrentOffset"][n] <= 10.0)) ConfigOUT["CurrentOffset"][n] = config["CurrentOffset"][n];
       }
     }
     if(config.contains("CurrentLevel") && config["CurrentLevel"].is_array() && (config["CurrentLevel"].size() == 4)) {
       for(uint n = 0; n < 4; n++) {
-        if(config["CurrentLevel"][n].is_number()) ConfigOUT["CurrentLevel"][n] = config["CurrentLevel"][n];
+        if(config["CurrentLevel"][n].is_number() && (config["CurrentLevel"][n] > 0.001) && (config["CurrentLevel"][n] <= 1000000.0)) ConfigOUT["CurrentLevel"][n] = config["CurrentLevel"][n];
       }
     }
     if(config.contains("AutoStart") && config["AutoStart"].is_boolean()) ConfigOUT["AutoStart"] = config["AutoStart"];
@@ -192,7 +191,7 @@ json DeviceV2_01::CheckConfig(const json& config) {
           if((CurrentMask & 0x0E) != 0) continue;
           CurrentMask |= 0x0E;
         }
-        Output["Analyzer"] = AnalyzerSoft::CheckConfig(config[n]["Analyzer"]);
+        Output["Analyzer"] = AnalyzerSoft::CheckConfig(config["Outputs"][n].contains("Analyzer") ? config["Outputs"][n]["Analyzer"] : json::object());
         ConfigOUT["Outputs"].push_back(Output);
       }      
     }
@@ -265,13 +264,13 @@ void DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
     }
     ((float*)&This->pCapture)[This->pCaptureSync++] = ((float)(Samples[Pos] & 0x1FFF)) - 4096.0;
     if(This->pCaptureSync == 7) {
-      This->pCapture.Voltage[0] = (This->pCapture.Voltage[0] - This->pVoltageOffset[0]) * This->pVoltageGain[0];
-      This->pCapture.Voltage[1] = (This->pCapture.Voltage[1] - This->pVoltageOffset[1]) * This->pVoltageGain[1];
-      This->pCapture.Voltage[2] = (This->pCapture.Voltage[2] - This->pVoltageOffset[2]) * This->pVoltageGain[2];
-      This->pCapture.Current[0] = (This->pCapture.Current[0] - This->pCurrentOffset[0]) * This->pCurrentGain[0];
-      This->pCapture.Current[1] = (This->pCapture.Current[1] - This->pCurrentOffset[1]) * This->pCurrentGain[1];
-      This->pCapture.Current[2] = (This->pCapture.Current[2] - This->pCurrentOffset[2]) * This->pCurrentGain[2];
-      This->pCapture.Current[3] = (This->pCapture.Current[3] - This->pCurrentOffset[3]) * This->pCurrentGain[3];
+      This->pCapture.Voltage[0] = ((This->pCapture.Voltage[0] * 0.110266113281) * (1.0 + (This->pVoltageGain[0] / 100.0))) + This->pVoltageOffset[0];
+      This->pCapture.Voltage[1] = ((This->pCapture.Voltage[1] * 0.110266113281) * (1.0 + (This->pVoltageGain[1] / 100.0))) + This->pVoltageOffset[1];
+      This->pCapture.Voltage[2] = ((This->pCapture.Voltage[2] * 0.110266113281) * (1.0 + (This->pVoltageGain[2] / 100.0))) + This->pVoltageOffset[2];
+      This->pCapture.Current[0] = ((This->pCapture.Current[0] * 201.416015625) * (1.0 + (This->pCurrentGain[0] / 100.0))) / This->pCurrentLevel[0] + This->pCurrentOffset[0];
+      This->pCapture.Current[1] = ((This->pCapture.Current[1] * 201.416015625) * (1.0 + (This->pCurrentGain[1] / 100.0))) / This->pCurrentLevel[1] + This->pCurrentOffset[1];
+      This->pCapture.Current[2] = ((This->pCapture.Current[2] * 201.416015625) * (1.0 + (This->pCurrentGain[2] / 100.0))) / This->pCurrentLevel[2] + This->pCurrentOffset[2];
+      This->pCapture.Current[3] = ((This->pCapture.Current[3] * 201.416015625) * (1.0 + (This->pCurrentGain[3] / 100.0))) / This->pCurrentLevel[3] + This->pCurrentOffset[3];
       if(This->BuffersAppend() == false) {
         LOGFile::Error("Capture buffer overflow! Posible lost of samples\n");
         break;
@@ -330,19 +329,21 @@ bool DeviceV2_01::BuffersAppend() {
       pAnalyzersLock.ReadUnlock();
       return true;
     }
-  }  
+  }
+  pAnalyzersLock.ReadUnlock();
   bool Started = false;
   while((pBuffer.empty() == false) && (Started == false)) {
     Sample_t Sample = pBuffer.front();
     pBuffer.pop_front();
+    pAnalyzersLock.ReadLock();
     for(uint32_t i = 0; i < pAnalyzers.size(); i++) {
       vector<float> Voltage, Current;
       for(uint8_t n = 0; n < ((pAnalyzersSetup[i].Mode == Analyzer::PHASE1) ? 1 : 3); n++) Voltage.push_back(Sample.Voltage[pAnalyzersSetup[i].OffsetV + n]);
       for(uint8_t n = 0; n < ((pAnalyzersSetup[i].Mode == Analyzer::PHASE1) ? 1 : (pAnalyzersSetup[i].Mode == Analyzer::PHASE3) ? 3 : 4); n++) Current.push_back(Sample.Current[pAnalyzersSetup[i].OffsetC + n]);
       if(((AnalyzerSoft*)pAnalyzers[i])->BufferAppend(Voltage, Current, Sampletime) == true) Started = true;
     }
+    pAnalyzersLock.ReadUnlock();
   }
-  pAnalyzersLock.ReadUnlock();
   return true;
 }
 void *DeviceV2_01::Capture_Thread(void *args) {

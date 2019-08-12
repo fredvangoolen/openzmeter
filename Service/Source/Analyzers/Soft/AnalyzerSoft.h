@@ -103,8 +103,8 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks, pri
     Params_t                   pAggreg10M;               //Agregacion de 10 minutos
     Params_t                   pAggreg15M;               //Agregacion de 15 minutos
     Params_t                   pAggreg1H;                //Agregacion de 1 hora
-    vector<FFT>                pVoltageFFT;              //Muestras de FFT tension del bloque
-    vector<FFT>                pCurrentFFT;              //Muestras de FFT corriente del bloque
+    vector<FFT*>               pVoltageFFT;              //Muestras de FFT tension del bloque
+    vector<FFT*>               pCurrentFFT;              //Muestras de FFT corriente del bloque
     pthread_t                  pThread;                  //Hilo de ejecucion
     bool                       pTerminate;               //Marca para finalizar proceso
     uint64_t                   pPrevTimestamp;           //Timestamp del ultimo bloque procesado

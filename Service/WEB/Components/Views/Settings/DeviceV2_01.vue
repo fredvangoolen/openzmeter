@@ -29,8 +29,8 @@
       </div>
       <div v-for="(v, index) in Settings.CurrentGain">
         <div class="col-xs-12 col-sm-4">
-          <label class="control-label">Current {{ index}} level</label>
-          <input-spin :min="-1" :max="1" :value="Settings.CurrentOffset[index]" :increment="0.001" :decimals="3" prepend="μV/A" v-on:change="Settings.CurrentLevel[index] = $event"></input-spin>
+          <label class="control-label">Current {{ index }} level</label>
+          <input-spin :min="0.001" :max="1000000" :value="Settings.CurrentLevel[index]" :increment="0.001" :decimals="3" prepend="μV/A" v-on:change="Settings.CurrentLevel[index] = $event"></input-spin>
         </div>
         <div class="col-xs-12 col-sm-4">
           <label class="control-label">Current {{ index }} correction</label>
@@ -38,7 +38,7 @@
         </div>
         <div class="col-xs-12 col-sm-4">
           <label class="control-label">Current {{ index }} offset</label>
-          <input-spin :min="-1" :max="1" :value="Settings.CurrentOffset[index]" :increment="0.01" prepend="A" v-on:change="Settings.CurrentOffset[index] = $event"></input-spin>
+          <input-spin :min="-10" :max="10" :value="Settings.CurrentOffset[index]" :increment="0.01" prepend="A" v-on:change="Settings.CurrentOffset[index] = $event"></input-spin>
         </div>
       </div>
     </div>
