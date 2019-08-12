@@ -14,7 +14,8 @@
           <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != ''">{{ Error }}</div>
           <spinner v-if="ShowSpinner"></spinner>
           <device-virtual v-if="(ShowSpinner == false) && (Driver == 'Virtual')" ref="options" :settings="Settings"></device-virtual>
-          <device1_01 v-if="(ShowSpinner == false) && (Driver == 'V1.01')" ref="options" :settings="Settings"></device1_01>
+          <device-v1_01 v-if="(ShowSpinner == false) && (Driver == 'V1.01')" ref="options" :settings="Settings"></device-v1_01>
+          <device-v2_01 v-if="(ShowSpinner == false) && (Driver == 'V2.01')" ref="options" :settings="Settings"></device-v2_01>
         </div>
       </div>
     </div>
@@ -23,7 +24,8 @@
 
 <script>
   import DeviceVirtual from './DeviceVirtual.vue';
-  import Device1_01 from './Device1_01.vue';
+  import DeviceV1_01 from './DeviceV1_01.vue';
+  import DeviceV2_01 from './DeviceV2_01.vue';
   import Toggle from 'Components/Toggle.vue';
   import Spinner from 'Components/Spinner.vue';
   export default {
@@ -71,7 +73,7 @@
     destroyed: function() {
       this.$root.$el.removeChild(this.$el);
     },
-    components: { Toggle, DeviceVirtual, Device1_01, Spinner }
+    components: { Toggle, DeviceVirtual, DeviceV1_01, DeviceV2_01, Spinner }
   }
 </script>
 

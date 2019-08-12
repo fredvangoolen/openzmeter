@@ -709,6 +709,7 @@ void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
     return;
   }
   json Response = json::object();
+  pConfigLocks.ReadLock();
   Response["Analyzer"] = pSerial;
   Response["Name"] = pName;
   Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
@@ -723,6 +724,7 @@ void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   Response["GeoPosition"] = pGeo;
   json Remote = GetJSONSyncConfig();  
   Response.insert(Remote.begin(), Remote.end());
+  pConfigLocks.ReadUnlock();
   req.FromJSON(Response);
   Dereference();
 }

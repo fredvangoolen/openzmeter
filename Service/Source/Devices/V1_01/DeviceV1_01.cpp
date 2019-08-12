@@ -101,7 +101,7 @@ bool DeviceV1_01::Start(const json &config) {
   pDeviceHandle = NULL;
   pNewDevice    = NULL;
   pAnalyzersLock.WriteLock();
-  pAnalyzers.emplace_back(new AnalyzerSoft(pSerial, Analyzer::PHASE1, "/Devices/" + pSerial + "/Analyzer", DEVICEV1_01_SAMPLEFREQ));
+  pAnalyzers.push_back(new AnalyzerSoft(pSerial, Analyzer::PHASE1, "/Devices/" + pSerial + "/Analyzer", DEVICEV1_01_SAMPLEFREQ));
   pAnalyzersLock.WriteUnlock();
   if(libusb_init(&pContext) < 0) {
     LOGFile::Error("Can not open libUSB...\n");
