@@ -81,7 +81,7 @@
                     return '<div style="display: inline-block; text-align: right; width: 36px; color: ' + oZm.Series['VOLTAGE'].Color + ' ">' + oZm.Round2(x) + '</div><div style="display: inline-block; text-align: right; width: 36px; color: ' + oZm.Series['CURRENT'].Color + ' ">' + oZm.Round2(x / this.CurrentMult) + '</div>'; }.bind(this)
             },
             x: { ticker: function(min, max) { return Graph.WaveTimeTicks(max, Analyzer); },
-                 valueFormatter: function (x) { return oZm.Round2((x * 1000) / Analyzer.SampleFreq) + ' <em class="x-small">ms</em>'; }
+                 valueFormatter: function (x) { return oZm.Round2((x * 1000) / Analyzer.SampleRate) + ' <em class="x-small">ms</em>'; }
                }
           },
           file: ToShow

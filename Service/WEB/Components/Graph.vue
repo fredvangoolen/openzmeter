@@ -172,8 +172,8 @@
   export default {
     WaveTimeTicks: function(max, analyzer) {
       var ticks = [];
-      for(var i = 0; i <= Math.floor(max / analyzer.SampleFreq * analyzer.NominalFreq); i++) {
-        ticks.push({ v: i * analyzer.SampleFreq / analyzer.NominalFreq, label: oZm.Round2(i / analyzer.NominalFreq * 1000) });
+      for(var i = 0; i <= Math.floor(max / analyzer.SampleRate * analyzer.NominalFreq); i++) {
+        ticks.push({ v: i * analyzer.SampleRate / analyzer.NominalFreq, label: oZm.Round2(i / analyzer.NominalFreq * 1000) });
       }
       return ticks;
     },

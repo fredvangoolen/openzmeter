@@ -118,7 +118,7 @@ void AnalyzerSoft::Configure(const json &options) {
 }
 bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime) {
   if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
-  pConfigLocks.WriteLock();
+  pConfigLocks.ReadLock();
   pDelayVoltage.push_back(voltageSamples);
   pDelayCurrent.push_back(currentSamples);
   vector<float> Voltage = pDelayVoltage.front();
@@ -136,7 +136,7 @@ bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vecto
       Outs[i] = Out;
     }
   }
-  pConfigLocks.WriteUnlock();
+  pConfigLocks.ReadUnlock();
   if(pBlockCycles.size() == pBlockCycles.capacity()) pBlockCycles.clear();
   pCycleLen++;
   if(((pLastSamples[0] >= 0.0) && (Outs[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (Outs[0] > 0.0))) {
@@ -422,6 +422,11 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
         if(i > 0) This->pAggreg10C.Current_THD[j] = This->AccumulateSUM(This->pAggreg10C.Current_THD[j], This->pAggreg10C.Current_Harmonics[j][i]);
       }
       float PHI = FFT::CalcAngle(This->pVoltageFFT[j]->Output[10], This->pCurrentFFT[j]->Output[10]);
+      if(j == 0) {
+        This->pAggreg10C.Voltage_Phase[0] = 0;
+      } else {
+        This->pAggreg10C.Voltage_Phase[j] = FFT::CalcAngle(This->pVoltageFFT[0]->Output[10], This->pVoltageFFT[j]->Output[10]) * 180.0 / M_PI;
+      }
       This->pAggreg10C.Reactive_Power[j] = This->pAggreg10C.Voltage_Harmonics[j][0] * This->pAggreg10C.Current_Harmonics[j][0] * sin(PHI);
       PHI = fmod(PHI, 2.0 * M_PI);
       if(PHI > M_PI) PHI = PHI -  2.0 * M_PI;
@@ -730,6 +735,7 @@ void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   Response["Contract"] = pContract;
   Response["ZipCode"] = pZipCode;
   Response["GeoPosition"] = pGeo;
+  Response["Samplerate"] = pSamplerate;
   json Remote = GetJSONSyncConfig();  
   Response.insert(Remote.begin(), Remote.end());
   pConfigLocks.ReadUnlock();

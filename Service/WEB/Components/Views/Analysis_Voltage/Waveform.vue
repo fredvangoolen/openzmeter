@@ -83,7 +83,7 @@
                   axisLabelFormatter: function (x) { return (Object.keys(Series).length > 0) ? oZm.Round2(x) : ''; }
             },
             x: { ticker: function(min, max) { return Graph.WaveTimeTicks(max, Analyzer); },
-                 valueFormatter: function (x) { return oZm.Round2((x * 1000) / Analyzer.SampleFreq) + ' <em class="x-small">ms</em>'; }
+                 valueFormatter: function (x) { return oZm.Round2((x * 1000) / Analyzer.SampleRate) + ' <em class="x-small">ms</em>'; }
                }
           },
           file: this.Data

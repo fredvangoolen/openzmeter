@@ -26,8 +26,8 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   function GraphWaveTimeTicks(max, analyzer) {
     var ticks = [];
-    for(var i = 0; i <= Math.floor(max / analyzer.SampleFreq * analyzer.NominalFreq); i++) {
-      ticks.push({ v: i * analyzer.SampleFreq / analyzer.NominalFreq, label: oZm.Round2(i / analyzer.NominalFreq * 1000) });
+    for(var i = 0; i <= Math.floor(max / analyzer.SampleRate * analyzer.NominalFreq); i++) {
+      ticks.push({ v: i * analyzer.SampleRate / analyzer.NominalFreq, label: oZm.Round2(i / analyzer.NominalFreq * 1000) });
     }
     return ticks;
   }
@@ -89,7 +89,7 @@
                   axisLabelFormatter: function (x) { return (Object.keys(Series).length > 0) ? oZm.Round2(x) : ''; }
             },
             x: { ticker: function(min, max) { return GraphWaveTimeTicks(max, Analyzer); },
-                 valueFormatter: function (x) { return oZm.Round2((x * 1000) / Analyzer.SampleFreq) + ' <em class="x-small">ms</em>'; }
+                 valueFormatter: function (x) { return oZm.Round2((x * 1000) / Analyzer.SampleRate) + ' <em class="x-small">ms</em>'; }
                }
           },
           file: this.Data
