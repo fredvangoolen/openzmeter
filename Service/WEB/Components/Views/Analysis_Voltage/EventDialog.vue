@@ -53,11 +53,11 @@
       XTicks: function(x) {
         var Analyzer = this.$root.SelectedAnalyzer;
         if((Analyzer == null) || (this.Event == null)) return;
-        var EventDuration = this.Event.SampleDuration / Analyzer.SampleFreq;
+        var EventDuration = this.Event.SampleDuration / Analyzer.SampleRate;
         if(x <= (this.Event.Prev_Samples[0].length + this.Event.Samples[0].length / 2.0)) {
-          return oZm.Round3((x - this.Event.Prev_Samples[0].length) / ((this.ViewMode == 'RMS') ? (Analyzer.NominalFreq * 2.0) : (Analyzer.SampleFreq)));
+          return oZm.Round3((x - this.Event.Prev_Samples[0].length) / ((this.ViewMode == 'RMS') ? (Analyzer.NominalFreq * 2.0) : (Analyzer.SampleRate)));
         } else if(x >= (this.Data.length - (this.Event.Post_Samples[0].length + this.Event.Samples[0].length / 2.0))) {
-          return oZm.Round3(EventDuration + (x - (this.Data.length - this.Event.Post_Samples[0].length)) / ((this.ViewMode == 'RMS') ? (Analyzer.NominalFreq * 2.0) : (Analyzer.SampleFreq)));
+          return oZm.Round3(EventDuration + (x - (this.Data.length - this.Event.Post_Samples[0].length)) / ((this.ViewMode == 'RMS') ? (Analyzer.NominalFreq * 2.0) : (Analyzer.SampleRate)));
         } else {
           return "";
         }
