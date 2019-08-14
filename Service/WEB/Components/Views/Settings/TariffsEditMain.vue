@@ -17,7 +17,7 @@
         <div class="col-xs-12 col-sm-6"><label class="control-label">Name</label><input type="text" class="form-control" v-model="Tariff.Name"></div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Time zone</label>
-          <option-picker :options="TimeZones" :selected="Tariff.TimeZone" v-on:OptionChanged="TimezoneChanged" :big="true"></option-picker>
+          <option-picker :options="TimeZones" :selected="Tariff.TimeZone" v-on:change="TimezoneChanged" :big="true"></option-picker>
         </div>
         <div class="col-xs-12 col-sm-6"><label class="control-label">Start date</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetStartDate"></date-picker></div>
         <div class="col-xs-12 col-sm-6"><label class="control-label">End date</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetEndDate"></date-picker></div>

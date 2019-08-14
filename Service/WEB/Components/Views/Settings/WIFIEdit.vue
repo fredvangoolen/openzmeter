@@ -33,7 +33,7 @@
             </div>
             <div class="col-md-3 col-sm-6">
               <label class="control-label">Mode</label>
-              <option-picker :options="['NONE', 'WEP', 'WPA', 'WPA2']" :selected="Config.KeyMode" ref="KeyType" v-on:OptionChanged="SetKeyType" :big="true"></option-picker>
+              <option-picker :options="['NONE', 'WEP', 'WPA', 'WPA2']" :selected="Config.KeyMode" ref="KeyType" v-on:change="SetKeyType" :big="true"></option-picker>
             </div>
             <div class="col-md-9 col-sm-6">
               <label class="control-label">Password</label>
@@ -43,7 +43,7 @@
               <label class="control-label">IP address</label>
               <div class="input-group">
                 <span class="input-group-addon input-group-addon-toogle">
-                  <toggle ref="EnableDHCP" v-on:Changed="DHCPChanged" onText="DHCP" offText="STATIC"></toggle>
+                  <toggle ref="EnableDHCP" v-on:change="DHCPChanged" onText="DHCP" offText="STATIC"></toggle>
                 </span>
                 <input type="text" class="form-control" ref="IP" :disabled="Config.IPMode==='DHCP'" :value="Config.IP">
               </div>

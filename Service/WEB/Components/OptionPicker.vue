@@ -28,7 +28,7 @@
       OptionClick(option, evt) {
         event.preventDefault();
         this.Selected = option;
-        this.$emit('OptionChanged', option);
+        this.$emit('change', option);
       },
       SetOption: function(option) {
         this.Selected = option;

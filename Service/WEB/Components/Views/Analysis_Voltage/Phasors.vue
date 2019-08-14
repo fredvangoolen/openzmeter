@@ -234,12 +234,12 @@
         var Table = [];
         var Vectors = [];
         for(var i = 0; i < result['Voltage'].length; i++) {
-          Vectors.push([i * 2, 120 * i, result.Voltage[i]]);
-          Vectors.push([i * 2 + 1, 120 * i - result.Phi[i], result.Current[i]]);
-          this.Data.push([Phases[i], "Voltage", i * 120, result['Voltage'][i]]);
-          this.Data.push([Phases[i], "Current", i * 120 - result.Phi[i], result['Current'][i]]);
-          Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(i * 120) + '°', Value: oZm.Round2(result['Voltage'][i]) + ' V' } );
-          Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(i * 120 - result.Phi[i]) + '°', Value: oZm.Round2(result.Current[i]) + ' A'} );
+          Vectors.push([i * 2, result.Voltage_Phase[i], result.Voltage[i]]);
+          Vectors.push([i * 2 + 1, result.Voltage_Phase[i] - result.Phi[i], result.Current[i]]);
+          this.Data.push([Phases[i], "Voltage", result.Voltage_Phase[i], result['Voltage'][i]]);
+          this.Data.push([Phases[i], "Current", result.Voltage_Phase[i] - result.Phi[i], result['Current'][i]]);
+          Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(result.Voltage_Phase[i]) + '°', Value: oZm.Round2(result['Voltage'][i]) + ' V' } );
+          Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(result.Voltage_Phase[i] - result.Phi[i]) + '°', Value: oZm.Round2(result.Current[i]) + ' A'} );
         }
         this.$refs.graph.SetOptions({ file: Vectors });
         this.$refs.table.setData( { data: Table });
