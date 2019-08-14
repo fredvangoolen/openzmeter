@@ -16,7 +16,7 @@
                 <span class="input-group-btn"><button class="btn btn-default delete" type="button" @click="Delete(idx)"><img :src="require('Imgs/cross.png')"></button></span>
                 <input type="text" class="form-control" @change="NameChanged($event, idx)" :value="tax.Name">
               </div></td>
-              <td><option-picker :options="TypeNames" @OptionChanged="TypeChanged($event, idx)" :selected="TypeNames[TypesEnum.indexOf(tax.Type)]"></option-picker></td>
+              <td><option-picker :options="TypeNames" v-on:change="TypeChanged($event, idx)" :selected="TypeNames[TypesEnum.indexOf(tax.Type)]"></option-picker></td>
               <td><div class="input-group input-group-xs">
                 <input type="text" class="form-control text-right" @change="ValueChanged($event, idx)" :value="Round6(tax.Value)"> 
                 <span class="input-group-addon">{{ (tax.Type == 'FIXED_QUANTITY') ? '€/Bill cycle' : '%' }}</span>
@@ -29,11 +29,11 @@
         </div>
         <div class="col-xs-6">
           <label class="control-label">Bill day</label>
-          <option-picker :options="BillDayNames" :selected="BillDayNames[Day]" v-on:OptionChanged="DayChanged"></option-picker>
+          <option-picker :options="BillDayNames" :selected="BillDayNames[Day]" v-on:change="DayChanged"></option-picker>
         </div>
         <div class="col-xs-6">
           <label class="control-label">Bill period</label>
-          <option-picker :options="PeriodNames" :selected="PeriodNames[Period]" v-on:OptionChanged="PeriodChanged"></option-picker>
+          <option-picker :options="PeriodNames" :selected="PeriodNames[Period]" v-on:change="PeriodChanged"></option-picker>
         </div>
       </div>
     </div>

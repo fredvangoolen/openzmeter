@@ -13,9 +13,7 @@
         <div class="modal-body">
           <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != ''">{{ Error }}</div>
           <spinner v-if="ShowSpinner"></spinner>
-          <device-virtual v-if="(ShowSpinner == false) && (Driver == 'Virtual')" ref="options" :settings="Settings"></device-virtual>
-          <device-v1_01 v-if="(ShowSpinner == false) && (Driver == 'V1.01')" ref="options" :settings="Settings"></device-v1_01>
-          <device-v2_01 v-if="(ShowSpinner == false) && (Driver == 'V2.01')" ref="options" :settings="Settings"></device-v2_01>
+          <component v-if="ShowSpinner==false" :is="Driver" ref="options" :settings="Settings"></component>
         </div>
       </div>
     </div>
@@ -30,14 +28,13 @@
   import Spinner from 'Components/Spinner.vue';
   export default {
     data() {
-      return { ShowSpinner: true, ShowDialog: false, Serial: '', Driver: '', Settings: {}, Error: '' };
+      return { ShowSpinner: true, ShowDialog: false, Serial: '', Driver: null, Settings: {}, Error: '' };
     },
     methods: {
       Load: function(dev) {
         this.Serial = dev.Serial;
         this.ShowDialog = true;
         this.ShowSpinner = true;
-        this.Driver = dev.Driver;
         this.$nextTick(function() {
           $(this.$el).modal('show');
         });
@@ -45,6 +42,11 @@
           success: function(result) {
             this.ShowSpinner = false;
             this.Settings = result;
+            if(dev.Driver === 'Virtual') this.Driver = 'DeviceVirtual';
+            if(dev.Driver === 'V2.01') this.Driver = 'DeviceV2_01';
+                 
+                    
+
           }.bind(this)
         });
       },
@@ -53,6 +55,9 @@
         this.ShowDialog = false;
       },
       Save: function() {
+        this.Error = this.$refs.options.Check();
+        setTimeout(function() { this.Error = ''; }.bind(this), 1000);
+        if(this.Error != '') return;
         this.ShowSpinner = true;
         $.ajax({ url: "setDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(Object.assign({Serial: this.Serial}, this.Settings)),
           success: function(result) {

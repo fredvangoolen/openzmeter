@@ -735,7 +735,7 @@ void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   Response["Contract"] = pContract;
   Response["ZipCode"] = pZipCode;
   Response["GeoPosition"] = pGeo;
-  Response["Samplerate"] = pSamplerate;
+  Response["SampleRate"] = pSamplerate;
   json Remote = GetJSONSyncConfig();  
   Response.insert(Remote.begin(), Remote.end());
   pConfigLocks.ReadUnlock();

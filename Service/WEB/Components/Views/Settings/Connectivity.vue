@@ -15,7 +15,7 @@
           <label class="control-label">Bluetooth connection</label>
           <div class="input-group">
             <span class="input-group-addon input-group-addon-toogle">
-              <toggle ref="EnableBT" v-on:Changed="EnableBTChange"></toggle>
+              <toggle ref="EnableBT" v-on:change="EnableBTChange"></toggle>
             </span>
             <input type="text" class="form-control" disabled :value="BTName">
           </div>
@@ -32,7 +32,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
           <label class="control-label">WIFI connection</label>
           <div class="input-group">
             <span class="input-group-addon input-group-addon-toogle">
-              <toggle ref="EnableWIFI" v-on:Changed="EnableWIFIChange"></toggle>
+              <toggle ref="EnableWIFI" v-on:change="EnableWIFIChange"></toggle>
             </span>
             <input type="text" class="form-control" disabled :value="WIFIName">
             <span class="input-group-btn">
@@ -51,7 +51,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
           <label class="control-label">NTP synchronization</label>
           <div class="input-group">
             <span class="input-group-addon input-group-addon-toogle">
-              <toggle ref="EnableNTP" v-on:Changed="EnableNTPChange"></toggle>
+              <toggle ref="EnableNTP" v-on:change="EnableNTPChange"></toggle>
             </span>
             <input type="text" class="form-control" ref="ntpserver" v-on:input="NTPServerChanged" :disabled="!NTPEnabled">
           </div>
