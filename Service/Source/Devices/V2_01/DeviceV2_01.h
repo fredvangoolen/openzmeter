@@ -20,8 +20,9 @@
 class DeviceV2_01 : public Device {
   private :
     typedef struct {
-      uint8_t                 OffsetV;
-      uint8_t                 OffsetC;
+      int8_t                  Voltage[3];
+      int8_t                  Current[4];
+      bool                    CurrentInvert[4];
       Analyzer::AnalyzerMode  Mode;
     } Analyzer_t;
     typedef struct {

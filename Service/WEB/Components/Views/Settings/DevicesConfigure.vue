@@ -42,6 +42,7 @@
           success: function(result) {
             this.ShowSpinner = false;
             this.Settings = result;
+            this.Settings.Serial = dev.Serial;
             if(dev.Driver === 'Virtual') this.Driver = 'DeviceVirtual';
             if(dev.Driver === 'V2.01') this.Driver = 'DeviceV2_01';
                  
@@ -55,9 +56,6 @@
         this.ShowDialog = false;
       },
       Save: function() {
-        this.Error = this.$refs.options.Check();
-        setTimeout(function() { this.Error = ''; }.bind(this), 1000);
-        if(this.Error != '') return;
         this.ShowSpinner = true;
         $.ajax({ url: "setDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(Object.assign({Serial: this.Serial}, this.Settings)),
           success: function(result) {
