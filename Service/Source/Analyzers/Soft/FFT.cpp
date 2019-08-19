@@ -61,9 +61,12 @@ float FFT::CalcAngle(const complex<float> &a, const complex<float> &b) {
   else
     Tmp = atan(a.imag() / a.real()) + M_PI;
   if((b.real() == 0) && (b.imag() == 0)) 
-    return Tmp;
+    Tmp = Tmp;
   else if(b.real() < 0)
-    return Tmp - atan(b.imag() / b.real());
+    Tmp = Tmp - atan(b.imag() / b.real());
   else
-    return Tmp - atan(b.imag() / b.real()) + M_PI;
+    Tmp = Tmp - atan(b.imag() / b.real()) + M_PI;
+  Tmp = fmod(Tmp, 2.0 * M_PI);
+  if(Tmp > M_PI) Tmp = Tmp -  2.0 * M_PI;
+  return Tmp;
 }

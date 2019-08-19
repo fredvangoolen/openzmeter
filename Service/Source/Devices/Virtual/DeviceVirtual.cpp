@@ -147,12 +147,12 @@ void *DeviceVirtual::Capture_Thread(void *args) {
     uint64_t Sampletime = Tools::GetTime();
     if((Analyzer->IsFinished() == true) && (((Sampletime - StartTime) * This->pSampleRate / 1000) > GeneratedSamples)) {
       Voltage.push_back(This->pVoltage * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency));
-      Current.push_back(This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples - Phase) / This->pSampleRate * This->pFrequency));
+      Current.push_back(This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples + Phase) / This->pSampleRate * This->pFrequency));
       if((This->pMode == Analyzer::PHASE3) || (This->pMode == Analyzer::PHASE3N)) {
         Voltage.push_back(This->pVoltage * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency - 2.0 * M_PI / 3.0));
-        Current.push_back(This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples - Phase) / This->pSampleRate * This->pFrequency - 2.0 * M_PI / 3.0));
+        Current.push_back(This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples + Phase) / This->pSampleRate * This->pFrequency - 2.0 * M_PI / 3.0));
         Voltage.push_back(This->pVoltage * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency - 4.0 * M_PI / 3.0));
-        Current.push_back(This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples - Phase) / This->pSampleRate * This->pFrequency - 4.0 * M_PI / 3.0));
+        Current.push_back(This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples + Phase) / This->pSampleRate * This->pFrequency - 4.0 * M_PI / 3.0));
       }
       if(This->pMode == Analyzer::PHASE3) Current.push_back(Current[0] + Current[1] + Current[2]);
       GeneratedSamples++;
