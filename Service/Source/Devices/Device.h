@@ -6,7 +6,7 @@
 #include <vector>
 #include <pthread.h>
 #include <nlohmann/json.hpp>
-#include "Analyzers.h"
+#include "Analyzer.h"
 #include "HTTPServer.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------

@@ -31,7 +31,7 @@ DeviceVirtual::~DeviceVirtual() {
 bool DeviceVirtual::Start(const json &config) {
   pVoltage = config["Voltage"];
   pFrequency = config["Frequency"];
-  pSampleRate = config["Samplerate"];
+  pSampleRate = config["SampleRate"];
   pCurrent = config["Current"];
   pCurrentPhase = config["CurrentPhase"];    
   pMode = (config["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (config["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
@@ -53,7 +53,7 @@ json DeviceVirtual::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Voltage"] = 230.0;
   ConfigOUT["Frequency"] = 50.0;
-  ConfigOUT["Samplerate"] = 10000.0;
+  ConfigOUT["SampleRate"] = 10000.0;
   ConfigOUT["Current"] = 5.0;
   ConfigOUT["CurrentPhase"] = 0.0;
   ConfigOUT["Mode"] = "1PHASE";
@@ -62,7 +62,7 @@ json DeviceVirtual::CheckConfig(const json &config) {
   if(config.is_object()) {
     if(config.contains("Voltage") && config["Voltage"].is_number() && (config["Voltage"] >= 10) && (config["Voltage"] <= 1000)) ConfigOUT["Voltage"] = config["Voltage"];
     if(config.contains("Frequency") && config["Frequency"].is_number() && (config["Frequency"] >= 0) && (config["Frequency"] <= 100)) ConfigOUT["Frequency"] = config["Frequency"];
-    if(config.contains("Samplerate") && config["Samplerate"].is_number() && (config["Samplerate"] >= 10000) && (config["Samplerate"] <= 100000)) ConfigOUT["Samplerate"] = config["Samplerate"];
+    if(config.contains("SampleRate") && config["SampleRate"].is_number() && (config["SampleRate"] >= 10000) && (config["SampleRate"] <= 100000)) ConfigOUT["SampleRate"] = config["SampleRate"];
     if(config.contains("Current") && config["Current"].is_number() && (config["Current"] >= 0.1) && (config["Current"] <= 1000)) ConfigOUT["Current"] = config["Current"];
     if(config.contains("CurrentPhase") && config["CurrentPhase"].is_number() && (config["CurrentPhase"] >= -180.0) && (config["CurrentPhase"] <= 180.0)) ConfigOUT["CurrentPhase"] = config["CurrentPhase"];    
     if(config.contains("Mode") && config["Mode"].is_string() && ((config["Mode"] == "1PHASE") || (config["Mode"] == "3PHASE") || (config["Mode"] == "3PHASE+N"))) ConfigOUT["Mode"] = config["Mode"];
@@ -140,19 +140,19 @@ void *DeviceVirtual::Capture_Thread(void *args) {
   uint64_t StartTime        = Tools::GetTime();
   uint64_t GeneratedSamples = 0;
   AnalyzerSoft *Analyzer    = (AnalyzerSoft*)This->pAnalyzers[0];
+  int32_t Phase = (This->pSampleRate / This->pFrequency) * (This->pCurrentPhase / 360.0);
   while(!This->pTerminate) {
     vector<float> Voltage;
     vector<float> Current;
     uint64_t Sampletime = Tools::GetTime();
-    float Phase = (This->pSampleRate / This->pFrequency) * (This->pCurrentPhase / 360.0);
     if((Analyzer->IsFinished() == true) && (((Sampletime - StartTime) * This->pSampleRate / 1000) > GeneratedSamples)) {
       Voltage.push_back(This->pVoltage * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency));
-      Current.push_back(This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples - Phase) / This->pSampleRate * This->pFrequency));
+      Current.push_back(This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples + Phase) / This->pSampleRate * This->pFrequency));
       if((This->pMode == Analyzer::PHASE3) || (This->pMode == Analyzer::PHASE3N)) {
         Voltage.push_back(This->pVoltage * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency - 2.0 * M_PI / 3.0));
-        Current.push_back(This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples - Phase) / This->pSampleRate * This->pFrequency - 2.0 * M_PI / 3.0));
+        Current.push_back(This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples + Phase) / This->pSampleRate * This->pFrequency - 2.0 * M_PI / 3.0));
         Voltage.push_back(This->pVoltage * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency - 4.0 * M_PI / 3.0));
-        Current.push_back(This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples - Phase) / This->pSampleRate * This->pFrequency - 4.0 * M_PI / 3.0));
+        Current.push_back(This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples + Phase) / This->pSampleRate * This->pFrequency - 4.0 * M_PI / 3.0));
       }
       if(This->pMode == Analyzer::PHASE3) Current.push_back(Current[0] + Current[1] + Current[2]);
       GeneratedSamples++;

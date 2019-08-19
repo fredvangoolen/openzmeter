@@ -20,7 +20,7 @@
         $(this.$refs.check).off('change');
         $(this.$refs.check).bootstrapToggle((checked) ? 'on' : 'off');
         $(this.$refs.check).on('change', function(e) {
-          this.$emit('Changed', $(this.$refs.check).prop('checked'));    
+          this.$emit('change', $(this.$refs.check).prop('checked'));    
         }.bind(this));
       }
     },

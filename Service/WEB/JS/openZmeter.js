@@ -190,7 +190,7 @@ export var Series = {
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['PF'] : ['PF(R)', 'PF(S)', 'PF(T)']; },
   },
   'PHI': { CSS_Class: '', Title: 'Phi', Serie: 'Phi', Units: '', Link: '', 
-    FormatValue: function(val) { return { Units: ((val < 0) ? '° CAP' : (val > 0) ? '° IND' : '°'), Value: Round2(Math.abs(val)) }; },
+    FormatValue: function(val) { return { Units: ((val < 0) ? '° IND' : (val > 0) ? '° CAP' : '°'), Value: Round2(Math.abs(val)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['Phi'] : ['Phi(R)', 'Phi(S)', 'Phi(T)']; },
   },
   'VOLTAGE_THD': { 

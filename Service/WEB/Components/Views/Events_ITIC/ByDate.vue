@@ -19,13 +19,13 @@
       this.GraphOptions = { strokeWidth: 0.5, labels: ["Duration", "Events"], legend: 'follow', plotter: Graph.multiColumnBarPlotter, colors: ["#DF842A"], interactionModel: {},
         drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback,
         axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 14,
+          y: { pixelsPerLabel: 15, axisLabelWidth: 16,
                valueFormatter: function (x) { return x; },
                axisLabelFormatter: function (x) { return ((x % 1) !== 0) ? "" : x; }
              },
           x: {  pixelsPerLabel: 26,
-                valueFormatter: function (x) { return ((x < 0) || (x >= this.Dates.length)) ? "" : moment(this.Dates[x][1]).format('DD<br>MM'); }.bind(this),
-                axisLabelFormatter: function (x) { return ((x < 0) || (x >= this.Dates.length) || (Number.isInteger() === false)) ? "" : moment(this.Dates[x][1]).format('DD<br>MM'); }.bind(this)
+                valueFormatter: (x) => { return ((x < 0) || (x >= this.Dates.length)) ? "" : moment.months()[moment(this.Dates[x][1]).month()]; },
+                axisLabelFormatter: (x) => { return ((x < 0) || (x >= this.Dates.length) || (Number.isInteger(x) === false)) ? "" : moment.monthsShort()[moment(this.Dates[x][1]).month()]; }
              }
         }
       };

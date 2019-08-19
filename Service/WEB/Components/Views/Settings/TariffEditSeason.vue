@@ -16,7 +16,7 @@
         <div class="col-xs-12">
           <label class="control-label">Hourly rates</label>
           <div class="row">
-            <div class="col-lg-3" v-for="(period, hour) in Tariff.Template.Seasons[Index].DayPeriods">
+            <div class="col-xs-3" v-for="(period, hour) in Tariff.Template.Seasons[Index].DayPeriods">
               <div class="btn-group" style="width: 100%; margin-bottom: 2px; box-sizing: content-box">
                 <div class="input-group input-group-xs">    
                   <span class="input-group-addon">{{ ("0" + hour).slice(-2) }}</span>

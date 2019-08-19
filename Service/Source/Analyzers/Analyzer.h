@@ -25,7 +25,6 @@ class Analyzer {
       size_t MaxSize;
     } CurlWriteBuff_t;
     typedef struct {
-//      pthread_t Thread;
       json      Params;
       string    Method;
       uint64_t  Sequence;

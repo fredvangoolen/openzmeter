@@ -15,7 +15,7 @@
           <label class="control-label">Bluetooth connection</label>
           <div class="input-group">
             <span class="input-group-addon input-group-addon-toogle">
-              <toggle ref="EnableBT" v-on:Changed="EnableBTChange"></toggle>
+              <toggle ref="EnableBT" v-on:change="EnableBTChange"></toggle>
             </span>
             <input type="text" class="form-control" disabled :value="BTName">
           </div>
@@ -32,7 +32,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
           <label class="control-label">WIFI connection</label>
           <div class="input-group">
             <span class="input-group-addon input-group-addon-toogle">
-              <toggle ref="EnableWIFI" v-on:Changed="EnableWIFIChange"></toggle>
+              <toggle ref="EnableWIFI" v-on:change="EnableWIFIChange"></toggle>
             </span>
             <input type="text" class="form-control" disabled :value="WIFIName">
             <span class="input-group-btn">
@@ -51,7 +51,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
           <label class="control-label">NTP synchronization</label>
           <div class="input-group">
             <span class="input-group-addon input-group-addon-toogle">
-              <toggle ref="EnableNTP" v-on:Changed="EnableNTPChange"></toggle>
+              <toggle ref="EnableNTP" v-on:change="EnableNTPChange"></toggle>
             </span>
             <input type="text" class="form-control" ref="ntpserver" v-on:input="NTPServerChanged" :disabled="!NTPEnabled">
           </div>
@@ -76,34 +76,42 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
       return { BTName: '', Bluetooth_Support: false, BTChanges: false,
                 WIFIName: '', WIFIDetails: '', WIFI_Support: false, WIFIChanges: false, WIFISettings: {},
                 NTP_Support: false, NTPDetails: '', NTPChanges: false,
-                Loading: false, NTPEnabled: false};
+                Loading: false, NTPEnabled: false };
     },
     created: function() {
       this.BTEnabled = false;
       this.WIFIEnabled = false;
+      this.NTPAjax = null;
+      this.WifiAjax = null;
       this.Timer = null;
       this.Timer2 = null;
     },
     mounted: function() {
       this.Load();
     },
-    beforedestroy: function() {
+    beforeDestroy: function() {
+      if(this.NTPAjax) this.NTPAjax.abort();
+      if(this.WifiAjax) this.WifiAjax.abort();
       clearInterval(this.Timer);
       clearInterval(this.Timer2);
     },
     methods: {
       UpdateTime: function() {
-        $.ajax({ url: "getNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
+        clearInterval(this.Timer2);
+        if(this.NTPAjax) this.NTPAjax.abort();
+        this.NTPAjax = $.ajax({ url: "getNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
           success: function(result) { 
             this.NTPDetails = 'Local timezone : ' + moment.tz.zone(moment.tz.guess()).name + '\nTime           : ' + moment(result.Time).format('DD/MM/YYYY HH:mm:ss');
           }.bind(this),
-          complete: function() { 
-            this.Timer2 = setTimeout(this.UpdateTime, 500); 
+          complete: function() {
+            this.Timer2 = setTimeout(this.UpdateTime, 500);
           }.bind(this)
         });  
       },
       UpdateWifi: function() {
-        $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: "CURRENT" }), 
+        clearInterval(this.Timer);
+        if(this.WifiAjax) this.WifiAjax.abort();
+        this.WifiAjax = $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: "CURRENT" }), 
           success: function(result) { 
             if(result.Connected === true) {
               this.WIFIName = result.ESSID;

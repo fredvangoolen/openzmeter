@@ -7,7 +7,7 @@
 #include <inttypes.h>
 #include <deque>
 #include <list>
-#include "Analyzers.h"
+#include "Analyzer.h"
 #include "FFT.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define ZEROCROSSING_FILTERSTAGES          5
@@ -19,7 +19,7 @@
 #define EVENT_RAWENVELOPETIME            0.5        //Time in seconds before and after event to store RAW samples
 #define EVENT_RMSENVELOPETIME           10.0        //Time in seconds before and after event to store RMS samples
 //----------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks {
+class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks, private InstanceLocks {
   private :
     enum EventType { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
     enum EventState { EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };
@@ -83,6 +83,7 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks {
     static vector<float>  THDRanges;         //Rangos de distorsion harmonica para estadisticas
     static vector<float>  HarmonicsAllowed;  //Rangos permitidos para cada harmonico
   private :
+    RWLocks                    pConfigLocks;             //Locks
     vector< vector<float> >    pVoltageSamples;          //Voltage samples
     vector< vector<float> >    pCurrentSamples;          //Current samples
     float                      pNominalVoltage;          //Analyzer nominal voltage
@@ -127,8 +128,7 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks {
     static void *Analyzer_Thread(void *args);
     static void *Events_Thread(void *args);
   private :
-    void  Start(const json &options);
-    void  Stop();
+    void  Configure(const json &options);
     void  AccumulateAggreg(Params_t &src, const Params_t &dst) const;
     float AccumulateSUM(const float val1, const float val2) const;
     float AccumulateRMS(const float val1, const float val2) const;

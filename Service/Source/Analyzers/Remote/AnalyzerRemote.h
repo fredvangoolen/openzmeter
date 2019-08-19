@@ -5,7 +5,7 @@
 #pragma once
 #include <list>
 #include "HTTPServer.h"
-#include "Analyzers.h"
+#include "Analyzer.h"
 class AnalyzerRemote : public Analyzer {
   private :
     typedef struct {
