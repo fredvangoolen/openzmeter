@@ -1,0 +1,60 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP 4016
+D Quad Analog Switches
+K CMOS SWITCH
+$ENDCMP
+#
+$CMP 4066
+D Quad Ananlog Switches
+K CMOS SWITCH
+$ENDCMP
+#
+$CMP 4P4C
+D RJ connector, 4P4C (4 positions 4 connected), RJ9/RJ10/RJ22
+K 4P4C RJ female connector
+F ~
+$ENDCMP
+#
+$CMP Conn_01x02
+D Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
+$CMP Conn_01x03
+D Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
+$CMP LED_Dual_ACA
+D LED dual, common cathode
+K led diode bicolor dual
+$ENDCMP
+#
+$CMP MCP6004
+D Microchip quad general purpose rail to rail op-amp, 1MHz GBWP
+K quad op amp operational amplifier
+F http://ww1.microchip.com/downloads/en/DeviceDoc/21733j.pdf
+$ENDCMP
+#
+$CMP RJ10
+D RJ connector, 4P4C (4 positions 4 connected)
+K 4P4C RJ female connector
+F ~
+$ENDCMP
+#
+$CMP RJ22
+D RJ connector, 4P4C (4 positions 4 connected)
+K 4P4C RJ female connector
+F ~
+$ENDCMP
+#
+$CMP RJ9
+D RJ connector, 4P4C (4 positions 4 connected)
+K 4P4C RJ female connector
+F ~
+$ENDCMP
+#
+#End Doc Library

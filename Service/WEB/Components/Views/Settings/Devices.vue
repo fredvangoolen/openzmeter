@@ -53,7 +53,7 @@
         $.ajax({ url: "stopDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Serial: id }), 
           success: function(result) { 
             this.LoadTable();
-            this.$root.$children[0].$refs.sidebar.$refs.analyzer.GetAnalyzers();
+            this.$root.$children[0].$refs.sidebar.$refs.analyzer.CheckAnalyzer();
           }.bind(this)
         });
       },
@@ -62,7 +62,7 @@
         $.ajax({ url: "startDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Serial: id }), 
           success: function(result) { 
             this.LoadTable();
-            this.$root.$children[0].$refs.sidebar.$refs.analyzer.GetAnalyzers();
+            this.$root.$children[0].$refs.sidebar.$refs.analyzer.CheckAnalyzer();
           }.bind(this)
         });
       },
