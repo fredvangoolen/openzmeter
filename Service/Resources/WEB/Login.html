@@ -162,7 +162,7 @@
                 localStorage.setItem('LastLogin', Response.LastLogin);
                 localStorage.setItem('UserName', document.getElementById('username').value);
                 setTimeout(function() { 
-                  location.replace('/');
+                  location.reload();
                 }, 500);
               } else {
                 removeClass(document.getElementById('error'), 'hide');
