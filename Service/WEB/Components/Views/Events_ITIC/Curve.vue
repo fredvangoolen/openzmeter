@@ -91,7 +91,7 @@
       $(window).on('resize', this.ResizeHandler.bind(this));
       window.dispatchEvent(new Event('resize'));
     },
-    beforedestroy: function() {
+    beforeDestroy: function() {
       $(window).off('resize', this.ResizeHandler.bind(this));
     },
     methods: {

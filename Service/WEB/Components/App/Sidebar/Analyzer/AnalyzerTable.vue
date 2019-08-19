@@ -41,7 +41,7 @@
         Columns: [
           {name: 'Online', title: 'Online', callback: 'OnlineStatus'},
           {name: 'Name', title: 'Description'}, 
-          {name: 'ID', title: 'Serial'},
+          {name: 'Analyzer', title: 'Serial'},
           {name: '__slot:actions', title: ''}
         ]
       };

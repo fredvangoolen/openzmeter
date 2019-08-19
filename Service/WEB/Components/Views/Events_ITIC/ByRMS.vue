@@ -18,8 +18,7 @@
       this.GraphOptions = { strokeWidth: 1, labels: ["Variation", "Events"], legend: 'follow', plotter: Graph.multiColumnBarPlotter, colors: ["#DF842A"], dateWindow: [-1, this.RMSs.length], interactionModel: {},
         drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback,
         axes: {
-          y: { pixelsPerLabel: 15,
-               axisLabelWidth: 14,
+          y: { pixelsPerLabel: 15, axisLabelWidth: 16,
                valueFormatter: function (x) { return x; },
                axisLabelFormatter: function (x) { return ((x % 1) !== 0) ? "" : x; }
              },

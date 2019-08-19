@@ -15,6 +15,7 @@
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include "DeviceV2_01.h"
+#include "DeviceManager.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceV2_01::pRegistered = DeviceV2_01::GetInstances();
@@ -76,142 +77,186 @@ DeviceV2_01::DeviceV2_01(string serial) {
   pSerial        = serial;
   pDriver        = "V2.01";
   pName          = "Capture device V2.01";
-  pVoltageGain.resize(3, 0.110266113281);
-  pCurrentGain.resize(4, 0.00604248046876);
+  pCaptureThread = 0;
+//  pSignalThread  = 0;
+  pMutex         = PTHREAD_MUTEX_INITIALIZER;
+  pVoltageGain.resize(3, 0.0);
+  pCurrentGain.resize(4, 0.00);
   pVoltageOffset.resize(3, 0.0);
   pCurrentOffset.resize(4, 0.0);
-  pMutex         = PTHREAD_MUTEX_INITIALIZER;
+  pCurrentLevel.resize(4, 1.0);
 }
-Analyzer *DeviceV2_01::FindAnalyzer(string serial) {
-  for(uint32_t i = 0; i < pAnalyzers.size(); i++) {
-    if(pAnalyzers[i].Analyzer == NULL) continue;
-    if(serial == pAnalyzers[i].Analyzer->Serial()) return pAnalyzers[i].Analyzer;
-  }
-  return NULL;
+DeviceV2_01::~DeviceV2_01() {
+  StopDevice();
+  WaitInstances();
 }
-uint32_t DeviceV2_01::AnalyzersCount() {
-  uint32_t Count = 0;
-  for(uint32_t i = 0; i < pAnalyzers.size(); i++) {
-    if(pAnalyzers[i].Analyzer == NULL) continue;
-    Count++;
-  }
-  return Count++;
-}
-bool DeviceV2_01::Start() {
-  pthread_mutex_lock(&pMutex);
-  if(pState == RUNNING) {
-    pthread_mutex_unlock(&pMutex);
-    return false;
-  }
-  LOGFile::Info("Loading 'V2.01' driver configuration for serial '%s'\n", pSerial.c_str());
-  bool AutoStart = false;
-  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
-  if(Config.is_object()) {
-    if(Config["VoltageGain"].is_array() && (Config["VoltageGain"].size() == 3)) {
-      for(uint n = 0; n < 3; n++) {
-        if(Config["VoltageGain"][n].is_number()) pVoltageGain[n] = Config["VoltageGain"][n];
-      }
-    }
-    if(Config["VoltageOffset"].is_array() && (Config["VoltageOffset"].size() == 3)) {
-      for(uint n = 0; n < 3; n++) {
-        if(Config["VoltageOffset"][n].is_number()) pVoltageOffset[n] = Config["VoltageOffset"][n];
-      }
-    }
-    if(Config["CurrentGain"].is_array() && (Config["CurrentGain"].size() == 4)) {
-      for(uint n = 0; n < 4; n++) {
-        if(Config["CurrentGain"][n].is_number()) pCurrentGain[n] = Config["CurrentGain"][n];
-      }
-    }
-    if(Config["CurrentOffset"].is_array() && (Config["CurrentOffset"].size() == 4)) {
-      for(uint n = 0; n < 4; n++) {
-        if(Config["CurrentOffset"][n].is_number()) pCurrentOffset[n] = Config["CurrentOffset"][n];
-      }
-    }
-    if(Config["AutoStart"].is_boolean()) AutoStart = Config["AutoStart"];
-    uint8_t CurrentMask = 0x00;
-    if(Config["Outputs"].is_array()) {
-      for(uint n = 0; n < Config["Outputs"].size(); n++) {
-        Analyzer_t Analyzer;
-        Analyzer.Analyzer = NULL;
-        Analyzer.Mode = Analyzer::PHASE3;
-        Analyzer.OffsetC = 0;
-        Analyzer.OffsetV = 0;
-        if(!Config["Outputs"][n].is_object()) continue;
-        if(Config["Outputs"][n]["Mode"].is_string() && ((Config["Outputs"][n]["Mode"] == "1PHASE") || (Config["Outputs"][n]["Mode"] == "3PHASE") || (Config["Outputs"][n]["Mode"] == "3PHASE+N"))) Analyzer.Mode = (Config["Outputs"][n]["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Config["Outputs"][n]["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
-        if(Analyzer.Mode == Analyzer::PHASE1) {
-          if(Config["Outputs"][n]["CurrentChannel"].is_number() && (Config["Outputs"][n]["CurrentChannel"] >= 0) && (Config["Outputs"][n]["CurrentChannel"] <= 4)) Analyzer.OffsetC = Config["Outputs"][n]["CurrentChannel"];
-          if(Config["Outputs"][n]["VoltageChannel"].is_number() && (Config["Outputs"][n]["VoltageChannel"] >= 0) && (Config["Outputs"][n]["VoltageChannel"] <= 3)) Analyzer.OffsetC = Config["Outputs"][n]["VoltageChannel"];
-          if((CurrentMask & (1 << Analyzer.OffsetC)) != 0) continue;
-          CurrentMask |= (1 << Analyzer.OffsetC);
-        } else if(Analyzer.Mode == Analyzer::PHASE3) {
-          if((CurrentMask & 0x0F) != 0) continue;
-          CurrentMask |= 0x0F;
-        } else if(Analyzer.Mode == Analyzer::PHASE3N) {
-          if((CurrentMask & 0x0E) != 0) continue;
-          CurrentMask |= 0x0E;
-        }
-        pAnalyzers.push_back(Analyzer);
-      }
-    }
-  }
-  Config = json::object();
-  Config["VoltageGain"] = pVoltageGain;
-  Config["VoltageOffset"] = pVoltageOffset;
-  Config["CurrentGain"] = pCurrentGain;
-  Config["CurrentOffset"] = pCurrentOffset;
-  Config["AutoStart"] = AutoStart;
-  Config["Outputs"] = json::array();
-  for(uint n = 0; n < pAnalyzers.size(); n++) {
-    json Analyzer;
-    Analyzer["Mode"] = (pAnalyzers[n].Mode == Analyzer::PHASE1) ? "1PHASE" : (pAnalyzers[n].Mode == Analyzer::PHASE3) ? "3PHASE" : "3PHASE+N";
-    if(pAnalyzers[n].Mode == Analyzer::PHASE1) {
-      Analyzer["CurrentChannel"] = pAnalyzers[n].OffsetC;
-      Analyzer["VoltageChannel"] = pAnalyzers[n].OffsetV;
-    }
-    Config["Outputs"].push_back(Analyzer);
-  }
-  ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
-  if(pState == UNCONFIGURED) {
-    pState = STOPPED;
-    if(AutoStart == false) {
-      pthread_mutex_unlock(&pMutex);
-      pAnalyzers.clear();
-      return true;
-    }
-  }
-  LOGFile::Info("Starting 'V2.01' driver for serial '%s'\n", pSerial.c_str());
-  pTerminate    = false;
+bool DeviceV2_01::Start(const json &config) {
+  for(uint8_t n = 0; n < 3; n++) pVoltageGain[n] = config["VoltageGain"][n];
+  for(uint8_t n = 0; n < 3; n++) pVoltageOffset[n] = config["VoltageOffset"][n];
+  for(uint8_t n = 0; n < 4; n++) pCurrentGain[n] = config["CurrentGain"][n];
+  for(uint8_t n = 0; n < 4; n++) pCurrentOffset[n] = config["CurrentOffset"][n];
+  for(uint8_t n = 0; n < 4; n++) pCurrentLevel[n] = config["CurrentLevel"][n];
+  pTerminate = false;
   pDeviceHandle = NULL;
   pNewDevice    = NULL;
-  for(uint n = 0; n < pAnalyzers.size(); n++) {
-    string Name = (pAnalyzers[n].Mode == Analyzer::PHASE1) ? pSerial + "_1P_" + to_string(pAnalyzers[n].OffsetC) : (pAnalyzers[n].Mode == Analyzer::PHASE3) ? pSerial + "_3P" : pSerial + "_3PN";
-    pAnalyzers[n].Analyzer = new AnalyzerSoft(Name, pAnalyzers[n].Mode, DEVICEV2_01_SAMPLEFREQ);
+  pAnalyzersLock.WriteLock();
+  for(uint8_t n = 0; n < config["Outputs"].size(); n++) {
+    Analyzer_t AnalyzerSetup;
+    AnalyzerSetup.Mode = (config["Outputs"][n]["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (config["Outputs"][n]["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
+    string Name = pSerial;
+    if(AnalyzerSetup.Mode == Analyzer::PHASE1) {
+      string Current = config["Outputs"][n]["Current"];
+      if(config["Outputs"][n]["Voltage"] == "CH1") AnalyzerSetup.Voltage[0] = 0;
+      if(config["Outputs"][n]["Voltage"] == "CH2") AnalyzerSetup.Voltage[0] = 1;
+      if(config["Outputs"][n]["Voltage"] == "CH3") AnalyzerSetup.Voltage[0] = 2;
+      if(Current.find("CH1") != string::npos) AnalyzerSetup.Current[0] = 0;
+      if(Current.find("CH2") != string::npos) AnalyzerSetup.Current[0] = 1;
+      if(Current.find("CH3") != string::npos) AnalyzerSetup.Current[0] = 2;
+      AnalyzerSetup.CurrentInvert[0] = (Current.find("-") != string::npos);
+      Name += "_1P_CH" + to_string(AnalyzerSetup.Current[0]);
+    } else {
+      for(uint i = 0; i < 3; i++) {
+        if(config["Outputs"][n]["Voltage"][i] == "CH1") AnalyzerSetup.Voltage[i] = 0;
+        if(config["Outputs"][n]["Voltage"][i] == "CH2") AnalyzerSetup.Voltage[i] = 1;
+        if(config["Outputs"][n]["Voltage"][i] == "CH3") AnalyzerSetup.Voltage[i] = 2;
+      }
+      for(uint i = 0; i < ((AnalyzerSetup.Mode == Analyzer::PHASE3) ? 3 : 4); i++) {
+        string Current = config["Outputs"][n]["Current"][i];
+        if(Current.find("CH1") != string::npos) AnalyzerSetup.Current[i] = 0;
+        if(Current.find("CH2") != string::npos) AnalyzerSetup.Current[i] = 1;
+        if(Current.find("CH3") != string::npos) AnalyzerSetup.Current[i] = 2;
+        AnalyzerSetup.CurrentInvert[i] = (Current.find("-") != string::npos);
+      }
+      Name += (AnalyzerSetup.Mode == Analyzer::PHASE3) ? "_3P" : "_3PN";
+    }
+    pAnalyzersSetup.push_back(AnalyzerSetup);
+    pAnalyzers.push_back(new AnalyzerSoft(Name, AnalyzerSetup.Mode, "/Devices/" + pSerial + "/Outputs/" + to_string(n) + "/Analyzer", DEVICEV2_01_SAMPLEFREQ));
   }
+  pAnalyzersLock.WriteUnlock();
   if(libusb_init(&pContext) < 0) {
     LOGFile::Error("Can not open libUSB...\n");
-    pthread_mutex_unlock(&pMutex);
     return false;
   }
-  pCaptureSync = -1;
   if(pthread_create(&pCaptureThread, NULL, Capture_Thread, this) != 0) {
+    pCaptureThread = 0;
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(pContext);
-    pthread_mutex_unlock(&pMutex);
     return false;
   }
   if(libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV2_01_VID, DEVICEV2_01_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL) < 0) {
     LOGFile::Error("Failed to register libUSB calback...\n");
     pTerminate = true;
     pthread_join(pCaptureThread, NULL);
+    pCaptureThread = 0;
     libusb_exit(pContext);
-    pthread_mutex_unlock(&pMutex);
     return false;
   }
   pState = RUNNING;
-  pthread_mutex_unlock(&pMutex);
   return true;
 }
-bool DeviceV2_01::Stop() {
+json DeviceV2_01::CheckConfig(const json& config) {
+  json ConfigOUT = json::object();
+  ConfigOUT["VoltageGain"] = vector<float>(3, 0.0);
+  ConfigOUT["VoltageOffset"] = vector<float>(3, 0.0);
+  ConfigOUT["CurrentGain"] = vector<float>(4, 0.0);
+  ConfigOUT["CurrentOffset"] = vector<float>(4, 0.0);
+  ConfigOUT["CurrentLevel"] = vector<float>(4, 1000000.0);
+  ConfigOUT["AutoStart"] = false;
+  ConfigOUT["Outputs"] = json::array();
+  if(config.is_object()) {
+    if(config.contains("VoltageGain") && config["VoltageGain"].is_array() && (config["VoltageGain"].size() == 3)) {
+      for(uint n = 0; n < 3; n++) {
+        if(config["VoltageGain"][n].is_number() && (config["VoltageGain"][n] >= -10.0) && (config["VoltageGain"][n] <= 10.0)) ConfigOUT["VoltageGain"][n] = config["VoltageGain"][n];
+      }
+    }
+    if(config.contains("VoltageOffset") && config["VoltageOffset"].is_array() && (config["VoltageOffset"].size() == 3)) {
+      for(uint n = 0; n < 3; n++) {
+        if(config["VoltageOffset"][n].is_number() && (config["VoltageOffset"][n] >= -20.0) && (config["VoltageOffset"][n] <= 20.0)) ConfigOUT["VoltageOffset"][n] = config["VoltageOffset"][n];
+      }
+    }
+    if(config.contains("CurrentGain") && config["CurrentGain"].is_array() && (config["CurrentGain"].size() == 4)) {
+      for(uint n = 0; n < 4; n++) {
+        if(config["CurrentGain"][n].is_number() && (config["CurrentGain"][n] >= -10.0) && (config["CurrentGain"][n] <= 10.0)) ConfigOUT["CurrentGain"][n] = config["CurrentGain"][n];
+      }
+    }
+    if(config.contains("CurrentOffset") && config["CurrentOffset"].is_array() && (config["CurrentOffset"].size() == 4)) {
+      for(uint n = 0; n < 4; n++) {
+        if(config["CurrentOffset"][n].is_number() && (config["CurrentOffset"][n] >= -10.0) && (config["CurrentOffset"][n] <= 10.0)) ConfigOUT["CurrentOffset"][n] = config["CurrentOffset"][n];
+      }
+    }
+    if(config.contains("CurrentLevel") && config["CurrentLevel"].is_array() && (config["CurrentLevel"].size() == 4)) {
+      for(uint n = 0; n < 4; n++) {
+        if(config["CurrentLevel"][n].is_number() && (config["CurrentLevel"][n] > 0.001) && (config["CurrentLevel"][n] <= 1000000.0)) ConfigOUT["CurrentLevel"][n] = config["CurrentLevel"][n];
+      }
+    }
+    if(config.contains("AutoStart") && config["AutoStart"].is_boolean()) ConfigOUT["AutoStart"] = config["AutoStart"];
+    if(config.contains("Outputs") && config["Outputs"].is_array()) {
+      uint8_t CurrentMask = 0x00;
+      for(uint8_t n = 0; n < config["Outputs"].size(); n++) {
+        if(!config["Outputs"][n].is_object()) continue;
+        json Output     = json::object();
+        bool Error      = false;
+        Output["Mode"]  = "1PHASE";
+        if(config["Outputs"][n].contains("Mode") && config["Outputs"][n]["Mode"].is_string() && ((config["Outputs"][n]["Mode"] == "1PHASE") || (config["Outputs"][n]["Mode"] == "3PHASE") || (config["Outputs"][n]["Mode"] == "3PHASE+N"))) Output["Mode"] = config["Outputs"][n]["Mode"];
+        if(Output["Mode"] == "1PHASE") {
+          Output["Voltage"] = "CH1";
+          Output["Current"] = "+CH1";
+          if(config["Outputs"][n].contains("Voltage") && config["Outputs"][n]["Voltage"].is_string() && ((config["Outputs"][n]["Voltage"] == "CH1") || (config["Outputs"][n]["Voltage"] == "CH2") || (config["Outputs"][n]["Voltage"] == "CH3"))) Output["Voltage"] = config["Outputs"][n]["Voltage"];
+          if(config["Outputs"][n].contains("Current") && config["Outputs"][n]["Current"].is_string() && ((config["Outputs"][n]["Current"] == "+CH1") || (config["Outputs"][n]["Current"] == "-CH1") || (config["Outputs"][n]["Current"] == "+CH2") || (config["Outputs"][n]["Current"] == "-CH2") || (config["Outputs"][n]["Current"] == "+CH3") || (config["Outputs"][n]["Current"] == "-CH3") || (config["Outputs"][n]["Current"] == "+CH4") || (config["Outputs"][n]["Current"] == "-CH4"))) Output["Current"] = config["Outputs"][n]["Current"];
+          string CurrentCH = Output["Current"];
+          uint8_t Channel = CurrentCH[3] - '1';
+          if((CurrentMask & (1 << Channel)) != 0) Error = true;
+          CurrentMask |= (1 << Channel);
+        } else {
+          Output["Voltage"] = json::parse("[\"CH1\", \"CH2\", \"CH3\"]");
+          Output["Current"] = ((Output["Mode"] == "3PHASE") ? json::parse("[\"+CH1\", \"+CH2\", \"+CH3\"]") : json::parse("[\"+CH1\", \"+CH2\", \"+CH3\", \"+CH4\"]"));
+          if(config["Outputs"][n].contains("Voltage") && config["Outputs"][n]["Voltage"].is_array() && (config["Outputs"][n]["Voltage"].size() == 3) && config["Outputs"][n].contains("Current") && config["Outputs"][n]["Current"].is_array() && (config["Outputs"][n]["Current"].size() == ((Output["Mode"] == "3PHASE") ? 3 : 4))) {
+            for(uint8_t i = 0; i < 3; i++) {
+              Output["Voltage"].push_back("CH" + to_string(i + 1));
+              if(config["Outputs"][n]["Voltage"][i].is_string() && ((config["Outputs"][n]["Voltage"][i] == "CH1") || (config["Outputs"][n]["Voltage"][i] == "CH2") || (config["Outputs"][n]["Voltage"][i] == "CH3"))) Output["Voltage"][i] = config["Outputs"][n]["Voltage"][i];
+            }
+            for(uint8_t i = 0; i < ((Output["Mode"] == "3PHASE") ? 3 : 4); i++) {
+              Output["Current"].push_back("+CH" + to_string(i + 1));
+              if(config["Outputs"][n]["Current"][i].is_string() && ((config["Outputs"][n]["Current"][i] == "+CH1") || (config["Outputs"][n]["Current"][i] == "-CH1") || (config["Outputs"][n]["Current"][i] == "+CH2") || (config["Outputs"][n]["Current"][i] == "-CH2") || (config["Outputs"][n]["Current"][i] == "+CH3") || (config["Outputs"][n]["Current"][i] == "-CH3") || (config["Outputs"][n]["Current"][i] == "+CH4") || (config["Outputs"][n]["Current"][i] == "-CH4"))) Output["Current"][i] = config["Outputs"][n]["Current"][i];
+            }
+          }
+        }
+        for(uint8_t i = 0; i < ((Output["Mode"] == "3PHASE") ? 3 : 4); i++) {
+          string CurrentCH = Output["Current"][i];
+          uint8_t Channel = CurrentCH[3] - '1';
+          if((CurrentMask & (1 << Channel)) != 0) Error = true;
+          CurrentMask |= (1 << Channel);
+        }
+        Output["Analyzer"] = AnalyzerSoft::CheckConfig(config["Outputs"][n].contains("Analyzer") ? config["Outputs"][n]["Analyzer"] : json::object());
+        if(Error == false) ConfigOUT["Outputs"].push_back(Output);
+      }      
+    }
+  }
+  return ConfigOUT;
+}
+bool DeviceV2_01::StartDevice() {
+  pthread_mutex_lock(&pMutex);
+  if(pState == RUNNING) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  LOGFile::Info("Loading 'V2.01' driver configuration for serial '%s'\n", pSerial.c_str());
+  json Config = CheckConfig(ConfigManager::ReadConfig("/Devices/" + pSerial));
+  bool AutoStart = Config["AutoStart"];
+  ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
+  if(pState == UNCONFIGURED) {
+    pState = STOPPED;
+    if(AutoStart == false) {
+      pthread_mutex_unlock(&pMutex);
+      return true;
+    }
+  }
+  LOGFile::Info("Starting 'V2.01' driver for serial '%s'\n", pSerial.c_str());
+  bool Result = Start(Config);  
+  pthread_mutex_unlock(&pMutex);
+  return Result;
+}
+bool DeviceV2_01::StopDevice() {
   pthread_mutex_lock(&pMutex);
   if(pState != RUNNING) {
     pthread_mutex_unlock(&pMutex);
@@ -220,17 +265,17 @@ bool DeviceV2_01::Stop() {
   LOGFile::Info("Stopping 'V2.01' driver for serial '%s'\n", pSerial.c_str());
   pTerminate = true;
   pthread_join(pCaptureThread, NULL);
-  for(uint n = 0; n < pAnalyzers.size(); n++) {
-    if(pAnalyzers[n].Analyzer != NULL) delete pAnalyzers[n].Analyzer;
-    pAnalyzers[n].Analyzer = NULL;
+  pAnalyzersLock.WriteLock();
+  while(pAnalyzers.size() > 0) {
+    Analyzer *Analyzer = pAnalyzers.back();
+    pAnalyzers.pop_back();
+    pAnalyzersSetup.pop_back();
+    delete Analyzer;    
   }
-  pAnalyzers.clear();
+  pAnalyzersLock.WriteUnlock();
   pState = STOPPED;
   pthread_mutex_unlock(&pMutex);
   return true;
-}
-DeviceV2_01::~DeviceV2_01() {
-  Stop();
 }
 void DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV2_01 *This = (DeviceV2_01*)transfer->user_data;
@@ -255,13 +300,13 @@ void DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
     }
     ((float*)&This->pCapture)[This->pCaptureSync++] = ((float)(Samples[Pos] & 0x1FFF)) - 4096.0;
     if(This->pCaptureSync == 7) {
-      This->pCapture.Voltage[0] = (This->pCapture.Voltage[0] - This->pVoltageOffset[0]) * This->pVoltageGain[0];
-      This->pCapture.Voltage[1] = (This->pCapture.Voltage[1] - This->pVoltageOffset[1]) * This->pVoltageGain[1];
-      This->pCapture.Voltage[2] = (This->pCapture.Voltage[2] - This->pVoltageOffset[2]) * This->pVoltageGain[2];
-      This->pCapture.Current[0] = (This->pCapture.Current[0] - This->pCurrentOffset[0]) * This->pCurrentGain[0];
-      This->pCapture.Current[1] = (This->pCapture.Current[1] - This->pCurrentOffset[1]) * This->pCurrentGain[1];
-      This->pCapture.Current[2] = (This->pCapture.Current[2] - This->pCurrentOffset[2]) * This->pCurrentGain[2];
-      This->pCapture.Current[3] = (This->pCapture.Current[3] - This->pCurrentOffset[3]) * This->pCurrentGain[3];
+      This->pCapture.Voltage[0] = ((This->pCapture.Voltage[0] * 0.110266113281) * (1.0 + (This->pVoltageGain[0] / 100.0))) + This->pVoltageOffset[0];
+      This->pCapture.Voltage[1] = ((This->pCapture.Voltage[1] * 0.110266113281) * (1.0 + (This->pVoltageGain[1] / 100.0))) + This->pVoltageOffset[1];
+      This->pCapture.Voltage[2] = ((This->pCapture.Voltage[2] * 0.110266113281) * (1.0 + (This->pVoltageGain[2] / 100.0))) + This->pVoltageOffset[2];
+      This->pCapture.Current[0] = ((This->pCapture.Current[0] * 201.416015625) * (1.0 + (This->pCurrentGain[0] / 100.0))) / This->pCurrentLevel[0] + This->pCurrentOffset[0];
+      This->pCapture.Current[1] = ((This->pCapture.Current[1] * 201.416015625) * (1.0 + (This->pCurrentGain[1] / 100.0))) / This->pCurrentLevel[1] + This->pCurrentOffset[1];
+      This->pCapture.Current[2] = ((This->pCapture.Current[2] * 201.416015625) * (1.0 + (This->pCurrentGain[2] / 100.0))) / This->pCurrentLevel[2] + This->pCurrentOffset[2];
+      This->pCapture.Current[3] = ((This->pCapture.Current[3] * 201.416015625) * (1.0 + (This->pCurrentGain[3] / 100.0))) / This->pCurrentLevel[3] + This->pCurrentOffset[3];
       if(This->BuffersAppend() == false) {
         LOGFile::Error("Capture buffer overflow! Posible lost of samples\n");
         break;
@@ -290,24 +335,50 @@ int DeviceV2_01::PlugCallback(struct libusb_context *ctx, struct libusb_device *
   }
   return 0;
 }
+void DeviceV2_01::GetDevice(HTTPRequest &req) {
+  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
+  req.FromJSON(Config);
+}
+void DeviceV2_01::SetDevice(HTTPRequest &req) {
+  pthread_mutex_lock(&pMutex);
+  DeviceState State = pState;
+  pthread_mutex_unlock(&pMutex);
+  StopDevice();
+  json Params = req.GetParams();
+  json Config = CheckConfig(Params);
+  bool Result = true;
+  ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
+  pthread_mutex_lock(&pMutex);
+  if((pState != RUNNING) && (State == RUNNING)) Result = Start(Config);
+  pthread_mutex_unlock(&pMutex);
+  json Response;
+  Response["Result"] = Result;
+  req.FromJSON(Response);
+}
 bool DeviceV2_01::BuffersAppend() {
   pBuffer.push_back(pCapture);
   uint64_t Sampletime = Tools::GetTime();
-  for(uint32_t i = 0; i < pAnalyzers.size(); i++) {
-    if(pAnalyzers[i].Analyzer == NULL) continue;
-    if(pAnalyzers[i].Analyzer->IsFinished() == false) return true;
+  pAnalyzersLock.ReadLock();
+  for(uint8_t i = 0; i < pAnalyzers.size(); i++) {
+    if(((AnalyzerSoft*)pAnalyzers[i])->IsFinished() == false) {
+      pAnalyzersLock.ReadUnlock();
+      return true;
+    }
   }
+  pAnalyzersLock.ReadUnlock();
   bool Started = false;
   while((pBuffer.empty() == false) && (Started == false)) {
     Sample_t Sample = pBuffer.front();
     pBuffer.pop_front();
+    pAnalyzersLock.ReadLock();
     for(uint32_t i = 0; i < pAnalyzers.size(); i++) {
-      if(pAnalyzers[i].Analyzer == NULL) continue;
       vector<float> Voltage, Current;
-      for(uint8_t n = 0; n < ((pAnalyzers[i].Mode == Analyzer::PHASE1) ? 1 : 3); n++) Voltage.push_back(Sample.Voltage[pAnalyzers[i].OffsetV + n]);
-      for(uint8_t n = 0; n < ((pAnalyzers[i].Mode == Analyzer::PHASE1) ? 1 : (pAnalyzers[i].Mode == Analyzer::PHASE3) ? 3 : 4); n++) Current.push_back(Sample.Current[pAnalyzers[i].OffsetC + n]);
-      if(pAnalyzers[i].Analyzer->BufferAppend(Voltage, Current, Sampletime) == true) Started = true;
+      for(uint8_t n = 0; n < ((pAnalyzersSetup[i].Mode == Analyzer::PHASE1) ? 1 : 3); n++) Voltage.push_back(Sample.Voltage[pAnalyzersSetup[i].Voltage[n]]);
+      for(uint8_t n = 0; n < ((pAnalyzersSetup[i].Mode == Analyzer::PHASE1) ? 1 : (pAnalyzersSetup[i].Mode == Analyzer::PHASE3) ? 3 : 4); n++) Current.push_back(Sample.Current[pAnalyzersSetup[i].Current[n]] * (pAnalyzersSetup[i].CurrentInvert[n] ? -1.0 : 1.0));
+      if(((AnalyzerSoft*)pAnalyzers[i])->BufferAppend(Voltage, Current, Sampletime) == true) Started = true;
     }
+    pAnalyzersLock.ReadUnlock();
   }
   return true;
 }

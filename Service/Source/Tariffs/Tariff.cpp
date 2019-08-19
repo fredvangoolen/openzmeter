@@ -61,7 +61,7 @@ TariffList::~TariffList() {
 bool Tariff::pRegistered = Tariff::RegisterCallbacks();
 //----------------------------------------------------------------------------------------------------------------------
 Tariff::Tariff(const uint64_t start, const uint64_t end, const string &tz) {
-  cctz::load_time_zone(tz, &pTimeZone);
+  pValidTimeZone = cctz::load_time_zone(tz, &pTimeZone);
   pStartDate = start;
   pEndDate = end;
 }
@@ -80,14 +80,48 @@ bool Tariff::RegisterCallbacks() {
   return true;
 }
 void Tariff::GetTariffsCallback(HTTPRequest &req) {
-  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('TariffID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'CountryCode', country_code))), '[]') as result FROM rates");
+  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('TariffID', tariff, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'TimeZone', time_zone))), '[]') as result FROM tariffs");
   if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
 }
-void Tariff::GetTariffCallback(HTTPRequest &req) {}
-void Tariff::SetTariffCallback(HTTPRequest &req) {}
-void Tariff::DelTariffCallback(HTTPRequest &req) {}
+void Tariff::GetTariffCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  uint32_t TariffID = Params["TariffID"];
+  req.ExecSentenceAsyncResult("SELECT json_build_object('TariffID', tariff, 'Name', name, 'UserName', username, 'StartDate', startdate, 'EndDate', enddate, 'TimeZone', time_zone, 'Template', template) as result FROM tariffs WHERE tariff = " + req.Bind(TariffID));
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
+}
+void Tariff::SetTariffCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["TariffID"].is_number() || !Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["TimeZone"].is_string()) return req.FromString("'TariffID', 'Template', StartDate', 'EndDate', 'TimeZone' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  uint64_t Start    = Params["StartDate"];
+  uint64_t End      = Params["EndDate"];
+  string   Name     = Params["Name"];
+  string   TimeZone = Params["TimeZone"];
+  uint32_t TariffID = Params["TariffID"];
+  Tariff T(Start, End, TimeZone);
+  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
+  bool Result = req.ExecSentenceNoResult("UPDATE tariffs SET name = " + req.Bind(Name) + ", time_zone = " + req.Bind(TimeZone) + ", template = " + req.Bind(T.GetTemplate().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE tariff = " + req.Bind(TariffID) + ((req.UserName() != "admin") ? " AND username = " + req.Bind(req.UserName()) : ""));
+  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+}
+void Tariff::DelTariffCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["TariffID"].is_number()) return req.FromString("'TariffID' param required", MHD_HTTP_BAD_REQUEST);
+  uint32_t TariffID = Params["TariffID"];
+  bool Result = req.ExecSentenceNoResult("DELETE FROM tariffs WHERE tariff = " + req.Bind(TariffID) + ((req.UserName() != "admin") ? " AND username = " + req.Bind(req.UserName()) : ""));
+  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+}
 void Tariff::AddTariffCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["TimeZone"].is_string()) return req.FromString("'Template', StartDate', 'EndDate', 'TimeZone' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  uint64_t Start    = Params["StartDate"];
+  uint64_t End      = Params["EndDate"];
+  string   Name     = Params["Name"];
+  string   TimeZone = Params["TimeZone"];
+  Tariff T(Start, End, TimeZone);
+  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
+  bool Result = req.ExecSentenceNoResult("INSERT into tariffs(name, username, time_zone, template, startdate, enddate) VALUES(" + req.Bind(Name) + ", " + req.Bind(req.UserName()) + ", " + req.Bind(TimeZone) + ", " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Start) + ", " + req.Bind(End) + ")");
+  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
 }
 uint8_t Tariff::FindPeriod(uint64_t timestamp) {
   uint8_t Period = UINT8_MAX;
@@ -105,6 +139,7 @@ uint8_t Tariff::FindPeriod(uint64_t timestamp) {
   return Period;
 }
 bool Tariff::SetTemplate(json t) {
+  if(pValidTimeZone == false) return false;
   if((pStartDate % 900000) != 0) return false;
   if((pEndDate % 900000) != 899999) return false;
   if(!t["Periods"].is_array()) return false;
@@ -223,6 +258,7 @@ json Tariff::GetTemplate() {
   return T;
 }
 bool Tariff::SetConfig(json t) {
+  if(pValidTimeZone == false) return false;
   if(!t["Taxs"].is_array()) return false;
   for(uint32_t n = 0; n < t["Taxs"].size(); n++) {
     Tax_t Tax;

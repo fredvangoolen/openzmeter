@@ -79,3 +79,12 @@ CREATE TABLE IF NOT EXISTS prices (
   sampletime bigint NOT NULL PRIMARY KEY, 
   price real NOT NULL
 ) WITH (OIDS=FALSE);
+
+CREATE TABLE IF NOT EXISTS rates(
+  rate      serial            NOT NULL PRIMARY KEY,  
+  name      character varying NOT NULL,
+  startdate bigint            NOT NULL,
+  enddate   bigint            NOT NULL,
+  config    jsonb             NOT NULL,
+  template  jsonb             NOT NULL
+) WITH (OIDS=FALSE);

@@ -21,7 +21,7 @@
     "jquery-bootstrap-scrolling-tabs": "^2.5.0",
     "moment-timezone": "^0.5.25",
     "momentjs": "^2.0.0",
-    "npm": "^6.8.0",
+    "npm": "^6.10.3",
     "vue": "^2.5.11",
     "vue-blockui": "^1.1.7",
     "vue-bootstrap-table": "^0.1.2",

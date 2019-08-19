@@ -8,10 +8,13 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <cctz/time_zone.h>
 #include "Tools.h"
 #include "HTTPServer.h"
 #include "DeviceManager.h"
 #include "SysSupport.h"
+//---------------------------------------------------------------------------------------------------------------------
+using namespace cctz;
 //---------------------------------------------------------------------------------------------------------------------
 void GetNewsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
@@ -72,6 +75,13 @@ int main(int argc, char** argv) {
   signal(SIGILL, SIG_IGN);
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
+  
+//  for(auto it = cctz::time_zone_map.begin(); it != cctz::time_zone_map.end(); it++) {
+//    printf("%s\n", it->first.c_str());
+//  }
+  
+  
+  
   string ConfigFileName = "/etc/openZmeter.conf";
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {

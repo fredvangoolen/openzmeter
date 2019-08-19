@@ -31,7 +31,7 @@ class FFT : private WorkerLocks {
   public :
     static float CalcAngle(const complex<float> &a, const complex<float> &b);
   public :
-    FFT(char *name);
+    FFT(const string &name);
     void  Start(const vector<float> &in);
     float BinPower(const uint bin);
     void  Wait();

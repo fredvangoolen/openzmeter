@@ -22,16 +22,15 @@
   import moment from 'JS/moment.js';
   export default {
     data: function() {
-      return { ShowDialog: false, Tariff: {}, RateID: null };
+      return { ShowDialog: false, Tariff: {} };
     },
     methods: {
       Show: function(id) {
         this.ShowDialog = true;
-        this.RateID = id;  
         this.$nextTick(function() {  
           if(id === null) {
             this.Tariff = { 
-              Country: null, 
+              TimeZone: moment.tz.guess(), 
               StartDate: moment().startOf('year').valueOf(), 
               EndDate: moment().endOf('year').valueOf(), 
               Name: 'No nane', 
@@ -47,7 +46,7 @@
             this.$refs.Main.Load(this.Tariff);
             $(this.$el).modal('show');
           } else {
-            $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: id }),
+            $.ajax({ url: "getTariff", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ TariffID: id }),
               success: function(result) {
                 this.Tariff = result;
                 this.$refs.Main.Load(this.Tariff);
@@ -58,11 +57,7 @@
         });
       },
       Save: function() {
-//        alert("guardar no terminado!!");
-//        TariffDefinition.Name = $('#inputTariffName').val();
-//  TariffDefinition.Template.Description = $('#inputTariffComments').val();
-//  if(TariffKey !== null) TariffDefinition.RateID = TariffKey;
-        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign(this.Tariff, { CountryCode: 'ESP', RateID: this.RateID }) ), 
+        $.ajax({ url: (this.Tariff.TariffID === undefined) ? 'addTariff' : 'setTariff', timeout: 20000, type: 'POST', dataType: 'text', contentType: 'application/json', data: JSON.stringify(this.Tariff), 
           success: function() {
             this.Close();
             this.$parent.GetTariffs();

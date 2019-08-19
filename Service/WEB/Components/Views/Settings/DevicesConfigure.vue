@@ -13,8 +13,7 @@
         <div class="modal-body">
           <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != ''">{{ Error }}</div>
           <spinner v-if="ShowSpinner"></spinner>
-          <device-virtual v-if="(ShowSpinner == false) && (Driver == 'Virtual')" ref="options" :settings="Settings"></device-virtual>
-          <device1_01 v-if="(ShowSpinner == false) && (Driver == 'V1.01')" ref="options" :settings="Settings"></device1_01>
+          <component v-if="ShowSpinner==false" :is="Driver" ref="options" :settings="Settings"></component>
         </div>
       </div>
     </div>
@@ -23,19 +22,19 @@
 
 <script>
   import DeviceVirtual from './DeviceVirtual.vue';
-  import Device1_01 from './Device1_01.vue';
+  import DeviceV1_01 from './DeviceV1_01.vue';
+  import DeviceV2_01 from './DeviceV2_01.vue';
   import Toggle from 'Components/Toggle.vue';
   import Spinner from 'Components/Spinner.vue';
   export default {
     data() {
-      return { ShowSpinner: true, ShowDialog: false, Serial: '', Driver: '', Settings: {}, Error: '' };
+      return { ShowSpinner: true, ShowDialog: false, Serial: '', Driver: null, Settings: {}, Error: '' };
     },
     methods: {
       Load: function(dev) {
         this.Serial = dev.Serial;
         this.ShowDialog = true;
         this.ShowSpinner = true;
-        this.Driver = dev.Driver;
         this.$nextTick(function() {
           $(this.$el).modal('show');
         });
@@ -43,6 +42,12 @@
           success: function(result) {
             this.ShowSpinner = false;
             this.Settings = result;
+            this.Settings.Serial = dev.Serial;
+            if(dev.Driver === 'Virtual') this.Driver = 'DeviceVirtual';
+            if(dev.Driver === 'V2.01') this.Driver = 'DeviceV2_01';
+                 
+                    
+
           }.bind(this)
         });
       },
@@ -71,7 +76,7 @@
     destroyed: function() {
       this.$root.$el.removeChild(this.$el);
     },
-    components: { Toggle, DeviceVirtual, Device1_01, Spinner }
+    components: { Toggle, DeviceVirtual, DeviceV1_01, DeviceV2_01, Spinner }
   }
 </script>
 
