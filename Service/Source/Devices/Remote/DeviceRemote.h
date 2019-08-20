@@ -18,7 +18,12 @@ class DeviceRemote : public Device {
     static bool GetInstances();
     static void GetRemoteCallback(HTTPRequest &req);
     static void SetRemoteCallback(HTTPRequest &req);
+    static json CheckConfig(const json &config);
   private :
+    pthread_mutex_t  pMutex;                   //Critical sections locks
+  private :
+    DeviceRemote();
+    bool Start(const json &config);
     bool StartDevice();
     bool StopDevice();
     void GetDevice(HTTPRequest &req);
@@ -26,7 +31,6 @@ class DeviceRemote : public Device {
     void GetRemote(HTTPRequest &req);
     void SetRemote(HTTPRequest &req);
   public :
-    DeviceRemote();
     ~DeviceRemote();
 };
 //----------------------------------------------------------------------------------------------------------------------

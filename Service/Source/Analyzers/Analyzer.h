@@ -38,16 +38,18 @@ class Analyzer {
     CURLSH         *pCurl;                    //Shared object for curl lib
     curl_slist     *pCurlHeaders;             //Common headers
     pthread_mutex_t pCurlLocks;               //Curl access control
+    pthread_mutex_t pConfLocks;               //Config access control
     bool            pTerminateSync;           //Signal to terminate sync thread
     pthread_t       pSyncThread;              //Synchronize thread
     string          pSyncServer;              //Sync server
     string          pSyncUser;                //Sync username
     string          pSyncPass;                //Sync password
+  private :
+    void StopSync();
   protected :
     bool CheckRights(HTTPRequest &req, const uint neededAccess) const;
-    bool EnableSync(const string &server, const string &user, const string &pass);
+    bool SetSync(const bool enabled, const string &server, const string &user, const string &pass);
     json GetJSONSyncConfig();
-    void DisableSync();
   private :
     static size_t CurlWriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
     static void   CurlLockCallback(CURL *handle, curl_lock_data data, curl_lock_access access, void *userptr);

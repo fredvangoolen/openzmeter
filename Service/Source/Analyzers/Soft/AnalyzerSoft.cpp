@@ -61,7 +61,6 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
 AnalyzerSoft::~AnalyzerSoft() {
   WaitInstances();
   pTerminate = true;
-  DisableSync();
   Abort(&pThread);
   while(pVoltageFFT.size() > 0) { 
     FFT *Tmp = pVoltageFFT.back();
@@ -106,15 +105,12 @@ void AnalyzerSoft::Configure(const json &options) {
   uint32_t PhaseShift = ((pNominalFrequency / pSamplerate) / 4.0) * ZEROCROSSING_FILTERSTAGES;
   pDelayVoltage.resize(PhaseShift, vector<float>(pVoltageSamples.size(), 0.0));
   pDelayCurrent.resize(PhaseShift, vector<float>(pCurrentSamples.size(), 0.0));
-  if(options["RemoteEnabled"] == true) {
-    string Server = options["RemoteServer"];
-    string User = options["RemoteUser"];
-    string Pass = options["RemotePass"];
-    EnableSync(Server, User, Pass);
-  } else {
-    DisableSync();
-  }
   pConfigLocks.WriteUnlock();
+  string Server = options["RemoteServer"];
+  string User = options["RemoteUser"];
+  string Pass = options["RemotePass"];
+  bool   Enabled = options["RemoteEnabled"];
+  SetSync(Enabled, Server, User, Pass);
 }
 bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime) {
   if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
