@@ -16,9 +16,18 @@ Analyzer::Analyzer(const string &id) {
   pCurl        = NULL;
   pCurlHeaders = NULL;
   pCurlLocks   = PTHREAD_MUTEX_INITIALIZER;
+  pConfLocks   = PTHREAD_MUTEX_INITIALIZER;
 }
 Analyzer::~Analyzer() {
-  DisableSync();
+  StopSync();
+  if(pCurl != NULL) {
+    curl_share_cleanup(pCurl);
+    pCurl = NULL;
+  }
+  if(pCurlHeaders != NULL) {
+    curl_slist_free_all(pCurlHeaders);
+    pCurlHeaders = NULL;
+  }
 }
 string Analyzer::Serial() const {
   return pSerial;
@@ -36,53 +45,52 @@ bool Analyzer::CheckRights(HTTPRequest &req, const uint neededAccess) const {
 }
 json Analyzer::GetJSONSyncConfig() {
   json Response = json::object();
-  Response["RemoteEnabled"] = (pCurl != NULL);
+  pthread_mutex_lock(&pConfLocks);
+  Response["RemoteEnabled"] = (pSyncThread != 0);
   Response["RemoteServer"] = pSyncServer;
   Response["RemoteUser"] = pSyncUser;
   Response["RemotePass"] = pSyncPass;
+  pthread_mutex_unlock(&pConfLocks);
   return Response; 
 }
-bool Analyzer::EnableSync(const string &server, const string &user, const string &pass) {
-  pthread_mutex_lock(&pCurlLocks);
-  if(pCurl != NULL) {
-    pthread_mutex_unlock(&pCurlLocks);  
-    DisableSync();
-    pthread_mutex_unlock(&pCurlLocks);  
-  }
+bool Analyzer::SetSync(const bool enabled, const string &server, const string &user, const string &pass) {
+  StopSync();
+  pthread_mutex_lock(&pConfLocks);
   pSyncServer    = server;
   pSyncUser      = user;
   pSyncPass      = pass;
   pTerminateSync = false;
-  pCurlHeaders   = NULL;
-  pCurl = curl_share_init();
-  pCurlHeaders = curl_slist_append(pCurlHeaders, "Accept: application/json");
-  pCurlHeaders = curl_slist_append(pCurlHeaders, "Connection: keep-alive");
-  pCurlHeaders = curl_slist_append(pCurlHeaders, "Content-Type: application/json");
-  curl_share_setopt(pCurl, CURLSHOPT_LOCKFUNC, CurlLockCallback);
-  curl_share_setopt(pCurl, CURLSHOPT_UNLOCKFUNC, CurlUnlockCallback);
-  curl_share_setopt(pCurl, CURLSHOPT_USERDATA, &pCurlLocks);
-  curl_share_setopt(pCurl, CURLSHOPT_SHARE, CURL_LOCK_DATA_COOKIE);  
+  if(enabled == false) {
+    pthread_mutex_unlock(&pConfLocks);
+    return true;
+  }
+  if(pCurl == NULL) {
+    pCurl = curl_share_init();
+    curl_share_setopt(pCurl, CURLSHOPT_LOCKFUNC, CurlLockCallback);
+    curl_share_setopt(pCurl, CURLSHOPT_UNLOCKFUNC, CurlUnlockCallback);
+    curl_share_setopt(pCurl, CURLSHOPT_USERDATA, &pCurlLocks);
+    curl_share_setopt(pCurl, CURLSHOPT_SHARE, CURL_LOCK_DATA_COOKIE);
+  }
+  if(pCurlHeaders == NULL) {
+    pCurlHeaders = curl_slist_append(pCurlHeaders, "Accept: application/json");
+    pCurlHeaders = curl_slist_append(pCurlHeaders, "Connection: keep-alive");
+    pCurlHeaders = curl_slist_append(pCurlHeaders, "Content-Type: application/json");
+  }
   if(pthread_create(&pSyncThread, NULL, Sync_Thread, (void*)this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pSyncThread = 0;
-    pthread_mutex_unlock(&pCurlLocks);
+    pthread_mutex_unlock(&pConfLocks);
     return false;
   }
+  pthread_mutex_unlock(&pConfLocks);
   return true;  
 }
-void Analyzer::DisableSync() {
-  pthread_mutex_lock(&pCurlLocks);
+void Analyzer::StopSync() {
+  pthread_mutex_lock(&pConfLocks);
   pTerminateSync = true;
   if(pSyncThread != 0) pthread_join(pSyncThread, NULL);
-  if(pCurl != NULL) {
-    curl_share_cleanup(pCurl);
-    pCurl = NULL;
-  }
-  if(pCurlHeaders != NULL) {
-    curl_slist_free_all(pCurlHeaders);
-    pCurlHeaders = NULL;
-  }
-  pthread_mutex_unlock(&pCurlLocks);  
+  pSyncThread = 0;
+  pthread_mutex_unlock(&pConfLocks);  
 }
 size_t Analyzer::CurlWriteCallback(void *contents, size_t size, size_t nmemb, void *userp) {
   CurlWriteBuff_t *Buffer = (CurlWriteBuff_t*)userp;
@@ -112,14 +120,15 @@ void *Analyzer::Sync_Thread(void *args) {
   long            HTTPCode;
   bool            Registered  = false;
   CURL           *Curl        = curl_easy_init();
+  curl_easy_setopt(Curl, CURLOPT_SHARE, This->pCurl);
   curl_easy_setopt(Curl, CURLOPT_HTTPHEADER, This->pCurlHeaders);
   curl_easy_setopt(Curl, CURLOPT_COOKIEFILE, "");
   curl_easy_setopt(Curl, CURLOPT_POST, 1L);
   curl_easy_setopt(Curl, CURLOPT_ACCEPT_ENCODING, "");
   curl_easy_setopt(Curl, CURLOPT_WRITEDATA, (void*)&CurlBuff);
   curl_easy_setopt(Curl, CURLOPT_WRITEFUNCTION, CurlWriteCallback);
-  curl_easy_setopt(Curl, CURLOPT_SHARE, This->pCurl);
-  while(!This->pTerminateSync == false) {
+  
+  while(This->pTerminateSync == false) {
     if(Registered == false) {
       json   Content = json::object();
       string URL     = This->pSyncServer + "/LogIn";
@@ -170,7 +179,6 @@ void *Analyzer::Sync_Thread(void *args) {
                 LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
                 delete Request;
               } else {
-                pthread_setname_np(Thread, Request->Method.c_str());
                 pthread_detach(Thread);
               }
             }
@@ -184,6 +192,7 @@ void *Analyzer::Sync_Thread(void *args) {
         LOGFile::Debug("No pending queries in remote server for analyzar '%s'\n", This->pSerial.c_str());
       } else if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_METHOD_NOT_ALLOWED)) {
         LOGFile::Debug("Device remote is not enabled on remote server\n");
+        usleep(1000000);
       } else {
         LOGFile::Debug("Failed request to remote server for analyzer '%s'\n", This->pSerial.c_str());
         usleep(1000000);
