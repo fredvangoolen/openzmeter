@@ -2912,15 +2912,11 @@ U 1 1 5E457107
 P 2500 2775
 F 0 "J5" H 2580 2817 50  0000 L CNN
 F 1 "Conn_01x03" H 2580 2726 50  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical" H 2500 2775 50  0001 C CNN
+F 2 "Footprints:PinHeader_1x03_P2.54mm_Vertical" H 2500 2775 50  0001 C CNN
 F 3 "~" H 2500 2775 50  0001 C CNN
 	1    2500 2775
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	2300 2675 1650 2675
-Wire Wire Line
-	1650 2775 2300 2775
 $Comp
 L power:GND #PWR0108
 U 1 1 5E55C7EA
@@ -3422,4 +3418,20 @@ Wire Wire Line
 Connection ~ 6625 3175
 Wire Wire Line
 	6625 3175 6625 3275
+Wire Wire Line
+	1650 2775 2100 2775
+Wire Wire Line
+	2100 2775 2100 2675
+Wire Wire Line
+	2100 2675 2300 2675
+Wire Wire Line
+	2300 2775 2175 2775
+Wire Wire Line
+	2175 2775 2175 2725
+Wire Wire Line
+	2175 2725 2025 2725
+Wire Wire Line
+	2025 2725 2025 2675
+Wire Wire Line
+	2025 2675 1650 2675
 $EndSCHEMATC
