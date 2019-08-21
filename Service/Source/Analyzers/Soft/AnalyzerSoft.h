@@ -83,7 +83,6 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks, pri
     static vector<float>  THDRanges;         //Rangos de distorsion harmonica para estadisticas
     static vector<float>  HarmonicsAllowed;  //Rangos permitidos para cada harmonico
   private :
-    RWLocks                    pConfigLocks;             //Locks
     vector< vector<float> >    pVoltageSamples;          //Voltage samples
     vector< vector<float> >    pCurrentSamples;          //Current samples
     float                      pNominalVoltage;          //Analyzer nominal voltage

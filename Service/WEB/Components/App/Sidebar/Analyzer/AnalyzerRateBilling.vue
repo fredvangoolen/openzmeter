@@ -1,7 +1,7 @@
 <template>
   <div class="modal-content" v-if="Show">
     <div class="modal-header">
-      <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Tariffs &raquo; Edit &raquo; Billing</h4></div>
+      <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates &raquo; Edit &raquo; Billing</h4></div>
       <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
@@ -11,7 +11,7 @@
         <div class="col-xs-12">
           <table>
             <tr><td><strong>Concept</strong></td><td><strong>Type</strong></td><td class="text-right"><strong>Value</strong></td></tr>
-            <tr v-for="(tax, idx) in Tariff.Config.Taxs">
+            <tr v-for="(tax, idx) in Rate.Config.Taxs">
               <td><div class="input-group input-group-xs">
                 <span class="input-group-btn"><button class="btn btn-default delete" type="button" @click="Delete(idx)"><img :src="require('Imgs/cross.png')"></button></span>
                 <input type="text" class="form-control" @change="NameChanged($event, idx)" :value="tax.Name">
@@ -26,6 +26,7 @@
               <td colspan="3"><button type="button" class="btn btn-default btn-xs" style="width:100%" @click="Add"><img :src="require('Imgs/plus.png')"> New concept</button></td>
             </tr>
           </table>
+          <hr />
         </div>
         <div class="col-xs-6">
           <label class="control-label">Bill day</label>
@@ -53,20 +54,20 @@
     },
     methods: {
       Round6: oZm.Round6Plain,
-      Load: function(tariff) {
-        if(tariff.Config.Billing.length < 1) {
-          this.Day = moment(tariff.StartDate).date() - 1;
+      Load: function(rate) {
+        if(rate.Config.Billing.length < 1) {
+          this.Day = moment(rate.StartDate).date() - 1;
         } else {
-          this.Day = moment(tariff.Config.Billing[0]).date() - 1;
+          this.Day = moment(rate.Config.Billing[0]).date() - 1;
         }
         this.Day = Math.max(0, Math.min(this.Day, this.BillDayNames.length - 1));
-        if(tariff.Config.Billing.length < 2) {
+        if(rate.Config.Billing.length < 2) {
           this.Period = 0;
         } else {
-          this.Period = moment(tariff.Config.Billing[1]).diff(moment(tariff.Config.Billing[0]), 'months') - 1;
+          this.Period = moment(rate.Config.Billing[1]).diff(moment(rate.Config.Billing[0]), 'months') - 1;
         }
         this.Period = Math.max(0, Math.min(this.Period, this.PeriodNames.length - 1));
-        this.Tariff = tariff;
+        this.Rate = rate;
         this.CreateBuildPeriods();
         this.Show = true;
       },
@@ -79,39 +80,39 @@
         this.CreateBuildPeriods();
       },
       CreateBuildPeriods: function() {
-        this.Tariff.Config.Billing = [];
-        var Date = moment(this.Tariff.StartDate);
+        this.Rate.Config.Billing = [];
+        var Date = moment(this.Rate.StartDate);
         while(true) {
           Date = Date.add(this.Period + 1, 'M').date(this.Day + 1);
-          if(Date.valueOf() >= this.Tariff.EndDate) break;
-          this.Tariff.Config.Billing.push(Date.startOf('day').valueOf() - 1);
+          if(Date.valueOf() >= this.Rate.EndDate) break;
+          this.Rate.Config.Billing.push(Date.startOf('day').valueOf() - 1);
         }
       },
       Back: function() {
         this.Show = false;
-        this.$parent.$refs.Tariff.Show = true;
+        this.$parent.$refs.Rate.Show = true;
       },
       Add: function() {
-        this.Tariff.Config.Taxs.push({Name: 'Unnamed tax', Type: 'PERCENT_TOTAL', Value: 0.0});
+        this.Rate.Config.Taxs.push({Name: 'Unnamed tax', Type: 'PERCENT_TOTAL', Value: 0.0});
       },
       Delete: function(idx) {
         if(confirm("Delete '"+this.Tariff.Config.Taxs[idx].Name+"' tax?")){
-          this.Tariff.Config.Taxs.splice(idx, 1);
+          this.Rate.Config.Taxs.splice(idx, 1);
         }
       },
       TypeChanged: function(name, idx) {
-        this.Tariff.Config.Taxs[idx].Type = this.TypesEnum[this.TypeNames.indexOf(name)];
-        this.Tariff = Object.assign({}, this.Tariff);
+        this.Rate.Config.Taxs[idx].Type = this.TypesEnum[this.TypeNames.indexOf(name)];
+        this.Rate = Object.assign({}, this.Tariff);
       },
       ValueChanged: function(value, idx) {
         var Value = parseFloat(value.target.value);
         if(isNaN(Value) === true) Value = 0.0;
-        this.Tariff.Config.Taxs[idx].Value = Value;
-        this.Tariff = Object.assign({}, this.Tariff);
+        this.Rate.Config.Taxs[idx].Value = Value;
+        this.Rate = Object.assign({}, this.Tariff);
       },
       NameChanged: function(value, idx) {
-        this.Tariff.Config.Taxs[idx].Name = value.target.value;
-        this.Tariff = Object.assign({}, this.Tariff);
+        this.Rate.Config.Taxs[idx].Name = value.target.value;
+        this.Rate = Object.assign({}, this.Rate);
       }
     },
     created: function() {

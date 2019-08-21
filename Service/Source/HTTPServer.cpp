@@ -241,6 +241,8 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         Request->MimeType("text/html");
       } else if(Request->UserName().empty()) {
         return SendRedirect(connection, "Login");
+      } else if((URL == "Login") && !Request->UserName().empty()) {
+        return SendRedirect(connection, "");
       } else {
         size_t Len;
         const char *Content = (const char *)ResourceLoader::GetFile("WEB/Index.html", &Len);

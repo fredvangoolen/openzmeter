@@ -1,10 +1,10 @@
 <template>
   <div class="modal-content" v-if="Show">
     <div class="modal-header">
-      <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Tariffs</h4></div>
+      <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner }" @click="Add"><img :src="require('Imgs/plus.png')" alt="Add tariff"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner }" v-on:click="Add"><img :src="require('Imgs/plus.png')" alt="Add rate"></button>
+        <button type="button" class="btn btn-default btn-xs" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
     </div>
     <div class="modal-body">
@@ -61,7 +61,7 @@
             this.Error = '';
             for(var n = 1; n < result.length; n++) {
               if(result[n].StartDate <= result[n - 1].EndDate) {
-                this.Error = 'Assigned tariffs overlaps, please check date ranges';
+                this.Error = 'Assigned rates overlaps, please check date ranges';
                 return;
               }
             }
@@ -73,17 +73,17 @@
       },
       Edit: function(row) {
         this.Show = false;
-        this.$parent.$refs.Tariff.Load(this.Analyzer, row.RateID);
+        this.$parent.$refs.Rate.Load(this.Analyzer, row.RateID);
       },
       Delete: function(row) {
-        if(confirm("Delete '"+row.Name+"' tariff?")){
+        if(confirm("Delete '"+row.Name+"' rate?")){
           this.ShowSpinner = true;
-          $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: row.RateID, Analyzer: this.Analyzer.Analyzer }), success: function() { this.Load(this.Analyzer); }.bind(this) });
+          $.ajax({ url: "delRate", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: row.RateID, Analyzer: this.Analyzer.Analyzer }), success: function() { this.Load(this.Analyzer); }.bind(this) });
         }
       },
       Add: function() {
         this.Show = false;
-        this.$parent.$refs.Tariff.Load(this.Analyzer, null);
+        this.$parent.$refs.Rate.Load(this.Analyzer, null);
       },
       Back: function() {
         this.Show = false;

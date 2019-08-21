@@ -5,10 +5,10 @@
       <analyzer-table ref="Table"></analyzer-table>
       <analyzer-not-found ref="NotFound"></analyzer-not-found>
       <analyzer-configure ref="Configure"></analyzer-configure>
-      <analyzer-tariffs ref="Tariffs"></analyzer-tariffs>
-      <analyzer-tariff ref="Tariff"></analyzer-tariff>
-      <analyzer-tariff-periods ref="Periods"></analyzer-tariff-periods>
-      <analyzer-tariff-billing ref="Billing"></analyzer-tariff-billing>
+      <analyzer-rates ref="Rates"></analyzer-rates>
+      <analyzer-rate ref="Rate"></analyzer-rate>
+      <analyzer-rate-periods ref="Periods"></analyzer-rate-periods>
+      <analyzer-rate-billing ref="Billing"></analyzer-rate-billing>
       <!--analyzer-acls ref="ACLs"></analyzer-acls>
       <analyzer-acl ref="ACL"></analyzer-acl-->
       <analyzer-maintenance ref="Maintenance"></analyzer-maintenance>
@@ -20,12 +20,12 @@
   import AnalyzerNotFound from './AnalyzerNotFound.vue';
   import AnalyzerTable from './AnalyzerTable.vue';
   import AnalyzerConfigure from './AnalyzerConfigure.vue';
-  import AnalyzerTariffs from './AnalyzerTariffs';
-  import AnalyzerTariff from './AnalyzerTariff.vue';
+  import AnalyzerRates from './AnalyzerRates';
+  import AnalyzerRate from './AnalyzerRate.vue';
   import AnalyzerAcls from './AnalyzerACLs.vue';
   import AnalyzerAcl from './AnalyzerACL.vue';
-  import AnalyzerTariffPeriods from './AnalyzerTariffPeriods.vue';
-  import AnalyzerTariffBilling from './AnalyzerTariffBilling.vue';
+  import AnalyzerRatePeriods from './AnalyzerRatePeriods.vue';
+  import AnalyzerRateBilling from './AnalyzerRateBilling.vue';
   import AnalyzerMaintenance from './AnalyzerMaintenance.vue';
   export default {
     data() {
@@ -50,7 +50,7 @@
     beforeDestroy: function() {
       this.$root.$el.removeChild(this.$el);
     },
-    components: { AnalyzerNotFound, AnalyzerTariffs, AnalyzerConfigure, AnalyzerTable, AnalyzerTariff, AnalyzerTariffPeriods, AnalyzerTariffBilling, AnalyzerAcls, AnalyzerAcl, AnalyzerMaintenance }
+    components: { AnalyzerNotFound, AnalyzerRates, AnalyzerConfigure, AnalyzerTable, AnalyzerRate, AnalyzerRatePeriods, AnalyzerRateBilling, AnalyzerAcls, AnalyzerAcl, AnalyzerMaintenance }
   }
 </script>
 

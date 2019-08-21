@@ -16,7 +16,6 @@ Analyzer::Analyzer(const string &id) {
   pCurl        = NULL;
   pCurlHeaders = NULL;
   pCurlLocks   = PTHREAD_MUTEX_INITIALIZER;
-  pConfLocks   = PTHREAD_MUTEX_INITIALIZER;
 }
 Analyzer::~Analyzer() {
   StopSync();
@@ -32,11 +31,13 @@ Analyzer::~Analyzer() {
 string Analyzer::Serial() const {
   return pSerial;
 }
-json Analyzer::GetJSONShortDescriptor() const {
+json Analyzer::GetJSONShortDescriptor() {
   json Response;
+  pConfigLocks.ReadLock();
   Response["Analyzer"] = pSerial;
   Response["Name"] = pName;
   Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
+  pConfigLocks.ReadUnlock();
   return Response;
 }
 bool Analyzer::CheckRights(HTTPRequest &req, const uint neededAccess) const {
@@ -45,23 +46,23 @@ bool Analyzer::CheckRights(HTTPRequest &req, const uint neededAccess) const {
 }
 json Analyzer::GetJSONSyncConfig() {
   json Response = json::object();
-  pthread_mutex_lock(&pConfLocks);
+  pConfigLocks.ReadLock();
   Response["RemoteEnabled"] = (pSyncThread != 0);
   Response["RemoteServer"] = pSyncServer;
   Response["RemoteUser"] = pSyncUser;
   Response["RemotePass"] = pSyncPass;
-  pthread_mutex_unlock(&pConfLocks);
+  pConfigLocks.ReadUnlock();
   return Response; 
 }
 bool Analyzer::SetSync(const bool enabled, const string &server, const string &user, const string &pass) {
   StopSync();
-  pthread_mutex_lock(&pConfLocks);
+  pConfigLocks.WriteLock();
   pSyncServer    = server;
   pSyncUser      = user;
   pSyncPass      = pass;
   pTerminateSync = false;
   if(enabled == false) {
-    pthread_mutex_unlock(&pConfLocks);
+    pConfigLocks.WriteUnlock();
     return true;
   }
   if(pCurl == NULL) {
@@ -79,18 +80,18 @@ bool Analyzer::SetSync(const bool enabled, const string &server, const string &u
   if(pthread_create(&pSyncThread, NULL, Sync_Thread, (void*)this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pSyncThread = 0;
-    pthread_mutex_unlock(&pConfLocks);
+    pConfigLocks.WriteUnlock();
     return false;
   }
-  pthread_mutex_unlock(&pConfLocks);
+  pConfigLocks.WriteUnlock();
   return true;  
 }
 void Analyzer::StopSync() {
-  pthread_mutex_lock(&pConfLocks);
+  pConfigLocks.WriteLock();
   pTerminateSync = true;
   if(pSyncThread != 0) pthread_join(pSyncThread, NULL);
   pSyncThread = 0;
-  pthread_mutex_unlock(&pConfLocks);  
+  pConfigLocks.WriteUnlock();
 }
 size_t Analyzer::CurlWriteCallback(void *contents, size_t size, size_t nmemb, void *userp) {
   CurlWriteBuff_t *Buffer = (CurlWriteBuff_t*)userp;
@@ -158,6 +159,9 @@ void *Analyzer::Sync_Thread(void *args) {
       string URL     = This->pSyncServer + "/getRemote";
       CurlBuff.Size = 0;
       Content["Analyzer"] = This->pSerial;
+      This->pConfigLocks.ReadLock();
+      Content["Name"] = This->pName;
+      This->pConfigLocks.ReadUnlock();
       string ContentText = Content.dump();
       curl_easy_setopt(Curl, CURLOPT_URL, URL.c_str());
       curl_easy_setopt(Curl, CURLOPT_POSTFIELDS, ContentText.c_str());
