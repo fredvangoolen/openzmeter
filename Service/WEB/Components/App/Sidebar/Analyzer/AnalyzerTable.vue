@@ -16,7 +16,7 @@
             <ul class="dropdown-menu pull-right">
               <li><a v-on:click="Configure(props.rowData)" v-if="true">Configure</a></li>
               <li><a v-on:click="ACL(props.rowData)" v-if="false">ACL</a></li>
-              <li><a v-on:click="Tariffs(props.rowData)">Tariff</a></li>
+              <li><a v-on:click="Rates(props.rowData)">Rates</a></li>
               <li><a v-on:click="Alerts(props.rowData)" v-if="false">Alerts</a></li>
               <!-- li role="separator" class="divider"></li>
               <li><a v-on:click="Maintenance(props.rowData)">Maintenance</a></li -->
@@ -102,9 +102,9 @@
       ACL: function(id) {
         alert("ACL not yet implemented"); 
       },
-      Tariffs: function(analizer) { 
+      Rates: function(analizer) { 
         this.Show = false;
-        this.$parent.$refs.Tariffs.Load(analizer); 
+        this.$parent.$refs.Rates.Load(analizer); 
       },
       Alerts: function(id) {
         alert("Alerts not yet implemented");

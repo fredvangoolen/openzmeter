@@ -31,6 +31,7 @@ class Analyzer {
       Analyzer *Parent;
     } RemoteRequest_t;
   protected :
+    RWLocks         pConfigLocks;             //Locks for configurations
     uint64_t        pLastSave;                //Timestamp of last save or communication
     string          pSerial;                  //Serial number
     string          pName;                    //Analyzer description
@@ -38,7 +39,6 @@ class Analyzer {
     CURLSH         *pCurl;                    //Shared object for curl lib
     curl_slist     *pCurlHeaders;             //Common headers
     pthread_mutex_t pCurlLocks;               //Curl access control
-    pthread_mutex_t pConfLocks;               //Config access control
     bool            pTerminateSync;           //Signal to terminate sync thread
     pthread_t       pSyncThread;              //Synchronize thread
     string          pSyncServer;              //Sync server
@@ -76,5 +76,5 @@ class Analyzer {
     Analyzer(const string &id);
     virtual ~Analyzer();
     string Serial() const;
-    json   GetJSONShortDescriptor() const;
+    json   GetJSONShortDescriptor();
 };

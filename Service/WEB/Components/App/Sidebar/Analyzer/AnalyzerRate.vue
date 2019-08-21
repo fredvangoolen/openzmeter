@@ -1,9 +1,9 @@
 <template>
   <div class="modal-content" v-bind:class="{ hide: !Show }">
     <div class="modal-header">
-      <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Tariffs &raquo; Edit</h4></div>
+      <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates &raquo; Edit</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save tariff"></button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save rate"></button>
         <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" @click="Periods">Periods</button>
         <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" @click="Billing">Billing</button>
         <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
@@ -12,7 +12,7 @@
     <div class="modal-body">
       <spinner v-if="ShowSpinner"></spinner>
       <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != '' && !ShowSpinner">{{ Error }}</div>
-      <div class="alert alert-success text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error == '' && !ShowSpinner">{{ Tariff.Template.Description }}<br><strong>Tariff contains {{ Tariff.Template.Seasons.length }}  seasons, a total of {{ Tariff.Template.Periods.length }}  day periods and {{ Tariff.Template.Holidays.length }} holidays</strong></div>
+      <div class="alert alert-success text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error == '' && !ShowSpinner">{{ Rate.Template.Description }}<br><strong>Rate contains {{ Rate.Template.Seasons.length }}  seasons, a total of {{ Rate.Template.Periods.length }}  day periods and {{ Rate.Template.Holidays.length }} holidays</strong></div>
       <div class="row">
         <div class="col-xs-12">
           <label class="control-label">Base Tariff</label>
@@ -38,15 +38,15 @@
   import Spinner from 'Components/Spinner.vue';
   export default {
     data() {
-      return { Show: false, ShowSpinner: true, Tariff: null, Error: '' };
+      return { Show: false, ShowSpinner: true, Rate: null, Error: '' };
     },
     methods: {
       LoadCurrent: function() {
         $(this.$refs.Base).attr('data-id', 'CURRENT');
         $(this.$refs.Base).val(this.Tariffs[0].name);
-        this.Tariff.Template = Object.assign({}, this.Initial.Template);
+        this.Rate.Template = Object.assign({}, this.Initial.Template);
         this.FillPeriods();
-        this.Tariff.Name = this.Initial.Name;
+        this.Rate.Name = this.Initial.Name;
       },
       SetTariffs: function() {
         $(this.$refs.Base).bsSuggest("destroy");
@@ -54,19 +54,19 @@
         $(this.$refs.Base).on('onSetSelectValue', this.SelectBase.bind(this));
         $(this.$refs.Base).on('onUnsetSelectValue', this.DeselectBase.bind(this));
         if(this.Initial !== null) this.LoadCurrent();
-        this.$refs.StartDate.SetDate(moment(this.Tariff.StartDate));
-        this.$refs.EndDate.SetDate(moment(this.Tariff.EndDate));   
+        this.$refs.StartDate.SetDate(moment(this.Rate.StartDate));
+        this.$refs.EndDate.SetDate(moment(this.Rate.EndDate));   
         this.Validate();
         this.ShowSpinner = false;
       },
       Save: function() {
-        $.ajax({ url: "setTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.Analyzer, CountryCode: 'ESP' /*this.Analyzer.CountryCode*/ }, this.Tariff) ), 
+        $.ajax({ url: "setRate", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.Analyzer, CountryCode: 'ESP' /*this.Analyzer.CountryCode*/ }, this.Rate) ), 
           success: function() {
             this.Show = false;
-            this.$parent.$refs.Tariffs.Load(this.Analyzer);
+            this.$parent.$refs.Ratess.Load(this.Analyzer);
           }.bind(this),
           error: function() {
-            this.Error = 'Failed to save tariff to analyzer!';
+            this.Error = 'Failed to save rate to analyzer!';
             setTimeout(function() { this.Error = ''; }.bind(this), 1000); 
           }.bind(this)
         });
@@ -81,10 +81,10 @@
             success: function(result) {
               for(var i = 0; i < result.length; i++) this.Tariffs.push({ id: result[i].RateID, name: result[i].Name, description: 'From ' + moment(result[i].StartDate).format('DD/MM/YYYY') + ' to ' + moment(result[i].EndDate).format('DD/MM/YYYY')}); 
               if(id !== null) {
-                $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.Analyzer, RateID: id }), 
+                $.ajax({ url: "getRate", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.Analyzer, RateID: id }), 
                   success: function(result) {
                     this.Initial = result;
-                    this.Tariff = Object.assign({}, result);
+                    this.Rate = Object.assign({}, result);
                     this.Tariffs.unshift({ id: 'CURRENT', name: '(*) ' + result.Name, description: 'From ' + moment(result.StartDate).format('DD/MM/YYYY') + ' to ' + moment(result.EndDate).format('DD/MM/YYYY')});
                     this.SetTariffs();
                   }.bind(this)
@@ -93,7 +93,7 @@
                 this.Initial = null;
                 $(this.$refs.Base).attr('data-id', '');
                 $(this.$refs.Base).val('');
-                this.Tariff = { StartDate: moment().startOf('year').valueOf(), EndDate: moment().endOf('year').valueOf(), Template: null, Config: {Periods: [], Taxs: [], Billing: []} };
+                this.Rate = { StartDate: moment().startOf('year').valueOf(), EndDate: moment().endOf('year').valueOf(), Template: null, Config: {Periods: [], Taxs: [], Billing: []} };
                 this.$refs.StartDate.Disable();
                 this.$refs.EndDate.Disable();
                 this.SetTariffs();
@@ -104,25 +104,25 @@
       },
       Validate: function() {
         this.Error = '';
-        if(this.Tariff.Template === null) {
+        if(this.Rate.Template === null) {
           this.Error = 'Select a base tariff first';
           return; 
         }
-        if(this.Tariff.StartDate < this.Tariff.Template.Seasons[0].StartDate) {
+        if(this.Rate.StartDate < this.Rate.Template.Seasons[0].StartDate) {
           this.Error = 'Date ranges is outside selected tariff ranges';
           return;
         }
-        if(this.Tariff.EndDate > this.Tariff.Template.Seasons.slice(-1)[0].EndDate) {
+        if(this.Rate.EndDate > this.Rate.Template.Seasons.slice(-1)[0].EndDate) {
           this.Error = 'Date ranges is outside selected tariff ranges';
           return;
         }
       },
       SetStartDate: function(date) {
-        this.Tariff.StartDate = date.startOf('day').valueOf();
+        this.Rate.StartDate = date.startOf('day').valueOf();
         this.Validate();
       },
       SetEndDate: function(date) {
-        this.Tariff.EndDate = date.endOf('day').valueOf();
+        this.Rate.EndDate = date.endOf('day').valueOf();
         this.Validate();
       },
       Back: function() {
@@ -130,8 +130,8 @@
         this.$parent.$refs.Tariffs.Load(this.Analyzer);
       },
       FillPeriods: function() {
-        this.Tariff.Config.Periods.length = this.Tariff.Template.Periods.length;
-        for(var n = 0; n < this.Tariff.Template.Periods.length; n++) this.Tariff.Config.Periods[n] = Object.assign({ Contracted_Power: 0.0, Energy_Cost: 0.0, Power_Cost: 0.0 }, this.Tariff.Config.Periods[n]);
+        this.Rate.Config.Periods.length = this.Rate.Template.Periods.length;
+        for(var n = 0; n < this.Rate.Template.Periods.length; n++) this.Rate.Config.Periods[n] = Object.assign({ Contracted_Power: 0.0, Energy_Cost: 0.0, Power_Cost: 0.0 }, this.Rate.Config.Periods[n]);
       },
       SelectBase: function(e, keywork) {
         this.$refs.StartDate.Enable();
@@ -141,10 +141,10 @@
           this.Validate();
         } else {
           this.ShowSpinner = true;
-          $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: keywork.id }), 
+          $.ajax({ url: "getTariff", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: keywork.id }), 
             success: function(result) {
-              this.Tariff.Template = result.Template;
-              this.Tariff.Name = result.Name;
+              this.Rate.Template = result.Template;
+              this.Rate.Name = result.Name;
               this.FillPeriods();
               this.Validate();
               this.ShowSpinner = false;
@@ -159,11 +159,11 @@
       },
       Periods: function() {
         this.Show = false;
-        this.$parent.$refs.Periods.Load(this.Tariff);
+        this.$parent.$refs.Periods.Load(this.Rate);
       },
       Billing: function() {
         this.Show = false;
-        this.$parent.$refs.Billing.Load(this.Tariff);
+        this.$parent.$refs.Billing.Load(this.Rate);
       }
     },
     created: function() {

@@ -19,12 +19,17 @@ AnalyzerRemote::~AnalyzerRemote() {
   pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerRemote::GetRemote(HTTPRequest& req) {
+  json Params = req.GetParams();
   pthread_mutex_lock(&pMutex);
   if(pRequestLocks != NULL) {
     req.FromString("", MHD_HTTP_SERVICE_UNAVAILABLE);
     pthread_mutex_unlock(&pMutex);
     return;
   }
+  pConfigLocks.WriteLock();
+  pLastSave = Tools::GetTime();
+  pName     = Params["Name"];
+  pConfigLocks.WriteUnlock();
   pRequestLocks = new ProviderLocks();
   pthread_mutex_unlock(&pMutex);
   if(pRequestLocks->ConsumerWait(15000) == false) {
@@ -50,7 +55,6 @@ void AnalyzerRemote::GetRemote(HTTPRequest& req) {
   delete pRequestLocks;
   pRequestLocks = NULL;
   pthread_mutex_unlock(&pMutex);
-  pLastSave = Tools::GetTime();
   req.FromJSON(Response);
 }
 void AnalyzerRemote::SetRemote(HTTPRequest &req) {
@@ -79,7 +83,6 @@ void AnalyzerRemote::HandleRequest(string url, HTTPRequest &req) {
   pQueries.push_back(&Query);
   if(pRequestLocks != NULL) pRequestLocks->ProviderWrite();
   pthread_mutex_unlock(&pMutex);
-  
   if(Query.Locks.ConsumerWait(15000) == false) req.FromString("", MHD_HTTP_GATEWAY_TIMEOUT);
   pthread_mutex_lock(&pMutex);
   for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {

@@ -109,7 +109,7 @@ void DeviceRemote::SetDevice(HTTPRequest &req) {
 void DeviceRemote::GetRemoteCallback(HTTPRequest &req) {
   pInstance->Reference();
   json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+  if(!Params["Analyzer"].is_string() || !Params["Name"].is_string()) return req.FromString("'Analyzer' and 'Name' params are requiered", MHD_HTTP_BAD_REQUEST);
   pInstance->GetRemote(req);
   pInstance->Dereference();
 }
