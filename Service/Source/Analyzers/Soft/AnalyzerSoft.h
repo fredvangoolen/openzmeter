@@ -87,7 +87,7 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks, pri
     vector< vector<float> >    pCurrentSamples;          //Current samples
     float                      pNominalVoltage;          //Analyzer nominal voltage
     float                      pNominalFrequency;        //Analyzer nominal frequency
-    string                     pCountryCode;             //Country code
+    string                     pTimeZone;             //Country code
     string                     pContract;                //Contract identifier
     string                     pZipCode;                 //Installation zip code
     vector<float>              pGeo;                     //GPS position
