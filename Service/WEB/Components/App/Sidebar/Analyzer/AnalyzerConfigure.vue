@@ -29,19 +29,10 @@
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Nominal voltage</label>
           <input-spin prepend="V" :list="[{Text: '120 V (L-N)', Value: 120}, {Text: '240 V (L-L)', Value: 240}, {Text: '230 V (L-N)', Value: 230}]" :decimals="1" :min="10" :max="10000" :increment="1" :value="Analyzer.NominalVoltage" v-on:change="SetVoltage"></input-spin>
-          <!--select class="form-control" v-model="analyzer.NominalVoltage">
-            <option value="120">120 V</option>
-            <option value="230">230 V</option>
-            <option value="400">400 V</option>            
-          </select-->
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Nominal frequency</label>
           <input-spin prepend="Hz" :list="[{Text: 'DC', Value: 0}, {Text: '50 Hz', Value: 50}, {Text: '60 Hz', Value: 60}]" :decimals="1" :min="0" :max="500" :increment="1" :value="Analyzer.NominalFreq" v-on:change="SetFrequency"></input-spin>
-          <!--select class="form-control" v-model="analyzer.NominalFreq">
-            <option value="50">50 Hz</option>
-            <option value="60">60 Hz</option>
-          </select-->
         </div>
         <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
         <div class="col-xs-12 col-sm-6">
@@ -59,8 +50,8 @@
           <input type="text" class="form-control" v-model="Analyzer.Contract">
         </div>
         <div class="col-xs-12 col-sm-9">
-          <label class="control-label">Country</label>
-          <input type="text" class="form-control">
+          <label class="control-label">Time zone</label>
+          <option-picker :options="TimeZones" :selected="Analyzer.TimeZone" v-on:change="Analyzer.TimeZone=$event" :big="true"></option-picker>
         </div>
         <div class="col-xs-12 col-sm-3">
           <label class="control-label">ZIP Code</label>
@@ -107,9 +98,10 @@
   import InputSpin from 'Components/InputSpin.vue';
   import OptionPicker from 'Components/OptionPicker.vue';
   import Toggle from 'Components/Toggle.vue';
+  import moment from 'JS/moment.js';
   export default {
     data() {
-      return { View: 'Basic', Show: false, ShowSpinner: true, Analyzer: {}, Error: ''};
+      return { TimeZones: moment.tz.names(), View: 'Basic', Show: false, ShowSpinner: true, Analyzer: {}, Error: ''};
     },
     methods: {
       Load: function(analyzer) {

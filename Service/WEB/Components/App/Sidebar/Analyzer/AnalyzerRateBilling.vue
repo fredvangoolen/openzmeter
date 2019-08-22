@@ -26,16 +26,29 @@
               <td colspan="3"><button type="button" class="btn btn-default btn-xs" style="width:100%" @click="Add"><img :src="require('Imgs/plus.png')"> New concept</button></td>
             </tr>
           </table>
-          <hr />
         </div>
-        <div class="col-xs-6">
-          <label class="control-label">Bill day</label>
-          <option-picker :options="BillDayNames" :selected="BillDayNames[Day]" v-on:change="DayChanged"></option-picker>
+        <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
+        <div class="col-xs-12">
+          <table>
+            <tr><td><strong>From</strong></td><td><strong>To</strong></td><td class="text-right"><strong>Duration</strong></td></tr>
+            <tr v-for="(date, idx) in Rate.Config.Billing">
+              <td><span style="font-size: 12px">10/10/2015</span></td>
+              <td width="100%"><date-picker ref="StartDate" :big="false" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" ></date-picker></td>
+              <td width="120px" class="text-right"><span style="font-size: 12px">12 days</span></td>
+            </tr>
+            <tr>
+              <td><button type="button" class="btn btn-default btn-xs" style="width:100%" @click="AddBillDay"><img :src="require('Imgs/cross.png')"> Remove last</button></td>
+              <td style="display: flex;">
+                <option-picker class="flex-item" :options="BillDayNames" :selected="BillDayNames[Day]" v-on:change="DayChanged"></option-picker>
+                <option-picker class="flex-item" :options="PeriodNames" :selected="PeriodNames[Period]" v-on:change="PeriodChanged"></option-picker>
+                <button type="button" class="btn btn-default btn-xs flex-item" @click="AddBillDay" data-toggle="tooltip" title="Create or replace bill days according to selections"><img :src="require('Imgs/wand.png')"></button>              
+              </td>
+              <td>
+                <button type="button" class="btn btn-default btn-xs" style="width:100%" @click="AddBillDay"><img :src="require('Imgs/plus.png')"> Add new</button></td>
+            </tr>
+          </table>
         </div>
-        <div class="col-xs-6">
-          <label class="control-label">Bill period</label>
-          <option-picker :options="PeriodNames" :selected="PeriodNames[Period]" v-on:change="PeriodChanged"></option-picker>
-        </div>
+ 
       </div>
     </div>
   </div>
@@ -43,6 +56,7 @@
 
 <script>
   import OptionPicker from 'Components/OptionPicker.vue';
+  import DatePicker from 'Components/DatePicker.vue';
   import moment from 'JS/moment.js';
   import * as oZm from 'JS/openZmeter.js';
   export default {
@@ -113,12 +127,15 @@
       NameChanged: function(value, idx) {
         this.Rate.Config.Taxs[idx].Name = value.target.value;
         this.Rate = Object.assign({}, this.Rate);
+      },
+      AddBillDay: function() {
+        
       }
     },
     created: function() {
       this.TypesEnum = ['PERCENT_TOTAL', 'PERCENT_ENERGY', 'PERCENT_POWER', 'PERCENT_ENERGY_POWER', 'FIXED_QUANTITY'];
     },
-    components: { OptionPicker }
+    components: { OptionPicker, DatePicker }
   }
 </script>
 
@@ -140,5 +157,8 @@
   }
   button.delete{
     width: 25px;
+  }
+  .flex-item {
+    margin-right: 2px;
   }
 </style>
