@@ -1,5 +1,5 @@
 <template>
-  <div class='input-group'>
+  <div class='input-group' v-bind:class="{'input-group-xs': (big==false)}">
     <input type='text' class="form-control"/>
     <span class="input-group-addon"><span class="glyphicon-calendar"></span></span>
   </div>
@@ -10,7 +10,7 @@
   import datetimepicker from 'JS/bootstrap-datetimepicker.min.js';
   import 'CSS/bootstrap-datetimepicker.min.css'  
   export default {
-    props: ['options'],
+    props: {options: { type: Object, default: {}}, big: {type: Boolean, default: true}},
     data() {
       return { };
     },
@@ -35,5 +35,7 @@
 </script>
 
 <style scoped>
-  
+  .input-group-addon {
+    line-height: 0;
+  }
 </style>

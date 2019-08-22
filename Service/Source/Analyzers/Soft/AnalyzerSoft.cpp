@@ -685,7 +685,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   ConfigOUT["NominalFreq"] = 50.0;
   ConfigOUT["MaxCurrent"] = 35.0;
   ConfigOUT["MinCurrent"] = 0.1;
-  ConfigOUT["TimeZone"] = "Europe/Madrid";
+  ConfigOUT["TimeZone"] = "UTC";
   ConfigOUT["Contract"] = "";
   ConfigOUT["ZipCode"] = "";
   ConfigOUT["GeoPosition"] = json::parse("[0, 0]");
@@ -941,13 +941,21 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
   Dereference();
 }
 void AnalyzerSoft::GetSeriesRange(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  Reference();
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
+    Dereference();
+    return;
+  }
   json Params = req.GetParams();
   string Aggreg = Params["Aggreg"];
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial) + ", 'public'");
   req.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM aggreg_" + Aggreg + ") AS t1) AS t2 ");
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  if(!req.FecthRow()) {
+    Dereference();
+    return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  }
   req.FromString(req.ResultString("ranges"), MHD_HTTP_OK);
+  Dereference();
 }
 void AnalyzerSoft::GetEvents(HTTPRequest &req) {
   Reference();
@@ -1035,7 +1043,8 @@ void AnalyzerSoft::GetRates(HTTPRequest &req) {
     Dereference();
     return;
   }
-  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', analyzers_rates.name, 'StartDate', startdate, 'EndDate', enddate))), '[]') as result FROM analyzers_rates LEFT JOIN analyzers USING(serial) WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(pSerial));
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
+  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') as result FROM rates");
   if(!req.FecthRow()) {
     Dereference();
     return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
@@ -1050,8 +1059,13 @@ void AnalyzerSoft::GetRate(HTTPRequest &req) {
     return;
   }
   json Params = req.GetParams();
+  if(!Params["RateID"].is_number_unsigned()) {
+    Dereference();
+    return req.FromString("'RateID' params required", MHD_HTTP_BAD_REQUEST);
+  }
   uint32_t RateID = Params["RateID"];
-  req.ExecSentenceAsyncResult("SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) as result FROM analyzers_rates where rate = " + req.Bind(RateID));
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
+  req.ExecSentenceAsyncResult("SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) as result FROM rates where rate = " + req.Bind(RateID));
   if(!req.FecthRow()) {
     Dereference();
     return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
@@ -1066,14 +1080,15 @@ void AnalyzerSoft::SetRate(HTTPRequest &req) {
     return;
   }
   json Params = req.GetParams();
-  if(!Params["RateID"].is_number() || !Params["Config"].is_object() || !Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["TimeZone"].is_string()) return req.FromString("'RateID', 'StartDate', 'EndDate', 'TimeZone', 'Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  if(!Params["RateID"].is_number() || !Params["Config"].is_object() || !Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string()) {
+    Dereference();
+    return req.FromString("'RateID', 'StartDate', 'EndDate', Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  }
   uint64_t Start    = Params["StartDate"];
   uint64_t End      = Params["EndDate"];
   string   Name     = Params["Name"];
-  string   TimeZone = Params["TimeZone"];
   uint32_t RateID   = Params["RateID"];
-  if(TimeZone != pTimeZone) return 
-  Tariff T(Start, End, TimeZone);
+  Tariff T(Start, End, pTimeZone);
   if(T.SetTemplate(Params["Template"]) == false) {
     Dereference();
     return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
@@ -1082,7 +1097,8 @@ void AnalyzerSoft::SetRate(HTTPRequest &req) {
     Dereference();
     return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
   }
-  bool Result = req.ExecSentenceNoResult("UPDATE analyzers_rates SET name = " + req.Bind(Name) + ", template = " + req.Bind(T.GetTemplate().dump()) + ", config = " + req.Bind(T.GetConfig().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE rate = " + req.Bind(RateID) + " AND serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ")");
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
+  bool Result = req.ExecSentenceNoResult("UPDATE rates SET name = " + req.Bind(Name) + ", template = " + req.Bind(T.GetTemplate().dump()) + ", config = " + req.Bind(T.GetConfig().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE rate = " + req.Bind(RateID));
   req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
   Dereference();
 }
@@ -1098,12 +1114,9 @@ void AnalyzerSoft::DelRate(HTTPRequest &req) {
     return req.FromString("'RateID' params required", MHD_HTTP_BAD_REQUEST);
   }
   uint32_t RateID = Params["RateID"];
-  if(!Params["Analyzer"].is_string()) {
-    req.FromString("", (req.ExecSentenceNoResult("DELETE FROM rates WHERE rate = " + req.Bind(RateID) + " AND username = " + req.Bind(req.UserName())) == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
-  } else {
-    string Analyzer = Params["Analyzer"];
-    req.FromString("", (req.ExecSentenceNoResult("DELETE FROM analyzers_rates WHERE rate = " + req.Bind(RateID) + " AND serial IN (SELECT serial from analyzers WHERE serial = " + req.Bind(Analyzer) + " AND username = " + req.Bind(req.UserName()) + ")") == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
-  }
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
+  bool Result = req.ExecSentenceNoResult("DELETE FROM rates WHERE rate = " + req.Bind(RateID));
+  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
   Dereference();
 }
 void AnalyzerSoft::AddRate(HTTPRequest &req) {
@@ -1113,13 +1126,14 @@ void AnalyzerSoft::AddRate(HTTPRequest &req) {
     return;
   }
   json Params = req.GetParams();
-  if(!Params["Config"].is_object() || !Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["TimeZone"].is_string()) return req.FromString("'StartDate', 'EndDate', 'TimeZone', 'Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
-  string Analyzer = Params["Analyzer"];
+  if(!Params["Config"].is_object() || !Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string()) {
+    Dereference();
+    return req.FromString("'StartDate', 'EndDate', 'Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  }
   uint64_t Start    = Params["StartDate"];
   uint64_t End      = Params["EndDate"];
   string   Name     = Params["Name"];
-  string   TimeZone = Params["TimeZone"];
-  Tariff T(Start, End, TimeZone);
+  Tariff T(Start, End, pTimeZone);
   if(T.SetTemplate(Params["Template"]) == false) {
     Dereference();
     return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
@@ -1128,7 +1142,8 @@ void AnalyzerSoft::AddRate(HTTPRequest &req) {
     Dereference();
     return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
   }
-  bool Result = req.ExecSentenceNoResult("INSERT INTO analyzers_rates(serial, startdate, enddate, config, template, name) VALUES (" + req.Bind(Analyzer) + ", " + req.Bind(Start) + ", " + req.Bind(End) + ", " + req.Bind(T.GetConfig().dump()) + ", " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Name) + ")");
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
+  bool Result = req.ExecSentenceNoResult("INSERT INTO rates(startdate, enddate, config, template, name) VALUES (" + req.Bind(Start) + ", " + req.Bind(End) + ", " + req.Bind(T.GetConfig().dump()) + ", " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Name) + ")");
   req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
   Dereference();
 }
