@@ -62,6 +62,9 @@ bool Tariff::pRegistered = Tariff::RegisterCallbacks();
 //----------------------------------------------------------------------------------------------------------------------
 Tariff::Tariff(const uint64_t start, const uint64_t end, const string &tz) {
   pValidTimeZone = cctz::load_time_zone(tz, &pTimeZone);
+  if(pValidTimeZone == false) {
+    LOGFile::Error("Can not find timezone '%s'\n", tz.c_str());
+  }
   pStartDate = start;
   pEndDate = end;
 }
@@ -86,6 +89,7 @@ void Tariff::GetTariffsCallback(HTTPRequest &req) {
 }
 void Tariff::GetTariffCallback(HTTPRequest &req) {
   json Params = req.GetParams();
+  if(!Params["TariffID"].is_number()) return req.FromString("'TariffID' param is required", MHD_HTTP_BAD_REQUEST);  
   uint32_t TariffID = Params["TariffID"];
   req.ExecSentenceAsyncResult("SELECT json_build_object('TariffID', tariff, 'Name', name, 'UserName', username, 'StartDate', startdate, 'EndDate', enddate, 'TimeZone', time_zone, 'Template', template) as result FROM tariffs WHERE tariff = " + req.Bind(TariffID));
   if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);

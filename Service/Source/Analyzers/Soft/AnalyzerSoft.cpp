@@ -81,7 +81,7 @@ void AnalyzerSoft::Configure(const json &options) {
   pNominalFrequency = options["NominalFreq"];
   pMaxCurrent       = options["MaxCurrent"];
   pMinCurrent       = options["MinCurrent"];
-  pCountryCode      = options["CountryCode"];
+  pTimeZone         = options["TimeZone"];
   pContract         = options["Contract"];
   pZipCode          = options["ZipCode"];
   pGeo              = options["GeoPosition"].get<vector<float> >();
@@ -685,7 +685,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   ConfigOUT["NominalFreq"] = 50.0;
   ConfigOUT["MaxCurrent"] = 35.0;
   ConfigOUT["MinCurrent"] = 0.1;
-  ConfigOUT["CountryCode"] = "UTC";
+  ConfigOUT["TimeZone"] = "Europe/Madrid";
   ConfigOUT["Contract"] = "";
   ConfigOUT["ZipCode"] = "";
   ConfigOUT["GeoPosition"] = json::parse("[0, 0]");
@@ -699,7 +699,11 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   if(config.contains("NominalFreq") && config["NominalFreq"].is_number() && (config["NominalFreq"] >= 0) && (config["NominalFreq"] <= 400)) ConfigOUT["NominalFreq"] = config["NominalFreq"];
   if(config.contains("MaxCurrent") && config["MaxCurrent"].is_number() && (config["MaxCurrent"] >= 1) && (config["MaxCurrent"] <= 100000)) ConfigOUT["MaxCurrent"] = config["MaxCurrent"];
   if(config.contains("MinCurrent") && config["MinCurrent"].is_number() && (config["MinCurrent"] >= 0.01) && (config["MinCurrent"] <= 100)) ConfigOUT["MinCurrent"] = config["MinCurrent"];
-  if(config.contains("CountryCode") && config["CountryCode"].is_string()) ConfigOUT["CountryCode"] = config["CountryCode"];
+  if(config.contains("TimeZone") && config["TimeZone"].is_string()) {
+    time_zone TimeZone;
+    string TZ = config["TimeZone"];
+    if(cctz::load_time_zone(TZ, &TimeZone) == true) ConfigOUT["TimeZone"] = TZ;
+  }
   if(config.contains("Contract") && config["Contract"].is_string()) ConfigOUT["Contract"] = config["Contract"];
   if(config.contains("ZipCode") && config["ZipCode"].is_string()) ConfigOUT["ZipCode"] = config["ZipCode"];
   if(config.contains("GeoPosition") && config["GeoPosition"].is_array() && (config["GeoPosition"].size() == 2) && config["GeoPosition"][0].is_number() && config["GeoPosition"][1].is_number()) ConfigOUT["GeoPosition"] = config["GeoPosition"];
@@ -725,7 +729,7 @@ void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   Response["NominalFreq"] = pNominalFrequency;
   Response["MaxCurrent"] = pMaxCurrent;
   Response["MinCurrent"] = pMinCurrent;
-  Response["CountryCode"] = pCountryCode;
+  Response["TimeZone"] = pTimeZone;
   Response["Contract"] = pContract;
   Response["ZipCode"] = pZipCode;
   Response["GeoPosition"] = pGeo;
@@ -1062,34 +1066,24 @@ void AnalyzerSoft::SetRate(HTTPRequest &req) {
     return;
   }
   json Params = req.GetParams();
-  if(!Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["CountryCode"].is_string()) return req.FromString("'StartDate', 'EndDate', 'CountryCode' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  if(!Params["RateID"].is_number() || !Params["Config"].is_object() || !Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["TimeZone"].is_string()) return req.FromString("'RateID', 'StartDate', 'EndDate', 'TimeZone', 'Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
   uint64_t Start    = Params["StartDate"];
   uint64_t End      = Params["EndDate"];
   string   Name     = Params["Name"];
-  string   TimeZone = Params["CountryCode"];
-  req.ExecSentenceAsyncResult("SELECT timezone FROM country WHERE country_code = " + req.Bind(TimeZone));
-  if(req.FecthRow() == false) {
-    Dereference();
-    return req.FromString("Invalid 'CountryCode'", MHD_HTTP_BAD_REQUEST);
-  }
-  if(!Params["Template"].is_object()) {
-    Dereference();
-    return req.FromString("'Template' param required", MHD_HTTP_BAD_REQUEST);
-  }
-  Tariff T(Start, End, req.ResultString("timezone"));
+  string   TimeZone = Params["TimeZone"];
+  uint32_t RateID   = Params["RateID"];
+  if(TimeZone != pTimeZone) return 
+  Tariff T(Start, End, TimeZone);
   if(T.SetTemplate(Params["Template"]) == false) {
     Dereference();
     return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
   }
-    string Analyzer = Params["Analyzer"];
-    if(!Params["Config"].is_object()) return req.FromString("'Config' param required", MHD_HTTP_BAD_REQUEST);    
-    if(T.SetConfig(Params["Config"]) == false) return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
-    if(!Params["RateID"].is_number_unsigned()) {
-      req.FromString("", (req.ExecSentenceNoResult("INSERT INTO analyzers_rates(serial, startdate, enddate, config, template, name) VALUES (" + req.Bind(Analyzer) + ", " + req.Bind(Start) + ", " + req.Bind(End) + ", " + req.Bind(T.GetConfig().dump()) + ", " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Name) + ")") == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
-    } else {
-      uint32_t RateID = Params["RateID"];
-      req.FromString("", (req.ExecSentenceNoResult("UPDATE analyzers_rates SET name = " + req.Bind(Name) + ", template = " + req.Bind(T.GetTemplate().dump()) + ", config = " + req.Bind(T.GetConfig().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE rate = " + req.Bind(RateID) + " AND serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ")") == true) ? MHD_HTTP_OK : MHD_HTTP_BAD_REQUEST);
-    }
+  if(T.SetConfig(Params["Config"]) == false) {
+    Dereference();
+    return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
+  }
+  bool Result = req.ExecSentenceNoResult("UPDATE analyzers_rates SET name = " + req.Bind(Name) + ", template = " + req.Bind(T.GetTemplate().dump()) + ", config = " + req.Bind(T.GetConfig().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE rate = " + req.Bind(RateID) + " AND serial IN (SELECT serial FROM analyzers WHERE username = " + req.Bind(req.UserName()) + " AND serial = " + req.Bind(Analyzer) + ")");
+  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
   Dereference();
 }
 void AnalyzerSoft::DelRate(HTTPRequest &req) {
@@ -1118,7 +1112,24 @@ void AnalyzerSoft::AddRate(HTTPRequest &req) {
     Dereference();
     return;
   }
-  
+  json Params = req.GetParams();
+  if(!Params["Config"].is_object() || !Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["TimeZone"].is_string()) return req.FromString("'StartDate', 'EndDate', 'TimeZone', 'Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  string Analyzer = Params["Analyzer"];
+  uint64_t Start    = Params["StartDate"];
+  uint64_t End      = Params["EndDate"];
+  string   Name     = Params["Name"];
+  string   TimeZone = Params["TimeZone"];
+  Tariff T(Start, End, TimeZone);
+  if(T.SetTemplate(Params["Template"]) == false) {
+    Dereference();
+    return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
+  }
+  if(T.SetConfig(Params["Config"]) == false) {
+    Dereference();
+    return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
+  }
+  bool Result = req.ExecSentenceNoResult("INSERT INTO analyzers_rates(serial, startdate, enddate, config, template, name) VALUES (" + req.Bind(Analyzer) + ", " + req.Bind(Start) + ", " + req.Bind(End) + ", " + req.Bind(T.GetConfig().dump()) + ", " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Name) + ")");
+  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
   Dereference();
 }
 void AnalyzerSoft::GetPrices(HTTPRequest &req) {

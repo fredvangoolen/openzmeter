@@ -60,10 +60,10 @@
         this.ShowSpinner = false;
       },
       Save: function() {
-        $.ajax({ url: "setRate", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.Analyzer, CountryCode: 'ESP' /*this.Analyzer.CountryCode*/ }, this.Rate) ), 
+        $.ajax({ url: (this.Rate.RateID == undefined) ? "addRate" : "setRate", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.Analyzer, CountryCode: 'ESP' /*this.Analyzer.CountryCode*/ }, this.Rate) ), 
           success: function() {
             this.Show = false;
-            this.$parent.$refs.Ratess.Load(this.Analyzer);
+            this.$parent.$refs.Rates.Load(this.Analyzer);
           }.bind(this),
           error: function() {
             this.Error = 'Failed to save rate to analyzer!';
@@ -79,7 +79,7 @@
         this.$nextTick(function() {
           $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
             success: function(result) {
-              for(var i = 0; i < result.length; i++) this.Tariffs.push({ id: result[i].RateID, name: result[i].Name, description: 'From ' + moment(result[i].StartDate).format('DD/MM/YYYY') + ' to ' + moment(result[i].EndDate).format('DD/MM/YYYY')}); 
+              for(var i = 0; i < result.length; i++) this.Tariffs.push({ id: result[i].TariffID, name: result[i].Name, description: 'From ' + moment(result[i].StartDate).format('DD/MM/YYYY') + ' to ' + moment(result[i].EndDate).format('DD/MM/YYYY')}); 
               if(id !== null) {
                 $.ajax({ url: "getRate", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.Analyzer, RateID: id }), 
                   success: function(result) {
@@ -127,7 +127,7 @@
       },
       Back: function() {
         this.Show = false;
-        this.$parent.$refs.Tariffs.Load(this.Analyzer);
+        this.$parent.$refs.Rates.Load(this.Analyzer);
       },
       FillPeriods: function() {
         this.Rate.Config.Periods.length = this.Rate.Template.Periods.length;
@@ -141,7 +141,7 @@
           this.Validate();
         } else {
           this.ShowSpinner = true;
-          $.ajax({ url: "getTariff", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: keywork.id }), 
+          $.ajax({ url: "getTariff", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ TariffID: keywork.id }), 
             success: function(result) {
               this.Rate.Template = result.Template;
               this.Rate.Name = result.Name;
