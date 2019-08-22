@@ -227,7 +227,11 @@ bool ConfigManager::WriteConfig(const string &path, const json &val) {
     pthread_mutex_unlock(&pMutex);
     return false;
   }
+  
+  LOGFile::Debug("merge path: %s\n", path.c_str());
+  LOGFile::Debug("merge contents: %s\n", val.dump().c_str());
   pInstance->pConfig[json::json_pointer(path)].merge_patch(val);
+  LOGFile::Debug("merge result: %s\n",   pInstance->pConfig[json::json_pointer(path)].dump().c_str());
   if(pInstance->pFile < 0) {
     pthread_mutex_unlock(&pMutex);
     return false;

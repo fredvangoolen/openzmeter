@@ -37,6 +37,7 @@
           {name: 'Phase', title: 'Phase'},
           {name: 'Channel', title: 'Channel'},
           {name: 'Angle', title: 'Angle'}, 
+          {name: 'SecAngle', title: ''},
           {name: 'Value', title: 'Value'}
         ]
       };
@@ -55,41 +56,20 @@
           //x-axis
           canvas.strokeStyle = '#000';
           canvas.setLineDash([]);
-          canvas.lineWidth = 1;
+          canvas.lineWidth = 0.5;
           canvas.beginPath();
           canvas.moveTo(g.toDomXCoord(-115), g.toDomYCoord(0));
           canvas.lineTo(g.toDomXCoord(115), g.toDomYCoord(0));
           canvas.stroke();
-          
-          canvas.beginPath();
-          canvas.translate(g.toDomXCoord(115), g.toDomYCoord(0));
-          canvas.moveTo(-10, 4);
-          canvas.lineTo(5, 0);
-          canvas.lineTo(-10, -4);
-          canvas.fill();
-          canvas.closePath();
-          canvas.restore();
-          canvas.save();
-
           //y-axis
           canvas.strokeStyle = '#000';
           canvas.setLineDash([]);
-          canvas.lineWidth = 1;
+          canvas.lineWidth = 0.5;
           canvas.beginPath();
           canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(-115));
           canvas.lineTo(g.toDomXCoord(0), g.toDomYCoord(115));
           canvas.stroke();
-          
-          canvas.beginPath();
-          canvas.translate(g.toDomXCoord(0), g.toDomYCoord(115));
-          canvas.moveTo(4,10);
-          canvas.lineTo(0,-5);
-          canvas.lineTo(-4,10);
-          canvas.fill();
-          canvas.closePath();
-          canvas.restore();
-
-          canvas.lineWidth = 2;
+          canvas.lineWidth = 1;
           canvas.setLineDash(g.user_attrs_.gridLinePattern);
           canvas.strokeStyle = g.user_attrs_.gridLineColor;
           canvas.beginPath();
@@ -100,18 +80,9 @@
           canvas.stroke();
           canvas.beginPath();
           for(var n = 1; n < 11; n++) {
-            //if(n === 10) continue;      
-            canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(n * 10) - g.toDomXCoord(0), 0, 2 * Math.PI);
+            canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(120 * (Math.log(n * 10) / Math.log(120))) - g.toDomXCoord(0), 0, 2 * Math.PI);
           }    
           canvas.stroke();
-          // canvas.strokeStyle = oZm.Series["VOLTAGE"].Color;
-          // canvas.beginPath();
-          // canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(100) - g.toDomXCoord(0), 0, 2 * Math.PI);
-          // canvas.stroke();
-          // canvas.strokeStyle = oZm.Series["CURRENT"].Color;
-          // canvas.beginPath();
-          // canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(80) - g.toDomXCoord(0), 0, 2 * Math.PI);
-          // canvas.stroke();          
         }
       };
     },
@@ -128,6 +99,7 @@
       Plotter: function(e) {
         var Analyzer = this.$root.SelectedAnalyzer;
         if((Analyzer === null) || (e.seriesIndex !== 0) || (e.plotArea.h < 0) || (e.plotArea.w < 0) || (e.dygraph.file_.length === 0) || (e.dygraph.file_[0].length !== 3)) return;
+        var Phases = (oZm.Series['VOLTAGE'].Names(Analyzer).length === 1) ? ['L'] : ['R', 'S', 'T'];
         var ctx = e.drawingContext;
         var MaxCurrent = 0;
         for(var i = 0; i < e.points.length; i++) {
@@ -135,75 +107,74 @@
         }
         for(var i = 0; i < e.points.length; i++) {
           if(isNaN(e.allSeriesPoints[1][i].yval)) continue;
-          var Module = e.allSeriesPoints[1][i].yval / (((i % 2) == 0) ? Analyzer.NominalVoltage : Analyzer.MaxCurrent) * 100.0;
+          var Module = Math.log(e.allSeriesPoints[1][i].yval) / (((i % 2) == 0) ? Math.log(Analyzer.NominalVoltage) : Math.log(Analyzer.MaxCurrent)) * 100.0;
+          Module = Math.max(10, Module);
           if(i % 2) {
             var StartAngle = (e.dygraph.file_[i - 1][1] < e.dygraph.file_[i][1]) ? e.dygraph.file_[i][1] * Math.PI / 180.0 : e.dygraph.file_[i - 1][1] * Math.PI / 180.0;
             var EndAngle   = (e.dygraph.file_[i - 1][1] < e.dygraph.file_[i][1]) ? e.dygraph.file_[i - 1][1] * Math.PI / 180.0 : e.dygraph.file_[i][1] * Math.PI / 180.0;
-            ctx.save();
-            var MidAngle = (e.dygraph.file_[i - 1][1] - e.dygraph.file_[i][1]) * Math.PI / 180.0;
-            ctx.translate(e.dygraph.toDomXCoord(50 * Math.cos(MidAngle / 2.0)), e.dygraph.toDomYCoord(50 * Math.sin(MidAngle / 2.0)));
-            ctx.rotate(MidAngle / -2.0);
-            ctx.beginPath();
-            ctx.textAlign = "left";
-            ctx.font = "10px sans";
-            ctx.fillStyle = "#333";
-            ctx.fillText(oZm.Round2Plain(Math.abs(e.dygraph.file_[i - 1][1] - e.dygraph.file_[i][1])) + "°", 2, 5);
-            ctx.fill();
-            ctx.restore();  
-            
-            ctx.fillStyle = e.dygraph.user_attrs_.gridLineColor;
-            ctx.setLineDash([]);
-            
             //Angular area
+            ctx.fillStyle = e.dygraph.user_attrs_.gridLineColor;
             ctx.beginPath();
             ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
-            ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(50) - e.dygraph.toDomXCoord(0), StartAngle, EndAngle, true);
+            ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(75) - e.dygraph.toDomXCoord(0), -StartAngle, -EndAngle);
             ctx.lineTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
             ctx.fill();
-            
-            //Black arc to delimit angular area.
+            //Black arc to delimit angular area
+            ctx.setLineDash([]);
             ctx.strokeStyle = '#333';
             ctx.beginPath();
-            ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(50) - e.dygraph.toDomXCoord(0), StartAngle, EndAngle, true);
+            ctx.arc(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0), e.dygraph.toDomXCoord(75) - e.dygraph.toDomXCoord(0), -StartAngle, -EndAngle);
             ctx.stroke();
+            //Angular legend
+            ctx.save();
+            var MidAngle = EndAngle + (StartAngle - EndAngle) / 2.0;
+            ctx.translate(e.dygraph.toDomXCoord(75 * Math.cos(MidAngle)), e.dygraph.toDomYCoord(75 * Math.sin(MidAngle)));
+            ctx.rotate(-MidAngle);
+            ctx.beginPath();
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.font = "10px sans";
+            ctx.fillStyle = "#333";
+            ctx.fillText(oZm.Round2Plain(e.dygraph.file_[i][1] - e.dygraph.file_[i - 1][1]) + "°", 3, 0);
+            ctx.font = "bold 12px sans";
+            ctx.textAlign = "right";
+            ctx.fillText(Phases[(i - 1) / 2], -3, 0);
+            ctx.fill();
+            ctx.restore();  
           }
-
           //Module line
           ctx.setLineDash([]);
           ctx.strokeStyle = e.dygraph.getColors()[i % 2];
           ctx.fillStyle = e.dygraph.getColors()[i % 2];
           ctx.lineWidth = 2;
-          
           ctx.beginPath();
           ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
-          ctx.lineTo(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / -180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / -180.0)));
+          ctx.lineTo(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
           ctx.stroke();
-  
+          //Arrow
           ctx.lineWidth = 1;
           ctx.save();
           ctx.beginPath();
-          ctx.translate(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / -180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / -180.0)));
-          ctx.rotate(e.dygraph.file_[i][1] * Math.PI / 180.0);
+          ctx.translate(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
+          ctx.rotate(e.dygraph.file_[i][1] * Math.PI / -180.0);
           ctx.moveTo(-10, 4);
           ctx.lineTo(5, 0);
           ctx.lineTo(-10, -4);
           ctx.fillStyle = e.dygraph.getColors()[i % 2];
           ctx.fill();
           ctx.restore();
-
           //Dot line for the series
           ctx.lineWidth = 1;
           ctx.setLineDash([2, 2]);
           ctx.strokeStyle = e.dygraph.getColors()[i % 2];
           ctx.beginPath();
-          ctx.moveTo(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / -180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / -180.0)));
-          ctx.lineTo(e.dygraph.toDomXCoord(120 * Math.cos(e.dygraph.file_[i][1] * Math.PI / -180.0)), e.dygraph.toDomYCoord(120 * Math.sin(e.dygraph.file_[i][1] * Math.PI / -180.0)));
+          ctx.moveTo(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
+          ctx.lineTo(e.dygraph.toDomXCoord(120 * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(120 * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
           ctx.stroke();
-          
-          //Value
+          //Value legend
           ctx.save();
-          ctx.translate(e.dygraph.toDomXCoord(100 * Math.cos(e.dygraph.file_[i][1] * Math.PI / -180.0)), e.dygraph.toDomYCoord(100 * Math.sin(e.dygraph.file_[i][1] * Math.PI / -180.0)));
-          ctx.rotate(e.dygraph.file_[i][1] * Math.PI / 180.0);
+          ctx.translate(e.dygraph.toDomXCoord(100 * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(100 * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
+          ctx.rotate(e.dygraph.file_[i][1] * Math.PI / -180.0);
           ctx.beginPath();
           ctx.textAlign = "left";
           ctx.font = "10px sans";
@@ -238,7 +209,7 @@
           this.Data.push([Phases[i], "Voltage", result.Voltage_Phase[i], result['Voltage'][i]]);
           this.Data.push([Phases[i], "Current", result.Voltage_Phase[i] + result.Phi[i], result['Current'][i]]);
           Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(result.Voltage_Phase[i]) + '°', Value: oZm.Round2(result['Voltage'][i]) + ' V' } );
-          Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(result.Voltage_Phase[i] + result.Phi[i]) + '°', Value: oZm.Round2(result.Current[i]) + ' A'} );
+          Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(result.Voltage_Phase[i] + result.Phi[i]) + '°', SecAngle: '(' + oZm.Round2(result.Phi[i]) + '°)', Value: oZm.Round2(result.Current[i]) + ' A'} );
         }
         this.$refs.graph.SetOptions({ file: Vectors });
         this.$refs.table.setData( { data: Table });
@@ -265,7 +236,7 @@
       width: 50px;
       text-align: center;
     }
-    .table >>> th:nth-child(3), .table >>> th:nth-child(4)  {
+    .table >>> th:nth-child(3), .table >>> th:nth-child(5)  {
       text-align: right;
     }
     .table >>> td {
@@ -274,7 +245,7 @@
     .table >>> td:nth-child(1), .table >>> td:nth-child(1) {
       text-align: center;
     }
-    .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
+    .table >>> td:nth-child(3), .table >>> td:nth-child(5) {
       text-align: right;
     }
   }

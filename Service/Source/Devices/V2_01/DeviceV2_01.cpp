@@ -212,11 +212,9 @@ json DeviceV2_01::CheckConfig(const json& config) {
           Output["Current"] = ((Output["Mode"] == "3PHASE") ? json::parse("[\"+CH1\", \"+CH2\", \"+CH3\"]") : json::parse("[\"+CH1\", \"+CH2\", \"+CH3\", \"+CH4\"]"));
           if(config["Outputs"][n].contains("Voltage") && config["Outputs"][n]["Voltage"].is_array() && (config["Outputs"][n]["Voltage"].size() == 3) && config["Outputs"][n].contains("Current") && config["Outputs"][n]["Current"].is_array() && (config["Outputs"][n]["Current"].size() == ((Output["Mode"] == "3PHASE") ? 3 : 4))) {
             for(uint8_t i = 0; i < 3; i++) {
-              Output["Voltage"].push_back("CH" + to_string(i + 1));
               if(config["Outputs"][n]["Voltage"][i].is_string() && ((config["Outputs"][n]["Voltage"][i] == "CH1") || (config["Outputs"][n]["Voltage"][i] == "CH2") || (config["Outputs"][n]["Voltage"][i] == "CH3"))) Output["Voltage"][i] = config["Outputs"][n]["Voltage"][i];
             }
             for(uint8_t i = 0; i < ((Output["Mode"] == "3PHASE") ? 3 : 4); i++) {
-              Output["Current"].push_back("+CH" + to_string(i + 1));
               if(config["Outputs"][n]["Current"][i].is_string() && ((config["Outputs"][n]["Current"][i] == "+CH1") || (config["Outputs"][n]["Current"][i] == "-CH1") || (config["Outputs"][n]["Current"][i] == "+CH2") || (config["Outputs"][n]["Current"][i] == "-CH2") || (config["Outputs"][n]["Current"][i] == "+CH3") || (config["Outputs"][n]["Current"][i] == "-CH3") || (config["Outputs"][n]["Current"][i] == "+CH4") || (config["Outputs"][n]["Current"][i] == "-CH4"))) Output["Current"][i] = config["Outputs"][n]["Current"][i];
             }
           }
