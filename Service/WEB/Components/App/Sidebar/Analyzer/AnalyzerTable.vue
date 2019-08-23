@@ -75,7 +75,7 @@
       },
       Select: function(analyzer) {
         this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }), 
+        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }),
           success: function(result) { 
             this.$root.SelectedAnalyzer = result;
             this.$root.$emit('AnalyzerChanged', result);
@@ -102,9 +102,17 @@
       ACL: function(id) {
         alert("ACL not yet implemented"); 
       },
-      Rates: function(analyzer) { 
-        this.Show = false;
-        this.$parent.$refs.Rates.Load(analyzer); 
+      Rates: function(analyzer) {
+        this.ShowSpinner = true;
+        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }), 
+          success: (result) => { 
+            this.Show = false;
+            this.$parent.$refs.Rates.Load(result);
+          },
+          error: () => {
+            this.ShowSpinner = false;
+          }
+        });
       },
       Alerts: function(id) {
         alert("Alerts not yet implemented");
