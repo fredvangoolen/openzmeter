@@ -32,21 +32,21 @@
         Columns: [
           {name: 'TimeZone', title: 'Time zone'},
           {name: 'Name', title: 'Name'},
-          {name: 'StartDate', title: 'Start date', callback: 'DateFormat'},
-          {name: 'EndDate', title: 'End date', callback: 'DateFormat'},
+          {name: 'StartDate', title: 'Start date'},
+          {name: 'EndDate', title: 'End date'},
           {name: '__slot:actions', title: ''}
         ]
       };
     },
     methods: {
-      DateFormat: function(val) {
-        return moment(val).format('DD/MM/YYYY');
-      },
       GetTariffs: function() {
         $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
           success: function(result) {
-            var TableData = { data: result };
-            this.$refs.table.setData(TableData);
+            for(var n = 0; n < result.length; n++) {
+              result[n].StartDate = moment.tz(result[n].StartDate, result[n].TimeZone).format('DD/MM/YYYY');
+              result[n].EndDate   = moment.tz(result[n].EndDate,   result[n].TimeZone).format('DD/MM/YYYY');
+            }
+            this.$refs.table.setData({ data: result });
             this.ShowSpinner = false;
           }.bind(this)
         });

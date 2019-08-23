@@ -41,7 +41,7 @@
       };
     },
     created: function() {
-      this.Analizer = null;
+      this.Analyzer = null;
     },
     updated: function(){
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
@@ -79,7 +79,11 @@
       Delete: function(row) {
         if(confirm("Delete '"+row.Name+"' rate?")){
           this.ShowSpinner = true;
-          $.ajax({ url: "delRate", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: row.RateID, Analyzer: this.Analyzer.Analyzer }), success: function() { this.Load(this.Analyzer); }.bind(this) });
+          $.ajax({ url: "delRate", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: row.RateID, Analyzer: this.Analyzer.Analyzer }), 
+            success: (result) => { 
+              this.Load(this.Analyzer); 
+            }
+          });
         }
       },
       Add: function() {

@@ -102,9 +102,9 @@
       ACL: function(id) {
         alert("ACL not yet implemented"); 
       },
-      Rates: function(analizer) { 
+      Rates: function(analyzer) { 
         this.Show = false;
-        this.$parent.$refs.Rates.Load(analizer); 
+        this.$parent.$refs.Rates.Load(analyzer); 
       },
       Alerts: function(id) {
         alert("Alerts not yet implemented");
