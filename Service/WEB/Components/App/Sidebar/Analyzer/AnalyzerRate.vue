@@ -24,8 +24,8 @@
             </div>
           </div>
         </div>
-        <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetStartDate"></date-picker></div>
-        <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetEndDate"></date-picker></div>
+        <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" v-on:DateChanged="SetStartDate"></date-picker></div>
+        <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" v-on:DateChanged="SetEndDate"></date-picker></div>
       </div>              
     </div>
   </div>
@@ -38,13 +38,9 @@
   import Spinner from 'Components/Spinner.vue';
   export default {
     data() {
-      return { Show: false, ShowSpinner: true, Rate: null, Error: '' };
+      return { Show: false, ShowSpinner: true, Rate: null, Error: '', Analyzer: null };
     },
     methods: {
-      //var now = moment().tz("Europe/Madrid");
-//now.set({year:2019, month: 0, date: 1, hour: 23, minute: 59, second: 59, milisecond: 999});
-//alert(now);
-      
       LoadCurrent: function() {
         $(this.$refs.Base).attr('data-id', 'CURRENT');
         $(this.$refs.Base).val(this.Tariffs[0].name);
@@ -171,7 +167,6 @@
       }
     },
     created: function() {
-      this.Analyzer = null;
       this.Tariffs = [];
       this.Initial = null;
     },

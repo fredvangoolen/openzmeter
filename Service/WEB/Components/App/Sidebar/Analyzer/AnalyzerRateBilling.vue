@@ -12,15 +12,21 @@
           <table>
             <tr><td><strong>Concept</strong></td><td><strong>Type</strong></td><td class="text-right"><strong>Value</strong></td></tr>
             <tr v-for="(tax, idx) in Rate.Config.Taxs">
-              <td><div class="input-group input-group-xs">
-                <span class="input-group-btn"><button class="btn btn-default delete" type="button" @click="Delete(idx)"><img :src="require('Imgs/cross.png')"></button></span>
-                <input type="text" class="form-control" @change="NameChanged($event, idx)" :value="tax.Name">
-              </div></td>
-              <td><option-picker :options="TypeNames" v-on:change="TypeChanged($event, idx)" :selected="TypeNames[TypesEnum.indexOf(tax.Type)]"></option-picker></td>
-              <td><div class="input-group input-group-xs">
+              <td>
+                <div class="input-group input-group-xs">
+                  <span class="input-group-btn"><button class="btn btn-default delete" type="button" @click="Delete(idx)"><img :src="require('Imgs/cross.png')"></button></span>
+                  <input type="text" class="form-control" @change="NameChanged($event, idx)" :value="tax.Name">
+                </div>
+              </td>
+              <td>
+            <option-picker :options="TypeNames" v-on:change="TypeChanged($event, idx)" :selected="TypeNames[TypesEnum.indexOf(tax.Type)]"></option-picker>
+            </td>
+            <td>
+              <div class="input-group input-group-xs">
                 <input type="text" class="form-control text-right" @change="ValueChanged($event, idx)" :value="Round6(tax.Value)"> 
-                <span class="input-group-addon">{{ (tax.Type == 'FIXED_QUANTITY') ? '€/Bill cycle' : '%' }}</span>
-              </div></td>
+                <span class="input-group-addon" style="width: 70px">{{ (tax.Type == 'FIXED_QUANTITY') ? '€/Bill cycle' : '%' }}</span>
+              </div>
+            </td>
             </tr>
             <tr>
               <td colspan="3"><button type="button" class="btn btn-default btn-xs" style="width:100%" @click="Add"><img :src="require('Imgs/plus.png')"> New concept</button></td>
@@ -30,30 +36,55 @@
         <div class="col-xs-12" style="height: 5px;"></div>
         <div class="col-xs-12">
           <table>
-            <tr><td><strong>From</strong></td><td><strong>To</strong></td><td class="text-right"><strong>Duration</strong></td></tr>
+            <tr><td style="min-width: 120px"><strong>From</strong></td><td><strong>To</strong></td><td class="text-right" style="min-width: 120px"><strong>Duration</strong></td></tr>
             <tr v-for="(date, idx) in Rate.Config.Billing">
-              <td><span style="font-size: 12px">{{ FromDate(idx) }}</span></td>
-              <td width="100%"><date-picker ref="StartDate" :big="false" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" ></date-picker></td>
-              <td width="120px" class="text-right"><span style="font-size: 12px">12 days</span></td>
+              <td>
+                <div class="input-group input-group-xs">
+                  <span class="input-group-btn"><button class="btn btn-default delete" type="button" v-on:click="DeleteBill(idx)"><img :src="require('Imgs/cross.png')"></button></span>
+                  <input type="text" class="form-control" disabled="" :value="FormatDate(FromDate(idx))">
+                </div>
+              </td>
+              <td width="100%">
+            <date-picker ref="StartDate" :big="false" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" ></date-picker>
+            </td>
+            <td class="text-right">
+              <div class="input-group input-group-xs">
+                <input type="text" class="form-control text-right" :value="CalcDays(idx)"> 
+                <span class="input-group-addon">Days</span>
+              </div>
+            </td>
             </tr>
             <tr>
-              <td><span style="font-size: 12px">{{ FromDate(Rate.Config.Billing.length - 1) }}</span></td>
-              <td><span style="font-size: 12px">{{ EndDate() }}</span></td>
-              <td width="120px" class="text-right"><span style="font-size: 12px">12 days</span></td>
+              <td>
+                <div class="input-group input-group-xs">
+                  <input type="text" class="form-control" disabled="" :value="FormatDate(FromDate(Rate.Config.Billing.length))">
+                </div>
+              </td>
+              <td width="100%">
+                <div class="input-group input-group-xs">
+                  <input type="text" class="form-control" disabled="" :value="FormatDate(EndDate(Rate.Config.Billing.length))">
+                </div>
+              </td>
+              <td>
+                <div class="input-group input-group-xs">
+                  <input type="text" class="form-control text-right" disabled="" :value="CalcDays(Rate.Config.Billing.length)">
+                  <span class="input-group-addon">Days</span>
+                </div>
+              </td>
             </tr>
             <tr>
               <td><button type="button" class="btn btn-default btn-xs" style="width:100%" @click="AddBillDay"><img :src="require('Imgs/cross.png')"> Remove last</button></td>
               <td style="display: flex;">
-                <option-picker class="flex-item" :options="BillDayNames" :selected="BillDayNames[0]" v-on:change="Day=$event"></option-picker>
-                <option-picker class="flex-item" :options="PeriodNames" :selected="PeriodNames[0]" v-on:change="Period=$event"></option-picker>
-                <button type="button" class="btn btn-default btn-xs flex-item" v-on:click="BuildPeriods" data-toggle="tooltip" title="Create or replace bill days according to selections"><img :src="require('Imgs/wand.png')"></button>              
-              </td>
-              <td>
-                <button type="button" class="btn btn-default btn-xs" style="width:100%" @click="AddBillDay"><img :src="require('Imgs/plus.png')"> Add new</button></td>
+            <option-picker class="flex-item" :options="BillDayNames" :selected="BillDayNames[0]" v-on:change="Day=$event"></option-picker>
+            <option-picker class="flex-item" :options="PeriodNames" :selected="PeriodNames[0]" v-on:change="Period=$event"></option-picker>
+            <button type="button" class="btn btn-default btn-xs flex-item" v-on:click="BuildPeriods" data-toggle="tooltip" title="Create or replace bill days according to selections"><img :src="require('Imgs/wand.png')"></button>              
+            </td>
+            <td>
+              <button type="button" class="btn btn-default btn-xs" style="width:100%" @click="AddBillDay"><img :src="require('Imgs/plus.png')"> Add new</button></td>
             </tr>
           </table>
         </div>
- 
+
       </div>
     </div>
   </div>
@@ -66,7 +97,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
-      return { Show: false, Day: 0, Period: 0, TypeNames: ['Total', 'Energy', 'Power', 'Energy+Power', 'Fixed'],
+      return { Show: false, Day: 0, Period: 0, TypeNames: ['Total', 'Energy', 'Power', 'Energy+Power', 'Fixed'], Analyzer: null, Rate: null,
                 PeriodNames: ['Each month', 'Each two month', 'Each three month'],
                 BillDayNames: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th']
               };
@@ -74,10 +105,18 @@
     methods: {
       Round6: oZm.Round6Plain,
       FromDate: function(idx) {
-        return moment.tz((idx == 0) ? this.Rate.StartDate : this.Rate.Config.Billing[idx - 1], this.Analyzer.TimeZone).format('DD/MM/YYYY');
+        return moment.tz(((idx <= 0) ? this.Rate.StartDate : this.Rate.Config.Billing[idx - 1] + 1), this.Analyzer.TimeZone);
       },
-      EndDate: function() {
-        return moment(this.Rate.EndDate).format('DD/MM/YYYY');
+      EndDate: function(idx) {
+        return moment.tz(((idx >= this.Rate.Config.Billing.length) ? this.Rate.EndDate : this.Rate.Config.Billing[idx]), this.Analyzer.TimeZone);
+      },
+      FormatDate: function(val) {
+        return val.format('DD/MM/YYYY');
+      },
+      CalcDays: function(idx) {
+        console.log("from " + this.FromDate(idx));
+        console.log("to " + this.EndDate(idx).add(1, 'ms'));
+        return this.EndDate(idx).add(1, 'ms').diff(this.FromDate(idx), 'days'); 
       },
       Load: function(analyzer, rate) {
         this.Analyzer = analyzer;
@@ -107,7 +146,7 @@
       },
       TypeChanged: function(name, idx) {
         this.Rate.Config.Taxs[idx].Type = this.TypesEnum[this.TypeNames.indexOf(name)];
-        this.Rate = Object.assign({}, this.Tariff);
+        this.Rate = Object.assign({}, this.Rate);
       },
       ValueChanged: function(value, idx) {
         var Value = parseFloat(value.target.value);
@@ -125,7 +164,6 @@
     },
     created: function() {
       this.TypesEnum = ['PERCENT_TOTAL', 'PERCENT_ENERGY', 'PERCENT_POWER', 'PERCENT_ENERGY_POWER', 'FIXED_QUANTITY'];
-      this.Analyzer = null;
     },
     components: { OptionPicker, DatePicker }
   }
@@ -140,9 +178,6 @@
   }
   .input-group-addon {
     border-left: none;
-  }
-  .input-group-addon:nth-child(2) {
-    width: 70px;
   }
   .dropdown-toggle {
     width: 120px;

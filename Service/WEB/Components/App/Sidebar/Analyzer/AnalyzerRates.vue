@@ -48,7 +48,7 @@
     },
     methods: {
       DateFormat: function(val) {
-        return moment(val).format('DD/MM/YYYY');
+        return moment.tz(val, this.Analyzer.TimeZone).format('DD/MM/YYYY');
       },
       Load(analyzer) {
         this.Show = true;
