@@ -41,6 +41,10 @@
       return { Show: false, ShowSpinner: true, Rate: null, Error: '' };
     },
     methods: {
+      //var now = moment().tz("Europe/Madrid");
+//now.set({year:2019, month: 0, date: 1, hour: 23, minute: 59, second: 59, milisecond: 999});
+//alert(now);
+      
       LoadCurrent: function() {
         $(this.$refs.Base).attr('data-id', 'CURRENT');
         $(this.$refs.Base).val(this.Tariffs[0].name);

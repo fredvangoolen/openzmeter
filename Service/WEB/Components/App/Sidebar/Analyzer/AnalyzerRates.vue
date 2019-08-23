@@ -10,6 +10,7 @@
     <div class="modal-body">
       <spinner v-if="ShowSpinner"></spinner>
       <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != '' && !ShowSpinner">{{ Error }}</div>
+      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error == '' && !ShowSpinner">All dates/times are in analyzer timezone.</div>
       <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">

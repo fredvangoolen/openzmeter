@@ -32,8 +32,13 @@
           <table>
             <tr><td><strong>From</strong></td><td><strong>To</strong></td><td class="text-right"><strong>Duration</strong></td></tr>
             <tr v-for="(date, idx) in Rate.Config.Billing">
-              <td><span style="font-size: 12px">10/10/2015</span></td>
+              <td><span style="font-size: 12px">{{ FromDate(idx) }}</span></td>
               <td width="100%"><date-picker ref="StartDate" :big="false" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" ></date-picker></td>
+              <td width="120px" class="text-right"><span style="font-size: 12px">12 days</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-size: 12px">{{ FromDate(Rate.Config.Billing.length - 1) }}</span></td>
+              <td><span style="font-size: 12px">{{ EndDate() }}</span></td>
               <td width="120px" class="text-right"><span style="font-size: 12px">12 days</span></td>
             </tr>
             <tr>
@@ -41,7 +46,7 @@
               <td style="display: flex;">
                 <option-picker class="flex-item" :options="BillDayNames" :selected="BillDayNames[Day]" v-on:change="DayChanged"></option-picker>
                 <option-picker class="flex-item" :options="PeriodNames" :selected="PeriodNames[Period]" v-on:change="PeriodChanged"></option-picker>
-                <button type="button" class="btn btn-default btn-xs flex-item" @click="AddBillDay" data-toggle="tooltip" title="Create or replace bill days according to selections"><img :src="require('Imgs/wand.png')"></button>              
+                <button type="button" class="btn btn-default btn-xs flex-item" v-on:click="BuildPeriods" data-toggle="tooltip" title="Create or replace bill days according to selections"><img :src="require('Imgs/wand.png')"></button>              
               </td>
               <td>
                 <button type="button" class="btn btn-default btn-xs" style="width:100%" @click="AddBillDay"><img :src="require('Imgs/plus.png')"> Add new</button></td>
@@ -68,6 +73,12 @@
     },
     methods: {
       Round6: oZm.Round6Plain,
+      FromDate: function(idx) {
+        return moment((idx == 0) ? this.Rate.StartDate : this.Rate.Config.Billing[idx - 1]).format('DD/MM/YYYY');
+      },
+      EndDate: function() {
+        return moment(this.Rate.EndDate).format('DD/MM/YYYY');
+      },
       Load: function(rate) {
         if(rate.Config.Billing.length < 1) {
           this.Day = moment(rate.StartDate).date() - 1;
@@ -82,7 +93,7 @@
         }
         this.Period = Math.max(0, Math.min(this.Period, this.PeriodNames.length - 1));
         this.Rate = rate;
-        this.CreateBuildPeriods();
+//        this.CreateBuildPeriods();
         this.Show = true;
       },
       PeriodChanged: function(value) {
@@ -93,7 +104,7 @@
         this.Day = this.BillDayNames.indexOf(value);
         this.CreateBuildPeriods();
       },
-      CreateBuildPeriods: function() {
+      BuildPeriods: function() {
         this.Rate.Config.Billing = [];
         var Date = moment(this.Rate.StartDate);
         while(true) {
