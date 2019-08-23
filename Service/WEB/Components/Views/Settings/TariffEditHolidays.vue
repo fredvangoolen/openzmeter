@@ -44,7 +44,7 @@
     },
     methods: {
       DateFormat: function(val) {
-        return moment(val).format('DD/MM/YYYY');
+        return moment.tz(val, this.Tariff.TimeZone).format('DD/MM/YYYY');
       },
       FillTable: function() {
         this.$refs.table.setData({ data: this.Tariff.Template.Holidays });   

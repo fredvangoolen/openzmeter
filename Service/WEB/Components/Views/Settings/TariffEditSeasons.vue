@@ -37,20 +37,20 @@
     data() {
       return { Show: false, ShowSpinner: true, Tariff: null, 
         Columns: [
-          {name: 'Name', title: 'Name'},
-          {name: 'StartDate', title: 'Start date', callback: 'DateFormat'},
-          {name: 'EndDate', title: 'End date', callback: 'DateFormat'}, 
-          {name: '__slot:actions', title: ''}
+          {name: 'Name', title: 'Name' },
+          {name: 'StartDate', title: 'Start date', callback: 'DateFormat' },
+          {name: 'EndDate', title: 'End date', callback: 'DateFormat' }, 
+          {name: '__slot:actions', title: '' }
         ]
       };
     },
     methods: {
       DateFormat: function(val) {
-        return moment(val).format('DD/MM/YYYY');
+        return moment.tz(val, this.Tariff.TimeZone).format('DD/MM/YYYY');
       },
       FillTable: function() {
         this.$refs.table.setData({ data: this.Tariff.Template.Seasons });  
-        this.ShowSpinner=false;      
+        this.ShowSpinner = false;
       },
       Load: function(tariff) {
         this.Show = true;
@@ -95,19 +95,19 @@
 </script>
 
 <style scoped>
-@media screen and (min-width: 600px) {
-  .table >>> th:nth-child(2), .table >>> th:nth-child(3)  {
-    width: 100px;
-    text-align: center;
+  @media screen and (min-width: 600px) {
+    .table >>> th:nth-child(2), .table >>> th:nth-child(3)  {
+      width: 100px;
+      text-align: center;
+    }
+    .table >>> td:nth-child(2), .table >>> td:nth-child(3) {
+      text-align: center;
+    }
+    .table >>> th:nth-child(4) {
+      width: 150px;
+    }
+    .table >>> td:nth-child(4) {
+      text-align: right;
+    }
   }
-  .table >>> td:nth-child(2), .table >>> td:nth-child(3) {
-    text-align: center;
-  }
-  .table >>> th:nth-child(4) {
-    width: 150px;
-  }
-  .table >>> td:nth-child(4) {
-    text-align: right;
-  }
-}
 </style>

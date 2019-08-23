@@ -11,8 +11,8 @@
         <div class="col-xs-12">
           <label class="control-label">Name</label><input type="text" class="form-control" ref="Name" @change="SetName">
         </div>
-        <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetStartDate"></date-picker></div>
-        <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetEndDate"></date-picker></div>
+        <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:DateChanged="SetStartDate"></date-picker></div>
+        <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:DateChanged="SetEndDate"></date-picker></div>
         <div class="col-xs-12">
           <label class="control-label">Hourly rates</label>
           <div class="row">
@@ -23,7 +23,7 @@
                   <div class="input-group-btn">
                     <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" style="width: 100%"><span style="display: inline-block; width: 30px;">P{{ period + 1 }}</span><span class="caret"></span></button>
                     <ul class="dropdown-menu pull-right">
-                      <li v-for="(p, index) in Tariff.Template.Periods" v-bind:class="{ active: Tariff.Template.Seasons[Index].DayPeriods[hour] == index }"><a @click="SetHourPeriod(hour, index)">P{{ index + 1 }}</a></li>
+                      <li v-for="(p, index) in Tariff.Template.Periods" v-bind:class="{ active: Tariff.Template.Seasons[Index].DayPeriods[hour] == index }"><a v-on:click="SetHourPeriod(hour, index)">P{{ index + 1 }}</a></li>
                     </ul>    
                   </div>
                 </div>
@@ -53,8 +53,8 @@
         this.Show = true;
         this.$nextTick(function() {
           $(this.$refs.Name).val(tariff.Template.Seasons[index].Name);
-          this.$refs.StartDate.SetDate(moment(tariff.Template.Seasons[index].StartDate));
-          this.$refs.EndDate.SetDate(moment(tariff.Template.Seasons[index].EndDate));
+          this.$refs.StartDate.SetDate(tariff.Template.Seasons[index].StartDate);
+          this.$refs.EndDate.SetDate(tariff.Template.Seasons[index].EndDate);
         });
       },
       SetName: function(evt) {

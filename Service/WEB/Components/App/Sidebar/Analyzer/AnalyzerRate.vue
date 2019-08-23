@@ -3,9 +3,9 @@
     <div class="modal-header">
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates &raquo; Edit</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save rate"></button>
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" @click="Periods">Periods</button>
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" @click="Billing">Billing</button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" v-on:click="Save"><img :src="require('Imgs/diskette.png')" alt="Save rate"></button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" v-on:click="Periods">Periods</button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" v-on:click="Billing">Billing</button>
         <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </div>
@@ -167,7 +167,7 @@
       },
       Billing: function() {
         this.Show = false;
-        this.$parent.$refs.Billing.Load(this.Rate);
+        this.$parent.$refs.Billing.Load(this.Analyzer, this.Rate);
       }
     },
     created: function() {

@@ -27,12 +27,12 @@
     methods: {
       Show: function(id) {
         this.ShowDialog = true;
-        this.$nextTick(function() {  
+        this.$nextTick(function() {
           if(id === null) {
             this.Tariff = { 
-              TimeZone: moment.tz.guess(), 
-              StartDate: moment().startOf('year').valueOf(), 
-              EndDate: moment().endOf('year').valueOf(), 
+              TimeZone: moment.tz.guess(),
+              StartDate: moment().startOf('year').valueOf(),
+              EndDate: moment().endOf('year').valueOf(),
               Name: 'No nane', 
               Template: {
                 Description: 'Add tariff description here',
@@ -47,11 +47,11 @@
             $(this.$el).modal('show');
           } else {
             $.ajax({ url: "getTariff", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ TariffID: id }),
-              success: function(result) {
+              success: (result) => {
                 this.Tariff = result;
                 this.$refs.Main.Load(this.Tariff);
                 $(this.$el).modal('show');
-              }.bind(this)
+              }
             });
           }          
         });
@@ -115,5 +115,4 @@
     font-size: 14px;
     margin-top: 70px;
   }
-</style> 
- 
+</style>

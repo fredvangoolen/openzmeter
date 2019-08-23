@@ -11,8 +11,8 @@
         <div class="col-xs-12">
           <label class="control-label">Name</label><input type="text" class="form-control" ref="Name" @change="SetName">
         </div>
-        <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetStartDate"></date-picker></div>
-        <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetEndDate"></date-picker></div>
+        <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:DateChanged="SetStartDate"></date-picker></div>
+        <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:DateChanged="SetEndDate"></date-picker></div>
       </div>
     </div>
   </div> 
@@ -32,8 +32,8 @@
         this.Show = true;
         this.$nextTick(function() {
           $(this.$refs.Name).val(tariff.Template.Holidays[index].Name);
-          this.$refs.StartDate.SetDate(moment(tariff.Template.Holidays[index].StartDate));
-          this.$refs.EndDate.SetDate(moment(tariff.Template.Holidays[index].EndDate));
+          this.$refs.StartDate.SetDate(tariff.Template.Holidays[index].StartDate);
+          this.$refs.EndDate.SetDate(tariff.Template.Holidays[index].EndDate);
         });
       },
       SetName: function(evt) {

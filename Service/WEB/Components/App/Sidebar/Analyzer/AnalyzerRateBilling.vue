@@ -27,7 +27,7 @@
             </tr>
           </table>
         </div>
-        <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
+        <div class="col-xs-12" style="height: 5px;"></div>
         <div class="col-xs-12">
           <table>
             <tr><td><strong>From</strong></td><td><strong>To</strong></td><td class="text-right"><strong>Duration</strong></td></tr>
@@ -44,8 +44,8 @@
             <tr>
               <td><button type="button" class="btn btn-default btn-xs" style="width:100%" @click="AddBillDay"><img :src="require('Imgs/cross.png')"> Remove last</button></td>
               <td style="display: flex;">
-                <option-picker class="flex-item" :options="BillDayNames" :selected="BillDayNames[Day]" v-on:change="DayChanged"></option-picker>
-                <option-picker class="flex-item" :options="PeriodNames" :selected="PeriodNames[Period]" v-on:change="PeriodChanged"></option-picker>
+                <option-picker class="flex-item" :options="BillDayNames" :selected="BillDayNames[0]" v-on:change="Day=$event"></option-picker>
+                <option-picker class="flex-item" :options="PeriodNames" :selected="PeriodNames[0]" v-on:change="Period=$event"></option-picker>
                 <button type="button" class="btn btn-default btn-xs flex-item" v-on:click="BuildPeriods" data-toggle="tooltip" title="Create or replace bill days according to selections"><img :src="require('Imgs/wand.png')"></button>              
               </td>
               <td>
@@ -74,39 +74,19 @@
     methods: {
       Round6: oZm.Round6Plain,
       FromDate: function(idx) {
-        return moment((idx == 0) ? this.Rate.StartDate : this.Rate.Config.Billing[idx - 1]).format('DD/MM/YYYY');
+        return moment.tz((idx == 0) ? this.Rate.StartDate : this.Rate.Config.Billing[idx - 1], this.Analyzer.TimeZone).format('DD/MM/YYYY');
       },
       EndDate: function() {
         return moment(this.Rate.EndDate).format('DD/MM/YYYY');
       },
-      Load: function(rate) {
-        if(rate.Config.Billing.length < 1) {
-          this.Day = moment(rate.StartDate).date() - 1;
-        } else {
-          this.Day = moment(rate.Config.Billing[0]).date() - 1;
-        }
-        this.Day = Math.max(0, Math.min(this.Day, this.BillDayNames.length - 1));
-        if(rate.Config.Billing.length < 2) {
-          this.Period = 0;
-        } else {
-          this.Period = moment(rate.Config.Billing[1]).diff(moment(rate.Config.Billing[0]), 'months') - 1;
-        }
-        this.Period = Math.max(0, Math.min(this.Period, this.PeriodNames.length - 1));
+      Load: function(analyzer, rate) {
+        this.Analyzer = analyzer;
         this.Rate = rate;
-//        this.CreateBuildPeriods();
         this.Show = true;
-      },
-      PeriodChanged: function(value) {
-        this.Period = this.PeriodNames.indexOf(value);
-        this.CreateBuildPeriods();
-      },
-      DayChanged: function(value) {
-        this.Day = this.BillDayNames.indexOf(value);
-        this.CreateBuildPeriods();
       },
       BuildPeriods: function() {
         this.Rate.Config.Billing = [];
-        var Date = moment(this.Rate.StartDate);
+        var Date = moment.tz(this.Rate.StartDate, this.Analyzer.TimeZone);
         while(true) {
           Date = Date.add(this.Period + 1, 'M').date(this.Day + 1);
           if(Date.valueOf() >= this.Rate.EndDate) break;
@@ -145,6 +125,7 @@
     },
     created: function() {
       this.TypesEnum = ['PERCENT_TOTAL', 'PERCENT_ENERGY', 'PERCENT_POWER', 'PERCENT_ENERGY_POWER', 'FIXED_QUANTITY'];
+      this.Analyzer = null;
     },
     components: { OptionPicker, DatePicker }
   }
@@ -171,5 +152,12 @@
   }
   .flex-item {
     margin-right: 2px;
+  }
+  table {
+    background: #fafafa;
+    padding: 6px;
+    border-collapse: separate;
+    border-radius: 6px;
+    border: 1px solid #eee;    
   }
 </style>
