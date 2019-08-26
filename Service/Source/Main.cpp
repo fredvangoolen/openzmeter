@@ -15,36 +15,6 @@
 #include "SysSupport.h"
 //---------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
-//---------------------------------------------------------------------------------------------------------------------
-void GetNewsCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(Params["NewsTime"].is_number()) {
-    uint64_t Time = Params["NewsTime"];
-    req.ExecSentenceAsyncResult("SELECT COALESCE((SELECT json_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime = " + req.Bind(Time) + "), 'null') AS result");
-  } else {
-    req.ExecSentenceAsyncResult("SELECT json_build_object('Version', '" __BUILD__ "', 'News', array_agg(newstime ORDER BY newstime ASC)) AS result from news");
-  }
-  if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("result"), MHD_HTTP_OK);
-}
-void GetUserCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  req.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'TelegramID', telegram, 'Country_Code', country_code) AS result FROM users WHERE username = " + req.Bind(req.UserName()));
-  if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("result"), MHD_HTTP_OK);
-}
-void SetUserCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  //req.ExecSentenceAsyncResult("UPDATE users SET name = ", 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'TelegramID', telegram, 'Country_Code', country_code) AS result FROM users WHERE username = " + req.Bind(req.UserName()));
-  if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("result"), MHD_HTTP_OK);
-}
-void GetCountriesCallback(HTTPRequest &req) {
-  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('Country_Code', country_code, 'Name', country, 'Currency', currency, 'TimeZone', timezone))), '[]') as result FROM country");
-  if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("result"), MHD_HTTP_OK);
-}
-//---------------------------------------------------------------------------------------------------------------------
 static bool Terminate = false;
 //---------------------------------------------------------------------------------------------------------------------
 void SignalHandler(int signal) {
@@ -74,13 +44,6 @@ int main(int argc, char** argv) {
   signal(SIGILL, SIG_IGN);
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
-  
-//  for(auto it = cctz::time_zone_map.begin(); it != cctz::time_zone_map.end(); it++) {
-//    printf("%s\n", it->first.c_str());
-//  }
-  
-  
-  
   string ConfigFileName = "/etc/openZmeter.conf";
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
@@ -110,28 +73,10 @@ int main(int argc, char** argv) {
   }
   /* Create system manager */
   System SystemManager;
-
   /* Create devices interface */
   DeviceManager DeviceManager;
-  
   /* Create WEB service */
   HTTPServer HTTPServer;
-//  if(HTTPServer.Config() == false) return EXIT_FAILURE;
-//  HTTPServer.RegisterCallback("/getSysInfo",          Tools::GetSysInfo);
-//  HTTPServer::RegisterCallback("/getNetworks",         NetworkManager::GetNetworksCallback);
-  HTTPServer::RegisterCallback("getNews",             GetNewsCallback);
-  HTTPServer::RegisterCallback("getCountries",        GetCountriesCallback);  
-  HTTPServer::RegisterCallback("getUser",             GetUserCallback);
-  HTTPServer::RegisterCallback("setUser",             SetUserCallback);
-
-
-//  int Prio = sched_get_priority_max(SCHED_RR);
-//  if(Prio == -1) {
-//    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//  } else {
-//    sched_param Param {.sched_priority = Prio };
-//    if(sched_setscheduler(0, SCHED_RR, &Param) != 0) LOGFile::Warning("Cant raise process priority (%s:%d -> %s)\n", __func__, __LINE__, strerror(errno));
-//  }
 
   uint32_t Iter = 0;
   while(!Terminate) {

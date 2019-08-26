@@ -83,6 +83,7 @@
         <in>HTTPServer.cpp</in>
         <in>MODBus.cpp</in>
         <in>Main.cpp</in>
+        <in>SysSupport.cpp</in>
         <in>Tools.cpp</in>
       </df>
     </df>
@@ -631,6 +632,8 @@
       <item path="Source/Support/OpenWRT/OpenWRT.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="2">
         </ccTool>
+      </item>
+      <item path="Source/SysSupport.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Source/Tariffs/ESP/TariffPlugin_ESP.cpp"
             ex="false"
