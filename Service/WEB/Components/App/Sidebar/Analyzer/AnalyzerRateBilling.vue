@@ -91,28 +91,19 @@
 </template>
 
 <script>
-  import OptionPicker from 'Components/OptionPicker.vue';
+  
   import DatePicker from 'Components/DatePicker.vue';
   import moment from 'JS/moment.js';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
-      return { Show: false, Day: 0, Period: 0, TypeNames: ['Total', 'Energy', 'Power', 'Energy+Power', 'Fixed'], Analyzer: null, Rate: null,
-                PeriodNames: ['Each month', 'Each two month', 'Each three month'],
-                BillDayNames: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th']
+      return { Show: false, Day: 0, Period: 0, Analyzer: null, Rate: null,
               };
     },
     methods: {
       Round6: oZm.Round6Plain,
-      FromDate: function(idx) {
-        return moment.tz(((idx <= 0) ? this.Rate.StartDate : this.Rate.Config.Billing[idx - 1] + 1), this.Analyzer.TimeZone);
-      },
-      EndDate: function(idx) {
-        return moment.tz(((idx >= this.Rate.Config.Billing.length) ? this.Rate.EndDate : this.Rate.Config.Billing[idx]), this.Analyzer.TimeZone);
-      },
-      FormatDate: function(val) {
-        return val.format('DD/MM/YYYY');
-      },
+
+
       CalcDays: function(idx) {
         console.log("from " + this.FromDate(idx));
         console.log("to " + this.EndDate(idx).add(1, 'ms'));
@@ -123,15 +114,7 @@
         this.Rate = rate;
         this.Show = true;
       },
-      BuildPeriods: function() {
-        this.Rate.Config.Billing = [];
-        var Date = moment.tz(this.Rate.StartDate, this.Analyzer.TimeZone);
-        while(true) {
-          Date = Date.add(this.Period + 1, 'M').date(this.Day + 1);
-          if(Date.valueOf() >= this.Rate.EndDate) break;
-          this.Rate.Config.Billing.push(Date.startOf('day').valueOf() - 1);
-        }
-      },
+
       Back: function() {
         this.Show = false;
         this.$parent.$refs.Rate.Show = true;
@@ -148,12 +131,7 @@
         this.Rate.Config.Taxs[idx].Type = this.TypesEnum[this.TypeNames.indexOf(name)];
         this.Rate = Object.assign({}, this.Rate);
       },
-      ValueChanged: function(value, idx) {
-        var Value = parseFloat(value.target.value);
-        if(isNaN(Value) === true) Value = 0.0;
-        this.Rate.Config.Taxs[idx].Value = Value;
-        this.Rate = Object.assign({}, this.Tariff);
-      },
+
       NameChanged: function(value, idx) {
         this.Rate.Config.Taxs[idx].Name = value.target.value;
         this.Rate = Object.assign({}, this.Rate);
@@ -162,10 +140,8 @@
         
       }
     },
-    created: function() {
-      this.TypesEnum = ['PERCENT_TOTAL', 'PERCENT_ENERGY', 'PERCENT_POWER', 'PERCENT_ENERGY_POWER', 'FIXED_QUANTITY'];
-    },
-    components: { OptionPicker, DatePicker }
+
+    
   }
 </script>
 

@@ -10,9 +10,20 @@
   import datetimepicker from 'JS/bootstrap-datetimepicker.min.js';
   import 'CSS/bootstrap-datetimepicker.min.css'  
   export default {
-    props: {options: { type: Object, default: {}}, big: {type: Boolean, default: true}, timezone: {type: String, default: 'UTC'}},
+    props: {options: { type: Object, default: {}}, big: {type: Boolean, default: true}, timezone: {type: String, default: 'UTC'}, disabled: {type: Boolean, default: false}, date: { type: Object, default: null}},
     data() {
-      return { };
+      return { Date: 0 };
+    },
+    watch: {
+      disabled: function(val) {
+        if(this.disabled === true) 
+          this.Disable();
+        else 
+          this.Enable();  
+      },
+      date: function(val) {
+        this.SetDate(val);
+      },
     },
     methods: {
       SetTimeZone: function(val) {
@@ -30,9 +41,15 @@
     },
     mounted: function() {
       $(this.$el).datetimepicker(this.options);
-      $(this.$el).on('dp.change', function(e) {
-        this.$emit('DateChanged', e.date);
-      }.bind(this));
+      if(this.disabled === true) 
+        this.Disable();
+      else 
+        this.Enable();
+      if(this.date != null) $(this.$el).data("DateTimePicker").options({ date: this.date });
+      $(this.$el).on('dp.change', (e) => {
+        if(this.Date != e.date.valueOf()) this.$emit('DateChanged', e.date);
+        this.Date = e.date.valueOf();
+      });
     }
   }
 </script>

@@ -1,13 +1,13 @@
 <template>
-  <div class="modal-content" v-if="Show">
+  <div class="modal-content">
     <div class="modal-header">
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Configuration</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner, active: View=='Basic' }" @click="View='Basic'">Basic</button>
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner, active: View=='Contract' }" @click="View='Contract'">Contract</button>
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner, active: View=='Remote' }" @click="View='Remote'">Remote</button>
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner }" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner }" v-on:click="Save"><img :src="require('Imgs/diskette.png')" alt="Save"></button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner, active: View=='Basic' }" v-on:click="View='Basic'">Basic</button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner, active: View=='Contract' }" v-on:click="View='Contract'">Contract</button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: ShowSpinner, active: View=='Remote' }" v-on:click="View='Remote'">Remote</button>
+        <button type="button" class="btn btn-default btn-xs" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </div>
     <div class="modal-body">
@@ -16,11 +16,11 @@
       <div class="row" v-if="View=='Basic'">
         <div class="col-xs-9">
           <label class="control-label">Serial number</label>
-          <input type="text" class="form-control" disabled :value="Analyzer.Analyzer">
+          <input type="text" class="form-control" disabled="" :value="Analyzer.Analyzer">
         </div>
         <div class="col-xs-3">
           <label class="control-label">Mode</label>
-          <input type="text" class="form-control" disabled :value="Analyzer.Mode">
+          <input type="text" class="form-control" disabled="" :value="Analyzer.Mode">
         </div>
         <div class="col-xs-12">
           <label class="control-label">Display name</label>
@@ -28,20 +28,20 @@
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Nominal voltage</label>
-          <input-spin prepend="V" :list="[{Text: '120 V (L-N)', Value: 120}, {Text: '240 V (L-L)', Value: 240}, {Text: '230 V (L-N)', Value: 230}]" :decimals="1" :min="10" :max="10000" :increment="1" :value="Analyzer.NominalVoltage" v-on:change="SetVoltage"></input-spin>
+          <input-spin prepend="V" :list="[{Text: '120 V (L-N)', Value: 120}, {Text: '240 V (L-L)', Value: 240}, {Text: '230 V (L-N)', Value: 230}]" :decimals="1" :min="10" :max="10000" :increment="1" :value="Analyzer.NominalVoltage" v-on:change="Analyzer.NominalVoltage=$event"></input-spin>
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Nominal frequency</label>
-          <input-spin prepend="Hz" :list="[{Text: 'DC', Value: 0}, {Text: '50 Hz', Value: 50}, {Text: '60 Hz', Value: 60}]" :decimals="1" :min="0" :max="500" :increment="1" :value="Analyzer.NominalFreq" v-on:change="SetFrequency"></input-spin>
+          <input-spin prepend="Hz" :list="[{Text: 'DC', Value: 0}, {Text: '50 Hz', Value: 50}, {Text: '60 Hz', Value: 60}]" :decimals="1" :min="0" :max="500" :increment="1" :value="Analyzer.NominalFreq" v-on:change="Analyzer.NominalFreq=$event"></input-spin>
         </div>
         <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Min current</label>
-          <input-spin prepend="A" :decimals="1" :min="10" :max="500" :increment="1" :value="Analyzer.MinCurrent" v-on:change="SetMinCurrent"></input-spin>
+          <input-spin prepend="A" :decimals="1" :min="10" :max="500" :increment="1" :value="Analyzer.MinCurrent" v-on:change="Analyzer.MinCurrent=$event"></input-spin>
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Max current</label>
-          <input-spin prepend="A" :decimals="1" :min="0.1" :max="500" :increment="1" :value="Analyzer.MaxCurrent" v-on:change="SetMaxCurrent"></input-spin>
+          <input-spin prepend="A" :decimals="1" :min="0.1" :max="500" :increment="1" :value="Analyzer.MaxCurrent" v-on:change="Analyzer.MaxCurrent=$event"></input-spin>
         </div>      
       </div>
       <div class="row" v-if="View=='Contract'">
@@ -61,10 +61,10 @@
           <label class="control-label">Location</label>
           <div style="display: flex">
             <div class="input-group" style="flex-grow: 50">
-              <input-spin ref="latitude" prepend="º Lat" :decimals="7" :min="-180" :max="180" :increment="0.01" :value="Analyzer.GeoPosition[0]" v-on:change="SetLatitude"></input-spin>
+              <input-spin ref="latitude" prepend="º Lat" :decimals="7" :min="-180" :max="180" :increment="0.01" :value="Analyzer.GeoPosition[0]" v-on:change="Analyzer.GeoPosition[0]=$event"></input-spin>
             </div>
             <div class="input-group" style="flex-grow: 50; margin: 0px 5px">
-              <input-spin ref="longitude" prepend="º Lon" :decimals="7" :min="-180" :max="180" :increment="0.01" :value="Analyzer.GeoPosition[1]" v-on:change="SetLongitude"></input-spin>
+              <input-spin ref="longitude" prepend="º Lon" :decimals="7" :min="-180" :max="180" :increment="0.01" :value="Analyzer.GeoPosition[1]" v-on:change="Analyzer.GeoPosition[1]=$event"></input-spin>
             </div>
             <button class="btn btn-default" v-on:click="GetLocation" title="Get current location"><img :src="require('Imgs/pin.png')"></button>
           </div>
@@ -73,7 +73,7 @@
       <div class="row" v-if="View=='Remote'">
         <div class="col-xs-12">
           <label class="control-label" style="line-height: 22px">Enable remote access</label>
-          <toggle class="float-right" onText="Yes" offText="No" :value="Analyzer.RemoteEnabled" v-on:change="SetRemoteEnabled"></toggle>
+          <toggle class="float-right" onText="Yes" offText="No" :value="Analyzer.RemoteEnabled" v-on:change="Analyzer.RemoteEnabled=$event"></toggle>
           <hr style="margin: 5px 0px 5px 0px"/>
         </div>
         <div class="col-xs-12">
@@ -100,28 +100,14 @@
   import Toggle from 'Components/Toggle.vue';
   import moment from 'JS/moment.js';
   export default {
+    props: ['analyzer'],
     data() {
-      return { TimeZones: moment.tz.names(), View: 'Basic', Show: false, ShowSpinner: true, Analyzer: {}, Error: ''};
+      return { TimeZones: moment.tz.names(), View: 'Basic', ShowSpinner: false, Analyzer: {}, Error: ''};
+    },
+    created: function() {
+      this.Analyzer = this.analyzer;
     },
     methods: {
-      Load: function(analyzer) {
-        this.Analyzer = analyzer;
-        this.Show = true;
-        this.View = 'Basic';
-        this.ShowSpinner = false;
-      },
-      SetVoltage: function(val) {
-        this.Analyzer.NominalVoltage = val;
-      },
-      SetFrequency: function(val) {
-        this.Analyzer.NominalFreq = val;
-      },
-      SetMinCurrent: function(val) {
-        this.Analyzer.MinCurrent = val;
-      },
-      SetMaxCurrent: function(val) {
-        this.Analyzer.MaxCurrent = val;
-      },
       GetLocation: function() {
         navigator.geolocation.getCurrentPosition(this.SetLocation);
       },
@@ -129,42 +115,33 @@
         this.$refs.latitude.SetValue(val.coords.latitude);
         this.$refs.longitude.SetValue(val.coords.longitude);
       },
-      SetLongitude: function(val) {
-        this.Analyzer.GeoPosition[1] = val;
-      },
-      SetLatitude: function(val) {
-        this.Analyzer.GeoPosition[0] = val;
-      },
-      SetRemoteEnabled: function(val) {
-        this.Analyzer.RemoteEnabled = val;
-      },
       Save: function() {
         this.ShowSpinner = true;
         $.ajax({ url: "setAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(this.Analyzer), 
-          success: function(data) {
+          success: (data) => {
             this.ShowSpinner = false;
             if(data.Result === true) {
-              this.Show = false;
-              this.$parent.$refs.Table.Load();
+              this.$parent.View = 'List';
+              this.$parent.GetAnalyzers();
               if(this.$root.SelectedAnalyzer.Analyzer === this.Analyzer.Analyzer) {
                 this.$root.SelectedAnalyzer = this.Analyzer;
                 this.$root.$emit('AnalyzerChanged', this.Analyzer);
               }
             } else {
               this.Error = 'Form values are incorrect. Please, review.';
-              setTimeout(function() { this.Error = ''; }.bind(this), 5000); 
+              setTimeout(() => { this.Error = ''; }, 5000); 
             }
-          }.bind(this),
-          error: function() {
+          },
+          error: () => {
             this.ShowSpinner = false;
             this.Error = 'Failed to save analyzer!';
-            setTimeout(function() { this.Error = ''; }.bind(this), 5000);
-          }.bind(this)
+            setTimeout(() => { this.Error = ''; }, 5000);
+          }
         });
       },
       Back: function() {
-        this.Show = false;
-        this.$parent.$refs.Table.Load();
+        this.$parent.View = 'List';
+        this.$parent.GetAnalyzers();
       }
     },
     components: { Spinner, OptionPicker, InputSpin, Toggle }
