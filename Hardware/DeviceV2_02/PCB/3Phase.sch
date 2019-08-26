@@ -1425,12 +1425,12 @@ L3I_ADC
 $Comp
 L Components:MCP6004 U11
 U 2 1 5BFE63CA
-P 7100 9350
-F 0 "U11" H 7100 9550 50  0000 L CNN
-F 1 "MCP6004" H 7050 9150 50  0000 L CNN
-F 2 "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm" H 7050 9450 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/Free-Shipping-100pcs-lots-MCP6004-I-SL-MCP6004-SOP-14-IC-In-stock/1380782_32850180423.html" H 7150 9550 50  0001 C CNN
-	2    7100 9350
+P 2225 10100
+F 0 "U11" H 2225 10300 50  0000 L CNN
+F 1 "MCP6004" H 2175 9900 50  0000 L CNN
+F 2 "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm" H 2175 10200 50  0001 C CNN
+F 3 "https://es.aliexpress.com/store/product/Free-Shipping-100pcs-lots-MCP6004-I-SL-MCP6004-SOP-14-IC-In-stock/1380782_32850180423.html" H 2275 10300 50  0001 C CNN
+	2    2225 10100
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -1447,12 +1447,12 @@ $EndComp
 $Comp
 L Components:MCP6004 U11
 U 4 1 5BFEBAD0
-P 2225 10100
-F 0 "U11" H 2225 10300 50  0000 L CNN
-F 1 "MCP6004" H 2175 9900 50  0000 L CNN
-F 2 "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm" H 2175 10200 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/Free-Shipping-100pcs-lots-MCP6004-I-SL-MCP6004-SOP-14-IC-In-stock/1380782_32850180423.html" H 2275 10300 50  0001 C CNN
-	4    2225 10100
+P 7100 9350
+F 0 "U11" H 7100 9550 50  0000 L CNN
+F 1 "MCP6004" H 7050 9150 50  0000 L CNN
+F 2 "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm" H 7050 9450 50  0001 C CNN
+F 3 "https://es.aliexpress.com/store/product/Free-Shipping-100pcs-lots-MCP6004-I-SL-MCP6004-SOP-14-IC-In-stock/1380782_32850180423.html" H 7150 9550 50  0001 C CNN
+	4    7100 9350
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -1702,9 +1702,6 @@ Wire Wire Line
 	2900 10125 2900 10100
 Wire Wire Line
 	2875 10100 2900 10100
-Connection ~ 2550 10100
-Wire Wire Line
-	2525 10100 2550 10100
 Wire Wire Line
 	2550 10350 2550 10100
 Wire Wire Line
@@ -3077,7 +3074,6 @@ Wire Wire Line
 	2125 9100 2125 9125
 Wire Wire Line
 	2200 9125 2125 9125
-Connection ~ 2125 9125
 Wire Wire Line
 	2125 9125 2125 9150
 Wire Wire Line
@@ -3179,8 +3175,6 @@ F 3 "" H 2125 9775 50  0000 C CNN
 	1    2125 9775
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	2125 9775 2125 9750
 $Comp
 L power:GND #PWR0111
 U 1 1 5C28DFF1
@@ -3434,4 +3428,10 @@ Wire Wire Line
 	2025 2725 2025 2675
 Wire Wire Line
 	2025 2675 1650 2675
+Connection ~ 2550 10100
+Wire Wire Line
+	2525 10100 2550 10100
+Connection ~ 2125 9125
+Wire Wire Line
+	2125 9775 2125 9750
 $EndSCHEMATC

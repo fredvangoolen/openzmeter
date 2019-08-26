@@ -1,19 +1,21 @@
 <template>
-  <div class="modal-content" v-bind:class="{ hide: !Show }">
+  <div class="modal-content">
     <div class="modal-header">
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates &raquo; Edit</h4></div>
       <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" v-on:click="Save"><img :src="require('Imgs/diskette.png')" alt="Save rate"></button>
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" v-on:click="Periods">Periods</button>
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" v-on:click="Billing">Billing</button>
-        <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ active: View=='Main' }" v-on:click="View='Main'">Main</button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ active: View=='Periods' }" v-on:click="View='Periods'">Periods</button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ active: View=='Concepts' }" v-on:click="View='Concepts'">Concepts</button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ active: View=='Cycles' }" v-on:click="View='Cycles'">Cycles</button>
+        <button type="button" class="btn btn-default btn-xs" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </div>
     <div class="modal-body">
       <spinner v-if="ShowSpinner"></spinner>
       <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != '' && !ShowSpinner">{{ Error }}</div>
-      <div class="alert alert-success text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error == '' && !ShowSpinner">{{ Rate.Template.Description }}<br><strong>Rate contains {{ Rate.Template.Seasons.length }}  seasons, a total of {{ Rate.Template.Periods.length }}  day periods and {{ Rate.Template.Holidays.length }} holidays</strong></div>
-      <div class="row">
+      <div class="row" v-bind:style="{ display: (View=='Main') ? 'block' : 'none' }">
+        <div class="alert alert-success text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error == '' && !ShowSpinner">{{ Rate.Template.Description }}<br><strong>Tariff contains {{ Rate.Template.Seasons.length }}  seasons, a total of {{ Rate.Template.Periods.length }}  day periods and {{ Rate.Template.Holidays.length }} holidays<br>Rate contains {{ Rate.Config.Taxs.length }}  concepts and {{ Rate.Config.Billing.length + 1 }} bills</strong></div>
         <div class="col-xs-12">
           <label class="control-label">Base Tariff</label>
           <div class="input-group">
@@ -26,21 +28,166 @@
         </div>
         <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" v-on:DateChanged="SetStartDate"></date-picker></div>
         <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" v-on:DateChanged="SetEndDate"></date-picker></div>
-      </div>              
+      </div>
+      <div class="row periods" v-if="View=='Periods'">
+        <div class="col-xs-12">
+          <table>
+            <tr><td></td><td><strong>Contracted power <em>(kW)</em></strong></td><td><strong>Power costs <em>(€/kW/day)</em></strong></td><td><strong>Energy costs <em>(€/kWh)</em></strong></td></tr>
+            <tr v-for="(period, idx) in Rate.Config.Periods">
+              <td><strong>P{{idx + 1}}</strong></td>
+              <td><div class="input-group input-group-xs"><input type="text" class="form-control" v-on:change="PeriodItemChanged($event, 'Contracted_Power', idx)" :value="Round6(period.Contracted_Power / 1000)"></div></td>
+              <td><div class="input-group input-group-xs"><input type="text" class="form-control" v-on:change="PeriodItemChanged($event, 'Power_Cost', idx)" :value="Round6(period.Power_Cost * 1000)"></div></td>
+              <td><div class="input-group input-group-xs"><input type="text" class="form-control" v-on:change="PeriodItemChanged($event, 'Energy_Cost', idx)" :value="Round6(period.Energy_Cost * 1000)"></div></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="row" v-if="View=='Concepts'">
+        <div class="col-xs-12">
+          <table>
+            <tr><td><strong>Concept</strong></td><td><strong>Type</strong></td><td class="text-right"><strong>Value</strong></td></tr>
+            <tr v-for="(tax, idx) in Rate.Config.Taxs">
+              <td>
+                <div class="input-group input-group-xs">
+                  <span class="input-group-btn"><button class="btn btn-default" type="button" v-on:click="Rate.Config.Taxs.splice(idx, 1)"><img :src="require('Imgs/cross.png')"></button></span>
+                  <input type="text" class="form-control" v-on:change="tax.Name=$event.target.value" :value="tax.Name">
+                </div>
+              </td>
+              <td>
+                <option-picker :options="TypeNames" v-on:change="tax.Type=TypesEnum[TypeNames.indexOf($event)]" :selected="TypeNames[TypesEnum.indexOf(tax.Type)]"></option-picker>
+              </td>
+              <td>
+                <div class="input-group input-group-xs">
+                  <input type="text" class="form-control text-right" v-on:change="ValueConceptChanged($event, idx)" :value="Round6(tax.Value)"> 
+                  <span class="input-group-addon" style="width: 70px">{{ (tax.Type == 'FIXED_QUANTITY') ? '€/Bill cycle' : '%' }}</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3"><button type="button" class="btn btn-default btn-xs" style="width:100%" v-on:click="Rate.Config.Taxs.push({Name: 'Unnamed tax', Type: 'PERCENT_TOTAL', Value: 0.0})"><img :src="require('Imgs/plus.png')"> New concept</button></td>
+            </tr>
+          </table>
+        </div>
+      </div>      
+      <div class="row" v-if="View=='Cycles'">
+        <div class="col-xs-12">
+          <table>
+            <tr><td style="min-width: 120px"><strong>From</strong></td><td style="width: 100%"><strong>To</strong></td><td class="text-right" style="min-width: 120px"><strong>Duration</strong></td></tr>
+            <tr v-for="(date, idx) in Rate.Config.Billing.concat([Rate.EndDate])">
+              <td>
+                <div class="input-group input-group-xs">
+                  <span class="input-group-btn" v-if="idx!=Rate.Config.Billing.length"><button class="btn btn-default" type="button" v-on:click="Rate.Config.Billing.splice(idx, 1)"><img :src="require('Imgs/cross.png')"></button></span>
+                  <input type="text" class="form-control" disabled="" :value="FormatDate(StartDate(idx))">
+                </div>
+              </td>
+              <td>
+                <date-picker :big="false" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :date="EndDate(idx)" v-on:DateChanged="SetBillPeriods(idx, $event)" :disabled="idx==Rate.Config.Billing.length"></date-picker>
+              </td>
+              <td class="text-right">
+                <div class="input-group input-group-xs">
+                  <input type="text" class="form-control text-right" disabled="" :value="CalcDays(idx)"> 
+                  <span class="input-group-addon">Days</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><button type="button" class="btn btn-default btn-xs" style="width:100%" v-on:click="AddBillDay"><img :src="require('Imgs/plus.png')"> New bill</button></td>
+              <td style="display: flex">
+                <option-picker class="flex-item" :options="BillDayNames" :selected="BillDayNames[0]" v-on:change="Day=$event"></option-picker>&nbsp;
+                <option-picker class="flex-item" :options="PeriodNames" :selected="PeriodNames[0]" v-on:change="Period=PeriodNames.indexOf($event)"></option-picker>&nbsp;
+                <button type="button" class="btn btn-default btn-xs flex-item" v-on:click="BuildPeriods" data-toggle="tooltip" title="Create or replace bill days according to selections"><img :src="require('Imgs/wand.png')"></button>              
+              </td>
+              <td></td>
+            </tr>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
   import bsSuggest from 'JS/bootstrap-suggest.js';
+  import OptionPicker from 'Components/OptionPicker.vue';
   import moment from 'JS/moment.js';
   import DatePicker from 'Components/DatePicker.vue';
   import Spinner from 'Components/Spinner.vue';
+  import * as oZm from 'JS/openZmeter.js';
   export default {
+    props: ['rate', 'analyzer', 'tariffs'],
     data() {
-      return { Show: false, ShowSpinner: true, Rate: null, Error: '', Analyzer: null };
+      return { ShowSpinner: true, Rate: null, Error: '', Analyzer: null, Tariffs: null, View: 'Main', Day: 0, Period: 0,
+        TypeNames: ['Total', 'Energy', 'Power', 'Energy+Power', 'Fixed'],
+        PeriodNames: ['Each month', 'Each two month', 'Each three month'],
+        BillDayNames: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th']
+      };
+    },
+    created: function() {
+      this.TypesEnum = ['PERCENT_TOTAL', 'PERCENT_ENERGY', 'PERCENT_POWER', 'PERCENT_ENERGY_POWER', 'FIXED_QUANTITY'];
+      this.Analyzer = this.analyzer;
+      this.Tariffs = this.tariffs;
+      for(var n = 0; n < this.Tariffs.length; n++) {
+        this.Tariffs[n].id = this.Tariffs[n].TariffID;
+        this.Tariffs[n].name = this.Tariffs[n].Name;
+        this.Tariffs[n].description = 'From ' + moment.tz(this.Tariffs[n].StartDate, this.Analyzer.TimeZone).format('DD/MM/YYYY') + ' to ' + moment.tz(this.Tariffs[n].EndDate, this.Analyzer.TimeZone).format('DD/MM/YYYY');
+      }
+      this.Initial = this.rate;
+      if(this.rate === null) {
+        this.Rate = { StartDate: moment().startOf('year').valueOf(), EndDate: moment().endOf('year').valueOf(), Template: null, Config: {Periods: [], Taxs: [], Billing: []} };
+      } else {
+        this.Rate = Object.assign({}, this.rate);
+      }
+    },
+    mounted: function() {
+      if(this.Rate.RateID !== undefined) {
+        this.Tariffs.unshift({ id: 'CURRENT', name: '(*) ' + this.Rate.Name, description: 'From ' + moment.tz(this.Rate.StartDate, this.Analyzer.TimeZone).format('DD/MM/YYYY') + ' to ' + moment.tz(this.Rate.EndDate, this.Analyzer.TimeZone).format('DD/MM/YYYY')});
+      } else {
+        $(this.$refs.Base).attr('data-id', '');
+        $(this.$refs.Base).val('');
+        this.$nextTick(() => {  
+          this.$refs.StartDate.Disable();
+          this.$refs.EndDate.Disable();
+        });
+      }
+      this.SetTariffs();
     },
     methods: {
+      Round6: oZm.Round6Plain,
+      FormatDate: function(val) {
+        return val.format('DD/MM/YYYY');
+      },
+      SetBillPeriods: function(idx, val) {
+        if(this.Rate.Config.Billing[idx] == val.endOf('day').valueOf()) return;
+        this.Rate.Config.Billing[idx] = val.endOf('day').valueOf();
+        this.$nextTick(() => { 
+          this.Rate.Config.Billing.sort();
+        });
+      },
+      StartDate: function(idx) {
+        var Date;
+        if(idx <= 0) 
+          Date = moment.tz(this.Rate.StartDate, this.Analyzer.TimeZone);
+        else if((idx > 0) && (idx <= this.Rate.Config.Billing.length)) 
+          Date = moment.tz(this.Rate.Config.Billing[idx - 1] + 1, this.Analyzer.TimeZone);
+        else
+          Date = moment.tz(this.Rate.EndDate + 1, this.Analyzer.TimeZone);
+        console.log("Start" + idx, Date);
+        return Date;
+      },
+      EndDate: function(idx) {
+        var Date;    
+        if(idx < 0)
+          Date = moment.tz(this.Rate.StartDate - 1, this.Analyzer.TimeZone);
+        else if((idx >= 0) && (idx < this.Rate.Config.Billing.length))
+          Date = moment.tz(this.Rate.Config.Billing[idx], this.Analyzer.TimeZone);
+        else    
+          Date = moment.tz(this.Rate.EndDate, this.Analyzer.TimeZone);
+        console.log("end"+idx,Date);
+        return Date;
+      },
+      CalcDays: function(idx) {
+        return this.EndDate(idx).add(1, 'ms').diff(this.StartDate(idx), 'days');
+      },
       LoadCurrent: function() {
         $(this.$refs.Base).attr('data-id', 'CURRENT');
         $(this.$refs.Base).val(this.Tariffs[0].name);
@@ -60,46 +207,15 @@
         this.ShowSpinner = false;
       },
       Save: function() {
-        $.ajax({ url: (this.Rate.RateID == undefined) ? "addRate" : "setRate", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.Analyzer, CountryCode: 'ESP' /*this.Analyzer.CountryCode*/ }, this.Rate) ), 
-          success: function() {
-            this.Show = false;
-            this.$parent.$refs.Rates.Load(this.Analyzer);
-          }.bind(this),
-          error: function() {
+        $.ajax({ url: (this.Rate.RateID === undefined) ? "addRate" : "setRate", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.Analyzer, CountryCode: 'ESP' /*this.Analyzer.CountryCode*/ }, this.Rate) ), 
+          success: () => {
+            this.$parent.View = 'List';
+            this.$parent.GetRates();
+          },
+          error: () => {
             this.Error = 'Failed to save rate to analyzer!';
-            setTimeout(function() { this.Error = ''; }.bind(this), 1000); 
-          }.bind(this)
-        });
-      },
-      Load: function(analyzer, id) {
-        this.Analyzer = analyzer;
-        this.Show = true;
-        this.ShowSpinner = true;
-        this.Tariffs = [];
-        this.$nextTick(function() {
-          $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-            success: function(result) {
-              for(var i = 0; i < result.length; i++) this.Tariffs.push({ id: result[i].TariffID, name: result[i].Name, description: 'From ' + moment(result[i].StartDate).format('DD/MM/YYYY') + ' to ' + moment(result[i].EndDate).format('DD/MM/YYYY')}); 
-              if(id !== null) {
-                $.ajax({ url: "getRate", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.Analyzer, RateID: id }), 
-                  success: function(result) {
-                    this.Initial = result;
-                    this.Rate = Object.assign({}, result);
-                    this.Tariffs.unshift({ id: 'CURRENT', name: '(*) ' + result.Name, description: 'From ' + moment(result.StartDate).format('DD/MM/YYYY') + ' to ' + moment(result.EndDate).format('DD/MM/YYYY')});
-                    this.SetTariffs();
-                  }.bind(this)
-                });
-              } else {
-                this.Initial = null;
-                $(this.$refs.Base).attr('data-id', '');
-                $(this.$refs.Base).val('');
-                this.Rate = { StartDate: moment().startOf('year').valueOf(), EndDate: moment().endOf('year').valueOf(), Template: null, Config: {Periods: [], Taxs: [], Billing: []} };
-                this.$refs.StartDate.Disable();
-                this.$refs.EndDate.Disable();
-                this.SetTariffs();
-              }
-            }.bind(this)
-          });
+            setTimeout(() => { this.Error = ''; }, 1000); 
+          }
         });
       },
       Validate: function() {
@@ -126,8 +242,36 @@
         this.Validate();
       },
       Back: function() {
-        this.Show = false;
-        this.$parent.$refs.Rates.Load(this.Analyzer);
+        this.$parent.View = 'List';
+        this.$parent.GetRates();
+      },
+      PeriodItemChanged: function(value, type, idx) {
+        var Value = parseFloat(value.target.value);
+        if(isNaN(Value) === true) Value = 0.0;
+        if(type === 'Contracted_Power') 
+          Value = Value * 1000;
+        else
+          Value = Value / 1000;
+        this.Rate.Config.Periods[idx][type] = Value;
+        this.Rate = Object.assign({}, this.Rate);
+      },
+      ValueConceptChanged: function(value, idx) {
+        var Value = parseFloat(value.target.value);
+        if(isNaN(Value) === true) Value = 0.0;
+        this.Rate.Config.Taxs[idx].Value = Value;
+        //this.Rate = Object.assign({}, this.Tariff);
+      },
+      AddBillDay: function() {
+        this.Rate.Config.Billing.push(this.Rate.EndDate);
+      },
+      BuildPeriods: function() {
+        this.$set(this.Rate.Config, 'Billing', []);
+        var Date = moment.tz(this.Rate.StartDate, this.Analyzer.TimeZone);
+        while(true) {
+          Date = Date.add(this.Period + 1, 'M').date(this.Day + 1);
+          if(Date.valueOf() >= this.Rate.EndDate) break;
+          this.Rate.Config.Billing.push(Date.startOf('day').valueOf() - 1);
+        }
       },
       FillPeriods: function() {
         this.Rate.Config.Periods.length = this.Rate.Template.Periods.length;
@@ -156,26 +300,14 @@
         this.$refs.StartDate.Disable();
         this.$refs.EndDate.Disable();
         this.Error = 'Select a base tariff from list';
-      },
-      Periods: function() {
-        this.Show = false;
-        this.$parent.$refs.Periods.Load(this.Rate);
-      },
-      Billing: function() {
-        this.Show = false;
-        this.$parent.$refs.Billing.Load(this.Analyzer, this.Rate);
       }
-    },
-    created: function() {
-      this.Tariffs = [];
-      this.Initial = null;
     },
     beforeDestroy: function() {
       $(this.$refs.Base).off('onSetSelectValue', this.SelectBase.bind(this));
       $(this.$refs.Base).off('onUnsetSelectValue', this.DeselectBase.bind(this));
       $(this.$refs.Base).bsSuggest("destroy");
     },
-    components: { DatePicker, Spinner }
+    components: { OptionPicker, DatePicker, Spinner }
   }
 </script>
 
@@ -188,5 +320,14 @@
   }
   .dropdown-menu >>> td {
     border: none;
+  }
+  table, .input-group {
+    width: 100%;
+  }
+  table tr td {
+    padding: 1px 3px;
+  }
+  .periods input, .periods td {
+    text-align: right;
   }
 </style>
