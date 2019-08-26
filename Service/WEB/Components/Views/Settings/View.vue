@@ -4,12 +4,13 @@
       <div class="col-lg-12"><devices></devices></div>
       <div class="col-lg-12"><tariffs></tariffs></div>
       <div class="col-lg-12"><connectivity></connectivity></div>
+      <div class="col-lg-12"><users></users></div>
     </div>
   </div>
 </template>
 
 <script>
-
+  import Users from './Users.vue';
   import Devices from './Devices.vue';
   import Tariffs from './Tariffs.vue';
   import Connectivity from './Connectivity.vue';
@@ -18,6 +19,6 @@
     data () {
       return {  };
     },
-    components: { Devices, Tariffs, Connectivity }
+    components: { Users, Devices, Tariffs, Connectivity }
   }
 </script>
