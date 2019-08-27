@@ -63,7 +63,6 @@ class HTTPServer {
   private:
     MHD_Daemon  *pDaemon;
   private :
-    static void PingCallback(HTTPRequest &req);
     static int  HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
     static void HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe);
     static int  SendRedirect(struct MHD_Connection *connection, const string &url);

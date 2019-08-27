@@ -165,14 +165,9 @@ HTTPServer::HTTPServer() {
   } else {
     LOGFile::Info("HTTP server started on port %hu with relative path '%s'\n", Port, pRelativePath.c_str());
   }
-  RegisterCallback("Ping", PingCallback);
 }
 HTTPServer::~HTTPServer() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
-  UnregisterCallback("/Ping");
-}
-void HTTPServer::PingCallback(HTTPRequest &req) {
-  req.FromString("{}", (req.UserName() == "") ? MHD_HTTP_UNAUTHORIZED : MHD_HTTP_OK);
 }
 void HTTPServer::RegisterCallback(const string &handleName, const HTTPServer::Func_t function) {
   Callback_t Item = {handleName, function};
