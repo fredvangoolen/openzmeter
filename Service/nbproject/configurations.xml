@@ -69,6 +69,7 @@
           <df name="OpenWRT">
             <in>OpenWRT.cpp</in>
           </df>
+          <in>SysSupport.cpp</in>
         </df>
         <df name="Tariffs">
           <df name="ESP">
@@ -104,15 +105,17 @@
   <confs>
     <conf name="Default" type="0">
       <toolsSet>
-        <compilerSet>openWRT|GNU</compilerSet>
+        <compilerSet>GNU|GNU</compilerSet>
         <dependencyChecking>false</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <flagsDictionary>
         <element flagsID="0" commonFlags="-g -Os -std=c99 -ffreestanding"/>
-        <element flagsID="1" commonFlags="-std=c++11"/>
-        <element flagsID="2" commonFlags="-std=c++11 -fstack-protector-all"/>
-        <element flagsID="3" commonFlags="-std=c++11 -march=native"/>
+        <element flagsID="1"
+                 commonFlags="-mtune=generic -march=x86-64 -std=c++11 -fstack-protector-all"/>
+        <element flagsID="2" commonFlags="-std=c++11"/>
+        <element flagsID="3" commonFlags="-std=c++11 -fstack-protector-all"/>
+        <element flagsID="4" commonFlags="-std=c++11 -march=native"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -133,11 +136,7 @@
               <pElem>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21</pElem>
             </incDir>
           </cTool>
-          <ccTool flags="2">
-            <preprocessorList>
-              <Elem>DEBIAN</Elem>
-              <Elem>__BUILD__="20190731.1831"</Elem>
-            </preprocessorList>
+          <ccTool flags="3">
           </ccTool>
         </makeTool>
         <preBuild>
@@ -153,8 +152,19 @@
         </cTool>
       </item>
       <item path="Libs/cctz/civil_time_detail.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="2">
           <incDir>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Support/Debian</pElem>
+            <pElem>.</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>/usr/include/dbus-1.0</pElem>
             <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
             <pElem>/usr/include/libxml2</pElem>
@@ -173,20 +183,37 @@
             <pElem>Libs/cctz</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>DEBIAN</Elem>
             <Elem>OZM_DEBUG</Elem>
+            <Elem>__BUILD__="20190731.1831"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/civil_time_detail.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <preprocessorList>
-            <Elem>__BUILD__="20190822.0932"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_fixed.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
           <incDir>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Support/Debian</pElem>
+            <pElem>.</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>/usr/include/dbus-1.0</pElem>
             <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
             <pElem>/usr/include/libxml2</pElem>
@@ -205,20 +232,37 @@
             <pElem>Libs/cctz</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>DEBIAN</Elem>
             <Elem>OZM_DEBUG</Elem>
+            <Elem>__BUILD__="20190731.1831"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_fixed.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <preprocessorList>
-            <Elem>__BUILD__="20190822.0932"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_format.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
           <incDir>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Support/Debian</pElem>
+            <pElem>.</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>/usr/include/dbus-1.0</pElem>
             <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
             <pElem>/usr/include/libxml2</pElem>
@@ -237,20 +281,37 @@
             <pElem>Libs/cctz</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>DEBIAN</Elem>
             <Elem>OZM_DEBUG</Elem>
+            <Elem>__BUILD__="20190731.1831"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_format.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <preprocessorList>
-            <Elem>__BUILD__="20190822.0932"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_if.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
           <incDir>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Support/Debian</pElem>
+            <pElem>.</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>/usr/include/dbus-1.0</pElem>
             <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
             <pElem>/usr/include/libxml2</pElem>
@@ -269,20 +330,37 @@
             <pElem>Libs/cctz</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>DEBIAN</Elem>
             <Elem>OZM_DEBUG</Elem>
+            <Elem>__BUILD__="20190731.1831"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_if.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <preprocessorList>
-            <Elem>__BUILD__="20190822.0932"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_impl.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
           <incDir>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Support/Debian</pElem>
+            <pElem>.</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>/usr/include/dbus-1.0</pElem>
             <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
             <pElem>/usr/include/libxml2</pElem>
@@ -301,20 +379,37 @@
             <pElem>Libs/cctz</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>DEBIAN</Elem>
             <Elem>OZM_DEBUG</Elem>
+            <Elem>__BUILD__="20190731.1831"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_impl.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <preprocessorList>
-            <Elem>__BUILD__="20190822.0932"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
+          <incDir>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_info.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
           <incDir>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Support/Debian</pElem>
+            <pElem>.</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>/usr/include/dbus-1.0</pElem>
             <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
             <pElem>/usr/include/libxml2</pElem>
@@ -333,20 +428,37 @@
             <pElem>Libs/cctz</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>DEBIAN</Elem>
             <Elem>OZM_DEBUG</Elem>
+            <Elem>__BUILD__="20190731.1831"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_info.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <preprocessorList>
-            <Elem>__BUILD__="20190822.0932"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_libc.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
           <incDir>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Support/Debian</pElem>
+            <pElem>.</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>/usr/include/dbus-1.0</pElem>
             <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
             <pElem>/usr/include/libxml2</pElem>
@@ -365,20 +477,37 @@
             <pElem>Libs/cctz</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>DEBIAN</Elem>
             <Elem>OZM_DEBUG</Elem>
+            <Elem>__BUILD__="20190731.1831"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_libc.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <preprocessorList>
-            <Elem>__BUILD__="20190822.0932"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_lookup.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
           <incDir>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Support/Debian</pElem>
+            <pElem>.</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>/usr/include/dbus-1.0</pElem>
             <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
             <pElem>/usr/include/libxml2</pElem>
@@ -397,20 +526,37 @@
             <pElem>Libs/cctz</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>DEBIAN</Elem>
             <Elem>OZM_DEBUG</Elem>
+            <Elem>__BUILD__="20190731.1831"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_lookup.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <preprocessorList>
-            <Elem>__BUILD__="20190822.0932"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_posix.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
           <incDir>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Support/Debian</pElem>
+            <pElem>.</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>/usr/include/dbus-1.0</pElem>
             <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
             <pElem>/usr/include/libxml2</pElem>
@@ -429,20 +575,36 @@
             <pElem>Libs/cctz</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>DEBIAN</Elem>
             <Elem>OZM_DEBUG</Elem>
+            <Elem>__BUILD__="20190731.1831"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_posix.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <preprocessorList>
-            <Elem>__BUILD__="20190822.0932"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Libs/cctz/zone_info_source.cc" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
           <incDir>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Support/Debian</pElem>
+            <pElem>.</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>/usr/include/dbus-1.0</pElem>
             <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
             <pElem>/usr/include/libxml2</pElem>
@@ -461,118 +623,186 @@
             <pElem>Libs/cctz</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>DEBIAN</Elem>
             <Elem>OZM_DEBUG</Elem>
+            <Elem>__BUILD__="20190731.1831"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="Libs/cctz/zone_info_source.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <preprocessorList>
-            <Elem>__BUILD__="20190822.0932"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Analyzers/Analyzer.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
+          <incDir>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+            <pElem>Source</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Analyzers/Remote/AnalyzerRemote.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Analyzers/Soft/AnalyzerSoft.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
+          <incDir>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Analyzers/Soft/FFT.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Database.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
           <incDir>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
             <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/Devices/Device.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Devices/DeviceManager.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Devices/Remote/DeviceRemote.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Devices/V1_00/DeviceV1_00.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Source/Devices/V1_01/DeviceV1_01.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Devices/V2_01/DeviceV2_01.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Devices/Virtual/DeviceVirtual.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
           <incDir>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
             <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/MODBus.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
+        <ccTool flags="4">
           <incDir>
             <pElem>Source</pElem>
             <pElem>Source/Devices</pElem>
@@ -603,72 +833,104 @@
             <pElem>Libs/cctz</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>DEBIAN</Elem>
             <Elem>OZM_DEBUG</Elem>
             <Elem>__BUILD__="20190731.1831"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="Source/Main.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
           <incDir>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Devices</pElem>
             <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/Support/Debian/Debian.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Support/OpenWRT/OpenWRT.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="3">
         </ccTool>
       </item>
-      <item path="Source/SysSupport.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Source/Support/SysSupport.cpp" ex="false" tool="1" flavor2="8">
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+      </item>
+      <item path="Source/SysSupport.cpp" ex="false" tool="1" flavor2="9">
+        <ccTool>
+          <preprocessorList>
+            <Elem>DEBIAN</Elem>
+            <Elem>__BUILD__="20190822.0932"</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="Source/Tariffs/ESP/TariffPlugin_ESP.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Tariffs/NONE/TariffPlugin_NONE.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
         </ccTool>
       </item>
       <item path="Source/Tariffs/Tariff.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
-          <preprocessorList>
-            <Elem>__BUILD__="20190822.0949"</Elem>
-          </preprocessorList>
+        <ccTool flags="1">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="1">
           <incDir>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
             <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
@@ -690,50 +952,59 @@
           </incDir>
         </ccTool>
       </folder>
-      <folder path="0/Source">
-        <ccTool>
-          <preprocessorList>
-            <Elem>__BUILD__="20190822.0932"</Elem>
-          </preprocessorList>
-        </ccTool>
-      </folder>
-      <folder path="0/Source/Analyzers">
+      <folder path="0/Source/Analyzers/Remote">
         <ccTool>
           <incDir>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
-            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Libs/nlohmann</pElem>
             <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
       </folder>
-      <folder path="0/Source/Devices">
+      <folder path="0/Source/Devices/Remote">
         <ccTool>
           <incDir>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Devices/Remote</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
             <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
             <pElem>Source/Analyzers</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
             <pElem>/usr/include/postgresql</pElem>
             <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
       </folder>
       <folder path="0/Source/Devices/V1_00">
         <ccTool>
+          <incDir>
+            <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Source/Support</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Support/Debian</pElem>
+            <pElem>.</pElem>
+          </incDir>
           <preprocessorList>
+            <Elem>DEBIAN</Elem>
             <Elem>DEVICE_V1_00</Elem>
             <Elem>DEVICE_V1_01</Elem>
             <Elem>DEVICE_V2_01</Elem>
@@ -742,7 +1013,81 @@
           </preprocessorList>
         </ccTool>
       </folder>
-      <folder path="0/Source/Support">
+      <folder path="0/Source/Devices/V1_01">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/libusb-1.0</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Devices/V1_01</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Devices/V2_01">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/libusb-1.0</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Devices/V2_01</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Devices/Virtual">
+        <ccTool>
+          <incDir>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Devices/Virtual</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Support/Debian">
+        <ccTool>
+          <incDir>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Source</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Support/OpenWRT">
         <ccTool>
           <incDir>
             <pElem>Source/Analyzers/Remote</pElem>
@@ -756,26 +1101,6 @@
             <pElem>Libs</pElem>
             <pElem>Source/Support</pElem>
             <pElem>/usr/include/postgresql</pElem>
-          </incDir>
-          <undefinedList>
-            <Elem>__ARM_ASM_SYNTAX_UNIFIED__</Elem>
-            <Elem>__ARM_FEATURE_CRYPTO</Elem>
-            <Elem>__ARM_FEATURE_FP16_SCALAR_ARITHMETIC</Elem>
-            <Elem>__ARM_FEATURE_FP16_VECTOR_ARITHMETIC</Elem>
-            <Elem>__ARM_FEATURE_NUMERIC_MAXMIN</Elem>
-            <Elem>__ARM_FEATURE_QRDMX</Elem>
-            <Elem>__ARM_FP16_ARGS</Elem>
-            <Elem>__ARM_FP16_FORMAT_ALTERNATIVE</Elem>
-            <Elem>__ARM_FP16_FORMAT_IEEE</Elem>
-            <Elem>__THUMBEL__</Elem>
-            <Elem>__thumb2__</Elem>
-            <Elem>__thumb__</Elem>
-          </undefinedList>
-        </ccTool>
-      </folder>
-      <folder path="0/Source/Support/OpenWRT">
-        <ccTool>
-          <incDir>
             <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
             <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
             <pElem>/mnt/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/arm-openwrt-linux-muslgnueabi/bits</pElem>
@@ -800,6 +1125,7 @@
             <pElem>/mnt/openwrt/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/lib/dbus-1.0/include</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>DEBIAN</Elem>
             <Elem>DEVICE_VIRTUAL=1</Elem>
             <Elem>OPENWRT=1</Elem>
             <Elem>__ACCUM_EPSILON__=0x1P-15K</Elem>
@@ -1097,21 +1423,56 @@
             <Elem>__cpp_inheriting_constructors=201511</Elem>
             <Elem>__cpp_threadsafe_static_init=200806</Elem>
           </preprocessorList>
+          <undefinedList>
+            <Elem>__ARM_ASM_SYNTAX_UNIFIED__</Elem>
+            <Elem>__ARM_FEATURE_CRYPTO</Elem>
+            <Elem>__ARM_FEATURE_FP16_SCALAR_ARITHMETIC</Elem>
+            <Elem>__ARM_FEATURE_FP16_VECTOR_ARITHMETIC</Elem>
+            <Elem>__ARM_FEATURE_NUMERIC_MAXMIN</Elem>
+            <Elem>__ARM_FEATURE_QRDMX</Elem>
+            <Elem>__ARM_FP16_ARGS</Elem>
+            <Elem>__ARM_FP16_FORMAT_ALTERNATIVE</Elem>
+            <Elem>__ARM_FP16_FORMAT_IEEE</Elem>
+            <Elem>__THUMBEL__</Elem>
+            <Elem>__thumb2__</Elem>
+            <Elem>__thumb__</Elem>
+          </undefinedList>
         </ccTool>
       </folder>
-      <folder path="0/Source/Tariffs">
+      <folder path="0/Source/Tariffs/ESP">
         <ccTool>
           <incDir>
-            <pElem>Source</pElem>
-            <pElem>Source/Devices</pElem>
-            <pElem>Source/Analyzers</pElem>
             <pElem>Source/Tariffs</pElem>
-            <pElem>Libs</pElem>
-            <pElem>Source/Support</pElem>
+            <pElem>Source/Tariffs/ESP</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
             <pElem>/usr/include/postgresql</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/Source/Tariffs/NONE">
+        <ccTool>
+          <incDir>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Source/Tariffs/NONE</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6/bits</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>Source/Analyzers</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+            <pElem>Libs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/c++/6</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
