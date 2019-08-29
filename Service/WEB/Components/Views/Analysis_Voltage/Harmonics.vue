@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
+      <div class="header-text">{{ MouseOver ? 'PAUSED - ' : '' }}{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
         <div class="header-buttons" ref="Toolbar">
           <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedMulti" type="CURRENT"></toolbar-phases>
           <toolbar-options variable="DetailOptions" :options="['1st Harmonic', 'Current', 'Log']" v-on:OptionChanged="SetOption"></toolbar-options>
@@ -10,7 +10,7 @@
       </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <graph ref="graph" :options="{}"></graph>
+      <graph ref="graph" :options="{}" v-on:mouseOver="MouseOver=$event"></graph>
     </div>
   </div>
 </template>
@@ -25,7 +25,7 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data() {
-      return { ShowWarning: true, ShowSpinner: true, Time: 'Loading data...' };
+      return { ShowWarning: true, ShowSpinner: true, MouseOver: false, Time: 'Loading data...' };
     },
     methods: {
       BinPower: function(value) {

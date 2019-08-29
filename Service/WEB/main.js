@@ -1,11 +1,20 @@
 //Libs -----------------------------------------
 import Vue from './JS/vue.js';
 import Router from './JS/vue-router.js';
+//import BootstrapVue from 'bootstrap-vue'
+
+//Vue.use(BootstrapVue)
+
+
+
 import jQuery from './JS/jquery.js';
 window.$ = window.jQuery = jQuery;
+//import 'bootstrap/dist/css/bootstrap.css'
+//import 'bootstrap-vue/dist/bootstrap-vue.css'
+
 import './JS/bootstrap.min.js';
 import './CSS/bootstrap.min.css';
-import './JS/dygraph.js';
+//import './JS/dygraph.js';
 
 Vue.use(Router);
 import './CSS/openZmeter.css';

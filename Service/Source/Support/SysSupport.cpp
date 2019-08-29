@@ -8,6 +8,8 @@ bool SysSupport::Register() {
   HTTPServer::RegisterCallback("getUsers",  SysSupport::GetUsersCallback);  
   HTTPServer::RegisterCallback("getUser",   SysSupport::GetUserCallback);
   HTTPServer::RegisterCallback("setUser",   SysSupport::SetUserCallback);
+  HTTPServer::RegisterCallback("addUser",   SysSupport::AddUserCallback);
+  HTTPServer::RegisterCallback("delUser",   SysSupport::delUserCallback);
   return true;
 }
 void SysSupport::GetNewsCallback(HTTPRequest &req) {
@@ -43,6 +45,12 @@ void SysSupport::SetUserCallback(HTTPRequest &req) {
   //req.ExecSentenceAsyncResult("UPDATE users SET name = ", 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'TelegramID', telegram, 'Country_Code', country_code) AS result FROM users WHERE username = " + req.Bind(req.UserName()));
   if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("result"), MHD_HTTP_OK);
+}
+void SysSupport::AddUserCallback(HTTPRequest &req) {
+
+}
+void SysSupport::DelUserCallback(HTTPRequest &req) {
+
 }
 
 //void GetCountriesCallback(HTTPRequest &req) {

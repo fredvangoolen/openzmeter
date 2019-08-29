@@ -3,8 +3,12 @@
     <div class="panel-heading">
       <div class="huge header-text">{{ SerieProps.Title }}</div>
       <div class="header-buttons">
-        <div><span class="huge-small" v-html="LastValue"></span><em class="huge-small-unit">{{ UnitsScale }}{{ SerieProps.Units }}</em></div>
-        <div>{{ Aggregation }}</div>
+        <div style="margin-top: -3px; height: 33px">
+          <div style="display: inline-block; font-size: 24px; padding-right: 4px; vertical-align: top"><span v-html="LastValue"></span> <em class="huge-small-unit">{{ UnitsScale }}{{ SerieProps.Units }}</em>
+            <div style="font-size: 14px; line-height: 14px">{{ Aggregation }}</div>
+          </div>
+          <div v-if="PhasesValue.length > 1" style="display: inline-block; border-left: 1px solid #FFF; padding-left: 2px; line-height: 12px; font-size: 12px; vertical-align: top"><div v-for="val in PhasesValue">{{ val }}</div></div>
+       </div>
       </div>
     </div>
     <div class="panel-body">
@@ -33,13 +37,7 @@
   export default {
     props: ['type'],
     data() {
-      return {
-        ShowSpinner: true,
-        StopUpdating: false,
-        UnitsScale: '',
-        SerieProps: {},
-        Aggregation: 'Loading data...',
-        LastValue: []
+      return { ShowSpinner: true, PhasesValue:[], LastValue: null, UnitsScale: '', SerieProps: {}, Aggregation: 'Loading data...'        
       };
     },
     methods: {
@@ -50,8 +48,6 @@
         var Options = {
           visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data, valueRange: Range, selectMode: 'euclidian',
           labels: ['Time'].concat(this.SerieProps.Names(Analyzer)), colors: oZm.ColorArray(this.SerieProps.Color, this.SerieProps.Names(Analyzer).length),
-          highlightCallback: this.HoverIn,
-          unhighlightCallback: this.HoverOut,
           axes: {
             y: { pixelsPerLabel: 15, axisLabelWidth: 30,
                  valueFormatter: function (x) { var Result = this.SerieProps.FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; }.bind(this),
@@ -64,44 +60,62 @@
       },
       UpdateGraph() {
         if(this.$root.SelectedAnalyzer === null) return;
-        if(this.StopUpdating==false){
+        
           $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], To: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.Analyzer, Period: 7200000 }), 
-            success: function(result) {
+            success: (result) => {
               if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
               this.Data = oZm.GraphDataAppend(result, this.SerieProps.Serie, this.Data);
               var LastSample = result[this.SerieProps.Serie].slice(-1)[0];
-              this.UnitsScale = oZm.GetBestUnits(oZm.ArrayAbsMax(LastSample));
-              this.LastValue = oZm.Array_Round2(oZm.ScaleArrayToUnits(LastSample, this.UnitsScale), oZm.ColorArray($(this.$refs.panel).css('border-color'), 4));
+              if(this.type == 'FREQUENCY') {
+                this.LastValue = oZm.Round3(LastSample);
+                this.PhasesValue = [];
+              } else if(this.type == 'ACTIVE_POWER') {
+                this.LastValue = 0;
+                this.PhasesValue = [];
+                this.UnitsScale = oZm.GetBestUnits(oZm.ArrayAbsMax(LastSample));
+                for(var n = 0; n < LastSample.length; n++) this.LastValue = this.LastValue + LastSample[n];  
+                this.LastValue = oZm.Round2(oZm.ScaleToUnits(this.LastValue, this.UnitsScale));
+                this.PhasesValue = LastSample.map((n) => {
+                  return oZm.Round2Plain(oZm.ScaleToUnits(n, this.UnitsScale));
+                });
+              } else if(this.type == 'VOLTAGE') {
+                this.LastValue = 0;
+                this.PhasesValue = [];
+                this.UnitsScale = oZm.GetBestUnits(oZm.ArrayAbsMax(LastSample));
+                for(var n = 0; n < LastSample.length; n++) this.LastValue = this.LastValue + Math.pow(LastSample[n], 2.0);  
+                this.LastValue = oZm.Round2(oZm.ScaleToUnits(Math.sqrt(this.LastValue / LastSample.length), this.UnitsScale));
+                this.PhasesValue = LastSample.map((n) => {
+                  return oZm.Round2Plain(oZm.ScaleToUnits(n, this.UnitsScale));
+                });               
+              } else if(this.type == 'CURRENT') {
+                this.LastValue = 0;
+                this.PhasesValue = [];
+                this.UnitsScale = oZm.GetBestUnits(oZm.ArrayAbsMax(LastSample));
+                var PhasesCount = oZm.Series['VOLTAGE'].Names(this.$root.SelectedAnalyzer).length;
+                for(var n = 0; n < PhasesCount; n++) this.LastValue = this.LastValue + Math.pow(LastSample[n], 2.0);  
+                this.LastValue = oZm.Round2(oZm.ScaleToUnits(Math.sqrt(this.LastValue / PhasesCount), this.UnitsScale));
+                this.PhasesValue = LastSample.map((n) => {
+                  return oZm.Round2Plain(oZm.ScaleToUnits(n, this.UnitsScale));
+                });    
+              }
               this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
               this.DateWindow = [result['From'], result['To']];
               this.LastSample = oZm.LastSampletime(result, this.LastSample);
               if(this.Data.length > 0) this.CalcOptions();
               this.ShowSpinner = false;
-            }.bind(this),
-            complete: function() {
-              this.RearmUpdateGraphTimer();
-            }.bind(this), 
-            error: function() {
+            },
+            complete: () => {
+              this.UpdateGraphTimer = setTimeout(this.UpdateGraph, 5000);
+            }, 
+            error: () => {
               this.ShowSpinner = true;
-            }.bind(this)
+            }
           });
-        }else{
-          this.RearmUpdateGraphTimer();
-        }
-      },
-      RearmUpdateGraphTimer(){
-        if(this.UpdateGraphTimer !== null) clearTimeout(this.UpdateGraphTimer);
-          this.UpdateGraphTimer = setTimeout(this.UpdateGraph, 5000);
+
       },
       SetPhases(phases) {
         this.Phases = phases;
         if(this.Data.length > 0) this.CalcOptions();
-      },
-      HoverIn() {
-        this.StopUpdating=true;
-      },
-      HoverOut() {
-        this.StopUpdating=false;
       },
       MaximizeClick() {
         this.$refs.tools.Maximize(this.SerieProps.Title, this.$refs.Chart.Graph, this.$refs.Toolbar);
