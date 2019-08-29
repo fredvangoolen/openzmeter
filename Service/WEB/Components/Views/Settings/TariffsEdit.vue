@@ -1,5 +1,5 @@
 <template>
-  <div class="modal" tabindex="-1" role="dialog" data-backdrop="false" data-keyboard="false" v-if="ShowDialog">
+  <div class="modal" tabindex="1" role="dialog" data-backdrop="false" data-keyboard="false" v-if="ShowDialog">
     <div class="modal-backdrop in"></div>
     <div class="modal-dialog">
       <edit-main ref="Main" v-on:Close="Close"></edit-main>
@@ -25,35 +25,12 @@
       return { ShowDialog: false, Tariff: {} };
     },
     methods: {
-      Show: function(id) {
+      Show: function(tariff) {
+        this.$set(this, 'Tariff', tariff);
         this.ShowDialog = true;
-        this.$nextTick(function() {
-          if(id === null) {
-            this.Tariff = { 
-              TimeZone: moment.tz.guess(),
-              StartDate: moment().startOf('year').valueOf(),
-              EndDate: moment().endOf('year').valueOf(),
-              Name: 'No nane', 
-              Template: {
-                Description: 'Add tariff description here',
-                Seasons: [], 
-                Periods: [ { ReactiveMode: 'NONE', PowerMode: 'NONE', Color: '#fffff0' } ], 
-                Holidays: [],
-                WeekendPeriod: null,
-                HolidayPeriod: null
-              } 
-            };
-            this.$refs.Main.Load(this.Tariff);
-            $(this.$el).modal('show');
-          } else {
-            $.ajax({ url: "getTariff", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ TariffID: id }),
-              success: (result) => {
-                this.Tariff = result;
-                this.$refs.Main.Load(this.Tariff);
-                $(this.$el).modal('show');
-              }
-            });
-          }          
+        this.$nextTick(() => {
+          $(this.$el).modal('show');
+          this.$refs.Main.Load(this.Tariff);
         });
       },
       Save: function() {

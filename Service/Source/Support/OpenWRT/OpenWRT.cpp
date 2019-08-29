@@ -611,5 +611,6 @@ json System::GetSystemDetails() {
 }
 void System::PeriodicTask() {
   System::HandleAgentBT();
+  //Comprobar actualizaciones
 }
 //----------------------------------------------------------------------------------------------------------------------

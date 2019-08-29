@@ -14,4 +14,6 @@ class SysSupport {
     static void GetUsersCallback(HTTPRequest &req);
     static void GetUserCallback(HTTPRequest &req);
     static void SetUserCallback(HTTPRequest &req);
+    static void AddUserCallback(HTTPRequest &req);
+    static void DelUserCallback(HTTPRequest &req);
 };

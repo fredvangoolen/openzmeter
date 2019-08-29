@@ -262,21 +262,44 @@
     methods: {
       SetOptions: function(options) {
         this.Options = Object.assign({}, this.Options, options);
-        if(this.Graph !== null) this.Graph.updateOptions(this.Options);
+        if(this.Graph === null) return;
+        if(this.AllowUpdate == true) {
+          this.Graph.updateOptions(this.Options);
+        } else {
+          this.OptionsChanged = true;
+        }
       },
       SetData: function(data) {
         this.Options = Object.assign({}, this.Options, { file: data });
-        this.Graph.updateOptions(this.options);
+        if(this.Graph === null) return;
+        if(this.AllowUpdate == true) {
+          this.Graph.updateOptions(this.Options);
+        } else {
+          this.OptionsChanged = true;
+        }
       },
       Redraw: function(w, h) {
         $(this.Graph.graphDiv).parent().removeAttr('style');
         if((w !== undefined) && (h !== undefined)) this.Graph.resize(w, h);
         this.Graph.resize();
-      }
+      },
+      HoverIn() {
+        this.AllowUpdate = false;
+        this.$emit('mouseOver', true);
+      },
+      HoverOut() {
+        this.AllowUpdate = true;
+        this.$emit('mouseOver', false);
+        if(this.OptionsChanged == true) {
+          this.Graph.updateOptions(this.options);
+          this.OptionsChanged = false;
+        }
+      },
     },
     created: function() {
       this.Graph = null;
-      this.Options = Object.assign({ strokeWidth: 0.5, gridLineColor: "rgba(0, 0, 0, 0.1)", gridLinePattern: [4, 4], labels: ['Index', 'Value'], interactionModel: {} }, this.options);
+      this.AllowUpdate = true;
+      this.Options = Object.assign({ highlightCallback: this.HoverIn, unhighlightCallback: this.HoverOut, strokeWidth: 0.5, gridLineColor: "rgba(0, 0, 0, 0.1)", gridLinePattern: [4, 4], labels: ['Index', 'Value'], interactionModel: {} }, this.options);
     },
     mounted: function() {
       var Data = [[0, 0]];

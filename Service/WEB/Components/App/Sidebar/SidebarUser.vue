@@ -19,14 +19,18 @@
   import Offline from './User/Offline.vue';
   export default {
     data() {
-      return { UserName: '' };
+      return { UserName: '', ShowEdit: false };
     },
     methods: {
       Logout: function() {
         window.location.href = 'Logout';
       },
       Edit: function() {
-        this.$refs.userEdit.show();
+        $.ajax({ url: "getUser", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
+          success: (result) => {
+            this.$refs.userEdit.LoadUser(result);
+          }
+        });
       },
 //      PingServer: function() {
 //        $.ajax({ url: 'Ping', timeout: 5000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),

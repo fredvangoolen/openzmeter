@@ -75,7 +75,7 @@ export default {
     transition: transform .3s;
     top: 0;
     width: 256px;
-    z-index: 100;
+    z-index: 1000;
     margin: 0px;
   }
   @media(min-width:1280px) {

@@ -53,10 +53,31 @@
       },
       Edit: function(tariff, evt) {
         $(evt.target).blur();
-        this.$refs.EditDialog.Show(tariff.TariffID);
+        this.ShowSpinner = true;
+        $.ajax({ url: "getTariff", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ TariffID: tariff.TariffID }),
+          success: (result) => {
+            this.$refs.EditDialog.Show(result);
+          },
+          completed: () => {
+            this.ShowSpinner = false;
+          }
+        });
       },
       Add: function() {
-        this.$refs.EditDialog.Show(null);
+        this.$refs.EditDialog.Show( { 
+          TimeZone: moment.tz.guess(),
+          StartDate: moment().startOf('year').valueOf(),
+          EndDate: moment().endOf('year').valueOf(),
+          Name: 'No nane', 
+          Template: {
+            Description: 'Add tariff description here',
+            Seasons: [], 
+            Periods: [ { ReactiveMode: 'NONE', PowerMode: 'NONE', Color: '#fffff0' } ], 
+            Holidays: [],
+            WeekendPeriod: null,
+            HolidayPeriod: null
+          } 
+        });
       },
       Delete: function(tariff, evt) {
         if(confirm("Delete '" + tariff.Name + "' tariff?")){
