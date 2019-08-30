@@ -50,5 +50,5 @@
   .toggle.btn-xs{min-width:35px;min-height:22px}
   .toggle-on.btn-xs{padding-right:12px}
   .toggle-off.btn-xs{padding-left:12px}
-  .active{ background-color: red};
+  checkbox .active{ background-color: red};
 </style>

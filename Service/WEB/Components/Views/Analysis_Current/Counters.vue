@@ -5,7 +5,8 @@
       <div class="counters-aggreg">From 3 seconds aggregation<br>{{ Time3S }}</div>
       <div class="clearfix"></div>
       <div>
-        <div class="current-value" v-for="phase in CurrentValue3S" v-html="phase"></div>
+        <div class="current-value" v-html="CurrentValue3S"></div>
+        <div class="counters-phases" v-html="CurrentValue3SPhases" v-if="CurrentValue3SPhases != ''"></div>
       </div>
     </div>
     <div class="subpanel clearfix">
@@ -13,7 +14,8 @@
       <div class="counters-aggreg">From 1 minute aggregation<br>{{ Time1M }}</div>
       <div class="clearfix"></div>
       <div>
-        <div class="current-value" v-for="phase in CurrentValue1M" v-html="phase"></div>
+        <div class="current-value" v-html="CurrentValue1M"></div>
+        <div class="counters-phases" v-html="CurrentValue1MPhases" v-if="CurrentValue1MPhases != ''"></div>
       </div>
     </div>
     <div class="subpanel clearfix">
@@ -49,7 +51,7 @@
     props: ['variable'],
     data () {
       return { CountersAggregation: 'Loading data...', MinTime: '', MinArray: [], MaxTime: '', MaxArray: [],
-                Time3S: '', CurrentValue3S: [], Time1M: '', CurrentValue1M: [],
+                Time3S: '', CurrentValue3S: '', CurrentValue3SPhases: '', Time1M: '', CurrentValue1M: '', CurrentValue1MPhases: '',
                 TimeStatsFrom: '...', TimeStatsTo: '...'
               };
     },
@@ -76,56 +78,72 @@
       NowValue3S: function() {
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['CURRENT'], To: 0, Aggreg: '3S', Period: 6000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
-          success: function(result) {
-            if(result['Sampletime'].length === 0) {
-              this.CurrentValue3S = ['No data'];
-              this.Time3S = '';
-            } else {
+          success: (result) => {
+            this.CurrentValue3S = 'No data';
+            this.CurrentValue3SPhases = '';
+            this.Time3S = '';
+            if(result['Sampletime'].length !== 0) {
               var Pos = result['Sampletime'].length - 1;
               this.Time3S = 'At ' + moment(result.Sampletime[Pos]).format('HH:mm:ss');
-              if(result['Current'][Pos] === null) {
-                this.CurrentValue3S = ['No data'];
-              } else {
-                for(var i = 0; i < result['Current'][Pos].length; i++) this.CurrentValue3S[i] = oZm.Round2(result['Current'][Pos][i]) + ' A';
+              if(result['Current'][Pos] !== null) {
+                this.CurrentValue3SPhases = '';
+                if(result['Current'][Pos].length > 1) {
+                  for(var n = 0; n < result['Current'][Pos].length; n++) {
+                    var Format = oZm.Round2Plain(result['Current'][Pos][n]);
+                    this.CurrentValue3SPhases += oZm.Round2Plain(result['Current'][Pos][n]) +'<br>';
+                  }
+                }
+                this.CurrentValue3S = 0.0;
+                for(var n = 0; n < oZm.Series['VOLTAGE'].Names(this.$root.SelectedAnalyzer).length; n++) this.CurrentValue3S += Math.pow(result['Current'][Pos][n], 2.0);
+                this.CurrentValue3S = oZm.Round2(Math.sqrt(this.CurrentValue3S / oZm.Series['VOLTAGE'].Names(this.$root.SelectedAnalyzer).length)) + 'A';
               }
             }
-          }.bind(this),
-          complete: function() {
-            this.NowTimer = setTimeout(this.NowValue3S.bind(this), 5000);
+          },
+          complete: () => {
+            this.NowTimer3S = setTimeout(this.NowValue3S.bind(this), 5000);
             this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
-          }.bind(this), 
-          error: function() {
-            this.CurrentValue3S = ['No data'];
+          }, 
+          error: () => {
+            this.CurrentValue3S = 'No data';
+            this.CurrentValue3SPhases = '';
             this.Time3S = '';
-          }.bind(this)
+          }
         });
       },
       NowValue1M: function() {
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['CURRENT'], To: 0, Aggreg: '1M', Period: 120000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
-          success: function(result) {
-            if(result['Sampletime'].length === 0) {
-              this.CurrentValue1M = ['No data'];
-              this.Time1M = '';
-            } else {
+          success: (result) => {
+            this.CurrentValue1M = 'No data';
+            this.CurrentValue1MPhases = 'No data';
+            this.Time1M = '';
+            if(result['Sampletime'].length !== 0) {
               var Pos = result['Sampletime'].length - 1;
               this.Time1M = 'At ' + moment(result.Sampletime[Pos]).format('HH:mm:ss');
-              if(result['Current'][Pos] === null) {
-                this.CurrentValue1M = ['No data'];
-              } else {
-                for(var i = 0; i < result['Current'][Pos].length; i++) this.CurrentValue1M[i] = oZm.Round2(result['Current'][Pos][i]) + ' A';
+              if(result['Current'][Pos] !== null) {
+                this.CurrentValue1MPhases = '';
+                if(result['Current'][Pos].length > 1) {
+                  for(var n = 0; n < result['Current'][Pos].length; n++) {
+                    var Format = oZm.Round2Plain(result['Current'][Pos][n]);
+                    this.CurrentValue1MPhases += oZm.Round2Plain(result['Current'][Pos][n]) +'<br>';
+                  }
+                }
+                this.CurrentValue1M = 0.0;
+                for(var n = 0; n < oZm.Series['VOLTAGE'].Names(this.$root.SelectedAnalyzer).length; n++) this.CurrentValue1M += Math.pow(result['Current'][Pos][n], 2.0);
+                this.CurrentValue1M = oZm.Round2(Math.sqrt(this.CurrentValue1M / oZm.Series['VOLTAGE'].Names(this.$root.SelectedAnalyzer).length)) + 'A';
               }
             }
-          }.bind(this),
-          complete: function() {
+          },
+          complete: () => {
             clearTimeout(this.NowTimer);
-            this.NowTimer = setTimeout(this.NowValue1M.bind(this), 30000);
+            this.NowTimer1M = setTimeout(this.NowValue1M.bind(this), 30000);
             this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
-          }.bind(this), 
-          error: function() {
-            this.CurrentValue1M = ['No data'];
+          }, 
+          error: () => {
+            this.CurrentValue1M = 'No data';
+            this.CurrentValue1MPhases = '';
             this.Time1M = '';
-          }.bind(this)
+          }
         });
       },
       SetStats: function(datewindow, data, aggreg) {
@@ -236,5 +254,15 @@
   }
   .line-border {
     border-top: 1px solid #cce0f1;
+  }
+  .counters-phases {
+    text-align: left;
+    display: inline-block;
+    font-size: 12px;
+    line-height: 12px;
+    font-weight: bold;
+    padding-left: 2px;
+    border-left: 1px solid #cce0f1;
+    margin-left: 5px;
   }
 </style>

@@ -5,7 +5,8 @@
       <div class="counters-aggreg">From 10 minutes aggregation<br>{{ Time10M }}</div>
       <div class="clearfix"></div>
       <div>
-        <div class="current-value" v-for="phase in CurrentValue10M" v-html="phase"></div>
+        <div class="current-value" v-html="CurrentValue10M"></div>
+        <div class="counters-phases" v-html="CurrentValue10MPhases" v-if="CurrentValue10MPhases != ''"></div>
       </div>
     </div>
     <div class="subpanel clearfix">
@@ -56,7 +57,7 @@
     data () {
       return { CountersAggregation: 'Loading data...', MinTime: '', MinArray: [], MaxTime: '', MaxArray: [],
                 AvgSamples: '', AvgArray: [], StdPercent: '', StdArray: [],
-                Time10M: '', CurrentValue10M: [],
+                Time10M: '', CurrentValue10M: null, CurrentValue10MPhases: '',
                 TimeStatsFrom: '...', TimeStatsTo: '...'
               };
     },
@@ -78,29 +79,36 @@
       NowValue: function() {
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE'], To: 0, Aggreg: '10M', Period: 1200000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
-          success: function(result) {
-            if(result['Sampletime'].length === 0) {
-              this.CurrentValue10M = ['No data'];
-              this.Time10M = '';
-            } else {
+          success: (result) => {
+            this.CurrentValue10M = 'No data';
+            this.CurrentValue10MPhases = '';
+            this.Time10M = '';
+            if(result['Sampletime'].length !== 0) {
               var Pos = result['Sampletime'].length - 1;
               this.Time10M = 'At ' + moment(result.Sampletime[Pos]).format('HH:mm:ss');
-              if(result['Voltage'][Pos] === null) {
-                this.CurrentValue10M = ['No data'];
-              } else {
-                for(var i = 0; i < result['Voltage'][Pos].length; i++) this.CurrentValue10M[i] = oZm.Round2(result['Voltage'][Pos][i]) + ' V';
+              if(result['Voltage'][Pos] !== null) {
+                this.CurrentValue10MPhases = '';
+                if(result['Voltage'][Pos].length > 1) {
+                  for(var n = 0; n < result['Voltage'][Pos].length; n++) {
+                    var Format = oZm.Round2Plain(result['Voltage'][Pos][n]);
+                    this.CurrentValue10MPhases += oZm.Round2Plain(result['Voltage'][Pos][n]) +'<br>';
+                  }
+                }
+                this.CurrentValue10M = 0.0;
+                for(var n = 0; n < result['Voltage'][Pos].length; n++) this.CurrentValue10M += Math.pow(result['Voltage'][Pos][n], 2.0);
+                this.CurrentValue10M = oZm.Round2(Math.sqrt(this.CurrentValue10M / result['Voltage'][Pos].length)) + 'V';
               }
             }
-          }.bind(this),
-          complete: function() {
+          },
+          complete: () => {
             clearTimeout(this.NowTimer);
             this.NowTimer = setTimeout(this.NowValue.bind(this), 5000);
             this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
-          }.bind(this), 
-          error: function() {
+          }, 
+          error: () => {
             this.CurrentValue10M = ['No data'];
             this.Time10M = '';
-          }.bind(this)
+          }
         });
       },
       SetStats: function(datewindow, data, aggreg) {
@@ -211,5 +219,15 @@
   }
   .line-border {
     border-top: 1px solid #efbab8;
+  }
+  .counters-phases {
+    text-align: left;
+    display: inline-block;
+    font-size: 12px;
+    line-height: 12px;
+    font-weight: bold;
+    padding-left: 2px;
+    border-left: 1px solid #efbab8;
+    margin-left: 5px;
   }
 </style>
