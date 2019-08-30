@@ -404,6 +404,11 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     for(uint j = 0; j < This->pAggreg10C.Voltage.size(); j++) {
       This->pVoltageFFT[j]->Wait();
       if(isnan(This->pAggreg10C.Voltage[j])) continue;
+      if(j == 0) {
+        This->pAggreg10C.Voltage_Phase[0] = 0;
+      } else {
+        This->pAggreg10C.Voltage_Phase[j] = FFT::CalcAngle(This->pVoltageFFT[j]->Output[10], This->pVoltageFFT[0]->Output[10]) * 180.0 / M_PI;
+      }
       for(uint i = 0; i < This->pAggreg10C.Voltage_Harmonics[j].size(); i++) {
         This->pAggreg10C.Voltage_Harmonics[j][i] = This->pVoltageFFT[j]->BinPower(10 + i * 10);
         if(i > 0) This->pAggreg10C.Voltage_THD[j] = This->AccumulateSUM(This->pAggreg10C.Voltage_THD[j], This->pAggreg10C.Voltage_Harmonics[j][i]);
@@ -419,11 +424,6 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
         if(i > 0) This->pAggreg10C.Current_THD[j] = This->AccumulateSUM(This->pAggreg10C.Current_THD[j], This->pAggreg10C.Current_Harmonics[j][i]);
       }
       float PHI = FFT::CalcAngle(This->pCurrentFFT[j]->Output[10], This->pVoltageFFT[j]->Output[10]);
-      if(j == 0) {
-        This->pAggreg10C.Voltage_Phase[0] = 0;
-      } else {
-        This->pAggreg10C.Voltage_Phase[j] = FFT::CalcAngle(This->pVoltageFFT[j]->Output[10], This->pVoltageFFT[0]->Output[10]) * 180.0 / M_PI;
-      }
       This->pAggreg10C.Reactive_Power[j] = This->pAggreg10C.Voltage_Harmonics[j][0] * This->pAggreg10C.Current_Harmonics[j][0] * sin(-PHI);
       This->pAggreg10C.Phi[j] = PHI * 180.0 / M_PI;
       This->pAggreg10C.Current_THD[j] = This->pAggreg10C.Current_THD[j] / This->pAggreg10C.Current_Harmonics[j][0];
