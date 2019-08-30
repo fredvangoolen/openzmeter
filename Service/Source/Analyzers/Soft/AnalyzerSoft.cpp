@@ -86,7 +86,8 @@ void AnalyzerSoft::Configure(const json &options) {
   pZipCode          = options["ZipCode"];
   pGeo              = options["GeoPosition"].get<vector<float> >();
   pMaxSamples       = ceil((15.0 * pSamplerate) / pNominalFrequency);
-  
+  pPrevSamples.resize(0);
+  pPrevCycles.resize(0);
   //Calc peak filter coefficients for nominal frequency
   pFilters.clear();
   for(uint n = 0; n < ZEROCROSSING_FILTERSTAGES; n++) {
@@ -527,6 +528,7 @@ void *AnalyzerSoft::Events_Thread(void* args) {
   AnalyzerSoft *This = (AnalyzerSoft*)args;
   while(This->pTerminate == false) {
     if(This->pEventLocks.WorkerWaitTask() == false) break;
+    This->pConfigLocks.ReadLock();
     uint32_t RequiredRAW = This->pSamplerate * EVENT_RAWENVELOPETIME;
     uint32_t RequiredRMS = This->pNominalFrequency * 2 * EVENT_RMSENVELOPETIME;
     uint32_t Pos = 0;
@@ -674,6 +676,7 @@ void *AnalyzerSoft::Events_Thread(void* args) {
       Pos = Pos + CycleLen;
       This->pPrevStationary = Stationary;
     }
+    This->pConfigLocks.ReadUnlock();
     This->pEventLocks.WorkerEndsTask();
   }
   return NULL;

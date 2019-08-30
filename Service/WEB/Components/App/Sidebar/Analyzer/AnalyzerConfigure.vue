@@ -37,7 +37,7 @@
         <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Min current</label>
-          <input-spin prepend="A" :decimals="1" :min="10" :max="500" :increment="1" :value="Analyzer.MinCurrent" v-on:change="Analyzer.MinCurrent=$event"></input-spin>
+          <input-spin prepend="A" :decimals="1" :min="0" :max="500" :increment="1" :value="Analyzer.MinCurrent" v-on:change="Analyzer.MinCurrent=$event"></input-spin>
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Max current</label>

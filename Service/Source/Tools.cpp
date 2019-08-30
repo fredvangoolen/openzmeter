@@ -62,6 +62,7 @@ InstanceLocks::InstanceLocks() {
 }
 void InstanceLocks::WaitInstances() {
   pthread_mutex_lock(&pMutex);
+  LOGFile::Debug("Waiting %d instances to terminate\n", pReferences);
   while(pReferences != 0) pthread_cond_wait(&pCond, &pMutex);
   pthread_mutex_unlock(&pMutex);
 }
