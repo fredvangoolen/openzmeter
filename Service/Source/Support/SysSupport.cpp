@@ -9,7 +9,7 @@ bool SysSupport::Register() {
   HTTPServer::RegisterCallback("getUser",   SysSupport::GetUserCallback);
   HTTPServer::RegisterCallback("setUser",   SysSupport::SetUserCallback);
   HTTPServer::RegisterCallback("addUser",   SysSupport::AddUserCallback);
-  HTTPServer::RegisterCallback("delUser",   SysSupport::delUserCallback);
+  HTTPServer::RegisterCallback("delUser",   SysSupport::DelUserCallback);
   return true;
 }
 void SysSupport::GetNewsCallback(HTTPRequest &req) {

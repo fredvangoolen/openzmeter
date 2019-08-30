@@ -125,6 +125,7 @@ bool DeviceV2_01::Start(const json &config) {
         if(Current.find("CH1") != string::npos) AnalyzerSetup.Current[i] = 0;
         if(Current.find("CH2") != string::npos) AnalyzerSetup.Current[i] = 1;
         if(Current.find("CH3") != string::npos) AnalyzerSetup.Current[i] = 2;
+        if(Current.find("CH4") != string::npos) AnalyzerSetup.Current[i] = 3;
         AnalyzerSetup.CurrentInvert[i] = (Current.find("-") != string::npos);
       }
       Name += (AnalyzerSetup.Mode == Analyzer::PHASE3) ? "_3P" : "_3PN";
