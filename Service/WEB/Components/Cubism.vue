@@ -77,10 +77,10 @@
         this.Graph.updateOptions(data);
       },
       HoverIn() {
-        this.$parent.StopUpdating=true;
+        this.$emit('mouseOver', true);
       },
       HoverOut() {
-        this.$parent.StopUpdating=false;
+        this.$emit('mouseOver', false);
       },
     },
     created: function() {
