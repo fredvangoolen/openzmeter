@@ -9,7 +9,7 @@
       </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <cubism v-for="(serie, index) in Series" :serie="serie" :key="serie" ref="rows" :index="index"></cubism>
+      <cubism v-for="(serie, index) in Series" :serie="serie" :key="serie" ref="rows" :index="index" v-on:mouseOver="MouseOver"></cubism>
     </div>
   </div>
 </template>
@@ -27,6 +27,9 @@
       return { ShowSpinner: true, Aggregation: 'Loading data...', Series: ['POWER_FACTOR', 'CURRENT_THD', 'PHI'], Phase: null };
     },
     methods: {
+      MouseOver: function(val) {
+        this.mouseOverCount = this.mouseOverCount + ((val === true) ? +1 : -1);
+      },
       Redraw() {
         this.$nextTick(function() {    
           for(var n = 0; n < this.Series.length; n++) $(this.$refs.rows[n].Graph.graphDiv).parent().removeAttr('style');
@@ -62,10 +65,11 @@
         this.DateWindow = [result['From'], result['To']];
         this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
         for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
-        this.CalcOptions();
+        if(this.mouseOverCount === 0) this.CalcOptions();
         this.ShowSpinner = false; 
       },
       SetDataNow(result) {
+        if(this.mouseOverCount !== 0) return;
         for(var n = 0; n < this.Series.length; n++) this.$refs.rows[n].SetNowLabel(result[oZm.Series[this.Series[n]].Serie][this.Phase]);
       },
       CalcOptions() {
@@ -78,6 +82,7 @@
       }
     },
     created: function() {
+      this.mouseOverCount = 0;
       this.Data = {};
       for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = [];
     },

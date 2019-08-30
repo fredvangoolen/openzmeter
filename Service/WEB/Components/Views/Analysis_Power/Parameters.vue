@@ -9,7 +9,7 @@
     </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <cubism v-for="(serie, index) in Series" :serie="serie" :key="serie" ref="rows" :index="index"></cubism>
+      <cubism v-for="(serie, index) in Series" :serie="serie" :key="serie" ref="rows" :index="index" v-on:mouseOver="MouseOver"></cubism>
     </div>
   </div>
 </template>
@@ -28,7 +28,10 @@
       return { ShowSpinner: true, Aggregation: 'Loading data...', Series: ['ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI'] };
     },
     methods: {
-      Redraw() {
+      MouseOver: function(val) {
+        this.mouseOverCount = this.mouseOverCount + ((val === true) ? +1 : -1);
+      },
+      Redraw: function() {
         this.$nextTick(function() {    
           for(var n = 0; n < this.Series.length; n++) $(this.$refs.rows[n].Graph.graphDiv).parent().removeAttr('style');
           window.dispatchEvent(new Event('resize'));
@@ -63,13 +66,14 @@
         this.DateWindow = [result['From'], result['To']];
         this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
         for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
-        this.CalcOptions();
+        if(this.mouseOverCount === 0) this.CalcOptions();
         this.ShowSpinner = false; 
       },
-      SetDataNow(result) {
+      SetDataNow: function(result) {
+        if(this.mouseOverCount !== 0) return;
         for(var n = 0; n < this.Series.length; n++) this.$refs.rows[n].SetNowLabel(result[oZm.Series[this.Series[n]].Serie][this.Phase]);
       },
-      CalcOptions() {
+      CalcOptions: function() {
         for(var n = 0; n < this.Series.length; n++) {
           if(this.Data[this.Series[n]].length === 0) continue;
           var Data = [];
@@ -78,7 +82,8 @@
         }
       }
     },
-    created: function() { 
+    created: function() {
+      this.mouseOverCount = 0;
       this.Data = {};
       this.Phase = null;
       for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = [];

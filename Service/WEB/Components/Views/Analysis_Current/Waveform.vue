@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
+      <div class="header-text">{{ MouseOver ? 'Paused while over graph' : Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <div class="header-buttons" ref="Toolbar">
         <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedMulti" type="CURRENT"></toolbar-phases>
         <toolbar-options variable="DetailOptions" :options="['Voltage']" v-on:OptionChanged="SetOption"></toolbar-options>
@@ -10,7 +10,7 @@
     </div>
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <graph ref="graph" :options="GraphOptions"></graph>
+      <graph ref="graph" :options="GraphOptions" v-on:mouseOver="MouseOver=$event"></graph>
     </div>
   </div>
 </template>
@@ -24,16 +24,9 @@
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarOptions from 'Components/ToolbarOptions.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
-  function GraphWaveTimeTicks(max, analyzer) {
-    var ticks = [];
-    for(var i = 0; i <= Math.floor(max / analyzer.SampleRate * analyzer.NominalFreq); i++) {
-      ticks.push({ v: i * analyzer.SampleRate / analyzer.NominalFreq, label: oZm.Round2(i / analyzer.NominalFreq * 1000) });
-    }
-    return ticks;
-  }
   export default {
     data() {
-      return { ShowWarning: true, ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' } };
+      return { ShowWarning: true, MouseOver: false, ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' } };
     },
     methods: {
       Redraw: function() {
@@ -88,7 +81,7 @@
                   valueFormatter: function (x) { return oZm.Round2(x) + ' <em class="x-small">V</em>'; },
                   axisLabelFormatter: function (x) { return (Object.keys(Series).length > 0) ? oZm.Round2(x) : ''; }
             },
-            x: { ticker: function(min, max) { return GraphWaveTimeTicks(max, Analyzer); },
+            x: { ticker: function(min, max) { return Graph.WaveTimeTicks(max, Analyzer); },
                  valueFormatter: function (x) { return oZm.Round2((x * 1000) / Analyzer.SampleRate) + ' <em class="x-small">ms</em>'; }
                }
           },
