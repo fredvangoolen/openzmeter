@@ -27,13 +27,13 @@
   export default {
     data() {
       return { ShowWarning: true, ShowSpinner: true, MouseOver: false, Time: 'Loading data...',
-                GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' }
+                GraphOptions: { plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' }
       };
     },
     created: function() {
       this.MaxCurrent = 0;
       this.Data = null;
-      this.VoltagePhases = null;
+      this.Phases = null;
       this.ShowCurrent = null;
       this.Log = null;
       this.VOffset = 0;
@@ -47,7 +47,7 @@
       },
       SetPhases: function(phases) {
         this.$refs.phases.SetPhases(phases);
-        this.VoltagePhases = phases;
+        this.Phases = phases;
         this.CalcOptions();
       },
       SetOption: function(option, val) {
@@ -70,20 +70,20 @@
       },
       CalcOptions() {
         if((this.$root.SelectedAnalyzer === null) || (this.VoltagePhases === null) || (this.ShowCurrent === null) || (this.Log === null) || (this.Data === null)) return;
-        var Analyzer = this.$root.SelectedAnalyzer, ToShow = [], Series = {}, CurrentPhases = [];
+        var Analyzer = this.$root.SelectedAnalyzer, ToShow = [], Series = {}, VoltagePhases = this.Phases.slice(0, oZm.Series['VOLTAGE'].Names(Analyzer).length), CurrentPhases = [];
         this.ShowWarning = (this.MaxCurrent < Analyzer.MinCurrent); 
         for(var i = 0; i < this.Data.length; i++) {
           var Row = [i];
           for(var n = 0; n < this.Data[i].length; n++) Row.push(this.Log ? 20.0 * Math.log10(Math.max(0.001, this.Data[i][n])) : this.Data[i][n]);
           ToShow.push(Row);
         }
-        for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length; n++) {
-          CurrentPhases.push((this.VoltagePhases[n] === true) && (this.ShowCurrent === true));
-          if((this.VoltagePhases[n] === true) && (this.ShowCurrent === true)) Series[oZm.Series['CURRENT'].Names(Analyzer)[n]] = { axis: 'y2' };
+        for(var n = 0; n < this.Phases.length; n++) {
+          CurrentPhases.push((this.Phases[n] === true) && (this.ShowCurrent === true));
+          if((this.Phases[n] === true) && (this.ShowCurrent === true)) Series[oZm.Series['CURRENT'].Names(Analyzer)[n]] = { axis: 'y2' };
         }  
-        var Y1Range = oZm.Series['VOLTAGE'].Range(ToShow, this.VoltagePhases);
+        var Y1Range = oZm.Series['VOLTAGE'].Range(ToShow, VoltagePhases);
         if(this.Log) Y1Range[0] = -60;
-        var Y2Range = oZm.Series['CURRENT'].Range(ToShow, Array(this.VoltagePhases.length).fill(false).concat(CurrentPhases));
+        var Y2Range = oZm.Series['CURRENT'].Range(ToShow, Array(VoltagePhases.length).fill(false).concat(CurrentPhases));
         if(this.Log) Y2Range[0] = -60;
         this.VOffset = (Y1Range[0] < 0.0) ? -Y1Range[0] : 0.0;
         this.COffset = (Y2Range[0] < 0.0) ? -Y2Range[0] : 0.0;
@@ -93,18 +93,19 @@
           for(n = 0; n < oZm.Series['CURRENT'].Names(Analyzer).length; n++) Row.push(ToShow[i][n + 1 + oZm.Series['VOLTAGE'].Names(Analyzer).length] + this.COffset);
           ToShow[i] = Row;
         }
+        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], Analyzer, ((this.ShowCurrent) ? 1 : 0));
+        var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], Analyzer, 0);
         var Options = {
           strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], fillGraph: true, legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, 
-          labels: ['Bin'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)).concat(oZm.Series['CURRENT'].Names(Analyzer)), series: Series, visibility: this.VoltagePhases.concat(CurrentPhases),
-          plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], showRangeSelector: false,
-          colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length)),
+          labels: ['Bin'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)).concat(oZm.Series['CURRENT'].Names(Analyzer)), series: Series, visibility: VoltagePhases.concat(CurrentPhases),
+          showRangeSelector: false, colors: VoltageStyle.Colors.concat(CurrentStyle.Colors),
           axes: { 
-            y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: [Y1Range[0] + this.VOffset, Y1Range[1] + this.VOffset], 
+            y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: [Y1Range[0] + this.VOffset, Y1Range[1] + this.VOffset],  strokeWidth: VoltageStyle.Width,
                  ticker: this.Log ? function(min, max) { return Graph.DBTicks(min, max, this.VOffset); }.bind(this) : Dygraph.numericTicks,
                  valueFormatter: function(x) { return oZm.Round2(x - this.VOffset) + '<em class="x-small">' + (this.Log ? 'dB' : 'V') + '</em>'; }.bind(this),
                  axisLabelFormatter: function (x) { return oZm.Round2(x); }
                },
-            y2: { pixelsPerLabel: 15, axisLabelWidth: this.ShowCurrent ? 34 : 0, valueRange: [Y2Range[0] + this.COffset, Y2Range[1] + this.COffset],
+            y2: { pixelsPerLabel: 15, axisLabelWidth: this.ShowCurrent ? 34 : 0, valueRange: [Y2Range[0] + this.COffset, Y2Range[1] + this.COffset], strokeWidth: CurrentStyle.Width,
                   valueFormatter: function(x) { return oZm.Round2(x - this.COffset) + ' <em class="x-small">' + (this.Log ? 'dB' : 'A') + '</em>'; }.bind(this),
                   ticker: (this.Log || this.ShowCurrent === false) ? function(min, max) { return (this.ShowCurrent === true) ? Graph.DBTicks(min, max, this.COffset) : []; }.bind(this) : Dygraph.numericTicks,
                   axisLabelFormatter: function (x) { return oZm.Round2(x - this.COffset); }.bind(this)

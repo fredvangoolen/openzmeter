@@ -42,15 +42,12 @@
     },
     methods: {
       CalcOptions() {
-//        var Colors = ['#d9534f', '#5cb85c', '#318ce7'];
-//                var Colors = ['#c38847', '#333333', '#949494'];
-
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
         var Range = this.SerieProps.Range(this.Data, this.Phases);
         var Options = {
           visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data, valueRange: Range, selectMode: 'euclidian',
-          labels: ['Time'].concat(this.SerieProps.Names(Analyzer)), colors: oZm.ColorArray(this.SerieProps.Color, this.SerieProps.Names(Analyzer).length),
+          labels: ['Time'].concat(this.SerieProps.Names(Analyzer)), colors: oZm.SerieStyle(this.SerieProps, Analyzer, 0).Colors,
           axes: {
             y: { pixelsPerLabel: 15, axisLabelWidth: 30,
                  valueFormatter: (x) => { var Result = oZm.FormatSerieValue(x, this.SerieProps); return Result.ValuePlain + ' <em class="x-small">' + Result.Units + '</em>'; },

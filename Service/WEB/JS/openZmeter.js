@@ -34,19 +34,11 @@ export function FormatSerieValue(val, serie, units) {
   if(units === undefined) units = GetBestUnits(val); 
   return { Units: units + serie.Units, ValuePlain: RoundPlain(ScaleToUnits(val, Units), serie.Decimals), ValueHTML: RoundHTML(ScaleToUnits(val, Units), serie.Decimals) };
 }
-export function SerieColors(serie, analyzer, user, pri) {
-  if(user.ColorScheme === 'SERIECOLOR_PHASESHADE') {
-    var Array = [];
-    var Base = chroma(serie.Color);
-    for(var i = 0; i < serie.Names(analyzer).length; i++) {
-      Array.push(Base);
-      Base = chroma(Base).darken();
-    }
-    return Array;        
-  } else if(user.ColorScheme === 'SERIESHADE_PHASECOLOR') {
-    
-  }
-  
+export function SerieStyle(serie, analyzer, order) {
+  var SerieLen = serie.Names(analyzer).length;
+  if(SerieLen === 1) return { Colors: [serie.Color], Width: 0.5 };
+  var Colors = ['#d9534f', '#5cb85c', '#318ce7', '#333333'];
+  return {Colors: Colors.slice(0, SerieLen), Width: (order == 0) ? 0.5 : 1.5 }
 }
 export var Series = {
   'VOLTAGE': { CSS_Class: 'panel-voltage', Title: 'Voltage', Serie: 'Voltage', Units: 'V',  Link: '/Analysis/Voltage', Color: '#d9534f', Decimals: 2,
