@@ -68,17 +68,23 @@
         }
         var Y1Range = oZm.Series['VOLTAGE_SAMPLES'].Range(this.Data, VoltagePhases);
         var Y2Range = oZm.Series['CURRENT_SAMPLES'].Range(this.Data, Array(VoltagePhases.length).fill(false).concat(CurrentPhases));
+        
+        //
+                var Colors = ['#d9534f', '#5cb85c', '#318ce7'];
+//                var Colors = ['#c38847', '#333333', '#949494'];
+
+        
         var Options = {
           legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, series: Series, visibility: VoltagePhases.concat(CurrentPhases),
           labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)).concat(oZm.Series['CURRENT'].Names(Analyzer)), 
-          colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length)), 
+          colors: Colors.concat(Colors).concat('black') /*oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length))*/, 
           plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], showRangeSelector: false,
           axes: {
-            y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: Y1Range, 
+            y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: Y1Range, strokeWidth: 1.5,
                  valueFormatter: function (x) { return oZm.Round2(x) + ' <em class="x-small">V</em>'; },
                  axisLabelFormatter: function (x) { return oZm.Round2(x); }
             },
-            y2: { pixelsPerLabel: 15, axisLabelWidth: (this.ShowCurrent) ? 34 : 0, valueRange: Y2Range, 
+            y2: { pixelsPerLabel: 15, axisLabelWidth: (this.ShowCurrent) ? 34 : 0, valueRange: Y2Range, strokeWidth: 0.5,
                   valueFormatter: function (x) { return oZm.Round2(x) + ' <em class="x-small">A</em>'; },
                   axisLabelFormatter: function (x) { return (Object.keys(Series).length > 0) ? oZm.Round2(x) : ''; }
             },
