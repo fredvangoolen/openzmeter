@@ -1,0 +1,37 @@
+
+image: registry.gitlab.com/zredalmeria/dockers/ozm-openwrt
+
+stages:
+  - build
+
+build:
+  stage: build
+  cache:
+    paths:
+      - Service/WEB/node_modules
+  artifacts:
+    paths:
+      - Tmp/openZmeter
+  script:
+    - cd Service
+    - make CONFIG=Configs/openWRT.config
+
+package:
+  stage: package
+  before_script:
+    - if [-z "${CI_COMMIT_TAG}"]; then export VERSION="$CI_COMMIT_SHORT_SHA"; else export VERSION="${CI_COMMIT_TAG}"; fi
+  artifacts:
+    paths:
+      - ./*.ipk
+  dependencies:
+    - build
+    - npm
+  script:
+    - mkdir -p Service/Package/usr/bin/
+    - cp build/bin/openZmeter Service/Package/usr/bin/
+    - chmod +x Service/Package/usr/bin/openZmeter
+    - mkdir -p Service/Package/usr/share/openzmeter/web
+    - cp Service/Resources/WEB/* Service/Package/usr/share/openzmeter/web
+    - cp web/*  Service/Package/usr/share/openzmeter/web
+    - sed -i "s/{{ VERSION }}/$VERSION/g" Service/Package/usr/share/openzmeter/web/Index.html
+    - opkg-build -g 0 -o 0 -Z xz -c Service/Package/
