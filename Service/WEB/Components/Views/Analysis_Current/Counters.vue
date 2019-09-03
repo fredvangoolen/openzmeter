@@ -191,13 +191,13 @@
         this.AvgArray = [];
         for(var p = 0; p < MinArray.length; p++) {
           var Val = oZm.Series['CURRENT'].FormatValue(MinArray[p]);
-          this.MinArray.push(Val.Value + '<em>' + Val.Units + '</em>');
+          this.MinArray.push(Val.Value + ' ' + Val.Units);
           Val = oZm.Series['CURRENT'].FormatValue(MaxArray[p]);
-          this.MaxArray.push(Val.Value + '<em>' + Val.Units + '</em>');
+          this.MaxArray.push(Val.Value + ' ' + Val.Units);
           Val = oZm.Series['CURRENT'].FormatValue(AvgArray[p] / AvgSamples);
-          this.AvgArray.push(Val.Value + '<em>' + Val.Units + '</em>');
+          this.AvgArray.push(Val.Value + ' ' + Val.Units);
           Val = oZm.Series['CURRENT'].FormatValue(Math.sqrt((StdArray[p] / AvgSamples) - Math.pow(AvgArray[p] / AvgSamples, 2)));
-          this.StdArray.push(Val.Value + '<em>' + Val.Units + '</em>');
+          this.StdArray.push(Val.Value + ' ' + Val.Units);
         }
         this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
       }

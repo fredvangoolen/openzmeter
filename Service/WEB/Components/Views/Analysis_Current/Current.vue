@@ -103,7 +103,7 @@
             this.Data = oZm.GraphDataAppend(result, 'Current', this.Data);
             lastsample = oZm.LastSampletime(result, lastsample);
             this.$refs.graph.SetOptions({ dateWindow: [result.From, result.To], file: this.Data, valueRange: oZm.Series['CURRENT'].Range(this.Data, this.Phases),
-                                          labels: ['Time'].concat(oZm.Series['CURRENT'].Names(Analyzer)), colors: oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length) } );
+                                          labels: ['Time'].concat(oZm.Series['CURRENT'].Names(Analyzer)), colors: oZm.SerieStyle(oZm.Series['CURRENT'], Analyzer, 0).Colors } );
             this.$refs.counters.SetStats([result.From, result.To], this.Data, result["Aggregation_Source"]);
           }.bind(this),
           complete: function() {

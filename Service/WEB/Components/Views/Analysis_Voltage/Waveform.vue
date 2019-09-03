@@ -59,10 +59,9 @@
       },
       CalcOptions: function() {
         if((this.$root.SelectedAnalyzer === null) || (this.Phases === null) || (this.ShowCurrent === null) || (Array.isArray(this.Data) === false)) return;
-        var Analyzer = this.$root.SelectedAnalyzer, Series = {}, CurrentPhases = [], VoltagePhases = [];
+        var Analyzer = this.$root.SelectedAnalyzer, Series = {}, CurrentPhases = [], VoltagePhases = this.Phases.slice(0, oZm.Series['VOLTAGE'].Names(Analyzer).length);
         this.ShowWarning = (this.MaxCurrent < Analyzer.MinCurrent); 
         for(var n = 0; n < this.Phases.length; n++) {
-          if(n < this.Phases.length) VoltagePhases.push(this.Phases[n]);
           CurrentPhases.push((this.Phases[n] === true) && (this.ShowCurrent === true));
           if((this.Phases[n] === true) && (this.ShowCurrent === true)) Series[oZm.Series['CURRENT'].Names(Analyzer)[n]] = { axis: 'y2' };
         }

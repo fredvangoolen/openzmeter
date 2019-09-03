@@ -227,7 +227,7 @@
     },
     //interactions models
     FixedRangeInteractionModel: function(parent) {
-      return { mousedown: mouseDown, mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
+      return { mousedown: mouseDown.bind(parent), mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
                 touchstart: touchStart, touchmove: touchMove, touchend: touchEnd.bind(parent) };
     },
     ScrollableInteractionModel: function(parent) {
