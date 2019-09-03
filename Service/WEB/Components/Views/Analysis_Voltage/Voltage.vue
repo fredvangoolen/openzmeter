@@ -43,8 +43,8 @@
         interactionModel: Graph.ScrollableInteractionModel(this), xAxisHeight: 24, selectMode: 'euclidian',
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { var Result = oZm.Series['VOLTAGE'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
-               axisLabelFormatter: function (x) { var Result = oZm.Series['VOLTAGE'].FormatValue(x); return Result.Value; }
+               valueFormatter: function (x) { var Result = oZm.FormatSerieValue(x, oZm.Series['VOLTAGE']); return Result.ValueHTML + ' <em class="x-small">' + Result.Units + '</em>'; },
+               axisLabelFormatter: function (x) { return oZm.FormatSerieValue(x, oZm.Series['VOLTAGE']).ValueHTML; }
              },
           x: { axisLabelFormatter: function(x) { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); },
                valueFormatter: function (x) { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); }
@@ -95,13 +95,12 @@
             this.Data = oZm.GraphDataAppend(result, 'Voltage', this.Data);
             lastsample = oZm.LastSampletime(result, lastsample);
             this.$refs.graph.SetOptions({ dateWindow: [result.From, result.To], file: this.Data, valueRange: oZm.Series['VOLTAGE'].Range(this.Data, this.Phases), 
-                                          labels: ['Time'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length) } );
+                                          labels: ['Time'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), colors: oZm.SerieStyle(oZm.Series['VOLTAGE'], Analyzer, 0).Colors } );
             this.$refs.counters.SetStats([result.From, result.To], this.Data, result["Aggregation_Source"]);
           }.bind(this),
           complete: function() {
             this.ShowSpinner = false;
             this.$refs.period.Updating = false;
-            //this.$refs.period.UpdateCompleted(lastsample);
           }.bind(this),
           error: function(response) {
             if(response.status === 400) this.$refs.aggregation.AggregationFail();
