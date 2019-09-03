@@ -26,7 +26,7 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data() {
-      return { ShowWarning: true, MouseOver: false, ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' } };
+      return { ShowWarning: true, MouseOver: false, ShowSpinner: true, Time: 'Loading data...', GraphOptions: { plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' } };
     },
     created: function() {
       this.MaxCurrent = 0;
@@ -45,7 +45,7 @@
       },
       SetPhases: function(phases) {
         this.$refs.phases.SetPhases(phases);
-        this.Phases = phases;
+        this.CurrentPhases = phases;
         this.CalcOptions();
       },
       SetOption: function(option, val) {
@@ -67,7 +67,7 @@
         this.ShowSpinner = false;
       },
       CalcOptions() {
-        if((this.$root.SelectedAnalyzer === null) || (this.Phases === null) || (this.ShowVoltage === null) || (this.Log === null) || (this.Data === null)) return;
+        if((this.$root.SelectedAnalyzer === null) || (this.CurrentPhases === null) || (this.ShowVoltage === null) || (this.Log === null) || (this.Data === null)) return;
         var Analyzer = this.$root.SelectedAnalyzer, ToShow = [], Series = {}, VoltagePhases = [];
         this.ShowWarning = (this.MaxCurrent < Analyzer.MinCurrent); 
         for(var i = 0; i < this.Data.length; i++) {
@@ -91,18 +91,20 @@
           for(n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length; n++) Row.push(ToShow[i][n + 1 + oZm.Series['CURRENT'].Names(Analyzer).length] + this.VOffset);
           ToShow[i] = Row;
         }
+        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], Analyzer, 0);
+        var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], Analyzer, ((this.ShowVoltage) ? 1 : 0));
         var Options = {
-          strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], fillGraph: true, interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup  : oZm.mouseUp, dblclick : oZm.dblClick_Restore },
+          strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], fillGraph: true,
+          //interactionModel: { mousedown: Graph.mouseDown, mousemove: Graph.mouseMove, mouseup  : oZm.mouseUp, dblclick : oZm.dblClick_Restore },
           legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, labels: ['Bin'].concat(oZm.Series['CURRENT'].Names(Analyzer)).concat(oZm.Series['VOLTAGE'].Names(Analyzer)), series: Series, visibility: this.CurrentPhases.concat(VoltagePhases),
-          plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], showRangeSelector: false,
-          colors: oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length)),
+          showRangeSelector: false, colors: CurrentStyle.Colors.concat(VoltageStyle.Colors),
           axes: {
-            y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: [Y1Range[0] + this.COffset, Y1Range[1] + this.COffset], strokeWidth: VoltageStyle.Width,
+            y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: [Y1Range[0] + this.COffset, Y1Range[1] + this.COffset], strokeWidth: CurrentStyle.Width,
                  ticker: this.Log ? function(min, max) { return Graph.DBTicks(min, max, this.COffset); }.bind(this) : Dygraph.numericTicks,
                  valueFormatter: function(x) { return oZm.Round2(x - this.VOffset) + '<em class="x-small">' + (this.Log ? 'dB' : 'A') + '</em>'; }.bind(this),
                  axisLabelFormatter: function (x) { return oZm.Round2(x); }
                },
-            y2: { pixelsPerLabel: 15, axisLabelWidth: this.ShowVoltage ? 34 : 0, valueRange: [Y2Range[0] + this.VOffset, Y2Range[1] + this.VOffset], strokeWidth: CurrentStyle.Width,
+            y2: { pixelsPerLabel: 15, axisLabelWidth: this.ShowVoltage ? 34 : 0, valueRange: [Y2Range[0] + this.VOffset, Y2Range[1] + this.VOffset], strokeWidth: VoltageStyle.Width,
                   valueFormatter: function(x) { return oZm.Round2(x - this.VOffset) + ' <em class="x-small">' + (this.Log ? 'dB' : 'V') + '</em>'; }.bind(this),
                   ticker: (this.Log || this.ShowCurrent === false) ? function(min, max) { return (this.ShowVoltage === true) ? Graph.DBTicks(min, max, this.VOffset) : []; }.bind(this) : Dygraph.numericTicks,
                   axisLabelFormatter: function (x) { return oZm.Round2(x - this.VOffset); }.bind(this)
